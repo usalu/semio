@@ -61,7 +61,7 @@ Let me walk you throw 🚶
    - [🤖 @semio/assistant](#-semioassistant-)
    - [⚙️ @semio/engine](#️-semioengine-)
    - [🛍️ @semio/assets](#%EF%B8%8F-semioassets-)
-   - [🟪 @semio/dotnet](#-semiodotnet-)
+   - [🟪 @semio/net](#-semionet-)
    - [🦗 @semio/grasshopper](#-semiograsshopper-)
 1. [💯 Brand](#-brand-)
    - [✍️ Concept](#%EF%B8%8F-concept-)
@@ -376,7 +376,7 @@ Mostly a [Large Language Model](https://en.wikipedia.org/wiki/Large_language_mod
 
 A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
 
-## 🟪 [@semio/dotnet](https://github.com/usalu/semio/tree/main/dotnet) [↑](#-components-)
+## 🟪 [@semio/net](https://github.com/usalu/semio/tree/main/dotnet) [↑](#-components-)
 
 <details>
 <summary><strong>🔗 Useful links:</strong></summary>
@@ -594,7 +594,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 > [!TIP]
 > In the end of a section you can give the curious reader a summarizing question to think about the consequences and a link to more resources 🤔
 
-### 🔡 [Fonts](/assets/fonts/README.md) [↑](#-typography-)
+### 🔡 [Typesetting](/assets/fonts/README.md) [↑](#-typography-)
 
 - Sans serif: [Anta](https://fonts.google.com/specimen/Anta) 🖨️
 - Serif: [Kelly Slab](https://fonts.google.com/specimen/Kelly+Slab) ✍️

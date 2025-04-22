@@ -1,15 +1,21 @@
 import React, { FC, useCallback, useMemo, useState, useEffect } from 'react';
-import { addEdge, Background, BackgroundVariant, BaseEdge, BuiltInNode, ConnectionMode, Controls, Edge, EdgeProps, getBezierPath, getStraightPath, Handle, HandleProps, MiniMap, MiniMapNodeProps, Node, NodeProps, OnConnect, OnEdgesChange, OnNodesChange, Panel, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useOnViewportChange, useReactFlow, useStoreApi, useViewport, Viewport, ViewportPortal } from '@xyflow/react';
-import { Connection, Design, ICON_WIDTH, Kit, Piece, Port, Type } from '@semio/js/semio'
+import { addEdge, Background, BackgroundVariant, BaseEdge, BuiltInNode, ConnectionMode, Controls, Edge, EdgeProps, getBezierPath, getStraightPath, Handle, HandleProps, MiniMap, MiniMapNodeProps, Node, NodeProps, OnConnect, OnEdgesChange, OnNodesChange, Panel, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useOnViewportChange, useReactFlow, useStoreApi, useViewport, Viewport, ViewportPortal, useStore } from '@xyflow/react';
+import * as THREE from 'three';
+import { useDroppable } from '@dnd-kit/core';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Sphere } from '@react-three/drei';
+
+import { Connection, Design, flattenDesign, ICON_WIDTH, Kit, Piece, Port, Type, TypeID } from '@semio/js/semio'
 import { Avatar, AvatarFallback, AvatarImage } from '@semio/js/components/ui/Avatar';
 
 // import '@xyflow/react/dist/base.css';
 import '@xyflow/react/dist/style.css';
 import "@semio/js/globals.css";
-import { useDroppable } from '@dnd-kit/core';
+import { DesignEditorSelection } from '../..';
 
 type PieceNodeProps = {
     piece: Piece;
+    type: Type;
     selected?: boolean;
 };
 
@@ -49,7 +55,8 @@ const PortHandle: React.FC<PortHandleProps> = ({ port }) => {
 };
 
 const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = ({ id, data, selected }) => {
-    const { piece: { id_ } } = data;
+    // const { zoom } = useViewport();
+    const { piece: { id_ }, type: { ports } } = data;
     return (
         <div>
             <svg
@@ -63,6 +70,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = ({ id, data, selected
                     r={ICON_WIDTH / 2 - 1}
                     className={`stroke-foreground stroke-2 ${selected ? 'fill-primary ' : 'fill-transparent'} `}
                 />
+                {/* {zoom < 10 && */}
                 <text
                     x={ICON_WIDTH / 2}
                     y={ICON_WIDTH / 2}
@@ -72,11 +80,24 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = ({ id, data, selected
                 >
                     {id_}
                 </text>
+                {/* } */}
             </svg>
-            <PortHandle port={{ id_: 't', t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
-            <PortHandle port={{ id_: 'e', t: 0.25, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
-            <PortHandle port={{ id_: 's', t: 0.5, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
-            <PortHandle port={{ id_: 'sw', t: 0.66, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }} />
+            {/* {zoom > 10 && <Canvas className="w-full h-full">
+                <OrbitControls
+                    mouseButtons={{
+                        LEFT: THREE.MOUSE.ROTATE, // Left mouse button for orbit/pan
+                        MIDDLE: undefined,
+                        RIGHT: undefined // Right button disabled to allow selection
+                    }}
+                />
+                <Sphere args={[1, 100, 100]} position={[0, 0, 0]}>
+                    <meshStandardMaterial color="gold" roughness={0} metalness={1} />
+                </Sphere>
+                <ambientLight intensity={1} />
+            </Canvas>} */}
+            {ports?.map((port) => (
+                <PortHandle key={port.id_} port={port} />
+            ))}
         </div>
     );
 };
@@ -115,25 +136,28 @@ export const MiniMapNode: React.FC<MiniMapNodeProps> = ({ x, y, selected }) => {
 }
 
 
-const DiagramCore: FC<DiagramProps> = ({ fullscreen, onPanelDoubleClick, design }) => {
-
-
+const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, onPanelDoubleClick, onSelectionChange }) => {
     const { setNodeRef } = useDroppable({
         id: 'diagram',
     });
 
-    const nodes = design.pieces?.map((piece) => ({
+    const flatDesign = design ? flattenDesign(design, types) : null;
+
+    const nodes = flatDesign?.pieces?.map((piece) => ({
         type: 'piece',
         id: piece.id_,
-        position: { x: piece.center.x * 100, y: -piece.center.y * 100 },
-        data: { piece },
+        position: { x: piece.center?.x * ICON_WIDTH || 0, y: -piece.center?.y * ICON_WIDTH || 0 },
+        data: { piece, type: types.find((t) => t.name === piece.type.name && (t.variant ?? '') === (piece.type.variant ?? '')), selected: selection?.selectedPieceIds.includes(piece.id_) },
     }));
 
     const edges = design.connections?.map((connection) => ({
         type: 'connection',
         id: `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`,
         source: connection.connecting.piece.id_,
+        sourceHandle: connection.connecting.port.id_,
         target: connection.connected.piece.id_,
+        targetHandle: connection.connected.port.id_,
+        data: { connection, selected: selection?.selectedConnections.some((c) => c.connectingPieceId === connection.connecting.piece.id_ && c.connectedPieceId === connection.connected.piece.id_) },
     }));
 
     // const edges = design.connections?.map((connection) => ({
@@ -322,7 +346,6 @@ const DiagramCore: FC<DiagramProps> = ({ fullscreen, onPanelDoubleClick, design 
     //     [getClosestEdge],
     // );
 
-
     return (
         <ReactFlow
             ref={setNodeRef}
@@ -332,14 +355,43 @@ const DiagramCore: FC<DiagramProps> = ({ fullscreen, onPanelDoubleClick, design 
             edgeTypes={edgeTypes}
             connectionMode={ConnectionMode.Loose}
             elementsSelectable
-            // fitView
             minZoom={0.1}
-            maxZoom={5}
+            maxZoom={12}
             // onNodesChange={onNodesChange}
             // onEdgesChange={onEdgesChange}
             // onNodeDrag={onNodeDrag}
             // onNodeDragStop={onNodeDragStop}
             // onConnect={onConnect}
+            onSelectionChange={({ nodes, edges }) => {
+                const selectedPieceIds = nodes.map((node) => node.id);
+                const selectedConnections = edges.map((edge) => {
+                    return {
+                        connectedPieceId: edge.source,
+                        connectingPieceId: edge.target,
+                    }
+                });
+
+                // Only trigger onSelectionChange if the selection actually changed
+                const currentSelection = selection || { selectedPieceIds: [], selectedConnections: [] };
+                const piecesChanged =
+                    selectedPieceIds.length !== currentSelection.selectedPieceIds.length ||
+                    selectedPieceIds.some(id => !currentSelection.selectedPieceIds.includes(id));
+                const connectionsChanged =
+                    selectedConnections.length !== currentSelection.selectedConnections.length ||
+                    selectedConnections.some(conn =>
+                        !currentSelection.selectedConnections.some(
+                            currConn => currConn.connectedPieceId === conn.connectedPieceId &&
+                                currConn.connectingPieceId === conn.connectingPieceId
+                        )
+                    );
+
+                if (piecesChanged || connectionsChanged) {
+                    onSelectionChange?.({
+                        selectedPieceIds,
+                        selectedConnections
+                    });
+                }
+            }}
             zoomOnDoubleClick={false}
             onDoubleClickCapture={(e) => {
                 e.stopPropagation();
@@ -362,19 +414,20 @@ const DiagramCore: FC<DiagramProps> = ({ fullscreen, onPanelDoubleClick, design 
 
 
 interface DiagramProps {
-    fullscreen?: boolean;
-    onPanelDoubleClick?: () => void;
     design: Design;
+    types: Type[];
+    fullscreen?: boolean;
+    selection?: DesignEditorSelection;
+    onPanelDoubleClick?: () => void;
+    onSelectionChange?: (selection: DesignEditorSelection) => void;
 }
 
 
-const Diagram: FC<DiagramProps> = ({ fullscreen, onPanelDoubleClick, design }) => {
+const Diagram: FC<DiagramProps> = ({ design, types, fullscreen, selection, onPanelDoubleClick, onSelectionChange }) => {
 
     return (
         <div id="diagram" className="h-full w-full">
-            <ReactFlowProvider >
-                <DiagramCore fullscreen={fullscreen} onPanelDoubleClick={onPanelDoubleClick} design={design} />
-            </ReactFlowProvider>
+            <DiagramCore fullscreen={fullscreen} onPanelDoubleClick={onPanelDoubleClick} design={design} types={types} selection={selection} onSelectionChange={onSelectionChange} />
         </div>
     );
 };

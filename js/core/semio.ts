@@ -1,3 +1,6 @@
+import cytoscape from 'cytoscape'
+import * as THREE from 'three'
+
 // TODOs
 // Update to latest schema and unify docstrings
 
@@ -14,6 +17,7 @@
 // match the expected interface, even if the JSON is valid.
 
 export const ICON_WIDTH = 50;
+export const TOLERANCE = 1e-5;
 
 // ↗️ Represents a Kit, the top-level container for types and designs.
 export type Kit = {
@@ -128,7 +132,7 @@ export type Side = {
 // 🪪 Identifier for a piece within a design.
 export type PieceID = {
     // 🆔 The id of the piece
-    id_?: string;
+    id_: string;
 }
 
 // 🪪 Identifier for a port within a type.
@@ -140,9 +144,9 @@ export type PortID = {
 // ⭕ A piece is a 3D instance of a type within a design.
 export type Piece = {
     // 🆔 The id of the piece
-    id_?: string;
+    id_: string;
     // 💬 The human-readable description of the piece
-    description: string;
+    description?: string;
     // 🧩 The type defining this piece
     type: TypeID; // Represents Type identifier
     // ◳ The optional plane (position and orientation) of the piece
@@ -603,3 +607,239 @@ const typeMap: any = {
         { json: "qualities", js: "qualities", typ: u(undefined, a(r("Quality"))) },
     ], "any"),
 };
+
+
+const round = (value: number): number => {
+    return Math.round(value / TOLERANCE) * TOLERANCE;
+};
+
+const roundPlane = (plane: Plane): Plane => {
+    return {
+        origin: { x: round(plane.origin.x), y: round(plane.origin.y), z: round(plane.origin.z) },
+        xAxis: { x: round(plane.xAxis.x), y: round(plane.xAxis.y), z: round(plane.xAxis.z) },
+        yAxis: { x: round(plane.yAxis.x), y: round(plane.yAxis.y), z: round(plane.yAxis.z) },
+    };
+};
+
+
+const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
+    const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
+    const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z);
+    const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z);
+    const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis).normalize();
+    const orthoYAxis = new THREE.Vector3().crossVectors(zAxis, xAxis).normalize();
+    const matrix = new THREE.Matrix4();
+    matrix.makeBasis(xAxis.normalize(), orthoYAxis, zAxis);
+    matrix.setPosition(origin);
+    return matrix;
+};
+
+const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
+    const origin = new THREE.Vector3();
+    const xAxis = new THREE.Vector3();
+    const yAxis = new THREE.Vector3();
+    const zAxis = new THREE.Vector3();
+
+    matrix.decompose(origin, new THREE.Quaternion(), new THREE.Vector3());
+    matrix.extractBasis(xAxis, yAxis, zAxis);
+
+    return {
+        origin: { x: origin.x, y: origin.y, z: origin.z },
+        xAxis: { x: xAxis.x, y: xAxis.y, z: xAxis.z },
+        yAxis: { x: yAxis.x, y: yAxis.y, z: yAxis.z },
+    };
+};
+
+
+const semioVectorToThree = (v: Point | Vector): THREE.Vector3 => {
+    return new THREE.Vector3(v.x, v.y, v.z);
+};
+
+const computeChildPlane = (
+    parentPlane: Plane,
+    parentPort: Port,
+    childPort: Port,
+    connection: Connection
+): Plane => {
+
+    const parentMatrix = planeToMatrix(parentPlane);
+    const parentPoint = semioVectorToThree(parentPort.point);
+    const parentDirection = semioVectorToThree(parentPort.direction).normalize();
+    const childPoint = semioVectorToThree(childPort.point);
+    const childDirection = semioVectorToThree(childPort.direction).normalize();
+
+    const { gap, shift, raise_, rotation, turn, tilt } = connection;
+    const rotationRad = THREE.MathUtils.degToRad(rotation);
+    const turnRad = THREE.MathUtils.degToRad(turn);
+    const tiltRad = THREE.MathUtils.degToRad(tilt);
+
+    const targetDirection = parentDirection.clone();
+    const sourceDirection = childDirection.clone().negate();
+
+    const alignQuat = new THREE.Quaternion().setFromUnitVectors(sourceDirection, targetDirection);
+    const alignMatrix = new THREE.Matrix4().makeRotationFromQuaternion(alignQuat);
+
+    const parentXAxis = new THREE.Vector3();
+    const parentYAxis = new THREE.Vector3();
+    const parentZAxis = new THREE.Vector3();
+    parentMatrix.extractBasis(parentXAxis, parentYAxis, parentZAxis);
+
+    const rotationQuat = new THREE.Quaternion().setFromAxisAngle(parentDirection, -rotationRad);
+
+    const turnAxis = new THREE.Vector3().crossVectors(parentXAxis, parentDirection).normalize();
+    const turnQuat = new THREE.Quaternion().setFromAxisAngle(turnAxis, turnRad);
+
+    const tiltQuat = new THREE.Quaternion().setFromAxisAngle(parentXAxis, tiltRad);
+
+    const totalRotationQuat = new THREE.Quaternion()
+        .multiplyQuaternions(tiltQuat, turnQuat)
+        .multiply(rotationQuat)
+        .multiply(alignQuat);
+
+    const orientationMatrix = new THREE.Matrix4().makeRotationFromQuaternion(totalRotationQuat);
+    const childLocalMatrix = new THREE.Matrix4().makeTranslation(childPoint.x, childPoint.y, childPoint.z).invert();
+    const gapVec = parentDirection.clone().multiplyScalar(gap);
+    const shiftVec = parentXAxis.clone().multiplyScalar(shift);
+    const raiseVec = turnAxis.clone().multiplyScalar(raise_);
+    const displacement = new THREE.Vector3().add(gapVec).add(shiftVec).add(raiseVec);
+    const parentPortWorldPos = parentPoint.clone().applyMatrix4(parentMatrix);
+    const childOriginWorldPos = parentPortWorldPos.clone().add(displacement);
+    const translationMatrix = new THREE.Matrix4().makeTranslation(
+        childOriginWorldPos.x,
+        childOriginWorldPos.y,
+        childOriginWorldPos.z
+    );
+    const finalChildMatrix = new THREE.Matrix4().multiplyMatrices(translationMatrix, orientationMatrix);
+    const finalMatrix = new THREE.Matrix4().multiplyMatrices(finalChildMatrix, childLocalMatrix);
+
+    return matrixToPlane(finalMatrix);
+};
+
+
+export const flattenDesign = (design: Design, types: Type[]): Design => {
+    if (!design.pieces || design.pieces.length === 0) return design;
+
+    const typesDict: { [key: string]: { [key: string]: Type } } = {};
+    types.forEach(t => {
+        if (!typesDict[t.name]) typesDict[t.name] = {};
+        typesDict[t.name][t.variant || ''] = t;
+    });
+    const getType = (typeId: TypeID): Type | undefined => {
+        return typesDict[typeId.name]?.[typeId.variant || ''];
+    };
+    const getPort = (type: Type | undefined, portId: PortID | undefined): Port | undefined => {
+        if (!type?.ports) return undefined;
+        return portId?.id_ ? type.ports.find(p => p.id_ === portId.id_) : type.ports[0];
+    };
+
+    const flatDesign: Design = JSON.parse(JSON.stringify(design));
+
+    const piecePlanes: { [pieceId: string]: Plane } = {};
+    const pieceMap: { [pieceId: string]: Piece } = {};
+    flatDesign.pieces.forEach(p => { if (p.id_) pieceMap[p.id_] = p });
+
+    const cy = cytoscape({
+        elements: {
+            nodes: flatDesign.pieces.map((piece) => ({
+                data: { id: piece.id_ ?? 'unknown', label: piece.id_ ?? 'unknown' }
+            })),
+            edges: flatDesign.connections?.map((connection, index) => {
+                const sourceId = connection.connected.piece?.id_ ?? `unknown-source-${index}`;
+                const targetId = connection.connecting.piece?.id_ ?? `unknown-target-${index}`;
+                return {
+                    data: {
+                        id: `${sourceId}-${targetId}-${index}`,
+                        source: sourceId,
+                        target: targetId,
+                        connectionData: connection
+                    }
+                };
+            }) ?? []
+        },
+        headless: true,
+    });
+
+    const components = cy.elements().components();
+    let isFirstRoot = true;
+
+    components.forEach((component) => {
+        let roots = component.nodes().filter(node => {
+            const piece = pieceMap[node.id()];
+            return piece?.plane !== undefined;
+        });
+        let rootNode = roots.length > 0 ? roots[0] : component.nodes().length > 0 ? component.nodes()[0] : undefined;
+        if (!rootNode) return;
+        const rootPiece = pieceMap[rootNode.id()];
+        if (!rootPiece || !rootPiece.id_) return;
+        let rootPlane: Plane;
+        if (rootPiece.plane) {
+            rootPlane = rootPiece.plane;
+        } else if (isFirstRoot) {
+            const identityMatrix = new THREE.Matrix4().identity();
+            rootPlane = matrixToPlane(identityMatrix);
+            isFirstRoot = false;
+        } else {
+            console.warn(`Root piece ${rootPiece.id_} has no defined plane and is not the first root. Defaulting to identity plane.`);
+            const identityMatrix = new THREE.Matrix4().identity();
+            rootPlane = matrixToPlane(identityMatrix);
+        }
+
+        piecePlanes[rootPiece.id_] = rootPlane;
+        const flatRootPiece: Piece = {
+            ...rootPiece,
+            plane: rootPlane,
+        };
+        flatDesign.pieces?.push(flatRootPiece);
+
+        const bfs = cy.elements().bfs({
+            roots: `#${rootNode.id()}`,
+            visit: (v, e, u, i, depth) => {
+                if (!e) return;
+                const edgeData = e.data();
+                const connection: Connection | undefined = edgeData.connectionData;
+                if (!connection) return;
+                const parentNode = u;
+                const childNode = v;
+                const parentId = parentNode.id();
+                const childId = childNode.id();
+                const parentPiece = pieceMap[parentId];
+                const childPiece = pieceMap[childId];
+                if (!parentPiece || !childPiece || !parentPiece.id_ || !childPiece.id_) return;
+                if (piecePlanes[childPiece.id_]) return;
+                const parentPlane = piecePlanes[parentPiece.id_];
+                if (!parentPlane) {
+                    console.error(`Error during flatten: Parent piece ${parentPiece.id_} plane not found.`);
+                    return;
+                }
+                const parentSide = connection.connected.piece.id_ === parentId ? connection.connected : connection.connecting;
+                const childSide = connection.connecting.piece.id_ === childId ? connection.connecting : connection.connected;
+                const parentType = getType(parentPiece.type);
+                const childType = getType(childPiece.type);
+                const parentPort = getPort(parentType, parentSide.port);
+                const childPort = getPort(childType, childSide.port);
+                if (!parentPort || !childPort) {
+                    console.error(`Error during flatten: Ports not found for connection between ${parentId} and ${childId}. Parent Port: ${parentSide.port.id_}, Child Port: ${childSide.port.id_}`);
+                    return;
+                }
+                const childPlane = roundPlane(computeChildPlane(parentPlane, parentPort, childPort, connection));
+                piecePlanes[childPiece.id_] = childPlane;
+                const direction = semioVectorToThree({ x: connection.x, y: connection.y, z: 0 }).normalize();
+                const childCenter = {
+                    x: round(parentPiece.center?.x + connection.x + direction.x),
+                    y: round(parentPiece.center?.y + connection.y + direction.y),
+                }
+
+                const flatChildPiece: Piece = {
+                    ...childPiece,
+                    plane: childPlane,
+                    center: childCenter,
+                };
+                pieceMap[childId] = flatChildPiece;
+            },
+            directed: false
+        });
+    });
+    flatDesign.pieces = flatDesign.pieces?.map(p => pieceMap[p.id_ ?? '']);
+    flatDesign.connections = [];
+    return flatDesign;
+}

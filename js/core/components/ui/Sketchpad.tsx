@@ -200,7 +200,7 @@ const View: FC<ViewProps> = ({ }) => {
         });
         const editorId = studioStore.createDesignEditorStore("usalu/metabolism", "Nakagin Capsule Tower", "", "");
         setDesignEditorId(editorId);
-    }, [studioStore]);
+    }, []);
 
     if (!designEditorId) {
         return <div>Loading editor...</div>;

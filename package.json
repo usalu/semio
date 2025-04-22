@@ -8,8 +8,8 @@
     "js/core",
     "js/docs",
     "js/sketchpad",
-    "dotnet/Semio",
-    "dotnet/Semio.Grasshopper",
+    "net/Semio",
+    "net/Semio.Grasshopper",
     "yak"
   ],
   "private": true,
@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@nx/eslint": "^20.8.0",
-    "@nxlv/python": "^20.10.0",
+    "@nxlv/python": "^20.13.3",
     "nx": "20.6.2"
   }
 }
