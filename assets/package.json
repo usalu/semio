@@ -3,7 +3,9 @@
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "assets",
   "projectType": "library",
-  "devDependencies": {
-    "@semio/icons": "*"
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
   }
 }

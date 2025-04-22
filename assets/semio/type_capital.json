@@ -1,1 +1,150 @@
-{"representations":[{"url":"representations/capital.glb","description":"","mime":"model/gltf-binary","tags":[],"qualities":[]},{"url":"representations/capital_1to500.3dm","description":"","mime":"model/vnd.3dm","tags":["1to500"],"qualities":[]},{"url":"representations/capital_1to200.3dm","description":"","mime":"model/vnd.3dm","tags":["1to200"],"qualities":[]},{"url":"https://app.speckle.systems/projects/e7de1a2f8f/models/82fd28f19e","description":"","mime":"model/vnd.speckle+json","tags":["1to500"],"qualities":[]},{"url":"https://app.speckle.systems/projects/e7de1a2f8f/models/90435c0046","description":"","mime":"model/vnd.speckle+json","tags":["1to200"],"qualities":[]},{"url":"representations/capital_collider.glb","description":"","mime":"model/gltf-binary","tags":["collider"],"qualities":[]}],"ports":[{"id_":"","description":"The center of the bottom.","family":"","compatibleFamilies":[],"point":{"x":0.0,"y":0.0,"z":0.0},"direction":{"x":0.0,"y":0.0,"z":-1.0},"t":0.0,"qualities":[]}],"authors":[{"name":"Ueli Saluz","email":"ueli@semio-tech.org"}],"qualities":[{"name":"peak","value":"north west","unit":"","definition":""},{"name":"length","value":"5.5","unit":"m","definition":""},{"name":"width","value":"5.5","unit":"m","definition":""},{"name":"height","value":"5.5","unit":"m","definition":""},{"name":"height side","value":"5.5","unit":"m","definition":""},{"name":"height low","value":"1","unit":"m","definition":""},{"name":"wall thickness","value":"0.3","unit":"m","definition":""},{"name":"construction cost","value":"60025","unit":"€","definition":""},{"name":"maintenance expenses","value":"720","unit":"€/a","definition":""},{"name":"construction global warming potential","value":"4802","unit":"kgCO2e","definition":"https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"}],"name":"Capital","description":"A roof that has the skin of a cut extruded cuboid.","icon":"icons/capital.svg","image":"images/capital.png","variant":"","unit":"m"}
+{
+    "representations": [
+        {
+            "url": "representations/capital.glb",
+            "description": "",
+            "mime": "model/gltf-binary",
+            "tags": [],
+            "qualities": []
+        },
+        {
+            "url": "representations/capital_1to500.3dm",
+            "description": "",
+            "mime": "model/vnd.3dm",
+            "tags": [
+                "1to500"
+            ],
+            "qualities": []
+        },
+        {
+            "url": "representations/capital_1to200.3dm",
+            "description": "",
+            "mime": "model/vnd.3dm",
+            "tags": [
+                "1to200"
+            ],
+            "qualities": []
+        },
+        {
+            "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/82fd28f19e",
+            "description": "",
+            "mime": "model/vnd.speckle+json",
+            "tags": [
+                "1to500"
+            ],
+            "qualities": []
+        },
+        {
+            "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/90435c0046",
+            "description": "",
+            "mime": "model/vnd.speckle+json",
+            "tags": [
+                "1to200"
+            ],
+            "qualities": []
+        },
+        {
+            "url": "representations/capital_collider.glb",
+            "description": "",
+            "mime": "model/gltf-binary",
+            "tags": [
+                "collider"
+            ],
+            "qualities": []
+        }
+    ],
+    "ports": [
+        {
+            "id_": "",
+            "description": "The center of the bottom.",
+            "family": "",
+            "compatibleFamilies": [],
+            "point": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "direction": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": -1.0
+            },
+            "t": 0.0,
+            "qualities": []
+        }
+    ],
+    "authors": [
+        {
+            "name": "Ueli Saluz",
+            "email": "ueli@semio-tech.com"
+        }
+    ],
+    "qualities": [
+        {
+            "name": "peak",
+            "value": "north west",
+            "unit": "",
+            "definition": ""
+        },
+        {
+            "name": "length",
+            "value": "5.5",
+            "unit": "m",
+            "definition": ""
+        },
+        {
+            "name": "width",
+            "value": "5.5",
+            "unit": "m",
+            "definition": ""
+        },
+        {
+            "name": "height",
+            "value": "5.5",
+            "unit": "m",
+            "definition": ""
+        },
+        {
+            "name": "height side",
+            "value": "5.5",
+            "unit": "m",
+            "definition": ""
+        },
+        {
+            "name": "height low",
+            "value": "1",
+            "unit": "m",
+            "definition": ""
+        },
+        {
+            "name": "wall thickness",
+            "value": "0.3",
+            "unit": "m",
+            "definition": ""
+        },
+        {
+            "name": "construction cost",
+            "value": "60025",
+            "unit": "€",
+            "definition": ""
+        },
+        {
+            "name": "maintenance expenses",
+            "value": "720",
+            "unit": "€/a",
+            "definition": ""
+        },
+        {
+            "name": "construction global warming potential",
+            "value": "4802",
+            "unit": "kgCO2e",
+            "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
+        }
+    ],
+    "name": "Capital",
+    "description": "A roof that has the skin of a cut extruded cuboid.",
+    "icon": "icons/capital.svg",
+    "image": "images/capital.png",
+    "variant": "",
+    "unit": "m"
+}

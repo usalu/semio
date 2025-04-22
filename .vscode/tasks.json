@@ -64,7 +64,7 @@
             }
         },
         {
-            "label": "dev js core",
+            "label": "dev js",
             "type": "shell",
             "isBackground": true,
             "command": "npx nx dev @semio/js",
@@ -139,7 +139,9 @@
                 "options": {
                     "shell": {
                         "executable": "powershell.exe",
-                        "args": ["-Command"]
+                        "args": [
+                            "-Command"
+                        ]
                     }
                 }
             },

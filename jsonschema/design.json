@@ -29,7 +29,7 @@
                 "description": {
                     "default": "",
                     "description": "\ud83d\udcac The optional human-readable description of the connection.",
-                    "maxLength": 2560,
+                    "maxLength": 512,
                     "title": "Description",
                     "type": "string"
                 },
@@ -54,24 +54,24 @@
                 "rotation": {
                     "default": 0,
                     "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
-                    "exclusiveMaximum": 360.0,
-                    "minimum": 0.0,
+                    "exclusiveMaximum": 360,
+                    "minimum": 0,
                     "title": "Rotation",
                     "type": "number"
                 },
                 "turn": {
                     "default": 0,
                     "description": "\ud83d\udede The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
-                    "exclusiveMaximum": 360.0,
-                    "minimum": 0.0,
+                    "exclusiveMaximum": 360,
+                    "minimum": 0,
                     "title": "Turn",
                     "type": "number"
                 },
                 "tilt": {
                     "default": 0,
                     "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
-                    "exclusiveMaximum": 360.0,
-                    "minimum": 0.0,
+                    "exclusiveMaximum": 360,
+                    "minimum": 0,
                     "title": "Tilt",
                     "type": "number"
                 },
@@ -124,6 +124,27 @@
             "title": "DiagramPoint",
             "type": "object"
         },
+        "Location": {
+            "description": "\ud83d\udccd The output of a location.",
+            "properties": {
+                "longitude": {
+                    "description": "\u2194\ufe0f The longitude of the location in degrees.",
+                    "title": "Longitude",
+                    "type": "number"
+                },
+                "latitude": {
+                    "description": "\u2195\ufe0f The latitude of the location in degrees.",
+                    "title": "Latitude",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "longitude",
+                "latitude"
+            ],
+            "title": "Location",
+            "type": "object"
+        },
         "PieceId": {
             "description": "\ud83e\udeaa The props to identify the piece within the parent design.",
             "properties": {
@@ -151,7 +172,7 @@
                 "description": {
                     "default": "",
                     "description": "\ud83d\udcac The optional human-readable description of the piece.",
-                    "maxLength": 2560,
+                    "maxLength": 512,
                     "title": "Description",
                     "type": "string"
                 },
@@ -289,7 +310,7 @@
                 "definition": {
                     "default": "",
                     "description": "\ud83d\udccf The optional definition [ text | uri ] of the quality.",
-                    "maxLength": 2560,
+                    "maxLength": 512,
                     "title": "Definition",
                     "type": "string"
                 }
@@ -379,7 +400,7 @@
         "description": {
             "default": "",
             "description": "\ud83d\udcac The optional human-readable description of the design.",
-            "maxLength": 2560,
+            "maxLength": 512,
             "title": "Description",
             "type": "string"
         },
@@ -429,6 +450,17 @@
             "format": "date-time",
             "title": "Updated",
             "type": "string"
+        },
+        "location": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/Location"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null
         },
         "pieces": {
             "items": {

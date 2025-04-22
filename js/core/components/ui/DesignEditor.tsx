@@ -1,4 +1,4 @@
-import { FC, ReactNode, useState, useEffect } from 'react';
+import { FC, ReactNode, useState, useEffect, useReducer } from 'react';
 import {
     DndContext,
     DragEndEvent,
@@ -9,12 +9,15 @@ import {
 import { createPortal } from 'react-dom';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Wrench, Terminal, Info, MessageCircle, ChevronDown, ChevronRight, Folder, Circle } from 'lucide-react';
+import { ReactFlowProvider, useReactFlow } from '@xyflow/react';
 
 import {
     ResizableHandle,
     ResizablePanel,
     ResizablePanelGroup,
 } from "@semio/js/components/ui/Resizable";
+import { Design, Type, Piece, flattenDesign, getPieceRepresentationUrls } from '@semio/js';
+import { ICON_WIDTH } from '@semio/js/semio';
 import { Avatar, AvatarFallback, AvatarImage } from "@semio/js/components/ui/Avatar";
 import { default as Diagram } from "@semio/js/components/ui/Diagram";
 import { default as Model } from "@semio/js/components/ui/Model";
@@ -25,8 +28,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/c
 import { ScrollArea } from '@semio/js/components/ui/ScrollArea';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/components/ui/HoverCard";
 import { Textarea } from '@semio/js/components/ui/Textarea';
-
-import { Design, Type, Piece } from '@semio/js';
 import { Generator } from '@semio/js/lib/utils';
 import { useDesignEditorStore, useStudioStore } from '@semio/js/store';
 import { useSketchpad } from '@semio/js/components/ui/Sketchpad';
@@ -265,7 +266,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     };
 
     // const { kit } = useKit();
-    const kit = useStudioStore().getKit("Metabolism");
+    const kit = useStudioStore().getKit("Metabolism", "r25.03-1");
     if (!kit?.types) return null;
 
     const typesByName = kit.types.reduce((acc, type) => {
@@ -512,17 +513,31 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
     );
 }
 
-interface DesignEditorProps { }
+const DesignEditorCore: FC = () => {
+    const [, forceUpdate] = useReducer(x => x + 1, 0);
 
-const DesignEditor: FC<DesignEditorProps> = () => {
-    const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null);
-    const { setNavbarToolbar } = useSketchpad();
     const studioStore = useStudioStore();
     const designEditorStore = useDesignEditorStore();
-    const kitUri = designEditorStore.getKitId();
-    const kit = studioStore.getKit(kitUri);
+
+    useEffect(() => {
+        const unsubscribe = designEditorStore.subscribe(() => {
+            forceUpdate();
+        });
+        return () => unsubscribe();
+    }, [designEditorStore]);
+
+    const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null);
+    const { setNavbarToolbar } = useSketchpad();
+    const [kitName, kitVersion] = designEditorStore.getKitId();
+    const kit = studioStore.getKit(kitName, kitVersion);
+    if (!kit) return null;
+
+    if (!kit.types) throw new Error(`Kit ${kitName} ${kitVersion} has no types`);
+
     const [designName, designVariant, designView] = designEditorStore.getDesignId();
-    const design = studioStore.getDesign(kitUri, designName, designVariant, designView);
+    const design = studioStore.getDesign(kitName, kitVersion, designName, designVariant, designView);
+
+    const selection = designEditorStore.getState().selection;
 
     const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
         workbench: false,
@@ -554,19 +569,27 @@ const DesignEditor: FC<DesignEditorProps> = () => {
     useHotkeys('mod+l', (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('details'); });
     useHotkeys(['mod+[', 'mod+semicolon', 'mod+ö'], (e) => { e.preventDefault(); e.stopPropagation(); togglePanel('chat'); });
 
-    useHotkeys('ctrl+a', (e) => { e.preventDefault(); console.log('Select all pieces and connections'); });
-    useHotkeys('ctrl+i', (e) => { e.preventDefault(); console.log('Invert selection'); });
-    useHotkeys('ctrl+d', (e) => { e.preventDefault(); console.log('Select closest piece with same variant'); });
-    useHotkeys('ctrl+shift+d', (e) => { e.preventDefault(); console.log('Select all pieces with same variant'); });
-    useHotkeys('ctrl+c', (e) => { e.preventDefault(); console.log('Copy selected'); });
+    useHotkeys('mod+a', (e) => { e.preventDefault(); console.log('Select all pieces and connections'); });
+    useHotkeys('mod+i', (e) => { e.preventDefault(); console.log('Invert selection'); });
+    useHotkeys('mod+d', (e) => { e.preventDefault(); console.log('Select closest piece with same variant'); });
+    useHotkeys('mod+shift+d', (e) => { e.preventDefault(); console.log('Select all pieces with same variant'); });
+    useHotkeys('mod+c', (e) => { e.preventDefault(); console.log('Copy selected'); });
 
-    useHotkeys('ctrl+v', (e) => { e.preventDefault(); console.log('Paste'); });
-    useHotkeys('ctrl+x', (e) => { e.preventDefault(); console.log('Cut selected'); });
-    useHotkeys('delete', (e) => { e.preventDefault(); console.log('Delete selected'); });
-    useHotkeys('ctrl+z', (e) => { e.preventDefault(); console.log('Undo'); });
-    useHotkeys('ctrl+y', (e) => { e.preventDefault(); console.log('Redo'); });
-    useHotkeys('ctrl+s', (e) => { e.preventDefault(); console.log('Save stash'); });
-    useHotkeys('ctrl+w', (e) => { e.preventDefault(); console.log('Close design'); });
+    useHotkeys('mod+v', (e) => { e.preventDefault(); console.log('Paste'); });
+    useHotkeys('mod+x', (e) => { e.preventDefault(); console.log('Cut selected'); });
+    useHotkeys('delete', (e) => {
+        e.preventDefault();
+        designEditorStore.transact(() => {
+            designEditorStore.deleteSelectedPiecesAndConnections();
+        });
+    });
+    useHotkeys('mod+y', (e) => {
+        e.preventDefault(); designEditorStore.undo();
+    });
+    useHotkeys('mod+z', (e) => {
+        e.preventDefault(); designEditorStore.redo();
+    });
+    useHotkeys('mod+w', (e) => { e.preventDefault(); console.log('Close design'); });
 
     const handlePanelDoubleClick = (panel: 'diagram' | 'model') => {
         setFullscreenPanel(currentPanel => currentPanel === panel ? null : panel);
@@ -602,18 +625,25 @@ const DesignEditor: FC<DesignEditorProps> = () => {
         return () => setNavbarToolbar(null);
     }, [setNavbarToolbar, visiblePanels]);
 
+    const { screenToFlowPosition } = useReactFlow();
     const [activeDraggedType, setActiveDraggedType] = useState<Type | null>(null);
     const [activeDraggedDesign, setActiveDraggedDesign] = useState<Design | null>(null);
 
+    const createPiece = (piece: Piece) => {
+        designEditorStore.transact(() => {
+            studioStore.createPiece(kitName, kitVersion, designName, designVariant, designView, piece);
+        });
+    };
+
     const onDragStart = (event: DragStartEvent) => {
         const { active } = event;
-        const idStr = active.id.toString();
-        if (idStr.startsWith('type-')) {
-            const [_, name, variant] = idStr.split('-');
+        const id = active.id.toString();
+        if (id.startsWith('type-')) {
+            const [_, name, variant] = id.split('-');
             const type = kit?.types?.find((t: Type) => t.name === name && t.variant === (variant || undefined));
             setActiveDraggedType(type || null);
-        } else if (idStr.startsWith('design-')) {
-            const [_, name, variant, view] = idStr.split('-');
+        } else if (id.startsWith('design-')) {
+            const [_, name, variant, view] = id.split('-');
             const draggedDesign = kit?.designs?.find(d => d.name === name && d.variant === (variant || undefined) && d.view === (view || undefined));
             setActiveDraggedDesign(draggedDesign || null);
         }
@@ -621,17 +651,31 @@ const DesignEditor: FC<DesignEditorProps> = () => {
 
     const onDragEnd = (event: DragEndEvent) => {
         const { over } = event;
-        if (over?.id === 'sketchpad-edgeless') {
+        if (over?.id === 'diagram') {
+            if (!(event.activatorEvent instanceof PointerEvent)) {
+                return;
+            }
             if (activeDraggedType) {
+                const { x, y } = screenToFlowPosition({
+                    x: event.activatorEvent.clientX + event.delta.x,
+                    y: event.activatorEvent.clientY + event.delta.y
+                });
                 const piece: Piece = {
                     id_: Generator.randomId(),
-                    description: activeDraggedType.description || '',
                     type: {
                         name: activeDraggedType.name,
                         variant: activeDraggedType.variant
-                    }
+                    },
+                    plane: {
+                        origin: { x: 0, y: 0, z: 0 },
+                        xAxis: { x: 1, y: 0, z: 0 },
+                        yAxis: { x: 0, y: 1, z: 0 }
+                    },
+                    center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 }
                 };
-                createPiece(piece);
+                designEditorStore.transact(() => {
+                    createPiece(piece);
+                });
             } else if (activeDraggedDesign) {
                 const correspondingType = kit?.types?.find(t => t.name === activeDraggedDesign.name && t.variant === activeDraggedDesign.variant);
                 if (correspondingType) {
@@ -643,7 +687,9 @@ const DesignEditor: FC<DesignEditorProps> = () => {
                             variant: correspondingType.variant
                         }
                     };
-                    createPiece(piece);
+                    designEditorStore.transact(() => {
+                        createPiece(piece);
+                    });
                 } else {
                     console.warn(`Could not find corresponding Type for dragged Design: ${activeDraggedDesign.name} / ${activeDraggedDesign.variant}`);
                 }
@@ -653,8 +699,10 @@ const DesignEditor: FC<DesignEditorProps> = () => {
         setActiveDraggedDesign(null);
     };
 
+    const fileUrls = studioStore.getFileUrls()
     return (
         <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
+
             <div className="canvas flex-1 relative">
                 <div id="sketchpad-edgeless" className="h-full">
                     <ResizablePanelGroup direction="horizontal">
@@ -668,6 +716,10 @@ const DesignEditor: FC<DesignEditorProps> = () => {
                                     fullscreen={fullscreenPanel === 'diagram'}
                                     onPanelDoubleClick={() => handlePanelDoubleClick('diagram')}
                                     design={design}
+                                    types={kit?.types ?? []}
+                                    selection={selection}
+                                    fileUrls={fileUrls}
+                                    onSelectionChange={designEditorStore.updateDesignEditorSelection}
                                 />
                             ) : (
                                 <div className="flex items-center justify-center h-full text-muted-foreground">No design loaded</div>
@@ -684,6 +736,10 @@ const DesignEditor: FC<DesignEditorProps> = () => {
                                     fullscreen={fullscreenPanel === 'model'}
                                     onPanelDoubleClick={() => handlePanelDoubleClick('model')}
                                     design={design}
+                                    types={kit?.types ?? []}
+                                    selection={selection}
+                                    fileUrls={fileUrls}
+                                    onSelectionChange={designEditorStore.updateDesignEditorSelection}
                                 />
                             ) : (
                                 <div className="flex items-center justify-center h-full text-muted-foreground">No design loaded</div>
@@ -724,6 +780,17 @@ const DesignEditor: FC<DesignEditorProps> = () => {
                 )}
             </div>
         </DndContext>
+    )
+}
+
+interface DesignEditorProps { }
+
+const DesignEditor: FC<DesignEditorProps> = () => {
+
+    return (
+        <ReactFlowProvider>
+            <DesignEditorCore />
+        </ReactFlowProvider>
     );
 };
 

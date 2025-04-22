@@ -3,46 +3,74 @@ title: 🥈 Installation
 description: 📝 How to install semio 💻
 ---
 
-import { Steps, FileTree } from "@astrojs/starlight/components";
+import { Tabs, TabItem, Steps, FileTree } from "@astrojs/starlight/components";
 
 :::note[Are you a Mac user?]
-The code of semio is compatible with Windows, Mac and Linux but currently compiled for Windows only ⚠️
+The code of semio is compatible with Windows, Mac, and Linux — but currently compiled for Windows only ⚠️  
 [Reach out to us on Discord](https://discord.gg/m6nnf6pQRc) if you want to help us extend it for Mac 👐
 :::
-
-semio has two user-interfaces:
-
-- Grasshopper 🦗
-- sketchpad ✏️
-
-### 🦗 Grasshopper (Rhino 8)
-
-:::tip[Are you interested in the latest version? ]
-Then hit `Include pre-releases` and download `5.3.0-beta` ⬇️
+## 🧩 User Interfaces
+:::note
+semio currently supports two interfaces:
 :::
 
-The Grasshopper plugin can be installed over the Rhino Package Manager 🟢
 
-![Rhino Package](../../../../../assets/images/rhinopackage.gif)
+<div style="display: flex; flex-direction: column; gap: 0.5rem;">
 
-<Steps>
+  <div style="display: flex; gap: 1rem; align-items: baseline;">
+    <strong style="min-width: 120px;">🦗 Grasshopper</strong>
+    <span>Rhino 8 plugin for creating and managing semio kits in a parametric workflow.</span>
+  </div>
 
-1. Open Rhino Package Manger ⌨️
-2. Search for semio 🔎
-3. Install the latest version ⬇️
-4. Restart Rhino 🔄
+  <div style="display: flex; gap: 1rem; align-items: baseline;">
+    <strong style="min-width: 120px;">✏️ Sketchpad</strong>
+    <span>Portable app for fast, visual kit-based design — no installation needed.</span>
+  </div>
 
-</Steps>
+</div>
 
-That's it!
 
-### ✏️ sketchpad
+<Tabs>
+  <TabItem label="🦗 Grasshopper (Rhino 8)">
+## 🧩 Grasshopper
+  :::tip[Interested in the latest version?]
+  Then hit `Include pre-releases` and download `5.3.0-beta` ⬇️
+  :::
 
-:::caution[Still a prototype 🧑‍💻]
-It doesn't use the latest versions of the engine and Grasshopper ⚠️
-:::
+  The Grasshopper plugin can be installed through the **Rhino Package Manager** 🟢
 
-{/* ![sketchpad demo](../../../../../assets/images/sketchpad-demo.gif) */}
-![sketchpad demo](../../../../../assets/images/sketchpad-demo.png)
+  ![Rhino Package](../../../../../assets/images/rhinopackage.gif)
 
-[sketchpad](https://github.com/usalu/semio/releases/download/r24.07-1/sketchpad.exe) is a portable program and needs no installation. To use sketchpad with Grasshopper you need to download semio Grasshopper `2.1.2`. If you want to use sketchpad standalone you need to download, extract and start the [engine](https://github.com/usalu/semio/releases/download/r24.07-1/engine.zip). After this you can open the [examples](https://github.com/usalu/semio/releases/download/r24.07-1/examples.zip)🏎️
+  <Steps>
+  1. Open Rhino Package Manager ⌨️  
+  2. Search for **semio** 🔎  
+  3. Install the latest version ⬇️  
+  4. Restart Rhino 🔄  
+  </Steps>
+
+### 🧩 Grasshopper
+
+  That’s it!
+
+  </TabItem>
+
+  <TabItem label="✏️ sketchpad">
+## 🧩 Sketchpad
+  :::caution[Still a prototype 🧑‍💻]
+  It doesn’t use the latest versions of the engine and Grasshopper ⚠️
+  :::
+
+ [**Sketchpad**](https://github.com/usalu/semio/releases/download/r24.07-1/sketchpad.exe) is a **portable program** — no installation needed.
+ 
+   
+  ![sketchpad demo](../../../../../assets/images/sketchpad-demo.png)
+
+
+### 🧩 Sketchpad
+
+  - To use Sketchpad **with Grasshopper**, download **semio Grasshopper `2.1.2`**.  
+  - To use Sketchpad **standalone**, download, extract, and run the [**engine**](https://github.com/usalu/semio/releases/download/r24.07-1/engine.zip).  
+  - You can then explore the [**examples**](https://github.com/usalu/semio/releases/download/r24.07-1/examples.zip) 🏎️
+
+  </TabItem>
+</Tabs>

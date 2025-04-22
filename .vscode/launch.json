@@ -14,7 +14,7 @@
             },
             "pathMappings": [
                 {
-                    "localRoot": "${workspaceFolder}/python/engine",
+                    "localRoot": "${workspaceFolder}/py/engine",
                     "remoteRoot": ".",
                 }
             ],
@@ -31,7 +31,7 @@
             },
             "pathMappings": [
                 {
-                    "localRoot": "${workspaceFolder}/python/engine",
+                    "localRoot": "${workspaceFolder}/py/engine",
                     "remoteRoot": ".",
                 }
             ],
@@ -53,8 +53,8 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "dev js core",
-            "preLaunchTask": "dev js core",
+            "name": "dev js",
+            "preLaunchTask": "dev js",
             "postDebugTask": "Kill Development Tasks",
             "type": "chrome",
             "request": "launch",
@@ -177,6 +177,20 @@
                 "@semio/sketchpad"
             ],
             "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "PowerShell",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "${file}",
+            "cwd": "${fileDirname}"
+        },
+        {
+            "name": "Python",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
             "console": "integratedTerminal"
         },
     ]

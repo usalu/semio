@@ -1,236 +1,237 @@
 @startuml "data architecture"
 skinparam linetype ortho
 
-interface Artifact {
-    *name : string
-    *description : string
-    *icon : string
-    *image : string
-    ..
-    *createdAt : datetime
-    *lastUpdatedAt : datetime
+entity Semio {
+    *release : string <<PK>>
+    *engine : string
+    *created : datetime
 }
-note left of Artifact
-    description is optional
-    (can be set to "").
-    icon is optional
-    (can be set to "").
-    icon in data:uri format.
-end note
-
-entity Kit {
-    *id : int <<PK,generated>> 
-    ..
-    *uri : string
-    ..
-    *version : string
-    *remote : string
-    *homepage : string
-    *license : string
-}
-note left of Kit
-    uri is unique.
-    version="" means latest.
-    remote is optional
-    (can be set to "").
-    homepage is optional
-    (can be set to "").
-    license is optional
-    (can be set to "").
-
-end note
-
-entity Type {
-    *id : int <<PK,generated>>
-    ..
-    *variant : string
-    *unit : string
-    ..
-    *kitId : int <<FK>>
-}
-note right of Type
-    name and variant
-    are unique together.
-    variant="" means default.
-end note
-
-entity Representation {
-    *id : int <<PK,generated>>
-    ..
-    *url : string
-    *description : string
-    *mime : string
-    ..
-    *typeId : int <<FK>>
-}
-note right of Representation
-    mime, lod and tags
-    are unique together.
-    lod="" means default.
-end note
-
-entity Tag {
-    *value : string <<PK>>
-    ..
-    *representationId : int <<PK,FK>>
-}
-
-entity Port {
-    *id : int <<PK,generated>>
-    ..
-    *localId : string
-    ..
-    *pointX : float
-    *pointY : float
-    *pointZ : float
-    ..
-    *directionX : float
-    *directionY : float
-    *directionZ : float
-    ..
-    *typeId : int <<FK>>
-}
-note right of Port
-    localId and typeId
-    are unique together.
-    localId="" means default.
-end note
 
 entity Quality {
-    *id : int <<PK,generated>>
-    ..
+    *pk : int <<PK,generated>>
     *name : string
     *value : string
     *unit : string
     *definition : string
     ..
-    typeId : int <<FK>>
-    designId : int <<FK>>
+    representationPk : int <<FK>>
+    portPk : int <<FK>>
+    typePk : int <<FK>>
+    piecePk : int <<FK>>
+    connectionPk : int <<FK>>
+    designPk : int <<FK>>
+    kitPk : int <<FK>>
 }
 note bottom of Quality
-    Either typeId or designId
-    must be set.
-    value="" means true.
-    unit is optional
-    (can be set to "").
-    definition is optional.
-    (can be set to "").
+    value, definition can be empty
+    empty value means true
+    one of portPk, typePk, piecePk, connectionPk, designPk, kitPk must be set
+end note
+
+entity Tag {
+    *pk : int <<PK,generated>>
+    *name : string
+    *order : int
+    ..
+    representationPk : int <<FK>>
+}
+
+entity Representation {
+    *pk : int <<PK,generated>>
+    *url : string
+    *description : string
+    ..
+    typePk : int <<FK>>
+}
+note right of Representation
+    description can be empty
+end note
+
+entity Plane {
+    *pk : int <<PK,generated>>
+    *originX : float
+    *originY : float
+    *originZ : float
+    *xAxisX : float
+    *xAxisY : float
+    *xAxisZ : float
+    *yAxisX : float
+    *yAxisY : float
+    *yAxisZ : float
+}
+
+entity CompatibleFamily {
+  *pk : int <<PK,generated>>
+  *name : string
+  *order : int
+  ..
+  portPk : int <<FK>>
+}
+
+entity Port {
+    *pk : int <<PK,generated>>
+    *id : string
+    *description : string
+    *family : string
+    *mandatory : boolean
+    *pointX : float
+    *pointY : float
+    *pointZ : float
+    *directionX : float
+    *directionY : float
+    *directionZ : float
+    *t : float
+    ..
+    typePk : int <<FK>>
+}
+note right of Port
+    description, family can be empty
+    t is in [0,1[
 end note
 
 entity Author {
+    *pk : int <<PK,generated>>
     *name : string
     *email : string
+    *rank : int
     ..
-    *typeId : int <<PK,FK>>
-    *designId : int <<PK,FK>>
+    typePk : int <<FK>>
+    designPk : int <<FK>>
 }
-note right of Authors
-    Either typeId or designId
-    must be set.
+note right of Author
+    one of typePk or designPk must be set
 end note
 
-entity Locator {
-    *group : string <<PK>>
-    *subgroup : string
+entity Type {
+    *pk : int <<PK,generated>>
+    *name : string
+    *description : string
+    *icon : string
+    *image : string
+    *variant : string
+    *stock : float
+    *virtual : boolean
+    *unit : string
+    *longitude : float
+    *latitude : float
+    *created : datetime
+    *updated : datetime
     ..
-    *portId : int <<PK,FK>>
+    kitPk : int <<FK>>
 }
-note right of Locator
-    subgroup is optional
-    (can be set to "").
+note right of Type
+    description, icon, image, variant can be empty
+    empty variant means default
+    stock is default to +infinity
 end note
 
 entity Piece {
-    *id : int <<PK,generated>>
+    *pk : int <<PK,generated>>
+    *id : string
+    *description : string
+    *planePk : int <<FK>>
+    *centerX : float
+    *centerY : float
     ..
-    *localId : string
-    *typeId : int <<FK>>
-    ..
-    planeOriginX : float
-    planeOriginY : float
-    planeOriginZ : float
-    ..
-    planeXAxisX : float
-    planeXAxisY : float
-    planeXAxisZ : float
-    ..
-    planeYAxisX : float
-    planeYAxisY : float
-    planeYAxisZ : float
-    ..
-    *centerX : int
-    *centerY : int
-    ..
-    *designId : int <<FK>>
+    typePk : int <<FK>>
+    designPk : int <<FK>>
+    piecePk : int <<FK>>
 }
 note right of Piece
-    localId and designId
-    are unique together.
-    root plane can only be set
-    when piece is root.
-    Otherwise all values are null.
+    description can be empty
+    one of typePk or (designPk and piecePk) must be set
 end note
 
 entity Connection {
-    *connectingPieceId : int <<PK,FK>>
-    *connectingPieceTypePortId : int <<FK>>
-    ..
-    *connectedPieceId : int <<PK,FK>>
-    *connectedPieceTypePortId : int <<FK>>
-    ..
-    *rotation : float
-    *tilt : float
+    *pk : int <<PK,generated>>
+    *connectedPiecePk : int <<FK>>
+    *connectedPortPk : int <<FK>>
+    *connectingPiecePk : int <<FK>>
+    *connectingPortPk : int <<FK>>
+    *description : string
     *gap : float
     *shift : float
-    ..
+    *raise : float
+    *rotation : float
+    *turn : float
+    *tilt : float
     *x : float
     *y : float
     ..
-    *designId : int <<FK>>
+    designPk : int <<FK>>
 }
 note right of Connection
-    gap is in normal 
-    direction and optional
-    (can be set to 0).
-    rotation is azimuthal
-    angle of normal in
-    degree [0,360[
-    and optional
-    (can be set to 0). 
+    description can be empty
 end note
 
 entity Design {
-    *id : int <<PK,generated>>
-    ..
+    *pk : int <<PK,generated>>
+    *name : string
+    *description : string
+    *icon : string
+    *image : string
     *variant : string
+    *view : string
     *unit : string
+    *created : datetime
+    *updated : datetime
     ..
-    *kitId : int <<FK>>
+    kitPk : int <<FK>>
 }
 note right of Design
-    name and variant
-    are unique together.
-    variant="" means default.
+    description, icon, image, variant, view can be empty
+    empty variant means default
+    empty view means default
 end note
 
-Kit ||--o{ Design
-Kit ||--o{ Type 
-Tag }o--|| Representation
-Representation }|--|| Type
-Type ||--|{ Port
-Type ||--o{ Quality
-Type ||--o{ Author
-Design ||--|{ Piece
-Design ||--o{ Connection
-Design ||--o{ Quality
-Design ||--o{ Author
-Port ||--o{ Locator
-Type <-- Piece
-Piece <-- Connection
-Port <-- Connection
+entity Kit {
+    *pk : int <<PK,generated>>
+    *uri : string <<Unique>>
+    *name : string
+    *description : string
+    *icon : string
+    *image : string
+    *preview : string
+    *version : string
+    *remote : string
+    *homepage : string
+    *license : string
+    *created : datetime
+    *updated : datetime
+}
+note left of Kit
+    description, icon, image, preview, version, remote, homepage, license can be empty
+    empty version means latest
+end note
 
-Artifact <|-- Kit
-Artifact <|-- Design
-Artifact <|-- Type
+Kit ||--o{ Type
+Kit ||--o{ Design
+Kit ||--o{ Quality
+
+Design ||--o{ Piece
+Design ||--o{ Connection
+Design ||--o{ Author
+Design ||--o{ Quality
+
+Type ||--o{ Representation
+Type ||--o{ Port
+Type ||--o{ Author
+Type ||--o{ Quality
+
+Piece ||--o{ Plane
+Piece ||--o{ Quality
+
+Connection ||--o{ Quality
+
+Representation ||--o{ Tag
+Representation ||--o{ Quality
+
+Port ||--o{ CompatibleFamily
+Port ||--o{ Quality
+
+Connection -- Piece : "connected"
+Connection -- Piece : "connecting"
+Connection -- Port : "connected"
+Connection -- Port : "connecting"
 
 @enduml
