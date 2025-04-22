@@ -3,6 +3,79 @@ title: 🏘️ Think in Semio
 description: 📖 An introduction to kit-of-parts architecture and how semio relates to it 🔀
 ---
 
-import { Tabs, TabItem, Card } from "@astrojs/starlight/components";
+import { Tabs, TabItem, Card, Aside } from "@astrojs/starlight/components";
 
-## 🔄️ It's more than prefab
+## 🧩 Understanding Semio: The Anatomy of a Modular Design System
+
+Let’s say you’ve just bought a big Lego box. Inside, you can build a spaceship, a castle, or a race car. Everything starts from that box—and that’s how Semio’s architecture works too.
+
+---
+
+### 📦 1. Kit = The LEGO Box
+
+A **Kit** is the entire Lego set you own. It holds all the parts, instructions, and models. Whether you’re building a castle or a spaceship, it all comes from this one box. In Semio, the Kit functions as the overall project container—your working environment that stores everything related to your modular system.
+
+- **Semio role**: The top-level folder that contains all Designs, Types, Pieces, data, and connection logic.  
+:::note
+A Kit might include Multiple Designs, reusable components, metadata, and logic rules.
+:::
+
+---
+
+### 🧾 2. Design = The Model You Build
+
+A **Design** is one specific thing you choose to build—like the spaceship. It’s made of many Lego pieces arranged in a certain way. You can build several different things from the same box, each with a unique structure and layout. In Semio, each Design is a snapshot—a specific assembly of Pieces connected together to form a complete configuration.
+
+- **Semio role**: A defined arrangement of components that exists within a Kit.  
+:::note
+One Kit might include spaceship, base, and launchpad Designs, all built from the same set of components.
+:::
+
+---
+
+### 🧱 3. Type = The Unique Brick Mold
+
+A **Type** is like a distinct kind of Lego brick: a basic brick, a window, or a roof tile. It’s not just about how it looks—it's about how it was made. In Semio, a Type represents a unique building element based on a specific design logic.
+
+Think of a brick as one Type. If you create different versions of that brick—maybe one is longer, another is red, or one has holes—they're all still based on the same idea. That means they're variants of the same Type. They follow the same rules or logic, just with a few tweaks.
+
+But if you build something completely different, like a window or a doorframe, that’s a new Type—because it comes from a different idea and structure altogether.
+
+- **Semio role**: A core building element defined by a shared logic or creation method. Variants are flexible versions built from the same foundation.  
+:::note
+A “brick” is one Type. A 2x4 red brick and a 3x2 grey brick are variants. A “window” is a different Type.
+:::
+
+---
+
+### 🔁 4. Piece = A Brick You Actually Use
+
+A **Piece** is one actual brick that you snap into your spaceship. It’s a real instance of a Type. If you use ten red 2x4 bricks, each one is a Piece based on the same Type. All Pieces carry the same geometry and metadata from their Type.
+
+- **Semio role**: A direct instance of a Type that exists in a Design and inherits all of its structure, properties, and Ports.  
+:::note
+Every component in a Design is a Piece, and every Piece is based on a defined Type.
+:::
+
+---
+
+### ⚓ 5. Port = The Connection Point on a Brick
+
+**Ports** are the connectors—like the studs or sockets on a Lego brick—but smarter. They define where and how a piece can attach to another. But unlike traditional Lego, you don’t define ports on every surface. In Semio, a Port is a specific, intentional docking point placed exactly where a connection is meant to happen. You only need one Port on the top of one Piece and one on the bottom of another to establish a connection.
+
+- **Semio role**: A defined interface on a Type (inherited by Pieces) that allows for controlled, logical attachment to other components.  
+:::note
+Ports are essential for connecting geometry—they enable modular systems to understand how components should align and link.
+:::
+
+---
+
+### 🔗 6. Connection = The Snapping Together
+
+**Connections** define which bricks are connected to which—just like snapping a window piece onto a wall. It’s the logic of assembly. In Semio, Connections are not physical objects but logical relationships between Ports. They describe how Pieces come together in a Design by specifying which Port on one Piece connects to which Port on another.
+
+- **Semio role**: The rule that establishes the relationship between two Pieces by linking their Ports inside a Design.  
+:::note
+A connection might say, “Connect the top Port of Piece A to the bottom Port of Piece B.”
+:::
+
