@@ -1,31 +1,32 @@
-> 👀 Do you want to develop semio with us? Then join our Weekly-Evening-Session every Tuesday starting at 6pm (UTC+1) on [Discord](https://discord.gg/m6nnf6pQRc) 🍻
+> 👀 Are you curious how we develop semio? Then you might want to check out our [Discord server](https://discord.gg/m6nnf6pQRc) 👥
 
 <p align="center">
     <a href="https://docs.semio-tech.com">
       <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/semio/main-tag/logo/semio-horizontal-dark.svg">
-          <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/semio/main-tag/logo/semio-horizontal.svg">
-          <img alt="semio" href="https://github.com/usalu/semio/" src="https://raw.githubusercontent.com/usalu/semio/main-tag/logo/semio-horizontal.svg">
+          <source media="(prefers-color-scheme: dark)" srcset="assets/logo/semio-horizontal-dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="assets/logo/semio-horizontal.svg">
+          <img alt="semio" href="https://github.com/usalu/semio/" src="assets/logo/semio-horizontal.svg">
       </picture>
     </a>
     <br/>
-    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/doi-zenodo.svg" alt="Cite"></a>
-    <a href="https://github.com/usalu/semio/"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/latest-release.svg" alt="Latest Release"></a>
-    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/license-agpl-v3.svg" alt="AGPLv3 License"></a>
+    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="assets/badges/doi-zenodo.svg" alt="Cite"></a>
+    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="assets/badges/license-agpl-v3.svg" alt="AGPLv3 License"></a>
+    <a href="https://discord.gg/m6nnf6pQRc"><img src="https://img.shields.io/discord/1338232508264747130?style=flat-square&color=ff344f" alt="Discord"></a>
     <br/>
-    <a href="https://www.grasshopper3d.com/"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/ui-grasshopper.svg" alt="Grasshopper"></a>
-    <a href="https://www.microsoft.com/windows/windows-11"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/ui-windows.svg" alt="Windows"></a>
-    <a href="https://apple.com/macos"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/ui-macos.svg" alt="macOS"></a>
+    <a href="https://www.grasshopper3d.com/"><img src="assets/badges/ui-browser.svg" alt="Browser"></a>
+    <a href="https://www.grasshopper3d.com/"><img src="assets/badges/ui-grasshopper.svg" alt="Grasshopper"></a>
+    <a href="https://www.microsoft.com/windows/windows-11"><img src="assets/badges/ui-windows.svg" alt="Windows"></a>
+    <a href="https://apple.com/macos"><img src="assets/badges/ui-macos.svg" alt="macOS"></a>
     <br/>
-    <a href="https://www.python.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/powered-by-python.svg" alt="Python"></a>
-    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/powered-by-csharp.svg" alt="C#"></a>
-    <a href="https://www.typescriptlang.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main-tag/badges/powered-by-typescript.svg" alt="Typescript"></a>
+    <a href="https://www.typescriptlang.org/"><img src="assets/badges/powered-by-typescript.svg" alt="Typescript"></a>
+    <a href="https://www.python.org/"><img src="assets/badges/powered-by-python.svg" alt="Python"></a>
+    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="assets/badges/powered-by-csharp.svg" alt="C#"></a>
     <br/>
     <i>🧩 Design-Information-Modeling for Kit-of-Parts Architecture 🏘️ </i>
 </p>
 <br/>
 
-You want to 🧩 the next 🏛️🏘️🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣️👥🖱️⌨️ takes all your ⌚? Then try to 🧠 the 🧬 and let semio 💉🖥️✒️🖨️🪄🚀.
+You want to 🧩 the next 🏘️🏛️🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣️👥🖱️⌨️ takes all your ⌚? Then try to 🧠 the 🧬 and let semio 💉🖥️✒️🖨️🪄🚀.
 
 # 👋 Hello contributor
 
@@ -34,7 +35,7 @@ You want to 🧩 the next 🏛️🏘️🏢🏭🏫🏨⛪🕌 with 🤖? But �
 
 Glad to see you!
 
-Let me walk you throw 🚶
+Let me walk you through 🚶
 
 # 📑 Overview
 
@@ -42,11 +43,21 @@ Let me walk you throw 🚶
    - [✏️ sketchpad](#%EF%B8%8F-sketchpad-)
    - [👀 studio](#-studio-)
    - [🤖 assistant](#-assistant-)
-   - [🦗 grasshopper](#-grasshopper-)
-   - [🐝 wasp](#-wasp-)
-   - [🐞 ladybug](#-ladybug-)
+   - [🦗 semio.gh](#-semiogh-)
+   - [🐝 semio.wasp](#-semiowasp-)
+   - [🦌 semio.monoceros](#-semiomonoceros-)
+   - [🐞 semio.ladybug](#-semioladybug-)
 1. [📄 Specs](#-specs-)
-1. [🦑 Monorepo](#-monorepo-)
+   - [📦 Kit](#-kit-)
+   - [🏙️ Design](#-design-)
+   - [🔗 Connection](#-connection-)
+   - [⭕ Piece](#-piece-)
+   - [💾 Representation](#-representation-)
+   - [📏 Quality](#-quality-)
+   - [🏷️ Tag](#-tag-)
+   - [◳ Plane](#-plane-)
+   - [🔗 Url](#-url-)
+1. [🦑 Repo](#-repo-)
    - [⚖️ Principles](#️-principles-)
    - [🧑‍💻 Development](#-development-)
 1. [♻️ Ecosystems](#%EF%B8%8F-ecosystems-)
@@ -57,17 +68,23 @@ Let me walk you throw 🚶
    - [🟨 @semio/js](#-semiojs-)
    - [✏️ @semio/sketchpad](#️-semiosketchpad-)
    - [📚 @semio/docs](#-semiodocs-)
-   - [🎛️ @semio/playground](#-semioplayground-)
+   - [🎛️ @semio/playground](#%EF%B8%8F-semioplayground-)
    - [🤖 @semio/assistant](#-semioassistant-)
    - [⚙️ @semio/engine](#️-semioengine-)
-   - [🛍️ @semio/assets](#%EF%B8%8F-semioassets-)
-   - [🟪 @semio/dotnet](#-semiodotnet-)
+   - [🟪 @semio/net](#-semionet-)
    - [🦗 @semio/grasshopper](#-semiograsshopper-)
+     - [🪢 Scriptstyle](#️-scriptstyle-)
+   - [🛍️ @semio/assets](#%EF%B8%8F-semioassets-)
+1. [🏘️ Examples](#%EF%B8%8F-examples-)
+   - [🚀 Starters](#-starters-)
+   - [👋 Hello semio](#-hello-semio-)
+   - [🫀 Metabolism](#-metabolism-)
 1. [💯 Brand](#-brand-)
    - [✍️ Concept](#%EF%B8%8F-concept-)
    - [🌈 Colors](#-colors-)
    - [📄 Typography](#-typography-)
    - [👀 Visual elements](#-visual-elements-)
+1. [✨ Contributors](#-contributors-)
 
 # 🛍️ Products [↑](#-overview)
 
@@ -75,29 +92,132 @@ Let me walk you throw 🚶
 
 ## ✏️ sketchpad [↑](#%EF%B8%8F-products-)
 
-sketchpad is a simple-to-use, accessible and browser-based user interface for semio 🖱️
+sketchpad is a simple-to-use, accessible and browser-based user interface for semio🖱️
 
 ## 👀 studio [↑](#%EF%B8%8F-products-)
 
-A studio is a synchronous collaboriation environment for teams to work together on a project 🤝
+A studio is a synchronous collaboriation environment for teams to work together in semio 🤝
 
 ## 🤖 assistant [↑](#%EF%B8%8F-products-)
 
-The assistant helps you on every step in the design process ✍️
+The assistant helps you on every step in the design process with semio ✍️
 
-## 🦗 grasshopper [↑](#%EF%B8%8F-products-)
+## 🦗 semio.gh [↑](#%EF%B8%8F-products-)
 
-## 🐝 wasp [↑](#%EF%B8%8F-products-)
+A batteries-included [Grasshopper](https://www.grasshopper3d.com) plugin for semio ⚡
 
-## 🐞 ladybug [↑](#%EF%B8%8F-products-)
+## 🦏 semio.3dm [↑](#%EF%B8%8F-products-)
+
+A Grasshopper-based integration of [Rhino](https://www.rhino3d.com) and semio 🔀
+
+## 🐝 semio.wasp [↑](#%EF%B8%8F-products-)
+
+A Grasshopper-based integration of [Wasp](https://www.food4rhino.com/en/app/wasp) and semio 🔀
+
+## 🦌 semio.monoceros [↑](#%EF%B8%8F-products-)
+
+A Grasshopper-based integration of [Monoceros](https://monoceros.sub.digital) and semio 🔀
+
+## 🐞 semio.ladybug [↑](#%EF%B8%8F-products-)
+
+A Grasshopper-based integration of [Ladybug](https://www.ladybug.tools) and semio 🔀
 
 # 📄 Specs [↑](#-overview)
 
-# 🦑 [Monorepo](https://github.com/usalu/semio.git) [↑](#-overview)
+## 📦 Kit [↑](#-specs-)
+
+A `kit` is a collection of [`types`](#-types) and [`designs`](#-design) 📦
+
+A `kit` is either _static_ (a special `.zip` file) or _dynamic_ (bound to a runtime) 📦
+
+A _static_ `kit` contains a reserved `.semio` folder that contains a `kit.db` sqlite file 💾
+
+The SQL-schema of `kit.db` is found in [`./sqlite/schema.sql`](./sqlite/schema.sql) 📄
+
+For Inter-Process Communication (IPC) the JSON-schema in [`./jsonschema/kit.json`](./jsonschema/kit.json) is used 📄
+
+## 🏙️ Design [↑](#-specs-)
+
+A [`design`](#-design) is an undirected graph of [`pieces`](#-piece) (nodes) and [`connections`](#-connection) (edges) 📐
+
+A _flat_ [`design`](#-design) has no [`connections`](#-connection) and all [`pieces`](#-piece) are _fixed_ ◳
+
+The [`pieces`](#-piece) are _placed_ _hierarchically_ ([breadth-first](https://en.wikipedia.org/wiki/Breadth-first_search)) for every _cluster_ 🌿
+
+Additional [`connections`](#-connection) which where not used in the _placement_ can be used to validate the computed [`planes`](#◳-plane) 🛂
+
+## 🔗 Connection [↑](#-specs-)
+
+A [`connection`](#-connection) is a 3D-Link between two [`pieces`](#-piece) with the _translation_ parameters **gap** (offset in y-direction), **shift** (offset in x-direction) and **raise** (offset in z-direction), and the _rotation_ parameters **rotation** (rotation around y-axis), **turn** (rotation around z-axis) and **tilt** (rotation around x-axis) 🪢
+
+The _translation_ is applied first, then the _rotation_ 🥈
+
+The two [`pieces`](#-piece) are called _connected_ and _connecting_ but there is no difference between them 🔄
+
+The _direction_ of a [`connection`](#-connection) goes from the lower _hierarchy_ to the higher _hierarchy_ of the [`pieces`](#-piece) ➡️
+
+## ⭕ Piece [↑](#-specs-)
+
+A [`piece`](#-piece) is an instance of either a [`type`](#-type) or a [`design`](#-design) 📐
+
+A [`piece`](#-piece) is either _fixed_ (with a [`plane`](#◳-plane)) or _linked_ (with a [`connection`](#-connection)) 📐
+
+A group of _connected_ [`pieces`](#-piece) is called a _cluster_ 🌿
+
+The _hierachy_ of a [`piece`](#-piece) is the length of the shortest path to the next _fixed_ [`piece`](#-piece) 👣
+
+## 💾 Representation [↑](#-specs-)
+
+A [`representation`](#-representation) is a **[`tagged`](#-tag)** **[`url`](#🔗-url)** to a resource with an optional **description** 📄
+
+No **[`tags`](#-tag)** means the _default_ representation 🔑
+
+The similarity of [`representations`](#-representation) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#-tag)** 🔄
+
+## 📏 Quality [↑](#-specs-)
+
+A [`quality`](#📏-quality) is metadata with a **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#🔗-url) or text) 🔤
+
+The **name** is [kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) and with `.`-separated string similar to [toml keys](https://toml.io/en/v1.0.0#keys) 🔑
+
+No **value** is equivalent to the boolean _true_ where the **name** is the category of the quality 🔑
+
+The **unit** is a [unit identifier](https://en.wikipedia.org/wiki/Unit_of_measurement) 🔢
+
+- `mm` for millimeter, `cm` for centimeter, `dm` for decimeter, `m` for meter, `km` for kilometer
+- `m²` for square meter, `m³` for cubic meter, `m⁴` for quartic meter
+- `°` for degree, `rad` for radian
+- `N` for newton, `kN` for kilonewton, `MN` for meganewton
+- `°C` for degree Celsius, `°F` for degree Fahrenheit
+- `W` for watt, `kW` for kilowatt, `MW` for megawatt, `GW` for gigawatt
+- `Wh` for watt-hour, `kWh` for kilowatt-hour, `MWh` for megawatt-hour, `GWh` for gigawatt-hour
+- `J` for joule, `kJ` for kilojoule, `kcal` for kilocalorie
+- `kWh/m²a` for kilowatt-hour per square meter per year
+- `m/s` for meter per second, `m²/s` for square meter per second, `m³/s` for cubic meter per second
+- `Pa` for pascal, `kPa` for kilopascal, `MPa` for megapascal
+- …
+
+## 🏷️ Tag [↑](#-specs-)
+
+A [`tag`](#-tag) is a [kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) **name** 🔤
+
+## ◳ Plane [↑](#-specs-)
+
+A [`plane`](#◳-plane) is a location (**origin**) and orientation (**x-axis**, **y-axis** and derived z-axis) in 3D space ✈️
+
+The coordinate system is left-handed where the thumb points up into the direction of the z-axis, the index-finger forwards into the direction of the y-axis and the middle-finger points to the right into the direction of the x-axis 👈
+
+## 🔗 Url [↑](#-specs-)
+
+A [`url`](#🔗-url) is either _relative_ (to the root of the `.zip` file) or _remote_ (http, https, ftp, …) string🌐
+
+A _relative_ [`url`](#🔗-url) is a `/`-normalized path to a file in the `.zip` file and is not prefixed with with `.`, `./`, `/`, …
+
+# 🦑 [Repo](https://github.com/usalu/semio.git) [↑](#-overview)
 
 This git repo has <strong>everything</strong> that exists in the open semio ecosystem 🤯
 
-## ⚖️ Principles [↑](#-monorepo-)
+## ⚖️ Principles [↑](#-repo-)
 
 Let's start with the rule of thumbs that this codebase was built with 🫰
 
@@ -112,7 +232,7 @@ Out of my experience, it makes development slower, not faster 🐌
 
 A single file is easier for humans and computers to understand 💡
 
-You will be supprised
+You will be surprised
 
 - by the awesome fill-in-the-middle suggestions of your copilot 🤖
 - by the hassle-free context selection for your ai agent 🖱️
@@ -136,14 +256,33 @@ But most likely not ❌
 </details>
 
 <details>
-<summary><strong>📑 If multiple people work longterm on the same part, then one file for each part should be created ⚙️</strong></summary>
+<summary><strong>📦 Parts that belong together should be close in the source code  ✅</strong></summary>
+
+The default code organization is to group kind of structurally similar parts together 📂
+
+All models next to each other, all controllers next to each other, all errors next to each other, …
+
+While this pattern supports structural refactoring, it makes plain extensions harder because you have to search through all the files 🔍
+
+Most changes are plain extensions and not structural refactors 🔄
+
+Further it has the advantage that every LLM-agent only has to predict one big block of code instead of plenty of small ones 🤖
+
+That's why frameworks like [React](https://react.dev/learn/thinking-in-react) exist or vendoring such as with [shadcn](https://ui.shadcn.com/docs) is more flexible than dependcenies such as with [bootstrap](https://getbootstrap.com/)
+
+Cutting components vertically (a bit of logic with a bit of UI) instead of horizontally (all logic, all ui) requires more effort but enhances reusability 🔮
+
+</details>
+
+<details>
+<summary><strong>📑 If multiple people work longterm on the same part, then one file for each part should be created ✅</strong></summary>
 
 Trust me, it will make collaboration much easier 🔀
 
 </details>
 
 <details>
-<summary><strong>📦 If you don't need an interface because something is not likely to be extended soon, don't create it ❌</strong></summary>
+<summary><strong>🔮 If you don't need an interface because something is not likely to be extended soon, don't create it ❌</strong></summary>
 
 The main question is the interface productive or not?
 
@@ -175,9 +314,9 @@ If not, then you are probably good 👌
 <details>
 <summary><strong>🤨 Wait, no high-level advice and only plain numbers, files, folders or close line of codes?</strong></summary>
 
-In my understanding, rule-of-thumbs are most useful when they are concrete 🔨
+In our understanding, rule-of-thumbs are most useful when they are concrete 🔨
 
-Besides that I am sure you know about <strong>KISS</strong> (Keep-It-Simple-Stupid), <strong>DRY</strong> (Dont-Repeat-Yourself), <strong>YAGNI</strong> (You-Aren't-Gonna-Need-It), <strong>SoC</strong> (Seperation-of-Concerns), <strong>Avoid Premature Optimization</strong>, <strong>Law of Demeter</strong>, <strong>LCHC</strong> (Low-Coupling-High-Cohesion), <strong>SOLID</strong> (Single Responsibility (<strong>SR</strong>), Open/Closed (<strong>OC</strong>), Liskov’s Substitution (<strong>LS</strong>), Interface Segregation (<strong>IS</strong>), Dependency Inversion (<strong>DI</strong>)), …
+Besides that we are sure you know about <strong>KISS</strong> (Keep-It-Simple-Stupid), <strong>DRY</strong> (Dont-Repeat-Yourself), <strong>YAGNI</strong> (You-Aren't-Gonna-Need-It), <strong>SoC</strong> (Separation-of-Concerns), <strong>Avoid Premature Optimization</strong>, <strong>Law of Demeter</strong>, <strong>LCHC</strong> (Low-Coupling-High-Cohesion), <strong>SOLID</strong> (Single Responsibility (<strong>SR</strong>), Open/Closed (<strong>OC</strong>), Liskov's Substitution (<strong>LS</strong>), Interface Segregation (<strong>IS</strong>), Dependency Inversion (<strong>DI</strong>)), …
 
 But as always, the devil is in the details 😈
 
@@ -185,15 +324,16 @@ Even if 95% of the codebase follows those principles, there are good reasons for
 
 </details>
 
-**🚩 Don't worry, you'll figure out the possiblites and make the right choice for the specific problems ✅**
+**🚩 Don't worry, you'll figure out the possibilities and make the right choice for the specific problems ✅**
 
-## 🧑‍💻 Development [↑](#-monorepo-)
+## 🧑‍💻 Development [↑](#-repo-)
 
 Different components need different tools 🧰
 
 For a complete setup you need:
 
 - Windows 10 or 11
+- [Visual Studio Code](https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-user)
 - [Visual Studio 2022 Community](https://visualstudio.microsoft.com/de/thank-you-downloading-visual-studio/?sku=Community&channel=Release&version=VS2022)
 - [Rhino 8](https://www.rhino3d.com/download/rhino-for-windows/8/latest/)
 - Python 3.13
@@ -209,7 +349,7 @@ Afterwards you can install poetry with this Powershell command:
 ```
 
 In the console you will see a warning that the `poetry.exe` is not installed in the requested location 📁
-![Actual Location](https://raw.githubusercontent.com/usalu/semio/main-tag/poetry/python_ms-store_location.png)
+![Actual Location](poetry/python_ms-store_location.png)
 Then copy the actual path `...\AppData\Local\Packages\PythonSoftwareFoundation...\Roaming\pypoetry\venv\Scripts` and add it to your environmental path variable ➕
 
 Then you can `build.ps1` in the Powershell and add your full path `LOCAL_PATH\dotnet\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
@@ -223,9 +363,9 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
 
 # ♻️ Ecosystems [↑](#-overview)
 
-You might have noticed that the individual components can be closely related such as [sketchpad](#️-sketchpad-), [Grasshopper](#-grasshopper-) and [engine](#️-engine-) but they are in totaly different folders 📂
+You might have noticed that the individual components can be closely related such as [sketchpad](#️-sketchpad-), [Grasshopper](#-semiogh-) and [engine](#️-engine-) but they are in totally different folders 📂
 
-The reason for this is that the monorepo is not disected according content but according technology stack ✂️
+The reason for this is that the repo is not disected according content but according technology stack ✂️
 
 This is less intuitive but more tool-friendly and everything that is easier for our tools is less pain to develop 🧑‍💻
 
@@ -239,8 +379,10 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 - [TypeScript](https://www.npmjs.com/package/typescript)
   - [Docs](https://www.typescriptlang.org/docs)
   - [Issues](https://github.com/microsoft/TypeScript/issues)
-
-</details>
+- [Wasm](https://developer.mozilla.org/docs/WebAssembly)
+  - [C/C++](https://developer.mozilla.org/docs/WebAssembly/Guides/C_to_Wasm)
+  - [Rust](https://developer.mozilla.org/docs/WebAssembly/Rust_to_Wasm)
+  </details>
 
 ## 🟪 [.NET](https://github.com/usalu/semio/tree/main/dotnet) [↑](#%EF%B8%8F-ecosystems-)
 
@@ -253,6 +395,12 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 
 </details>
 
+A .NET core for semio 🥜
+
+> [!WARNING]  
+> [Rhino](#-semio.3dm-) still runs on .NET 7.0 7️⃣
+> Be careful to not update packages to a higher version, that might break the compatibility 🚨
+
 ## 🐍 [Python](https://github.com/usalu/semio/tree/main/python) [↑](#%EF%B8%8F-ecosystems-)
 
 <details>
@@ -263,7 +411,7 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 
 </details>
 
-Currently only [engine](#️-engine-) but in the future it might grow and then the `.venv` will be centralized, …
+Currently only [engine](#️-semioengine-) but in the future it might grow and then the `.venv` will be centralized, …
 
 # 📦 Components [↑](#-overview)
 
@@ -312,6 +460,11 @@ A component is a piece of software which is packaged independently 🏝️
   - [Docs](https://docs.yjs.dev)
   - [API](https://github.com/yjs/yjs)
   - [Issues](https://github.com/yjs/yjs/issues)
+- [sql.js](https://www.npmjs.com/package/sql.js)
+  - [Docs](https://sql.js.org)
+  - [API](https://sql.js.org/documentation)
+  - [Issues](https://github.com/sql-js/sql.js/issues)
+  - [Playground](https://sql.js.org/examples/GUI)
 - [dnd kit](https://www.npmjs.com/package/@dnd-kit/core)
   - [Docs](https://docs.dndkit.com/)
   - [Examples](https://master--5fc05e08a4a65d0021ae0bf2.chromatic.com/)
@@ -376,7 +529,7 @@ Mostly a [Large Language Model](https://en.wikipedia.org/wiki/Large_language_mod
 
 A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
 
-## 🟪 [@semio/dotnet](https://github.com/usalu/semio/tree/main/dotnet) [↑](#-components-)
+## 🟪 [@semio/net](https://github.com/usalu/semio/tree/main/dotnet) [↑](#-components-)
 
 <details>
 <summary><strong>🔗 Useful links:</strong></summary>
@@ -400,7 +553,8 @@ A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
   - [Docs](https://github.com/Humanizr/Humanizer)
   - [Issues](https://github.com/Humanizr/Humanizer/issues)
 - [SVG](https://www.nuget.org/packages/Svg)
-  - [Docs](hhttps://svg-net.github.io/SVG)
+  - [Docs](https://svg-net.github.io/SVG)
+  - [API](https://svg-net.github.io/SVG/api)
   - [Issues](https://github.com/svg-net/svg/issues)
 - [GrGen.NET](https://grgen.de)
   - [Docs](https://grgen.de/GrGenNET-Manual.pdf)
@@ -427,7 +581,69 @@ The core which is shared in the [semio .NET ecosystem](#-net-) 🥜
 
 A full-blown Grasshopper Plugin that has (almost) everything 💯
 
-## ⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/python/engine) [↑](#-components-)
+### 🪢 Scriptstyle
+
+Analogous to [our principles](#️-principles-) for text-based code, we follow a similar logic for script-based code 🔄
+
+<details>
+<summary><strong>💻 Optimize your definitions for rectangular space ✅</strong></summary>
+
+Every inch of wasted screen space, means a loss of productivity because you need longer for navigation 🖱️
+
+It is harder to understand something far away compared to something close 🔍
+
+I know, the triangular layout where you place the next component always vertically in the middle of the inputs looks cleaner due to the better wire display 🧹
+
+But you waste a lot of space for nothing 💸
+
+</details>
+
+<details>
+<summary><strong>📛 Don't name things unless it is the output of a group or cluster ❌</strong></summary>
+
+We know that there are [only two hard things in Computer Science](https://martinfowler.com/bliki/TwoHardThings.html): Cache invalidation and naming things 🥈
+
+Visual programming languages solve the naming problem by using wires to overcome the neeed of names ⬆️
+
+That is a big gain in productivity because you can focus on the logic instead of the names 🚀
+
+Wait, but how I am supposed to understand what is happening in the code if I don't use names?
+
+Most things in Grasshopper are visual and the green `Only draw preview of selected components` button on the top left is your best friend 🔍
+
+</details>
+
+<details>
+<summary><strong>📦 If you don't absolutely need a cluster, don't create it ❌</strong></summary>
+
+Clusters are a good way to make code reusable and hide complexity 🥸
+
+But hiding complexity means a slower development speed because you have to navigate through more files 🐌
+
+Did you know that Grasshopper behaves different inside a cluster when outside?
+
+E.g. when you feed an empty branch into a cluster the input inside it its magically pruned and when you leave it is there again which makes debugging much harder 🐛
+
+I don't have to tell you about open definition tabs, updating nested clusters, recompute, performance, … right?
+
+</details>
+
+<details>
+<summary><strong>🤏 Minimize the amount of external parameters and take as much decisions as possible ✅</strong></summary>
+
+Designing means making decisions 🪨
+
+Fewer parameters makes your design more parameteric and not less 🤯
+
+The price for a synergizing system is the loss of flexibility 🤷‍♂️
+
+If you don't know the parameters in the first place, you shouldn't create the Grasshopper script in the first place 🥈
+
+Grasshopper is an amazing tool if you know the system that you want to create but is terrible for prototyping because of its lack of abstraction ⬇️
+
+</details>
+
+## ⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-components-)
 
 <details>
 <summary><strong>🔗 Useful links:</strong></summary>
@@ -495,19 +711,19 @@ It offers two APIs to other clients:
 - A simple REST OpenAPI 🥇
 - A complex GraphQL Relay API 🥈
 
-### {} [REST OpenAPI](https://github.com/usalu/semio/tree/main/python/engine/engine.py#L5529)
+### {} [REST OpenAPI](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5529)
 
 If you go to `http://127.0.0.1:2412/api/docs/` you find the Swagger UI:
 
-![GraphQL Query](https://raw.githubusercontent.com/usalu/semio/main-tag/openapi/docs/swagger.png)
+![GraphQL Query](openapi/docs/swagger.png)
 
-### ⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/python/engine/engine.py#L5095)
+### ⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5095)
 
 > Still a prototype ✏️
 
 If you go to `http://127.0.0.1:2412/graphql/` you find the GraphiQL UI:
 
-![GraphQL Query](https://raw.githubusercontent.com/usalu/semio/main-tag/graphql/docs/graphiql.png)
+![GraphQL Query](graphql/docs/graphiql.png)
 
 ## 🛍️ [@semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-components-)
 
@@ -538,6 +754,16 @@ Each badge is created with [shields.io](https://shields.io) with style `flat-squ
 1. Repeat the process for all icons 🔁
 1. Run `build icons` in the debugger of vscode 🔨
 
+# 🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)
+
+## 🚀 [Starter](https://github.com/usalu/semio/tree/main/examples/starter) [↑](#%EF%B8%8F-examples-)
+
+## 👋 [Hello semio](https://github.com/usalu/semio/tree/main/examples/hello-semio) [↑](#%EF%B8%8F-examples-)
+
+## 🌈 [Geometry](https://github.com/usalu/semio/tree/main/examples/geometry) [↑](#%EF%B8%8F-examples-)
+
+## 🫀 [Metabolism](https://github.com/usalu/metabolism) [↑](#%EF%B8%8F-examples-)
+
 # 💯 Brand [↑](#-overview)
 
 ## ✍️ Concept [↑](#-brand-)
@@ -545,7 +771,7 @@ Each badge is created with [shields.io](https://shields.io) with style `flat-squ
 ### ✅ Do [↑](#%EF%B8%8F-concept-)
 
 - Visual is better than text 👀
-- Compact ➡️ Less space ➡️ More information ➡️ Faster to understand 🚀
+- Compact ➡️ More information ➡️ Faster to understand 🚀
 
 ### ❌ Dont [↑](#%EF%B8%8F-concept-)
 
@@ -578,7 +804,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 > [!NOTE]
 > Try to place notes either in the beginning or the end of a section ↕️
 > A starting note should contain something important but not crucial to give the brain the right context 🧠
-> The starting sence of a note needs no symbol because every note type starts with a symbol 🥇
+> The starting sentence of a note needs no symbol because every note type starts with a symbol 🥇
 
 - Be consistent with your language ♻️
 - When things are analogical use the same sentence structure for it 🔄
@@ -586,7 +812,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 - One symbol at a time 🥇
 - A symbol is preferably an emoji or otherwise unicode ⚖️
 - 📝 One symbol to summarize a title
-- 💡 One symbol to summatize a title description and one to think about in the end 🤔
+- 💡 One symbol to summarize a title description and one to think about in the end 🤔
 - `.` are forbidden ⛔
 - All components in `semio` (`sketchpad`,`studio`, …) start with a small letter 🔡
 - Did you know that `…` is just one character?
@@ -594,7 +820,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 > [!TIP]
 > In the end of a section you can give the curious reader a summarizing question to think about the consequences and a link to more resources 🤔
 
-### 🔡 [Fonts](/assets/fonts/README.md) [↑](#-typography-)
+### 🔡 [Typesetting](/assets/fonts/README.md) [↑](#-typography-)
 
 - Sans serif: [Anta](https://fonts.google.com/specimen/Anta) 🖨️
 - Serif: [Kelly Slab](https://fonts.google.com/specimen/Kelly+Slab) ✍️
@@ -607,15 +833,79 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 - Borders □
 - Basic geometric shapes ⚪
 
-# 🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)
+# ✨ [Contributors](https://github.com/usalu/semio/graphs/contributors) [↑](#-overview)
 
-## 🚀 [Starter](https://github.com/usalu/semio/tree/main/examples/starter) [↑](#-examples-)
-
-## 👋 [Hello semio](https://github.com/usalu/hello-semio) [↑](#-examples-)
-
-## 🌈 [Geometry](https://github.com/usalu/geometry) [↑](#-examples-)
-
-## 🫀 [Metabolism](https://github.com/usalu/metabolism) [↑](#-examples-)
+<table style="border-collapse: collapse; border: none;">
+  <tbody>
+    <tr style="border: none;">
+      <td align="center" valign="top" width="145px" style="border: none;"><a href="https://github.com/usalu">
+        <img src="assets/contributors/usalu_round_90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
+        <br />
+        <sub><b>Ueli Saluz</b></sub>
+        <br />
+        <a href="#-semiojs-" title="🟨@semio/js"><sub>🟨<sub></a>
+        <a href="#-semionet-" title="🟪@semio/net"><sub>🟪<sub></a>
+        <a href="#-python-" title="🐍Python"><sub>🐍<sub></a>
+        <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a>      
+        <br />
+        <a href="#-semiosketchpad-" title="✏️@semio/sketchpad"><sub>✏️<sub></a>
+        <a href="#-semioengine-" title="⚙️@semio/engine"><sub>⚙️<sub></a>
+        <a href="#-semioassistant-" title="🤖@semio/assistant"><sub>🤖<sub></a>
+        <a href="#%EF%B8%8F-semioplayground-" title="🎛️@semio/playground"><sub>🎛️<sub></a>
+        <br />
+        <a href="#-semiodocs-" title="📚@semio/docs"><sub>📚<sub></a>
+        <a href="#-semioassets-" title="🛍️@semio/assets"><sub>🛍️<sub></a>
+        <a href="#-brand-" title="💯Brand"><sub>💯<sub></a>
+        <br />
+        <a href="#-semio.3dm-" title="🦏Rhino"><sub>🦏<sub></a>
+        <a href="#-semiowasp-" title="🐝Wasp"><sub>🐝<sub></a>
+        <a href="#-semiomonoceros-" title="🦌Monoceros"><sub>🦌<sub></a>
+        <a href="#-semioladybug-" title="🐞Ladybug"><sub>🐞<sub></a>
+        <br />
+        <a href="#-metabolism-" title="🫀Metabolism"><sub>🫀<sub></a>
+        <a href="#-hello-semio-" title="👋Hello semio"><sub>👋<sub></a>
+        <a href="#-starters-" title="🚀Starters"><sub>🚀<sub></a>
+      </td>
+      <td align="center" valign="top" width="145px"><a href="https://github.com/kinansarak">
+        <img src="assets/contributors/kinansarak_round_90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
+        <br />
+        <sub><b>KinanSarak</b></sub></a>
+        <br />
+        <a href="#-semiodocs-" title="📚@semio/docs"><sub>📚<sub></a>
+        <a href="#-hello-semio-" title="👋 Hello semio"><sub>👋<sub></a>
+        <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a> 
+      </td>
+      <td align="center" valign="top" width="145px"><a href="https://github.com/EinMysterium">
+        <img src="assets/contributors/EinMysterium_round_90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
+        <br />
+        <sub><b>EinMysterium</b></sub></a>
+        <br />
+        <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a>
+      </td>
+      <td align="center" valign="top" width="145px"><a href="https://github.com/drymuzzle">
+        <img src="assets/contributors/drymuzzle_round_90.png" width="90px" alt="drymuzzle" style="border-radius: 50%;"/>
+        <br />
+        <sub><b>drymuzzle</b></sub></a>
+        <br />
+        <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a>
+        <a href="#-semioladybug-" title="🐞ladybug"><sub>🐞<sub></a>
+      </td>
+      <td align="center" valign="top" width="145px"><a href="https://github.com/kaatzjo">
+        <img src="assets/contributors/kaatzjo_round_90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
+        <br />
+        <sub><b>kaatzjo</b></sub></a>
+        <br />
+        <a href="#-semioengine-" title="⚙️@semio/engine"><sub>⚙️<sub></a> 
+      </td>
+      <td align="center" valign="top" width="145px"><a href="https://github.com/pizzadizza">
+        <img src="assets/contributors/pizzadizza_round_90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>
+        <br />
+        <sub><b>pizzadizza</b></sub></a>
+        <br />
+        <a href="#-semioassistant-" title="🤖@semio/assistant"><sub>🤖<sub></a> 
+      </td>
+    </tr>
+</table>
 
 # 📊 Stats
 

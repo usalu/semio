@@ -1,8 +1,8 @@
 import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { Center, Environment, GizmoHelper, GizmoViewport, Grid, OrbitControls, Select, Sphere, Stage, useGLTF } from '@react-three/drei';
+import { Canvas, ThreeEvent, useLoader } from '@react-three/fiber';
+import { Center, Environment, GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, Select, Sphere, Stage, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { Design, Piece } from '@semio/js';
+import { Design, Piece, Plane, Type, flattenDesign, DesignEditorSelection, getPieceRepresentationUrls } from '@semio/js';
 
 const getComputedColor = (variable: string): string => {
     return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -10,49 +10,136 @@ const getComputedColor = (variable: string): string => {
 
 interface ModelPieceProps {
     piece: Piece;
-}
-const ModelPiece: FC<ModelPieceProps> = ({ piece }) => {
-    // const { selection, setSelection } = useDesignEditor();
-    return (
-        <Select
-            multiple
-            box
-            // TODO: If theme becomes customizable, same approach as in Gizmo is needed 🔄️
-            border="1px solid var(--color-primary)"
-            backgroundColor="color-mix(in srgb, var(--color-primary) 10%, transparent)"
-            onClick={(e) => {
-                console.log('select clicked', e)
-                // setSelection({
-                //     ...selection,
-                //     // TODO: Update selection to set
-                //     pieceIds: selection.pieceIds.includes(piece.id_) ? selection.pieceIds.filter((id) => id !== piece.id_) : [...selection.pieceIds, piece.id_]
-                // });
-            }}
-        >
-            <Sphere args={[1, 100, 100]} position={[piece.plane.origin.x, piece.plane.origin.z, -piece.plane.origin.y]}>
-                <meshStandardMaterial color="gold" roughness={0} metalness={1} />
-            </Sphere>
-        </Select>
-    )
+    plane: Plane;
+    fileUrl: string;
+    selected?: boolean;
+    onSelect: (piece: Piece) => void
 }
 
-// ModelDesign component to visualize a design and its pieces
+const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, onSelect }) => {
+    const matrix = useMemo(() => {
+        const threeToSemioRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
+        const semioToThreeRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
+        // const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
+        const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z);
+        const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z);
+        const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis);
+        const planeRotationMatrix = new THREE.Matrix4();
+        planeRotationMatrix.makeBasis(xAxis.normalize(), yAxis.normalize(), zAxis.normalize());
+        // planeRotationMatrix.setPosition(origin);
+        const m = new THREE.Matrix4();
+        m.multiply(threeToSemioRotation);
+        m.multiply(planeRotationMatrix);
+        m.multiply(semioToThreeRotation);
+        m.multiply(new THREE.Matrix4().makeTranslation(plane.origin.x, -plane.origin.z, plane.origin.y));
+        return m
+    }, [plane]);
+    const scene = useMemo(() => {
+        return useGLTF(fileUrl).scene.clone()
+    }, [fileUrl])
+    const selectedScene = useMemo(() => {
+        const sceneClone = scene.clone()
+        sceneClone.traverse((object) => {
+            if (object instanceof THREE.Mesh) {
+                const meshColor = new THREE.Color(getComputedColor('--color-primary'))
+                object.material = new THREE.MeshBasicMaterial({ color: meshColor })
+            }
+            if (object instanceof THREE.Line) {
+                const lineColor = new THREE.Color(getComputedColor('--color-foreground'))
+                object.material = new THREE.LineBasicMaterial({ color: lineColor })
+            }
+        })
+        return sceneClone
+    }, [scene])
+
+    return (
+        <group
+            // matrix={matrix}
+            // matrixAutoUpdate={false}
+            position={[piece.plane!.origin.x, -piece.plane!.origin.z, piece.plane!.origin.y]}
+
+            userData={{ pieceId: piece.id_ }}
+            onClick={(e) => {
+                onSelect(piece)
+                e.stopPropagation()
+            }}>
+            <primitive object={selected ? selectedScene : scene} />
+        </group>
+    );
+};
+
 interface ModelDesignProps {
     design: Design;
+    types: Type[];
+    fileUrls: Map<string, string>;
+    selection: DesignEditorSelection;
+    onSelectionChange: (selection: DesignEditorSelection) => void;
 }
 
-const ModelDesign: FC<ModelDesignProps> = ({ design }) => {
-    // Return early if there are no pieces
-    if (!design?.pieces || design.pieces.length === 0) {
-        return null;
-    }
+const ModelDesign: FC<ModelDesignProps> = ({ design, types, fileUrls, selection, onSelectionChange }) => {
+    const [gridColors, setGridColors] = useState(() => ({
+        sectionColor: getComputedColor('--foreground'),
+        cellColor: getComputedColor('--accent-foreground')
+    }));
+
+    useEffect(() => {
+        fileUrls.forEach((url, id) => {
+            useGLTF.preload(id);
+        });
+    }, [fileUrls]);
+
+    design.pieces?.forEach(p => {
+        const type = types.find(t => t.name === p.type.name && t.variant === p.type.variant);
+        if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`);
+    });
+
+    const flatDesign = design ? flattenDesign(design, types) : null;
+    const piecePlanes = flatDesign?.pieces?.map(p => p.plane);
+    const pieceRepresentationUrls = getPieceRepresentationUrls(design, types!);
+
+    pieceRepresentationUrls.forEach((url, id) => {
+        if (!fileUrls.has(url)) throw new Error(`Representation url ${url} for piece ${id} not found in fileUrls map`);
+    });
 
     return (
-        <group>
-            {design.pieces.map((piece, index) => (
-                <ModelPiece key={`piece-${piece.id_ || index}`} piece={piece} />
+        <Select box multiple onChange={(selected) => {
+            const newSelectedPieceIds = selected.map(item => item.parent?.userData.pieceId);
+
+            if (!Array.isArray(selection.selectedPieceIds) ||
+                newSelectedPieceIds.length !== selection.selectedPieceIds.length ||
+                newSelectedPieceIds.some((id, index) => id !== selection.selectedPieceIds[index])) {
+
+                onSelectionChange({
+                    ...selection,
+                    selectedPieceIds: newSelectedPieceIds
+                });
+            }
+        }} filter={items => items}>
+            {design.pieces?.map((piece, index) => (
+                <ModelPiece
+                    key={`piece-${piece.id_ || index}`}
+                    piece={piece}
+                    plane={piecePlanes[index]}
+                    fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_))}
+                    selected={selection.selectedPieceIds.includes(piece.id_)}
+                    onSelect={
+                        (piece) => {
+                            if (selection.selectedPieceIds.includes(piece.id_)) {
+                                onSelectionChange({
+                                    ...selection,
+                                    selectedPieceIds: selection.selectedPieceIds.filter(id => id !== piece.id_)
+                                })
+                            } else {
+                                onSelectionChange({
+                                    ...selection,
+                                    selectedPieceIds: [...selection.selectedPieceIds, piece.id_]
+                                })
+                            }
+                        }
+                    }
+                />
             ))}
-        </group>
+        </Select>
     );
 };
 
@@ -76,11 +163,15 @@ const Gizmo: FC = (): JSX.Element => {
 }
 
 interface ModelProps {
+    design: Design;
+    types: Type[];
+    fileUrls: Map<string, string>;
     fullscreen: boolean;
     onPanelDoubleClick?: () => void;
-    design: Design;
+    selection: DesignEditorSelection;
+    onSelectionChange: (selection: DesignEditorSelection) => void;
 }
-const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design }) => {
+const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design, types, fileUrls, selection, onSelectionChange }) => {
     const [gridColors, setGridColors] = useState({
         sectionColor: getComputedColor('--foreground'),
         cellColor: getComputedColor('--accent-foreground')
@@ -94,11 +185,7 @@ const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design }) => {
                 cellColor: getComputedColor('--accent-foreground')
             });
         };
-
-        // Update immediately and set up observer
         updateColors();
-
-        // Watch for class changes on document.documentElement (light/dark theme toggle)
         const observer = new MutationObserver(updateColors);
         observer.observe(document.documentElement, {
             attributes: true,
@@ -110,11 +197,19 @@ const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design }) => {
 
     return (
         <div className="w-full h-full">
-            <Canvas onDoubleClickCapture={(e) => {
-                e.stopPropagation();
-                if (onPanelDoubleClick) onPanelDoubleClick();
-            }}>
+            <Canvas
+                onDoubleClickCapture={(e) => {
+                    e.stopPropagation();
+                    if (onPanelDoubleClick) onPanelDoubleClick();
+                }}
+                onPointerMissed={() => {
+                    onSelectionChange({
+                        selectedPieceIds: [],
+                        selectedConnections: []
+                    })
+                }}>
                 <OrbitControls
+                    makeDefault
                     mouseButtons={{
                         LEFT: THREE.MOUSE.ROTATE, // Left mouse button for orbit/pan
                         MIDDLE: undefined,
@@ -125,7 +220,7 @@ const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design }) => {
                 {/* <Suspense fallback={null}>
                         <Gltf src={src} />
                     </Suspense> */}
-                <ModelDesign design={design} />
+                <ModelDesign design={design} types={types} fileUrls={fileUrls} selection={selection} onSelectionChange={onSelectionChange} />
                 <Environment files={'schlenker-shed.hdr'} />
                 <Grid
                     infiniteGrid={true}

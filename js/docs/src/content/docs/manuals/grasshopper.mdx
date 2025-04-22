@@ -12,3 +12,69 @@ Most components are Grasshopper clusters 📦
 ### Passthrough components
 
 ### Filter components
+
+
+
+---
+---
+---
+
+
+## 🧩 Model Piece
+
+**Category:** Modeling  
+**Outputs:** `Pc` (Piece)
+
+---
+
+### 📄 Description
+Defines a **Piece** — a placed instance of a `Type` — with a name, placement, and optional visual geometry
+
+---
+
+### 🧰 Inputs
+
+| Input              | Description                                                                 |
+|-------------------|-----------------------------------------------------------------------------|
+| `Name`            | Local identifier of the Piece. Must be unique within the Design. 📛          |
+| `Type`            | Reference to a `Ty` (Type) this Piece is based on. 🧩                        |
+| `Plane`           | Optional placement plane of the Piece. If omitted, must be connected. ◳     |
+| `Diagram Center`  | Optional center location in the design diagram (2D). Used for layouting. ⌖ |
+| `Preview Geometry`| Optional geometry to preview, without affecting the actual Type. 🖼️         |
+| `Quality`         | Optional qualities like floor area, cost, etc., used in performance metrics. 📏|
+
+---
+
+### 🎯 Outputs
+
+| Output  | Description                           |
+|---------|---------------------------------------|
+| `Pc`    | A fully defined Semio Piece object ⭕  |
+
+---
+
+### 🧱 Behaviors
+Semio components support three operations:
+
+- **Construct:** Build a new Piece from the inputs above.
+- **Deconstruct:** Plug a `Pc` into the first input to unpack its structure.
+- **Reconstruct:** Modify an existing Piece by combining a `Pc` with new inputs. Only changed inputs will be updated.
+
+> 🧩 **Example:** Flip the first piece in your Hello Semio logo by injecting a new `Plane` while keeping the rest intact.
+
+---
+
+### 🔗 Related Components
+
+- `Model Type` → to define the base Type 🧱  
+- `Model Design` → to assemble Pieces and Connections 🏙️  
+- `Model Connection` → to snap Pieces together 🔗  
+
+---
+
+### 💡 Tips
+
+- A Piece must reference a Type.
+- If a Plane is missing, the Piece must be part of a Connection chain.
+- Use preview geometry to test variations without altering the Type.
+- Add Tags and Icons to organize Pieces visually in Studio.

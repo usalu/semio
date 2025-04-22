@@ -1,0 +1,17 @@
+{
+  "name": "@semio/grasshopper",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "net/Semio.Grasshopper",
+  "projectType": "application",
+  "scripts": {
+    "build": "powershell -ExecutionPolicy Bypass -File ./build.ps1"
+  },
+  "devDependencies": {
+    "@semio/net": "*"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  }
+}

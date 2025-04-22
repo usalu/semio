@@ -1,1 +1,174 @@
-{"representations":[{"url":"representations/capsule_s.glb","description":"","mime":"model/gltf-binary","tags":[],"qualities":[]},{"url":"representations/capsule_s_1to500.3dm","description":"","mime":"model/vnd.3dm","tags":["1to500"],"qualities":[]},{"url":"representations/capsule_s_1to200.3dm","description":"","mime":"model/vnd.3dm","tags":["1to200"],"qualities":[]},{"url":"https://app.speckle.systems/projects/e7de1a2f8f/models/0da1e26dff","description":"","mime":"model/vnd.speckle+json","tags":["1to500"],"qualities":[]},{"url":"https://app.speckle.systems/projects/e7de1a2f8f/models/a3b1c730a1","description":"","mime":"model/vnd.speckle+json","tags":["1to200"],"qualities":[]},{"url":"representations/capsule_s_collider.glb","description":"","mime":"model/gltf-binary","tags":["collider"],"qualities":[]}],"ports":[{"id_":"","description":"The middle of the main entrance door of the upper entrance floor.","family":"","compatibleFamilies":[],"point":{"x":-1.3,"y":-1.25,"z":0.0},"direction":{"x":-1.0,"y":0.0,"z":0.0},"t":0.0,"qualities":[]}],"authors":[{"name":"Ueli Saluz","email":"ueli@semio-tech.org"}],"qualities":[{"name":"entrance","value":"side","unit":"","definition":""},{"name":"view","value":"side","unit":"","definition":""},{"name":"length","value":"4.2","unit":"m","definition":"https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Length"},{"name":"width","value":"2.6","unit":"m","definition":"https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width"},{"name":"heigth","value":"2.5","unit":"m","definition":"https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height"},{"name":"window shape","value":"round","unit":"","definition":""},{"name":"effective floor area","value":"8.74","unit":"m²","definition":"https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"},{"name":"construction cost","value":"82992","unit":"€","definition":""},{"name":"heating energy demand","value":"393","unit":"kWh/a","definition":"https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"},{"name":"cooling energy demand","value":"262","unit":"kWh/a","definition":"https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"},{"name":"technical equipment energy demand","value":"262","unit":"kWh/a","definition":"https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"},{"name":"income","value":"13104","unit":"€/a","definition":""},{"name":"maintenance expenses","value":"1048","unit":"€/a","definition":""},{"name":"construction global warming potential","value":"8736.01","unit":"kgCO2e","definition":"https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 "}],"name":"Capsule","description":"An apartment capsule for one person. It has the entrance on the side and has the view to the side.","icon":"icons/capsule_s.svg","image":"images/capsule_s.png","variant":"s","unit":"m"}
+{
+    "representations": [
+        {
+            "url": "representations/capsule_s.glb",
+            "description": "",
+            "mime": "model/gltf-binary",
+            "tags": [],
+            "qualities": []
+        },
+        {
+            "url": "representations/capsule_s_1to500.3dm",
+            "description": "",
+            "mime": "model/vnd.3dm",
+            "tags": [
+                "1to500"
+            ],
+            "qualities": []
+        },
+        {
+            "url": "representations/capsule_s_1to200.3dm",
+            "description": "",
+            "mime": "model/vnd.3dm",
+            "tags": [
+                "1to200"
+            ],
+            "qualities": []
+        },
+        {
+            "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/0da1e26dff",
+            "description": "",
+            "mime": "model/vnd.speckle+json",
+            "tags": [
+                "1to500"
+            ],
+            "qualities": []
+        },
+        {
+            "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/a3b1c730a1",
+            "description": "",
+            "mime": "model/vnd.speckle+json",
+            "tags": [
+                "1to200"
+            ],
+            "qualities": []
+        },
+        {
+            "url": "representations/capsule_s_collider.glb",
+            "description": "",
+            "mime": "model/gltf-binary",
+            "tags": [
+                "collider"
+            ],
+            "qualities": []
+        }
+    ],
+    "ports": [
+        {
+            "id_": "",
+            "description": "The middle of the main entrance door of the upper entrance floor.",
+            "family": "",
+            "compatibleFamilies": [],
+            "point": {
+                "x": -1.3,
+                "y": -1.25,
+                "z": 0.0
+            },
+            "direction": {
+                "x": -1.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            "t": 0.0,
+            "qualities": []
+        }
+    ],
+    "authors": [
+        {
+            "name": "Ueli Saluz",
+            "email": "ueli@semio-tech.com"
+        }
+    ],
+    "qualities": [
+        {
+            "name": "entrance",
+            "value": "side",
+            "unit": "",
+            "definition": ""
+        },
+        {
+            "name": "view",
+            "value": "side",
+            "unit": "",
+            "definition": ""
+        },
+        {
+            "name": "length",
+            "value": "4.2",
+            "unit": "m",
+            "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Length"
+        },
+        {
+            "name": "width",
+            "value": "2.6",
+            "unit": "m",
+            "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width"
+        },
+        {
+            "name": "heigth",
+            "value": "2.5",
+            "unit": "m",
+            "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height"
+        },
+        {
+            "name": "window shape",
+            "value": "round",
+            "unit": "",
+            "definition": ""
+        },
+        {
+            "name": "effective floor area",
+            "value": "8.74",
+            "unit": "m²",
+            "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
+        },
+        {
+            "name": "construction cost",
+            "value": "82992",
+            "unit": "€",
+            "definition": ""
+        },
+        {
+            "name": "heating energy demand",
+            "value": "393",
+            "unit": "kWh/a",
+            "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
+        },
+        {
+            "name": "cooling energy demand",
+            "value": "262",
+            "unit": "kWh/a",
+            "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
+        },
+        {
+            "name": "technical equipment energy demand",
+            "value": "262",
+            "unit": "kWh/a",
+            "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
+        },
+        {
+            "name": "income",
+            "value": "13104",
+            "unit": "€/a",
+            "definition": ""
+        },
+        {
+            "name": "maintenance expenses",
+            "value": "1048",
+            "unit": "€/a",
+            "definition": ""
+        },
+        {
+            "name": "construction global warming potential",
+            "value": "8736.01",
+            "unit": "kgCO2e",
+            "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 "
+        }
+    ],
+    "name": "Capsule",
+    "description": "An apartment capsule for one person. It has the entrance on the side and has the view to the side.",
+    "icon": "icons/capsule_s.svg",
+    "image": "images/capsule_s.png",
+    "variant": "s",
+    "unit": "m"
+}
