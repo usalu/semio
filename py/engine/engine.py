@@ -4840,8 +4840,8 @@ def decodeDesign(design: dict):
                 "rotation": normalizeAngle(c["rotation"]),
                 "turn": normalizeAngle(c["turn"]),
                 "tilt": normalizeAngle(c["tilt"]),
-                "x": c["diagramX"],
-                "y": c["diagramY"],
+                "x": c["x"],
+                "y": c["y"],
             }
             for c in design["connections"]
         ],
@@ -5085,7 +5085,7 @@ designResponseFormat = json.loads(
                         "connectingPieceTypePortId",
                         "gap",
                         "shift",
-                        "raise_",
+                        "raise",
                         "rotation",
                         "turn",
                         "tilt",
