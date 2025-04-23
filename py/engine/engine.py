@@ -5069,11 +5069,11 @@ designResponseFormat = json.loads(
                             "type": "number",
                             "description": "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."
                         },
-                        "diagramX": {
+                        "x": {
                             "description": "The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
                             "type": "number"
                         },
-                        "diagramY": {
+                        "y": {
                             "description": "The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
                             "type": "number"
                         }
@@ -5083,12 +5083,14 @@ designResponseFormat = json.loads(
                         "connectedPieceTypePortId",
                         "connectingPieceId",
                         "connectingPieceTypePortId",
-                        "rotation",
-                        "tilt",
                         "gap",
                         "shift",
-                        "diagramX",
-                        "diagramY"
+                        "raise_",
+                        "rotation",
+                        "turn",
+                        "tilt",
+                        "x",
+                        "y"
                     ],
                     "additionalProperties": false
                 }
