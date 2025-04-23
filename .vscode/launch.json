@@ -14,7 +14,7 @@
             },
             "pathMappings": [
                 {
-                    "localRoot": "${workspaceFolder}/python/engine",
+                    "localRoot": "${workspaceFolder}/py/engine",
                     "remoteRoot": ".",
                 }
             ],
@@ -31,7 +31,7 @@
             },
             "pathMappings": [
                 {
-                    "localRoot": "${workspaceFolder}/python/engine",
+                    "localRoot": "${workspaceFolder}/py/engine",
                     "remoteRoot": ".",
                 }
             ],

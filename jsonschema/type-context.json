@@ -13,7 +13,7 @@
                 "description": {
                     "default": "",
                     "description": "\ud83d\udcac The optional human-readable description of the port.",
-                    "maxLength": 2560,
+                    "maxLength": 512,
                     "title": "Description",
                     "type": "string"
                 },
@@ -86,7 +86,7 @@
         "description": {
             "default": "",
             "description": "\ud83d\udcac The optional human-readable description of the type.",
-            "maxLength": 2560,
+            "maxLength": 512,
             "title": "Description",
             "type": "string"
         },

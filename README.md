@@ -427,7 +427,7 @@ The core which is shared in the [semio .NET ecosystem](#-net-) 🥜
 
 A full-blown Grasshopper Plugin that has (almost) everything 💯
 
-## ⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/python/engine) [↑](#-components-)
+## ⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-components-)
 
 <details>
 <summary><strong>🔗 Useful links:</strong></summary>
@@ -495,13 +495,13 @@ It offers two APIs to other clients:
 - A simple REST OpenAPI 🥇
 - A complex GraphQL Relay API 🥈
 
-### {} [REST OpenAPI](https://github.com/usalu/semio/tree/main/python/engine/engine.py#L5529)
+### {} [REST OpenAPI](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5529)
 
 If you go to `http://127.0.0.1:2412/api/docs/` you find the Swagger UI:
 
 ![GraphQL Query](https://raw.githubusercontent.com/usalu/semio/main-tag/openapi/docs/swagger.png)
 
-### ⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/python/engine/engine.py#L5095)
+### ⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5095)
 
 > Still a prototype ✏️
 
