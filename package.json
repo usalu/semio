@@ -4,7 +4,7 @@
     "assets/logo",
     "assets/icons",
     "assets",
-    "python/engine",
+    "py/engine",
     "js/core",
     "js/docs",
     "js/sketchpad",

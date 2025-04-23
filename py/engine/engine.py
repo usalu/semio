@@ -4954,15 +4954,17 @@ Rules:
 Every piece MUST have a type that exists. The type name and type variant MUST match.
 Two pieces are different when they have a different type name or type variant.
 Two types are different when they have a different name or different variant.
-Every connecting and connected piece MUST be part of the pieces of the design. The ids MUST match.
-The port of connecting and connected pieces MUST exist in the type of the piece. The ids MUST match.
-The port of connecting and connected pieces SHOULD match.
+Every connected and connecting piece MUST be part of the pieces of the design. The ids MUST match.
+The port of connected and connecting pieces MUST exist in the type of the piece. The ids MUST match.
+The port of connected and connecting pieces SHOULD match.
+If the ports of connected and connecting pieces have a family, they should be compatible.
+If one port has the other port as ocompatible that's enough.
 Every piece in the design MUST be connected to at least one other piece.
 One piece is the root piece of the design. The connections MUST form a tree.
 Ids SHOULD be abreviated and don't have to be globally unique.
 Rotation, tilt, gap, shift SHOULD NOT be added unless specifically instructed.
 The diagram is only a nice 2D representation of the design and does not change the design.
-When a piece is [on, next to, above, below, ...] another piece, there SHOULD be a connecting between the pieces.
+When a piece is [on, next to, above, below, ...] another piece, there SHOULD be a connected between the pieces.
 When a piece fits to a port of another piece, there SHOULD be a connecting between the pieces."""
 # logger.debug("System prompt: {}", systemPrompt)
 
