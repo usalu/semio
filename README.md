@@ -617,6 +617,38 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 
 ## 🫀 [Metabolism](https://github.com/usalu/metabolism) [↑](#-examples-)
 
+# ✨ Contributors
+
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/usalu">
+        <img src="https://avatars.githubusercontent.com/u/65786312?v=4" width="100px;" alt="Ueli Saluz"/>
+        <br /><sub><b>Ueli Saluz</b></sub></a>
+        <br />
+        <a href="https://github.com/usalu/semio/commits?author=usalu" title="Commits">🧑‍💻</a> 
+      </td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/kinansarak">
+        <img src="https://avatars.githubusercontent.com/u/48572266?v=4" width="100px;" alt="KinanSarak"/>
+        <br /><sub><b>KinanSarak</b></sub></a>
+        <br />
+        <a href="https://github.com/usalu/semio/commits?author=kinansarak" title="Commits">🧑‍💻</a> 
+      </td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/drymuzzle">
+        <img src="https://avatars.githubusercontent.com/u/174096675?v=4" width="100px;" alt="drymuzzle"/>
+        <br /><sub><b>drymuzzle</b></sub></a>
+        <br />
+        <a href="https://github.com/usalu/semio/commits?author=drymuzzle" title="Commits">🧑‍💻</a> 
+      </td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/kaatzjo">
+        <img src="https://avatars.githubusercontent.com/u/110397668?v=4" width="100px;" alt="kaatzjo"/>
+        <br /><sub><b>kaatzjo</b></sub></a>
+        <br />
+        <a href="https://github.com/usalu/semio/commits?author=kaatzjo" title="Commits">🧑‍💻</a> 
+      </td>
+    </tr>
+</table>
+
 # 📊 Stats
 
 <p align="center">
