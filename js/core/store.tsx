@@ -75,7 +75,6 @@ class StudioStore {
             console.log(`Local changes are synchronized for user (${this.userId}) with client (${this.yDoc.clientID})`);
             try {
                 const kit = this.getKit("usalu/metabolism");
-                console.log(kit);
                 this.notifyListeners();
 
             } catch (error) {

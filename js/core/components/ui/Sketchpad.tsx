@@ -195,24 +195,32 @@ const View: FC<ViewProps> = ({ }) => {
     const studioStore = useStudioStore();
     const [designEditorId, setDesignEditorId] = useState<string>('');
 
-    useEffect(() => {
+
+    if (!designEditorId) {
         try {
+            // Consider moving this logic if it needs to react to props or other state changes
             const editorId = studioStore.createDesignEditorStore("usalu/metabolism", "Nakagin Capsule Tower", "", "");
             setDesignEditorId(editorId);
         } catch (error) {
-            console.error(error);
+            console.error("Error creating design editor store:", error);
         }
-        studioStore.subscribe(forceUpdate);
-    }, [designEditorId]);
+    }
 
     if (!designEditorId) {
-        return <div>Loading editor...</div>;
+        return <Button onClick={() => {
+            forceUpdate()
+        }}>Refresh</Button>;
     }
 
     return (
-        <DesignEditorStoreProvider designEditorId={designEditorId}>
-            <DesignEditor />
-        </DesignEditorStoreProvider>
+        <>
+            <Button onClick={() => {
+                forceUpdate()
+            }}>Refresh</Button>;
+            <DesignEditorStoreProvider designEditorId={designEditorId}>
+                <DesignEditor />
+            </DesignEditorStoreProvider>
+        </>
     );
 }
 
