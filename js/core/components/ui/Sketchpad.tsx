@@ -1,4 +1,4 @@
-import { FC, Suspense, ReactNode, useState, useEffect, createContext, useContext, useMemo } from 'react';
+import { FC, Suspense, ReactNode, useState, useEffect, createContext, useContext, useMemo, useReducer } from 'react';
 import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X, MessageCircle, Home, Sun, Moon, Monitor, Sofa, Glasses, AppWindow } from 'lucide-react';
 import {
     DndContext,
@@ -191,6 +191,7 @@ interface ViewProps {
 }
 
 const View: FC<ViewProps> = ({ }) => {
+    const [, forceUpdate] = useReducer(x => x + 1, 0);
     const studioStore = useStudioStore();
     const [designEditorId, setDesignEditorId] = useState<string>('');
 
@@ -201,6 +202,7 @@ const View: FC<ViewProps> = ({ }) => {
         } catch (error) {
             console.error(error);
         }
+        studioStore.subscribe(forceUpdate);
     }, [designEditorId]);
 
     if (!designEditorId) {

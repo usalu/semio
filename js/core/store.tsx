@@ -63,6 +63,7 @@ class StudioStore {
     private undoManager: UndoManager;
     private designEditorStores: Map<string, DesignEditorStore>;
     private indexeddbProvider: IndexeddbPersistence;
+    private listeners: Set<() => void> = new Set();
 
     constructor(userId: string) {
         this.userId = userId;
@@ -75,11 +76,17 @@ class StudioStore {
             try {
                 const kit = this.getKit("usalu/metabolism");
                 console.log(kit);
+                this.notifyListeners();
 
             } catch (error) {
                 console.error(error);
             }
         });
+        this.yDoc.on('update', () => this.notifyListeners());
+    }
+
+    private notifyListeners(): void {
+        this.listeners.forEach(listener => listener());
     }
 
     private createQuality(quality: Quality): Y.Map<any> {
@@ -954,6 +961,13 @@ class StudioStore {
 
     transact(commands: () => void): void {
         this.yDoc.transact(commands, new Set([this.userId]));
+    }
+
+    subscribe(callback: () => void): () => void {
+        this.listeners.add(callback);
+        return () => {
+            this.listeners.delete(callback);
+        };
     }
 }
 
