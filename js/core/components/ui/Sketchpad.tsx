@@ -195,12 +195,13 @@ const View: FC<ViewProps> = ({ }) => {
     const [designEditorId, setDesignEditorId] = useState<string>('');
 
     useEffect(() => {
-        studioStore.transact(() => {
-            studioStore.importKit("metabolism.json");
-        });
-        const editorId = studioStore.createDesignEditorStore("usalu/metabolism", "Nakagin Capsule Tower", "", "");
-        setDesignEditorId(editorId);
-    }, []);
+        try {
+            const editorId = studioStore.createDesignEditorStore("usalu/metabolism", "Nakagin Capsule Tower", "", "");
+            setDesignEditorId(editorId);
+        } catch (error) {
+            console.error(error);
+        }
+    }, [designEditorId]);
 
     if (!designEditorId) {
         return <div>Loading editor...</div>;

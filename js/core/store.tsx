@@ -60,19 +60,26 @@ import { default as nakaginCapsuleTower } from '@semio/assets/semio/design_nakag
 class StudioStore {
     private userId: string;
     private yDoc: Y.Doc;
-    // private undoManager: UndoManager;
+    private undoManager: UndoManager;
     private designEditorStores: Map<string, DesignEditorStore>;
-    // private indexeddbProvider: IndexeddbPersistence;
+    private indexeddbProvider: IndexeddbPersistence;
 
     constructor(userId: string) {
         this.userId = userId;
         this.yDoc = new Y.Doc();
-        // this.undoManager = new UndoManager(this.yDoc, { trackedOrigins: new Set([this.userId]) });
+        this.undoManager = new UndoManager(this.yDoc, { trackedOrigins: new Set([this.userId]) });
         this.designEditorStores = new Map();
-        // this.indexeddbProvider = new IndexeddbPersistence(userId, this.yDoc);
-        // this.indexeddbProvider.whenSynced.then(() => {
-        //     console.log(`Local changes are synchronized for user (${this.userId}) with client (${this.yDoc.clientID})`);
-        // });
+        this.indexeddbProvider = new IndexeddbPersistence(userId, this.yDoc);
+        this.indexeddbProvider.whenSynced.then(() => {
+            console.log(`Local changes are synchronized for user (${this.userId}) with client (${this.yDoc.clientID})`);
+            try {
+                const kit = this.getKit("usalu/metabolism");
+                console.log(kit);
+
+            } catch (error) {
+                console.error(error);
+            }
+        });
     }
 
     private createQuality(quality: Quality): Y.Map<any> {
