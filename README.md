@@ -617,34 +617,46 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 
 ## 🫀 [Metabolism](https://github.com/usalu/metabolism) [↑](#-examples-)
 
-# ✨ Contributors
+# ✨ [Contributors](https://github.com/usalu/semio/graphs/contributors) [↑](#-overview)
 
 <table>
   <tbody>
     <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/usalu">
-        <img src="https://avatars.githubusercontent.com/u/65786312?v=4" width="100px;" alt="Ueli Saluz"/>
-        <br /><sub><b>Ueli Saluz</b></sub></a>
+      <td align="center" valign="top" width="80px"><a href="https://github.com/usalu">
+        <img src="https://avatars.githubusercontent.com/u/65786312?v=4" alt="Ueli Saluz" style="border-radius: 50%;"/>
+        <br />
+        <sub><b>Ueli Saluz</b></sub></a>
         <br />
         <a href="https://github.com/usalu/semio/commits?author=usalu" title="Commits">🧑‍💻</a> 
+        <a href="https://github.com/usalu/semio/issues?q=author%3Ausalu OR assignee%3Ausalu" title="Issues">ℹ️</a>
+        <a href="https://github.com/usalu/semio/pulls?q=author%3Ausalu" title="Pull Requests">🔄</a>
       </td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/kinansarak">
-        <img src="https://avatars.githubusercontent.com/u/48572266?v=4" width="100px;" alt="KinanSarak"/>
-        <br /><sub><b>KinanSarak</b></sub></a>
+      <td align="center" valign="top" width="80px"><a href="https://github.com/kinansarak">
+        <img src="https://avatars.githubusercontent.com/u/48572266?v=4" alt="KinanSarak" style="border-radius: 50%;"/>
+        <br />
+        <sub><b>KinanSarak</b></sub></a>
         <br />
         <a href="https://github.com/usalu/semio/commits?author=kinansarak" title="Commits">🧑‍💻</a> 
+        <a href="https://github.com/usalu/semio/issues?q=author%3Akinansarak OR assignee%3Akinansarak" title="Issues">ℹ️</a>
+        <a href="https://github.com/usalu/semio/pulls?q=author%3Akinansarak" title="Pull Requests">🔄</a>
       </td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/drymuzzle">
-        <img src="https://avatars.githubusercontent.com/u/174096675?v=4" width="100px;" alt="drymuzzle"/>
-        <br /><sub><b>drymuzzle</b></sub></a>
+      <td align="center" valign="top" width="80px"><a href="https://github.com/drymuzzle">
+        <img src="https://avatars.githubusercontent.com/u/174096675?v=4" alt="drymuzzle" style="border-radius: 50%;"/>
+        <br />
+        <sub><b>drymuzzle</b></sub></a>
         <br />
         <a href="https://github.com/usalu/semio/commits?author=drymuzzle" title="Commits">🧑‍💻</a> 
+        <a href="https://github.com/usalu/semio/issues?q=author%3Adrymuzzle OR assignee%3Adrymuzzle" title="Issues">ℹ️</a>
+        <a href="https://github.com/usalu/semio/pulls?q=author%3Adrymuzzle" title="Pull Requests">🔄</a>
       </td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/kaatzjo">
-        <img src="https://avatars.githubusercontent.com/u/110397668?v=4" width="100px;" alt="kaatzjo"/>
-        <br /><sub><b>kaatzjo</b></sub></a>
+      <td align="center" valign="top" width="80px"><a href="https://github.com/kaatzjo">
+        <img src="https://avatars.githubusercontent.com/u/110397668?v=4" alt="kaatzjo" style="border-radius: 50%;"/>
+        <br />
+        <sub><b>kaatzjo</b></sub></a>
         <br />
         <a href="https://github.com/usalu/semio/commits?author=kaatzjo" title="Commits">🧑‍💻</a> 
+        <a href="https://github.com/usalu/semio/issues?q=author%3Akaatzjo OR assignee%3Akaatzjo" title="Issues">ℹ️</a>
+        <a href="https://github.com/usalu/semio/pulls?q=author%3Akaatzjo OR assignee%3Akaatzjo" title="Pull Requests">🔄</a>
       </td>
     </tr>
 </table>
