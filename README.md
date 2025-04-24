@@ -624,7 +624,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
   <tbody>
     <tr>
       <td align="center" valign="top" width="105px"><a href="https://github.com/usalu">
-        <img src="https://avatars.githubusercontent.com/u/65786312?v=4&s=20" alt="Ueli Saluz" style="border-radius: 50%;"/>
+        <img src="/assets/contributors/usalu_round_90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
         <br />
         <sub><b>Ueli Saluz</b></sub></a>
         <br />
