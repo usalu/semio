@@ -5,94 +5,106 @@ description: 📖 An introduction to kit-of-parts architecture and how semio rel
 
 import { Tabs, TabItem, Card, Aside } from "@astrojs/starlight/components";
 
-## 📦 1. Kit = The LEGO Box
-<br />
-A Kit is the full Lego set you own 🧰  
-It holds all the parts, instructions, and models you need to build anything 🧱  
-In Semio, the Kit is your project container 📁  
-It includes everything related to your modular system:  
-📁 Designs, 🧱 Building Blocks, 🔗 Connection Logic, and 📊 Various Data 📦
+## 🧩 Understanding Semio: The Anatomy of a Modular Design System
+Let’s say you’ve just bought a big Lego box. Inside, you can build a spaceship, a castle, or a race car. Everything starts from that box 
+, and that’s how Semio’s architecture works too.
 
-:::note[Organize Everything]
+### 📦 1. Kit = The LEGO Box
+<br />
+- A Kit is the **full Lego set** you own 🧰  
+-  It holds all the parts, instructions, and models you need to build anything 🧱  
+- In Semio, the Kit is your project container 📁  
+    - It includes everything related to your modular system:  
+        - 📁 Designs,
+        - 🧱 Building Blocks
+        - 🔗 Connection Logic 
+        - 📊 Various Data 📦
+
+:::note
 Kits allow you to organize an entire system in one place 🧩  
 Its elements are reusable across projects or teams 🔄
 :::
 
 ---
 
-## 🧾 2. Design = The Model You Build
+### 🧾 2. Design = The Model You Build
 <br />
-A Design is one specific thing you build  
-like a 🚀 spaceship, 🧱 launchpad, or 🏰 tower 🛠️  
-It's made of multiple Lego pieces arranged with intention 🎯  
-You can build many different Designs from the same Kit 🧰  
-In Semio, a Design is a 📸 snapshot  
-a specific arrangement of Pieces and how they connect 🔗
+- A Design is one specific thing you build  
+    - like a 🚀 spaceship, 🧱 launchpad, or a 🏰 tower   
+- It's made of multiple Lego parts arranged with intention 🎯  
+- You can build many different Designs from the same building components 🧰  
 
-:::note[Multiple Designs per Kit]
+
+:::note
 A Kit could include multiple Designs 📚
 :::
 
 ---
 
-## 🧱 3. Type = The Unique Brick Mold
+### 🧱 3. Type = The Unique Brick Mold
 <br />
-A Type is a distinct kind of Lego brick 🧊  
-such as a 2×4 block, a window, or a roof tile 🧱  
-You can think of a Type as the definition or blueprint of a building component 📐  
-It describes what it is, what it looks like, and how it connects 🔧  
-Once defined, a Type can be reused as many times as needed  
-helping you build consistent and modular systems 🧩
+- A Type is a **distinct** kind of Lego brick 🧊  
+    - such as a 2×4 block, a window, or a roof tile 🧱  
+- You can think of a Type as the **definition** or **blueprint** of a building component 📐  
+    - It describes what it is, what it looks like, and how it connects 🔧  
+- Once defined, a Type can be reused as many times as needed  
+    - it helps you build consistent and modular systems 🧩
 
-:::note[Variants and Separation]
-A Type can have different variants 🧬  
-For example, a 2×4 red brick 🟥 and a 3×2 grey brick ⬜ are both variants of the same Type because they follow the same design logic 📏  
-On the other hand, a window 🪟 serves a different purpose and follows different rules, so it is considered a separate Type 🧠
+:::note[A Common Mistake to Avoid]
+It's easy to assume a 2×4 red brick 🟥 and a 3×2 grey brick ⬜ should be separate Types.  
+But in Semio, they can be **variants of the same Type** ✅ As long as components follow the same design rules, size and color differences can be handled as **variants**.
+
+💡 **Tip:**  
+Create a new Type only when the geometry or behavior is fundamentally different.  
+For example, a window 🪟 isn't just a visual variation. it connects and functions differently, so it belongs to a separate Type 🧠  
 :::
+
+
 
 ---
 
-## 🔁 4. Piece = A Brick You Actually Use
+### 🔁 4. Piece = A Brick You Actually Use
 <br />
-A Piece is an individual brick placed in your design 🧩  
-It’s a specific instance of a Type that appears within a Design 🧱  
-If you use ten red 2×4 bricks, each one is a separate Piece  
-but they all come from the same mold 🧰  
-Each Piece inherits everything from its Type:  
-🧬 Geometry, 🧠 Semantics, 📄 Various Metadata 🔗
+- A Piece is an individual brick placed in your design 🧩  
+    - It’s a specific **instance of a Type** (the mold) that appears within a Design 🧱  
+- If you use ten red 2×4 bricks, each one is a separate Piece  
+    - but they all come from the same mold 🧰  
+- Each Piece inherits all the infoemations from its Type:  
+    - 🧬 Geometry, 
+    - 🧠 Semantics,
+    - 📄 Various Metadata 🔗
 
-:::note[From Type to Reality]
-Pieces are the building blocks of your design 🛠️  
+:::note
+Pieces are the geometrical building blocks of your design 🛠️  
 They bring Types to life by placing them into real configurations 🧩
 :::
 
 ---
 
-## ⚓ 5. Port = The Connection Point
+### ⚓ 5. Port = The Connection Point
 <br />
-A Port is a smart, intentional connector 🧲  
-Think of it like a Lego stud or socket 🧱 but placed exactly where it's needed 🎯  
-Each Port acts as a docking spot, telling the system where and how a Piece should attach to another 🔧  
-Ports are defined once on a Type and automatically inherited by all its Pieces 🧩
+- A Port is a smart, intentional **connector** 🧲  
+    - Think of it like a Lego stud or socket 🧱 but placed exactly where it's needed 🎯  
+- Each Port acts as a docking spot, telling the system where and how a Piece should attach to another 🔧  
+- Ports are defined once on a Type and automatically inherited by all its Pieces 🧩
 
-:::note[Precision Over Quantity]
-Unlike classic Lego bricks with many studs on every surface 🔳, Semio uses only the Ports that matter 🎯  
-To stack two Pieces, for example, you just define one Port on the top ⬆️ and one on the bottom ⬇️
+:::note[Minimal Ports, Maximum Clarity]
+Unlike classic Lego bricks with many studs on every surface 🔳 Semio uses only the Ports that matter 🎯 To stack two Lego bricks on top of each other, you just define one Port on the top ⬆️ and one on the bottom ⬇️  
 :::
 
 ---
 
-## 🔗 6. Connection = The Snapping Together
+### 🔗 6. Connection = The Snapping Together
 <br />
-A Connection defines how two bricks come together 🧷  
-Like snapping a window piece onto a wall 🪟  
-It's not a shape or object. It's a rule 🧠  
-It tells the system which Ports should connect and how they align ⚓
+- A Connection defines how two bricks **come together** 🧷  
+    - Like snapping a window piece onto a wall 🪟  
+- It's not a shape or object. It's a rule 🧠  
+- It tells the system which Ports should connect and how they align ⚓
 
 📐 **Example:**  
 “Connect the top Port of Piece A ⬆️ to the bottom Port of Piece B ⬇️” 🧩
 
-:::note[Design as Logic]
+:::note
 Connections describe assembly logic 🔄  
 They allow your design to be structured, modular, and flexible without relying on fixed geometry 🧠
 :::
