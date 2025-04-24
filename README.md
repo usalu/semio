@@ -46,7 +46,7 @@ Let me walk you throw 🚶
    - [🐝 wasp](#-wasp-)
    - [🐞 ladybug](#-ladybug-)
 1. [📄 Specs](#-specs-)
-1. [🦑 Monorepo](#-monorepo-)
+1. [🦑 Repo](#-repo-)
    - [⚖️ Principles](#️-principles-)
    - [🧑‍💻 Development](#-development-)
 1. [♻️ Ecosystems](#%EF%B8%8F-ecosystems-)
@@ -68,6 +68,7 @@ Let me walk you throw 🚶
    - [🌈 Colors](#-colors-)
    - [📄 Typography](#-typography-)
    - [👀 Visual elements](#-visual-elements-)
+1. [✨ Contributors](#-contributors-)
 
 # 🛍️ Products [↑](#-overview)
 
@@ -93,11 +94,11 @@ The assistant helps you on every step in the design process ✍️
 
 # 📄 Specs [↑](#-overview)
 
-# 🦑 [Monorepo](https://github.com/usalu/semio.git) [↑](#-overview)
+# 🦑 [Repo](https://github.com/usalu/semio.git) [↑](#-overview)
 
 This git repo has <strong>everything</strong> that exists in the open semio ecosystem 🤯
 
-## ⚖️ Principles [↑](#-monorepo-)
+## ⚖️ Principles [↑](#-repo-)
 
 Let's start with the rule of thumbs that this codebase was built with 🫰
 
@@ -187,7 +188,7 @@ Even if 95% of the codebase follows those principles, there are good reasons for
 
 **🚩 Don't worry, you'll figure out the possiblites and make the right choice for the specific problems ✅**
 
-## 🧑‍💻 Development [↑](#-monorepo-)
+## 🧑‍💻 Development [↑](#-repo-)
 
 Different components need different tools 🧰
 
@@ -225,7 +226,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
 
 You might have noticed that the individual components can be closely related such as [sketchpad](#️-sketchpad-), [Grasshopper](#-grasshopper-) and [engine](#️-engine-) but they are in totaly different folders 📂
 
-The reason for this is that the monorepo is not disected according content but according technology stack ✂️
+The reason for this is that the repo is not disected according content but according technology stack ✂️
 
 This is less intuitive but more tool-friendly and everything that is easier for our tools is less pain to develop 🧑‍💻
 
@@ -622,41 +623,59 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 <table>
   <tbody>
     <tr>
-      <td align="center" valign="top" width="80px"><a href="https://github.com/usalu">
-        <img src="https://avatars.githubusercontent.com/u/65786312?v=4" alt="Ueli Saluz" style="border-radius: 50%;"/>
+      <td align="center" valign="top" width="105px"><a href="https://github.com/usalu">
+        <img src="https://avatars.githubusercontent.com/u/65786312?v=4&s=20" alt="Ueli Saluz" style="border-radius: 50%;"/>
         <br />
         <sub><b>Ueli Saluz</b></sub></a>
         <br />
         <a href="https://github.com/usalu/semio/commits?author=usalu" title="Commits">🧑‍💻</a> 
         <a href="https://github.com/usalu/semio/issues?q=author%3Ausalu OR assignee%3Ausalu" title="Issues">ℹ️</a>
-        <a href="https://github.com/usalu/semio/pulls?q=author%3Ausalu" title="Pull Requests">🔄</a>
+        <a href="https://github.com/usalu/semio/pulls?q=author%3Ausalu" title="Pull Requests">🔀</a>
+        <br />
+        <a href="#-semiojs-" title="@semio/js"><sub>@semio/js<sub></a>
+        <a href="#-semiosketchpad-" title="@semio/sketchpad"><sub>@semio/sketchpad<sub></a>
+        <a href="#-semiodocs-" title="@semio/docs"><sub>@semio/docs<sub></a>
+        <a href="#-semioplayground-" title="@semio/playground"><sub>@semio/playground<sub></a>
+        <a href="#-semioassistant-" title="@semio/assistant"><sub>@semio/assistant<sub></a>
+        <a href="#-semioengine-" title="@semio/engine"><sub>@semio/engine<sub></a>
+        <a href="#-semioassets-" title="@semio/assets"><sub>@semio/assets<sub></a>
+        <a href="#-semionet-" title="@semio/net"><sub>@semio/net<sub></a>
+        <a href="#-semiograsshopper-" title="@semio/grasshopper"><sub>@semio/grasshopper<sub></a>
       </td>
-      <td align="center" valign="top" width="80px"><a href="https://github.com/kinansarak">
-        <img src="https://avatars.githubusercontent.com/u/48572266?v=4" alt="KinanSarak" style="border-radius: 50%;"/>
+      <td align="center" valign="top" width="105px"><a href="https://github.com/kinansarak">
+        <img src="https://avatars.githubusercontent.com/u/48572266?v=4&s=90" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
         <br />
         <sub><b>KinanSarak</b></sub></a>
         <br />
         <a href="https://github.com/usalu/semio/commits?author=kinansarak" title="Commits">🧑‍💻</a> 
         <a href="https://github.com/usalu/semio/issues?q=author%3Akinansarak OR assignee%3Akinansarak" title="Issues">ℹ️</a>
-        <a href="https://github.com/usalu/semio/pulls?q=author%3Akinansarak" title="Pull Requests">🔄</a>
+        <a href="https://github.com/usalu/semio/pulls?q=author%3Akinansarak" title="Pull Requests">🔀</a>
+        <br />
+        <a href="#-semiodocs-" title="@semio/docs"><sub>@semio/docs<sub></a>
+        <a href="#-semiograsshopper-" title="@semio/grasshopper"><sub>@semio/grasshopper<sub></a>
+        <br />
       </td>
-      <td align="center" valign="top" width="80px"><a href="https://github.com/drymuzzle">
-        <img src="https://avatars.githubusercontent.com/u/174096675?v=4" alt="drymuzzle" style="border-radius: 50%;"/>
+      <td align="center" valign="top" width="105px"><a href="https://github.com/drymuzzle">
+        <img src="https://avatars.githubusercontent.com/u/174096675?v=4&s=90" width="90px" alt="drymuzzle" style="border-radius: 50%;"/>
         <br />
         <sub><b>drymuzzle</b></sub></a>
         <br />
         <a href="https://github.com/usalu/semio/commits?author=drymuzzle" title="Commits">🧑‍💻</a> 
         <a href="https://github.com/usalu/semio/issues?q=author%3Adrymuzzle OR assignee%3Adrymuzzle" title="Issues">ℹ️</a>
-        <a href="https://github.com/usalu/semio/pulls?q=author%3Adrymuzzle" title="Pull Requests">🔄</a>
+        <a href="https://github.com/usalu/semio/pulls?q=author%3Adrymuzzle" title="Pull Requests">🔀</a>
+        <br />
+        <a href="#-semiograsshopper-" title="@semio/grasshopper"><sub>@semio/grasshopper<sub></a>
       </td>
-      <td align="center" valign="top" width="80px"><a href="https://github.com/kaatzjo">
-        <img src="https://avatars.githubusercontent.com/u/110397668?v=4" alt="kaatzjo" style="border-radius: 50%;"/>
+      <td align="center" valign="top" width="105px"><a href="https://github.com/kaatzjo">
+        <img src="https://avatars.githubusercontent.com/u/110397668?v=4&s=90" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
         <br />
         <sub><b>kaatzjo</b></sub></a>
         <br />
         <a href="https://github.com/usalu/semio/commits?author=kaatzjo" title="Commits">🧑‍💻</a> 
         <a href="https://github.com/usalu/semio/issues?q=author%3Akaatzjo OR assignee%3Akaatzjo" title="Issues">ℹ️</a>
-        <a href="https://github.com/usalu/semio/pulls?q=author%3Akaatzjo OR assignee%3Akaatzjo" title="Pull Requests">🔄</a>
+        <a href="https://github.com/usalu/semio/pulls?q=author%3Akaatzjo OR assignee%3Akaatzjo" title="Pull Requests">🔀</a>
+        <br />
+        <a href="#-semioengine-" title="@semio/engine"><sub>@semio/engine<sub></a> 
       </td>
     </tr>
 </table>
