@@ -179,5 +179,19 @@
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
         },
+        {
+            "name": "PowerShell",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "${file}",
+            "cwd": "${fileDirname}"
+        },
+        {
+            "name": "Python",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
     ]
 }
