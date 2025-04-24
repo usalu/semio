@@ -643,7 +643,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <a href="#-semiograsshopper-" title="@semio/grasshopper"><sub>@semio/grasshopper<sub></a>
       </td>
       <td align="center" valign="top" width="105px"><a href="https://github.com/kinansarak">
-        <img src="https://avatars.githubusercontent.com/u/48572266?v=4&s=90" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
+        <img src="/assets/contributors/kinansarak_round_90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
         <br />
         <sub><b>KinanSarak</b></sub></a>
         <br />
@@ -656,7 +656,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <br />
       </td>
       <td align="center" valign="top" width="105px"><a href="https://github.com/drymuzzle">
-        <img src="https://avatars.githubusercontent.com/u/174096675?v=4&s=90" width="90px" alt="drymuzzle" style="border-radius: 50%;"/>
+        <img src="/assets/contributors/drymuzzle_round_90.png" width="90px" alt="drymuzzle" style="border-radius: 50%;"/>
         <br />
         <sub><b>drymuzzle</b></sub></a>
         <br />
@@ -667,7 +667,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <a href="#-semiograsshopper-" title="@semio/grasshopper"><sub>@semio/grasshopper<sub></a>
       </td>
       <td align="center" valign="top" width="105px"><a href="https://github.com/kaatzjo">
-        <img src="https://avatars.githubusercontent.com/u/110397668?v=4&s=90" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
+        <img src="/assets/contributors/kaatzjo_round_90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
         <br />
         <sub><b>kaatzjo</b></sub></a>
         <br />
