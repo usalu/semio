@@ -57,7 +57,7 @@ Let me walk you throw 🚶
    - [🟨 @semio/js](#-semiojs-)
    - [✏️ @semio/sketchpad](#️-semiosketchpad-)
    - [📚 @semio/docs](#-semiodocs-)
-   - [🎛️ @semio/playground](#-semioplayground-)
+   - [🎛️ @semio/playground](#%EF%B8%8F-semioplayground-)
    - [🤖 @semio/assistant](#-semioassistant-)
    - [⚙️ @semio/engine](#️-semioengine-)
    - [🛍️ @semio/assets](#%EF%B8%8F-semioassets-)
@@ -264,7 +264,7 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 
 </details>
 
-Currently only [engine](#️-engine-) but in the future it might grow and then the `.venv` will be centralized, …
+Currently only [engine](#️-semioengine-) but in the future it might grow and then the `.venv` will be centralized, …
 
 # 📦 Components [↑](#-overview)
 
@@ -620,10 +620,10 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 
 # ✨ [Contributors](https://github.com/usalu/semio/graphs/contributors) [↑](#-overview)
 
-<table>
+<table style="border-collapse: collapse; border: none;">
   <tbody>
-    <tr>
-      <td align="center" valign="top" width="105px"><a href="https://github.com/usalu">
+    <tr style="border: none;">
+      <td align="center" valign="top" width="105px" style="border: none;"><a href="https://github.com/usalu">
         <img src="/assets/contributors/usalu_round_90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
         <br />
         <sub><b>Ueli Saluz</b></sub></a>
@@ -635,7 +635,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <a href="#-semiojs-" title="@semio/js"><sub>@semio/js<sub></a>
         <a href="#-semiosketchpad-" title="@semio/sketchpad"><sub>@semio/sketchpad<sub></a>
         <a href="#-semiodocs-" title="@semio/docs"><sub>@semio/docs<sub></a>
-        <a href="#-semioplayground-" title="@semio/playground"><sub>@semio/playground<sub></a>
+        <a href="#%EF%B8%8F-semioplayground-" title="@semio/playground"><sub>@semio/playground<sub></a>
         <a href="#-semioassistant-" title="@semio/assistant"><sub>@semio/assistant<sub></a>
         <a href="#-semioengine-" title="@semio/engine"><sub>@semio/engine<sub></a>
         <a href="#-semioassets-" title="@semio/assets"><sub>@semio/assets<sub></a>

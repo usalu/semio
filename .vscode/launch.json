@@ -53,8 +53,8 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "dev js core",
-            "preLaunchTask": "dev js core",
+            "name": "dev js",
+            "preLaunchTask": "dev js",
             "postDebugTask": "Kill Development Tasks",
             "type": "chrome",
             "request": "launch",

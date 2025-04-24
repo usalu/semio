@@ -57,96 +57,17 @@ import { default as nakaginCapsuleTower } from '@semio/assets/semio/design_nakag
 //     designEditorStates: Y.Map<DesignEditorState>;
 // }
 
-export interface DesignEditorSelection {
-    selectedPieceIds: string[];
-    selectedConnections: {
-        connectingPieceId: string;
-        connectedPieceId: string;
-    }[];
-}
-
-export interface DesignEditorState {
-    selection: DesignEditorSelection;
-}
-
-class DesignEditorStore {
-    private id: string;
-    private yDoc: Y.Doc;
-    private yKit: Y.Map<any>;
-    private yDesign: Y.Map<any>;
-    private undoManager: UndoManager;
-    private state: DesignEditorState;
-    private listeners: Set<() => void> = new Set();
-
-    constructor(id: string, yDoc: Y.Doc, yKit: Y.Map<any>, yDesign: Y.Map<any>, undoManager: UndoManager) {
-        this.id = id;
-        this.yDoc = yDoc;
-        this.yKit = yKit;
-        this.yDesign = yDesign;
-        this.undoManager = undoManager;
-        this.state = {
-            selection: {
-                selectedPieceIds: [],
-                selectedConnections: []
-            }
-        };
-    }
-
-    getState(): DesignEditorState {
-        return this.state;
-    }
-
-    setState(state: DesignEditorState): void {
-        this.state = state;
-        this.listeners.forEach(listener => listener());
-    }
-
-    getDesignId(): [string, string, string] {
-        return [this.yDesign.get('name'), this.yDesign.get('variant'), this.yDesign.get('view')];
-    }
-
-    getKitId(): string {
-        return this.yKit.get('uri');
-    }
-
-    updateDesignEditorSelection = (selection: DesignEditorSelection): void => {
-        this.setState({ ...this.getState(), selection });
-    }
-
-    undo(): void {
-        this.undoManager.undo();
-        this.listeners.forEach(listener => listener());
-    }
-
-    redo(): void {
-        this.undoManager.redo();
-        this.listeners.forEach(listener => listener());
-    }
-
-    transact(operations: () => void): void {
-        this.yDoc.transact(operations, { trackedOrigins: new Set([this.id]) });
-        this.listeners.forEach(listener => listener());
-    }
-
-    subscribe(callback: () => void): () => void {
-        this.listeners.add(callback);
-        return () => {
-            this.listeners.delete(callback);
-        };
-    }
-}
-
 class StudioStore {
     private userId: string;
     private yDoc: Y.Doc;
-    private undoManager: UndoManager;
+    // private undoManager: UndoManager;
     private designEditorStores: Map<string, DesignEditorStore>;
     // private indexeddbProvider: IndexeddbPersistence;
 
     constructor(userId: string) {
         this.userId = userId;
         this.yDoc = new Y.Doc();
-        this.undoManager = new UndoManager(this.yDoc, { trackedOrigins: new Set([this.userId]) });
+        // this.undoManager = new UndoManager(this.yDoc, { trackedOrigins: new Set([this.userId]) });
         this.designEditorStores = new Map();
         // this.indexeddbProvider = new IndexeddbPersistence(userId, this.yDoc);
         // this.indexeddbProvider.whenSynced.then(() => {
@@ -984,8 +905,7 @@ class StudioStore {
         const yDesign = yKit.get('designs').get(designName)?.get(designVariant)?.get(view);
         if (!yDesign) throw new Error(`Design (${designName}, ${designVariant}, ${view}) not found in kit (${kitUri})`);
         const id = uuidv4();
-        const undoManager = new UndoManager(yDesign, { trackedOrigins: new Set([id]) });
-        const designEditorStore = new DesignEditorStore(id, this.yDoc, yKit, yDesign, undoManager);
+        const designEditorStore = new DesignEditorStore(id, this.yDoc, yKit, yDesign);
         this.designEditorStores.set(id, designEditorStore);
         return id;
     }
@@ -1030,7 +950,6 @@ class StudioStore {
     }
 }
 
-
 const StudioStoreContext = createContext<StudioStore | null>(null);
 
 export const useStudioStore = () => {
@@ -1049,6 +968,86 @@ export const StudioStoreProvider: FC<{ userId: string, children: React.ReactNode
         </StudioStoreContext.Provider>
     );
 };
+
+export interface DesignEditorSelection {
+    selectedPieceIds: string[];
+    selectedConnections: {
+        connectingPieceId: string;
+        connectedPieceId: string;
+    }[];
+}
+
+export interface DesignEditorState {
+    selection: DesignEditorSelection;
+}
+
+class DesignEditorStore {
+    private id: string;
+    private yDoc: Y.Doc;
+    private yKit: Y.Map<any>;
+    private yDesign: Y.Map<any>;
+    private undoManager: UndoManager;
+    private state: DesignEditorState;
+    private listeners: Set<() => void> = new Set();
+
+    constructor(id: string, yDoc: Y.Doc, yKit: Y.Map<any>, yDesign: Y.Map<any>) {
+        this.id = id;
+        this.yDoc = yDoc;
+        this.yKit = yKit;
+        this.yDesign = yDesign;
+        this.undoManager = new UndoManager(yDesign, { captureTimeout: 0, trackedOrigins: new Set([id]) });
+        // this.undoManager = new UndoManager(yDesign, { captureTimeout: 0 });
+        this.state = {
+            selection: {
+                selectedPieceIds: [],
+                selectedConnections: []
+            }
+        };
+    }
+
+    getState(): DesignEditorState {
+        return this.state;
+    }
+
+    setState(state: DesignEditorState): void {
+        this.state = state;
+        this.listeners.forEach(listener => listener());
+    }
+
+    getDesignId(): [string, string, string] {
+        return [this.yDesign.get('name'), this.yDesign.get('variant'), this.yDesign.get('view')];
+    }
+
+    getKitId(): string {
+        return this.yKit.get('uri');
+    }
+
+    updateDesignEditorSelection = (selection: DesignEditorSelection): void => {
+        this.setState({ ...this.getState(), selection });
+    }
+
+    undo(): void {
+        this.undoManager.undo();
+        this.listeners.forEach(listener => listener());
+    }
+
+    redo(): void {
+        this.undoManager.redo();
+        this.listeners.forEach(listener => listener());
+    }
+
+    transact(operations: () => void): void {
+        this.yDoc.transact(operations, this.id);
+        this.listeners.forEach(listener => listener());
+    }
+
+    subscribe(callback: () => void): () => void {
+        this.listeners.add(callback);
+        return () => {
+            this.listeners.delete(callback);
+        };
+    }
+}
 
 const DesignEditorStoreContext = createContext<DesignEditorStore | null>(null);
 
