@@ -5,6 +5,8 @@ import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import JSZip from 'jszip';
 // Import initSqlJs
+import initSqlJs from 'sql.js';
+import sqlWasm from 'sql.js/dist/sql-wasm.wasm';
 
 import { Generator } from '@semio/js/lib/utils';
 import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint, Point, Vector, Quality, Author, Side } from '@semio/js/semio';
@@ -961,7 +963,7 @@ class StudioStore {
         let kitDb: any; // Define kitDb here to access in finally block
         try {
             // Initialize SQL.js specifically for this import operation
-            SQL = await initSqlJs({ locateFile: file => `/${file}` });
+            SQL = await initSqlJs({ locateFile: () => sqlWasm });
             console.log("SQL.js initialized for import.");
         } catch (err) {
             console.error("Failed to initialize SQL.js for import:", err);
