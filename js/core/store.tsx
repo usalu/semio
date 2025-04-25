@@ -7,8 +7,7 @@ import { IndexeddbPersistence } from 'y-indexeddb';
 import { Generator } from '@semio/js/lib/utils';
 import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint, Point, Vector, Quality, Author, Side } from '@semio/js/semio';
 
-import { default as metabolism } from '@semio/assets/semio/kit_metabolism.json';
-import { default as nakaginCapsuleTower } from '@semio/assets/semio/design_nakagin-capsule-tower_flat.json';
+// import { default as metabolism } from '@semio/assets/semio/kit_metabolism.json';
 
 
 // type YType = {
@@ -54,7 +53,7 @@ import { default as nakaginCapsuleTower } from '@semio/assets/semio/design_nakag
 
 // type YStudio = {
 //     kits: Y.Map<YKit>;
-//     designEditorStates: Y.Map<DesignEditorState>;
+//     files: Y.Map<Uint8Array>;
 // }
 
 class StudioStore {
@@ -68,6 +67,8 @@ class StudioStore {
     constructor(userId: string) {
         this.userId = userId;
         this.yDoc = new Y.Doc();
+        this.yDoc.getMap('kits');
+        this.yDoc.getMap('files');
         this.undoManager = new UndoManager(this.yDoc, { trackedOrigins: new Set([this.userId]) });
         this.designEditorStores = new Map();
         this.indexeddbProvider = new IndexeddbPersistence(userId, this.yDoc);
@@ -940,16 +941,6 @@ class StudioStore {
         this.designEditorStores.delete(id);
     }
 
-    importKit(url: string): void {
-        const importedKitData = metabolism as unknown as Omit<Kit, 'created' | 'updated'>;
-        const kitToCreate: Kit = {
-            ...importedKitData,
-            created: new Date(),
-            updated: new Date(),
-        };
-        this.createKit(kitToCreate);
-    }
-
     undo(): void {
         this.undoManager.undo();
     }
@@ -967,6 +958,34 @@ class StudioStore {
         return () => {
             this.listeners.delete(callback);
         };
+    }
+
+    importKit(url: string, complete = false): void {
+        // load zip file from url into memory
+
+        // if complete, load all files from the zip file into memory
+        // otherwise, load only files from all representations with relative urls
+
+        // load ./semio/kit.db as sqlite database into memory
+
+        // extract kit from sqlite database
+
+        this.createKit(kit);
+    }
+
+    exportKit(kitUri: string, complete = false): Uint8Array {
+        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
+        if (!yKit) throw new Error(`Kit (${kitUri}) not found`);
+        const kit = this.getKit(kitUri);
+
+        // create sqlite file in memory from kit
+
+        // if complete, include all files from the kit
+        // otherwise, include only files from all representations with relative urls
+
+        // export zip file with sqlite file and files
+
+        return buffer;
     }
 }
 
