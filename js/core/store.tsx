@@ -64,9 +64,10 @@ class StudioStore {
     private userId: string;
     private yDoc: Y.Doc;
     private undoManager: UndoManager;
-    private designEditorStores: Map<string, DesignEditorStore>;
+    private designEditorStores: Map<string, DesignEditorStore> = new Map();;
     private indexeddbProvider: IndexeddbPersistence;
     private listeners: Set<() => void> = new Set();
+    private fileUrls: Map<string, string> = new Map();
 
     constructor(userId: string) {
         this.userId = userId;
@@ -74,7 +75,6 @@ class StudioStore {
         this.yDoc.getMap('kits');
         this.yDoc.getMap('files');
         this.undoManager = new UndoManager(this.yDoc, { trackedOrigins: new Set([this.userId]) });
-        this.designEditorStores = new Map();
         this.indexeddbProvider = new IndexeddbPersistence(userId, this.yDoc);
         this.indexeddbProvider.whenSynced.then(() => {
             console.log(`Local changes are synchronized for user (${this.userId}) with client (${this.yDoc.clientID})`);
@@ -911,6 +911,39 @@ class StudioStore {
         ports.delete(portId);
     }
 
+    createFile(url: string, data: Uint8Array, mime: string): void {
+        this.yDoc.getMap('files').set(url, data);
+        const blob = new Blob([data], { type: mime });
+        const blobUrl = URL.createObjectURL(blob);
+        this.fileUrls.set(url, blobUrl);
+    }
+
+    getFileUrl(url: string): string {
+        const fileUrl = this.fileUrls.get(url);
+        if (!fileUrl) throw new Error(`File (${url}) not found`);
+        return fileUrl;
+    }
+
+    getFileUrls(): string[] {
+        return Array.from(this.fileUrls.values());
+    }
+
+    getFileData(url: string): Uint8Array {
+        const fileData = this.yDoc.getMap('files').get(url);
+        if (!fileData) throw new Error(`File (${url}) not found`);
+        return fileData as Uint8Array;
+    }
+
+    deleteFile(url: string): void {
+        this.yDoc.getMap('files').delete(url);
+        this.fileUrls.delete(url);
+    }
+
+    deleteFiles(): void {
+        this.yDoc.getMap('files').clear();
+        this.fileUrls.clear();
+    }
+
     createDesignEditorStore(kitUri: string, designName: string, designVariant: string, view: string): string {
         const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit (${kitUri}) not found`);
@@ -960,34 +993,27 @@ class StudioStore {
 
     async importKit(url: string, complete = false): Promise<void> {
         let SQL: any;
-        let kitDb: any; // Define kitDb here to access in finally block
+        let kitDb: any;
         try {
-            // Initialize SQL.js specifically for this import operation
             SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
             console.log("SQL.js initialized for import.");
         } catch (err) {
             console.error("Failed to initialize SQL.js for import:", err);
-            throw new Error("SQL.js failed to initialize for import."); // Rethrow or handle as appropriate
+            throw new Error("SQL.js failed to initialize for import.");
         }
 
         const zipData = await fetch(url).then(res => res.arrayBuffer());
         const zip = await JSZip.loadAsync(zipData);
-
         const kitDbFileEntry = zip.file(".semio/kit.db");
         if (!kitDbFileEntry) {
             throw new Error("kit.db not found in the zip file at path ./semio/kit.db");
         }
         const kitDbFile = await kitDbFileEntry.async("uint8array");
-        kitDb = new SQL.Database(kitDbFile); // Assign to outer scope variable
-
+        kitDb = new SQL.Database(kitDbFile);
 
         let kit: Kit | null = null;
-        let types: Type[] = [];
-        let designs: Design[] = [];
-        const filesMap = this.yDoc.getMap('files');
 
         try {
-            // Extract kit
             const kitRes = kitDb.exec("SELECT uri, name, description, icon, image, preview, version, remote, homepage, license, created, updated FROM kit LIMIT 1");
             if (!kitRes || kitRes.length === 0 || !kitRes[0].values || kitRes[0].values.length === 0) throw new Error("Kit data not found in database.");
             const kitRow: any[] = kitRes[0].values[0];
@@ -995,34 +1021,27 @@ class StudioStore {
                 uri: kitRow[0], name: kitRow[1], description: kitRow[2], icon: kitRow[3], image: kitRow[4], preview: kitRow[5],
                 version: kitRow[6], remote: kitRow[7], homepage: kitRow[8], license: kitRow[9],
                 created: new Date(kitRow[10]), updated: new Date(kitRow[11]),
-                types: [], designs: [], qualities: [] // Initialize arrays
+                types: [], designs: [], qualities: []
             };
             const kitIdRes = kitDb.exec("SELECT id FROM kit WHERE uri = ?", [kit.uri]);
             const kitId = kitIdRes[0].values[0][0];
 
 
-            // --- Helper function to get Qualities ---
-            const getQualities = (tableName: string, fkColumn: string, fkValue: number | string): Quality[] => {
+            const getQualities = (fkColumn: string, fkValue: number | string): Quality[] => {
                 const query = `SELECT name, value, unit, definition FROM quality WHERE ${fkColumn} = ?`;
-                // Use kitDb directly
                 const res = kitDb.exec(query, [fkValue]);
                 if (!res || res.length === 0 || !res[0].values) return [];
                 return res[0].values.map((row: any[]) => ({ name: row[0], value: row[1], unit: row[2], definition: row[3] }));
             };
-            // --- Helper function to get Authors ---
-            const getAuthors = (tableName: string, fkColumn: string, fkValue: number | string): Author[] => {
+            const getAuthors = (fkColumn: string, fkValue: number | string): Author[] => {
                 const query = `SELECT name, email, rank FROM author WHERE ${fkColumn} = ?`;
-                // Use kitDb directly
                 const res = kitDb.exec(query, [fkValue]);
                 if (!res || res.length === 0 || !res[0].values) return [];
                 return res[0].values.map((row: any[]) => ({ name: row[0], email: row[1], rank: row[2] }));
             };
 
-            // Extract kit qualities
-            kit.qualities = getQualities('quality', 'kit_id', kitId);
+            kit.qualities = getQualities('kit_id', kitId);
 
-
-            // Extract types
             const typeRes = kitDb.exec("SELECT id, name, description, icon, image, variant, unit, created, updated FROM type WHERE kit_id = ?", [kitId]);
             if (typeRes && typeRes.length > 0 && typeRes[0].values) {
                 for (const typeRow of typeRes[0].values) {
@@ -1033,7 +1052,6 @@ class StudioStore {
                         representations: [], ports: [], qualities: [], authors: []
                     };
 
-                    // Extract representations for this type
                     const repRes = kitDb.exec("SELECT id, url, description, mime FROM representation WHERE type_id = ?", [typeId]);
                     if (repRes && repRes.length > 0 && repRes[0].values) {
                         for (const repRow of repRes[0].values) {
@@ -1042,18 +1060,16 @@ class StudioStore {
                             const representation: Representation = {
                                 url: repUrl, description: repRow[2], mime: repRow[3], tags: [], qualities: []
                             };
-                            // Extract tags for this representation
                             const tagRes = kitDb.exec("SELECT name FROM tag WHERE representation_id = ? ORDER BY \"order\"", [repId]);
                             if (tagRes && tagRes.length > 0 && tagRes[0].values) {
                                 representation.tags = tagRes[0].values.map((row: any[]) => row[0]);
                             }
-                            representation.qualities = getQualities('quality', 'representation_id', repId);
+                            representation.qualities = getQualities('representation_id', repId);
 
-                            // Extract file data from zip and store in filesMap
                             const fileEntry = zip.file(repUrl);
                             if (fileEntry) {
                                 const fileData = await fileEntry.async("uint8array");
-                                filesMap.set(repUrl, fileData);
+                                this.createFile(repUrl, fileData, repRow[3]);
                             } else if (complete && !repUrl.startsWith("http")) {
                                 console.warn(`Representation file not found in zip: ${repUrl}`);
                             }
@@ -1061,7 +1077,6 @@ class StudioStore {
                         }
                     }
 
-                    // Extract ports for this type
                     const portRes = kitDb.exec("SELECT id, local_id, description, family, t, point_x, point_y, point_z, direction_x, direction_y, direction_z FROM port WHERE type_id = ?", [typeId]);
                     if (portRes && portRes.length > 0 && portRes[0].values) {
                         for (const portRow of portRes[0].values) {
@@ -1072,24 +1087,19 @@ class StudioStore {
                                 direction: { x: portRow[8], y: portRow[9], z: portRow[10] },
                                 compatibleFamilies: [], qualities: []
                             };
-                            // Extract compatible families for this port
                             const compFamRes = kitDb.exec("SELECT name FROM compatible_family WHERE port_id = ? ORDER BY \"order\"", [portId]);
                             if (compFamRes && compFamRes.length > 0 && compFamRes[0].values) {
                                 port.compatibleFamilies = compFamRes[0].values.map((row: any[]) => row[0]);
                             }
-                            port.qualities = getQualities('quality', 'port_id', portId);
+                            port.qualities = getQualities('port_id', portId);
                             type.ports!.push(port);
                         }
                     }
-                    type.qualities = getQualities('quality', 'type_id', typeId);
-                    type.authors = getAuthors('author', 'type_id', typeId);
-                    types.push(type);
+                    type.qualities = getQualities('type_id', typeId);
+                    type.authors = getAuthors('type_id', typeId);
+                    kit.types!.push(type);
                 }
             }
-            kit.types = types;
-
-
-            // Extract designs
             const designRes = kitDb.exec("SELECT id, name, description, icon, image, variant, \"view\", unit, created, updated FROM design WHERE kit_id = ?", [kitId]);
             if (designRes && designRes.length > 0 && designRes[0].values) {
                 for (const designRow of designRes[0].values) {
@@ -1099,11 +1109,9 @@ class StudioStore {
                         view: designRow[6], unit: designRow[7], created: new Date(designRow[8]), updated: new Date(designRow[9]),
                         pieces: [], connections: [], qualities: [], authors: []
                     };
-
-                    // Extract pieces for this design
                     const pieceRes = kitDb.exec("SELECT p.id, p.local_id, p.description, t.name, t.variant, pl.origin_x, pl.origin_y, pl.origin_z, pl.x_axis_x, pl.x_axis_y, pl.x_axis_z, pl.y_axis_x, pl.y_axis_y, pl.y_axis_z, p.center_x, p.center_y FROM piece p JOIN type t ON p.type_id = t.id LEFT JOIN plane pl ON p.plane_id = pl.id WHERE p.design_id = ?", [designId]);
-                    const pieceMap: { [key: string]: Piece } = {}; // Map local_id to piece for connections
-                    const pieceIdMap: { [dbId: number]: string } = {}; // Map db id to local_id
+                    const pieceMap: { [key: string]: Piece } = {};
+                    const pieceIdMap: { [dbId: number]: string } = {};
                     if (pieceRes && pieceRes.length > 0 && pieceRes[0].values) {
                         for (const pieceRow of pieceRes[0].values) {
                             const pieceId = pieceRow[0];
@@ -1121,14 +1129,12 @@ class StudioStore {
                                 center: pieceRow[14] !== null ? { x: pieceRow[14], y: pieceRow[15] } : undefined,
                                 qualities: []
                             };
-                            piece.qualities = getQualities('quality', 'piece_id', pieceId);
+                            piece.qualities = getQualities('piece_id', pieceId);
                             design.pieces!.push(piece);
                             pieceMap[localId] = piece;
                             pieceIdMap[pieceId] = localId;
                         }
                     }
-
-                    // Extract connections for this design
                     const connRes = kitDb.exec("SELECT c.id, c.description, c.gap, c.shift, c.raise_, c.rotation, c.turn, c.tilt, c.x, c.y, c.connected_piece_id, cp.local_id AS connected_port_id, c.connecting_piece_id, cnp.local_id AS connecting_port_id FROM connection c JOIN port cp ON c.connected_port_id = cp.id JOIN port cnp ON c.connecting_port_id = cnp.id WHERE c.design_id = ?", [designId]);
                     if (connRes && connRes.length > 0 && connRes[0].values) {
                         for (const connRow of connRes[0].values) {
@@ -1146,26 +1152,21 @@ class StudioStore {
                                 connecting: { piece: { id_: connectingPieceLocalId }, port: { id_: connRow[13] } },
                                 qualities: []
                             };
-                            connection.qualities = getQualities('quality', 'connection_id', connId);
+                            connection.qualities = getQualities('connection_id', connId);
                             design.connections!.push(connection);
                         }
                     }
-                    design.qualities = getQualities('quality', 'design_id', designId);
-                    design.authors = getAuthors('author', 'design_id', designId);
-                    designs.push(design);
+                    design.qualities = getQualities('design_id', designId);
+                    design.authors = getAuthors('design_id', designId);
+                    kit.designs!.push(design);
                 }
             }
-            kit.designs = designs;
-
-            // Create the kit in the store
             this.createKit(kit);
             console.log(`Kit "${kit.name}" imported successfully from ${url}`);
-
         } catch (error) {
             console.error("Error importing kit:", error);
-            throw error; // Re-throw the error after logging
+            throw error;
         } finally {
-            // Ensure the database is closed for this specific import
             if (kitDb) {
                 kitDb.close();
                 console.log("SQL.js database closed for import.");
@@ -1175,22 +1176,17 @@ class StudioStore {
 
     async exportKit(kitUri: string, complete = false): Promise<Blob> {
         let SQL: any;
-        let db: any; // Define db here to access in finally block
+        let db: any;
         try {
-            // Initialize SQL.js specifically for this export operation
             SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
             console.log("SQL.js initialized for export.");
         } catch (err) {
             console.error("Failed to initialize SQL.js for export:", err);
             throw new Error("SQL.js failed to initialize for export.");
         }
-
         const kit = this.getKit(kitUri);
-        db = new SQL.Database(); // Assign to outer scope variable
+        db = new SQL.Database();
         const zip = new JSZip();
-        const filesMap = this.yDoc.getMap('files');
-
-        // Use schema from sqlite/schema.sql
         const schema = `
             CREATE TABLE kit ( uri VARCHAR(2048) NOT NULL UNIQUE, name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, preview VARCHAR(1024) NOT NULL, version VARCHAR(64) NOT NULL, remote VARCHAR(1024) NOT NULL, homepage VARCHAR(1024) NOT NULL, license VARCHAR(1024) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY );
             CREATE TABLE type ( name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, variant VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, CONSTRAINT "Unique name and variant" UNIQUE (name, variant, kit_id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
@@ -1207,47 +1203,34 @@ class StudioStore {
         `;
 
         try {
-            db.run(schema); // Create tables
-
-            // --- Helper function to insert Qualities ---
+            db.run(schema);
             const insertQualities = (qualities: Quality[] | undefined, fkColumn: string, fkValue: number) => {
                 if (!qualities) return;
-                // Use db directly
                 const stmt = db.prepare(`INSERT INTO quality (name, value, unit, definition, ${fkColumn}) VALUES (?, ?, ?, ?, ?)`);
                 qualities.forEach(q => stmt.run([q.name, q.value, q.unit, q.definition, fkValue]));
                 stmt.free();
             };
-            // --- Helper function to insert Authors ---
             const insertAuthors = (authors: Author[] | undefined, fkColumn: string, fkValue: number) => {
                 if (!authors) return;
-                // Use db directly
                 const stmt = db.prepare(`INSERT INTO author (name, email, rank, ${fkColumn}) VALUES (?, ?, ?, ?)`);
                 authors.forEach(a => stmt.run([a.name, a.email, a.rank, fkValue]));
                 stmt.free();
             };
 
-            // Insert Kit
             const kitStmt = db.prepare("INSERT INTO kit (uri, name, description, icon, image, preview, version, remote, homepage, license, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             kitStmt.run([kit.uri, kit.name, kit.description, kit.icon, kit.image, kit.preview, kit.version, kit.remote, kit.homepage, kit.license, kit.created.toISOString(), kit.updated.toISOString()]);
             kitStmt.free();
             const kitId = db.exec("SELECT last_insert_rowid()")[0].values[0][0];
             insertQualities(kit.qualities, 'kit_id', kitId);
-
-
-            // Mappings for foreign keys
             const typeIdMap: { [key: string]: number } = {}; // key: "name:variant"
             const portIdMap: { [typeDbId: number]: { [localId: string]: number } } = {}; // port local_id to db id per type
             const repIdMap: { [typeDbId: number]: { [key: string]: number } } = {}; // key: "mime:tags"
-
-
-            // Insert Types, Representations, Ports
             if (kit.types) {
                 const typeStmt = db.prepare("INSERT INTO type (name, description, icon, image, variant, unit, created, updated, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 const repStmt = db.prepare("INSERT INTO representation (url, description, mime, type_id) VALUES (?, ?, ?, ?)");
                 const tagStmt = db.prepare("INSERT INTO tag (name, \"order\", representation_id) VALUES (?, ?, ?)");
                 const portStmt = db.prepare("INSERT INTO port (local_id, description, family, t, point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 const compFamStmt = db.prepare("INSERT INTO compatible_family (name, \"order\", port_id) VALUES (?, ?, ?)");
-
                 for (const type of kit.types) {
                     const typeKey = `${type.name}:${type.variant || ''}`;
                     typeStmt.run([type.name, type.description, type.icon, type.image, type.variant || '', type.unit, type.created.toISOString(), type.updated.toISOString(), kitId]);
@@ -1257,9 +1240,6 @@ class StudioStore {
                     repIdMap[typeDbId] = {};
                     insertQualities(type.qualities, 'type_id', typeDbId);
                     insertAuthors(type.authors, 'type_id', typeDbId);
-
-
-                    // Insert Representations and Tags
                     if (type.representations) {
                         for (const rep of type.representations) {
                             const repKey = `${rep.mime}:${rep.tags?.join(',') || ''}`;
@@ -1267,18 +1247,15 @@ class StudioStore {
                             const repDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
                             repIdMap[typeDbId][repKey] = repDbId;
                             insertQualities(rep.qualities, 'representation_id', repDbId);
-
                             if (rep.tags) {
                                 rep.tags.forEach((tag, index) => tagStmt.run([tag, index, repDbId]));
                             }
-                            // Add file to zip
-                            const fileData = filesMap.get(rep.url) as Uint8Array | undefined; // Explicit cast
+                            const fileData = this.getFileData(rep.url);
                             if (fileData) {
                                 zip.file(rep.url, fileData);
                             } else if (!complete && !rep.url.startsWith("http")) {
                                 console.warn(`File data for representation ${rep.url} not found in store.`);
                             } else if (complete && !rep.url.startsWith("http")) {
-                                // If complete export requested and file missing locally, try fetching
                                 try {
                                     const fetchedData = await fetch(rep.url).then(res => res.arrayBuffer());
                                     zip.file(rep.url, fetchedData);
@@ -1289,7 +1266,6 @@ class StudioStore {
                         }
                     }
 
-                    // Insert Ports and Compatible Families
                     if (type.ports) {
                         for (const port of type.ports) {
                             if (!port.id_) {
