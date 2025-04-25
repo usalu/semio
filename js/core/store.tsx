@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useMemo, FC } fr
 import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import JSZip from 'jszip';
-import SQL from 'sql.js';
+import initSqlJs from 'sql.js'; // Import initSqlJs
 
 import { Generator } from '@semio/js/lib/utils';
 import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint, Point, Vector, Quality, Author, Side } from '@semio/js/semio';
@@ -65,6 +65,7 @@ class StudioStore {
     private designEditorStores: Map<string, DesignEditorStore>;
     private indexeddbProvider: IndexeddbPersistence;
     private listeners: Set<() => void> = new Set();
+    private SQL: any = null; // To store the initialized SQL object
 
     constructor(userId: string) {
         this.userId = userId;
@@ -85,6 +86,17 @@ class StudioStore {
             }
         });
         this.yDoc.on('update', () => this.notifyListeners());
+        this.initializeSql(); // Initialize SQL.js on store creation
+    }
+
+    private async initializeSql() {
+        try {
+            // Assuming sql-wasm.wasm is served alongside your JS files
+            this.SQL = await initSqlJs({ locateFile: file => `/${file}` });
+            console.log("SQL.js initialized successfully.");
+        } catch (err) {
+            console.error("Failed to initialize SQL.js:", err);
+        }
     }
 
     private notifyListeners(): void {
@@ -963,666 +975,461 @@ class StudioStore {
     }
 
     async importKit(url: string, complete = false): Promise<void> {
+        if (!this.SQL) {
+            console.error("SQL.js is not initialized yet.");
+            await this.initializeSql(); // Attempt to initialize again
+            if (!this.SQL) throw new Error("SQL.js failed to initialize.");
+        }
+        const SQL = this.SQL; // Use the initialized SQL object
+
         // load zip file from url into memory
         const zipData = await fetch(url).then(res => res.arrayBuffer());
         const zip = await JSZip.loadAsync(zipData);
 
-        // load ./semio/kit.db as sqlite database into memory  
-        const kitDbFile = await zip.file("./semio/kit.db").async("uint8array");
+        // load ./semio/kit.db as sqlite database into memory
+        const kitDbFileEntry = zip.file("semio/kit.db"); // Adjusted path
+        if (!kitDbFileEntry) {
+            throw new Error("kit.db not found in the zip file at path semio/kit.db");
+        }
+        const kitDbFile = await kitDbFileEntry.async("uint8array");
         const kitDb = new SQL.Database(kitDbFile);
 
-        // extract kit from sqlite database
-        const kitRow = kitDb.exec("SELECT * FROM kit")[0].values[0];
-        const kit: Kit = {
-            uri: kitRow[0],
-            name: kitRow[1],
-            description: kitRow[2],
-            icon: kitRow[3],
-            image: kitRow[4],
-            preview: kitRow[5],
-            version: kitRow[6],
-            remote: kitRow[7],
-            homepage: kitRow[8],
-            license: kitRow[9],
-            created: new Date(kitRow[10]),
-            updated: new Date(kitRow[11]),
-        };
+        let kit: Kit | null = null;
+        let types: Type[] = [];
+        let designs: Design[] = [];
+        const filesMap = this.yDoc.getMap('files');
 
-        // extract types
-        const typeRows = kitDb.exec("SELECT * FROM type WHERE kit_id = ?", [kitRow[12]])[0].values;
-        kit.types = typeRows.map(row => ({
-            name: row[0],
-            description: row[1],
-            icon: row[2],
-            image: row[3],
-            variant: row[4],
-            unit: row[5],
-            created: new Date(row[6]),
-            updated: new Date(row[7]),
-            representations: [], // will populate later
-        }));
-
-        // extract designs  
-        const designRows = kitDb.exec("SELECT * FROM design WHERE kit_id = ?", [kitRow[12]])[0].values;
-        kit.designs = designRows.map(row => ({
-            name: row[0],
-            description: row[1],
-            icon: row[2],
-            image: row[3],
-            variant: row[4],
-            view: row[5],
-            unit: row[6],
-            created: new Date(row[7]),
-            updated: new Date(row[8]),
-        }));
-
-        // populate type representations
-        for (const type of kit.types) {
-            const repRows = kitDb.exec("SELECT * FROM representation WHERE type_id = ?", [type.id])[0].values;
-            for (const repRow of repRows) {
-                const url = repRow[0];
-                const file = !complete && url.startsWith("http") ? null : await zip.file(url).async("uint8array");
-                type.representations.push({
-                    url,
-                    description: repRow[1],
-                    mime: repRow[2],
-                    tags: [], // TODO: populate tags
-                    file: file ? { data: file, name: url.split("/").pop() } : undefined,
-                });
-            }
-        }
-
-        // extract ports for each type
-        for (const type of kit.types) {
-            const portRows = kitDb.exec("SELECT * FROM port WHERE type_id = ?", [type.id])[0].values;
-            type.ports = portRows.map(row => ({
-                id_: row[0],
-                description: row[1],
-                family: row[2],
-                t: row[3],
-                compatibleFamilies: [], // TODO: populate compatible families
-                point: {
-                    x: row[5],
-                    y: row[6],
-                    z: row[7]
-                },
-                direction: {
-                    x: row[8],
-                    y: row[9],
-                    z: row[10]
-                }
-            }));
-        }
-
-        // extract pieces for each design
-        for (const design of kit.designs) {
-            const pieceRows = kitDb.exec("SELECT * FROM piece WHERE design_id = ?", [design.id])[0].values;
-            design.pieces = pieceRows.map(row => ({
-                id_: row[0],
-                description: row[1],
-                type: {
-                    name: row[2],
-                    variant: row[3]
-                },
-                plane: row[4] ? {
-                    origin: {
-                        x: row[5],
-                        y: row[6],
-                        z: row[7]
-                    },
-                    xAxis: {
-                        x: row[8],
-                        y: row[9],
-                        z: row[10]
-                    },
-                    yAxis: {
-                        x: row[11],
-                        y: row[12],
-                        z: row[13]
-                    }
-                } : undefined,
-                center: {
-                    x: row[14],
-                    y: row[15]
-                }
-            }));
-        }
-
-        // extract connections for each design  
-        for (const design of kit.designs) {
-            const connectionRows = kitDb.exec("SELECT * FROM connection WHERE design_id = ?", [design.id])[0].values;
-            design.connections = connectionRows.map(row => ({
-                description: row[0],
-                gap: row[1],
-                shift: row[2],
-                raise_: row[3],
-                rotation: row[4],
-                turn: row[5],
-                tilt: row[6],
-                x: row[7],
-                y: row[8],
-                connected: {
-                    piece: { id_: row[9] },
-                    port: { id_: row[10] }
-                },
-                connecting: {
-                    piece: { id_: row[11] },
-                    port: { id_: row[12] }
-                }
-            }));
-        }
-
-        // extract qualities
-        const qualityRows = kitDb.exec("SELECT * FROM quality")[0].values;
-        const qualityMap: { [id: number]: Quality } = {};
-        qualityRows.forEach(row => {
-            qualityMap[row[0]] = {
-                name: row[1],
-                value: row[2],
-                unit: row[3],
-                definition: row[4]
+        try {
+            // Extract kit
+            const kitRes = kitDb.exec("SELECT uri, name, description, icon, image, preview, version, remote, homepage, license, created, updated FROM kit LIMIT 1");
+            if (!kitRes || kitRes.length === 0 || !kitRes[0].values || kitRes[0].values.length === 0) throw new Error("Kit data not found in database.");
+            const kitRow: any[] = kitRes[0].values[0];
+            kit = {
+                uri: kitRow[0], name: kitRow[1], description: kitRow[2], icon: kitRow[3], image: kitRow[4], preview: kitRow[5],
+                version: kitRow[6], remote: kitRow[7], homepage: kitRow[8], license: kitRow[9],
+                created: new Date(kitRow[10]), updated: new Date(kitRow[11]),
+                types: [], designs: [], qualities: [] // Initialize arrays
             };
-        });
+            const kitIdRes = kitDb.exec("SELECT id FROM kit WHERE uri = ?", [kit.uri]);
+            const kitId = kitIdRes[0].values[0][0];
 
-        // assign qualities to respective objects
-        kit.qualities = qualityRows
-            .filter(row => row[7] === 1)
-            .map(row => qualityMap[row[0]]);
 
-        kit.types.forEach(type => {
-            type.qualities = qualityRows
-                .filter(row => row[3] === type.id)
-                .map(row => qualityMap[row[0]]);
+            // --- Helper function to get Qualities ---
+            const getQualities = (tableName: string, fkColumn: string, fkValue: number | string): Quality[] => {
+                const query = `SELECT name, value, unit, definition FROM quality WHERE ${fkColumn} = ?`;
+                const res = kitDb.exec(query, [fkValue]);
+                if (!res || res.length === 0 || !res[0].values) return [];
+                return res[0].values.map((row: any[]) => ({ name: row[0], value: row[1], unit: row[2], definition: row[3] }));
+            };
+            // --- Helper function to get Authors ---
+            const getAuthors = (tableName: string, fkColumn: string, fkValue: number | string): Author[] => {
+                const query = `SELECT name, email, rank FROM author WHERE ${fkColumn} = ?`;
+                const res = kitDb.exec(query, [fkValue]);
+                if (!res || res.length === 0 || !res[0].values) return [];
+                return res[0].values.map((row: any[]) => ({ name: row[0], email: row[1], rank: row[2] }));
+            };
 
-            type.ports?.forEach(port => {
-                port.qualities = qualityRows
-                    .filter(row => row[2] === port.id_)
-                    .map(row => qualityMap[row[0]]);
-            });
-        });
+            // Extract kit qualities
+            kit.qualities = getQualities('quality', 'kit_id', kitId);
 
-        kit.designs.forEach(design => {
-            design.qualities = qualityRows
-                .filter(row => row[6] === design.id)
-                .map(row => qualityMap[row[0]]);
 
-            design.pieces?.forEach(piece => {
-                piece.qualities = qualityRows
-                    .filter(row => row[4] === piece.id_)
-                    .map(row => qualityMap[row[0]]);
-            });
+            // Extract types
+            const typeRes = kitDb.exec("SELECT id, name, description, icon, image, variant, unit, created, updated FROM type WHERE kit_id = ?", [kitId]);
+            if (typeRes && typeRes.length > 0 && typeRes[0].values) {
+                for (const typeRow of typeRes[0].values) {
+                    const typeId = typeRow[0];
+                    const type: Type = {
+                        name: typeRow[1], description: typeRow[2], icon: typeRow[3], image: typeRow[4], variant: typeRow[5],
+                        unit: typeRow[6], created: new Date(typeRow[7]), updated: new Date(typeRow[8]),
+                        representations: [], ports: [], qualities: [], authors: []
+                    };
 
-            design.connections?.forEach(connection => {
-                connection.qualities = qualityRows
-                    .filter(row => row[5] === connection.id)
-                    .map(row => qualityMap[row[0]]);
-            });
-        });
+                    // Extract representations for this type
+                    const repRes = kitDb.exec("SELECT id, url, description, mime FROM representation WHERE type_id = ?", [typeId]);
+                    if (repRes && repRes.length > 0 && repRes[0].values) {
+                        for (const repRow of repRes[0].values) {
+                            const repId = repRow[0];
+                            const url = repRow[1];
+                            const representation: Representation = {
+                                url: url, description: repRow[2], mime: repRow[3], tags: [], qualities: []
+                            };
+                            // Extract tags for this representation
+                            const tagRes = kitDb.exec("SELECT name FROM tag WHERE representation_id = ? ORDER BY \"order\"", [repId]);
+                            if (tagRes && tagRes.length > 0 && tagRes[0].values) {
+                                representation.tags = tagRes[0].values.map((row: any[]) => row[0]);
+                            }
+                            representation.qualities = getQualities('quality', 'representation_id', repId);
 
-        this.createKit(kit);
+                            // Extract file data from zip and store in filesMap
+                            const fileEntry = zip.file(url);
+                            if (fileEntry) {
+                                const fileData = await fileEntry.async("uint8array");
+                                filesMap.set(url, fileData);
+                            } else if (complete && !url.startsWith("http")) {
+                                console.warn(`Representation file not found in zip: ${url}`);
+                            }
+                            type.representations!.push(representation);
+                        }
+                    }
+
+                    // Extract ports for this type
+                    const portRes = kitDb.exec("SELECT id, local_id, description, family, t, point_x, point_y, point_z, direction_x, direction_y, direction_z FROM port WHERE type_id = ?", [typeId]);
+                    if (portRes && portRes.length > 0 && portRes[0].values) {
+                        for (const portRow of portRes[0].values) {
+                            const portId = portRow[0];
+                            const port: Port = {
+                                id_: portRow[1], description: portRow[2], family: portRow[3], t: portRow[4],
+                                point: { x: portRow[5], y: portRow[6], z: portRow[7] },
+                                direction: { x: portRow[8], y: portRow[9], z: portRow[10] },
+                                compatibleFamilies: [], qualities: []
+                            };
+                            // Extract compatible families for this port
+                            const compFamRes = kitDb.exec("SELECT name FROM compatible_family WHERE port_id = ? ORDER BY \"order\"", [portId]);
+                            if (compFamRes && compFamRes.length > 0 && compFamRes[0].values) {
+                                port.compatibleFamilies = compFamRes[0].values.map((row: any[]) => row[0]);
+                            }
+                            port.qualities = getQualities('quality', 'port_id', portId);
+                            type.ports!.push(port);
+                        }
+                    }
+                    type.qualities = getQualities('quality', 'type_id', typeId);
+                    type.authors = getAuthors('author', 'type_id', typeId);
+                    types.push(type);
+                }
+            }
+            kit.types = types;
+
+
+            // Extract designs
+            const designRes = kitDb.exec("SELECT id, name, description, icon, image, variant, \"view\", unit, created, updated FROM design WHERE kit_id = ?", [kitId]);
+            if (designRes && designRes.length > 0 && designRes[0].values) {
+                for (const designRow of designRes[0].values) {
+                    const designId = designRow[0];
+                    const design: Design = {
+                        name: designRow[1], description: designRow[2], icon: designRow[3], image: designRow[4], variant: designRow[5],
+                        view: designRow[6], unit: designRow[7], created: new Date(designRow[8]), updated: new Date(designRow[9]),
+                        pieces: [], connections: [], qualities: [], authors: []
+                    };
+
+                    // Extract pieces for this design
+                    const pieceRes = kitDb.exec("SELECT p.id, p.local_id, p.description, t.name, t.variant, pl.origin_x, pl.origin_y, pl.origin_z, pl.x_axis_x, pl.x_axis_y, pl.x_axis_z, pl.y_axis_x, pl.y_axis_y, pl.y_axis_z, p.center_x, p.center_y FROM piece p JOIN type t ON p.type_id = t.id LEFT JOIN plane pl ON p.plane_id = pl.id WHERE p.design_id = ?", [designId]);
+                    const pieceMap: { [key: string]: Piece } = {}; // Map local_id to piece for connections
+                    const pieceIdMap: { [dbId: number]: string } = {}; // Map db id to local_id
+                    if (pieceRes && pieceRes.length > 0 && pieceRes[0].values) {
+                        for (const pieceRow of pieceRes[0].values) {
+                            const pieceId = pieceRow[0];
+                            const localId = pieceRow[1];
+                            const plane: Plane | undefined = pieceRow[5] !== null ? { // Check if plane data exists
+                                origin: { x: pieceRow[5], y: pieceRow[6], z: pieceRow[7] },
+                                xAxis: { x: pieceRow[8], y: pieceRow[9], z: pieceRow[10] },
+                                yAxis: { x: pieceRow[11], y: pieceRow[12], z: pieceRow[13] }
+                            } : undefined;
+                            const piece: Piece = {
+                                id_: localId,
+                                description: pieceRow[2],
+                                type: { name: pieceRow[3], variant: pieceRow[4] },
+                                plane: plane,
+                                center: pieceRow[14] !== null ? { x: pieceRow[14], y: pieceRow[15] } : undefined,
+                                qualities: []
+                            };
+                            piece.qualities = getQualities('quality', 'piece_id', pieceId);
+                            design.pieces!.push(piece);
+                            pieceMap[localId] = piece;
+                            pieceIdMap[pieceId] = localId;
+                        }
+                    }
+
+                    // Extract connections for this design
+                    const connRes = kitDb.exec("SELECT c.id, c.description, c.gap, c.shift, c.raise_, c.rotation, c.turn, c.tilt, c.x, c.y, c.connected_piece_id, cp.local_id AS connected_port_id, c.connecting_piece_id, cnp.local_id AS connecting_port_id FROM connection c JOIN port cp ON c.connected_port_id = cp.id JOIN port cnp ON c.connecting_port_id = cnp.id WHERE c.design_id = ?", [designId]);
+                    if (connRes && connRes.length > 0 && connRes[0].values) {
+                        for (const connRow of connRes[0].values) {
+                            const connId = connRow[0];
+                            const connectedPieceLocalId = pieceIdMap[connRow[10]];
+                            const connectingPieceLocalId = pieceIdMap[connRow[12]];
+                            if (!connectedPieceLocalId || !connectingPieceLocalId) {
+                                console.warn(`Could not find piece local IDs for connection ${connId}`);
+                                continue;
+                            }
+                            const connection: Connection = {
+                                description: connRow[1], gap: connRow[2], shift: connRow[3], raise_: connRow[4], rotation: connRow[5],
+                                turn: connRow[6], tilt: connRow[7], x: connRow[8], y: connRow[9],
+                                connected: { piece: { id_: connectedPieceLocalId }, port: { id_: connRow[11] } },
+                                connecting: { piece: { id_: connectingPieceLocalId }, port: { id_: connRow[13] } },
+                                qualities: []
+                            };
+                            connection.qualities = getQualities('quality', 'connection_id', connId);
+                            design.connections!.push(connection);
+                        }
+                    }
+                    design.qualities = getQualities('quality', 'design_id', designId);
+                    design.authors = getAuthors('author', 'design_id', designId);
+                    designs.push(design);
+                }
+            }
+            kit.designs = designs;
+
+            // Create the kit in the store
+            this.createKit(kit);
+            console.log(`Kit "${kit.name}" imported successfully from ${url}`);
+
+        } catch (error) {
+            console.error("Error importing kit:", error);
+            throw error; // Re-throw the error after logging
+        } finally {
+            kitDb.close(); // Ensure the database is closed
+        }
     }
 
     async exportKit(kitUri: string, complete = false): Promise<Blob> {
+        if (!this.SQL) {
+            console.error("SQL.js is not initialized yet.");
+            await this.initializeSql();
+            if (!this.SQL) throw new Error("SQL.js failed to initialize.");
+        }
+        const SQL = this.SQL;
         const kit = this.getKit(kitUri);
-
-        const kitTableSql = `
-CREATE TABLE kit (
-    uri VARCHAR(2048) NOT NULL, 
-    name VARCHAR(64) NOT NULL, 
-    description VARCHAR(512) NOT NULL, 
-    icon VARCHAR(1024) NOT NULL, 
-    image VARCHAR(1024) NOT NULL, 
-    preview VARCHAR(1024) NOT NULL, 
-    version VARCHAR(64) NOT NULL, 
-    remote VARCHAR(1024) NOT NULL, 
-    homepage VARCHAR(1024) NOT NULL, 
-    license VARCHAR(1024) NOT NULL, 
-    created DATETIME NOT NULL, 
-    updated DATETIME NOT NULL, 
-    id INTEGER NOT NULL PRIMARY KEY, 
-    UNIQUE (uri)
-);`;
-
-        const typeTableSql = `
-CREATE TABLE type (
-    name VARCHAR(64) NOT NULL, 
-    description VARCHAR(512) NOT NULL, 
-    icon VARCHAR(1024) NOT NULL, 
-    image VARCHAR(1024) NOT NULL, 
-    variant VARCHAR(64) NOT NULL, 
-    unit VARCHAR(64) NOT NULL, 
-    created DATETIME NOT NULL, 
-    updated DATETIME NOT NULL, 
-    id INTEGER NOT NULL PRIMARY KEY, 
-    kit_id INTEGER, 
-    CONSTRAINT "Unique name and variant" UNIQUE (name, variant, kit_id), 
-    FOREIGN KEY(kit_id) REFERENCES kit (id)
-);`;
-
-        const designTableSql = `
-CREATE TABLE design (
-    name VARCHAR(64) NOT NULL, 
-    description VARCHAR(512) NOT NULL, 
-    icon VARCHAR(1024) NOT NULL, 
-    image VARCHAR(1024) NOT NULL, 
-    variant VARCHAR(64) NOT NULL, 
-    "view" VARCHAR(64) NOT NULL, 
-    unit VARCHAR(64) NOT NULL, 
-    created DATETIME NOT NULL, 
-    updated DATETIME NOT NULL, 
-    id INTEGER NOT NULL PRIMARY KEY, 
-    kit_id INTEGER, 
-    UNIQUE (name, variant, "view", kit_id), 
-    FOREIGN KEY(kit_id) REFERENCES kit (id)
-);`;
-
-        const representationTableSql = `
-CREATE TABLE representation (
-    url VARCHAR(1024) NOT NULL, 
-    description VARCHAR(512) NOT NULL, 
-    mime VARCHAR(64) NOT NULL, 
-    id INTEGER NOT NULL PRIMARY KEY, 
-    type_id INTEGER, 
-    FOREIGN KEY(type_id) REFERENCES type (id)
-);`;
-
-        const tagTableSql = `
-CREATE TABLE tag (
-    name VARCHAR(64) NOT NULL, 
-    "order" INTEGER NOT NULL, 
-    id INTEGER NOT NULL PRIMARY KEY, 
-    representation_id INTEGER, 
-    FOREIGN KEY(representation_id) REFERENCES representation (id)
-);`;
-
-
-        const portTableSql = `
-CREATE TABLE port (
-    description VARCHAR(512) NOT NULL, 
-    family VARCHAR(64) NOT NULL, 
-    t FLOAT NOT NULL, 
-    id INTEGER NOT NULL PRIMARY KEY, 
-    local_id VARCHAR(128), 
-    point_x FLOAT, 
-    point_y FLOAT, 
-    point_z FLOAT, 
-    direction_x FLOAT, 
-    direction_y FLOAT, 
-    direction_z FLOAT, 
-    type_id INTEGER, 
-    CONSTRAINT "Unique local_id" UNIQUE (local_id, type_id), 
-    FOREIGN KEY(type_id) REFERENCES type (id)
-);`;
-
-        const compatibleFamilyTableSql = `
-CREATE TABLE compatible_family (
-    name VARCHAR(64) NOT NULL, 
-    "order" INTEGER NOT NULL, 
-    id INTEGER NOT NULL PRIMARY KEY, 
-    port_id INTEGER, 
-    FOREIGN KEY(port_id) REFERENCES port (id)
-);`;
-
-        const planeTableSql = `
-CREATE TABLE plane (
-    id INTEGER NOT NULL PRIMARY KEY, 
-    origin_x FLOAT, 
-    origin_y FLOAT, 
-    origin_z FLOAT, 
-    x_axis_x FLOAT, 
-    x_axis_y FLOAT, 
-    x_axis_z FLOAT, 
-    y_axis_x FLOAT, 
-    y_axis_y FLOAT, 
-    y_axis_z FLOAT
-);`;
-
-        const pieceTableSql = `
-CREATE TABLE piece (
-    description VARCHAR(512) NOT NULL, 
-    id INTEGER NOT NULL PRIMARY KEY, 
-    local_id VARCHAR(128), 
-    type_id INTEGER, 
-    plane_id INTEGER, 
-    center_x FLOAT, 
-    center_y FLOAT, 
-    design_id INTEGER, 
-    UNIQUE (local_id, design_id), 
-    FOREIGN KEY(type_id) REFERENCES type (id), 
-    FOREIGN KEY(plane_id) REFERENCES plane (id), 
-    FOREIGN KEY(design_id) REFERENCES design (id)
-);`;
-
-
-        const connectionTableSql = `
-CREATE TABLE connection (
-    description VARCHAR(512) NOT NULL, 
-    gap FLOAT NOT NULL, 
-    shift FLOAT NOT NULL, 
-    raise_ FLOAT NOT NULL, 
-    rotation FLOAT NOT NULL, 
-    turn FLOAT NOT NULL, 
-    tilt FLOAT NOT NULL, 
-    x FLOAT NOT NULL, 
-    y FLOAT NOT NULL, 
-    id INTEGER NOT NULL PRIMARY KEY, 
-    connected_piece_id INTEGER, 
-    connected_port_id INTEGER, 
-    connecting_piece_id INTEGER, 
-    connecting_port_id INTEGER, 
-    design_id INTEGER, 
-    CONSTRAINT "no reflexive connection" CHECK (connecting_piece_id != connected_piece_id), 
-    FOREIGN KEY(connected_piece_id) REFERENCES piece (id), 
-    FOREIGN KEY(connected_port_id) REFERENCES port (id), 
-    FOREIGN KEY(connecting_piece_id) REFERENCES piece (id), 
-    FOREIGN KEY(connecting_port_id) REFERENCES port (id), 
-    FOREIGN KEY(design_id) REFERENCES design (id)
-);`;
-
-
-        const qualityTableSql = `
-CREATE TABLE quality (
-    name VARCHAR(64) NOT NULL, 
-    value VARCHAR(64) NOT NULL, 
-    unit VARCHAR(64) NOT NULL, 
-    definition VARCHAR(512) NOT NULL, 
-    id INTEGER NOT NULL PRIMARY KEY, 
-    representation_id INTEGER, 
-    port_id INTEGER, 
-    type_id INTEGER, 
-    piece_id INTEGER, 
-    connection_id INTEGER, 
-    design_id INTEGER, 
-    kit_id INTEGER, 
-    FOREIGN KEY(representation_id) REFERENCES representation (id), 
-    FOREIGN KEY(port_id) REFERENCES port (id), 
-    FOREIGN KEY(type_id) REFERENCES type (id), 
-    FOREIGN KEY(piece_id) REFERENCES piece (id), 
-    FOREIGN KEY(connection_id) REFERENCES connection (id), 
-    FOREIGN KEY(design_id) REFERENCES design (id), 
-    FOREIGN KEY(kit_id) REFERENCES kit (id)
-);`;
-
-        const authorTableSql = `
-CREATE TABLE author (
-	name VARCHAR(64) NOT NULL, 
-	email VARCHAR(128) NOT NULL, 
-	rank INTEGER NOT NULL, 
-	id INTEGER NOT NULL PRIMARY KEY, 
-	type_id INTEGER, 
-	design_id INTEGER, 
-	FOREIGN KEY(type_id) REFERENCES type (id), 
-	FOREIGN KEY(design_id) REFERENCES design (id)
-);`
-
-
-        // create sqlite file in memory from kit
         const db = new SQL.Database();
-        db.run(kitTableSql);
-        db.run(typeTableSql);
-        db.run(designTableSql);
-        db.run(representationTableSql);
-        db.run(portTableSql);
-        db.run(pieceTableSql);
-        db.run(connectionTableSql);
-        db.run(qualityTableSql);
-
-        const kitStatement = db.prepare("INSERT INTO kit VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        kitStatement.run([
-            kit.uri,
-            kit.name,
-            kit.description,
-            kit.icon,
-            kit.image,
-            kit.preview,
-            kit.version,
-            kit.remote,
-            kit.homepage,
-            kit.license,
-            kit.created.toISOString(),
-            kit.updated.toISOString(),
-            1 // id
-        ]);
-        kitStatement.free();
-
-        const typeStatement = db.prepare("INSERT INTO type VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        for (const [i, type] of kit.types.entries()) {
-            typeStatement.run([
-                type.name,
-                type.description,
-                type.icon,
-                type.image,
-                type.variant,
-                type.unit,
-                type.created.toISOString(),
-                type.updated.toISOString(),
-                i + 1, // id
-                1    // kit_id  
-            ]);
-        }
-        typeStatement.free();
-
-        const designStatement = db.prepare("INSERT INTO design VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        for (const [i, design] of kit.designs.entries()) {
-            designStatement.run([
-                design.name,
-                design.description,
-                design.icon,
-                design.image,
-                design.variant,
-                design.view,
-                design.unit,
-                design.created.toISOString(),
-                design.updated.toISOString(),
-                i + 1, // id
-                1    // kit_id
-            ]);
-        }
-        designStatement.free();
-
-        const repStatement = db.prepare("INSERT INTO representation VALUES (?, ?, ?, ?, ?)");
-        for (const type of kit.types) {
-            for (const [i, rep] of type.representations.entries()) {
-                repStatement.run([
-                    rep.url,
-                    rep.description,
-                    rep.mime,
-                    i + 1, // id
-                    type.id
-                ]);
-            }
-        }
-        repStatement.free();
-
-        const portStatement = db.prepare("INSERT INTO port VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        for (const type of kit.types) {
-            for (const [i, port] of (type.ports || []).entries()) {
-                portStatement.run([
-                    port.description,
-                    port.family,
-                    port.t,
-                    i + 1, // id
-                    port.id_, // local_id
-                    port.point.x,
-                    port.point.y,
-                    port.point.z,
-                    port.direction.x,
-                    port.direction.y,
-                    port.direction.z,
-                    type.id
-                ]);
-            }
-        }
-        portStatement.free();
-
-        const pieceStatement = db.prepare("INSERT INTO piece VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        for (const design of kit.designs) {
-            for (const [i, piece] of (design.pieces || []).entries()) {
-                const plane = piece.plane;
-                pieceStatement.run([
-                    piece.description,
-                    i + 1, // id
-                    piece.id_, // local_id
-                    typesDict[piece.type.name][piece.type.variant || ''].id,
-                    plane ? 1 : null, // plane_id, null if no plane
-                    plane?.origin.x,
-                    plane?.origin.y,
-                    plane?.origin.z,
-                    piece.center?.x,
-                    piece.center?.y,
-                    design.id
-                ]);
-            }
-        }
-        pieceStatement.free();
-
-        const connectionStatement = db.prepare("INSERT INTO connection VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        for (const design of kit.designs) {
-            for (const [i, connection] of (design.connections || []).entries()) {
-                connectionStatement.run([
-                    connection.description,
-                    connection.gap,
-                    connection.shift,
-                    connection.raise_,
-                    connection.rotation,
-                    connection.turn,
-                    connection.tilt,
-                    connection.x,
-                    connection.y,
-                    i + 1, // id
-                    pieceMap[connection.connected.piece.id_!].id,
-                    portsDict[connection.connected.port.id_!].id,
-                    pieceMap[connection.connecting.piece.id_!].id,
-                    portsDict[connection.connecting.port.id_!].id,
-                    design.id
-                ]);
-            }
-        }
-        connectionStatement.free();
-
-        const qualityStatement = db.prepare("INSERT INTO quality VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        let qualityId = 1;
-        kit.qualities?.forEach(q => {
-            qualityStatement.run([
-                q.name,
-                q.value,
-                q.unit,
-                q.definition,
-                qualityId++,
-                null, // representation_id
-                null, // port_id 
-                null, // type_id
-                null, // piece_id
-                null, // connection_id
-                null, // design_id
-                1     // kit_id
-            ]);
-        });
-        kit.types.forEach(type => {
-            type.qualities?.forEach(q => {
-                qualityStatement.run([
-                    q.name,
-                    q.value,
-                    q.unit,
-                    q.definition,
-                    qualityId++,
-                    null, // representation_id
-                    null, // port_id
-                    type.id,
-                    null, // piece_id  
-                    null, // connection_id
-                    null, // design_id
-                    null  // kit_id
-                ]);
-            });
-            type.ports?.forEach(port => {
-                port.qualities?.forEach(q => {
-                    qualityStatement.run([
-                        q.name,
-                        q.value,
-                        q.unit,
-                        q.definition,
-                        qualityId++,
-                        null, // representation_id
-                        portsDict[port.id_!].id,
-                        null, // type_id
-                        null, // piece_id
-                        null, // connection_id  
-                        null, // design_id
-                        null  // kit_id
-                    ]);
-                });
-            });
-        });
-        kit.designs.forEach(design => {
-            design.qualities?.forEach(q => {
-                qualityStatement.run([
-                    q.name,
-                    q.value,
-                    q.unit,
-                    q.definition,
-                    qualityId++,
-                    null, // representation_id
-                    null, // port_id
-                    null, // type_id
-                    null, // piece_id
-                    null, // connection_id
-                    design.id,
-                    null  // kit_id      
-                ]);
-            });
-            design.pieces?.forEach(piece => {
-                piece.qualities?.forEach(q => {
-                    qualityStatement.run([
-                        q.name,
-                        q.value,
-                        q.unit,
-                        q.definition,
-                        qualityId++,
-                        null, // representation_id
-                        null, // port_id
-                        null, // type_id
-                        pieceMap[piece.id_!].id,
-                        null, // connection_id
-                        null, // design_id
-                        null  // kit_id
-                    ]);
-                });
-            });
-            design.connections?.forEach(connection => {
-                connection.qualities?.forEach(q => {
-                    qualityStatement.run([
-                        q.name,
-                        q.value,
-                        q.unit,
-                        q.definition,
-                        qualityId++,
-                        null, // representation_id
-                        null, // port_id
-                        null, // type_id  
-                        null, // piece_id
-                        connectionsDict[`${connection.connected.piece.id_}--${connection.connecting.piece.id_}`].id,
-                        null, // design_id
-                        null  // kit_id
-                    ]);
-                });
-            });
-        });
-        qualityStatement.free();
-
-        // export zip file with sqlite file and representation files
         const zip = new JSZip();
-        zip.file("./semio/kit.db", new Uint8Array(db.export()));
-        for (const type of kit.types) {
-            for (const rep of type.representations) {
-                if (rep.file && (!complete || !rep.url.startsWith("http"))) {
-                    zip.file(rep.url, rep.file.data);
-                }
-            }
-        }
-        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        const filesMap = this.yDoc.getMap('files');
 
-        return zipBlob;
+        // Use schema from sqlite/schema.sql
+        const schema = `
+            CREATE TABLE kit ( uri VARCHAR(2048) NOT NULL UNIQUE, name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, preview VARCHAR(1024) NOT NULL, version VARCHAR(64) NOT NULL, remote VARCHAR(1024) NOT NULL, homepage VARCHAR(1024) NOT NULL, license VARCHAR(1024) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY );
+            CREATE TABLE type ( name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, variant VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, CONSTRAINT "Unique name and variant" UNIQUE (name, variant, kit_id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
+            CREATE TABLE design ( name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, variant VARCHAR(64) NOT NULL, "view" VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, UNIQUE (name, variant, "view", kit_id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
+            CREATE TABLE representation ( url VARCHAR(1024) NOT NULL, description VARCHAR(512) NOT NULL, mime VARCHAR(64) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, type_id INTEGER, FOREIGN KEY(type_id) REFERENCES type (id) );
+            CREATE TABLE tag ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, representation_id INTEGER, FOREIGN KEY(representation_id) REFERENCES representation (id) );
+            CREATE TABLE port ( description VARCHAR(512) NOT NULL, family VARCHAR(64) NOT NULL, t FLOAT NOT NULL, id INTEGER NOT NULL PRIMARY KEY, local_id VARCHAR(128), point_x FLOAT, point_y FLOAT, point_z FLOAT, direction_x FLOAT, direction_y FLOAT, direction_z FLOAT, type_id INTEGER, CONSTRAINT "Unique local_id" UNIQUE (local_id, type_id), FOREIGN KEY(type_id) REFERENCES type (id) );
+            CREATE TABLE compatible_family ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, port_id INTEGER, FOREIGN KEY(port_id) REFERENCES port (id) );
+            CREATE TABLE plane ( id INTEGER NOT NULL PRIMARY KEY, origin_x FLOAT, origin_y FLOAT, origin_z FLOAT, x_axis_x FLOAT, x_axis_y FLOAT, x_axis_z FLOAT, y_axis_x FLOAT, y_axis_y FLOAT, y_axis_z FLOAT );
+            CREATE TABLE piece ( description VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, local_id VARCHAR(128), type_id INTEGER, plane_id INTEGER, center_x FLOAT, center_y FLOAT, design_id INTEGER, UNIQUE (local_id, design_id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(plane_id) REFERENCES plane (id), FOREIGN KEY(design_id) REFERENCES design (id) );
+            CREATE TABLE connection ( description VARCHAR(512) NOT NULL, gap FLOAT NOT NULL, shift FLOAT NOT NULL, raise_ FLOAT NOT NULL, rotation FLOAT NOT NULL, turn FLOAT NOT NULL, tilt FLOAT NOT NULL, x FLOAT NOT NULL, y FLOAT NOT NULL, id INTEGER NOT NULL PRIMARY KEY, connected_piece_id INTEGER, connected_port_id INTEGER, connecting_piece_id INTEGER, connecting_port_id INTEGER, design_id INTEGER, CONSTRAINT "no reflexive connection" CHECK (connecting_piece_id != connected_piece_id), FOREIGN KEY(connected_piece_id) REFERENCES piece (id), FOREIGN KEY(connected_port_id) REFERENCES port (id), FOREIGN KEY(connecting_piece_id) REFERENCES piece (id), FOREIGN KEY(connecting_port_id) REFERENCES port (id), FOREIGN KEY(design_id) REFERENCES design (id) );
+            CREATE TABLE quality ( name VARCHAR(64) NOT NULL, value VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, definition VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, representation_id INTEGER, port_id INTEGER, type_id INTEGER, piece_id INTEGER, connection_id INTEGER, design_id INTEGER, kit_id INTEGER, FOREIGN KEY(representation_id) REFERENCES representation (id), FOREIGN KEY(port_id) REFERENCES port (id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(piece_id) REFERENCES piece (id), FOREIGN KEY(connection_id) REFERENCES connection (id), FOREIGN KEY(design_id) REFERENCES design (id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
+            CREATE TABLE author ( name VARCHAR(64) NOT NULL, email VARCHAR(128) NOT NULL, rank INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, type_id INTEGER, design_id INTEGER, FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(design_id) REFERENCES design (id) );
+        `;
+
+        try {
+            db.run(schema); // Create tables
+
+            // --- Helper function to insert Qualities ---
+            const insertQualities = (qualities: Quality[] | undefined, fkColumn: string, fkValue: number) => {
+                if (!qualities) return;
+                const stmt = db.prepare(`INSERT INTO quality (name, value, unit, definition, ${fkColumn}) VALUES (?, ?, ?, ?, ?)`);
+                qualities.forEach(q => stmt.run([q.name, q.value, q.unit, q.definition, fkValue]));
+                stmt.free();
+            };
+            // --- Helper function to insert Authors ---
+            const insertAuthors = (authors: Author[] | undefined, fkColumn: string, fkValue: number) => {
+                if (!authors) return;
+                const stmt = db.prepare(`INSERT INTO author (name, email, rank, ${fkColumn}) VALUES (?, ?, ?, ?)`);
+                authors.forEach(a => stmt.run([a.name, a.email, a.rank, fkValue]));
+                stmt.free();
+            };
+
+            // Insert Kit
+            const kitStmt = db.prepare("INSERT INTO kit (uri, name, description, icon, image, preview, version, remote, homepage, license, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            kitStmt.run([kit.uri, kit.name, kit.description, kit.icon, kit.image, kit.preview, kit.version, kit.remote, kit.homepage, kit.license, kit.created.toISOString(), kit.updated.toISOString()]);
+            kitStmt.free();
+            const kitId = db.exec("SELECT last_insert_rowid()")[0].values[0][0];
+            insertQualities(kit.qualities, 'kit_id', kitId);
+
+
+            // Mappings for foreign keys
+            const typeIdMap: { [key: string]: number } = {}; // key: "name:variant"
+            const portIdMap: { [typeDbId: number]: { [localId: string]: number } } = {}; // port local_id to db id per type
+            const repIdMap: { [typeDbId: number]: { [key: string]: number } } = {}; // key: "mime:tags"
+
+
+            // Insert Types, Representations, Ports
+            if (kit.types) {
+                const typeStmt = db.prepare("INSERT INTO type (name, description, icon, image, variant, unit, created, updated, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                const repStmt = db.prepare("INSERT INTO representation (url, description, mime, type_id) VALUES (?, ?, ?, ?)");
+                const tagStmt = db.prepare("INSERT INTO tag (name, \"order\", representation_id) VALUES (?, ?, ?)");
+                const portStmt = db.prepare("INSERT INTO port (local_id, description, family, t, point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                const compFamStmt = db.prepare("INSERT INTO compatible_family (name, \"order\", port_id) VALUES (?, ?, ?)");
+
+                for (const type of kit.types) {
+                    const typeKey = `${type.name}:${type.variant || ''}`;
+                    typeStmt.run([type.name, type.description, type.icon, type.image, type.variant || '', type.unit, type.created.toISOString(), type.updated.toISOString(), kitId]);
+                    const typeDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
+                    typeIdMap[typeKey] = typeDbId;
+                    portIdMap[typeDbId] = {};
+                    repIdMap[typeDbId] = {};
+                    insertQualities(type.qualities, 'type_id', typeDbId);
+                    insertAuthors(type.authors, 'type_id', typeDbId);
+
+
+                    // Insert Representations and Tags
+                    if (type.representations) {
+                        for (const rep of type.representations) {
+                            const repKey = `${rep.mime}:${rep.tags?.join(',') || ''}`;
+                            repStmt.run([rep.url, rep.description, rep.mime, typeDbId]);
+                            const repDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
+                            repIdMap[typeDbId][repKey] = repDbId;
+                            insertQualities(rep.qualities, 'representation_id', repDbId);
+
+                            if (rep.tags) {
+                                rep.tags.forEach((tag, index) => tagStmt.run([tag, index, repDbId]));
+                            }
+                            // Add file to zip
+                            const fileData = filesMap.get(rep.url);
+                            if (fileData) {
+                                zip.file(rep.url, fileData);
+                            } else if (!complete && !rep.url.startsWith("http")) {
+                                console.warn(`File data for representation ${rep.url} not found in store.`);
+                            } else if (complete && !rep.url.startsWith("http")) {
+                                // If complete export requested and file missing locally, try fetching
+                                try {
+                                    const fetchedData = await fetch(rep.url).then(res => res.arrayBuffer());
+                                    zip.file(rep.url, fetchedData);
+                                } catch (fetchErr) {
+                                    console.error(`Could not fetch representation ${rep.url} for complete export`, fetchErr);
+                                }
+                            }
+                        }
+                    }
+
+                    // Insert Ports and Compatible Families
+                    if (type.ports) {
+                        for (const port of type.ports) {
+                            if (!port.id_) {
+                                console.warn(`Skipping port without local_id in type ${type.name}:${type.variant}`);
+                                continue;
+                            }
+                            portStmt.run([port.id_, port.description, port.family, port.t, port.point.x, port.point.y, port.point.z, port.direction.x, port.direction.y, port.direction.z, typeDbId]);
+                            const portDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
+                            portIdMap[typeDbId][port.id_] = portDbId;
+                            insertQualities(port.qualities, 'port_id', portDbId);
+
+                            if (port.compatibleFamilies) {
+                                port.compatibleFamilies.forEach((fam, index) => compFamStmt.run([fam, index, portDbId]));
+                            }
+                        }
+                    }
+                }
+                typeStmt.free();
+                repStmt.free();
+                tagStmt.free();
+                portStmt.free();
+                compFamStmt.free();
+            }
+
+
+            // Mappings for designs
+            const designIdMap: { [key: string]: number } = {}; // key: "name:variant:view"
+            const pieceIdMap: { [designDbId: number]: { [localId: string]: number } } = {}; // piece local_id to db id per design
+            const planeIdMap: { [pieceDbId: number]: number } = {}; // map piece db id to plane db id
+            let nextPlaneId = 1; // Simple counter for plane IDs
+
+
+            // Insert Designs, Pieces, Connections
+            if (kit.designs) {
+                const designStmt = db.prepare("INSERT INTO design (name, description, icon, image, variant, \"view\", unit, created, updated, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                const planeStmt = db.prepare("INSERT INTO plane (id, origin_x, origin_y, origin_z, x_axis_x, x_axis_y, x_axis_z, y_axis_x, y_axis_y, y_axis_z) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                const pieceStmt = db.prepare("INSERT INTO piece (local_id, description, type_id, plane_id, center_x, center_y, design_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                const connStmt = db.prepare("INSERT INTO connection (description, gap, shift, raise_, rotation, turn, tilt, x, y, connected_piece_id, connected_port_id, connecting_piece_id, connecting_port_id, design_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+
+                for (const design of kit.designs) {
+                    const designKey = `${design.name}:${design.variant || ''}:${design.view || ''}`;
+                    designStmt.run([design.name, design.description, design.icon, design.image, design.variant || '', design.view || '', design.unit, design.created.toISOString(), design.updated.toISOString(), kitId]);
+                    const designDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
+                    designIdMap[designKey] = designDbId;
+                    pieceIdMap[designDbId] = {};
+                    insertQualities(design.qualities, 'design_id', designDbId);
+                    insertAuthors(design.authors, 'design_id', designDbId);
+
+
+                    // Insert Pieces and Planes
+                    if (design.pieces) {
+                        for (const piece of design.pieces) {
+                            if (!piece.id_) {
+                                console.warn(`Skipping piece without local_id in design ${design.name}:${design.variant}:${design.view}`);
+                                continue;
+                            }
+                            const typeKey = `${piece.type.name}:${piece.type.variant || ''}`;
+                            const typeDbId = typeIdMap[typeKey];
+                            if (typeDbId === undefined) {
+                                console.warn(`Could not find type DB ID for piece ${piece.id_} (type: ${typeKey})`);
+                                continue;
+                            }
+
+                            let planeDbId: number | null = null;
+                            if (piece.plane) {
+                                planeDbId = nextPlaneId++;
+                                planeStmt.run([planeDbId, piece.plane.origin.x, piece.plane.origin.y, piece.plane.origin.z, piece.plane.xAxis.x, piece.plane.xAxis.y, piece.plane.xAxis.z, piece.plane.yAxis.x, piece.plane.yAxis.y, piece.plane.yAxis.z]);
+                            }
+
+                            pieceStmt.run([piece.id_, piece.description, typeDbId, planeDbId, piece.center?.x, piece.center?.y, designDbId]);
+                            const pieceDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
+                            pieceIdMap[designDbId][piece.id_] = pieceDbId;
+                            insertQualities(piece.qualities, 'piece_id', pieceDbId);
+                            if (planeDbId !== null) {
+                                planeIdMap[pieceDbId] = planeDbId;
+                            }
+                        }
+                    }
+
+                    // Insert Connections
+                    if (design.connections) {
+                        for (const conn of design.connections) {
+                            const connectedPieceDbId = pieceIdMap[designDbId][conn.connected.piece.id_];
+                            const connectingPieceDbId = pieceIdMap[designDbId][conn.connecting.piece.id_];
+
+                            const connectedPiece = design.pieces?.find(p => p.id_ === conn.connected.piece.id_);
+                            const connectingPiece = design.pieces?.find(p => p.id_ === conn.connecting.piece.id_);
+
+                            if (!connectedPieceDbId || !connectingPieceDbId || !connectedPiece || !connectingPiece) {
+                                console.warn(`Could not find piece DB IDs for connection between ${conn.connected.piece.id_} and ${conn.connecting.piece.id_}`);
+                                continue;
+                            }
+
+                            const connectedTypeKey = `${connectedPiece.type.name}:${connectedPiece.type.variant || ''}`;
+                            const connectingTypeKey = `${connectingPiece.type.name}:${connectingPiece.type.variant || ''}`;
+                            const connectedTypeDbId = typeIdMap[connectedTypeKey];
+                            const connectingTypeDbId = typeIdMap[connectingTypeKey];
+
+                            if (connectedTypeDbId === undefined || connectingTypeDbId === undefined) {
+                                console.warn(`Could not find type DB IDs for connection pieces`);
+                                continue;
+                            }
+
+                            const connectedPortDbId = conn.connected.port.id_ ? portIdMap[connectedTypeDbId]?.[conn.connected.port.id_] : undefined;
+                            const connectingPortDbId = conn.connecting.port.id_ ? portIdMap[connectingTypeDbId]?.[conn.connecting.port.id_] : undefined;
+
+
+                            if (connectedPortDbId === undefined || connectingPortDbId === undefined) {
+                                console.warn(`Could not find port DB IDs for connection between ${conn.connected.piece.id_}:${conn.connected.port.id_} and ${conn.connecting.piece.id_}:${conn.connecting.port.id_}`);
+                                continue;
+                            }
+
+                            connStmt.run([conn.description, conn.gap, conn.shift, conn.raise_, conn.rotation, conn.turn, conn.tilt, conn.x, conn.y, connectedPieceDbId, connectedPortDbId, connectingPieceDbId, connectingPortDbId, designDbId]);
+                            const connDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
+                            insertQualities(conn.qualities, 'connection_id', connDbId);
+                        }
+                    }
+                }
+                designStmt.free();
+                planeStmt.free();
+                pieceStmt.free();
+                connStmt.free();
+            }
+
+            // Export DB to Uint8Array
+            const dbData = db.export();
+            zip.file("semio/kit.db", dbData); // Adjusted path
+
+            // Generate Zip Blob
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+            console.log(`Kit "${kit.name}" exported successfully.`);
+            return zipBlob;
+
+        } catch (error) {
+            console.error("Error exporting kit:", error);
+            throw error; // Re-throw after logging
+        } finally {
+            db.close(); // Ensure database is closed
+        }
     }
 }
 
