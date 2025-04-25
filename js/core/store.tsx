@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useMemo, FC } fr
 import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import JSZip from 'jszip';
-import initSqlJs from 'sql.js'; // Import initSqlJs
+// Import initSqlJs
 
 import { Generator } from '@semio/js/lib/utils';
 import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint, Point, Vector, Quality, Author, Side } from '@semio/js/semio';
@@ -76,6 +76,7 @@ class StudioStore {
         this.indexeddbProvider = new IndexeddbPersistence(userId, this.yDoc);
         this.indexeddbProvider.whenSynced.then(() => {
             console.log(`Local changes are synchronized for user (${this.userId}) with client (${this.yDoc.clientID})`);
+            this.importKit('metabolism.zip');
         });
         this.yDoc.on('update', () => this.notifyListeners());
     }
