@@ -65,7 +65,6 @@ class StudioStore {
     private designEditorStores: Map<string, DesignEditorStore>;
     private indexeddbProvider: IndexeddbPersistence;
     private listeners: Set<() => void> = new Set();
-    private SQL: any = null; // To store the initialized SQL object
 
     constructor(userId: string) {
         this.userId = userId;
@@ -77,26 +76,8 @@ class StudioStore {
         this.indexeddbProvider = new IndexeddbPersistence(userId, this.yDoc);
         this.indexeddbProvider.whenSynced.then(() => {
             console.log(`Local changes are synchronized for user (${this.userId}) with client (${this.yDoc.clientID})`);
-            try {
-                const kit = this.getKit("usalu/metabolism");
-                this.notifyListeners();
-
-            } catch (error) {
-                console.error(error);
-            }
         });
         this.yDoc.on('update', () => this.notifyListeners());
-        this.initializeSql(); // Initialize SQL.js on store creation
-    }
-
-    private async initializeSql() {
-        try {
-            // Assuming sql-wasm.wasm is served alongside your JS files
-            this.SQL = await initSqlJs({ locateFile: file => `/${file}` });
-            console.log("SQL.js initialized successfully.");
-        } catch (err) {
-            console.error("Failed to initialize SQL.js:", err);
-        }
     }
 
     private notifyListeners(): void {
@@ -975,24 +956,27 @@ class StudioStore {
     }
 
     async importKit(url: string, complete = false): Promise<void> {
-        if (!this.SQL) {
-            console.error("SQL.js is not initialized yet.");
-            await this.initializeSql(); // Attempt to initialize again
-            if (!this.SQL) throw new Error("SQL.js failed to initialize.");
+        let SQL: any;
+        let kitDb: any; // Define kitDb here to access in finally block
+        try {
+            // Initialize SQL.js specifically for this import operation
+            SQL = await initSqlJs({ locateFile: file => `/${file}` });
+            console.log("SQL.js initialized for import.");
+        } catch (err) {
+            console.error("Failed to initialize SQL.js for import:", err);
+            throw new Error("SQL.js failed to initialize for import."); // Rethrow or handle as appropriate
         }
-        const SQL = this.SQL; // Use the initialized SQL object
 
-        // load zip file from url into memory
         const zipData = await fetch(url).then(res => res.arrayBuffer());
         const zip = await JSZip.loadAsync(zipData);
 
-        // load ./semio/kit.db as sqlite database into memory
-        const kitDbFileEntry = zip.file("semio/kit.db"); // Adjusted path
+        const kitDbFileEntry = zip.file("semio/kit.db");
         if (!kitDbFileEntry) {
             throw new Error("kit.db not found in the zip file at path semio/kit.db");
         }
         const kitDbFile = await kitDbFileEntry.async("uint8array");
-        const kitDb = new SQL.Database(kitDbFile);
+        kitDb = new SQL.Database(kitDbFile); // Assign to outer scope variable
+
 
         let kit: Kit | null = null;
         let types: Type[] = [];
@@ -1017,6 +1001,7 @@ class StudioStore {
             // --- Helper function to get Qualities ---
             const getQualities = (tableName: string, fkColumn: string, fkValue: number | string): Quality[] => {
                 const query = `SELECT name, value, unit, definition FROM quality WHERE ${fkColumn} = ?`;
+                // Use kitDb directly
                 const res = kitDb.exec(query, [fkValue]);
                 if (!res || res.length === 0 || !res[0].values) return [];
                 return res[0].values.map((row: any[]) => ({ name: row[0], value: row[1], unit: row[2], definition: row[3] }));
@@ -1024,6 +1009,7 @@ class StudioStore {
             // --- Helper function to get Authors ---
             const getAuthors = (tableName: string, fkColumn: string, fkValue: number | string): Author[] => {
                 const query = `SELECT name, email, rank FROM author WHERE ${fkColumn} = ?`;
+                // Use kitDb directly
                 const res = kitDb.exec(query, [fkValue]);
                 if (!res || res.length === 0 || !res[0].values) return [];
                 return res[0].values.map((row: any[]) => ({ name: row[0], email: row[1], rank: row[2] }));
@@ -1176,19 +1162,28 @@ class StudioStore {
             console.error("Error importing kit:", error);
             throw error; // Re-throw the error after logging
         } finally {
-            kitDb.close(); // Ensure the database is closed
+            // Ensure the database is closed for this specific import
+            if (kitDb) {
+                kitDb.close();
+                console.log("SQL.js database closed for import.");
+            }
         }
     }
 
     async exportKit(kitUri: string, complete = false): Promise<Blob> {
-        if (!this.SQL) {
-            console.error("SQL.js is not initialized yet.");
-            await this.initializeSql();
-            if (!this.SQL) throw new Error("SQL.js failed to initialize.");
+        let SQL: any;
+        let db: any; // Define db here to access in finally block
+        try {
+            // Initialize SQL.js specifically for this export operation
+            SQL = await initSqlJs({ locateFile: file => `/${file}` });
+            console.log("SQL.js initialized for export.");
+        } catch (err) {
+            console.error("Failed to initialize SQL.js for export:", err);
+            throw new Error("SQL.js failed to initialize for export.");
         }
-        const SQL = this.SQL;
+
         const kit = this.getKit(kitUri);
-        const db = new SQL.Database();
+        db = new SQL.Database(); // Assign to outer scope variable
         const zip = new JSZip();
         const filesMap = this.yDoc.getMap('files');
 
@@ -1214,6 +1209,7 @@ class StudioStore {
             // --- Helper function to insert Qualities ---
             const insertQualities = (qualities: Quality[] | undefined, fkColumn: string, fkValue: number) => {
                 if (!qualities) return;
+                // Use db directly
                 const stmt = db.prepare(`INSERT INTO quality (name, value, unit, definition, ${fkColumn}) VALUES (?, ?, ?, ?, ?)`);
                 qualities.forEach(q => stmt.run([q.name, q.value, q.unit, q.definition, fkValue]));
                 stmt.free();
@@ -1221,6 +1217,7 @@ class StudioStore {
             // --- Helper function to insert Authors ---
             const insertAuthors = (authors: Author[] | undefined, fkColumn: string, fkValue: number) => {
                 if (!authors) return;
+                // Use db directly
                 const stmt = db.prepare(`INSERT INTO author (name, email, rank, ${fkColumn}) VALUES (?, ?, ?, ?)`);
                 authors.forEach(a => stmt.run([a.name, a.email, a.rank, fkValue]));
                 stmt.free();
@@ -1272,7 +1269,7 @@ class StudioStore {
                                 rep.tags.forEach((tag, index) => tagStmt.run([tag, index, repDbId]));
                             }
                             // Add file to zip
-                            const fileData = filesMap.get(rep.url);
+                            const fileData = filesMap.get(rep.url) as Uint8Array | undefined; // Explicit cast
                             if (fileData) {
                                 zip.file(rep.url, fileData);
                             } else if (!complete && !rep.url.startsWith("http")) {
@@ -1428,7 +1425,11 @@ class StudioStore {
             console.error("Error exporting kit:", error);
             throw error; // Re-throw after logging
         } finally {
-            db.close(); // Ensure database is closed
+            // Ensure database is closed for this specific export
+            if (db) {
+                db.close();
+                console.log("SQL.js database closed for export.");
+            }
         }
     }
 }
