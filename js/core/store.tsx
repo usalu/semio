@@ -1032,6 +1032,133 @@ class StudioStore {
             }
         }
 
+        // extract ports for each type
+        for (const type of kit.types) {
+            const portRows = kitDb.exec("SELECT * FROM port WHERE type_id = ?", [type.id])[0].values;
+            type.ports = portRows.map(row => ({
+                id_: row[0],
+                description: row[1],
+                family: row[2],
+                t: row[3],
+                compatibleFamilies: [], // TODO: populate compatible families
+                point: {
+                    x: row[5],
+                    y: row[6],
+                    z: row[7]
+                },
+                direction: {
+                    x: row[8],
+                    y: row[9],
+                    z: row[10]
+                }
+            }));
+        }
+
+        // extract pieces for each design
+        for (const design of kit.designs) {
+            const pieceRows = kitDb.exec("SELECT * FROM piece WHERE design_id = ?", [design.id])[0].values;
+            design.pieces = pieceRows.map(row => ({
+                id_: row[0],
+                description: row[1],
+                type: {
+                    name: row[2],
+                    variant: row[3]
+                },
+                plane: row[4] ? {
+                    origin: {
+                        x: row[5],
+                        y: row[6],
+                        z: row[7]
+                    },
+                    xAxis: {
+                        x: row[8],
+                        y: row[9],
+                        z: row[10]
+                    },
+                    yAxis: {
+                        x: row[11],
+                        y: row[12],
+                        z: row[13]
+                    }
+                } : undefined,
+                center: {
+                    x: row[14],
+                    y: row[15]
+                }
+            }));
+        }
+
+        // extract connections for each design  
+        for (const design of kit.designs) {
+            const connectionRows = kitDb.exec("SELECT * FROM connection WHERE design_id = ?", [design.id])[0].values;
+            design.connections = connectionRows.map(row => ({
+                description: row[0],
+                gap: row[1],
+                shift: row[2],
+                raise_: row[3],
+                rotation: row[4],
+                turn: row[5],
+                tilt: row[6],
+                x: row[7],
+                y: row[8],
+                connected: {
+                    piece: { id_: row[9] },
+                    port: { id_: row[10] }
+                },
+                connecting: {
+                    piece: { id_: row[11] },
+                    port: { id_: row[12] }
+                }
+            }));
+        }
+
+        // extract qualities
+        const qualityRows = kitDb.exec("SELECT * FROM quality")[0].values;
+        const qualityMap: { [id: number]: Quality } = {};
+        qualityRows.forEach(row => {
+            qualityMap[row[0]] = {
+                name: row[1],
+                value: row[2],
+                unit: row[3],
+                definition: row[4]
+            };
+        });
+
+        // assign qualities to respective objects
+        kit.qualities = qualityRows
+            .filter(row => row[7] === 1)
+            .map(row => qualityMap[row[0]]);
+
+        kit.types.forEach(type => {
+            type.qualities = qualityRows
+                .filter(row => row[3] === type.id)
+                .map(row => qualityMap[row[0]]);
+
+            type.ports?.forEach(port => {
+                port.qualities = qualityRows
+                    .filter(row => row[2] === port.id_)
+                    .map(row => qualityMap[row[0]]);
+            });
+        });
+
+        kit.designs.forEach(design => {
+            design.qualities = qualityRows
+                .filter(row => row[6] === design.id)
+                .map(row => qualityMap[row[0]]);
+
+            design.pieces?.forEach(piece => {
+                piece.qualities = qualityRows
+                    .filter(row => row[4] === piece.id_)
+                    .map(row => qualityMap[row[0]]);
+            });
+
+            design.connections?.forEach(connection => {
+                connection.qualities = qualityRows
+                    .filter(row => row[5] === connection.id)
+                    .map(row => qualityMap[row[0]]);
+            });
+        });
+
         this.createKit(kit);
     }
 
@@ -1044,6 +1171,10 @@ class StudioStore {
         db.run(typeTableSql);
         db.run(designTableSql);
         db.run(representationTableSql);
+        db.run(portTableSql);
+        db.run(pieceTableSql);
+        db.run(connectionTableSql);
+        db.run(qualityTableSql);
 
         const kitStatement = db.prepare("INSERT INTO kit VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         kitStatement.run([
@@ -1111,6 +1242,182 @@ class StudioStore {
             }
         }
         repStatement.free();
+
+        const portStatement = db.prepare("INSERT INTO port VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        for (const type of kit.types) {
+            for (const [i, port] of (type.ports || []).entries()) {
+                portStatement.run([
+                    port.description,
+                    port.family,
+                    port.t,
+                    i + 1, // id
+                    port.id_, // local_id
+                    port.point.x,
+                    port.point.y,
+                    port.point.z,
+                    port.direction.x,
+                    port.direction.y,
+                    port.direction.z,
+                    type.id
+                ]);
+            }
+        }
+        portStatement.free();
+
+        const pieceStatement = db.prepare("INSERT INTO piece VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        for (const design of kit.designs) {
+            for (const [i, piece] of (design.pieces || []).entries()) {
+                const plane = piece.plane;
+                pieceStatement.run([
+                    piece.description,
+                    i + 1, // id
+                    piece.id_, // local_id
+                    typesDict[piece.type.name][piece.type.variant || ''].id,
+                    plane ? 1 : null, // plane_id, null if no plane
+                    plane?.origin.x,
+                    plane?.origin.y,
+                    plane?.origin.z,
+                    piece.center?.x,
+                    piece.center?.y,
+                    design.id
+                ]);
+            }
+        }
+        pieceStatement.free();
+
+        const connectionStatement = db.prepare("INSERT INTO connection VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        for (const design of kit.designs) {
+            for (const [i, connection] of (design.connections || []).entries()) {
+                connectionStatement.run([
+                    connection.description,
+                    connection.gap,
+                    connection.shift,
+                    connection.raise_,
+                    connection.rotation,
+                    connection.turn,
+                    connection.tilt,
+                    connection.x,
+                    connection.y,
+                    i + 1, // id
+                    pieceMap[connection.connected.piece.id_!].id,
+                    portsDict[connection.connected.port.id_!].id,
+                    pieceMap[connection.connecting.piece.id_!].id,
+                    portsDict[connection.connecting.port.id_!].id,
+                    design.id
+                ]);
+            }
+        }
+        connectionStatement.free();
+
+        const qualityStatement = db.prepare("INSERT INTO quality VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        let qualityId = 1;
+        kit.qualities?.forEach(q => {
+            qualityStatement.run([
+                q.name,
+                q.value,
+                q.unit,
+                q.definition,
+                qualityId++,
+                null, // representation_id
+                null, // port_id 
+                null, // type_id
+                null, // piece_id
+                null, // connection_id
+                null, // design_id
+                1     // kit_id
+            ]);
+        });
+        kit.types.forEach(type => {
+            type.qualities?.forEach(q => {
+                qualityStatement.run([
+                    q.name,
+                    q.value,
+                    q.unit,
+                    q.definition,
+                    qualityId++,
+                    null, // representation_id
+                    null, // port_id
+                    type.id,
+                    null, // piece_id  
+                    null, // connection_id
+                    null, // design_id
+                    null  // kit_id
+                ]);
+            });
+            type.ports?.forEach(port => {
+                port.qualities?.forEach(q => {
+                    qualityStatement.run([
+                        q.name,
+                        q.value,
+                        q.unit,
+                        q.definition,
+                        qualityId++,
+                        null, // representation_id
+                        portsDict[port.id_!].id,
+                        null, // type_id
+                        null, // piece_id
+                        null, // connection_id  
+                        null, // design_id
+                        null  // kit_id
+                    ]);
+                });
+            });
+        });
+        kit.designs.forEach(design => {
+            design.qualities?.forEach(q => {
+                qualityStatement.run([
+                    q.name,
+                    q.value,
+                    q.unit,
+                    q.definition,
+                    qualityId++,
+                    null, // representation_id
+                    null, // port_id
+                    null, // type_id
+                    null, // piece_id
+                    null, // connection_id
+                    design.id,
+                    null  // kit_id      
+                ]);
+            });
+            design.pieces?.forEach(piece => {
+                piece.qualities?.forEach(q => {
+                    qualityStatement.run([
+                        q.name,
+                        q.value,
+                        q.unit,
+                        q.definition,
+                        qualityId++,
+                        null, // representation_id
+                        null, // port_id
+                        null, // type_id
+                        pieceMap[piece.id_!].id,
+                        null, // connection_id
+                        null, // design_id
+                        null  // kit_id
+                    ]);
+                });
+            });
+            design.connections?.forEach(connection => {
+                connection.qualities?.forEach(q => {
+                    qualityStatement.run([
+                        q.name,
+                        q.value,
+                        q.unit,
+                        q.definition,
+                        qualityId++,
+                        null, // representation_id
+                        null, // port_id
+                        null, // type_id  
+                        null, // piece_id
+                        connectionsDict[`${connection.connected.piece.id_}--${connection.connecting.piece.id_}`].id,
+                        null, // design_id
+                        null  // kit_id
+                    ]);
+                });
+            });
+        });
+        qualityStatement.free();
 
         // export zip file with sqlite file and representation files
         const zip = new JSZip();
