@@ -661,7 +661,7 @@ const DesignEditorCore: FC = () => {
                         xAxis: { x: 1, y: 0, z: 0 },
                         yAxis: { x: 0, y: 1, z: 0 }
                     },
-                    center: { x: x / ICON_WIDTH, y: -y / ICON_WIDTH }
+                    center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 }
                 };
                 designEditorStore.transact(() => {
                     createPiece(piece);
