@@ -6,7 +6,7 @@ import { IndexeddbPersistence } from 'y-indexeddb';
 import JSZip from 'jszip';
 // Import initSqlJs
 import initSqlJs from 'sql.js';
-import sqlWasm from 'sql.js/dist/sql-wasm.wasm';
+import sqlWasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 
 import { Generator } from '@semio/js/lib/utils';
 import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint, Point, Vector, Quality, Author, Side } from '@semio/js/semio';
@@ -963,7 +963,7 @@ class StudioStore {
         let kitDb: any; // Define kitDb here to access in finally block
         try {
             // Initialize SQL.js specifically for this import operation
-            SQL = await initSqlJs({ locateFile: () => sqlWasm });
+            SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
             console.log("SQL.js initialized for import.");
         } catch (err) {
             console.error("Failed to initialize SQL.js for import:", err);
@@ -973,7 +973,7 @@ class StudioStore {
         const zipData = await fetch(url).then(res => res.arrayBuffer());
         const zip = await JSZip.loadAsync(zipData);
 
-        const kitDbFileEntry = zip.file("semio/kit.db");
+        const kitDbFileEntry = zip.file(".semio/kit.db");
         if (!kitDbFileEntry) {
             throw new Error("kit.db not found in the zip file at path semio/kit.db");
         }
@@ -1178,7 +1178,7 @@ class StudioStore {
         let db: any; // Define db here to access in finally block
         try {
             // Initialize SQL.js specifically for this export operation
-            SQL = await initSqlJs({ locateFile: file => `/${file}` });
+            SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
             console.log("SQL.js initialized for export.");
         } catch (err) {
             console.error("Failed to initialize SQL.js for export:", err);
