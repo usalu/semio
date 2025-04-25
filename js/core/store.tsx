@@ -3,6 +3,8 @@ import * as Y from 'yjs';
 import React, { createContext, useContext, useEffect, useState, useMemo, FC } from 'react';
 import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
+import JSZip from 'jszip';
+import SQL from 'sql.js';
 
 import { Generator } from '@semio/js/lib/utils';
 import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint, Point, Vector, Quality, Author, Side } from '@semio/js/semio';
@@ -960,32 +962,169 @@ class StudioStore {
         };
     }
 
-    importKit(url: string, complete = false): void {
+    async importKit(url: string, complete = false): Promise<void> {
         // load zip file from url into memory
+        const zipData = await fetch(url).then(res => res.arrayBuffer());
+        const zip = await JSZip.loadAsync(zipData);
 
-        // if complete, load all files from the zip file into memory
-        // otherwise, load only files from all representations with relative urls
-
-        // load ./semio/kit.db as sqlite database into memory
+        // load ./semio/kit.db as sqlite database into memory  
+        const kitDbFile = await zip.file("./semio/kit.db").async("uint8array");
+        const kitDb = new SQL.Database(kitDbFile);
 
         // extract kit from sqlite database
+        const kitRow = kitDb.exec("SELECT * FROM kit")[0].values[0];
+        const kit: Kit = {
+            uri: kitRow[0],
+            name: kitRow[1],
+            description: kitRow[2],
+            icon: kitRow[3],
+            image: kitRow[4],
+            preview: kitRow[5],
+            version: kitRow[6],
+            remote: kitRow[7],
+            homepage: kitRow[8],
+            license: kitRow[9],
+            created: new Date(kitRow[10]),
+            updated: new Date(kitRow[11]),
+        };
+
+        // extract types
+        const typeRows = kitDb.exec("SELECT * FROM type WHERE kit_id = ?", [kitRow[12]])[0].values;
+        kit.types = typeRows.map(row => ({
+            name: row[0],
+            description: row[1],
+            icon: row[2],
+            image: row[3],
+            variant: row[4],
+            unit: row[5],
+            created: new Date(row[6]),
+            updated: new Date(row[7]),
+            representations: [], // will populate later
+        }));
+
+        // extract designs  
+        const designRows = kitDb.exec("SELECT * FROM design WHERE kit_id = ?", [kitRow[12]])[0].values;
+        kit.designs = designRows.map(row => ({
+            name: row[0],
+            description: row[1],
+            icon: row[2],
+            image: row[3],
+            variant: row[4],
+            view: row[5],
+            unit: row[6],
+            created: new Date(row[7]),
+            updated: new Date(row[8]),
+        }));
+
+        // populate type representations
+        for (const type of kit.types) {
+            const repRows = kitDb.exec("SELECT * FROM representation WHERE type_id = ?", [type.id])[0].values;
+            for (const repRow of repRows) {
+                const url = repRow[0];
+                const file = !complete && url.startsWith("http") ? null : await zip.file(url).async("uint8array");
+                type.representations.push({
+                    url,
+                    description: repRow[1],
+                    mime: repRow[2],
+                    tags: [], // TODO: populate tags
+                    file: file ? { data: file, name: url.split("/").pop() } : undefined,
+                });
+            }
+        }
 
         this.createKit(kit);
     }
 
     exportKit(kitUri: string, complete = false): Uint8Array {
-        const yKit = this.yDoc.getMap('kits').get(kitUri) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitUri}) not found`);
         const kit = this.getKit(kitUri);
 
         // create sqlite file in memory from kit
+        const db = new SQL.Database();
+        db.run(kitTableSql);
+        db.run(typeTableSql);
+        db.run(designTableSql);
+        db.run(representationTableSql);
 
-        // if complete, include all files from the kit
-        // otherwise, include only files from all representations with relative urls
+        const kitStatement = db.prepare("INSERT INTO kit VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        kitStatement.run([
+            kit.uri,
+            kit.name,
+            kit.description,
+            kit.icon,
+            kit.image,
+            kit.preview,
+            kit.version,
+            kit.remote,
+            kit.homepage,
+            kit.license,
+            kit.created.toISOString(),
+            kit.updated.toISOString(),
+            1 // id
+        ]);
+        kitStatement.free();
 
-        // export zip file with sqlite file and files
+        const typeStatement = db.prepare("INSERT INTO type VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        for (const [i, type] of kit.types.entries()) {
+            typeStatement.run([
+                type.name,
+                type.description,
+                type.icon,
+                type.image,
+                type.variant,
+                type.unit,
+                type.created.toISOString(),
+                type.updated.toISOString(),
+                i + 1, // id
+                1    // kit_id  
+            ]);
+        }
+        typeStatement.free();
 
-        return buffer;
+        const designStatement = db.prepare("INSERT INTO design VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        for (const [i, design] of kit.designs.entries()) {
+            designStatement.run([
+                design.name,
+                design.description,
+                design.icon,
+                design.image,
+                design.variant,
+                design.view,
+                design.unit,
+                design.created.toISOString(),
+                design.updated.toISOString(),
+                i + 1, // id
+                1    // kit_id
+            ]);
+        }
+        designStatement.free();
+
+        const repStatement = db.prepare("INSERT INTO representation VALUES (?, ?, ?, ?, ?)");
+        for (const type of kit.types) {
+            for (const [i, rep] of type.representations.entries()) {
+                repStatement.run([
+                    rep.url,
+                    rep.description,
+                    rep.mime,
+                    i + 1, // id
+                    type.id
+                ]);
+            }
+        }
+        repStatement.free();
+
+        // export zip file with sqlite file and representation files
+        const zip = new JSZip();
+        zip.file("./semio/kit.db", new Uint8Array(db.export()));
+        for (const type of kit.types) {
+            for (const rep of type.representations) {
+                if (rep.file && (!complete || !rep.url.startsWith("http"))) {
+                    zip.file(rep.url, rep.file.data);
+                }
+            }
+        }
+        const zipFile = await zip.generateAsync({ type: "uint8array" });
+
+        return zipFile;
     }
 }
 
