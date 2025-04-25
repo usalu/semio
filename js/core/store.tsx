@@ -1162,7 +1162,7 @@ class StudioStore {
         this.createKit(kit);
     }
 
-    exportKit(kitUri: string, complete = false): Uint8Array {
+    async exportKit(kitUri: string, complete = false): Promise<Blob> {
         const kit = this.getKit(kitUri);
 
         // create sqlite file in memory from kit
@@ -1429,9 +1429,9 @@ class StudioStore {
                 }
             }
         }
-        const zipFile = await zip.generateAsync({ type: "uint8array" });
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
 
-        return zipFile;
+        return zipBlob;
     }
 }
 
