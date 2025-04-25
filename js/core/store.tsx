@@ -1165,6 +1165,197 @@ class StudioStore {
     async exportKit(kitUri: string, complete = false): Promise<Blob> {
         const kit = this.getKit(kitUri);
 
+        const kitTableSql = `
+CREATE TABLE kit (
+    uri VARCHAR(2048) NOT NULL, 
+    name VARCHAR(64) NOT NULL, 
+    description VARCHAR(512) NOT NULL, 
+    icon VARCHAR(1024) NOT NULL, 
+    image VARCHAR(1024) NOT NULL, 
+    preview VARCHAR(1024) NOT NULL, 
+    version VARCHAR(64) NOT NULL, 
+    remote VARCHAR(1024) NOT NULL, 
+    homepage VARCHAR(1024) NOT NULL, 
+    license VARCHAR(1024) NOT NULL, 
+    created DATETIME NOT NULL, 
+    updated DATETIME NOT NULL, 
+    id INTEGER NOT NULL PRIMARY KEY, 
+    UNIQUE (uri)
+);`;
+
+        const typeTableSql = `
+CREATE TABLE type (
+    name VARCHAR(64) NOT NULL, 
+    description VARCHAR(512) NOT NULL, 
+    icon VARCHAR(1024) NOT NULL, 
+    image VARCHAR(1024) NOT NULL, 
+    variant VARCHAR(64) NOT NULL, 
+    unit VARCHAR(64) NOT NULL, 
+    created DATETIME NOT NULL, 
+    updated DATETIME NOT NULL, 
+    id INTEGER NOT NULL PRIMARY KEY, 
+    kit_id INTEGER, 
+    CONSTRAINT "Unique name and variant" UNIQUE (name, variant, kit_id), 
+    FOREIGN KEY(kit_id) REFERENCES kit (id)
+);`;
+
+        const designTableSql = `
+CREATE TABLE design (
+    name VARCHAR(64) NOT NULL, 
+    description VARCHAR(512) NOT NULL, 
+    icon VARCHAR(1024) NOT NULL, 
+    image VARCHAR(1024) NOT NULL, 
+    variant VARCHAR(64) NOT NULL, 
+    "view" VARCHAR(64) NOT NULL, 
+    unit VARCHAR(64) NOT NULL, 
+    created DATETIME NOT NULL, 
+    updated DATETIME NOT NULL, 
+    id INTEGER NOT NULL PRIMARY KEY, 
+    kit_id INTEGER, 
+    UNIQUE (name, variant, "view", kit_id), 
+    FOREIGN KEY(kit_id) REFERENCES kit (id)
+);`;
+
+        const representationTableSql = `
+CREATE TABLE representation (
+    url VARCHAR(1024) NOT NULL, 
+    description VARCHAR(512) NOT NULL, 
+    mime VARCHAR(64) NOT NULL, 
+    id INTEGER NOT NULL PRIMARY KEY, 
+    type_id INTEGER, 
+    FOREIGN KEY(type_id) REFERENCES type (id)
+);`;
+
+        const tagTableSql = `
+CREATE TABLE tag (
+    name VARCHAR(64) NOT NULL, 
+    "order" INTEGER NOT NULL, 
+    id INTEGER NOT NULL PRIMARY KEY, 
+    representation_id INTEGER, 
+    FOREIGN KEY(representation_id) REFERENCES representation (id)
+);`;
+
+
+        const portTableSql = `
+CREATE TABLE port (
+    description VARCHAR(512) NOT NULL, 
+    family VARCHAR(64) NOT NULL, 
+    t FLOAT NOT NULL, 
+    id INTEGER NOT NULL PRIMARY KEY, 
+    local_id VARCHAR(128), 
+    point_x FLOAT, 
+    point_y FLOAT, 
+    point_z FLOAT, 
+    direction_x FLOAT, 
+    direction_y FLOAT, 
+    direction_z FLOAT, 
+    type_id INTEGER, 
+    CONSTRAINT "Unique local_id" UNIQUE (local_id, type_id), 
+    FOREIGN KEY(type_id) REFERENCES type (id)
+);`;
+
+        const compatibleFamilyTableSql = `
+CREATE TABLE compatible_family (
+    name VARCHAR(64) NOT NULL, 
+    "order" INTEGER NOT NULL, 
+    id INTEGER NOT NULL PRIMARY KEY, 
+    port_id INTEGER, 
+    FOREIGN KEY(port_id) REFERENCES port (id)
+);`;
+
+        const planeTableSql = `
+CREATE TABLE plane (
+    id INTEGER NOT NULL PRIMARY KEY, 
+    origin_x FLOAT, 
+    origin_y FLOAT, 
+    origin_z FLOAT, 
+    x_axis_x FLOAT, 
+    x_axis_y FLOAT, 
+    x_axis_z FLOAT, 
+    y_axis_x FLOAT, 
+    y_axis_y FLOAT, 
+    y_axis_z FLOAT
+);`;
+
+        const pieceTableSql = `
+CREATE TABLE piece (
+    description VARCHAR(512) NOT NULL, 
+    id INTEGER NOT NULL PRIMARY KEY, 
+    local_id VARCHAR(128), 
+    type_id INTEGER, 
+    plane_id INTEGER, 
+    center_x FLOAT, 
+    center_y FLOAT, 
+    design_id INTEGER, 
+    UNIQUE (local_id, design_id), 
+    FOREIGN KEY(type_id) REFERENCES type (id), 
+    FOREIGN KEY(plane_id) REFERENCES plane (id), 
+    FOREIGN KEY(design_id) REFERENCES design (id)
+);`;
+
+
+        const connectionTableSql = `
+CREATE TABLE connection (
+    description VARCHAR(512) NOT NULL, 
+    gap FLOAT NOT NULL, 
+    shift FLOAT NOT NULL, 
+    raise_ FLOAT NOT NULL, 
+    rotation FLOAT NOT NULL, 
+    turn FLOAT NOT NULL, 
+    tilt FLOAT NOT NULL, 
+    x FLOAT NOT NULL, 
+    y FLOAT NOT NULL, 
+    id INTEGER NOT NULL PRIMARY KEY, 
+    connected_piece_id INTEGER, 
+    connected_port_id INTEGER, 
+    connecting_piece_id INTEGER, 
+    connecting_port_id INTEGER, 
+    design_id INTEGER, 
+    CONSTRAINT "no reflexive connection" CHECK (connecting_piece_id != connected_piece_id), 
+    FOREIGN KEY(connected_piece_id) REFERENCES piece (id), 
+    FOREIGN KEY(connected_port_id) REFERENCES port (id), 
+    FOREIGN KEY(connecting_piece_id) REFERENCES piece (id), 
+    FOREIGN KEY(connecting_port_id) REFERENCES port (id), 
+    FOREIGN KEY(design_id) REFERENCES design (id)
+);`;
+
+
+        const qualityTableSql = `
+CREATE TABLE quality (
+    name VARCHAR(64) NOT NULL, 
+    value VARCHAR(64) NOT NULL, 
+    unit VARCHAR(64) NOT NULL, 
+    definition VARCHAR(512) NOT NULL, 
+    id INTEGER NOT NULL PRIMARY KEY, 
+    representation_id INTEGER, 
+    port_id INTEGER, 
+    type_id INTEGER, 
+    piece_id INTEGER, 
+    connection_id INTEGER, 
+    design_id INTEGER, 
+    kit_id INTEGER, 
+    FOREIGN KEY(representation_id) REFERENCES representation (id), 
+    FOREIGN KEY(port_id) REFERENCES port (id), 
+    FOREIGN KEY(type_id) REFERENCES type (id), 
+    FOREIGN KEY(piece_id) REFERENCES piece (id), 
+    FOREIGN KEY(connection_id) REFERENCES connection (id), 
+    FOREIGN KEY(design_id) REFERENCES design (id), 
+    FOREIGN KEY(kit_id) REFERENCES kit (id)
+);`;
+
+        const authorTableSql = `
+CREATE TABLE author (
+	name VARCHAR(64) NOT NULL, 
+	email VARCHAR(128) NOT NULL, 
+	rank INTEGER NOT NULL, 
+	id INTEGER NOT NULL PRIMARY KEY, 
+	type_id INTEGER, 
+	design_id INTEGER, 
+	FOREIGN KEY(type_id) REFERENCES type (id), 
+	FOREIGN KEY(design_id) REFERENCES design (id)
+);`
+
+
         // create sqlite file in memory from kit
         const db = new SQL.Database();
         db.run(kitTableSql);
