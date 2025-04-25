@@ -975,7 +975,7 @@ class StudioStore {
 
         const kitDbFileEntry = zip.file(".semio/kit.db");
         if (!kitDbFileEntry) {
-            throw new Error("kit.db not found in the zip file at path semio/kit.db");
+            throw new Error("kit.db not found in the zip file at path ./semio/kit.db");
         }
         const kitDbFile = await kitDbFileEntry.async("uint8array");
         kitDb = new SQL.Database(kitDbFile); // Assign to outer scope variable
