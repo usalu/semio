@@ -1038,9 +1038,9 @@ class StudioStore {
                     if (repRes && repRes.length > 0 && repRes[0].values) {
                         for (const repRow of repRes[0].values) {
                             const repId = repRow[0];
-                            const url = repRow[1];
+                            const repUrl = repRow[1];
                             const representation: Representation = {
-                                url: url, description: repRow[2], mime: repRow[3], tags: [], qualities: []
+                                url: repUrl, description: repRow[2], mime: repRow[3], tags: [], qualities: []
                             };
                             // Extract tags for this representation
                             const tagRes = kitDb.exec("SELECT name FROM tag WHERE representation_id = ? ORDER BY \"order\"", [repId]);
@@ -1050,12 +1050,12 @@ class StudioStore {
                             representation.qualities = getQualities('quality', 'representation_id', repId);
 
                             // Extract file data from zip and store in filesMap
-                            const fileEntry = zip.file(url);
+                            const fileEntry = zip.file(repUrl);
                             if (fileEntry) {
                                 const fileData = await fileEntry.async("uint8array");
-                                filesMap.set(url, fileData);
-                            } else if (complete && !url.startsWith("http")) {
-                                console.warn(`Representation file not found in zip: ${url}`);
+                                filesMap.set(repUrl, fileData);
+                            } else if (complete && !repUrl.startsWith("http")) {
+                                console.warn(`Representation file not found in zip: ${repUrl}`);
                             }
                             type.representations!.push(representation);
                         }
