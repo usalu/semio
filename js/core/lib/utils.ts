@@ -48,3 +48,13 @@ export class Generator {
         return `${adjective}${animal}${number}`
     }
 }
+
+export const jaccard = (a: string[], b: string[]) => {
+    const setA = new Set(a)
+    const setB = new Set(b)
+
+    const intersection = [...setA].filter((x) => setB.has(x)).length
+    const union = setA.size + setB.size - intersection
+
+    return intersection / union
+}
