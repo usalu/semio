@@ -1,6 +1,7 @@
 import cytoscape from 'cytoscape'
 import * as THREE from 'three'
 
+import { jaccard } from '@semio/js/lib/utils';
 // TODOs
 // Update to latest schema and unify docstrings
 
@@ -842,4 +843,28 @@ export const flattenDesign = (design: Design, types: Type[]): Design => {
     flatDesign.pieces = flatDesign.pieces?.map(p => pieceMap[p.id_ ?? '']);
     flatDesign.connections = [];
     return flatDesign;
+}
+
+const selectRepresentation = (representations: Representation[], mime: string, tags: string[]): Representation => {
+    const filteredRepresentations = representations.filter(r => r.mime === mime);
+    const indices = filteredRepresentations.map(r => jaccard(r.tags, tags));
+    const maxIndex = Math.max(...indices);
+    const maxIndexIndex = indices.indexOf(maxIndex);
+    return filteredRepresentations[maxIndexIndex];
+}
+
+/**
+ * 🔗 Returns a map of piece ids to representation urls for the given design and types.
+ * @param design - The design with the pieces to get the representation urls for. 
+ * @param types - The types of the pieces with the representations.
+ * @returns A map of piece ids to representation urls.
+ */
+export const pieceRepresentationUrls = (design: Design, types: Type[]): Map<string, string> => {
+    const representationUrls = new Map<string, string>();
+    design.pieces?.forEach(p => {
+        const type = types.find(t => t.name === p.type.name && t.variant === p.type.variant);
+        if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) not found`);
+        const representation = selectRepresentation(type.representations, 'model/gltf+json', p.tags);
+        representationUrls.set(p.id_, representation.url);
+    });
 }

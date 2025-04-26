@@ -3,7 +3,7 @@ export type {
     Author, Side, DiagramPoint, Plane, Point, Vector, PieceID, PortID, TypeID
 } from '@semio/js/semio';
 export type { DesignEditorSelection, DesignEditorState } from '@semio/js/store';
-export { flattenDesign } from '@semio/js/semio';
+export { flattenDesign, selectRepresentation } from '@semio/js/semio';
 export { default as File } from '@semio/js/components/ui/File';
 export { default as Model } from '@semio/js/components/ui/Model';
 export { default as Diagram } from '@semio/js/components/ui/Diagram';

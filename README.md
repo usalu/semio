@@ -623,7 +623,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 <table style="border-collapse: collapse; border: none;">
   <tbody>
     <tr style="border: none;">
-      <td align="center" valign="top" width="105px" style="border: none;"><a href="https://github.com/usalu">
+      <td align="center" valign="top" width="140px" style="border: none;"><a href="https://github.com/usalu">
         <img src="/assets/contributors/usalu_round_90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
         <br />
         <sub><b>Ueli Saluz</b></sub></a>
@@ -642,7 +642,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <a href="#-semionet-" title="@semio/net"><sub>@semio/net<sub></a>
         <a href="#-semiograsshopper-" title="@semio/grasshopper"><sub>@semio/grasshopper<sub></a>
       </td>
-      <td align="center" valign="top" width="105px"><a href="https://github.com/kinansarak">
+      <td align="center" valign="top" width="140px"><a href="https://github.com/kinansarak">
         <img src="/assets/contributors/kinansarak_round_90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
         <br />
         <sub><b>KinanSarak</b></sub></a>
@@ -655,7 +655,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <a href="#-semiograsshopper-" title="@semio/grasshopper"><sub>@semio/grasshopper<sub></a>
         <br />
       </td>
-      <td align="center" valign="top" width="105px"><a href="https://github.com/drymuzzle">
+      <td align="center" valign="top" width="140px"><a href="https://github.com/drymuzzle">
         <img src="/assets/contributors/drymuzzle_round_90.png" width="90px" alt="drymuzzle" style="border-radius: 50%;"/>
         <br />
         <sub><b>drymuzzle</b></sub></a>
@@ -666,7 +666,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <br />
         <a href="#-semiograsshopper-" title="@semio/grasshopper"><sub>@semio/grasshopper<sub></a>
       </td>
-      <td align="center" valign="top" width="105px"><a href="https://github.com/kaatzjo">
+      <td align="center" valign="top" width="140px"><a href="https://github.com/kaatzjo">
         <img src="/assets/contributors/kaatzjo_round_90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
         <br />
         <sub><b>kaatzjo</b></sub></a>

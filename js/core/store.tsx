@@ -1289,23 +1289,15 @@ class StudioStore {
                 portStmt.free();
                 compFamStmt.free();
             }
-
-
-            // Mappings for designs
-            const designIdMap: { [key: string]: number } = {}; // key: "name:variant:view"
+            const designIdMap: { [key: string]: number } = {};
             const pieceIdMap: { [designDbId: number]: { [localId: string]: number } } = {}; // piece local_id to db id per design
             const planeIdMap: { [pieceDbId: number]: number } = {}; // map piece db id to plane db id
             let nextPlaneId = 1; // Simple counter for plane IDs
-
-
-            // Insert Designs, Pieces, Connections
             if (kit.designs) {
                 const designStmt = db.prepare("INSERT INTO design (name, description, icon, image, variant, \"view\", unit, created, updated, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 const planeStmt = db.prepare("INSERT INTO plane (id, origin_x, origin_y, origin_z, x_axis_x, x_axis_y, x_axis_z, y_axis_x, y_axis_y, y_axis_z) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 const pieceStmt = db.prepare("INSERT INTO piece (local_id, description, type_id, plane_id, center_x, center_y, design_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
                 const connStmt = db.prepare("INSERT INTO connection (description, gap, shift, raise_, rotation, turn, tilt, x, y, connected_piece_id, connected_port_id, connecting_piece_id, connecting_port_id, design_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-
-
                 for (const design of kit.designs) {
                     const designKey = `${design.name}:${design.variant || ''}:${design.view || ''}`;
                     designStmt.run([design.name, design.description, design.icon, design.image, design.variant || '', design.view || '', design.unit, design.created.toISOString(), design.updated.toISOString(), kitId]);
@@ -1314,9 +1306,6 @@ class StudioStore {
                     pieceIdMap[designDbId] = {};
                     insertQualities(design.qualities, 'design_id', designDbId);
                     insertAuthors(design.authors, 'design_id', designDbId);
-
-
-                    // Insert Pieces and Planes
                     if (design.pieces) {
                         for (const piece of design.pieces) {
                             if (!piece.id_) {
@@ -1329,13 +1318,11 @@ class StudioStore {
                                 console.warn(`Could not find type DB ID for piece ${piece.id_} (type: ${typeKey})`);
                                 continue;
                             }
-
                             let planeDbId: number | null = null;
                             if (piece.plane) {
                                 planeDbId = nextPlaneId++;
                                 planeStmt.run([planeDbId, piece.plane.origin.x, piece.plane.origin.y, piece.plane.origin.z, piece.plane.xAxis.x, piece.plane.xAxis.y, piece.plane.xAxis.z, piece.plane.yAxis.x, piece.plane.yAxis.y, piece.plane.yAxis.z]);
                             }
-
                             pieceStmt.run([piece.id_, piece.description, typeDbId, planeDbId, piece.center?.x, piece.center?.y, designDbId]);
                             const pieceDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
                             pieceIdMap[designDbId][piece.id_] = pieceDbId;
@@ -1345,40 +1332,30 @@ class StudioStore {
                             }
                         }
                     }
-
-                    // Insert Connections
                     if (design.connections) {
                         for (const conn of design.connections) {
                             const connectedPieceDbId = pieceIdMap[designDbId][conn.connected.piece.id_];
                             const connectingPieceDbId = pieceIdMap[designDbId][conn.connecting.piece.id_];
-
                             const connectedPiece = design.pieces?.find(p => p.id_ === conn.connected.piece.id_);
                             const connectingPiece = design.pieces?.find(p => p.id_ === conn.connecting.piece.id_);
-
                             if (!connectedPieceDbId || !connectingPieceDbId || !connectedPiece || !connectingPiece) {
                                 console.warn(`Could not find piece DB IDs for connection between ${conn.connected.piece.id_} and ${conn.connecting.piece.id_}`);
                                 continue;
                             }
-
                             const connectedTypeKey = `${connectedPiece.type.name}:${connectedPiece.type.variant || ''}`;
                             const connectingTypeKey = `${connectingPiece.type.name}:${connectingPiece.type.variant || ''}`;
                             const connectedTypeDbId = typeIdMap[connectedTypeKey];
                             const connectingTypeDbId = typeIdMap[connectingTypeKey];
-
                             if (connectedTypeDbId === undefined || connectingTypeDbId === undefined) {
                                 console.warn(`Could not find type DB IDs for connection pieces`);
                                 continue;
                             }
-
                             const connectedPortDbId = conn.connected.port.id_ ? portIdMap[connectedTypeDbId]?.[conn.connected.port.id_] : undefined;
                             const connectingPortDbId = conn.connecting.port.id_ ? portIdMap[connectingTypeDbId]?.[conn.connecting.port.id_] : undefined;
-
-
                             if (connectedPortDbId === undefined || connectingPortDbId === undefined) {
                                 console.warn(`Could not find port DB IDs for connection between ${conn.connected.piece.id_}:${conn.connected.port.id_} and ${conn.connecting.piece.id_}:${conn.connecting.port.id_}`);
                                 continue;
                             }
-
                             connStmt.run([conn.description, conn.gap, conn.shift, conn.raise_, conn.rotation, conn.turn, conn.tilt, conn.x, conn.y, connectedPieceDbId, connectedPortDbId, connectingPieceDbId, connectingPortDbId, designDbId]);
                             const connDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
                             insertQualities(conn.qualities, 'connection_id', connDbId);
@@ -1390,21 +1367,15 @@ class StudioStore {
                 pieceStmt.free();
                 connStmt.free();
             }
-
-            // Export DB to Uint8Array
             const dbData = db.export();
-            zip.file("semio/kit.db", dbData); // Adjusted path
-
-            // Generate Zip Blob
+            zip.file("semio/kit.db", dbData);
             const zipBlob = await zip.generateAsync({ type: 'blob' });
             console.log(`Kit "${kit.name}" exported successfully.`);
             return zipBlob;
-
         } catch (error) {
             console.error("Error exporting kit:", error);
-            throw error; // Re-throw after logging
+            throw error;
         } finally {
-            // Ensure database is closed for this specific export
             if (db) {
                 db.close();
                 console.log("SQL.js database closed for export.");

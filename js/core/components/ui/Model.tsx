@@ -1,8 +1,8 @@
 import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef } from 'react';
 import { Canvas, ThreeEvent } from '@react-three/fiber';
-import { Center, Environment, GizmoHelper, GizmoViewport, Grid, OrbitControls, Select, Sphere, Stage } from '@react-three/drei';
+import { Center, Environment, GizmoHelper, GizmoViewport, Grid, OrbitControls, Select, Sphere, Stage, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { Design, Piece, Plane, Type, flattenDesign, DesignEditorSelection } from '@semio/js';
+import { Design, Piece, Plane, Type, flattenDesign, DesignEditorSelection, selectRepresentation } from '@semio/js';
 
 const getComputedColor = (variable: string): string => {
     return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -11,10 +11,11 @@ const getComputedColor = (variable: string): string => {
 interface ModelPieceProps {
     piece: Piece;
     plane: Plane;
+    fileUrl: string;
     selected?: boolean;
 }
 
-const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, selected }) => {
+const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected }) => {
     const position = useMemo(() => new THREE.Vector3(plane.origin.x, plane.origin.z, -plane.origin.y), [plane]);
     return (
         <group position={position} userData={{ pieceId: piece.id_ }}>
@@ -29,18 +30,32 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, selected }) => {
 interface ModelDesignProps {
     design: Design;
     types: Type[];
+    fileUrls: Map<string, string>;
     selection: DesignEditorSelection;
     onSelectionChange: (selection: DesignEditorSelection) => void;
 }
 
-const ModelDesign: FC<ModelDesignProps> = ({ design, types, selection, onSelectionChange }) => {
+const ModelDesign: FC<ModelDesignProps> = ({ design, types, fileUrls, selection, onSelectionChange }) => {
     const [gridColors, setGridColors] = useState(() => ({
         sectionColor: getComputedColor('--foreground'),
         cellColor: getComputedColor('--accent-foreground')
     }));
 
+    useEffect(() => {
+        fileUrls.forEach((url, id) => {
+            useGLTF.preload(id);
+        });
+    }, [fileUrls]);
+
     const flatDesign = design ? flattenDesign(design, types) : null;
     const piecePlanes = flatDesign?.pieces?.map(p => p.plane);
+
+    // get the file url for each piece by looking at the type and the representation
+    const pieceFileUrls = design?.pieces?.map(p => {
+        const type = types.find(t => t.id_ === p.typeId);
+        const representation = selectRepresentation(type?.representations, 'model/gltf+json', p.tags);
+        return representation.fileUrl;
+    });
 
     return (
         <Select box multiple onChange={(selected) => {
@@ -85,12 +100,13 @@ const Gizmo: FC = (): JSX.Element => {
 interface ModelProps {
     design: Design;
     types: Type[];
+    fileUrls: Map<string, string>;
     fullscreen: boolean;
     onPanelDoubleClick?: () => void;
     selection: DesignEditorSelection;
     onSelectionChange: (selection: DesignEditorSelection) => void;
 }
-const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design, types, selection, onSelectionChange }) => {
+const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design, types, fileUrls, selection, onSelectionChange }) => {
     const [gridColors, setGridColors] = useState({
         sectionColor: getComputedColor('--foreground'),
         cellColor: getComputedColor('--accent-foreground')
@@ -132,7 +148,7 @@ const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design, types, 
                 {/* <Suspense fallback={null}>
                         <Gltf src={src} />
                     </Suspense> */}
-                <ModelDesign design={design} types={types} selection={selection} onSelectionChange={onSelectionChange} />
+                <ModelDesign design={design} types={types} fileUrls={fileUrls} selection={selection} onSelectionChange={onSelectionChange} />
                 <Environment files={'schlenker-shed.hdr'} />
                 <Grid
                     infiniteGrid={true}
