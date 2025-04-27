@@ -16,8 +16,8 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from "@semio/js/components/ui/Resizable";
-import { Design, Type, Piece, flattenDesign } from '@semio/js';
-import { ICON_WIDTH, pieceRepresentationUrls } from '@semio/js/semio';
+import { Design, Type, Piece, flattenDesign, getPieceRepresentationUrls } from '@semio/js';
+import { ICON_WIDTH } from '@semio/js/semio';
 import { Avatar, AvatarFallback, AvatarImage } from "@semio/js/components/ui/Avatar";
 import { default as Diagram } from "@semio/js/components/ui/Diagram";
 import { default as Model } from "@semio/js/components/ui/Model";
@@ -532,19 +532,12 @@ const DesignEditorCore: FC = () => {
     const kit = studioStore.getKit(kitUri);
     if (!kit) return null;
 
+    if (!kit.types) throw new Error(`Kit ${kitUri} has no types`);
+
     const [designName, designVariant, designView] = designEditorStore.getDesignId();
     const design = studioStore.getDesign(kitUri, designName, designVariant, designView);
 
-    // check that all types for the pieces of the design are present in the kit
-    const types = kit.types;
-    if (!types) throw new Error(`Kit ${kitUri} has no types`);
-    design.pieces?.forEach(p => {
-        const type = types.find(t => t.name === p.type.name && t.variant === p.type.variant);
-        if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`);
-    });
-
     const selection = designEditorStore.getState().selection;
-    const fileUrls = pieceRepresentationUrls(design, kit.types!);
 
     const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
         workbench: false,
@@ -718,6 +711,7 @@ const DesignEditorCore: FC = () => {
                                     design={design}
                                     types={kit?.types ?? []}
                                     selection={selection}
+
                                     onSelectionChange={designEditorStore.updateDesignEditorSelection}
                                 />
                             ) : (
@@ -737,6 +731,7 @@ const DesignEditorCore: FC = () => {
                                     design={design}
                                     types={kit?.types ?? []}
                                     selection={selection}
+                                    fileUrls={studioStore.getFileUrls()}
                                     onSelectionChange={designEditorStore.updateDesignEditorSelection}
                                 />
                             ) : (

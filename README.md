@@ -633,13 +633,21 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <a href="https://github.com/usalu/semio/pulls?q=author%3Ausalu" title="Pull Requests">🔀</a>
         <br />
         <a href="#-semiojs-" title="@semio/js"><sub>@semio/js<sub></a>
+        <br />
         <a href="#-semiosketchpad-" title="@semio/sketchpad"><sub>@semio/sketchpad<sub></a>
+        <br />
         <a href="#-semiodocs-" title="@semio/docs"><sub>@semio/docs<sub></a>
+        <br />
         <a href="#%EF%B8%8F-semioplayground-" title="@semio/playground"><sub>@semio/playground<sub></a>
+        <br />
         <a href="#-semioassistant-" title="@semio/assistant"><sub>@semio/assistant<sub></a>
+        <br />
         <a href="#-semioengine-" title="@semio/engine"><sub>@semio/engine<sub></a>
+        <br />
         <a href="#-semioassets-" title="@semio/assets"><sub>@semio/assets<sub></a>
+        <br />
         <a href="#-semionet-" title="@semio/net"><sub>@semio/net<sub></a>
+        <br />
         <a href="#-semiograsshopper-" title="@semio/grasshopper"><sub>@semio/grasshopper<sub></a>
       </td>
       <td align="center" valign="top" width="140px"><a href="https://github.com/kinansarak">
@@ -652,8 +660,8 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <a href="https://github.com/usalu/semio/pulls?q=author%3Akinansarak" title="Pull Requests">🔀</a>
         <br />
         <a href="#-semiodocs-" title="@semio/docs"><sub>@semio/docs<sub></a>
-        <a href="#-semiograsshopper-" title="@semio/grasshopper"><sub>@semio/grasshopper<sub></a>
         <br />
+        <a href="#-semiograsshopper-" title="@semio/grasshopper"><sub>@semio/grasshopper<sub></a>
       </td>
       <td align="center" valign="top" width="140px"><a href="https://github.com/drymuzzle">
         <img src="/assets/contributors/drymuzzle_round_90.png" width="90px" alt="drymuzzle" style="border-radius: 50%;"/>

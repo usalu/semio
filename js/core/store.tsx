@@ -924,8 +924,8 @@ class StudioStore {
         return fileUrl;
     }
 
-    getFileUrls(): string[] {
-        return Array.from(this.fileUrls.values());
+    getFileUrls(): Map<string, string> {
+        return this.fileUrls;
     }
 
     getFileData(url: string): Uint8Array {

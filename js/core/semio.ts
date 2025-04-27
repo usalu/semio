@@ -859,7 +859,7 @@ const selectRepresentation = (representations: Representation[], mime: string, t
  * @param types - The types of the pieces with the representations.
  * @returns A map of piece ids to representation urls.
  */
-export const pieceRepresentationUrls = (design: Design, types: Type[], mime: string = 'model/gltf-binary', tags: string[] = []): Map<string, string> => {
+export const getPieceRepresentationUrls = (design: Design, types: Type[], mime: string = 'model/gltf-binary', tags: string[] = []): Map<string, string> => {
     const representationUrls = new Map<string, string>();
     design.pieces?.forEach(p => {
         const type = types.find(t => t.name === p.type.name && t.variant === p.type.variant);

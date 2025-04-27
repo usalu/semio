@@ -49,10 +49,12 @@ export class Generator {
     }
 }
 
-export const jaccard = (a: string[], b: string[]) => {
+export const jaccard = (a: string[] | undefined, b: string[] | undefined) => {
+    if ((a === undefined && b === undefined) || (a?.length === 0 && b?.length === 0)) return 1
     const setA = new Set(a)
     const setB = new Set(b)
     const intersection = [...setA].filter((x) => setB.has(x)).length
     const union = setA.size + setB.size - intersection
+    if (union === 0) return 0
     return intersection / union
 }

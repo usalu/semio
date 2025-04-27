@@ -2,7 +2,7 @@ import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef } from '
 import { Canvas, ThreeEvent } from '@react-three/fiber';
 import { Center, Environment, GizmoHelper, GizmoViewport, Grid, OrbitControls, Select, Sphere, Stage, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { Design, Piece, Plane, Type, flattenDesign, DesignEditorSelection, selectRepresentation } from '@semio/js';
+import { Design, Piece, Plane, Type, flattenDesign, DesignEditorSelection, selectRepresentation, pieceRepresentationUrls, getPieceRepresentationUrls } from '@semio/js';
 
 const getComputedColor = (variable: string): string => {
     return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -47,14 +47,17 @@ const ModelDesign: FC<ModelDesignProps> = ({ design, types, fileUrls, selection,
         });
     }, [fileUrls]);
 
+    design.pieces?.forEach(p => {
+        const type = types.find(t => t.name === p.type.name && t.variant === p.type.variant);
+        if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`);
+    });
+
     const flatDesign = design ? flattenDesign(design, types) : null;
     const piecePlanes = flatDesign?.pieces?.map(p => p.plane);
+    const pieceRepresentationUrls = getPieceRepresentationUrls(design, types!);
 
-    // get the file url for each piece by looking at the type and the representation
-    const pieceFileUrls = design?.pieces?.map(p => {
-        const type = types.find(t => t.id_ === p.typeId);
-        const representation = selectRepresentation(type?.representations, 'model/gltf+json', p.tags);
-        return representation.fileUrl;
+    pieceRepresentationUrls.forEach((id, url) => {
+        if (!fileUrls.has(url)) throw new Error(`Representation url ${url} for piece ${id} not found in fileUrls map`);
     });
 
     return (
@@ -72,7 +75,13 @@ const ModelDesign: FC<ModelDesignProps> = ({ design, types, fileUrls, selection,
             }
         }} filter={items => items}>
             {design.pieces?.map((piece, index) => (
-                <ModelPiece key={`piece-${piece.id_ || index}`} piece={piece} plane={piecePlanes[index]} selected={selection.selectedPieceIds.includes(piece.id_)} />
+                <ModelPiece
+                    key={`piece-${piece.id_ || index}`}
+                    piece={piece}
+                    plane={piecePlanes[index]}
+                    fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_))}
+                    selected={selection.selectedPieceIds.includes(piece.id_)}
+                />
             ))}
         </Select>
     );
