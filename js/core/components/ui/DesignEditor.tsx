@@ -266,7 +266,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     };
 
     // const { kit } = useKit();
-    const kit = useStudioStore().getKit("Metabolism", "");
+    const kit = useStudioStore().getKit("Metabolism", "r25.03-1");
     if (!kit?.types) return null;
 
     const typesByName = kit.types.reduce((acc, type) => {
@@ -528,14 +528,14 @@ const DesignEditorCore: FC = () => {
 
     const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null);
     const { setNavbarToolbar } = useSketchpad();
-    const kitUri = designEditorStore.getKitId();
-    const kit = studioStore.getKit(kitUri);
+    const [kitName, kitVersion] = designEditorStore.getKitId();
+    const kit = studioStore.getKit(kitName, kitVersion);
     if (!kit) return null;
 
-    if (!kit.types) throw new Error(`Kit ${kitUri} has no types`);
+    if (!kit.types) throw new Error(`Kit ${kitName} ${kitVersion} has no types`);
 
     const [designName, designVariant, designView] = designEditorStore.getDesignId();
-    const design = studioStore.getDesign(kitUri, designName, designVariant, designView);
+    const design = studioStore.getDesign(kitName, kitVersion, designName, designVariant, designView);
 
     const selection = designEditorStore.getState().selection;
 
@@ -626,7 +626,7 @@ const DesignEditorCore: FC = () => {
 
     const createPiece = (piece: Piece) => {
         designEditorStore.transact(() => {
-            studioStore.createPiece(kitUri, designName, designVariant, designView, piece);
+            studioStore.createPiece(kitName, kitVersion, designName, designVariant, designView, piece);
         });
     };
 
