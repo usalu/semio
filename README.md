@@ -63,7 +63,7 @@ Let me walk you through 🚶
    - [🟪 @semio/net](#-semionet-)
    - [🦗 @semio/grasshopper](#-semiograsshopper-)
    - [🛍️ @semio/assets](#%EF%B8%8F-semioassets-)
-1. [🏘️ Examples](#-examples-)
+1. [🏘️ Examples](#%EF%B8%8F-examples-)
    - [🚀 Starters](#-starters-)
    - [👋 Hello semio](#-hello-semio-)
    - [🫀 Metabolism](#-metabolism-)
@@ -412,7 +412,8 @@ A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
   - [Docs](https://github.com/Humanizr/Humanizer)
   - [Issues](https://github.com/Humanizr/Humanizer/issues)
 - [SVG](https://www.nuget.org/packages/Svg)
-  - [Docs](hhttps://svg-net.github.io/SVG)
+  - [Docs](https://svg-net.github.io/SVG)
+  - [API](https://svg-net.github.io/SVG/api)
   - [Issues](https://github.com/svg-net/svg/issues)
 - [GrGen.NET](https://grgen.de)
   - [Docs](https://grgen.de/GrGenNET-Manual.pdf)
@@ -552,11 +553,13 @@ Each badge is created with [shields.io](https://shields.io) with style `flat-squ
 
 # 🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)
 
-## 🫀 [Metabolism](https://github.com/usalu/metabolism) [↑](#-examples-)
+## 🚀 [Starter](https://github.com/usalu/semio/tree/main/examples/starter) [↑](#%EF%B8%8F-examples-)
 
-## 🚀 [Starters](https://github.com/usalu/semio/tree/main/examples/starter) [↑](#-examples-)
+## 👋 [Hello semio](https://github.com/usalu/semio/tree/main/examples/hello-semio) [↑](#%EF%B8%8F-examples-)
 
-## 👋 [Hello semio](https://github.com/usalu/hello-semio) [↑](#-examples-)
+## 🌈 [Geometry](https://github.com/usalu/semio/tree/main/examples/geometry) [↑](#%EF%B8%8F-examples-)
+
+## 🫀 [Metabolism](https://github.com/usalu/metabolism) [↑](#%EF%B8%8F-examples-)
 
 # 💯 Brand [↑](#-overview)
 
@@ -627,22 +630,12 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 - Borders □
 - Basic geometric shapes ⚪
 
-# 🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)
-
-## 🚀 [Starter](https://github.com/usalu/semio/tree/main/examples/starter) [↑](#-examples-)
-
-## 👋 [Hello semio](https://github.com/usalu/hello-semio) [↑](#-examples-)
-
-## 🌈 [Geometry](https://github.com/usalu/geometry) [↑](#-examples-)
-
-## 🫀 [Metabolism](https://github.com/usalu/metabolism) [↑](#-examples-)
-
 # ✨ [Contributors](https://github.com/usalu/semio/graphs/contributors) [↑](#-overview)
 
 <table style="border-collapse: collapse; border: none;">
   <tbody>
     <tr style="border: none;">
-      <td align="center" valign="top" width="140px" style="border: none;"><a href="https://github.com/usalu">
+      <td align="center" valign="top" width="145px" style="border: none;"><a href="https://github.com/usalu">
         <img src="/assets/contributors/usalu_round_90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
         <br />
         <sub><b>Ueli Saluz</b></sub></a>
@@ -669,7 +662,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <br />
         <a href="#-semiograsshopper-" title="@semio/grasshopper"><sub>@semio/grasshopper<sub></a>
       </td>
-      <td align="center" valign="top" width="140px"><a href="https://github.com/kinansarak">
+      <td align="center" valign="top" width="145px"><a href="https://github.com/kinansarak">
         <img src="/assets/contributors/kinansarak_round_90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
         <br />
         <sub><b>KinanSarak</b></sub></a>
@@ -682,7 +675,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <br />
         <a href="#-semiograsshopper-" title="@semio/grasshopper"><sub>@semio/grasshopper<sub></a>
       </td>
-      <td align="center" valign="top" width="140px"><a href="https://github.com/drymuzzle">
+      <td align="center" valign="top" width="145px"><a href="https://github.com/drymuzzle">
         <img src="/assets/contributors/drymuzzle_round_90.png" width="90px" alt="drymuzzle" style="border-radius: 50%;"/>
         <br />
         <sub><b>drymuzzle</b></sub></a>
@@ -693,7 +686,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <br />
         <a href="#-semiograsshopper-" title="@semio/grasshopper"><sub>@semio/grasshopper<sub></a>
       </td>
-      <td align="center" valign="top" width="140px"><a href="https://github.com/kaatzjo">
+      <td align="center" valign="top" width="145px"><a href="https://github.com/kaatzjo">
         <img src="/assets/contributors/kaatzjo_round_90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
         <br />
         <sub><b>kaatzjo</b></sub></a>

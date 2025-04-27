@@ -1,5 +1,5 @@
 import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef } from 'react';
-import { Canvas, ThreeEvent } from '@react-three/fiber';
+import { Canvas, ThreeEvent, useLoader } from '@react-three/fiber';
 import { Center, Environment, GizmoHelper, GizmoViewport, Grid, OrbitControls, Select, Sphere, Stage, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { Design, Piece, Plane, Type, flattenDesign, DesignEditorSelection, selectRepresentation, pieceRepresentationUrls, getPieceRepresentationUrls } from '@semio/js';
@@ -17,12 +17,15 @@ interface ModelPieceProps {
 
 const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected }) => {
     const position = useMemo(() => new THREE.Vector3(plane.origin.x, plane.origin.z, -plane.origin.y), [plane]);
+    const scene = useMemo(() => {
+        return useGLTF(fileUrl).scene.clone()
+    }, [fileUrl])
     return (
         <group position={position} userData={{ pieceId: piece.id_ }}>
-            {/* Example geometry, replace with actual representation */}
-            <Sphere args={[0.5, 32, 32]} >
+            <primitive object={scene} />
+            {/* <Sphere args={[0.5, 32, 32]} >
                 <meshStandardMaterial color={selected ? 'pink' : 'gold'} roughness={0} metalness={1} />
-            </Sphere>
+            </Sphere> */}
         </group>
     );
 };
