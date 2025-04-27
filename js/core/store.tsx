@@ -196,25 +196,24 @@ class StudioStore {
         kit.designs?.forEach(d => this.createDesign(kit.name, kit.version, d));
     }
 
-    getKit(kitName: string, kitVersion: string): Kit {
+    getKit(name: string, version: string): Kit {
         const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
-        const yKit = kits.get(kitName)?.get(kitVersion) as Y.Map<any> | undefined;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
+        const yKit = kits.get(name)?.get(version) as Y.Map<any> | undefined;
+        if (!yKit) throw new Error(`Kit (${name}, ${version}) not found`);
 
         const yTypesMap = yKit.get('types') as Y.Map<Y.Map<any>>; // name -> variant -> YType
         const types = yTypesMap ? Array.from(yTypesMap.values()).flatMap(variantMap =>
-            Array.from(variantMap.values()).map((yType: Y.Map<any>) => this.getType(kitName, kitVersion, yType.get('name'), yType.get('variant')))
+            Array.from(variantMap.values()).map((yType: Y.Map<any>) => this.getType(name, version, yType.get('name'), yType.get('variant')))
         ).filter((t): t is Type => t !== null) : [];
 
         const yDesignsMap = yKit.get('designs') as Y.Map<Y.Map<Y.Map<any>>>; // name -> variant -> view -> YDesign
         const designs = yDesignsMap ? Array.from(yDesignsMap.values()).flatMap(variantMap =>
             Array.from(variantMap.values()).flatMap(viewMap =>
-                Array.from(viewMap.values()).map((yDesign: Y.Map<any>) => this.getDesign(kitName, kitVersion, yDesign.get('name'), yDesign.get('variant'), yDesign.get('view')))
+                Array.from(viewMap.values()).map((yDesign: Y.Map<any>) => this.getDesign(name, version, yDesign.get('name'), yDesign.get('variant'), yDesign.get('view')))
             )
         ).filter((d): d is Design => d !== null) : [];
 
         return {
-            uri: yKit.get('uri'), // Kept URI field for now
             name: yKit.get('name'),
             version: yKit.get('version'),
             description: yKit.get('description'),
@@ -232,31 +231,27 @@ class StudioStore {
         };
     }
 
-    updateKit(kitName: string, kitVersion: string, kitUpdate: Partial<Omit<Kit, 'name' | 'version'>>): Kit {
+    updateKit(kit: Partial<Omit<Kit, 'name' | 'version'>>): Kit {
         const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
-        const yKit = kits.get(kitName)?.get(kitVersion) as Y.Map<any> | undefined;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
+        const yKit = kits.get(kit.name)?.get(kit.version) as Y.Map<any> | undefined;
+        if (!yKit) throw new Error(`Kit (${kit.name}, ${kit.version}) not found`);
 
-        // Note: Cannot update name or version via this method.
-        // Need separate methods for renaming or version bumping if required.
-
-        if (kitUpdate.description !== undefined) yKit.set('description', kitUpdate.description);
-        if (kitUpdate.icon !== undefined) yKit.set('icon', kitUpdate.icon);
-        if (kitUpdate.image !== undefined) yKit.set('image', kitUpdate.image);
-        if (kitUpdate.preview !== undefined) yKit.set('preview', kitUpdate.preview);
-        if (kitUpdate.remote !== undefined) yKit.set('remote', kitUpdate.remote);
-        if (kitUpdate.homepage !== undefined) yKit.set('homepage', kitUpdate.homepage);
-        if (kitUpdate.license !== undefined) yKit.set('license', kitUpdate.license); // Assuming direct set works, adjust if Y.Array
-        if (kitUpdate.uri !== undefined) yKit.set('uri', kitUpdate.uri); // Allow updating URI if needed
+        if (kit.description !== undefined) yKit.set('description', kit.description);
+        if (kit.icon !== undefined) yKit.set('icon', kit.icon);
+        if (kit.image !== undefined) yKit.set('image', kit.image);
+        if (kit.preview !== undefined) yKit.set('preview', kit.preview);
+        if (kit.remote !== undefined) yKit.set('remote', kit.remote);
+        if (kit.homepage !== undefined) yKit.set('homepage', kit.homepage);
+        if (kit.license !== undefined) yKit.set('license', kit.license); // Assuming direct set works, adjust if Y.Array
 
         // Updating nested structures (types, designs, qualities) is complex here.
         // Recommend using specific update methods like updateType, updateDesign.
-        if (kitUpdate.qualities !== undefined) {
-            yKit.set('qualities', this.createQualities(kitUpdate.qualities));
+        if (kit.qualities !== undefined) {
+            yKit.set('qualities', this.createQualities(kit.qualities));
         }
 
         yKit.set('updated', new Date().toISOString());
-        return this.getKit(kitName, kitVersion);
+        return this.getKit(kit.name, kit.version);
     }
 
     deleteKit(kitName: string, kitVersion: string): void {
