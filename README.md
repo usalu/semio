@@ -1,4 +1,4 @@
-> 👀 Do you want to develop semio with us? Then join our Weekly-Evening-Session every Tuesday starting at 6pm (UTC+1) on [Discord](https://discord.gg/m6nnf6pQRc) 🍻
+> 👀 Do you want to develop semio with us? Then join our Weekly-Evening-Session every Thursday starting at 6pm (UTC+1) on [Discord](https://discord.gg/m6nnf6pQRc) 🍻
 
 <p align="center">
     <a href="https://docs.semio-tech.com">
@@ -34,7 +34,7 @@ You want to 🧩 the next 🏛️🏘️🏢🏭🏫🏨⛪🕌 with 🤖? But �
 
 Glad to see you!
 
-Let me walk you throw 🚶
+Let me walk you through 🚶
 
 # 📑 Overview
 
@@ -117,7 +117,7 @@ Out of my experience, it makes development slower, not faster 🐌
 
 A single file is easier for humans and computers to understand 💡
 
-You will be supprised
+You will be surprised
 
 - by the awesome fill-in-the-middle suggestions of your copilot 🤖
 - by the hassle-free context selection for your ai agent 🖱️
@@ -182,7 +182,7 @@ If not, then you are probably good 👌
 
 In my understanding, rule-of-thumbs are most useful when they are concrete 🔨
 
-Besides that I am sure you know about <strong>KISS</strong> (Keep-It-Simple-Stupid), <strong>DRY</strong> (Dont-Repeat-Yourself), <strong>YAGNI</strong> (You-Aren't-Gonna-Need-It), <strong>SoC</strong> (Seperation-of-Concerns), <strong>Avoid Premature Optimization</strong>, <strong>Law of Demeter</strong>, <strong>LCHC</strong> (Low-Coupling-High-Cohesion), <strong>SOLID</strong> (Single Responsibility (<strong>SR</strong>), Open/Closed (<strong>OC</strong>), Liskov’s Substitution (<strong>LS</strong>), Interface Segregation (<strong>IS</strong>), Dependency Inversion (<strong>DI</strong>)), …
+Besides that I am sure you know about <strong>KISS</strong> (Keep-It-Simple-Stupid), <strong>DRY</strong> (Dont-Repeat-Yourself), <strong>YAGNI</strong> (You-Aren't-Gonna-Need-It), <strong>SoC</strong> (Separation-of-Concerns), <strong>Avoid Premature Optimization</strong>, <strong>Law of Demeter</strong>, <strong>LCHC</strong> (Low-Coupling-High-Cohesion), <strong>SOLID</strong> (Single Responsibility (<strong>SR</strong>), Open/Closed (<strong>OC</strong>), Liskov's Substitution (<strong>LS</strong>), Interface Segregation (<strong>IS</strong>), Dependency Inversion (<strong>DI</strong>)), …
 
 But as always, the devil is in the details 😈
 
@@ -190,7 +190,7 @@ Even if 95% of the codebase follows those principles, there are good reasons for
 
 </details>
 
-**🚩 Don't worry, you'll figure out the possiblites and make the right choice for the specific problems ✅**
+**🚩 Don't worry, you'll figure out the possibilities and make the right choice for the specific problems ✅**
 
 ## 🧑‍💻 Development [↑](#-repo-)
 
@@ -228,7 +228,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
 
 # ♻️ Ecosystems [↑](#-overview)
 
-You might have noticed that the individual components can be closely related such as [sketchpad](#️-sketchpad-), [Grasshopper](#-grasshopper-) and [engine](#️-engine-) but they are in totaly different folders 📂
+You might have noticed that the individual components can be closely related such as [sketchpad](#️-sketchpad-), [Grasshopper](#-grasshopper-) and [engine](#️-engine-) but they are in totally different folders 📂
 
 The reason for this is that the repo is not disected according content but according technology stack ✂️
 
@@ -606,7 +606,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 - One symbol at a time 🥇
 - A symbol is preferably an emoji or otherwise unicode ⚖️
 - 📝 One symbol to summarize a title
-- 💡 One symbol to summatize a title description and one to think about in the end 🤔
+- 💡 One symbol to summarize a title description and one to think about in the end 🤔
 - `.` are forbidden ⛔
 - All components in `semio` (`sketchpad`,`studio`, …) start with a small letter 🔡
 - Did you know that `…` is just one character?
