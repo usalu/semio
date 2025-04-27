@@ -60,9 +60,13 @@ Let me walk you throw 🚶
    - [🎛️ @semio/playground](#%EF%B8%8F-semioplayground-)
    - [🤖 @semio/assistant](#-semioassistant-)
    - [⚙️ @semio/engine](#️-semioengine-)
-   - [🛍️ @semio/assets](#%EF%B8%8F-semioassets-)
    - [🟪 @semio/net](#-semionet-)
    - [🦗 @semio/grasshopper](#-semiograsshopper-)
+   - [🛍️ @semio/assets](#%EF%B8%8F-semioassets-)
+1. [🏘️ Examples](#-examples-)
+   - [🚀 Starters](#-starters-)
+   - [👋 Hello semio](#-hello-semio-)
+   - [🫀 Metabolism](#-metabolism-)
 1. [💯 Brand](#-brand-)
    - [✍️ Concept](#%EF%B8%8F-concept-)
    - [🌈 Colors](#-colors-)
@@ -240,8 +244,10 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 - [TypeScript](https://www.npmjs.com/package/typescript)
   - [Docs](https://www.typescriptlang.org/docs)
   - [Issues](https://github.com/microsoft/TypeScript/issues)
-
-</details>
+- [Wasm](https://developer.mozilla.org/docs/WebAssembly)
+  - [C/C++](https://developer.mozilla.org/docs/WebAssembly/Guides/C_to_Wasm)
+  - [Rust](https://developer.mozilla.org/docs/WebAssembly/Rust_to_Wasm)
+  </details>
 
 ## 🟪 [.NET](https://github.com/usalu/semio/tree/main/dotnet) [↑](#%EF%B8%8F-ecosystems-)
 
@@ -313,6 +319,11 @@ A component is a piece of software which is packaged independently 🏝️
   - [Docs](https://docs.yjs.dev)
   - [API](https://github.com/yjs/yjs)
   - [Issues](https://github.com/yjs/yjs/issues)
+- [sql.js](https://www.npmjs.com/package/sql.js)
+  - [Docs](https://sql.js.org)
+  - [API](https://sql.js.org/documentation)
+  - [Issues](https://github.com/sql-js/sql.js/issues)
+  - [Playground](https://sql.js.org/examples/GUI)
 - [dnd kit](https://www.npmjs.com/package/@dnd-kit/core)
   - [Docs](https://docs.dndkit.com/)
   - [Examples](https://master--5fc05e08a4a65d0021ae0bf2.chromatic.com/)
@@ -538,6 +549,14 @@ Each badge is created with [shields.io](https://shields.io) with style `flat-squ
 1. Hit `Generate Favicon` and download the zip file to `assets/icons/temp/NAME.zip` where `NAME` is the lowercase name and verb of the icon 📂
 1. Repeat the process for all icons 🔁
 1. Run `build icons` in the debugger of vscode 🔨
+
+# 🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)
+
+## 🫀 [Metabolism](https://github.com/usalu/metabolism) [↑](#-examples-)
+
+## 🚀 [Starters](https://github.com/usalu/semio/tree/main/examples/starter) [↑](#-examples-)
+
+## 👋 [Hello semio](https://github.com/usalu/hello-semio) [↑](#-examples-)
 
 # 💯 Brand [↑](#-overview)
 

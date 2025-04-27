@@ -56,7 +56,7 @@ const ModelDesign: FC<ModelDesignProps> = ({ design, types, fileUrls, selection,
     const piecePlanes = flatDesign?.pieces?.map(p => p.plane);
     const pieceRepresentationUrls = getPieceRepresentationUrls(design, types!);
 
-    pieceRepresentationUrls.forEach((id, url) => {
+    pieceRepresentationUrls.forEach((url, id) => {
         if (!fileUrls.has(url)) throw new Error(`Representation url ${url} for piece ${id} not found in fileUrls map`);
     });
 
