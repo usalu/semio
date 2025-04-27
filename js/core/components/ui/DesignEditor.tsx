@@ -266,7 +266,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     };
 
     // const { kit } = useKit();
-    const kit = useStudioStore().getKit("usalu/metabolism");
+    const kit = useStudioStore().getKit("Metabolism", "");
     if (!kit?.types) return null;
 
     const typesByName = kit.types.reduce((acc, type) => {

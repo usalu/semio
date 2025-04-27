@@ -72,6 +72,7 @@ class StudioStore {
     constructor(userId: string) {
         this.userId = userId;
         this.yDoc = new Y.Doc();
+        // kits: Y.Map<Y.Map<any>> -> name -> version -> YKit
         this.yDoc.getMap('kits');
         this.yDoc.getMap('files');
         this.undoManager = new UndoManager(this.yDoc, { trackedOrigins: new Set([this.userId]) });
@@ -79,7 +80,8 @@ class StudioStore {
         this.indexeddbProvider.whenSynced.then(() => {
             console.log(`Local changes are synchronized for user (${this.userId}) with client (${this.yDoc.clientID})`);
             // this.indexeddbProvider.clearData();
-            this.importKit('metabolism.zip');
+            // Consider how initial kit import works with name/version
+            // this.importKit('metabolism.zip');
         });
         this.yDoc.on('update', () => this.notifyListeners());
     }
@@ -162,79 +164,115 @@ class StudioStore {
         return authors;
     }
 
-
     createKit(kit: Kit): void {
+        if (!kit.name) throw new Error("Kit name is required to create a kit.");
+        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
+        let versionMap = kits.get(kit.name) as Y.Map<any> | undefined;
+        if (!versionMap) {
+            versionMap = new Y.Map<any>();
+            kits.set(kit.name, versionMap);
+        }
+        if (versionMap.has(kit.version)) {
+            throw new Error(`Kit (${kit.name}, ${kit.version}) already exists.`);
+        }
         const yKit = new Y.Map<any>();
-        yKit.set('uri', kit.uri);
         yKit.set('name', kit.name);
+        yKit.set('version', kit.version);
         yKit.set('description', kit.description || '');
         yKit.set('icon', kit.icon || '');
         yKit.set('image', kit.image || '');
         yKit.set('preview', kit.preview || '');
-        yKit.set('version', kit.version || '');
         yKit.set('remote', kit.remote || '');
         yKit.set('homepage', kit.homepage || '');
-        yKit.set('license', kit.license || []);
-        yKit.set('types', new Y.Map<any>());
-        yKit.set('designs', new Y.Map<any>());
-        yKit.set('qualities', this.createQualities(kit.qualities) || []);
+        yKit.set('license', kit.license || '');
+        yKit.set('types', new Y.Map<any>()); // name -> variant -> YType
+        yKit.set('designs', new Y.Map<any>()); // name -> variant -> view -> YDesign
+        yKit.set('qualities', this.createQualities(kit.qualities));
+        yKit.set('created', new Date().toISOString());
+        yKit.set('updated', new Date().toISOString());
 
-        this.yDoc.getMap('kits').set(kit.uri, yKit);
-        kit.types?.map(t => this.createType(kit.uri, t));
-        kit.designs?.map(d => this.createDesign(kit.uri, d));
+        versionMap.set(kit.version, yKit);
+        kit.types?.forEach(t => this.createType(kit.name, kit.version, t));
+        kit.designs?.forEach(d => this.createDesign(kit.name, kit.version, d));
     }
 
-    getKit(uri: string): Kit {
-        const yKit = this.yDoc.getMap('kits').get(uri) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit ${uri} not found`);
+    getKit(kitName: string, kitVersion: string): Kit {
+        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
+        const yKit = kits.get(kitName)?.get(kitVersion) as Y.Map<any> | undefined;
+        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
 
-        const yTypesMap = yKit.get('types') as Y.Map<Y.Map<any>>;
+        const yTypesMap = yKit.get('types') as Y.Map<Y.Map<any>>; // name -> variant -> YType
         const types = yTypesMap ? Array.from(yTypesMap.values()).flatMap(variantMap =>
-            Array.from(variantMap.values()).map((t: Y.Map<any>) => this.getType(uri, t.get('name'), t.get('variant')))
+            Array.from(variantMap.values()).map((yType: Y.Map<any>) => this.getType(kitName, kitVersion, yType.get('name'), yType.get('variant')))
         ).filter((t): t is Type => t !== null) : [];
-        const yDesignsMap = yKit.get('designs') as Y.Map<Y.Map<Y.Map<any>>>;
+
+        const yDesignsMap = yKit.get('designs') as Y.Map<Y.Map<Y.Map<any>>>; // name -> variant -> view -> YDesign
         const designs = yDesignsMap ? Array.from(yDesignsMap.values()).flatMap(variantMap =>
             Array.from(variantMap.values()).flatMap(viewMap =>
-                Array.from(viewMap.values()).map((d: Y.Map<any>) => this.getDesign(uri, d.get('name'), d.get('variant'), d.get('view')))
+                Array.from(viewMap.values()).map((yDesign: Y.Map<any>) => this.getDesign(kitName, kitVersion, yDesign.get('name'), yDesign.get('variant'), yDesign.get('view')))
             )
         ).filter((d): d is Design => d !== null) : [];
+
         return {
-            uri: yKit.get('uri'),
+            uri: yKit.get('uri'), // Kept URI field for now
             name: yKit.get('name'),
+            version: yKit.get('version'),
             description: yKit.get('description'),
             icon: yKit.get('icon'),
             image: yKit.get('image'),
             preview: yKit.get('preview'),
-            version: yKit.get('version'),
             remote: yKit.get('remote'),
             homepage: yKit.get('homepage'),
-            license: yKit.get('license'),
-            created: new Date(),
-            updated: new Date(),
+            license: yKit.get('license')?.toArray ? yKit.get('license').toArray() : yKit.get('license'), // Handle potential Y.Array
+            created: new Date(yKit.get('created')),
+            updated: new Date(yKit.get('updated')),
             designs,
             types,
             qualities: this.getQualities(yKit.get('qualities'))
         };
     }
 
-    updateKit(kit: Partial<Kit>): Kit {
-        if (!kit.uri) throw new Error("Kit URI is required for update.");
-        const yKit = this.yDoc.getMap('kits').get(kit.uri) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit ${kit.uri} not found`);
-        if (kit.name !== undefined && kit.name !== "") yKit.set('name', kit.name);
-        if (kit.description !== undefined && kit.description !== "") yKit.set('description', kit.description);
-        if (kit.icon !== undefined && kit.icon !== "") yKit.set('icon', kit.icon);
-        if (kit.image !== undefined && kit.image !== "") yKit.set('image', kit.image);
-        if (kit.preview !== undefined && kit.preview !== "") yKit.set('preview', kit.preview);
-        if (kit.version !== undefined && kit.version !== "") yKit.set('version', kit.version);
-        if (kit.remote !== undefined && kit.remote !== "") yKit.set('remote', kit.remote);
-        if (kit.homepage !== undefined && kit.homepage !== "") yKit.set('homepage', kit.homepage);
-        if (kit.license !== undefined) yKit.set('license', kit.license);
-        return this.getKit(kit.uri);
+    updateKit(kitName: string, kitVersion: string, kitUpdate: Partial<Omit<Kit, 'name' | 'version'>>): Kit {
+        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
+        const yKit = kits.get(kitName)?.get(kitVersion) as Y.Map<any> | undefined;
+        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
+
+        // Note: Cannot update name or version via this method.
+        // Need separate methods for renaming or version bumping if required.
+
+        if (kitUpdate.description !== undefined) yKit.set('description', kitUpdate.description);
+        if (kitUpdate.icon !== undefined) yKit.set('icon', kitUpdate.icon);
+        if (kitUpdate.image !== undefined) yKit.set('image', kitUpdate.image);
+        if (kitUpdate.preview !== undefined) yKit.set('preview', kitUpdate.preview);
+        if (kitUpdate.remote !== undefined) yKit.set('remote', kitUpdate.remote);
+        if (kitUpdate.homepage !== undefined) yKit.set('homepage', kitUpdate.homepage);
+        if (kitUpdate.license !== undefined) yKit.set('license', kitUpdate.license); // Assuming direct set works, adjust if Y.Array
+        if (kitUpdate.uri !== undefined) yKit.set('uri', kitUpdate.uri); // Allow updating URI if needed
+
+        // Updating nested structures (types, designs, qualities) is complex here.
+        // Recommend using specific update methods like updateType, updateDesign.
+        if (kitUpdate.qualities !== undefined) {
+            yKit.set('qualities', this.createQualities(kitUpdate.qualities));
+        }
+
+        yKit.set('updated', new Date().toISOString());
+        return this.getKit(kitName, kitVersion);
     }
 
-    deleteKit(uri: string): void {
-        this.yDoc.getMap('kits').delete(uri);
+    deleteKit(kitName: string, kitVersion: string): void {
+        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
+        const versionMap = kits.get(kitName) as Y.Map<any> | undefined;
+        if (versionMap) {
+            if (!versionMap.has(kitVersion)) {
+                throw new Error(`Kit version (${kitName}, ${kitVersion}) not found, cannot delete.`);
+            }
+            versionMap.delete(kitVersion);
+            if (versionMap.size === 0) {
+                kits.delete(kitName);
+            }
+        } else {
+            throw new Error(`Kit name (${kitName}) not found, cannot delete version (${kitVersion})`);
+        }
     }
 
     createType(kitUri: string, type: Type): void {

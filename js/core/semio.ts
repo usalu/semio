@@ -22,8 +22,6 @@ export const TOLERANCE = 1e-5;
 
 // ↗️ Represents a Kit, the top-level container for types and designs.
 export type Kit = {
-    // 🆔 The URI of the kit
-    uri: string;
     // 📛 The name of the kit
     name: string;
     // 💬 The human-readable description of the kit
