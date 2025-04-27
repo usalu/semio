@@ -1066,9 +1066,9 @@ class StudioStore {
                             const representation: Representation = {
                                 url: repRow[1], description: repRow[2], mime: repRow[3], tags: [], qualities: []
                             };
-                            const repId = repRow[0]; // Keep repId for subsequent queries
+                            const repId = String(repRow[0]); // Keep repId for subsequent queries, ensure string
 
-                            const tagRes = kitDb.exec("SELECT name FROM tag WHERE representation_id = ? ORDER BY "order"", [repId]);
+                            const tagRes = kitDb.exec("SELECT name FROM tag WHERE representation_id = ? ORDER BY \"order\"", [repId]);
                             if (tagRes && tagRes.length > 0 && tagRes[0].values) {
                                 representation.tags = tagRes[0].values.map((row: any[]) => row[0]);
                             }
@@ -1095,9 +1095,9 @@ class StudioStore {
                                 direction: { x: portRow[8], y: portRow[9], z: portRow[10] },
                                 compatibleFamilies: [], qualities: []
                             };
-                            const portId = portRow[0]; // Keep portId for subsequent queries
+                            const portId = String(portRow[0]); // Keep portId for subsequent queries, ensure string
 
-                            const compFamRes = kitDb.exec("SELECT name FROM compatible_family WHERE port_id = ? ORDER BY "order"", [portId]);
+                            const compFamRes = kitDb.exec("SELECT name FROM compatible_family WHERE port_id = ? ORDER BY \"order\"", [portId]);
                             if (compFamRes && compFamRes.length > 0 && compFamRes[0].values) {
                                 port.compatibleFamilies = compFamRes[0].values.map((row: any[]) => row[0]);
                             }
@@ -1110,7 +1110,7 @@ class StudioStore {
                     kit.types!.push(type);
                 }
             }
-            const designRes = kitDb.exec("SELECT id, name, description, icon, image, variant, "view", unit, created, updated FROM design WHERE kit_id = ?", [kitId]);
+            const designRes = kitDb.exec("SELECT id, name, description, icon, image, variant, \"view\", unit, created, updated FROM design WHERE kit_id = ?", [kitId]);
             if (designRes && designRes.length > 0 && designRes[0].values) {
                 for (const designRow of designRes[0].values) {
                     const design: Design = {
@@ -1118,7 +1118,7 @@ class StudioStore {
                         view: designRow[6], unit: designRow[7], created: new Date(designRow[8]), updated: new Date(designRow[9]),
                         pieces: [], connections: [], qualities: [], authors: []
                     };
-                    const designId = designRow[0]; // Keep designId for subsequent queries
+                    const designId = String(designRow[0]); // Keep designId for subsequent queries, ensure string
 
                     const pieceRes = kitDb.exec("SELECT p.id, p.local_id, p.description, t.name, t.variant, pl.origin_x, pl.origin_y, pl.origin_z, pl.x_axis_x, pl.x_axis_y, pl.x_axis_z, pl.y_axis_x, pl.y_axis_y, pl.y_axis_z, p.center_x, p.center_y FROM piece p JOIN type t ON p.type_id = t.id LEFT JOIN plane pl ON p.plane_id = pl.id WHERE p.design_id = ?", [designId]);
                     const pieceMap: { [key: string]: Piece } = {};
@@ -1126,7 +1126,7 @@ class StudioStore {
                     if (pieceRes && pieceRes.length > 0 && pieceRes[0].values) {
                         for (const pieceRow of pieceRes[0].values) {
                             const piece: Piece = {
-                                id_: pieceRow[1], // Use local_id
+                                id_: String(pieceRow[1]), // Use local_id, ensure string
                                 description: pieceRow[2],
                                 type: { name: pieceRow[3], variant: pieceRow[4] },
                                 plane: pieceRow[5] !== null ? { // Check if plane data exists
@@ -1137,12 +1137,12 @@ class StudioStore {
                                 center: pieceRow[14] !== null ? { x: pieceRow[14], y: pieceRow[15] } : undefined,
                                 qualities: []
                             };
-                            const pieceId = pieceRow[0]; // Keep pieceId (DB ID) for subsequent queries and mapping
+                            const pieceId = String(pieceRow[0]); // Keep pieceId (DB ID) for subsequent queries and mapping, ensure string
 
                             piece.qualities = getQualities('piece_id', pieceId);
                             design.pieces!.push(piece);
-                            pieceMap[piece.id_] = piece; // Use local_id as key
-                            pieceIdMap[pieceId] = piece.id_; // Map DB ID to local ID
+                            pieceMap[piece.id_ as string] = piece; // Assert key as string
+                            pieceIdMap[pieceId] = piece.id_; // Map DB ID to local ID (already string)
                         }
                     }
                     const connRes = kitDb.exec("SELECT c.id, c.description, c.gap, c.shift, c.raise_, c.rotation, c.turn, c.tilt, c.x, c.y, c.connected_piece_id, cp.local_id AS connected_port_id, c.connecting_piece_id, cnp.local_id AS connecting_port_id FROM connection c JOIN port cp ON c.connected_port_id = cp.id JOIN port cnp ON c.connecting_port_id = cnp.id WHERE c.design_id = ?", [designId]);
@@ -1161,7 +1161,7 @@ class StudioStore {
                                 connecting: { piece: { id_: connectingPieceLocalId }, port: { id_: connRow[13] } }, // Use local IDs
                                 qualities: []
                             };
-                            const connId = connRow[0]; // Keep connId for subsequent queries
+                            const connId = String(connRow[0]); // Keep connId for subsequent queries, ensure string
 
                             connection.qualities = getQualities('connection_id', connId);
                             design.connections!.push(connection);
@@ -1239,9 +1239,9 @@ class StudioStore {
             if (kit.types) {
                 const typeStmt = db.prepare("INSERT INTO type (name, description, icon, image, variant, unit, created, updated, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 const repStmt = db.prepare("INSERT INTO representation (url, description, mime, type_id) VALUES (?, ?, ?, ?)");
-                const tagStmt = db.prepare("INSERT INTO tag (name, "order", representation_id) VALUES (?, ?, ?)");
+                const tagStmt = db.prepare("INSERT INTO tag (name, \"order\", representation_id) VALUES (?, ?, ?)");
                 const portStmt = db.prepare("INSERT INTO port (local_id, description, family, t, point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                const compFamStmt = db.prepare("INSERT INTO compatible_family (name, "order", port_id) VALUES (?, ?, ?)");
+                const compFamStmt = db.prepare("INSERT INTO compatible_family (name, \"order\", port_id) VALUES (?, ?, ?)");
                 for (const type of kit.types) {
                     const typeKey = `${type.name}:${type.variant || ''}`;
                     typeStmt.run([type.name, type.description, type.icon, type.image, type.variant || '', type.unit, type.created.toISOString(), type.updated.toISOString(), kitId]);
@@ -1305,7 +1305,7 @@ class StudioStore {
             const planeIdMap: { [pieceDbId: number]: number } = {}; // map piece db id to plane db id
             let nextPlaneId = 1; // Simple counter for plane IDs
             if (kit.designs) {
-                const designStmt = db.prepare("INSERT INTO design (name, description, icon, image, variant, "view", unit, created, updated, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                const designStmt = db.prepare("INSERT INTO design (name, description, icon, image, variant, \"view\", unit, created, updated, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 const planeStmt = db.prepare("INSERT INTO plane (id, origin_x, origin_y, origin_z, x_axis_x, x_axis_y, x_axis_z, y_axis_x, y_axis_y, y_axis_z) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 const pieceStmt = db.prepare("INSERT INTO piece (local_id, description, type_id, plane_id, center_x, center_y, design_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
                 const connStmt = db.prepare("INSERT INTO connection (description, gap, shift, raise_, rotation, turn, tilt, x, y, connected_piece_id, connected_port_id, connecting_piece_id, connecting_port_id, design_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
