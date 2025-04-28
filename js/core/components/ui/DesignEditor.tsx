@@ -693,6 +693,8 @@ const DesignEditorCore: FC = () => {
         setActiveDraggedType(null);
         setActiveDraggedDesign(null);
     };
+
+    const fileUrls=studioStore.getFileUrls()
     return (
         <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
 
@@ -711,7 +713,7 @@ const DesignEditorCore: FC = () => {
                                     design={design}
                                     types={kit?.types ?? []}
                                     selection={selection}
-
+                                    fileUrls={fileUrls}
                                     onSelectionChange={designEditorStore.updateDesignEditorSelection}
                                 />
                             ) : (
@@ -731,7 +733,7 @@ const DesignEditorCore: FC = () => {
                                     design={design}
                                     types={kit?.types ?? []}
                                     selection={selection}
-                                    fileUrls={studioStore.getFileUrls()}
+                                    fileUrls={fileUrls}
                                     onSelectionChange={designEditorStore.updateDesignEditorSelection}
                                 />
                             ) : (

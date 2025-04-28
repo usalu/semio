@@ -418,12 +418,13 @@ interface DiagramProps {
     types: Type[];
     fullscreen?: boolean;
     selection?: DesignEditorSelection;
+    fileUrl: string;
     onPanelDoubleClick?: () => void;
     onSelectionChange?: (selection: DesignEditorSelection) => void;
 }
 
 
-const Diagram: FC<DiagramProps> = ({ design, types, fullscreen, selection, onPanelDoubleClick, onSelectionChange }) => {
+const Diagram: FC<DiagramProps> = ({ design, types, fullscreen, selection, fileUrl, onPanelDoubleClick, onSelectionChange }) => {
 
     return (
         <div id="diagram" className="h-full w-full">
