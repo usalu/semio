@@ -146,7 +146,7 @@ const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, o
     const nodes = flatDesign?.pieces?.map((piece) => ({
         type: 'piece',
         id: piece.id_,
-        position: { x: piece.center?.x * ICON_WIDTH || 0, y: -piece.center?.y * ICON_WIDTH || 0 },
+        position: { x: piece.center!.x * ICON_WIDTH || 0, y: -piece.center!.y * ICON_WIDTH || 0 },
         data: { piece, type: types.find((t) => t.name === piece.type.name && (t.variant ?? '') === (piece.type.variant ?? '')), selected: selection?.selectedPieceIds.includes(piece.id_) },
     }));
 
@@ -403,11 +403,7 @@ const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, o
         >
             {fullscreen && <Controls className="border" showZoom={false} showInteractive={false} />}
             {fullscreen && < MiniMap className="border" maskColor='var(--accent)' bgColor='var(--background)' nodeComponent={MiniMapNode} />}
-            <ViewportPortal>
-                <div>
-                    x
-                </div>
-            </ViewportPortal>
+            <ViewportPortal>⌞</ViewportPortal>
         </ReactFlow>
     )
 }
@@ -418,17 +414,23 @@ interface DiagramProps {
     types: Type[];
     fullscreen?: boolean;
     selection?: DesignEditorSelection;
-    fileUrl: string;
+    fileUrls: Map<string, string>;
     onPanelDoubleClick?: () => void;
     onSelectionChange?: (selection: DesignEditorSelection) => void;
 }
 
 
-const Diagram: FC<DiagramProps> = ({ design, types, fullscreen, selection, fileUrl, onPanelDoubleClick, onSelectionChange }) => {
-
+const Diagram: FC<DiagramProps> = ({ design, types, fullscreen, selection, fileUrls, onPanelDoubleClick, onSelectionChange }) => {
     return (
         <div id="diagram" className="h-full w-full">
-            <DiagramCore fullscreen={fullscreen} onPanelDoubleClick={onPanelDoubleClick} design={design} types={types} selection={selection} onSelectionChange={onSelectionChange} />
+            <DiagramCore
+                fullscreen={fullscreen}
+                onPanelDoubleClick={onPanelDoubleClick}
+                design={design}
+                types={types}
+                selection={selection}
+                fileUrls={fileUrls}
+                onSelectionChange={onSelectionChange} />
         </div>
     );
 };
