@@ -1,8 +1,12 @@
 import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef } from 'react';
 import { Canvas, ThreeEvent, useLoader } from '@react-three/fiber';
-import { Center, Environment, GizmoHelper, GizmoViewport, Grid, OrbitControls, Select, Sphere, Stage, useGLTF } from '@react-three/drei';
+import { Center, Environment, GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, Select, Sphere, Stage, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { Design, Piece, Plane, Type, flattenDesign, DesignEditorSelection, selectRepresentation, pieceRepresentationUrls, getPieceRepresentationUrls } from '@semio/js';
+import { LineBasicMaterial } from 'three';
+import { MeshBasicMaterial } from 'three';
+import { Color } from 'three';
+import { Mesh } from 'three';
 
 const getComputedColor = (variable: string): string => {
     return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -13,15 +17,37 @@ interface ModelPieceProps {
     plane: Plane;
     fileUrl: string;
     selected?: boolean;
+    onSelect: (piece: Piece) => void
 }
 
-const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected }) => {
+const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, onSelect }) => {
     const position = useMemo(() => new THREE.Vector3(plane.origin.x, plane.origin.z, -plane.origin.y), [plane]);
     const scene = useMemo(() => {
         return useGLTF(fileUrl).scene.clone()
     }, [fileUrl])
+    // useMemo(() => {
+    //     scene.traverse((object) => {
+    //         if (object instanceof Mesh) {
+    //             // const meshColor = selected ? new Color('var(--color-primary)') : new Color('var(--color-background)')
+
+    //             const meshColor = selected ? new Color('red') : new Color('blue')
+    //             object.material = new MeshBasicMaterial({ color: meshColor })
+    //         }
+    //         if (object instanceof Line) {
+    //             // const lineColor = new Color('var(--color-foreground)')
+    //             const lineColor = new Color('green')
+    //             object.material = new LineBasicMaterial({ color: lineColor })
+    //         }
+    //     })
+    // }, [selected])
     return (
-        <group position={position} userData={{ pieceId: piece.id_ }}>
+        <group
+            position={position}
+            userData={{ pieceId: piece.id_ }}
+            onClick={(e) => {
+                onSelect(piece)
+                e.stopPropagation()
+            }}>
             <primitive object={scene} />
             {/* <Sphere args={[0.5, 32, 32]} >
                 <meshStandardMaterial color={selected ? 'pink' : 'gold'} roughness={0} metalness={1} />
@@ -84,6 +110,21 @@ const ModelDesign: FC<ModelDesignProps> = ({ design, types, fileUrls, selection,
                     plane={piecePlanes[index]}
                     fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_))}
                     selected={selection.selectedPieceIds.includes(piece.id_)}
+                    onSelect={
+                        (piece) => {
+                            if (selection.selectedPieceIds.includes(piece.id_)) {
+                                onSelectionChange({
+                                    ...selection,
+                                    selectedPieceIds: selection.selectedPieceIds.filter(id => id !== piece.id_)
+                                })
+                            } else {
+                                onSelectionChange({
+                                    ...selection,
+                                    selectedPieceIds: [...selection.selectedPieceIds, piece.id_]
+                                })
+                            }
+                        }
+                    }
                 />
             ))}
         </Select>
@@ -144,10 +185,17 @@ const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design, types, 
 
     return (
         <div className="w-full h-full">
-            <Canvas onDoubleClickCapture={(e) => {
-                e.stopPropagation();
-                if (onPanelDoubleClick) onPanelDoubleClick();
-            }}>
+            <Canvas
+                onDoubleClickCapture={(e) => {
+                    e.stopPropagation();
+                    if (onPanelDoubleClick) onPanelDoubleClick();
+                }}
+                onPointerMissed={() => {
+                    onSelectionChange({
+                        selectedPieceIds: [],
+                        selectedConnections: []
+                    })
+                }}>
                 <OrbitControls
                     makeDefault
                     mouseButtons={{

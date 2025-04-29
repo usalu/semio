@@ -362,6 +362,7 @@ const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, o
             // onNodeDrag={onNodeDrag}
             // onNodeDragStop={onNodeDragStop}
             // onConnect={onConnect}
+            // TODO: Whenever another components updates the selection, onSelectionChange is called. Figure out how to prevent this.
             onSelectionChange={({ nodes, edges }) => {
                 const selectedPieceIds = nodes.map((node) => node.id);
                 const selectedConnections = edges.map((edge) => {
@@ -370,6 +371,10 @@ const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, o
                         connectingPieceId: edge.target,
                     }
                 });
+                // When another component updates the selection, nodes and edges are empty but we don't want this to reset the selection
+                if (selectedPieceIds.length === 0 && selectedConnections.length === 0) {
+                    return;
+                }
 
                 // Only trigger onSelectionChange if the selection actually changed
                 const currentSelection = selection || { selectedPieceIds: [], selectedConnections: [] };

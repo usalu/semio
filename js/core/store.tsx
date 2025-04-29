@@ -994,12 +994,6 @@ class StudioStore {
         return designEditorStore;
     }
 
-    updateDesignEditorSelection(id: string, selection: DesignEditorSelection): DesignEditorSelection {
-        const designEditorStore = this.designEditorStores.get(id);
-        if (!designEditorStore) throw new Error(`Design editor store ${id} not found`);
-        designEditorStore.setState({ ...designEditorStore.getState(), selection });
-        return selection;
-    }
 
     deleteDesignEditorStore(id: string): void {
         this.designEditorStores.delete(id);
