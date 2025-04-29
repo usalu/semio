@@ -16,7 +16,6 @@ import { DesignEditorSelection } from '../..';
 type PieceNodeProps = {
     piece: Piece;
     type: Type;
-    selected?: boolean;
 };
 
 type PieceNode = Node<PieceNodeProps, 'piece'>;
@@ -147,7 +146,8 @@ const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, o
         type: 'piece',
         id: piece.id_,
         position: { x: piece.center!.x * ICON_WIDTH || 0, y: -piece.center!.y * ICON_WIDTH || 0 },
-        data: { piece, type: types.find((t) => t.name === piece.type.name && (t.variant ?? '') === (piece.type.variant ?? '')), selected: selection?.selectedPieceIds.includes(piece.id_) },
+        selected: selection?.selectedPieceIds.includes(piece.id_),
+        data: { piece, type: types.find((t) => t.name === piece.type.name && (t.variant ?? '') === (piece.type.variant ?? '')) },
     }));
 
     const edges = design.connections?.map((connection) => ({
@@ -363,38 +363,55 @@ const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, o
             // onNodeDragStop={onNodeDragStop}
             // onConnect={onConnect}
             // TODO: Whenever another components updates the selection, onSelectionChange is called. Figure out how to prevent this.
-            onSelectionChange={({ nodes, edges }) => {
-                const selectedPieceIds = nodes.map((node) => node.id);
-                const selectedConnections = edges.map((edge) => {
-                    return {
-                        connectedPieceId: edge.source,
-                        connectingPieceId: edge.target,
+            // onSelectionChange={({ nodes, edges }) => {
+            //     const selectedPieceIds = nodes.map((node) => node.id);
+            //     const selectedConnections = edges.map((edge) => {
+            //         return {
+            //             connectedPieceId: edge.source,
+            //             connectingPieceId: edge.target,
+            //         }
+            //     });
+            //     // When another component updates the selection, nodes and edges are empty but we don't want this to reset the selection
+            //     if (selectedPieceIds.length === 0 && selectedConnections.length === 0) {
+            //         return;
+            //     }
+
+            //     // Only trigger onSelectionChange if the selection actually changed
+            //     const currentSelection = selection || { selectedPieceIds: [], selectedConnections: [] };
+            //     const piecesChanged =
+            //         selectedPieceIds.length !== currentSelection.selectedPieceIds.length ||
+            //         selectedPieceIds.some(id => !currentSelection.selectedPieceIds.includes(id));
+            //     const connectionsChanged =
+            //         selectedConnections.length !== currentSelection.selectedConnections.length ||
+            //         selectedConnections.some(conn =>
+            //             !currentSelection.selectedConnections.some(
+            //                 currConn => currConn.connectedPieceId === conn.connectedPieceId &&
+            //                     currConn.connectingPieceId === conn.connectingPieceId
+            //             )
+            //         );
+
+            //     if (piecesChanged || connectionsChanged) {
+            //         onSelectionChange?.({
+            //             selectedPieceIds,
+            //             selectedConnections
+            //         });
+            //     }
+            // }}
+            onNodeClick={(e, node) => {
+                console.log('node clicked', node);
+                e.stopPropagation();
+                if (selection && onSelectionChange) {
+                    if (node.selected) {
+                        onSelectionChange?.({
+                            ...selection,
+                            selectedPieceIds: selection?.selectedPieceIds.filter((id) => id !== node.id),
+                        });
+                    } else {
+                        onSelectionChange?.({
+                            ...selection,
+                            selectedPieceIds: [...selection?.selectedPieceIds, node.id],
+                        });
                     }
-                });
-                // When another component updates the selection, nodes and edges are empty but we don't want this to reset the selection
-                if (selectedPieceIds.length === 0 && selectedConnections.length === 0) {
-                    return;
-                }
-
-                // Only trigger onSelectionChange if the selection actually changed
-                const currentSelection = selection || { selectedPieceIds: [], selectedConnections: [] };
-                const piecesChanged =
-                    selectedPieceIds.length !== currentSelection.selectedPieceIds.length ||
-                    selectedPieceIds.some(id => !currentSelection.selectedPieceIds.includes(id));
-                const connectionsChanged =
-                    selectedConnections.length !== currentSelection.selectedConnections.length ||
-                    selectedConnections.some(conn =>
-                        !currentSelection.selectedConnections.some(
-                            currConn => currConn.connectedPieceId === conn.connectedPieceId &&
-                                currConn.connectingPieceId === conn.connectingPieceId
-                        )
-                    );
-
-                if (piecesChanged || connectionsChanged) {
-                    onSelectionChange?.({
-                        selectedPieceIds,
-                        selectedConnections
-                    });
                 }
             }}
             zoomOnDoubleClick={false}

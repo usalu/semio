@@ -2,11 +2,7 @@ import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef } from '
 import { Canvas, ThreeEvent, useLoader } from '@react-three/fiber';
 import { Center, Environment, GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, Select, Sphere, Stage, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { Design, Piece, Plane, Type, flattenDesign, DesignEditorSelection, selectRepresentation, pieceRepresentationUrls, getPieceRepresentationUrls } from '@semio/js';
-import { LineBasicMaterial } from 'three';
-import { MeshBasicMaterial } from 'three';
-import { Color } from 'three';
-import { Mesh } from 'three';
+import { Design, Piece, Plane, Type, flattenDesign, DesignEditorSelection, getPieceRepresentationUrls } from '@semio/js';
 
 const getComputedColor = (variable: string): string => {
     return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -25,21 +21,21 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, onSe
     const scene = useMemo(() => {
         return useGLTF(fileUrl).scene.clone()
     }, [fileUrl])
-    // useMemo(() => {
-    //     scene.traverse((object) => {
-    //         if (object instanceof Mesh) {
-    //             // const meshColor = selected ? new Color('var(--color-primary)') : new Color('var(--color-background)')
+    const selectedScene = useMemo(() => {
+        const sceneClone = scene.clone()
+        sceneClone.traverse((object) => {
+            if (object instanceof THREE.Mesh) {
+                const meshColor = new THREE.Color(getComputedColor('--color-primary'))
+                object.material = new THREE.MeshBasicMaterial({ color: meshColor })
+            }
+            if (object instanceof THREE.Line) {
+                const lineColor = new THREE.Color(getComputedColor('--color-foreground'))
+                object.material = new THREE.LineBasicMaterial({ color: lineColor })
+            }
+        })
+        return sceneClone
+    }, [scene])
 
-    //             const meshColor = selected ? new Color('red') : new Color('blue')
-    //             object.material = new MeshBasicMaterial({ color: meshColor })
-    //         }
-    //         if (object instanceof Line) {
-    //             // const lineColor = new Color('var(--color-foreground)')
-    //             const lineColor = new Color('green')
-    //             object.material = new LineBasicMaterial({ color: lineColor })
-    //         }
-    //     })
-    // }, [selected])
     return (
         <group
             position={position}
@@ -48,7 +44,7 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, onSe
                 onSelect(piece)
                 e.stopPropagation()
             }}>
-            <primitive object={scene} />
+            <primitive object={selected ? selectedScene : scene} />
             {/* <Sphere args={[0.5, 32, 32]} >
                 <meshStandardMaterial color={selected ? 'pink' : 'gold'} roughness={0} metalness={1} />
             </Sphere> */}
