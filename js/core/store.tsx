@@ -9,7 +9,7 @@ import initSqlJs from 'sql.js';
 import sqlWasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 
 import { Generator } from '@semio/js/lib/utils';
-import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint, Point, Vector, Quality, Author, Side } from '@semio/js/semio';
+import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint, Point, Vector, Quality, Author, Side, flattenDesign } from '@semio/js';
 
 // import { default as metabolism } from '@semio/assets/semio/kit_metabolism.json';
 
@@ -983,7 +983,7 @@ class StudioStore {
         const yDesign = yKit.get('designs').get(designName)?.get(designVariant)?.get(view);
         if (!yDesign) throw new Error(`Design (${designName}, ${designVariant}, ${view}) not found in kit (${kitName}, ${kitVersion})`);
         const id = uuidv4();
-        const designEditorStore = new DesignEditorStore(id, this.yDoc, yKit, yDesign);
+        const designEditorStore = new DesignEditorStore(this, id, this.yDoc, yKit, yDesign);
         this.designEditorStores.set(id, designEditorStore);
         return id;
     }
@@ -1443,6 +1443,7 @@ export interface DesignEditorState {
 }
 
 class DesignEditorStore {
+    private studioStore: StudioStore;
     private id: string;
     private yDoc: Y.Doc;
     private yKit: Y.Map<any>;
@@ -1451,7 +1452,8 @@ class DesignEditorStore {
     private state: DesignEditorState;
     private listeners: Set<() => void> = new Set();
 
-    constructor(id: string, yDoc: Y.Doc, yKit: Y.Map<any>, yDesign: Y.Map<any>) {
+    constructor(studioStore: StudioStore, id: string, yDoc: Y.Doc, yKit: Y.Map<any>, yDesign: Y.Map<any>) {
+        this.studioStore = studioStore;
         this.id = id;
         this.yDoc = yDoc;
         this.yKit = yKit;
@@ -1485,6 +1487,64 @@ class DesignEditorStore {
 
     updateDesignEditorSelection = (selection: DesignEditorSelection): void => {
         this.setState({ ...this.getState(), selection });
+    }
+
+    deleteSelectedPiecesAndConnections(): void {
+        const { selection } = this.state;
+
+        const [kitName, kitVersion] = this.getKitId();
+        const [designName, designVariant, designView] = this.getDesignId();
+        const types = this.studioStore.getTypes(kitName, kitVersion);
+        const design = this.studioStore.getDesign(kitName, kitVersion, designName, designVariant, designView);
+        const flatDesign = flattenDesign(design, types);
+
+        // First delete all selected connections
+        if (selection.selectedConnections.length > 0) {
+            const connections = this.yDesign.get('connections') as Y.Map<any>;
+            selection.selectedConnections.forEach(conn => {
+                const connectionId = `${conn.connectedPieceId}--${conn.connectingPieceId}`;
+                const reverseConnectionId = `${conn.connectingPieceId}--${conn.connectedPieceId}`;
+
+                // Check for both possible orientations of the connection
+                if (connections.has(connectionId)) {
+                    connections.delete(connectionId);
+                } else if (connections.has(reverseConnectionId)) {
+                    connections.delete(reverseConnectionId);
+                }
+            });
+        }
+
+        // Then delete all selected pieces
+        if (selection.selectedPieceIds.length > 0) {
+            const pieces = this.yDesign.get('pieces') as Y.Map<any>;
+            const connections = this.yDesign.get('connections') as Y.Map<any>;
+
+            // First identify and delete any connections involving the selected pieces
+            const connectionsToDelete: string[] = [];
+            connections.forEach((_, connectionId) => {
+                const [connectedPieceId, connectingPieceId] = connectionId.split('--');
+                if (selection.selectedPieceIds.includes(connectedPieceId) ||
+                    selection.selectedPieceIds.includes(connectingPieceId)) {
+                    connectionsToDelete.push(connectionId);
+                }
+            });
+
+            // Delete identified connections
+            connectionsToDelete.forEach(connectionId => {
+                connections.delete(connectionId);
+            });
+
+            // Finally delete the pieces
+            selection.selectedPieceIds.forEach(pieceId => {
+                pieces.delete(pieceId);
+            });
+        }
+
+        // Clear the selection
+        this.updateDesignEditorSelection({
+            selectedPieceIds: [],
+            selectedConnections: []
+        });
     }
 
     undo(): void {

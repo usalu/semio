@@ -577,7 +577,12 @@ const DesignEditorCore: FC = () => {
 
     useHotkeys('mod+v', (e) => { e.preventDefault(); console.log('Paste'); });
     useHotkeys('mod+x', (e) => { e.preventDefault(); console.log('Cut selected'); });
-    useHotkeys('delete', (e) => { e.preventDefault(); console.log('Delete selected'); });
+    useHotkeys('delete', (e) => {
+        e.preventDefault();
+        designEditorStore.transact(() => {
+            designEditorStore.deleteSelectedPiecesAndConnections();
+        });
+    });
     useHotkeys('mod+y', (e) => {
         e.preventDefault(); designEditorStore.undo();
     });
@@ -694,7 +699,7 @@ const DesignEditorCore: FC = () => {
         setActiveDraggedDesign(null);
     };
 
-    const fileUrls=studioStore.getFileUrls()
+    const fileUrls = studioStore.getFileUrls()
     return (
         <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
 

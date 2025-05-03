@@ -206,12 +206,12 @@ export type TypeID = {
 export type Quality = {
     // 📛 The name of the quality
     name: string;
-    // ❓ The value of the quality
-    value: string;
-    // 📐 The unit of the quality's value
-    unit: string;
-    // 📖 The definition [ text | url ] of the quality
-    definition: string;
+    // ❓ The optional value of the quality
+    value?: string;
+    // 📐 The optional unit of the quality's value
+    unit?: string;
+    // 📖 The optional definition [ text | url ] of the quality
+    definition?: string;
 }
 
 // 🧩 A type is a reusable element blueprint with ports for connection.
@@ -735,19 +735,19 @@ export const flattenDesign = (design: Design, types: Type[]): Design => {
 
     const piecePlanes: { [pieceId: string]: Plane } = {};
     const pieceMap: { [pieceId: string]: Piece } = {};
-    flatDesign.pieces.forEach(p => { if (p.id_) pieceMap[p.id_] = p });
+    flatDesign.pieces!.forEach(p => { if (p.id_) pieceMap[p.id_] = p });
 
     const cy = cytoscape({
         elements: {
-            nodes: flatDesign.pieces.map((piece) => ({
-                data: { id: piece.id_ ?? 'unknown', label: piece.id_ ?? 'unknown' }
+            nodes: flatDesign.pieces!.map((piece) => ({
+                data: { id: piece.id_, label: piece.id_ }
             })),
             edges: flatDesign.connections?.map((connection, index) => {
-                const sourceId = connection.connected.piece?.id_ ?? `unknown-source-${index}`;
-                const targetId = connection.connecting.piece?.id_ ?? `unknown-target-${index}`;
+                const sourceId = connection.connected.piece.id_;
+                const targetId = connection.connecting.piece.id_;
                 return {
                     data: {
-                        id: `${sourceId}-${targetId}-${index}`,
+                        id: `${sourceId}--${targetId}`,
                         source: sourceId,
                         target: targetId,
                         connectionData: connection
@@ -832,6 +832,14 @@ export const flattenDesign = (design: Design, types: Type[]): Design => {
                     ...childPiece,
                     plane: childPlane,
                     center: childCenter,
+                    qualities: [...(childPiece.qualities ?? []),
+                    {
+                        name: 'semio',
+                        value: JSON.stringify({
+                            parentPieceId: parentPiece.id_,
+                            depth: depth,
+                        })
+                    }],
                 };
                 pieceMap[childId] = flatChildPiece;
             },
