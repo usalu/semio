@@ -230,6 +230,15 @@ class StudioStore {
         };
     }
 
+    getKits(): Map<string, string[]> {
+        const kitsMap = new Map<string, string[]>();
+        const yKits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
+        yKits.forEach((versionMap, name) => {
+            kitsMap.set(name, Array.from(versionMap.keys()));
+        });
+        return kitsMap;
+    }
+
     updateKit(kit: Kit): Kit {
         const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
         const yKit = kits.get(kit.name)?.get(kit.version) as Y.Map<any> | undefined;
@@ -321,6 +330,28 @@ class StudioStore {
             created: yType.get('created'),
             updated: yType.get('updated'),
         };
+    }
+
+    getTypes(kitName: string, kitVersion: string): Type[] {
+        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
+        const versionMap = kits.get(kitName);
+        const yKit = versionMap?.get(kitVersion) as Y.Map<any> | undefined;
+        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
+
+        const types: Type[] = [];
+        const yTypesMap = yKit.get('types') as Y.Map<Y.Map<any>>; // name -> variant -> YType
+        if (yTypesMap) {
+            yTypesMap.forEach((variantMap, name) => {
+                variantMap.forEach((_, variant) => {
+                    try {
+                        types.push(this.getType(kitName, kitVersion, name, variant));
+                    } catch (error) {
+                        console.warn(`Error getting type (${name}, ${variant}) from kit (${kitName}, ${kitVersion}):`, error);
+                    }
+                });
+            });
+        }
+        return types;
     }
 
     updateType(kitName: string, kitVersion: string, type: Type): Type {
@@ -429,6 +460,30 @@ class StudioStore {
             connections,
             qualities: this.getQualities(yDesign.get('qualities')),
         };
+    }
+
+    getDesigns(kitName: string, kitVersion: string): Design[] {
+        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
+        const versionMap = kits.get(kitName);
+        const yKit = versionMap?.get(kitVersion) as Y.Map<any> | undefined;
+        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
+
+        const designs: Design[] = [];
+        const yDesignsMap = yKit.get('designs') as Y.Map<Y.Map<Y.Map<any>>>; // name -> variant -> view -> YDesign
+        if (yDesignsMap) {
+            yDesignsMap.forEach((variantMap, name) => {
+                variantMap.forEach((viewMap, variant) => {
+                    viewMap.forEach((_, view) => {
+                        try {
+                            designs.push(this.getDesign(kitName, kitVersion, name, variant, view));
+                        } catch (error) {
+                            console.warn(`Error getting design (${name}, ${variant}, ${view}) from kit (${kitName}, ${kitVersion}):`, error);
+                        }
+                    });
+                });
+            });
+        }
+        return designs;
     }
 
     updateDesign(kitName: string, kitVersion: string, design: Design): Design {
@@ -582,6 +637,31 @@ class StudioStore {
         };
     }
 
+    getPieces(kitName: string, kitVersion: string, designName: string, designVariant: string, view: string): Piece[] {
+        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
+        const versionMap = kits.get(kitName);
+        const yKit = versionMap?.get(kitVersion) as Y.Map<any> | undefined;
+        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
+        const designs = yKit.get('designs');
+        const variantMap = designs.get(designName);
+        const viewMap = variantMap?.get(designVariant);
+        const yDesign = viewMap?.get(view);
+        if (!yDesign) throw new Error(`Design (${designName}, ${designVariant}, ${view}) not found in kit (${kitName}, ${kitVersion})`);
+
+        const pieces: Piece[] = [];
+        const yPieces = yDesign.get('pieces') as Y.Map<any>;
+        if (yPieces) {
+            yPieces.forEach((_, pieceId) => {
+                try {
+                    pieces.push(this.getPiece(kitName, kitVersion, designName, designVariant, view, pieceId));
+                } catch (error) {
+                    console.warn(`Error getting piece (${pieceId}) from design (${designName}, ${designVariant}, ${view}) in kit (${kitName}, ${kitVersion}):`, error);
+                }
+            });
+        }
+        return pieces;
+    }
+
     updatePiece(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, piece: Piece): Piece {
         if (!piece.id_) throw new Error("Piece ID is required for update.");
         const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
@@ -717,6 +797,34 @@ class StudioStore {
             y: yConnection.get('y'),
             qualities: this.getQualities(yConnection.get('qualities'))
         };
+    }
+
+    getConnections(kitName: string, kitVersion: string, designName: string, designVariant: string, view: string): Connection[] {
+        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
+        const versionMap = kits.get(kitName);
+        const yKit = versionMap?.get(kitVersion) as Y.Map<any> | undefined;
+        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
+        const designs = yKit.get('designs');
+        const variantMap = designs.get(designName);
+        const viewMap = variantMap?.get(designVariant);
+        const yDesign = viewMap?.get(view);
+        if (!yDesign) throw new Error(`Design (${designName}, ${designVariant}, ${view}) not found in kit (${kitName}, ${kitVersion})`);
+
+        const connections: Connection[] = [];
+        const yConnections = yDesign.get('connections') as Y.Map<any>;
+        if (yConnections) {
+            yConnections.forEach((_, connectionId) => {
+                const [connectedPieceId, connectingPieceId] = connectionId.split('--');
+                if (connectedPieceId && connectingPieceId) {
+                    try {
+                        connections.push(this.getConnection(kitName, kitVersion, designName, designVariant, view, connectedPieceId, connectingPieceId));
+                    } catch (error) {
+                        console.warn(`Error getting connection (${connectedPieceId}, ${connectingPieceId}) from design (${designName}, ${designVariant}, ${view}) in kit (${kitName}, ${kitVersion}):`, error);
+                    }
+                }
+            });
+        }
+        return connections;
     }
 
     updateConnection(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, connection: Partial<Connection>): void {
@@ -1419,28 +1527,6 @@ class StudioStore {
         return kitsMap;
     }
 
-    getTypes(kitName: string, kitVersion: string): Type[] {
-        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
-        const versionMap = kits.get(kitName);
-        const yKit = versionMap?.get(kitVersion) as Y.Map<any> | undefined;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-
-        const types: Type[] = [];
-        const yTypesMap = yKit.get('types') as Y.Map<Y.Map<any>>; // name -> variant -> YType
-        if (yTypesMap) {
-            yTypesMap.forEach((variantMap, name) => {
-                variantMap.forEach((_, variant) => {
-                    try {
-                        types.push(this.getType(kitName, kitVersion, name, variant));
-                    } catch (error) {
-                        console.warn(`Error getting type (${name}, ${variant}) from kit (${kitName}, ${kitVersion}):`, error);
-                    }
-                });
-            });
-        }
-        return types;
-    }
-
     getDesigns(kitName: string, kitVersion: string): Design[] {
         const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
         const versionMap = kits.get(kitName);
@@ -1463,31 +1549,6 @@ class StudioStore {
             });
         }
         return designs;
-    }
-
-    getPieces(kitName: string, kitVersion: string, designName: string, designVariant: string, view: string): Piece[] {
-        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
-        const versionMap = kits.get(kitName);
-        const yKit = versionMap?.get(kitVersion) as Y.Map<any> | undefined;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const designs = yKit.get('designs');
-        const variantMap = designs.get(designName);
-        const viewMap = variantMap?.get(designVariant);
-        const yDesign = viewMap?.get(view);
-        if (!yDesign) throw new Error(`Design (${designName}, ${designVariant}, ${view}) not found in kit (${kitName}, ${kitVersion})`);
-
-        const pieces: Piece[] = [];
-        const yPieces = yDesign.get('pieces') as Y.Map<any>;
-        if (yPieces) {
-            yPieces.forEach((_, pieceId) => {
-                try {
-                    pieces.push(this.getPiece(kitName, kitVersion, designName, designVariant, view, pieceId));
-                } catch (error) {
-                    console.warn(`Error getting piece (${pieceId}) from design (${designName}, ${designVariant}, ${view}) in kit (${kitName}, ${kitVersion}):`, error);
-                }
-            });
-        }
-        return pieces;
     }
 
     getConnections(kitName: string, kitVersion: string, designName: string, designVariant: string, view: string): Connection[] {
