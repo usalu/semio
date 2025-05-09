@@ -17,7 +17,22 @@ interface ModelPieceProps {
 }
 
 const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, onSelect }) => {
-    const position = useMemo(() => new THREE.Vector3(plane.origin.x, plane.origin.z, -plane.origin.y), [plane]);
+    const matrix = useMemo(() => {
+        const zAxis = new THREE.Vector3().crossVectors(
+            new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z),
+            new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z)).normalize()
+        const m = new THREE.Matrix4(
+            plane.xAxis.x, plane.yAxis.x, zAxis.x, plane.origin.x,
+            plane.xAxis.z, plane.yAxis.z, zAxis.z, plane.origin.z,
+            -plane.xAxis.y, -plane.yAxis.y, -zAxis.y, -plane.origin.y,
+            // 1, 0, 0, plane.origin.x,
+            // 0, 1, 0, plane.origin.z,
+            // 0, 0, 1, -plane.origin.y,
+            0, 0, 0, 1
+        )
+        console.log('Matrix:', m.elements)
+        return m
+    }, [plane]);
     const scene = useMemo(() => {
         return useGLTF(fileUrl).scene.clone()
     }, [fileUrl])
@@ -38,7 +53,7 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, onSe
 
     return (
         <group
-            position={position}
+            matrixWorld={matrix}
             userData={{ pieceId: piece.id_ }}
             onClick={(e) => {
                 onSelect(piece)
