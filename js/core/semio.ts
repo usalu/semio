@@ -824,8 +824,8 @@ export const flattenDesign = (design: Design, types: Type[]): Design => {
                 piecePlanes[childPiece.id_] = childPlane;
                 const direction = semioVectorToThree({ x: connection.x, y: connection.y, z: 0 }).normalize();
                 const childCenter = {
-                    x: round(parentPiece.center?.x + connection.x + direction.x),
-                    y: round(parentPiece.center?.y + connection.y + direction.y),
+                    x: round(parentPiece.center!.x + connection.x + direction.x),
+                    y: round(parentPiece.center!.y + connection.y + direction.y),
                 }
 
                 const flatChildPiece: Piece = {
