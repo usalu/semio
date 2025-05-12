@@ -2099,6 +2099,19 @@ public class Design : DesignProps
                     Y = parent.Center.Y + connection.Y + direction.Y
                 };
                 child.Center = childCenter;
+                var semioQuality = child.Qualities.FirstOrDefault(q => q.Name == "semio.parent");
+                if (semioQuality != null)
+                {
+                    semioQuality.Value = parent.Id;
+                }
+                else
+                {
+                    child.Qualities.Add(new Quality
+                    {
+                        Name = "semio.parent",
+                        Value = parent.Id
+                    });
+                }
             });
             Bfs(onRoot, onConnection);
         }
