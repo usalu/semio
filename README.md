@@ -199,6 +199,7 @@ Different components need different tools 🧰
 For a complete setup you need:
 
 - Windows 10 or 11
+- [Visual Studio Code](https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-user)
 - [Visual Studio 2022 Community](https://visualstudio.microsoft.com/de/thank-you-downloading-visual-studio/?sku=Community&channel=Release&version=VS2022)
 - [Rhino 8](https://www.rhino3d.com/download/rhino-for-windows/8/latest/)
 - Python 3.13
