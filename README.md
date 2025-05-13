@@ -494,7 +494,7 @@ Most things in Grasshopper are visual and preview selected components is your be
 </details>
 
 <details>
-<summary><strong>📦 If you don't need absolutely need a cluster, don't create it ❌</strong></summary>
+<summary><strong>📦 If you don't absolutely need a cluster, don't create it ❌</strong></summary>
 
 Clusters are a good way to make code reusable and hide complexity 🥸
 
