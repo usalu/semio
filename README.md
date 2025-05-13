@@ -141,6 +141,25 @@ But most likely not ❌
 </details>
 
 <details>
+<summary><strong>📦 Parts that belong together, should be close together in the source code  ✅</strong></summary>
+
+The default code organization is to group kind of structurally similar parts together 📂
+
+All models next to each other, all controllers next to each other, all errors next to each other, …
+
+While this pattern supports structural refactoring, it makes plain extensions harder because you have to search through all the files 🔍
+
+Most changes are plain extensions and not structural refactors 🔄
+
+Further it has the advantage that every LLM-agent only has to predict one big block of code instead of plenty of small ones 🤖
+
+That's why frameworks like [React](https://react.dev/learn/thinking-in-react) exist or vendoring such as with [shadcn](https://ui.shadcn.com/docs) is more flexible than dependcenies such as with [bootstrap](https://getbootstrap.com/)
+
+Cutting components vertically (a bit of logic with a bit of UI) instead of horizontally (all logic, all ui) requires more effort but enhances reusability 🔮
+
+</details>
+
+<details>
 <summary><strong>📑 If multiple people work longterm on the same part, then one file for each part should be created ⚙️</strong></summary>
 
 Trust me, it will make collaboration much easier 🔀
@@ -148,7 +167,7 @@ Trust me, it will make collaboration much easier 🔀
 </details>
 
 <details>
-<summary><strong>📦 If you don't need an interface because something is not likely to be extended soon, don't create it ❌</strong></summary>
+<summary><strong>🔮 If you don't need an interface because something is not likely to be extended soon, don't create it ❌</strong></summary>
 
 The main question is the interface productive or not?
 
