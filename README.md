@@ -62,6 +62,7 @@ Let me walk you through 🚶
    - [⚙️ @semio/engine](#️-semioengine-)
    - [🟪 @semio/net](#-semionet-)
    - [🦗 @semio/grasshopper](#-semiograsshopper-)
+     - [🪢 Scriptstyle](#️-scriptstyle-)
    - [🛍️ @semio/assets](#%EF%B8%8F-semioassets-)
 1. [🏘️ Examples](#%EF%B8%8F-examples-)
    - [🚀 Starters](#-starters-)
@@ -459,6 +460,68 @@ The core which is shared in the [semio .NET ecosystem](#-net-) 🥜
   </details>
 
 A full-blown Grasshopper Plugin that has (almost) everything 💯
+
+### 🪢 Scriptstyle
+
+Analogous to [our principles](#️-principles-) for text-based code, we follow a similar logic for script-based code 🔄
+
+<details>
+<summary><strong>💻 Optimize your definitions for rectangular space ✅</strong></summary>
+
+Every inch of wasted screen space, means a loss of productivity because you need longer for navigation 🖱️
+
+It is harder to understand something far away compared to something close 🔍
+
+I know, the triangular layout where you place the next component always vertically in the middle of the inputs looks cleaner due to the better wire display 🧹
+
+But you waste a lot of space for nothing 💸
+
+</details>
+
+<details>
+<summary><strong>📛 Don't name things unless it is the output of a group or cluster ❌</strong></summary>
+
+We know that there are [only two hard things in Computer Science](https://martinfowler.com/bliki/TwoHardThings.html): Naming and Caching 🥈
+
+Visual programming languages solve the naming problem by using wires to overcome the neeed of names ⬆️
+
+That is a big gain in productivity because you can focus on the logic instead of the names 🚀
+
+Wait, but how I am supposed to understand what is happening in the code if I don't use names?
+
+Most things in Grasshopper are visual and preview selected components is your best friend 🔍
+
+</details>
+
+<details>
+<summary><strong>📦 If you don't need absolutely need a cluster, don't create it ❌</strong></summary>
+
+Clusters are a good way to make code reusable and hide complexity 🥸
+
+But hiding complexity means a slower development speed because you have to navigate through more files 🐌
+
+Did you know that Grasshopper behaves different inside a cluster when outside?
+
+E.g. when you feed an empty branch into a cluster the input inside it its magically pruned and when you leave it is there again which makes debugging much harder 🐛
+
+I don't have to tell you about open definition tabs, updating nested clusters, recompute, performance, … right?
+
+</details>
+
+<details>
+<summary><strong>🤏 Minimize the amount of external parameters and take as much decisions as possible ✅</strong></summary>
+
+Designing means making decisions 🪨
+
+Fewer parameters makes your design more parameteric and not less 🤯
+
+The price for a synergizing system is the loss of flexibility 🤷‍♂️
+
+If you don't know the parameters in the first place, you shouldn't create the Grasshopper script in the first place 🥈
+
+Grasshopper is an amazing tool if you know the system that you want to create but is terrible for prototyping because of its lack of abstraction ⬇️
+
+</details>
 
 ## ⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-components-)
 
