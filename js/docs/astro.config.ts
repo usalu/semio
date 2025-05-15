@@ -44,10 +44,12 @@ export default defineConfig({
                         label: '🥇 Intro',
                         items: [
                             'intro',
-                            'design-information-modeling',
-                            'kit-of-parts-architecture',
+                            'why-semio',
+                            'think-in-semio',
+                            'core-concepts',
                         ],
                     },
+                    'toolkit',
                     'installation',
                     'starter'
                 ],
