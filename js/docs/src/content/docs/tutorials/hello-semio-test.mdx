@@ -18,13 +18,13 @@ Type, Piece and connection are always linked to the page Thinking in semio
 
 Manual 👍
 
-- ## Working Smarter: Loading Geometry from Files in Semio ( The Placeholder )
+- ## Working Smarter: Loading Geometry from Files in semio ( The Placeholder )
 
 - Overview: Working in Chunks Tips on how to separate a project and where as well as how   
 - Naming in semio   
 -  Data trees in Grasshopper and semio Typen,Representation,Geometry (0,0,0)  
 - Overview \> What are Construct, Deconstruct, Modify Components   
-- 🛠️ Platforms & Workflow in Semio with Examples  
+- 🛠️ Platforms & Workflow in semio with Examples  
 - From studio to Grasshopper and opposite   
 - Hierarchies in semio  
 - Component dictionary   
@@ -33,15 +33,15 @@ Manual 👍
 
 **General Knowledge :** 
 
-## **📁 Working Smarter: Loading Geometry from Files in Semio ( The Placeholder )**
+## **📁 Working Smarter: Loading Geometry from Files in semio ( The Placeholder )**
 
-In this chapter, we explore why referencing geometry from **external files**—rather than live links from within a single Grasshopper script—can be a powerful and more efficient way to work. This approach transforms how teams collaborate, how data is stored, and how modular systems are designed in Semio.
+In this chapter, we explore why referencing geometry from **external files**—rather than live links from within a single Grasshopper script—can be a powerful and more efficient way to work. This approach transforms how teams collaborate, how data is stored, and how modular systems are designed in semio.
 
 ---
 
 ### **💡 Why Use File-Based Geometry?**
 
-Semio introduces a powerful shift in computational design by encouraging **loading geometry from baked, static files (whether a baked Grasshopper solution or a typical 3D modelled Geometry)**
+semio introduces a powerful shift in computational design by encouraging **loading geometry from baked, static files (whether a baked Grasshopper solution or a typical 3D modelled Geometry)**
 
 This method that may feel counterintuitive at first, but unlocks surprising benefits.
 
@@ -53,7 +53,7 @@ Let’s unpack what this approach offers.
 
 In traditional Grasshopper workflows, it's common to build massive, tangled scripts that try to manage an entire project in one go. This quickly becomes hard to debug, scale, or share.
 
-Semio changes this by letting you **split your design into smaller, reusable “chunks.”** Each chunk can be built in its own Grasshopper file, then exported and referenced through Semio using file-based geometry.
+semio changes this by letting you **split your design into smaller, reusable “chunks.”** Each chunk can be built in its own Grasshopper file, then exported and referenced through semio using file-based geometry.
 
 #### **✨ Key Benefits:**
 
@@ -63,7 +63,7 @@ Semio changes this by letting you **split your design into smaller, reusable “
 
 * **Faster iteration:** You can isolate issues or update a part without breaking the whole system.
 
-🧱 *Semio makes this possible through its concept of placeholders, connections, and logic—not raw geometry—so different teams can focus on their pieces independently.*
+🧱 *semio makes this possible through its concept of placeholders, connections, and logic—not raw geometry—so different teams can focus on their pieces independently.*
 
 ---
 
@@ -71,7 +71,7 @@ Semio changes this by letting you **split your design into smaller, reusable “
 
 One of the biggest headaches in computational design is managing plugin versions, Grasshopper dependencies, or opening files across systems.
 
-By **exporting geometry to files and referencing it in Semio**, you unlock a platform-independent workflow.
+By **exporting geometry to files and referencing it in semio**, you unlock a platform-independent workflow.
 
 #### **✨ Key Benefits:**
 
@@ -79,9 +79,9 @@ By **exporting geometry to files and referencing it in Semio**, you unlock a pla
 
 * **No plugin chaos:** You don’t need to ensure everyone has the same Grasshopper or plugin versions installed.
 
-* **Cross-software compatibility:** You can bring work from different sources—Grasshopper, Rhino, Semio, or even other platforms—into a unified **design Blueprint**.
+* **Cross-software compatibility:** You can bring work from different sources—Grasshopper, Rhino, semio, or even other platforms—into a unified **design Blueprint**.
 
-🧠 *Semio acts as the glue between systems, allowing modular contributions from different tools to merge into one coherent structure.*
+🧠 *semio acts as the glue between systems, allowing modular contributions from different tools to merge into one coherent structure.*
 
 ---
 
@@ -102,13 +102,13 @@ This leads to:
 
 * Cleaner collaboration
 
-📌 *We highly recommend baking the necessary geometry and saving it to a folder before bringing it into Semio.*
+📌 *We highly recommend baking the necessary geometry and saving it to a folder before bringing it into semio.*
 
 ---
 
 ### **🔄 Alternative: Direct Dynamic Linking**
 
-That said, Semio **does still support direct connections** to Grasshopper outputs without saving to a file.
+That said, semio **does still support direct connections** to Grasshopper outputs without saving to a file.
 
 This can be useful when:
 
@@ -123,9 +123,9 @@ A useful middle ground:
 
 
 
-🛠️ **Platforms & Workflow in Semio**
+🛠️ **Platforms & Workflow in semio**
 
-Designing in Semio is split into two main stages, each supported by a dedicated platform but flexible enough to be done entirely in **Grasshopper**.
+Designing in semio is split into two main stages, each supported by a dedicated platform but flexible enough to be done entirely in **Grasshopper**.
 
 ---
 
@@ -137,7 +137,7 @@ You model **Types** (the brick templates), place **Ports** (connectors), and att
 
 ✅ **Tool:**
 
-🦗 **Semio Plugin for Grasshopper**  
+🦗 **semio Plugin for Grasshopper**  
 The plugin gives you precise control over your workflow and lets you take full advantage of Grasshopper’s parametric logic
 
 ---
@@ -150,25 +150,25 @@ You place **Pieces** (instances of Types) and define **Connections** (rules betw
 
 ✅ **Tools:**
 
-🌐 **Semio Studio (Online):**  
+🌐 **semio Studio (Online):**  
  A visual, intuitive interface for assembling Designs collaboratively. Ideal for layout, teamwork, and quick iteration.
 
 🦗 **Grasshopper Plugin:**  
- You can also use the Semio plugin for the entire process, especially when you want to leverage parametric workflows or integrate with plugins like **Wasp** or **Ladybug**, whether to generate connection logic, analyze a Design, or enrich Metadata.
+ You can also use the semio plugin for the entire process, especially when you want to leverage parametric workflows or integrate with plugins like **Wasp** or **Ladybug**, whether to generate connection logic, analyze a Design, or enrich Metadata.
 
 ---
 
 ### **🔄 Combine Both Platforms**
 
-Semio is **platform-flexible**: you can **generate Kits in Grasshopper** and **assemble Designs in Studio**, or do it all in one place.
+semio is **platform-flexible**: you can **generate Kits in Grasshopper** and **assemble Designs in Studio**, or do it all in one place.
 
 Everything stays **linked and synced**. Kits and Designs can be reused, shared, and edited across both tools seamlessly.
 
-# **🧩 Building Your First Semio Design**
+# **🧩 Building Your First semio Design**
 
 **From Sketch to Structure**
 
-In this tutorial, you’ll walk through the process of turning a sketch into a working modular design using Semio. Think of this as assembling your first LEGO model from scratch — except now, you’re the one defining the bricks.
+In this tutorial, you’ll walk through the process of turning a sketch into a working modular design using semio. Think of this as assembling your first LEGO model from scratch — except now, you’re the one defining the bricks.
 
 We’ll structure each step around Semio’s core components: **Type**, **Piece**, **Port**, and **Connection**, all of which you already encountered in The Anatomy of a Modular Design System ( Think in semio )
 
@@ -213,7 +213,7 @@ We’ll explain all these parts as we move step-by-step through building the des
 
 ### **🧱 Step 1: Modeling the Types (Brick Molds)**
 
-As mentioned earlier in **Thinking in Semio**, a **Type** is like a **brick mold**.  
+As mentioned earlier in **Thinking in semio**, a **Type** is like a **brick mold**.  
  You're not just drawing geometry — you're designing a **template** that combines shape with meaningful design information.
 
 #### **🧩 What are the “Molds” in this example?**
@@ -226,7 +226,7 @@ So while you see five Pieces in the final Design, they’re made up of **three u
 
 #### **🔧 What do we need to create these Molds?**
 
-To define a Type in Semio, you’ll model both its **form** and its **behavior**.  
+To define a Type in semio, you’ll model both its **form** and its **behavior**.  
  Let’s go over the essential ingredients:
 
 * **🏷️ Name** → Every Type needs a unique name that helps you identify and reuse it later.
@@ -241,7 +241,7 @@ In the next steps, we’ll walk through how to set up each of these elements to 
 
 #### **📚 General: Why Naming Matters**
 
-Giving clear and consistent names to elements in Semio **pays off later** — especially during the design and connection phases.  
+Giving clear and consistent names to elements in semio **pays off later** — especially during the design and connection phases.  
  When your project grows and you’re working with multiple Types, Variants, and Pieces, meaningful names help you:
 
 * stay organized
@@ -256,10 +256,10 @@ Giving clear and consistent names to elements in Semio **pays off later** — es
 
 ### **🧱 Referencing Geometry to the Type (Modeling Representation)**
 
-In Semio, geometry is more than just shapes — it’s tied to **meaning** 💡  
+In semio, geometry is more than just shapes — it’s tied to **meaning** 💡  
  This is different from regular Grasshopper workflows, where geometry is just raw data.
 
-In Semio, you're building your own **design language** — like sketching with intent ✏️  
+In semio, you're building your own **design language** — like sketching with intent ✏️  
  You don’t say “connect point (x, y, z) to Brep edge 23.”  
  You say “connect the door to the living room” —  
  or in Lego terms: “snap the window brick to the top of the wall” 🪟🧱
@@ -277,7 +277,7 @@ We call this step **Modeling a Representation** 🧩 —
 
 To model a Representation, you first need to create the **geometry** — the body of your building block.
 
-Semio lets you attach geometry to a Type in **two main ways**, each with its own strengths 🚀
+semio lets you attach geometry to a Type in **two main ways**, each with its own strengths 🚀
 
 #### **1️⃣ Direct Reference**
 
@@ -339,7 +339,7 @@ Once you've modeled the visual look of your brick mold (Representation), it’s 
 
 ### **🧩 What Do You Need to Define a Port?**
 
-In the Semio Grasshopper plugin, each Port is defined with 3 main inputs:
+In the semio Grasshopper plugin, each Port is defined with 3 main inputs:
 
 * **A Point** 📍  
    This is the location where the connection happens.  
@@ -348,7 +348,7 @@ In the Semio Grasshopper plugin, each Port is defined with 3 main inputs:
 * **A Vector** ➡️  
    This defines the direction the Port faces.  
    It’s like saying: "This side is meant to connect outward."  
-   The vector is especially important later when aligning pieces — because Semio uses this direction to orient other parts when snapping.
+   The vector is especially important later when aligning pieces — because semio uses this direction to orient other parts when snapping.
 
 * **A Port ID** 🏷️  
    This is the name of the Port — a label you'll use when connecting components.  
@@ -378,7 +378,7 @@ You might wonder:
 
 “Why aren’t the Ports placed exactly where the pieces touch?”
 
-That’s because Semio lets you **adjust** the position and rotation of a Piece **after** it snaps.  
+That’s because semio lets you **adjust** the position and rotation of a Piece **after** it snaps.  
  So you can define Ports in logical, consistent places — like the center of a face — and still have full control over placement later.
 
 This is especially helpful when modeling **Variants of the same Type**:  
@@ -388,7 +388,7 @@ This is especially helpful when modeling **Variants of the same Type**:
 
 That’s up to you. Just like Lego bricks have multiple studs — even if not all of them are used — you can place multiple Ports to offer flexibility 🧱
 
-But in Semio, you decide **how much flexibility** you need:
+But in semio, you decide **how much flexibility** you need:
 
 * You can define only one Port per side 🔒
 
@@ -437,7 +437,7 @@ Each Variant uses the **same mold**, just stretched or scaled.
 
 ---
 
-### **🔁 How to Model a Variant in Semio**
+### **🔁 How to Model a Variant in semio**
 
 To model a Variant, you follow **the same steps** as creating a Type —  
  but with **two key differences**:
@@ -446,7 +446,7 @@ To model a Variant, you follow **the same steps** as creating a Type —
 
 2. **Assign** a **unique Variant name** (e.g. the unit count `n`)
 
-This tells Semio:  
+This tells semio:  
  ➡️ “Same mold, different size.”
 
 ✅ Just like with Types, you have **three ways** to reference geometry:
@@ -507,7 +507,7 @@ Grasshopper
 ## **🔁 Step 1: Create the Pieces (Modeling Pieces)**
 
 Now that you’ve defined your **Types** (brick molds) and their **Variants**, it’s time to place actual bricks into your **Design** 🧩  
- In Semio, these placed components are called **Pieces**.
+ In semio, these placed components are called **Pieces**.
 
 Each **Piece** is:
 
@@ -583,7 +583,7 @@ Each row creates one Piece.
 
 ## **🔗 Step 2: Create the Connections**
 
-Now that you’ve placed your Pieces, it’s time to tell Semio how they connect.  
+Now that you’ve placed your Pieces, it’s time to tell semio how they connect.  
  Think of this like giving the assembly instructions for snapping bricks together 🧱🧲
 
 Each **Connection** says:  
@@ -598,7 +598,7 @@ To create a connection,, you need to define four key values:
 3. **Connecting Piece ID** **(CgPc)**– the ID of the piece you're snapping *to **To Piece***  
 4. **Connecting Piece Port ID** **(CgPo)**– the specific port on the other piece you're connecting *to **To Port***
 
-***That’s it\! Just tell Semio:***
+***That’s it\! Just tell semio:***
 
 ***“Connect this Port on this Piece → to that Port on that Piece.”***
 
@@ -618,7 +618,7 @@ To create a connection,, you need to define four key values:
 
 ***`Con(i:w → w:L1)`***
 
-***`This tells Semio:`***  
+***`This tells semio:`***  
  ***`"Snap the west Port of i to the west Port of L1."`***
 
 ***`It’s that simple`*** 
@@ -627,7 +627,7 @@ To create a connection,, you need to define four key values:
 
 ### ***`🔧 Adjusting Position and Rotation at the Port (Optional Step)`***
 
-***`When two Pieces are connected through Ports, Semio lets you fine-tune how the connected Piece is placed — not by changing the Port itself, but by shifting or rotating the geometry that comes with it.`***
+***`When two Pieces are connected through Ports, semio lets you fine-tune how the connected Piece is placed — not by changing the Port itself, but by shifting or rotating the geometry that comes with it.`***
 
 ***`These adjustments are always relative to the orientation of the Port on the connected Piece — which was originally defined in the Type (your mold)`***
 
@@ -671,7 +671,7 @@ To create a connection,, you need to define four key values:
 ***You can often skip adjustments by placing Ports exactly where the geometry should land.***  
  ***But adding small transformations gives you more flexibility — especially when working with geometries that follow the same logic, like the variants in this example. Keeping consistent Port placement across them makes the Type reusable.***
 
-***Semio supports both strategies — there’s no single “right” way.***
+***semio supports both strategies — there’s no single “right” way.***
 
 ***🧱 Just like Lego: studs cover the whole surface. You don’t always use all of them — but they’re there when needed.***
 
@@ -689,11 +689,11 @@ To create a connection,, you need to define four key values:
 ***but unlike Grasshopper, Semio’s connections are independent of data trees.***  
 ***The logic is based on explicit relationships, not list order.***
 
-***Semio keeps your Pieces connected based on relationships — not just data order.***
+***semio keeps your Pieces connected based on relationships — not just data order.***
 
 ### ***🧠 Important to Know***
 
-***Semio doesn’t change how Grasshopper works — it changes what you connect.***  
+***semio doesn’t change how Grasshopper works — it changes what you connect.***  
  ***Instead of wiring geometry, you connect its semantic structure: Types, Ports, and Pieces.***
 
 ***Under the hood, it behaves just like any Grasshopper component:***  
@@ -726,7 +726,7 @@ To display it properly, plug in:
 
 * The **Objects** (representations of the Types)
 
-✅ That’s it — you’ve built your first modular kit in Semio\!
+✅ That’s it — you’ve built your first modular kit in semio\!
 
 Model Kit ?
 
