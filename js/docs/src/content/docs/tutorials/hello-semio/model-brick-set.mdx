@@ -5,7 +5,7 @@ sidebar:
   order: 2
 ---
 
-import { Steps } from "@astrojs/starlight/components";
+import { Steps, Tabs, TabItem } from "@astrojs/starlight/components";
 
 
 ## 🧰 Create Brick Mold (Type)
@@ -80,20 +80,6 @@ To model a Representation, you first need to create the **geometry** — the bod
 
 semio lets you attach geometry to a Type in **two main ways**, each with its own strengths 🚀
 
-{/_ TODO: Insert Table _/}
-
-###### 1️⃣ Direct Reference
-
-Model or script the geometry **directly** in Rhino or Grasshopper 🦗🦏  
- ✅ Fast and flexible for prototyping  
- ⚠️ But tightly coupled to your current file — harder to reuse or collaborate on
-
-###### 2️⃣ File-Based Reference (🔁 Recommended)
-
-Reference geometry from an **external file** 📁  
- ✅ Modular and clean  
- ✅ Easy to update without breaking connections  
- ✅ Perfect for large teams and scalable design workflows 🤝
 
 ---
 
@@ -109,15 +95,25 @@ As you can see the different design Parameters in the sketch :
 - `W` = a single Unit Dimensions  
   `n` = Number of segments (length of each element
 
-In Grasshopper :
-
+<Tabs>
+<TabItem label="Direct Reference">
 For now we will develop This Shape a logic has been created to generate it based on how many Units it has in its length.
 
 We have created a Grashopper logic that first generate this Rectangular shape cut and then Create a wood profile out of this curve
-
-In Rhino
-
+</TabItem>
+<TabItem label="File-Based Reference (🔁 Recommended)">
 We could model the Geometry we want to attach at the end we reference a layer
+</TabItem>
+</Tabs>
+
+| Feature                              |  Direct Reference                     |  File-Based Reference (🔁 Recommended) |
+| :----------------------------------- | :---------------------------------------: | :------------------------------------------: |
+| **Source**                           | Scripted/Modeled in Rhino/Grasshopper 🦗🦏 | External File 📁                            |
+| **Speed & Flexibility (Prototyping)**|                     ✅                    |            ⚠️ Slower Initial Setup            |
+| **Coupling & Reusability**           |      ⚠️ Tightly Coupled, Less Reusable    |          ✅ Loosely Coupled, Reusable        |
+| **Modularity & Cleanliness**         |      ⚠️ Less Modular, Potential Clutter   |        ✅ Modular & Clean Organization       |
+| **Updates (Connection Stability)**   |      ⚠️ Prone to Breaking Connections    |         ✅ Stable Updates, Intact Links        |
+| **Teamwork & Scalability**           |      ⚠️ Difficult for Teams & Scaling   |         ✅ Ideal for Collaboration & Growth  |
 
 File Linking files :
 
