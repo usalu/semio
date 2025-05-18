@@ -1,0 +1,95 @@
+---
+title: 📐 Sketch Setup
+description: Break down your sketch into modular parts and layout — like the first page of a LEGO manual.
+
+sidebar:
+  order: 1
+---
+
+
+
+🛠️ **Platforms & Workflow in semio**
+
+Designing in semio is split into two main stages, each supported by a dedicated platform but flexible enough to be done entirely in **Grasshopper**.
+
+---
+
+🧱 **1\. Creating the Brick set**
+
+This is where you define your modular parts. Think of it like designing the Lego set:
+
+You model **Types** (the brick templates), place **Ports** (connectors), and attach **Metadata** (semantic and design-relevant information).
+
+✅ **Tool:**
+
+🦗 **semio Plugin for Grasshopper**  
+The plugin gives you precise control over your workflow and lets you take full advantage of Grasshopper’s parametric logic
+
+---
+
+🧩 **2\. Creating the Design**
+
+This is where you snap those parts together.
+
+You place **Pieces** (instances of Types) and define **Connections** (rules between Ports). like assembling bricks into a model.
+
+✅ **Tools:**
+
+🌐 **semio Studio (Online):**  
+ A visual, intuitive interface for assembling Designs collaboratively. Ideal for layout, teamwork, and quick iteration.
+
+🦗 **Grasshopper Plugin:**  
+ You can also use the semio plugin for the entire process, especially when you want to leverage parametric workflows or integrate with plugins like **Wasp** or **Ladybug**, whether to generate connection logic, analyze a Design, or enrich Metadata.
+
+---
+
+### **🔄 Combine Both Platforms**
+
+semio is **platform-flexible**: you can **generate Kits in Grasshopper** and **assemble Designs in Studio**, or do it all in one place.
+
+Everything stays **linked and synced**. Kits and Designs can be reused, shared, and edited across both tools seamlessly.
+
+---
+
+# **🧩 Building Your First semio Design**
+
+**From Sketch to Structure**
+
+In this tutorial, you’ll walk through the process of turning a sketch into a working modular design using semio. Think of this as assembling your first LEGO model from scratch — except now, you’re the one defining the bricks.
+
+We’ll structure each step around Semio’s core components: **Type**, **Piece**, **Port**, and **Connection**, all of which you already encountered in The Anatomy of a Modular Design System ( Think in semio )
+
+---
+
+## **👀 Step 1:📝 Sketch Breakdown**
+
+Your sketch is split into two parts — just like a Lego instruction sheet:
+
+#### **🔲 Top: Designing the Building Blocks**
+
+This is the starting point of any modular design — **spotting patterns**.  
+ You can spot five shapes that look almost the same, just with different sizes.
+
+🧱 Think of them like Lego bricks: a 2-stud brick, a 4-stud brick, and a 5-stud brick.  
+ Similar shape, same logic — just stretched.
+
+That means:  
+**We will have to model them as _variants_ of the same Type** (the same mold with different settings).  
+ If there were different shapes — like a window or roof piece — those would count as _different_ Types.
+
+The shape you see is a rectangle, cut at an angle — that’s your custom building block.  
+ On the right, the yellow box lists the three repeated **variants** (2, 4, and 5 units long).
+
+---
+
+#### **🔳 Bottom: Building the Design**
+
+This is where you see how those bricks snap together to form your structure.
+
+- Each number (2, 4, 5) shows **which variant** is used where.
+
+- 🔴 **Circles with arrows** = _Ports_ — the snap points where pieces connect
+
+- 🖋️ **Black text** = _Assembly instructions_ — telling you which Port connects to which, and how
+
+We’ll explain all these parts as we move step-by-step through building the design.
