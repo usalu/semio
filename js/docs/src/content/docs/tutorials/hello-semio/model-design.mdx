@@ -5,14 +5,13 @@ sidebar:
   order: 2
 ---
 
-## **Design Creation**
 
-## **This can be done in Two platforms >**
+#### **This can be done in Two platforms >**
 
 Check out the difference here !
 Grasshopper
 
-## **🔁 Step 1: Create the Pieces (Modeling Pieces)**
+## **🔁 Step 1: 🔖 Place Pieces**
 
 Now that you've defined your **Types** (brick molds) and their **Variants**, it's time to place actual bricks into your **Design** 🧩  
  In semio, these placed components are called **Pieces**.
@@ -33,7 +32,7 @@ Each **Piece** is:
 
 ---
 
-### **🧱 What You Need to Create a Piece**
+##### **🧱 What You Need to Create a Piece**
 
 To model a Piece, you need **two main inputs**:
 
@@ -50,7 +49,7 @@ To model a Piece, you need **two main inputs**:
 
 ---
 
-### **📐 Example from the Sketch**
+##### **📐 Example from the Sketch**
 
 In our example, the final **Design** contains 5 total Pieces:
 
@@ -72,7 +71,7 @@ We'll name them like this:
 
 ---
 
-### **🛠️ In Grasshopper**
+##### **🛠️ In Grasshopper**
 
 To create these Pieces, you provide three things to the `Pce` component:
 
@@ -89,7 +88,7 @@ Each row creates one Piece.
 
 ---
 
-## **🔗 Step 2: Create the Connections**
+## **🔗 Step 2: 🔗 Make Connections**
 
 Now that you've placed your Pieces, it's time to tell semio how they connect.  
  Think of this like giving the assembly instructions for snapping bricks together 🧱🧲
@@ -97,7 +96,7 @@ Now that you've placed your Pieces, it's time to tell semio how they connect.
 Each **Connection** says:  
  👉 "Connect this Port on one Piece to a Port on another Piece."
 
-### **🧩 What You Need**
+##### **🧩 What You Need**
 
 To create a connection,, you need to define four key values:
 
@@ -110,7 +109,7 @@ To create a connection,, you need to define four key values:
 
 **_"Connect this Port on this Piece → to that Port on that Piece."_**
 
-### **_`📐 Example: Connecting Two Pieces`_**
+#### **_`📐 Example: Connecting Two Pieces`_**
 
 **_`Let's walk through a simple example from the sketch:`_**
 
@@ -133,7 +132,7 @@ To create a connection,, you need to define four key values:
 
 ---
 
-### **_`🔧 Adjusting Position and Rotation at the Port (Optional Step)`_**
+##### **_`🔧 Adjusting Position and Rotation at the Port (Optional Step)`_**
 
 **_`When two Pieces are connected through Ports, semio lets you fine-tune how the connected Piece is placed — not by changing the Port itself, but by shifting or rotating the geometry that comes with it.`_**
 
@@ -143,7 +142,7 @@ To create a connection,, you need to define four key values:
 
 ---
 
-### **_`📦 Moving (Translation)`_**
+##### **_`📦 Moving (Translation)`_**
 
 **_`These are local movements based on the direction the Port was defined in :`_**
 
@@ -159,7 +158,7 @@ To create a connection,, you need to define four key values:
 
 ---
 
-### **_`🔁 Rotating (Orientation)`_**
+##### **_`🔁 Rotating (Orientation)`_**
 
 **_`You can also spin or angle the Piece around the Port's local axes:`_**
 
@@ -174,7 +173,7 @@ To create a connection,, you need to define four key values:
 
   **_`🤸 Like tilting a ramp or slope brick up or down.`_**
 
-### **_🧠 Keep in Mind_**
+#### **_🧠 Keep in Mind_**
 
 **_You can often skip adjustments by placing Ports exactly where the geometry should land._**  
  **_But adding small transformations gives you more flexibility — especially when working with geometries that follow the same logic, like the variants in this example. Keeping consistent Port placement across them makes the Type reusable._**
@@ -187,7 +186,7 @@ To create a connection,, you need to define four key values:
 
 **_Connecting multiple pieces :_**
 
-### **_🧠 Important to Know_**
+#### **_🧠 Important to Know_**
 
 **_When you move or rotate a Piece — like the second one connected to a third —_**  
  **_all connected Pieces after it will update automatically._**  
@@ -199,7 +198,7 @@ To create a connection,, you need to define four key values:
 
 **_semio keeps your Pieces connected based on relationships — not just data order._**
 
-### **_🧠 Important to Know_**
+#### **_🧠 Important to Know_**
 
 **_semio doesn't change how Grasshopper works — it changes what you connect._**  
  **_Instead of wiring geometry, you connect its semantic structure: Types, Ports, and Pieces._**
@@ -211,3 +210,29 @@ To create a connection,, you need to define four key values:
  **_To apply values like Gap, just feed a matching list_**
 
 ---
+
+## **🔗 Step 3: 🏗️ Build Design**
+
+**Putting It All Together (Building the Design)**
+
+Now that you've created your **Pieces** and defined how they connect using **Connections**, it's time to assemble them into a full Design.
+
+🧩 The `Design` component needs three main inputs:
+
+- **Design Name** – e.g. `"Spaceship"`
+
+- **Pieces** – the components you want to place
+
+- **Connections** – how these Pieces snap together
+
+Once you've built the Design, use the **`Show Design`** component to visualize the result.
+
+To display it properly, plug in:
+
+- The **Design**
+
+- The **Types** you used
+
+- The **Objects** (representations of the Types)
+
+✅ That's it — you've built your first modular kit in semio!
