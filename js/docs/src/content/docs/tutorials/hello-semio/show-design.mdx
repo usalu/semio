@@ -5,28 +5,26 @@ sidebar:
   order: 3
 ---
 
-### **🔗 Step 3: Creating the Design**
+This page explains how to visualize your assembled Design in semio.
 
-**Putting It All Together (Building the Design)**
+## 🖼️ Show Design
+→ How to visualize it using the `Show Design` component
 
-Now that you've created your **Pieces** and defined how they connect using **Connections**, it's time to assemble them into a full Design.
+Once you have:
+1. Defined your **Pieces** (instances of your brick molds)
+2. Established **Connections** between these Pieces
+3. Assembled them into a `Design` structure
 
-🧩 The `Design` component needs three main inputs:
+The next step is to see your creation!
 
-- **Design Name** – e.g. `"Spaceship"`
+In semio, you use the `Show Design` component (or a similar visualization function in semio Studio) to render your final model.
 
-- **Pieces** – the components you want to place
+To properly display your Design, you typically need to provide the following to the visualization component:
 
-- **Connections** – how these Pieces snap together
+- The **`Design`** itself: This contains all the information about which Pieces are used and how they are connected.
+- The **`Types`** used in the Design: This tells semio the definition of each brick mold, including its Ports.
+- The **Geometry/Representations** for each Type/Variant: This provides the actual visual shapes for each Piece.
 
-Once you've built the Design, use the **`Show Design`** component to visualize the result.
+Plug these inputs into the `Show Design` component, and semio will render your complete modular assembly.
 
-To display it properly, plug in:
-
-- The **Design**
-
-- The **Types** you used
-
-- The **Objects** (representations of the Types)
-
-✅ That's it — you've built your first modular kit in semio!
+✅ That's it — you've built and visualized your first modular kit in semio!
