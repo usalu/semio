@@ -23,14 +23,30 @@ So while you see five Pieces in the final Design, they're made up of **three uni
 
 ##### 🔧 What do we need to create these Molds?
 
-To define a Type in semio, you'll model both its **form** and its **behavior**.  
- Let's go over the essential ingredients:
+When we think of a **mold**, the first thing that comes to mind is usually its **shape** — the geometry 🧱✏️  
+But in Semio, that shape isn’t just visual — it carries **meaning** 💡
 
-- **🏷️ Name** → Every Type needs a unique name that helps you identify and reuse it later.
+In traditional Grasshopper workflows, geometry is raw: a set of points, edges, and surfaces 🧬  
+But in Semio, every shape becomes part of your **design language** 🗣️🎨  
+You're not just modeling forms — you're modeling **intent** 🎯
 
-- **🏷️🧱 Representation** → This is the geometry linked to the Type. Think of it as the visual shape of your brick.
+Instead of saying:  
+👉 “connect point (x, y, z) to Brep edge 23”  
+you say:  
+👉 “connect the **door** to the **living room**” —  
+or in LEGO terms:  
+👉 “**snap the window brick onto the top of the wall**” 🪟🧱🏠
+🔗 The geometry is still there, but now it's semantic.
 
-- **🧲 Ports** → These are the snap points. You'll define exactly where the brick connects to others.
+
+ Let's go over the essential ingredients for creating a Type:
+
+- **🏷️ Name** → A unique name to identify your Type and reuse it in different designs.
+
+- **🧱 Geometry (Representation)** → The 3D shape attached to the Type. It shows what the piece looks like.
+
+- **🧲 Connection Points (Ports)** → The snap points where this piece connects to others in the system.
+
 
 In the next steps, we'll walk through how to set up each of these elements to build a complete, reusable mold — just like designing a custom Lego piece.
 
@@ -57,24 +73,20 @@ Giving clear and consistent names to elements in semio **pays off later** — es
 <li>
 ### 🧊 Attach Geometry (Model Representation)
 
-In semio, geometry is more than just shapes — it's tied to **meaning** 💡  
- This is different from regular Grasshopper workflows, where geometry is just raw data.
 
-In semio, you're building your own **design language** — like sketching with intent ✏️  
- You don't say "connect point (x, y, z) to Brep edge 23."  
- You say "connect the door to the living room" —  
- or in Lego terms: "snap the window brick to the top of the wall" 🪟🧱
 
-🔗 The geometry is still there — but now it's **semantic**.  
- You're connecting **components with purpose**, not just lines or meshes.
+In Semio, when you give a Type its shape, you're adding a **Representation** 🧱
 
-We call this step **Modeling a Representation** 🧩 —  
- it's where you attach a visual form to your brick mold (Type),  
- so that every **beam**, **panel**, or **profile** knows what it is and where it fits ✅
+It’s like snapping a plastic shell onto a LEGO mold — now your brick has a visible form 👀  
+This shape is the geometry, but it’s not fixed. A Representation is more like a **costume** — you can swap it anytime, as long as it fits.
+
+Just like architects use a simple block for city models 🏙️ and a detailed one for close-ups 🪟,  
+Semio lets you change the **look** without changing the **logic** 🔄
+
+Same brick, different shell — that’s a Representation 💡
 
 ---
 
-##### 🧊 How to Attach Geometry
 
 To model a Representation, you first need to create the **geometry** — the body of your building block.
 
@@ -106,14 +118,6 @@ We could model the Geometry we want to attach at the end we reference a layer
 </TabItem>
 </Tabs>
 
-| Feature                              |  Direct Reference                     |  File-Based Reference (🔁 Recommended) |
-| :----------------------------------- | :---------------------------------------: | :------------------------------------------: |
-| **Source**                           | Scripted/Modeled in Rhino/Grasshopper 🦗🦏 | External File 📁                            |
-| **Speed & Flexibility (Prototyping)**|                     ✅                    |            ⚠️ Slower Initial Setup            |
-| **Coupling & Reusability**           |      ⚠️ Tightly Coupled, Less Reusable    |          ✅ Loosely Coupled, Reusable        |
-| **Modularity & Cleanliness**         |      ⚠️ Less Modular, Potential Clutter   |        ✅ Modular & Clean Organization       |
-| **Updates (Connection Stability)**   |      ⚠️ Prone to Breaking Connections    |         ✅ Stable Updates, Intact Links        |
-| **Teamwork & Scalability**           |      ⚠️ Difficult for Teams & Scaling   |         ✅ Ideal for Collaboration & Growth  |
 
 File Linking files :
 
@@ -216,12 +220,17 @@ After modeling all the parts of your brick mold —
 🎯 The result is a complete **Type** —  
  a smart, reusable building block ready to be placed and connected in your Design.
 
+ 
+
 Think of it as snapping all the mold info together — now you have your custom LEGO brick 🔧🧱
+
+
 
 ---
 </li>
 </ol>
 </Steps>
+
 
 ## 🧬 Mold Versions (Variants of Type)
 → Use the same mold to make bricks of different sizes
