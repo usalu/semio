@@ -10,18 +10,22 @@ import { Steps, Tabs, TabItem } from "@astrojs/starlight/components";
 
 ## 🧰 Create Brick Mold (Type)
 
-As mentioned earlier in **Thinking in semio**, a **Type** is like a **brick mold**.  
- You're not just drawing geometry — you're designing a **template** that combines shape with meaningful design information.
+As mentioned earlier in **Thinking in Semio**, a **Type** is like a **brick mold**.  
+You're not just drawing geometry — you're designing a **template** that combines shape with meaningful design information.
 
-##### 🧩 What are the "Molds" in this example?
+---
+
+##### 🧩 What Are the "Molds" in This Example?
 
 Each of the five elements in your sketch is a **variant** of the **same Type** —  
- meaning they all share the same shape logic but vary in size.
+meaning they all share the same shape logic but vary in size.
 
 So while you see five Pieces in the final Design, they're made up of **three unique shapes**,  
- with two of them repeated once — making **three Variants of one Type**.
+with two of them repeated once — making **three Variants of one Type**.
 
-##### 🔧 What do we need to create these Molds?
+---
+
+##### 🔧 What Do We Need to Create These Molds?
 
 When we think of a **mold**, the first thing that comes to mind is usually its **shape** — the geometry 🧱✏️  
 But in Semio, that shape isn’t just visual — it carries **meaning** 💡
@@ -33,22 +37,26 @@ You're not just modeling forms — you're modeling **intent** 🎯
 Instead of saying:  
 👉 “connect point (x, y, z) to Brep edge 23”  
 you say:  
-👉 “connect the **door** to the **living room**” —  
+👉 “connect the **door** to the **living room**”  
 or in LEGO terms:  
 👉 “**snap the window brick onto the top of the wall**” 🪟🧱🏠
-🔗 The geometry is still there, but now it's semantic.
 
+🔗 The geometry is still there — but now it's **semantic**.
+
+---
+
+### 🧰 The Essentials of a Type
 
  Let's go over the essential ingredients for creating a Type:
 
-- **🏷️ Name** → A unique name to identify your Type and reuse it in different designs.
+- **🏷️ Name** → A unique name to identify your Type and reuse it in different designs.  
+- **🧱 Geometry (Representation)** → The 3D shape attached to the Type. It gives the piece its visual form.  
+- **🧲 Connection Points (Ports)** → The snap points where the piece connects to others in the system.
 
-- **🧱 Geometry (Representation)** → The 3D shape attached to the Type. It shows what the piece looks like.
+---
 
-- **🧲 Connection Points (Ports)** → The snap points where this piece connects to others in the system.
-
-
-In the next steps, we'll walk through how to set up each of these elements to build a complete, reusable mold — just like designing a custom Lego piece.
+In the next steps, we'll walk through how to set up each of these elements —  
+to build a complete, reusable mold, just like designing your own custom LEGO brick.
 
 <Steps>
 <ol>
@@ -116,7 +124,24 @@ We could model the Geometry we want to attach at the end we reference a layer
  Want to dive deeper into the pros and cons? Learn more here 🔍
 
 
-Switching the placeholder : 
+#### 🧪 Representation as a Placeholder
+
+Use different Representations for the same design — depending on the level of detail needed.
+
+<Tabs>
+
+<TabItem label="🔍 Detailed Version">
+Display a high-detail Representation of the model —  
+includes elements like profiles, joints, or textures.
+</TabItem>
+
+<TabItem label="⚡ Simplified Version">
+Display a simplified Representation of the same model —  
+basic geometry used for fast modeling or large-scale views.
+</TabItem>
+
+</Tabs>
+
 
 
 
@@ -165,29 +190,33 @@ But in your own projects, you might use:
 
 ##### 💡 Tip: Where Should You Place Ports?
 
-Place Ports in **consistent, logical locations** — not necessarily where pieces touch.
+Don't just place Ports where pieces touch — place them where they make sense **logically and consistently** across all Variants.
 
-In Semio, Pieces can be **moved or rotated after snapping**, so Ports don’t have to match exact geometry edges.  
-Instead, place them in places that make sense across all Variants — like the **center of a face** or **midpoint of a side**.
+🔧 Here's how to decide:
 
-This helps you:
+- 📍 **Place Ports in central or stable locations**  
+  (e.g. the center of a face or edge, not the outermost corner)
 
-- Keep your Port layout clean and reusable ♻️  
-- Easily swap between Variants of a Type without breaking connections 🔁  
-- Focus on logic, not micromanaging alignment 🎯
+- ♻️ **Use the same Port positions for all Variants of a Type**  
+  This keeps your snapping logic reusable, even if the shapes vary
+
+- 🎯 **Don’t worry about perfect alignment**  
+  Semio lets you adjust a Piece’s position and rotation *after* it snaps
 
 ---
 
 ##### 💡 Tip: How Many Ports Should You Add?
 
-Add as many Ports as your design needs — no more, no less.
+There’s no fixed number — it depends on how much flexibility you want in your design system.
 
-Just like LEGO bricks have **extra studs** for flexibility, you can place **multiple Ports** to offer different connection options.
+🧱 Think of it like LEGO:
 
-- Use **fewer Ports** if you want simple, clear snapping 🔒  
-- Use **more Ports** if your design benefits from flexible connections 🔓  
+- 🔒 **Use fewer Ports** for simple, strict snapping  
+  (e.g. one Port per face or side)
 
-There’s no perfect number — choose what supports your system’s logic best.
+- 🔓 **Add more Ports** if you want options for different layouts or orientations
+
+- 🧠 **Plan ahead**: Add the Ports you might need later, even if you don’t use them right away
 
 Here more Grasshopper
 </li>
