@@ -1604,6 +1604,62 @@ public class TruncateTextComponent : Component
     }
 }
 
+public class RandomIdsComponent : Component
+{
+    public RandomIdsComponent()
+        : base("Random Ids", "%Ids", "Generate random ids.", "Util")
+    {
+    }
+
+    public override Guid ComponentGuid => new("27E48D59-10BE-4239-8AAC-9031BF6AFBCC");
+
+    protected override Bitmap Icon => Resources.id_random_24x24;
+
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddIntegerParameter("Count", "Ct", "Number of ids to generate.", GH_ParamAccess.item, 1);
+        pManager.AddIntegerParameter("Seed", "Se", "Seed for the random generator.", GH_ParamAccess.item, 0);
+        pManager.AddBooleanParameter("Unique Component", "UC",
+            "If true, the generated ids will be unique for this component.", GH_ParamAccess.item, true);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Ids", "Id+", "Generated ids.", GH_ParamAccess.list);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var count = 0;
+        var seed = 0;
+        var unique = true;
+
+        DA.GetData(0, ref count);
+        DA.GetData(1, ref seed);
+        DA.GetData(2, ref unique);
+
+        var ids = new List<string>();
+
+        for (var i = 0; i < count; i++)
+        {
+            var hashString = seed + ";" + i;
+            if (unique)
+                hashString += ";" + InstanceGuid;
+            using (var md5 = MD5.Create())
+            {
+                var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(hashString));
+                var id = Semio.Utility.GenerateRandomId(BitConverter.ToInt32(hash, 0));
+                ids.Add(id);
+            }
+        }
+
+        DA.SetDataList(0, ids);
+    }
+}
+
+
 //public class UpdateComponents : Component
 //{
 //    public UpdateComponents()
@@ -2121,61 +2177,6 @@ public class KitComponent : ModelComponent<KitParam, KitGoo, Kit>
 }
 
 #endregion
-
-public class RandomIdsComponent : Component
-{
-    public RandomIdsComponent()
-        : base("Random Ids", "%Ids", "Generate random ids.", "Modeling")
-    {
-    }
-
-    public override Guid ComponentGuid => new("27E48D59-10BE-4239-8AAC-9031BF6AFBCC");
-
-    protected override Bitmap Icon => Resources.id_random_24x24;
-
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddIntegerParameter("Count", "Ct", "Number of ids to generate.", GH_ParamAccess.item, 1);
-        pManager.AddIntegerParameter("Seed", "Se", "Seed for the random generator.", GH_ParamAccess.item, 0);
-        pManager.AddBooleanParameter("Unique Component", "UC",
-            "If true, the generated ids will be unique for this component.", GH_ParamAccess.item, true);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddTextParameter("Ids", "Id+", "Generated ids.", GH_ParamAccess.list);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var count = 0;
-        var seed = 0;
-        var unique = true;
-
-        DA.GetData(0, ref count);
-        DA.GetData(1, ref seed);
-        DA.GetData(2, ref unique);
-
-        var ids = new List<string>();
-
-        for (var i = 0; i < count; i++)
-        {
-            var hashString = seed + ";" + i;
-            if (unique)
-                hashString += ";" + InstanceGuid;
-            using (var md5 = MD5.Create())
-            {
-                var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(hashString));
-                var id = Semio.Utility.GenerateRandomId(BitConverter.ToInt32(hash, 0));
-                ids.Add(id);
-            }
-        }
-
-        DA.SetDataList(0, ids);
-    }
-}
 
 #region Engine
 
