@@ -8,46 +8,48 @@ sidebar:
 import { Steps, Tabs, TabItem } from "@astrojs/starlight/components";
 
 
-## 🧰 Create Brick Mold (Type)
 
-As mentioned earlier in **Thinking in Semio**, a **Type** is like a **brick mold**.  
+As mentioned earlier in **[Thinking in Semio](/think-in-semio/)**, a **Type** is like a **brick mold**.  
+
 You're not just drawing geometry — you're designing a **template** that combines shape with meaningful design information.
 
 ---
 
-##### 🧩 What Are the "Molds" in This Example?
+#### 🧩 What Are the "Molds" in This Example?
 
-Each of the five elements in your sketch is a **variant** of the **same Type** —  
-meaning they all share the same shape logic but vary in size.
+Take a look at your sketch — you'll see five elements that follow the **same basic shape**, just stretched to different lengths.
 
-So while you see five Pieces in the final Design, they're made up of **three unique shapes**,  
-with two of them repeated once — making **three Variants of one Type**.
+Even though the final Design includes five Pieces, they're made from only **three distinct shapes**,  
+with two of them used twice — giving us **three Variants of one Type**.
 
----
+🧱 Think of it like a LEGO brick that comes in 2-stud, 4-stud, and 5-stud versions — same shape logic, just scaled.
 
-##### 🔧 What Do We Need to Create These Molds?
+If the shape were completely different — like a triangle, window, or roof — that would count as a **new Type** altogether.
 
-When we think of a **mold**, the first thing that comes to mind is usually its **shape** — the geometry 🧱✏️  
-But in Semio, that shape isn’t just visual — it carries **meaning** 💡
-
-In traditional Grasshopper workflows, geometry is raw: a set of points, edges, and surfaces 🧬  
-But in Semio, every shape becomes part of your **design language** 🗣️🎨  
-You're not just modeling forms — you're modeling **intent** 🎯
-
-Instead of saying:  
-👉 “connect point (x, y, z) to Brep edge 23”  
-you say:  
-👉 “connect the **door** to the **living room**”  
-or in LEGO terms:  
-👉 “**snap the window brick onto the top of the wall**” 🪟🧱🏠
-
-🔗 The geometry is still there — but now it's **semantic**.
 
 ---
 
-### 🧰 The Essentials of a Type
+#### 🔧 What Do We Need to Create These Molds?
 
- Let's go over the essential ingredients for creating a Type:
+When you think of a mold, the first thing that comes to mind is usually its **shape** — the geometry 🧱✏️  
+But in Semio, geometry is more than form — it serves as a **placeholder for meaning** 💡
+
+In traditional Grasshopper workflows, geometry is just raw data 🧬  
+But in Semio, it becomes part of your **design language** 🗣️🎨 — a way to represent **intent**, not just surfaces 🎯
+
+For example:  
+👉 Instead of saying "connect point (x, y, z) to Brep edge 23"  
+👉 You say "connect the **door** to the **living room**"  
+👉 Or in LEGO terms: "**snap the window brick onto the top of the wall**" 🪟🧱
+
+🔗 The geometry still exists — but now it stands in for something more: **a role, a relationship, a meaning**.
+
+
+---
+
+## 🧰 What makes a Brick Mold (Type)?
+
+Let's go over the essential ingredients for creating a Type:
 
 - **🏷️ Name** → A unique name to identify your Type and reuse it in different designs.  
 - **🧱 Geometry (Representation)** → The 3D shape attached to the Type. It gives the piece its visual form.  
@@ -65,11 +67,11 @@ to build a complete, reusable mold, just like designing your own custom LEGO bri
 
 
 Giving clear and consistent names to elements in Semio **really pays off later** — especially when designing and making connections.  
-As your project grows and you’re working with many Types, Variants, and Pieces, meaningful names make everything easier to navigate and understand.
+As your project grows and you're working with many Types, Variants, and Pieces, meaningful names make everything easier to navigate and understand.
 
 📝 Try to name things the way you would in a real project — clear, specific, and with purpose.
 
-
+---
 
 ##
 </li>
@@ -80,13 +82,13 @@ As your project grows and you’re working with many Types, Variants, and Pieces
 
 In Semio, when you give a Type its shape, you're adding a **Representation** 🧱
 
-It’s like snapping a plastic shell onto a LEGO mold — now your brick has a visible form 👀  
-This shape is the geometry, but it’s not fixed. A Representation is more like a **costume** — you can swap it anytime, as long as it fits.
+It's like snapping a plastic shell onto a LEGO mold — now your brick has a visible form 👀  
+This shape is the geometry, but it's not fixed. A Representation is more like a **costume** — you can swap it anytime, as long as it fits.
 
 Just like architects use a simple block for city models 🏙️ and a detailed one for close-ups 🪟,  
 Semio lets you change the **look** without changing the **logic** 🔄
 
-Same brick, different shell — that’s a Representation 💡
+Same brick, different shell — that's a Representation 💡
 
 ---
 
@@ -122,9 +124,9 @@ We could model the Geometry we want to attach at the end we reference a layer
 </TabItem>
 </Tabs>
 
-💡 **Tip:** Choose the method that fits your workflow best.  
- Want to dive deeper into the pros and cons? Learn more here 🔍
-
+##### 💡 **Tip:** Choose the method that fits your workflow best.  
+##### Want to dive deeper into the pros and cons? Learn more here 🔍
+---
 
 #### 🧪 Representation as a Placeholder
 
@@ -170,8 +172,9 @@ In the semio Grasshopper plugin, each Port is defined with 3 main inputs:
 
 - **A Port ID** 🏷️  
    This is the name of the Port — a label you'll use when connecting components.  
-   For example: `"n"` (north), `"bottom"`, or `"hingePoint"`.
+   For example: `"n"`, `"bottom"`, or `"hingePoint"`.
 
+---
 ##### 🏷️ About Port IDs
 
 A **Port ID** is the label you give to each Port.  
@@ -202,14 +205,14 @@ Don't just place Ports where pieces touch — place them where they make sense *
 - ♻️ **Use the same Port positions for all Variants of a Type**  
   This keeps your snapping logic reusable, even if the shapes vary
 
-- 🎯 **Don’t worry about perfect alignment**  
-  Semio lets you adjust a Piece’s position and rotation *after* it snaps
+- 🎯 **Don't worry about perfect alignment**  
+  Semio lets you adjust a Piece's position and rotation *after* it snaps
 
 ---
 
 ##### 💡 Tip: How Many Ports Should You Add?
 
-There’s no fixed number — it depends on how much flexibility you want in your design system.
+There's no fixed number — it depends on how much flexibility you want in your design system.
 
 🧱 Think of it like LEGO:
 
@@ -218,9 +221,8 @@ There’s no fixed number — it depends on how much flexibility you want in you
 
 - 🔓 **Add more Ports** if you want options for different layouts or orientations
 
-- 🧠 **Plan ahead**: Add the Ports you might need later, even if you don’t use them right away
-
-Here more Grasshopper
+- 🧠 **Plan ahead**: Add the Ports you might need later, even if you don't use them right away
+---
 </li>
 <li>
 ### 🧱 Assemble the Mold (Model Type)
