@@ -47,9 +47,12 @@ For example:
 
 ---
 
-## 🧰 What makes a Brick Mold (Type)?
+## 🧰 Create a Brick Mold (Type - Ty)
 
-Let's go over the essential ingredients for creating a Type:
+Let’s begin by modeling the mold shown in the sketch. 
+This will serve as the base for generating its Variants.
+
+Before we start building it, let’s go over the essential elements that define a Type:
 
 - **🏷️ Name** → A unique name to identify your Type and reuse it in different designs.  
 - **🧱 Geometry (Representation)** → The 3D shape attached to the Type. It gives the piece its visual form.  
@@ -62,7 +65,7 @@ Let’s take a look at the elements that make up a Type, and dive into modeling 
 
 <li>
 
-### 🏷️ Name Your Mold (Type Name)
+### 🏷️ Name Your Mold (Type Name - Na)
 
 Giving clear and consistent names to elements in Semio **really pays off later** — especially when designing and making connections.  
 As your project grows and you're working with many Types, Variants, and Pieces, meaningful names make everything easier to navigate and understand.
@@ -75,7 +78,8 @@ As your project grows and you're working with many Types, Variants, and Pieces, 
 
 <li>
 
-### 🧊 Attach Geometry (Model Representation)
+### 🧊 Attach Geometry (Representation – Rp)
+
 
 In Semio, when you give a Type its shape, you're adding a **Representation** 🧱  
 This isn’t just visual geometry — it’s a **layer of meaning** that stands in for a design element.
@@ -91,25 +95,110 @@ Same brick, different shell — that’s the idea 💡
 
 #### 🔧 How to Model a Representation
 
-To add a Representation, you first need to create the actual **geometry** — the body of your building block.  
-In Semio, you can attach this geometry to a Type in **two main ways**, depending on your workflow:
+Creating a Representation works in two simple steps:
+🧱 First, you build the geometry — the actual shape of your brick.
+📎 Then, you attach that shape to your Type to give it a visual form.
+
+Let’s take a closer look at the brick mold in our example.
+It’s shaped like a rectangle cut at an angle, then stretched into a wooden LEGO-style profile.
+
+We’ll use two parameters to define its size:
+
+W → the width of one brick unit
+
+n → the number of units in length 
+
+In Semio, you can attach geometry to a Type in different ways — depending on what works best for your workflow
+Let’s look at how that works in practice:
+
+
 
 <Tabs>
-
-<TabItem label="Direct Reference">
-
-Use a parametric definition in Grasshopper to generate the shape.  
-In our example, the geometry is a rectangle, cut at an angle and extruded into a wooden profile.  
-The length is defined by two parameters:
-
-- `W` = unit width  
-- `n` = number of segments
-
-</TabItem>
 
 <TabItem label="File-Based Reference (🔁 Recommended)">
 
 Model the shape externally (e.g. in Rhino), then attach it to your Type by referencing a named layer.
+
+### 🗂️ Referencing a File-Based Representation
+
+In Semio, Representations are typically referenced through **external geometry files** — even when the geometry is generated inside Grasshopper.  
+This approach helps maintain clean, modular workflows and supports flexible updates.
+
+In this example, we’re exporting a `.glb` file and referencing it in a **Type** using the file-based method.
+
+---
+
+#### 🛠️ Geometry Generation & Export 
+
+We use a **parametric Grasshopper definition** to generate the shape of the brick mold.  
+This is helpful because we can define a logic that supports **all Variants** of a Type — controlled by the parameter `n`, which sets the brick's length.
+
+While the modeling logic isn't the focus of this tutorial, the key takeaway is:
+
+> 🧱 **We generate the geometry , and reference it via an exported file.**
+
+---
+#### 🧱 Exporting the Geometry to a File
+
+Here’s what the script does:
+
+- **Set the Export Location**  
+  A directory path is defined using the `Dir` and `Path` components.  
+  This determines where the exported file will be saved.
+
+- **Build the File Name**  
+  The file name is generated dynamically using `Concat`,  
+  combining the Type name (e.g. `profile`) and the Variant (e.g. `2`) → `profile_2.glb`
+
+- **Assemble the Full File Path**  
+  A second `Concat` block merges the directory and file name:  
+  `C:\Users\Users\Downloads\profile_2.glb`
+
+- **Prepare the Geometry**  
+  - Convert or prepare the geometry in the desired format (e.g. Mesh)  
+  - The `iGeo` component then writes the `.glb` file to disk
+
+---
+
+#### 🧱 Referencing the File in a Type (Top Group)
+
+The same file name (`profile_2.glb`) is passed to the **`Ur` input** of the `~Rep` component.  
+This tells Semio where to find the exported geometry.
+
+- The `~Rep` component uses this path (`Ur`) to create a Representation:  
+  `Rep(model/gltf-binary)`
+
+- This Representation is then connected to the **Type**, along with its **Name** and **Variant**.
+
+> 💡 `Ur` stands for "URL" or file path — it’s how Semio links a Type to its geometry.
+
+---
+
+#### 🔁 Why File-Based?
+
+Even when working inside Grasshopper, Semio requires a **snapshot** of the geometry —  
+a static file that represents the shape of the brick mold at a given point in time.
+
+This means:
+
+- If you generate geometry dynamically, you still need to export it as a file  
+- Semio references that **fixed file**, not a live Grasshopper definition
+
+> 💡 This ensures geometry stays **modular and transferable** between Grasshopper and Semio Studio.
+
+
+
+
+
+
+</TabItem>
+
+<TabItem label="Manual Reference">
+
+
+
+Here are the 
+
 
 </TabItem>
 
@@ -143,8 +232,11 @@ Use a simplified shape — fast to render and easier to work with at larger scal
 
 This flexibility helps keep your model lightweight while preserving the underlying logic.
 
+</li>
 
-### ⚓ Add Snapping Points (Model Ports)
+<li>
+
+### ⚓ Add Snapping Points (Ports - Po)
 
 Once you've modeled the visual look of your brick mold (Representation), it's time to decide **where** these bricks connect to each other.  
 That's where **Ports** come in — the snap points that define where a Brick can attach 🧲
@@ -155,20 +247,20 @@ That's where **Ports** come in — the snap points that define where a Brick can
 
 In the Semio Grasshopper plugin, each Port is defined with three main inputs:
 
-- **A Port ID** 🏷️  
+- **A Port ID** 🏷️ (Id)  
   The name of the Port — a label used to define connections, such as `"n"`, `"bottom"`, or `"hingePoint"`.
 
-- **A Point** 📍  
+- **A Point** 📍 (Pt)  
   The exact location where the connection happens — like the stud or socket on a LEGO brick.  
   You place it carefully on the surface of your geometry.
 
-- **A Vector** ➡️  
+- **A Vector** ➡️ (Dr)  
   The direction the Port faces — like saying “this side connects outward.”  
   It’s important for aligning pieces when snapping.
 
 ---
 
-#### 🏷️ Port ID
+#### 🏷️ Port ID (Id)
 
 A **Port ID** is the label you give to each Port.  
 This naming is important — because later, when you make connections, you'll say things like:
@@ -189,33 +281,68 @@ It will make connecting components easier — and helps when working with AI or 
 
 ---
 
-#### 💡 Port Location
+#### 💡 Port Location (Pt)
 
-Don't just place Ports where pieces touch — place them where they make sense **logically and consistently** across all Variants.
+(Add Image of the sketch with the ports)
 
-Here’s how to decide:
+When modeling Ports, it’s not just about where pieces touch — it’s about creating a clear, logical system that works across all Variants.
 
-- 📍 **Place Ports in central or stable locations**  
-  (e.g. the center of a face, edge, corner, or endpoint — not just randomly on a surface.
-Symmetry is often helpful for keeping your logic clean and reusable.)
+Here’s how to define your Ports effectively:
 
-- ♻️ **Use the same Port positions for all Variants of a Type**  
-  This keeps your snapping logic reusable, even if the shapes vary
+- 📍 **Choose stable, meaningful locations**  
+  Place Ports in central or geometrically stable spots — like the center of a face, edge, corner, or endpoint.  
+  Avoid placing them randomly across a surface. Symmetry often helps make your logic more reusable.
 
-- 🎯 **Don't worry about perfect alignment**  
-  Semio lets you adjust a Piece's position and rotation *after* it snaps
+- ♻️ **Keep positions consistent across Variants**  
+  Even if your pieces vary in length or size, try to place Ports in the same relative positions.  
+  This keeps your connection logic intact across all Versions of a Type.
+
+- 🎯 **Don’t worry about perfect alignment**  
+  Semio allows you to adjust a Piece’s position and rotation *after* it snaps — so focus on logical placement, not exact fits.
+
+---
+
+There’s no strict rule for how many Ports to add — it depends on how much flexibility your system requires:
+
+- 🔒 **Fewer Ports** → simpler, more controlled snapping  
+- 🔓 **More Ports** → greater layout or orientation flexibility  
+- 🧠 **Plan ahead** → add Ports you might need later, even if they’re not used right away
+
+👉 *In our example, we use four Ports placed at the center of each edge of a four-sided profile
 
 ---
 
-#### 💡 Port Count
+#### 💡 Port Direction (Dr)
 
-There’s no fixed number — it depends on how much flexibility you want in your design system.
 
-- 🔒 **Use fewer Ports** for simple, strict snapping  
-- 🔓 **Add more Ports** if you want layout or orientation flexibility  
-- 🧠 **Plan ahead:** Add Ports you might need later, even if you don't use them right away
+Every Port needs a direction — a vector that tells Semio which way the connection faces.  
+This is essential for aligning pieces correctly when snapping them together.
+
+Here’s how to define direction effectively:
+
+- ➡️ **Think of it as the “facing” of the Port**  
+  The direction vector shows which way the Port is meant to connect — like saying, “this side points outward.”
+
+- 🧭 **Use simple, readable vectors**  
+  Stick to clean, orthogonal directions when possible (e.g. X, Y, or Z axes).  
+  This keeps alignment predictable and easier to debug.
+
+- ♻️ **Prioritize consistency over precision**  
+  The pieces can still be moved or rotated after snapping, so vectors don’t have to be exact  
+  but they **must be consistent** across all Variants to keep your logic reliable.
+
+👉 *In our example, all edge Ports face outward — perpendicular to the face they sit on.*
+
 
 ---
+
+Now you can see how the three inputs — Id, Pt, and Dr — work together to create Ports.
+Each Port is defined by one entry from each list, so the lists must be the same length.
+This ensures that every snapping point has a matching ID, position, and direction
+
+
+  (Add port Image here Gh)
+  (Image of Wireframe with points and Vectors in Rhino)
 
 </li>
 
@@ -228,14 +355,18 @@ After modeling all the parts of your brick mold —
 you plug them into the `Typ` component.
 
 - 🏷️ **Name** → e.g. `"Profile"`  
-- 🔢 **Variant** → e.g. `2`  
+- 🔢 **Variant** → e.g. `"4"`  
 - 🧲 **Ports** → e.g. `n`, `s`, `e`, `w`  
 - 🧊 **Representation** → the linked geometry
 
-🎯 The result is a complete **Type** —  
-a smart, reusable building block ready to be placed and connected in your Design.
 
-Think of it as snapping all the mold info together — and voilà, you've made your custom LEGO brick 🔧🧱
+🎯 The result is a complete Type —
+a smart, reusable building block, ready to be placed and connected in your Design.
+It’s defined by the Name and Variant you assign — for example: Typ("profile", 4)
+
+
+(Add Image of the Type component with the inputs)
+
 
 ---
 
