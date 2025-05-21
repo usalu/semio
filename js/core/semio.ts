@@ -620,6 +620,8 @@ const roundPlane = (plane: Plane): Plane => {
     };
 };
 
+// const semioToThreeRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1)
+// const threeToSemioRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1)
 
 const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
     const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);

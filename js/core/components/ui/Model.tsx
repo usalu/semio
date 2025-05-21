@@ -18,19 +18,20 @@ interface ModelPieceProps {
 
 const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, onSelect }) => {
     const matrix = useMemo(() => {
-        const zAxis = new THREE.Vector3().crossVectors(
-            new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z),
-            new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z)).normalize()
-        const m = new THREE.Matrix4(
-            plane.xAxis.x, plane.yAxis.x, zAxis.x, plane.origin.x,
-            plane.xAxis.z, plane.yAxis.z, zAxis.z, plane.origin.z,
-            -plane.xAxis.y, -plane.yAxis.y, -zAxis.y, -plane.origin.y,
-            // 1, 0, 0, plane.origin.x,
-            // 0, 1, 0, plane.origin.z,
-            // 0, 0, 1, -plane.origin.y,
-            0, 0, 0, 1
-        )
-        console.log('Matrix:', m.elements)
+        const threeToSemioRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
+        const semioToThreeRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
+        // const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
+        const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z);
+        const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z);
+        const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis);
+        const planeRotationMatrix = new THREE.Matrix4();
+        planeRotationMatrix.makeBasis(xAxis.normalize(), yAxis.normalize(), zAxis.normalize());
+        // planeRotationMatrix.setPosition(origin);
+        const m = new THREE.Matrix4();
+        m.multiply(threeToSemioRotation);
+        m.multiply(planeRotationMatrix);
+        m.multiply(semioToThreeRotation);
+        m.multiply(new THREE.Matrix4().makeTranslation(plane.origin.x, -plane.origin.z, plane.origin.y));
         return m
     }, [plane]);
     const scene = useMemo(() => {
@@ -53,16 +54,16 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, onSe
 
     return (
         <group
-            matrixWorld={matrix}
+            // matrix={matrix}
+            // matrixAutoUpdate={false}
+            position={[piece.plane!.origin.x, -piece.plane!.origin.z, piece.plane!.origin.y]}
+
             userData={{ pieceId: piece.id_ }}
             onClick={(e) => {
                 onSelect(piece)
                 e.stopPropagation()
             }}>
             <primitive object={selected ? selectedScene : scene} />
-            {/* <Sphere args={[0.5, 32, 32]} >
-                <meshStandardMaterial color={selected ? 'pink' : 'gold'} roughness={0} metalness={1} />
-            </Sphere> */}
         </group>
     );
 };
