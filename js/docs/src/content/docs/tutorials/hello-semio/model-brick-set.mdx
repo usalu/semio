@@ -55,15 +55,14 @@ Let's go over the essential ingredients for creating a Type:
 - **🧱 Geometry (Representation)** → The 3D shape attached to the Type. It gives the piece its visual form.  
 - **🧲 Connection Points (Ports)** → The snap points where the piece connects to others in the system.
 
-In the next steps, we'll walk through how to set up each of these elements —  
-to build a complete, reusable mold, just like designing your own custom LEGO brick.
+Let’s take a look at the elements that make up a Type, and dive into modeling our first brick mold.
 
 <Steps>
 <ol>
 
 <li>
 
-### 🏷️ Name Your Mold
+### 🏷️ Name Your Mold (Type Name)
 
 Giving clear and consistent names to elements in Semio **really pays off later** — especially when designing and making connections.  
 As your project grows and you're working with many Types, Variants, and Pieces, meaningful names make everything easier to navigate and understand.
@@ -78,102 +77,98 @@ As your project grows and you're working with many Types, Variants, and Pieces, 
 
 ### 🧊 Attach Geometry (Model Representation)
 
-In Semio, when you give a Type its shape, you're adding a **Representation** 🧱
+In Semio, when you give a Type its shape, you're adding a **Representation** 🧱  
+This isn’t just visual geometry — it’s a **layer of meaning** that stands in for a design element.
 
-It's like snapping a plastic shell onto a LEGO mold — now your brick has a visible form 👀  
-This shape is the geometry, but it's not fixed. A Representation is more like a **costume** — you can swap it anytime, as long as it fits.
+Think of it like snapping a shell onto a LEGO mold — now your brick has a visible form 👀  
+But that form isn’t fixed. A Representation is more like a **costume** — it can be swapped at any time, as long as it fits the logic.
 
-Just like architects use a simple block for city models 🏙️ and a detailed one for close-ups 🪟,  
-Semio lets you change the **look** without changing the **logic** 🔄
-
-Same brick, different shell — that's a Representation 💡
-
----
-
-To model a Representation, you first need to create the **geometry** — the body of your building block.  
-Semio lets you attach geometry to a Type in **two main ways**, each with its own strengths 🚀
+Just like architects might use a blocky mass for urban models 🏙️ or detailed profiles for close-ups 🪟,  
+Semio lets you change the **look** without changing the **design logic** 🔄  
+Same brick, different shell — that’s the idea 💡
 
 ---
 
-We will now discover a hands-on of doing both on our example:  
-Let’s try to model our shape — a rectangle, cut at an angle.
+#### 🔧 How to Model a Representation
 
-As you can see in the sketch, there are two key design parameters:
-
-- `W` = single unit dimension  
-- `n` = number of segments (length of each element)
+To add a Representation, you first need to create the actual **geometry** — the body of your building block.  
+In Semio, you can attach this geometry to a Type in **two main ways**, depending on your workflow:
 
 <Tabs>
 
 <TabItem label="Direct Reference">
 
-We’ll use a parametric setup to generate the shape based on how many units it contains.  
-A Grasshopper definition creates the cut rectangle and then extrudes it into a wood profile.
+Use a parametric definition in Grasshopper to generate the shape.  
+In our example, the geometry is a rectangle, cut at an angle and extruded into a wooden profile.  
+The length is defined by two parameters:
+
+- `W` = unit width  
+- `n` = number of segments
 
 </TabItem>
 
 <TabItem label="File-Based Reference (🔁 Recommended)">
 
-We can model the geometry externally and reference a specific layer at the end.
+Model the shape externally (e.g. in Rhino), then attach it to your Type by referencing a named layer.
 
 </TabItem>
 
 </Tabs>
 
-##### 💡 **Tip:** Choose the method that fits your workflow best.  
-Want to dive deeper into the pros and cons? Learn more here 🔍
+##### 💡 Tip: Choose the method that best fits your workflow.  
+Want to go deeper into the pros and cons? Learn more here 🔍
 
 ---
 
 #### 🧪 Representation as a Placeholder
 
-Use different Representations for the same design — depending on the level of detail needed.
+Representations can be swapped — they’re just one way to **visualize** a design, not define it.  
+That means you can use **different versions** of the same Type depending on your needs:
 
 <Tabs>
 
 <TabItem label="🔍 Detailed Version">
-A high-detail Representation of the model —  
-includes elements like profiles, joints, or textures.
+
+Use a high-detail Representation with features like joints, profiles, or textures — ideal for fabrication or close-up studies.
+
 </TabItem>
 
 <TabItem label="⚡ Simplified Version">
-A simplified Representation of the same model —  
-basic geometry used for fast modeling or large-scale views.
+
+Use a simplified shape — fast to render and easier to work with at larger scales.
+
 </TabItem>
 
 </Tabs>
 
----
+This flexibility helps keep your model lightweight while preserving the underlying logic.
 
-</li>
 
-<li>
-
-### ⚓ Add Connection Points (Model Ports)
+### ⚓ Add Snapping Points (Model Ports)
 
 Once you've modeled the visual look of your brick mold (Representation), it's time to decide **where** these bricks connect to each other.  
 That's where **Ports** come in — the snap points that define where a Brick can attach 🧲
 
-##### 🧩 What Do You Need to Define a Port?
+---
 
-In the Semio Grasshopper plugin, each Port is defined with 3 main inputs:
+#### 🧩 What Do You Need to Define a Port?
 
-- **A Point** 📍  
-  This is the location where the connection happens.  
-  Think of it as the exact stud or socket on your LEGO brick. You choose this point carefully on the surface of your geometry.
-
-- **A Vector** ➡️  
-  This defines the direction the Port faces.  
-  It's like saying: "This side is meant to connect outward."  
-  The vector is especially important later when aligning pieces — because Semio uses this direction to orient other parts when snapping.
+In the Semio Grasshopper plugin, each Port is defined with three main inputs:
 
 - **A Port ID** 🏷️  
-  This is the name of the Port — a label you'll use when connecting components.  
-  For example: `"n"`, `"bottom"`, or `"hingePoint"`.
+  The name of the Port — a label used to define connections, such as `"n"`, `"bottom"`, or `"hingePoint"`.
+
+- **A Point** 📍  
+  The exact location where the connection happens — like the stud or socket on a LEGO brick.  
+  You place it carefully on the surface of your geometry.
+
+- **A Vector** ➡️  
+  The direction the Port faces — like saying “this side connects outward.”  
+  It’s important for aligning pieces when snapping.
 
 ---
 
-##### 🏷️ About Port IDs
+#### 🏷️ Port ID
 
 A **Port ID** is the label you give to each Port.  
 This naming is important — because later, when you make connections, you'll say things like:
@@ -185,7 +180,7 @@ In this example, we use:
 
 - `n`, `s`, `e`, `w` — standing for **north, south, east, and west** 🧭
 
-But in your own projects, you might use:
+In your own project, you might use:
 
 - `top`, `bottom`, `hinge`, `plug`, `outlet`, `windowDock` — or anything else 🔧
 
@@ -194,14 +189,15 @@ It will make connecting components easier — and helps when working with AI or 
 
 ---
 
-##### 💡 Tip: Where Should You Place Ports?
+#### 💡 Port Location
 
 Don't just place Ports where pieces touch — place them where they make sense **logically and consistently** across all Variants.
 
-🔧 Here's how to decide:
+Here’s how to decide:
 
 - 📍 **Place Ports in central or stable locations**  
-  (e.g. the center of a face or edge, not the outermost corner)
+  (e.g. the center of a face, edge, corner, or endpoint — not just randomly on a surface.
+Symmetry is often helpful for keeping your logic clean and reusable.)
 
 - ♻️ **Use the same Port positions for all Variants of a Type**  
   This keeps your snapping logic reusable, even if the shapes vary
@@ -211,18 +207,13 @@ Don't just place Ports where pieces touch — place them where they make sense *
 
 ---
 
-##### 💡 Tip: How Many Ports Should You Add?
+#### 💡 Port Count
 
-There's no fixed number — it depends on how much flexibility you want in your design system.
-
-🧱 Think of it like LEGO:
+There’s no fixed number — it depends on how much flexibility you want in your design system.
 
 - 🔒 **Use fewer Ports** for simple, strict snapping  
-  (e.g. one Port per face or side)
-
-- 🔓 **Add more Ports** if you want options for different layouts or orientations
-
-- 🧠 **Plan ahead:** Add the Ports you might need later, even if you don't use them right away
+- 🔓 **Add more Ports** if you want layout or orientation flexibility  
+- 🧠 **Plan ahead:** Add Ports you might need later, even if you don't use them right away
 
 ---
 
