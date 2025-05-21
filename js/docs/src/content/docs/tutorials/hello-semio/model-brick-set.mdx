@@ -160,7 +160,7 @@ Here’s what the script does:
 
 ---
 
-#### 🧱 Referencing the File in a Type (Top Group)
+#### 🧱 Referencing the File in a Type 
 
 The same file name (`profile_2.glb`) is passed to the **`Ur` input** of the `~Rep` component.  
 This tells Semio where to find the exported geometry.
@@ -209,29 +209,53 @@ Want to go deeper into the pros and cons? Learn more here 🔍
 
 ---
 
-#### 🧪 Representation as a Placeholder
+#### 🧪 Switching the Representation (Placeholder principle)
 
-Representations can be swapped — they’re just one way to **visualize** a design, not define it.  
-That means you can use **different versions** of the same Type depending on your needs:
+
+As introduced earlier, when you give a Type its shape in Semio, you're attaching a **Representation** — a piece of geometry that shows what the brick looks like.  
+But this geometry is more than just visual: it acts as a **semantic placeholder**.  
+That means the Representation can be changed or swapped at any time without affecting the logic of your design.
+
+You can think of it like a **costume** for your Type 🎭  
+The identity, name, and behavior stay the same — you're just changing how it looks on stage.  
+
+This flexibility is especially useful when working at different levels of detail across a project.
+
+---
+
+
+In our example, we create two geometry files for the same brick mold Type:
 
 <Tabs>
 
 <TabItem label="🔍 Detailed Version">
 
-Use a high-detail Representation with features like joints, profiles, or textures — ideal for fabrication or close-up studies.
+This version includes the full profile of the piece — a rectangle cut at an angle and extruded into a wooden section.  
+It reflects real-world geometry and is ideal for detailed communication: joinery, materiality, and fabrication outputs.
+(Add Image of the detailed version)
 
 </TabItem>
 
 <TabItem label="⚡ Simplified Version">
 
-Use a simplified shape — fast to render and easier to work with at larger scales.
-
+This version is just a bounding box — a minimal block that matches the brick’s overall size but leaves out its inner shape.  
+It’s perfect for early-stage layouts, when exact geometry isn’t known yet, or when fast performance is more important than visual fidelity.
+(Add Image of the simplified version)
 </TabItem>
 
 </Tabs>
 
-This flexibility helps keep your model lightweight while preserving the underlying logic.
+---
 
+Even though the two Representations look very different, they both belong to the same **Type**.  
+The Name, Variant, Ports, and logic stay identical — only the appearance changes.
+
+This means you can design, assemble, and connect everything using placeholders, then later **swap in the detailed version** when you're ready to communicate or fabricate.
+
+> 💡 In Semio, the Representation doesn’t define the part — it simply **stands in for it**.  
+Like a LEGO minifig in different outfits — it's still the same character underneath.
+
+This separation of logic and form is what makes Semio workflows flexible, scalable, and robust — across early concept, detailed design, and collaborative development.
 </li>
 
 <li>
