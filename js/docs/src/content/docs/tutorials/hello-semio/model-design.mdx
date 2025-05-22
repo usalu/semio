@@ -5,62 +5,100 @@ sidebar:
   order: 3
 ---
 
-This section shows how to snap the pieces (your previously defined bricks) together to assemble a complete model or design.
+🧱 This section shows how to use the brick molds you’ve built — your **Types** and **Variants** — to actually build something with them.
+
+📐 As mentioned in *[Think in Semio]*, what you’ve made so far are just **blueprints** — molds that define the logic and shape of your bricks.  
+But a mold alone isn’t a brick you can snap into place.
+
+---
 
 ## 🔖 Place Your Bricks (Model Pieces)
-→ Drop individual elements into the design
 
-Now that you've defined your **Types** (brick molds) and their **Variants**, it's time to place actual bricks into your **Design** 🧩. In semio, these placed components are called **Pieces**.
+🧩 Now it’s time to **cast those molds** into real, usable bricks — called **Pieces**.  
+🎯 These are the actual building blocks you’ll place, connect, and arrange in your design.
 
-Each **Piece** is:
-- A placed instance of a **Variant**
-- It inherits everything from its parent **Type**:
-  - Geometry 🧱
-  - Metadata 📄
-  - Ports ⚓
-  - Semantic structure 🧠
+When you model a Piece, you're telling Semio:  
+🧱 *“Cast this specific version of a brick mold (a Type and its Variant) to create an actual, usable brick.”*
 
-### 🆔 Name Piece
-To model a Piece, one of the main inputs is an **ID** → A unique name for each individual Piece (e.g. `i`, `L1`, `e1`).
+---
 
-### 🧬 Link Mold
-The other main input is a **Reference to the Type (Mold)** → This connects the Piece to its mold. Usually, this is done by providing both:
-- The **Type name** (e.g. `'Profile'`)
-- The **Variant number/identifier** (e.g. `2`, `4`, `5`)
+Each **Piece** automatically inherits everything defined in its mold:
+
+- 🧱 **Geometry (Representation)**  
+  The shape from the Variant’s assigned geometry file or model
+
+- ⚓ **Ports**  
+  The snap points and directions from the mold
+
+- 🧠 **Semantic structure**  
+  Its Type name, Variant origin (if applicable), and how it behaves or connects within the design
+
+- 📄 **Metadata**  
+  Any design-relevant info added to the Type — such as function, material, or custom properties
+
+In other words: it carries everything you baked into the mold.
+
+---
+
+### 🆔 Name the Piece
+
+Each Piece also needs one more thing: a unique identity.  
+You give each one an **ID** — like `i`, `L1`, or `e1` — so it can be referenced, tracked, or connected later on.
+
+> 💡 Think of it as putting a sticker on each brick in your box so you know exactly which one goes where.
+
+---
+
+### 🧬 Link to the Mold
+
+To actually model the Piece, Semio needs to know **which mold it came from**.  
+You do this by linking it to a specific **Type** and **Variant**:
+
+- 🏷️ **Type name** → e.g. `'Profile'`  
+- 🔢 **Variant number** → e.g. `2`, `4`, or `5`
 
 👉 **Without this reference**, the Piece has no shape or logic — it won't know what to look like or how to connect.
 
---- 
 
-##### **📐 Example from the Sketch**
+---
 
-In our example, the final **Design** contains 5 total Pieces:
-- 2× Variant 2
-- 1× Variant 4
+##### 📐 Example from the Sketch
+
+In our example, the final **Design** includes five Pieces, built from three different Variants:
+
+- 2× Variant 2  
+- 1× Variant 4  
 - 2× Variant 5
 
-These are the actual elements we want to place into the model.
-We'll name them like this:
+We’ll give each of these Pieces a unique ID, like so:
 
-| Variant | Piece IDs  |
-| ------- | ---------- |
-| `4`     | `i`        |
-| `5`     | `L1`, `L2` |
-| `2`     | `e1`, `e2` |
+| Variant | Piece IDs      |
+| ------- | -------------- |
+| `4`     | `i`            |
+| `5`     | `L1`, `L2`     |
+| `2`     | `e1`, `e2`     |
+
+These are the actual bricks we’ll be placing into our model.
 
 --- 
 
 ##### **🛠️ In Grasshopper**
 
-To create these Pieces, you provide three things to the `Pce` component:
-1. A **list of IDs**
-2. A **list of Variant numbers**
-3. The shared **Type name** (e.g. `'Profile'`)
+##### 🛠️ How to Cast Pieces in Grasshopper
 
-Each row creates one Piece.
+Now that you understand what a Piece is, let’s learn how to actually **cast** them using the Semio plugin in Grasshopper.  
 
-🧾 Output:  
-You'll see items like `Pce(i)` or `Pce(L1)` — these are your ready-to-place building blocks.
+As shown in the image, you use the model Piece `Pce` component and provide three main inputs:
+
+1. 🆔 **Piece IDs** — unique names for each individual brick (e.g. `i`, `L1`)  
+2. 🔢 **Variant numbers** — telling Semio which version of the mold to use (e.g. `4`, `5`)  
+3. 🏷️ **Type name** — the shared name of the mold they all come from (e.g. `'Profile'`)
+
+Each row of input becomes one new **Piece**, named after its ID — like `Pce(i)` or `Pce(L1)` —  
+each inheriting geometry, ports, and semantic structure from its parent mold.
+
+
+> 🧱 Your bricks are now cast and ready. The next step will be placing and connecting them to build your model.
 
 ---
 
@@ -75,29 +113,29 @@ Each **Connection** says:
 ### 🔀 Set Connection
 To create a connection, you need to define four key values:
 
-1.  **Connected Piece ID** **(CdPc)**– the ID of the piece you're snapping *from* (**From Piece**)
-2.  **Connected Piece Port ID** **(CdPo)**– the specific port on that piece you're connecting *from* (**From Port**)
-3.  **Connecting Piece ID** **(CgPc)**– the ID of the piece you're snapping *to* (**To Piece**)
-4.  **Connecting Piece Port ID** **(CgPo)**– the specific port on the other piece you're connecting *to* (**To Port**)
+1.  **Connected Piece ID (CdPc)** – the ID of the piece you're snapping from (**From Piece**)
+2.  **Connected Piece Port ID (CdPo)** – the specific port on that piece you're connecting from (**From Port**)
+3.  **Connecting Piece ID (CgPc)** – the ID of the piece you're snapping to (**To Piece**)
+4.  **Connecting Piece Port ID (CgPo)** – the specific port on the other piece you're connecting to (**To Port**)
 
-**_That's it! Just tell semio:_**
-**_"Connect this Port on this Piece → to that Port on that Piece."_**
+**That's it! Just tell semio:**
+**Connect this Port on this Piece → to that Port on that Piece.**
 
-#### **_`📐 Example: Connecting Two Pieces`_**
-**_`Let's walk through a simple example from the sketch:`_**
-**_`We want to connect Piece i to Piece L1.`_**
+#### **Example: Connecting Two Pieces**
+**Let's walk through a simple example from the sketch:**
+**We want to connect Piece i to Piece L1.**
 
-**_`From the sketch:`_**
-- **_`Use the w (west) Port of i`_**
-- **_`Connect it to the w (west) Port of L1`_**
+**From the sketch:**
+- **Use the w (west) Port of i**
+- **Connect it to the w (west) Port of L1**
 
-**_`So the connection looks like this:`_**
-**_`Con(i:w → w:L1)`_**
+**So the connection looks like this:**
+**Con(i:w → w:L1)**
 
-**_`This tells semio:`_**  
-**_`"Snap the west Port of i to the west Port of L1."_**
+**This tells semio:**
+**Snap the west Port of i to the west Port of L1.**
 
-**_`It's that simple`_**
+**It's that simple**
 
 ### 🎯 Adjust Snap
 (Optional Step)
@@ -108,60 +146,60 @@ These adjustments are always relative to the orientation of the Port on the conn
 
 📌 Use this when the geometry needs to land slightly beyond or offset from the Port point.
 
---- 
+---
 
-##### **_`📦 Moving (Translation)`_**
+##### **Moving (Translation)**
 These are local movements based on the direction the Port was defined in:
 
-- **_`Gap → Creates a gap between two connected elements by pushing the Piece forward or backward along the Port's axis.`_**
-- **_`Shift → Shifts the Piece side to side, across the plane of the Port.`_**
-  **_`📐 Like nudging a LEGO brick left or right to align with studs underneath.`_**
-- **_`Raise → Raises the Piece up or down, perpendicular to the face it connects to.`_**
-  **_`🪜 Like lifting a brick slightly higher or lowering it onto the studs.`_**
+- **Gap** → Creates a gap between two connected elements by pushing the Piece forward or backward along the Port's axis.
+- **Shift** → Shifts the Piece side to side, across the plane of the Port.
+  📐 Like nudging a LEGO brick left or right to align with studs underneath.
+- **Raise** → Raises the Piece up or down, perpendicular to the face it connects to.
+  🪜 Like lifting a brick slightly higher or lowering it onto the studs.
 
---- 
+---
 
-##### **_`🔁 Rotating (Orientation)`_**
+##### **Rotating (Orientation)**
 You can also spin or angle the Piece around the Port's local axes:
 
-- **_`Rotate → Rotates the Piece flat, around the Port's main vector.`_**
-  **_`🧭 Like spinning a round LEGO tile in place.`_**
-- **_`Turn → Turns the Piece sideways, rotating it horizontally.`_**  
-  **_`🔄 Like twisting a LEGO hinge side to side.`_**
-- **_`Tilt → Tilts the Piece forward or backward, around a vertical axis.`_**
-  **_`🤸 Like tilting a ramp or slope brick up or down.`_**
+- **Rotate** → Rotates the Piece flat, around the Port's main vector.
+  🧭 Like spinning a round LEGO tile in place.
+- **Turn** → Turns the Piece sideways, rotating it horizontally.
+  🔄 Like twisting a LEGO hinge side to side.
+- **Tilt** → Tilts the Piece forward or backward, around a vertical axis.
+  🤸 Like tilting a ramp or slope brick up or down.
 
-#### **_🧠 Keep in Mind_**
-**_You can often skip adjustments by placing Ports exactly where the geometry should land._**  
-**_But adding small transformations gives you more flexibility — especially when working with geometries that follow the same logic, like the variants in this example. Keeping consistent Port placement across them makes the Type reusable._**
+#### **Keep in Mind**
+You can often skip adjustments by placing Ports exactly where the geometry should land.
+But adding small transformations gives you more flexibility — especially when working with geometries that follow the same logic, like the variants in this example. Keeping consistent Port placement across them makes the Type reusable.
 
-**_semio supports both strategies — there's no single "right" way._**
-**_🧱 Just like Lego: studs cover the whole surface. You don't always use all of them — but they're there when needed._**
+**semio supports both strategies — there's no single "right" way.**
+🧱 Just like Lego: studs cover the whole surface. You don't always use all of them — but they're there when needed.
 
-**_`Here rotate the second piece to be aligned correctly`_**
+**Here rotate the second piece to be aligned correctly**
 
-**_Connecting multiple pieces :_**
+**Connecting multiple pieces:**
 
-#### **_🧠 Important to Know_**
-**_When you move or rotate a Piece — like the second one connected to a third —_**  
-**_all connected Pieces after it will update automatically._**  
-**_It works like a chain: change one link, the rest follow._**
+#### **Important to Know**
+When you move or rotate a Piece — like the second one connected to a third —
+all connected Pieces after it will update automatically.
+It works like a chain: change one link, the rest follow.
 
-**_For Grasshopper users, this may feel intuitive —_**  
-**_but unlike Grasshopper, Semio's connections are independent of data trees._**  
-**_The logic is based on explicit relationships, not list order._**
+For Grasshopper users, this may feel intuitive —
+but unlike Grasshopper, Semio's connections are independent of data trees.
+The logic is based on explicit relationships, not list order.
 
-**_semio keeps your Pieces connected based on relationships — not just data order._**
+**semio keeps your Pieces connected based on relationships — not just data order.**
 
-#### **_🧠 Important to Know_**
-**_semio doesn't change how Grasshopper works — it changes what you connect._**  
-**_Instead of wiring geometry, you connect its semantic structure: Types, Ports, and Pieces._**
+#### **Important to Know**
+semio doesn't change how Grasshopper works — it changes what you connect.
+Instead of wiring geometry, you connect its semantic structure: Types, Ports, and Pieces.
 
-**_Under the hood, it behaves just like any Grasshopper component:_**  
-**_you work with lists or trees, and items are matched by index or branch._**
+Under the hood, it behaves just like any Grasshopper component:
+you work with lists or trees, and items are matched by index or branch.
 
-**_Each item creates one connection._**  
-**_To apply values like Gap, just feed a matching list_**
+Each item creates one connection.
+To apply values like Gap, just feed a matching list
 
 ---
 
