@@ -217,6 +217,26 @@ public static class Utility
     {
         return !(Uri.IsWellFormedUriString(uri, UriKind.Relative) || uri.StartsWith("http"));
     }
+    public static bool IsValidMime(string mime)
+    {
+        var validMimes = new List<string>
+        {
+            "model/stl",
+            "model/obj",
+            "model/gltf-binary",
+            "model/gltf+json",
+            "model/vnd.3dm",
+            "image/png",
+            "image/jpeg",
+            "image/svg+xml",
+            "application/pdf",
+            "application/zip",
+            "application/json",
+            "text/csv",
+            "text/plain"
+        };
+        return validMimes.Contains(mime);
+    }
 
     public static string ParseMimeFromUrl(string url)
     {
@@ -1033,12 +1053,12 @@ public class Representation : Model<Representation>
 
     public string ToIdString()
     {
-        return $"{Mime}#{string.Join(",", Tags.Select(t => Utility.Encode(t)))}";
+        return $"{string.Join(",", Tags.Select(t => Utility.Encode(t)))}";
     }
 
     public string ToHumanIdString()
     {
-        return $"{Mime}" + (Tags.Count == 0 ? "" : "," + string.Join(" ", Tags));
+        return string.Join(", ", Tags);
     }
 
     public override string ToString()

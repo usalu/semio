@@ -1908,8 +1908,10 @@ public class RepresentationComponent : ModelComponent<RepresentationParam, Repre
 
     protected override Representation ProcessModel(Representation model)
     {
-        if (model.Mime == "")
-            model.Mime = Semio.Utility.ParseMimeFromUrl(model.Url);
+        var mime = Semio.Utility.ParseMimeFromUrl(model.Url);
+        var firstTag = model.Tags.FirstOrDefault();
+        if (firstTag != null && mime != "" && !Semio.Utility.IsValidMime(firstTag))
+            model.Tags.Insert(0,mime);
         model.Url = model.Url.Replace('\\', '/');
         return model;
     }
