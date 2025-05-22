@@ -119,7 +119,7 @@ Let’s look at how that works in practice:
 
 Model the shape externally (e.g. in Rhino), then attach it to your Type by referencing a named layer.
 
-### 🗂️ Referencing a File-Based Representation
+#### 🗂️ Referencing a File-Based Representation
 
 In Semio, Representations are typically referenced through **external geometry files** — even when the geometry is generated inside Grasshopper.  
 This approach helps maintain clean, modular workflows and supports flexible updates.
@@ -402,15 +402,14 @@ It’s defined by the Name and Variant you assign — for example: Typ("profile"
 
 
 ## 🧬 Mold Versions (Variants of Type)
-→ Use the same mold to make bricks of different sizes
+→ what we ae going to do in this step is to use the same mold to make bricks of different sizes
 
 Now that you've created your base **Type**, it's time to generate **Variants** — based on the **unit count `n`** shown in the sketch.
 
 Each Variant uses the **same mold**, just stretched or scaled.  
  Think of it like longer or shorter Lego bricks of the same kind 🧱🧱🧱  
  Since they follow the same design logic, we treat them as **Variants** of one **Type**, not separate Types.
-
-#### 🔢 From the Sketch:
+These Variants are technically 
 
 - **Variant 2** → 2 units long
 
@@ -420,62 +419,64 @@ Each Variant uses the **same mold**, just stretched or scaled.
 
 ---
 
-#### 🔁 How to Model a Variant in semio
+#### 🔁 How to Model a Variant in Semio
 
-To model a Variant, you follow **the same steps** as creating a Type —  
- but with **two key differences**:
+Modeling a **Variant** follows the **same steps** as creating a new Type —  
+but with one key difference: you're referencing the **same mold**, just with a new configuration.
 
-1. **Reuse** the original **Type name**
+Here’s what changes:
 
-2. **Assign** a **unique Variant name** (e.g. the unit count `n`)
+1. **Reuse** the original **Type name** 🏷️  
+2. **Assign** a new **Variant name** (e.g. `n`, the unit count) 🔢
+
+You’ll still go through the usual modeling steps:
+
+1. Name your mold (**Type Name**)  
+2. Attach geometry (**Model Representation**)  
+3. Add Ports (**Model Port**)  
+4. Set the Variant number  
+5. Create the complete **Model Type**
 
 This tells semio:  
- ➡️ "Same mold, different size."
+➡️ *“Same mold, different size.”*
 
-✅ Just like with Types, you have **three ways** to reference geometry:
-
-- Direct from Grasshopper or Rhino Layer
-
-- External file (recommended)
+✅ Just like when modeling a Type, you define the Representation, Ports, and final Model Type — only the **Variant** changes.
 
 ---
+(Here add a image of model Type inside the cluster. Two images one for each variant )
+
+as you can see the output coming out of model type is a new Type with the same name but different variant number.
+
 
 #### 💡 Advanced Tip: Use Clusters to Generate Variants
 
-In Grasshopper, a smart way to manage **Variants** is by using a **Cluster** —  
- essentially a reusable mold-maker that builds each version of your LEGO brick 🧱
+In Grasshopper, a great way to handle multiple Variants is with a **Cluster** —  
+a reusable mold-maker that generates each version of your LEGO brick 🧱
 
-Since Variants are mostly identical and only differ by one or two inputs,  
- the Cluster helps you model everything once and repeat only what's necessary.
+Since most Variants share the same logic and differ by only one or two parameters, a Cluster helps you:
+
+- Model the logic once  
+- Generate all Variants efficiently  
+- Keep your script clean and modular
 
 **Inside the Cluster:**  
- You define the full Type logic —
+You define the full logic:
 
-- Geometry generation
-- Representation attachment (Model Representation)
-- Port placement (Model Port)
-- Type creation (Model Type)
+- Geometry generation & export  
+- Geometry import and Representation attachment  
+- Port placement  
+- Model Type creation
 
 **Outside the Cluster:**  
- You feed in only what changes:
+You feed in only what changes:
 
-- `n` → the unit count (e.g. 2, 4, 5), which controls the shape size 📏
+- `n` → the unit count (e.g. 2, 4, 5) 📏  
+- Variant name → (often also `n`) 🏷️
 
-- Variant name → In this Case it is also `n` 🏷️
-
-This way, you can generate multiple Variants from the same Type mold —  
- without duplicating anything or cluttering your canvas.
+This way, you can generate many Variants from the same Type —  
+without duplicating components or cluttering your canvas.
 
 ✅ **Bonus:** Keeps your file organized and scalable — perfect for growing your Kit later on.
 
-Showcase the three different methods :
-
-Cluster without referencing
-
-Cluster with referencing Files
-
-Note > If the Shape would be different you would create a new type instead of Variants of the same type
-
-
 ---
-
+(Here add an image of the cluster)
