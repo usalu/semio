@@ -15,7 +15,7 @@ You're not just drawing geometry — you're designing a **template** that combin
 
 ---
 
-#### 🧩 What Are the "Molds" in This Example?
+##### 🧩 What Are the "Molds" in This Example?
 
 Take a look at your sketch — you'll see five elements that follow the **same basic shape**, just stretched to different lengths.
 
@@ -29,7 +29,7 @@ If the shape were completely different — like a triangle, window, or roof — 
 
 ---
 
-#### 🔧 What Do We Need to Create These Molds?
+##### 🔧 What Do We Need to Create These Molds?
 
 When you think of a mold, the first thing that comes to mind is usually its **shape** — the geometry 🧱✏️  
 But in Semio, geometry is more than form — it serves as a **placeholder for meaning** 💡
@@ -119,7 +119,6 @@ Let’s look at how that works in practice:
 
 Model the shape externally (e.g. in Rhino), then attach it to your Type by referencing a named layer.
 
-#### 🗂️ Referencing a File-Based Representation
 
 In Semio, Representations are typically referenced through **external geometry files** — even when the geometry is generated inside Grasshopper.  
 This approach helps maintain clean, modular workflows and supports flexible updates.
@@ -138,7 +137,7 @@ While the modeling logic isn't the focus of this tutorial, the key takeaway is:
 > 🧱 **We generate the geometry , and reference it via an exported file.**
 
 ---
-#### 🧱 Exporting the Geometry to a File
+##### 🧱 Exporting the Geometry to a File
 
 Here’s what the script does:
 
@@ -160,7 +159,7 @@ Here’s what the script does:
 
 ---
 
-#### 🧱 Referencing the File in a Type 
+##### 🧱 Referencing the File in a Type 
 
 The same file name (`profile_2.glb`) is passed to the **`Ur` input** of the `~Rep` component.  
 This tells Semio where to find the exported geometry.
@@ -174,7 +173,7 @@ This tells Semio where to find the exported geometry.
 
 ---
 
-#### 🔁 Why File-Based?
+##### 🔁 Why File-Based?
 
 Even when working inside Grasshopper, Semio requires a **snapshot** of the geometry —  
 a static file that represents the shape of the brick mold at a given point in time.
@@ -267,7 +266,7 @@ That's where **Ports** come in — the snap points that define where a Brick can
 
 ---
 
-#### 🧩 What Do You Need to Define a Port?
+##### 🧩 What Do You Need to Define a Port?
 
 In the Semio Grasshopper plugin, each Port is defined with three main inputs:
 
@@ -419,7 +418,7 @@ These Variants are technically
 
 ---
 
-#### 🔁 How to Model a Variant in Semio
+#### 🔁 Modeling a Variant
 
 Modeling a **Variant** follows the **same steps** as creating a new Type —  
 but with one key difference: you're referencing the **same mold**, just with a new configuration.
@@ -448,7 +447,7 @@ This tells semio:
 as you can see the output coming out of model type is a new Type with the same name but different variant number.
 
 
-#### 💡 Advanced Tip: Use Clusters to Generate Variants
+##### 💡 Advanced Tip: Use Clusters to Generate Variants
 
 In Grasshopper, a great way to handle multiple Variants is with a **Cluster** —  
 a reusable mold-maker that generates each version of your LEGO brick 🧱
