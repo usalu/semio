@@ -33,6 +33,7 @@ class Type #Application {
   icon: str
   image: str
   variant: str
+  virtual: bool
   unit: str
   created: datetime
   updated: datetime

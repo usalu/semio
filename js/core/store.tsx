@@ -280,11 +280,12 @@ class StudioStore {
         }
         const yType = new Y.Map<any>();
         yType.set('name', type.name);
-        yType.set('variant', type.variant || '');
         yType.set('description', type.description || '');
         yType.set('icon', type.icon || '');
         yType.set('image', type.image || '');
-        yType.set('unit', type.unit || '');
+        yType.set('variant', type.variant || '');
+        yType.set('virtual', type.virtual || false);
+        yType.set('unit', type.unit);
         yType.set('representations', new Y.Map());
         yType.set('ports', new Y.Map());
         yType.set('authors', this.createAuthors(type.authors));
@@ -304,7 +305,7 @@ class StudioStore {
         if (!yType) throw new Error(`Type (${name}, ${variant}) not found in kit (${kitName}, ${kitVersion})`);
 
         const yRepresentationsMap = yType.get('representations') as Y.Map<Y.Map<any>>;
-        const representations = yRepresentationsMap ? Array.from(yRepresentationsMap.values()).map(rMap => this.getRepresentation(kitName, kitVersion, name, variant, rMap.get('mime'), rMap.get('tags')?.toArray() || [])).filter((r): r is Representation => r !== null) : [];
+        const representations = yRepresentationsMap ? Array.from(yRepresentationsMap.values()).map(rMap => this.getRepresentation(kitName, kitVersion, name, variant, rMap.get('tags')?.toArray() || [])).filter((r): r is Representation => r !== null) : [];
         const yPortsMap = yType.get('ports') as Y.Map<Y.Map<any>>;
         const ports = yPortsMap ? Array.from(yPortsMap.values()).map(pMap => this.getPort(kitName, kitVersion, name, variant, pMap.get('id_'))).filter((p): p is Port => p !== null) : [];
         return {
@@ -313,6 +314,7 @@ class StudioStore {
             icon: yType.get('icon'),
             image: yType.get('image'),
             variant: yType.get('variant'),
+            virtual: yType.get('virtual'),
             unit: yType.get('unit'),
             ports,
             representations,
@@ -333,6 +335,7 @@ class StudioStore {
         if (type.description !== undefined) yType.set('description', type.description);
         if (type.icon !== undefined) yType.set('icon', type.icon);
         if (type.image !== undefined) yType.set('image', type.image);
+        if (type.virtual !== undefined) yType.set('virtual', type.virtual);
         if (type.unit !== undefined) yType.set('unit', type.unit);
 
         if (type.ports !== undefined) {

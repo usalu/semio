@@ -112,6 +112,7 @@ entity Type {
     icon : string
     image : string
     variant : string
+    virtual : boolean
     *unit : string
     *created : datetime
     *updated : datetime

@@ -226,6 +226,8 @@ export type Type = {
     image: string;
     // 🔀 The variant of the type
     variant: string;
+    // 👻 The optional virtual flag of the type
+    virtual?: boolean;
     // Ⓜ️ The length unit used by the type's geometry
     unit: string;
     // 🕒 The creation date of the type
@@ -576,6 +578,7 @@ const typeMap: any = {
         { json: "icon", js: "icon", typ: "" },
         { json: "image", js: "image", typ: "" },
         { json: "variant", js: "variant", typ: "" },
+        { json: "virtual", js: "virtual", typ: u(undefined, false) },
         { json: "unit", js: "unit", typ: "" },
         { json: "created", js: "created", typ: Date },
         { json: "updated", js: "updated", typ: Date },

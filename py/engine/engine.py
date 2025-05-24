@@ -2403,6 +2403,16 @@ class TypeVariantField(RealField, abc.ABC):
     """🔀 The optional variant of the type. No variant means the default variant."""
 
 
+class TypeVirtualField(RealField, abc.ABC):
+    """👻 Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type."""
+
+    virtual: bool = sqlmodel.Field(
+        default=False,
+        description="👻 Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.",
+    )
+    """👻 Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type."""
+
+
 class TypeUnitField(RealField, abc.ABC):
     """Ⓜ️ The length unit of the point and the direction of the ports of the type."""
 
@@ -2440,6 +2450,7 @@ class TypeId(TypeVariantField, TypeNameField, Id):
 
 class TypeProps(
     TypeUnitField,
+    TypeVirtualField,
     TypeVariantField,
     TypeImageField,
     TypeIconField,
@@ -2452,6 +2463,7 @@ class TypeProps(
 
 class TypeInput(
     TypeUnitField,
+    TypeVirtualField,
     TypeVariantField,
     TypeImageField,
     TypeIconField,
@@ -2471,6 +2483,7 @@ class TypeOutput(
     TypeUpdatedField,
     TypeCreatedField,
     TypeUnitField,
+    TypeVirtualField,
     TypeVariantField,
     TypeImageField,
     TypeIconField,
@@ -2487,7 +2500,12 @@ class TypeOutput(
 
 
 class TypeContext(
-    TypeUnitField, TypeVariantField, TypeDescriptionField, TypeNameField, Context
+    TypeUnitField,
+    TypeVirtualField,
+    TypeVariantField,
+    TypeDescriptionField,
+    TypeNameField,
+    Context,
 ):
     """🧩 A type is a reusable element that can be connected with other types over ports."""
 
@@ -2499,6 +2517,7 @@ class Type(
     TypeUpdatedField,
     TypeCreatedField,
     TypeUnitField,
+    TypeVirtualField,
     TypeVariantField,
     TypeImageField,
     TypeIconField,

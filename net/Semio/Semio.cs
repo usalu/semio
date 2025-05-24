@@ -1451,6 +1451,9 @@ public class TypeProps : Model<Type>
         PropImportance.REQUIRED)]
     public string Unit { get; set; } = "";
 
+    [FalseOrTrue("👻", "Vi?", "Vir?", "Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.")]
+    public bool Virtual { get; set; } = false;
+
     public string ToIdString()
     {
         return $"{Name}#{Variant}";
