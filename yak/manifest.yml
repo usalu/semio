@@ -1,6 +1,6 @@
 ---
 name: semio
-version: 5.3.0-beta
+version: 5.4.0-beta
 authors:
 - Ueli Saluz
 description: >
@@ -24,4 +24,4 @@ keywords:
 - building_information_modeling
 - guid:fe587cbf-5f7d-4091-aa6d-d9d30cf80b64
 platform: win
-icon: semio_256x256.png
+icon: semio_512x512.png
