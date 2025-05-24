@@ -1,115 +1,185 @@
 @startuml "software architecture"
 skinparam linetype ortho
 
-interface Artifact {
-    name : String
-    description : String
-    icon : String
-    image : String
+abstract class ModelBase <<(M,LightGray)>> #LightGray {
+  +parse(input): ModelBase
+  +dump(): Output
 }
 
-class Kit {
-    url : String
-    homepage : String
-    remote : String
+class Semio #LightYellow {
+  release: str
+  engine: str
+  created: datetime
 }
 
-class Type {
+class Kit #Application {
+  uri: str
+  name: str
+  description: str
+  icon: str
+  image: str
+  preview: str
+  version: str
+  remote: str
+  homepage: str
+  license: str
+  created: datetime
+  updated: datetime
 }
 
-class Representation{
-    mime : String
-    lod : String
-    tags: String[]
-    url : String
+class Type #Application {
+  name: str
+  description: str
+  icon: str
+  image: str
+  variant: str
+  unit: str
+  created: datetime
+  updated: datetime
 }
 
-class Point {
-    x : Float
-    y : Float
-    z : Float
+class Design #Application {
+  name: str
+  description: str
+  icon: str
+  image: str
+  variant: str
+  view: str
+  unit: str
+  created: datetime
+  updated: datetime
 }
 
-class Vector {
-    x : Float
-    y : Float
-    z : Float
+class Representation #Application {
+  url: str
+  description: str
+  mime: str
 }
 
-class Plane {
+class Tag #Application {
+  name: str
+  order: int
 }
 
-class Port {
-    id : String
+class Port #Application {
+  id_: str
+  description: str
+  family: str
+  t: float
 }
 
-class Quality {
-    name : String
-    value : String
-    unit : String
-    definition : String
+class CompatibleFamily #Application {
+  name: str
+  order: int
 }
 
-class Author {
-    name : String
-    email : String
+class Piece #Application {
+  id_: str
+  description: str
 }
 
-class Locator {
-    group : String
-    subgroup : String
+class Plane #Application {
+  // originX, originY, etc. (flattened Point/Vector)
 }
 
-class Piece{
-    id : String
+class Connection #Application {
+  description: str
+  gap: float
+  shift: float
+  raise_: float
+  rotation: float
+  turn: float
+  tilt: float
+  x: float // diagram x
+  y: float // diagram y
 }
 
-class Root {
-
+class Side #Application {
+  // References PieceId and PortId
 }
 
-class Connection {
-    gap : Float
-    rotation : Float
+class Quality #Application {
+  name: str
+  value: str
+  unit: str
+  definition: str
 }
 
-class Side {
-
+class Author #Application {
+  name: str
+  email: str
+  rank: int
 }
 
-class Design {
+class Point #DataType {
+  x: float
+  y: float
+  z: float
 }
 
+class Vector #DataType {
+  x: float
+  y: float
+  z: float
+}
 
-Kit *-- "0..*" Type
-Kit *-- "0..*" Design
-Representation "1..*" --* Type
-Type *-- "1..*" Port
-Type *-- "0..*" Quality
-Type *-- "0..*" Author
-Design *-- "1..*" Piece
-Piece *-- "0..1" Root
-Root *-- Plane
-Design *-- "0..*" Connection
-Design *-- "0..*" Quality
-Design *-- "0..*" Author
-Connection *-- Side : connected
-Connection *-- Side : connecting
+class DiagramPoint #DataType {
+  x: float
+  y: float
+}
 
-Port *-- Plane
-Port *-- "0..*"  Locator
-Point --*  Plane : origin
-Plane *-- Vector : x_axis
-Plane *-- Vector : y_axis
-Plane *-- Vector : normal
+ModelBase <|-- Kit
+ModelBase <|-- Type
+ModelBase <|-- Design
+ModelBase <|-- Representation
+ModelBase <|-- Port
+ModelBase <|-- Piece
+ModelBase <|-- Connection
+ModelBase <|-- Quality
+ModelBase <|-- Author
+ModelBase <|-- Plane
+ModelBase <|-- Tag
+ModelBase <|-- CompatibleFamily
+ModelBase <|-- Side
+ModelBase <|-- Point
+ModelBase <|-- Vector
+ModelBase <|-- DiagramPoint
 
-Type <-- Piece
-Piece <-- Side
-Port <-- Side
+Kit *-- "many" Type : contains >
+Kit *-- "many" Design : contains >
+Kit *-- "many" Quality : has >
 
-Artifact <|-- Kit
-Artifact <|-- Type
-Artifact <|-- Design
+Design *-- "many" Piece : contains >
+Design *-- "many" Connection : contains >
+Design *-- "many" Author : authored by >
+Design *-- "many" Quality : has >
 
+Type *-- "many" Representation : has >
+Type *-- "many" Port : has >
+Type *-- "many" Author : authored by >
+Type *-- "many" Quality : has >
+
+Piece *-- "1" Type : instance of >
+Piece o-- "0..1" Plane : located by >
+Piece *-- "many" Quality : has >
+
+Connection *-- "many" Quality : has >
+Connection o-- "1" Side : connected >
+Connection o-- "1" Side : connecting >
+
+Side o-- "1" Piece : refers to >
+Side o-- "1" Port : refers to >
+
+Representation *-- "many" Tag : tagged with >
+Representation *-- "many" Quality : has >
+
+Port *-- "many" CompatibleFamily : compatible with >
+Port *-- "many" Quality : has >
+Port *-- "1" Point : at >
+Port *-- "1" Vector : oriented by >
+
+Plane *-- "1" Point : origin >
+Plane *-- "1" Vector : xAxis >
+Plane *-- "1" Vector : yAxis >
 
 @enduml

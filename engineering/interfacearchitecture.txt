@@ -1,61 +1,71 @@
 kit : !Kit{
+    uri : !String // Unique URI of the kit
     name : !String
     description : ?String
-    icon : ?String
-    image : ?String
-    remote : ?String
-    homepage : ?String
+    icon : ?String // emoji | logogram | url
+    image : ?String // url
+    preview : ?String // url
+    version : ?String
+    remote : ?String // url for remote fetching
+    homepage : ?String // url
+    license : ?String // spdx id | url
+    created : !DateTime
+    updated : !DateTime
     types : +Type[
         name : !String
         description : ?String
-        icon : ?String
-        image : ?String
-        variant : ?String
-        unit : !String
-        representations : +Representations[
+        icon : ?String // emoji | logogram | url
+        image : ?String // url
+        variant : ?String // Default is empty string
+        unit : !String // e.g., mm, cm, m
+        created : !DateTime
+        updated : !DateTime
+        representations : +Representation[
             url : !String
-            mime : !String
-            lod : ?String
-            tags : *String[]
+            description : ?String
+            mime : !String // e.g., model/gltf-binary
+            tags : *String[] // Default is empty list (meaning default LOD)
+            qualities : *Quality[]
         ]
         ports : +Port[
-            id : !String
-            point : !{
+            id_ : !String // Local ID within the type, called "id" in some contexts
+            description : ?String
+            family : ?String // For explicit compatibility
+            compatibleFamilies : *String[] // Empty list means compatible with all
+            point : !Point{
                 x : !Float
                 y : !Float
                 z : !Float
             }
-            direction : !{
+            direction : !Vector{
                 x : !Float
                 y : !Float
                 z : !Float
             }
-            locators : *Locator[
-                group : !String
-                subgroup : !String
-            ]
-        ]
-        qualities : *Quality[
-            name : !String
-            value : !String
-            unit : ?String
-            definition : ?String
+            t : !Float // [0,1[ for diagram ring position
+            qualities : *Quality[]
         ]
         authors : *Author[
-            name : ?String
-            email: !String
+            name : !String
+            email : !String
+            rank : !Integer // For ordering
         ]
+        qualities : *Quality[]
     ]
     designs : +Design[
         name : !String
         description : ?String
-        icon : ?String
-        image : ?String
-        variant : ?String
-        unit : !String
-        pieces : !Piece[
-            id : !String
-            type : !TypeId{
+        icon : ?String // emoji | logogram | url
+        image : ?String // url
+        variant : ?String // Default is empty string
+        view : ?String // Default is empty string
+        unit : !String // e.g., mm, cm, m
+        created : !DateTime
+        updated : !DateTime
+        pieces : +Piece[
+            id_ : !String // Local ID within the design, called "id" in some contexts
+            description : ?String
+            type : !TypeId{ // Reference to a Type
                 name : !String
                 variant : ?String
             }
@@ -65,57 +75,110 @@ kit : !Kit{
                     y : !Float
                     z : !Float
                 }
-                x_axis : !Vector{
+                xAxis : !Vector{
                     x : !Float
                     y : !Float
                     z : !Float
                 }
-                y_axis : !Vector{
+                yAxis : !Vector{
                     x : !Float
                     y : !Float
                     z : !Float
                 }
             }
-            center :  ?DiagramPoint{
-                x : !Integer
-                y : !Integer
+            center : ?DiagramPoint{ // For 2D diagram
+                x : !Float
+                y : !Float
             }
+            qualities : *Quality[]
         ]
         connections : +Connection[
             connected : !Side{
-                piece : !SidePiece{
-                    id : !String
-                    type : !SidePieceType{
-                        port : !PortId{
-                            id : !String
-                        }
-                    }
-                }
+                piece : !PieceId{ id_ : !String }
+                port : !PortId{ id_ : !String }
             }
             connecting : !Side{
-                piece : !SidePiece{
-                    id : !String
-                    type : !SidePieceType{
-                        port : !PortId{
-                            id : !String
-                        }
-                    }
-                }
+                piece : !PieceId{ id_ : !String }
+                port : !PortId{ id_ : !String }
             }
-            rotation : !Float
-            tilt : !Float
-            gap : !Float
-            x : !Float
-            y : !Float
-        ]
-        qualities : *Quality[
-            name : !String
-            value : !String
-            unit : ?String
+            description : ?String
+            gap : ?Float
+            shift : ?Float
+            raise_ : ?Float // named raise_ in python
+            rotation : ?Float // degrees
+            turn : ?Float // degrees
+            tilt : ?Float // degrees
+            x : ?Float // diagram offset x
+            y : ?Float // diagram offset y
+            qualities : *Quality[]
         ]
         authors : *Author[
-            name : ?String
-            email: !String
+            name : !String
+            email : !String
+            rank : !Integer
         ]
+        qualities : *Quality[]
     ]
+    qualities : *Quality[
+        name : !String
+        value : ?String // No value means true
+        unit : ?String
+        definition : ?String // text | uri
+    ]
+}
+
+// Standalone definitions for clarity, though they are nested above
+
+Point : !{
+    x : !Float
+    y : !Float
+    z : !Float
+}
+
+Vector : !{
+    x : !Float
+    y : !Float
+    z : !Float
+}
+
+DiagramPoint : !{
+    x : !Float
+    y : !Float
+}
+
+Plane : !{
+    origin : !Point
+    xAxis : !Vector
+    yAxis : !Vector
+}
+
+TypeId : !{
+    name : !String
+    variant : ?String
+}
+
+PieceId : !{
+    id_ : !String
+}
+
+PortId : !{
+    id_ : !String
+}
+
+Side : !{
+    piece : !PieceId
+    port : !PortId
+}
+
+Quality : !{
+    name : !String
+    value : ?String
+    unit : ?String
+    definition : ?String
+}
+
+Author : !{
+    name : !String
+    email : !String
+    rank : !Integer
 }
