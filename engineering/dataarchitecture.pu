@@ -41,7 +41,6 @@ entity Representation {
     *pk : int <<PK,generated>>
     *url : string
     description : string
-    *mime : string
     ..
     typePk : int <<FK>>
 }

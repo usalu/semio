@@ -999,12 +999,6 @@ public class Representation : Model<Representation>
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the representation.")]
     public string Description { get; set; } = "";
 
-    /// <summary>
-    ///     ✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.
-    /// </summary>
-    [Id("✉️", "Mm", "Mim",
-        "The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.")]
-    public string Mime { get; set; } = "";
 
     /// <summary>
     ///     🏷️ The optional tags to group representations. No tags means default.

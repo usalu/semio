@@ -23,7 +23,6 @@ kit : !Kit{
         representations : +Representation[
             url : !String
             description : ?String
-            mime : !String // e.g., model/gltf-binary
             tags : *String[] // Default is empty list (meaning default LOD)
             qualities : *Quality[]
         ]

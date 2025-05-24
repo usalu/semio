@@ -268,8 +268,6 @@ export type Representation = {
     url: string;
     // 💬 The human-readable description of the representation
     description: string;
-    // ✉️ The MIME type of the resource
-    mime: string;
     // 🏷️ Tags to group or filter representations
     tags: string[];
     // 📏 Qualities associated with the representation
@@ -601,8 +599,7 @@ const typeMap: any = {
     "Representation": o([
         { json: "url", js: "url", typ: "" },
         { json: "description", js: "description", typ: "" },
-        { json: "mime", js: "mime", typ: "" },
-        { json: "tags", js: "tags", typ: a("") }, // Required array of strings
+        { json: "tags", js: "tags", typ: a("") },
         { json: "qualities", js: "qualities", typ: u(undefined, a(r("Quality"))) },
     ], "any"),
 };
@@ -853,12 +850,11 @@ export const flattenDesign = (design: Design, types: Type[]): Design => {
     return flatDesign;
 }
 
-const selectRepresentation = (representations: Representation[], mime: string, tags: string[]): Representation => {
-    const filteredRepresentations = representations.filter(r => r.mime === mime);
-    const indices = filteredRepresentations.map(r => jaccard(r.tags, tags));
+const selectRepresentation = (representations: Representation[], tags: string[]): Representation => {
+    const indices = representations.map(r => jaccard(r.tags, tags));
     const maxIndex = Math.max(...indices);
     const maxIndexIndex = indices.indexOf(maxIndex);
-    return filteredRepresentations[maxIndexIndex];
+    return representations[maxIndexIndex];
 }
 
 /**
@@ -867,13 +863,13 @@ const selectRepresentation = (representations: Representation[], mime: string, t
  * @param types - The types of the pieces with the representations.
  * @returns A map of piece ids to representation urls.
  */
-export const getPieceRepresentationUrls = (design: Design, types: Type[], mime: string = 'model/gltf-binary', tags: string[] = []): Map<string, string> => {
+export const getPieceRepresentationUrls = (design: Design, types: Type[], tags: string[] = []): Map<string, string> => {
     const representationUrls = new Map<string, string>();
     design.pieces?.forEach(p => {
         const type = types.find(t => t.name === p.type.name && t.variant === p.type.variant);
         if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`);
         if (!type.representations) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} has no representations`);
-        const representation = selectRepresentation(type.representations, mime, tags);
+        const representation = selectRepresentation(type.representations, tags);
         representationUrls.set(p.id_, representation.url);
     });
     return representationUrls;

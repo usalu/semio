@@ -1013,16 +1013,6 @@ class RepresentationDescriptionField(RealField, abc.ABC):
     """💬 The optional human-readable description of the representation."""
 
 
-class RepresentationMimeField(RealField, abc.ABC):
-    """✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation."""
-
-    mime: str = sqlmodel.Field(
-        max_length=NAME_LENGTH_LIMIT,
-        description="✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.",
-    )
-    """✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation."""
-
-
 class RepresentationTagsField(MaskedField, abc.ABC):
     """🏷️ The optional tags to group representations. No tags means default."""
 
@@ -1033,13 +1023,14 @@ class RepresentationTagsField(MaskedField, abc.ABC):
     """🏷️ The optional tags to group representations. No tags means default."""
 
 
-class RepresentationId(RepresentationTagsField, RepresentationMimeField, Id):
-    """🪪 The props to identify the representation within the parent type."""
+class RepresentationId(RepresentationTagsField, Id):
+    """💾 A representation is a link to a resource that describes a type for a certain level of detail and tags."""
+
+    pass
 
 
 class RepresentationProps(
     RepresentationTagsField,
-    RepresentationMimeField,
     RepresentationDescriptionField,
     RepresentationUrlField,
     Props,
@@ -1049,7 +1040,6 @@ class RepresentationProps(
 
 class RepresentationInput(
     RepresentationTagsField,
-    RepresentationMimeField,
     RepresentationDescriptionField,
     RepresentationUrlField,
     Input,
@@ -1065,7 +1055,6 @@ class RepresentationInput(
 
 class RepresentationContext(
     RepresentationTagsField,
-    RepresentationMimeField,
     RepresentationDescriptionField,
     Context,
 ):
@@ -1080,7 +1069,6 @@ class RepresentationContext(
 
 class RepresentationOutput(
     RepresentationTagsField,
-    RepresentationMimeField,
     RepresentationDescriptionField,
     RepresentationUrlField,
     Output,
@@ -1095,7 +1083,6 @@ class RepresentationOutput(
 
 
 class Representation(
-    RepresentationMimeField,
     RepresentationDescriptionField,
     RepresentationUrlField,
     TableEntity,
@@ -1189,7 +1176,7 @@ class Representation(
     # TODO: Automatic derive from Id model.
     def idMembers(self) -> RecursiveAnyList:
         """🪪 The members that form the id of the representation within its parent type."""
-        return [self.mime, self.tags]
+        return [self.tags]
 
 
 ### Screen Points ###

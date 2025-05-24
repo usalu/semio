@@ -770,29 +770,27 @@ class StudioStore {
         const yRepresentation = new Y.Map<any>();
         yRepresentation.set('url', representation.url);
         yRepresentation.set('description', representation.description || '');
-        yRepresentation.set('mime', representation.mime);
         const yTags = Y.Array.from(representation.tags || []);
         yRepresentation.set('tags', yTags);
         yRepresentation.set('qualities', this.createQualities(representation.qualities || []));
 
-        const id = `${representation.mime}:${representation.tags?.join(',') || ''}`;
+        const id = `{representation.tags?.join(',') || ''}`;
         representations.set(id, yRepresentation);
     }
 
-    getRepresentation(kitName: string, kitVersion: string, typeName: string, typeVariant: string, mime: string, tags: string[]): Representation {
+    getRepresentation(kitName: string, kitVersion: string, typeName: string, typeVariant: string, tags: string[]): Representation {
         const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
         if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
         const types = yKit.get('types');
         const yType = types.get(typeName)?.get(typeVariant);
         if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitName}, ${kitVersion})`);
         const representations = yType.get('representations');
-        const yRepresentation = representations.get(`${mime}:${tags?.join(',') || ''}`);
-        if (!yRepresentation) throw new Error(`Representation (${mime}, ${tags?.join(',') || ''}) not found in type (${typeName}, ${typeVariant}) in kit (${kitName}, ${kitVersion})`);
+        const yRepresentation = representations.get(`${tags?.join(',') || ''}`);
+        if (!yRepresentation) throw new Error(`Representation (${tags?.join(',') || ''}) not found in type (${typeName}, ${typeVariant}) in kit (${kitName}, ${kitVersion})`);
 
         return {
             url: yRepresentation.get('url'),
             description: yRepresentation.get('description'),
-            mime: yRepresentation.get('mime'),
             tags: yRepresentation.get('tags').toArray(),
             qualities: this.getQualities(yRepresentation.get('qualities'))
         };
@@ -805,12 +803,11 @@ class StudioStore {
         const yType = types.get(typeName)?.get(typeVariant);
         if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitName}, ${kitVersion})`);
         const representations = yType.get('representations');
-        const id = `${representation.mime}:${representation.tags?.join(',') || ''}`;
+        const id = `${representation.tags?.join(',') || ''}`;
         const yRepresentation = representations.get(id);
         if (!yRepresentation) throw new Error(`Representation (${id}) not found in type (${typeName}, ${typeVariant}) in kit (${kitName}, ${kitVersion})`);
 
         if (representation.description !== undefined) yRepresentation.set('description', representation.description);
-        if (representation.mime !== undefined) yRepresentation.set('mime', representation.mime);
         if (representation.tags !== undefined) {
             const yTags = Y.Array.from(representation.tags || []);
             yRepresentation.set('tags', yTags);
@@ -831,7 +828,7 @@ class StudioStore {
         if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitName}, ${kitVersion})`);
 
         const representations = yType.get('representations');
-        representations.delete(`${mime}:${tags?.join(',') || ''}`);
+        representations.delete(`${tags?.join(',') || ''}`);
     }
 
     createPort(kitName: string, kitVersion: string, typeName: string, typeVariant: string, port: Port): void {
@@ -1532,12 +1529,11 @@ class StudioStore {
         const yRepresentations = yType.get('representations') as Y.Map<any>;
         if (yRepresentations) {
             yRepresentations.forEach((yRep) => {
-                const mime = yRep.get('mime');
                 const tags = yRep.get('tags')?.toArray() || [];
                 try {
-                    representations.push(this.getRepresentation(kitName, kitVersion, typeName, typeVariant, mime, tags));
+                    representations.push(this.getRepresentation(kitName, kitVersion, typeName, typeVariant, tags));
                 } catch (error) {
-                    console.warn(`Error getting representation (${mime}, ${tags}) for type (${typeName}, ${typeVariant}) in kit (${kitName}, ${kitVersion}):`, error);
+                    console.warn(`Error getting representation (${tags}) for type (${typeName}, ${typeVariant}) in kit (${kitName}, ${kitVersion}):`, error);
                 }
             });
         }
