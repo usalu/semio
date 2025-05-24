@@ -1930,6 +1930,16 @@ class PortFamilyField(RealField, abc.ABC):
     """👨‍👩‍👧‍👦 The optional family of the port. This allows to define explicit compatibility with other ports."""
 
 
+class PortMandatoryField(RealField, abc.ABC):
+    """💯 Whether the port is mandatory. A mandatory port must be connected in a design."""
+
+    mandatory: bool = sqlmodel.Field(
+        default=False,
+        description="💯 Whether the port is mandatory. A mandatory port must be connected in a design.",
+    )
+    """💯 Whether the port is mandatory. A mandatory port must be connected in a design."""
+
+
 class PortCompatibleFamiliesField(MaskedField, abc.ABC):
     """✅ The optional other compatible families of the port. An empty list means this port is compatible with all other ports."""
 
@@ -1976,6 +1986,7 @@ class PortProps(
     PortTField,
     PortCompatibleFamiliesField,
     PortFamilyField,
+    PortMandatoryField,
     PortDescriptionField,
     PortIdField,
     Props,
@@ -1987,6 +1998,7 @@ class PortInput(
     PortTField,
     PortCompatibleFamiliesField,
     PortFamilyField,
+    PortMandatoryField,
     PortDescriptionField,
     PortIdField,
     Input,
@@ -2011,6 +2023,7 @@ class PortInput(
 class PortContext(
     PortCompatibleFamiliesField,
     PortFamilyField,
+    PortMandatoryField,
     PortDescriptionField,
     PortIdField,
     Context,
@@ -2030,6 +2043,7 @@ class PortOutput(
     PortPointField,
     PortCompatibleFamiliesField,
     PortFamilyField,
+    PortMandatoryField,
     PortDescriptionField,
     PortIdField,
     Output,
@@ -2043,7 +2057,14 @@ class PortOutput(
     """📏 The qualities of the port."""
 
 
-class Port(PortTField, PortFamilyField, PortDescriptionField, TableEntity, table=True):
+class Port(
+    PortTField,
+    PortFamilyField,
+    PortMandatoryField,
+    PortDescriptionField,
+    TableEntity,
+    table=True,
+):
     """🔌 A port is a connection point (with a direction) of a type."""
 
     PLURAL = "ports"

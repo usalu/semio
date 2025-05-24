@@ -845,6 +845,7 @@ class StudioStore {
         const yPort = new Y.Map<any>();
         yPort.set('id_', port.id_ || "");
         yPort.set('description', port.description || '');
+        yPort.set('mandatory', port.mandatory === undefined ? false : port.mandatory);
         yPort.set('family', port.family || '');
 
         const yCompatibleFamilies = Y.Array.from(port.compatibleFamilies || []);
@@ -883,6 +884,7 @@ class StudioStore {
         return {
             id_: yPort.get('id_'),
             description: yPort.get('description'),
+            mandatory: yPort.get('mandatory') as boolean,
             family: yPort.get('family'),
             compatibleFamilies: yPort.get('compatibleFamilies')?.toArray() || [],
             direction: {
@@ -891,11 +893,10 @@ class StudioStore {
                 z: yDirection.get('z')
             },
             point: {
-                x: yPoint.get('x'),
-                y: yPoint.get('y'),
-                z: yPoint.get('z')
+                x: (yPoint.get('point') as Y.Map<any>).get('x') as number,
+                y: (yPoint.get('point') as Y.Map<any>).get('y') as number,
+                z: (yPoint.get('point') as Y.Map<any>).get('z') as number
             },
-            t: yPort.get('t'),
             qualities: this.getQualities(yPort.get('qualities'))
         };
     }
@@ -931,6 +932,14 @@ class StudioStore {
             yQualities.delete(0, yQualities.length);
             port.qualities.forEach(q => yQualities.push([this.createQuality(q)]));
             yPort.set('qualities', yQualities);
+        }
+        if (port.family !== undefined && yPort.set('family', port.family)) {
+            (yPort.get('compatibleFamilies') as Y.Array<string>).delete(0, (yPort.get('compatibleFamilies') as Y.Array<string>).length);
+            (port.compatibleFamilies || []).forEach(cf => (yPort.get('compatibleFamilies') as Y.Array<string>).push([cf]));
+        }
+        if (port.mandatory !== undefined && yPort.set('mandatory', port.mandatory)) {
+            (yPort.get('compatibleFamilies') as Y.Array<string>).delete(0, (yPort.get('compatibleFamilies') as Y.Array<string>).length);
+            (port.compatibleFamilies || []).forEach(cf => (yPort.get('compatibleFamilies') as Y.Array<string>).push([cf]));
         }
     }
 
@@ -1598,6 +1607,14 @@ class StudioStore {
             yQualities.delete(0, yQualities.length);
             port.qualities.forEach(q => yQualities.push([this.createQuality(q)]));
             yPort.set('qualities', yQualities);
+        }
+        if (port.family !== undefined && yPort.set('family', port.family)) {
+            (yPort.get('compatibleFamilies') as Y.Array<string>).delete(0, (yPort.get('compatibleFamilies') as Y.Array<string>).length);
+            (port.compatibleFamilies || []).forEach(cf => (yPort.get('compatibleFamilies') as Y.Array<string>).push([cf]));
+        }
+        if (port.mandatory !== undefined && yPort.set('mandatory', port.mandatory)) {
+            (yPort.get('compatibleFamilies') as Y.Array<string>).delete(0, (yPort.get('compatibleFamilies') as Y.Array<string>).length);
+            (port.compatibleFamilies || []).forEach(cf => (yPort.get('compatibleFamilies') as Y.Array<string>).push([cf]));
         }
     }
 }

@@ -31,6 +31,7 @@ kit : !Kit{
             id_ : !String // Local ID within the type, called "id" in some contexts
             description : ?String
             family : ?String // For explicit compatibility
+            mandatory : ?Boolean // Default is false
             compatibleFamilies : *String[] // Empty list means compatible with all
             point : !Point{
                 x : !Float

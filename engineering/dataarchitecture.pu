@@ -74,6 +74,7 @@ entity Port {
     *id_ : string
     description : string
     family : string
+    mandatory : boolean
     *pointX : float
     *pointY : float
     *pointZ : float

@@ -1236,6 +1236,9 @@ public class Port : Model<Port>
         "The optional family of the port. This allows to define explicit compatibility with other ports.")]
     public string Family { get; set; } = "";
 
+    [FalseOrTrue("💯", "Ma?", "Man?", "Whether the port is mandatory. A mandatory port must be connected in a design.")]
+    public bool Mandatory { get; set; } = false;
+
     /// <summary>
     ///     ✅ The optional other compatible families of the port. An empty list means this port is compatible with all other
     ///     ports.

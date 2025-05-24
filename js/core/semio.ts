@@ -252,6 +252,8 @@ export type Port = {
     description: string;
     // 👨‍👩‍👧‍👦 The family of the port for compatibility checks
     family: string;
+    // 💯 Whether the port is mandatory. A mandatory port must be connected in a design.
+    mandatory?: boolean;
     // 💍 The parameter t [0,1[ for diagram visualization
     t: number;
     // ✅ Other compatible port families

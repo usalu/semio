@@ -65,6 +65,7 @@ class Port #Application {
   id_: str
   description: str
   family: str
+  mandatory: bool
   t: float
 }
 
