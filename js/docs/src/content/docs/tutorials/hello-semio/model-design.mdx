@@ -127,8 +127,9 @@ To create a connection, you need to define four key values:
 
 ##### 🧩 Example: Connecting Two Pieces
 
-Let's walk through a simple example from the sketch.  
-We want to connect **Piece `i`** to **Piece `L1`** using their west-facing Ports.
+
+🧱 Before we snap the full model together, let’s start small — by connecting the first two bricks.
+We’ll connect Piece i to Piece L1, using their west-facing Ports.
 
 From the sketch, we see:
 
@@ -141,11 +142,10 @@ From the sketch, we see:
 This tells Semio:  
 **Snap the west Port of `i` to the west Port of `L1`.**
 
-**Simple as that.**
-
 (Here a picture where two pieces are connected)
 
 ---
+
 
 ### 🎯 Adjust Snap *(Optional Step)*
 
@@ -181,30 +181,37 @@ These are local movements based on the direction the Port was defined in:
   🤸 Like tilting a ramp or slope brick up or down.
 
 ---
+As we can see, the two Pieces we connected earlier don’t align exactly as shown in the sketch 🧩.
+This is where the optional step of adjusting the snap comes in 🛠️
+Here is how to use them to fine-tune the position and rotation of a Piece after it snaps.
+
+
 (Here add a GIF for snaping)
-
-##### 🧠 Port Placement vs. Adjustment
-
-You can often skip manual adjustments by placing Ports **exactly where the geometry should land**.  
-But when working with Variants or non-aligned shapes, small transformations give you added flexibility.
-
-Keeping Port positions consistent across Variants makes your Types easier to reuse and align.
-
-> **Semio supports both strategies** — place Ports precisely, or adjust Pieces after snapping.  
-> 🧱 Just like LEGO: studs cover the whole surface, but you only use the ones that fit your logic.
 
 ---
 
 
-##### ➕ Connecting Multiple Pieces
+##### ➕ Connecting the rest of the Pieces
 
-📏 After connecting the second Piece, you can keep building — attach the third to the second, the fourth to the third, and so on.
+Once i and L1 are correctly aligned, we can continue connecting the rest of the Pieces ➕
+Following the sketch, each new Piece is snapped to the previous one using their matching Ports — adjusting alignment when needed
+🌀 If a connected Piece isn’t oriented properly, you can simply rotate it into position. Semio allows per-piece rotation without breaking the logic
+🔗 And thanks to Semio’s chain behavior, when you move or rotate one Piece, all the connected Pieces after it update automatically
 
+(Here few screenshorts of adjusting one piece at a time)
 
-🌀 If a connected Piece isn't aligned properly, just rotate it into position.  
-Semio allows per-piece rotation without breaking the logic.
+---
 
-🔗 Connections behave like a chain: when you rotate or move one Piece, all the connected Pieces that follow update automatically.
+##### 🧠 Port Placement vs. Adjustment
+
+You can often skip manual adjustments by placing Ports **exactly where the geometry should land**  
+But when working with Variants or non-aligned shapes, small transformations give you added flexibility
+
+Keeping Port positions consistent across Variants makes your Types easier to reuse and align
+
+> **Semio supports both strategies** — place Ports precisely, or adjust Pieces after snapping  
+> 🧱 Just like LEGO: studs cover the whole surface, but you only use the ones that fit your logic
+
 
 
 ---
