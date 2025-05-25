@@ -100,23 +100,21 @@ Same brick, different shell — that’s the idea 💡
 
 ##### 🔧 Modeling Representation
 
-Creating a Representation works in two simple steps:
-🧱 First, you build the geometry — the actual shape of your brick
+Creating a Representation works in two simple steps:  
+🧱 First, you build the geometry — the actual shape of your brick  
 📎 Then, you attach that shape to your Type to give it a visual form
 
-Let’s take a closer look at the brick mold in our example.
+Let’s take a closer look at the brick mold in our example.  
 You’ll notice that it’s always the same shape 🧱 a rectangle cut at an angle ✂️ just stretched into different sizes 📏
 
 We’ll use these two parameters to define its size:
 
-*W* → the width of one brick unit
+- `W` → the width of one brick unit  
+- `n` → the number of units in length
 
-*n* → the number of units in length 
-
-🧰 Next, we’ll dive into how to create and attach geometry to your brick mold
-🧱 In Semio, you can attach geometry to a Type in different ways — depending on what fits your workflow best.
-👀 Let’s take a look at how that works in practice.
-
+🧰 Next, we’ll dive into how to create and attach geometry to your brick mold.  
+🧱 In Semio, you can attach geometry to a Type in different ways — depending on what fits your workflow best.  
+👀 Let’s take a look at how that works in practice
 
 
 <Tabs>
@@ -125,83 +123,87 @@ We’ll use these two parameters to define its size:
 
 
 
-In Semio, Representations are typically referenced through external geometry files 🗂️ even when the geometry is generated inside Grasshopper.
-This approach helps maintain clean, modular workflows 🧼 and supports flexible updates.
-
-In this example, we’re exporting a .glb file 💾 and referencing it in a Type using the file-based method.
-
----
-
-#### Step 1: 🛠️ Geometry Generation & Export 
-
-Since our shape follows a clear logic 🧠, we use a parametric Grasshopper definition to generate the geometry of the brick mold 🧱.
-This is useful because it lets us define one logic that supports all Variants of a Type 🔁 — controlled by the parameter `n` and `W`, which sets the brick’s length and width 📏.
+In Semio, Representations are typically referenced through **external geometry files** 🗂️ — even when generated inside Grasshopper.  
+This approach helps maintain **clean, modular workflows** 🧼 and supports flexible updates.
 
 While the modeling process itself isn’t the focus of this tutorial, the key takeaway is this:
-you’ll need to go through two simple steps to attach this geometry as a Representation.
+you’ll need to go through two simple steps to attach this geometry as a Representation
 
 ---
-🧱 After creating the geometry, the next step is to attach it as a Representation — and to do that, we first need to export it as a file (in this case, a .glb).
-💾 We’ll showcase a simple script that handles this process automatically — and you can easily attach it right after your geometry definition.
 
-Here’s how it works:
+#### Step 1: 🛠️ Geometry Generation 
 
-Modeling the Geometry happes within the Cluster at the beginning, but we are going to focus on how to Export the Geometry to a File mainly
+Since our shape follows a clear logic 🧠, we use a **parametric Grasshopper definition** to generate the geometry of the brick mold 🧱  
+This is useful because it lets us generate **all the different Variants** of this brick seen in the sketch, using a single logic controlled by the parameters `n` and `W`, which define the brick’s length and width 📏
 
-Here’s what the script does:
 
-- **Set the Export Location**  
+#### Step 2: 🛠️ Geometry Export
+
+After generating the geometry, we need to **export it as a `.glb` file** so it can be attached as a Representation.  
+💾 We’ll use a simple workflow that automates this export — it can be placed directly after your geometry definition in Grasshopper.
+
+Although modeling happens inside a **Cluster** at the very left of your definition, we’ll focus here on the **export logic**:
+
+**The workflow looks like this:**
+
+- 📂 **Set the Export Location**  
   A directory path is defined using the `Dir` and `Path` components.  
   This determines where the exported file will be saved.
 
-- **Build the File Name**  
+- 📝 **Build the File Name**  
   The file name is generated dynamically using `Concat`,  
   combining the Type name (e.g. `profile`) and the Variant (e.g. `2`) → `profile_2.glb`
 
-- **Assemble the Full File Path**  
+- 📂 **Assemble the Full File Path**  
   A second `Concat` block merges the directory and file name:  
   `C:\Users\Users\Downloads\profile_2.glb`
 
-- **Prepare the Geometry**  
+- 📐 **Prepare the Geometry**  
   - Convert or prepare the geometry in the desired format (e.g. Mesh)  
   - The `iGeo` component then writes the `.glb` file to disk
 
+ :::note
+⚙️ This method is ideal because it combines the familiar **parametric workflow** of Grasshopper with the **modular workflow** of Semio.  
+📤 Every time a parameter is changed in the geometry generation, the corresponding file can be **automatically exported** and then **referenced** in the next step.
+:::
+
+
+
 ---
 
-#### Step 2: 🔗 Referencing the file as a representation 
+#### Step 3: 🔗 Referencing the Exported File
 
-The same file name (`profile_2.glb`) is passed to the **`Ur` input** of the `~Rep` component.  
-This tells Semio where to find the exported geometry.
+The exported file name (e.g. `profile_2.glb`) is passed to the **`Ur` input** of the **Model Representation** component (`~Rep`).  
+This tells Semio where to find the geometry file.
 
-- The `~Rep` component uses this path (`Ur`) to create a Representation:  
+- The **`~Rep` (Model Representation)** component uses the `Ur` path — the file location — to create a Representation:  
   `Rep(model/gltf-binary)`
 
-- This Representation is then connected to the **Type**, along with its **Name** and **Variant**.
+- This Representation is then connected in a later step to the **`Typ` (Model Type)** component.
 
-> 💡 `Ur` stands for "URL" or file path — it’s how Semio links a Type to its geometry.
+
 
 ---
 
-##### 🔁 Why File-Based?
+##### 🔁 Why Use File-Based Referencing?
 
-Even when working inside Grasshopper, Semio requires a **snapshot** of the geometry —  
-a static file that represents the shape of the brick mold at a given point in time.
+Even when working inside Grasshopper, Semio needs a **static snapshot** of your geometry —  
+a file that captures the shape of your brick mold at that moment.
 
-This means:
+Here’s what that means:
 
-- If you generate geometry dynamically, you still need to export it as a file  
-- Semio references that **fixed file**, not a live Grasshopper definition
+- If your geometry is generated dynamically, it still needs to be **exported as a file**  
+- Semio references that exported file — not the live Grasshopper definition
 
-> 💡 This ensures geometry stays **modular and transferable** between Grasshopper and Semio Studio.
-
-
+> 💡 This approach keeps your geometry **modular and portable**, so it works seamlessly across Grasshopper and Semio Sketchpad  
+> 🧱 It also enables working in **chunks** — letting you break large designs into smaller, manageable parts
 
 
 
 
 </TabItem>
 
-<TabItem label="Manual Reference">
+<TabItem label="Direct Reference">
 
 
 
@@ -220,34 +222,47 @@ Want to go deeper into the pros and cons? Learn more here 🔍
 #### 🧪 Switching the Representation (Placeholder principle)
 
 
-As introduced earlier, when you give a Type its shape in Semio, you're attaching a **Representation** — a piece of geometry that shows what the brick looks like.  
-But this geometry is more than just visual: it acts as a **semantic placeholder**.  
-That means the Representation can be changed or swapped at any time without affecting the logic of your design.
+As introduced earlier, when you give a **Type** its shape in Semio, you're attaching a **Representation** —  
+a piece of geometry that shows what the brick looks like visually 👁️.  
+But this geometry is more than just form: it acts as a **semantic placeholder** 🧠.  
+That means you can **change or swap** the Representation at any time **without breaking your design logic** 🔁
 
 You can think of it like a **costume** for your Type 🎭  
-The identity, name, and behavior stay the same — you're just changing how it looks on stage.  
+The identity, name, and behavior stay the same — you're just changing how it looks on stage.
 
-This flexibility is especially useful when working at different levels of detail across a project.
+This flexibility is especially useful when working at **different levels of detail** across a project 🧩
+
+##### 🎬 One Brick, Two Representations
+
+To illustrate this concept, we created **two geometry files** for the **same brick mold Type**:
 
 ---
-
-
-In our example, we create two geometry files for the same brick mold Type:
 
 <Tabs>
 
 <TabItem label="🔍 Detailed Version">
 
-This version includes the full profile of the piece — a rectangle cut at an angle and extruded into a wooden section.  
-It reflects real-world geometry and is ideal for detailed communication: joinery, materiality, and fabrication outputs.
+This version includes the full profile of the piece —  
+a rectangle cut at an angle and extruded into a wooden section 🪵.  
+It reflects real-world geometry and is ideal for:
+
+- Joinery and fabrication  
+- Material communication  
+- High-detail outputs
+
 (Add Image of the detailed version)
 
 </TabItem>
 
 <TabItem label="⚡ Simplified Version">
 
-This version is just a bounding box — a minimal block that matches the brick’s overall size but leaves out its inner shape.  
-It’s perfect for early-stage layouts, when exact geometry isn’t known yet, or when fast performance is more important than visual fidelity.
+This version is just a **bounding box** — a minimal block that matches the brick’s size 📦, but skips inner detail.  
+It’s perfect for:
+
+- Early-stage layouts  
+- Fast performance  
+- Projects where shape is still evolving
+
 (Add Image of the simplified version)
 </TabItem>
 
@@ -255,15 +270,16 @@ It’s perfect for early-stage layouts, when exact geometry isn’t known yet, o
 
 ---
 
-Even though the two Representations look very different, they both belong to the same **Type**.  
-The Name, Variant, Ports, and logic stay identical — only the appearance changes.
+Even though these two Representations **look very different**, they both belong to the **same Type** ✅. The **Name**, **Variant**, **Ports**, and **logic** stay exactly the same — only the appearance changes.
 
-This means you can design, assemble, and connect everything using placeholders, then later **swap in the detailed version** when you're ready to communicate or fabricate.
+This means you can **design and assemble** everything using lightweight placeholders,  
+then **swap in the detailed version** when you're ready for presentation, communication, or fabrication 🧰.
 
 > 💡 In Semio, the Representation doesn’t define the part — it simply **stands in for it**.  
-Like a LEGO minifig in different outfits — it's still the same character underneath.
+> Like a LEGO minifig in different outfits 🧑‍🚀🕵️ — it's still the same character underneath.
 
-This separation of logic and form is what makes Semio workflows flexible, scalable, and robust — across early concept, detailed design, and collaborative development.
+This separation of **logic and form** is what makes Semio workflows flexible, scalable, and robust, from early concept to detailed design to collaborative development 🤝
+
 </li>
 
 <li>
