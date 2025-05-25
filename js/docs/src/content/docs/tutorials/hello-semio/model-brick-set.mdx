@@ -77,6 +77,7 @@ As your project grows and you're working with many Types, Variants, and Pieces, 
 
 👉 In our example, we’ll name our Type **'Profile'**, since we’re modeling Pieces based on custom wood shapes with a defined profile
 
+
 ---
 
 </li>
@@ -129,12 +130,16 @@ This approach helps maintain **clean, modular workflows** 🧼 and supports flex
 While the modeling process itself isn’t the focus of this tutorial, the key takeaway is this:
 you’ll need to go through two simple steps to attach this geometry as a Representation
 
+
 ---
 
-#### Step 1: 🛠️ Geometry Generation 
+#### Step 1: 🛠️ Geometry modeling 
 
 Since our shape follows a clear logic 🧠, we use a **parametric Grasshopper definition** to generate the geometry of the brick mold 🧱  
 This is useful because it lets us generate **all the different Variants** of this brick seen in the sketch, using a single logic controlled by the parameters `n` and `W`, which define the brick’s length and width 📏
+
+{/* TODO: insert Geometry Generation image */}
+
 
 
 #### Step 2: 🛠️ Geometry Export
@@ -142,9 +147,19 @@ This is useful because it lets us generate **all the different Variants** of thi
 After generating the geometry, we need to **export it as a `.glb` file** so it can be attached as a Representation.  
 💾 We’ll use a simple workflow that automates this export — it can be placed directly after your geometry definition in Grasshopper.
 
-Although modeling happens inside a **Cluster** at the very left of your definition, we’ll focus here on the **export logic**:
+The modeling happens in this example inside a **Cluster** at the very left of your definition, we’ll focus here mainly on the **export logic**:
 
-**The workflow looks like this:**
+**The export workflow looks like this:**
+
+
+
+
+{/* TODO: insert export geometry image */}
+
+![📤 Export Geometry](/export-geometry.png)
+
+
+
 
 - 📂 **Set the Export Location**  
   A directory path is defined using the `Dir` and `Path` components.  
@@ -181,7 +196,9 @@ This tells Semio where to find the geometry file.
 
 - This Representation is then connected in a later step to the **`Typ` (Model Type)** component.
 
+{/* TODO: insert Referencing the Exported File image */}
 
+![📁 Reference Geometry](/reference-geometry.png)
 
 ---
 
@@ -250,7 +267,7 @@ It reflects real-world geometry and is ideal for:
 - Material communication  
 - High-detail outputs
 
-(Add Image of the detailed version)
+{/* TODO: insert Detailed Version image */}
 
 </TabItem>
 
@@ -263,7 +280,7 @@ It’s perfect for:
 - Fast performance  
 - Projects where shape is still evolving
 
-(Add Image of the simplified version)
+{/* TODO: insert Simplified Version image */}
 </TabItem>
 
 </Tabs>
@@ -308,26 +325,7 @@ In the Semio Grasshopper plugin, each Port is defined with three main inputs:
 
 ---
 
-#### 🏷️ Port ID (Id)
 
-A **Port ID** is the label you give to each Port.  
-This naming is important — because later, when you make connections, you'll say things like:
-
-> "Connect Piece A's `top` Port to Piece B's `bottom` Port."
-
-You can choose any naming system — as long as it makes sense in your design logic.  
-In this example, we use:
-
-- `n`, `s`, `e`, `w` — standing for **north, south, east, and west** 🧭
-
-In your own project, you might use:
-
-- `top`, `bottom`, `hinge`, `plug`, `outlet`, `windowDock` — or anything else 🔧
-
-💡 **Tip:** Choose a consistent and meaningful naming system.  
-It will make connecting components easier — and helps when working with AI or teammates.
-
----
 
 #### 💡 Port Location (Pt)
 
@@ -383,14 +381,35 @@ Here’s how to define direction effectively:
 
 
 ---
+#### 🏷️ Port ID (Id)
+
+A **Port ID** is the label you give to each Port.  
+This naming is important — because later, when you make connections, you'll say things like:
+
+> "Connect Piece A's `top` Port to Piece B's `bottom` Port."
+
+You can choose any naming system — as long as it makes sense in your design logic.  
+In this example, we use:
+
+- `n`, `s`, `e`, `w` — standing for **north, south, east, and west** 🧭
+
+In your own project, you might use:
+
+- `top`, `bottom`, `hinge`, `plug`, `outlet`, `windowDock` — or anything else 🔧
+
+💡 **Tip:** Choose a consistent and meaningful naming system.  
+It will make connecting components easier — and helps when working with AI or teammates.
+
+---
 
 Now you can see how the three inputs — Id, Pt, and Dr — work together to create Ports.
 Each Port is defined by one entry from each list, so the lists must be the same length.
 This ensures that every snapping point has a matching ID, position, and direction
 
 
-  (Add port Image here Gh)
-  (Image of Wireframe with points and Vectors in Rhino)
+  {/* TODO: insert port Image here Gh */}
+  
+  {/* TODO: insert Image of Wireframe with points and Vectors in Rhino */}
 
 </li>
 
@@ -407,13 +426,15 @@ you plug them into the `Typ` component.
 - 🧲 **Ports** → e.g. `n`, `s`, `e`, `w`  
 - 🧊 **Representation** → the linked geometry
 
-
-🎯 The result is a complete Type —
-a smart, reusable building block, ready to be placed and connected in your Design.
-It’s defined by the Name and Variant you assign — for example: Typ("profile", 4)
+  {/* TODO: insert Image of Type component with the inputs */}
+![📁 Model Type](/model-type.png)
 
 
-(Add Image of the Type component with the inputs)
+  🎯 The result is a complete Type —
+  a smart, reusable mold, ready to be casted into your Design.
+  🧩 The output `Typ("profile", 2)` means we're creating a Variant **named `2`** based on the `"profile"` mold 🧱 — a 2-unit-long brick 📏
+
+
 
 
 ---
@@ -465,7 +486,7 @@ This tells semio:
 ✅ Just like when modeling a Type, you define the Representation, Ports, and final Model Type — only the **Variant** changes.
 
 ---
-(Here add a image of model Type inside the cluster. Two images one for each variant )
+{/* TODO: insert Image of model Type inside the cluster. Two images one for each variant */}
 
 
 
@@ -500,4 +521,4 @@ without duplicating components or cluttering your canvas.
 ✅ **Bonus:** Keeps your file organized and scalable — perfect for growing your Kit later on.
 
 ---
-(Here add an image of the cluster)
+{/* TODO: insert Gif of the cluster with the different variants */}
