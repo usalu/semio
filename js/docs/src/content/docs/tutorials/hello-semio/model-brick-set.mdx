@@ -70,7 +70,12 @@ Let’s take a look at the elements that make up a Type, and dive into modeling 
 Giving clear and consistent names to elements in Semio **really pays off later** — especially when designing and making connections.  
 As your project grows and you're working with many Types, Variants, and Pieces, meaningful names make everything easier to navigate and understand.
 
-📝 Try to name things the way you would in a real project — clear, specific, and with purpose.
+:::note
+📝 Try to name things the way you would in a real project — clear, specific, and with purpose
+:::
+
+
+👉 In our example, we’ll name our Type **'Profile'**, since we’re modeling Pieces based on custom wood shapes with a defined profile
 
 ---
 
@@ -87,7 +92,7 @@ This isn’t just visual geometry — it’s a **layer of meaning** that stands 
 Think of it like snapping a shell onto a LEGO mold — now your brick has a visible form 👀  
 But that form isn’t fixed. A Representation is more like a **costume** — it can be swapped at any time, as long as it fits the logic.
 
-Just like architects might use a blocky mass for urban models 🏙️ or detailed profiles for close-ups 🪟,  
+Just like architects might use a blocky volumes for urban models 🏙️ or detailed profiles for close-ups 🪟,  
 Semio lets you change the **look** without changing the **design logic** 🔄  
 Same brick, different shell — that’s the idea 💡
 
@@ -96,20 +101,21 @@ Same brick, different shell — that’s the idea 💡
 ##### 🔧 Modeling Representation
 
 Creating a Representation works in two simple steps:
-🧱 First, you build the geometry — the actual shape of your brick.
-📎 Then, you attach that shape to your Type to give it a visual form.
+🧱 First, you build the geometry — the actual shape of your brick
+📎 Then, you attach that shape to your Type to give it a visual form
 
 Let’s take a closer look at the brick mold in our example.
-It’s shaped like a rectangle cut at an angle, then stretched into a wooden LEGO-style profile.
+You’ll notice that it’s always the same shape 🧱 a rectangle cut at an angle ✂️ just stretched into different sizes 📏
 
-We’ll use two parameters to define its size:
+We’ll use these two parameters to define its size:
 
-W → the width of one brick unit
+*W* → the width of one brick unit
 
-n → the number of units in length 
+*n* → the number of units in length 
 
-In Semio, you can attach geometry to a Type in different ways — depending on what works best for your workflow
-Let’s look at how that works in practice:
+🧰 Next, we’ll dive into how to create and attach geometry to your brick mold
+🧱 In Semio, you can attach geometry to a Type in different ways — depending on what fits your workflow best.
+👀 Let’s take a look at how that works in practice.
 
 
 
@@ -117,27 +123,25 @@ Let’s look at how that works in practice:
 
 <TabItem label="File-Based Reference (🔁 Recommended)">
 
-Model the shape externally (e.g. in Rhino), then attach it to your Type by referencing a named layer.
 
 
-In Semio, Representations are typically referenced through **external geometry files** — even when the geometry is generated inside Grasshopper.  
-This approach helps maintain clean, modular workflows and supports flexible updates.
+In Semio, Representations are typically referenced through external geometry files 🗂️ even when the geometry is generated inside Grasshopper.
+This approach helps maintain clean, modular workflows 🧼 and supports flexible updates.
 
-In this example, we’re exporting a `.glb` file and referencing it in a **Type** using the file-based method.
-
----
-
-#### 🛠️ Geometry Generation & Export 
-
-We use a **parametric Grasshopper definition** to generate the shape of the brick mold.  
-This is helpful because we can define a logic that supports **all Variants** of a Type — controlled by the parameter `n`, which sets the brick's length.
-
-While the modeling logic isn't the focus of this tutorial, the key takeaway is:
-
-> 🧱 **We generate the geometry , and reference it via an exported file.**
+In this example, we’re exporting a .glb file 💾 and referencing it in a Type using the file-based method.
 
 ---
-##### 🧱 Exporting the Geometry to a File
+
+#### Step 1: 🛠️ Geometry Generation & Export 
+
+Since our shape follows a clear logic 🧠, we use a parametric Grasshopper definition to generate the geometry of the brick mold 🧱.
+This is useful because it lets us define one logic that supports all Variants of a Type 🔁 — controlled by the parameter `n` and `W`, which sets the brick’s length and width 📏.
+
+While the modeling process itself isn’t the focus of this tutorial, the key takeaway is this:
+you’ll need to go through two simple steps to attach this geometry as a Representation.
+
+---
+##### Exporting the Geometry to a File
 
 Here’s what the script does:
 
@@ -159,7 +163,7 @@ Here’s what the script does:
 
 ---
 
-#### 🧱 Referencing the file as a representation 
+#### Step 2: 🔗 Referencing the file as a representation 
 
 The same file name (`profile_2.glb`) is passed to the **`Ur` input** of the `~Rep` component.  
 This tells Semio where to find the exported geometry.
@@ -400,7 +404,7 @@ It’s defined by the Name and Variant you assign — for example: Typ("profile"
 
 
 
-## 🧬 Mold Versions (Variants of Type)
+## 🧬 Create Mold Versions (Variants of Type)
 → what we ae going to do in this step is to use the same mold to make bricks of different sizes
 
 Now that you've created your base **Type**, it's time to generate **Variants** — based on the **unit count `n`** shown in the sketch.
