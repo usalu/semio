@@ -1,37 +1,37 @@
 kit : !Kit{
-    uri : !String // Unique URI of the kit
+    uri : !String
     name : !String
     description : ?String
     icon : ?String // emoji | logogram | url
     image : ?String // url
     preview : ?String // url
-    version : ?String
+    version : ?String // empty is latest
     remote : ?String // url for remote fetching
     homepage : ?String // url
     license : ?String // spdx id | url
-    created : !DateTime
-    updated : !DateTime
+    created : !String // date
+    updated : !String // date
     types : +Type[
         name : !String
         description : ?String
         icon : ?String // emoji | logogram | url
         image : ?String // url
-        variant : ?String // Default is empty string
-        virtual : ?Boolean // Default is false
+        variant : ?String // empty is default
+        virtual : ?Boolean // default false
         unit : !String // e.g., mm, cm, m
-        created : !DateTime
-        updated : !DateTime
+        created : !String // date
+        updated : !String // date
         representations : +Representation[
             url : !String
             description : ?String
-            tags : *String[] // Default is empty list (meaning default LOD)
+            tags : *String[] // default is empty list (meaning default LOD)
             qualities : *Quality[]
         ]
         ports : +Port[
-            id_ : !String // Local ID within the type, called "id" in some contexts
+            id : !String // empty is default
             description : ?String
+            mandatory : ?Boolean // default false
             family : ?String // For explicit compatibility
-            mandatory : ?Boolean // Default is false
             compatibleFamilies : *String[] // Empty list means compatible with all
             point : !Point{
                 x : !Float
@@ -49,7 +49,7 @@ kit : !Kit{
         authors : *Author[
             name : !String
             email : !String
-            rank : !Integer // For ordering
+            rank : !Integer // for ordering
         ]
         qualities : *Quality[]
     ]
@@ -58,17 +58,22 @@ kit : !Kit{
         description : ?String
         icon : ?String // emoji | logogram | url
         image : ?String // url
-        variant : ?String // Default is empty string
-        view : ?String // Default is empty string
+        variant : ?String // empty is default
+        view : ?String // empty is default
         unit : !String // e.g., mm, cm, m
-        created : !DateTime
-        updated : !DateTime
+        created : !String // date
+        updated : !String // date
         pieces : +Piece[
-            id_ : !String // Local ID within the design, called "id" in some contexts
+            id : !String
             description : ?String
-            type : !TypeId{ // Reference to a Type
+            type : !TypeId{
                 name : !String
                 variant : ?String
+            }
+            design : ?DesignId{
+                name : !String
+                variant : ?String
+                view : ?String
             }
             plane : ?Plane{
                 origin : !Point{
@@ -87,7 +92,7 @@ kit : !Kit{
                     z : !Float
                 }
             }
-            center : ?DiagramPoint{ // For 2D diagram
+            center : ?DiagramPoint{
                 x : !Float
                 y : !Float
             }
@@ -95,17 +100,17 @@ kit : !Kit{
         ]
         connections : +Connection[
             connected : !Side{
-                piece : !PieceId{ id_ : !String }
-                port : !PortId{ id_ : !String }
+                piece : !PieceId{ id : !String }
+                port : !PortId{ id : !String }
             }
             connecting : !Side{
-                piece : !PieceId{ id_ : !String }
-                port : !PortId{ id_ : !String }
+                piece : !PieceId{ id : !String }
+                port : !PortId{ id : !String }
             }
             description : ?String
             gap : ?Float
             shift : ?Float
-            raise_ : ?Float // named raise_ in python
+            raise : ?Float
             rotation : ?Float // degrees
             turn : ?Float // degrees
             tilt : ?Float // degrees
@@ -126,60 +131,4 @@ kit : !Kit{
         unit : ?String
         definition : ?String // text | uri
     ]
-}
-
-// Standalone definitions for clarity, though they are nested above
-
-Point : !{
-    x : !Float
-    y : !Float
-    z : !Float
-}
-
-Vector : !{
-    x : !Float
-    y : !Float
-    z : !Float
-}
-
-DiagramPoint : !{
-    x : !Float
-    y : !Float
-}
-
-Plane : !{
-    origin : !Point
-    xAxis : !Vector
-    yAxis : !Vector
-}
-
-TypeId : !{
-    name : !String
-    variant : ?String
-}
-
-PieceId : !{
-    id_ : !String
-}
-
-PortId : !{
-    id_ : !String
-}
-
-Side : !{
-    piece : !PieceId
-    port : !PortId
-}
-
-Quality : !{
-    name : !String
-    value : ?String
-    unit : ?String
-    definition : ?String
-}
-
-Author : !{
-    name : !String
-    email : !String
-    rank : !Integer
 }

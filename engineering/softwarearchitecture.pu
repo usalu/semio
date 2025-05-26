@@ -1,18 +1,8 @@
 @startuml "software architecture"
 skinparam linetype ortho
 
-abstract class ModelBase <<(M,LightGray)>> #LightGray {
-  +parse(input): ModelBase
-  +dump(): Output
-}
 
-class Semio #LightYellow {
-  release: str
-  engine: str
-  created: datetime
-}
-
-class Kit #Application {
+class Kit {
   uri: str
   name: str
   description: str
@@ -25,9 +15,12 @@ class Kit #Application {
   license: str
   created: datetime
   updated: datetime
+  types: list[Type]
+  designs: list[Design]
+  qualities: list[Quality]
 }
 
-class Type #Application {
+class Type {
   name: str
   description: str
   icon: str
@@ -37,9 +30,13 @@ class Type #Application {
   unit: str
   created: datetime
   updated: datetime
+  representations: list[Representation]
+  ports: list[Port]
+  authors: list[Author]
+  qualities: list[Quality]
 }
 
-class Design #Application {
+class Design {
   name: str
   description: str
   icon: str
@@ -49,133 +46,130 @@ class Design #Application {
   unit: str
   created: datetime
   updated: datetime
+  pieces: list[Piece]
+  connections: list[Connection]
+  authors: list[Author]
+  qualities: list[Quality]
 }
 
-class Representation #Application {
+class Representation {
   url: str
   description: str
+  tags: list[str]
+  qualities: list[Quality]
 }
 
-class Tag #Application {
-  name: str
-  order: int
-}
-
-class Port #Application {
-  id_: str
+class Port {
+  id: str
   description: str
-  family: str
   mandatory: bool
   t: float
+  qualities: list[Quality]
 }
 
-class CompatibleFamily #Application {
+class PortFamily {
   name: str
-  order: int
+  
+  ports: list[Port]
 }
 
-class Piece #Application {
-  id_: str
+class Piece {
+  id: str
   description: str
+  plane: Plane
+  center: DiagramPoint
+  type: Type
+  design: Design
+  piece: Piece
+  qualities: list[Quality]
 }
 
-class Plane #Application {
-  // originX, originY, etc. (flattened Point/Vector)
+class Plane {
+  origin: Point
+  xAxis: Vector
+  yAxis: Vector
 }
 
-class Connection #Application {
+class Connection {
+  connecting: Side
+  connected: Side
   description: str
   gap: float
   shift: float
-  raise_: float
+  raise: float
   rotation: float
   turn: float
   tilt: float
-  x: float // diagram x
-  y: float // diagram y
+  x: float
+  y: float
+  qualities: list[Quality]
 }
 
-class Side #Application {
-  // References PieceId and PortId
+class Side {
+  piece: Piece
+  port: Port
 }
 
-class Quality #Application {
+class Quality {
   name: str
   value: str
   unit: str
   definition: str
 }
 
-class Author #Application {
+class Author {
   name: str
   email: str
-  rank: int
 }
 
-class Point #DataType {
+class Point {
   x: float
   y: float
   z: float
 }
 
-class Vector #DataType {
+class Vector {
   x: float
   y: float
   z: float
 }
 
-class DiagramPoint #DataType {
+class DiagramPoint {
   x: float
   y: float
 }
 
-ModelBase <|-- Kit
-ModelBase <|-- Type
-ModelBase <|-- Design
-ModelBase <|-- Representation
-ModelBase <|-- Port
-ModelBase <|-- Piece
-ModelBase <|-- Connection
-ModelBase <|-- Quality
-ModelBase <|-- Author
-ModelBase <|-- Plane
-ModelBase <|-- Tag
-ModelBase <|-- CompatibleFamily
-ModelBase <|-- Side
-ModelBase <|-- Point
-ModelBase <|-- Vector
-ModelBase <|-- DiagramPoint
+Kit *-- "0..*" Type : contains >
+Kit *-- "0..*" Design : contains >
+Kit *-- "0..*" Quality : has >
 
-Kit *-- "many" Type : contains >
-Kit *-- "many" Design : contains >
-Kit *-- "many" Quality : has >
+Design *-- "0..*" Piece : contains >
+Design *-- "0..*" Connection : contains >
+Design *-- "0..*" Author : authored by >
+Design *-- "0..*" Quality : has >
 
-Design *-- "many" Piece : contains >
-Design *-- "many" Connection : contains >
-Design *-- "many" Author : authored by >
-Design *-- "many" Quality : has >
-
-Type *-- "many" Representation : has >
-Type *-- "many" Port : has >
-Type *-- "many" Author : authored by >
-Type *-- "many" Quality : has >
+Type *-- "0..*" Representation : has >
+Type *-- "0..*" Port : has >
+Type *-- "0..*" Author : authored by >
+Type *-- "0..*" Quality : has >
 
 Piece *-- "1" Type : instance of >
 Piece o-- "0..1" Plane : located by >
-Piece *-- "many" Quality : has >
+Piece *-- "0..*" Quality : has >
+Piece o-- "0..1" DiagramPoint : has center >
 
-Connection *-- "many" Quality : has >
+Connection *-- "0..*" Quality : has >
 Connection o-- "1" Side : connected >
 Connection o-- "1" Side : connecting >
 
 Side o-- "1" Piece : refers to >
 Side o-- "1" Port : refers to >
 
-Representation *-- "many" Tag : tagged with >
-Representation *-- "many" Quality : has >
+Representation *-- "0..*" Tag : tagged with >
+Representation *-- "0..*" Quality : has >
 
-Port *-- "many" CompatibleFamily : compatible with >
-Port *-- "many" Quality : has >
+Port *-- "0..*" Port : compatible with >
+Port *-- "0..*" Quality : has >
 Port *-- "1" Point : at >
 Port *-- "1" Vector : oriented by >
 
