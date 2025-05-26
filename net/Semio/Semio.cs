@@ -684,9 +684,9 @@ public class DescriptionAttribute : TextAttribute
     }
 }
 
-public class BoolAttribute : PropAttribute
+public class FalseOrTrueAttribute : PropAttribute
 {
-    public BoolAttribute(string emoji, string code, string abbreviation, string description,
+    public FalseOrTrueAttribute(string emoji, string code, string abbreviation, string description,
         PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
         base(emoji, code,
             abbreviation, description, importance, isDefaultValid, skipValidation)
@@ -838,7 +838,6 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
                 .NotEmpty()
                 .WithMessage($"The {property.Name.ToLower()} must have at least one.")
                 .When(m => propAttribute.Importance != PropImportance.OPTIONAL);
-
         if (property.PropertyType == typeof(float))
         {
             var numberAttribute = property.GetCustomAttribute<NumberPropAttribute>();
