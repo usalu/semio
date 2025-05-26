@@ -1619,8 +1619,20 @@ public class Piece : Model<Piece>
     /// <summary>
     ///     🧩 The local identifier of the type of the piece within the kit.
     /// </summary>
-    [ModelProp("🧩", "Ty", "Typ", "The local identifier of the type of the piece within the kit.")]
-    public TypeId Type { get; set; } = new();
+    [ModelProp("🧩", "Ty?", "Typ?", "The local identifier of the type of the piece within the kit.")]
+    public TypeId Type { get; set; } = null;
+
+    /// <summary>
+    ///     🏙️ The local identifier of the design of the piece within the kit.
+    /// </summary>
+    [ModelProp("🏙️", "Dn?", "Dsn?", "The local identifier of the design of the piece within the kit.")]
+    public DesignId Design { get; set; } = null;
+
+    /// <summary>
+    ///     ⭕ The local identifier of the piece within the design.
+    /// </summary>
+    [ModelProp("⭕", "Pc?", "Pce?", "The local identifier of the piece within the design.")]
+    public PieceId DesignPiece { get; set; } = null;
 
     /// <summary>
     ///     ◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.
@@ -1663,6 +1675,22 @@ public class Piece : Model<Piece>
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
+        if (Type == null && Design == null)
+        {
+            isValid = false;
+            errors.Add("Piece must have either a Type or a Design reference.");
+        }
+        if (Type != null && Design != null)
+        {
+            isValid = false;
+            errors.Add("Piece cannot have both a Type and a Design reference.");
+        }
+        // TODO Add validation that either type or design is not null
+        if (Qualities != null && Qualities.Count > Constants.QualitiesMax)
+        {
+            isValid = false;
+            errors.Add($"The piece cannot have more than {Constants.QualitiesMax} qualities.");
+        }
         var (isValidType, errorsType) = Type.Validate();
         isValid = isValid && isValidType;
         errors.AddRange(errorsType.Select(e => $"The type({Type.ToHumanIdString()}) is invalid: " + e));
@@ -2507,7 +2535,7 @@ public class DesignId : Model<DesignId>
     /// <summary>
     ///     🔀 The optional variant of the design. No variant means the default variant.
     /// </summary>
-    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the design. No variant means the default variant.",
+    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the design. No variant means the default variant. ",
         PropImportance.ID, true)]
     public string Variant { get; set; } = "";
 

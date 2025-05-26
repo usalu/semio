@@ -2711,10 +2711,27 @@ class PieceDescriptionField(RealField, abc.ABC):
 class PieceTypeField(MaskedField, abc.ABC):
     """🧩 The type of the piece."""
 
-    type: TypeId = sqlmodel.Field(
-        description="🧩 The type of the piece.",
+    type: typing.Optional[TypeId] = (
+        sqlmodel.Field(  # TODO: Make this either type or design (oneOf).
+            default=None, description="""🧩 The type of the piece."""
+        )
     )
-    """🧩 The type of the piece."""
+
+
+class PieceDesignField(MaskedField, abc.ABC):
+    """🏙️ The design of the piece."""
+
+    design: typing.Optional["DesignId"] = sqlmodel.Field(
+        default=None, description="🏙️ The design of the piece."
+    )
+
+
+class PiecePieceField(MaskedField, abc.ABC):
+    """⭕ The piece in the design."""
+
+    piece: typing.Optional["PieceId"] = sqlmodel.Field(
+        default=None, description="⭕ The piece in the design."
+    )
 
 
 class PiecePlaneField(MaskedField, abc.ABC):
@@ -2744,6 +2761,8 @@ class PieceId(PieceIdField, Id):
 class PieceProps(
     PieceCenterField,
     PiecePlaneField,
+    PiecePieceField,
+    PieceDesignField,
     PieceTypeField,
     PieceDescriptionField,
     PieceIdField,
@@ -2772,7 +2791,14 @@ class PieceInput(PieceTypeField, PieceDescriptionField, PieceIdField, Input):
     """📏 The qualities of the piece."""
 
 
-class PieceContext(PieceTypeField, PieceDescriptionField, PieceIdField, Context):
+class PieceContext(
+    PiecePieceField,
+    PieceDesignField,
+    PieceTypeField,
+    PieceDescriptionField,
+    PieceIdField,
+    Context,
+):
     """⭕ A piece is a 3d-instance of a type in a design."""
 
     plane: typing.Optional[PlaneContext] = sqlmodel.Field(
@@ -2792,7 +2818,14 @@ class PieceContext(PieceTypeField, PieceDescriptionField, PieceIdField, Context)
     """📏 The qualities of the piece."""
 
 
-class PieceOutput(PieceTypeField, PieceDescriptionField, PieceIdField, Output):
+class PieceOutput(
+    PiecePieceField,
+    PieceDesignField,
+    PieceTypeField,
+    PieceDescriptionField,
+    PieceIdField,
+    Output,
+):
     """⭕ A piece is a 3d-instance of a type in a design."""
 
     plane: typing.Optional[PlaneOutput] = sqlmodel.Field(
@@ -2812,7 +2845,14 @@ class PieceOutput(PieceTypeField, PieceDescriptionField, PieceIdField, Output):
     """📏 The qualities of the piece."""
 
 
-class PiecePrediction(PieceTypeField, PieceDescriptionField, PieceIdField, Prediction):
+class PiecePrediction(
+    PiecePieceField,
+    PieceDesignField,
+    PieceTypeField,
+    PieceDescriptionField,
+    PieceIdField,
+    Prediction,
+):
     """⭕ A piece is a 3d-instance of a type in a design."""
 
     # center: typing.Optional[DiagramPointPrediction] = sqlmodel.Field(
@@ -2840,6 +2880,7 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
         ),
         default="",
     )
+    """🆔 The id of the piece within the design."""
     typePk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
             "type_id",
@@ -2850,8 +2891,20 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
         exclude=True,
     )
     """🔑 The foreign key of the type of the piece in the database."""
-    type: Type = sqlmodel.Relationship(back_populates="pieces")
-    """🆔 The id of the piece within the design."""
+    type: typing.Optional[Type] = sqlmodel.Relationship(back_populates="pieces")
+    """👪 The parent type of the piece."""
+    designPk: typing.Optional[int] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "design_id",
+            sqlalchemy.Integer(),
+            sqlalchemy.ForeignKey("design.id"),
+        ),
+        default=None,
+        exclude=True,
+    )
+    """🔑 The foreign primary key of the parent design of the piece in the database."""
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="pieces")
+    """👪 The parent design of the piece."""
     planePk: typing.Optional[int] = sqlmodel.Field(
         sa_column=sqlmodel.Column(
             "plane_id",
@@ -2944,9 +2997,10 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
         cls: "Piece",
         input: str | dict | PieceInput | typing.Any | None,
         types: dict[str, dict[str, Type]],
+        designs: dict[str, dict[str, dict[str, Design]]],
     ) -> "Piece":
         if input is None:
-            return cls()
+            return None
         obj = (
             json.loads(input)
             if isinstance(input, str)
@@ -2970,6 +3024,31 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
             if obj["center"] is not None:
                 center = DiagramPoint.parse(obj["center"])
                 entity.center = center
+        except KeyError:
+            pass
+        if parsedInput.design:
+            try:
+                # TODO: Implement design lookup
+                pass
+            except KeyError:
+                # raise DesignNotFound(parsedInput.design) # TODO: Implement DesignNotFound
+                pass
+        else:
+            # TODO: improve error message
+            raise ValueError("Either type or design must be specified for a piece.")
+
+        # TODO: Add validation that either type or design is set.
+        # if not new.type and not new.design:
+        #     raise ValueError("Either type or design must be set for a Piece.")
+        if new.plane:
+            try:
+                if new.plane.originX is not None:
+                    entity.plane = new.plane
+            except KeyError:
+                pass
+        try:
+            if obj["qualities"] is not None:
+                entity.qualities = [Quality.parse(q) for q in obj["qualities"]]
         except KeyError:
             pass
         return entity
@@ -3631,7 +3710,7 @@ class DesignUpdatedField(RealField, abc.ABC):
     """🕒 The last update date of the design."""
 
 
-class DesignId(DesignNameField, DesignVariantField, Id):
+class DesignId(DesignViewField, DesignVariantField, DesignNameField, Id):
     """🪪 The props to identify the design."""
 
 
@@ -3781,6 +3860,7 @@ class Design(
         cls: "Design",
         input: str | dict | DesignInput | typing.Any | None,
         types: list[Type],
+        designs: dict[str, dict[str, dict[str, Design]]],
     ) -> "Design":
         """🧪 Parse the input to a design."""
         if input is None:
@@ -3800,7 +3880,7 @@ class Design(
                 typesDict[type.name][type.variant] = {}
             typesDict[type.name][type.variant] = type
         try:
-            pieces = [Piece.parse(p, typesDict) for p in obj["pieces"]]
+            pieces = [Piece.parse(p, typesDict, designs) for p in obj["pieces"]]
             entity.pieces = pieces
         except KeyError:
             pass
@@ -4143,7 +4223,7 @@ class Kit(
         except KeyError:
             pass
         try:
-            designs = [Design.parse(d, types) for d in obj["designs"]]
+            designs = [Design.parse(d, types, designs) for d in obj["designs"]]
             entity.designs = designs
         except KeyError:
             pass
@@ -5561,9 +5641,10 @@ class PieceNode(TableEntityNode):
 class PieceInputNode(InputNode):
     class Meta:
         model = PieceInput
-        exclude_fields = "type"
+        exclude_fields = ("type", "design")  # Already handled below
 
-    type = graphene.NonNull(TypeIdInputNode)
+    type = graphene.Field(TypeIdInputNode)  # Made optional by graphene not !
+    design = graphene.Field(DesignIdInputNode)  # Made optional by graphene not !
 
 
 class PieceIdInputNode(InputNode):

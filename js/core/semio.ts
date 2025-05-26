@@ -134,6 +134,15 @@ export type PieceID = {
     id_: string;
 }
 
+export type DesignID = {
+    // 📛 The name of the design being referenced
+    name: string;
+    // 🔀 The optional variant of the design being referenced
+    variant?: string;
+    // 🥽 The optional view of the design being referenced
+    view?: string;
+}
+
 // 🪪 Identifier for a port within a type.
 export type PortID = {
     // 🆔 The id of the port
@@ -147,7 +156,10 @@ export type Piece = {
     // 💬 The human-readable description of the piece
     description?: string;
     // 🧩 The type defining this piece
-    type: TypeID; // Represents Type identifier
+    type?: TypeID; // Represents Type identifier
+    // 🏙️ The design defining this piece
+    design?: DesignID; // Represents Design identifier
+    piece?: PieceID; // The piece in the referenced design
     // ◳ The optional plane (position and orientation) of the piece
     plane?: Plane;
     // 📺 The optional center of the piece in the diagram
@@ -537,13 +549,14 @@ const typeMap: any = {
         { json: "id_", js: "id_", typ: u(undefined, "") },
     ], "any"),
     "Piece": o([
-        { json: "id_", js: "id_", typ: u(undefined, "") },
-        { json: "description", js: "description", typ: "" },
-        { json: "type", js: "type", typ: r("TypeID") },
-        { json: "plane", js: "plane", typ: u(undefined, r("Plane")) }, // Now optional object
-        { json: "center", js: "center", typ: r("DiagramPoint") }, // Now required object
+        { json: "id_", js: "id_", typ: "" },
+        { json: "description", js: "description", typ: u(undefined, "") },
+        { json: "type", js: "type", typ: u(undefined, r("TypeID")) },
+        { json: "design", js: "design", typ: u(undefined, r("DesignID")) },
+        { json: "piece", js: "piece", typ: u(undefined, r("PieceID")) },
+        { json: "plane", js: "plane", typ: u(undefined, r("Plane")) },
+        { json: "center", js: "center", typ: u(undefined, r("DiagramPoint")) },
         { json: "qualities", js: "qualities", typ: u(undefined, a(r("Quality"))) },
-        { json: "connections", js: "connections", typ: a(r("Connection")) }, // Now required array
     ], "any"),
     "DiagramPoint": o([
         { json: "x", js: "x", typ: 0 },
@@ -595,17 +608,22 @@ const typeMap: any = {
         { json: "description", js: "description", typ: "" },
         { json: "family", js: "family", typ: "" },
         { json: "t", js: "t", typ: 0 },
-        { json: "compatibleFamilies", js: "compatibleFamilies", typ: a("") }, // Required array of strings
+        { json: "compatibleFamilies", js: "compatibleFamilies", typ: a("") },
         { json: "point", js: "point", typ: r("Point") },
         { json: "direction", js: "direction", typ: r("Vector") },
         { json: "qualities", js: "qualities", typ: u(undefined, a(r("Quality"))) },
-        { json: "connections", js: "connections", typ: a(r("Connection")) }, // Required array
+        { json: "connections", js: "connections", typ: a(r("Connection")) },
     ], "any"),
     "Representation": o([
         { json: "url", js: "url", typ: "" },
         { json: "description", js: "description", typ: "" },
         { json: "tags", js: "tags", typ: a("") },
         { json: "qualities", js: "qualities", typ: u(undefined, a(r("Quality"))) },
+    ], "any"),
+    "DesignID": o([
+        { json: "name", js: "name", typ: "" },
+        { json: "variant", js: "variant", typ: u(undefined, "") },
+        { json: "view", js: "view", typ: u(undefined, "") },
     ], "any"),
 };
 
@@ -871,9 +889,9 @@ const selectRepresentation = (representations: Representation[], tags: string[])
 export const getPieceRepresentationUrls = (design: Design, types: Type[], tags: string[] = []): Map<string, string> => {
     const representationUrls = new Map<string, string>();
     design.pieces?.forEach(p => {
-        const type = types.find(t => t.name === p.type.name && t.variant === p.type.variant);
-        if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`);
-        if (!type.representations) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} has no representations`);
+        const type = types.find(t => t.name === p.type!.name && t.variant === p.type!.variant);
+        if (!type) throw new Error(`Type (${p.type!.name}, ${p.type!.variant}) for piece ${p.id_} not found`);
+        if (!type.representations) throw new Error(`Type (${p.type!.name}, ${p.type!.variant}) for piece ${p.id_} has no representations`);
         const representation = selectRepresentation(type.representations, tags);
         representationUrls.set(p.id_, representation.url);
     });

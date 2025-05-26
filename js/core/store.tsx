@@ -497,10 +497,22 @@ class StudioStore {
         const yPiece = new Y.Map<any>();
         yPiece.set('id_', piece.id_ || Generator.randomId());
         yPiece.set('description', piece.description || '');
-        const yType = new Y.Map<any>();
-        yType.set('name', piece.type.name);
-        yType.set('variant', piece.type.variant);
-        yPiece.set('type', yType);
+        if (piece.type?.name) {
+            const yTypeRef = new Y.Map<any>();
+            yTypeRef.set('name', piece.type.name);
+            yTypeRef.set('variant', piece.type.variant);
+            yPiece.set('type', yTypeRef);
+        }
+        else {
+            const yDesignRef = new Y.Map<any>();
+            yDesignRef.set('name', piece.design!.name);
+            yDesignRef.set('variant', piece.design!.variant);
+            yDesignRef.set('view', piece.design!.view);
+            yPiece.set('design', yDesignRef);
+            const yPieceRef = new Y.Map<any>();
+            yPieceRef.set('id_', piece.piece);
+            yPiece.set('piece', yPieceRef);
+        }
         if (piece.plane) {
             const yPlane = new Y.Map<any>();
             const yOrigin = new Y.Map<any>();
@@ -540,9 +552,26 @@ class StudioStore {
         const yPiece = pieces.get(pieceId);
         if (!yPiece) throw new Error(`Piece (${pieceId}) not found in design (${designName}, ${designVariant}, ${view}) in kit (${kitName}, ${kitVersion})`);
 
-        const type = yPiece.get('type');
-        const typeName = type.get('name');
-        const typeVariant = type.get('variant');
+        const yTypeRef = yPiece.get('type');
+        let typeName: string | undefined;
+        let typeVariant: string | undefined;
+        let pieceDesignName: string | undefined;
+        let pieceDesignVariant: string | undefined;
+        let pieceDesignView: string | undefined;
+        let piecePieceId: string | undefined;
+        const isTypePiece = yTypeRef !== undefined;
+        if (isTypePiece) {
+            typeName = yTypeRef.get('name');
+            typeVariant = yTypeRef.get('variant');
+        }
+        else {
+            const yDesignRef = yPiece.get('design');
+            pieceDesignName = yDesignRef.get('name');
+            pieceDesignVariant = yDesignRef.get('variant');
+            pieceDesignView = yDesignRef.get('view');
+            const yPieceRef = yPiece.get('piece');
+            piecePieceId = yPieceRef.get('id_');
+        }
 
         const yPlane = yPiece.get('plane') as Y.Map<any> | undefined;
         const yOrigin = yPlane?.get('origin');
@@ -578,7 +607,9 @@ class StudioStore {
         return {
             id_: yPiece.get('id_'),
             description: yPiece.get('description'),
-            type: { name: typeName, variant: typeVariant },
+            type: isTypePiece ? { name: typeName, variant: typeVariant } : undefined,
+            design: !isTypePiece ? { name: pieceDesignName, variant: pieceDesignVariant, view: pieceDesignView } : undefined,
+            piece: !isTypePiece ? { id_: piecePieceId } : undefined,
             plane: plane ?? undefined,
             center: center ?? undefined,
             qualities: this.getQualities(yPiece.get('qualities')),
@@ -912,6 +943,14 @@ class StudioStore {
         if (!yPort) throw new Error(`Port (${portId}) not found in type (${typeName}, ${typeVariant})`);
 
         if (port.description !== undefined) yPort.set('description', port.description);
+        if (port.mandatory !== undefined && yPort.set('mandatory', port.mandatory)) {
+            (yPort.get('compatibleFamilies') as Y.Array<string>).delete(0, (yPort.get('compatibleFamilies') as Y.Array<string>).length);
+            (port.compatibleFamilies || []).forEach(cf => (yPort.get('compatibleFamilies') as Y.Array<string>).push([cf]));
+        }
+        if (port.family !== undefined && yPort.set('family', port.family)) {
+            (yPort.get('compatibleFamilies') as Y.Array<string>).delete(0, (yPort.get('compatibleFamilies') as Y.Array<string>).length);
+            (port.compatibleFamilies || []).forEach(cf => (yPort.get('compatibleFamilies') as Y.Array<string>).push([cf]));
+        }
         if (port.direction !== undefined) {
             const yDirection = new Y.Map<any>();
             yDirection.set('x', port.direction.x);
@@ -932,14 +971,6 @@ class StudioStore {
             yQualities.delete(0, yQualities.length);
             port.qualities.forEach(q => yQualities.push([this.createQuality(q)]));
             yPort.set('qualities', yQualities);
-        }
-        if (port.family !== undefined && yPort.set('family', port.family)) {
-            (yPort.get('compatibleFamilies') as Y.Array<string>).delete(0, (yPort.get('compatibleFamilies') as Y.Array<string>).length);
-            (port.compatibleFamilies || []).forEach(cf => (yPort.get('compatibleFamilies') as Y.Array<string>).push([cf]));
-        }
-        if (port.mandatory !== undefined && yPort.set('mandatory', port.mandatory)) {
-            (yPort.get('compatibleFamilies') as Y.Array<string>).delete(0, (yPort.get('compatibleFamilies') as Y.Array<string>).length);
-            (port.compatibleFamilies || []).forEach(cf => (yPort.get('compatibleFamilies') as Y.Array<string>).push([cf]));
         }
     }
 
@@ -1574,48 +1605,6 @@ class StudioStore {
             });
         }
         return ports;
-    }
-
-    updatePort(kitName: string, kitVersion: string, typeName: string, typeVariant: string, portId: string, port: Partial<Port>): void {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit ${kitName} not found`);
-        const types = yKit.get('types');
-        const yType = types.get(typeName)?.get(typeVariant);
-        if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitName}, ${kitVersion})`);
-        const ports = yType.get('ports');
-        const yPort = ports.get(portId);
-        if (!yPort) throw new Error(`Port (${portId}) not found in type (${typeName}, ${typeVariant})`);
-
-        if (port.description !== undefined) yPort.set('description', port.description);
-        if (port.direction !== undefined) {
-            const yDirection = new Y.Map<any>();
-            yDirection.set('x', port.direction.x);
-            yDirection.set('y', port.direction.y);
-            yDirection.set('z', port.direction.z);
-            yPort.set('direction', yDirection);
-        }
-        if (port.point !== undefined) {
-            const yPoint = new Y.Map<any>();
-            yPoint.set('x', port.point.x);
-            yPoint.set('y', port.point.y);
-            yPoint.set('z', port.point.z);
-            yPort.set('point', yPoint);
-        }
-        if (port.t !== undefined) yPort.set('t', port.t);
-        if (port.qualities !== undefined) {
-            const yQualities = yPort.get('qualities') || new Y.Array<Y.Map<any>>();
-            yQualities.delete(0, yQualities.length);
-            port.qualities.forEach(q => yQualities.push([this.createQuality(q)]));
-            yPort.set('qualities', yQualities);
-        }
-        if (port.family !== undefined && yPort.set('family', port.family)) {
-            (yPort.get('compatibleFamilies') as Y.Array<string>).delete(0, (yPort.get('compatibleFamilies') as Y.Array<string>).length);
-            (port.compatibleFamilies || []).forEach(cf => (yPort.get('compatibleFamilies') as Y.Array<string>).push([cf]));
-        }
-        if (port.mandatory !== undefined && yPort.set('mandatory', port.mandatory)) {
-            (yPort.get('compatibleFamilies') as Y.Array<string>).delete(0, (yPort.get('compatibleFamilies') as Y.Array<string>).length);
-            (port.compatibleFamilies || []).forEach(cf => (yPort.get('compatibleFamilies') as Y.Array<string>).push([cf]));
-        }
     }
 }
 
