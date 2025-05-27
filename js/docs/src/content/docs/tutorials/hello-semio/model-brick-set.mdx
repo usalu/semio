@@ -147,7 +147,8 @@ This is useful because it lets us generate **all the different Variants** of thi
 After generating the geometry, we need to **export it as a `.glb` file** so it can be attached as a Representation.  
 💾 We’ll use a simple workflow that automates this export — it can be placed directly after your geometry definition in Grasshopper.
 
-The modeling happens in this example inside a **Cluster** at the very left of your definition, we’ll focus here mainly on the **export logic**:
+The modeling of the geometry happens earlier in the Grasshopper definition 🛠️  
+here, we’ll focus mainly on the **export logic**: how to turn that geometry into a file Semio can reference. 💾
 
 **The export workflow looks like this:**
 
@@ -337,6 +338,8 @@ In the Semio Grasshopper plugin, each Port is defined with three main inputs:
   The direction the Port faces — like saying “this side connects outward.”  
   It’s important for aligning pieces when snapping.
 
+
+![📁 Ports](/model-port-alpha.png)
 ---
 
 
@@ -442,6 +445,8 @@ you plug them into the `Typ` component.
 
   {/* TODO: insert Image of Type component with the inputs */}
 ![📁 Model Type](/model-type.png)
+
+![📁 Model Type](/model-type-geo.png)
 
 
   🎯 The result is a complete Type —
