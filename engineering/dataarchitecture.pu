@@ -112,6 +112,8 @@ entity Type {
     *stock : float
     *virtual : boolean
     *unit : string
+    *longitude : float
+    *latitude : float
     *created : datetime
     *updated : datetime
     ..

@@ -1229,14 +1229,17 @@ public class Port : Model<Port>
     public string Description { get; set; } = "";
 
     /// <summary>
+    ///     💯 Whether the port is mandatory. A mandatory port must be connected in a design.
+    /// </summary>
+    [FalseOrTrue("💯", "Ma?", "Man?", "Whether the port is mandatory. A mandatory port must be connected in a design.")]
+    public bool Mandatory { get; set; } = false;
+
+    /// <summary>
     ///     👨‍👩‍👧‍👦 The optional family of the port. This allows to define explicit compatibility with other ports.
     /// </summary>
     [Name("👨‍👩‍👧‍👦", "Fa?", "Fam?",
         "The optional family of the port. This allows to define explicit compatibility with other ports.")]
     public string Family { get; set; } = "";
-
-    [FalseOrTrue("💯", "Ma?", "Man?", "Whether the port is mandatory. A mandatory port must be connected in a design.")]
-    public bool Mandatory { get; set; } = false;
 
     /// <summary>
     ///     ✅ The optional other compatible families of the port. An empty list means this port is compatible with all other
@@ -1409,14 +1412,27 @@ public class Author : Model<Author>
     }
 }
 
-public class TypeProps : Model<Type>
+[Model("📍", "Lc", "Loc", "A location on the earth surface (longitude, latitude).")]
+public class Location : Model<Location>
+{
+    [NumberProp("↔️", "Lon", "Lon", "The longitude of the location in degrees.", PropImportance.REQUIRED)]
+    public float Longitude { get; set; }
+
+    [NumberProp("↕️", "Lat", "Lat", "The latitude of the location in degrees.", PropImportance.REQUIRED)]
+    public float Latitude { get; set; }
+}
+
+/// <summary>
+///     🧩 A type is a reusable element that can be connected with other types over ports.
+/// </summary>
+[Model("🧩", "Ty", "Typ", "A type is a reusable element that can be connected with other types over ports.")]
+public class Type : Model<Type>
 {
     /// <summary>
     ///     📛 Name of the type.
     /// </summary>
     [Name("📛", "Na", "Nam", "The name of the type.", PropImportance.ID)]
     public string Name { get; set; } = "";
-
     /// <summary>
     ///     💬 The optional human-readable description of the type.
     /// </summary>
@@ -1446,6 +1462,21 @@ public class TypeProps : Model<Type>
         PropImportance.ID, true)]
     public string Variant { get; set; } = "";
 
+    [IntProp("📦", "Stk", "Stk", "The number of items in stock.", PropImportance.OPTIONAL)]
+    public float Stock { get; set; } = float.PositiveInfinity;
+
+    /// <summary>
+    ///     👻 Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.
+    /// </summary>
+    [FalseOrTrue("👻", "Vi?", "Vir?", "Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.")]
+    public bool Virtual { get; set; } = false;
+
+    /// <summary>
+    ///     🗺️ The optional location of the type.
+    /// </summary>
+    [ModelProp("🗺️", "Lc?", "Loc?", "The optional location of the type.", PropImportance.OPTIONAL)]
+    public Location? Location { get; set; }
+
     /// <summary>
     ///     Ⓜ️ The length unit of the point and the direction of the ports of the type.
     /// </summary>
@@ -1453,34 +1484,6 @@ public class TypeProps : Model<Type>
         PropImportance.REQUIRED)]
     public string Unit { get; set; } = "";
 
-    [IntProp("📦", "Stk", "Stk", "The number of items in stock.", PropImportance.OPTIONAL)]
-    public float Stock { get; set; } = float.PositiveInfinity;
-
-    [FalseOrTrue("👻", "Vi?", "Vir?", "Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.")]
-    public bool Virtual { get; set; } = false;
-
-    public string ToIdString()
-    {
-        return $"{Name}#{Variant}";
-    }
-
-    public string ToHumanIdString()
-    {
-        return $"{Name}" + (Variant.Length == 0 ? "" : $", {Variant}");
-    }
-
-    public override string ToString()
-    {
-        return $"Typ({ToHumanIdString()})";
-    }
-}
-
-/// <summary>
-///     🧩 A type is a reusable element that can be connected with other types over ports.
-/// </summary>
-[Model("🧩", "Ty", "Typ", "A type is a reusable element that can be connected with other types over ports.")]
-public class Type : TypeProps
-{
     /// <summary>
     ///     💾 The optional representations of the type.
     /// </summary>
@@ -1504,6 +1507,21 @@ public class Type : TypeProps
     /// </summary>
     [ModelProp("📏", "Ql*", "Qals*", "The optional qualities of the type.", PropImportance.OPTIONAL)]
     public List<Quality> Qualities { get; set; } = new();
+
+    public string ToIdString()
+    {
+        return $"{Name}#{Variant}";
+    }
+
+    public string ToHumanIdString()
+    {
+        return $"{Name}" + (Variant.Length == 0 ? "" : $", {Variant}");
+    }
+
+    public override string ToString()
+    {
+        return $"Typ({ToHumanIdString()})";
+    }
 
     // TODO: Implement reflexive validation for model properties.
     public override (bool, List<string>) Validate()
@@ -1640,6 +1658,18 @@ public class Piece : Model<Piece>
         "The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
         PropImportance.OPTIONAL)]
     public DiagramPoint? Center { get; set; }
+
+    /// <summary>
+    ///     👻 Whether the piece is hidden. A hidden piece is not visible in the model.
+    /// </summary>
+    [FalseOrTrue("👻", "Hi?", "Hid?", "Whether the piece is hidden. A hidden piece is not visible in the model.")]
+    public bool Hidden { get; set; } = false;
+
+    /// <summary>
+    ///     🔒 Whether the piece is locked. A locked piece cannot be edited.
+    /// </summary>
+    [FalseOrTrue("🔒", "Lk?", "Lck?", "Whether the piece is locked. A locked piece cannot be edited.")]
+    public bool Locked { get; set; } = false;
 
     /// <summary>
     ///     📏 The optional qualities of the piece.
@@ -1907,7 +1937,11 @@ public class Connection : Model<Connection>
     }
 }
 
-public class DesignProps : Model<Design>
+/// <summary>
+///     🏙️ A design is a collection of pieces that are connected.
+/// </summary>
+[Model("🏙️", "Dn", "Dsn", "A design is a collection of pieces that are connected.")]
+public class Design : Model<Design>
 {
     /// <summary>
     ///     📛 The name of the design.
@@ -1958,29 +1992,6 @@ public class DesignProps : Model<Design>
         PropImportance.REQUIRED)]
     public string Unit { get; set; } = "";
 
-    public string ToIdString()
-    {
-        return $"{Name}#{Variant}#{View}";
-    }
-
-    public string ToHumanIdString()
-    {
-        return $"{Name}" + (Variant.Length == 0 ? "" : $", {Variant}") +
-               (View.Length == 0 ? "" : $", {View}");
-    }
-
-    public override string ToString()
-    {
-        return $"Dsn({ToHumanIdString()})";
-    }
-}
-
-/// <summary>
-///     🏙️ A design is a collection of pieces that are connected.
-/// </summary>
-[Model("🏙️", "Dn", "Dsn", "A design is a collection of pieces that are connected.")]
-public class Design : DesignProps
-{
     /// <summary>
     ///     ⭕ The optional pieces of the design.
     /// </summary>
@@ -2005,6 +2016,22 @@ public class Design : DesignProps
     [ModelProp("📏", "Ql*", "Qals*", "The optional qualities of the design.",
         PropImportance.OPTIONAL)]
     public List<Quality> Qualities { get; set; } = new();
+
+    public string ToIdString()
+    {
+        return $"{Name}#{Variant}#{View}";
+    }
+
+    public string ToHumanIdString()
+    {
+        return $"{Name}" + (Variant.Length == 0 ? "" : $", {Variant}") +
+               (View.Length == 0 ? "" : $", {View}");
+    }
+
+    public override string ToString()
+    {
+        return $"Dsn({ToHumanIdString()})";
+    }
 
     public void Bfs(Action<Piece> onRoot, Action<Piece, Piece, Connection> onConnection)
     {

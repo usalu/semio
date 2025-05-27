@@ -22,6 +22,10 @@ kit : !Kit{
         unit : !String // e.g., mm, cm, m
         created : !String // date
         updated : !String // date
+        location : ?Location{
+            longitude : !Float
+            latitude : !Float
+        }
         representations : +Representation[
             url : !String
             description : ?String

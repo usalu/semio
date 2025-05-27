@@ -31,6 +31,7 @@ class Type {
   unit: str
   created: datetime
   updated: datetime
+  location: Location
   representations: list[Representation]
   ports: list[Port]
   authors: list[Author]
@@ -140,6 +141,11 @@ class DiagramPoint {
   y: float
 }
 
+class Location {
+  longitude: float
+  latitude: float
+}
+
 Kit *-- "0..*" Type : contains >
 Kit *-- "0..*" Design : contains >
 Kit *-- "0..*" Quality : has >
@@ -149,6 +155,7 @@ Design *-- "0..*" Connection : contains >
 Design *-- "0..*" Author : authored by >
 Design *-- "0..*" Quality : has >
 
+Type *-- "0..1" Location : has >
 Type *-- "0..*" Representation : has >
 Type *-- "0..*" Port : has >
 Type *-- "0..*" Author : authored by >
