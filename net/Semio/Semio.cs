@@ -2548,16 +2548,6 @@ public class DesignId : Model<DesignId>
         true)]
     public string View { get; set; } = "";
 
-    public static implicit operator DesignId(DesignProps design)
-    {
-        return new DesignId
-        {
-            Name = design.Name,
-            Variant = design.Variant,
-            View = design.View
-        };
-    }
-
     public static implicit operator DesignId(Design design)
     {
         return new DesignId
