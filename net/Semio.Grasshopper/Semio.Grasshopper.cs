@@ -680,6 +680,46 @@ public class AuthorGoo : ModelGoo<Author>
     }
 }
 
+public class LocationGoo : ModelGoo<Location>
+{
+    public LocationGoo()
+    {
+    }
+
+    internal override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_Point)))
+        {
+            if (Value == null)
+                return false;
+            object ptr = new GH_Point(new Point3d(Value.Longitude, Value.Latitude, 0));
+            target = (Q)ptr;
+            return true;
+        }
+
+        return false;
+    }
+
+    internal override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+
+        var point = new Point3d();
+        if (GH_Convert.ToPoint3d(source, ref point, GH_Conversion.Both))
+        {
+            Value = new Location
+            {
+                Longitude = (float)point.X,
+                Latitude = (float)point.Y
+            };
+            return true;
+        }
+
+        return false;
+    }
+
+}
+
 public class TypeGoo : ModelGoo<Type>
 {
     public TypeGoo()
@@ -929,6 +969,11 @@ public class QualityParam : ModelParam<QualityGoo, Quality>
 public class AuthorParam : ModelParam<AuthorGoo, Author>
 {
     public override Guid ComponentGuid => new("9F52380B-1812-42F7-9DAD-952C2F7A635A");
+}
+
+public class LocationParam : ModelParam<LocationGoo, Location>
+{
+    public override Guid ComponentGuid => new("CA9DA889-398E-469B-BF1B-AD2BDFCA7957");
 }
 
 public class TypeParam : ModelParam<TypeGoo, Type>
@@ -1911,7 +1956,7 @@ public class RepresentationComponent : ModelComponent<RepresentationParam, Repre
         var mime = Semio.Utility.ParseMimeFromUrl(model.Url);
         var firstTag = model.Tags.FirstOrDefault();
         if (firstTag != null && mime != "" && !Semio.Utility.IsValidMime(firstTag))
-            model.Tags.Insert(0,mime);
+            model.Tags.Insert(0, mime);
         model.Url = model.Url.Replace('\\', '/');
         return model;
     }
@@ -1930,6 +1975,11 @@ public class QualityComponent : ModelComponent<QualityParam, QualityGoo, Quality
 public class AuthorComponent : ModelComponent<AuthorParam, AuthorGoo, Author>
 {
     public override Guid ComponentGuid => new("5143ED92-0A2C-4D0C-84ED-F90CC8450894");
+}
+
+public class LocationComponent : ModelComponent<LocationParam, LocationGoo, Location>
+{
+    public override Guid ComponentGuid => new("6F2EDF42-6E10-4944-8B05-4D41F4876ED0");
 }
 
 public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
@@ -1981,6 +2031,10 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         pManager.AddParameter(new DiagramPointParam(), "Center", "Ce?",
             "The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
             GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Hidden", "Hi?",
+            "Whether the piece is hidden. A hidden piece is not visible in the model.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Locked", "Lk?",
+            "Whether the piece is locked. A locked piece cannot be edited.", GH_ParamAccess.item);
         pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
             "The optional qualities of the piece.", GH_ParamAccess.list);
     }
@@ -1994,6 +2048,9 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         var plane = new Rhino.Geometry.Plane();
         var centerGoo = new DiagramPointGoo();
         var qualitiesGoos = new List<QualityGoo>();
+        var hidden = false;
+        var locked = false;
+
 
         if (DA.GetData(2, ref id))
             pieceGoo.Value.Id = id;
@@ -2009,6 +2066,10 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
             pieceGoo.Value.Center = centerGoo.Value;
         if (DA.GetDataList(8, qualitiesGoos))
             pieceGoo.Value.Qualities = qualitiesGoos.Select(q => q.Value).ToList();
+        if (DA.GetData(9, ref hidden))
+            pieceGoo.Value.Hidden = hidden;
+        if (DA.GetData(10, ref locked))
+            pieceGoo.Value.Locked = locked;
     }
 
     protected override void SetData(IGH_DataAccess DA, dynamic pieceGoo)
@@ -2023,6 +2084,8 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         foreach (Quality quality in pieceGoo.Value.Qualities)
             qualityGoos.Add(new QualityGoo(quality.DeepClone()));
         DA.SetDataList(8, qualityGoos);
+        DA.SetData(9, pieceGoo.Value.Hidden);
+        DA.SetData(10, pieceGoo.Value.Locked);
     }
 }
 
