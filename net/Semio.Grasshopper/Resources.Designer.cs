@@ -147,17 +147,17 @@ namespace Semio.Grasshopper
         internal static System.Drawing.Bitmap kit_serialize_24x24 =>
             (System.Drawing.Bitmap)ResourceManager.GetObject("kit_serialize_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap locator_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("locator_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap location_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("location_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap locator_deserialize_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("locator_deserialize_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap location_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("location_deserialize_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap locator_modify_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("locator_modify_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap location_modify_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("location_modify_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap locator_serialize_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("locator_serialize_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap location_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("location_serialize_24x24", resourceCulture);
 
         internal static System.Drawing.Bitmap objects_convert_text_24x24 =>
             (System.Drawing.Bitmap)ResourceManager.GetObject("objects_convert_text_24x24", resourceCulture);

@@ -1199,6 +1199,11 @@ public class SerializeAuthorComponent : SerializeComponent<AuthorParam, AuthorGo
     public override Guid ComponentGuid => new("99130A53-4FC1-4E64-9A46-2ACEC4634878");
 }
 
+public class SerializeLocationComponent : SerializeComponent<LocationParam, LocationGoo, Location>
+{
+    public override Guid ComponentGuid => new("DB94C7FC-3F0F-4FB4-992E-7E069C17D466");
+}
+
 public class SerializeTypeComponent : SerializeComponent<TypeParam, TypeGoo, Type>
 {
     public override Guid ComponentGuid => new("BD184BB8-8124-4604-835C-E7B7C199673A");
@@ -1300,6 +1305,11 @@ public class DeserializeQualityComponent : DeserializeComponent<QualityParam, Qu
 public class DeserializeAuthorComponent : DeserializeComponent<AuthorParam, AuthorGoo, Author>
 {
     public override Guid ComponentGuid => new("DDC0A2EC-4BAD-4FFE-B3A6-F9644C8B0072");
+}
+
+public class DeserializeLocationComponent : DeserializeComponent<LocationParam, LocationGoo, Location>
+{
+    public override Guid ComponentGuid => new("B4107B24-B730-4F5D-B9BB-46AE585FCFE9");
 }
 
 public class DeserializeTypeComponent : DeserializeComponent<TypeParam, TypeGoo, Type>
@@ -1959,7 +1969,7 @@ public class RepresentationComponent : ModelComponent<RepresentationParam, Repre
     {
         var mime = Semio.Utility.ParseMimeFromUrl(model.Url);
         var firstTag = model.Tags.FirstOrDefault();
-        if (firstTag != null && mime != "" && !Semio.Utility.IsValidMime(firstTag))
+        if ((firstTag == null) || (firstTag != null && mime != "" && !Semio.Utility.IsValidMime(firstTag)))
             model.Tags.Insert(0, mime);
         model.Url = model.Url.Replace('\\', '/');
         return model;

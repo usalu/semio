@@ -1462,7 +1462,10 @@ public class Type : Model<Type>
         PropImportance.ID, true)]
     public string Variant { get; set; } = "";
 
-    [IntProp("📦", "St", "Stk", "The number of items in stock.", PropImportance.OPTIONAL)]
+    /// <summary>
+    ///     📦 The optional number of items in stock.
+    /// </summary>
+    [IntProp("📦", "St?", "Stk?", "The optional number of items in stock.", PropImportance.OPTIONAL)]
     public float Stock { get; set; } = float.PositiveInfinity;
 
     /// <summary>
