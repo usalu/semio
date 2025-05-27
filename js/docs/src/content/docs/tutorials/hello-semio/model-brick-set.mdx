@@ -494,8 +494,6 @@ You’ll still go through the usual modeling steps:
 4. Set the Variant number  
 5. Create the complete **Model Type**
 
-This tells semio:  
-➡️ *“Same mold, different size.”*
 
 ✅ Just like when modeling a Type, you define the Representation, Ports, and final Model Type — only the **Variant** changes.
 
@@ -518,53 +516,52 @@ Since most Variants share the same logic and differ by only one or two parameter
 
 <Tabs>
 
-<TabItem label="🔍 File-Based Geometry Reference">
+<TabItem label=" File-Based Geometry Reference">
 
 **Inside the Cluster:**  
 
-![📁 Cluster](/cluster.png)
-
 You define the full logic:
 
-- Geometry generation & export  
-- Geometry import and Representation attachment  
-- Port placement  
-- Model Type creation
+- Geometry generation & export   
+- Modeling the Representation by linking the exported file  (Model Representation)
+- Port placement (Model Port)
+- Type creation (Model Type)
+
+![📁 Cluster](/cluster-type-inside-ALpha.png)
+
 
 **Outside the Cluster:**  
 
-![📁 Cluster](/type-cluster-file-reference.png)
+![📁 Cluster](/type-cluster-file-reference-Alpha.png)
 
+![📁 Cluster](/file-export.png)
 
 You feed in only what changes:
 
 - `n` → the unit count (e.g. 2, 4, 5) 📏  
 - Variant name → (often also `n`) 🏷️
+- The Directory of the Grasshopper Definition
+- Export toggle
  
-
-
-
-
 
 
 </TabItem>
 
-<TabItem label="⚡ Direct Geometry Reference">
+<TabItem label=" Direct Geometry Reference">
 
 **Inside the Cluster:**  
 
-![📁 Cluster](/cluster.png)
+![📁 Cluster](/cluster-type-inside-direct.rfrc.png)
 
 You define the full logic:
 
-- Geometry generation & export  
-- Geometry import and Representation attachment  
-- Port placement  
-- Model Type creation
+- Geometry generation 
+- Port placement (Model Port)
+- Type creation (Model Type)
 
 **Outside the Cluster:**  
 
-![📁 Cluster](/type-cluster-direct-reference.png)
+![📁 Cluster](/type-cluster-direct-reference-Alpha.png)
 
 
 You feed in only what changes:
@@ -585,7 +582,7 @@ You feed in only what changes:
 This way, you can generate many Variants from the same Type —  
 without duplicating components or cluttering your canvas.
 
-✅ **Bonus:** Keeps your file organized and scalable — perfect for growing your Kit later on.
+✅ **Bonus:** Keeps your file organized and scalable — perfect for growing your Kit later on
 
 ---
 {/* TODO: insert Gif of the cluster with the different variants */}
