@@ -686,6 +686,10 @@ public class LocationGoo : ModelGoo<Location>
     {
     }
 
+    public LocationGoo(Location value) : base(value)
+    {
+    }
+
     internal override bool CustomCastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_Point)))
@@ -2064,12 +2068,12 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
             pieceGoo.Value.Plane = plane.Convert();
         if (DA.GetData(7, ref centerGoo))
             pieceGoo.Value.Center = centerGoo.Value;
-        if (DA.GetDataList(8, qualitiesGoos))
-            pieceGoo.Value.Qualities = qualitiesGoos.Select(q => q.Value).ToList();
-        if (DA.GetData(9, ref hidden))
+        if (DA.GetData(8, ref hidden))
             pieceGoo.Value.Hidden = hidden;
-        if (DA.GetData(10, ref locked))
+        if (DA.GetData(9, ref locked))
             pieceGoo.Value.Locked = locked;
+        if (DA.GetDataList(10, qualitiesGoos))
+            pieceGoo.Value.Qualities = qualitiesGoos.Select(q => q.Value).ToList();
     }
 
     protected override void SetData(IGH_DataAccess DA, dynamic pieceGoo)
@@ -2080,12 +2084,12 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         DA.SetData(5, pieceGoo.Value.Type.Variant);
         DA.SetData(6, (pieceGoo.Value.Plane as Plane)?.Convert());
         DA.SetData(7, pieceGoo.Value != null ? new DiagramPointGoo(pieceGoo.Value.Center as DiagramPoint) : null);
+        DA.SetData(8, pieceGoo.Value.Hidden);
+        DA.SetData(9, pieceGoo.Value.Locked);
         var qualityGoos = new List<QualityGoo>();
         foreach (Quality quality in pieceGoo.Value.Qualities)
             qualityGoos.Add(new QualityGoo(quality.DeepClone()));
-        DA.SetDataList(8, qualityGoos);
-        DA.SetData(9, pieceGoo.Value.Hidden);
-        DA.SetData(10, pieceGoo.Value.Locked);
+        DA.SetDataList(10, qualityGoos);
     }
 }
 
