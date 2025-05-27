@@ -1396,7 +1396,7 @@ public class DrawDiagramComponent : Component
 public class FlattenDesignComponent : Component
 {
     public FlattenDesignComponent()
-        : base("Flatten Design", "FltDsn", "Flatten a design.", "Util")
+        : base("Flatten Design", "↓Dsn", "Flatten a design.", "Util")
     {
     }
 
