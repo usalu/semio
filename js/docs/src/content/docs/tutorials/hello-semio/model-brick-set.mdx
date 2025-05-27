@@ -263,10 +263,17 @@ To illustrate this concept, we created **two geometry files** for the **same bri
 
 <TabItem label="🔍 Detailed Version">
 
+
+
 This version includes the full profile of the piece —  
 a rectangle cut at an angle and extruded into a wooden section 🪵.  
-It reflects real-world geometry and is ideal for:
 
+
+![📁 Switch Representation](/Switch-Representation.png)
+![📁 Filename](/Profile-2-detailed.png)
+
+
+It reflects real-world geometry and is ideal for:
 - Joinery and fabrication  
 - Material communication  
 - High-detail outputs
@@ -277,9 +284,12 @@ It reflects real-world geometry and is ideal for:
 
 <TabItem label="⚡ Simplified Version">
 
-This version is just a **bounding box** — a minimal block that matches the brick’s size 📦, but skips inner detail.  
-It’s perfect for:
+This version is just a **bounding box** — a minimal block that matches the brick’s size 📦, but skips inner detail
 
+![📁 Switch Representation](/switch-representation-Block.png)
+![📁 Filename](/Profile-2-simplified.png)
+
+It’s perfect for:
 - Early-stage layouts  
 - Fast performance  
 - Projects where shape is still evolving
@@ -505,7 +515,15 @@ Since most Variants share the same logic and differ by only one or two parameter
 - Generate all Variants efficiently  
 - Keep your script clean and modular
 
+
+<Tabs>
+
+<TabItem label="🔍 File-Based Geometry Reference">
+
 **Inside the Cluster:**  
+
+![📁 Cluster](/cluster.png)
+
 You define the full logic:
 
 - Geometry generation & export  
@@ -514,10 +532,55 @@ You define the full logic:
 - Model Type creation
 
 **Outside the Cluster:**  
+
+![📁 Cluster](/type-cluster-file-reference.png)
+
+
 You feed in only what changes:
 
 - `n` → the unit count (e.g. 2, 4, 5) 📏  
 - Variant name → (often also `n`) 🏷️
+ 
+
+
+
+
+
+
+</TabItem>
+
+<TabItem label="⚡ Direct Geometry Reference">
+
+**Inside the Cluster:**  
+
+![📁 Cluster](/cluster.png)
+
+You define the full logic:
+
+- Geometry generation & export  
+- Geometry import and Representation attachment  
+- Port placement  
+- Model Type creation
+
+**Outside the Cluster:**  
+
+![📁 Cluster](/type-cluster-direct-reference.png)
+
+
+You feed in only what changes:
+
+- `n` → the unit count (e.g. 2, 4, 5) 📏  
+- Variant name → (often also `n`) 🏷️
+
+
+
+
+</TabItem>
+
+</Tabs>
+
+
+
 
 This way, you can generate many Variants from the same Type —  
 without duplicating components or cluttering your canvas.
