@@ -1453,6 +1453,9 @@ public class TypeProps : Model<Type>
         PropImportance.REQUIRED)]
     public string Unit { get; set; } = "";
 
+    [IntProp("📦", "Stk", "Stk", "The number of items in stock.", PropImportance.OPTIONAL)]
+    public float Stock { get; set; } = float.PositiveInfinity;
+
     [FalseOrTrue("👻", "Vi?", "Vir?", "Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.")]
     public bool Virtual { get; set; } = false;
 

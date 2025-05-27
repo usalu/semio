@@ -17,6 +17,7 @@ kit : !Kit{
         icon : ?String // emoji | logogram | url
         image : ?String // url
         variant : ?String // empty is default
+        stock : !Float // default is +infinity
         virtual : ?Boolean // default false
         unit : !String // e.g., mm, cm, m
         created : !String // date

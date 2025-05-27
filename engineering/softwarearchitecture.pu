@@ -26,6 +26,7 @@ class Type {
   icon: str
   image: str
   variant: str
+  stock: float
   virtual: bool
   unit: str
   created: datetime

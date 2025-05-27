@@ -109,6 +109,7 @@ entity Type {
     *icon : string
     *image : string
     *variant : string
+    *stock : float
     *virtual : boolean
     *unit : string
     *created : datetime
@@ -119,6 +120,7 @@ entity Type {
 note right of Type
     description, icon, image, variant can be empty
     empty variant means default
+    stock is default to +infinity
 end note
 
 entity Piece {

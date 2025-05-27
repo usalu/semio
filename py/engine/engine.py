@@ -2424,6 +2424,15 @@ class TypeVariantField(RealField, abc.ABC):
     """🔀 The optional variant of the type. No variant means the default variant."""
 
 
+class TypeStockField(RealField, abc.ABC):
+    """📦 The number of items in stock."""
+
+    stock: float = sqlmodel.Field(
+        default=float("inf"), description="📦 The number of items in stock."
+    )
+    """📦 The number of items in stock."""
+
+
 class TypeVirtualField(RealField, abc.ABC):
     """👻 Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type."""
 
@@ -2472,6 +2481,7 @@ class TypeId(TypeVariantField, TypeNameField, Id):
 class TypeProps(
     TypeUnitField,
     TypeVirtualField,
+    TypeStockField,
     TypeVariantField,
     TypeImageField,
     TypeIconField,
@@ -2485,6 +2495,7 @@ class TypeProps(
 class TypeInput(
     TypeUnitField,
     TypeVirtualField,
+    TypeStockField,
     TypeVariantField,
     TypeImageField,
     TypeIconField,
@@ -2505,6 +2516,7 @@ class TypeOutput(
     TypeCreatedField,
     TypeUnitField,
     TypeVirtualField,
+    TypeStockField,
     TypeVariantField,
     TypeImageField,
     TypeIconField,
@@ -2523,6 +2535,7 @@ class TypeOutput(
 class TypeContext(
     TypeUnitField,
     TypeVirtualField,
+    TypeStockField,
     TypeVariantField,
     TypeDescriptionField,
     TypeNameField,
@@ -2539,6 +2552,7 @@ class Type(
     TypeCreatedField,
     TypeUnitField,
     TypeVirtualField,
+    TypeStockField,
     TypeVariantField,
     TypeImageField,
     TypeIconField,

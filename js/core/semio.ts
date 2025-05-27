@@ -226,6 +226,8 @@ export type Type = {
     image: string;
     // 🔀 The variant of the type
     variant: string;
+    // 📦 The number of items in stock
+    stock?: number;
     // 👻 The optional virtual flag of the type
     virtual?: boolean;
     // Ⓜ️ The length unit used by the type's geometry
@@ -584,6 +586,7 @@ const typeMap: any = {
         { json: "unit", js: "unit", typ: "" },
         { json: "created", js: "created", typ: Date },
         { json: "updated", js: "updated", typ: Date },
+        { json: "stock", js: "stock", typ: u(undefined, 0) },
         { json: "representations", js: "representations", typ: u(undefined, a(r("Representation"))) },
         { json: "ports", js: "ports", typ: u(undefined, a(r("Port"))) },
         { json: "authors", js: "authors", typ: a(r("Author")) },

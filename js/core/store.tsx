@@ -284,6 +284,7 @@ class StudioStore {
         yType.set('icon', type.icon || '');
         yType.set('image', type.image || '');
         yType.set('variant', type.variant || '');
+        yType.set('stock', type.stock || Number('Infinity'));
         yType.set('virtual', type.virtual || false);
         yType.set('unit', type.unit);
         yType.set('representations', new Y.Map());
@@ -314,6 +315,7 @@ class StudioStore {
             icon: yType.get('icon'),
             image: yType.get('image'),
             variant: yType.get('variant'),
+            stock: yType.get('stock'),
             virtual: yType.get('virtual'),
             unit: yType.get('unit'),
             ports,
@@ -335,6 +337,7 @@ class StudioStore {
         if (type.description !== undefined) yType.set('description', type.description);
         if (type.icon !== undefined) yType.set('icon', type.icon);
         if (type.image !== undefined) yType.set('image', type.image);
+        if (type.stock !== undefined) yType.set('stock', type.stock);
         if (type.virtual !== undefined) yType.set('virtual', type.virtual);
         if (type.unit !== undefined) yType.set('unit', type.unit);
 
@@ -348,7 +351,7 @@ class StudioStore {
             yType.set('qualities', qualities);
         }
         if (type.representations !== undefined) {
-            const representations = new Y.Map(type.representations.map(r => [`${r.mime}:${r.tags?.join(',')}`, this.createRepresentation(kitName, kitVersion, type.name, type.variant || '', r)]));
+            const representations = new Y.Map(type.representations.map(r => [`${r.url}:${r.tags?.join(',')}`, this.createRepresentation(kitName, kitVersion, type.name, type.variant || '', r)]));
             yType.set('representations', representations);
         }
         if (type.authors !== undefined) {
