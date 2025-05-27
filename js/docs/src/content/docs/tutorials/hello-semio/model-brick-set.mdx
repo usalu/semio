@@ -138,8 +138,8 @@ you’ll need to go through two simple steps to attach this geometry as a Repres
 Since our shape follows a clear logic 🧠, we use a **parametric Grasshopper definition** to generate the geometry of the brick mold 🧱  
 This is useful because it lets us generate **all the different Variants** of this brick seen in the sketch, using a single logic controlled by the parameters `n` and `W`, which define the brick’s length and width 📏
 
-{/* TODO: insert Geometry Generation image */}
 
+![📁 Geometry Generation](/attach-geometry-crop.gif)
 
 
 #### Step 2: 🛠️ Geometry Export
@@ -436,7 +436,7 @@ After modeling all the parts of your brick mold —
 you plug them into the `Typ` component.
 
 - 🏷️ **Name** → e.g. `"Profile"`  
-- 🔢 **Variant** → e.g. `"4"`  
+- 🔢 **Variant** → e.g. `"2"`  
 - 🧲 **Ports** → e.g. `n`, `s`, `e`, `w`  
 - 🧊 **Representation** → the linked geometry
 
@@ -513,6 +513,8 @@ Since most Variants share the same logic and differ by only one or two parameter
 - Generate all Variants efficiently  
 - Keep your script clean and modular
 
+
+![📁 Variant GIF](/Type-1-to-5-crop.gif)
 
 <Tabs>
 
