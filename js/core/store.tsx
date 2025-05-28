@@ -780,7 +780,7 @@ class StudioStore {
         yRepresentation.set('tags', yTags);
         yRepresentation.set('qualities', this.createQualities(representation.qualities || []));
 
-        const id = `{representation.tags?.join(',') || ''}`;
+        const id = representation.tags?.join(',') || '';
         representations.set(id, yRepresentation);
     }
 
@@ -900,6 +900,7 @@ class StudioStore {
                 y: (yPoint.get('point') as Y.Map<any>).get('y') as number,
                 z: (yPoint.get('point') as Y.Map<any>).get('z') as number
             },
+            t: yPort.get('t') as number,
             qualities: this.getQualities(yPort.get('qualities'))
         };
     }
