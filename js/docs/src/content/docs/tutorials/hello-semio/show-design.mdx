@@ -1,30 +1,63 @@
 ---
-title: 🖼️ Show Design
-description: Visualize your model using the Show Design component.
+title: 🖼️ Preview Design
+description: Visualize your model using the Preview Design component.
 sidebar:
   order: 4
 ---
 
-This page explains how to visualize your assembled Design in semio.
+## 🔍 From Logic to Look 
 
-## 🖼️ Show Design
-→ How to visualize it using the `Show Design` component
+Once you've done the following:
 
-Once you have:
-1. Defined your **Pieces** (instances of your brick molds)
-2. Established **Connections** between these Pieces
-3. Assembled them into a `Design` structure
+1️⃣ **Placed your Bricks** – by defining **Pieces** (instances of your brick molds)  
+2️⃣ **Snapped them together** – by setting up **Connections** between their Ports  
+3️⃣ **Organized the build** – by assembling them into a full **Design**
 
-The next step is to see your creation!
+🎉 It’s time to **see your LEGO model come to life**!
 
-In semio, you use the `Show Design` component (or a similar visualization function in semio Studio) to render your final model.
+---
 
-To properly display your Design, you typically need to provide the following to the visualization component:
+Up to now, we’ve been working behind the scenes 🛠️ defining meaning, relationships, and structure.  
+But unlike regular Grasshopper workflows, Semio doesn’t preview the geometry automatically ⚠️  
+🧩 That happens in a dedicated step 🎬 just like revealing your finished LEGO build after following all the instructions.
 
-- The **`Design`** itself: This contains all the information about which Pieces are used and how they are connected.
-- The **`Types`** used in the Design: This tells semio the definition of each brick mold, including its Ports.
-- The **Geometry/Representations** for each Type/Variant: This provides the actual visual shapes for each Piece.
 
-Plug these inputs into the `Show Design` component, and semio will render your complete modular assembly.
+## 🧩 Visualize the Design
 
-✅ That's it — you've built and visualized your first modular kit in semio!
+Once your modular system is ready, it’s time to see it come together!  
+To visualize the final assembly, Semio uses the `Preview Design` component in Grasshopper.
+
+🔌 **Connect these inputs to the `Preview Design` component**:
+
+- **🧱 Design**  
+  The complete structure — tells Semio which Pieces are used and how they’re connected.
+
+- **📦 Types**  
+  The brick molds used in the Design — including Ports and logic for snapping.
+
+- **🧊 Representations**  
+  The geometry files (e.g. `.glb`) or `Objects` for each Type and Variant — the actual shape of each brick.
+
+---
+
+🔍 Once connected, the `Preview Design` component renders your full modular creation:  
+brick by brick, just like snapping together your final LEGO model on the table! 🧩
+
+Here’s what gets visualized:
+
+- 🧱 **Brick Placement**  
+  Every Piece is shown in its final position — exactly where your Design logic places it.
+
+- 🧲 **Port Connections**  
+  Only the **connected Ports** are displayed — including their direction — so you can confirm how Pieces are snapped together
+
+- 🔄 **Snapping Adjustments**  
+  Rotations, gaps, shifts, or tilts added during connection are shown — making alignment easy to check.
+
+
+
+---
+
+✅ That’s it — you’ve built and visualized your first modular kit in Semio!  
+From mold to model, every part now fits where it belongs. 🧠🧱🎉
+

@@ -15,7 +15,7 @@ You're not just drawing geometry — you're designing a **template** that combin
 
 ---
 
-#### 🧩 What Are the "Molds" in This Example?
+##### 🧩 What Are the "Molds" in This Example?
 
 Take a look at your sketch — you'll see five elements that follow the **same basic shape**, just stretched to different lengths.
 
@@ -29,7 +29,7 @@ If the shape were completely different — like a triangle, window, or roof — 
 
 ---
 
-#### 🔧 What Do We Need to Create These Molds?
+##### 🔧 What Do We Need to Create These Molds?
 
 When you think of a mold, the first thing that comes to mind is usually its **shape** — the geometry 🧱✏️  
 But in Semio, geometry is more than form — it serves as a **placeholder for meaning** 💡
@@ -70,7 +70,13 @@ Let’s take a look at the elements that make up a Type, and dive into modeling 
 Giving clear and consistent names to elements in Semio **really pays off later** — especially when designing and making connections.  
 As your project grows and you're working with many Types, Variants, and Pieces, meaningful names make everything easier to navigate and understand.
 
-📝 Try to name things the way you would in a real project — clear, specific, and with purpose.
+:::note
+📝 Try to name things the way you would in a real project — clear, specific, and with purpose
+:::
+
+
+👉 In our example, we’ll name our Type **'Profile'**, since we’re modeling Pieces based on custom wood shapes with a defined profile
+
 
 ---
 
@@ -87,113 +93,139 @@ This isn’t just visual geometry — it’s a **layer of meaning** that stands 
 Think of it like snapping a shell onto a LEGO mold — now your brick has a visible form 👀  
 But that form isn’t fixed. A Representation is more like a **costume** — it can be swapped at any time, as long as it fits the logic.
 
-Just like architects might use a blocky mass for urban models 🏙️ or detailed profiles for close-ups 🪟,  
+Just like architects might use a blocky volumes for urban models 🏙️ or detailed profiles for close-ups 🪟,  
 Semio lets you change the **look** without changing the **design logic** 🔄  
 Same brick, different shell — that’s the idea 💡
 
 ---
 
-#### 🔧 How to Model a Representation
+##### 🔧 Modeling Representation
 
-Creating a Representation works in two simple steps:
-🧱 First, you build the geometry — the actual shape of your brick.
-📎 Then, you attach that shape to your Type to give it a visual form.
+Creating a Representation works in two simple steps:  
+🧱 First, you build the geometry — the actual shape of your brick  
+📎 Then, you attach that shape to your Type to give it a visual form
 
-Let’s take a closer look at the brick mold in our example.
-It’s shaped like a rectangle cut at an angle, then stretched into a wooden LEGO-style profile.
+Let’s take a closer look at the brick mold in our example.  
+You’ll notice that it’s always the same shape 🧱 a rectangle cut at an angle ✂️ just stretched into different sizes 📏
 
-We’ll use two parameters to define its size:
+We’ll use these two parameters to define its size:
 
-W → the width of one brick unit
+- `W` → the width of one brick unit  
+- `n` → the number of units in length
 
-n → the number of units in length 
-
-In Semio, you can attach geometry to a Type in different ways — depending on what works best for your workflow
-Let’s look at how that works in practice:
-
+🧰 Next, we’ll dive into how to create and attach geometry to your brick mold.  
+🧱 In Semio, you can attach geometry to a Type in different ways — depending on what fits your workflow best.  
+👀 Let’s take a look at how that works in practice
 
 
 <Tabs>
 
 <TabItem label="File-Based Reference (🔁 Recommended)">
 
-Model the shape externally (e.g. in Rhino), then attach it to your Type by referencing a named layer.
 
-#### 🗂️ Referencing a File-Based Representation
 
-In Semio, Representations are typically referenced through **external geometry files** — even when the geometry is generated inside Grasshopper.  
-This approach helps maintain clean, modular workflows and supports flexible updates.
+In Semio, Representations are typically referenced through **external geometry files** 🗂️ — even when generated inside Grasshopper.  
+This approach helps maintain **clean, modular workflows** 🧼 and supports flexible updates.
 
-In this example, we’re exporting a `.glb` file and referencing it in a **Type** using the file-based method.
+While the modeling process itself isn’t the focus of this tutorial, the key takeaway is this:
+you’ll need to go through two simple steps to attach this geometry as a Representation
 
----
-
-#### 🛠️ Geometry Generation & Export 
-
-We use a **parametric Grasshopper definition** to generate the shape of the brick mold.  
-This is helpful because we can define a logic that supports **all Variants** of a Type — controlled by the parameter `n`, which sets the brick's length.
-
-While the modeling logic isn't the focus of this tutorial, the key takeaway is:
-
-> 🧱 **We generate the geometry , and reference it via an exported file.**
 
 ---
-#### 🧱 Exporting the Geometry to a File
 
-Here’s what the script does:
+#### Step 1: 🛠️ Geometry modeling 
 
-- **Set the Export Location**  
+Since our shape follows a clear logic 🧠, we use a **parametric Grasshopper definition** to generate the geometry of the brick mold 🧱  
+This is useful because it lets us generate **all the different Variants** of this brick seen in the sketch, using a single logic controlled by the parameters `n` and `W`, which define the brick’s length and width 📏
+
+
+![📁 Geometry Generation](/attach-geometry-crop.gif)
+
+
+#### Step 2: 🛠️ Geometry Export
+
+After generating the geometry, we need to **export it as a `.glb` file** so it can be attached as a Representation.  
+💾 We’ll use a simple workflow that automates this export — it can be placed directly after your geometry definition in Grasshopper.
+
+The modeling of the geometry happens earlier in the Grasshopper definition 🛠️  
+here, we’ll focus mainly on the **export logic**: how to turn that geometry into a file Semio can reference. 💾
+
+**The export workflow looks like this:**
+
+
+
+
+{/* TODO: insert export geometry image */}
+
+![📤 Export Geometry](/export-geometry.png)
+
+
+
+
+- 📂 **Set the Export Location**  
   A directory path is defined using the `Dir` and `Path` components.  
   This determines where the exported file will be saved.
 
-- **Build the File Name**  
+- 📝 **Build the File Name**  
   The file name is generated dynamically using `Concat`,  
   combining the Type name (e.g. `profile`) and the Variant (e.g. `2`) → `profile_2.glb`
 
-- **Assemble the Full File Path**  
+- 📂 **Assemble the Full File Path**  
   A second `Concat` block merges the directory and file name:  
   `C:\Users\Users\Downloads\profile_2.glb`
 
-- **Prepare the Geometry**  
+- 📐 **Prepare the Geometry**  
   - Convert or prepare the geometry in the desired format (e.g. Mesh)  
   - The `iGeo` component then writes the `.glb` file to disk
 
+  Your file directory, where your Grasshopper definition is, should look like this:
+
+  ![📤 Exported file](/file-export-Profile-2-.png)
+
+ :::note
+⚙️ This method is ideal because it combines the familiar **parametric workflow** of Grasshopper with the **modular workflow** of Semio.  
+📤 Every time a parameter is changed in the geometry generation, the corresponding file can be **automatically exported** and then **referenced** in the next step.
+:::
+
+
+
 ---
 
-#### 🧱 Referencing the File in a Type 
+#### Step 3: 🔗 Referencing the Exported File
 
-The same file name (`profile_2.glb`) is passed to the **`Ur` input** of the `~Rep` component.  
-This tells Semio where to find the exported geometry.
+The exported file name (e.g. `profile_2.glb`) is passed to the **`Ur` input** of the **Model Representation** component (`~Rep`).  
+This tells Semio where to find the geometry file.
 
-- The `~Rep` component uses this path (`Ur`) to create a Representation:  
+- The **`~Rep` (Model Representation)** component uses the `Ur` path — the file location — to create a Representation:  
   `Rep(model/gltf-binary)`
 
-- This Representation is then connected to the **Type**, along with its **Name** and **Variant**.
+- This Representation is then connected in a later step to the **`Typ` (Model Type)** component.
 
-> 💡 `Ur` stands for "URL" or file path — it’s how Semio links a Type to its geometry.
+{/* TODO: insert Referencing the Exported File image */}
+
+![📁 Reference Geometry](/reference-geometry.png)
 
 ---
 
-#### 🔁 Why File-Based?
+##### 🔁 Why Use File-Based Referencing?
 
-Even when working inside Grasshopper, Semio requires a **snapshot** of the geometry —  
-a static file that represents the shape of the brick mold at a given point in time.
+Even when working inside Grasshopper, Semio needs a **static snapshot** of your geometry —  
+a file that captures the shape of your brick mold at that moment.
 
-This means:
+Here’s what that means:
 
-- If you generate geometry dynamically, you still need to export it as a file  
-- Semio references that **fixed file**, not a live Grasshopper definition
+- If your geometry is generated dynamically, it still needs to be **exported as a file**  
+- Semio references that exported file — not the live Grasshopper definition
 
-> 💡 This ensures geometry stays **modular and transferable** between Grasshopper and Semio Studio.
-
-
+> 💡 This approach keeps your geometry **modular and portable**, so it works seamlessly across Grasshopper and Semio Sketchpad  
+> 🧱 It also enables working in **chunks** — letting you break large designs into smaller, manageable parts
 
 
 
 
 </TabItem>
 
-<TabItem label="Manual Reference">
+<TabItem label="Direct Reference">
 
 
 
@@ -212,50 +244,74 @@ Want to go deeper into the pros and cons? Learn more here 🔍
 #### 🧪 Switching the Representation (Placeholder principle)
 
 
-As introduced earlier, when you give a Type its shape in Semio, you're attaching a **Representation** — a piece of geometry that shows what the brick looks like.  
-But this geometry is more than just visual: it acts as a **semantic placeholder**.  
-That means the Representation can be changed or swapped at any time without affecting the logic of your design.
+As introduced earlier, when you give a **Type** its shape in Semio, you're attaching a **Representation** —  
+a piece of geometry that shows what the brick looks like visually 👁️.  
+But this geometry is more than just form: it acts as a **semantic placeholder** 🧠.  
+That means you can **change or swap** the Representation at any time **without breaking your design logic** 🔁
 
 You can think of it like a **costume** for your Type 🎭  
-The identity, name, and behavior stay the same — you're just changing how it looks on stage.  
+The identity, name, and behavior stay the same — you're just changing how it looks on stage.
 
-This flexibility is especially useful when working at different levels of detail across a project.
+This flexibility is especially useful when working at **different levels of detail** across a project 🧩
+
+##### 🎬 One Brick, Two Representations
+
+To illustrate this concept, we created **two geometry files** for the **same brick mold Type**:
 
 ---
-
-
-In our example, we create two geometry files for the same brick mold Type:
 
 <Tabs>
 
 <TabItem label="🔍 Detailed Version">
 
-This version includes the full profile of the piece — a rectangle cut at an angle and extruded into a wooden section.  
-It reflects real-world geometry and is ideal for detailed communication: joinery, materiality, and fabrication outputs.
-(Add Image of the detailed version)
+
+
+This version includes the full profile of the piece —  
+a rectangle cut at an angle and extruded into a wooden section 🪵.  
+
+
+![📁 Switch Representation](/Switch-Representation.png)
+![📁 Filename](/Profile-2-detailed.png)
+
+
+It reflects real-world geometry and is ideal for:
+- Joinery and fabrication  
+- Material communication  
+- High-detail outputs
+
+{/* TODO: insert Detailed Version image */}
 
 </TabItem>
 
 <TabItem label="⚡ Simplified Version">
 
-This version is just a bounding box — a minimal block that matches the brick’s overall size but leaves out its inner shape.  
-It’s perfect for early-stage layouts, when exact geometry isn’t known yet, or when fast performance is more important than visual fidelity.
-(Add Image of the simplified version)
+This version is just a **bounding box** — a minimal block that matches the brick’s size 📦, but skips inner detail
+
+![📁 Switch Representation](/switch-representation-Block.png)
+![📁 Filename](/Profile-2-simplified.png)
+
+It’s perfect for:
+- Early-stage layouts  
+- Fast performance  
+- Projects where shape is still evolving
+
+{/* TODO: insert Simplified Version image */}
 </TabItem>
 
 </Tabs>
 
 ---
 
-Even though the two Representations look very different, they both belong to the same **Type**.  
-The Name, Variant, Ports, and logic stay identical — only the appearance changes.
+Even though these two Representations **look very different**, they both belong to the **same Type** ✅. The **Name**, **Variant**, **Ports**, and **logic** stay exactly the same — only the appearance changes.
 
-This means you can design, assemble, and connect everything using placeholders, then later **swap in the detailed version** when you're ready to communicate or fabricate.
+This means you can **design and assemble** everything using lightweight placeholders,  
+then **swap in the detailed version** when you're ready for presentation, communication, or fabrication 🧰.
 
 > 💡 In Semio, the Representation doesn’t define the part — it simply **stands in for it**.  
-Like a LEGO minifig in different outfits — it's still the same character underneath.
+> Like a LEGO minifig in different outfits 🧑‍🚀🕵️ — it's still the same character underneath.
 
-This separation of logic and form is what makes Semio workflows flexible, scalable, and robust — across early concept, detailed design, and collaborative development.
+This separation of **logic and form** is what makes Semio workflows flexible, scalable, and robust, from early concept to detailed design to collaborative development 🤝
+
 </li>
 
 <li>
@@ -267,7 +323,7 @@ That's where **Ports** come in — the snap points that define where a Brick can
 
 ---
 
-#### 🧩 What Do You Need to Define a Port?
+##### 🧩 What Do You Need to Define a Port?
 
 In the Semio Grasshopper plugin, each Port is defined with three main inputs:
 
@@ -282,28 +338,11 @@ In the Semio Grasshopper plugin, each Port is defined with three main inputs:
   The direction the Port faces — like saying “this side connects outward.”  
   It’s important for aligning pieces when snapping.
 
+
+![📁 Ports](/model-port-alpha.png)
 ---
 
-#### 🏷️ Port ID (Id)
 
-A **Port ID** is the label you give to each Port.  
-This naming is important — because later, when you make connections, you'll say things like:
-
-> "Connect Piece A's `top` Port to Piece B's `bottom` Port."
-
-You can choose any naming system — as long as it makes sense in your design logic.  
-In this example, we use:
-
-- `n`, `s`, `e`, `w` — standing for **north, south, east, and west** 🧭
-
-In your own project, you might use:
-
-- `top`, `bottom`, `hinge`, `plug`, `outlet`, `windowDock` — or anything else 🔧
-
-💡 **Tip:** Choose a consistent and meaningful naming system.  
-It will make connecting components easier — and helps when working with AI or teammates.
-
----
 
 #### 💡 Port Location (Pt)
 
@@ -359,14 +398,35 @@ Here’s how to define direction effectively:
 
 
 ---
+#### 🏷️ Port ID (Id)
+
+A **Port ID** is the label you give to each Port.  
+This naming is important — because later, when you make connections, you'll say things like:
+
+> "Connect Piece A's `top` Port to Piece B's `bottom` Port."
+
+You can choose any naming system — as long as it makes sense in your design logic.  
+In this example, we use:
+
+- `n`, `s`, `e`, `w` — standing for **north, south, east, and west** 🧭
+
+In your own project, you might use:
+
+- `top`, `bottom`, `hinge`, `plug`, `outlet`, `windowDock` — or anything else 🔧
+
+💡 **Tip:** Choose a consistent and meaningful naming system.  
+It will make connecting components easier — and helps when working with AI or teammates.
+
+---
 
 Now you can see how the three inputs — Id, Pt, and Dr — work together to create Ports.
 Each Port is defined by one entry from each list, so the lists must be the same length.
 This ensures that every snapping point has a matching ID, position, and direction
 
 
-  (Add port Image here Gh)
-  (Image of Wireframe with points and Vectors in Rhino)
+  {/* TODO: insert port Image here Gh */}
+  
+  {/* TODO: insert Image of Wireframe with points and Vectors in Rhino */}
 
 </li>
 
@@ -379,17 +439,21 @@ After modeling all the parts of your brick mold —
 you plug them into the `Typ` component.
 
 - 🏷️ **Name** → e.g. `"Profile"`  
-- 🔢 **Variant** → e.g. `"4"`  
+- 🔢 **Variant** → e.g. `"2"`  
 - 🧲 **Ports** → e.g. `n`, `s`, `e`, `w`  
 - 🧊 **Representation** → the linked geometry
 
+  {/* TODO: insert Image of Type component with the inputs */}
+![📁 Model Type](/model-type.png)
 
-🎯 The result is a complete Type —
-a smart, reusable building block, ready to be placed and connected in your Design.
-It’s defined by the Name and Variant you assign — for example: Typ("profile", 4)
+![📁 Model Type](/model-type-geo.png)
 
 
-(Add Image of the Type component with the inputs)
+  🎯 The result is a complete Type —
+  a smart, reusable mold, ready to be casted into your Design.
+  🧩 The output `Typ("profile", 2)` means we're creating a Variant **named `2`** based on the `"profile"` mold 🧱 — a 2-unit-long brick 📏
+
+
 
 
 ---
@@ -401,15 +465,13 @@ It’s defined by the Name and Variant you assign — for example: Typ("profile"
 
 
 
-## 🧬 Mold Versions (Variants of Type)
-→ what we ae going to do in this step is to use the same mold to make bricks of different sizes
+## 🧬 Create Mold Versions (Variants of Type)
 
 Now that you've created your base **Type**, it's time to generate **Variants** — based on the **unit count `n`** shown in the sketch.
 
 Each Variant uses the **same mold**, just stretched or scaled.  
- Think of it like longer or shorter Lego bricks of the same kind 🧱🧱🧱  
+ Think of it like longer or shorter Lego bricks of the same kind 🧱
  Since they follow the same design logic, we treat them as **Variants** of one **Type**, not separate Types.
-These Variants are technically 
 
 - **Variant 2** → 2 units long
 
@@ -419,7 +481,7 @@ These Variants are technically
 
 ---
 
-#### 🔁 How to Model a Variant in Semio
+#### 🔁 Modeling a Variant
 
 Modeling a **Variant** follows the **same steps** as creating a new Type —  
 but with one key difference: you're referencing the **same mold**, just with a new configuration.
@@ -437,18 +499,15 @@ You’ll still go through the usual modeling steps:
 4. Set the Variant number  
 5. Create the complete **Model Type**
 
-This tells semio:  
-➡️ *“Same mold, different size.”*
 
 ✅ Just like when modeling a Type, you define the Representation, Ports, and final Model Type — only the **Variant** changes.
 
 ---
-(Here add a image of model Type inside the cluster. Two images one for each variant )
-
-as you can see the output coming out of model type is a new Type with the same name but different variant number.
+{/* TODO: insert Image of model Type inside the cluster. Two images one for each variant */}
 
 
-#### 💡 Advanced Tip: Use Clusters to Generate Variants
+
+##### 💡 Advanced Tip: Use Clusters to Generate Variants
 
 In Grasshopper, a great way to handle multiple Variants is with a **Cluster** —  
 a reusable mold-maker that generates each version of your LEGO brick 🧱
@@ -459,24 +518,78 @@ Since most Variants share the same logic and differ by only one or two parameter
 - Generate all Variants efficiently  
 - Keep your script clean and modular
 
+
+![📁 Variant GIF](/Type-1-to-5-crop.gif)
+
+<Tabs>
+
+<TabItem label=" File-Based Geometry Reference">
+
 **Inside the Cluster:**  
+
 You define the full logic:
 
-- Geometry generation & export  
-- Geometry import and Representation attachment  
-- Port placement  
-- Model Type creation
+- Geometry generation & export   
+- Modeling the Representation by linking the exported file  (Model Representation)
+- Port placement (Model Port)
+- Type creation (Model Type)
+
+![📁 Cluster](/cluster-type-inside-ALpha.png)
+
 
 **Outside the Cluster:**  
+
+![📁 Cluster](/type-cluster-file-reference-Alpha.png)
+
+![📁 Cluster](/file-export.png)
+
+You feed in only what changes:
+
+- `n` → the unit count (e.g. 2, 4, 5) 📏  
+- Variant name → (often also `n`) 🏷️
+- The Directory of the Grasshopper Definition
+- Export toggle
+ 
+
+
+</TabItem>
+
+<TabItem label=" Direct Geometry Reference">
+
+**Inside the Cluster:**  
+
+![📁 Cluster](/cluster-type-inside-direct.rfrc.png)
+
+You define the full logic:
+
+- Geometry generation 
+- Port placement (Model Port)
+- Type creation (Model Type)
+
+**Outside the Cluster:**  
+
+![📁 Cluster](/type-cluster-direct-reference-Alpha.png)
+
+
 You feed in only what changes:
 
 - `n` → the unit count (e.g. 2, 4, 5) 📏  
 - Variant name → (often also `n`) 🏷️
 
+
+
+
+</TabItem>
+
+</Tabs>
+
+
+
+
 This way, you can generate many Variants from the same Type —  
 without duplicating components or cluttering your canvas.
 
-✅ **Bonus:** Keeps your file organized and scalable — perfect for growing your Kit later on.
+✅ **Bonus:** Keeps your file organized and scalable — perfect for growing your Kit later on
 
 ---
-(Here add an image of the cluster)
+{/* TODO: insert Gif of the cluster with the different variants */}

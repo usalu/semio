@@ -12,7 +12,7 @@ But a mold alone isn't a brick you can snap into place.
 
 ---
 
-## 🔖 Place Your Bricks (Model Pieces)
+## 🔖 Place Your Bricks (Model Pieces - Pcs)
 
 🧩 Now it's time to **cast those molds** into real, usable bricks — called **Pieces**.  
 🎯 These are the actual building blocks you'll place, connect, and arrange in your design.
@@ -101,7 +101,7 @@ each inheriting geometry, ports, and semantic structure from its parent mold.
 
 ---
 
-## 🔗 Connect the Bricks (Model Connections)
+## 🔗 Connect the Bricks (Model Connections - Con)
 
 
 Now that you've placed your Pieces, it's time to tell semio how they connect. Think of this like giving the assembly instructions for snapping bricks together 🧱🧲
@@ -125,10 +125,11 @@ To create a connection, you need to define four key values:
 
 ---
 
-#### 🧩 Example: Connecting Two Pieces
+##### 🧩 Example: Connecting Two Pieces
 
-Let's walk through a simple example from the sketch.  
-We want to connect **Piece `i`** to **Piece `L1`** using their west-facing Ports.
+
+🧱 Before we snap the full model together, let’s start small — by connecting the first two bricks.
+We’ll connect Piece i to Piece L1, using their west-facing Ports.
 
 From the sketch, we see:
 
@@ -141,11 +142,10 @@ From the sketch, we see:
 This tells Semio:  
 **Snap the west Port of `i` to the west Port of `L1`.**
 
-**Simple as that.**
-
 (Here a picture where two pieces are connected)
 
 ---
+
 
 ### 🎯 Adjust Snap *(Optional Step)*
 
@@ -181,39 +181,42 @@ These are local movements based on the direction the Port was defined in:
   🤸 Like tilting a ramp or slope brick up or down.
 
 ---
+As we can see, the two Pieces we connected earlier don’t align exactly as shown in the sketch 🧩.
+This is where the optional step of adjusting the snap comes in 🛠️
+Here is how to use them to fine-tune the position and rotation of a Piece after it snaps.
+
+
 (Here add a GIF for snaping)
 
-#### 🧠 Port Placement vs. Adjustment
+---
 
-You can often skip manual adjustments by placing Ports **exactly where the geometry should land**.  
-But when working with Variants or non-aligned shapes, small transformations give you added flexibility.
 
-Keeping Port positions consistent across Variants makes your Types easier to reuse and align.
+##### ➕ Connecting the rest of the Pieces
 
-> **Semio supports both strategies** — place Ports precisely, or adjust Pieces after snapping.  
-> 🧱 Just like LEGO: studs cover the whole surface, but you only use the ones that fit your logic.
+Once i and L1 are correctly aligned, we can continue connecting the rest of the Pieces ➕
+Following the sketch, each new Piece is snapped to the previous one using their matching Ports — adjusting alignment when needed
+🌀 If a connected Piece isn’t oriented properly, you can simply rotate it into position. Semio allows per-piece rotation without breaking the logic
+🔗 And thanks to Semio’s chain behavior, when you move or rotate one Piece, all the connected Pieces after it update automatically
+
+(Here few screenshorts of adjusting one piece at a time)
 
 ---
 
-#### ➕ Connecting Multiple Pieces
+##### 🧠 Port Placement vs. Adjustment
 
-📏 **Continue the sequence**  
-After connecting the second Piece, you can keep building — attach the third to the second, the fourth to the third, and so on.
+You can often skip manual adjustments by placing Ports **exactly where the geometry should land**  
+But when working with Variants or non-aligned shapes, small transformations give you added flexibility
 
-🌀 **Rotate when needed**  
-If a connected Piece isn't aligned properly, just rotate it into position.  
-Semio allows per-piece rotation without breaking the logic.
+Keeping Port positions consistent across Variants makes your Types easier to reuse and align
 
-🔗 **Automatic updates**  
-Connections behave like a chain: when you rotate or move one Piece, all the connected Pieces that follow update automatically.
+> **Semio supports both strategies** — place Ports precisely, or adjust Pieces after snapping  
+> 🧱 Just like LEGO: studs cover the whole surface, but you only use the ones that fit your logic
 
-🏗️ **Everything stays linked**  
-It's like twisting the middle of a LEGO tower — the top moves with it.  
-Your structure remains fully connected, even as it evolves.
+
 
 ---
 
-#### ⚙️ How Semio Fits into Grasshopper
+##### ⚙️ How Semio Fits into Grasshopper
 
 Semio doesn't change how Grasshopper works — it changes **what** you connect.  
 You're not just wiring geometry — you're building relationships between **Types, Ports, and Pieces**.
@@ -230,11 +233,11 @@ Semio handles the rest.
 
 ---
 
-## 🏗️ Build the Final Design
+## 🏗️ Build the Design (Model Design - Dsn)
 
 Now that you've created your **Pieces** and defined how they connect using **Connections**, it's time to assemble everything into a complete **Design** — the final model you want to build.
 
-### 🧩 What is a Design?
+##### 🧩 What is a Design?
 
 A **Design** in Semio is the full set of instructions for your model.  
 It’s the final assembly where you place specific Pieces and connect them using logic — not just forming geometry, but encoding meaning and relationships.
@@ -245,7 +248,7 @@ This is where everything comes together into a structured system.
 
 ---
 
-### 🛠️ How to Assemble the Design
+### 🛠️ Assembling the Design
 
 To create your Design in semio (for example, in Grasshopper), use the `Model Design` component. You'll provide three main inputs:
 
@@ -269,7 +272,7 @@ Design(
 
 ---
 
-### 🖼️ What Happens Next?
+##### 🖼️ What Happens Next?
 
 Once you've built your Design, you can visualize it using the `Show Design` component (see the next page). This will render your assembled model, showing all the Pieces in their correct positions and how they're connected.
 
