@@ -1475,9 +1475,9 @@ public class Type : Model<Type>
     public bool Virtual { get; set; } = false;
 
     /// <summary>
-    ///     🗺️ The optional location of the type.
+    ///     📍 The optional location of the type.
     /// </summary>
-    [ModelProp("🗺️", "Lc?", "Loc?", "The optional location of the type.", PropImportance.OPTIONAL)]
+    [ModelProp("📍", "Lo?", "Loc?", "The optional location of the type.", PropImportance.OPTIONAL)]
     public Location? Location { get; set; }
 
     /// <summary>
@@ -1987,6 +1987,12 @@ public class Design : Model<Design>
     [Name("🥽", "Vw?", "Vew?", "The optional view of the design. No view means the default view.", PropImportance.ID,
         true)]
     public string View { get; set; } = "";
+
+    /// <summary>
+    ///     📍 The optional location of the design.
+    /// </summary>
+    [ModelProp("📍", "Lo?", "Loc?", "The optional location of the design.", PropImportance.OPTIONAL)]
+    public Location? Location { get; set; }
 
     /// <summary>
     ///     Ⓜ️ The length unit for all distance-related information of the design.
@@ -2562,7 +2568,11 @@ public class DesignId : Model<DesignId>
     }
 }
 
-public class KitProps : Model<Kit>
+/// <summary>
+///     🗃️ A kit is a collection of types and designs.
+/// </summary>
+[Model("🗃️", "Kt", "Kit", "A kit is a collection of types and designs.")]
+public class Kit : Model<Kit>
 {
     /// <summary>
     ///     📛 Name of the kit.
@@ -2624,14 +2634,6 @@ public class KitProps : Model<Kit>
     /// </summary>
     [Url("⚖️", "Ln?", "Lcn?", "The optional license [ spdx id | url ] of the kit.")]
     public string License { get; set; } = "";
-}
-
-/// <summary>
-///     🗃️ A kit is a collection of types and designs.
-/// </summary>
-[Model("🗃️", "Kt", "Kit", "A kit is a collection of types and designs.")]
-public class Kit : KitProps
-{
     /// <summary>
     ///     🧩 The optional types of the kit.
     /// </summary>
