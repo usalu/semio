@@ -71,8 +71,6 @@ engine.py
 # 🪪,Id,Id,Identifier,The props to identify the {{NAME}} within the parent {{PARENT_NAME}}.
 # ↘️,In,Inp,Input,The input for a {{NAME}}.
 # 🗃️,Kt,Kit,Kit,A kit is a collection of designs that use types.
-# 🗺️,Lc,Loc,Locator,A locator is machine-readable metadata for grouping ports and provides a mechanism to easily switch between ports based on individual locators.
-# 🗺️,Lc*,Locs,Locators,The optional machine-readable locators of the port. Every port should have a unique set of locators.
 # 🔍,Ld?,Lod,Level of Detail,The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod.
 # 📛,Na,Nam,Name,The name of the {{NAME}}.
 # ✉️,Mm,Mim,Mime,The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.
@@ -1179,7 +1177,7 @@ class Representation(
         return [self.tags]
 
 
-### Screen Points ###
+### Diagram Points ###
 
 
 class DiagramPoint(Model):
@@ -1919,6 +1917,16 @@ class PortDescriptionField(RealField, abc.ABC):
     """💬 The optional human-readable description of the port."""
 
 
+class PortMandatoryField(RealField, abc.ABC):
+    """💯 Whether the port is mandatory. A mandatory port must be connected in a design."""
+
+    mandatory: bool = sqlmodel.Field(
+        default=False,
+        description="💯 Whether the port is mandatory. A mandatory port must be connected in a design.",
+    )
+    """💯 Whether the port is mandatory. A mandatory port must be connected in a design."""
+
+
 class PortFamilyField(RealField, abc.ABC):
     """👨‍👩‍👧‍👦 The optional family of the port. This allows to define explicit compatibility with other ports."""
 
@@ -1928,16 +1936,6 @@ class PortFamilyField(RealField, abc.ABC):
         description="👨‍👩‍👧‍👦 The optional family of the port. This allows to define explicit compatibility with other ports.",
     )
     """👨‍👩‍👧‍👦 The optional family of the port. This allows to define explicit compatibility with other ports."""
-
-
-class PortMandatoryField(RealField, abc.ABC):
-    """💯 Whether the port is mandatory. A mandatory port must be connected in a design."""
-
-    mandatory: bool = sqlmodel.Field(
-        default=False,
-        description="💯 Whether the port is mandatory. A mandatory port must be connected in a design.",
-    )
-    """💯 Whether the port is mandatory. A mandatory port must be connected in a design."""
 
 
 class PortCompatibleFamiliesField(MaskedField, abc.ABC):
@@ -2021,6 +2019,9 @@ class PortInput(
 
 
 class PortContext(
+    PortTField,
+    PortDirectionField,
+    PortPointField,
     PortCompatibleFamiliesField,
     PortFamilyField,
     PortMandatoryField,
@@ -2367,6 +2368,22 @@ class Author(
         return self.email
 
 
+### Locations ###
+
+
+class Location(Model):
+    """📍 A location on the earth surface (longitude, latitude)."""
+
+    longitude: float = sqlmodel.Field(
+        description="↔️ The longitude of the location in degrees.",
+    )
+    """↔️ The longitude of the location in degrees."""
+    latitude: float = sqlmodel.Field(
+        description="↕️ The latitude of the location in degrees."
+    )
+    """↕️ The latitude of the location in degrees."""
+
+
 ### Types ###
 
 
@@ -2454,6 +2471,16 @@ class TypeUnitField(RealField, abc.ABC):
     """Ⓜ️ The length unit of the point and the direction of the ports of the type."""
 
 
+class TypeLocationField(MaskedField, abc.ABC):
+    """📍 The optional location of the type."""
+
+    location: typing.Optional[Location] = sqlmodel.Field(
+        default=None,
+        description="📍 The optional location of the type.",
+    )
+    """📍 The optional location of the type."""
+
+
 class TypeCreatedField(RealField, abc.ABC):
     """🕒 The creation date of the type."""
 
@@ -2480,6 +2507,7 @@ class TypeId(TypeVariantField, TypeNameField, Id):
 
 class TypeProps(
     TypeUnitField,
+    TypeLocationField,
     TypeVirtualField,
     TypeStockField,
     TypeVariantField,
@@ -2494,6 +2522,7 @@ class TypeProps(
 
 class TypeInput(
     TypeUnitField,
+    TypeLocationField,
     TypeVirtualField,
     TypeStockField,
     TypeVariantField,
@@ -2515,6 +2544,7 @@ class TypeOutput(
     TypeUpdatedField,
     TypeCreatedField,
     TypeUnitField,
+    TypeLocationField,
     TypeVirtualField,
     TypeStockField,
     TypeVariantField,
@@ -2534,6 +2564,7 @@ class TypeOutput(
 
 class TypeContext(
     TypeUnitField,
+    TypeLocationField,
     TypeVirtualField,
     TypeStockField,
     TypeVariantField,
@@ -2571,6 +2602,24 @@ class Type(
         exclude=True,
     )
     """🔑 The primary key of the type in the database."""
+    locationLongitude: typing.Optional[float] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "location_longitude",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+        default=None,
+    )
+    """↔️ The longitude of the location in degrees."""
+    locationLatitude: typing.Optional[float] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "location_latitude",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+        default=None,
+    )
+    """↕️ The latitude of the location in degrees."""
     representations: list[Representation] = sqlmodel.Relationship(
         back_populates="type",
         cascade_delete=True,
@@ -2608,6 +2657,20 @@ class Type(
             "name", "variant", "kit_id", name="Unique name and variant"
         ),
     )
+
+    @property
+    def location(self) -> Location:
+        """📍 The location of the type."""
+        return Location(
+            longitude=self.locationLongitude,
+            latitude=self.locationLatitude,
+        )
+
+    @location.setter
+    def location(self, location: Location):
+        """📍 Set the location of the type."""
+        self.locationLongitude = location.longitude
+        self.locationLatitude = location.latitude
 
     @property
     def authors(self) -> list[Author]:

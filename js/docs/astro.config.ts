@@ -54,7 +54,7 @@ export default defineConfig({
                     'starter'
                 ],
                 translations: {
-                    'de': 'Erste Schritte',
+                    'de': '🚀 Erste Schritte',
                 },
             },
             {
