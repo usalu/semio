@@ -114,6 +114,77 @@ A Grasshopper-based integration of [Ladybug](https://www.ladybug.tools) and semi
 
 # 📄 Specs [↑](#-overview)
 
+## 🔗 Url
+
+A [`url`](#🔗-url) is either _relative_ (to the root of the `.zip` file) or _remote_ (http, https, ftp, …) string🌐
+
+A _relative_ [`url`](#🔗-url) is a `/`-normalized path to a file in the `.zip` file and is not prefixed with with `.`, `./`, `/`, …
+
+## ◳ Plane
+
+A [`plane`](#◳-plane) is a location (**origin**) and orientation (**x-axis**, **y-axis** and derived z-axis) in 3D space ✈️
+
+The coordinate system is left-handed where the thumb points up into the direction of the z-axis, the index-finger forwards into the direction of the y-axis and the middle-finger points to the right into the direction of the x-axis 👈
+
+## 📏 Quality
+
+A [`quality`](#📏-quality) is metadata with a **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#🔗-url) or text) 🔤
+
+The **name** is [kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) and with `.`-separated string similar to [toml keys](https://toml.io/en/v1.0.0#keys) 🔑
+
+No **value** is equivalent to the boolean _true_ where the **name** is the category of the quality 🔑
+
+The **unit** is a [unit identifier](https://en.wikipedia.org/wiki/Unit_of_measurement) 🔢
+
+- `mm` for millimeter, `cm` for centimeter, `dm` for decimeter, `m` for meter, `km` for kilometer
+- `m²` for square meter, `m³` for cubic meter, `m⁴` for quartic meter
+- `°` for degree, `rad` for radian
+- `N` for newton, `kN` for kilonewton, `MN` for meganewton
+- `°C` for degree Celsius, `°F` for degree Fahrenheit
+- `W` for watt, `kW` for kilowatt, `MW` for megawatt, `GW` for gigawatt
+- `Wh` for watt-hour, `kWh` for kilowatt-hour, `MWh` for megawatt-hour, `GWh` for gigawatt-hour
+- `J` for joule, `kJ` for kilojoule, `kcal` for kilocalorie
+- `kWh/m²a` for kilowatt-hour per square meter per year
+- `m/s` for meter per second, `m²/s` for square meter per second, `m³/s` for cubic meter per second
+- `Pa` for pascal, `kPa` for kilopascal, `MPa` for megapascal
+- …
+
+## 🏷️ Tag
+
+A [`tag`](#🏷️-tag) is a [kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) string 🔤
+
+## 💾 Representation
+
+A [`representation`](#💾-representation) is a [`tagged`](#🏷️-tag) [`url`](#🔗-url) to a resource 📄
+
+No [`tags`](#🏷️-tag) means the _default_ representation 🔑
+
+The similiarty of [`representations`](#💾-representation) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their [`tags`](#🏷️-tag) 🔄
+
+## ⭕ Piece
+
+A [`piece`](#⭕-piece) is either _fixed_ (with a [`plane`](#◳-plane)) or _linked_ (with a [`connection`](#🔗-connection)) 📐
+
+A group of _connected_ [`pieces`](#⭕-piece) is called a _cluster_ 🌿
+
+## 🔗 Connection
+
+A [`connection`](#🔗-connection) is a 3D-Link between two [`pieces`](#⭕-piece) 🪢
+
+The two [`pieces`](#⭕-piece) are called _connected_ and _connecting_ but there is no difference between them 🔄
+
+The _direction_ of a [`connection`](#🔗-connection) is determined by the _hierarchy_ of the [`pieces`](#⭕-piece) in a _cluster_ 🔄
+
+## 🏙️ Design
+
+A [`design`](#🏙️-design) is an undirected graph of [`pieces`](#⭕-piece) (nodes) and [`connections`](#🔗-connection) (edges) 📐
+
+A _flat_ [`design`](#🏙️-design) has no [`connections`](#🔗-connection) and all [`pieces`](#⭕-piece) are _fixed_ ◳
+
+The [`pieces`](#⭕-piece) are _placed_ [breadth-first](https://en.wikipedia.org/wiki/Breadth-first_search) for every _cluster_ 🌿
+
+Additional [`connections`](#🔗-connection) which where not used in the _placement_ can be used to validate the computed [`planes`](#◳-plane) 🛂
+
 ## 📦 Kit
 
 A `kit` is a special `.zip` file 📦
@@ -121,40 +192,6 @@ A `kit` is a special `.zip` file 📦
 It contains a reserved `.semio` folder that contains a `kit.db` sqlite file 💾
 
 The schema of `kit.db` is found in [`./sqlite/schema.sql`](./sqlite/schema.sql) 📄
-
-## 🏙️ Design
-
-A `design` is an undirected graph of `pieces` (nodes) and `connections` (edges) 📐
-
-A _flat_ `design` has no `connections` and all `pieces` are _fixed_ ◳
-
-The `pieces` are _placed_ [breadth-first](https://en.wikipedia.org/wiki/Breadth-first_search) for every _cluster_ 🌿
-
-Additional `connections` which where not used in the _placement_ can be used to validate the computed `planes` 🛂
-
-## 🔗 Connection
-
-A `connection` is a 3D-Link between two `pieces` 🪢
-
-The two `pieces` are called _connected_ and _connecting_ but there is no difference between them 🔄
-
-The _direction_ of a `connection` is determined by the _hierarchy_ of the `pieces` in a _cluster_ 🔄
-
-## ⭕ Piece
-
-A `piece` is either _fixed_ (with a [`plane`](#◳-plane)) or _linked_ (with a [`connection`](#🔗-connection)) 📐
-
-A group of _connected_ `pieces` is called a _cluster_
-
-## 🔗 Url
-
-A `url` is either _relative_ (to the root of the `.zip` file) or _remote_ (http, https, ftp, …) 🌐
-
-A _relative_ `url` is a `/`-normalized path to a file in the `.zip` file and is not prefixed with with `.`, `./`, `/`, …
-
-## ◳ Plane
-
-A `plane` is a location (point) and orientation (x-axis, y-axis and derived z-axis) in 3D space ✈️
 
 # 🦑 [Repo](https://github.com/usalu/semio.git) [↑](#-overview)
 
