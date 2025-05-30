@@ -82,7 +82,7 @@ public class Semio_GrasshopperInfo : GH_AssemblyInfo
     public override Guid Id => new("FE587CBF-5F7D-4091-AA6D-D9D30CF80B64");
     public override string Version => Constants.Version;
     public override string AuthorName => "Ueli Saluz";
-    public override string AuthorContact => "ueli@semio-tech.org";
+    public override string AuthorContact => "ueli@semio-tech.com";
 }
 
 public class SemioCategoryIcon : GH_AssemblyPriority
@@ -1918,7 +1918,7 @@ public abstract class ModelComponent<T, U, V> : Component
             var value = property.GetValue(modelGoo.Value);
 
             if (value == null)
-                return;
+                continue;
 
             if (isList)
             {

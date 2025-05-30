@@ -1412,13 +1412,13 @@ public class Author : Model<Author>
     }
 }
 
-[Model("📍", "Lc", "Loc", "A location on the earth surface (longitude, latitude).")]
+[Model("📍", "Lo", "Loc", "A location on the earth surface (longitude, latitude).")]
 public class Location : Model<Location>
 {
-    [NumberProp("↔️", "Lon", "Lon", "The longitude of the location in degrees.", PropImportance.REQUIRED)]
+    [NumberProp("↔️", "Ln", "Lon", "The longitude of the location in degrees.", PropImportance.REQUIRED)]
     public float Longitude { get; set; }
 
-    [NumberProp("↕️", "Lat", "Lat", "The latitude of the location in degrees.", PropImportance.REQUIRED)]
+    [NumberProp("↕️", "Lt", "Lat", "The latitude of the location in degrees.", PropImportance.REQUIRED)]
     public float Latitude { get; set; }
 }
 
