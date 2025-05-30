@@ -44,6 +44,7 @@ Let me walk you through 🚶
    - [🤖 assistant](#-assistant-)
    - [🦗 grasshopper](#-grasshopper-)
    - [🐝 wasp](#-wasp-)
+   - [🦌 monoceros](#-monoceros-)
    - [🐞 ladybug](#-ladybug-)
 1. [📄 Specs](#-specs-)
 1. [🦑 Repo](#-repo-)
@@ -93,9 +94,23 @@ The assistant helps you on every step in the design process ✍️
 
 ## 🦗 grasshopper [↑](#%EF%B8%8F-products-)
 
+A batteries-included grasshopper plugin for semio ⚡
+
+## 🦏 rhino [↑](#%EF%B8%8F-products-)
+
+A Grasshopper-based integration of [Rhino](https://www.rhino3d.com) and semio ⚡
+
 ## 🐝 wasp [↑](#%EF%B8%8F-products-)
 
+A Grasshopper-based integration of [Wasp](https://www.food4rhino.com/en/app/wasp) and semio 🔀
+
+## 🦌 monoceros [↑](#%EF%B8%8F-products-)
+
+A Grasshopper-based integration of [Monoceros](https://monoceros.sub.digital) and semio 🔀
+
 ## 🐞 ladybug [↑](#%EF%B8%8F-products-)
+
+A Grasshopper-based integration of [Ladybug](https://www.ladybug.tools) and semio 🔀
 
 # 📄 Specs [↑](#-overview)
 
@@ -280,6 +295,14 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 - [NuGet](https://www.nuget.org)
 
 </details>
+
+A .NET core for semio 🥜
+
+### ⚠️ Compatibility
+
+[Rhino](#-rhino-) still runs on .NET 7.0 7️⃣
+
+Be careful to not update packages to a higher version, that might break the compatibility 🚨
 
 ## 🐍 [Python](https://github.com/usalu/semio/tree/main/python) [↑](#%EF%B8%8F-ecosystems-)
 
@@ -727,23 +750,29 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <a href="https://github.com/usalu/semio/issues?q=author%3Ausalu OR assignee%3Ausalu" title="Issues">ℹ️</a>
         <a href="https://github.com/usalu/semio/pulls?q=author%3Ausalu" title="Pull Requests">🔀</a>
         <br />
-        <a href="#-semiojs-" title="@semio/js"><sub>@semio/js<sub></a>
+        <a href="#-semiojs-" title="🟨@semio/js"><sub>🟨<sub></a>
+        <a href="#-semionet-" title="🟪@semio/net"><sub>🟪<sub></a>
+        <a href="#-python-" title="🐍Python"><sub>🐍<sub></a>
         <br />
-        <a href="#-semiosketchpad-" title="@semio/sketchpad"><sub>@semio/sketchpad<sub></a>
+        <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a>      
+        <a href="#-semiosketchpad-" title="✏️@semio/sketchpad"><sub>✏️<sub></a>
+        <a href="#-semioengine-" title="⚙️@semio/engine"><sub>⚙️<sub></a>
         <br />
-        <a href="#-semiodocs-" title="@semio/docs"><sub>@semio/docs<sub></a>
+        <a href="#-rhino-" title="🦏Rhino"><sub>🦏<sub></a>
+        <a href="#-wasp-" title="🐝Wasp"><sub>🐝<sub></a>
+        <a href="#-monoceros-" title="🦌Monoceros"><sub>🦌<sub></a>
         <br />
-        <a href="#%EF%B8%8F-semioplayground-" title="@semio/playground"><sub>@semio/playground<sub></a>
+        <a href="#-ladybug-" title="🐞Ladybug"><sub>🐞<sub></a>
+        <a href="#-semioassistant-" title="🤖@semio/assistant"><sub>🤖<sub></a>
+        <a href="#%EF%B8%8F-semioplayground-" title="🎛️@semio/playground"><sub>🎛️<sub></a>
         <br />
-        <a href="#-semioassistant-" title="@semio/assistant"><sub>@semio/assistant<sub></a>
+        <a href="#-semiodocs-" title="📚@semio/docs"><sub>📚<sub></a>
+        <a href="#-semioassets-" title="🛍️@semio/assets"><sub>🛍️<sub></a>
+        <a href="#-brand-" title="💯Brand"><sub>💯<sub></a>
         <br />
-        <a href="#-semioengine-" title="@semio/engine"><sub>@semio/engine<sub></a>
-        <br />
-        <a href="#-semioassets-" title="@semio/assets"><sub>@semio/assets<sub></a>
-        <br />
-        <a href="#-semionet-" title="@semio/net"><sub>@semio/net<sub></a>
-        <br />
-        <a href="#-semiograsshopper-" title="@semio/grasshopper"><sub>@semio/grasshopper<sub></a>
+        <a href="#-metabolism-" title="🫀Metabolism"><sub>🫀<sub></a>
+        <a href="#-hello-semio-" title="👋Hello semio"><sub>👋<sub></a>
+        <a href="#-starters-" title="🚀Starters"><sub>🚀<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kinansarak">
         <img src="assets/contributors/kinansarak_round_90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
@@ -754,9 +783,20 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <a href="https://github.com/usalu/semio/issues?q=author%3Akinansarak OR assignee%3Akinansarak" title="Issues">ℹ️</a>
         <a href="https://github.com/usalu/semio/pulls?q=author%3Akinansarak" title="Pull Requests">🔀</a>
         <br />
-        <a href="#-semiodocs-" title="@semio/docs"><sub>@semio/docs<sub></a>
+        <a href="#-semiodocs-" title="📚@semio/docs"><sub>📚<sub></a>
+        <a href="#-hello-semio-" title="👋 Hello semio"><sub>👋<sub></a>
+        <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a> 
+      </td>
+      <td align="center" valign="top" width="145px"><a href="https://github.com/EinMysterium">
+        <img src="assets/contributors/einmysterium_round_90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
         <br />
-        <a href="#-semiograsshopper-" title="@semio/grasshopper"><sub>@semio/grasshopper<sub></a>
+        <sub><b>EinMysterium</b></sub></a>
+        <br />
+        <a href="https://github.com/usalu/semio/commits?author=EinMysterium" title="Commits">🧑‍💻</a> 
+        <a href="https://github.com/usalu/semio/issues?q=author%3AEinMysterium OR assignee%3AEinMysterium" title="Issues">ℹ️</a>
+        <a href="https://github.com/usalu/semio/pulls?q=author%3AEinMysterium OR assignee%3AEinMysterium" title="Pull Requests">🔀</a>
+        <br />
+        <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/drymuzzle">
         <img src="assets/contributors/drymuzzle_round_90.png" width="90px" alt="drymuzzle" style="border-radius: 50%;"/>
@@ -767,7 +807,8 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <a href="https://github.com/usalu/semio/issues?q=author%3Adrymuzzle OR assignee%3Adrymuzzle" title="Issues">ℹ️</a>
         <a href="https://github.com/usalu/semio/pulls?q=author%3Adrymuzzle" title="Pull Requests">🔀</a>
         <br />
-        <a href="#-semiograsshopper-" title="@semio/grasshopper"><sub>@semio/grasshopper<sub></a>
+        <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a>
+        <a href="#-ladybug-" title="🐞ladybug"><sub>🐞<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kaatzjo">
         <img src="assets/contributors/kaatzjo_round_90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
@@ -778,7 +819,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <a href="https://github.com/usalu/semio/issues?q=author%3Akaatzjo OR assignee%3Akaatzjo" title="Issues">ℹ️</a>
         <a href="https://github.com/usalu/semio/pulls?q=author%3Akaatzjo OR assignee%3Akaatzjo" title="Pull Requests">🔀</a>
         <br />
-        <a href="#-semioengine-" title="@semio/engine"><sub>@semio/engine<sub></a> 
+        <a href="#-semioengine-" title="⚙️@semio/engine"><sub>⚙️<sub></a> 
       </td>
     </tr>
 </table>
