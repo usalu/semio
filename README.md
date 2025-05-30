@@ -42,10 +42,10 @@ Let me walk you through 🚶
    - [✏️ sketchpad](#%EF%B8%8F-sketchpad-)
    - [👀 studio](#-studio-)
    - [🤖 assistant](#-assistant-)
-   - [🦗 grasshopper](#-grasshopper-)
-   - [🐝 wasp](#-wasp-)
-   - [🦌 monoceros](#-monoceros-)
-   - [🐞 ladybug](#-ladybug-)
+   - [🦗 semio.gh](#-semio.gh-)
+   - [🐝 semio.wasp](#-semio.wasp-)
+   - [🦌 semio.monoceros](#-semio.monoceros-)
+   - [🐞 semio.ladybug](#-semio.ladybug-)
 1. [📄 Specs](#-specs-)
 1. [🦑 Repo](#-repo-)
    - [⚖️ Principles](#️-principles-)
@@ -82,37 +82,79 @@ Let me walk you through 🚶
 
 ## ✏️ sketchpad [↑](#%EF%B8%8F-products-)
 
-sketchpad is a simple-to-use, accessible and browser-based user interface for semio 🖱️
+sketchpad is a simple-to-use, accessible and browser-based user interface for semio🖱️
 
 ## 👀 studio [↑](#%EF%B8%8F-products-)
 
-A studio is a synchronous collaboriation environment for teams to work together on a project 🤝
+A studio is a synchronous collaboriation environment for teams to work together in semio 🤝
 
 ## 🤖 assistant [↑](#%EF%B8%8F-products-)
 
-The assistant helps you on every step in the design process ✍️
+The assistant helps you on every step in the design process with semio ✍️
 
-## 🦗 grasshopper [↑](#%EF%B8%8F-products-)
+## 🦗 semio.gh [↑](#%EF%B8%8F-products-)
 
-A batteries-included grasshopper plugin for semio ⚡
+A batteries-included [Grasshopper](https://www.grasshopper3d.com) plugin for semio ⚡
 
-## 🦏 rhino [↑](#%EF%B8%8F-products-)
+## 🦏 semio.3dm [↑](#%EF%B8%8F-products-)
 
-A Grasshopper-based integration of [Rhino](https://www.rhino3d.com) and semio ⚡
+A Grasshopper-based integration of [Rhino](https://www.rhino3d.com) and semio 🔀
 
-## 🐝 wasp [↑](#%EF%B8%8F-products-)
+## 🐝 semio.wasp [↑](#%EF%B8%8F-products-)
 
 A Grasshopper-based integration of [Wasp](https://www.food4rhino.com/en/app/wasp) and semio 🔀
 
-## 🦌 monoceros [↑](#%EF%B8%8F-products-)
+## 🦌 semio.monoceros [↑](#%EF%B8%8F-products-)
 
 A Grasshopper-based integration of [Monoceros](https://monoceros.sub.digital) and semio 🔀
 
-## 🐞 ladybug [↑](#%EF%B8%8F-products-)
+## 🐞 semio.ladybug [↑](#%EF%B8%8F-products-)
 
 A Grasshopper-based integration of [Ladybug](https://www.ladybug.tools) and semio 🔀
 
 # 📄 Specs [↑](#-overview)
+
+## 📦 Kit
+
+A `kit` is a special `.zip` file 📦
+
+It contains a reserved `.semio` folder that contains a `kit.db` sqlite file 💾
+
+The schema of `kit.db` is found in [`./sqlite/schema.sql`](./sqlite/schema.sql) 📄
+
+## 🏙️ Design
+
+A `design` is an undirected graph of `pieces` (nodes) and `connections` (edges) 📐
+
+A _flat_ `design` has no `connections` and all `pieces` are _fixed_ ◳
+
+The `pieces` are _placed_ [breadth-first](https://en.wikipedia.org/wiki/Breadth-first_search) for every _cluster_ 🌿
+
+Additional `connections` which where not used in the _placement_ can be used to validate the computed `planes` 🛂
+
+## 🔗 Connection
+
+A `connection` is a 3D-Link between two `pieces` 🪢
+
+The two `pieces` are called _connected_ and _connecting_ but there is no difference between them 🔄
+
+The _direction_ of a `connection` is determined by the _hierarchy_ of the `pieces` in a _cluster_ 🔄
+
+## ⭕ Piece
+
+A `piece` is either _fixed_ (with a [`plane`](#◳-plane)) or _linked_ (with a [`connection`](#🔗-connection)) 📐
+
+A group of _connected_ `pieces` is called a _cluster_
+
+## 🔗 Url
+
+A `url` is either _relative_ (to the root of the `.zip` file) or _remote_ (http, https, ftp, …) 🌐
+
+A _relative_ `url` is a `/`-normalized path to a file in the `.zip` file and is not prefixed with with `.`, `./`, `/`, …
+
+## ◳ Plane
+
+A `plane` is a location (point) and orientation (x-axis, y-axis and derived z-axis) in 3D space ✈️
 
 # 🦑 [Repo](https://github.com/usalu/semio.git) [↑](#-overview)
 
@@ -264,7 +306,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
 
 # ♻️ Ecosystems [↑](#-overview)
 
-You might have noticed that the individual components can be closely related such as [sketchpad](#️-sketchpad-), [Grasshopper](#-grasshopper-) and [engine](#️-engine-) but they are in totally different folders 📂
+You might have noticed that the individual components can be closely related such as [sketchpad](#️-sketchpad-), [Grasshopper](#-semio.gh-) and [engine](#️-engine-) but they are in totally different folders 📂
 
 The reason for this is that the repo is not disected according content but according technology stack ✂️
 
@@ -300,7 +342,7 @@ A .NET core for semio 🥜
 
 ### ⚠️ Compatibility
 
-[Rhino](#-rhino-) still runs on .NET 7.0 7️⃣
+[Rhino](#-semio.3dm-) still runs on .NET 7.0 7️⃣
 
 Be careful to not update packages to a higher version, that might break the compatibility 🚨
 
@@ -758,11 +800,11 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <a href="#-semiosketchpad-" title="✏️@semio/sketchpad"><sub>✏️<sub></a>
         <a href="#-semioengine-" title="⚙️@semio/engine"><sub>⚙️<sub></a>
         <br />
-        <a href="#-rhino-" title="🦏Rhino"><sub>🦏<sub></a>
-        <a href="#-wasp-" title="🐝Wasp"><sub>🐝<sub></a>
-        <a href="#-monoceros-" title="🦌Monoceros"><sub>🦌<sub></a>
+        <a href="#-semio.3dm-" title="🦏Rhino"><sub>🦏<sub></a>
+        <a href="#-semio.wasp-" title="🐝Wasp"><sub>🐝<sub></a>
+        <a href="#-semio.monoceros-" title="🦌Monoceros"><sub>🦌<sub></a>
         <br />
-        <a href="#-ladybug-" title="🐞Ladybug"><sub>🐞<sub></a>
+        <a href="#-semio.ladybug-" title="🐞Ladybug"><sub>🐞<sub></a>
         <a href="#-semioassistant-" title="🤖@semio/assistant"><sub>🤖<sub></a>
         <a href="#%EF%B8%8F-semioplayground-" title="🎛️@semio/playground"><sub>🎛️<sub></a>
         <br />
@@ -808,7 +850,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <a href="https://github.com/usalu/semio/pulls?q=author%3Adrymuzzle" title="Pull Requests">🔀</a>
         <br />
         <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a>
-        <a href="#-ladybug-" title="🐞ladybug"><sub>🐞<sub></a>
+        <a href="#-semio.ladybug-" title="🐞ladybug"><sub>🐞<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kaatzjo">
         <img src="assets/contributors/kaatzjo_round_90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
