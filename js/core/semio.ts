@@ -66,6 +66,8 @@ export type Design = {
     variant: string;
     // 🥽 The view of the design
     view: string;
+    // 📍 The location of the design
+    location?: Location;
     // 📏 The unit of the design
     unit: string;
     // 🕒 The creation date of the design
@@ -236,6 +238,8 @@ export type Type = {
     created: Date;
     // 🕒 The last update date of the type
     updated: Date;
+    // 🗺️ The optional location of the type
+    location?: Location;
     // 💾 Representations (e.g., CAD files) of the type
     representations?: Representation[];
     // 🔌 Connection points (ports) of the type
@@ -502,6 +506,7 @@ const typeMap: any = {
         { json: "variant", js: "variant", typ: "" },
         { json: "view", js: "view", typ: "" },
         { json: "unit", js: "unit", typ: "" },
+        { json: "location", js: "location", typ: u(undefined, r("Location")) },
         { json: "created", js: "created", typ: Date },
         { json: "updated", js: "updated", typ: Date },
         { json: "pieces", js: "pieces", typ: u(undefined, a(r("Piece"))) },
@@ -587,6 +592,7 @@ const typeMap: any = {
         { json: "created", js: "created", typ: Date },
         { json: "updated", js: "updated", typ: Date },
         { json: "stock", js: "stock", typ: u(undefined, 0) },
+        { json: "location", js: "location", typ: u(undefined, r("Location")) },
         { json: "representations", js: "representations", typ: u(undefined, a(r("Representation"))) },
         { json: "ports", js: "ports", typ: u(undefined, a(r("Port"))) },
         { json: "authors", js: "authors", typ: a(r("Author")) },
@@ -609,6 +615,10 @@ const typeMap: any = {
         { json: "description", js: "description", typ: "" },
         { json: "tags", js: "tags", typ: a("") },
         { json: "qualities", js: "qualities", typ: u(undefined, a(r("Quality"))) },
+    ], "any"),
+    "Location": o([
+        { json: "longitude", js: "longitude", typ: 0 },
+        { json: "latitude", js: "latitude", typ: 0 },
     ], "any"),
 };
 

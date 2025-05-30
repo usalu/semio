@@ -3677,6 +3677,16 @@ class DesignViewField(RealField, abc.ABC):
     """🥽 The optional view of the design. No view means the default view."""
 
 
+class DesignLocationField(MaskedField, abc.ABC):
+    """📍 The optional location of the design."""
+
+    location: typing.Optional[Location] = sqlmodel.Field(
+        default=None,
+        description="📍 The optional location of the design.",
+    )
+    """📍 The optional location of the design."""
+
+
 class DesignUnitField(RealField, abc.ABC):
     """📏 The unit of the design."""
 
@@ -3715,6 +3725,7 @@ class DesignId(DesignNameField, DesignVariantField, Id):
 class DesignProps(
     DesignUnitField,
     DesignViewField,
+    DesignLocationField,
     DesignVariantField,
     DesignImageField,
     DesignIconField,
@@ -3728,6 +3739,7 @@ class DesignProps(
 class DesignInput(
     DesignUnitField,
     DesignViewField,
+    DesignLocationField,
     DesignVariantField,
     DesignImageField,
     DesignIconField,
@@ -3746,6 +3758,7 @@ class DesignInput(
 class DesignContext(
     DesignUnitField,
     DesignViewField,
+    DesignLocationField,
     DesignVariantField,
     DesignDescriptionField,
     DesignNameField,
@@ -3762,6 +3775,7 @@ class DesignOutput(
     DesignUpdatedField,
     DesignCreatedField,
     DesignUnitField,
+    DesignLocationField,
     DesignViewField,
     DesignVariantField,
     DesignImageField,
@@ -3810,6 +3824,24 @@ class Design(
         default=None,
         exclude=True,
     )
+    locationLongitude: typing.Optional[float] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "location_longitude",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+        default=None,
+    )
+    """↔️ The longitude of the location in degrees."""
+    locationLatitude: typing.Optional[float] = sqlmodel.Field(
+        sa_column=sqlmodel.Column(
+            "location_latitude",
+            sqlalchemy.Float(),
+        ),
+        exclude=True,
+        default=None,
+    )
+    """↕️ The latitude of the location in degrees."""
     pieces: list[Piece] = sqlmodel.Relationship(
         back_populates="design", cascade_delete=True
     )
@@ -3837,7 +3869,22 @@ class Design(
     __table_args__ = (sqlalchemy.UniqueConstraint("name", "variant", "view", "kit_id"),)
 
     @property
+    def location(self) -> Location:
+        """📍 The location of the design."""
+        return Location(
+            longitude=self.locationLongitude,
+            latitude=self.locationLatitude,
+        )
+
+    @location.setter
+    def location(self, location: Location):
+        """📍 Set the location of the design."""
+        self.locationLongitude = location.longitude
+        self.locationLatitude = location.latitude
+
+    @property
     def authors(self) -> list[Author]:
+        """👤 Get the authors of the design."""
         return sorted(self.authors_, key=lambda a: a.rank)
 
     @authors.setter
