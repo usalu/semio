@@ -40,10 +40,26 @@ In other words: it carries everything you baked into the mold.
 
 ---
 
-### 🆔 Name the Piece
+### 🆔 Name the Pieces
 
-Each Piece also needs one more thing: a unique identity.  
-You give each one an **ID** — like `i`, `L1`, or `e1` — so it can be referenced, tracked, or connected later on.
+Each Piece needs a unique name — its ID — so Semio can 🧭 track, 🔗 reference, and 🧩 connect it later on.
+Think of it as your brick’s personal label 🏷️
+
+In this example, we name the Pieces based on the original Semio logo — using both color and position as references 🎨:
+
+🟨 Yel → yellow piece on the left
+
+🔴 Red-T → red piece at the top
+
+🔴 Red-R → red piece on the right
+
+🔵 Blu-T → blue piece at the top
+
+🔵 Blu-B → blue piece at the bottom
+
+As always in Semio, naming is flexible 🔤 —
+but using a systematic and meaningful convention 🧠 helps make your design easier to understand, build, and share.
+
 
 > 💡 Think of it as putting a sticker on each brick in your box so you know exactly which one goes where.
 
@@ -74,9 +90,9 @@ We'll give each of these Pieces a unique ID, like so:
 
 | Variant | Piece IDs      |
 | ------- | -------------- |
-| `4`     | `i`            |
-| `5`     | `L1`, `L2`     |
-| `2`     | `e1`, `e2`     |
+| `4`     | `Yel`            |
+| `5`     | `Red-T`, `Red-R`     |
+| `2`     | `Blu-T`, `Blu-B`     |
 
 These are the actual bricks we'll be placing into our model.
 
@@ -89,12 +105,20 @@ Now that you understand what a Piece is, let's learn how to actually **cast** th
 
 As shown in the image, you use the model Piece `Pce` component and provide three main inputs:
 
-1. 🆔 **Piece IDs** — unique names for each individual brick (e.g. `i`, `L1`)  
+1. 🆔 **Piece IDs** — unique names for each individual brick (e.g. `Yel`, `Blu-B`)  
 2. 🔢 **Variant numbers** — telling Semio which version of the mold to use (e.g. `4`, `5`)  
 3. 🏷️ **Type name** — the shared name of the mold they all come from (e.g. `'Profile'`)
 
-Each row of input becomes one new **Piece**, named after its ID — like `Pce(i)` or `Pce(L1)` —  
-each inheriting geometry, ports, and semantic structure from its parent mold.
+Each row of input becomes one new **Piece**, named after its ID — like `Pce(Yel)` or `Pce(Red-R)` —  
+each inheriting geometry, ports, and semantic structure from its parent mold
+
+🧱 Let’s start by modeling the first two Pieces from the sketch.
+
+![Model Piece Component](/model-piece-10Alpha.png)
+
+Once all five are complete, your model will look like this:
+
+![Model Piece Component](/model-5pieces-10Alpha-V2.png)
 
 
 > 🧱 Your bricks are now cast and ready. The next step will be placing and connecting them to build your model.
@@ -129,20 +153,21 @@ To create a connection, you need to define four key values:
 
 
 🧱 Before we snap the full model together, let’s start small — by connecting the first two bricks.
-We’ll connect Piece i to Piece L1, using their west-facing Ports.
+We’ll connect Piece Yel to Piece Red-T, using their west-facing Ports.
 
 From the sketch, we see:
 
-- Use the **`w` (west)** Port of `i`  
-- Connect it to the **`w` (west)** Port of `L1`
+- Use the **`w` (west)** Port of `Yel`  
+- Connect it to the **`w` (west)** Port of `Red-T`
 
 **So the connection is written as:**  
-`Con(i:w → w:L1)`
+`Con(Yel:w → Red-T:w)`
+
+![Connection Example](/mode-connection-grasshopper.png)
 
 This tells Semio:  
-**Snap the west Port of `i` to the west Port of `L1`.**
+**Snap the west Port of `Yel` to the west Port of `Red-T`**
 
-(Here a picture where two pieces are connected)
 
 ---
 
@@ -168,6 +193,8 @@ These are local movements based on the direction the Port was defined in:
 - **Raise** → Raises the Piece up or down, perpendicular to the face it connects to.
   🪜 Like lifting a brick slightly higher or lowering it onto the studs.
 
+  ![Connection Adjustment](/translation-parameter.gif)
+
 ---
 
 
@@ -179,6 +206,8 @@ These are local movements based on the direction the Port was defined in:
   🔄 Like twisting a LEGO hinge side to side.
 - **Tilt** → Tilts the Piece forward or backward, around a vertical axis.
   🤸 Like tilting a ramp or slope brick up or down.
+
+  ![Connection Adjustment](/Rotation-parameter.gif)
 
 ---
 As we can see, the two Pieces we connected earlier don’t align exactly as shown in the sketch 🧩.
