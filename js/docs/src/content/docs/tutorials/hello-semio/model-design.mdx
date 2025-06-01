@@ -175,6 +175,11 @@ This tells Semio:
 ![Set Connection](/set-connection-all-pcs-alpha.png)
 
 
+:::note
+🔗 The number of Connections is always one less than the number of Pieces, because each Connection links two Pieces.
+So with 2 Pieces, you need 1 Connection — with 3 Pieces, 2 Connections — and so on.
+:::
+
 ---
 
 
@@ -223,6 +228,9 @@ Here is how to use them to fine-tune the position and rotation of a Piece after 
 
 ![Set Connection](/set-connection-2pcs.gif)
 
+
+
+
 ---
 
 
@@ -249,7 +257,50 @@ Keeping Port positions consistent across Variants makes your Types easier to reu
 > **Semio supports both strategies** — place Ports precisely, or adjust Pieces after snapping  
 > 🧱 Just like LEGO: studs cover the whole surface, but you only use the ones that fit your logic
 
-Modify component: 
+
+### 🔄 Reuse & Modify with the Same Block
+
+In Semio, each **Model** component (like `Model Type`, `Model Piece`, or `Model Design`) outputs a special Semio parameter:
+
+- `Ty` → a **Type** (your brick mold)  
+- `Pc` → a **Piece** (a placed brick)  
+- `Cn` → a **Connection** (how two bricks snap together)  
+- `Ds` → a **Design** (the full assembled model)
+
+You can plug these outputs **back into the same component** — usually into the **first input** — to reconstruct or update them without rebuilding from scratch.
+
+
+---
+
+### 🔁 Example Use Cases
+
+- **Update a Piece’s position or ID**  
+  → Take one `Pc` from the output of `Model Piece`, plug it back into the same component, and change the plane or name.  
+  _E.g. flipping the first brick in the Hello Semio logo by changing its base plane._
+  By feeding a modified Piece (with a rotated Plane) into the Design input, all connected Pieces will follow — since they’re linked by logic.
+
+  ![Reconstruct Piece](/reconruct-piece-2.png)
+
+  ![Reconstruct Piece](/reconruct-piece.png)
+
+- **Modify a Type’s geometry or metadata**  
+  → Take the `Ty` output and reconnect it to `Model Type` with updated geometry or new properties.
+
+- **Adjust a snap or add a gap**  
+  → Reuse the `Cn` from `Model Connection` and input it again to tweak transformation or rotation values.
+
+  ![Reconstruct Con](/reconstruct-connection.png)
+  ![Reconstruct Con](/reconstruct-connection-2.png)
+  ![Reconstruct Con](/reconstruct-connection-3.png)
+
+
+- **Rename or reorganize a Design**  
+  → Inject the existing `Ds` into `Model Design` and update its name or structure.
+
+
+
+
+
 
 
 Rotate Piece
