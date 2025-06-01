@@ -168,6 +168,12 @@ From the sketch, we see:
 This tells Semio:  
 **Snap the west Port of `Yel` to the west Port of `Red-T`**
 
+![Set Connection](/set-connection-2pcs-alpha.png)
+
+![Set Connection](/mode-connection-5pcs-grasshopper.png)
+
+![Set Connection](/set-connection-all-pcs-alpha.png)
+
 
 ---
 
@@ -215,7 +221,7 @@ This is where the optional step of adjusting the snap comes in 🛠️
 Here is how to use them to fine-tune the position and rotation of a Piece after it snaps.
 
 
-(Here add a GIF for snaping)
+![Set Connection](/set-connection-2pcs.gif)
 
 ---
 
@@ -227,7 +233,9 @@ Following the sketch, each new Piece is snapped to the previous one using their 
 🌀 If a connected Piece isn’t oriented properly, you can simply rotate it into position. Semio allows per-piece rotation without breaking the logic
 🔗 And thanks to Semio’s chain behavior, when you move or rotate one Piece, all the connected Pieces after it update automatically
 
-(Here few screenshorts of adjusting one piece at a time)
+![Set Connection](/set-connection-3pcs.gif)
+
+![Set Connection](/set-connection-5pcs.gif)
 
 ---
 
@@ -241,7 +249,11 @@ Keeping Port positions consistent across Variants makes your Types easier to reu
 > **Semio supports both strategies** — place Ports precisely, or adjust Pieces after snapping  
 > 🧱 Just like LEGO: studs cover the whole surface, but you only use the ones that fit your logic
 
+Modify component: 
 
+
+Rotate Piece
+Connections
 
 ---
 
@@ -291,13 +303,8 @@ To create your Design in semio (for example, in Grasshopper), use the `Model Des
    Pass in the list of Connections — each one describes how two Pieces are snapped together via their Ports.
 
 **Example:**
-```
-Design(
-  Name: "Logo Example",
-  Pieces: [i, L1, L2, e1, e2],
-  Connections: [Con(i:w → w:L1), Con(L1:e → w:L2), ...]
-)
-```
+
+![Model Design Example](/model-design.png)
 
 ---
 
