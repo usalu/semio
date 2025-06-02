@@ -2577,6 +2577,14 @@ class TypeOutput(
     authors: list[AuthorOutput] = sqlmodel.Field(default_factory=list)
     qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
 
+    @pydantic.field_serializer("stock")
+    def serialize_stock_output(
+        self, stock_value: float, _info
+    ) -> typing.Union[float, str]:
+        if stock_value == float("inf"):
+            return "Infinity"
+        return stock_value
+
 
 class TypeContext(
     TypeUnitField,
