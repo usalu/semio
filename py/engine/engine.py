@@ -5380,39 +5380,6 @@ GRAPHQLTYPES = {
     "float": graphene.NonNull(graphene.Float),
     "bool": graphene.NonNull(graphene.Boolean),
     "list[str]": graphene.NonNull(graphene.List(graphene.NonNull(graphene.String))),
-    "DiagramPoint": graphene.NonNull(lambda: DiagramPointNode),
-    "typing.Optional[__main__.DiagramPoint]": lambda: DiagramPointNode,
-    "typing.Optional[__mp_main__.DiagramPoint]": lambda: DiagramPointNode,
-    "typing.Optional[engine.DiagramPoint]": lambda: DiagramPointNode,
-    "Point": graphene.NonNull(lambda: PointNode),
-    "Vector": graphene.NonNull(lambda: VectorNode),
-    "Plane": graphene.NonNull(lambda: PlaneNode),
-    "Location": graphene.NonNull(lambda: LocationNode),
-    "Representation": graphene.NonNull(lambda: RepresentationNode),
-    "list[Representation]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: RepresentationNode))
-    ),
-    "list[__main__.Representation]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: RepresentationNode))
-    ),
-    "list[__mp_main__.Representation]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: RepresentationNode))
-    ),
-    "list[engine.Representation]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: RepresentationNode))
-    ),
-    "Port": graphene.NonNull(lambda: PortNode),
-    "PortId": graphene.NonNull(lambda: PortNode),
-    "list[Port]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: PortNode))),
-    "list[__main__.Port]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: PortNode))
-    ),
-    "list[__mp_main__.Port]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: PortNode))
-    ),
-    "list[engine.Port]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: PortNode))
-    ),
     "Quality": graphene.NonNull(lambda: QualityNode),
     "list[Quality]": graphene.NonNull(
         graphene.List(graphene.NonNull(lambda: QualityNode))
@@ -5425,6 +5392,42 @@ GRAPHQLTYPES = {
     ),
     "list[engine.Quality]": graphene.NonNull(
         graphene.List(graphene.NonNull(lambda: QualityNode))
+    ),
+    "DiagramPoint": graphene.NonNull(lambda: DiagramPointNode),
+    "typing.Optional[__main__.DiagramPoint]": lambda: DiagramPointNode,
+    "typing.Optional[__mp_main__.DiagramPoint]": lambda: DiagramPointNode,
+    "typing.Optional[engine.DiagramPoint]": lambda: DiagramPointNode,
+    "Location": graphene.NonNull(lambda: LocationNode),
+    "typing.Optional[__main__.Location]": lambda: LocationNode,
+    "typing.Optional[__mp_main__.Location]": lambda: LocationNode,
+    "typing.Optional[engine.Location]": lambda: LocationNode,
+    "Point": graphene.NonNull(lambda: PointNode),
+    "Vector": graphene.NonNull(lambda: VectorNode),
+    "Plane": graphene.NonNull(lambda: PlaneNode),
+    "Port": graphene.NonNull(lambda: PortNode),
+    "PortId": graphene.NonNull(lambda: PortNode),
+    "list[Port]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: PortNode))),
+    "list[__main__.Port]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: PortNode))
+    ),
+    "list[__mp_main__.Port]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: PortNode))
+    ),
+    "list[engine.Port]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: PortNode))
+    ),
+    "Representation": graphene.NonNull(lambda: RepresentationNode),
+    "list[Representation]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: RepresentationNode))
+    ),
+    "list[__main__.Representation]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: RepresentationNode))
+    ),
+    "list[__mp_main__.Representation]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: RepresentationNode))
+    ),
+    "list[engine.Representation]": graphene.NonNull(
+        graphene.List(graphene.NonNull(lambda: RepresentationNode))
     ),
     "Author": graphene.NonNull(lambda: AuthorNode),
     "list[Author]": graphene.NonNull(
