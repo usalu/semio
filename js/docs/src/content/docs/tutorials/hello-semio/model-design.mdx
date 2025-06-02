@@ -258,71 +258,6 @@ Keeping Port positions consistent across Variants makes your Types easier to reu
 > 🧱 Just like LEGO: studs cover the whole surface, but you only use the ones that fit your logic
 
 
-### 🔄 Reuse & Modify with the Same Block
-
-In Semio, each **Model** component (like `Model Type`, `Model Piece`, or `Model Design`) outputs a special Semio parameter:
-
-- `Ty` → a **Type** (your brick mold)  
-- `Pc` → a **Piece** (a placed brick)  
-- `Cn` → a **Connection** (how two bricks snap together)  
-- `Ds` → a **Design** (the full assembled model)
-
-You can plug these outputs **back into the same component** — usually into the **first input** — to reconstruct or update them without rebuilding from scratch.
-
-
----
-
-### 🔁 Example Use Cases
-
-- **Update a Piece’s position or ID**  
-  → Take one `Pc` from the output of `Model Piece`, plug it back into the same component, and change the plane or name.  
-  _E.g. flipping the first brick in the Hello Semio logo by changing its base plane._
-  By feeding a modified Piece (with a rotated Plane) into the Design input, all connected Pieces will follow — since they’re linked by logic.
-
-  ![Reconstruct Piece](/reconruct-piece-2.png)
-
-  ![Reconstruct Piece](/reconruct-piece.png)
-
-- **Modify a Type’s geometry or metadata**  
-  → Take the `Ty` output and reconnect it to `Model Type` with updated geometry or new properties.
-
-- **Adjust a snap or add a gap**  
-  → Reuse the `Cn` from `Model Connection` and input it again to tweak transformation or rotation values.
-
-  ![Reconstruct Con](/reconstruct-connection.png)
-  ![Reconstruct Con](/reconstruct-connection-2.png)
-  ![Reconstruct Con](/reconstruct-connection-3.png)
-
-
-- **Rename or reorganize a Design**  
-  → Inject the existing `Ds` into `Model Design` and update its name or structure.
-
-
-
-
-
-
-
-Rotate Piece
-Connections
-
----
-
-##### ⚙️ How Semio Fits into Grasshopper
-
-Semio doesn't change how Grasshopper works — it changes **what** you connect.  
-You're not just wiring geometry — you're building relationships between **Types, Ports, and Pieces**.
-
-Behind the scenes:
-
-- ✅ It works like any Grasshopper component  
-- ✅ You still use lists and data trees  
-- ✅ Items are matched by index or branch  
-- ✅ Each list item creates one connection
-
-To apply values like `Gap`, simply provide a matching list.  
-Semio handles the rest.
-
 ---
 
 ## 🏗️ Build the Design (Model Design - Dsn)
@@ -358,6 +293,83 @@ To create your Design in semio (for example, in Grasshopper), use the `Model Des
 ![Model Design Example](/model-design.png)
 
 ---
+## ⚙️ Workflow Mechanics 
+
+### 🛠️ Grasshopper Workflow
+
+semio doesn’t change how Grasshopper works — it just changes **what** you’re building.
+
+Instead of only passing geometry between components, you’re now passing structured data like:
+
+- 🧱 **Types** (brick molds)  
+- 🧩 **Pieces** (placed bricks)  
+- 🔌 **Ports** and 🔗 **Connections** between them
+
+
+Semio components behave just like regular Grasshopper components 🧩:
+
+- 📋 You still use **lists** and  **data trees**  
+- 🔢 Items are matched by **index** or **branch**
+
+If you want to set something like a **gap** ↔️ or **rotation** 🔄, just provide a matching list of values:  
+Each value will apply to the corresponding item in the list of Connections or Pieces 🔗
+
+---
+
+
+
+### 🔄 Contruct, Deconstruct, Reconstruct
+
+In Semio, each Model component (like Model Type, Model Piece, or Model Design) outputs a special Semio parameter:
+
+- `Ty` → a **Type** (your brick mold) 🧱  
+- `Pc` → a **Piece** (a placed brick) 🧩  
+- `Cn` → a **Connection** (how two bricks snap together) 🔗  
+- `Ds` → a **Design** (the full assembled model) 🧰  
+
+You can plug these outputs back into the **same component** — usually the first input — to modify or rebuild them.  
+Only the parameters you redefine will be changed; all other values stay untouched.  
+
+
+---
+
+##### 🔁 Example Use Cases
+
+#### 🧩 Modify a Piece  
+
+→ You can modify **any aspect** of a Piece — like its placement, name, or other construction parameters —  
+by feeding its `Pc` output back into a new `Model Piece` component 
+semio overrides only what you redefine while keeping the rest intact.
+
+_E.g. In the Hello Semio logo, flipping the first Piece by rotating its plane causes all connected Pieces to follow — since they’re linked._
+
+
+  ![Reconstruct Piece](/reconruct-piece-2.png)
+
+  ![Reconstruct Piece](/reconruct-piece.png)
+
+#### 🔗 Adjust a Connection  
+→ Plug the `Cn` output from `Model Connection` back into a new `Model Connection` component  
+to change the **transformations** or **rotation adjustments**
+
+  ![Reconstruct Con](/reconstruct-connection.png)
+  ![Reconstruct Con](/reconstruct-connection-2.png)
+  ![Reconstruct Con](/reconstruct-connection-3.png)
+
+#### 🧱 Update a Type  
+→ Feed the `Ty` output from `Model Type` back into the same component to update the  
+**Representations**, **Ports**, or **metadata** of a Type.  
+Only the changed inputs are overwritten.
+
+_E.g. Swapping a simplified geometry file for a detailed one, or updating tags like material or category._
+
+---
+
+#### 🧰 Refactor a Design  
+→ Use the `Ds` output from `Model Design` as input again to update the **Design name**,  
+reorganize components, or rebuild part of the structure.
+
+_E.g. Renaming a layout or modifying how a few bricks are connected — without touching the rest._
 
 ##### 🖼️ What Happens Next?
 
