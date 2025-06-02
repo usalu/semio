@@ -166,6 +166,17 @@
                     "title": "Updated",
                     "type": "string"
                 },
+                "location": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Location"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                },
                 "pieces": {
                     "items": {
                         "$ref": "#/$defs/Piece"
@@ -220,6 +231,27 @@
                 "y"
             ],
             "title": "DiagramPoint",
+            "type": "object"
+        },
+        "Location": {
+            "description": "\ud83d\udccd The output of a location.",
+            "properties": {
+                "longitude": {
+                    "description": "\u2194\ufe0f The longitude of the location in degrees.",
+                    "title": "Longitude",
+                    "type": "number"
+                },
+                "latitude": {
+                    "description": "\u2195\ufe0f The latitude of the location in degrees.",
+                    "title": "Latitude",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "longitude",
+                "latitude"
+            ],
+            "title": "Location",
             "type": "object"
         },
         "PieceId": {
@@ -378,6 +410,12 @@
                     "title": "Description",
                     "type": "string"
                 },
+                "mandatory": {
+                    "default": false,
+                    "description": "\ud83d\udcaf Whether the port is mandatory. A mandatory port must be connected in a design.",
+                    "title": "Mandatory",
+                    "type": "boolean"
+                },
                 "family": {
                     "default": "",
                     "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional family of the port. This allows to define explicit compatibility with other ports.",
@@ -476,12 +514,6 @@
                     "title": "Description",
                     "type": "string"
                 },
-                "mime": {
-                    "description": "\u2709\ufe0f The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.",
-                    "maxLength": 64,
-                    "title": "Mime",
-                    "type": "string"
-                },
                 "tags": {
                     "description": "\ud83c\udff7\ufe0f The optional tags to group representations. No tags means default.",
                     "items": {
@@ -500,8 +532,7 @@
                 }
             },
             "required": [
-                "url",
-                "mime"
+                "url"
             ],
             "title": "Representation",
             "type": "object"
@@ -583,6 +614,18 @@
                     "title": "Variant",
                     "type": "string"
                 },
+                "stock": {
+                    "default": Infinity,
+                    "description": "\ud83d\udce6 The number of items in stock.",
+                    "title": "Stock",
+                    "type": "number"
+                },
+                "virtual": {
+                    "default": false,
+                    "description": "\ud83d\udc7b Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.",
+                    "title": "Virtual",
+                    "type": "boolean"
+                },
                 "unit": {
                     "default": "",
                     "description": "\u24c2\ufe0f The length unit of the point and the direction of the ports of the type.",
@@ -601,6 +644,17 @@
                     "format": "date-time",
                     "title": "Updated",
                     "type": "string"
+                },
+                "location": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Location"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
                 },
                 "representations": {
                     "items": {

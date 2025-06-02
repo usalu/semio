@@ -928,6 +928,16 @@
                         "description": "\ud83d\udccf The unit of the design.",
                         "default": ""
                     },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/LocationContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
                     "pieces": {
                         "items": {
                             "$ref": "#/components/schemas/PieceContext-Input"
@@ -992,6 +1002,16 @@
                         "title": "Unit",
                         "description": "\ud83d\udccf The unit of the design.",
                         "default": ""
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/LocationContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     },
                     "pieces": {
                         "items": {
@@ -1071,6 +1091,16 @@
                         "title": "Unit",
                         "description": "\ud83d\udccf The unit of the design.",
                         "default": ""
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/LocationInput"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     },
                     "pieces": {
                         "items": {
@@ -1169,6 +1199,16 @@
                         "format": "date-time",
                         "title": "Updated",
                         "description": "\ud83d\udd52 The last update date of the design."
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/Location"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     },
                     "pieces": {
                         "items": {
@@ -1567,6 +1607,69 @@
                 ],
                 "title": "Kit",
                 "description": "\ud83d\uddc3\ufe0f A kit is a collection of types and designs."
+            },
+            "LocationContext": {
+                "properties": {
+                    "longitude": {
+                        "type": "number",
+                        "title": "Longitude",
+                        "description": "\u2194\ufe0f The longitude of the location in degrees."
+                    },
+                    "latitude": {
+                        "type": "number",
+                        "title": "Latitude",
+                        "description": "\u2195\ufe0f The latitude of the location in degrees."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "longitude",
+                    "latitude"
+                ],
+                "title": "LocationContext",
+                "description": "\ud83d\udccd The context of a location."
+            },
+            "LocationInput": {
+                "properties": {
+                    "longitude": {
+                        "type": "number",
+                        "title": "Longitude",
+                        "description": "\u2194\ufe0f The longitude of the location in degrees."
+                    },
+                    "latitude": {
+                        "type": "number",
+                        "title": "Latitude",
+                        "description": "\u2195\ufe0f The latitude of the location in degrees."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "longitude",
+                    "latitude"
+                ],
+                "title": "LocationInput",
+                "description": "\ud83d\udccd The input for a location."
+            },
+            "Location": {
+                "properties": {
+                    "longitude": {
+                        "type": "number",
+                        "title": "Longitude",
+                        "description": "\u2194\ufe0f The longitude of the location in degrees."
+                    },
+                    "latitude": {
+                        "type": "number",
+                        "title": "Latitude",
+                        "description": "\u2195\ufe0f The latitude of the location in degrees."
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "longitude",
+                    "latitude"
+                ],
+                "title": "Location",
+                "description": "\ud83d\udccd The output of a location."
             },
             "PieceContext-Input": {
                 "properties": {
@@ -2011,6 +2114,12 @@
                         "description": "\ud83d\udcac The optional human-readable description of the port.",
                         "default": ""
                     },
+                    "mandatory": {
+                        "type": "boolean",
+                        "title": "Mandatory",
+                        "description": "\ud83d\udcaf Whether the port is mandatory. A mandatory port must be connected in a design.",
+                        "default": false
+                    },
                     "family": {
                         "type": "string",
                         "maxLength": 64,
@@ -2026,6 +2135,20 @@
                         "title": "Compatiblefamilies",
                         "description": "\u2705 The optional other compatible families of the port. An empty list means this port is compatible with all other ports."
                     },
+                    "point": {
+                        "$ref": "#/components/schemas/Point",
+                        "description": "\u2716\ufe0f The connection point of the port that is attracted to another connection point."
+                    },
+                    "direction": {
+                        "$ref": "#/components/schemas/Vector",
+                        "description": "\u27a1\ufe0f The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
+                    },
+                    "t": {
+                        "type": "number",
+                        "title": "T",
+                        "description": "\ud83d\udc8d The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
+                        "default": 0.0
+                    },
                     "qualities": {
                         "items": {
                             "$ref": "#/components/schemas/QualityContext"
@@ -2036,6 +2159,10 @@
                     }
                 },
                 "type": "object",
+                "required": [
+                    "point",
+                    "direction"
+                ],
                 "title": "PortContext",
                 "description": "\ud83d\udd0c A port is a connection point (with a direction) of a type."
             },
@@ -2068,6 +2195,12 @@
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the port.",
                         "default": ""
+                    },
+                    "mandatory": {
+                        "type": "boolean",
+                        "title": "Mandatory",
+                        "description": "\ud83d\udcaf Whether the port is mandatory. A mandatory port must be connected in a design.",
+                        "default": false
                     },
                     "family": {
                         "type": "string",
@@ -2130,6 +2263,12 @@
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the port.",
                         "default": ""
+                    },
+                    "mandatory": {
+                        "type": "boolean",
+                        "title": "Mandatory",
+                        "description": "\ud83d\udcaf Whether the port is mandatory. A mandatory port must be connected in a design.",
+                        "default": false
                     },
                     "family": {
                         "type": "string",
@@ -2296,12 +2435,6 @@
                         "description": "\ud83d\udcac The optional human-readable description of the representation.",
                         "default": ""
                     },
-                    "mime": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Mime",
-                        "description": "\u2709\ufe0f The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation."
-                    },
                     "tags": {
                         "items": {
                             "type": "string"
@@ -2321,8 +2454,7 @@
                 },
                 "type": "object",
                 "required": [
-                    "url",
-                    "mime"
+                    "url"
                 ],
                 "title": "RepresentationInput",
                 "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags."
@@ -2341,12 +2473,6 @@
                         "title": "Description",
                         "description": "\ud83d\udcac The optional human-readable description of the representation.",
                         "default": ""
-                    },
-                    "mime": {
-                        "type": "string",
-                        "maxLength": 64,
-                        "title": "Mime",
-                        "description": "\u2709\ufe0f The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation."
                     },
                     "tags": {
                         "items": {
@@ -2367,8 +2493,7 @@
                 },
                 "type": "object",
                 "required": [
-                    "url",
-                    "mime"
+                    "url"
                 ],
                 "title": "Representation",
                 "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags."
@@ -2463,12 +2588,33 @@
                         "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
                         "default": ""
                     },
+                    "stock": {
+                        "type": "number",
+                        "title": "Stock",
+                        "description": "\ud83d\udce6 The number of items in stock."
+                    },
+                    "virtual": {
+                        "type": "boolean",
+                        "title": "Virtual",
+                        "description": "\ud83d\udc7b Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.",
+                        "default": false
+                    },
                     "unit": {
                         "type": "string",
                         "maxLength": 64,
                         "title": "Unit",
                         "description": "\u24c2\ufe0f The length unit of the point and the direction of the ports of the type.",
                         "default": ""
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/LocationContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     },
                     "ports": {
                         "items": {
@@ -2514,12 +2660,33 @@
                         "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
                         "default": ""
                     },
+                    "stock": {
+                        "type": "number",
+                        "title": "Stock",
+                        "description": "\ud83d\udce6 The number of items in stock."
+                    },
+                    "virtual": {
+                        "type": "boolean",
+                        "title": "Virtual",
+                        "description": "\ud83d\udc7b Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.",
+                        "default": false
+                    },
                     "unit": {
                         "type": "string",
                         "maxLength": 64,
                         "title": "Unit",
                         "description": "\u24c2\ufe0f The length unit of the point and the direction of the ports of the type.",
                         "default": ""
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/LocationContext"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     },
                     "ports": {
                         "items": {
@@ -2602,12 +2769,33 @@
                         "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
                         "default": ""
                     },
+                    "stock": {
+                        "type": "number",
+                        "title": "Stock",
+                        "description": "\ud83d\udce6 The number of items in stock."
+                    },
+                    "virtual": {
+                        "type": "boolean",
+                        "title": "Virtual",
+                        "description": "\ud83d\udc7b Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.",
+                        "default": false
+                    },
                     "unit": {
                         "type": "string",
                         "maxLength": 64,
                         "title": "Unit",
                         "description": "\u24c2\ufe0f The length unit of the point and the direction of the ports of the type.",
                         "default": ""
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/LocationInput"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     },
                     "representations": {
                         "items": {
@@ -2681,6 +2869,24 @@
                         "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
                         "default": ""
                     },
+                    "stock": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "string"
+                            }
+                        ],
+                        "title": "Stock",
+                        "description": "\ud83d\udce6 The number of items in stock."
+                    },
+                    "virtual": {
+                        "type": "boolean",
+                        "title": "Virtual",
+                        "description": "\ud83d\udc7b Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.",
+                        "default": false
+                    },
                     "unit": {
                         "type": "string",
                         "maxLength": 64,
@@ -2699,6 +2905,16 @@
                         "format": "date-time",
                         "title": "Updated",
                         "description": "\ud83d\udd52 The last update date of the type."
+                    },
+                    "location": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/Location"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     },
                     "representations": {
                         "items": {

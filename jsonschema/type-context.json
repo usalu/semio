@@ -1,5 +1,53 @@
 {
     "$defs": {
+        "Location": {
+            "description": "\ud83d\udccd The context of a location.",
+            "properties": {
+                "longitude": {
+                    "description": "\u2194\ufe0f The longitude of the location in degrees.",
+                    "title": "Longitude",
+                    "type": "number"
+                },
+                "latitude": {
+                    "description": "\u2195\ufe0f The latitude of the location in degrees.",
+                    "title": "Latitude",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "longitude",
+                "latitude"
+            ],
+            "title": "Location",
+            "type": "object"
+        },
+        "Point": {
+            "description": "\u2716\ufe0f A 3d-point (xyz) of floating point numbers.",
+            "properties": {
+                "x": {
+                    "description": "\ud83c\udf9a\ufe0f The x-coordinate of the point.",
+                    "title": "X",
+                    "type": "number"
+                },
+                "y": {
+                    "description": "\ud83c\udf9a\ufe0f The y-coordinate of the point.",
+                    "title": "Y",
+                    "type": "number"
+                },
+                "z": {
+                    "description": "\ud83c\udf9a\ufe0f The z-coordinate of the point.",
+                    "title": "Z",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "x",
+                "y",
+                "z"
+            ],
+            "title": "Point",
+            "type": "object"
+        },
         "Port": {
             "description": "\ud83d\udd0c A port is a connection point (with a direction) of a type.",
             "properties": {
@@ -17,6 +65,12 @@
                     "title": "Description",
                     "type": "string"
                 },
+                "mandatory": {
+                    "default": false,
+                    "description": "\ud83d\udcaf Whether the port is mandatory. A mandatory port must be connected in a design.",
+                    "title": "Mandatory",
+                    "type": "boolean"
+                },
                 "family": {
                     "default": "",
                     "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional family of the port. This allows to define explicit compatibility with other ports.",
@@ -32,6 +86,20 @@
                     "title": "Compatiblefamilies",
                     "type": "array"
                 },
+                "point": {
+                    "$ref": "#/$defs/Point",
+                    "description": "\u2716\ufe0f The connection point of the port that is attracted to another connection point."
+                },
+                "direction": {
+                    "$ref": "#/$defs/Vector",
+                    "description": "\u27a1\ufe0f The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
+                },
+                "t": {
+                    "default": 0.0,
+                    "description": "\ud83d\udc8d The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
+                    "title": "T",
+                    "type": "number"
+                },
                 "qualities": {
                     "description": "\ud83d\udccf The qualities of the port.",
                     "items": {
@@ -41,6 +109,10 @@
                     "type": "array"
                 }
             },
+            "required": [
+                "point",
+                "direction"
+            ],
             "title": "Port",
             "type": "object"
         },
@@ -73,6 +145,33 @@
             ],
             "title": "Quality",
             "type": "object"
+        },
+        "Vector": {
+            "description": "\u27a1\ufe0f A 3d-vector (xyz) of floating point numbers.",
+            "properties": {
+                "x": {
+                    "description": "\ud83c\udf9a\ufe0f The x-coordinate of the vector.",
+                    "title": "X",
+                    "type": "number"
+                },
+                "y": {
+                    "description": "\ud83c\udf9a\ufe0f The y-coordinate of the vector.",
+                    "title": "Y",
+                    "type": "number"
+                },
+                "z": {
+                    "description": "\ud83c\udf9a\ufe0f The z-coordinate of the vector.",
+                    "title": "Z",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "x",
+                "y",
+                "z"
+            ],
+            "title": "Vector",
+            "type": "object"
         }
     },
     "description": "\ud83e\udde9 A type is a reusable element that can be connected with other types over ports.",
@@ -97,12 +196,35 @@
             "title": "Variant",
             "type": "string"
         },
+        "stock": {
+            "default": Infinity,
+            "description": "\ud83d\udce6 The number of items in stock.",
+            "title": "Stock",
+            "type": "number"
+        },
+        "virtual": {
+            "default": false,
+            "description": "\ud83d\udc7b Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.",
+            "title": "Virtual",
+            "type": "boolean"
+        },
         "unit": {
             "default": "",
             "description": "\u24c2\ufe0f The length unit of the point and the direction of the ports of the type.",
             "maxLength": 64,
             "title": "Unit",
             "type": "string"
+        },
+        "location": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/Location"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null
         },
         "ports": {
             "items": {

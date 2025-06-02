@@ -101,6 +101,27 @@
             "title": "DiagramPoint",
             "type": "object"
         },
+        "Location": {
+            "description": "\ud83d\udccd The context of a location.",
+            "properties": {
+                "longitude": {
+                    "description": "\u2194\ufe0f The longitude of the location in degrees.",
+                    "title": "Longitude",
+                    "type": "number"
+                },
+                "latitude": {
+                    "description": "\u2195\ufe0f The latitude of the location in degrees.",
+                    "title": "Latitude",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "longitude",
+                "latitude"
+            ],
+            "title": "Location",
+            "type": "object"
+        },
         "Piece": {
             "description": "\u2b55 A piece is a 3d-instance of a type in a design.",
             "properties": {
@@ -373,6 +394,17 @@
             "maxLength": 64,
             "title": "Unit",
             "type": "string"
+        },
+        "location": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/Location"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null
         },
         "pieces": {
             "items": {
