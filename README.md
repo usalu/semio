@@ -1,31 +1,31 @@
-> 👀 Do you want to develop semio with us? Then join our Weekly-Evening-Session every Thursday starting at 6pm (UTC+1) on [Discord](https://discord.gg/m6nnf6pQRc) 🍻
+> 👀 Are you curious how we develop semio? Then you might want to check out our [Discord server](https://discord.gg/m6nnf6pQRc) 👥
 
 <p align="center">
     <a href="https://docs.semio-tech.com">
       <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="logo/semio-horizontal-dark.svg">
-          <source media="(prefers-color-scheme: light)" srcset="logo/semio-horizontal.svg">
-          <img alt="semio" href="https://github.com/usalu/semio/" src="logo/semio-horizontal.svg">
+          <source media="(prefers-color-scheme: dark)" srcset="assets/logo/semio-horizontal-dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="assets/logo/semio-horizontal.svg">
+          <img alt="semio" href="https://github.com/usalu/semio/" src="assets/logo/semio-horizontal.svg">
       </picture>
     </a>
     <br/>
-    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="badges/doi-zenodo.svg" alt="Cite"></a>
-    <a href="https://github.com/usalu/semio/"><img src="badges/latest-release.svg" alt="Latest Release"></a>
-    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="badges/license-agpl-v3.svg" alt="AGPLv3 License"></a>
+    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="assets/badges/doi-zenodo.svg" alt="Cite"></a>
+    <a href="https://github.com/usalu/semio/"><img src="assets/badges/latest-release.svg" alt="Latest Release"></a>
+    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="assets/badges/license-agpl-v3.svg" alt="AGPLv3 License"></a>
     <br/>
-    <a href="https://www.grasshopper3d.com/"><img src="badges/ui-grasshopper.svg" alt="Grasshopper"></a>
-    <a href="https://www.microsoft.com/windows/windows-11"><img src="badges/ui-windows.svg" alt="Windows"></a>
-    <a href="https://apple.com/macos"><img src="badges/ui-macos.svg" alt="macOS"></a>
+    <a href="https://www.grasshopper3d.com/"><img src="assets/badges/ui-grasshopper.svg" alt="Grasshopper"></a>
+    <a href="https://www.microsoft.com/windows/windows-11"><img src="assets/badges/ui-windows.svg" alt="Windows"></a>
+    <a href="https://apple.com/macos"><img src="assets/badges/ui-macos.svg" alt="macOS"></a>
     <br/>
-    <a href="https://www.python.org/"><img src="badges/powered-by-python.svg" alt="Python"></a>
-    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="badges/powered-by-csharp.svg" alt="C#"></a>
-    <a href="https://www.typescriptlang.org/"><img src="badges/powered-by-typescript.svg" alt="Typescript"></a>
+    <a href="https://www.python.org/"><img src="assets/badges/powered-by-python.svg" alt="Python"></a>
+    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="assets/badges/powered-by-csharp.svg" alt="C#"></a>
+    <a href="https://www.typescriptlang.org/"><img src="assets/badges/powered-by-typescript.svg" alt="Typescript"></a>
     <br/>
     <i>🧩 Design-Information-Modeling for Kit-of-Parts Architecture 🏘️ </i>
 </p>
 <br/>
 
-You want to 🧩 the next 🏛️🏘️🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣️👥🖱️⌨️ takes all your ⌚? Then try to 🧠 the 🧬 and let semio 💉🖥️✒️🖨️🪄🚀.
+You want to 🧩 the next 🏘️🏛️🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣️👥🖱️⌨️ takes all your ⌚? Then try to 🧠 the 🧬 and let semio 💉🖥️✒️🖨️🪄🚀.
 
 # 👋 Hello contributor
 
@@ -42,10 +42,10 @@ Let me walk you through 🚶
    - [✏️ sketchpad](#%EF%B8%8F-sketchpad-)
    - [👀 studio](#-studio-)
    - [🤖 assistant](#-assistant-)
-   - [🦗 semio.gh](#-semio.gh-)
-   - [🐝 semio.wasp](#-semio.wasp-)
-   - [🦌 semio.monoceros](#-semio.monoceros-)
-   - [🐞 semio.ladybug](#-semio.ladybug-)
+   - [🦗 semio.gh](#-semiogh-)
+   - [🐝 semio.wasp](#-semiowasp-)
+   - [🦌 semio.monoceros](#-semiomonoceros-)
+   - [🐞 semio.ladybug](#-semioladybug-)
 1. [📄 Specs](#-specs-)
 1. [🦑 Repo](#-repo-)
    - [⚖️ Principles](#️-principles-)
@@ -244,7 +244,7 @@ But most likely not ❌
 </details>
 
 <details>
-<summary><strong>📦 Parts that belong together, should be close together in the source code  ✅</strong></summary>
+<summary><strong>📦 Parts that belong together should be close in the source code  ✅</strong></summary>
 
 The default code organization is to group kind of structurally similar parts together 📂
 
@@ -263,7 +263,7 @@ Cutting components vertically (a bit of logic with a bit of UI) instead of horiz
 </details>
 
 <details>
-<summary><strong>📑 If multiple people work longterm on the same part, then one file for each part should be created ⚙️</strong></summary>
+<summary><strong>📑 If multiple people work longterm on the same part, then one file for each part should be created ✅</strong></summary>
 
 Trust me, it will make collaboration much easier 🔀
 
@@ -302,9 +302,9 @@ If not, then you are probably good 👌
 <details>
 <summary><strong>🤨 Wait, no high-level advice and only plain numbers, files, folders or close line of codes?</strong></summary>
 
-In my understanding, rule-of-thumbs are most useful when they are concrete 🔨
+In our understanding, rule-of-thumbs are most useful when they are concrete 🔨
 
-Besides that I am sure you know about <strong>KISS</strong> (Keep-It-Simple-Stupid), <strong>DRY</strong> (Dont-Repeat-Yourself), <strong>YAGNI</strong> (You-Aren't-Gonna-Need-It), <strong>SoC</strong> (Separation-of-Concerns), <strong>Avoid Premature Optimization</strong>, <strong>Law of Demeter</strong>, <strong>LCHC</strong> (Low-Coupling-High-Cohesion), <strong>SOLID</strong> (Single Responsibility (<strong>SR</strong>), Open/Closed (<strong>OC</strong>), Liskov's Substitution (<strong>LS</strong>), Interface Segregation (<strong>IS</strong>), Dependency Inversion (<strong>DI</strong>)), …
+Besides that we are sure you know about <strong>KISS</strong> (Keep-It-Simple-Stupid), <strong>DRY</strong> (Dont-Repeat-Yourself), <strong>YAGNI</strong> (You-Aren't-Gonna-Need-It), <strong>SoC</strong> (Separation-of-Concerns), <strong>Avoid Premature Optimization</strong>, <strong>Law of Demeter</strong>, <strong>LCHC</strong> (Low-Coupling-High-Cohesion), <strong>SOLID</strong> (Single Responsibility (<strong>SR</strong>), Open/Closed (<strong>OC</strong>), Liskov's Substitution (<strong>LS</strong>), Interface Segregation (<strong>IS</strong>), Dependency Inversion (<strong>DI</strong>)), …
 
 But as always, the devil is in the details 😈
 
@@ -351,7 +351,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
 
 # ♻️ Ecosystems [↑](#-overview)
 
-You might have noticed that the individual components can be closely related such as [sketchpad](#️-sketchpad-), [Grasshopper](#-semio.gh-) and [engine](#️-engine-) but they are in totally different folders 📂
+You might have noticed that the individual components can be closely related such as [sketchpad](#️-sketchpad-), [Grasshopper](#-semiogh-) and [engine](#️-engine-) but they are in totally different folders 📂
 
 The reason for this is that the repo is not disected according content but according technology stack ✂️
 
@@ -385,11 +385,8 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 
 A .NET core for semio 🥜
 
-### ⚠️ Compatibility
-
-[Rhino](#-semio.3dm-) still runs on .NET 7.0 7️⃣
-
-Be careful to not update packages to a higher version, that might break the compatibility 🚨
+> [!WARNING] > [Rhino](#-semio.3dm-) still runs on .NET 7.0 7️⃣
+> Be careful to not update packages to a higher version, that might break the compatibility 🚨
 
 ## 🐍 [Python](https://github.com/usalu/semio/tree/main/python) [↑](#%EF%B8%8F-ecosystems-)
 
@@ -591,7 +588,7 @@ But you waste a lot of space for nothing 💸
 <details>
 <summary><strong>📛 Don't name things unless it is the output of a group or cluster ❌</strong></summary>
 
-We know that there are [only two hard things in Computer Science](https://martinfowler.com/bliki/TwoHardThings.html): Naming and Caching 🥈
+We know that there are [only two hard things in Computer Science](https://martinfowler.com/bliki/TwoHardThings.html): Cache invalidation and naming things 🥈
 
 Visual programming languages solve the naming problem by using wires to overcome the neeed of names ⬆️
 
@@ -599,7 +596,7 @@ That is a big gain in productivity because you can focus on the logic instead of
 
 Wait, but how I am supposed to understand what is happening in the code if I don't use names?
 
-Most things in Grasshopper are visual and preview selected components is your best friend 🔍
+Most things in Grasshopper are visual and the green `Only draw preview of selected components` button on the top left is your best friend 🔍
 
 </details>
 
@@ -852,9 +849,9 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <a href="#-brand-" title="💯Brand"><sub>💯<sub></a>
         <br />
         <a href="#-semio.3dm-" title="🦏Rhino"><sub>🦏<sub></a>
-        <a href="#-semio.wasp-" title="🐝Wasp"><sub>🐝<sub></a>
-        <a href="#-semio.monoceros-" title="🦌Monoceros"><sub>🦌<sub></a>
-        <a href="#-semio.ladybug-" title="🐞Ladybug"><sub>🐞<sub></a>
+        <a href="#-semiowasp-" title="🐝Wasp"><sub>🐝<sub></a>
+        <a href="#-semiomonoceros-" title="🦌Monoceros"><sub>🦌<sub></a>
+        <a href="#-semioladybug-" title="🐞Ladybug"><sub>🐞<sub></a>
         <br />
         <a href="#-metabolism-" title="🫀Metabolism"><sub>🫀<sub></a>
         <a href="#-hello-semio-" title="👋Hello semio"><sub>👋<sub></a>
@@ -894,7 +891,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <a href="https://github.com/usalu/semio/pulls?q=author%3Adrymuzzle" title="Pull Requests">🔀</a>
         <br />
         <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a>
-        <a href="#-semio.ladybug-" title="🐞ladybug"><sub>🐞<sub></a>
+        <a href="#-semioladybug-" title="🐞ladybug"><sub>🐞<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kaatzjo">
         <img src="assets/contributors/kaatzjo_round_90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
