@@ -2384,6 +2384,22 @@ class Location(Model):
     """↕️ The latitude of the location in degrees."""
 
 
+class LocationInput(Location, Input):
+    """📍 The input for a location."""
+
+
+class LocationOutput(Location, Output):
+    """📍 The output of a location."""
+
+
+class LocationContext(Location, Context):
+    """📍 The context of a location."""
+
+
+class LocationPrediction(Location, Prediction):
+    """📍 The prediction of a location."""
+
+
 ### Types ###
 
 
@@ -3739,7 +3755,6 @@ class DesignProps(
 class DesignInput(
     DesignUnitField,
     DesignViewField,
-    DesignLocationField,
     DesignVariantField,
     DesignImageField,
     DesignIconField,
@@ -3749,6 +3764,7 @@ class DesignInput(
 ):
     """🏙️ A design is a collection of pieces that are connected."""
 
+    location: typing.Optional[LocationInput] = sqlmodel.Field(default=None)
     pieces: list[PieceInput] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionInput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorInput] = sqlmodel.Field(default_factory=list)
@@ -3758,7 +3774,6 @@ class DesignInput(
 class DesignContext(
     DesignUnitField,
     DesignViewField,
-    DesignLocationField,
     DesignVariantField,
     DesignDescriptionField,
     DesignNameField,
@@ -3766,6 +3781,7 @@ class DesignContext(
 ):
     """🏙️ A design is a collection of pieces that are connected."""
 
+    location: typing.Optional[LocationContext] = sqlmodel.Field(default=None)
     pieces: list[PieceContext] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionContext] = sqlmodel.Field(default_factory=list)
     qualities: list[QualityContext] = sqlmodel.Field(default_factory=list)
@@ -3775,7 +3791,6 @@ class DesignOutput(
     DesignUpdatedField,
     DesignCreatedField,
     DesignUnitField,
-    DesignLocationField,
     DesignViewField,
     DesignVariantField,
     DesignImageField,
@@ -3786,6 +3801,7 @@ class DesignOutput(
 ):
     """🏙️ A design is a collection of pieces that are connected."""
 
+    location: typing.Optional[LocationOutput] = sqlmodel.Field(default=None)
     pieces: list[PieceOutput] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionOutput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorOutput] = sqlmodel.Field(default_factory=list)
@@ -5371,6 +5387,7 @@ GRAPHQLTYPES = {
     "Point": graphene.NonNull(lambda: PointNode),
     "Vector": graphene.NonNull(lambda: VectorNode),
     "Plane": graphene.NonNull(lambda: PlaneNode),
+    "Location": graphene.NonNull(lambda: LocationNode),
     "Representation": graphene.NonNull(lambda: RepresentationNode),
     "list[Representation]": graphene.NonNull(
         graphene.List(graphene.NonNull(lambda: RepresentationNode))
@@ -5572,6 +5589,16 @@ class QualityNode(TableEntityNode):
 class QualityInputNode(InputNode):
     class Meta:
         model = QualityInput
+
+
+class LocationNode(Node):
+    class Meta:
+        model = Location
+
+
+class LocationInputNode(InputNode):
+    class Meta:
+        model = Location
 
 
 class RepresentationNode(TableEntityNode):
