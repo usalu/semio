@@ -1123,7 +1123,7 @@ class Representation(
     @property
     def tags(self: "Representation") -> list[str]:
         """↗️ Get the masked tags of the representation."""
-        return sorted([tag.name for tag in self.tags_], key=lambda x: x.order)
+        return [tag.name for tag in sorted(self.tags_, key=lambda x: x.order)]
 
     @tags.setter
     def tags(self: "Representation", tags: list[str]):
@@ -2461,7 +2461,7 @@ class TypeStockField(RealField, abc.ABC):
     """📦 The number of items in stock."""
 
     stock: float = sqlmodel.Field(
-        default=float("inf"), description="📦 The number of items in stock."
+        default=float("Infinity"), description="📦 The number of items in stock."
     )
     """📦 The number of items in stock."""
 
@@ -2538,7 +2538,6 @@ class TypeProps(
 
 class TypeInput(
     TypeUnitField,
-    TypeLocationField,
     TypeVirtualField,
     TypeStockField,
     TypeVariantField,
@@ -2550,6 +2549,7 @@ class TypeInput(
 ):
     """🧩 A type is a reusable element that can be connected with other types over ports."""
 
+    location: typing.Optional[LocationInput] = sqlmodel.Field(default=None)
     representations: list[RepresentationInput] = sqlmodel.Field(default_factory=list)
     ports: list[PortInput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorInput] = sqlmodel.Field(default_factory=list)
@@ -2560,7 +2560,6 @@ class TypeOutput(
     TypeUpdatedField,
     TypeCreatedField,
     TypeUnitField,
-    TypeLocationField,
     TypeVirtualField,
     TypeStockField,
     TypeVariantField,
@@ -2572,6 +2571,7 @@ class TypeOutput(
 ):
     """🧩 A type is a reusable element that can be connected with other types over ports."""
 
+    location: typing.Optional[LocationOutput] = sqlmodel.Field(default=None)
     representations: list[RepresentationOutput] = sqlmodel.Field(default_factory=list)
     ports: list[PortOutput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorOutput] = sqlmodel.Field(default_factory=list)
@@ -2580,7 +2580,6 @@ class TypeOutput(
 
 class TypeContext(
     TypeUnitField,
-    TypeLocationField,
     TypeVirtualField,
     TypeStockField,
     TypeVariantField,
@@ -2590,6 +2589,7 @@ class TypeContext(
 ):
     """🧩 A type is a reusable element that can be connected with other types over ports."""
 
+    location: typing.Optional[LocationContext] = sqlmodel.Field(default=None)
     ports: list[PortContext] = sqlmodel.Field(default_factory=list)
     qualities: list[QualityContext] = sqlmodel.Field(default_factory=list)
 
@@ -2730,6 +2730,10 @@ class Type(
         props = TypeProps.model_validate(obj)
         entity = cls(**props.model_dump())
         try:
+            entity.location = props.location
+        except KeyError:
+            pass
+        try:
             representations = [Representation.parse(r) for r in obj["representations"]]
             entity.representations = representations
         except KeyError:
@@ -2750,6 +2754,7 @@ class Type(
             entity.authors = authors
         except KeyError:
             pass
+
         return entity
 
     def dump(self) -> "TypeOutput":
@@ -3948,6 +3953,10 @@ class Design(
         )
         props = DesignProps.model_validate(obj)
         entity = cls(**props.model_dump())
+        try:
+            entity.location = props.location
+        except KeyError:
+            pass
         typesDict = {}
         for type in types:
             if type.name not in typesDict:
