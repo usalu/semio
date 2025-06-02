@@ -151,47 +151,55 @@ The **unit** is a [unit identifier](https://en.wikipedia.org/wiki/Unit_of_measur
 
 ## 🏷️ Tag
 
-A [`tag`](#🏷️-tag) is a [kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) string 🔤
+A [`tag`](#-tag) is a [kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) **name** 🔤
 
 ## 💾 Representation
 
-A [`representation`](#💾-representation) is a [`tagged`](#🏷️-tag) [`url`](#🔗-url) to a resource 📄
+A [`representation`](#-representation) is a **[`tagged`](#-tag)** **[`url`](#🔗-url)** to a resource with an optional **description** 📄
 
-No [`tags`](#🏷️-tag) means the _default_ representation 🔑
+No **[`tags`](#-tag)** means the _default_ representation 🔑
 
-The similiarty of [`representations`](#💾-representation) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their [`tags`](#🏷️-tag) 🔄
+The similarity of [`representations`](#-representation) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#-tag)** 🔄
 
 ## ⭕ Piece
 
-A [`piece`](#⭕-piece) is either _fixed_ (with a [`plane`](#◳-plane)) or _linked_ (with a [`connection`](#🔗-connection)) 📐
+A [`piece`](#-piece) is an instance of either a [`type`](#-type) or a [`design`](#-design) 📐
 
-A group of _connected_ [`pieces`](#⭕-piece) is called a _cluster_ 🌿
+A [`piece`](#-piece) is either _fixed_ (with a [`plane`](#◳-plane)) or _linked_ (with a [`connection`](#-connection)) 📐
+
+A group of _connected_ [`pieces`](#-piece) is called a _cluster_ 🌿
+
+The _hierachy_ of a [`piece`](#-piece) is the length of the shortest path to the next _fixed_ [`piece`](#-piece) 👣
 
 ## 🔗 Connection
 
-A [`connection`](#🔗-connection) is a 3D-Link between two [`pieces`](#⭕-piece) 🪢
+A [`connection`](#-connection) is a 3D-Link between two [`pieces`](#-piece) with the _translation_ parameters **gap** (offset in y-direction), **shift** (offset in x-direction) and **raise** (offset in z-direction), and the _rotation_ parameters **rotation** (rotation around y-axis), **turn** (rotation around z-axis) and **tilt** (rotation around x-axis) 🪢
 
-The two [`pieces`](#⭕-piece) are called _connected_ and _connecting_ but there is no difference between them 🔄
+The _translation_ is applied first, then the _rotation_ 🥈
 
-The _direction_ of a [`connection`](#🔗-connection) is determined by the _hierarchy_ of the [`pieces`](#⭕-piece) in a _cluster_ 🔄
+The two [`pieces`](#-piece) are called _connected_ and _connecting_ but there is no difference between them 🔄
+
+The _direction_ of a [`connection`](#-connection) goes from the lower _hierarchy_ to the higher _hierarchy_ of the [`pieces`](#-piece) ➡️
 
 ## 🏙️ Design
 
-A [`design`](#🏙️-design) is an undirected graph of [`pieces`](#⭕-piece) (nodes) and [`connections`](#🔗-connection) (edges) 📐
+A [`design`](#-design) is an undirected graph of [`pieces`](#-piece) (nodes) and [`connections`](#-connection) (edges) 📐
 
-A _flat_ [`design`](#🏙️-design) has no [`connections`](#🔗-connection) and all [`pieces`](#⭕-piece) are _fixed_ ◳
+A _flat_ [`design`](#-design) has no [`connections`](#-connection) and all [`pieces`](#-piece) are _fixed_ ◳
 
-The [`pieces`](#⭕-piece) are _placed_ [breadth-first](https://en.wikipedia.org/wiki/Breadth-first_search) for every _cluster_ 🌿
+The [`pieces`](#-piece) are _placed_ _hierarchically_ ([breadth-first](https://en.wikipedia.org/wiki/Breadth-first_search)) for every _cluster_ 🌿
 
-Additional [`connections`](#🔗-connection) which where not used in the _placement_ can be used to validate the computed [`planes`](#◳-plane) 🛂
+Additional [`connections`](#-connection) which where not used in the _placement_ can be used to validate the computed [`planes`](#◳-plane) 🛂
 
 ## 📦 Kit
 
-A `kit` is a special `.zip` file 📦
+A `kit` is either _static_ (a special `.zip` file) or _dynamic_ (bound to a runtime) 📦
 
-It contains a reserved `.semio` folder that contains a `kit.db` sqlite file 💾
+A _static_ `kit` contains a reserved `.semio` folder that contains a `kit.db` sqlite file 💾
 
-The schema of `kit.db` is found in [`./sqlite/schema.sql`](./sqlite/schema.sql) 📄
+The SQL-schema of `kit.db` is found in [`./sqlite/schema.sql`](./sqlite/schema.sql) 📄
+
+For Inter-Process Communication (IPC) the JSON-schema in [`./jsonschema/kit.json`](./jsonschema/kit.json) is used 📄
 
 # 🦑 [Repo](https://github.com/usalu/semio.git) [↑](#-overview)
 
@@ -823,7 +831,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
       <td align="center" valign="top" width="145px" style="border: none;"><a href="https://github.com/usalu">
         <img src="assets/contributors/usalu_round_90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
         <br />
-        <sub><b>Ueli Saluz</b></sub></a>
+        <sup><b>Ueli Saluz</b></sup>
         <br />
         <a href="https://github.com/usalu/semio/commits?author=usalu" title="Commits">🧑‍💻</a> 
         <a href="https://github.com/usalu/semio/issues?q=author%3Ausalu OR assignee%3Ausalu" title="Issues">ℹ️</a>
@@ -832,22 +840,21 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <a href="#-semiojs-" title="🟨@semio/js"><sub>🟨<sub></a>
         <a href="#-semionet-" title="🟪@semio/net"><sub>🟪<sub></a>
         <a href="#-python-" title="🐍Python"><sub>🐍<sub></a>
-        <br />
         <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a>      
+        <br />
         <a href="#-semiosketchpad-" title="✏️@semio/sketchpad"><sub>✏️<sub></a>
         <a href="#-semioengine-" title="⚙️@semio/engine"><sub>⚙️<sub></a>
-        <br />
-        <a href="#-semio.3dm-" title="🦏Rhino"><sub>🦏<sub></a>
-        <a href="#-semio.wasp-" title="🐝Wasp"><sub>🐝<sub></a>
-        <a href="#-semio.monoceros-" title="🦌Monoceros"><sub>🦌<sub></a>
-        <br />
-        <a href="#-semio.ladybug-" title="🐞Ladybug"><sub>🐞<sub></a>
         <a href="#-semioassistant-" title="🤖@semio/assistant"><sub>🤖<sub></a>
         <a href="#%EF%B8%8F-semioplayground-" title="🎛️@semio/playground"><sub>🎛️<sub></a>
         <br />
         <a href="#-semiodocs-" title="📚@semio/docs"><sub>📚<sub></a>
         <a href="#-semioassets-" title="🛍️@semio/assets"><sub>🛍️<sub></a>
         <a href="#-brand-" title="💯Brand"><sub>💯<sub></a>
+        <br />
+        <a href="#-semio.3dm-" title="🦏Rhino"><sub>🦏<sub></a>
+        <a href="#-semio.wasp-" title="🐝Wasp"><sub>🐝<sub></a>
+        <a href="#-semio.monoceros-" title="🦌Monoceros"><sub>🦌<sub></a>
+        <a href="#-semio.ladybug-" title="🐞Ladybug"><sub>🐞<sub></a>
         <br />
         <a href="#-metabolism-" title="🫀Metabolism"><sub>🫀<sub></a>
         <a href="#-hello-semio-" title="👋Hello semio"><sub>👋<sub></a>
@@ -856,7 +863,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
       <td align="center" valign="top" width="145px"><a href="https://github.com/kinansarak">
         <img src="assets/contributors/kinansarak_round_90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
         <br />
-        <sub><b>KinanSarak</b></sub></a>
+        <sup><b>KinanSarak</b></sup></a>
         <br />
         <a href="https://github.com/usalu/semio/commits?author=kinansarak" title="Commits">🧑‍💻</a> 
         <a href="https://github.com/usalu/semio/issues?q=author%3Akinansarak OR assignee%3Akinansarak" title="Issues">ℹ️</a>
@@ -867,9 +874,9 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/EinMysterium">
-        <img src="assets/contributors/einmysterium_round_90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
+        <img src="assets/contributors/EinMysterium_round_90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
         <br />
-        <sub><b>EinMysterium</b></sub></a>
+        <sup><b>EinMysterium</b></sup></a>
         <br />
         <a href="https://github.com/usalu/semio/commits?author=EinMysterium" title="Commits">🧑‍💻</a> 
         <a href="https://github.com/usalu/semio/issues?q=author%3AEinMysterium OR assignee%3AEinMysterium" title="Issues">ℹ️</a>
@@ -880,7 +887,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
       <td align="center" valign="top" width="145px"><a href="https://github.com/drymuzzle">
         <img src="assets/contributors/drymuzzle_round_90.png" width="90px" alt="drymuzzle" style="border-radius: 50%;"/>
         <br />
-        <sub><b>drymuzzle</b></sub></a>
+        <sup><b>drymuzzle</b></sup></a>
         <br />
         <a href="https://github.com/usalu/semio/commits?author=drymuzzle" title="Commits">🧑‍💻</a> 
         <a href="https://github.com/usalu/semio/issues?q=author%3Adrymuzzle OR assignee%3Adrymuzzle" title="Issues">ℹ️</a>
@@ -892,7 +899,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
       <td align="center" valign="top" width="145px"><a href="https://github.com/kaatzjo">
         <img src="assets/contributors/kaatzjo_round_90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
         <br />
-        <sub><b>kaatzjo</b></sub></a>
+        <sup><b>kaatzjo</b></sup></a>
         <br />
         <a href="https://github.com/usalu/semio/commits?author=kaatzjo" title="Commits">🧑‍💻</a> 
         <a href="https://github.com/usalu/semio/issues?q=author%3Akaatzjo OR assignee%3Akaatzjo" title="Issues">ℹ️</a>
