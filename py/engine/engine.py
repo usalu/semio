@@ -2675,18 +2675,28 @@ class Type(
     )
 
     @property
-    def location(self) -> Location:
+    def location(self) -> typing.Optional[Location]:
         """📍 The location of the type."""
+        if self.locationLongitude is None and self.locationLatitude is None:
+            return None
+        if self.locationLongitude is None:
+            raise ValueError("Location longitude is required")
+        if self.locationLatitude is None:
+            raise ValueError("Location latitude is required")
         return Location(
             longitude=self.locationLongitude,
             latitude=self.locationLatitude,
         )
 
     @location.setter
-    def location(self, location: Location):
+    def location(self, location: typing.Optional[Location]):
         """📍 Set the location of the type."""
-        self.locationLongitude = location.longitude
-        self.locationLatitude = location.latitude
+        if location is None:
+            self.locationLongitude = None
+            self.locationLatitude = None
+        else:
+            self.locationLongitude = location.longitude
+            self.locationLatitude = location.latitude
 
     @property
     def authors(self) -> list[Author]:
@@ -3885,18 +3895,24 @@ class Design(
     __table_args__ = (sqlalchemy.UniqueConstraint("name", "variant", "view", "kit_id"),)
 
     @property
-    def location(self) -> Location:
+    def location(self) -> typing.Optional[Location]:
         """📍 The location of the design."""
+        if self.locationLongitude is None or self.locationLatitude is None:
+            return None
         return Location(
             longitude=self.locationLongitude,
             latitude=self.locationLatitude,
         )
 
     @location.setter
-    def location(self, location: Location):
+    def location(self, location: typing.Optional[Location]):
         """📍 Set the location of the design."""
-        self.locationLongitude = location.longitude
-        self.locationLatitude = location.latitude
+        if location is None:
+            self.locationLongitude = None
+            self.locationLatitude = None
+        else:
+            self.locationLongitude = location.longitude
+            self.locationLatitude = location.latitude
 
     @property
     def authors(self) -> list[Author]:
@@ -5601,7 +5617,7 @@ class LocationNode(Node):
 
 class LocationInputNode(InputNode):
     class Meta:
-        model = Location
+        model = LocationInput
 
 
 class RepresentationNode(TableEntityNode):
