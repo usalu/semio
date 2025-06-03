@@ -134,6 +134,7 @@ Now that you've placed your Pieces, it's time to tell semio how they connect. Th
 
 Each **Connection** says:  
 👉 "Connect this Port on one Piece to a Port on another Piece."
+<br />
 
 ![📤 sketch drawing](/sketch-drawing-connections.png)
 
@@ -177,7 +178,27 @@ This tells Semio:
 
 ![Set Connection](/set-connection-2pcs-alpha.png)
 
+🧩 Once this first connection is in place, you can continue snapping all remaining bricks together using similar logic
+
 ![Set Connection](/mode-connection-5pcs-grasshopper.png)
+
+🔗 This Tells Semio:
+
+
+1. `Con(Yel:w → w:Red-T)`  
+   👉 **Snap the west Port of `Yel`** to the **west Port of `Red-T`**
+
+2. `Con(Red-T:e → e:Red-R)`  
+   👉 **Snap the east Port of `Red-T`** to the **east Port of `Red-R`**
+
+3. `Con(Red-R:n → w:Blu-T)`  
+   👉 **Snap the north Port of `Red-R`** to the **west Port of `Blu-T`**
+
+4. `Con(Red-R:n → w:Blu-B)`  
+   👉 **Snap the north Port of `Red-R`** to the **west Port of `Blu-B`**
+
+---
+
 
 ![Set Connection](/set-connection-all-pcs-alpha.png)
 
@@ -231,9 +252,9 @@ These are local movements based on the direction the Port was defined in:
 
 
 As we can see, the two Pieces we connected earlier don’t align exactly as shown in the sketch 🧩
-
-![📤 sketch drawing](/sketch-drawing-adjustments.png)
-
+<br />
+![📤 sketch drawing](/sketch-drawing-45.png)
+<br />
 This is where the optional step of adjusting the snap comes in 🛠️
 Here is how to use them to fine-tune the position and rotation of a Piece after it snaps.
 
@@ -307,16 +328,22 @@ To create your Design in semio (for example, in Grasshopper), use the `Model Des
 ---
 ## ⚙️ Workflow Mechanics 
 
+
+Now that we've covered the core concepts of Semio, let's take a closer look at how the components actually work —  
+and explore the key features of the Semio workflow inside Grasshopper.
+
 ### 🛠️ Grasshopper Workflow
 
-semio doesn’t change how Grasshopper works — it just changes **what** you’re building.
+Semio doesn’t change **how** Grasshopper works — it changes **what** you’re working with..
+You're not wiring geometry anymore — you're wiring **design intent**
+- 🧱 **Types** – brick molds with meaning, not just shapes  
+- 🧩 **Pieces** – placed bricks that follow system logic   
+- 🔗 **Connections** – rules that control how elements relate  
+- 🧰 **Designs** – full assemblies of smart, connected pieces 
 
-Instead of only passing geometry between components, you’re now passing structured data like:
+This shift lets you build not just geometry — but structured, adaptable systems
 
-- 🧱 **Types** (brick molds)  
-- 🧩 **Pieces** (placed bricks)  
-- 🔌 **Ports** and 🔗 **Connections** between them
-
+---
 
 Semio components behave just like regular Grasshopper components 🧩:
 
@@ -332,19 +359,48 @@ Each value will apply to the corresponding item in the list of Connections or Pi
 
 ### 🔄 Contruct, Deconstruct, Reconstruct
 
-In Semio, each Model component (like Model Type, Model Piece, or Model Design) outputs a special Semio parameter:
 
-- `Ty` → a **Type** (your brick mold) 🧱  
-- `Pc` → a **Piece** (a placed brick) 🧩  
-- `Cn` → a **Connection** (how two bricks snap together) 🔗  
-- `Ds` → a **Design** (the full assembled model) 🧰  
+In Semio, **Model components** like `Model Type`, `Model Piece`, `Model Connection`, and `Model Design` follow a shared logic:  
+they’re not just builders — they’re also **editors** and **inspectors**.
 
-You can plug these outputs back into the **same component** — usually the first input — to modify or rebuild them.  
-Only the parameters you redefine will be changed; all other values stay untouched.  
-
+Each component supports three fundamental actions:
 
 ---
 
+##### 1. 🔨 Construct
+
+Each Model component can **create** a structured Semio object from your inputs:
+
+- `Model Type` → outputs a `Ty` (Type)
+- `Model Piece` → outputs a `Pc` (Piece)
+- `Model Connection` → outputs a `Cn` (Connection)
+- `Model Design` → outputs a `Ds` (Design)
+
+These are Semio’s core data types — they carry geometry, logic, metadata, and relationships.
+
+---
+
+##### 2. 🔍 Deconstruct
+
+You can also use the same component to **inspect** or **extract** the inner structure of a Semio object, and all its inputs will populate with the current values, like unpacking a brick to see how it was made.
+
+---
+
+##### 3. 🔁 Reconstruct / Modify
+
+In Semio, you can update any modeled object — like a Type, Piece, Connection, or Design —  
+by feeding its output back into the **first input** of the same Model component.
+
+- `Ty` → Type 🧱  
+- `Pc` → Piece 🧩  
+- `Cn` → Connection 🔗  
+- `Ds` → Design 🧰  
+
+When you do this, you can redefine any part of the object (like its name, geometry, plane, or metadata).  
+Only the inputs you change will be updated — everything else stays exactly as it was
+
+---
+### 🧪 Example Use Case
 
 #### 🧩 Modify a Piece  
 
