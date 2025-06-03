@@ -16,26 +16,26 @@ graphene-pydantic = "^0.6.1"
 graphene-sqlalchemy = { version = "^3.0.0rc2", allow-prereleases = true }
 jinja2 = "^3.1.6"
 lark = "^1.2.2"
-networkx = "^3.4.1"
-numpy = "^2.2.5"
-openai = "^1.75.0"
+networkx = "^3.5"
+numpy = "^2.2.6"
+openai = "^1.83.0"
 pint = "^0.24.4"
-pydantic = "^2.11.3"
-pyside6 = "^6.9.0"
+pydantic = "^2.11.5"
+pyside6 = "^6.9.1"
 python = ">=3.13,<3.14"
 python-dotenv = "^1.1.0"
-pytransform3d = "^3.14.0"
+pytransform3d = "^3.14.1"
 requests = "^2.32.3"
-sqlalchemy = "^2.0.40"
+sqlalchemy = "^2.0.41"
 sqlmodel = "^0.0.24"
 starlette = "^0.46.2"
 starlette-graphene3 = "^0.6.0"
-uvicorn = { extras = ["standard"], version = "^0.34.2" }
+uvicorn = { extras = ["standard"], version = "^0.34.3" }
 loguru = "^0.7.3"
 
 [tool.poetry.group.test.dependencies]
-pytest = "^8.3.5"
-deepdiff = "^8.4.2"
+pytest = "^8.4.0"
+deepdiff = "^8.5.0"
 pytest-cov = "^6.1.1"
 
 [tool.poetry.group.dev.dependencies]
