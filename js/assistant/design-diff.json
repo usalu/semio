@@ -1,5 +1,50 @@
 {
     "$defs": {
+        "ConnectionDiff": {
+            "description": "🔗 A bidirectional connection between two pieces of a design (diff format).",
+            "properties": {
+                "deleted": {
+                    "items": {
+                        "$ref": "#/$defs/ConnectionId"
+                    },
+                    "title": "Deleted",
+                    "type": "array"
+                },
+                "updated": {
+                    "items": {
+                        "$ref": "#/$defs/Connection"
+                    },
+                    "title": "Updated",
+                    "type": "array"
+                },
+                "added": {
+                    "items": {
+                        "$ref": "#/$defs/Connection"
+                    },
+                    "title": "Added",
+                    "type": "array"
+                }
+            },
+            "title": "ConnectionDiff",
+            "type": "object"
+        },
+        "ConnectionId": {
+            "description": "🔗 The props to identify the connection within the parent design.",
+            "properties": {
+                "connected": {
+                    "$ref": "#/$defs/Side"
+                },
+                "connecting": {
+                    "$ref": "#/$defs/Side"
+                }
+            },
+            "required": [
+                "connected",
+                "connecting"
+            ],
+            "title": "ConnectionId",
+            "type": "object"
+        },
         "Connection": {
             "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design.",
             "properties": {
@@ -225,11 +270,9 @@
             "type": "object"
         },
         "connections": {
-            "items": {
-                "$ref": "#/$defs/Connection"
-            },
-            "title": "Connections",
-            "type": "array"
+            "$ref": "#/$defs/ConnectionDiff",
+            "title": "ConnectionDiff",
+            "type": "object"
         }
     },
     "title": "DesignDiff",
