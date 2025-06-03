@@ -19,7 +19,11 @@
   "packageManager": "npm@10.8.2",
   "scripts": {
     "build": "npx nx run-many -t dev",
-    "update": "npx nx run-many -t update"
+    "update": "npx nx run-many -t update",
+    "engine": "npx nx dev @semio/engine",
+    "js": "npx nx dev @semio/js",
+    "sketchpad": "npx nx dev @semio/sketchpad",
+    "docs": "npx nx dev @semio/docs"
   },
   "devDependencies": {
     "@nx/eslint": "^20.8.0",

@@ -114,19 +114,57 @@ A Grasshopper-based integration of [Ladybug](https://www.ladybug.tools) and semi
 
 # 📄 Specs [↑](#-overview)
 
-## 🔗 Url
+## 📦 Kit [↑](#-specs-)
 
-A [`url`](#🔗-url) is either _relative_ (to the root of the `.zip` file) or _remote_ (http, https, ftp, …) string🌐
+A `kit` is a collection of [`types`](#-types) and [`designs`](#-design) 📦
 
-A _relative_ [`url`](#🔗-url) is a `/`-normalized path to a file in the `.zip` file and is not prefixed with with `.`, `./`, `/`, …
+A `kit` is either _static_ (a special `.zip` file) or _dynamic_ (bound to a runtime) 📦
 
-## ◳ Plane
+A _static_ `kit` contains a reserved `.semio` folder that contains a `kit.db` sqlite file 💾
 
-A [`plane`](#◳-plane) is a location (**origin**) and orientation (**x-axis**, **y-axis** and derived z-axis) in 3D space ✈️
+The SQL-schema of `kit.db` is found in [`./sqlite/schema.sql`](./sqlite/schema.sql) 📄
 
-The coordinate system is left-handed where the thumb points up into the direction of the z-axis, the index-finger forwards into the direction of the y-axis and the middle-finger points to the right into the direction of the x-axis 👈
+For Inter-Process Communication (IPC) the JSON-schema in [`./jsonschema/kit.json`](./jsonschema/kit.json) is used 📄
 
-## 📏 Quality
+## 🏙️ Design [↑](#-specs-)
+
+A [`design`](#-design) is an undirected graph of [`pieces`](#-piece) (nodes) and [`connections`](#-connection) (edges) 📐
+
+A _flat_ [`design`](#-design) has no [`connections`](#-connection) and all [`pieces`](#-piece) are _fixed_ ◳
+
+The [`pieces`](#-piece) are _placed_ _hierarchically_ ([breadth-first](https://en.wikipedia.org/wiki/Breadth-first_search)) for every _cluster_ 🌿
+
+Additional [`connections`](#-connection) which where not used in the _placement_ can be used to validate the computed [`planes`](#◳-plane) 🛂
+
+## 🔗 Connection [↑](#-specs-)
+
+A [`connection`](#-connection) is a 3D-Link between two [`pieces`](#-piece) with the _translation_ parameters **gap** (offset in y-direction), **shift** (offset in x-direction) and **raise** (offset in z-direction), and the _rotation_ parameters **rotation** (rotation around y-axis), **turn** (rotation around z-axis) and **tilt** (rotation around x-axis) 🪢
+
+The _translation_ is applied first, then the _rotation_ 🥈
+
+The two [`pieces`](#-piece) are called _connected_ and _connecting_ but there is no difference between them 🔄
+
+The _direction_ of a [`connection`](#-connection) goes from the lower _hierarchy_ to the higher _hierarchy_ of the [`pieces`](#-piece) ➡️
+
+## ⭕ Piece [↑](#-specs-)
+
+A [`piece`](#-piece) is an instance of either a [`type`](#-type) or a [`design`](#-design) 📐
+
+A [`piece`](#-piece) is either _fixed_ (with a [`plane`](#◳-plane)) or _linked_ (with a [`connection`](#-connection)) 📐
+
+A group of _connected_ [`pieces`](#-piece) is called a _cluster_ 🌿
+
+The _hierachy_ of a [`piece`](#-piece) is the length of the shortest path to the next _fixed_ [`piece`](#-piece) 👣
+
+## 💾 Representation [↑](#-specs-)
+
+A [`representation`](#-representation) is a **[`tagged`](#-tag)** **[`url`](#🔗-url)** to a resource with an optional **description** 📄
+
+No **[`tags`](#-tag)** means the _default_ representation 🔑
+
+The similarity of [`representations`](#-representation) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#-tag)** 🔄
+
+## 📏 Quality [↑](#-specs-)
 
 A [`quality`](#📏-quality) is metadata with a **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#🔗-url) or text) 🔤
 
@@ -149,57 +187,21 @@ The **unit** is a [unit identifier](https://en.wikipedia.org/wiki/Unit_of_measur
 - `Pa` for pascal, `kPa` for kilopascal, `MPa` for megapascal
 - …
 
-## 🏷️ Tag
+## 🏷️ Tag [↑](#-specs-)
 
 A [`tag`](#-tag) is a [kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) **name** 🔤
 
-## 💾 Representation
+## ◳ Plane [↑](#-specs-)
 
-A [`representation`](#-representation) is a **[`tagged`](#-tag)** **[`url`](#🔗-url)** to a resource with an optional **description** 📄
+A [`plane`](#◳-plane) is a location (**origin**) and orientation (**x-axis**, **y-axis** and derived z-axis) in 3D space ✈️
 
-No **[`tags`](#-tag)** means the _default_ representation 🔑
+The coordinate system is left-handed where the thumb points up into the direction of the z-axis, the index-finger forwards into the direction of the y-axis and the middle-finger points to the right into the direction of the x-axis 👈
 
-The similarity of [`representations`](#-representation) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#-tag)** 🔄
+## 🔗 Url [↑](#-specs-)
 
-## ⭕ Piece
+A [`url`](#🔗-url) is either _relative_ (to the root of the `.zip` file) or _remote_ (http, https, ftp, …) string🌐
 
-A [`piece`](#-piece) is an instance of either a [`type`](#-type) or a [`design`](#-design) 📐
-
-A [`piece`](#-piece) is either _fixed_ (with a [`plane`](#◳-plane)) or _linked_ (with a [`connection`](#-connection)) 📐
-
-A group of _connected_ [`pieces`](#-piece) is called a _cluster_ 🌿
-
-The _hierachy_ of a [`piece`](#-piece) is the length of the shortest path to the next _fixed_ [`piece`](#-piece) 👣
-
-## 🔗 Connection
-
-A [`connection`](#-connection) is a 3D-Link between two [`pieces`](#-piece) with the _translation_ parameters **gap** (offset in y-direction), **shift** (offset in x-direction) and **raise** (offset in z-direction), and the _rotation_ parameters **rotation** (rotation around y-axis), **turn** (rotation around z-axis) and **tilt** (rotation around x-axis) 🪢
-
-The _translation_ is applied first, then the _rotation_ 🥈
-
-The two [`pieces`](#-piece) are called _connected_ and _connecting_ but there is no difference between them 🔄
-
-The _direction_ of a [`connection`](#-connection) goes from the lower _hierarchy_ to the higher _hierarchy_ of the [`pieces`](#-piece) ➡️
-
-## 🏙️ Design
-
-A [`design`](#-design) is an undirected graph of [`pieces`](#-piece) (nodes) and [`connections`](#-connection) (edges) 📐
-
-A _flat_ [`design`](#-design) has no [`connections`](#-connection) and all [`pieces`](#-piece) are _fixed_ ◳
-
-The [`pieces`](#-piece) are _placed_ _hierarchically_ ([breadth-first](https://en.wikipedia.org/wiki/Breadth-first_search)) for every _cluster_ 🌿
-
-Additional [`connections`](#-connection) which where not used in the _placement_ can be used to validate the computed [`planes`](#◳-plane) 🛂
-
-## 📦 Kit
-
-A `kit` is either _static_ (a special `.zip` file) or _dynamic_ (bound to a runtime) 📦
-
-A _static_ `kit` contains a reserved `.semio` folder that contains a `kit.db` sqlite file 💾
-
-The SQL-schema of `kit.db` is found in [`./sqlite/schema.sql`](./sqlite/schema.sql) 📄
-
-For Inter-Process Communication (IPC) the JSON-schema in [`./jsonschema/kit.json`](./jsonschema/kit.json) is used 📄
+A _relative_ [`url`](#🔗-url) is a `/`-normalized path to a file in the `.zip` file and is not prefixed with with `.`, `./`, `/`, …
 
 # 🦑 [Repo](https://github.com/usalu/semio.git) [↑](#-overview)
 
@@ -385,7 +387,8 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 
 A .NET core for semio 🥜
 
-> [!WARNING] > [Rhino](#-semio.3dm-) still runs on .NET 7.0 7️⃣
+> [!WARNING]  
+> [Rhino](#-semio.3dm-) still runs on .NET 7.0 7️⃣
 > Be careful to not update packages to a higher version, that might break the compatibility 🚨
 
 ## 🐍 [Python](https://github.com/usalu/semio/tree/main/python) [↑](#%EF%B8%8F-ecosystems-)
