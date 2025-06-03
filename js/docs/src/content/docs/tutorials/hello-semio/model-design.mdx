@@ -333,11 +333,10 @@ Only the parameters you redefine will be changed; all other values stay untouche
 
 ---
 
-##### 🔁 Example Use Cases
 
 #### 🧩 Modify a Piece  
 
-→ You can modify **any aspect** of a Piece — like its placement, name, or other construction parameters —  
+→ You can modify **any aspect** of a Piece — like its placement, name, or other construction parameters   
 by feeding its `Pc` output back into a new `Model Piece` component 
 semio overrides only what you redefine while keeping the rest intact.
 
@@ -349,8 +348,10 @@ _E.g. In the Hello Semio logo, flipping the first Piece by rotating its plane ca
   ![Reconstruct Piece](/reconruct-piece.png)
 
 #### 🔗 Adjust a Connection  
-→ Plug the `Cn` output from `Model Connection` back into a new `Model Connection` component  
-to change the **transformations** or **rotation adjustments**
+
+→ Plug the `Cn` output from the **Model Connection** component back into a new **Model Connection** component 🔁  
+to **update the transformation or rotation** parameters 🔄 — Semio will override only the values you redefine, while keeping the rest untouched.
+
 
   ![Reconstruct Con](/reconstruct-connection.png)
   ![Reconstruct Con](/reconstruct-connection-2.png)
@@ -373,5 +374,5 @@ _E.g. Renaming a layout or modifying how a few bricks are connected — without 
 
 ##### 🖼️ What Happens Next?
 
-Once you've built your Design, you can visualize it using the `Show Design` component (see the next page). This will render your assembled model, showing all the Pieces in their correct positions and how they're connected.
+Once you've built your Design, you can visualize it using the `Preview Design` component (see the next page). This will render your assembled model, showing all the Pieces in their correct positions and how they're connected.
 

@@ -154,9 +154,6 @@ here, we’ll focus mainly on the **export logic**: how to turn that geometry in
 
 
 
-
-{/* TODO: insert export geometry image */}
-
 ![📤 Export Geometry](/export-geometry.png)
 
 
@@ -201,7 +198,6 @@ This tells Semio where to find the geometry file.
 
 - This Representation is then connected in a later step to the **`Typ` (Model Type)** component.
 
-{/* TODO: insert Referencing the Exported File image */}
 
 ![📁 Reference Geometry](/reference-geometry.png)
 
@@ -229,15 +225,19 @@ Here’s what that means:
 
 
 
-Here are the 
+You don’t always need to embed geometry directly into a Type 🧱.
+In some cases, you can skip integration and reference the geometry directly in Grasshopper instead 🎛️.
 
+Just pass the geometry — either as a Geometry 🧊 or Object 🧩 — straight into the Preview Design component 👀.
+This lets you visualize your Design using custom shapes without embedding them into the Type’s definition 🔍.
+
+👉 We’ll explore this option in a later step.
+⚠️ Just note: this method is for visualization only — the geometry won’t be part of the mold itself
 
 </TabItem>
 
 </Tabs>
 
-##### 💡 Tip: Choose the method that best fits your workflow.  
-Want to go deeper into the pros and cons? Learn more here 🔍
 
 ---
 
@@ -279,7 +279,6 @@ It reflects **real-world shape and fabrication detail**, making it ideal for:
 - Detailed documentation and renders
 
 
-{/* TODO: insert Detailed Version image */}
 
 </TabItem>
 
@@ -312,7 +311,6 @@ Best for:
 - Quick iterations and high-speed previews  
 - Placeholder geometry before final detailing
 
-{/* TODO: insert Simplified Version image */}
 </TabItem>
 
 </Tabs>
