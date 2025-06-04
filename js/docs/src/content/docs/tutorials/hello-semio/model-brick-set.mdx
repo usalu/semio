@@ -52,6 +52,8 @@ For example:
 Let’s begin by modeling the mold shown in the sketch. 
 This will serve as the base for generating its Variants.
 
+![📤 sketch drawing](/sketch-drawing-mold.png)
+
 Before we start building it, let’s go over the essential elements that define a Type:
 
 - **🏷️ Name** → A unique name to identify your Type and reuse it in different designs.  
@@ -154,9 +156,6 @@ here, we’ll focus mainly on the **export logic**: how to turn that geometry in
 
 
 
-
-{/* TODO: insert export geometry image */}
-
 ![📤 Export Geometry](/export-geometry.png)
 
 
@@ -201,7 +200,6 @@ This tells Semio where to find the geometry file.
 
 - This Representation is then connected in a later step to the **`Typ` (Model Type)** component.
 
-{/* TODO: insert Referencing the Exported File image */}
 
 ![📁 Reference Geometry](/reference-geometry.png)
 
@@ -229,15 +227,19 @@ Here’s what that means:
 
 
 
-Here are the 
+You don’t always need to embed geometry directly into a Type 🧱.
+In some cases, you can skip integration and reference the geometry directly in Grasshopper instead 🎛️.
 
+Just pass the geometry — either as a Geometry 🧊 or Object 🧩 — straight into the Preview Design component 👀.
+This lets you visualize your Design using custom shapes without embedding them into the Type’s definition 🔍.
+
+👉 We’ll explore this option in a later step.
+⚠️ Just note: this method is for visualization only — the geometry won’t be part of the mold itself
 
 </TabItem>
 
 </Tabs>
 
-##### 💡 Tip: Choose the method that best fits your workflow.  
-Want to go deeper into the pros and cons? Learn more here 🔍
 
 ---
 
@@ -254,7 +256,7 @@ The identity, name, and behavior stay the same — you're just changing how it l
 
 This flexibility is especially useful when working at **different levels of detail** across a project 🧩
 
-##### 🎬 One Brick, Two Representations
+##### 🎬 One Brick, various Representations
 
 To illustrate this concept, we created **two geometry files** for the **same brick mold Type**:
 
@@ -265,40 +267,58 @@ To illustrate this concept, we created **two geometry files** for the **same bri
 <TabItem label="🔍 Detailed Version">
 
 
-
-This version includes the full profile of the piece —  
-a rectangle cut at an angle and extruded into a wooden section 🪵.  
-
+This version uses the **fully detailed geometry** of the piece —  
+a rectangle cut at an angle and extruded into a realistic wooden profile 🪵
+It includes every visible detail in 3D: full depth, edges, and joinery-ready shapes
 
 ![📁 Switch Representation](/Switch-Representation.png)
 ![📁 Filename](/Profile-2-detailed.png)
 
 
-It reflects real-world geometry and is ideal for:
-- Joinery and fabrication  
-- Material communication  
-- High-detail outputs
+It reflects **real-world shape and fabrication detail**, making it ideal for:
+- Joinery and production planning  
+- Material-specific outputs  
+- Detailed documentation and renders
 
-{/* TODO: insert Detailed Version image */}
+
 
 </TabItem>
 
-<TabItem label="⚡ Simplified Version">
+<TabItem label="⚡ Sheet Version">
+This version is a **flat sheet simplification** —  
+a single-surface geometry that represents the general size of the piece 📄.  
+It captures only **one dimension** , and skips all 3D detail.
 
-This version is just a **bounding box** — a minimal block that matches the brick’s size 📦, but skips inner detail
+![📁 Switch Representation](/switch-representation-sheet.png)
+![📁 Filename](/Profile-2-simplified.png)
+
+Use this when:
+- Only the 2D footprint is known  
+- The full shape is not finalized yet  
+- You need fast previews or early-stage coordination
+
+</TabItem>
+
+<TabItem label="⚡ Block Version">
+
+This version is a **bounding box simplification** —  
+a simple block that approximates the piece’s volume 📦.  
+It includes **two dimensions** , but omits exact geometry.
 
 ![📁 Switch Representation](/switch-representation-Block.png)
 ![📁 Filename](/Profile-2-simplified.png)
 
-It’s perfect for:
-- Early-stage layouts  
-- Fast performance  
-- Projects where shape is still evolving
+Best for:
+- Early-stage layouts and feasibility checks  
+- Quick iterations and high-speed previews  
+- Placeholder geometry before final detailing
 
-{/* TODO: insert Simplified Version image */}
 </TabItem>
 
 </Tabs>
+
+
+
 
 ---
 
@@ -340,6 +360,7 @@ In the Semio Grasshopper plugin, each Port is defined with three main inputs:
 
 
 ![📁 Ports](/model-port-alpha.png)
+
 ---
 
 
@@ -455,7 +476,6 @@ you plug them into the `Typ` component.
 
 
 
-
 ---
 
 </li>
@@ -466,6 +486,10 @@ you plug them into the `Typ` component.
 
 
 ## 🧬 Create Mold Versions (Variants of Type)
+
+
+![📤 sketch drawing](/sketch-drawing-variant.png)
+
 
 Now that you've created your base **Type**, it's time to generate **Variants** — based on the **unit count `n`** shown in the sketch.
 
@@ -503,7 +527,6 @@ You’ll still go through the usual modeling steps:
 ✅ Just like when modeling a Type, you define the Representation, Ports, and final Model Type — only the **Variant** changes.
 
 ---
-{/* TODO: insert Image of model Type inside the cluster. Two images one for each variant */}
 
 
 
