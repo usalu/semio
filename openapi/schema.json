@@ -2589,9 +2589,10 @@
                         "default": ""
                     },
                     "stock": {
-                        "type": "number",
+                        "type": "integer",
                         "title": "Stock",
-                        "description": "\ud83d\udce6 The number of items in stock."
+                        "description": "\ud83d\udce6 The number of items in stock. 2147483647 means infinite stock.",
+                        "default": 2147483647
                     },
                     "virtual": {
                         "type": "boolean",
@@ -2661,9 +2662,10 @@
                         "default": ""
                     },
                     "stock": {
-                        "type": "number",
+                        "type": "integer",
                         "title": "Stock",
-                        "description": "\ud83d\udce6 The number of items in stock."
+                        "description": "\ud83d\udce6 The number of items in stock. 2147483647 means infinite stock.",
+                        "default": 2147483647
                     },
                     "virtual": {
                         "type": "boolean",
@@ -2770,9 +2772,10 @@
                         "default": ""
                     },
                     "stock": {
-                        "type": "number",
+                        "type": "integer",
                         "title": "Stock",
-                        "description": "\ud83d\udce6 The number of items in stock."
+                        "description": "\ud83d\udce6 The number of items in stock. 2147483647 means infinite stock.",
+                        "default": 2147483647
                     },
                     "virtual": {
                         "type": "boolean",
@@ -2879,7 +2882,7 @@
                             }
                         ],
                         "title": "Stock",
-                        "description": "\ud83d\udce6 The number of items in stock."
+                        "description": "\ud83d\udce6 The number of items in stock. 2147483647 means infinite stock."
                     },
                     "virtual": {
                         "type": "boolean",

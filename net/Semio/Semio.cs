@@ -1412,13 +1412,13 @@ public class Author : Model<Author>
     }
 }
 
-[Model("📍", "Lo", "Loc", "A location on the earth surface (longitude, latitude).")]
+[Model("📍", "Lc", "Loc", "A location on the earth surface (longitude, latitude).")]
 public class Location : Model<Location>
 {
-    [NumberProp("↔️", "Ln", "Lon", "The longitude of the location in degrees.", PropImportance.REQUIRED)]
+    [NumberProp("↔️", "Lo", "Lon", "The longitude of the location in degrees.", PropImportance.REQUIRED)]
     public float Longitude { get; set; }
 
-    [NumberProp("↕️", "Lt", "Lat", "The latitude of the location in degrees.", PropImportance.REQUIRED)]
+    [NumberProp("↕️", "La", "Lat", "The latitude of the location in degrees.", PropImportance.REQUIRED)]
     public float Latitude { get; set; }
 }
 
@@ -1463,10 +1463,10 @@ public class Type : Model<Type>
     public string Variant { get; set; } = "";
 
     /// <summary>
-    ///     📦 The optional number of items in stock.
+    ///     📦 The optional number of items in stock. -1 means infinite stock.
     /// </summary>
-    [IntProp("📦", "St?", "Stk?", "The optional number of items in stock.", PropImportance.OPTIONAL)]
-    public float Stock { get; set; } = float.PositiveInfinity;
+    [IntProp("📦", "St?", "Stk?", "The optional number of items in stock. -1 means infinite stock.", PropImportance.OPTIONAL)]
+    public int Stock { get; set; } = -1;
 
     /// <summary>
     ///     👻 Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.
@@ -2632,7 +2632,7 @@ public class Kit : Model<Kit>
     /// <summary>
     ///     ⚖️ The optional license [ spdx id | url ] of the kit.
     /// </summary>
-    [Url("⚖️", "Ln?", "Lcn?", "The optional license [ spdx id | url ] of the kit.")]
+    [Url("⚖️", "Li?", "Lic?", "The optional license [ spdx id | url ] of the kit.")]
     public string License { get; set; } = "";
     /// <summary>
     ///     🧩 The optional types of the kit.

@@ -197,10 +197,10 @@
             "type": "string"
         },
         "stock": {
-            "default": Infinity,
-            "description": "\ud83d\udce6 The number of items in stock.",
+            "default": 2147483647,
+            "description": "\ud83d\udce6 The number of items in stock. 2147483647 means infinite stock.",
             "title": "Stock",
-            "type": "number"
+            "type": "integer"
         },
         "virtual": {
             "default": false,

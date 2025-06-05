@@ -2458,12 +2458,13 @@ class TypeVariantField(RealField, abc.ABC):
 
 
 class TypeStockField(RealField, abc.ABC):
-    """📦 The number of items in stock."""
+    """📦 The number of items in stock. 2147483647 means infinite stock."""
 
-    stock: float = sqlmodel.Field(
-        default=float("Infinity"), description="📦 The number of items in stock."
+    stock: int = sqlmodel.Field(
+        default=2147483647,
+        description="📦 The number of items in stock. 2147483647 means infinite stock.",
     )
-    """📦 The number of items in stock."""
+    """📦 The number of items in stock. 2147483647 means infinite stock."""
 
 
 class TypeVirtualField(RealField, abc.ABC):

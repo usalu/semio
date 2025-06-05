@@ -462,8 +462,8 @@ input TypeInputNode {
   """
   variant: String = ""
 
-  """📦 The number of items in stock. -1 means infinite stock."""
-  stock: Int = -1
+  """📦 The number of items in stock. 2147483647 means infinite stock."""
+  stock: Int = 2147483647
 
   """
   👻 Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.
