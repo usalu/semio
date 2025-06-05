@@ -1,0 +1,166 @@
+{
+    "floor_areas": {
+        "gross_floor_area": {
+            "net_floor_area": {
+                "usable_area": {
+                    "living_and_staying": {
+                        "living_rooms": {
+                            "living_areas": 0.0,
+                            "kitchen_areas": 0.0,
+                            "sanitary_areas": 0.0,
+                            "circulation_areas": 0.0,
+                            "outdoor_seating_areas": 0.0,
+                            "storage_areas": 0.0
+                        },
+                        "common_rooms": 0.0,
+                        "break_rooms": 0.0,
+                        "waiting_rooms": 0.0,
+                        "dining_rooms": 0.0,
+                        "detention_rooms": 0.0
+                    },
+                    "office_work": {
+                        "office_rooms": 0.0,
+                        "open_plan_offices": 0.0,
+                        "meeting_rooms": 0.0,
+                        "design_rooms": 0.0,
+                        "counter_rooms": 0.0,
+                        "control_rooms": 0.0,
+                        "supervision_rooms": 0.0,
+                        "office_technology_rooms": 0.0,
+                        "other": 0.0
+                    },
+                    "production_experiments_work": {
+                        "production_halls": 0.0,
+                        "workshops": 0.0,
+                        "technology_labs": 0.0,
+                        "physics_electrical_labs": 0.0,
+                        "chemistry_biology_labs": 0.0,
+                        "animal_husbandry_rooms": 0.0,
+                        "plant_cultivation_rooms": 0.0,
+                        "kitchens": 0.0,
+                        "special_work_rooms": 0.0
+                    },
+                    "storage_distribution_sales": {
+                        "storage_rooms": 0.0,
+                        "collection_rooms_archives": 0.0,
+                        "cold_storage_rooms": 0.0,
+                        "receiving_dispatch_rooms": 0.0,
+                        "sales_rooms": 0.0,
+                        "exhibition_rooms": 0.0,
+                        "other": 0.0
+                    },
+                    "education_culture_instruction": {
+                        "classrooms_with_fixed_seating": 0.0,
+                        "teaching_practice_rooms": 0.0,
+                        "special_classrooms": 0.0,
+                        "library_rooms": 0.0,
+                        "sports_rooms": 0.0,
+                        "assembly_rooms": 0.0,
+                        "stage_studio_rooms": 0.0,
+                        "display_rooms": 0.0,
+                        "sacred_rooms": 0.0
+                    },
+                    "healing_and_care": {
+                        "general_medical_equipment_rooms": 0.0,
+                        "special_medical_equipment_rooms": 0.0,
+                        "surgical_rooms": 0.0,
+                        "radiation_diagnostic_rooms": 0.0,
+                        "radiation_therapy_rooms": 0.0,
+                        "rehabilitation_physiotherapy": 0.0,
+                        "general_patient_rooms": 0.0,
+                        "special_patient_rooms": 0.0,
+                        "other": 0.0
+                    },
+                    "other": {
+                        "sanitary_rooms": 0.0,
+                        "cloakrooms": 0.0,
+                        "storage_rooms": 0.0,
+                        "vehicle_parking_area": 0.0,
+                        "passenger_areas": 0.0,
+                        "central_technical_rooms": 0.0,
+                        "protective_rooms": 0.0,
+                        "laundry_rooms": 0.0,
+                        "other": 0.0
+                    }
+                },
+                "technical_area": {
+                    "wastewater_gases_water_supply": 0.0,
+                    "heating_hot_water": 0.0,
+                    "ventilation_air_conditioning": 0.0,
+                    "electrical_power_supply": 0.0,
+                    "telecommunications": 0.0,
+                    "elevator_conveyor_systems": 0.0,
+                    "other": 0.0
+                },
+                "circulation_area": {
+                    "corridors_halls": 0.0,
+                    "stairs": 0.0,
+                    "shafts_for_conveyor_systems": 0.0,
+                    "vehicle_traffic_areas": 0.0,
+                    "other": 0.0
+                }
+            },
+            "construction_floor_area": {
+                "exterior_wall_construction_area": 0.0,
+                "interior_wall_construction_area": 0.0,
+                "partition_wall_area": 0.0,
+                "column_area": 0.0,
+                "shaft_area": 0.0,
+                "beam_area": 0.0,
+                "other": 0.0
+            }
+        },
+        "property_area": {
+            "built_up_area": 0.0,
+            "unbuilt_area": 0.0,
+            "outdoor_facility_area": {
+                "traffic_areas": {
+                    "sidewalks": 0.0,
+                    "driveways": 0.0,
+                    "parking_spaces": 0.0,
+                    "bicycle_parking": 0.0,
+                    "turning_areas": 0.0,
+                    "other": 0.0
+                },
+                "green_areas": {
+                    "lawn_areas": 0.0,
+                    "planted_beds": 0.0,
+                    "hedge_areas": 0.0,
+                    "tree_areas": 0.0,
+                    "roof_greening": 0.0,
+                    "facade_greening": 0.0,
+                    "other": 0.0
+                },
+                "paved_areas": {
+                    "terraces": 0.0,
+                    "balconies": 0.0,
+                    "courtyards": 0.0,
+                    "storage_utility_areas": 0.0,
+                    "playgrounds": 0.0,
+                    "other": 0.0
+                },
+                "technical_facilities": {
+                    "waste_collection_points": 0.0,
+                    "utility_lines": 0.0,
+                    "stormwater_management": 0.0,
+                    "lighting_systems": 0.0,
+                    "fences_enclosures": 0.0,
+                    "other": 0.0
+                },
+                "water_areas": {
+                    "ponds": 0.0,
+                    "fountains": 0.0,
+                    "stormwater_retention": 0.0,
+                    "other": 0.0
+                },
+                "other": 0.0
+            }
+        }
+    },
+    "room_volumes": {
+        "gross_room_volume": {
+            "net_room_volume": 0.0,
+            "construction_volume": 0.0
+        }
+    }
+}
