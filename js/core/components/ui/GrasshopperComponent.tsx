@@ -10,11 +10,8 @@ interface ParamProps {
 
 const Param: FC<ParamProps> = ({ name, nickname, description, kind }) => {
     return (
-        <div className="param">
-            <h2>{name}</h2>
-            <p>{description}</p>
+        <div className="param" title={`Name: ${name}\nDescription: ${description}\nKind: ${kind}`}>
             <p>{nickname}</p>
-            <p>Kind: {kind}</p>
         </div>
     );
 };
@@ -27,7 +24,7 @@ interface GrasshopperComponentProps {
     outputs?: ParamProps[];
 }
 
-const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ name, nickname, description, inputs, outputs }) => {
+const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs, outputs }) => {
     return (
         <div className="grasshopper-component">
             <div className="inputs">
@@ -36,7 +33,7 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ name, nickname, d
                 ))}
             </div>
             <div className="name-vertical">
-                <h1>{name}</h1>
+                <p>{nickname}</p>
             </div>
             <div className="outputs">
                 {outputs?.map((output, index) => (
