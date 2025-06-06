@@ -14,9 +14,16 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
-export const Example: Story = {
+export const ModelType: Story = {
     args: {
-        name: 'GrasshopperComponent',
-        description: 'GrasshopperComponent is a component that displays a name and a description',
+        name: 'Model Type',
+        description: 'Construct, deconstruct or modify a type.',
+    },
+};
+
+export const LinearConnections: Story = {
+    args: {
+        name: 'Linear Connections',
+        description: 'Connect two types together.',
     },
 };
