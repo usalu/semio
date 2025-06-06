@@ -1,0 +1,34 @@
+.grasshopper-component {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    height: 100%;
+}
+
+.inputs, .outputs {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+}
+
+.inputs {
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.outputs {
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.name-vertical {
+    transform: rotate(-90deg);
+    text-align: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-90deg);
+}

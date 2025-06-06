@@ -19,13 +19,63 @@ export const ModelType: Story = {
         name: 'Model Type',
         nickname: '~Typ',
         description: 'Construct, deconstruct or modify a type.',
+        inputs: [
+            {
+                name: 'Type',
+                nickname: '~Typ',
+                description: 'The type to modify.',
+                kind: 'Type',
+            },
+            {
+                name: 'Modifier',
+                nickname: '~Mod',
+                description: 'The modifier to apply to the type.',
+                kind: 'Type',
+            },
+        
+        ],  
+        outputs: [
+            {
+                name: 'Modified Type',
+                nickname: '~Typ',
+                description: 'The modified type.',
+                kind: 'Type',
+            },
+            {
+                name: 'Original Type',
+                nickname: '~Typ',
+                description: 'The original type before modification.',
+                kind: 'Type',
+            },
+            {
+                name: 'Modifier',
+                nickname: '~Mod',
+                description: 'The modifier applied to the type.',
+                kind: 'Type',
+            }            
+        ],
     },
 };
+
 
 export const LinearConnections: Story = {
     args: {
         name: 'Linear Connections',
         nickname: '---',
         description: 'Connect two types together.',
+        inputs: [
+            {
+                name: 'Type A',
+                nickname: '~A',
+                description: 'The first type to connect.',
+                kind: 'Type',
+            },
+            {
+                name: 'Type B',
+                nickname: '~B',
+                description: 'The second type to connect.',
+                kind: 'Type',
+            },
+        ],
     },
 };

@@ -1,6 +1,5 @@
-import React, { FC, useCallback, useMemo, useState, useEffect } from 'react';
-
-
+import React, { FC } from 'react';
+import './GrasshopperComponent.css';
 
 interface ParamProps {
     name: string;
@@ -9,10 +8,9 @@ interface ParamProps {
     kind: string;
 }
 
-
 const Param: FC<ParamProps> = ({ name, nickname, description, kind }) => {
     return (
-        <div>
+        <div className="param">
             <h2>{name}</h2>
             <p>{description}</p>
             <p>{nickname}</p>
@@ -20,6 +18,7 @@ const Param: FC<ParamProps> = ({ name, nickname, description, kind }) => {
         </div>
     );
 };
+
 interface GrasshopperComponentProps {
     name: string;
     nickname: string;
@@ -28,13 +27,22 @@ interface GrasshopperComponentProps {
     outputs?: ParamProps[];
 }
 
-const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ name,nickname,description,inputs,outputs }) => {
+const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ name, nickname, description, inputs, outputs }) => {
     return (
-        <div>
-            <h1>{name}</h1>
-            <p>{description}</p>
-            <p>{nickname}</p>
-
+        <div className="grasshopper-component">
+            <div className="inputs">
+                {inputs?.map((input, index) => (
+                    <Param key={index} {...input} />
+                ))}
+            </div>
+            <div className="name-vertical">
+                <h1>{name}</h1>
+            </div>
+            <div className="outputs">
+                {outputs?.map((output, index) => (
+                    <Param key={index} {...output} />
+                ))}
+            </div>
         </div>
     );
 };
