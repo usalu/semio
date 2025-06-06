@@ -281,7 +281,7 @@
         },
         "stock": {
             "default": 2147483647,
-            "description": "\ud83d\udce6 The number of items in stock. 2147483647 means infinite stock.",
+            "description": "\ud83d\udce6 The number of items in stock. 2147483647 (=2^31-1) means infinite stock.",
             "title": "Stock",
             "type": "integer"
         },
