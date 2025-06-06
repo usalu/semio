@@ -8,5 +8,10 @@
   },
   "devDependencies": {
     "@semio/logo": "*"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
   }
 }

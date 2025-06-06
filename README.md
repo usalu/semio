@@ -804,7 +804,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 > [!NOTE]
 > Try to place notes either in the beginning or the end of a section ↕️
 > A starting note should contain something important but not crucial to give the brain the right context 🧠
-> The starting sence of a note needs no symbol because every note type starts with a symbol 🥇
+> The starting sentence of a note needs no symbol because every note type starts with a symbol 🥇
 
 - Be consistent with your language ♻️
 - When things are analogical use the same sentence structure for it 🔄
@@ -841,7 +841,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
       <td align="center" valign="top" width="145px" style="border: none;"><a href="https://github.com/usalu">
         <img src="assets/contributors/usalu_round_90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
         <br />
-        <sup><b>Ueli Saluz</b></sup>
+        <sub><b>Ueli Saluz</b></sub>
         <br />
         <a href="#-semiojs-" title="🟨@semio/js"><sub>🟨<sub></a>
         <a href="#-semionet-" title="🟪@semio/net"><sub>🟪<sub></a>
@@ -869,7 +869,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
       <td align="center" valign="top" width="145px"><a href="https://github.com/kinansarak">
         <img src="assets/contributors/kinansarak_round_90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
         <br />
-        <sup><b>KinanSarak</b></sup></a>
+        <sub><b>KinanSarak</b></sub></a>
         <br />
         <a href="#-semiodocs-" title="📚@semio/docs"><sub>📚<sub></a>
         <a href="#-hello-semio-" title="👋 Hello semio"><sub>👋<sub></a>
@@ -878,14 +878,14 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
       <td align="center" valign="top" width="145px"><a href="https://github.com/EinMysterium">
         <img src="assets/contributors/EinMysterium_round_90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
         <br />
-        <sup><b>EinMysterium</b></sup></a>
+        <sub><b>EinMysterium</b></sub></a>
         <br />
         <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/drymuzzle">
         <img src="assets/contributors/drymuzzle_round_90.png" width="90px" alt="drymuzzle" style="border-radius: 50%;"/>
         <br />
-        <sup><b>drymuzzle</b></sup></a>
+        <sub><b>drymuzzle</b></sub></a>
         <br />
         <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a>
         <a href="#-semioladybug-" title="🐞ladybug"><sub>🐞<sub></a>
@@ -893,14 +893,14 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
       <td align="center" valign="top" width="145px"><a href="https://github.com/kaatzjo">
         <img src="assets/contributors/kaatzjo_round_90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
         <br />
-        <sup><b>kaatzjo</b></sup></a>
+        <sub><b>kaatzjo</b></sub></a>
         <br />
         <a href="#-semioengine-" title="⚙️@semio/engine"><sub>⚙️<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/pizzadizza">
         <img src="assets/contributors/pizzadizza_round_90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>
         <br />
-        <sup><b>pizzadizza</b></sup></a>
+        <sub><b>pizzadizza</b></sub></a>
         <br />
         <a href="#-semioassistant-" title="🤖@semio/assistant"><sub>🤖<sub></a> 
       </td>
