@@ -1463,10 +1463,10 @@ public class Type : Model<Type>
     public string Variant { get; set; } = "";
 
     /// <summary>
-    ///     📦 The optional number of items in stock. -1 means infinite stock.
+    ///     📦 The optional number of items in stock. 2147483647 (=2^31-1) means infinite stock.
     /// </summary>
-    [IntProp("📦", "St?", "Stk?", "The optional number of items in stock. -1 means infinite stock.", PropImportance.OPTIONAL)]
-    public int Stock { get; set; } = -1;
+    [IntProp("📦", "St?", "Stk?", "The optional number of items in stock. 2147483647 (=2^31-1) means infinite stock.")]
+    public int Stock { get; set; } = 2147483647;
 
     /// <summary>
     ///     👻 Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.
