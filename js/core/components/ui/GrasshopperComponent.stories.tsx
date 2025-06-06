@@ -17,6 +17,7 @@ type Story = StoryObj<typeof meta>;
 export const ModelType: Story = {
     args: {
         name: 'Model Type',
+        nickname: '~Typ',
         description: 'Construct, deconstruct or modify a type.',
     },
 };
@@ -24,6 +25,7 @@ export const ModelType: Story = {
 export const LinearConnections: Story = {
     args: {
         name: 'Linear Connections',
+        nickname: '---',
         description: 'Connect two types together.',
     },
 };
