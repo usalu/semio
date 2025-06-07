@@ -489,3 +489,4 @@ FodyWeavers.xsd
 !js/core/lib
 !.axoCover/settings.json
 !**/[Pp]ackages/build/
+!rb/lib
