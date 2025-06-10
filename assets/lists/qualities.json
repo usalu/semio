@@ -1,286 +1,324 @@
 {
-    "semio": {
-        "TYPE": "VENDOR",
-        "area": {
-            "TYPE": "TAXONOMY",
-            "UNITS": [
-                "m²",
-                "ft²"
-            ],
-            "gross": {
-                "net": {
-                    "usable": {
-                        "living-and-staying": {
-                            "living-room": {
-                                "living": "number",
-                                "kitchen": "number",
-                                "sanitary": "number",
-                                "circulation": "number",
-                                "outdoor-seating": "number",
-                                "storage": "number"
-                            },
-                            "common-room": "number",
-                            "break-room": "number",
-                            "waiting-room": "number",
-                            "dining-room": "number",
-                            "detention-room": "number"
-                        },
-                        "office-work": {
-                            "office-room": "number",
-                            "open-plan-office": "number",
-                            "meeting-room": "number",
-                            "design-room": "number",
-                            "counter-room": "number",
-                            "control-room": "number",
-                            "supervision-room": "number",
-                            "office-technology-room": "number",
-                            "other": "number"
-                        },
-                        "production-experiments-work": {
-                            "production-hall": "number",
-                            "workshop": "number",
-                            "technology-lab": "number",
-                            "physics-electrical-lab": "number",
-                            "chemistry-biology-lab": "number",
-                            "animal-husbandry-room": "number",
-                            "plant-cultivation-room": "number",
-                            "kitchen": "number",
-                            "special-work-room": "number"
-                        },
-                        "storage-distribution-sales": {
-                            "storage-room": "number",
-                            "collection-archive": "number",
-                            "cold-storage-room": "number",
-                            "receiving-dispatch-room": "number",
-                            "sales-room": "number",
-                            "exhibition-room": "number",
-                            "other": "number"
-                        },
-                        "education-culture-instruction": {
-                            "classwith-fixed-seating": "number",
-                            "teaching-practice-room": "number",
-                            "special-classroom": "number",
-                            "library-room": "number",
-                            "sports-room": "number",
-                            "assembly-room": "number",
-                            "stage-studio-room": "number",
-                            "display-room": "number",
-                            "sacred-room": "number"
-                        },
-                        "healing-and-care": {
-                            "general-medical-equipment-room": "number",
-                            "special-medical-equipment-room": "number",
-                            "surgical-room": "number",
-                            "radiation-diagnostic-room": "number",
-                            "radiation-therapy-room": "number",
-                            "rehabilitation-physiotherapy": "number",
-                            "general-patient-room": "number",
-                            "special-patient-room": "number",
-                            "other": "number"
-                        },
-                        "other": {
-                            "sanitary-room": "number",
-                            "cloakroom": "number",
-                            "storage-room": "number",
-                            "vehicle-parking": "number",
-                            "passenger": "number",
-                            "central-technical-room": "number",
-                            "protective-room": "number",
-                            "laundry-room": "number",
-                            "other": "number"
-                        }
-                    },
-                    "technical": {
-                        "wastewater-gases-water-supply": "number",
-                        "heating-hot-water": "number",
-                        "ventilation-air-conditioning": "number",
-                        "electrical-power-supply": "number",
-                        "telecommunications": "number",
-                        "elevator-conveyor-systems": "number",
-                        "other": "number"
-                    },
-                    "circulation": {
-                        "corridor-hall": "number",
-                        "stair": "number",
-                        "shaft-for-conveyor-system": "number",
-                        "vehicle-traffic": "number",
-                        "other": "number"
-                    }
-                },
-                "construction": {
-                    "exterior-wall-construction": "number",
-                    "interior-wall-construction": "number",
-                    "partition-wall": "number",
-                    "column": "number",
-                    "shaft": "number",
-                    "beam": "number",
-                    "other": "number"
-                }
+  "semio": {
+    "TYPE": "VENDOR",
+    "area": {
+      "TYPE": "TAXONOMY",
+      "UNITS": ["m²", "ft²"],
+      "gross": {
+        "net": {
+          "usable": {
+            "living-and-staying": {
+              "living-room": {
+                "living": "number",
+                "kitchen": "number",
+                "sanitary": "number",
+                "circulation": "number",
+                "outdoor-seating": "number",
+                "storage": "number"
+              },
+              "common-room": "number",
+              "break-room": "number",
+              "waiting-room": "number",
+              "dining-room": "number",
+              "detention-room": "number"
             },
-            "property": {
-                "built-up": "number",
-                "unbuilt": "number",
-                "outdoor-facility": {
-                    "traffic": {
-                        "sidewalk": "number",
-                        "driveway": "number",
-                        "parking-space": "number",
-                        "bicycle-parking": "number",
-                        "turning": "number",
-                        "other": "number"
-                    },
-                    "green": {
-                        "lawn": "number",
-                        "planted-bed": "number",
-                        "hedge": "number",
-                        "tree": "number",
-                        "roof-greening": "number",
-                        "facade-greening": "number",
-                        "other": "number"
-                    },
-                    "paved": {
-                        "terrace": "number",
-                        "balcony": "number",
-                        "courtyard": "number",
-                        "storage-utility": "number",
-                        "playground": "number",
-                        "other": "number"
-                    },
-                    "technical-facility": {
-                        "waste-collection-point": "number",
-                        "utility-line": "number",
-                        "stormwater-management": "number",
-                        "lighting-system": "number",
-                        "fence-enclosure": "number",
-                        "other": "number"
-                    },
-                    "water": {
-                        "pond": "number",
-                        "fountain": "number",
-                        "stormwater-retention": "number",
-                        "other": "number"
-                    },
-                    "other": "number"
-                }
-            }
-        },
-        "volume": {
-            "TYPE": "TAXONOMY",
-            "UNITS": [
-                "m³",
-                "ft³"
-            ],
-            "gross-volume": {
-                "net-volume": "number",
-                "construction-volume": "number"
-            }
-        },
-        "people": {
-            "TYPE": "TAXONOMY",
-            "UNITS": [
-                "count"
-            ],
-            "stationary": {
-                "living": {
-                    "residents": "number",
-                    "guests": "number"
-                },
-                "working": {
-                    "office": "number",
-                    "production": "number",
-                    "service": "number",
-                    "education": "number",
-                    "healthcare": "number",
-                    "other": "number"
-                },
-                "students": {
-                    "pupils": "number",
-                    "students": "number"
-                },
-                "client": {
-                    "customers": "number",
-                    "visitors": "number",
-                    "patients": "number"
-                }
+            "office-work": {
+              "office-room": "number",
+              "open-plan-office": "number",
+              "meeting-room": "number",
+              "design-room": "number",
+              "counter-room": "number",
+              "control-room": "number",
+              "supervision-room": "number",
+              "office-technology-room": "number",
+              "other": "number"
             },
-            "mobile": {
-                "visitors": {
-                    "customers": "number",
-                    "guests": "number",
-                    "tourists": "number"
-                },
-                "employees": {
-                    "mobile-workers": "number",
-                    "delivery-personnel": "number"
-                },
-                "students": {
-                    "commuters": "number",
-                    "exchange-students": "number"
-                }
-            }
-        },
-        "energy": {
-            "TYPE": "CLASSIFICATION",
-            "primary demand": {
-                "TYPE": "TAXONOMY",
-                "UNITS": [
-                    "kWh/m²a"
-                ],
-                "primary heating": {
-                    "final heating": {
-                        "final ventilation":{
-                            "ventilation" :"number"
-                        }
-                }
-                },
-                "cooling": "number",
-                "lighting": "number",
-                "ventilation": "number",
-                "hot-water": "number",
-                "other": "number"
+            "production-experiments-work": {
+              "production-hall": "number",
+              "workshop": "number",
+              "technology-lab": "number",
+              "physics-electrical-lab": "number",
+              "chemistry-biology-lab": "number",
+              "animal-husbandry-room": "number",
+              "plant-cultivation-room": "number",
+              "kitchen": "number",
+              "special-work-room": "number"
             },
-            "load": {
-                "TYPE": "CLASSIFICATION",
-                "heating": {
-                    "TYPE": "TAXONOMY"
-                },
-                "cooling": {
-                    "TYPE": "TAXONOMY"
-                },
-                "lighting": {
-                    "TYPE": "TAXONOMY"
-                },
-                "ventilation": {
-                    "TYPE": "TAXONOMY"
-                },
-                "hot-water": {
-                    "TYPE": "TAXONOMY"
-                }
-            }
-        },
-        "global-warming-potential": {
-            "TYPE": "TAXONOMY",
-            "UNITS": [
-                "tCO₂e",
-                "MtCO₂e"
-            ],
-            "embodied": {
-                "construction": "number",
-                "technical-equipment": "number"
+            "storage-distribution-sales": {
+              "storage-room": "number",
+              "collection-archive": "number",
+              "cold-storage-room": "number",
+              "receiving-dispatch-room": "number",
+              "sales-room": "number",
+              "exhibition-room": "number",
+              "other": "number"
             },
-            "operational": {
-                "heating": "number",
-                "cooling": "number",
-                "lighting": "number",
-                "ventilation": "number",
-                "hot-water": "number",
-                "other": "number"
+            "education-culture-instruction": {
+              "classwith-fixed-seating": "number",
+              "teaching-practice-room": "number",
+              "special-classroom": "number",
+              "library-room": "number",
+              "sports-room": "number",
+              "assembly-room": "number",
+              "stage-studio-room": "number",
+              "display-room": "number",
+              "sacred-room": "number"
+            },
+            "healing-and-care": {
+              "general-medical-equipment-room": "number",
+              "special-medical-equipment-room": "number",
+              "surgical-room": "number",
+              "radiation-diagnostic-room": "number",
+              "radiation-therapy-room": "number",
+              "rehabilitation-physiotherapy": "number",
+              "general-patient-room": "number",
+              "special-patient-room": "number",
+              "other": "number"
+            },
+            "other": {
+              "sanitary-room": "number",
+              "cloakroom": "number",
+              "storage-room": "number",
+              "vehicle-parking": "number",
+              "passenger": "number",
+              "central-technical-room": "number",
+              "protective-room": "number",
+              "laundry-room": "number",
+              "other": "number"
             }
+          },
+          "technical": {
+            "wastewater-gases-water-supply": "number",
+            "heating-hot-water": "number",
+            "ventilation-air-conditioning": "number",
+            "electrical-power-supply": "number",
+            "telecommunications": "number",
+            "elevator-conveyor-systems": "number",
+            "other": "number"
+          },
+          "circulation": {
+            "corridor-hall": "number",
+            "stair": "number",
+            "shaft-for-conveyor-system": "number",
+            "vehicle-traffic": "number",
+            "other": "number"
+          }
+        },
+        "construction": {
+          "exterior-wall-construction": "number",
+          "interior-wall-construction": "number",
+          "partition-wall": "number",
+          "column": "number",
+          "shaft": "number",
+          "beam": "number",
+          "other": "number"
         }
+      },
+      "property": {
+        "built-up": "number",
+        "unbuilt": "number",
+        "outdoor-facility": {
+          "traffic": {
+            "sidewalk": "number",
+            "driveway": "number",
+            "parking-space": "number",
+            "bicycle-parking": "number",
+            "turning": "number",
+            "other": "number"
+          },
+          "green": {
+            "lawn": "number",
+            "planted-bed": "number",
+            "hedge": "number",
+            "tree": "number",
+            "roof-greening": "number",
+            "facade-greening": "number",
+            "other": "number"
+          },
+          "paved": {
+            "terrace": "number",
+            "balcony": "number",
+            "courtyard": "number",
+            "storage-utility": "number",
+            "playground": "number",
+            "other": "number"
+          },
+          "technical-facility": {
+            "waste-collection-point": "number",
+            "utility-line": "number",
+            "stormwater-management": "number",
+            "lighting-system": "number",
+            "fence-enclosure": "number",
+            "other": "number"
+          },
+          "water": {
+            "pond": "number",
+            "fountain": "number",
+            "stormwater-retention": "number",
+            "other": "number"
+          },
+          "other": "number"
+        }
+      }
     },
-    "wasp": {
-        "connection": {
-            "rotation": "number"
+    "volume": {
+      "TYPE": "TAXONOMY",
+      "UNITS": ["m³", "ft³"],
+      "gross-volume": {
+        "net-volume": "number",
+        "construction-volume": "number"
+      }
+    },
+    "people": {
+      "TYPE": "TAXONOMY",
+      "UNITS": ["count"],
+      "stationary": {
+        "living": {
+          "residents": "number",
+          "guests": "number"
+        },
+        "working": {
+          "office": "number",
+          "production": "number",
+          "service": "number",
+          "education": "number",
+          "healthcare": "number",
+          "other": "number"
+        },
+        "students": {
+          "pupils": "number",
+          "students": "number"
+        },
+        "client": {
+          "customers": "number",
+          "visitors": "number",
+          "patients": "number"
         }
+      },
+      "mobile": {
+        "visitors": {
+          "customers": "number",
+          "guests": "number",
+          "tourists": "number"
+        },
+        "employees": {
+          "mobile-workers": "number",
+          "delivery-personnel": "number"
+        },
+        "students": {
+          "commuters": "number",
+          "exchange-students": "number"
+        }
+      }
+    },
+    "energy": {
+      "TYPE": "CLASSIFICATION",
+      "primary demand": {
+        "TYPE": "TAXONOMY",
+        "UNITS": ["kWh/m²a"],
+        "NAME": "primary energy demand",
+        "primary heating": {
+          "NAME": "primary heating energy demand",
+          "final": {
+            "NAME": "final heating energy demand",
+            "FACTOR": "primary heating energy factor",
+            "heating": {
+              "NAME": "heating energy demand",
+              "FACTOR": "heating effeciency factor",
+              "transmission": {
+                "NAME": "transmission heat loss"
+              },
+              "final ventilation": {
+                "NAME": "final ventilation heat loss",
+                "ventialtion": {
+                  "NAME": "ventilation heat loss",
+                  "FACTOR": "1-ventilation heat recovery factor"
+                }
+              }
+            }
+          }
+        },
+        "primary cooling": {
+          "NAME": "primary cooling energy demand",
+          "final": {
+            "NAME": "final cooling energy demand",
+            "FACTOR": "primary cooling energy factor",
+            "cooling energy": {
+              "NAME": "cooling energy demand",
+              "FACTOR": "cooling efficiency factor"
+            }
+          }
+        },
+        "primary electricity": {
+          "NAME": "primary electricity energy demand",
+          "electricity": {
+            "NAME": "electricity energy demand",
+            "FACTOR": "electricity primary energy factor",
+            "technical equipment": {
+              "NAME": "technical equipment energy demand"
+            }
+          }
+        }
+      },
+      "load": {
+        "TYPE": "CLASSIFICATION",
+        "heating": {
+          "TYPE": "TAXONOMY"
+        },
+        "cooling": {
+          "TYPE": "TAXONOMY"
+        },
+        "lighting": {
+          "TYPE": "TAXONOMY"
+        },
+        "ventilation": {
+          "TYPE": "TAXONOMY"
+        },
+        "hot-water": {
+          "TYPE": "TAXONOMY"
+        }
+      }
+    },
+    "global-warming-potential": {
+      "TYPE": "TAXONOMY",
+      "UNITS": ["tCO₂e", "MtCO₂e"],
+      "embodied": {
+        "construction": "number",
+        "technical-equipment": "number"
+      },
+      "operational": {
+        "heating": "number",
+        "cooling": "number",
+        "lighting": "number",
+        "ventilation": "number",
+        "hot-water": "number",
+        "other": "number"
+      }
+    },
+    "costs": {
+      "TYPE": "CLASSIFICATION",
+      "investment": {
+        "TYPE": "TAXONOMY",
+        "UNITS": ["currency"],
+        "construction": "number",
+        "technical-equipment": "number",
+        "other": "number"
+      },
+      "operating": {
+        "TYPE": "TAXONOMY",
+        "UNITS": ["currency/a"],
+        "maintenance": "number",
+        "energy": "number",
+        "water-and-wastewater": "number",
+        "cleaning": "number",
+        "insurance": "number",
+        "other": "number"
+      }
     }
+  },
+  "wasp": {
+    "connection": {
+      "rotation": "number"
+    }
+  }
 }
