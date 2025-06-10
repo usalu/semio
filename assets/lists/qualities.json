@@ -221,12 +221,18 @@
         },
         "energy": {
             "TYPE": "CLASSIFICATION",
-            "demand": {
+            "primary demand": {
                 "TYPE": "TAXONOMY",
                 "UNITS": [
                     "kWh/m²a"
                 ],
-                "heating": "number",
+                "primary heating": {
+                    "final heating": {
+                        "final ventilation":{
+                            "ventilation" :"number"
+                        }
+                }
+                },
                 "cooling": "number",
                 "lighting": "number",
                 "ventilation": "number",
