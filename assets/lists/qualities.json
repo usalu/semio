@@ -4,292 +4,292 @@
     "area": {
       "TYPE": "TAXONOMY",
       "UNITS": ["m²", "ft²"],
-      "NAME": "Area",
+      "NAME": "Floor Area",
       "gross": {
-        "NAME": "Gross Area",
+        "NAME": "Gross Floor Area",
         "net": {
-          "NAME": "Net Area",
+          "NAME": "Net Floor Area",
           "usable": {
-            "NAME": "Usable Area",
+            "NAME": "Usable Floor Area",
             "living-and-staying": {
-              "NAME": "Living and Staying Area",
+              "NAME": "Living And Staying Floor Area",
               "living-room": {
-                "NAME": "Living Room Area",
+                "NAME": "Living Room Floor Area",
                 "living": {
-                  "NAME": "Living Area"
+                  "NAME": "Living Floor Area"
                 },
                 "kitchen": {
-                  "NAME": "Kitchen Area"
+                  "NAME": "Kitchen Floor Area"
                 },
                 "sanitary": {
-                  "NAME": "Sanitary Area"
+                  "NAME": "Sanitary Floor Area"
                 },
                 "circulation": {
-                  "NAME": "Circulation Area"
+                  "NAME": "Circulation Floor Area"
                 },
                 "outdoor-seating": {
-                  "NAME": "Outdoor Seating Area"
+                  "NAME": "Outdoor Seating Floor Area"
                 },
                 "storage": {
-                  "NAME": "Storage Area"
+                  "NAME": "Storage Floor Area"
                 }
               },
               "common-room": {
-                "NAME": "Common Room Area"
+                "NAME": "Common Room Floor Area"
               },
               "break-room": {
-                "NAME": "Break Room Area"
+                "NAME": "Break Room Floor Area"
               },
               "waiting-room": {
-                "NAME": "Waiting Room Area"
+                "NAME": "Waiting Room Floor Area"
               },
               "dining-room": {
-                "NAME": "Dining Room Area"
+                "NAME": "Dining Room Floor Area"
               },
               "detention-room": {
-                "NAME": "Detention Room Area"
+                "NAME": "Detention Room Floor Area"
               }
             },
             "office-work": {
-              "NAME": "Office Work Area",
+              "NAME": "Office Work Floor Area",
               "office-room": {
-                "NAME": "Office Room Area"
+                "NAME": "Office Room Floor Area"
               },
               "open-plan-office": {
-                "NAME": "Open Plan Office Area"
+                "NAME": "Open Plan Office Floor Area"
               },
               "meeting-room": {
-                "NAME": "Meeting Room Area"
+                "NAME": "Meeting Room Floor Area"
               },
               "design-room": {
-                "NAME": "Design Room Area"
+                "NAME": "Design Room Floor Area"
               },
               "counter-room": {
-                "NAME": "Counter Room Area"
+                "NAME": "Counter Room Floor Area"
               },
               "control-room": {
-                "NAME": "Control Room Area"
+                "NAME": "Control Room Floor Area"
               },
               "supervision-room": {
-                "NAME": "Supervision Room Area"
+                "NAME": "Supervision Room Floor Area"
               },
               "office-technology-room": {
-                "NAME": "Office Technology Room Area"
+                "NAME": "Office Technology Room Floor Area"
               },
               "other": {
-                "NAME": "Other Office Work Area"
+                "NAME": "Other Office Work Floor Area"
               }
             },
             "production-experiments-work": {
-              "NAME": "Production Experiments Work Area",
+              "NAME": "Production Experiments Work Floor Area",
               "production-hall": {
-                "NAME": "Production Hall Area"
+                "NAME": "Production Hall Floor Area"
               },
               "workshop": {
-                "NAME": "Workshop Area"
+                "NAME": "Workshop Floor Area"
               },
               "technology-lab": {
-                "NAME": "Technology Lab Area"
+                "NAME": "Technology Lab Floor Area"
               },
               "physics-electrical-lab": {
-                "NAME": "Physics Electrical Lab Area"
+                "NAME": "Physics Electrical Lab Floor Area"
               },
               "chemistry-biology-lab": {
-                "NAME": "Chemistry Biology Lab Area"
+                "NAME": "Chemistry Biology Lab Floor Area"
               },
               "animal-husbandry-room": {
-                "NAME": "Animal Husbandry Room Area"
+                "NAME": "Animal Husbandry Room Floor Area"
               },
               "plant-cultivation-room": {
-                "NAME": "Plant Cultivation Room Area"
+                "NAME": "Plant Cultivation Room Floor Area"
               },
               "kitchen": {
-                "NAME": "Kitchen Area"
+                "NAME": "Kitchen Floor Area"
               },
               "special-work-room": {
-                "NAME": "Special Work Room Area"
+                "NAME": "Special Work Room Floor Area"
               }
             },
             "storage-distribution-sales": {
-              "NAME": "Storage Distribution Sales Area",
+              "NAME": "Storage Distribution Sales Floor Area",
               "storage-room": {
-                "NAME": "Storage Room Area"
+                "NAME": "Storage Room Floor Area"
               },
               "collection-archive": {
-                "NAME": "Collection Archive Area"
+                "NAME": "Collection Archive Floor Area"
               },
               "cold-storage-room": {
-                "NAME": "Cold Storage Room Area"
+                "NAME": "Cold Storage Room Floor Area"
               },
               "receiving-dispatch-room": {
-                "NAME": "Receiving Dispatch Room Area"
+                "NAME": "Receiving Dispatch Room Floor Area"
               },
               "sales-room": {
-                "NAME": "Sales Room Area"
+                "NAME": "Sales Room Floor Area"
               },
               "exhibition-room": {
-                "NAME": "Exhibition Room Area"
+                "NAME": "Exhibition Room Floor Area"
               },
               "other": {
-                "NAME": "Other Storage Distribution Sales Area"
+                "NAME": "Other Storage Distribution Sales Floor Area"
               }
             },
             "education-culture-instruction": {
-              "NAME": "Education Culture Instruction Area",
+              "NAME": "Education Culture Instruction Floor Area",
               "classwith-fixed-seating": {
-                "NAME": "Class with Fixed Seating Area"
+                "NAME": "Class With Fixed Seating Floor Area"
               },
               "teaching-practice-room": {
-                "NAME": "Teaching Practice Room Area"
+                "NAME": "Teaching Practice Room Floor Area"
               },
               "special-classroom": {
-                "NAME": "Special Classroom Area"
+                "NAME": "Special Classroom Floor Area"
               },
               "library-room": {
-                "NAME": "Library Room Area"
+                "NAME": "Library Room Floor Area"
               },
               "sports-room": {
-                "NAME": "Sports Room Area"
+                "NAME": "Sports Room Floor Area"
               },
               "assembly-room": {
-                "NAME": "Assembly Room Area"
+                "NAME": "Assembly Room Floor Area"
               },
               "stage-studio-room": {
-                "NAME": "Stage Studio Room Area"
+                "NAME": "Stage Studio Room Floor Area"
               },
               "display-room": {
-                "NAME": "Display Room Area"
+                "NAME": "Display Room Floor Area"
               },
               "sacred-room": {
-                "NAME": "Sacred Room Area"
+                "NAME": "Sacred Room Floor Area"
               }
             },
             "healing-and-care": {
-              "NAME": "Healing and Care Area",
+              "NAME": "Healing And Care Floor Area",
               "general-medical-equipment-room": {
-                "NAME": "General Medical Equipment Room Area"
+                "NAME": "General Medical Equipment Room Floor Area"
               },
               "special-medical-equipment-room": {
-                "NAME": "Special Medical Equipment Room Area"
+                "NAME": "Special Medical Equipment Room Floor Area"
               },
               "surgical-room": {
-                "NAME": "Surgical Room Area"
+                "NAME": "Surgical Room Floor Area"
               },
               "radiation-diagnostic-room": {
-                "NAME": "Radiation Diagnostic Room Area"
+                "NAME": "Radiation Diagnostic Room Floor Area"
               },
               "radiation-therapy-room": {
-                "NAME": "Radiation Therapy Room Area"
+                "NAME": "Radiation Therapy Room Floor Area"
               },
               "rehabilitation-physiotherapy": {
-                "NAME": "Rehabilitation Physiotherapy Area"
+                "NAME": "Rehabilitation Physiotherapy Floor Area"
               },
               "general-patient-room": {
-                "NAME": "General Patient Room Area"
+                "NAME": "General Patient Room Floor Area"
               },
               "special-patient-room": {
-                "NAME": "Special Patient Room Area"
+                "NAME": "Special Patient Room Floor Area"
               },
               "other": {
-                "NAME": "Other Healing and Care Area"
+                "NAME": "Other Healing And Care Floor Area"
               }
             },
             "other": {
-              "NAME": "Other Usable Area",
+              "NAME": "Other Usable Floor Area",
               "sanitary-room": {
-                "NAME": "Sanitary Room Area"
+                "NAME": "Sanitary Room Floor Area"
               },
               "cloakroom": {
-                "NAME": "Cloakroom Area"
+                "NAME": "Cloakroom Floor Area"
               },
               "storage-room": {
-                "NAME": "Storage Room Area"
+                "NAME": "Storage Room Floor Area"
               },
               "vehicle-parking": {
-                "NAME": "Vehicle Parking Area"
+                "NAME": "Vehicle Parking Floor Area"
               },
               "passenger": {
-                "NAME": "Passenger Area"
+                "NAME": "Passenger Floor Area"
               },
               "central-technical-room": {
-                "NAME": "Central Technical Room Area"
+                "NAME": "Central Technical Room Floor Area"
               },
               "protective-room": {
-                "NAME": "Protective Room Area"
+                "NAME": "Protective Room Floor Area"
               },
               "laundry-room": {
-                "NAME": "Laundry Room Area"
+                "NAME": "Laundry Room Floor Area"
               },
               "other": {
-                "NAME": "Other Area"
+                "NAME": "Other Floor Area"
               }
             }
           },
           "technical": {
-            "NAME": "Technical Area",
+            "NAME": "Technical Floor Area",
             "wastewater-gases-water-supply": {
-              "NAME": "Wastewater Gases Water Supply Area"
+              "NAME": "Wastewater Gases Water Supply Floor Area"
             },
             "heating-hot-water": {
-              "NAME": "Heating Hot Water Area"
+              "NAME": "Heating Hot Water Floor Area"
             },
             "ventilation-air-conditioning": {
-              "NAME": "Ventilation Air Conditioning Area"
+              "NAME": "Ventilation Air Conditioning Floor Area"
             },
             "electrical-power-supply": {
-              "NAME": "Electrical Power Supply Area"
+              "NAME": "Electrical Power Supply Floor Area"
             },
             "telecommunications": {
-              "NAME": "Telecommunications Area"
+              "NAME": "Telecommunications Floor Area"
             },
             "elevator-conveyor-systems": {
-              "NAME": "Elevator Conveyor Systems Area"
+              "NAME": "Elevator Conveyor Systems Floor Area"
             },
             "other": {
-              "NAME": "Other Technical Area"
+              "NAME": "Other Technical Floor Area"
             }
           },
           "circulation": {
-            "NAME": "Circulation Area",
+            "NAME": "Circulation Floor Area",
             "corridor-hall": {
-              "NAME": "Corridor Hall Area"
+              "NAME": "Corridor Hall Floor Area"
             },
             "stair": {
-              "NAME": "Stair Area"
+              "NAME": "Stair Floor Area"
             },
             "shaft-for-conveyor-system": {
-              "NAME": "Shaft for Conveyor System Area"
+              "NAME": "Shaft For Conveyor System Floor Area"
             },
             "vehicle-traffic": {
-              "NAME": "Vehicle Traffic Area"
+              "NAME": "Vehicle Traffic Floor Area"
             },
             "other": {
-              "NAME": "Other Circulation Area"
+              "NAME": "Other Circulation Floor Area"
             }
           }
         },
         "construction": {
-          "NAME": "Construction Area",
+          "NAME": "Construction Floor Area",
           "exterior-wall-construction": {
-            "NAME": "Exterior Wall Construction Area"
+            "NAME": "Exterior Wall Construction Floor Area"
           },
           "interior-wall-construction": {
-            "NAME": "Interior Wall Construction Area"
+            "NAME": "Interior Wall Construction Floor Area"
           },
           "partition-wall": {
-            "NAME": "Partition Wall Area"
+            "NAME": "Partition Wall Floor Area"
           },
           "column": {
-            "NAME": "Column Area"
+            "NAME": "Column Floor Area"
           },
           "shaft": {
-            "NAME": "Shaft Area"
+            "NAME": "Shaft Floor Area"
           },
           "beam": {
-            "NAME": "Beam Area"
+            "NAME": "Beam Floor Area"
           },
           "other": {
-            "NAME": "Other Construction Area"
+            "NAME": "Other Construction Floor Area"
           }
         }
       },
@@ -466,46 +466,46 @@
       "primary demand": {
         "TYPE": "TAXONOMY",
         "UNITS": ["kWh/m²a"],
-        "NAME": "primary energy demand",
+        "NAME": "Primary Energy Demand",
         "primary heating": {
-          "NAME": "primary heating energy demand",
+          "NAME": "Primary Heating Energy Demand",
           "final": {
-            "NAME": "final heating energy demand",
-            "FACTOR": "primary heating energy factor",
+            "NAME": "Final Heating Energy Demand",
+            "FACTOR": "Primary Heating Energy Factor",
             "heating": {
-              "NAME": "heating energy demand",
-              "FACTOR": "heating effeciency factor",
+              "NAME": "Heating Energy Demand",
+              "FACTOR": "Heating Effeciency Factor",
               "transmission": {
-                "NAME": "transmission heat loss"
+                "NAME": "Transmission Heat Loss"
               },
               "final ventilation": {
-                "NAME": "final ventilation heat loss",
+                "NAME": "Final Ventilation Heat Loss",
                 "ventialtion": {
-                  "NAME": "ventilation heat loss",
-                  "FACTOR": "1-ventilation heat recovery factor"
+                  "NAME": "Ventilation Heat Loss",
+                  "FACTOR": "1-Ventilation Heat Recovery Factor"
                 }
               }
             }
           }
         },
         "primary cooling": {
-          "NAME": "primary cooling energy demand",
+          "NAME": "Primary Cooling Energy Demand",
           "final": {
-            "NAME": "final cooling energy demand",
-            "FACTOR": "primary cooling energy factor",
+            "NAME": "Final Cooling Energy Demand",
+            "FACTOR": "Primary Cooling Energy Factor",
             "cooling energy": {
-              "NAME": "cooling energy demand",
-              "FACTOR": "cooling efficiency factor"
+              "NAME": "Cooling Energy Demand",
+              "FACTOR": "Cooling Efficiency Factor"
             }
           }
         },
         "primary electricity": {
-          "NAME": "primary electricity energy demand",
+          "NAME": "Primary Electricity Energy Demand",
           "electricity": {
-            "NAME": "electricity energy demand",
-            "FACTOR": "electricity primary energy factor",
+            "NAME": "Electricity Energy Demand",
+            "FACTOR": "Electricity Primary Energy Factor",
             "technical equipment": {
-              "NAME": "technical equipment energy demand"
+              "NAME": "Technical Equipment Energy Demand"
             }
           }
         }
