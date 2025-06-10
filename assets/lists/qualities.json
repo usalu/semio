@@ -4,160 +4,410 @@
     "area": {
       "TYPE": "TAXONOMY",
       "UNITS": ["m²", "ft²"],
+      "NAME": "Area",
       "gross": {
+        "NAME": "Gross Area",
         "net": {
+          "NAME": "Net Area",
           "usable": {
+            "NAME": "Usable Area",
             "living-and-staying": {
+              "NAME": "Living and Staying Area",
               "living-room": {
-                "living": "number",
-                "kitchen": "number",
-                "sanitary": "number",
-                "circulation": "number",
-                "outdoor-seating": "number",
-                "storage": "number"
+                "NAME": "Living Room Area",
+                "living": {
+                  "NAME": "Living Area"
+                },
+                "kitchen": {
+                  "NAME": "Kitchen Area"
+                },
+                "sanitary": {
+                  "NAME": "Sanitary Area"
+                },
+                "circulation": {
+                  "NAME": "Circulation Area"
+                },
+                "outdoor-seating": {
+                  "NAME": "Outdoor Seating Area"
+                },
+                "storage": {
+                  "NAME": "Storage Area"
+                }
               },
-              "common-room": "number",
-              "break-room": "number",
-              "waiting-room": "number",
-              "dining-room": "number",
-              "detention-room": "number"
+              "common-room": {
+                "NAME": "Common Room Area"
+              },
+              "break-room": {
+                "NAME": "Break Room Area"
+              },
+              "waiting-room": {
+                "NAME": "Waiting Room Area"
+              },
+              "dining-room": {
+                "NAME": "Dining Room Area"
+              },
+              "detention-room": {
+                "NAME": "Detention Room Area"
+              }
             },
             "office-work": {
-              "office-room": "number",
-              "open-plan-office": "number",
-              "meeting-room": "number",
-              "design-room": "number",
-              "counter-room": "number",
-              "control-room": "number",
-              "supervision-room": "number",
-              "office-technology-room": "number",
-              "other": "number"
+              "NAME": "Office Work Area",
+              "office-room": {
+                "NAME": "Office Room Area"
+              },
+              "open-plan-office": {
+                "NAME": "Open Plan Office Area"
+              },
+              "meeting-room": {
+                "NAME": "Meeting Room Area"
+              },
+              "design-room": {
+                "NAME": "Design Room Area"
+              },
+              "counter-room": {
+                "NAME": "Counter Room Area"
+              },
+              "control-room": {
+                "NAME": "Control Room Area"
+              },
+              "supervision-room": {
+                "NAME": "Supervision Room Area"
+              },
+              "office-technology-room": {
+                "NAME": "Office Technology Room Area"
+              },
+              "other": {
+                "NAME": "Other Office Work Area"
+              }
             },
             "production-experiments-work": {
-              "production-hall": "number",
-              "workshop": "number",
-              "technology-lab": "number",
-              "physics-electrical-lab": "number",
-              "chemistry-biology-lab": "number",
-              "animal-husbandry-room": "number",
-              "plant-cultivation-room": "number",
-              "kitchen": "number",
-              "special-work-room": "number"
+              "NAME": "Production Experiments Work Area",
+              "production-hall": {
+                "NAME": "Production Hall Area"
+              },
+              "workshop": {
+                "NAME": "Workshop Area"
+              },
+              "technology-lab": {
+                "NAME": "Technology Lab Area"
+              },
+              "physics-electrical-lab": {
+                "NAME": "Physics Electrical Lab Area"
+              },
+              "chemistry-biology-lab": {
+                "NAME": "Chemistry Biology Lab Area"
+              },
+              "animal-husbandry-room": {
+                "NAME": "Animal Husbandry Room Area"
+              },
+              "plant-cultivation-room": {
+                "NAME": "Plant Cultivation Room Area"
+              },
+              "kitchen": {
+                "NAME": "Kitchen Area"
+              },
+              "special-work-room": {
+                "NAME": "Special Work Room Area"
+              }
             },
             "storage-distribution-sales": {
-              "storage-room": "number",
-              "collection-archive": "number",
-              "cold-storage-room": "number",
-              "receiving-dispatch-room": "number",
-              "sales-room": "number",
-              "exhibition-room": "number",
-              "other": "number"
+              "NAME": "Storage Distribution Sales Area",
+              "storage-room": {
+                "NAME": "Storage Room Area"
+              },
+              "collection-archive": {
+                "NAME": "Collection Archive Area"
+              },
+              "cold-storage-room": {
+                "NAME": "Cold Storage Room Area"
+              },
+              "receiving-dispatch-room": {
+                "NAME": "Receiving Dispatch Room Area"
+              },
+              "sales-room": {
+                "NAME": "Sales Room Area"
+              },
+              "exhibition-room": {
+                "NAME": "Exhibition Room Area"
+              },
+              "other": {
+                "NAME": "Other Storage Distribution Sales Area"
+              }
             },
             "education-culture-instruction": {
-              "classwith-fixed-seating": "number",
-              "teaching-practice-room": "number",
-              "special-classroom": "number",
-              "library-room": "number",
-              "sports-room": "number",
-              "assembly-room": "number",
-              "stage-studio-room": "number",
-              "display-room": "number",
-              "sacred-room": "number"
+              "NAME": "Education Culture Instruction Area",
+              "classwith-fixed-seating": {
+                "NAME": "Class with Fixed Seating Area"
+              },
+              "teaching-practice-room": {
+                "NAME": "Teaching Practice Room Area"
+              },
+              "special-classroom": {
+                "NAME": "Special Classroom Area"
+              },
+              "library-room": {
+                "NAME": "Library Room Area"
+              },
+              "sports-room": {
+                "NAME": "Sports Room Area"
+              },
+              "assembly-room": {
+                "NAME": "Assembly Room Area"
+              },
+              "stage-studio-room": {
+                "NAME": "Stage Studio Room Area"
+              },
+              "display-room": {
+                "NAME": "Display Room Area"
+              },
+              "sacred-room": {
+                "NAME": "Sacred Room Area"
+              }
             },
             "healing-and-care": {
-              "general-medical-equipment-room": "number",
-              "special-medical-equipment-room": "number",
-              "surgical-room": "number",
-              "radiation-diagnostic-room": "number",
-              "radiation-therapy-room": "number",
-              "rehabilitation-physiotherapy": "number",
-              "general-patient-room": "number",
-              "special-patient-room": "number",
-              "other": "number"
+              "NAME": "Healing and Care Area",
+              "general-medical-equipment-room": {
+                "NAME": "General Medical Equipment Room Area"
+              },
+              "special-medical-equipment-room": {
+                "NAME": "Special Medical Equipment Room Area"
+              },
+              "surgical-room": {
+                "NAME": "Surgical Room Area"
+              },
+              "radiation-diagnostic-room": {
+                "NAME": "Radiation Diagnostic Room Area"
+              },
+              "radiation-therapy-room": {
+                "NAME": "Radiation Therapy Room Area"
+              },
+              "rehabilitation-physiotherapy": {
+                "NAME": "Rehabilitation Physiotherapy Area"
+              },
+              "general-patient-room": {
+                "NAME": "General Patient Room Area"
+              },
+              "special-patient-room": {
+                "NAME": "Special Patient Room Area"
+              },
+              "other": {
+                "NAME": "Other Healing and Care Area"
+              }
             },
             "other": {
-              "sanitary-room": "number",
-              "cloakroom": "number",
-              "storage-room": "number",
-              "vehicle-parking": "number",
-              "passenger": "number",
-              "central-technical-room": "number",
-              "protective-room": "number",
-              "laundry-room": "number",
-              "other": "number"
+              "NAME": "Other Usable Area",
+              "sanitary-room": {
+                "NAME": "Sanitary Room Area"
+              },
+              "cloakroom": {
+                "NAME": "Cloakroom Area"
+              },
+              "storage-room": {
+                "NAME": "Storage Room Area"
+              },
+              "vehicle-parking": {
+                "NAME": "Vehicle Parking Area"
+              },
+              "passenger": {
+                "NAME": "Passenger Area"
+              },
+              "central-technical-room": {
+                "NAME": "Central Technical Room Area"
+              },
+              "protective-room": {
+                "NAME": "Protective Room Area"
+              },
+              "laundry-room": {
+                "NAME": "Laundry Room Area"
+              },
+              "other": {
+                "NAME": "Other Area"
+              }
             }
           },
           "technical": {
-            "wastewater-gases-water-supply": "number",
-            "heating-hot-water": "number",
-            "ventilation-air-conditioning": "number",
-            "electrical-power-supply": "number",
-            "telecommunications": "number",
-            "elevator-conveyor-systems": "number",
-            "other": "number"
+            "NAME": "Technical Area",
+            "wastewater-gases-water-supply": {
+              "NAME": "Wastewater Gases Water Supply Area"
+            },
+            "heating-hot-water": {
+              "NAME": "Heating Hot Water Area"
+            },
+            "ventilation-air-conditioning": {
+              "NAME": "Ventilation Air Conditioning Area"
+            },
+            "electrical-power-supply": {
+              "NAME": "Electrical Power Supply Area"
+            },
+            "telecommunications": {
+              "NAME": "Telecommunications Area"
+            },
+            "elevator-conveyor-systems": {
+              "NAME": "Elevator Conveyor Systems Area"
+            },
+            "other": {
+              "NAME": "Other Technical Area"
+            }
           },
           "circulation": {
-            "corridor-hall": "number",
-            "stair": "number",
-            "shaft-for-conveyor-system": "number",
-            "vehicle-traffic": "number",
-            "other": "number"
+            "NAME": "Circulation Area",
+            "corridor-hall": {
+              "NAME": "Corridor Hall Area"
+            },
+            "stair": {
+              "NAME": "Stair Area"
+            },
+            "shaft-for-conveyor-system": {
+              "NAME": "Shaft for Conveyor System Area"
+            },
+            "vehicle-traffic": {
+              "NAME": "Vehicle Traffic Area"
+            },
+            "other": {
+              "NAME": "Other Circulation Area"
+            }
           }
         },
         "construction": {
-          "exterior-wall-construction": "number",
-          "interior-wall-construction": "number",
-          "partition-wall": "number",
-          "column": "number",
-          "shaft": "number",
-          "beam": "number",
-          "other": "number"
+          "NAME": "Construction Area",
+          "exterior-wall-construction": {
+            "NAME": "Exterior Wall Construction Area"
+          },
+          "interior-wall-construction": {
+            "NAME": "Interior Wall Construction Area"
+          },
+          "partition-wall": {
+            "NAME": "Partition Wall Area"
+          },
+          "column": {
+            "NAME": "Column Area"
+          },
+          "shaft": {
+            "NAME": "Shaft Area"
+          },
+          "beam": {
+            "NAME": "Beam Area"
+          },
+          "other": {
+            "NAME": "Other Construction Area"
+          }
         }
       },
       "property": {
-        "built-up": "number",
-        "unbuilt": "number",
+        "NAME": "Property Area",
+        "built-up": {
+          "NAME": "Built Up Area"
+        },
+        "unbuilt": {
+          "NAME": "Unbuilt Area"
+        },
         "outdoor-facility": {
+          "NAME": "Outdoor Facility Area",
           "traffic": {
-            "sidewalk": "number",
-            "driveway": "number",
-            "parking-space": "number",
-            "bicycle-parking": "number",
-            "turning": "number",
-            "other": "number"
+            "NAME": "Traffic Area",
+            "sidewalk": {
+              "NAME": "Sidewalk Area"
+            },
+            "driveway": {
+              "NAME": "Driveway Area"
+            },
+            "parking-space": {
+              "NAME": "Parking Space Area"
+            },
+            "bicycle-parking": {
+              "NAME": "Bicycle Parking Area"
+            },
+            "turning": {
+              "NAME": "Turning Area"
+            },
+            "other": {
+              "NAME": "Other Traffic Area"
+            }
           },
           "green": {
-            "lawn": "number",
-            "planted-bed": "number",
-            "hedge": "number",
-            "tree": "number",
-            "roof-greening": "number",
-            "facade-greening": "number",
-            "other": "number"
+            "NAME": "Green Area",
+            "lawn": {
+              "NAME": "Lawn Area"
+            },
+            "planted-bed": {
+              "NAME": "Planted Bed Area"
+            },
+            "hedge": {
+              "NAME": "Hedge Area"
+            },
+            "tree": {
+              "NAME": "Tree Area"
+            },
+            "roof-greening": {
+              "NAME": "Roof Greening Area"
+            },
+            "facade-greening": {
+              "NAME": "Facade Greening Area"
+            },
+            "other": {
+              "NAME": "Other Green Area"
+            }
           },
           "paved": {
-            "terrace": "number",
-            "balcony": "number",
-            "courtyard": "number",
-            "storage-utility": "number",
-            "playground": "number",
-            "other": "number"
+            "NAME": "Paved Area",
+            "terrace": {
+              "NAME": "Terrace Area"
+            },
+            "balcony": {
+              "NAME": "Balcony Area"
+            },
+            "courtyard": {
+              "NAME": "Courtyard Area"
+            },
+            "storage-utility": {
+              "NAME": "Storage Utility Area"
+            },
+            "playground": {
+              "NAME": "Playground Area"
+            },
+            "other": {
+              "NAME": "Other Paved Area"
+            }
           },
           "technical-facility": {
-            "waste-collection-point": "number",
-            "utility-line": "number",
-            "stormwater-management": "number",
-            "lighting-system": "number",
-            "fence-enclosure": "number",
-            "other": "number"
+            "NAME": "Technical Facility Area",
+            "waste-collection-point": {
+              "NAME": "Waste Collection Point Area"
+            },
+            "utility-line": {
+              "NAME": "Utility Line Area"
+            },
+            "stormwater-management": {
+              "NAME": "Stormwater Management Area"
+            },
+            "lighting-system": {
+              "NAME": "Lighting System Area"
+            },
+            "fence-enclosure": {
+              "NAME": "Fence Enclosure Area"
+            },
+            "other": {
+              "NAME": "Other Technical Facility Area"
+            }
           },
           "water": {
-            "pond": "number",
-            "fountain": "number",
-            "stormwater-retention": "number",
-            "other": "number"
+            "NAME": "Water Area",
+            "pond": {
+              "NAME": "Pond Area"
+            },
+            "fountain": {
+              "NAME": "Fountain Area"
+            },
+            "stormwater-retention": {
+              "NAME": "Stormwater Retention Area"
+            },
+            "other": {
+              "NAME": "Other Water Area"
+            }
           },
-          "other": "number"
+          "other": {
+            "NAME": "Other Outdoor Facility Area"
+          }
         }
       }
     },
