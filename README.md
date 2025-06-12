@@ -1043,7 +1043,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 
 # 📊 [Stats](https://stats.docs.semio-tech.com)
 
-We use [Goatcounter]()
+We use [Goatcounter](https://www.goatcounter.com) for gaining insights about our [docs](#-semiodocs-) 📈
 
 <p align="center">
     <a href="https://github.com/usalu/semio"><img src="https://myhits.vercel.app/api/hit/https%3A%2F%2Fgithub.com%2Fusalu%2Fsemio?color=gray&label=views&size=small" alt="views"/></a>
