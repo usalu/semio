@@ -14,11 +14,11 @@
     "@astrojs/markdoc": "^0.13.4",
     "@astrojs/mdx": "^4.3.0",
     "@astrojs/react": "^4.3.0",
-    "@astrojs/sitemap": "^3.4.0",
+    "@astrojs/sitemap": "^3.4.1",
     "@astrojs/starlight": "^0.32.6",
     "@astrojs/ts-plugin": "^1.10.4",
     "@semio/js": "^0.1.0",
-    "astro": "^5.8.1",
+    "astro": "^5.9.2",
     "sharp": "^0.32.6"
   },
   "author": {

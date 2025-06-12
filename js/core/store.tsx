@@ -1579,48 +1579,6 @@ class StudioStore {
         }
         return ports;
     }
-
-    updatePort(kitName: string, kitVersion: string, typeName: string, typeVariant: string, portId: string, port: Partial<Port>): void {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit ${kitName} not found`);
-        const types = yKit.get('types');
-        const yType = types.get(typeName)?.get(typeVariant);
-        if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitName}, ${kitVersion})`);
-        const ports = yType.get('ports');
-        const yPort = ports.get(portId);
-        if (!yPort) throw new Error(`Port (${portId}) not found in type (${typeName}, ${typeVariant})`);
-
-        if (port.description !== undefined) yPort.set('description', port.description);
-        if (port.direction !== undefined) {
-            const yDirection = new Y.Map<any>();
-            yDirection.set('x', port.direction.x);
-            yDirection.set('y', port.direction.y);
-            yDirection.set('z', port.direction.z);
-            yPort.set('direction', yDirection);
-        }
-        if (port.point !== undefined) {
-            const yPoint = new Y.Map<any>();
-            yPoint.set('x', port.point.x);
-            yPoint.set('y', port.point.y);
-            yPoint.set('z', port.point.z);
-            yPort.set('point', yPoint);
-        }
-        if (port.t !== undefined) yPort.set('t', port.t);
-        if (port.qualities !== undefined) {
-            const yQualities = yPort.get('qualities') || new Y.Array<Y.Map<any>>();
-            yQualities.delete(0, yQualities.length);
-            port.qualities.forEach(q => yQualities.push([this.createQuality(q)]));
-            yPort.set('qualities', yQualities);
-        }
-        if (port.family !== undefined && yPort.set('family', port.family)) {
-            (yPort.get('compatibleFamilies') as Y.Array<string>).delete(0, (yPort.get('compatibleFamilies') as Y.Array<string>).length);
-            (port.compatibleFamilies || []).forEach(cf => (yPort.get('compatibleFamilies') as Y.Array<string>).push([cf]));
-        }
-        if (port.mandatory !== undefined && yPort.set('mandatory', port.mandatory)) {
-            (yPort.get('compatibleFamilies') as Y.Array<string>).delete(0, (yPort.get('compatibleFamilies') as Y.Array<string>).length);
-            (port.compatibleFamilies || []).forEach(cf => (yPort.get('compatibleFamilies') as Y.Array<string>).push([cf]));
-        }
-    }
 }
 
 const StudioStoreContext = createContext<StudioStore | null>(null);
