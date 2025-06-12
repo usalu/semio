@@ -444,7 +444,7 @@ To keep our inbox notifications low, we try to push not more than once an hour �
 
 </details>
 
-# 🧑‍💻 Development [↑](#-repo-)
+# 🧑‍💻 Development [↑](#-overview)
 
 Different [ecosystems](#-ecosystems-) need different tools 🧰
 
@@ -483,7 +483,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
 
 Most of our [codebase](#-principles-) is heavily optimized for AI agents 🤖
 
-### 🖱️ [Cursor](./cursor) [↑](#-ai-)
+### 🖱️ [Cursor](/.cursor) [↑](#-ai-)
 
 We use [Cursor](https://www.cursor.com) as general editor mostly with [Tab](https://docs.cursor.com/tab/overview) ➡️
 
@@ -1041,8 +1041,12 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
     </tr>
 </table>
 
-# 📊 Stats
+# 📊 [Stats](https://stats.docs.semio-tech.com)
+
+We use [Goatcounter]()
 
 <p align="center">
     <a href="https://github.com/usalu/semio"><img src="https://myhits.vercel.app/api/hit/https%3A%2F%2Fgithub.com%2Fusalu%2Fsemio?color=gray&label=views&size=small" alt="views"/></a>
 </p>
+
+![Pixel](https://stats.docs.semio-tech.com/count?p=https://github.com/usalu/semio)
