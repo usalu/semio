@@ -53,21 +53,22 @@ Let me walk you through 🚶
    - [🔗 Connection](#-connection-)
    - [⭕ Piece](#-piece-)
    - [💾 Representation](#-representation-)
+   - [⚓ Port](#-port-)
    - [📏 Quality](#-quality-)
    - [🏷️ Tag](#%EF%B8%8F-tag-)
    - [◳ Plane](#-plane-)
    - [🔗 Url](#-url-)
 1. [🦑 Repo](#-repo-)
    - [⚖️ Principles](#️-principles-)
-   - [🧑‍💻 Development](#-development-)
-   - [🪄 AI](#-ai-)
-     - [🖱️ Cursor](#-cursor-)
-     - [✈️ Copilot](#-copilot-)
    - [🔀 Git](#-git-)
      - [📢 Release](#-release-)
-     - [🏷️ Tag](#-tag-)
+     - [🏷️ Tag](#%EF%B8%8F-tag--1)
      - [🌿 Branch](#-branch-)
-     - [🗃️ Commit](#-commit-)
+     - [🗃️ Commit](#️%EF%B8%8F-commit-)
+1. [🧑‍💻 Development](#-development-)
+   - [🪄 AI](#-ai-)
+     - [🖱️ Cursor](#%EF%B8%8F-cursor-)
+     - [✈️ Copilot](#%EF%B8%8F-copilot-)
 1. [♻️ Ecosystems](#%EF%B8%8F-ecosystems-)
    - [🟨 JavaScript](#-javascript-)
    - [🟪 .NET](#-net-)
@@ -81,10 +82,10 @@ Let me walk you through 🚶
    - [⚙️ @semio/engine](#️-semioengine-)
    - [🟪 @semio/net](#-semionet-)
    - [🦗 @semio/grasshopper](#-semiograsshopper-)
-     - [🪢 Scriptstyle](#️-scriptstyle-)
+     - [🪢 Scripting](#️-scripting-)
    - [🛍️ @semio/assets](#%EF%B8%8F-semioassets-)
 1. [🏘️ Examples](#%EF%B8%8F-examples-)
-   - [🚀 Starters](#-starters-)
+   - [🚀 Starter](#-starter-)
    - [👋 Hello semio](#-hello-semio-)
    - [🫀 Metabolism](#-metabolism-)
 1. [💯 Brand](#-brand-)
@@ -162,7 +163,7 @@ The SQL-schema of `kit.db` is found in [`./sqlite/schema.sql`](./sqlite/schema.s
 
 For Inter-Process-Communication (IPC) the JSON-schema in [`./jsonschema/kit.json`](./jsonschema/kit.json) is used 📄
 
-## 🏙️ Design [↑](#-specs-)
+## 🏘️ Design [↑](#-specs-)
 
 A [`design`](#%EF%B8%8F-design-) is an undirected graph of [`pieces`](#-piece-) (nodes) and [`connections`](#-connection-) (edges) 📐
 
@@ -172,13 +173,17 @@ The [`pieces`](#-piece-) are _placed_ _hierarchically_ ([breadth-first](https://
 
 Additional [`connections`](#-connection-) which where not used in the _placement_ can be used to validate the computed [`planes`](#◳-plane-) 🛂
 
+## 🏠 Type [↑](#-specs-)
+
+A [`type`](#-type-) is a resuable component with different [**`representations`**](#-representation-) and[**`ports`**](#-port-) 🧱
+
 ## 🔗 Connection [↑](#-specs-)
 
 A [`connection`](#-connection-) is a 3D-Link between two [`pieces`](#-piece-) with the _translation_ parameters **gap** (offset in y-direction), **shift** (offset in x-direction) and **raise** (offset in z-direction), and the _rotation_ parameters **rotation** (rotation around y-axis), **turn** (rotation around z-axis) and **tilt** (rotation around x-axis) 🪢
 
 The _translation_ is applied first, then the _rotation_ 🥈
 
-The two [`pieces`](#-piece-) are called _connected_ and _connecting_ but there is no difference between them 🔄
+The two [`pieces`](#-piece-) are called **_connected_** and **_connecting_** but there is no difference between them 🔄
 
 The _direction_ of a [`connection`](#-connection-) goes from the lower _hierarchy_ to the higher _hierarchy_ of the [`pieces`](#-piece-) ➡️
 
@@ -200,9 +205,21 @@ No **[`tags`](#%EF%B8%8F-tag-)** means the _default_ representation 🔑
 
 The similarity of [`representations`](#-representation-) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#%EF%B8%8F-tag-)** 🔄
 
+## ⚓ Port [↑](#-specs-)
+
+A [`port`](#-port-) is a conceptual connection **point** with an outwards **direction** 🤝
+
+A [`port`](#-port-) can be marked as **mandatory** in which case it is required to be connected to a [`piece`](#-piece-) 💯
+
+A [`port`](#-port-) can have a port **family** and a list of **compatible families** 👨‍👩‍👧‍👦
+
+No **family** means the _default_ family and no **compatible families** means the port is compatible with all other ports 🔑
+
+It is enough for one [`port`](#-port-) to be compatible with another [`port`](#-port-) to be compatible with each other ↔️
+
 ## 📏 Quality [↑](#-specs-)
 
-A [`quality`](#📏-quality-) is metadata with a **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
+A [`quality`](#-quality-) is metadata with a **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
 
 The **name** is [kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) and with `.`-separated string similar to [toml keys](https://toml.io/en/v1.0.0#keys) 🔑
 
@@ -352,57 +369,6 @@ Even if 95% of the codebase follows those principles, there are good reasons for
 
 **🚩 Don't worry, you'll figure out the possibilities and make the right choice for the specific problems ✅**
 
-## 🧑‍💻 Development [↑](#-repo-)
-
-Different components need different tools 🧰
-
-For a complete setup you need:
-
-- Windows 10 or 11
-- [Visual Studio Code](https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-user)
-- [Visual Studio 2022 Community](https://visualstudio.microsoft.com/de/thank-you-downloading-visual-studio/?sku=Community&channel=Release&version=VS2022)
-- [Rhino 8](https://www.rhino3d.com/download/rhino-for-windows/8/latest/)
-- Python 3.13
-- Poetry
-- [Node](https://nodejs.org/dist/v22.14.0/node-v22.14.0-x64.msi)
-
-If you do not have Python installed, I recommend to install it over the [Microsoft Store](<(https://www.microsoft.com/store/productId/9NCVDN91XZQP?ocid=pdpshare)>) 🏪
-
-Afterwards you can install poetry with this Powershell command:
-
-```powershell
-(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
-```
-
-In the console you will see a warning that the `poetry.exe` is not installed in the requested location 📁
-![Actual Location](poetry/python_ms-store_location.png)
-Then copy the actual path `...\AppData\Local\Packages\PythonSoftwareFoundation...\Roaming\pypoetry\venv\Scripts` and add it to your environmental path variable ➕
-
-Then you can `build.ps1` in the Powershell and add your full path `LOCAL_PATH\dotnet\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
-
-If you have never executed local Powershell before then you have to first [Set-ExecutionPolicy](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.security/set-executionpolicy) ⚠️
-If you don't care just run:
-
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
-```
-
-### 🪄 AI [↑](#-development-)
-
-Most of our [codebase](#-principles-) is heavily optimized for AI agents 🤖
-
-#### 🖱️ [Cursor](./cursor) [↑](#-ai-)
-
-We use [Cursor](https://www.cursor.com) as general editor mostly with [Tab](https://docs.cursor.com/tab/overview) ➡️
-
-For brain-heavy tasks we prepare good tickets and use [Gemini 2.5 Pro](https://gemini.google.com/gemini-2.5-pro) ⚡
-
-We parllely work on two tasks that are unrelated to each other in order switch between them during waiting times ⌛
-
-#### ✈️ Copilot [↑](#-ai-)
-
-For monkey-tasks we use the free [Copilot](https://github.com/features/copilot) with [GPT-4.1](https://docs.github.com/en/copilot/using-github-copilot/ai-models/using-openai-gpt-41-in-github-copilot) 🚀
-
 ## 🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)
 
 ### 📢 Release [↑](#-gitstyle-)
@@ -435,7 +401,7 @@ COMPONENT
 - 🔁 Refactored
 - 🐛 Bug fix
 
-Before every [release](#-release-) the [repo](#-repo-) is archived and then all [branches](#-branch-) are merged and squashed into a single [commit](#-commit-) 📦
+Before every [release](#-release-) the [repo](#-repo-) is archived and then all [branches](#-branch-) are merged and squashed into a single [commit](#️%EF%B8%8F-commit-) 📦
 
 ### 🏷️ Tag [↑](#-gitstyle-)
 
@@ -477,6 +443,57 @@ There are a few services (like [Discord](https://discord.com/channels/1338232508
 To keep our inbox notifications low, we try to push not more than once an hour ⬆️
 
 </details>
+
+# 🧑‍💻 Development [↑](#-repo-)
+
+Different [ecosystems](#-ecosystems-) need different tools 🧰
+
+For a complete setup you need:
+
+- Windows 10 or 11
+- [Visual Studio Code](https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-user)
+- [Visual Studio 2022 Community](https://visualstudio.microsoft.com/de/thank-you-downloading-visual-studio/?sku=Community&channel=Release&version=VS2022)
+- [Rhino 8](https://www.rhino3d.com/download/rhino-for-windows/8/latest/)
+- Python 3.13
+- Poetry
+- [Node](https://nodejs.org/dist/v22.14.0/node-v22.14.0-x64.msi)
+
+If you do not have Python installed, I recommend to install it over the [Microsoft Store](<(https://www.microsoft.com/store/productId/9NCVDN91XZQP?ocid=pdpshare)>) 🏪
+
+Afterwards you can install poetry with this Powershell command:
+
+```powershell
+(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
+```
+
+In the console you will see a warning that the `poetry.exe` is not installed in the requested location 📁
+![Actual Location](poetry/python_ms-store_location.png)
+Then copy the actual path `...\AppData\Local\Packages\PythonSoftwareFoundation...\Roaming\pypoetry\venv\Scripts` and add it to your environmental path variable ➕
+
+Then you can `build.ps1` in the Powershell and add your full path `LOCAL_PATH\dotnet\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
+
+If you have never executed local Powershell before then you have to first [Set-ExecutionPolicy](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.security/set-executionpolicy) ⚠️
+If you don't care just run:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
+```
+
+### 🪄 AI [↑](#-development-)
+
+Most of our [codebase](#-principles-) is heavily optimized for AI agents 🤖
+
+### 🖱️ [Cursor](./cursor) [↑](#-ai-)
+
+We use [Cursor](https://www.cursor.com) as general editor mostly with [Tab](https://docs.cursor.com/tab/overview) ➡️
+
+For brain-heavy tasks we prepare good tickets and use [Gemini 2.5 Pro](https://gemini.google.com/gemini-2.5-pro) ⚡
+
+We parllely work on two tasks that are unrelated to each other in order switch between them during waiting times ⌛
+
+### ✈️ Copilot [↑](#-ai-)
+
+For monkey-tasks we use the free [Copilot](https://github.com/features/copilot) with [GPT-4.1](https://docs.github.com/en/copilot/using-github-copilot/ai-models/using-openai-gpt-41-in-github-copilot) 🚀
 
 # ♻️ Ecosystems [↑](#-overview)
 
@@ -528,7 +545,7 @@ A .NET core for semio 🥜
 
 </details>
 
-Currently only [engine](#️-semioengine-) but in the future it might grow and then the `.venv` will be centralized, …
+Currently only [engine](#️-semioengine-) but in the future it might grow and then the [`.venv`](https://docs.python.org/3/library/venv.html) will be centralized, …
 
 # 📦 Components [↑](#-overview)
 
@@ -698,7 +715,7 @@ The core which is shared in the [semio .NET ecosystem](#-net-) 🥜
 
 A full-blown Grasshopper Plugin that has (almost) everything 💯
 
-### 🪢 Scriptstyle
+### 🪢 Scripting
 
 Analogous to [our principles](#️-principles-) for text-based code, we follow a similar logic for script-based code 🔄
 
