@@ -7,15 +7,17 @@ interface ParamProps {
     kind: string;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
+    onClick?: () => void; // Added onClick property
 }
 
-const Param: FC<ParamProps> = ({ name, nickname, description, kind, onMouseEnter, onMouseLeave }) => {
+const Param: FC<ParamProps> = ({ name, nickname, description, kind, onMouseEnter, onMouseLeave, onClick }) => {
     return (
         <div
             className="w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-help"
             title={`Name: ${name}\nDescription: ${description}\nKind: ${kind}`}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
+            onClick={onClick}
         >
             <a href={'#'+ kind} target="_blank" rel="noopener noreferrer"
                 className="text-blue-600 hover:text-blue-800">
@@ -33,7 +35,7 @@ interface GrasshopperComponentProps {
     outputs?: ParamProps[];
 }
 
-const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs, outputs }) => {
+const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs, outputs, description }) => {
     const [hoveredParam, setHoveredParam] = useState<string | null>(null);
 
     return (
@@ -62,6 +64,7 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                                 {...input}
                                 onMouseEnter={() => setHoveredParam(input.description)}
                                 onMouseLeave={() => setHoveredParam(null)}
+                                onClick={() => setHoveredParam(input.description)}
                             />
                         ))}
                     </div>
@@ -75,6 +78,7 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                                 {...output}
                                 onMouseEnter={() => setHoveredParam(output.description)}
                                 onMouseLeave={() => setHoveredParam(null)}
+                                onClick={() => setHoveredParam(output.description)}
                             />
                         ))}
                     </div>
@@ -95,11 +99,9 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                 </div>
             </div>
 
-            {hoveredParam && (
-                <div className="w-fit bg-gray-700 text-white p-3 rounded-md text-sm text-center mt-2">
-                    {hoveredParam}
-                </div>
-            )}
+            <div className="w-fit bg-gray-700 text-white p-3 rounded-md text-sm text-center mt-2">
+                {hoveredParam || description}
+            </div>
         </div>
     );
 };
