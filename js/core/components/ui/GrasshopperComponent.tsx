@@ -42,12 +42,12 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
         <div className="flex flex-col items-center gap-4">
             <div className="flex flex-row items-start gap-4">
                 {/* Input Names Box */}
-                <div className="w-fit border border-black rounded-lg p-1 bg-gray-800 flex flex-col items-start gap-1">
-                    <div className="flex flex-col gap-1 items-start">
+                <div className="w-fit border border-black rounded-lg p-3 bg-gray-800 flex flex-col items-start gap-3">
+                    <div className="flex flex-col gap-3 items-start">
                         {inputs?.map((input, index) => (
                             <div
                                 key={index}
-                                className="w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-default"
+                                className="w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-default p-2"
                             >
                                 {input.name}
                             </div>
@@ -56,8 +56,8 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                 </div>
 
                 {/* Main Component Box */}
-                <div className="w-fit border border-black rounded-lg p-1 bg-gray-800 flex flex-row items-start gap-1">
-                    <div className="flex flex-col gap-1 items-start">
+                <div className="w-fit border border-black rounded-lg p-3 bg-gray-800 flex flex-row items-start gap-3">
+                    <div className="flex flex-col gap-3 items-start">
                         {inputs?.map((input, index) => (
                             <Param
                                 key={index}
@@ -68,10 +68,10 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                             />
                         ))}
                     </div>
-                    <div className="rotate-90 text-center relative bg-gray-900 text-white p-1 rounded-md text-lg font-bold flex flex-col items-center justify-center gap-1">
+                    <div className="rotate-90 text-center relative bg-gray-900 text-white p-3 rounded-md text-lg font-bold flex flex-col items-center justify-center gap-3">
                         <p>{nickname}</p>
                     </div>
-                    <div className="flex flex-col gap-1 items-start">
+                    <div className="flex flex-col gap-3 items-start">
                         {outputs?.map((output, index) => (
                             <Param
                                 key={index}
@@ -85,12 +85,12 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                 </div>
 
                 {/* Output Names Box */}
-                <div className="w-fit border border-black rounded-lg p-1 bg-gray-800 flex flex-col items-start gap-1">
-                    <div className="flex flex-col gap-1 items-start">
+                <div className="w-fit border border-black rounded-lg p-3 bg-gray-800 flex flex-col items-start gap-3">
+                    <div className="flex flex-col gap-3 items-start">
                         {outputs?.map((output, index) => (
                             <div
                                 key={index}
-                                className="w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-default"
+                                className="w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-default p-2"
                             >
                                 {output.name}
                             </div>
@@ -99,7 +99,7 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                 </div>
             </div>
 
-            <div className="w-fit bg-gray-700 text-white p-1 rounded-md text-sm text-center mt-2">
+            <div className="w-fit bg-gray-700 text-white p-3 rounded-md text-sm text-center mt-2">
                 {hoveredParam || description}
             </div>
         </div>
