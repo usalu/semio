@@ -7,13 +7,14 @@ interface ParamProps {
     kind: string;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
-    onClick?: () => void; // Added onClick property
+    onClick?: () => void;
+    className?: string; // Added className property
 }
 
-const Param: FC<ParamProps> = ({ name, nickname, description, kind, onMouseEnter, onMouseLeave, onClick }) => {
+const Param: FC<ParamProps> = ({ name, nickname, description, kind, onMouseEnter, onMouseLeave, onClick, className }) => {
     return (
         <div
-            className="w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-help"
+            className={`w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-help ${className}`}
             title={`Name: ${name}\nDescription: ${description}\nKind: ${kind}`}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
@@ -47,7 +48,7 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                         {inputs?.map((input, index) => (
                             <div
                                 key={index}
-                                className="w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-default p-2"
+                                className="w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-default p-4"
                             >
                                 {input.name}
                             </div>
@@ -62,13 +63,14 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                             <Param
                                 key={index}
                                 {...input}
+                                className="p-4" // Added padding for Param components
                                 onMouseEnter={() => setHoveredParam(input.description)}
                                 onMouseLeave={() => setHoveredParam(null)}
                                 onClick={() => setHoveredParam(input.description)}
                             />
                         ))}
                     </div>
-                    <div className="rotate-90 text-center relative bg-gray-900 text-white p-3 rounded-md text-lg font-bold flex flex-col items-center justify-center gap-3">
+                    <div className="rotate-90 text-center relative bg-gray-900 text-white p-4 rounded-md text-lg font-bold flex flex-col items-center justify-center gap-3">
                         <p>{nickname}</p>
                     </div>
                     <div className="flex flex-col gap-3 items-start">
@@ -76,6 +78,7 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                             <Param
                                 key={index}
                                 {...output}
+                                className="p-4" // Added padding for Param components
                                 onMouseEnter={() => setHoveredParam(output.description)}
                                 onMouseLeave={() => setHoveredParam(null)}
                                 onClick={() => setHoveredParam(output.description)}
@@ -90,7 +93,7 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                         {outputs?.map((output, index) => (
                             <div
                                 key={index}
-                                className="w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-default p-2"
+                                className="w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-default p-4"
                             >
                                 {output.name}
                             </div>
