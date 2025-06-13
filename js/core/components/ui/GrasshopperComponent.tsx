@@ -7,13 +7,14 @@ interface ParamProps {
     kind: string;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
-    onClick?: () => void; // Added onClick property
+    onClick?: () => void;
+    className?: string; // Added className property
 }
 
-const Param: FC<ParamProps> = ({ name, nickname, description, kind, onMouseEnter, onMouseLeave, onClick }) => {
+const Param: FC<ParamProps> = ({ name, nickname, description, kind, onMouseEnter, onMouseLeave, onClick, className }) => {
     return (
         <div
-            className="w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-help"
+            className={`w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-help ${className}`}
             title={`Name: ${name}\nDescription: ${description}\nKind: ${kind}`}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
@@ -39,19 +40,15 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
     const [hoveredParam, setHoveredParam] = useState<string | null>(null);
 
     return (
-        <div className="flex flex-col items-center gap-4">
-            <div className="flex flex-row items-start gap-4">
+        <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-row items-start gap-1">
                 {/* Input Names Box */}
-<<<<<<< HEAD
-                <div className="w-fit border border-black rounded-lg p-1 bg-gray-800 flex flex-col items-start gap-1">
-=======
-                <div className="w-fit border-2 border-black rounded-lg p-5 bg-gray-800 flex flex-col items-start gap-4">
->>>>>>> origin/docs-grasshopper-kinan
+                <div className="w-fit border border-black rounded-lg p-2 flex flex-col items-start gap-1">
                     <div className="flex flex-col gap-1 items-start">
                         {inputs?.map((input, index) => (
                             <div
                                 key={index}
-                                className="w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-default"
+                                className="w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-default p-4"
                             >
                                 {input.name}
                             </div>
@@ -60,27 +57,20 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                 </div>
 
                 {/* Main Component Box */}
-<<<<<<< HEAD
-                <div className="w-fit border border-black rounded-lg p-1 bg-gray-800 flex flex-row items-start gap-1">
-=======
-                <div className="w-fit border-2 border-black rounded-lg p-5 bg-gray-800 flex flex-row items-start gap-4">
->>>>>>> origin/docs-grasshopper-kinan
+                <div className="w-fit border border-black rounded-lg p-2 flex flex-row items-start gap-1">
                     <div className="flex flex-col gap-1 items-start">
                         {inputs?.map((input, index) => (
                             <Param
                                 key={index}
                                 {...input}
+                                className="p-4"
                                 onMouseEnter={() => setHoveredParam(input.description)}
                                 onMouseLeave={() => setHoveredParam(null)}
                                 onClick={() => setHoveredParam(input.description)}
                             />
                         ))}
                     </div>
-<<<<<<< HEAD
-                    <div className="rotate-90 text-center relative bg-gray-900 text-white p-1 rounded-md text-lg font-bold flex flex-col items-center justify-center gap-1">
-=======
-                    <div className="rotate-90 text-center relative bg-gray-900 text-white p-2 rounded-md text-lg font-bold flex flex-col items-center justify-center gap-1">
->>>>>>> origin/docs-grasshopper-kinan
+                    <div className="rotate-90 text-center relative bg-black text-white p-4 rounded-md text-lg font-bold flex items-center justify-center">
                         <p>{nickname}</p>
                     </div>
                     <div className="flex flex-col gap-1 items-start">
@@ -88,6 +78,7 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                             <Param
                                 key={index}
                                 {...output}
+                                className="p-4"
                                 onMouseEnter={() => setHoveredParam(output.description)}
                                 onMouseLeave={() => setHoveredParam(null)}
                                 onClick={() => setHoveredParam(output.description)}
@@ -97,16 +88,12 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                 </div>
 
                 {/* Output Names Box */}
-<<<<<<< HEAD
-                <div className="w-fit border border-black rounded-lg p-1 bg-gray-800 flex flex-col items-start gap-1">
-=======
-                <div className="w-fit border-2 border-black rounded-lg p-5 bg-gray-800 flex flex-col items-start gap-4">
->>>>>>> origin/docs-grasshopper-kinan
+                <div className="w-fit border border-black rounded-lg p-2 flex flex-col items-start gap-1">
                     <div className="flex flex-col gap-1 items-start">
                         {outputs?.map((output, index) => (
                             <div
                                 key={index}
-                                className="w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-default"
+                                className="w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-default p-4"
                             >
                                 {output.name}
                             </div>
@@ -115,11 +102,7 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                 </div>
             </div>
 
-<<<<<<< HEAD
-            <div className="w-fit bg-gray-700 text-white p-1 rounded-md text-sm text-center mt-2">
-=======
-            <div className="w-fit bg-gray-700 text-white p-3 rounded-md text-sm text-center mt-2">
->>>>>>> origin/docs-grasshopper-kinan
+            <div className="w-fit text-white p-2 rounded-md text-sm text-center mt-1">
                 {hoveredParam || description}
             </div>
         </div>
