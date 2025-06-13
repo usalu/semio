@@ -40,11 +40,11 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
     const [hoveredParam, setHoveredParam] = useState<string | null>(null);
 
     return (
-        <div className="flex flex-col items-center gap-4">
-            <div className="flex flex-row items-start gap-4">
+        <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-row items-start gap-1">
                 {/* Input Names Box */}
-                <div className="w-fit border border-black rounded-lg p-3 bg-gray-800 flex flex-col items-start gap-3">
-                    <div className="flex flex-col gap-3 items-start">
+                <div className="w-fit border border-black rounded-lg p-2 flex flex-col items-start gap-1">
+                    <div className="flex flex-col gap-1 items-start">
                         {inputs?.map((input, index) => (
                             <div
                                 key={index}
@@ -57,28 +57,28 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                 </div>
 
                 {/* Main Component Box */}
-                <div className="w-fit border border-black rounded-lg p-3 bg-gray-800 flex flex-row items-start gap-3">
-                    <div className="flex flex-col gap-3 items-start">
+                <div className="w-fit border border-black rounded-lg p-2 flex flex-row items-start gap-1">
+                    <div className="flex flex-col gap-1 items-start">
                         {inputs?.map((input, index) => (
                             <Param
                                 key={index}
                                 {...input}
-                                className="p-4" // Added padding for Param components
+                                className="p-4"
                                 onMouseEnter={() => setHoveredParam(input.description)}
                                 onMouseLeave={() => setHoveredParam(null)}
                                 onClick={() => setHoveredParam(input.description)}
                             />
                         ))}
                     </div>
-                    <div className="rotate-90 text-center relative bg-gray-900 text-white p-4 rounded-md text-lg font-bold flex flex-col items-center justify-center gap-3">
+                    <div className="rotate-90 text-center relative text-white p-4 rounded-md text-lg font-bold flex flex-col items-center justify-center gap-1">
                         <p>{nickname}</p>
                     </div>
-                    <div className="flex flex-col gap-3 items-start">
+                    <div className="flex flex-col gap-1 items-start">
                         {outputs?.map((output, index) => (
                             <Param
                                 key={index}
                                 {...output}
-                                className="p-4" // Added padding for Param components
+                                className="p-4"
                                 onMouseEnter={() => setHoveredParam(output.description)}
                                 onMouseLeave={() => setHoveredParam(null)}
                                 onClick={() => setHoveredParam(output.description)}
@@ -88,8 +88,8 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                 </div>
 
                 {/* Output Names Box */}
-                <div className="w-fit border border-black rounded-lg p-3 bg-gray-800 flex flex-col items-start gap-3">
-                    <div className="flex flex-col gap-3 items-start">
+                <div className="w-fit border border-black rounded-lg p-2 flex flex-col items-start gap-1">
+                    <div className="flex flex-col gap-1 items-start">
                         {outputs?.map((output, index) => (
                             <div
                                 key={index}
@@ -102,7 +102,7 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                 </div>
             </div>
 
-            <div className="w-fit bg-gray-700 text-white p-3 rounded-md text-sm text-center mt-2">
+            <div className="w-fit text-white p-2 rounded-md text-sm text-center mt-1">
                 {hoveredParam || description}
             </div>
         </div>
