@@ -42,7 +42,11 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
         <div className="flex flex-col items-center gap-4">
             <div className="flex flex-row items-start gap-4">
                 {/* Input Names Box */}
+<<<<<<< HEAD
                 <div className="w-fit border border-black rounded-lg p-1 bg-gray-800 flex flex-col items-start gap-1">
+=======
+                <div className="w-fit border-2 border-black rounded-lg p-5 bg-gray-800 flex flex-col items-start gap-4">
+>>>>>>> origin/docs-grasshopper-kinan
                     <div className="flex flex-col gap-1 items-start">
                         {inputs?.map((input, index) => (
                             <div
@@ -56,7 +60,11 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                 </div>
 
                 {/* Main Component Box */}
+<<<<<<< HEAD
                 <div className="w-fit border border-black rounded-lg p-1 bg-gray-800 flex flex-row items-start gap-1">
+=======
+                <div className="w-fit border-2 border-black rounded-lg p-5 bg-gray-800 flex flex-row items-start gap-4">
+>>>>>>> origin/docs-grasshopper-kinan
                     <div className="flex flex-col gap-1 items-start">
                         {inputs?.map((input, index) => (
                             <Param
@@ -68,7 +76,11 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                             />
                         ))}
                     </div>
+<<<<<<< HEAD
                     <div className="rotate-90 text-center relative bg-gray-900 text-white p-1 rounded-md text-lg font-bold flex flex-col items-center justify-center gap-1">
+=======
+                    <div className="rotate-90 text-center relative bg-gray-900 text-white p-2 rounded-md text-lg font-bold flex flex-col items-center justify-center gap-1">
+>>>>>>> origin/docs-grasshopper-kinan
                         <p>{nickname}</p>
                     </div>
                     <div className="flex flex-col gap-1 items-start">
@@ -85,7 +97,11 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                 </div>
 
                 {/* Output Names Box */}
+<<<<<<< HEAD
                 <div className="w-fit border border-black rounded-lg p-1 bg-gray-800 flex flex-col items-start gap-1">
+=======
+                <div className="w-fit border-2 border-black rounded-lg p-5 bg-gray-800 flex flex-col items-start gap-4">
+>>>>>>> origin/docs-grasshopper-kinan
                     <div className="flex flex-col gap-1 items-start">
                         {outputs?.map((output, index) => (
                             <div
@@ -99,7 +115,11 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                 </div>
             </div>
 
+<<<<<<< HEAD
             <div className="w-fit bg-gray-700 text-white p-1 rounded-md text-sm text-center mt-2">
+=======
+            <div className="w-fit bg-gray-700 text-white p-3 rounded-md text-sm text-center mt-2">
+>>>>>>> origin/docs-grasshopper-kinan
                 {hoveredParam || description}
             </div>
         </div>
