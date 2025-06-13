@@ -1,5 +1,5 @@
 . ..\..\powershell.ps1
-StopProcessOnPort -Port 2503 # engine
+StopProcessOnPort -Port 2507 # engine
 StopProcessOnPort -Port 5678 # debugger
 $process = Start-Process -FilePath "poetry" -ArgumentList "run dev" -NoNewWindow -PassThru
 function Cleanup {

@@ -879,11 +879,14 @@ class StudioStore {
         const yType = types.get(typeName)?.get(typeVariant) as Y.Map<any>;
         if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitName}, ${kitVersion})`);
         const ports = yType.get('ports');
+        if (!ports) throw new Error(`Ports not found in type (${typeName}, ${typeVariant})`);
         const yPort = ports.get(id);
         if (!yPort) throw new Error(`Port (${id}) not found in type (${typeName}, ${typeVariant})`);
 
         const yDirection = yPort.get('direction');
+        if (!yDirection) throw new Error(`Direction not found in port (${id})`);
         const yPoint = yPort.get('point');
+        if (!yPoint) throw new Error(`Point not found in port (${id})`);
         return {
             id_: yPort.get('id_'),
             description: yPort.get('description'),

@@ -199,7 +199,7 @@ const View: FC<ViewProps> = ({ }) => {
     if (!designEditorId) {
         try {
             // Consider moving this logic if it needs to react to props or other state changes
-            const editorId = studioStore.createDesignEditorStore("Metabolism", "r25.03-1", "Nakagin Capsule Tower", "", "");
+            const editorId = studioStore.createDesignEditorStore("Metabolism", "r25.07-1", "Nakagin Capsule Tower", "", "");
             setDesignEditorId(editorId);
         } catch (error) {
             console.error("Error creating design editor store:", error);

@@ -67,10 +67,10 @@ public static class Constants
 {
     public const string Name = "semio";
     public const string Email = "ueli@semio-tech.com";
-    public const string Release = "r25.03-1";
+    public const string Release = "r25.07-1";
     public const string EngineHost = "http://127.0.0.1";
-    public const int EnginePort = 2503;
-    public const string EngineAddress = "http://127.0.0.1:2503";
+    public const int EnginePort = 2507;
+    public const string EngineAddress = "http://127.0.0.1:2507";
     public const int NameLengthLimit = 64;
     public const int IdLengthLimit = 128;
     public const int UrlLengthLimit = 1024;

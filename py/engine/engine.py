@@ -186,11 +186,11 @@ RecursiveAnyList = typing.Any | list["RecursiveAnyList"]
 
 NAME = "semio"
 EMAIL = "mail@semio-tech.com"
-RELEASE = "r25.03-1"
+RELEASE = "r25.07-1"
 VERSION = "4.3.0-beta"
 HOST = "127.0.0.1"
-PORT = 2503
-ADDRESS = "http://127.0.0.1:2503"
+PORT = 2507
+ADDRESS = "http://127.0.0.1:2507"
 NAME_LENGTH_LIMIT = 64
 ID_LENGTH_LIMIT = 128
 URL_LENGTH_LIMIT = 1024
@@ -2577,14 +2577,6 @@ class TypeOutput(
     ports: list[PortOutput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorOutput] = sqlmodel.Field(default_factory=list)
     qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
-
-    @pydantic.field_serializer("stock")
-    def serialize_stock_output(
-        self, stock_value: float, _info
-    ) -> typing.Union[float, str]:
-        if stock_value == float("inf"):
-            return "Infinity"
-        return stock_value
 
 
 class TypeContext(

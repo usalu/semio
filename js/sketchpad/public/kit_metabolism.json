@@ -37496,8 +37496,8 @@
     "icon": "icons/metabolism.svg",
     "image": "images/metabolism.png",
     "preview": "docs/preview.png",
-    "version": "r25.03-1",
-    "remote": "https://github.com/usalu/metabolism/archive/refs/tags/r25.03-1.zip",
-    "homepage": "https://github.com/usalu/metabolism/tree/r25.03-1",
+    "version": "r25.07-1",
+    "remote": "https://github.com/usalu/metabolism/archive/refs/tags/r25.07-1.zip",
+    "homepage": "https://github.com/usalu/metabolism/tree/r25.07-1",
     "license": ""
 }
