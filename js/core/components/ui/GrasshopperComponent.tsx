@@ -70,7 +70,7 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                             />
                         ))}
                     </div>
-                    <div className="rotate-90 text-center relative text-white p-4 rounded-md text-lg font-bold flex flex-col items-center justify-center gap-1">
+                    <div className="rotate-90 text-center relative bg-black text-white p-4 rounded-md text-lg font-bold flex items-center justify-center">
                         <p>{nickname}</p>
                     </div>
                     <div className="flex flex-col gap-1 items-start">
