@@ -43,7 +43,7 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
         <div className="flex flex-col items-center gap-1">
             <div className="flex flex-row items-start gap-4">
                 {/* Input Names Box */}
-                <div className="w-fit border border-black rounded-lg p-2 flex flex-col items-start gap-1">
+                <div className="w-fit border border-transparent rounded-lg p-2 flex flex-col items-start gap-1">
                     <div className="flex flex-col gap-1 items-start">
                         {inputs?.map((input, index) => (
                             <React.Fragment key={index}>
@@ -99,7 +99,7 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                 </div>
 
                 {/* Output Names Box */}
-                <div className="w-fit border border-black rounded-lg p-2 flex flex-col items-start gap-1">
+                <div className="w-fit border border-transparent rounded-lg p-2 flex flex-col items-start gap-1">
                     <div className="flex flex-col gap-1 items-start">
                         {outputs?.map((output, index) => (
                             <React.Fragment key={index}>
