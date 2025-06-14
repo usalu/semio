@@ -74,8 +74,8 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                             </React.Fragment>
                         ))}
                     </div>
-                    <div className="rotate-90 text-center relative bg-black text-white p-4 rounded-md text-lg font-bold flex items-center justify-center">
-                        <p>{nickname}</p>
+                    <div className="rotate-90 text-center bg-black text-white p-4 rounded-md text-lg font-bold flex items-center justify-center h-full">
+                        <p className="transform -translate-x-1/2 -translate-y-1/2">{nickname}</p>
                     </div>
                     <div className="flex flex-col gap-1 items-start">
                         {outputs?.map((output, index) => (
