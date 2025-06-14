@@ -49,8 +49,13 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                             <React.Fragment key={index}>
                                 <div
                                     className="w-fit h-10 flex items-center justify-center my-1 text-sm cursor-default p-4"
+                                    onMouseEnter={() => setHoveredParam(input.description)}
+                                    onMouseLeave={() => setHoveredParam(null)}
                                 >
-                                    {input.name}
+                                    <a href={'#' + input.description} target="_blank" rel="noopener noreferrer"
+                                        className="text-blue-600 hover:text-blue-800">
+                                        {input.name}
+                                    </a>
                                 </div>
                                 {index < inputs.length - 1 && <div className="w-full h-px bg-gray-400"></div>}
                             </React.Fragment>
@@ -100,8 +105,13 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                             <React.Fragment key={index}>
                                 <div
                                     className="w-fit h-10 flex items-center justify-center my-1 text-sm cursor-default p-4"
+                                    onMouseEnter={() => setHoveredParam(output.description)}
+                                    onMouseLeave={() => setHoveredParam(null)}
                                 >
-                                    {output.name}
+                                    <a href={'#' + output.description} target="_blank" rel="noopener noreferrer"
+                                        className="text-blue-600 hover:text-blue-800">
+                                        {output.name}
+                                    </a>
                                 </div>
                                 {index < outputs.length - 1 && <div className="w-full h-px bg-gray-400"></div>}
                             </React.Fragment>
