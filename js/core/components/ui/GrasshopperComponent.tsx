@@ -14,16 +14,16 @@ interface ParamProps {
 const Param: FC<ParamProps> = ({ name, nickname, description, kind, onMouseEnter, onMouseLeave, onClick, className }) => {
     return (
         <div
-            className={`w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-help ${className}`}
+            className={`w-fit h-10 flex items-center justify-center my-1 border border-black text-sm cursor-help ${className}`}
             title={`Name: ${name}\nDescription: ${description}\nKind: ${kind}`}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
             onClick={onClick}
         >
-            <a href={'#'+ kind} target="_blank" rel="noopener noreferrer"
+            <a href={'#' + kind} target="_blank" rel="noopener noreferrer"
                 className="text-blue-600 hover:text-blue-800">
                 {nickname}
-                </a>
+            </a>
         </div>
     );
 };
@@ -48,7 +48,7 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                         {inputs?.map((input, index) => (
                             <div
                                 key={index}
-                                className="w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-default p-4"
+                                className="w-fit h-10 flex items-center justify-center my-1 border border-black text-sm cursor-default p-4"
                             >
                                 {input.name}
                             </div>
@@ -93,7 +93,7 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                         {outputs?.map((output, index) => (
                             <div
                                 key={index}
-                                className="w-fit h-10 flex items-center justify-center my-1 border border-black bg-yellow-100 text-sm cursor-default p-4"
+                                className="w-fit h-10 flex items-center justify-center my-1 border border-black text-sm cursor-default p-4"
                             >
                                 {output.name}
                             </div>
@@ -102,7 +102,7 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs,
                 </div>
             </div>
 
-            <div className="w-fit text-white p-2 rounded-md text-sm text-center mt-1">
+            <div className="w-fit text-white p-2 rounded-md text-sm text-center mt-1 bg-black">
                 {hoveredParam || description}
             </div>
         </div>
