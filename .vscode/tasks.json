@@ -131,11 +131,11 @@
             "command": "npx nx build @semio/icons"
         },
         {
-            "label": "Kill Development Tasks",
+            "label": "kill dev",
             "type": "shell",
-            "command": "echo Terminating development tasks",
             "windows": {
-                "command": "$processList = @('*node*'); foreach ($process in $processList) { Get-Process -Name $process -ErrorAction SilentlyContinue | Where-Object {$_.CommandLine -like '*npx nx*dev*' -or $_.CommandLine -like '*astro*' -or $_.CommandLine -like '*vite*' -or $_.CommandLine -like '*nx dev*' -or $_.CommandLine -like '*storybook*'} | ForEach-Object { Write-Host \"Killing process: $($_.Id)\"; Stop-Process -Id $_.Id -Force } }; Get-NetTCPConnection -LocalPort 4321,5678,6006 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }",
+                // TODO: Find a reliable way to kill all dev tasks
+                "command": "",
                 "options": {
                     "shell": {
                         "executable": "powershell.exe",

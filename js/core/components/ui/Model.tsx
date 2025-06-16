@@ -56,7 +56,7 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, onSe
         <group
             // matrix={matrix}
             // matrixAutoUpdate={false}
-            position={[piece.plane!.origin.x, -piece.plane!.origin.z, piece.plane!.origin.y]}
+            position={[plane!.origin.x, -plane!.origin.z, plane!.origin.y]}
 
             userData={{ pieceId: piece.id_ }}
             onClick={(e) => {
@@ -93,9 +93,9 @@ const ModelDesign: FC<ModelDesignProps> = ({ design, types, fileUrls, selection,
         if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`);
     });
 
-    const flatDesign = design ? flattenDesign(design, types) : null;
-    const piecePlanes = flatDesign?.pieces?.map(p => p.plane);
-    const pieceRepresentationUrls = getPieceRepresentationUrls(design, types!);
+    const flatDesign = flattenDesign(design, types);
+    const piecePlanes = flatDesign.pieces?.map(p => p.plane);
+    const pieceRepresentationUrls = getPieceRepresentationUrls(design, types);
 
     pieceRepresentationUrls.forEach((url, id) => {
         if (!fileUrls.has(url)) throw new Error(`Representation url ${url} for piece ${id} not found in fileUrls map`);
@@ -117,7 +117,7 @@ const ModelDesign: FC<ModelDesignProps> = ({ design, types, fileUrls, selection,
         }} filter={items => items}>
             {design.pieces?.map((piece, index) => (
                 <ModelPiece
-                    key={`piece-${piece.id_ || index}`}
+                    key={`piece-${piece.id_}`}
                     piece={piece}
                     plane={piecePlanes[index]}
                     fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_))}
