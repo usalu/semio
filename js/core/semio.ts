@@ -90,8 +90,6 @@ export type Author = {
     name: string;
     // 📧 The email of the author
     email: string;
-    // #️⃣ The rank of the author
-    rank: number;
 }
 
 // 🖇️ A bidirectional connection between two pieces of a design.
@@ -282,6 +280,14 @@ export type Representation = {
     tags: string[];
     // 📏 Qualities associated with the representation
     qualities?: Quality[];
+}
+
+// 📍 A location on the earth surface (longitude, latitude).
+export type Location = {
+    // ↔️ The longitude of the location in degrees.
+    longitude: number;
+    // ↕️ The latitude of the location in degrees.
+    latitude: number;
 }
 
 // Converts JSON strings to/from your types
@@ -517,7 +523,6 @@ const typeMap: any = {
     "Author": o([
         { json: "name", js: "name", typ: "" },
         { json: "email", js: "email", typ: "" },
-        { json: "rank", js: "rank", typ: 0 }, // Use 0 for number type
     ], "any"),
     "Connection": o([
         { json: "description", js: "description", typ: "" },

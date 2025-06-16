@@ -131,7 +131,6 @@ class StudioStore {
         const yAuthor = new Y.Map<any>();
         yAuthor.set('name', author.name);
         yAuthor.set('email', author.email);
-        yAuthor.set('rank', author.rank);
         return yAuthor;
     }
 
@@ -146,8 +145,7 @@ class StudioStore {
     private getAuthor(yMap: Y.Map<any>): Author | null {
         const name = yMap.get('name');
         const email = yMap.get('email');
-        const rank = yMap.get('rank');
-        return { name, email, rank };
+        return { name, email };
     }
 
     private getAuthors(yAuthorsMap: Y.Map<any> | undefined): Author[] {
@@ -890,7 +888,7 @@ class StudioStore {
         return {
             id_: yPort.get('id_'),
             description: yPort.get('description'),
-            mandatory: yPort.get('mandatory') as boolean,
+            mandatory: yPort.get('mandatory'),
             family: yPort.get('family'),
             compatibleFamilies: yPort.get('compatibleFamilies')?.toArray() || [],
             direction: {
@@ -899,11 +897,11 @@ class StudioStore {
                 z: yDirection.get('z')
             },
             point: {
-                x: (yPoint.get('point') as Y.Map<any>).get('x') as number,
-                y: (yPoint.get('point') as Y.Map<any>).get('y') as number,
-                z: (yPoint.get('point') as Y.Map<any>).get('z') as number
+                x: yPoint.get('x'),
+                y: yPoint.get('y'),
+                z: yPoint.get('z')
             },
-            t: yPort.get('t') as number,
+            t: yPort.get('t'),
             qualities: this.getQualities(yPort.get('qualities'))
         };
     }
@@ -1079,26 +1077,29 @@ class StudioStore {
                 return res[0].values.map((row: any[]) => ({ name: row[0], value: row[1], unit: row[2], definition: row[3] }));
             };
             const getAuthors = (fkColumn: string, fkValue: number | string): Author[] => {
-                const query = `SELECT name, email, rank FROM author WHERE ${fkColumn} = ?`;
+                const query = `SELECT name, email FROM author WHERE ${fkColumn} = ? ORDER BY rank`;
                 const res = kitDb.exec(query, [fkValue]);
                 if (!res || res.length === 0 || !res[0].values) return [];
-                return res[0].values.map((row: any[]) => ({ name: row[0], email: row[1], rank: row[2] }));
+                return res[0].values.map((row: any[]) => ({ name: row[0], email: row[1] }));
             };
             kit.qualities = getQualities('kit_id', kitId);
-            const typeRes = kitDb.exec("SELECT id, name, description, icon, image, variant, unit, created, updated FROM type WHERE kit_id = ?", [kitId]);
+            const typeRes = kitDb.exec("SELECT id, name, description, icon, image, variant, stock, virtual, unit, created, updated, location_longitude, location_latitude FROM type WHERE kit_id = ?", [kitId]);
             if (typeRes && typeRes.length > 0 && typeRes[0].values) {
                 for (const typeRow of typeRes[0].values) {
                     const typeId = typeRow[0];
                     const type: Type = {
                         name: typeRow[1], description: typeRow[2], icon: typeRow[3], image: typeRow[4], variant: typeRow[5],
-                        unit: typeRow[6], created: new Date(typeRow[7]), updated: new Date(typeRow[8]),
+                        stock: typeRow[6], virtual: typeRow[7], unit: typeRow[8], created: new Date(typeRow[9]), updated: new Date(typeRow[10]),
+                        location: {
+                            longitude: typeRow[11], latitude: typeRow[12]
+                        },
                         representations: [], ports: [], qualities: [], authors: []
                     };
-                    const repRes = kitDb.exec("SELECT id, url, description, mime FROM representation WHERE type_id = ?", [typeId]);
+                    const repRes = kitDb.exec("SELECT id, url, description FROM representation WHERE type_id = ?", [typeId]);
                     if (repRes && repRes.length > 0 && repRes[0].values) {
                         for (const repRow of repRes[0].values) {
                             const representation: Representation = {
-                                url: repRow[1], description: repRow[2], mime: repRow[3], tags: [], qualities: []
+                                url: repRow[1], description: repRow[2], tags: [], qualities: []
                             };
                             const repId = repRow[0];
                             const tagRes = kitDb.exec("SELECT name FROM tag WHERE representation_id = ? ORDER BY \"order\"", [repId]);
@@ -1124,14 +1125,18 @@ class StudioStore {
                             type.representations!.push(representation);
                         }
                     }
-                    const portRes = kitDb.exec("SELECT id, local_id, description, family, t, point_x, point_y, point_z, direction_x, direction_y, direction_z FROM port WHERE type_id = ?", [typeId]);
+                    const portRes = kitDb.exec("SELECT id, description, mandatory, family, t, local_id, point_x, point_y, point_z, direction_x, direction_y, direction_z FROM port WHERE type_id = ?", [typeId]);
                     if (portRes && portRes.length > 0 && portRes[0].values) {
                         for (const portRow of portRes[0].values) {
                             const port: Port = {
-                                id_: portRow[1], description: portRow[2], family: portRow[3], t: portRow[4],
-                                point: { x: portRow[5], y: portRow[6], z: portRow[7] },
-                                direction: { x: portRow[8], y: portRow[9], z: portRow[10] },
-                                compatibleFamilies: [], qualities: []
+                                description: portRow[1], mandatory: portRow[2], family: portRow[3],
+                                compatibleFamilies: [], t: portRow[4],
+                                id_: portRow[5], point: {
+                                    x: portRow[6], y: portRow[7], z: portRow[8]
+                                }, direction: {
+                                    x: portRow[9], y: portRow[10], z: portRow[11]
+                                },
+                                qualities: []
                             };
                             const portId = portRow[0];
                             const compFamRes = kitDb.exec("SELECT name FROM compatible_family WHERE port_id = ? ORDER BY \"order\"", [portId]);
@@ -1147,7 +1152,7 @@ class StudioStore {
                     kit.types!.push(type);
                 }
             }
-            const designRes = kitDb.exec("SELECT id, name, description, icon, image, variant, \"view\", unit, created, updated FROM design WHERE kit_id = ?", [kitId]);
+            const designRes = kitDb.exec("SELECT id, name, description, icon, image, variant, view, unit, created, updated, location_longitude, location_latitude FROM design WHERE kit_id = ?", [kitId]);
             if (designRes && designRes.length > 0 && designRes[0].values) {
                 for (const designRow of designRes[0].values) {
                     const design: Design = {
