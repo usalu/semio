@@ -57,33 +57,33 @@ export const Catalogue: Story = {
                     }
                 ],
             },
-            {
-                name: 'Linear Connections',
-                nickname: '---',
-                description: 'Connect two types together.',
-                inputs: [
-                    {
-                        name: 'Type A',
-                        nickname: '~A',
-                        description: 'The first type to connect.',
-                        kind: 'Type',
-                    },
-                    {
-                        name: 'Type B',
-                        nickname: '~B',
-                        description: 'The second type to connect.',
-                        kind: 'Type',
-                    },
-                ],
-                outputs: [
-                    {
-                        name: 'Connected Type',
-                        nickname: '~Typ',
-                        description: 'The connected type.',
-                        kind: 'Type',
-                    },
-                ],
-            },
+            // {
+            //     name: 'Linear Connections',
+            //     nickname: '---',
+            //     description: 'Connect two types together.',
+            //     inputs: [
+            //         {
+            //             name: 'Type A',
+            //             nickname: '~A',
+            //             description: 'The first type to connect.',
+            //             kind: 'Type',
+            //         },
+            //         {
+            //             name: 'Type B',
+            //             nickname: '~B',
+            //             description: 'The second type to connect.',
+            //             kind: 'Type',
+            //         },
+            //     ],
+            //     outputs: [
+            //         {
+            //             name: 'Connected Type',
+            //             nickname: '~Typ',
+            //             description: 'The connected type.',
+            //             kind: 'Type',
+            //         },
+            //     ],
+            // },
         ],
     },
 };
