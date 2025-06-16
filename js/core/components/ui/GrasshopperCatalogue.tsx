@@ -1,4 +1,5 @@
 import React, { FC, useState } from 'react';
+import { Accordion, AccordionItem } from '@semio/js/components/ui/Accordion';
 
 interface ParamProps {
     name: string;
@@ -10,14 +11,32 @@ interface ParamProps {
 
 const Param: FC<ParamProps> = ({ name, nickname, description, kind, expanded }) => {
     return (
-        <div
+        <AccordionItem
             className="size-fit flex items-center justify-center my-1 text-sm cursor-help"
             title={`Name: ${name}\nDescription: ${description}\nKind: ${kind}`}
         >
             {expanded ? <p>{name}</p> : <p>{nickname}</p>}
-        </div>
+        </AccordionItem>
     );
 };
+
+
+interface ParamsProps {
+    params?: ParamProps[];
+    input?: boolean;
+}
+
+const Params: FC<ParamsProps> = ({ params, input }) => {
+    const [expanded, setExpanded] = useState(false);
+
+    return (
+        <Accordion className="flex flex-col gap-1">
+            {params.map((param, index) => (
+                <Param key={index} {...param} expanded={expanded} />
+            ))}
+        </Accordion>
+    );
+}
 
 interface GrasshopperComponentProps {
     name: string;
@@ -28,27 +47,14 @@ interface GrasshopperComponentProps {
 }
 
 const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ nickname, inputs, outputs }) => {
-    const [expandedInputs, setExpandedInputs] = useState(false);
     const [expandedOutputs, setExpandedOutputs] = useState(false);
     return (
         <div className="size-fit border-2 border-dark p-1 bg-light flex flex-row items-center justify-between">
-            <div className="flex flex-col gap-1 items-start"
-                onClick={() => setExpandedInputs(!expandedInputs)}
-            >
-                {inputs?.map((input, index) => (
-                    <Param key={index} {...input} expanded={expandedInputs} />
-                ))}
-            </div>
+            <Params params={inputs || []} />
             <div className="rotate-270 text-center relative bg-dark text-light p-2 text-lg font-bold flex flex-col items-center justify-center gap-1">
                 <p>{nickname}</p>
             </div>
-            <div className="flex flex-col gap-1 items-start"
-                onClick={() => setExpandedOutputs(!expandedOutputs)}
-            >
-                {outputs?.map((output, index) => (
-                    <Param key={index} {...output} expanded={expandedOutputs} />
-                ))}
-            </div>
+            <Params params={outputs || []} input={false} />
         </div>
     );
 };
