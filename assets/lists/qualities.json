@@ -547,22 +547,86 @@
     },
     "costs": {
       "TYPE": "CLASSIFICATION",
-      "investment": {
+      "life cycle costs": {
         "TYPE": "TAXONOMY",
         "UNITS": ["currency"],
-        "construction": "number",
-        "technical-equipment": "number",
-        "other": "number"
+        "construction": {
+          "Name": "construction costs",
+          "outdoor  area": "Number",
+          "building": {
+            "TYPE": "TAXONOMY",
+            "UNITS": ["currency"],
+            "NAME": "building costs",
+            "foundation": "number",
+            "superstructure": "number",
+            "roof": "number",
+            "facade": "number",
+            "windows": "number",
+            "pre installed furniture": "number"
+          },
+          "technical equipment": {
+            "TYPE": "TAXONOMY",
+            "UNITS": ["currency"],
+            "NAME": "technical equipment costs",
+            "heating equipment": "number",
+            "cooling equipment": "number",
+            "electrical equipment": "number"
+          },
+          "property": {
+            "NAME": "property purchase costs"
+          },
+          "planning": {
+            "NAME": "planning costs",
+            "architectural": "number",
+            "engineering": "number"
+          },
+          "expert opinions": {
+            "NAME": "expert opinions costs"
+          }
+        },
+        "running": {
+            "TYPE": "TAXONOMY",
+            "UNITS": ["currency"],
+            "NAME": "running costs",
+            "water-and-wastewater": "number",
+            "energye expenses":{
+              "NAME": "energy expenses",
+              "heating": {
+                "NAME": "heating costs"
+              },
+              "cooling": {
+                "NAME": "cooling costs"
+              },
+              "electricity": {
+                "NAME": "electricity costs"
+              }
+            },
+            "maintenance": {
+              "NAME": "maintenance costs",
+              "insurance":{
+                "NAME": "insurance costs"
+              },
+              "maintance staff": {
+                "NAME": "maintenance staff wage"
+              },
+              "replacement": {
+                "NAME": "replacement costs"
+            },
+            "renovation": {
+              "NAME": "renovation costs"
+
+            }
+        },
+        "interest": "number",
+        "demolition": "number"
       },
-      "operating": {
+      "life cycle income": {
         "TYPE": "TAXONOMY",
         "UNITS": ["currency/a"],
-        "maintenance": "number",
-        "energy": "number",
-        "water-and-wastewater": "number",
-        "cleaning": "number",
-        "insurance": "number",
-        "other": "number"
+        "NAME": "Life Cycle Income",
+        "rental income": "number",
+        "commercial income": "number",
+        "market value increase": "number"
       }
     }
   },
