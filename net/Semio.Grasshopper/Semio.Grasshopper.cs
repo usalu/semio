@@ -1022,743 +1022,6 @@ public abstract class Component : GH_Component
     }
 }
 
-#region Scripting
-
-public abstract class ScriptingComponent : Component
-{
-    public ScriptingComponent(string name, string nickname, string description)
-        : base(name, nickname, description, "Scripting")
-    {
-    }
-}
-
-public class EncodeTextComponent : ScriptingComponent
-{
-    public EncodeTextComponent()
-        : base("Encode Text", ">Txt", "Encode a text.")
-    {
-    }
-
-    public override Guid ComponentGuid => new("FBDDF723-80BD-4AF9-A1EE-450A27D50ABE");
-
-    protected override Bitmap Icon => Resources.encode_24x24;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "Tx", "Text to encode.", GH_ParamAccess.item);
-        pManager.AddIntegerParameter("Mode", "Mo", "0: url safe encoding ()\n1: base64 encoding\n2: replace only",
-            GH_ParamAccess.item, 0);
-        pManager[1].Optional = true;
-        pManager.AddTextParameter("Forbidden", "Fb", "Forbidden text that will be replaced after encoding.",
-            GH_ParamAccess.list);
-        pManager[2].Optional = true;
-        pManager.AddTextParameter("Replace", "Re", "Placeholder text that replaces the forbidden text after encoding.",
-            GH_ParamAccess.list);
-        pManager[3].Optional = true;
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddTextParameter("Encoded Text", "En", "Encoded text.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var text = "";
-        var mode = 0;
-        var forbidden = new List<string>();
-        var replace = new List<string>();
-        DA.GetData(0, ref text);
-        DA.GetData(1, ref mode);
-        DA.GetDataList(2, forbidden);
-        DA.GetDataList(3, replace);
-        DA.SetData(0,
-            Semio.Utility.Encode(text, (EncodeMode)mode, new Tuple<List<string>, List<string>>(forbidden, replace)));
-    }
-}
-
-public class DecodeTextComponent : ScriptingComponent
-{
-    public DecodeTextComponent()
-        : base("Decode Text", "<Txt", "Decode a text.")
-    {
-    }
-
-    public override Guid ComponentGuid => new("E7158D28-87DE-493F-8D78-923265C3E211");
-
-    protected override Bitmap Icon => Resources.decode_24x24;
-
-    public override GH_Exposure Exposure => GH_Exposure.primary;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddTextParameter("Encoded Text", "En", "Encoded text to decode.", GH_ParamAccess.item);
-        pManager.AddIntegerParameter("Mode", "Mo", "0: url safe encoding ()\n1: base64 encoding\n2: replace only",
-            GH_ParamAccess.item, 0);
-        pManager[1].Optional = true;
-        pManager.AddTextParameter("Replace", "Re",
-            "Placeholder text that was used to encode forbidden text after encoding and is restored before decoding. It will be applied sequentially. Make sure to invert the order of your original list.",
-            GH_ParamAccess.list);
-        pManager[2].Optional = true;
-        pManager.AddTextParameter("Original", "Or",
-            "Original forbidden text to restore from replaced before decoding. It will be applied sequentially. Make sure to invert the order of your original list.",
-            GH_ParamAccess.list);
-        pManager[3].Optional = true;
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "Tx", "Decoded text.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var encoded = "";
-        var mode = 0;
-        var replace = new List<string>();
-        var original = new List<string>();
-        DA.GetData(0, ref encoded);
-        DA.GetData(1, ref mode);
-        DA.GetDataList(2, replace);
-        DA.GetDataList(3, original);
-        DA.SetData(0,
-            Semio.Utility.Decode(encoded, (EncodeMode)mode, new Tuple<List<string>, List<string>>(replace, original)));
-    }
-}
-
-#region Serialize
-
-public abstract class SerializeComponent<T, U, V> : ScriptingComponent
-    where T : ModelParam<U, V>, new() where U : ModelGoo<V>, new() where V : Model<V>, new()
-
-{
-    public static readonly string NameM;
-    public static readonly ModelAttribute ModelM;
-
-    static SerializeComponent()
-    {
-        // force compiler to run static constructor of the the meta classes first.
-        var dummyMetaGrasshopper = Meta.Goo;
-
-        NameM = typeof(V).Name;
-        ModelM = Semio.Meta.Model[NameM];
-    }
-
-    protected SerializeComponent() : base($"Serialize {NameM}", $">{ModelM.Abbreviation}",
-        $"Serialize a {NameM.ToLower()}.")
-    {
-    }
-
-    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_serialize_24x24");
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new T(), NameM, ModelM.Code,
-            $"The {NameM.ToLower()} to serialize.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Indent", "In?",
-            $"The optional indent unit for the serialized {NameM.ToLower()}. Empty text for no indent or spaces or tabs",
-            GH_ParamAccess.item, "");
-        pManager[1].Optional = true;
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "Tx", "Text of serialized " + NameM + ".", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var goo = new U();
-        var indent = "";
-        DA.GetData(0, ref goo);
-        DA.GetData(1, ref indent);
-        var text = goo.Value.Serialize(indent);
-        DA.SetData(0, text);
-    }
-}
-
-public class
-    SerializeRepresentationComponent : SerializeComponent<RepresentationParam, RepresentationGoo, Representation>
-{
-    public override Guid ComponentGuid => new("AC6E381C-23EE-4A81-BE0F-3523AEE32046");
-}
-
-public class SerializePortComponent : SerializeComponent<PortParam, PortGoo, Port>
-{
-    public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1B5");
-}
-
-public class SerializeQualityComponent : SerializeComponent<QualityParam, QualityGoo, Quality>
-{
-    public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8974-8588BCA75250");
-}
-
-public class SerializeAuthorComponent : SerializeComponent<AuthorParam, AuthorGoo, Author>
-{
-    public override Guid ComponentGuid => new("99130A53-4FC1-4E64-9A46-2ACEC4634878");
-}
-
-public class SerializeLocationComponent : SerializeComponent<LocationParam, LocationGoo, Location>
-{
-    public override Guid ComponentGuid => new("DB94C7FC-3F0F-4FB4-992E-7E069C17D466");
-}
-
-public class SerializeTypeComponent : SerializeComponent<TypeParam, TypeGoo, Type>
-{
-    public override Guid ComponentGuid => new("BD184BB8-8124-4604-835C-E7B7C199673A");
-}
-
-public class SerializeDiagramPointComponent : SerializeComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
-{
-    public override Guid ComponentGuid => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A99");
-}
-
-public class SerializePieceComponent : SerializeComponent<PieceParam, PieceGoo, Piece>
-{
-    public override Guid ComponentGuid => new("A4EDA838-2246-4617-8298-9585ECFE00D9");
-}
-
-public class SerializeConnectionComponent : SerializeComponent<ConnectionParam, ConnectionGoo, Connection>
-{
-    public override Guid ComponentGuid => new("93FBA84E-79A1-4E32-BE61-A925F476DD60");
-}
-
-public class SerializeDesignComponent : SerializeComponent<DesignParam, DesignGoo, Design>
-{
-    public override Guid ComponentGuid => new("D755D6F1-27C4-441A-8856-6BA20E87DB58");
-}
-
-public class SerializeKitComponent : SerializeComponent<KitParam, KitGoo, Kit>
-{
-    public override Guid ComponentGuid => new("78202ACE-A876-45AF-BA72-D1FC00FE4165");
-}
-
-#endregion
-
-#region Deserialize
-
-public abstract class DeserializeComponent<T, U, V> : ScriptingComponent
-    where T : ModelParam<U, V>, new() where U : ModelGoo<V>, new() where V : Model<V>, new()
-
-{
-    public static readonly string NameM;
-    public static readonly ModelAttribute ModelM;
-
-    static DeserializeComponent()
-    {
-        // force compiler to run static constructor of the the meta classes first.
-        var dummyMetaGrasshopper = Meta.Goo;
-
-        NameM = typeof(V).Name;
-        ModelM = Semio.Meta.Model[NameM];
-    }
-
-    protected DeserializeComponent() : base($"Deserialize {NameM}", $"<{ModelM.Abbreviation}",
-        $"Deserialize a {NameM.ToLower()}.")
-    {
-    }
-
-    protected override Bitmap Icon =>
-        (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_deserialize_24x24");
-
-    public override GH_Exposure Exposure => GH_Exposure.tertiary;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "Tx", $"Text of serialized {NameM}.", GH_ParamAccess.item);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddParameter(new T(), NameM, ModelM.Code,
-            $"Deserialized {NameM}.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var text = "";
-        DA.GetData(0, ref text);
-        var value = text.Deserialize<V>();
-        var goo = new U();
-        goo.Value = value;
-        DA.SetData(0, goo);
-    }
-}
-
-public class
-    DeserializeRepresentationComponent : DeserializeComponent<RepresentationParam, RepresentationGoo, Representation>
-{
-    public override Guid ComponentGuid => new("B8ADAF54-3A91-402D-9542-A288D935015F");
-}
-
-public class DeserializePortComponent : DeserializeComponent<PortParam, PortGoo, Port>
-{
-    public override Guid ComponentGuid => new("3CEB0315-5A51-4072-97A7-D8B1B63FEF31");
-}
-
-public class DeserializeQualityComponent : DeserializeComponent<QualityParam, QualityGoo, Quality>
-{
-    public override Guid ComponentGuid => new("AECB1169-EB65-470F-966E-D491EB46A625");
-}
-
-public class DeserializeAuthorComponent : DeserializeComponent<AuthorParam, AuthorGoo, Author>
-{
-    public override Guid ComponentGuid => new("DDC0A2EC-4BAD-4FFE-B3A6-F9644C8B0072");
-}
-
-public class DeserializeLocationComponent : DeserializeComponent<LocationParam, LocationGoo, Location>
-{
-    public override Guid ComponentGuid => new("B4107B24-B730-4F5D-B9BB-46AE585FCFE9");
-}
-
-public class DeserializeTypeComponent : DeserializeComponent<TypeParam, TypeGoo, Type>
-{
-    public override Guid ComponentGuid => new("F21A80E0-2A62-4BFD-BC2B-A04363732F84");
-}
-
-public class DeserializeDiagramPointComponent : DeserializeComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
-{
-    public override Guid ComponentGuid => new("7FBEECE1-ECAC-4AC1-8DAF-C659A9B6238C");
-}
-
-public class DeserializePieceComponent : DeserializeComponent<PieceParam, PieceGoo, Piece>
-{
-    public override Guid ComponentGuid => new("1FB7F2FB-DCE2-4666-91B5-54DF6B6D9FA4");
-}
-
-public class DeserializeConnectionComponent : DeserializeComponent<ConnectionParam, ConnectionGoo, Connection>
-{
-    public override Guid ComponentGuid => new("41C33A9F-15AC-4CD0-8A9D-4A75CE599282");
-}
-
-public class DeserializeDesignComponent : DeserializeComponent<DesignParam, DesignGoo, Design>
-{
-    public override Guid ComponentGuid => new("464D4D72-CFF1-4391-8C31-9E37EB9434C6");
-}
-
-public class DeserializeKitComponent : DeserializeComponent<KitParam, KitGoo, Kit>
-{
-    public override Guid ComponentGuid => new("79AF9C1D-2B96-4D03-BDD9-C6514DA63E70");
-}
-
-#endregion
-
-#endregion
-
-#region Diagram
-
-public class DrawDiagramComponent : Component
-{
-    public DrawDiagramComponent()
-        : base("Draw Diagram", ":Dgm", "Draw the diagram of the design.", "Display")
-    {
-    }
-
-    public override Guid ComponentGuid => new("C53A0CC8-6DD7-415E-A20A-C5887CBE0DB9");
-
-    protected override Bitmap Icon => Resources.diagram_draw_24x24;
-
-    public override GH_Exposure Exposure => GH_Exposure.tertiary;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new DesignParam());
-        pManager.AddParameter(new TypeParam(), "Types", "Ty+",
-            "Types that are used by the pieces in the design.", GH_ParamAccess.list);
-        pManager.AddTextParameter("Uri", "Ur?",
-            "Optional Unique Resource Identifier (URI) of the kit. This can be an absolute path to a local kit or a url to a remote kit.\n" +
-            "If none is provided, it will try to see if the Grasshopper script is executed inside a local kit.",
-            GH_ParamAccess.item);
-        pManager[2].Optional = true;
-        pManager.AddBooleanParameter("Run", "R", "True to create the diagram of the design.", GH_ParamAccess.item);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddTextParameter("Scalable Vector Graphics", "SVG",
-            "The diagram as a Scalable Vector Graphics (SVG).", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var designGoo = new DesignGoo();
-        var typesGoos = new List<TypeGoo>();
-        var uri = "";
-        var run = false;
-
-        DA.GetData(0, ref designGoo);
-        DA.GetDataList(1, typesGoos);
-        if (!DA.GetData(2, ref uri))
-            uri = OnPingDocument().IsFilePathDefined
-                ? Path.GetDirectoryName(OnPingDocument().FilePath)
-                : Directory.GetCurrentDirectory();
-        DA.GetData(3, ref run);
-        if (!run)
-            return;
-        var design = designGoo.Value;
-        var types = typesGoos.Select(t => t.Value).ToArray();
-        var svg = design.Diagram(types, Utility.ComputeChildPlane, uri);
-        DA.SetData(0, svg);
-    }
-}
-
-#endregion
-
-#region Util
-
-public class FlattenDesignComponent : Component
-{
-    public FlattenDesignComponent()
-        : base("Flatten Design", "↓Dsn", "Flatten a design.", "Util")
-    {
-    }
-
-    public override Guid ComponentGuid => new("434144EA-2AFB-4D39-9F75-BB77A9223595");
-
-    protected override Bitmap Icon => Resources.design_flatten_24x24;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new DesignParam(), "Design", "Dn",
-            "Design to flatten.", GH_ParamAccess.item);
-        pManager.AddParameter(new TypeParam(), "Types", "Ty+",
-            "Types that are used by the pieces in the design.", GH_ParamAccess.list);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddParameter(new DesignParam(), "Design", "Dn",
-            "Flat Design with no connections.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var designGoo = new DesignGoo();
-        var typesGoos = new List<TypeGoo>();
-        DA.GetData(0, ref designGoo);
-        DA.GetDataList(1, typesGoos);
-        var design = designGoo.Value;
-        var types = typesGoos.Select(t => t.Value).ToArray();
-        var flatDesign = design.DeepClone().Flatten(types, Utility.ComputeChildPlane);
-        DA.SetData(0, new DesignGoo(flatDesign));
-    }
-}
-
-public class SortDesignComponent : Component
-{
-    public SortDesignComponent()
-        : base("Sort Design", "⁐Dsn",
-            "Sort a design by reordering pieces and connections to appear in order that they are discovered by breadth-first-search and some times flipping connected and connecting if the connected is not the parent of the connecting.",
-            "Util")
-    {
-    }
-
-    public override Guid ComponentGuid => new("F5E118B2-66EC-4622-9B8C-E77785AA1183");
-    protected override Bitmap Icon => Resources.design_sort_24x24;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new DesignParam(), "Design", "Dn",
-            "Design to sort.", GH_ParamAccess.item);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddParameter(new DesignParam(), "Design", "Dn",
-            "Sorted Design.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var designGoo = new DesignGoo();
-        DA.GetData(0, ref designGoo);
-        var design = designGoo.Value;
-        var sortedDesign = design.DeepClone().Sort();
-        DA.SetData(0, new DesignGoo(sortedDesign));
-    }
-}
-
-public class ConvertUnitComponent : Component
-{
-    public ConvertUnitComponent()
-        : base("Convert Unit", "↦Unt", "Convert a unit.", "Util")
-    {
-    }
-
-    public override Guid ComponentGuid => new("4EEB48B6-39A2-4FE1-B83F-6755EE355FF5");
-
-    protected override Bitmap Icon => Resources.unit_convert_24x24;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddNumberParameter("Value", "Vl", "Value to convert.", GH_ParamAccess.item, 1);
-        pManager.AddTextParameter("From Unit", "FU", "Unit to convert from.", GH_ParamAccess.item);
-        pManager.AddTextParameter("To Unit", "TU", "Unit to convert to.", GH_ParamAccess.item);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddNumberParameter("Converted Value", "CV", "Converted value.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var value = 0.0;
-        var from = "";
-        var to = "";
-        DA.GetData(0, ref value);
-        DA.GetData(1, ref from);
-        DA.GetData(2, ref to);
-        var convertedValue = Semio.Utility.Units.Convert((float)value, from, to);
-        DA.SetData(0, (double)convertedValue);
-    }
-}
-
-public class ObjectsToTextComponent : Component
-{
-    public ObjectsToTextComponent() : base("Objects to Text", "Objs→Txt",
-        "Converts a list of objects to a human-readable text.", "Util")
-    {
-    }
-
-    public override Guid ComponentGuid => new("3BE61561-8290-4965-A9A6-38ACB4EC5182");
-
-    protected override Bitmap Icon => Resources.objects_convert_text_24x24;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddGenericParameter("Objects", "Ob+", "Objects to humanize.", GH_ParamAccess.list);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddTextParameter("Humanized Text", "Tx", "Human-readable text.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var objects = new List<object>();
-        DA.GetDataList(0, objects);
-        var humanizedText = objects.Humanize();
-        DA.SetData(0, humanizedText);
-    }
-}
-
-public class NormalizeTextComponent : Component
-{
-    public NormalizeTextComponent() : base("Normalize Text", "⇒Txt", "Normalizes a text to different formats.", "Util")
-    {
-    }
-
-    public override Guid ComponentGuid => new("1417BD04-7271-4EFD-A32C-99B1D2FC8A9E");
-
-    protected override Bitmap Icon => Resources.text_normalize_24x24;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "Txt", "Text to normalize.", GH_ParamAccess.item);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddTextParameter("Strict", "St", "Strictly alphanumerical text that either strips characters or turn them into underscores.",
-            GH_ParamAccess.item);
-        pManager.AddTextParameter("Title", "Ti", "Titelized text by capitalizing and unifying casing.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Underscore", "Un", "Underscorized text by lowercasing everything and replacing spaces with underscores.",
-            GH_ParamAccess.item);
-        pManager.AddTextParameter("Kebab", "Kb",
-            "Kebaberized text by lowercasing everything and replacing spaces with dashes.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Pascal", "Pa", "Pascalized text by capitalizing and removing spaces.",
-            GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        string text = null;
-        DA.GetData(0, ref text);
-
-        var strict = Regex.Replace(text.Dehumanize().Underscore(), @"[^a-zA-Z0-9_]", "");
-        var title = text.Titleize();
-        var underscore = text.Underscore();
-        var kebab = text.Kebaberize();
-        var pascal = text.Pascalize();
-
-        DA.SetData(0, strict);
-        DA.SetData(1, title);
-        DA.SetData(2, underscore);
-        DA.SetData(3, kebab);
-        DA.SetData(4, pascal);
-    }
-}
-
-//public class NumberToTextComponent : Component
-//{
-//    public NumberToTextComponent() : base("Number To Text", "Num→Txt", "Converts a number to its textual representation.", "Util")
-//    {
-//    }
-
-//    public override Guid ComponentGuid => new("891063B8-7935-409A-AF9F-435E4E752922");
-
-//    protected override void RegisterInputParams(GH_InputParamManager pManager)
-//    {
-//        pManager.AddNumberParameter("Number", "Num", "Number to convert.", GH_ParamAccess.item);
-//    }
-
-//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-//    {
-//        pManager.AddTextParameter("Text", "Txt", "Textual representation of the number.", GH_ParamAccess.item);
-//    }
-
-//    protected override void SolveInstance(IGH_DataAccess DA)
-//    {
-
-//    }
-//}
-
-public class TruncateTextComponent : Component
-{
-    public TruncateTextComponent() : base("Truncate Text", "…Txt",
-        "Truncates text by length and an optional termination.", "Util")
-    {
-    }
-
-    public override Guid ComponentGuid => new("C15BFCE9-0EF7-4367-8310-EF47CE0B8013");
-
-    protected override Bitmap Icon => Resources.text_truncate_24x24;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "Txt", "Text to truncate.", GH_ParamAccess.item);
-        pManager.AddIntegerParameter("Length", "Le", "Maximum length of the text.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Termination", "Tr", "Optional termination to append to the truncated text.",
-            GH_ParamAccess.item, "…");
-        pManager[2].Optional = true;
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddTextParameter("Strict", "St", "Fixed length truncated text including the truncation text length.",
-            GH_ParamAccess.item);
-        pManager.AddTextParameter("Characters", "Crs",
-            "Fixed alphanumeric character length truncated text including the truncation text length",
-            GH_ParamAccess.item);
-        pManager.AddTextParameter("Words", "Wds", "Fixed word length truncated text.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        string text = null;
-        var length = 0;
-        var termination = "…";
-        DA.GetData(0, ref text);
-        DA.GetData(1, ref length);
-        DA.GetData(2, ref termination);
-        var strict = text.Truncate(length, termination, Truncator.FixedLength);
-        var characters = text.Truncate(length, termination, Truncator.FixedNumberOfCharacters);
-        var words = text.Truncate(length, termination, Truncator.FixedNumberOfWords);
-        DA.SetData(0, strict);
-        DA.SetData(1, characters);
-        DA.SetData(2, words);
-    }
-}
-
-public class RandomIdsComponent : Component
-{
-    public RandomIdsComponent()
-        : base("Random Ids", "%Ids", "Generate random ids.", "Util")
-    {
-    }
-
-    public override Guid ComponentGuid => new("27E48D59-10BE-4239-8AAC-9031BF6AFBCC");
-
-    protected override Bitmap Icon => Resources.id_random_24x24;
-
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddIntegerParameter("Count", "Ct", "Number of ids to generate.", GH_ParamAccess.item, 1);
-        pManager.AddIntegerParameter("Seed", "Se", "Seed for the random generator.", GH_ParamAccess.item, 0);
-        pManager.AddBooleanParameter("Unique Component", "UC",
-            "If true, the generated ids will be unique for this component.", GH_ParamAccess.item, true);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddTextParameter("Ids", "Id+", "Generated ids.", GH_ParamAccess.list);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var count = 0;
-        var seed = 0;
-        var unique = true;
-
-        DA.GetData(0, ref count);
-        DA.GetData(1, ref seed);
-        DA.GetData(2, ref unique);
-
-        var ids = new List<string>();
-
-        for (var i = 0; i < count; i++)
-        {
-            var hashString = seed + ";" + i;
-            if (unique)
-                hashString += ";" + InstanceGuid;
-            using (var md5 = MD5.Create())
-            {
-                var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(hashString));
-                var id = Semio.Utility.GenerateRandomId(BitConverter.ToInt32(hash, 0));
-                ids.Add(id);
-            }
-        }
-
-        DA.SetDataList(0, ids);
-    }
-}
-
-
-//public class UpdateComponents : Component
-//{
-//    public UpdateComponents()
-//    : base("Update Components", "↑Cmps", "Update all components.", "Util")
-//    {
-//    }
-
-//    public override Guid ComponentGuid => new("51AC98FB-167F-41EC-9BBA-867A0B3F9E0A");
-
-//    protected override Bitmap Icon => Resources.components_update_24x24;
-
-//    protected override void RegisterInputParams(GH_InputParamManager pManager)
-//    {
-//        pManager.AddBooleanParameter("Update", "Up", "Update all components.", GH_ParamAccess.item);
-//    }
-
-//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-//    {
-//        pManager.AddBooleanParameter("Updated", "Upd", "True if components were updated.", GH_ParamAccess.item);
-//    }
-
-//    protected override void SolveInstance(IGH_DataAccess DA)
-//    {
-//        var update = false;
-//        DA.GetData(0, ref update);
-//        if (update)
-//        {
-//            foreach (var obj in Instances.ActiveCanvas.Document.Objects)
-//            {
-//                if (obj is GH_Component component)
-//                    component.ExpireSolution(true);
-//            }
-//        }
-
-//        DA.SetData(0, update);
-//    }
-//}
-
-#endregion
-
 #region Modeling
 
 public abstract class ModelComponent<T, U, V> : Component
@@ -2256,6 +1519,479 @@ public class KitComponent : ModelComponent<KitParam, KitGoo, Kit>
         return kit;
     }
 }
+
+#endregion
+
+#region Scripting
+
+public abstract class ScriptingComponent : Component
+{
+    public ScriptingComponent(string name, string nickname, string description)
+        : base(name, nickname, description, "Scripting")
+    {
+    }
+}
+
+public class EncodeTextComponent : ScriptingComponent
+{
+    public EncodeTextComponent()
+        : base("Encode Text", ">Txt", "Encode a text.")
+    {
+    }
+
+    public override Guid ComponentGuid => new("FBDDF723-80BD-4AF9-A1EE-450A27D50ABE");
+
+    protected override Bitmap Icon => Resources.encode_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Text", "Tx", "Text to encode.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Mode", "Mo", "0: url safe encoding ()\n1: base64 encoding\n2: replace only",
+            GH_ParamAccess.item, 0);
+        pManager[1].Optional = true;
+        pManager.AddTextParameter("Forbidden", "Fb", "Forbidden text that will be replaced after encoding.",
+            GH_ParamAccess.list);
+        pManager[2].Optional = true;
+        pManager.AddTextParameter("Replace", "Re", "Placeholder text that replaces the forbidden text after encoding.",
+            GH_ParamAccess.list);
+        pManager[3].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Encoded Text", "En", "Encoded text.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var text = "";
+        var mode = 0;
+        var forbidden = new List<string>();
+        var replace = new List<string>();
+        DA.GetData(0, ref text);
+        DA.GetData(1, ref mode);
+        DA.GetDataList(2, forbidden);
+        DA.GetDataList(3, replace);
+        DA.SetData(0,
+            Semio.Utility.Encode(text, (EncodeMode)mode, new Tuple<List<string>, List<string>>(forbidden, replace)));
+    }
+}
+
+public class DecodeTextComponent : ScriptingComponent
+{
+    public DecodeTextComponent()
+        : base("Decode Text", "<Txt", "Decode a text.")
+    {
+    }
+
+    public override Guid ComponentGuid => new("E7158D28-87DE-493F-8D78-923265C3E211");
+
+    protected override Bitmap Icon => Resources.decode_24x24;
+
+    public override GH_Exposure Exposure => GH_Exposure.primary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Encoded Text", "En", "Encoded text to decode.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Mode", "Mo", "0: url safe encoding ()\n1: base64 encoding\n2: replace only",
+            GH_ParamAccess.item, 0);
+        pManager[1].Optional = true;
+        pManager.AddTextParameter("Replace", "Re",
+            "Placeholder text that was used to encode forbidden text after encoding and is restored before decoding. It will be applied sequentially. Make sure to invert the order of your original list.",
+            GH_ParamAccess.list);
+        pManager[2].Optional = true;
+        pManager.AddTextParameter("Original", "Or",
+            "Original forbidden text to restore from replaced before decoding. It will be applied sequentially. Make sure to invert the order of your original list.",
+            GH_ParamAccess.list);
+        pManager[3].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Text", "Tx", "Decoded text.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var encoded = "";
+        var mode = 0;
+        var replace = new List<string>();
+        var original = new List<string>();
+        DA.GetData(0, ref encoded);
+        DA.GetData(1, ref mode);
+        DA.GetDataList(2, replace);
+        DA.GetDataList(3, original);
+        DA.SetData(0,
+            Semio.Utility.Decode(encoded, (EncodeMode)mode, new Tuple<List<string>, List<string>>(replace, original)));
+    }
+}
+
+
+public class ObjectsToTextComponent : ScriptingComponent
+{
+    public ObjectsToTextComponent() : base("Objects to Text", "Objs→Txt",
+        "Converts a list of objects to a human-readable text.")
+    {
+    }
+
+    public override Guid ComponentGuid => new("3BE61561-8290-4965-A9A6-38ACB4EC5182");
+
+    protected override Bitmap Icon => Resources.objects_convert_text_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddGenericParameter("Objects", "Ob+", "Objects to humanize.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Humanized Text", "Tx", "Human-readable text.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var objects = new List<object>();
+        DA.GetDataList(0, objects);
+        var humanizedText = objects.Humanize();
+        DA.SetData(0, humanizedText);
+    }
+}
+
+public class NormalizeTextComponent : ScriptingComponent
+{
+    public NormalizeTextComponent() : base("Normalize Text", "⇒Txt", "Normalizes a text to different formats.")
+    {
+    }
+
+    public override Guid ComponentGuid => new("1417BD04-7271-4EFD-A32C-99B1D2FC8A9E");
+
+    protected override Bitmap Icon => Resources.text_normalize_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Text", "Txt", "Text to normalize.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Strict", "St", "Strictly alphanumerical text that either strips characters or turn them into underscores.",
+            GH_ParamAccess.item);
+        pManager.AddTextParameter("Title", "Ti", "Titelized text by capitalizing and unifying casing.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Underscore", "Un", "Underscorized text by lowercasing everything and replacing spaces with underscores.",
+            GH_ParamAccess.item);
+        pManager.AddTextParameter("Kebab", "Kb",
+            "Kebaberized text by lowercasing everything and replacing spaces with dashes.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Pascal", "Pa", "Pascalized text by capitalizing and removing spaces.",
+            GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        string text = null;
+        DA.GetData(0, ref text);
+
+        var strict = Regex.Replace(text.Dehumanize().Underscore(), @"[^a-zA-Z0-9_]", "");
+        var title = text.Titleize();
+        var underscore = text.Underscore();
+        var kebab = text.Kebaberize();
+        var pascal = text.Pascalize();
+
+        DA.SetData(0, strict);
+        DA.SetData(1, title);
+        DA.SetData(2, underscore);
+        DA.SetData(3, kebab);
+        DA.SetData(4, pascal);
+    }
+}
+
+//public class NumberToTextComponent : ScriptingComponent
+//{
+//    public NumberToTextComponent() : base("Number To Text", "Num→Txt", "Converts a number to its textual representation.")
+//    {
+//    }
+
+//    public override Guid ComponentGuid => new("891063B8-7935-409A-AF9F-435E4E752922");
+
+//    protected override void RegisterInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddNumberParameter("Number", "Num", "Number to convert.", GH_ParamAccess.item);
+//    }
+
+//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+//    {
+//        pManager.AddTextParameter("Text", "Txt", "Textual representation of the number.", GH_ParamAccess.item);
+//    }
+
+//    protected override void SolveInstance(IGH_DataAccess DA)
+//    {
+
+//    }
+//}
+
+public class TruncateTextComponent : ScriptingComponent
+{
+    public TruncateTextComponent() : base("Truncate Text", "…Txt",
+        "Truncates text by length and an optional termination.")
+    {
+    }
+
+    public override Guid ComponentGuid => new("C15BFCE9-0EF7-4367-8310-EF47CE0B8013");
+
+    protected override Bitmap Icon => Resources.text_truncate_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Text", "Txt", "Text to truncate.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Length", "Le", "Maximum length of the text.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Termination", "Tr", "Optional termination to append to the truncated text.",
+            GH_ParamAccess.item, "…");
+        pManager[2].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Strict", "St", "Fixed length truncated text including the truncation text length.",
+            GH_ParamAccess.item);
+        pManager.AddTextParameter("Characters", "Crs",
+            "Fixed alphanumeric character length truncated text including the truncation text length",
+            GH_ParamAccess.item);
+        pManager.AddTextParameter("Words", "Wds", "Fixed word length truncated text.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        string text = null;
+        var length = 0;
+        var termination = "…";
+        DA.GetData(0, ref text);
+        DA.GetData(1, ref length);
+        DA.GetData(2, ref termination);
+        var strict = text.Truncate(length, termination, Truncator.FixedLength);
+        var characters = text.Truncate(length, termination, Truncator.FixedNumberOfCharacters);
+        var words = text.Truncate(length, termination, Truncator.FixedNumberOfWords);
+        DA.SetData(0, strict);
+        DA.SetData(1, characters);
+        DA.SetData(2, words);
+    }
+}
+
+#region Serialize
+
+public abstract class SerializeComponent<T, U, V> : ScriptingComponent
+    where T : ModelParam<U, V>, new() where U : ModelGoo<V>, new() where V : Model<V>, new()
+
+{
+    public static readonly string NameM;
+    public static readonly ModelAttribute ModelM;
+
+    static SerializeComponent()
+    {
+        // force compiler to run static constructor of the the meta classes first.
+        var dummyMetaGrasshopper = Meta.Goo;
+
+        NameM = typeof(V).Name;
+        ModelM = Semio.Meta.Model[NameM];
+    }
+
+    protected SerializeComponent() : base($"Serialize {NameM}", $">{ModelM.Abbreviation}",
+        $"Serialize a {NameM.ToLower()}.")
+    {
+    }
+
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_serialize_24x24");
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new T(), NameM, ModelM.Code,
+            $"The {NameM.ToLower()} to serialize.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Indent", "In?",
+            $"The optional indent unit for the serialized {NameM.ToLower()}. Empty text for no indent or spaces or tabs",
+            GH_ParamAccess.item, "");
+        pManager[1].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Text", "Tx", "Text of serialized " + NameM + ".", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var goo = new U();
+        var indent = "";
+        DA.GetData(0, ref goo);
+        DA.GetData(1, ref indent);
+        var text = goo.Value.Serialize(indent);
+        DA.SetData(0, text);
+    }
+}
+
+public class
+    SerializeRepresentationComponent : SerializeComponent<RepresentationParam, RepresentationGoo, Representation>
+{
+    public override Guid ComponentGuid => new("AC6E381C-23EE-4A81-BE0F-3523AEE32046");
+}
+
+public class SerializePortComponent : SerializeComponent<PortParam, PortGoo, Port>
+{
+    public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1B5");
+}
+
+public class SerializeQualityComponent : SerializeComponent<QualityParam, QualityGoo, Quality>
+{
+    public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8974-8588BCA75250");
+}
+
+public class SerializeAuthorComponent : SerializeComponent<AuthorParam, AuthorGoo, Author>
+{
+    public override Guid ComponentGuid => new("99130A53-4FC1-4E64-9A46-2ACEC4634878");
+}
+
+public class SerializeLocationComponent : SerializeComponent<LocationParam, LocationGoo, Location>
+{
+    public override Guid ComponentGuid => new("DB94C7FC-3F0F-4FB4-992E-7E069C17D466");
+}
+
+public class SerializeTypeComponent : SerializeComponent<TypeParam, TypeGoo, Type>
+{
+    public override Guid ComponentGuid => new("BD184BB8-8124-4604-835C-E7B7C199673A");
+}
+
+public class SerializeDiagramPointComponent : SerializeComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
+{
+    public override Guid ComponentGuid => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A99");
+}
+
+public class SerializePieceComponent : SerializeComponent<PieceParam, PieceGoo, Piece>
+{
+    public override Guid ComponentGuid => new("A4EDA838-2246-4617-8298-9585ECFE00D9");
+}
+
+public class SerializeConnectionComponent : SerializeComponent<ConnectionParam, ConnectionGoo, Connection>
+{
+    public override Guid ComponentGuid => new("93FBA84E-79A1-4E32-BE61-A925F476DD60");
+}
+
+public class SerializeDesignComponent : SerializeComponent<DesignParam, DesignGoo, Design>
+{
+    public override Guid ComponentGuid => new("D755D6F1-27C4-441A-8856-6BA20E87DB58");
+}
+
+public class SerializeKitComponent : SerializeComponent<KitParam, KitGoo, Kit>
+{
+    public override Guid ComponentGuid => new("78202ACE-A876-45AF-BA72-D1FC00FE4165");
+}
+
+#endregion
+
+#region Deserialize
+
+public abstract class DeserializeComponent<T, U, V> : ScriptingComponent
+    where T : ModelParam<U, V>, new() where U : ModelGoo<V>, new() where V : Model<V>, new()
+
+{
+    public static readonly string NameM;
+    public static readonly ModelAttribute ModelM;
+
+    static DeserializeComponent()
+    {
+        // force compiler to run static constructor of the the meta classes first.
+        var dummyMetaGrasshopper = Meta.Goo;
+
+        NameM = typeof(V).Name;
+        ModelM = Semio.Meta.Model[NameM];
+    }
+
+    protected DeserializeComponent() : base($"Deserialize {NameM}", $"<{ModelM.Abbreviation}",
+        $"Deserialize a {NameM.ToLower()}.")
+    {
+    }
+
+    protected override Bitmap Icon =>
+        (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_deserialize_24x24");
+
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Text", "Tx", $"Text of serialized {NameM}.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new T(), NameM, ModelM.Code,
+            $"Deserialized {NameM}.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var text = "";
+        DA.GetData(0, ref text);
+        var value = text.Deserialize<V>();
+        var goo = new U();
+        goo.Value = value;
+        DA.SetData(0, goo);
+    }
+}
+
+public class
+    DeserializeRepresentationComponent : DeserializeComponent<RepresentationParam, RepresentationGoo, Representation>
+{
+    public override Guid ComponentGuid => new("B8ADAF54-3A91-402D-9542-A288D935015F");
+}
+
+public class DeserializePortComponent : DeserializeComponent<PortParam, PortGoo, Port>
+{
+    public override Guid ComponentGuid => new("3CEB0315-5A51-4072-97A7-D8B1B63FEF31");
+}
+
+public class DeserializeQualityComponent : DeserializeComponent<QualityParam, QualityGoo, Quality>
+{
+    public override Guid ComponentGuid => new("AECB1169-EB65-470F-966E-D491EB46A625");
+}
+
+public class DeserializeAuthorComponent : DeserializeComponent<AuthorParam, AuthorGoo, Author>
+{
+    public override Guid ComponentGuid => new("DDC0A2EC-4BAD-4FFE-B3A6-F9644C8B0072");
+}
+
+public class DeserializeLocationComponent : DeserializeComponent<LocationParam, LocationGoo, Location>
+{
+    public override Guid ComponentGuid => new("B4107B24-B730-4F5D-B9BB-46AE585FCFE9");
+}
+
+public class DeserializeTypeComponent : DeserializeComponent<TypeParam, TypeGoo, Type>
+{
+    public override Guid ComponentGuid => new("F21A80E0-2A62-4BFD-BC2B-A04363732F84");
+}
+
+public class DeserializeDiagramPointComponent : DeserializeComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
+{
+    public override Guid ComponentGuid => new("7FBEECE1-ECAC-4AC1-8DAF-C659A9B6238C");
+}
+
+public class DeserializePieceComponent : DeserializeComponent<PieceParam, PieceGoo, Piece>
+{
+    public override Guid ComponentGuid => new("1FB7F2FB-DCE2-4666-91B5-54DF6B6D9FA4");
+}
+
+public class DeserializeConnectionComponent : DeserializeComponent<ConnectionParam, ConnectionGoo, Connection>
+{
+    public override Guid ComponentGuid => new("41C33A9F-15AC-4CD0-8A9D-4A75CE599282");
+}
+
+public class DeserializeDesignComponent : DeserializeComponent<DesignParam, DesignGoo, Design>
+{
+    public override Guid ComponentGuid => new("464D4D72-CFF1-4391-8C31-9E37EB9434C6");
+}
+
+public class DeserializeKitComponent : DeserializeComponent<KitParam, KitGoo, Kit>
+{
+    public override Guid ComponentGuid => new("79AF9C1D-2B96-4D03-BDD9-C6514DA63E70");
+}
+
+#endregion
 
 #endregion
 
@@ -2906,6 +2642,284 @@ public class PredictDesignComponent : AssistantComponent
 }
 
 #endregion
+
+#endregion
+
+#region Display
+
+public class DrawDiagramComponent : Component
+{
+    public DrawDiagramComponent()
+        : base("Draw Diagram", ":Dgm", "Draw the diagram of the design.", "Display")
+    {
+    }
+
+    public override Guid ComponentGuid => new("C53A0CC8-6DD7-415E-A20A-C5887CBE0DB9");
+
+    protected override Bitmap Icon => Resources.diagram_draw_24x24;
+
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam());
+        pManager.AddParameter(new TypeParam(), "Types", "Ty+",
+            "Types that are used by the pieces in the design.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Uri", "Ur?",
+            "Optional Unique Resource Identifier (URI) of the kit. This can be an absolute path to a local kit or a url to a remote kit.\n" +
+            "If none is provided, it will try to see if the Grasshopper script is executed inside a local kit.",
+            GH_ParamAccess.item);
+        pManager[2].Optional = true;
+        pManager.AddBooleanParameter("Run", "R", "True to create the diagram of the design.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Scalable Vector Graphics", "SVG",
+            "The diagram as a Scalable Vector Graphics (SVG).", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var designGoo = new DesignGoo();
+        var typesGoos = new List<TypeGoo>();
+        var uri = "";
+        var run = false;
+
+        DA.GetData(0, ref designGoo);
+        DA.GetDataList(1, typesGoos);
+        if (!DA.GetData(2, ref uri))
+            uri = OnPingDocument().IsFilePathDefined
+                ? Path.GetDirectoryName(OnPingDocument().FilePath)
+                : Directory.GetCurrentDirectory();
+        DA.GetData(3, ref run);
+        if (!run)
+            return;
+        var design = designGoo.Value;
+        var types = typesGoos.Select(t => t.Value).ToArray();
+        var svg = design.Diagram(types, Utility.ComputeChildPlane, uri);
+        DA.SetData(0, svg);
+    }
+}
+
+#endregion
+
+
+#region Templates
+
+public abstract class TemplateComponent : Component
+{
+    protected TemplateComponent(string name, string nickname, string description, string subcategory = "Templates")
+        : base(name, nickname, description, subcategory)
+    {
+    }
+}
+
+public class RandomIdsComponent : TemplateComponent
+{
+    public RandomIdsComponent()
+        : base("Random Ids", "%Ids", "Generate random ids.", "Util")
+    {
+    }
+
+    public override Guid ComponentGuid => new("27E48D59-10BE-4239-8AAC-9031BF6AFBCC");
+
+    protected override Bitmap Icon => Resources.id_random_24x24;
+
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddIntegerParameter("Count", "Ct", "Number of ids to generate.", GH_ParamAccess.item, 1);
+        pManager.AddIntegerParameter("Seed", "Se", "Seed for the random generator.", GH_ParamAccess.item, 0);
+        pManager.AddBooleanParameter("Unique Component", "UC",
+            "If true, the generated ids will be unique for this component.", GH_ParamAccess.item, true);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Ids", "Id+", "Generated ids.", GH_ParamAccess.list);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var count = 0;
+        var seed = 0;
+        var unique = true;
+
+        DA.GetData(0, ref count);
+        DA.GetData(1, ref seed);
+        DA.GetData(2, ref unique);
+
+        var ids = new List<string>();
+
+        for (var i = 0; i < count; i++)
+        {
+            var hashString = seed + ";" + i;
+            if (unique)
+                hashString += ";" + InstanceGuid;
+            using (var md5 = MD5.Create())
+            {
+                var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(hashString));
+                var id = Semio.Utility.GenerateRandomId(BitConverter.ToInt32(hash, 0));
+                ids.Add(id);
+            }
+        }
+
+        DA.SetDataList(0, ids);
+    }
+}
+
+#endregion
+
+#region Util
+
+public class FlattenDesignComponent : Component
+{
+    public FlattenDesignComponent()
+        : base("Flatten Design", "↓Dsn", "Flatten a design.", "Util")
+    {
+    }
+
+    public override Guid ComponentGuid => new("434144EA-2AFB-4D39-9F75-BB77A9223595");
+
+    protected override Bitmap Icon => Resources.design_flatten_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam(), "Design", "Dn",
+            "Design to flatten.", GH_ParamAccess.item);
+        pManager.AddParameter(new TypeParam(), "Types", "Ty+",
+            "Types that are used by the pieces in the design.", GH_ParamAccess.list);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam(), "Design", "Dn",
+            "Flat Design with no connections.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var designGoo = new DesignGoo();
+        var typesGoos = new List<TypeGoo>();
+        DA.GetData(0, ref designGoo);
+        DA.GetDataList(1, typesGoos);
+        var design = designGoo.Value;
+        var types = typesGoos.Select(t => t.Value).ToArray();
+        var flatDesign = design.DeepClone().Flatten(types, Utility.ComputeChildPlane);
+        DA.SetData(0, new DesignGoo(flatDesign));
+    }
+}
+
+public class SortDesignComponent : Component
+{
+    public SortDesignComponent()
+        : base("Sort Design", "⁐Dsn",
+            "Sort a design by reordering pieces and connections to appear in order that they are discovered by breadth-first-search and some times flipping connected and connecting if the connected is not the parent of the connecting.",
+            "Util")
+    {
+    }
+
+    public override Guid ComponentGuid => new("F5E118B2-66EC-4622-9B8C-E77785AA1183");
+    protected override Bitmap Icon => Resources.design_sort_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam(), "Design", "Dn",
+            "Design to sort.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam(), "Design", "Dn",
+            "Sorted Design.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var designGoo = new DesignGoo();
+        DA.GetData(0, ref designGoo);
+        var design = designGoo.Value;
+        var sortedDesign = design.DeepClone().Sort();
+        DA.SetData(0, new DesignGoo(sortedDesign));
+    }
+}
+
+public class ConvertUnitComponent : Component
+{
+    public ConvertUnitComponent()
+        : base("Convert Unit", "↦Unt", "Convert a unit.", "Util")
+    {
+    }
+
+    public override Guid ComponentGuid => new("4EEB48B6-39A2-4FE1-B83F-6755EE355FF5");
+
+    protected override Bitmap Icon => Resources.unit_convert_24x24;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddNumberParameter("Value", "Vl", "Value to convert.", GH_ParamAccess.item, 1);
+        pManager.AddTextParameter("From Unit", "FU", "Unit to convert from.", GH_ParamAccess.item);
+        pManager.AddTextParameter("To Unit", "TU", "Unit to convert to.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddNumberParameter("Converted Value", "CV", "Converted value.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var value = 0.0;
+        var from = "";
+        var to = "";
+        DA.GetData(0, ref value);
+        DA.GetData(1, ref from);
+        DA.GetData(2, ref to);
+        var convertedValue = Semio.Utility.Units.Convert((float)value, from, to);
+        DA.SetData(0, (double)convertedValue);
+    }
+}
+
+
+//public class UpdateComponents : Component
+//{
+//    public UpdateComponents()
+//    : base("Update Components", "↑Cmps", "Update all components.", "Util")
+//    {
+//    }
+
+//    public override Guid ComponentGuid => new("51AC98FB-167F-41EC-9BBA-867A0B3F9E0A");
+
+//    protected override Bitmap Icon => Resources.components_update_24x24;
+
+//    protected override void RegisterInputParams(GH_InputParamManager pManager)
+//    {
+//        pManager.AddBooleanParameter("Update", "Up", "Update all components.", GH_ParamAccess.item);
+//    }
+
+//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+//    {
+//        pManager.AddBooleanParameter("Updated", "Upd", "True if components were updated.", GH_ParamAccess.item);
+//    }
+
+//    protected override void SolveInstance(IGH_DataAccess DA)
+//    {
+//        var update = false;
+//        DA.GetData(0, ref update);
+//        if (update)
+//        {
+//            foreach (var obj in Instances.ActiveCanvas.Document.Objects)
+//            {
+//                if (obj is GH_Component component)
+//                    component.ExpireSolution(true);
+//            }
+//        }
+
+//        DA.SetData(0, update);
+//    }
+//}
 
 #endregion
 
