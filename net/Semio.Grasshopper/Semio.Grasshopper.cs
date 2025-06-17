@@ -2718,15 +2718,13 @@ public abstract class TemplateComponent : Component
 public class RandomIdsComponent : TemplateComponent
 {
     public RandomIdsComponent()
-        : base("Random Ids", "%Ids", "Generate random ids.", "Util")
+        : base("Random Ids", "%Ids", "Generate random ids.")
     {
     }
 
     public override Guid ComponentGuid => new("27E48D59-10BE-4239-8AAC-9031BF6AFBCC");
 
     protected override Bitmap Icon => Resources.id_random_24x24;
-
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {

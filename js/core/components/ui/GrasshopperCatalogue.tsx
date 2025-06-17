@@ -95,13 +95,13 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ name, nickname, d
         >
             <div ref={coreRef} id="core" className="flex flex-row items-stretch size-fit border-2 border-dark bg-light justify-between">
                 {inputs && <Params params={inputs || []} input={true} setHighlight={setHighlightHandler} extended={extended} highlight={highlight?.input ? highlight?.index : undefined} />}
-                <div className="bg-dark text-light text-lg font-bold" style={{ writingMode: 'vertical-rl' }}>
+                <div className="bg-dark text-light font-bold" style={{ writingMode: 'vertical-rl' }}>
                     <p className="w-full text-center rotate-180">{extended ? name : nickname}</p>
                 </div>
                 {outputs && <Params params={outputs || []} input={false} setHighlight={setHighlightHandler} extended={extended} highlight={highlight?.input ? undefined : highlight?.index} />}
             </div>
             {extended &&
-                <div id="description" className="bg-gray p-1">
+                <div id="description" className="bg-gray p-1 text-sm">
                     {highlight?.description || description}
                 </div>
             }
