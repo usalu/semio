@@ -25,6 +25,21 @@ def is_numeric(s):
         return False
 
 
+def get_pivot_y(container_chunk):
+    # Extracts the Pivot Y value from the Container chunk, if present
+    attributes_chunk = container_chunk.find("./chunks/chunk[@name='Attributes']")
+    if attributes_chunk is not None:
+        for item in attributes_chunk.findall("./items/item"):
+            if item.get("name") == "Pivot":
+                y_elem = item.find("Y")
+                if y_elem is not None:
+                    try:
+                        return float(y_elem.text)
+                    except (TypeError, ValueError):
+                        pass
+    return float('inf')  # If not found, sort to end
+
+
 def parse_components_and_groups_xml(xml_file_path):
     tree = ET.parse(xml_file_path)
     root = tree.getroot()
@@ -46,6 +61,7 @@ def parse_components_and_groups_xml(xml_file_path):
                 if item.get("name") == "Name":
                     component_props["name"] = item.text
             container_chunk = obj_chunk.find("./chunks/chunk[@name='Container']")
+            pivot_y = None
             if container_chunk is not None:
                 for item in container_chunk.findall("./items/item"):
                     name_attr = item.get("name")
@@ -58,6 +74,8 @@ def parse_components_and_groups_xml(xml_file_path):
                     elif name_attr == "IconOverride":
                         # Try to extract icon as base64 or placeholder
                         component_props["icon"] = "icon"  # Placeholder, can be improved
+                # Extract Pivot Y (for sorting only)
+                pivot_y = get_pivot_y(container_chunk)
                 # Extract Inputs
                 inputs = []
                 input_param_chunks_normal = container_chunk.findall(
@@ -100,8 +118,9 @@ def parse_components_and_groups_xml(xml_file_path):
             if "icon" not in component_props:
                 component_props["icon"] = ""
             if instance_guid and component_props.get("name"):
-                components_by_guid[instance_guid] = component_props
-                all_components.append(component_props)
+                # Store pivot_y only in a parallel dict for sorting
+                components_by_guid[instance_guid] = (component_props, pivot_y)
+                all_components.append((component_props, pivot_y))
 
     # Now, collect all groups and subgroups
     groups = {}
@@ -180,18 +199,29 @@ def parse_components_and_groups_xml(xml_file_path):
                             subgroup_components = []
                             for sub_guid in subgroup_ids:
                                 if sub_guid in components_by_guid:
-                                    subgroup_components.append(
-                                        components_by_guid[sub_guid]
-                                    )
+                                    comp, pivot_y = components_by_guid[sub_guid]
+                                    subgroup_components.append((comp, pivot_y))
+                            # Sort subgroup components by pivot_y
+                            subgroup_components.sort(key=lambda c: c[1] if c[1] is not None else float('inf'))
+                            # Remove pivot_y before adding to output
+                            subgroup_components = [c[0] for c in subgroup_components]
                             if exposure_index is not None:
                                 subgroups[exposure_index] = subgroup_components
                         else:
                             # If not a subgroup, treat as direct component
                             if guid in components_by_guid:
-                                # Use exposure index '0' if not in a subgroup
-                                if "0" not in subgroups:
-                                    subgroups["0"] = []
-                                subgroups["0"].append(components_by_guid[guid])
+                                comp, pivot_y = components_by_guid[guid]
+                                # Use exposure index '1' if not in a subgroup
+                                if "1" not in subgroups:
+                                    subgroups["1"] = []
+                                subgroups["1"].append((comp, pivot_y))
+                    # Sort direct subgroup components by pivot_y
+                    for k in subgroups:
+                        # Only sort if items are tuples (component, pivot_y)
+                        if subgroups[k] and isinstance(subgroups[k][0], tuple):
+                            subgroups[k].sort(key=lambda c: c[1] if c[1] is not None else float('inf'))
+                            # Remove pivot_y before adding to output
+                            subgroups[k] = [c[0] for c in subgroups[k]]
                     if group_name:
                         groups[group_name] = subgroups
     return groups
@@ -199,9 +229,9 @@ def parse_components_and_groups_xml(xml_file_path):
 
 # group = "test"
 definition = "components"
-xml_file = f"{definition}.ghx"
+xml_file = f"assets/grasshopper/{definition}.ghx"
 extracted_data = parse_components_and_groups_xml(xml_file)
 
 json_output = json.dumps(extracted_data, indent=4)
-with open(f"{definition}.json", "w") as f:
+with open(f"assets/grasshopper/{definition}.json", "w") as f:
     json.dump(extracted_data, f, indent=4)

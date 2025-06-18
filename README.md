@@ -49,11 +49,12 @@ Let me walk you through 🚶
    - [🐞 semio.ladybug](#-semioladybug-)
 1. [📄 Specs](#-specs-)
    - [📦 Kit](#-kit-)
-   - [🏙️ Design](#%EF%B8%8F-design-)
+   - [🏘️ Design](#%EF%B8%8F-design-)
+   - [🏠 Type](#-type-)
    - [🔗 Connection](#-connection-)
    - [⭕ Piece](#-piece-)
-   - [💾 Representation](#-representation-)
    - [⚓ Port](#-port-)
+   - [💾 Representation](#-representation-)
    - [📏 Quality](#-quality-)
    - [🏷️ Tag](#%EF%B8%8F-tag-)
    - [◳ Plane](#-plane-)
@@ -200,14 +201,6 @@ A group of _connected_ [`pieces`](#-piece-) is called a _cluster_ 🌿
 
 The _hierachy_ of a [`piece`](#-piece-) is the length of the shortest path to the next _fixed_ [`piece`](#-piece-) 👣
 
-## 💾 Representation [↑](#-specs-)
-
-A [`representation`](#-representation-) is a **[`tagged`](#%EF%B8%8F-tag-)** **[`url`](#-url-)** to a resource with an optional **description** 📄
-
-No **[`tags`](#%EF%B8%8F-tag-)** means the _default_ representation 🔑
-
-The similarity of [`representations`](#-representation-) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#%EF%B8%8F-tag-)** 🔄
-
 ## ⚓ Port [↑](#-specs-)
 
 A [`port`](#-port-) is a conceptual connection **point** with an outwards **direction** 🤝
@@ -219,6 +212,14 @@ A [`port`](#-port-) can have a port **family** and a list of **compatible famili
 No **family** means the _default_ family and no **compatible families** means the port is compatible with all other ports 🔑
 
 It is enough for one [`port`](#-port-) to be compatible with another [`port`](#-port-) to be compatible with each other ↔️
+
+## 💾 Representation [↑](#-specs-)
+
+A [`representation`](#-representation-) is a **[`tagged`](#%EF%B8%8F-tag-)** **[`url`](#-url-)** to a resource with an optional **description** 📄
+
+No **[`tags`](#%EF%B8%8F-tag-)** means the _default_ representation 🔑
+
+The similarity of [`representations`](#-representation-) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#%EF%B8%8F-tag-)** 🔄
 
 ## 📏 Quality [↑](#-specs-)
 

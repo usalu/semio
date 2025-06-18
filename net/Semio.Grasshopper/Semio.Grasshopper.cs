@@ -1669,7 +1669,7 @@ public class NormalizeTextComponent : ScriptingComponent
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Text", "Txt", "Text to normalize.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Text", "Tx", "Text to normalize.", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -1719,7 +1719,7 @@ public class NormalizeTextComponent : ScriptingComponent
 
 //    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
 //    {
-//        pManager.AddTextParameter("Text", "Txt", "Textual representation of the number.", GH_ParamAccess.item);
+//        pManager.AddTextParameter("Text", "Tx", "Textual representation of the number.", GH_ParamAccess.item);
 //    }
 
 //    protected override void SolveInstance(IGH_DataAccess DA)
@@ -1741,7 +1741,7 @@ public class TruncateTextComponent : ScriptingComponent
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Text", "Txt", "Text to truncate.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Text", "Tx", "Text to truncate.", GH_ParamAccess.item);
         pManager.AddIntegerParameter("Length", "Le", "Maximum length of the text.", GH_ParamAccess.item);
         pManager.AddTextParameter("Termination", "Tr", "Optional termination to append to the truncated text.",
             GH_ParamAccess.item, "…");
@@ -2854,6 +2854,8 @@ public class ConvertUnitComponent : Component
     public override Guid ComponentGuid => new("4EEB48B6-39A2-4FE1-B83F-6755EE355FF5");
 
     protected override Bitmap Icon => Resources.unit_convert_24x24;
+
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
