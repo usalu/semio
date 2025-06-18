@@ -182,7 +182,7 @@ def parse_components_and_groups_xml(xml_file_path):
                                             and is_numeric(sub_nickname)
                                         ):
                                             subgroup_obj = sub_obj_chunk
-                        if subgroup_obj:
+                        if subgroup_obj is not None:
                             # Get exposure index from NickName
                             sub_container = subgroup_obj.find(
                                 "./chunks/chunk[@name='Container']"

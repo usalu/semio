@@ -614,48 +614,42 @@
     "Selecting": {
         "1": [
             {
-                "name": "Select Connection",
-                "description": "Select a connection with the connected id and the connecting id. The connections are symetric, so if the conected is the connecting and vice versa it will still selct them.",
+                "name": "Select Kit",
+                "description": "Select a kit with a name and an optional version.\nIf no version is provided it will select all variants.\nIf you want to select the default version then use the empty text.",
                 "icon": "icon",
-                "nickname": "?Con",
+                "nickname": "?Kit",
                 "inputs": [
                     {
-                        "description": "A connection between two pieces in a design.",
-                        "name": "Connection",
-                        "nickname": "Co",
-                        "kind": "Connection"
+                        "description": "A kit is a collection of types and designs.",
+                        "name": "Kit",
+                        "nickname": "Kt",
+                        "kind": "Kit"
                     },
                     {
-                        "description": "Id of the connected piece of the side.",
-                        "name": "Connected Piece Id",
-                        "nickname": "CdPc",
-                        "kind": "Connected Piece Id"
+                        "description": "The name of the kit.",
+                        "name": "Name",
+                        "nickname": "Na",
+                        "kind": "Name"
                     },
                     {
-                        "description": "Id of the connected piece of the side.",
-                        "name": "Connecting Piece Id",
-                        "nickname": "CgPc",
-                        "kind": "Connecting Piece Id"
+                        "description": "The optional version of the kit. No version means the latest version.",
+                        "name": "Version",
+                        "nickname": "Vr?",
+                        "kind": "Version"
                     }
                 ],
                 "outputs": [
                     {
-                        "description": "A connection between two pieces in a design.",
-                        "name": "Connection",
-                        "nickname": "Co",
-                        "kind": "Connection"
+                        "description": "A kit is a collection of types and designs.",
+                        "name": "Kit",
+                        "nickname": "Kt",
+                        "kind": "Kit"
                     },
                     {
                         "description": "Contains a collection of integer numbers",
                         "name": "Integer",
                         "nickname": "i",
                         "kind": "Integer"
-                    },
-                    {
-                        "description": "Contains a collection of boolean values",
-                        "name": "Boolean",
-                        "nickname": "Fl",
-                        "kind": "Boolean"
                     }
                 ]
             },
@@ -696,192 +690,6 @@
                         "name": "Design",
                         "nickname": "Dn",
                         "kind": "Design"
-                    }
-                ]
-            },
-            {
-                "name": "Select Fixed",
-                "description": "Select a fixed piece. A piece is fixed when it has a plane (and a center).",
-                "icon": "icon",
-                "nickname": "?Fix",
-                "inputs": [
-                    {
-                        "description": "A piece is a 3d-instance of a type in a design.",
-                        "name": "Piece",
-                        "nickname": "Pc",
-                        "kind": "Piece"
-                    }
-                ],
-                "outputs": [
-                    {
-                        "description": "A piece is a 3d-instance of a type in a design.",
-                        "name": "Piece",
-                        "nickname": "Fx",
-                        "kind": "Piece"
-                    },
-                    {
-                        "description": "Contains a collection of integer numbers",
-                        "name": "Integer",
-                        "nickname": "i",
-                        "kind": "Integer"
-                    }
-                ]
-            },
-            {
-                "name": "Select Piece",
-                "description": "Select a piece with the id.",
-                "icon": "icon",
-                "nickname": "?Pce",
-                "inputs": [
-                    {
-                        "description": "A piece is a 3d-instance of a type in a design.",
-                        "name": "Piece",
-                        "nickname": "Pc",
-                        "kind": "Piece"
-                    },
-                    {
-                        "description": "Id of the piece.",
-                        "name": "Id",
-                        "nickname": "Id",
-                        "kind": "Id"
-                    }
-                ],
-                "outputs": [
-                    {
-                        "description": "A piece is a 3d-instance of a type in a design.",
-                        "name": "Piece",
-                        "nickname": "Pc",
-                        "kind": "Piece"
-                    },
-                    {
-                        "description": "Contains a collection of integer numbers",
-                        "name": "Integer",
-                        "nickname": "i",
-                        "kind": "Integer"
-                    }
-                ]
-            },
-            {
-                "name": "Select Pieces",
-                "description": "Select pieces of a certain type. If no variant is provided it will select all variants. If you want to select the default type then use the empty text.",
-                "icon": "icon",
-                "nickname": "?Pces",
-                "inputs": [
-                    {
-                        "description": "A piece is a 3d-instance of a type in a design.",
-                        "name": "Piece",
-                        "nickname": "Pc",
-                        "kind": "Piece"
-                    },
-                    {
-                        "description": "The name of the type.",
-                        "name": "Name",
-                        "nickname": "Na",
-                        "kind": "Name"
-                    },
-                    {
-                        "description": "The optional value of the type.",
-                        "name": "Variant",
-                        "nickname": "Vn?",
-                        "kind": "Variant"
-                    }
-                ],
-                "outputs": [
-                    {
-                        "description": "A piece is a 3d-instance of a type in a design.",
-                        "name": "Piece",
-                        "nickname": "Pc",
-                        "kind": "Piece"
-                    }
-                ]
-            },
-            {
-                "name": "Select Port",
-                "description": "Select a port with the id. If no port matches, null is returned.",
-                "icon": "icon",
-                "nickname": "?Por",
-                "inputs": [
-                    {
-                        "description": "A port is a connection point (with a direction) of a type.",
-                        "name": "Port",
-                        "nickname": "Po",
-                        "kind": "Port"
-                    },
-                    {
-                        "description": "The optional local identifier of the port within the type. No id means the default port.",
-                        "name": "Id",
-                        "nickname": "Id?",
-                        "kind": "Id"
-                    }
-                ],
-                "outputs": [
-                    {
-                        "description": "A port is a connection point (with a direction) of a type.",
-                        "name": "Port",
-                        "nickname": "Po",
-                        "kind": "Port"
-                    },
-                    {
-                        "description": "Contains a collection of integer numbers",
-                        "name": "Integer",
-                        "nickname": "i",
-                        "kind": "Integer"
-                    }
-                ]
-            },
-            {
-                "name": "Select Quality",
-                "description": "Select a quality by its name. If no quality matches, null is returned.",
-                "icon": "icon",
-                "nickname": "?Qal",
-                "inputs": [
-                    {
-                        "description": "A quality is a named value with a unit and a definition.",
-                        "name": "Quality",
-                        "nickname": "Ql",
-                        "kind": "Quality"
-                    },
-                    {
-                        "description": "The name of the quality.",
-                        "name": "Name",
-                        "nickname": "Na",
-                        "kind": "Name"
-                    }
-                ],
-                "outputs": [
-                    {
-                        "description": "A quality is a named value with a unit and a definition.",
-                        "name": "Quality",
-                        "nickname": "Ql",
-                        "kind": "Quality"
-                    }
-                ]
-            },
-            {
-                "name": "Select Representation",
-                "description": "Select exactly one representation based on tags. The tag matching is based on the highest Jaccard index (|\u2229|/|\u222a|).",
-                "icon": "icon",
-                "nickname": "?Rep",
-                "inputs": [
-                    {
-                        "description": "A representation is a link to a resource that describes a type for a certain level of detail and tags.",
-                        "name": "Representation",
-                        "nickname": "Rp",
-                        "kind": "Representation"
-                    },
-                    {
-                        "description": "The optional tags to group representations. No tags means default.",
-                        "name": "Tags",
-                        "nickname": "Tg*",
-                        "kind": "Tags"
-                    }
-                ],
-                "outputs": [
-                    {
-                        "description": "A representation is a link to a resource that describes a type for a certain level of detail and tags.",
-                        "name": "Representation",
-                        "nickname": "Rp",
-                        "kind": "Representation"
                     },
                     {
                         "description": "Contains a collection of integer numbers",
@@ -962,6 +770,244 @@
                         "name": "Integer",
                         "nickname": "i",
                         "kind": "Integer"
+                    }
+                ]
+            },
+            {
+                "name": "Select Connection",
+                "description": "Select a connection with the connected id and the connecting id. The connections are symetric, so if the conected is the connecting and vice versa it will still selct them.",
+                "icon": "icon",
+                "nickname": "?Con",
+                "inputs": [
+                    {
+                        "description": "A connection between two pieces in a design.",
+                        "name": "Connection",
+                        "nickname": "Co",
+                        "kind": "Connection"
+                    },
+                    {
+                        "description": "Id of the connected piece of the side.",
+                        "name": "Connected Piece Id",
+                        "nickname": "CdPc",
+                        "kind": "Connected Piece Id"
+                    },
+                    {
+                        "description": "Id of the connected piece of the side.",
+                        "name": "Connecting Piece Id",
+                        "nickname": "CgPc",
+                        "kind": "Connecting Piece Id"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "description": "A connection between two pieces in a design.",
+                        "name": "Connection",
+                        "nickname": "Co",
+                        "kind": "Connection"
+                    },
+                    {
+                        "description": "Contains a collection of integer numbers",
+                        "name": "Integer",
+                        "nickname": "i",
+                        "kind": "Integer"
+                    },
+                    {
+                        "description": "Contains a collection of boolean values",
+                        "name": "Boolean",
+                        "nickname": "Fl",
+                        "kind": "Boolean"
+                    }
+                ]
+            },
+            {
+                "name": "Select Pieces",
+                "description": "Select pieces of a certain type. If no variant is provided it will select all variants. If you want to select the default type then use the empty text.",
+                "icon": "icon",
+                "nickname": "?Pces",
+                "inputs": [
+                    {
+                        "description": "A piece is a 3d-instance of a type in a design.",
+                        "name": "Piece",
+                        "nickname": "Pc",
+                        "kind": "Piece"
+                    },
+                    {
+                        "description": "The name of the type.",
+                        "name": "Name",
+                        "nickname": "Na",
+                        "kind": "Name"
+                    },
+                    {
+                        "description": "The optional value of the type.",
+                        "name": "Variant",
+                        "nickname": "Vn?",
+                        "kind": "Variant"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "description": "A piece is a 3d-instance of a type in a design.",
+                        "name": "Piece",
+                        "nickname": "Pc",
+                        "kind": "Piece"
+                    }
+                ]
+            },
+            {
+                "name": "Select Piece",
+                "description": "Select a piece with the id.",
+                "icon": "icon",
+                "nickname": "?Pce",
+                "inputs": [
+                    {
+                        "description": "A piece is a 3d-instance of a type in a design.",
+                        "name": "Piece",
+                        "nickname": "Pc",
+                        "kind": "Piece"
+                    },
+                    {
+                        "description": "Id of the piece.",
+                        "name": "Id",
+                        "nickname": "Id",
+                        "kind": "Id"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "description": "A piece is a 3d-instance of a type in a design.",
+                        "name": "Piece",
+                        "nickname": "Pc",
+                        "kind": "Piece"
+                    },
+                    {
+                        "description": "Contains a collection of integer numbers",
+                        "name": "Integer",
+                        "nickname": "i",
+                        "kind": "Integer"
+                    }
+                ]
+            },
+            {
+                "name": "Select Fixed",
+                "description": "Select a fixed piece. A piece is fixed when it has a plane (and a center).",
+                "icon": "icon",
+                "nickname": "?Fix",
+                "inputs": [
+                    {
+                        "description": "A piece is a 3d-instance of a type in a design.",
+                        "name": "Piece",
+                        "nickname": "Pc",
+                        "kind": "Piece"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "description": "A piece is a 3d-instance of a type in a design.",
+                        "name": "Piece",
+                        "nickname": "Fx",
+                        "kind": "Piece"
+                    },
+                    {
+                        "description": "Contains a collection of integer numbers",
+                        "name": "Integer",
+                        "nickname": "i",
+                        "kind": "Integer"
+                    }
+                ]
+            },
+            {
+                "name": "Select Port",
+                "description": "Select a port with the id. If no port matches, null is returned.",
+                "icon": "icon",
+                "nickname": "?Por",
+                "inputs": [
+                    {
+                        "description": "A port is a connection point (with a direction) of a type.",
+                        "name": "Port",
+                        "nickname": "Po",
+                        "kind": "Port"
+                    },
+                    {
+                        "description": "The optional local identifier of the port within the type. No id means the default port.",
+                        "name": "Id",
+                        "nickname": "Id?",
+                        "kind": "Id"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "description": "A port is a connection point (with a direction) of a type.",
+                        "name": "Port",
+                        "nickname": "Po",
+                        "kind": "Port"
+                    },
+                    {
+                        "description": "Contains a collection of integer numbers",
+                        "name": "Integer",
+                        "nickname": "i",
+                        "kind": "Integer"
+                    }
+                ]
+            },
+            {
+                "name": "Select Representation",
+                "description": "Select exactly one representation based on tags. The tag matching is based on the highest Jaccard index (|\u2229|/|\u222a|).",
+                "icon": "icon",
+                "nickname": "?Rep",
+                "inputs": [
+                    {
+                        "description": "A representation is a link to a resource that describes a type for a certain level of detail and tags.",
+                        "name": "Representation",
+                        "nickname": "Rp",
+                        "kind": "Representation"
+                    },
+                    {
+                        "description": "The optional tags to group representations. No tags means default.",
+                        "name": "Tags",
+                        "nickname": "Tg*",
+                        "kind": "Tags"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "description": "A representation is a link to a resource that describes a type for a certain level of detail and tags.",
+                        "name": "Representation",
+                        "nickname": "Rp",
+                        "kind": "Representation"
+                    },
+                    {
+                        "description": "Contains a collection of integer numbers",
+                        "name": "Integer",
+                        "nickname": "i",
+                        "kind": "Integer"
+                    }
+                ]
+            },
+            {
+                "name": "Select Quality",
+                "description": "Select a quality by its name. If no quality matches, null is returned.",
+                "icon": "icon",
+                "nickname": "?Qal",
+                "inputs": [
+                    {
+                        "description": "A quality is a named value with a unit and a definition.",
+                        "name": "Quality",
+                        "nickname": "Ql",
+                        "kind": "Quality"
+                    },
+                    {
+                        "description": "The name of the quality.",
+                        "name": "Name",
+                        "nickname": "Na",
+                        "kind": "Name"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "description": "A quality is a named value with a unit and a definition.",
+                        "name": "Quality",
+                        "nickname": "Ql",
+                        "kind": "Quality"
                     }
                 ]
             }
@@ -3304,34 +3350,6 @@
                         "kind": "Homepage"
                     }
                 ]
-            },
-            {
-                "name": "Slots to Design",
-                "description": "Convert Monoceros slots to a semio design.",
-                "icon": "icon",
-                "nickname": "Slts\u2192",
-                "inputs": [
-                    {
-                        "description": "Contains a collection of Monoceros Slots.",
-                        "name": "Slot",
-                        "nickname": "S",
-                        "kind": "Slot"
-                    },
-                    {
-                        "description": "A type is a reusable element that can be connected with other types over ports.",
-                        "name": "Type",
-                        "nickname": "Ty",
-                        "kind": "Type"
-                    }
-                ],
-                "outputs": [
-                    {
-                        "description": "A design is a collection of pieces that are connected.",
-                        "name": "Design",
-                        "nickname": "Dn",
-                        "kind": "Design"
-                    }
-                ]
             }
         ],
         "3": [
@@ -3570,6 +3588,34 @@
                         "name": "Rule",
                         "nickname": "R",
                         "kind": "Rule"
+                    }
+                ]
+            },
+            {
+                "name": "Slots to Design",
+                "description": "Convert Monoceros slots to a semio design.",
+                "icon": "icon",
+                "nickname": "Slts\u2192",
+                "inputs": [
+                    {
+                        "description": "Contains a collection of Monoceros Slots.",
+                        "name": "Slot",
+                        "nickname": "S",
+                        "kind": "Slot"
+                    },
+                    {
+                        "description": "A type is a reusable element that can be connected with other types over ports.",
+                        "name": "Type",
+                        "nickname": "Ty",
+                        "kind": "Type"
+                    }
+                ],
+                "outputs": [
+                    {
+                        "description": "A design is a collection of pieces that are connected.",
+                        "name": "Design",
+                        "nickname": "Dn",
+                        "kind": "Design"
                     }
                 ]
             }
