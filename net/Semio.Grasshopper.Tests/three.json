@@ -1,0 +1,6431 @@
+{
+    "name": "Nakagin Capsule Tower",
+    "description": "The digital shadow of the former Nakagin Capsule Tower which was a mixed-use residential and office tower designed by architect Kisho Kurokawa and located in Shimbashi, Tokyo, Japan. Completed in 1972, the building was a rare remaining example of Japanese Metabolism, an architectural movement emblematic of Japan's postwar cultural resurgence.",
+    "icon": "icons/nakagin-capsule-tower.svg",
+    "image": "images/nakagin-capsule-tower.png",
+    "variant": "",
+    "view": "",
+    "unit": "m",
+    "created": "2025-06-18T17:11:24.082Z",
+    "updated": "2025-06-18T17:11:24.082Z",
+    "authors": [
+        {
+            "name": "Ueli Saluz",
+            "email": "ueli@semio-tech.org"
+        }
+    ],
+    "pieces": [
+        {
+            "id_": "b",
+            "description": "",
+            "type": {
+                "name": "Base",
+                "variant": ""
+            },
+            "plane": {
+                "origin": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0,
+                "y": 0
+            },
+            "qualities": []
+        },
+        {
+            "id_": "ci_t_f8_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capital",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f8_b_c0\",\"depth\":10}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -7.500000000000001,
+                    "y": -7.700000000000001,
+                    "z": 34.083330000000004
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.90711,
+                "y": 36.187110000000004
+            }
+        },
+        {
+            "id_": "ci_t_f10_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capital",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f10_b_c1\",\"depth\":12}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -18.6,
+                    "y": -7.700000000000001,
+                    "z": 39.583330000000004
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.90711,
+                "y": 44.107110000000006
+            }
+        },
+        {
+            "id_": "t_f0_b_c0",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": "First Storey"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"b\",\"depth\":1}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -7.500000000000001,
+                    "y": -7.700000000000001,
+                    "z": 7.500000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.90711,
+                "y": 1.90711
+            }
+        },
+        {
+            "id_": "t_f1_b_c0",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f0_b_c0\",\"depth\":2}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -7.500000000000001,
+                    "y": -7.700000000000001,
+                    "z": 10.25
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.90711,
+                "y": 5.86711
+            }
+        },
+        {
+            "id_": "t_f2_b_c0",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f1_b_c0\",\"depth\":3}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -7.500000000000001,
+                    "y": -7.700000000000001,
+                    "z": 13.000000000000002
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.90711,
+                "y": 9.827110000000001
+            }
+        },
+        {
+            "id_": "t_f3_b_c0",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f2_b_c0\",\"depth\":4}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -7.500000000000001,
+                    "y": -7.700000000000001,
+                    "z": 15.750000000000002
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.90711,
+                "y": 13.787110000000002
+            }
+        },
+        {
+            "id_": "t_f4_b_c0",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f3_b_c0\",\"depth\":5}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -7.500000000000001,
+                    "y": -7.700000000000001,
+                    "z": 18.5
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.90711,
+                "y": 17.747110000000003
+            }
+        },
+        {
+            "id_": "t_f5_b_c0",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f4_b_c0\",\"depth\":6}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -7.500000000000001,
+                    "y": -7.700000000000001,
+                    "z": 21.25
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.90711,
+                "y": 21.70711
+            }
+        },
+        {
+            "id_": "t_f6_b_c0",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f5_b_c0\",\"depth\":7}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -7.500000000000001,
+                    "y": -7.700000000000001,
+                    "z": 24.000000000000004
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.90711,
+                "y": 25.66711
+            }
+        },
+        {
+            "id_": "t_f7_b_c0",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f6_b_c0\",\"depth\":8}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -7.500000000000001,
+                    "y": -7.700000000000001,
+                    "z": 26.750000000000004
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.90711,
+                "y": 29.627110000000002
+            }
+        },
+        {
+            "id_": "t_f8_b_c0",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": "Last Storey"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f7_b_c0\",\"depth\":9}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -7.500000000000001,
+                    "y": -7.700000000000001,
+                    "z": 29.500000000000004
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.90711,
+                "y": 33.58711
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f0_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f0_b_c0\",\"depth\":2}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -6.300000000000001,
+                    "y": -4.5,
+                    "z": 7.700000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.35572,
+                "y": 0.52863
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f1_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f1_b_c0\",\"depth\":3}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -2.6500000000000004,
+                    "y": -6.3500000000000005,
+                    "z": 10.450000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.35572,
+                "y": 4.488630000000001
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f2_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f2_b_c0\",\"depth\":4}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -2.6500000000000004,
+                    "y": -6.3500000000000005,
+                    "z": 13.200000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.35572,
+                "y": 8.448630000000001
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f3_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f3_b_c0\",\"depth\":5}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -2.6500000000000004,
+                    "y": -6.3500000000000005,
+                    "z": 15.950000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.35572,
+                "y": 12.40863
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f4_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f4_b_c0\",\"depth\":6}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -2.6500000000000004,
+                    "y": -6.3500000000000005,
+                    "z": 18.700000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.35572,
+                "y": 16.36863
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f5_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f5_b_c0\",\"depth\":7}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -2.6500000000000004,
+                    "y": -6.3500000000000005,
+                    "z": 21.450000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.35572,
+                "y": 20.32863
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f6_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f6_b_c0\",\"depth\":8}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -2.6500000000000004,
+                    "y": -6.3500000000000005,
+                    "z": 24.200000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.35572,
+                "y": 24.28863
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f7_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f7_b_c0\",\"depth\":9}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -2.6500000000000004,
+                    "y": -6.3500000000000005,
+                    "z": 26.950000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.35572,
+                "y": 28.248630000000002
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f8_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f8_b_c0\",\"depth\":10}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -2.6500000000000004,
+                    "y": -6.3500000000000005,
+                    "z": 29.700000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.35572,
+                "y": 32.20863
+            }
+        },
+        {
+            "id_": "cs_sl0_d1_t_f0_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f0_b_c0\",\"depth\":2}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -9,
+                    "y": -5.500000000000001,
+                    "z": 7.700000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -0.52863,
+                "y": 1.35572
+            }
+        },
+        {
+            "id_": "cs_sl0_d1_t_f1_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f1_b_c0\",\"depth\":3}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -5.3500000000000005,
+                    "y": -3.6500000000000004,
+                    "z": 10.450000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -0.52863,
+                "y": 5.315720000000001
+            }
+        },
+        {
+            "id_": "cs_sl0_d1_t_f2_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f2_b_c0\",\"depth\":4}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -5.3500000000000005,
+                    "y": -3.6500000000000004,
+                    "z": 13.200000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -0.52863,
+                "y": 9.275720000000002
+            }
+        },
+        {
+            "id_": "cs_sl0_d1_t_f3_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f3_b_c0\",\"depth\":5}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -5.3500000000000005,
+                    "y": -3.6500000000000004,
+                    "z": 15.950000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -0.52863,
+                "y": 13.23572
+            }
+        },
+        {
+            "id_": "cs_sl0_d1_t_f4_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f4_b_c0\",\"depth\":6}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -5.3500000000000005,
+                    "y": -3.6500000000000004,
+                    "z": 18.700000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -0.52863,
+                "y": 17.19572
+            }
+        },
+        {
+            "id_": "cs_sl0_d1_t_f5_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f5_b_c0\",\"depth\":7}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -5.3500000000000005,
+                    "y": -3.6500000000000004,
+                    "z": 21.450000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -0.52863,
+                "y": 21.155720000000002
+            }
+        },
+        {
+            "id_": "cs_sl0_d1_t_f6_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f6_b_c0\",\"depth\":8}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -5.3500000000000005,
+                    "y": -3.6500000000000004,
+                    "z": 24.200000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -0.52863,
+                "y": 25.115720000000003
+            }
+        },
+        {
+            "id_": "cs_sl0_d1_t_f7_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f7_b_c0\",\"depth\":9}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -5.3500000000000005,
+                    "y": -3.6500000000000004,
+                    "z": 26.950000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -0.52863,
+                "y": 29.075720000000004
+            }
+        },
+        {
+            "id_": "cs_sl0_d1_t_f8_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f8_b_c0\",\"depth\":10}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -5.3500000000000005,
+                    "y": -3.6500000000000004,
+                    "z": 29.700000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -0.52863,
+                "y": 33.035720000000005
+            }
+        },
+        {
+            "id_": "cs_sl0_d2_t_f0_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f0_b_c0\",\"depth\":2}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -11.500000000000002,
+                    "y": -7.300000000000001,
+                    "z": 7.700000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -0.52863,
+                "y": 2.4585000000000004
+            }
+        },
+        {
+            "id_": "cs_sl0_d2_t_f1_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f1_b_c0\",\"depth\":3}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -9.65,
+                    "y": -3.6500000000000004,
+                    "z": 10.450000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -0.52863,
+                "y": 6.418500000000001
+            }
+        },
+        {
+            "id_": "cs_sl0_d2_t_f3_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f3_b_c0\",\"depth\":5}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -9.65,
+                    "y": -3.6500000000000004,
+                    "z": 15.950000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -0.52863,
+                "y": 14.338500000000002
+            }
+        },
+        {
+            "id_": "cs_sl0_d2_t_f4_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f4_b_c0\",\"depth\":6}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -9.65,
+                    "y": -3.6500000000000004,
+                    "z": 18.700000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -0.52863,
+                "y": 18.2985
+            }
+        },
+        {
+            "id_": "cs_sl0_d2_t_f6_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f6_b_c0\",\"depth\":8}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -9.65,
+                    "y": -3.6500000000000004,
+                    "z": 24.200000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -0.52863,
+                "y": 26.218500000000002
+            }
+        },
+        {
+            "id_": "cs_sl0_d2_t_f7_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f7_b_c0\",\"depth\":9}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -9.65,
+                    "y": -3.6500000000000004,
+                    "z": 26.950000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -0.52863,
+                "y": 30.178500000000003
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f0_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f0_b_c0\",\"depth\":2}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -10.5,
+                    "y": -10,
+                    "z": 7.700000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.35572,
+                "y": 3.2855900000000005
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f1_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f1_b_c0\",\"depth\":3}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -12.350000000000001,
+                    "y": -6.3500000000000005,
+                    "z": 10.450000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.35572,
+                "y": 7.245590000000001
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f2_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f2_b_c0\",\"depth\":4}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -12.350000000000001,
+                    "y": -6.3500000000000005,
+                    "z": 13.200000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.35572,
+                "y": 11.20559
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f3_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f3_b_c0\",\"depth\":5}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -12.350000000000001,
+                    "y": -6.3500000000000005,
+                    "z": 15.950000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.35572,
+                "y": 15.165590000000002
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f4_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f4_b_c0\",\"depth\":6}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -12.350000000000001,
+                    "y": -6.3500000000000005,
+                    "z": 18.700000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.35572,
+                "y": 19.125590000000003
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f5_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f5_b_c0\",\"depth\":7}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -12.350000000000001,
+                    "y": -6.3500000000000005,
+                    "z": 21.450000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.35572,
+                "y": 23.085590000000003
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f6_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f6_b_c0\",\"depth\":8}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -12.350000000000001,
+                    "y": -6.3500000000000005,
+                    "z": 24.200000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.35572,
+                "y": 27.04559
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f7_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f7_b_c0\",\"depth\":9}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -12.350000000000001,
+                    "y": -6.3500000000000005,
+                    "z": 26.950000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.35572,
+                "y": 31.00559
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f8_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f8_b_c0\",\"depth\":10}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -12.350000000000001,
+                    "y": -6.3500000000000005,
+                    "z": 29.700000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -1.35572,
+                "y": 34.965590000000006
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f0_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f0_b_c0\",\"depth\":2}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -7.9,
+                    "y": -9.200000000000001,
+                    "z": 8.616670000000001
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -2.4585000000000004,
+                "y": 3.2855900000000005
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f1_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f1_b_c0\",\"depth\":3}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -11.55,
+                    "y": -7.3500000000000005,
+                    "z": 11.366670000000001
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -2.4585000000000004,
+                "y": 7.245590000000001
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f2_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f2_b_c0\",\"depth\":4}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -11.55,
+                    "y": -7.3500000000000005,
+                    "z": 14.116670000000001
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -2.4585000000000004,
+                "y": 11.20559
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f3_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f3_b_c0\",\"depth\":5}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -11.55,
+                    "y": -7.3500000000000005,
+                    "z": 16.866670000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -2.4585000000000004,
+                "y": 15.165590000000002
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f4_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f4_b_c0\",\"depth\":6}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -11.55,
+                    "y": -7.3500000000000005,
+                    "z": 19.616670000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -2.4585000000000004,
+                "y": 19.125590000000003
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f5_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f5_b_c0\",\"depth\":7}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -11.55,
+                    "y": -7.3500000000000005,
+                    "z": 22.366670000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -2.4585000000000004,
+                "y": 23.085590000000003
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f6_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f6_b_c0\",\"depth\":8}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -11.55,
+                    "y": -7.3500000000000005,
+                    "z": 25.116670000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -2.4585000000000004,
+                "y": 27.04559
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f7_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "s"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f7_b_c0\",\"depth\":9}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -11.55,
+                    "y": -7.3500000000000005,
+                    "z": 27.866670000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -2.4585000000000004,
+                "y": 31.00559
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f8_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "s"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f8_b_c0\",\"depth\":10}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -11.55,
+                    "y": -7.3500000000000005,
+                    "z": 30.616670000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -2.4585000000000004,
+                "y": 34.965590000000006
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f0_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f0_b_c0\",\"depth\":2}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -5.2,
+                    "y": -10.700000000000001,
+                    "z": 8.616670000000001
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -3.2855900000000005,
+                "y": 2.4585000000000004
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f1_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f1_b_c0\",\"depth\":3}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -8.850000000000001,
+                    "y": -12.55,
+                    "z": 11.366670000000001
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -3.2855900000000005,
+                "y": 6.418500000000001
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f2_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f2_b_c0\",\"depth\":4}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -8.850000000000001,
+                    "y": -12.55,
+                    "z": 14.116670000000001
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -3.2855900000000005,
+                "y": 10.3785
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f3_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f3_b_c0\",\"depth\":5}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -8.850000000000001,
+                    "y": -12.55,
+                    "z": 16.866670000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -3.2855900000000005,
+                "y": 14.338500000000002
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f4_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f4_b_c0\",\"depth\":6}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -8.850000000000001,
+                    "y": -12.55,
+                    "z": 19.616670000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -3.2855900000000005,
+                "y": 18.2985
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f5_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f5_b_c0\",\"depth\":7}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -8.850000000000001,
+                    "y": -12.55,
+                    "z": 22.366670000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -3.2855900000000005,
+                "y": 22.2585
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f6_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f6_b_c0\",\"depth\":8}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -8.850000000000001,
+                    "y": -12.55,
+                    "z": 25.116670000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -3.2855900000000005,
+                "y": 26.218500000000002
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f7_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f7_b_c0\",\"depth\":9}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -8.850000000000001,
+                    "y": -12.55,
+                    "z": 27.866670000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -3.2855900000000005,
+                "y": 30.178500000000003
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f8_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f8_b_c0\",\"depth\":10}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -8.850000000000001,
+                    "y": -12.55,
+                    "z": 30.616670000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -3.2855900000000005,
+                "y": 34.1385
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f0_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f0_b_c0\",\"depth\":2}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -3.5000000000000004,
+                    "y": -8.100000000000001,
+                    "z": 9.533330000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -3.2855900000000005,
+                "y": 1.35572
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f1_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f1_b_c0\",\"depth\":3}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -6.15,
+                    "y": -12.55,
+                    "z": 12.283330000000001
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -3.2855900000000005,
+                "y": 5.315720000000001
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f2_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f2_b_c0\",\"depth\":4}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -6.15,
+                    "y": -12.55,
+                    "z": 15.033330000000001
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -3.2855900000000005,
+                "y": 9.275720000000002
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f3_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f3_b_c0\",\"depth\":5}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -5.3500000000000005,
+                    "y": -11.750000000000002,
+                    "z": 17.783330000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -3.2855900000000005,
+                "y": 13.23572
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f4_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f4_b_c0\",\"depth\":6}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -6.15,
+                    "y": -12.55,
+                    "z": 20.533330000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -3.2855900000000005,
+                "y": 17.19572
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f5_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f5_b_c0\",\"depth\":7}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -6.15,
+                    "y": -12.55,
+                    "z": 23.283330000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -3.2855900000000005,
+                "y": 21.155720000000002
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f6_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f6_b_c0\",\"depth\":8}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -5.3500000000000005,
+                    "y": -11.750000000000002,
+                    "z": 26.033330000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -3.2855900000000005,
+                "y": 25.115720000000003
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f7_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f7_b_c0\",\"depth\":9}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -5.3500000000000005,
+                    "y": -11.750000000000002,
+                    "z": 28.783330000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -3.2855900000000005,
+                "y": 29.075720000000004
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f8_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f8_b_c0\",\"depth\":10}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -6.15,
+                    "y": -12.55,
+                    "z": 31.533330000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -3.2855900000000005,
+                "y": 33.035720000000005
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f0_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f0_b_c0\",\"depth\":2}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -4.5,
+                    "y": -5.4,
+                    "z": 9.533330000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -2.4585000000000004,
+                "y": 0.52863
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f1_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f1_b_c0\",\"depth\":3}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -3.45,
+                    "y": -7.3500000000000005,
+                    "z": 12.283330000000001
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -2.4585000000000004,
+                "y": 4.488630000000001
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f2_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f2_b_c0\",\"depth\":4}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -3.45,
+                    "y": -7.3500000000000005,
+                    "z": 15.033330000000001
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -2.4585000000000004,
+                "y": 8.448630000000001
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f3_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f3_b_c0\",\"depth\":5}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -2.6500000000000004,
+                    "y": -9.05,
+                    "z": 17.783330000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -2.4585000000000004,
+                "y": 12.40863
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f4_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f4_b_c0\",\"depth\":6}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -3.45,
+                    "y": -7.3500000000000005,
+                    "z": 20.533330000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -2.4585000000000004,
+                "y": 16.36863
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f5_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f5_b_c0\",\"depth\":7}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -2.6500000000000004,
+                    "y": -9.05,
+                    "z": 23.283330000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -2.4585000000000004,
+                "y": 20.32863
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f6_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f6_b_c0\",\"depth\":8}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -2.6500000000000004,
+                    "y": -9.05,
+                    "z": 26.033330000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -2.4585000000000004,
+                "y": 24.28863
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f7_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f7_b_c0\",\"depth\":9}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -2.6500000000000004,
+                    "y": -9.05,
+                    "z": 28.783330000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -2.4585000000000004,
+                "y": 28.248630000000002
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f8_b_c0",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f8_b_c0\",\"depth\":10}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -3.45,
+                    "y": -7.3500000000000005,
+                    "z": 31.533330000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": -2.4585000000000004,
+                "y": 32.20863
+            }
+        },
+        {
+            "id_": "t_f0_b_c1",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": "First Storey"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"b\",\"depth\":1}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -18.6,
+                    "y": -7.700000000000001,
+                    "z": 7.500000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.90711,
+                "y": 1.90711
+            }
+        },
+        {
+            "id_": "t_f1_b_c1",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f0_b_c1\",\"depth\":2}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -18.6,
+                    "y": -7.700000000000001,
+                    "z": 10.25
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.90711,
+                "y": 5.86711
+            }
+        },
+        {
+            "id_": "t_f2_b_c1",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f1_b_c1\",\"depth\":3}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -18.6,
+                    "y": -7.700000000000001,
+                    "z": 13.000000000000002
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.90711,
+                "y": 9.827110000000001
+            }
+        },
+        {
+            "id_": "t_f3_b_c1",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f2_b_c1\",\"depth\":4}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -18.6,
+                    "y": -7.700000000000001,
+                    "z": 15.750000000000002
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.90711,
+                "y": 13.787110000000002
+            }
+        },
+        {
+            "id_": "t_f4_b_c1",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f3_b_c1\",\"depth\":5}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -18.6,
+                    "y": -7.700000000000001,
+                    "z": 18.5
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.90711,
+                "y": 17.747110000000003
+            }
+        },
+        {
+            "id_": "t_f5_b_c1",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f4_b_c1\",\"depth\":6}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -18.6,
+                    "y": -7.700000000000001,
+                    "z": 21.25
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.90711,
+                "y": 21.70711
+            }
+        },
+        {
+            "id_": "t_f6_b_c1",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f5_b_c1\",\"depth\":7}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -18.6,
+                    "y": -7.700000000000001,
+                    "z": 24.000000000000004
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.90711,
+                "y": 25.66711
+            }
+        },
+        {
+            "id_": "t_f7_b_c1",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f6_b_c1\",\"depth\":8}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -18.6,
+                    "y": -7.700000000000001,
+                    "z": 26.750000000000004
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.90711,
+                "y": 29.627110000000002
+            }
+        },
+        {
+            "id_": "t_f8_b_c1",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f7_b_c1\",\"depth\":9}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -18.6,
+                    "y": -7.700000000000001,
+                    "z": 29.500000000000004
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.90711,
+                "y": 33.58711
+            }
+        },
+        {
+            "id_": "t_f9_b_c1",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f8_b_c1\",\"depth\":10}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -18.6,
+                    "y": -7.700000000000001,
+                    "z": 32.25
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.90711,
+                "y": 37.54711
+            }
+        },
+        {
+            "id_": "t_f10_b_c1",
+            "description": "",
+            "type": {
+                "name": "Tambour",
+                "variant": "Last Storey"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f9_b_c1\",\"depth\":11}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -18.6,
+                    "y": -7.700000000000001,
+                    "z": 35
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.90711,
+                "y": 41.507110000000004
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f0_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f0_b_c1\",\"depth\":2}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -15.600000000000001,
+                    "y": -10,
+                    "z": 7.700000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 3.2855900000000005
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f1_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f1_b_c1\",\"depth\":3}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -6.3500000000000005,
+                    "z": 10.450000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 7.245590000000001
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f2_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f2_b_c1\",\"depth\":4}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -6.3500000000000005,
+                    "z": 13.200000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 11.20559
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f3_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f3_b_c1\",\"depth\":5}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -6.3500000000000005,
+                    "z": 15.950000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 15.165590000000002
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f4_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f4_b_c1\",\"depth\":6}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -6.3500000000000005,
+                    "z": 18.700000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 19.125590000000003
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f5_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f5_b_c1\",\"depth\":7}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -6.3500000000000005,
+                    "z": 21.450000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 23.085590000000003
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f6_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f6_b_c1\",\"depth\":8}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -6.3500000000000005,
+                    "z": 24.200000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 27.04559
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f7_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f7_b_c1\",\"depth\":9}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -6.3500000000000005,
+                    "z": 26.950000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 31.00559
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f8_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f8_b_c1\",\"depth\":10}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -6.3500000000000005,
+                    "z": 29.700000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 34.965590000000006
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f9_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f9_b_c1\",\"depth\":11}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -6.3500000000000005,
+                    "z": 32.45
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 38.92559
+            }
+        },
+        {
+            "id_": "cs_sl0_d0_t_f10_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f10_b_c1\",\"depth\":12}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -6.3500000000000005,
+                    "z": 35.2
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 42.88559
+            }
+        },
+        {
+            "id_": "cs_sl0_d1_t_f0_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f0_b_c1\",\"depth\":2}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -14.600000000000001,
+                    "y": -7.300000000000001,
+                    "z": 7.700000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.52863,
+                "y": 2.4585000000000004
+            }
+        },
+        {
+            "id_": "cs_sl0_d1_t_f1_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f1_b_c1\",\"depth\":3}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -16.450000000000003,
+                    "y": -3.6500000000000004,
+                    "z": 10.450000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.52863,
+                "y": 6.418500000000001
+            }
+        },
+        {
+            "id_": "cs_sl0_d1_t_f3_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f3_b_c1\",\"depth\":5}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -16.450000000000003,
+                    "y": -3.6500000000000004,
+                    "z": 15.950000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.52863,
+                "y": 14.338500000000002
+            }
+        },
+        {
+            "id_": "cs_sl0_d1_t_f4_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f4_b_c1\",\"depth\":6}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -16.450000000000003,
+                    "y": -3.6500000000000004,
+                    "z": 18.700000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.52863,
+                "y": 18.2985
+            }
+        },
+        {
+            "id_": "cs_sl0_d1_t_f6_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f6_b_c1\",\"depth\":8}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -16.450000000000003,
+                    "y": -3.6500000000000004,
+                    "z": 24.200000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.52863,
+                "y": 26.218500000000002
+            }
+        },
+        {
+            "id_": "cs_sl0_d1_t_f7_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f7_b_c1\",\"depth\":9}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -16.450000000000003,
+                    "y": -3.6500000000000004,
+                    "z": 26.950000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.52863,
+                "y": 30.178500000000003
+            }
+        },
+        {
+            "id_": "cs_sl0_d1_t_f9_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f9_b_c1\",\"depth\":11}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -16.450000000000003,
+                    "y": -3.6500000000000004,
+                    "z": 32.45
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.52863,
+                "y": 38.0985
+            }
+        },
+        {
+            "id_": "cs_sl0_d1_t_f10_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f10_b_c1\",\"depth\":12}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -16.450000000000003,
+                    "y": -3.6500000000000004,
+                    "z": 35.2
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.52863,
+                "y": 42.0585
+            }
+        },
+        {
+            "id_": "cs_sl0_d2_t_f0_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f0_b_c1\",\"depth\":2}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -17.1,
+                    "y": -5.500000000000001,
+                    "z": 7.700000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.52863,
+                "y": 1.35572
+            }
+        },
+        {
+            "id_": "cs_sl0_d2_t_f1_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f1_b_c1\",\"depth\":3}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -20.75,
+                    "y": -3.6500000000000004,
+                    "z": 10.450000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.52863,
+                "y": 5.315720000000001
+            }
+        },
+        {
+            "id_": "cs_sl0_d2_t_f2_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f2_b_c1\",\"depth\":4}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -20.75,
+                    "y": -3.6500000000000004,
+                    "z": 13.200000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.52863,
+                "y": 9.275720000000002
+            }
+        },
+        {
+            "id_": "cs_sl0_d2_t_f3_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f3_b_c1\",\"depth\":5}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -20.75,
+                    "y": -3.6500000000000004,
+                    "z": 15.950000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.52863,
+                "y": 13.23572
+            }
+        },
+        {
+            "id_": "cs_sl0_d2_t_f4_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f4_b_c1\",\"depth\":6}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -20.75,
+                    "y": -3.6500000000000004,
+                    "z": 18.700000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.52863,
+                "y": 17.19572
+            }
+        },
+        {
+            "id_": "cs_sl0_d2_t_f5_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f5_b_c1\",\"depth\":7}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -20.75,
+                    "y": -3.6500000000000004,
+                    "z": 21.450000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.52863,
+                "y": 21.155720000000002
+            }
+        },
+        {
+            "id_": "cs_sl0_d2_t_f6_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f6_b_c1\",\"depth\":8}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -20.75,
+                    "y": -3.6500000000000004,
+                    "z": 24.200000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.52863,
+                "y": 25.115720000000003
+            }
+        },
+        {
+            "id_": "cs_sl0_d2_t_f7_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f7_b_c1\",\"depth\":9}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -20.75,
+                    "y": -3.6500000000000004,
+                    "z": 26.950000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.52863,
+                "y": 29.075720000000004
+            }
+        },
+        {
+            "id_": "cs_sl0_d2_t_f8_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f8_b_c1\",\"depth\":10}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -20.75,
+                    "y": -3.6500000000000004,
+                    "z": 29.700000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.52863,
+                "y": 33.035720000000005
+            }
+        },
+        {
+            "id_": "cs_sl0_d2_t_f9_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f9_b_c1\",\"depth\":11}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -20.75,
+                    "y": -3.6500000000000004,
+                    "z": 32.45
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.52863,
+                "y": 36.995720000000006
+            }
+        },
+        {
+            "id_": "cs_sl0_d2_t_f10_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f10_b_c1\",\"depth\":12}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -20.75,
+                    "y": -3.6500000000000004,
+                    "z": 35.2
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.52863,
+                "y": 40.95572000000001
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f0_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f0_b_c1\",\"depth\":2}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -19.8,
+                    "y": -4.5,
+                    "z": 7.700000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 0.52863
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f1_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f1_b_c1\",\"depth\":3}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -23.450000000000003,
+                    "y": -6.3500000000000005,
+                    "z": 10.450000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 4.488630000000001
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f2_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f2_b_c1\",\"depth\":4}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -23.450000000000003,
+                    "y": -6.3500000000000005,
+                    "z": 13.200000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 8.448630000000001
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f3_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f3_b_c1\",\"depth\":5}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -23.450000000000003,
+                    "y": -6.3500000000000005,
+                    "z": 15.950000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 12.40863
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f4_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f4_b_c1\",\"depth\":6}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -23.450000000000003,
+                    "y": -6.3500000000000005,
+                    "z": 18.700000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 16.36863
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f5_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f5_b_c1\",\"depth\":7}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -23.450000000000003,
+                    "y": -6.3500000000000005,
+                    "z": 21.450000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 20.32863
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f6_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f6_b_c1\",\"depth\":8}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -23.450000000000003,
+                    "y": -6.3500000000000005,
+                    "z": 24.200000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 24.28863
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f7_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f7_b_c1\",\"depth\":9}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -23.450000000000003,
+                    "y": -6.3500000000000005,
+                    "z": 26.950000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 28.248630000000002
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f8_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f8_b_c1\",\"depth\":10}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -23.450000000000003,
+                    "y": -6.3500000000000005,
+                    "z": 29.700000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 32.20863
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f9_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f9_b_c1\",\"depth\":11}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -23.450000000000003,
+                    "y": -6.3500000000000005,
+                    "z": 32.45
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 36.16863
+            }
+        },
+        {
+            "id_": "cs_sl0_d3_t_f10_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f10_b_c1\",\"depth\":12}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -23.450000000000003,
+                    "y": -6.3500000000000005,
+                    "z": 35.2
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 1.35572,
+                "y": 40.12863
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f0_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f0_b_c1\",\"depth\":2}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -20.8,
+                    "y": -3.7,
+                    "z": 8.616670000000001
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 0.52863
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f1_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f1_b_c1\",\"depth\":3}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -23.450000000000003,
+                    "y": -9.05,
+                    "z": 11.366670000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 4.488630000000001
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f2_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f2_b_c1\",\"depth\":4}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -23.450000000000003,
+                    "y": -9.05,
+                    "z": 14.116670000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 8.448630000000001
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f3_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f3_b_c1\",\"depth\":5}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -23.450000000000003,
+                    "y": -9.05,
+                    "z": 16.866670000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 12.40863
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f4_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f4_b_c1\",\"depth\":6}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -22.650000000000002,
+                    "y": -7.3500000000000005,
+                    "z": 19.616670000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 16.36863
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f5_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f5_b_c1\",\"depth\":7}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -22.650000000000002,
+                    "y": -7.3500000000000005,
+                    "z": 22.366670000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 20.32863
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f6_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f6_b_c1\",\"depth\":8}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -23.450000000000003,
+                    "y": -9.05,
+                    "z": 25.116670000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 24.28863
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f7_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f7_b_c1\",\"depth\":9}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -22.650000000000002,
+                    "y": -7.3500000000000005,
+                    "z": 27.866670000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 28.248630000000002
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f8_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f8_b_c1\",\"depth\":10}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -23.450000000000003,
+                    "y": -9.05,
+                    "z": 30.616670000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 32.20863
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f9_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "J"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f9_b_c1\",\"depth\":11}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -22.650000000000002,
+                    "y": -7.3500000000000005,
+                    "z": 33.366670000000006
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 36.16863
+            }
+        },
+        {
+            "id_": "cs_sl1_d0_t_f10_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "\\"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f10_b_c1\",\"depth\":12}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -23.450000000000003,
+                    "y": -9.05,
+                    "z": 36.116670000000006
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 40.12863
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f0_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f0_b_c1\",\"depth\":2}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -21.8,
+                    "y": -8.9,
+                    "z": 8.616670000000001
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 1.35572
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f1_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f1_b_c1\",\"depth\":3}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -20.75,
+                    "y": -11.750000000000002,
+                    "z": 11.366670000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 5.315720000000001
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f2_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f2_b_c1\",\"depth\":4}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -20.75,
+                    "y": -11.750000000000002,
+                    "z": 14.116670000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 9.275720000000002
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f3_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f3_b_c1\",\"depth\":5}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -20.75,
+                    "y": -11.750000000000002,
+                    "z": 16.866670000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 13.23572
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f4_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f4_b_c1\",\"depth\":6}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -19.950000000000003,
+                    "y": -12.55,
+                    "z": 19.616670000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 17.19572
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f5_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f5_b_c1\",\"depth\":7}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -19.950000000000003,
+                    "y": -12.55,
+                    "z": 22.366670000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 21.155720000000002
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f6_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f6_b_c1\",\"depth\":8}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -20.75,
+                    "y": -11.750000000000002,
+                    "z": 25.116670000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 25.115720000000003
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f7_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f7_b_c1\",\"depth\":9}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -19.950000000000003,
+                    "y": -12.55,
+                    "z": 27.866670000000003
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 29.075720000000004
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f8_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "L"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f8_b_c1\",\"depth\":10}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -20.75,
+                    "y": -11.750000000000002,
+                    "z": 30.616670000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 33.035720000000005
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f9_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f9_b_c1\",\"depth\":11}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -19.950000000000003,
+                    "y": -12.55,
+                    "z": 33.366670000000006
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 36.995720000000006
+            }
+        },
+        {
+            "id_": "cs_sl1_d1_t_f10_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "/"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f10_b_c1\",\"depth\":12}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -19.950000000000003,
+                    "y": -12.55,
+                    "z": 36.116670000000006
+                },
+                "xAxis": {
+                    "x": -1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 40.95572000000001
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f0_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "s"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f0_b_c1\",\"depth\":2}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -20.1,
+                    "y": -9.9,
+                    "z": 9.533330000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 2.4585000000000004
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f1_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "s"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f1_b_c1\",\"depth\":3}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -16.450000000000003,
+                    "y": -11.750000000000002,
+                    "z": 12.283330000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 6.418500000000001
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f2_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "s"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f2_b_c1\",\"depth\":4}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -16.450000000000003,
+                    "y": -11.750000000000002,
+                    "z": 15.033330000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 10.3785
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f3_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "s"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f3_b_c1\",\"depth\":5}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -16.450000000000003,
+                    "y": -11.750000000000002,
+                    "z": 17.783330000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 14.338500000000002
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f4_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "s"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f4_b_c1\",\"depth\":6}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -16.450000000000003,
+                    "y": -11.750000000000002,
+                    "z": 20.533330000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 18.2985
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f5_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "s"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f5_b_c1\",\"depth\":7}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -16.450000000000003,
+                    "y": -11.750000000000002,
+                    "z": 23.283330000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 22.2585
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f6_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "s"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f6_b_c1\",\"depth\":8}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -16.450000000000003,
+                    "y": -11.750000000000002,
+                    "z": 26.033330000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 26.218500000000002
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f7_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "s"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f7_b_c1\",\"depth\":9}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -16.450000000000003,
+                    "y": -11.750000000000002,
+                    "z": 28.783330000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 30.178500000000003
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f8_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "s"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f8_b_c1\",\"depth\":10}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -16.450000000000003,
+                    "y": -11.750000000000002,
+                    "z": 31.533330000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 34.1385
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f9_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "s"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f9_b_c1\",\"depth\":11}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -16.450000000000003,
+                    "y": -11.750000000000002,
+                    "z": 34.28333
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 38.0985
+            }
+        },
+        {
+            "id_": "cs_sl2_d0_t_f10_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "s"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f10_b_c1\",\"depth\":12}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -16.450000000000003,
+                    "y": -11.750000000000002,
+                    "z": 37.03333000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 3.2855900000000005,
+                "y": 42.0585
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f0_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "p"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f0_b_c1\",\"depth\":2}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -17.400000000000002,
+                    "y": -10.9,
+                    "z": 9.533330000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 3.2855900000000005
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f1_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "p"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f1_b_c1\",\"depth\":3}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -9.05,
+                    "z": 12.283330000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 7.245590000000001
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f2_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "p"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f2_b_c1\",\"depth\":4}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -9.05,
+                    "z": 15.033330000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 11.20559
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f3_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "p"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f3_b_c1\",\"depth\":5}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -9.05,
+                    "z": 17.783330000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 15.165590000000002
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f4_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "p"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f4_b_c1\",\"depth\":6}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -9.05,
+                    "z": 20.533330000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 19.125590000000003
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f5_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "p"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f5_b_c1\",\"depth\":7}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -9.05,
+                    "z": 23.283330000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 23.085590000000003
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f6_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "p"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f6_b_c1\",\"depth\":8}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -9.05,
+                    "z": 26.033330000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 27.04559
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f7_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "p"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f7_b_c1\",\"depth\":9}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -9.05,
+                    "z": 28.783330000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 31.00559
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f8_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "p"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f8_b_c1\",\"depth\":10}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -9.05,
+                    "z": 31.533330000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 34.965590000000006
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f9_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "p"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f9_b_c1\",\"depth\":11}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -9.05,
+                    "z": 34.28333
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 38.92559
+            }
+        },
+        {
+            "id_": "cs_sl2_d1_t_f10_b_c1",
+            "description": "",
+            "type": {
+                "name": "Capsule",
+                "variant": "p"
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f10_b_c1\",\"depth\":12}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -13.750000000000002,
+                    "y": -9.05,
+                    "z": 37.03333000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 2.4585000000000004,
+                "y": 42.88559
+            }
+        },
+        {
+            "id_": "br_sl0_d2_t_f2_b_c0",
+            "description": "",
+            "type": {
+                "name": "Bridge",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f2_b_c0\",\"depth\":4}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -7.9,
+                    "y": 0.65,
+                    "z": 13.200000000000001
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.0046700000000000005,
+                "y": 10.197130000000001
+            }
+        },
+        {
+            "id_": "br_sl0_d2_t_f5_b_c0",
+            "description": "",
+            "type": {
+                "name": "Bridge",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f5_b_c0\",\"depth\":7}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -7.9,
+                    "y": 0.65,
+                    "z": 21.450000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.0046700000000000005,
+                "y": 22.07713
+            }
+        },
+        {
+            "id_": "br_sl0_d2_t_f8_b_c0",
+            "description": "",
+            "type": {
+                "name": "Bridge",
+                "variant": ""
+            },
+            "qualities": [
+                {
+                    "name": "semio",
+                    "value": "{\"parentPieceId\":\"t_f8_b_c0\",\"depth\":10}"
+                }
+            ],
+            "plane": {
+                "origin": {
+                    "x": -7.9,
+                    "y": 0.65,
+                    "z": 29.700000000000003
+                },
+                "xAxis": {
+                    "x": 0,
+                    "y": -1,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0.0046700000000000005,
+                "y": 33.95713
+            }
+        },
+        {
+            "id_": "b",
+            "description": "",
+            "type": {
+                "name": "Base",
+                "variant": ""
+            },
+            "plane": {
+                "origin": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0
+                },
+                "xAxis": {
+                    "x": 1,
+                    "y": 0,
+                    "z": 0
+                },
+                "yAxis": {
+                    "x": 0,
+                    "y": 1,
+                    "z": 0
+                }
+            },
+            "center": {
+                "x": 0,
+                "y": 0
+            },
+            "qualities": []
+        }
+    ],
+    "connections": [],
+    "qualities": [
+        {
+            "name": "effective floor area",
+            "value": "2349.53",
+            "unit": "m²",
+            "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
+        },
+        {
+            "name": "specific operational global warming potential",
+            "value": "22.890446",
+            "unit": "kgCO2e/m²a",
+            "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
+        },
+        {
+            "name": "construction cost",
+            "value": "2.0311e+7",
+            "unit": "€",
+            "definition": ""
+        },
+        {
+            "name": "return",
+            "value": "2.2088e+6",
+            "unit": "€/a",
+            "definition": ""
+        },
+        {
+            "name": "construction global warming potential",
+            "value": "1.818e+6",
+            "unit": "kgCO2e",
+            "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
+        },
+        {
+            "name": "operational cost",
+            "value": "276616.911111",
+            "unit": "€/a",
+            "definition": ""
+        },
+        {
+            "name": "operational global warming potential",
+            "value": "53781.79",
+            "unit": "kgCO2e/a",
+            "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
+        },
+        {
+            "name": "income",
+            "value": "2.4854e+6",
+            "unit": "€",
+            "definition": ""
+        },
+        {
+            "name": "maintenance expenses",
+            "value": "232534",
+            "unit": "€/a",
+            "definition": ""
+        },
+        {
+            "name": "specific energy demand",
+            "value": "99.440124",
+            "unit": "kWh/m²a",
+            "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
+        },
+        {
+            "name": "operational energy cost",
+            "value": "44082.911111",
+            "unit": "€/a",
+            "definition": ""
+        },
+        {
+            "name": "heating energy demand",
+            "value": "83186",
+            "unit": "kWh/a",
+            "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
+        },
+        {
+            "name": "cooling energy demand",
+            "value": "63366",
+            "unit": "kWh/a",
+            "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
+        },
+        {
+            "name": "technical equipment energy demand",
+            "value": "70802",
+            "unit": "kWh/a",
+            "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
+        }
+    ]
+}

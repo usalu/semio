@@ -2,11 +2,27 @@ import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef } from '
 import { Canvas, ThreeEvent, useLoader } from '@react-three/fiber';
 import { Center, Environment, GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, Select, Sphere, Stage, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { Design, Piece, Plane, Type, flattenDesign, DesignEditorSelection, getPieceRepresentationUrls } from '@semio/js';
+import { Design, Piece, Plane, Type, flattenDesign, DesignEditorSelection, getPieceRepresentationUrls, planeToMatrix, ToThreeQuaternion, ToThreeRotation, ToSemioRotation } from '@semio/js';
 
 const getComputedColor = (variable: string): string => {
     return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 };
+
+interface PlaneThreeProps {
+    plane: Plane;
+}
+
+const PlaneThree: FC<PlaneThreeProps> = ({ plane }) => {
+    const matrix = useMemo(() => {
+        return planeToMatrix(plane)
+    }, [plane]);
+    return (
+        <group matrix={matrix} matrixAutoUpdate={false}>
+            <Line points={[new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]} color={new THREE.Color(getComputedColor('--color-primary'))} />
+            <Line points={[new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0)]} color={new THREE.Color(getComputedColor('--color-primary'))} />
+        </group>
+    )
+}
 
 interface ModelPieceProps {
     piece: Piece;
@@ -18,21 +34,31 @@ interface ModelPieceProps {
 
 const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, onSelect }) => {
     const matrix = useMemo(() => {
-        const threeToSemioRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
-        const semioToThreeRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
-        // const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
+        // const threeToSemioRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
+        // const semioToThreeRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
+        // // const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
+        // const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z);
+        // const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z);
+        // const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis);
+        // const planeRotationMatrix = new THREE.Matrix4();
+        // planeRotationMatrix.makeBasis(xAxis.normalize(), yAxis.normalize(), zAxis.normalize());
+        // // planeRotationMatrix.setPosition(origin);
+        // const m = new THREE.Matrix4();
+        // m.multiply(threeToSemioRotation);
+        // m.multiply(planeRotationMatrix);
+        // m.multiply(semioToThreeRotation);
+        // m.multiply(new THREE.Matrix4().makeTranslation(plane.origin.x, -plane.origin.z, plane.origin.y));
+        // return m
+        const r = ToSemioRotation()
+        const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
         const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z);
         const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z);
         const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis);
         const planeRotationMatrix = new THREE.Matrix4();
         planeRotationMatrix.makeBasis(xAxis.normalize(), yAxis.normalize(), zAxis.normalize());
-        // planeRotationMatrix.setPosition(origin);
-        const m = new THREE.Matrix4();
-        m.multiply(threeToSemioRotation);
-        m.multiply(planeRotationMatrix);
-        m.multiply(semioToThreeRotation);
-        m.multiply(new THREE.Matrix4().makeTranslation(plane.origin.x, -plane.origin.z, plane.origin.y));
-        return m
+        planeRotationMatrix.setPosition(origin);
+        planeRotationMatrix.multiply(r)
+        return planeRotationMatrix
     }, [plane]);
     const scene = useMemo(() => {
         return useGLTF(fileUrl).scene.clone()
@@ -54,9 +80,10 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, onSe
 
     return (
         <group
-            // matrix={matrix}
-            // matrixAutoUpdate={false}
-            position={[plane!.origin.x, -plane!.origin.z, plane!.origin.y]}
+
+            matrix={matrix}
+            matrixAutoUpdate={false}
+            // position={[plane!.origin.x, plane!.origin.z, -plane!.origin.y]}
 
             userData={{ pieceId: piece.id_ }}
             onClick={(e) => {
@@ -115,30 +142,36 @@ const ModelDesign: FC<ModelDesignProps> = ({ design, types, fileUrls, selection,
                 });
             }
         }} filter={items => items}>
-            {design.pieces?.map((piece, index) => (
-                <ModelPiece
-                    key={`piece-${piece.id_}`}
-                    piece={piece}
-                    plane={piecePlanes[index]}
-                    fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_))}
-                    selected={selection.selectedPieceIds.includes(piece.id_)}
-                    onSelect={
-                        (piece) => {
-                            if (selection.selectedPieceIds.includes(piece.id_)) {
-                                onSelectionChange({
-                                    ...selection,
-                                    selectedPieceIds: selection.selectedPieceIds.filter(id => id !== piece.id_)
-                                })
-                            } else {
-                                onSelectionChange({
-                                    ...selection,
-                                    selectedPieceIds: [...selection.selectedPieceIds, piece.id_]
-                                })
+            <group
+                quaternion={new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)}
+            >
+                {design.pieces?.map((piece, index) => (
+                    <ModelPiece
+                        key={`piece-${piece.id_}`}
+                        piece={piece}
+                        plane={piecePlanes[index]}
+                        fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_))}
+                        selected={selection.selectedPieceIds.includes(piece.id_)}
+                        onSelect={
+                            (piece) => {
+                                if (selection.selectedPieceIds.includes(piece.id_)) {
+                                    onSelectionChange({
+                                        ...selection,
+                                        selectedPieceIds: selection.selectedPieceIds.filter(id => id !== piece.id_)
+                                    })
+                                } else {
+                                    onSelectionChange({
+                                        ...selection,
+                                        selectedPieceIds: [...selection.selectedPieceIds, piece.id_]
+                                    })
+                                }
                             }
                         }
-                    }
-                />
-            ))}
+                    />
+                    // <PlaneThree key={`plane-${piece.id_}`} plane={piecePlanes![index]} />
+                ))}
+            </group>
+
         </Select>
     );
 };

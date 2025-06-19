@@ -640,10 +640,23 @@ const roundPlane = (plane: Plane): Plane => {
     };
 };
 
-// const semioToThreeRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1)
-// const threeToSemioRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1)
+export const ToThreeRotation = (): THREE.Matrix4 => {
+    return new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
+}
 
-const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
+export const ToSemioRotation = (): THREE.Matrix4 => {
+    return new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
+}
+
+export const ToThreeQuaternion = (): THREE.Quaternion => {
+    return new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476);
+}
+
+export const ToSemioQuaternion = (): THREE.Quaternion => {
+    return new THREE.Quaternion(0.7071067811865476, 0, 0, -0.7071067811865476);
+}
+
+export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
     const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
     const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z);
     const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z);
@@ -655,7 +668,7 @@ const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
     return matrix;
 };
 
-const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
+export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
     const origin = new THREE.Vector3();
     const xAxis = new THREE.Vector3();
     const yAxis = new THREE.Vector3();
@@ -672,7 +685,7 @@ const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
 };
 
 
-const semioVectorToThree = (v: Point | Vector): THREE.Vector3 => {
+export const vectorToThree = (v: Point | Vector): THREE.Vector3 => {
     return new THREE.Vector3(v.x, v.y, v.z);
 };
 
@@ -684,10 +697,10 @@ const computeChildPlane = (
 ): Plane => {
 
     const parentMatrix = planeToMatrix(parentPlane);
-    const parentPoint = semioVectorToThree(parentPort.point);
-    const parentDirection = semioVectorToThree(parentPort.direction).normalize();
-    const childPoint = semioVectorToThree(childPort.point);
-    const childDirection = semioVectorToThree(childPort.direction).normalize();
+    const parentPoint = vectorToThree(parentPort.point);
+    const parentDirection = vectorToThree(parentPort.direction).normalize();
+    const childPoint = vectorToThree(childPort.point);
+    const childDirection = vectorToThree(childPort.direction).normalize();
 
     const { gap, shift, raise_, rotation, turn, tilt } = connection;
     const rotationRad = THREE.MathUtils.degToRad(rotation);
@@ -844,7 +857,7 @@ export const flattenDesign = (design: Design, types: Type[]): Design => {
                 }
                 const childPlane = roundPlane(computeChildPlane(parentPlane, parentPort, childPort, connection));
                 piecePlanes[childPiece.id_] = childPlane;
-                const direction = semioVectorToThree({ x: connection.x, y: connection.y, z: 0 }).normalize();
+                const direction = vectorToThree({ x: connection.x, y: connection.y, z: 0 }).normalize();
                 const childCenter = {
                     x: round(parentPiece.center!.x + connection.x + direction.x),
                     y: round(parentPiece.center!.y + connection.y + direction.y),
