@@ -109,6 +109,15 @@ const ModelDesign: FC<ModelDesignProps> = ({ design, types, fileUrls, selection,
         cellColor: getComputedColor('--accent-foreground')
     }));
 
+    const piecePlanes = useMemo(() => {
+        const flatDesign = flattenDesign(design, types);
+        return flatDesign.pieces?.map(p => p.plane);
+    }, [design, types]);
+
+    const pieceRepresentationUrls = useMemo(() => {
+        return getPieceRepresentationUrls(design, types);
+    }, [design, types]);
+
     useEffect(() => {
         fileUrls.forEach((url, id) => {
             useGLTF.preload(id);
@@ -120,13 +129,12 @@ const ModelDesign: FC<ModelDesignProps> = ({ design, types, fileUrls, selection,
         if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`);
     });
 
-    const flatDesign = flattenDesign(design, types);
-    const piecePlanes = flatDesign.pieces?.map(p => p.plane);
-    const pieceRepresentationUrls = getPieceRepresentationUrls(design, types);
+    useEffect(() => {
+        pieceRepresentationUrls.forEach((url, id) => {
+            if (!fileUrls.has(url)) throw new Error(`Representation url ${url} for piece ${id} not found in fileUrls map`);
+        });
+    }, [pieceRepresentationUrls, fileUrls]);
 
-    pieceRepresentationUrls.forEach((url, id) => {
-        if (!fileUrls.has(url)) throw new Error(`Representation url ${url} for piece ${id} not found in fileUrls map`);
-    });
 
     return (
         <Select box multiple onChange={(selected) => {
@@ -149,8 +157,8 @@ const ModelDesign: FC<ModelDesignProps> = ({ design, types, fileUrls, selection,
                     <ModelPiece
                         key={`piece-${piece.id_}`}
                         piece={piece}
-                        plane={piecePlanes[index]}
-                        fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_))}
+                        plane={piecePlanes![index!]}
+                        fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_)!)!}
                         selected={selection.selectedPieceIds.includes(piece.id_)}
                         onSelect={
                             (piece) => {
