@@ -1,4 +1,4 @@
-import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef } from 'react';
+import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef, useCallback } from 'react';
 import { Canvas, ThreeEvent, useLoader } from '@react-three/fiber';
 import { Center, Environment, GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, Select, Sphere, Stage, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
@@ -78,6 +78,11 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, onSe
         return sceneClone
     }, [scene])
 
+    const handleClick = useCallback((e: ThreeEvent<MouseEvent>) => {
+        onSelect(piece);
+        e.stopPropagation();
+    }, [onSelect, piece]);
+
     return (
         <group
 
@@ -86,10 +91,7 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, onSe
             // position={[plane!.origin.x, plane!.origin.z, -plane!.origin.y]}
 
             userData={{ pieceId: piece.id_ }}
-            onClick={(e) => {
-                onSelect(piece)
-                e.stopPropagation()
-            }}>
+            onClick={handleClick}>
             <primitive object={selected ? selectedScene : scene} />
         </group>
     );
@@ -101,17 +103,13 @@ interface ModelDesignProps {
     fileUrls: Map<string, string>;
     selection: DesignEditorSelection;
     onSelectionChange: (selection: DesignEditorSelection) => void;
+    onDesignChange: (design: Design) => void;
 }
 
-const ModelDesign: FC<ModelDesignProps> = ({ design, types, fileUrls, selection, onSelectionChange }) => {
-    const [gridColors, setGridColors] = useState(() => ({
-        sectionColor: getComputedColor('--foreground'),
-        cellColor: getComputedColor('--accent-foreground')
-    }));
-
+const ModelDesign: FC<ModelDesignProps> = ({ design, types, fileUrls, selection, onSelectionChange, onDesignChange }) => {
     const piecePlanes = useMemo(() => {
         const flatDesign = flattenDesign(design, types);
-        return flatDesign.pieces?.map(p => p.plane);
+        return flatDesign.pieces?.map(p => p.plane!) || [];
     }, [design, types]);
 
     const pieceRepresentationUrls = useMemo(() => {
@@ -136,20 +134,37 @@ const ModelDesign: FC<ModelDesignProps> = ({ design, types, fileUrls, selection,
     }, [pieceRepresentationUrls, fileUrls]);
 
 
+    const handleSelectionChange = useCallback((selected: THREE.Object3D[]) => {
+        const newSelectedPieceIds = selected.map(item => item.parent?.userData.pieceId);
+
+        if (!Array.isArray(selection.selectedPieceIds) ||
+            newSelectedPieceIds.length !== selection.selectedPieceIds.length ||
+            newSelectedPieceIds.some((id, index) => id !== selection.selectedPieceIds[index])) {
+
+            onSelectionChange({
+                ...selection,
+                selectedPieceIds: newSelectedPieceIds
+            });
+        }
+    }, [selection, onSelectionChange]);
+
+    const handlePieceSelect = useCallback((piece: Piece) => {
+        if (selection.selectedPieceIds.includes(piece.id_)) {
+            onSelectionChange({
+                ...selection,
+                selectedPieceIds: selection.selectedPieceIds.filter(id => id !== piece.id_)
+            })
+        } else {
+            onSelectionChange({
+                ...selection,
+                selectedPieceIds: [...selection.selectedPieceIds, piece.id_]
+            })
+        }
+    }, [selection, onSelectionChange]);
+
+
     return (
-        <Select box multiple onChange={(selected) => {
-            const newSelectedPieceIds = selected.map(item => item.parent?.userData.pieceId);
-
-            if (!Array.isArray(selection.selectedPieceIds) ||
-                newSelectedPieceIds.length !== selection.selectedPieceIds.length ||
-                newSelectedPieceIds.some((id, index) => id !== selection.selectedPieceIds[index])) {
-
-                onSelectionChange({
-                    ...selection,
-                    selectedPieceIds: newSelectedPieceIds
-                });
-            }
-        }} filter={items => items}>
+        <Select box multiple onChange={handleSelectionChange} filter={items => items}>
             <group
                 quaternion={new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)}
             >
@@ -160,21 +175,7 @@ const ModelDesign: FC<ModelDesignProps> = ({ design, types, fileUrls, selection,
                         plane={piecePlanes![index!]}
                         fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_)!)!}
                         selected={selection.selectedPieceIds.includes(piece.id_)}
-                        onSelect={
-                            (piece) => {
-                                if (selection.selectedPieceIds.includes(piece.id_)) {
-                                    onSelectionChange({
-                                        ...selection,
-                                        selectedPieceIds: selection.selectedPieceIds.filter(id => id !== piece.id_)
-                                    })
-                                } else {
-                                    onSelectionChange({
-                                        ...selection,
-                                        selectedPieceIds: [...selection.selectedPieceIds, piece.id_]
-                                    })
-                                }
-                            }
-                        }
+                        onSelect={handlePieceSelect}
                     />
                     // <PlaneThree key={`plane-${piece.id_}`} plane={piecePlanes![index]} />
                 ))}
@@ -211,8 +212,9 @@ interface ModelProps {
     onPanelDoubleClick?: () => void;
     selection: DesignEditorSelection;
     onSelectionChange: (selection: DesignEditorSelection) => void;
+    onDesignChange: (design: Design) => void;
 }
-const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design, types, fileUrls, selection, onSelectionChange }) => {
+const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design, types, fileUrls, selection, onSelectionChange, onDesignChange }) => {
     const [gridColors, setGridColors] = useState({
         sectionColor: getComputedColor('--foreground'),
         cellColor: getComputedColor('--accent-foreground')
@@ -236,19 +238,23 @@ const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design, types, 
         return () => observer.disconnect();
     }, []);
 
+    const handleDoubleClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (onPanelDoubleClick) onPanelDoubleClick();
+    }, [onPanelDoubleClick]);
+
+    const handlePointerMissed = useCallback(() => {
+        onSelectionChange({
+            selectedPieceIds: [],
+            selectedConnections: []
+        })
+    }, [onSelectionChange]);
+
     return (
         <div className="w-full h-full">
             <Canvas
-                onDoubleClickCapture={(e) => {
-                    e.stopPropagation();
-                    if (onPanelDoubleClick) onPanelDoubleClick();
-                }}
-                onPointerMissed={() => {
-                    onSelectionChange({
-                        selectedPieceIds: [],
-                        selectedConnections: []
-                    })
-                }}>
+                onDoubleClickCapture={handleDoubleClick}
+                onPointerMissed={handlePointerMissed}>
                 <OrbitControls
                     makeDefault
                     mouseButtons={{
@@ -261,7 +267,7 @@ const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design, types, 
                 {/* <Suspense fallback={null}>
                         <Gltf src={src} />
                     </Suspense> */}
-                <ModelDesign design={design} types={types} fileUrls={fileUrls} selection={selection} onSelectionChange={onSelectionChange} />
+                <ModelDesign design={design} types={types} fileUrls={fileUrls} selection={selection} onSelectionChange={onSelectionChange} onDesignChange={onDesignChange} />
                 <Environment files={'schlenker-shed.hdr'} />
                 <Grid
                     infiniteGrid={true}
