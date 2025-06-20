@@ -1,6 +1,6 @@
 import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef, useCallback } from 'react';
 import { Canvas, ThreeEvent, useLoader } from '@react-three/fiber';
-import { Center, Environment, GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, Select, Sphere, Stage, useGLTF } from '@react-three/drei';
+import { Center, Environment, GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, Select, Sphere, Stage, TransformControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { Design, Piece, Plane, Type, flattenDesign, DesignEditorSelection, getPieceRepresentationUrls, planeToMatrix, ToThreeQuaternion, ToThreeRotation, ToSemioRotation } from '@semio/js';
 
@@ -29,10 +29,12 @@ interface ModelPieceProps {
     plane: Plane;
     fileUrl: string;
     selected?: boolean;
+    updating?: boolean;
     onSelect: (piece: Piece) => void
 }
 
-const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, onSelect }) => {
+const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, updating, onSelect }) => {
+    const fixed = piece.plane !== undefined;
     const matrix = useMemo(() => {
         // const threeToSemioRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
         // const semioToThreeRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
@@ -77,23 +79,57 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, onSe
         })
         return sceneClone
     }, [scene])
+    const updatingScene = useMemo(() => {
+        const sceneClone = scene.clone()
+        sceneClone.traverse((object) => {
+            if (object instanceof THREE.Mesh) {
+                const meshColor = new THREE.Color(getComputedColor('--color-foreground'))
+                object.material = new THREE.MeshBasicMaterial({ color: meshColor, transparent: true, opacity: 0.1 })
+            }
+            if (object instanceof THREE.Line) {
+                const lineColor = new THREE.Color(getComputedColor('--color-background'))
+                object.material = new THREE.LineBasicMaterial({ color: lineColor, transparent: true, opacity: 0.15 })
+            }
+        })
+        return sceneClone
+    }, [scene])
 
     const handleClick = useCallback((e: ThreeEvent<MouseEvent>) => {
         onSelect(piece);
         e.stopPropagation();
     }, [onSelect, piece]);
 
-    return (
-        <group
+    const transformControlRef = useRef(null)
+    const handleMouseUp = useCallback((e: ThreeEvent<MouseEvent>) => {
+        console.log("handleMouseUp", e);
+    }, [plane]);
 
+    const transformControl = selected && fixed
+    if (transformControl) {
+        console.log("transformControl", transformControl)
+    }
+    const group = (
+        <group
             matrix={matrix}
             matrixAutoUpdate={false}
             // position={[plane!.origin.x, plane!.origin.z, -plane!.origin.y]}
-
             userData={{ pieceId: piece.id_ }}
             onClick={handleClick}>
-            <primitive object={selected ? selectedScene : scene} />
+            <primitive object={selected ? selectedScene : updating ? updatingScene : scene} />
         </group>
+    )
+
+    return (
+        transformControl ? (
+            <TransformControls
+                ref={transformControlRef}
+                enabled={selected && fixed}
+                onMouseUp={handleMouseUp}
+            >
+                {group}
+            </TransformControls>
+        ) : group
+
     );
 };
 
@@ -176,6 +212,7 @@ const ModelDesign: FC<ModelDesignProps> = ({ design, types, fileUrls, selection,
                         fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_)!)!}
                         selected={selection.selectedPieceIds.includes(piece.id_)}
                         onSelect={handlePieceSelect}
+                        updating
                     />
                     // <PlaneThree key={`plane-${piece.id_}`} plane={piecePlanes![index]} />
                 ))}
@@ -213,6 +250,7 @@ interface ModelProps {
     selection: DesignEditorSelection;
     onSelectionChange: (selection: DesignEditorSelection) => void;
     onDesignChange: (design: Design) => void;
+    onPieceUpdate: (piece: Piece) => void;
 }
 const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design, types, fileUrls, selection, onSelectionChange, onDesignChange }) => {
     const [gridColors, setGridColors] = useState({
