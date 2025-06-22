@@ -9,23 +9,26 @@ import { Steps, Tabs, TabItem } from "@astrojs/starlight/components";
 
 
 
-As mentioned earlier in **[Thinking in Semio](/think-in-semio/)**, a **Type** is like a **brick mold**
+As mentioned earlier in **[Thinking in Semio](/think-in-semio/)**. A **Type** is like a **brick mold** 🧱 A reusable shape template that defines how multiple Pieces are made
 
-You're not just drawing geometry — you're designing a **template** that combines shape with meaningful design information
+You're not just drawing geometry 🎨  
+You're designing a **template** that combines shape with meaningful design information 🧠🔧
 
 ---
 
 ##### 🧩 What Are the "Molds" in This Example?
 
-Take a look at your sketch — you'll see five elements that follow the **same basic shape**, just stretched to different lengths.
+Take a look at your sketch 👀  
+You'll see five elements that follow the **same basic shape**, just stretched to different lengths 📏
 
-Even though the final Design includes five Pieces, they're made from only **three distinct shapes**,  
-with two of them used twice — giving us **three Variants of one Type**.
+Even though the final Design includes five Pieces, they're made from only **three distinct shapes**  
+with two of them used twice — giving us **three Variants of one Type** 🔢
 
-🧱 Think of it like a LEGO brick that comes in 2-stud, 4-stud, and 5-stud versions — same shape logic, just scaled.
+🧱 Think of it like a LEGO brick that comes in 2-stud, 4-stud, and 5-stud versions —  
+same shape logic, just scaled 📐
 
-If the shape were completely different — like a triangle, window, or roof — that would count as a **new Type** altogether
-
+If the shape were completely different — like a triangle, window, or roof ⛰️🪟🏠  
+That would count as a **new Type** altogether
 
 ---
 
@@ -35,32 +38,35 @@ When you think of a mold, the first thing that comes to mind is usually its **sh
 But in Semio, geometry is more than form — it serves as a **placeholder for meaning** 💡
 
 In traditional Grasshopper workflows, geometry is just raw data 🧬  
-But in Semio, it becomes part of your **design language** 🗣️🎨 — a way to represent **intent**, not just surfaces 🎯
+But in Semio, it becomes part of your **design language** 🗣️🎨 —  
+a way to represent **intent**, not just surfaces 🎯
 
 For example:  
 👉 Instead of saying "connect point (x, y, z) to Brep edge 23"  
-👉 You say "connect the **door** to the **living room**"  
-👉 Or in LEGO terms: "**snap the window brick onto the top of the wall**" 🪟🧱
+👉 You say "connect the **door** to the **living room**" 🛋️🚪  
+👉 Or in LEGO terms: "🪟 **snap the window brick onto the top of the wall**" 🧱
 
-🔗 The geometry still exists — but now it stands in for something more: **a role, a relationship, a meaning**
-
+🔗 The geometry still exists — but now it stands in for something more:  
+**a role**, **a relationship**, **a meaning** 🌐
 
 ---
 
-## 🧰 Create a Brick Mold ([Type](/think-in-semio/#type) - Ty)
+## 🧰 Create a Brick Mold ([Type](/think-in-semio/#type) – Ty)
 
-Let’s begin by modeling the mold shown in the sketch. 
-This will serve as the base for generating its Variants.
+Let’s begin by modeling the mold shown in the sketch  
+This will serve as the base for generating its **Variants** 🧩
 
 ![📤 sketch drawing](/sketch-drawing-mold.png)
 
-Before we start building it, let’s go over the essential elements that define a Type:
+Before we start building, let’s go over the essential elements that define a **Type** 🧱:
 
-- **🏷️ Name** → A unique name to identify your Type and reuse it in different designs
-- **🧱 Geometry (Representation)** → The 3D shape attached to the Type. It gives the piece its visual form  
-- **🧲 Connection Points (Ports)** → The snap points where the piece connects to others in the system
+- 🏷️ **Name** → A unique name to identify your Type and reuse it in different designs  
+- 🧱 **Geometry (Representation)** → The 3D shape attached to the Type — it gives the piece its visual form ✨  
+- 🧲 **Connection Points (Ports)** → The snap points where the piece connects to others in the system 🔗
 
-Let’s take a look at the elements that make up a Type, and dive into modeling our first brick mold
+Now let’s take a closer look at how these elements come together — and start modeling our first **brick mold** 🛠️
+
+
 
 <Steps>
 <ol>
@@ -69,15 +75,18 @@ Let’s take a look at the elements that make up a Type, and dive into modeling 
 
 ### 🏷️ Name Your Mold ([Type](/think-in-semio/#type) Name - Na)
 
-Giving clear and consistent names to elements in Semio **really pays off later** — especially when designing and making connections.  
-As your project grows and you're working with many Types, Variants, and Pieces, meaningful names make everything easier to navigate and understand
+Giving clear and consistent names to elements in Semio **really pays off later** ✅  
+Especially when designing and making connections between many components 🔗
+
+As your project grows and you're working with lots of **Types**, **Variants**, and **Pieces**,  
+meaningful names make everything easier to **navigate** and **understand** 🧭
 
 :::note
 📝 Try to name things the way you would in a real project — clear, specific, and with purpose
 :::
 
-
-👉 In our example, we’ll name our Type **'Profile'**, since we’re modeling Pieces based on custom wood shapes with a defined profile
+👉 In our example, we’ll name our Type **"Profile"**  
+We’re modeling Pieces based on custom wood shapes with a defined profile 🪵✏️
 
 
 ---
@@ -90,34 +99,40 @@ As your project grows and you're working with many Types, Variants, and Pieces, 
 
 
 In Semio, when you give a Type its shape, you're adding a **Representation** 🧱  
-This isn’t just visual geometry — it’s a **layer of meaning** that stands in for a design element
+This isn’t just visual geometry — it’s a **layer of meaning** that stands in for a design element 🎭
 
 Think of it like snapping a shell onto a LEGO mold — now your brick has a visible form 👀  
-But that form isn’t fixed. A Representation is more like a **costume** — it can be swapped at any time, as long as it fits the logic
+But that form isn’t fixed. A Representation is more like a **costume** — it can be swapped at any time, as long as it fits the logic 🎨
 
-Just like architects might use a blocky volumes for urban models 🏙️ or detailed profiles for close-ups 🪟,  
+Just like architects might use blocky volumes for urban models 🏙️ or detailed profiles for close-ups 🪟  
 Semio lets you change the **look** without changing the **design logic** 🔄  
 Same brick, different shell — that’s the idea 💡
+
 
 ---
 
 ##### 🔧 Modeling Representation
 
-Creating a Representation works in two simple steps:  
-🧱 First, you build the geometry — the actual shape of your brick  
-📎 Then, you attach that shape to your Type to give it a visual form
+Creating a Representation works in two simple steps:
 
-Let’s take a closer look at the brick mold in our example  
-You’ll notice that it’s always the same shape 🧱 a rectangle cut at an angle ✂️ just stretched into different sizes 📏
+- 🧱 First, you build the geometry — the actual shape of your brick  
+- 📎 Then, you attach that shape to your Type to give it a visual form
 
-We’ll use these two parameters to define its size:
+---
+
+Let’s take a closer look at the brick mold in our example 👀  
+You’ll notice that it’s always the same shape 🧱  
+A rectangle cut at an angle ✂️ just stretched into different sizes 📏
+
+We’ll use two parameters to define its size:
 
 - `W` → the width of one brick unit  
 - `n` → the number of units in length
 
-🧰 Next, we’ll dive into how to create and attach geometry to your brick mold 
-🧱 In Semio, you can attach geometry to a Type in different ways — depending on what fits your workflow best 
-👀 Let’s take a look at how that works in practice
+---
+
+In Semio, you can attach geometry to a Type in different ways — depending on what fits your workflow best. Let’s take a look at how that works in practice 👀 
+
 
 
 <Tabs>
@@ -126,33 +141,46 @@ We’ll use these two parameters to define its size:
 
 
 
-In Semio, Representations are typically referenced through **external geometry files** 🗂️ — even when generated inside Grasshopper.  
-This approach helps maintain **clean, modular workflows** 🧼 and supports flexible updates
+In Semio, Representations are typically referenced through **external geometry files** 🗂️  
+— even when generated inside Grasshopper  
 
-While the modeling process itself isn’t the focus of this tutorial, the key takeaway is this:
-you’ll need to go through two simple steps to attach this geometry as a Representation
+This approach helps maintain **clean, modular workflows** 🧼  
+and supports flexible updates
 
+While the modeling process itself isn’t the focus of this tutorial, the key takeaway is this:  
+you’ll need to go through three simple steps to attach this geometry as a Representation
 
 ---
 
-#### Step 1: 🛠️ Geometry modeling 
+### 🛠️ Step 1: Geometry Modeling
 
-Since our shape follows a clear logic 🧠, we use a **parametric Grasshopper definition** to generate the geometry of the brick mold 🧱  
-This is useful because it lets us generate **all the different Variants** of this brick seen in the sketch, using a single logic controlled by the parameters `n` and `W`, which define the brick’s length and width 📏
+Since our shape follows a clear logic 🧠  
+we use a **parametric Grasshopper definition** to generate the geometry of the brick mold 🧱  
 
+This is useful because it lets us generate **all the different Variants** of this brick seen in the sketch  
+using a single logic controlled by the parameters `n` and `W`  
+which define the brick’s length and width 📏
 
 ![📁 Geometry Generation](/attach-geometry-crop.gif)
 
+---
 
-#### Step 2: 🛠️ Geometry Export
+### 💾 Step 2: Geometry Export
 
-After generating the geometry, we need to **export it as a `.glb` file** so it can be attached as a Representation.  
-💾 We’ll use a simple workflow that automates this export — it can be placed directly after your geometry definition in Grasshopper.
+After generating the geometry  
+we need to **export it as a `.glb` file** so it can be attached as a Representation 💾
+
+We’ll use a simple workflow that automates this export  
+It can be placed directly after your geometry definition in Grasshopper 🦗
 
 The modeling of the geometry happens earlier in the Grasshopper definition 🛠️  
-here, we’ll focus mainly on the **export logic**: how to turn that geometry into a file Semio can reference. 💾
+Here, we’ll focus mainly on the **export logic**  
+how to turn that geometry into a file Semio can reference 💾
+
+---
 
 **The export workflow looks like this:**
+
 
 
 
