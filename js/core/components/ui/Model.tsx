@@ -51,15 +51,8 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, upda
         // m.multiply(semioToThreeRotation);
         // m.multiply(new THREE.Matrix4().makeTranslation(plane.origin.x, -plane.origin.z, plane.origin.y));
         // return m
-        const r = ToSemioRotation()
-        const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
-        const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z);
-        const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z);
-        const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis);
-        const planeRotationMatrix = new THREE.Matrix4();
-        planeRotationMatrix.makeBasis(xAxis.normalize(), yAxis.normalize(), zAxis.normalize());
-        planeRotationMatrix.setPosition(origin);
-        planeRotationMatrix.multiply(r)
+        const planeRotationMatrix = planeToMatrix(plane)
+        planeRotationMatrix.multiply(ToSemioRotation())
         return planeRotationMatrix
     }, [plane]);
     const scene = useMemo(() => {
