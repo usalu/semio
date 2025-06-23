@@ -5,51 +5,95 @@ description: 📖 An introduction to Building-Information-Modeling (BIM) and how
 
 import { Tabs, TabItem, Card } from "@astrojs/starlight/components";
 
-Design today is increasingly **system-based**, **modular**, and **dynamic**.  
-But most tools are still built around **static components** and **fixed categories**.  
-They assume you begin with **geometry**, not with **structure**, **logic**, or **relationships**.  
+## 🧭 Why Rethink the Way We Model?
 
-> **semio takes a different approach.**  
-To support a more flexible, system-oriented way of working, we introduced a new modeling foundation:
+There’s a gap between **how architects think** and **how most tools work**
 
----
+Designers think in:
 
-### 🧠 What is Design Information Modeling?
+- 🧠 **Systems**  
+- 🔗 **Relationships**  
+- 🧩 **Intentions and rules**
 
-**Design Information Modeling (DIM)** is a modeling approach developed by semio to support a level of architectural thinking that most tools overlook.  
+But traditional tools still expect:
 
-- Model **design logic** instead of static shapes 🧩  
-- Use **relationships**, **abstractions**, and **references** to define systems 🔗  
-- Focus on **how it is all connected**, not only **how it looks** 🛠️
+- 📦 **Fixed components**  
+- 📐 **Static geometry**  
+- 🏷️ **Predefined categories**
 
----
-
-### 🧱 Why We Created DIM
-
-**Building Information Modeling (BIM)** brought a major shift to architectural workflows by introducing **semantics**:  
-> Rather than just drawing lines, you place **smart objects** (like walls or windows) with embedded data, enabling efficient documentation and coordination later on.  
-
-However, this comes with constraints:
-
-- Fixed building elements make **non-standard designs** hard to model 🚧  
-  - **Inclined walls** 🏔️  
-  - **Split-level structures** 🏠  
-  - **Free-form roofs** 🌊  
-
-<br />
--  BIM assumes most design decisions are already made.  
-- It’s not built for 
-  - modular systems, 
-  - adaptive relationships, or 
-  - custom logic 
-
-  especially in early design.  
+> 🧠 **Semio takes a different route** —  
+> letting you model design **logic**, **behavior**, and **systems** before locking in form
 
 ---
 
+### ✏️ Traditional Modeling
+
+Modeling used to mean: **drawing shapes**
+
+You worked with:
+
+- Lines ✏️  
+- Volumes 📐  
+- Layers 📊  
+
+> You draw *how something looked* —  
+> not how it behaves, connects, or can be evolved
+
+It is **visual**, but not **relational** 
+
+---
+
+### 🏗️ BIM — Building Information Modeling
+
+**BIM** introduced a major shift 💥  
+It added **meaning** to geometry — now walls, windows, and roofs weren’t just lines,  
+they became **smart objects** with embedded data 📦
+
+That opened the door to better documentation, but it came with assumptions:
+
+- The design is already decided 🗂️  
+- You’re working toward construction 📄  
+- You're choosing from fixed categories 🧱  
 
 
-#### This is how BIM tools read architecture
+##### 🚫 But BIM Has Its Limits:
+
+- 🔁 Can’t represent **modular logic**, **dynamic rules**, or **adaptive systems**  
+- 🧬 Doesn’t support **non-standard geometry**, **custom assemblies**, or **freeform workflows**  
+- ⚙️ Limited flexibility for defining **new element types** or **experimental behavior**  
+- 🔒 Built around **centralized models** with **proprietary formats**, reducing interoperability  
+
+:::note[What’s hard to model in BIM?]
+- Inclined walls 🏔️  
+- Split-level structures 🧗  
+- free-form roofs 🔁  
+:::
+
+---
+
+### 🧠 DIM — Design Information Modeling
+
+**Design Information Modeling (DIM)** is a concept developed by **Semio** 🔬  
+It supports how architects actually work — **iteratively**, **modularly**, and with evolving intent 🎯
+
+Instead of modeling finished **objects**, DIM helps you model:
+
+- 🧩 **Rules** — What can connect, repeat, or vary  
+- 🔗 **Relationships** — How parts relate or depend on each other  
+- 📄 **Placeholders** — Where meaning and data can evolve over time  
+
+> DIM focuses on **design structure**, not predefined function  
+> It lets you embed **custom logic** and **metadata** that evolve with your system 🔧
+
+DIM works without forcing a final form —  
+perfect for **early design**, **custom systems**, and **complex reuse workflows** 🔁
+
+
+---
+
+### 🔀 Semio vs BIM
+
+##### This is how BIM tools read architecture
 <br />
 
 > As a catalog of elements 📚        
@@ -86,7 +130,7 @@ to **isolated parts** 🧩
 
 ---
 
-#### But this is how architects think 
+##### But this is how architects think 
 <br />
 > In systems 🧬  
 > In relationships 🔗  
@@ -128,8 +172,12 @@ The Nakagin Capsule Tower has been [digtially reconstructed in semio](../../show
 
 
 
-> This is the difference between semio and other BIM tools 💡**  
-In **semio**, you're not just arranging components! you're designing how they ****, how they ****, and how they can ****.  
+ 💡 **This is where semio takes a different path:**  
+> You don’t start by placing walls or windows —  
+> You start by shaping **ideas**, **rules**, and **relationships** 🧠  
+>  
+> Only then do you turn them into elements like **walls**, **zones**, or **components** — when you’re ready 🛠️  
+
 
 
 

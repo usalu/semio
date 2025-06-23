@@ -1,110 +1,132 @@
 ---
-title: 🏘️ Think in semio
-description: 📖 An introduction to kit-of-parts architecture and how semio relates to it 🔀
+title: 🏘️ Think in semio  
+description: 📖 An introduction to kit-of-parts architecture and how semio relates to it 🔀  
 ---
 
 import { Tabs, TabItem, Card, Aside } from "@astrojs/starlight/components";
 
-## 🧩 Understanding semio: The Anatomy of a Modular Design System
-Let’s say you’ve just bought a big Lego box. Inside, you can build a spaceship, a castle, or a race car. Everything starts from that box 
-, and that’s how Semio’s architecture works too.
+##### 🧩 Understanding semio: The Anatomy of a Modular Design System  
+Let’s say you’ve just bought a big LEGO box. Inside, you can build a spaceship, a castle, or a race car. Everything starts from that box, and that’s how Semio’s architecture works too.
 
-### 📦 1. Kit = The LEGO Box
+## <span id="kit">📦 Kit = The LEGO Box</span>
 <br />
-- A Kit is the **full Lego set** you own 🧰  
--  It holds all the parts, instructions, and models you need to build anything 🧱  
-- In semio, the Kit is your project container 📁  
-    - It includes everything related to your modular system:  
-        - 📁 Designs,
-        - 🧱 Building Blocks
-        - 🔗 Connection Logic 
-        - 📊 Various Data 📦
 
-:::note
-Kits allow you to organize an entire system in one place 🧩  
-Its elements are reusable across projects or teams 🔄
+- A **Kit** is your complete LEGO set 🧰  
+- It holds all the parts, instructions, and models you need to build anything 🧱  
+- In Semio, the Kit is your **project container** 📁  
+- It includes everything related to your modular system:  
+  - 📁 Designs, 🧱 Building Blocks, 🔗 Connection Logic, 📊 Various Data  
+
+<br />
+
+:::note  
+**Kits** keep your whole system in one place 🧩  
+You can reuse Kit elements across multiple projects or teams 🔄  
 :::
 
 ---
 
-### 🧾 2. Design = The Model You Build
+## <span id="design">🧾 Design = The Model You Build</span>
 <br />
-- A Design is one specific thing you build  
-    - like a 🚀 spaceship, 🧱 launchpad, or a 🏰 tower   
-- It's made of multiple Lego parts arranged with intention 🎯  
+
+- A **Design** is one specific thing you build  
+  - Like a spaceship 🚀, a launchpad 🧱, or a tower 🏰  
+- It’s made of multiple LEGO parts arranged with intention 🎯  
 - You can build many different Designs from the same building components 🧰  
 
+<br />
 
-:::note
-A Kit could include multiple Designs 📚
+:::note  
+A Kit can include multiple Designs 📚  
 :::
 
 ---
 
-### 🧱 3. Type = The Unique Brick Mold
+## <span id="type">🧱 Type = The Unique Brick Mold</span>
 <br />
-- A Type is a mold  for creating **distinct** kind of Lego bricks 🧊  
-    - such as a 2×4 block, a window, or a roof tile 🧱  
-- You can think of a Type as the **definition** or **blueprint** of a building component 📐  
-    - It describes what it is, what it looks like, and how it connects 🔧  
+
+- A **Type** is a mold for creating a distinct kind of LEGO brick 🧊  
+  - Such as a 2×4 block, a window, or a roof tile 🧱  
+- A Type is the **definition** or **blueprint** of a building component 📐  
+  - It describes what it is, what it looks like, and how it connects 🔧  
 - Once defined, a Type can be reused as many times as needed  
-    - it helps you build consistent and modular systems 🧩
+  - It helps you build consistent and modular systems 🧩  
 
-:::note[A Common Mistake to Avoid]
-It's easy to assume a 2×4 red brick 🟥 and a 3×2 grey brick ⬜ should be separate Types.  
-But in semio, they can be **variants of the same Type** ✅ As long as components follow the same design rules, size and color differences can be handled as **variants**.
+<br />
 
-💡 **Tip:**  
-Create a new Type only when the geometry or behavior is fundamentally different.  
-For example, a window 🪟 isn't just a visual variation. it connects and functions differently, so it belongs to a separate Type 🧠  
+:::note[💡 A Common Mistake to Avoid]  
+It’s easy to think that a 2×4 red brick 🟥 and a 3×2 grey brick ⬜ should be different Types.  
+But in Semio, they can be **variants of the same Type** if they follow the same **design logic**.
+
+✅ Differences in size, color, or detail are just variations, as long as the overall structure and the way pieces connect feel like part of the same family.
+
+🧱 Create a new Type only when the **design language changes**.  
+For example, a window 🪟 introduces a different rhythm, visual structure, and connection pattern. It doesn’t feel like the same kind of block anymore, so it should be its own Type.  
 :::
-
-
 
 ---
 
-### 🔁 4. Piece = A Brick You Actually Use
+## <span id="piece">🔁 Piece = A Brick You Actually Use</span>
 <br />
-- A Piece is an individual brick placed in your design 🧩  
-    - It’s a specific **instance of a Type** (the mold) that appears within a Design 🧱  
-- If you use ten red 2×4 bricks, each one is a separate Piece  
-    - but they all come from the same mold 🧰  
-- Each Piece inherits all the infoemations from its Type:  
-    - 🧬 Geometry, 
-    - 🧠 Semantics,
-    - 📄 Various Metadata 🔗
 
-:::note
+- A **Piece** is an individual brick placed in your design 🧩  
+  - It’s a specific **instance of a Type** (the mold) that appears within a Design 🧱  
+- If you use ten red 2×4 bricks, each one is a separate Piece, but they all come from the same mold 🧰  
+- Each Piece inherits information from its Type: 🧬 Geometry, 🧠 Semantics, 📄 Metadata 🔗  
+
+<br />
+
+:::note  
 Pieces are the geometrical building blocks of your design 🛠️  
-They bring Types to life by placing them into real configurations 🧩
+They bring Types to life by placing them into real configurations 🧩  
 :::
 
 ---
 
-### ⚓ 5. Port = The Connection Point
+## <span id="port">⚓ Port = The Connection Point</span>
 <br />
-- A Port is a smart, intentional **connector** 🧲  
-    - Think of it like a Lego stud or socket 🧱 but placed exactly where it's needed 🎯  
-- Each Port acts as a docking spot, telling the system where and how a Piece should attach to another 🔧  
-- Ports are defined once on a Type and automatically inherited by all its Pieces 🧩
 
-:::note[Minimal Ports, Maximum Clarity]
-Unlike classic Lego bricks with many studs on every surface 🔳 semio uses only the Ports that matter 🎯 To stack two Lego bricks on top of each other, you just define one Port on the top ⬆️ and one on the bottom ⬇️  
+- A **Port** is a smart, intentional connector 🧲  
+  - Like a LEGO stud or socket 🧱, but placed exactly where it’s needed 🎯  
+- Each Port tells the system where and how a Piece connects 🔧  
+- Ports are defined once on a **Type** and automatically inherited by all its **Pieces** 🧩  
+
+<br />
+
+:::note[Minimal Ports, Maximum Clarity]  
+LEGO bricks have studs on every side 🔳, but in Semio, you only add Ports where they’re needed.  
+To connect two pieces, one Port on top ⬆️ and one on the bottom ⬇️ is enough.  
+
+You can place Ports all over if you want, or just in specific spots to guide the design.  
 :::
 
 ---
 
-### 🔗 6. Connection = The Snapping Together
+## <span id="connection">🔗 Connection = The Snapping Together</span>
 <br />
-- A Connection defines how two bricks **come together** 🧷  
-    - Like snapping a window piece onto a wall 🪟  
-- It's not a shape or object. It's a rule 🧠  
-- It tells the system which Ports should connect and how they align ⚓
+
+- A **Connection** defines how two bricks fit together 🧷  
+  - Like snapping a window piece onto a wall 🪟  
+- It’s not a shape or object — it’s a **rule** 🧠  
+- It tells the system which Ports to join and how they align ⚓  
 
 📐 **Example:**  
-“Connect the top Port of Piece A ⬆️ to the bottom Port of Piece B ⬇️” 🧩
+“Connect the top Port of Piece A ⬆️ to the bottom Port of Piece B ⬇️”
 
-:::note
-Connections describe assembly logic 🔄  
-They allow your design to be structured, modular, and flexible without relying on fixed geometry 🧠
+<br />
+
+:::note  
+Connections define how your design is assembled 🔄  
+They don’t rely on fixed geometry. Instead, they let you build flexible, modular systems where parts can be rearranged, replaced, or repeated without breaking the structure 🧠  
 :::
+
+---
+
+#### Quick Links to Main Elements
+
+- [📦 Kit](#kit)  
+- [🧾 Design](#design)  
+- [🧱 Type](#type)  
+- [🔁 Piece](#piece)  
+- [⚓ Port](#port)  
+- [🔗 Connection](#connection)  
