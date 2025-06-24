@@ -1,0 +1,421 @@
+{
+  "Global Life Cycle Costs": {
+    "Life Cycle Costs": {
+      "Investment Costs (Construction Phase)": {
+        "Land Costs": {
+          "Land": {
+            "Land Value": null,
+            "Ancillary Land Costs": {
+              "Surveying Fees": null,
+              "Court Fees": null,
+              "Notary Fees": null,
+              "Land Transfer Tax": null,
+              "Investigations": null,
+              "Valuations": null,
+              "Permit Fees": null,
+              "Land Reorganization": null,
+              "other": null
+            },
+            "Third Party Rights": {
+              "Compensations": null,
+              "Redemption of Real Rights": null,
+              "Other Third Party Rights Costs (KG 130)": null
+            },
+            "Compensations": null,
+            "Redemption of Real Rights": null,
+            "Other Third Party Rights Costs (KG 130)": null
+          },
+          "Other Land Costs (KG 100)": null
+        },
+        "Development Costs": {
+          "Preparatory Measures": {
+            "Site Preparation": {
+              "Safety Measures": null,
+              "Demolition Measures": null,
+              "Contaminated Site Remediation": null,
+              "Surface Preparation": null,
+              "Explosive Ordnance Clearance": null,
+              "Cultural Heritage Finds": null,
+              "Other Site Preparation (KG 210)": null
+            },
+            "Public Infrastructure Development": {
+              "Wastewater Disposal": null,
+              "Water Supply": null,
+              "Gas Supply": null,
+              "District Heating Supply": null,
+              "Power Supply": null,
+              "Telecommunications": null,
+              "Traffic Development": null,
+              "Waste Disposal": null,
+              "Other Public Infrastructure (KG 220)": null
+            },
+            "Private Infrastructure Development": null,
+            "Compensatory Measures and Levies": {
+              "Compensatory Measures": null,
+              "Compensatory Levies": null,
+              "Other Compensatory Measures (KG 240)": null
+            },
+            "Transitional Measures": {
+              "Structural Measures": null,
+              "Organizational Measures": null,
+              "Other Transitional Measures (KG 250)": null
+            }
+          },
+          "Other Development Costs (KG 200)": null
+        },
+        "Building - Structural Components": {
+          "Excavation/ Earthworks": {
+            "Construction": null,
+            "Enclosure": null,
+            "Water Management": null,
+            "Conveyance": null,
+            "Other Excavation/ Earthworks Costs (KG 310)": null
+          },
+          "Foundation, Substructure": {
+            "Soil Improvement": null,
+            "Shallow Foundations and Slabs": null,
+            "Deep Foundations": null,
+            "Foundation Layers": null,
+            "Seals and Linings": null,
+            "Drains": null,
+            "Other Foundation, Substructure Costs (KG 320)": null
+          },
+          "External Walls/ Vertical Structural Components, Outside": {
+            "Load-Bearing External Walls": null,
+            "Non-Load-Bearing External Walls": null,
+            "External Columns": null,
+            "External Wall Openings": null,
+            "External Wall Claddings, Outside": null,
+            "External Wall Claddings, Inside": null,
+            "Prefabricated External Wall Structures": null,
+            "Light Protection (KG 330)": null,
+            "Other External Walls Costs (KG 330)": null
+          },
+          "Internal Walls/ Vertical Structural Components, Inside": {
+            "Load-Bearing Internal Walls": null,
+            "Non-Load-Bearing Internal Walls": null,
+            "Internal Columns": null,
+            "Internal Wall Openings": null,
+            "Internal Wall Claddings": null,
+            "Prefabricated Internal Wall Structures": null,
+            "Light Protection (KG 340)": null,
+            "Other Internal Walls Costs (KG 340)": null
+          },
+          "Ceilings/ Horizontal Structural Components": {
+            "Ceiling Structures": null,
+            "Ceiling Openings": null,
+            "Ceiling Finishes": null,
+            "Ceiling Linings": null,
+            "Prefabricated Ceiling Structures": null,
+            "Other Ceilings Costs (KG 350)": null
+          },
+          "Roofs": {
+            "Roof Structures": null,
+            "Roof Openings": null,
+            "Roof Finishes": null,
+            "Roof Linings": null,
+            "Prefabricated Roof Structures": null,
+            "Light Protection (KG 360)": null,
+            "Other Roof Costs (KG 360)": null
+          },
+          "Infrastructure Facilities": {
+            "Road Traffic Facilities": null,
+            "Rail Traffic Facilities": null,
+            "Air Traffic Facilities": null,
+            "Water Construction Facilities": null,
+            "Wastewater Disposal Facilities": null,
+            "Water Supply Facilities": null,
+            "Energy and Information Supply Facilities": null,
+            "Waste Disposal Facilities": null,
+            "Other Infrastructure Facilities (KG 370)": null
+          },
+          "Structural Installations": {
+            "General Installations": null,
+            "Special Installations": null,
+            "Landscape Architectural Installations": null,
+            "Mechanical Installations": null,
+            "Installations in Civil Engineering Structures": null,
+            "Orientation and Information Systems": null,
+            "Protective Installations": null,
+            "Other Structural Installations Costs (KG 380)": null
+          },
+          "Other Measures for Structural Components": {
+            "Construction Site Facilities": null,
+            "Scaffolding": null,
+            "Safety Measures": null,
+            "Demolition Measures": null,
+            "Renovations": null,
+            "Material Disposal": null,
+            "Additional Measures": null,
+            "Temporary Structural Components": null,
+            "Other Measures for Structural Components (KG 390)": null
+          }
+        },
+        "Technical Systems": {
+          "Wastewater, Water, Gas Systems": {
+            "Wastewater Systems": null,
+            "Water Systems": null,
+            "Gas Systems": null,
+            "Other Wastewater, Water, Gas Systems Costs (KG 410)": null
+          },
+          "Heating Supply Systems": {
+            "Heat Generation Systems": null,
+            "Heat Distribution Networks": null,
+            "Room Heating Surfaces": null,
+            "Traffic Heating Surfaces": null,
+            "Other Heating Supply Systems Costs (KG 420)": null
+          },
+          "Room Air Technology Systems": {
+            "Ventilation Systems": null,
+            "Partial Air Conditioning Systems": null,
+            "Air Conditioning Systems": null,
+            "Refrigeration Systems": null,
+            "Other Room Air Technology Systems Costs (KG 430)": null
+          },
+          "Electrical Systems": {
+            "High and Medium Voltage Systems": null,
+            "Emergency Power Supply Systems": null,
+            "Low Voltage Switchgear": null,
+            "Low Voltage Installation Systems": null,
+            "Lighting Systems": null,
+            "Lightning Protection and Grounding Systems": null,
+            "Catenary Systems": null,
+            "Other Electrical Systems Costs (KG 440)": null
+          },
+          "Communication, Safety, and Information Technology Systems": {
+            "Telecommunication Systems": null,
+            "Search and Signal Systems": null,
+            "Time Service Systems": null,
+            "Electroacoustic Systems": null,
+            "Audiovisual Media and Antenna Systems": null,
+            "Fire Alarm and Alert Systems": null,
+            "Data Transmission Networks": null,
+            "Traffic Control Systems": null,
+            "Other Communication, Safety, and Information Technology Systems Costs (KG 450)": null
+          },
+          "Conveying Systems": {
+            "Elevator Systems": null,
+            "Escalators and Moving Walkways": null,
+            "Conveyor Systems": null,
+            "Transport Systems": null,
+            "Crane Systems": null,
+            "Hydraulic Systems": null,
+            "Other Conveying Systems Costs (KG 460)": null
+          },
+          "Usage-Specific and Process Engineering Systems": {
+            "Kitchen Technology Systems": null,
+            "Laundry, Cleaning, and Bathing Technology Systems": null,
+            "Media Supply Systems, Medical and Laboratory Technology Systems": null,
+            "Fire Extinguishing Systems": null,
+            "Process Heat, Cold, and Air Systems": null,
+            "Other Usage-Specific and Process Engineering Systems Costs (KG 470)": null
+          },
+          "Building and Facility Automation": {
+            "Automation Devices": null,
+            "Control Cabinets, Automation Hubs": null,
+            "Automation Management": null,
+            "Cables, Lines, and Laying Systems": null,
+            "Data Transmission Networks": null,
+            "Other Building and Facility Automation Costs (KG 480)": null
+          },
+          "Other Measures for Technical Systems": {
+            "Construction Site Facilities": null,
+            "Scaffolding": null,
+            "Safety Measures": null,
+            "Demolition Measures": null,
+            "Renovations": null,
+            "Material Disposal": null,
+            "Additional Measures": null,
+            "Temporary Technical Systems": null,
+            "Other Measures for Technical Systems (KG 490)": null
+          }
+        },
+        "Outdoor Facilities and Open Spaces": {
+          "Earthworks": {
+            "Construction": null,
+            "Enclosure": null,
+            "Water Management": null,
+            "Conveyance": null,
+            "Other Earthworks Costs (KG 510)": null
+          },
+          "Foundation, Substructure": {
+            "Soil Improvement": null,
+            "Foundations and Slabs": null,
+            "Foundation Layers": null,
+            "Seals and Linings": null,
+            "Drains": null,
+            "Other Foundation, Substructure Costs (KG 520)": null
+          },
+          "Pavement, Surface Courses": {
+            "Paths": null,
+            "Roads": null,
+            "Squares, Yards, Terraces": null,
+            "Parking Spaces": null,
+            "Sports Field Areas": null,
+            "Playground Areas": null,
+            "Track Systems": null,
+            "Airfield Areas": null,
+            "Other Pavement, Surface Courses Costs (KG 530)": null
+          },
+          "Structural Components": {
+            "Fences": null,
+            "Protective Structures": null,
+            "Wall Structures": null,
+            "Ramps, Stairs, Stands": null,
+            "Roofs": null,
+            "Bridges": null,
+            "Canal and Shaft Structures": null,
+            "Water Basins": null,
+            "Other Structural Components Costs (KG 540)": null
+          },
+          "Technical Systems": {
+            "Wastewater Systems": null,
+            "Water Systems": null,
+            "Gas and Liquid Systems": null,
+            "Heating Supply Systems": null,
+            "Room Air Technology Systems": null,
+            "Electrical Systems": null,
+            "Communication, Safety, and Information Technology Systems, Automation": null,
+            "Usage-Specific Systems": null,
+            "Other Technical Systems Costs (KG 550)": null
+          },
+          "Installations in Outdoor Facilities and Open Spaces": {
+            "General Installations": null,
+            "Special Installations": null,
+            "Other Installations Costs (KG 560)": null
+          },
+          "Other Measures for Outdoor Facilities and Open Spaces": {
+            "Renovations": null,
+            "Material Disposal": null,
+            "Additional Measures": null,
+            "Temporary Outdoor Facilities and Open Spaces": null,
+            "Other Measures for Outdoor Facilities and Open Spaces (KG 590)": null
+          }
+        },
+        "Equipment and Artworks": {
+          "General Equipment": null,
+          "Special Equipment": null,
+          "Information Technology Equipment": null,
+          "Artistic Equipment": {
+            "Art Objects": null,
+            "Artistic Design of the Building": null,
+            "Artistic Design of Outdoor Facilities and Open Spaces": null,
+            "Other Artistic Equipment Costs (KG 640)": null
+          },
+          "Other Equipment": null
+        },
+        "Construction Ancillary Costs": {
+          "Client Tasks": {
+            "Project Management": null,
+            "Needs Assessment": null,
+            "Project Control": null,
+            "Safety and Health Protection Coordination": null,
+            "Award Procedures": null,
+            "Other Client Tasks Costs (KG 710)": null
+          },
+          "Preparation of Object Planning": {
+            "Investigations": null,
+            "Valuations": null,
+            "Urban Planning Services": null,
+            "Landscape Planning Services": null,
+            "Competitions": null,
+            "Other Preparation of Object Planning Costs (KG 720)": null
+          },
+          "Object Planning": {
+            "Buildings and Interiors": null,
+            "Open Spaces": null,
+            "Civil Engineering Structures": null,
+            "Traffic Facilities": null,
+            "Other Object Planning Costs (KG 730)": null
+          },
+          "Specialist Planning": {
+            "Structural Planning": null,
+            "Technical Equipment": null,
+            "Building Physics": null,
+            "Geotechnics": null,
+            "Engineering Surveying": null,
+            "Lighting Technology, Daylight Technology": null,
+            "Fire Protection": null,
+            "Contaminated Sites, Explosive Ordnance, Cultural Heritage Finds": null,
+            "Other Specialist Planning Costs (KG 740)": null
+          },
+          "Artistic Services": {
+            "Art Competitions": null,
+            "Fees": null,
+            "Other Artistic Services Costs (KG 750)": null
+          },
+          "General Construction Ancillary Costs": {
+            "Expertise and Consulting": null,
+            "Inspections, Approvals, Acceptance": null,
+            "Operating Costs": null,
+            "Sampling Costs": null,
+            "Operating Costs after Acceptance": null,
+            "Insurance": null,
+            "Other General Construction Ancillary Costs (KG 760)": null
+          },
+          "Other Construction Ancillary Costs": {
+            "Documentation of Existing Conditions": null,
+            "Other Construction Ancillary Costs (KG 790)": null
+          }
+        },
+        "Financing": {
+          "Financing Ancillary Costs": null,
+          "Debt Capital Interest": null,
+          "Equity Capital Interest": null,
+          "Guarantees": null,
+          "Other Financing Costs": null
+        },
+        "Taxes & Duties": null,
+        "Grants / Subsidies": null,
+        "Income": null
+      },
+      "Operating Costs (Ongoing Use)": {
+        "Operational Management Costs": {
+          "Property Management": null,
+          "Caretaker": null,
+          "Insurance": null
+        },
+        "Energy Costs": {
+          "Electricity": null,
+          "Heating": null,
+          "Hot Water": null
+        },
+        "Water Costs, Wastewater Fees": null,
+        "Waste Disposal": null,
+        "Security and Maintenance Costs": null,
+        "Costs for Common Facilities": {
+          "Elevators": null,
+          "Underground Garage": null,
+          "Technical Rooms": null
+        }
+      },
+      "Maintenance and Modernization Costs": {
+        "Regular Maintenance": {
+          "Elevators": null,
+          "Heating Systems": null
+        },
+        "Replacement of Components": {
+          "Windows": null,
+          "Facade": null,
+          "Roofs": null
+        },
+        "Modernization": {
+          "Energy Rehabilitation": null,
+          "Barrier-Free Conversion": null
+        }
+      },
+      "Dismantling and Disposal Costs": {
+        "Demolition Costs": null,
+        "Disposal of Contaminated Materials": null,
+        "Renaturation or Reuse of the Land": null
+      }
+    },
+    "Financing Costs": {
+      "Interest": null,
+      "Fees": null
+    },
+    "Taxes & Duties": null,
+    "Grants / Subsidies": null,
+    "Income": null
+  }
+}
