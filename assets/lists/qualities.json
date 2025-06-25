@@ -1514,7 +1514,7 @@
                   "NAME": "Art Competitions"
                 },
                 "fees": {
-                  "NAME": "Fees"
+                  "NAME": "Artistic Service Fees"
                 },
                 "other": {
                   "NAME": "Other Artistic Services"
@@ -1572,58 +1572,128 @@
                 "NAME": "Other Financing"
               }
             },
-            "taxes-and-duties": "number",
-            "grants-subsidies": "number",
-            "income": "number"
+            "taxes-and-duties": {
+              "NAME": "Construction Taxes And Duties"
+            },
+            "grants-subsidies": {
+              "NAME": "Construction Grants Subsidies"
+            },
+            "income": {
+              "NAME": "Construction Income"
+            }
           },
           "operating-costs-ongoing-use": {
+            "NAME": "Operating Costs Ongoing Use",
             "operational-management-costs": {
-              "property-management": "number",
-              "caretaker": "number",
-              "insurance": "number"
+              "NAME": "Operational Management Costs",
+              "property-management": {
+                "NAME": "Property Management Costs"
+              },
+              "caretaker": {
+                "NAME": "Caretaker Costs"
+              },
+              "insurance": {
+                "NAME": "Insurance Costs"
+              }
             },
             "energy-costs": {
-              "electricity": "number",
-              "heating": "number",
-              "hot-water": "number"
+              "NAME": "Energy Costs",
+              "electricity": {
+                "NAME": "Electricity Costs"
+              },
+              "heating": {
+                "NAME": "Heating Costs"
+              },
+              "hot-water": {
+                "NAME": "Hot Water Costs"
+              }
             },
-            "water-costs-wastewater-fees": "number",
-            "waste-disposal": "number",
-            "security-and-maintenance-costs": "number",
+            "water-costs-wastewater-fees": {
+              "NAME": "Water Costs Wastewater Fees"
+            },
+            "waste-disposal": {
+              "NAME": "Waste Disposal Costs"
+            },
+            "security-and-maintenance-costs": {
+              "NAME": "Security And Maintenance Costs"
+            },
             "costs-for-common-facilities": {
-              "elevators": "number",
-              "underground-garage": "number",
-              "technical-rooms": "number"
+              "NAME": "Costs For Common Facilities",
+              "elevators": {
+                "NAME": "Elevators Common Facility Costs"
+              },
+              "underground-garage": {
+                "NAME": "Underground Garage Common Facility Costs"
+              },
+              "technical-rooms": {
+                "NAME": "Technical Rooms Common Facility Costs"
+              }
             }
           },
           "maintenance-and-modernization-costs": {
+            "NAME": "Maintenance And Modernization Costs",
             "regular-maintenance": {
-              "elevators": "number",
-              "heating-systems": "number"
+              "NAME": "Regular Maintenance",
+              "elevators": {
+                "NAME": "Elevators Maintenance"
+              },
+              "heating-systems": {
+                "NAME": "Heating Systems Maintenance"
+              }
             },
             "replacement-of-components": {
-              "windows": "number",
-              "facade": "number",
-              "roofs": "number"
+              "NAME": "Replacement Of Components",
+              "windows": {
+                "NAME": "Windows Replacement"
+              },
+              "facade": {
+                "NAME": "Facade Replacement"
+              },
+              "roofs": {
+                "NAME": "Roofs Replacement"
+              }
             },
             "modernization": {
-              "energy-rehabilitation": "number",
-              "barrier-free-conversion": "number"
+              "NAME": "Modernization",
+              "energy-rehabilitation": {
+                "NAME": "Energy Rehabilitation"
+              },
+              "barrier-free-conversion": {
+                "NAME": "Barrier Free Conversion"
+              }
             }
           },
           "dismantling-and-disposal-costs": {
-            "demolition-costs": "number",
-            "disposal-of-contaminated-materials": "number",
-            "renaturation-or-reuse-of-the-land": "number"
+            "NAME": "Dismantling And Disposal Costs",
+            "demolition-costs": {
+              "NAME": "Demolition Costs"
+            },
+            "disposal-of-contaminated-materials": {
+              "NAME": "Disposal Of Contaminated Materials"
+            },
+            "renaturation-or-reuse-of-the-land": {
+              "NAME": "Renaturation Or Reuse Of The Land"
+            }
           }
         },
         "financing-costs": {
-          "interest": "number",
-          "fees": "number"
+          "NAME": "Financing Costs",
+          "interest": {
+            "NAME": "Financing Interest"
+          },
+          "fees": {
+            "NAME": "Financing Fees"
+          }
         },
-        "taxes-and-duties": "number",
-        "grants-subsidies": "number",
-        "income": "number"
+        "taxes-and-duties": {
+          "NAME": "Taxes And Duties"
+        },
+        "grants-subsidies": {
+          "NAME": "Grants Subsidies"
+        },
+        "income": {
+          "NAME": "Income"
+        }
       }
     }
   },
