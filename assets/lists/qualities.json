@@ -3,7 +3,10 @@
     "TYPE": "VENDOR",
     "area": {
       "TYPE": "TAXONOMY",
-      "UNITS": ["m²", "ft²"],
+      "UNITS": [
+        "m²",
+        "ft²"
+      ],
       "NAME": "Floor Area",
       "gross": {
         "NAME": "Gross Floor Area",
@@ -413,51 +416,100 @@
     },
     "volume": {
       "TYPE": "TAXONOMY",
-      "UNITS": ["m³", "ft³"],
+      "UNITS": [
+        "m³",
+        "ft³"
+      ],
       "gross-volume": {
-        "net-volume": "number",
-        "construction-volume": "number"
+        "net-volume": {
+          "NAME": "Net Volume"
+        },
+        "construction-volume": {
+          "NAME": "Construction Volume"
+        }
       }
     },
     "people": {
       "TYPE": "TAXONOMY",
-      "UNITS": ["count"],
+      "UNITS": [
+        "count"
+      ],
       "stationary": {
         "living": {
-          "residents": "number",
-          "guests": "number"
+          "residents": {
+            "NAME": "Residents"
+          },
+          "guests": {
+            "NAME": "Guests"
+          }
         },
         "working": {
-          "office": "number",
-          "production": "number",
-          "service": "number",
-          "education": "number",
-          "healthcare": "number",
-          "other": "number"
+          "office": {
+            "NAME": "Office Workers"
+          },
+          "production": {
+            "NAME": "Production Workers"
+          },
+          "service": {
+            "NAME": "Service Workers"
+          },
+          "education": {
+            "NAME": "Education Workers"
+          },
+          "healthcare": {
+            "NAME": "Healthcare Workers"
+          },
+          "other": {
+            "NAME": "Other Workers"
+          }
         },
         "students": {
-          "pupils": "number",
-          "students": "number"
+          "pupils": {
+            "NAME": "Pupils"
+          },
+          "students": {
+            "NAME": "Students"
+          }
         },
         "client": {
-          "customers": "number",
-          "visitors": "number",
-          "patients": "number"
+          "customers": {
+            "NAME": "Customers"
+          },
+          "visitors": {
+            "NAME": "Visitors"
+          },
+          "patients": {
+            "NAME": "Patients"
+          }
         }
       },
       "mobile": {
         "visitors": {
-          "customers": "number",
-          "guests": "number",
-          "tourists": "number"
+          "customers": {
+            "NAME": "Mobile Customers"
+          },
+          "guests": {
+            "NAME": "Mobile Guests"
+          },
+          "tourists": {
+            "NAME": "Tourists"
+          }
         },
         "employees": {
-          "mobile-workers": "number",
-          "delivery-personnel": "number"
+          "mobile-workers": {
+            "NAME": "Mobile Workers"
+          },
+          "delivery-personnel": {
+            "NAME": "Delivery Personnel"
+          }
         },
         "students": {
-          "commuters": "number",
-          "exchange-students": "number"
+          "commuters": {
+            "NAME": "Commuters"
+          },
+          "exchange-students": {
+            "NAME": "Exchange Students"
+          }
         }
       }
     },
@@ -465,7 +517,9 @@
       "TYPE": "CLASSIFICATION",
       "primary demand": {
         "TYPE": "TAXONOMY",
-        "UNITS": ["kWh/m²a"],
+        "UNITS": [
+          "kWh/m²a"
+        ],
         "NAME": "Primary Energy Demand",
         "primary heating": {
           "NAME": "Primary Heating Energy Demand",
@@ -531,108 +585,1053 @@
     },
     "global-warming-potential": {
       "TYPE": "TAXONOMY",
-      "UNITS": ["tCO₂e", "MtCO₂e"],
+      "UNITS": [
+        "tCO₂e",
+        "MtCO₂e"
+      ],
       "embodied": {
-        "construction": "number",
-        "technical-equipment": "number"
+        "construction": {
+          "NAME": "Embodied Construction GWP"
+        },
+        "technical-equipment": {
+          "NAME": "Embodied Technical Equipment GWP"
+        }
       },
       "operational": {
-        "heating": "number",
-        "cooling": "number",
-        "lighting": "number",
-        "ventilation": "number",
-        "hot-water": "number",
-        "other": "number"
+        "heating": {
+          "NAME": "Operational Heating GWP"
+        },
+        "cooling": {
+          "NAME": "Operational Cooling GWP"
+        },
+        "lighting": {
+          "NAME": "Operational Lighting GWP"
+        },
+        "ventilation": {
+          "NAME": "Operational Ventilation GWP"
+        },
+        "hot-water": {
+          "NAME": "Operational Hot Water GWP"
+        },
+        "other": {
+          "NAME": "Other Operational GWP"
+        }
       }
     },
     "costs": {
       "TYPE": "CLASSIFICATION",
-      "life cycle costs": {
+      "global life cycle costs": {
         "TYPE": "TAXONOMY",
-        "UNITS": ["currency"],
-        "construction": {
-          "Name": "construction costs",
-          "outdoor  area": "Number",
-          "building": {
-            "TYPE": "TAXONOMY",
-            "UNITS": ["currency"],
-            "NAME": "building costs",
-            "foundation": "number",
-            "superstructure": "number",
-            "roof": "number",
-            "facade": "number",
-            "windows": "number",
-            "pre installed furniture": "number"
-          },
-          "technical equipment": {
-            "TYPE": "TAXONOMY",
-            "UNITS": ["currency"],
-            "NAME": "technical equipment costs",
-            "heating equipment": "number",
-            "cooling equipment": "number",
-            "electrical equipment": "number"
-          },
-          "property": {
-            "NAME": "property purchase costs"
-          },
-          "planning": {
-            "NAME": "planning costs",
-            "architectural": "number",
-            "engineering": "number"
-          },
-          "expert opinions": {
-            "NAME": "expert opinions costs"
-          }
-        },
-        "running": {
-            "TYPE": "TAXONOMY",
-            "UNITS": ["currency"],
-            "NAME": "running costs",
-            "water-and-wastewater": "number",
-            "energye expenses":{
-              "NAME": "energy expenses",
-              "heating": {
-                "NAME": "heating costs"
+        "NAME": "Global Life Cycle Costs",
+        "UNITS": [
+          "currency"
+        ],
+        "life-cycle-costs": {
+          "NAME": "Life Cycle Costs",
+          "investment-costs-construction-phase": {
+            "NAME": "Investment Costs Construction Phase",
+            "land-costs": {
+              "NAME": "Land Costs",
+              "land": {
+                "NAME": "Land",
+                "land-value": {
+                  "NAME": "Land Value"
+                },
+                "ancillary-land-costs": {
+                  "NAME": "Ancillary Land Costs",
+                  "surveying-fees": {
+                    "NAME": "Surveying Fees"
+                  },
+                  "court-fees": {
+                    "NAME": "Court Fees"
+                  },
+                  "notary-fees": {
+                    "NAME": "Notary Fees"
+                  },
+                  "land-transfer-tax": {
+                    "NAME": "Land Transfer Tax"
+                  },
+                  "investigations": {
+                    "NAME": "Investigations"
+                  },
+                  "valuations": {
+                    "NAME": "Valuations"
+                  },
+                  "permit-fees": {
+                    "NAME": "Permit Fees"
+                  },
+                  "land-reorganization": {
+                    "NAME": "Land Reorganization"
+                  },
+                  "other": {
+                    "NAME": "Other Ancillary Land Costs"
+                  }
+                },
+                "third-party-rights": {
+                  "NAME": "Third Party Rights",
+                  "compensations": {
+                    "NAME": "Third Party Compensations"
+                  },
+                  "redemption-of-real-rights": {
+                    "NAME": "Redemption Of Real Rights"
+                  },
+                  "other": {
+                    "NAME": "Other Third Party Rights"
+                  }
+                },
+                "compensations": {
+                  "NAME": "Land Compensations"
+                },
+                "redemption-of-real-rights": {
+                  "NAME": "Land Redemption Of Real Rights"
+                },
+                "other": {
+                  "NAME": "Other Land Costs"
+                }
               },
-              "cooling": {
-                "NAME": "cooling costs"
-              },
-              "electricity": {
-                "NAME": "electricity costs"
+              "other": {
+                "NAME": "Other Land Costs"
               }
             },
-            "maintenance": {
-              "NAME": "maintenance costs",
-              "insurance":{
-                "NAME": "insurance costs"
+            "development-costs": {
+              "NAME": "Development Costs",
+              "preparatory-measures": {
+                "NAME": "Preparatory Measures",
+                "site-preparation": {
+                  "NAME": "Site Preparation",
+                  "safety-measures": {
+                    "NAME": "Safety Measures"
+                  },
+                  "demolition-measures": {
+                    "NAME": "Demolition Measures"
+                  },
+                  "contaminated-site-remediation": {
+                    "NAME": "Contaminated Site Remediation"
+                  },
+                  "surface-preparation": {
+                    "NAME": "Surface Preparation"
+                  },
+                  "explosive-ordnance-clearance": {
+                    "NAME": "Explosive Ordnance Clearance"
+                  },
+                  "cultural-heritage-finds": {
+                    "NAME": "Cultural Heritage Finds"
+                  },
+                  "other": {
+                    "NAME": "Other Site Preparation"
+                  }
+                },
+                "public-infrastructure-development": {
+                  "NAME": "Public Infrastructure Development",
+                  "wastewater-disposal": {
+                    "NAME": "Wastewater Disposal"
+                  },
+                  "water-supply": {
+                    "NAME": "Water Supply"
+                  },
+                  "gas-supply": {
+                    "NAME": "Gas Supply"
+                  },
+                  "district-heating-supply": {
+                    "NAME": "District Heating Supply"
+                  },
+                  "power-supply": {
+                    "NAME": "Power Supply"
+                  },
+                  "telecommunications": {
+                    "NAME": "Telecommunications"
+                  },
+                  "traffic-development": {
+                    "NAME": "Traffic Development"
+                  },
+                  "waste-disposal": {
+                    "NAME": "Waste Disposal"
+                  },
+                  "other": {
+                    "NAME": "Other Public Infrastructure Development"
+                  }
+                },
+                "private-infrastructure-development": {
+                  "NAME": "Private Infrastructure Development"
+                },
+                "compensatory-measures-and-levies": {
+                  "NAME": "Compensatory Measures And Levies",
+                  "compensatory-measures": {
+                    "NAME": "Compensatory Measures"
+                  },
+                  "compensatory-levies": {
+                    "NAME": "Compensatory Levies"
+                  },
+                  "other": {
+                    "NAME": "Other Compensatory Measures And Levies"
+                  }
+                },
+                "transitional-measures": {
+                  "NAME": "Transitional Measures",
+                  "structural-measures": {
+                    "NAME": "Structural Measures"
+                  },
+                  "organizational-measures": {
+                    "NAME": "Organizational Measures"
+                  },
+                  "other": {
+                    "NAME": "Other Transitional Measures"
+                  }
+                }
               },
-              "maintance staff": {
-                "NAME": "maintenance staff wage"
-              },
-              "replacement": {
-                "NAME": "replacement costs"
+              "other": {
+                "NAME": "Other Development Costs"
+              }
             },
-            "renovation": {
-              "NAME": "renovation costs"
-
+            "building-structural-components": {
+              "NAME": "Building Structural Components",
+              "excavation-earthworks": {
+                "NAME": "Excavation Earthworks",
+                "construction": {
+                  "NAME": "Construction"
+                },
+                "enclosure": {
+                  "NAME": "Enclosure"
+                },
+                "water-management": {
+                  "NAME": "Water Management"
+                },
+                "conveyance": {
+                  "NAME": "Conveyance"
+                },
+                "other": {
+                  "NAME": "Other Excavation Earthworks"
+                }
+              },
+              "foundation-substructure": {
+                "NAME": "Foundation Substructure",
+                "soil-improvement": {
+                  "NAME": "Soil Improvement"
+                },
+                "shallow-foundations-and-slabs": {
+                  "NAME": "Shallow Foundations And Slabs"
+                },
+                "deep-foundations": {
+                  "NAME": "Deep Foundations"
+                },
+                "foundation-layers": {
+                  "NAME": "Foundation Layers"
+                },
+                "seals-and-linings": {
+                  "NAME": "Seals And Linings"
+                },
+                "drains": {
+                  "NAME": "Drains"
+                },
+                "other": {
+                  "NAME": "Other Foundation Substructure"
+                }
+              },
+              "external-walls-vertical-structural-components-outside": {
+                "NAME": "External Walls Vertical Structural Components Outside",
+                "load-bearing-external-walls": {
+                  "NAME": "Load Bearing External Walls"
+                },
+                "non-load-bearing-external-walls": {
+                  "NAME": "Non Load Bearing External Walls"
+                },
+                "external-columns": {
+                  "NAME": "External Columns"
+                },
+                "external-wall-openings": {
+                  "NAME": "External Wall Openings"
+                },
+                "external-wall-claddings-outside": {
+                  "NAME": "External Wall Claddings Outside"
+                },
+                "external-wall-claddings-inside": {
+                  "NAME": "External Wall Claddings Inside"
+                },
+                "prefabricated-external-wall-structures": {
+                  "NAME": "Prefabricated External Wall Structures"
+                },
+                "light-protection-kg-330": {
+                  "NAME": "Light Protection Kg 330"
+                },
+                "other": {
+                  "NAME": "Other External Walls Vertical Structural Components Outside"
+                }
+              },
+              "internal-walls-vertical-structural-components-inside": {
+                "NAME": "Internal Walls Vertical Structural Components Inside",
+                "load-bearing-internal-walls": {
+                  "NAME": "Load Bearing Internal Walls"
+                },
+                "non-load-bearing-internal-walls": {
+                  "NAME": "Non Load Bearing Internal Walls"
+                },
+                "internal-columns": {
+                  "NAME": "Internal Columns"
+                },
+                "internal-wall-openings": {
+                  "NAME": "Internal Wall Openings"
+                },
+                "internal-wall-claddings": {
+                  "NAME": "Internal Wall Claddings"
+                },
+                "prefabricated-internal-wall-structures": {
+                  "NAME": "Prefabricated Internal Wall Structures"
+                },
+                "light-protection-kg-340": {
+                  "NAME": "Light Protection Kg 340"
+                },
+                "other": {
+                  "NAME": "Other Internal Walls Vertical Structural Components Inside"
+                }
+              },
+              "ceilings-horizontal-structural-components": {
+                "NAME": "Ceilings Horizontal Structural Components",
+                "ceiling-structures": {
+                  "NAME": "Ceiling Structures"
+                },
+                "ceiling-openings": {
+                  "NAME": "Ceiling Openings"
+                },
+                "ceiling-finishes": {
+                  "NAME": "Ceiling Finishes"
+                },
+                "ceiling-linings": {
+                  "NAME": "Ceiling Linings"
+                },
+                "prefabricated-ceiling-structures": {
+                  "NAME": "Prefabricated Ceiling Structures"
+                },
+                "other": {
+                  "NAME": "Other Ceilings Horizontal Structural Components"
+                }
+              },
+              "roofs": {
+                "NAME": "Roofs",
+                "roof-structures": {
+                  "NAME": "Roof Structures"
+                },
+                "roof-openings": {
+                  "NAME": "Roof Openings"
+                },
+                "roof-finishes": {
+                  "NAME": "Roof Finishes"
+                },
+                "roof-linings": {
+                  "NAME": "Roof Linings"
+                },
+                "prefabricated-roof-structures": {
+                  "NAME": "Prefabricated Roof Structures"
+                },
+                "light-protection-kg-360": {
+                  "NAME": "Light Protection Kg 360"
+                },
+                "other": {
+                  "NAME": "Other Roofs"
+                }
+              },
+              "infrastructure-facilities": {
+                "NAME": "Infrastructure Facilities",
+                "road-traffic-facilities": {
+                  "NAME": "Road Traffic Facilities"
+                },
+                "rail-traffic-facilities": {
+                  "NAME": "Rail Traffic Facilities"
+                },
+                "air-traffic-facilities": {
+                  "NAME": "Air Traffic Facilities"
+                },
+                "water-construction-facilities": {
+                  "NAME": "Water Construction Facilities"
+                },
+                "wastewater-disposal-facilities": {
+                  "NAME": "Wastewater Disposal Facilities"
+                },
+                "water-supply-facilities": {
+                  "NAME": "Water Supply Facilities"
+                },
+                "energy-and-information-supply-facilities": {
+                  "NAME": "Energy And Information Supply Facilities"
+                },
+                "waste-disposal-facilities": {
+                  "NAME": "Waste Disposal Facilities"
+                },
+                "other": {
+                  "NAME": "Other Infrastructure Facilities"
+                }
+              },
+              "structural-installations": {
+                "NAME": "Structural Installations",
+                "general-installations": {
+                  "NAME": "General Installations"
+                },
+                "special-installations": {
+                  "NAME": "Special Installations"
+                },
+                "landscape-architectural-installations": {
+                  "NAME": "Landscape Architectural Installations"
+                },
+                "mechanical-installations": {
+                  "NAME": "Mechanical Installations"
+                },
+                "installations-in-civil-engineering-structures": {
+                  "NAME": "Installations In Civil Engineering Structures"
+                },
+                "orientation-and-information-systems": {
+                  "NAME": "Orientation And Information Systems"
+                },
+                "protective-installations": {
+                  "NAME": "Protective Installations"
+                },
+                "other": {
+                  "NAME": "Other Structural Installations"
+                }
+              },
+              "other-measures-for-structural-components": {
+                "NAME": "Other Measures For Structural Components",
+                "construction-site-facilities": {
+                  "NAME": "Construction Site Facilities"
+                },
+                "scaffolding": {
+                  "NAME": "Scaffolding"
+                },
+                "safety-measures": {
+                  "NAME": "Safety Measures"
+                },
+                "demolition-measures": {
+                  "NAME": "Demolition Measures"
+                },
+                "renovations": {
+                  "NAME": "Renovations"
+                },
+                "material-disposal": {
+                  "NAME": "Material Disposal"
+                },
+                "additional-measures": {
+                  "NAME": "Additional Measures"
+                },
+                "temporary-structural-components": {
+                  "NAME": "Temporary Structural Components"
+                },
+                "other": {
+                  "NAME": "Other Measures For Structural Components"
+                }
+              }
+            },
+            "technical-systems": {
+              "NAME": "Technical Systems",
+              "wastewater-water-gas-systems": {
+                "NAME": "Wastewater Water Gas Systems",
+                "wastewater-systems": {
+                  "NAME": "Wastewater Systems"
+                },
+                "water-systems": {
+                  "NAME": "Water Systems"
+                },
+                "gas-systems": {
+                  "NAME": "Gas Systems"
+                },
+                "other": {
+                  "NAME": "Other Wastewater Water Gas Systems"
+                }
+              },
+              "heating-supply-systems": {
+                "NAME": "Heating Supply Systems",
+                "heat-generation-systems": {
+                  "NAME": "Heat Generation Systems"
+                },
+                "heat-distribution-networks": {
+                  "NAME": "Heat Distribution Networks"
+                },
+                "room-heating-surfaces": {
+                  "NAME": "Room Heating Surfaces"
+                },
+                "traffic-heating-surfaces": {
+                  "NAME": "Traffic Heating Surfaces"
+                },
+                "other": {
+                  "NAME": "Other Heating Supply Systems"
+                }
+              },
+              "room-air-technology-systems": {
+                "NAME": "Room Air Technology Systems",
+                "ventilation-systems": {
+                  "NAME": "Ventilation Systems"
+                },
+                "partial-air-conditioning-systems": {
+                  "NAME": "Partial Air Conditioning Systems"
+                },
+                "air-conditioning-systems": {
+                  "NAME": "Air Conditioning Systems"
+                },
+                "refrigeration-systems": {
+                  "NAME": "Refrigeration Systems"
+                },
+                "other": {
+                  "NAME": "Other Room Air Technology Systems"
+                }
+              },
+              "electrical-systems": {
+                "NAME": "Electrical Systems",
+                "high-and-medium-voltage-systems": {
+                  "NAME": "High And Medium Voltage Systems"
+                },
+                "emergency-power-supply-systems": {
+                  "NAME": "Emergency Power Supply Systems"
+                },
+                "low-voltage-switchgear": {
+                  "NAME": "Low Voltage Switchgear"
+                },
+                "low-voltage-installation-systems": {
+                  "NAME": "Low Voltage Installation Systems"
+                },
+                "lighting-systems": {
+                  "NAME": "Lighting Systems"
+                },
+                "lightning-protection-and-grounding-systems": {
+                  "NAME": "Lightning Protection And Grounding Systems"
+                },
+                "catenary-systems": {
+                  "NAME": "Catenary Systems"
+                },
+                "other": {
+                  "NAME": "Other Electrical Systems"
+                }
+              },
+              "communication-safety-and-information-technology-systems": {
+                "NAME": "Communication Safety And Information Technology Systems",
+                "telecommunication-systems": {
+                  "NAME": "Telecommunication Systems"
+                },
+                "search-and-signal-systems": {
+                  "NAME": "Search And Signal Systems"
+                },
+                "time-service-systems": {
+                  "NAME": "Time Service Systems"
+                },
+                "electroacoustic-systems": {
+                  "NAME": "Electroacoustic Systems"
+                },
+                "audiovisual-media-and-antenna-systems": {
+                  "NAME": "Audiovisual Media And Antenna Systems"
+                },
+                "fire-alarm-and-alert-systems": {
+                  "NAME": "Fire Alarm And Alert Systems"
+                },
+                "data-transmission-networks": {
+                  "NAME": "Data Transmission Networks"
+                },
+                "traffic-control-systems": {
+                  "NAME": "Traffic Control Systems"
+                },
+                "other": {
+                  "NAME": "Other Communication Safety And Information Technology Systems"
+                }
+              },
+              "conveying-systems": {
+                "NAME": "Conveying Systems",
+                "elevator-systems": {
+                  "NAME": "Elevator Systems"
+                },
+                "escalators-and-moving-walkways": {
+                  "NAME": "Escalators And Moving Walkways"
+                },
+                "conveyor-systems": {
+                  "NAME": "Conveyor Systems"
+                },
+                "transport-systems": {
+                  "NAME": "Transport Systems"
+                },
+                "crane-systems": {
+                  "NAME": "Crane Systems"
+                },
+                "hydraulic-systems": {
+                  "NAME": "Hydraulic Systems"
+                },
+                "other": {
+                  "NAME": "Other Conveying Systems"
+                }
+              },
+              "usage-specific-and-process-engineering-systems": {
+                "NAME": "Usage Specific And Process Engineering Systems",
+                "kitchen-technology-systems": {
+                  "NAME": "Kitchen Technology Systems"
+                },
+                "laundry-cleaning-and-bathing-technology-systems": {
+                  "NAME": "Laundry Cleaning And Bathing Technology Systems"
+                },
+                "media-supply-systems-medical-and-laboratory-technology-systems": {
+                  "NAME": "Media Supply Systems Medical And Laboratory Technology Systems"
+                },
+                "fire-extinguishing-systems": {
+                  "NAME": "Fire Extinguishing Systems"
+                },
+                "process-heat-cold-and-air-systems": {
+                  "NAME": "Process Heat Cold And Air Systems"
+                },
+                "other": {
+                  "NAME": "Other Usage Specific And Process Engineering Systems"
+                }
+              },
+              "building-and-facility-automation": {
+                "NAME": "Building And Facility Automation",
+                "automation-devices": {
+                  "NAME": "Automation Devices"
+                },
+                "control-cabinets-automation-hubs": {
+                  "NAME": "Control Cabinets Automation Hubs"
+                },
+                "automation-management": {
+                  "NAME": "Automation Management"
+                },
+                "cables-lines-and-laying-systems": {
+                  "NAME": "Cables Lines And Laying Systems"
+                },
+                "data-transmission-networks": {
+                  "NAME": "Data Transmission Networks"
+                },
+                "other": {
+                  "NAME": "Other Building And Facility Automation"
+                }
+              },
+              "other-measures-for-technical-systems": {
+                "NAME": "Other Measures For Technical Systems",
+                "construction-site-facilities": {
+                  "NAME": "Construction Site Facilities"
+                },
+                "scaffolding": {
+                  "NAME": "Scaffolding"
+                },
+                "safety-measures": {
+                  "NAME": "Safety Measures"
+                },
+                "demolition-measures": {
+                  "NAME": "Demolition Measures"
+                },
+                "renovations": {
+                  "NAME": "Renovations"
+                },
+                "material-disposal": {
+                  "NAME": "Material Disposal"
+                },
+                "additional-measures": {
+                  "NAME": "Additional Measures"
+                },
+                "temporary-technical-systems": {
+                  "NAME": "Temporary Technical Systems"
+                },
+                "other": {
+                  "NAME": "Other Measures For Technical Systems"
+                }
+              }
+            },
+            "outdoor-facilities-and-open-spaces": {
+              "NAME": "Outdoor Facilities And Open Spaces",
+              "earthworks": {
+                "NAME": "Earthworks",
+                "construction": {
+                  "NAME": "Construction"
+                },
+                "enclosure": {
+                  "NAME": "Enclosure"
+                },
+                "water-management": {
+                  "NAME": "Water Management"
+                },
+                "conveyance": {
+                  "NAME": "Conveyance"
+                },
+                "other": {
+                  "NAME": "Other Earthworks"
+                }
+              },
+              "foundation-substructure": {
+                "NAME": "Foundation Substructure",
+                "soil-improvement": {
+                  "NAME": "Soil Improvement"
+                },
+                "foundations-and-slabs": {
+                  "NAME": "Foundations And Slabs"
+                },
+                "foundation-layers": {
+                  "NAME": "Foundation Layers"
+                },
+                "seals-and-linings": {
+                  "NAME": "Seals And Linings"
+                },
+                "drains": {
+                  "NAME": "Drains"
+                },
+                "other": {
+                  "NAME": "Other Foundation Substructure"
+                }
+              },
+              "pavement-surface-courses": {
+                "NAME": "Pavement Surface Courses",
+                "paths": {
+                  "NAME": "Paths"
+                },
+                "roads": {
+                  "NAME": "Roads"
+                },
+                "squares-yards-terraces": {
+                  "NAME": "Squares Yards Terraces"
+                },
+                "parking-spaces": {
+                  "NAME": "Parking Spaces"
+                },
+                "sports-field-areas": {
+                  "NAME": "Sports Field Areas"
+                },
+                "playground-areas": {
+                  "NAME": "Playground Areas"
+                },
+                "track-systems": {
+                  "NAME": "Track Systems"
+                },
+                "airfield-areas": {
+                  "NAME": "Airfield Areas"
+                },
+                "other": {
+                  "NAME": "Other Pavement Surface Courses"
+                }
+              },
+              "structural-components": {
+                "NAME": "Structural Components",
+                "fences": {
+                  "NAME": "Fences"
+                },
+                "protective-structures": {
+                  "NAME": "Protective Structures"
+                },
+                "wall-structures": {
+                  "NAME": "Wall Structures"
+                },
+                "ramps-stairs-stands": {
+                  "NAME": "Ramps Stairs Stands"
+                },
+                "roofs": {
+                  "NAME": "Roofs"
+                },
+                "bridges": {
+                  "NAME": "Bridges"
+                },
+                "canal-and-shaft-structures": {
+                  "NAME": "Canal And Shaft Structures"
+                },
+                "water-basins": {
+                  "NAME": "Water Basins"
+                },
+                "other": {
+                  "NAME": "Other Structural Components"
+                }
+              },
+              "technical-systems": {
+                "NAME": "Technical Systems",
+                "wastewater-systems": {
+                  "NAME": "Wastewater Systems"
+                },
+                "water-systems": {
+                  "NAME": "Water Systems"
+                },
+                "gas-and-liquid-systems": {
+                  "NAME": "Gas And Liquid Systems"
+                },
+                "heating-supply-systems": {
+                  "NAME": "Heating Supply Systems"
+                },
+                "room-air-technology-systems": {
+                  "NAME": "Room Air Technology Systems"
+                },
+                "electrical-systems": {
+                  "NAME": "Electrical Systems"
+                },
+                "communication-safety-and-information-technology-systems-automation": {
+                  "NAME": "Communication Safety And Information Technology Systems Automation"
+                },
+                "usage-specific-systems": {
+                  "NAME": "Usage Specific Systems"
+                },
+                "other": {
+                  "NAME": "Other Technical Systems"
+                }
+              },
+              "installations-in-outdoor-facilities-and-open-spaces": {
+                "NAME": "Installations In Outdoor Facilities And Open Spaces",
+                "general-installations": {
+                  "NAME": "General Installations"
+                },
+                "special-installations": {
+                  "NAME": "Special Installations"
+                },
+                "other": {
+                  "NAME": "Other Installations In Outdoor Facilities And Open Spaces"
+                }
+              },
+              "other-measures-for-outdoor-facilities-and-open-spaces": {
+                "NAME": "Other Measures For Outdoor Facilities And Open Spaces",
+                "renovations": {
+                  "NAME": "Renovations"
+                },
+                "material-disposal": {
+                  "NAME": "Material Disposal"
+                },
+                "additional-measures": {
+                  "NAME": "Additional Measures"
+                },
+                "temporary-outdoor-facilities-and-open-spaces": {
+                  "NAME": "Temporary Outdoor Facilities And Open Spaces"
+                },
+                "other": {
+                  "NAME": "Other Measures For Outdoor Facilities And Open Spaces"
+                }
+              }
+            },
+            "equipment-and-artworks": {
+              "NAME": "Equipment And Artworks",
+              "general-equipment": {
+                "NAME": "General Equipment"
+              },
+              "special-equipment": {
+                "NAME": "Special Equipment"
+              },
+              "information-technology-equipment": {
+                "NAME": "Information Technology Equipment"
+              },
+              "artistic-equipment": {
+                "NAME": "Artistic Equipment",
+                "art-objects": {
+                  "NAME": "Art Objects"
+                },
+                "artistic-design-of-the-building": {
+                  "NAME": "Artistic Design Of The Building"
+                },
+                "artistic-design-of-outdoor-facilities-and-open-spaces": {
+                  "NAME": "Artistic Design Of Outdoor Facilities And Open Spaces"
+                },
+                "other": {
+                  "NAME": "Other Artistic Equipment"
+                }
+              },
+              "other": {
+                "NAME": "Other Equipment And Artworks"
+              }
+            },
+            "construction-ancillary-costs": {
+              "NAME": "Construction Ancillary Costs",
+              "client-tasks": {
+                "NAME": "Client Tasks",
+                "project-management": {
+                  "NAME": "Project Management"
+                },
+                "needs-assessment": {
+                  "NAME": "Needs Assessment"
+                },
+                "project-control": {
+                  "NAME": "Project Control"
+                },
+                "safety-and-health-protection-coordination": {
+                  "NAME": "Safety And Health Protection Coordination"
+                },
+                "award-procedures": {
+                  "NAME": "Award Procedures"
+                },
+                "other": {
+                  "NAME": "Other Client Tasks"
+                }
+              },
+              "preparation-of-object-planning": {
+                "NAME": "Preparation Of Object Planning",
+                "investigations": {
+                  "NAME": "Investigations"
+                },
+                "valuations": {
+                  "NAME": "Valuations"
+                },
+                "urban-planning-services": {
+                  "NAME": "Urban Planning Services"
+                },
+                "landscape-planning-services": {
+                  "NAME": "Landscape Planning Services"
+                },
+                "competitions": {
+                  "NAME": "Competitions"
+                },
+                "other": {
+                  "NAME": "Other Preparation Of Object Planning"
+                }
+              },
+              "object-planning": {
+                "NAME": "Object Planning",
+                "buildings-and-interiors": {
+                  "NAME": "Buildings And Interiors"
+                },
+                "open-spaces": {
+                  "NAME": "Open Spaces"
+                },
+                "civil-engineering-structures": {
+                  "NAME": "Civil Engineering Structures"
+                },
+                "traffic-facilities": {
+                  "NAME": "Traffic Facilities"
+                },
+                "other": {
+                  "NAME": "Other Object Planning"
+                }
+              },
+              "specialist-planning": {
+                "NAME": "Specialist Planning",
+                "structural-planning": {
+                  "NAME": "Structural Planning"
+                },
+                "technical-equipment": {
+                  "NAME": "Technical Equipment"
+                },
+                "building-physics": {
+                  "NAME": "Building Physics"
+                },
+                "geotechnics": {
+                  "NAME": "Geotechnics"
+                },
+                "engineering-surveying": {
+                  "NAME": "Engineering Surveying"
+                },
+                "lighting-technology-daylight-technology": {
+                  "NAME": "Lighting Technology Daylight Technology"
+                },
+                "fire-protection": {
+                  "NAME": "Fire Protection"
+                },
+                "contaminated-sites-explosive-ordnance-cultural-heritage-finds": {
+                  "NAME": "Contaminated Sites Explosive Ordnance Cultural Heritage Finds"
+                },
+                "other": {
+                  "NAME": "Other Specialist Planning"
+                }
+              },
+              "artistic-services": {
+                "NAME": "Artistic Services",
+                "art-competitions": {
+                  "NAME": "Art Competitions"
+                },
+                "fees": {
+                  "NAME": "Fees"
+                },
+                "other": {
+                  "NAME": "Other Artistic Services"
+                }
+              },
+              "general-construction-ancillary-costs": {
+                "NAME": "General Construction Ancillary Costs",
+                "expertise-and-consulting": {
+                  "NAME": "Expertise And Consulting"
+                },
+                "inspections-approvals-acceptance": {
+                  "NAME": "Inspections Approvals Acceptance"
+                },
+                "operating-costs": {
+                  "NAME": "Operating Costs"
+                },
+                "sampling-costs": {
+                  "NAME": "Sampling Costs"
+                },
+                "operating-costs-after-acceptance": {
+                  "NAME": "Operating Costs After Acceptance"
+                },
+                "insurance": {
+                  "NAME": "Insurance"
+                },
+                "other": {
+                  "NAME": "Other General Construction Ancillary Costs"
+                }
+              },
+              "other-construction-ancillary-costs": {
+                "NAME": "Other Construction Ancillary Costs",
+                "documentation-of-existing-conditions": {
+                  "NAME": "Documentation Of Existing Conditions"
+                },
+                "other": {
+                  "NAME": "Other Construction Ancillary Costs"
+                }
+              }
+            },
+            "financing": {
+              "NAME": "Financing",
+              "financing-ancillary-costs": {
+                "NAME": "Financing Ancillary Costs"
+              },
+              "debt-capital-interest": {
+                "NAME": "Debt Capital Interest"
+              },
+              "equity-capital-interest": {
+                "NAME": "Equity Capital Interest"
+              },
+              "guarantees": {
+                "NAME": "Guarantees"
+              },
+              "other": {
+                "NAME": "Other Financing"
+              }
+            },
+            "taxes-and-duties": "number",
+            "grants-subsidies": "number",
+            "income": "number"
+          },
+          "operating-costs-ongoing-use": {
+            "operational-management-costs": {
+              "property-management": "number",
+              "caretaker": "number",
+              "insurance": "number"
+            },
+            "energy-costs": {
+              "electricity": "number",
+              "heating": "number",
+              "hot-water": "number"
+            },
+            "water-costs-wastewater-fees": "number",
+            "waste-disposal": "number",
+            "security-and-maintenance-costs": "number",
+            "costs-for-common-facilities": {
+              "elevators": "number",
+              "underground-garage": "number",
+              "technical-rooms": "number"
             }
+          },
+          "maintenance-and-modernization-costs": {
+            "regular-maintenance": {
+              "elevators": "number",
+              "heating-systems": "number"
+            },
+            "replacement-of-components": {
+              "windows": "number",
+              "facade": "number",
+              "roofs": "number"
+            },
+            "modernization": {
+              "energy-rehabilitation": "number",
+              "barrier-free-conversion": "number"
+            }
+          },
+          "dismantling-and-disposal-costs": {
+            "demolition-costs": "number",
+            "disposal-of-contaminated-materials": "number",
+            "renaturation-or-reuse-of-the-land": "number"
+          }
         },
-        "interest": "number",
-        "demolition": "number"
-      },
-      "life cycle income": {
-        "TYPE": "TAXONOMY",
-        "UNITS": ["currency/a"],
-        "NAME": "Life Cycle Income",
-        "rental income": "number",
-        "commercial income": "number",
-        "market value increase": "number"
+        "financing-costs": {
+          "interest": "number",
+          "fees": "number"
+        },
+        "taxes-and-duties": "number",
+        "grants-subsidies": "number",
+        "income": "number"
       }
     }
   },
   "wasp": {
     "connection": {
-      "rotation": "number"
+      "rotation": {
+        "NAME": "rotation"
+      }
     }
   }
 }
