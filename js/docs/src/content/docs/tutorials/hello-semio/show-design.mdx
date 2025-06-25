@@ -17,26 +17,27 @@ Once you've done the following:
 
 ---
 
-Up to now, we’ve been working behind the scenes 🛠️ defining meaning, relationships, and structure.  
-But unlike regular Grasshopper workflows, Semio doesn’t preview the geometry automatically ⚠️  
-🧩 That happens in a dedicated step 🎬 just like revealing your finished LEGO build after following all the instructions.
+Up to now, we’ve been working behind the scenes 🛠️
+We’ve been defining meaning, relationships, and structure — not just drawing shapes
+
+But unlike regular Grasshopper workflows, Semio doesn’t preview geometry automatically ⚠️ The visualization happens in a dedicated step 🎬 like revealing your finished LEGO model after following all the instructions
 
 
 ## 🧩 Visualize the Design
 
 Once your modular system is ready, it’s time to see it come together!  
-To visualize the final assembly, Semio uses the `Preview Design` component in Grasshopper.
+To visualize the final assembly, Semio uses the `Preview Design` component in Grasshopper
 
 🔌 **Connect these inputs to the `Preview Design` component**:
 
 - **🧱 Design**  
-  The complete structure — tells Semio which Pieces are used and how they’re connected.
+  The complete structure — tells Semio which Pieces are used and how they’re connected
 
 - **📦 Types**  
-  The brick molds used in the Design — including Ports and logic for snapping.
+  The brick molds used in the Design — including Ports and logic for snapping
 
 - **🧊 Representations**  
-  The geometry files (e.g. `.glb`) or `Objects` for each Type and Variant — the actual shape of each brick.
+  The geometry files (e.g. `.glb`) or `Objects` for each Type and Variant — the actual shape of each brick
 
 ---
 
@@ -46,13 +47,14 @@ brick by brick, just like snapping together your final LEGO model on the table! 
 Here’s what gets visualized:
 
 - 🧱 **Brick Placement**  
-  Every Piece is shown in its final position — exactly where your Design logic places it.
+  Every Piece is shown in its final position — exactly where your Design logic places it
 
 - 🧲 **Port Connections**  
-  Only the **connected Ports** are displayed — including their direction — so you can confirm how Pieces are snapped together
+  All **Ports** are displayed — including their direction — so you can clearly see how Pieces are designed to snap together, and which ones are actually connected
+
 
 - 🔄 **Snapping Adjustments**  
-  Rotations, gaps, shifts, or tilts added during connection are shown — making alignment easy to check.
+  Rotations, gaps, shifts, or tilts added during connection are shown — making alignment easy to check
 
 
 
