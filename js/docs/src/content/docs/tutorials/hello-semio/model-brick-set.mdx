@@ -464,45 +464,46 @@ There’s no strict rule for how many Ports to add — it depends on how much fl
 
 #### 💡 Port Direction (Dr)
 
+Every Port needs a **direction** — a vector that tells Semio which way the connection should face 🧭  
+This is how Semio knows how to align and snap your Pieces together correctly 🧲
 
-Every Port needs a direction — a vector that tells Semio which way the connection faces  
-This is essential for aligning pieces correctly when snapping them together
+Here’s how to define Port directions clearly:
 
-Here’s how to define direction effectively:
 
-- ➡️ **Think of it as the “facing” of the Port**  
-  The direction vector shows which way the Port is meant to connect — like saying, “this side points outward”
+- 📏 **Use clean, simple vectors**  
+  Stick to basic axes like **X, Y, or Z**  relative to the face the Port sits on. It makes snapping easier and logic more readable 🧠  
+  Avoid random or diagonal directions unless needed
 
-- 🧭 **Use simple, readable vectors**  
-  Stick to clean, orthogonal directions when possible (e.g. X, Y, or Z axes).  
-  This keeps alignment predictable and easier to debug.
+- ♻️ **Be consistent across Variants**  
+  Ports don’t need to be perfectly precise — but they **must stay consistent**  
+  This ensures all your bricks connect correctly no matter the shape or version 🔧
 
-- ♻️ **Prioritize consistency over precision**  
-  The pieces can still be moved or rotated after snapping, so vectors don’t have to be exact  
-  but they **must be consistent** across all Variants to keep your logic reliable
-
-👉 *In our example, all edge Ports face outward — perpendicular to the face they sit on*
+👉 *In our example, each Port faces straight out — perpendicular to the edge it’s placed on* 🚀
 
 
 ---
 #### 🏷️ Port ID (Id)
 
-A **Port ID** is the label you give to each Port  
-This naming is important — because later, when you make connections, you'll say things like:
+A **Port ID** is the name you give to each Port 🏷️  
+This name is how Semio knows **which Port to connect** when snapping Pieces together
 
-> "Connect Piece A's `top` Port to Piece B's `bottom` Port"
+For example, you might say:  
+> "Connect the `top` Port of Piece A to the `bottom` Port of Piece B"
 
-You can choose any naming system — as long as it makes sense in your design logic  
-In this example, we use:
+You can use **any naming system** — as long as it’s clear and consistent:
 
-- `n`, `s`, `e`, `w` — standing for **north, south, east, and west** 🧭
+- Common examples: `n`, `s`, `e`, `w` — for north, south, east, and west 🧭  
+- Custom names: `top`, `bottom`, `hinge`, `plug`, `windowDock`, etc. 🧲
 
-In your own project, you might use:
+💡 **Tip:** Pick a naming system that’s easy to understand and stick to it  
+It helps you stay organized and makes teamwork or AI assistance much easier 🤝
 
-- `top`, `bottom`, `hinge`, `plug`, `outlet`, `windowDock` — or anything else 🔧
+---
 
-💡 **Tip:** Choose a consistent and meaningful naming system.  
-It will make connecting components easier — and helps when working with AI or teammates.
+Together with the **Pt** (position) and **Dr** (direction), the **Id** completes each Port definition:  
+Each row in the three lists defines one Port — so all lists must be the **same length** to stay in sync 🧩
+
+
 
 ---
 
@@ -511,9 +512,9 @@ Each Port is defined by one entry from each list, so the lists must be the same 
 This ensures that every snapping point has a matching ID, position, and direction
 
 
-  {/* TODO: insert port Image here Gh */}
+
   
-  {/* TODO: insert Image of Wireframe with points and Vectors in Rhino */}
+
 
 </li>
 
@@ -521,24 +522,30 @@ This ensures that every snapping point has a matching ID, position, and directio
 
 ### 🧱 Assemble the Mold (Model [Type](/think-in-semio/#type))
 
-After modeling all the parts of your brick mold —  
-**Name**, **Variant**, **Ports**, and **Representation** —  
-you plug them into the `Typ` component.
+Once you’ve defined all parts of your brick mold   
+the **Name**, **Variant**, **Ports**, and **Representation**   
+you can assemble them using the `Model Type` component (`Typ`) 🧰
 
-- 🏷️ **Name** → e.g. `"Profile"`  
-- 🔢 **Variant** → e.g. `"2"`  
-- 🧲 **Ports** → e.g. `n`, `s`, `e`, `w`  
-- 🧊 **Representation** → the linked geometry
+Here's what you plug in:
 
-  {/* TODO: insert Image of Type component with the inputs */}
-![📁 Model Type](/model-type.png)
+- 🏷️ **Name** — the shared identity of the mold (e.g. `"Profile"`)
+- 🔢 **Variant** — the specific version number (e.g. `"2"`)
+- 🧲 **Ports** — the snapping points and directions (e.g. `n`, `s`, `e`, `w`)
+- 🧊 **Representation** — the geometry that defines the brick's shape
 
+  
+![📁 Model Type](/model-type.png)  
 ![📁 Model Type](/model-type-geo.png)
 
+---
 
-  🎯 The result is a complete Type —
-  a smart, reusable mold, ready to be casted into your Design
-  🧩 The output `Typ("profile", 2)` means we're creating a Variant **named `2`** based on the `"profile"` mold 🧱 — a 2-unit-long brick 📏
+🎯 The result is a complete **Type**   
+A reusable brick mold that carries both shape and connection logic
+
+For example, `Typ("Profile", 2)`  
+creates Variant `2` of the `"Profile"` mold   
+a 2-unit-long brick ready to be placed in your Design 🧱
+
 
 
 
@@ -550,50 +557,58 @@ you plug them into the `Typ` component.
 </Steps>
 
 
-
 ## 🧬 Create Mold Versions (Variants of [Type](/think-in-semio/#type))
-
 
 ![📤 sketch drawing](/sketch-drawing-variant.png)
 
+Now that you've created your base **Type**, it's time to generate **Variants** — based on the **unit count `n`** shown in the sketch 🔢
 
-Now that you've created your base **Type**, it's time to generate **Variants** — based on the **unit count `n`** shown in the sketch
+Each Variant is built from the **same mold**, just stretched or scaled to a different length 📏  
+Think of it like longer or shorter LEGO bricks of the same kind 🧱  
+Since they follow the same logic and structure, we treat them as **Variants** of one **Type** — not separate Types ♻️
 
-Each Variant uses the **same mold**, just stretched or scaled.  
- Think of it like longer or shorter Lego bricks of the same kind 🧱
- Since they follow the same design logic, we treat them as **Variants** of one **Type**, not separate Types.
+Examples from our sketch:
 
-- **Variant 2** → 2 units long
+- `Variant 2` → 2 units long 🟩🟩  
+- `Variant 4` → 4 units long 🟩🟩🟩🟩  
+- `Variant 5` → 5 units long 🟩🟩🟩🟩🟩  
 
-- **Variant 4** → 4 units long
-
-- **Variant 5** → 5 units long
 
 ---
 
 #### 🔁 Modeling a Variant
 
-Modeling a **Variant** follows the **same steps** as creating a new Type —  
-but with one key difference: you're referencing the **same mold**, just with a new configuration
 
-Here’s what changes:
+---
 
-1. **Reuse** the original **Type name** 🏷️  
-2. **Assign** a new **Variant name** (e.g. `n`, the unit count) 🔢
+##### ✅ What Stays the Same
 
-You’ll still go through the usual modeling steps:
+- 🏷️ **Type name** — you’re still using the same underlying mold
 
-1. Name your mold (**Type Name**)  
-2. Attach geometry (**Model Representation**)  
-3. Add Ports (**Model Port**)  
-4. Set the Variant number  
-5. Create the complete **Model Type**
+##### 🔄 What Changes?
+
+- 🔢 **Variant name** — a unique label like `2`, `4`, or `5` to distinguish the version  
+- 🧊 **Representation** — new geometry that reflects the Variant’s shape or size  
+- 🧲 **Ports** — same logic, but positioned relative to the new shape  
+
+---
+
+
+##### 🛠️ Modeling Steps
+
+1. 🏷️ Set the **Type name** (same as the original mold)  
+2. 🔢 Assign a new **Variant name**  
+3. 🧊 Attach the **Representation** — the geometry for this Variant  
+4. 🧲 Add the **Ports** — positioned consistently  
+5. 🧱 Use the `Model Type` component to combine everything into a complete Variant
+
+---
 
 :::note
-🧭 Keeping Port positions **consistent across Variants** makes your Types easier to reuse, align, and assemble smoothly
+Keep Port positions consistent across all Variants — it ensures easier snapping and logic reuse
 :::
 
-✅ Just like when modeling a Type, you define the Representation, Ports, and final Model Type — only the **Variant** changes
+✅ That’s it — same mold, new shape, fully ready for modular design
 
 ---
 
@@ -601,87 +616,69 @@ You’ll still go through the usual modeling steps:
 
 ##### 💡 Advanced Tip: Use Clusters to Generate Variants
 
-In Grasshopper, a great way to handle multiple Variants is with a **Cluster** —  
-a reusable mold-maker that generates each version of your LEGO brick 🧱
+In Grasshopper, a great way to handle multiple Variants is with a **Cluster**  
 
 Since most Variants share the same logic and differ by only one or two parameters, a Cluster helps you:
 
-- Model the logic once  
-- Generate all Variants efficiently  
-- Keep your script clean and modular
-
+- 🔁 Model the logic **once**
+- ⚡ Generate all Variants **efficiently**
+- 🧼 Keep your script **clean and modular**
 
 ![📁 Variant GIF](/Type-1-to-5-crop.gif)
 
 <Tabs>
 
-<TabItem label=" File-Based Geometry Reference">
+<TabItem label="📂 File-Based Geometry Reference">
 
 **Inside the Cluster:**  
 
 You define the full logic:
 
-- Geometry generation & export   
-- Modeling the Representation by linking the exported file  (Model Representation)
-- Port placement (Model Port)
-- Type creation (Model Type)
+- 🧊 Generate and export geometry  
+- 📎 Link the exported file via `Model Representation`  
+- 🧲 Place Ports using `Model Port`  
+- 🧱 Create the Variant using `Model Type`
 
 ![📁 Cluster](/cluster-type-inside-ALpha.png)
 
-
 **Outside the Cluster:**  
 
-![📁 Cluster](/type-cluster-file-reference-Alpha.png)
+You only feed in the changing inputs:
 
+- 📏 `n` → the unit count (e.g. 2, 4, 5)  
+- 🏷️ Variant name → often also `n`  
+- 📁 Directory of the GH file  
+- 🔘 Export toggle
+
+![📁 Cluster](/type-cluster-file-reference-Alpha.png)  
 ![📁 Cluster](/file-export.png)
-
-You feed in only what changes:
-
-- `n` → the unit count (e.g. 2, 4, 5) 📏  
-- Variant name → (often also `n`) 🏷️
-- The Directory of the Grasshopper Definition
-- Export toggle
- 
-
 
 </TabItem>
 
-<TabItem label=" Direct Geometry Reference">
+<TabItem label="🧱 Direct Geometry Reference">
 
 **Inside the Cluster:**  
 
+You define the full modeling logic directly, without saving external files:
+
+- 🧊 Generate geometry  
+- 🧲 Place Ports using `Model Port`  
+- 🧱 Create the Variant using `Model Type`
+
 ![📁 Cluster](/cluster-type-inside-direct.rfrc.png)
-
-You define the full logic:
-
-- Geometry generation 
-- Port placement (Model Port)
-- Type creation (Model Type)
 
 **Outside the Cluster:**  
 
+Only the changing parameters are connected:
+
+- 📏 `n` → the unit count (e.g. 2, 4, 5)  
+- 🏷️ Variant name → often also `n`
+
 ![📁 Cluster](/type-cluster-direct-reference-Alpha.png)
 
-
-You feed in only what changes:
-
-- `n` → the unit count (e.g. 2, 4, 5) 📏  
-- Variant name → (often also `n`) 🏷️
-
-
-
-
 </TabItem>
-
 </Tabs>
 
-
-
-
-This way, you can generate many Variants from the same Type —  
-without duplicating components or cluttering your canvas
-
-✅ **Bonus:** Keeps your file organized and scalable — perfect for growing your Kit later on
-
 ---
-{/* TODO: insert Gif of the cluster with the different variants */}
+
+✅ **Bonus:** This workflow keeps your file organized, scalable, and easy to expand — perfect for growing your Kit later on 🧩
