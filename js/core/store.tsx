@@ -81,12 +81,20 @@ class StudioStore {
             console.log(`Local changes are synchronized for user (${this.userId}) with client (${this.yDoc.clientID})`);
             this.indexeddbProvider.clearData();
             this.importKit('metabolism.zip');
+            this.notifyListeners();
         });
         this.yDoc.on('update', () => this.notifyListeners());
     }
 
     private notifyListeners(): void {
         this.listeners.forEach(listener => listener());
+    }
+
+    subscribe(callback: () => void): () => void {
+        this.listeners.add(callback);
+        return () => {
+            this.listeners.delete(callback);
+        };
     }
 
     private createQuality(quality: Quality): Y.Map<any> {
@@ -1023,13 +1031,6 @@ class StudioStore {
 
     transact(commands: () => void): void {
         this.yDoc.transact(commands, new Set([this.userId]));
-    }
-
-    subscribe(callback: () => void): () => void {
-        this.listeners.add(callback);
-        return () => {
-            this.listeners.delete(callback);
-        };
     }
 
     async importKit(url: string, complete = false): Promise<void> {
