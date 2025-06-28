@@ -32,13 +32,7 @@ The Display tab handles all visual feedback in the canvas. Use it to preview you
 The Filter tab lets you query, sort, and extract specific elements from your model — such as only selected Pieces, certain Types, or Ports with a specific role. Ideal for downstream workflows where you want to operate on subsets of your full system.
 
 - **Select Kit**: Select a kit with a name and an optional version.
-If no version is provided it will select all variants.
-If you want to select the default version then use the empty text.
 - **Select Design**: Select a design with a name, an optional variant and an optional view.
-If no variant is provided it will select all variants.
-If you want to select the default variant then use the empty text.
-If no view is provided it will select all views.
-If you want to select the default view then use the empty text.
 - **Select Type**: Select a type with a name and an optional variant. If no variant is provided it will select all variants. If you want to select the default type then use the empty text.
 - **Select Type by Piece**: Select the type of a piece.
 - **Select Connection**: Select a connection with the connected id and the connecting id. The connections are symetric, so if the conected is the connecting and vice versa it will still selct them.
@@ -86,26 +80,16 @@ The Modeling tab contains all core components to define your design system: Type
 ## 🧩 Params  
 The Params tab lists all Semio’s custom parameter types — like Type, Piece, Connection, and Design. Use these to define inputs, share data across clusters, or inspect the structure of Semio objects in detail.
 
-- **Author**: 
-  Container for metadata about the author or source of a Semio object
-- **Design**: 
-  Holds a full Semio design: the complete configuration of placed Pieces and their connections
-- **Kit**: 
-  Stores a Kit: a collection of Types, Ports, and Connection rules
-- **Port**: 
-  A single Port definition — defines how Pieces connect to each other
-- **Representation**:
-  Stores geometry or data used to represent a Piece or Port in the model
-- **Connection**:
-  Contains rules and results for how two Ports or Pieces connect
-- **Design Piece**:
-  Represents a Piece placed inside a Design, including its position and context
-- **Piece**:
-  A param for a single Piece definition, including its Ports and Representation
-- **Query Info**: 
-  Contains structured query outputs or filtered object sets from logic operations
-- **Type**:
-  Holds a Type (brick mold), which defines the structure for creating Pieces
+- **Author**: Container for metadata about the author or source of a Semio object
+- **Design**: Holds a full Semio design: the complete configuration of placed Pieces and their connections
+- **Kit**: Stores a Kit: a collection of Types, Ports, and Connection rules
+- **Port**: A single Port definition — defines how Pieces connect to each other
+- **Representation**: Stores geometry or data used to represent a Piece or Port in the model
+- **Connection**: Contains rules and results for how two Ports or Pieces connect
+- **Design Piece**: Represents a Piece placed inside a Design, including its position and context
+- **Piece**: A param for a single Piece definition, including its Ports and Representation
+- **Query Info**: Contains structured query outputs or filtered object sets from logic operations
+- **Type**: Holds a Type (brick mold), which defines the structure for creating Pieces
 ---
 
 ## 💾 Persistence  
