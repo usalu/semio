@@ -28,6 +28,7 @@
     "@react-three/drei": "^10.2.0",
     "@react-three/fiber": "^9.1.2",
     "@react-three/postprocessing": "^3.0.4",
+    "@storybook/addon-docs": "^9.1.0-alpha.2",
     "@xyflow/react": "^12.7.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

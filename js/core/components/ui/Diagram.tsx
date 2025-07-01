@@ -135,7 +135,7 @@ export const MiniMapNode: React.FC<MiniMapNodeProps> = ({ x, y, selected }) => {
 }
 
 
-const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, onPanelDoubleClick, onSelectionChange }) => {
+const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, onPanelDoubleClick, onSelectionChange, onDesignChange }) => {
     const { setNodeRef } = useDroppable({
         id: 'diagram',
     });
@@ -210,7 +210,7 @@ const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, o
 
     const MIN_DISTANCE = 100;
     // const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-    // const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+    // const [edges, setEdges, onEdgesState] = useEdgesState(initialEdges);
     // const { getInternalNode } = useReactFlow();
 
     // const onConnect = useCallback(
@@ -346,6 +346,32 @@ const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, o
     //     [getClosestEdge],
     // );
 
+    const onNodeClick = useCallback((e: React.MouseEvent, node: Node) => {
+        e.stopPropagation();
+        if (selection && onSelectionChange) {
+            if (node.selected) {
+                onSelectionChange?.({
+                    ...selection,
+                    selectedPieceIds: selection?.selectedPieceIds.filter((id) => id !== node.id),
+                });
+            } else {
+                onSelectionChange?.({
+                    ...selection,
+                    selectedPieceIds: [...selection?.selectedPieceIds, node.id],
+                });
+            }
+        }
+    }, [selection, onSelectionChange]);
+
+    const onNodeDrag = useCallback((e: React.MouseEvent, node: Node) => {
+        console.log("onNodeDrag", e, node);
+    }, []);
+
+    const onDoubleClickCapture = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        onPanelDoubleClick?.();
+    }, [onPanelDoubleClick]);
+
     return (
         <ReactFlow
             ref={setNodeRef}
@@ -397,28 +423,10 @@ const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, o
             //         });
             //     }
             // }}
-            onNodeClick={(e, node) => {
-                console.log('node clicked', node);
-                e.stopPropagation();
-                if (selection && onSelectionChange) {
-                    if (node.selected) {
-                        onSelectionChange?.({
-                            ...selection,
-                            selectedPieceIds: selection?.selectedPieceIds.filter((id) => id !== node.id),
-                        });
-                    } else {
-                        onSelectionChange?.({
-                            ...selection,
-                            selectedPieceIds: [...selection?.selectedPieceIds, node.id],
-                        });
-                    }
-                }
-            }}
+            onNodeClick={onNodeClick}
+            onNodeDrag={onNodeDrag}
             zoomOnDoubleClick={false}
-            onDoubleClickCapture={(e) => {
-                e.stopPropagation();
-                onPanelDoubleClick?.();
-            }}
+            onDoubleClickCapture={onDoubleClickCapture}
             panOnDrag={[0]} //left mouse button
             proOptions={{ hideAttribution: true }}
             multiSelectionKeyCode="Shift"
@@ -439,10 +447,11 @@ interface DiagramProps {
     fileUrls: Map<string, string>;
     onPanelDoubleClick?: () => void;
     onSelectionChange?: (selection: DesignEditorSelection) => void;
+    onDesignChange?: (design: Design) => void;
 }
 
 
-const Diagram: FC<DiagramProps> = ({ design, types, fullscreen, selection, fileUrls, onPanelDoubleClick, onSelectionChange }) => {
+const Diagram: FC<DiagramProps> = ({ design, types, fullscreen, selection, fileUrls, onPanelDoubleClick, onSelectionChange, onDesignChange }) => {
     return (
         <div id="diagram" className="h-full w-full">
             <DiagramCore
@@ -452,7 +461,8 @@ const Diagram: FC<DiagramProps> = ({ design, types, fullscreen, selection, fileU
                 types={types}
                 selection={selection}
                 fileUrls={fileUrls}
-                onSelectionChange={onSelectionChange} />
+                onSelectionChange={onSelectionChange}
+                onDesignChange={onDesignChange} />
         </div>
     );
 };

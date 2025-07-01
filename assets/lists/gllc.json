@@ -1,0 +1,407 @@
+{
+  "global-life-cycle-costs": {
+    "life-cycle-costs": {
+      "investment-costs-construction-phase": {
+        "land-costs": {
+          "land": {
+            "land-value": null,            "ancillary-land-costs": {
+              "surveying-fees": null,
+              "court-fees": null,
+              "notary-fees": null,
+              "land-transfer-tax": null,
+              "investigations": null,
+              "valuations": null,
+              "permit-fees": null,
+              "land-reorganization": null,
+              "other": null
+            },
+            "third-party-rights": {
+              "compensations": null,
+              "redemption-of-real-rights": null,
+              "other": null            },
+            "compensations": null,
+            "redemption-of-real-rights": null,
+            "other": null
+          },
+          "other": null
+        },
+        "development-costs": {
+          "preparatory-measures": {            "site-preparation": {
+              "safety-measures": null,
+              "demolition-measures": null,
+              "contaminated-site-remediation": null,
+              "surface-preparation": null,
+              "explosive-ordnance-clearance": null,
+              "cultural-heritage-finds": null,
+              "other": null
+            },
+            "public-infrastructure-development": {
+              "wastewater-disposal": null,
+              "water-supply": null,
+              "gas-supply": null,
+              "district-heating-supply": null,
+              "power-supply": null,
+              "telecommunications": null,
+              "traffic-development": null,
+              "waste-disposal": null,
+              "other": null
+            },
+            "private-infrastructure-development": null,
+            "compensatory-measures-and-levies": {
+              "compensatory-measures": null,
+              "compensatory-levies": null,
+              "other": null
+            },
+            "transitional-measures": {
+              "structural-measures": null,
+              "organizational-measures": null,
+              "other": null            }
+          },
+          "other": null
+        },
+        "building-structural-components": {
+          "excavation-earthworks": {
+            "construction": null,
+            "enclosure": null,
+            "water-management": null,
+            "conveyance": null,
+            "other": null
+          },
+          "foundation-substructure": {
+            "soil-improvement": null,
+            "shallow-foundations-and-slabs": null,
+            "deep-foundations": null,
+            "foundation-layers": null,
+            "seals-and-linings": null,
+            "drains": null,
+            "other": null
+          },
+          "external-walls-vertical-structural-components-outside": {
+            "load-bearing-external-walls": null,
+            "non-load-bearing-external-walls": null,
+            "external-columns": null,
+            "external-wall-openings": null,
+            "external-wall-claddings-outside": null,
+            "external-wall-claddings-inside": null,
+            "prefabricated-external-wall-structures": null,
+            "light-protection-kg-330": null,
+            "other": null
+          },          "internal-walls-vertical-structural-components-inside": {
+            "load-bearing-internal-walls": null,
+            "non-load-bearing-internal-walls": null,
+            "internal-columns": null,
+            "internal-wall-openings": null,
+            "internal-wall-claddings": null,
+            "prefabricated-internal-wall-structures": null,
+            "light-protection-kg-340": null,
+            "other": null
+          },
+          "ceilings-horizontal-structural-components": {
+            "ceiling-structures": null,
+            "ceiling-openings": null,
+            "ceiling-finishes": null,
+            "ceiling-linings": null,
+            "prefabricated-ceiling-structures": null,
+            "other": null
+          },
+          "roofs": {
+            "roof-structures": null,
+            "roof-openings": null,
+            "roof-finishes": null,
+            "roof-linings": null,
+            "prefabricated-roof-structures": null,
+            "light-protection-kg-360": null,
+            "other": null
+          },          "infrastructure-facilities": {
+            "road-traffic-facilities": null,
+            "rail-traffic-facilities": null,
+            "air-traffic-facilities": null,
+            "water-construction-facilities": null,
+            "wastewater-disposal-facilities": null,
+            "water-supply-facilities": null,
+            "energy-and-information-supply-facilities": null,
+            "waste-disposal-facilities": null,
+            "other": null
+          },
+          "structural-installations": {
+            "general-installations": null,
+            "special-installations": null,
+            "landscape-architectural-installations": null,
+            "mechanical-installations": null,
+            "installations-in-civil-engineering-structures": null,
+            "orientation-and-information-systems": null,
+            "protective-installations": null,
+            "other": null
+          },
+          "other-measures-for-structural-components": {
+            "construction-site-facilities": null,
+            "scaffolding": null,
+            "safety-measures": null,
+            "demolition-measures": null,
+            "renovations": null,
+            "material-disposal": null,
+            "additional-measures": null,
+            "temporary-structural-components": null,
+            "other": null
+          }
+        },        "technical-systems": {
+          "wastewater-water-gas-systems": {
+            "wastewater-systems": null,
+            "water-systems": null,
+            "gas-systems": null,
+            "other": null
+          },
+          "heating-supply-systems": {
+            "heat-generation-systems": null,
+            "heat-distribution-networks": null,
+            "room-heating-surfaces": null,
+            "traffic-heating-surfaces": null,
+            "other": null
+          },
+          "room-air-technology-systems": {
+            "ventilation-systems": null,
+            "partial-air-conditioning-systems": null,
+            "air-conditioning-systems": null,
+            "refrigeration-systems": null,
+            "other": null
+          },
+          "electrical-systems": {
+            "high-and-medium-voltage-systems": null,
+            "emergency-power-supply-systems": null,
+            "low-voltage-switchgear": null,
+            "low-voltage-installation-systems": null,
+            "lighting-systems": null,
+            "lightning-protection-and-grounding-systems": null,
+            "catenary-systems": null,
+            "other": null
+          },          "communication-safety-and-information-technology-systems": {
+            "telecommunication-systems": null,
+            "search-and-signal-systems": null,
+            "time-service-systems": null,
+            "electroacoustic-systems": null,
+            "audiovisual-media-and-antenna-systems": null,
+            "fire-alarm-and-alert-systems": null,
+            "data-transmission-networks": null,
+            "traffic-control-systems": null,
+            "other": null
+          },
+          "conveying-systems": {
+            "elevator-systems": null,
+            "escalators-and-moving-walkways": null,
+            "conveyor-systems": null,
+            "transport-systems": null,
+            "crane-systems": null,
+            "hydraulic-systems": null,
+            "other": null
+          },
+          "usage-specific-and-process-engineering-systems": {
+            "kitchen-technology-systems": null,
+            "laundry-cleaning-and-bathing-technology-systems": null,
+            "media-supply-systems-medical-and-laboratory-technology-systems": null,
+            "fire-extinguishing-systems": null,
+            "process-heat-cold-and-air-systems": null,
+            "other": null
+          },          "building-and-facility-automation": {
+            "automation-devices": null,
+            "control-cabinets-automation-hubs": null,
+            "automation-management": null,
+            "cables-lines-and-laying-systems": null,
+            "data-transmission-networks": null,
+            "other": null
+          },
+          "other-measures-for-technical-systems": {
+            "construction-site-facilities": null,
+            "scaffolding": null,
+            "safety-measures": null,
+            "demolition-measures": null,
+            "renovations": null,
+            "material-disposal": null,
+            "additional-measures": null,
+            "temporary-technical-systems": null,
+            "other": null
+          }
+        },
+        "outdoor-facilities-and-open-spaces": {          "earthworks": {
+            "construction": null,
+            "enclosure": null,
+            "water-management": null,
+            "conveyance": null,
+            "other": null
+          },
+          "foundation-substructure": {
+            "soil-improvement": null,
+            "foundations-and-slabs": null,
+            "foundation-layers": null,
+            "seals-and-linings": null,
+            "drains": null,
+            "other": null
+          },
+          "pavement-surface-courses": {
+            "paths": null,
+            "roads": null,
+            "squares-yards-terraces": null,
+            "parking-spaces": null,
+            "sports-field-areas": null,
+            "playground-areas": null,
+            "track-systems": null,
+            "airfield-areas": null,
+            "other": null
+          },
+          "structural-components": {
+            "fences": null,
+            "protective-structures": null,
+            "wall-structures": null,
+            "ramps-stairs-stands": null,
+            "roofs": null,
+            "bridges": null,
+            "canal-and-shaft-structures": null,
+            "water-basins": null,
+            "other": null
+          },          "technical-systems": {
+            "wastewater-systems": null,
+            "water-systems": null,
+            "gas-and-liquid-systems": null,
+            "heating-supply-systems": null,
+            "room-air-technology-systems": null,
+            "electrical-systems": null,
+            "communication-safety-and-information-technology-systems-automation": null,
+            "usage-specific-systems": null,
+            "other": null
+          },
+          "installations-in-outdoor-facilities-and-open-spaces": {
+            "general-installations": null,
+            "special-installations": null,
+            "other": null
+          },
+          "other-measures-for-outdoor-facilities-and-open-spaces": {
+            "renovations": null,
+            "material-disposal": null,
+            "additional-measures": null,
+            "temporary-outdoor-facilities-and-open-spaces": null,
+            "other": null
+          }
+        },
+        "equipment-and-artworks": {
+          "general-equipment": null,
+          "special-equipment": null,
+          "information-technology-equipment": null,          "artistic-equipment": {
+            "art-objects": null,
+            "artistic-design-of-the-building": null,
+            "artistic-design-of-outdoor-facilities-and-open-spaces": null,
+            "other": null
+          },
+          "other": null
+        },
+        "construction-ancillary-costs": {
+          "client-tasks": {
+            "project-management": null,
+            "needs-assessment": null,
+            "project-control": null,
+            "safety-and-health-protection-coordination": null,
+            "award-procedures": null,
+            "other": null
+          },
+          "preparation-of-object-planning": {
+            "investigations": null,
+            "valuations": null,
+            "urban-planning-services": null,
+            "landscape-planning-services": null,
+            "competitions": null,
+            "other": null
+          },
+          "object-planning": {
+            "buildings-and-interiors": null,
+            "open-spaces": null,
+            "civil-engineering-structures": null,
+            "traffic-facilities": null,
+            "other": null
+          },          "specialist-planning": {
+            "structural-planning": null,
+            "technical-equipment": null,
+            "building-physics": null,
+            "geotechnics": null,
+            "engineering-surveying": null,
+            "lighting-technology-daylight-technology": null,
+            "fire-protection": null,
+            "contaminated-sites-explosive-ordnance-cultural-heritage-finds": null,
+            "other": null
+          },
+          "artistic-services": {
+            "art-competitions": null,
+            "fees": null,
+            "other": null
+          },
+          "general-construction-ancillary-costs": {
+            "expertise-and-consulting": null,
+            "inspections-approvals-acceptance": null,
+            "operating-costs": null,
+            "sampling-costs": null,
+            "operating-costs-after-acceptance": null,
+            "insurance": null,
+            "other": null
+          },
+          "other-construction-ancillary-costs": {
+            "documentation-of-existing-conditions": null,
+            "other": null
+          }
+        },
+        "financing": {
+          "financing-ancillary-costs": null,
+          "debt-capital-interest": null,
+          "equity-capital-interest": null,
+          "guarantees": null,
+          "other": null
+        },
+        "taxes-and-duties": null,
+        "grants-subsidies": null,
+        "income": null
+      },      "operating-costs-ongoing-use": {
+        "operational-management-costs": {
+          "property-management": null,
+          "caretaker": null,
+          "insurance": null
+        },
+        "energy-costs": {
+          "electricity": null,
+          "heating": null,
+          "hot-water": null
+        },
+        "water-costs-wastewater-fees": null,
+        "waste-disposal": null,
+        "security-and-maintenance-costs": null,
+        "costs-for-common-facilities": {
+          "elevators": null,
+          "underground-garage": null,
+          "technical-rooms": null
+        }
+      },
+      "maintenance-and-modernization-costs": {
+        "regular-maintenance": {
+          "elevators": null,
+          "heating-systems": null
+        },
+        "replacement-of-components": {
+          "windows": null,
+          "facade": null,
+          "roofs": null
+        },
+        "modernization": {
+          "energy-rehabilitation": null,
+          "barrier-free-conversion": null
+        }
+      },
+      "dismantling-and-disposal-costs": {
+        "demolition-costs": null,
+        "disposal-of-contaminated-materials": null,
+        "renaturation-or-reuse-of-the-land": null
+      }
+    },
+    "financing-costs": {
+      "interest": null,
+      "fees": null
+    },
+    "taxes-and-duties": null,
+    "grants-subsidies": null,
+    "income": null
+  }
+}

@@ -640,10 +640,23 @@ const roundPlane = (plane: Plane): Plane => {
     };
 };
 
-// const semioToThreeRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1)
-// const threeToSemioRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1)
+export const ToThreeRotation = (): THREE.Matrix4 => {
+    return new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
+}
 
-const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
+export const ToSemioRotation = (): THREE.Matrix4 => {
+    return new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
+}
+
+export const ToThreeQuaternion = (): THREE.Quaternion => {
+    return new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476);
+}
+
+export const ToSemioQuaternion = (): THREE.Quaternion => {
+    return new THREE.Quaternion(0.7071067811865476, 0, 0, -0.7071067811865476);
+}
+
+export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
     const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
     const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z);
     const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z);
@@ -655,7 +668,7 @@ const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
     return matrix;
 };
 
-const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
+export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
     const origin = new THREE.Vector3();
     const xAxis = new THREE.Vector3();
     const yAxis = new THREE.Vector3();
@@ -672,7 +685,7 @@ const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
 };
 
 
-const semioVectorToThree = (v: Point | Vector): THREE.Vector3 => {
+export const vectorToThree = (v: Point | Vector): THREE.Vector3 => {
     return new THREE.Vector3(v.x, v.y, v.z);
 };
 
@@ -682,56 +695,72 @@ const computeChildPlane = (
     childPort: Port,
     connection: Connection
 ): Plane => {
-
     const parentMatrix = planeToMatrix(parentPlane);
-    const parentPoint = semioVectorToThree(parentPort.point);
-    const parentDirection = semioVectorToThree(parentPort.direction).normalize();
-    const childPoint = semioVectorToThree(childPort.point);
-    const childDirection = semioVectorToThree(childPort.direction).normalize();
+    const parentPoint = vectorToThree(parentPort.point);
+    const parentDirection = vectorToThree(parentPort.direction).normalize();
+    const childPoint = vectorToThree(childPort.point);
+    const childDirection = vectorToThree(childPort.direction).normalize();
 
     const { gap, shift, raise_, rotation, turn, tilt } = connection;
     const rotationRad = THREE.MathUtils.degToRad(rotation);
     const turnRad = THREE.MathUtils.degToRad(turn);
     const tiltRad = THREE.MathUtils.degToRad(tilt);
 
-    const targetDirection = parentDirection.clone();
-    const sourceDirection = childDirection.clone().negate();
+    const reverseChildDirection = childDirection.clone().negate();
 
-    const alignQuat = new THREE.Quaternion().setFromUnitVectors(sourceDirection, targetDirection);
-    const alignMatrix = new THREE.Matrix4().makeRotationFromQuaternion(alignQuat);
+    let alignQuat: THREE.Quaternion;
+    if (new THREE.Vector3().crossVectors(parentDirection, reverseChildDirection).length() < 0.01) { // Parallel vectors
+        // Idea taken from: // https://github.com/dfki-ric/pytransform3d/blob/143943b028fc776adfc6939b1d7c2c6edeaa2d90/pytransform3d/rotations/_utils.py#L253
+        if (Math.abs(parentDirection.z) < TOLERANCE) {
+            alignQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI); // 180* around z axis
+        } else {
+            // 180* around cross product of z and parentDirection
+            const axis = new THREE.Vector3(0, 0, 1).cross(parentDirection).normalize();
+            alignQuat = new THREE.Quaternion().setFromAxisAngle(axis, Math.PI);
+        }
+    }
+    else {
+        alignQuat = new THREE.Quaternion().setFromUnitVectors(reverseChildDirection, parentDirection);
+    }
 
-    const parentXAxis = new THREE.Vector3();
-    const parentYAxis = new THREE.Vector3();
-    const parentZAxis = new THREE.Vector3();
-    parentMatrix.extractBasis(parentXAxis, parentYAxis, parentZAxis);
+    const directionT = new THREE.Matrix4().makeRotationFromQuaternion(alignQuat);
 
-    const rotationQuat = new THREE.Quaternion().setFromAxisAngle(parentDirection, -rotationRad);
+    const yAxis = new THREE.Vector3(0, 1, 0);
+    const parentPortQuat = new THREE.Quaternion().setFromUnitVectors(yAxis, parentDirection);
+    const parentRotationT = new THREE.Matrix4().makeRotationFromQuaternion(parentPortQuat);
 
-    const turnAxis = new THREE.Vector3().crossVectors(parentXAxis, parentDirection).normalize();
-    const turnQuat = new THREE.Quaternion().setFromAxisAngle(turnAxis, turnRad);
+    const gapDirection = new THREE.Vector3(0, 1, 0).applyMatrix4(parentRotationT);
+    const shiftDirection = new THREE.Vector3(1, 0, 0).applyMatrix4(parentRotationT);
+    const raiseDirection = new THREE.Vector3(0, 0, 1).applyMatrix4(parentRotationT);
+    const turnAxis = new THREE.Vector3(0, 0, 1).applyMatrix4(parentRotationT);
+    const tiltAxis = new THREE.Vector3(1, 0, 0).applyMatrix4(parentRotationT);
 
-    const tiltQuat = new THREE.Quaternion().setFromAxisAngle(parentXAxis, tiltRad);
+    let orientationT = directionT.clone();
 
-    const totalRotationQuat = new THREE.Quaternion()
-        .multiplyQuaternions(tiltQuat, turnQuat)
-        .multiply(rotationQuat)
-        .multiply(alignQuat);
+    const rotateT = new THREE.Matrix4().makeRotationAxis(parentDirection, -rotationRad);
+    orientationT.premultiply(rotateT);
 
-    const orientationMatrix = new THREE.Matrix4().makeRotationFromQuaternion(totalRotationQuat);
-    const childLocalMatrix = new THREE.Matrix4().makeTranslation(childPoint.x, childPoint.y, childPoint.z).invert();
-    const gapVec = parentDirection.clone().multiplyScalar(gap);
-    const shiftVec = parentXAxis.clone().multiplyScalar(shift);
-    const raiseVec = turnAxis.clone().multiplyScalar(raise_);
-    const displacement = new THREE.Vector3().add(gapVec).add(shiftVec).add(raiseVec);
-    const parentPortWorldPos = parentPoint.clone().applyMatrix4(parentMatrix);
-    const childOriginWorldPos = parentPortWorldPos.clone().add(displacement);
-    const translationMatrix = new THREE.Matrix4().makeTranslation(
-        childOriginWorldPos.x,
-        childOriginWorldPos.y,
-        childOriginWorldPos.z
-    );
-    const finalChildMatrix = new THREE.Matrix4().multiplyMatrices(translationMatrix, orientationMatrix);
-    const finalMatrix = new THREE.Matrix4().multiplyMatrices(finalChildMatrix, childLocalMatrix);
+    turnAxis.applyMatrix4(rotateT);
+    tiltAxis.applyMatrix4(rotateT);
+
+    const turnT = new THREE.Matrix4().makeRotationAxis(turnAxis, turnRad);
+    orientationT.premultiply(turnT);
+
+    const tiltT = new THREE.Matrix4().makeRotationAxis(tiltAxis, tiltRad);
+    orientationT.premultiply(tiltT);
+
+    const centerChildT = new THREE.Matrix4().makeTranslation(-childPoint.x, -childPoint.y, -childPoint.z);
+    let transform = new THREE.Matrix4().multiplyMatrices(orientationT, centerChildT);
+
+    const gapTransform = new THREE.Matrix4().makeTranslation(gapDirection.x * gap, gapDirection.y * gap, gapDirection.z * gap);
+    const shiftTransform = new THREE.Matrix4().makeTranslation(shiftDirection.x * shift, shiftDirection.y * shift, shiftDirection.z * shift);
+    const raiseTransform = new THREE.Matrix4().makeTranslation(raiseDirection.x * raise_, raiseDirection.y * raise_, raiseDirection.z * raise_);
+
+    const translationT = raiseTransform.clone().multiply(shiftTransform).multiply(gapTransform);
+    transform.premultiply(translationT);
+    const moveToParentT = new THREE.Matrix4().makeTranslation(parentPoint.x, parentPoint.y, parentPoint.z);
+    transform.premultiply(moveToParentT);
+    const finalMatrix = new THREE.Matrix4().multiplyMatrices(parentMatrix, transform);
 
     return matrixToPlane(finalMatrix);
 };
@@ -844,7 +873,7 @@ export const flattenDesign = (design: Design, types: Type[]): Design => {
                 }
                 const childPlane = roundPlane(computeChildPlane(parentPlane, parentPort, childPort, connection));
                 piecePlanes[childPiece.id_] = childPlane;
-                const direction = semioVectorToThree({ x: connection.x, y: connection.y, z: 0 }).normalize();
+                const direction = vectorToThree({ x: connection.x, y: connection.y, z: 0 }).normalize();
                 const childCenter = {
                     x: round(parentPiece.center!.x + connection.x + direction.x),
                     y: round(parentPiece.center!.y + connection.y + direction.y),

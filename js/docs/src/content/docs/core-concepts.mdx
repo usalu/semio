@@ -1,138 +1,179 @@
 ---
-title: 👋 Semio Principles
-description: 📝 Learn more about semio and create the logo 🖼️
+title: 👋 Semio Principles  
+description: 📝 Learn more about Semio’s core ideas and why they matter for modular design tools 🖼️  
 ---
+
 import { Tabs, TabItem, Card, Aside } from "@astrojs/starlight/components";
 
+# 📃 Core Principles of Semio
 
-## 📃 Principles
+Semio is built around 10 key principles that guide how it's developed, used, and extended
 
-semio is built on top of the following premises:
+- **[🔓 Open over closed](#open-over-closed)** — Futureproof technology is built together, not behind walls 🤝  
+- **[🖱️ Manual over automated](#manual-over-automated)** — Technology should support design, not replace it 🪛  
+- **[👥 Team over individual](#team-over-individual)** — Collaboration needs interfaces, not silos 🧩  
+- **[♻️ Composable over disposable](#composable-over-disposable)** — Complex systems are made of simple parts 🧠  
+- **[🧪 Implementation over specification](#implementation-over-specification)** — Learn by building ✍️  
+- **[🔀 Integration over generality](#integration-over-generality)** — Extend existing tools instead of replacing them 🚀  
+- **[🔨 Simple over complex](#simple-over-complex)** — Start simple, let complexity emerge 🌱  
+- **[📖 Example over theory](#example-over-theory)** — Show, don’t tell 🗼  
+- **[🏛️ Architecture over modeling](#architecture-over-modeling)** — Focus on structure, not just form ✏️  
+- **[🏗️ Prefab over custom](#prefab-over-custom)** — Reuse enables better ecology and economy 📉 
 
-- **[🔓 Open over closed](#open-over-closed):** Futureproof technology needs to be developed together 🤝
-- **[🖱️ Manual over automated](#manual-over-automated):** Design supported and not derived by technology 🪛
-- **[👥 Team over individual](#team-over-individual):** To collaborate efficiently we need interfaces 🧩
-- **[♻️ Composable over disposable](#composable-over-disposable):** Even the most complex systems can be thought of parts 🧠
-- **[🧪 Implementation over specification](#implementation-over-specification):** Hands-on instead of head-first ✍️
-- **[🔀 Integration over generality](#integration-over-generality):** We don't want to replace existing tools but extend them 🚀
-- **[🔨 Simple over complex](#simple-over-complex):** Complexity arises on it's own 🌱
-- **[📖 Example over theory](#example-over-theory):** To avoid building an ivory tower 🗼
-- **[🏛️ Architecture over modeling](#architecture-over-modeling):** We need more architecture-focused toolchains ✏️
-- **[🏗️ Prefab over custom](#prefab-over-custom):** For economic and ecologic solutions 📉
+---
 
-### 🔓 Open over closed
+<a id="open-over-closed"></a>
+### [🔓 Open over closed](#open-over-closed)
 
-:::note[Did you know?]
-semio stands on the shoulder of giants 🏙️ It is built with cutting-edge open-source technology 🌍
+Semio is built entirely on open-source foundations because lasting innovation grows in the open 🌍
+
+:::note[Did you know?]  
+Semio stands on the shoulders of giants 🏙️ — built using cutting-edge open technologies:
 | Tool | Users | Followers | Contributors |
 |------|-------|-----------|--------------|
-| [User Interface](https://github.com/facebook/react) | 27,800,000 | 234,000 | 1,698 |
-| [3D Engine](https://github.com/mrdoob/three.js/) | 465,000 | 105,000 | 1,977 |
+| [React (UI)](https://github.com/facebook/react) | 27,800,000 | 234,000 | 1,698 |
+| [three.js (3D)](https://github.com/mrdoob/three.js/) | 465,000 | 105,000 | 1,977 |
 :::
 
-The reason why computer science is so successful is because all of its core is open-source 🤝
+Semio is built entirely on open-source foundations because lasting innovation grows in the open 🌍
 
-Big IT-companies have realized that an open core is the best way for an industry to grow 📈
+Modern software runs on shared infrastructure 🤝 Instead of locking users in 🔒, big tech thrives by opening the core and building services on top 🧱
 
-The monetization shouldn't happen on the core technology but on the services around them 💰
+We don’t pay for libraries or APIs 🛠️ we pay for:
 
-As customers we pay for:
+☁️ Cloud platforms and integrations⚙️ Productivity-enhancing features🔒 Secure and private workspaces🤝 Collaboration environments
 
-- Shared collaboration environments
-- Productivity enhancing features
-- Private working spaces
-- Integration with company-specific infrastructure
-- …
+The AEC industry made the mistake of competing on closed cores 🧱 with open extensions 🔓 that lock users in ❌
 
-We don't care about the underlying:
+Semio does the opposite 🌀 The core is open-source 🔓 and the extensions can be commercial 💼
 
-- Libraries
-- Engines
-- APIs
-- CLIs
-- SDKs
-- …
+This lets the industry grow together 🌱 while companies can still stay profitable 💰
 
-Software companies of the Architecture-Engineering-Construction (AEC) industry have made the mistake to compete on the core technology instead of the services around them ❌
 
-They have built closed-source core technology with open-source extensions to lock you into their platform 🔒
-
-That's why semio is built the other way around 🔄️
-
-The core technology is open-source and the extensions are closed-source 🔓
-
-This way the industry can grow together by sharing the effort of building the core technology and companies that offer cloud solutions, ai features, … can still be profitable 📈
-
-{/* prettier-ignore */}
-<Aside type="tip" title="Are you curious what the world runs on?">
+<Aside type="tip" title="What does the world run on?">
   <Tabs>
-    <TabItem label="Operating System">
-      Most servers in the world run on [Kubernetes](https://kubernetes.io) which runs containers with [Docker](https://www.docker.com) that uses mainly [Linux](https://www.linux.org) 🐧
+    <TabItem label="Operating Systems">
+      Most servers run on [Kubernetes](https://kubernetes.io), with [Docker](https://www.docker.com), powered by [Linux](https://www.linux.org) 🐧
     </TabItem>
     <TabItem label="Version Control">
-      [GitHub](https://github.com), [GitLab](https://gitlab.com) and [Bitbucket](https://bitbucket.org) all rely on a linux tool [git](https://git-scm.com) 🔨
+      Tools like [GitHub](https://github.com), [GitLab](https://gitlab.com), and [Bitbucket](https://bitbucket.org) all rely on [Git](https://git-scm.com) 🔨
     </TabItem>
     <TabItem label="User Interfaces">
-      {/* TODO: Doublecheck listing and add company-internal link for every company https://jaydevs.com/top-companies-using-react-js/ */}
-      [React](https://react.dev) was originally only developed by [Facebook](https://github.com/facebook/react) but nowadays 
-      [Netflix](https://netflixtechblog.com/tagged/react), 
-      Airbnb, 
-      Paypal, 
-      Uber, 
-      Walmart,
-      Twitch,
-      BBC,
-      Tesla,
-      Dropbox, 
-      Salesforce,
-      … use it to power their systems ⚡
+      [React](https://react.dev) started at Facebook and is now used by  
+      [Netflix](https://netflixtechblog.com/tagged/react), Airbnb, Paypal, Uber, Walmart, Twitch, BBC, Tesla, Dropbox, Salesforce ⚡
     </TabItem>
     <TabItem label="Databases">
-      [PostgreSQL](https://www.postgresql.org), 
-      [MySQL](https://www.mysql.com),
-      [MariaDB](https://mariadb.org), 
-      [SQLite](https://www.sqlite.org), 
-      [MongoDB](https://www.mongodb.com), 
-      [Redis](https://redis.io), 
-      [Cassandra](https://cassandra.apache.org), 
-      [Neo4j](https://neo4j.com), 
-      [InfluxDB](https://www.influxdata.com), 
-      … have to be open for trust 👀
+      Platforms trust open databases like  
+      [PostgreSQL](https://www.postgresql.org), [MySQL](https://www.mysql.com), [MongoDB](https://www.mongodb.com), [Redis](https://redis.io) 👀
     </TabItem>
     <TabItem label="Programming Languages">
-      [Python](https://www.python.org), 
-      [Java](https://www.java.com), 
-      [JavaScript](https://www.javascript.com), 
-      [C++](https://isocpp.org), 
-      [C#](https://learn.microsoft.com/en-us/dotnet/csharp/), 
-      [Go](https://go.dev), 
-      [Rust](https://www.rust-lang.org), 
-      [PHP](https://www.php.net), 
-      … have all open specification and implementations 🐍
+      Languages like [Python](https://www.python.org), [JavaScript](https://www.javascript.com), [Java](https://www.java.com), [Rust](https://www.rust-lang.org) are all open by default 🐍
     </TabItem>
   </Tabs>
 </Aside>
 
-### 🖱️ Manual over automated
 
-### 👥 Team over individual
 
-### ♻️ Composable over disposable
+<a id="manual-over-automated"></a>
+### [🖱️ Manual over automated](#manual-over-automated)
 
-### 🛠️ Implementation over specification
+Automation should assist, not replace, the designer 🪛 In Semio, the goal is to give users full control 🕹️ over how things are configured, composed, and connected 🧩
 
-### 🔀 Integration over generality
+You can use automation to speed up repetitive tasks ⏩  but it should never override your creative intent 🎨
 
-### 🧩 Simple over complex
+This principle keeps design meaningful and intentional 🎯 It supports workflows where technology adapts to your design decisions 🧠  not the other way around 🔄
 
-### 📖 Example over theory
+---
 
-### 🏛️ Architecture over modeling
+<a id="team-over-individual"></a>
+### [👥 Team over individual](#team-over-individual)
 
-### 🏗️ Prefab over custom
+Good tools empower collaboration 🤝 Semio is built for teams: it’s modular 🧱, interface-based 🎛️, and easy to share 📤
 
-## 🤨 When should I design with semio?
+Different people can work on different parts of a system. Components, connections, and data without stepping on each other’s toes 👣
 
+By supporting team-based workflows 👥, Semio enables more diverse ideas 🌈, faster development 🚀, and scalable complexity 🧠
+
+---
+
+<a id="composable-over-disposable"></a>
+### [♻️ Composable over disposable](#composable-over-disposable)
+
+Modular thinking lies at the heart of Semio 🧩 Every part you create is meant to be reused, recombined, or repurposed 🔁 not thrown away 🗑️
+
+Systems should be built like LEGO 🧱  from pieces that can be taken apart and rearranged 🔄
+
+This makes your work more flexible 🔀, durable 🏗️, and understandable 📚 Instead of rebuilding, you simply reorganize
+
+---
+
+<a id="implementation-over-specification"></a>
+### [🧪 Implementation over specification](#implementation-over-specification)
+
+Ideas come to life through making ✍️ Semio encourages you to build early, test often, and refine through direct interaction 🔬
+
+Rather than getting stuck in abstract planning 🧾 or overly detailed specs 📐, you move forward by trying things out 🧪
+
+Design becomes a living process 🌱  fast, iterative, and grounded in real feedback 🔁
+
+---
+
+<a id="integration-over-generality"></a>
+### [🔀 Integration over generality](#integration-over-generality)
+
+Semio is not here to replace your tools ❌ it’s here to connect them 🔌
+
+Whether you use Rhino 🦏, Blender 🌀, Unreal 🕹️, or something else entirely, Semio integrates with what’s already working ⚙️
+
+This principle avoids the trap of creating “yet another platform” 🧱 and instead promotes interoperability 🔄 and low-friction workflows 🧰
+
+---
+
+<a id="simple-over-complex"></a>
+### [🔨 Simple over complex](#simple-over-complex)
+
+Simplicity is powerful 💡 Semio encourages you to start with minimal building blocks 🧱 that are easy to understand and use 🎯
+
+From there, complexity emerges naturally 🌱 as you layer, connect, and evolve the system over time 📈
+
+Rather than overengineering upfront 🛠️, you design just enough — and let your system grow with you 🌿
+
+---
+
+<a id="example-over-theory"></a>
+### [📖 Example over theory](#example-over-theory)
+
+Semio emphasizes learning by doing 🛠️ Every feature is documented with clear, working examples ✅ that you can remix and reuse ♻️
+
+Instead of long theoretical explanations 📚, you get templates, sketches, and proven patterns 🧩
+
+This makes it easier for new users to get started 🧑‍💻 and for experienced users to contribute meaningfully 💬
+
+---
+
+<a id="architecture-over-modeling"></a>
+### [🏛️ Architecture over modeling](#architecture-over-modeling)
+
+Semio focuses on structure, not just form 🏗️ It helps you define how parts relate, behave, and connect over time 🔗
+
+This is about more than just geometry 📐 it’s about designing systems that respond to rules, data, and interaction ⚙️
+
+You’re not just modeling shapes 🧊 you’re building logic, behavior, and relationships 🧠
+
+---
+
+<a id="prefab-over-custom"></a>
+### [🏗️ Prefab over custom](#prefab-over-custom)
+
+Not everything needs to be custom-built 🛠️ Semio encourages the use of prefabricated components 🧱 that can be adapted and reused 🔁
+
+This improves efficiency ⏱️, reduces waste 🗑️, and makes complexity manageable 🧠
+
+You don’t lose creativity 🎨 you just gain leverage 🔧
+
+---
+
+<a id="top"></a>
 
 
 

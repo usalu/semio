@@ -95,13 +95,13 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ name, nickname, d
         >
             <div ref={coreRef} id="core" className="flex flex-row items-stretch size-fit border-2 border-dark bg-light justify-between">
                 {inputs && <Params params={inputs || []} input={true} setHighlight={setHighlightHandler} extended={extended} highlight={highlight?.input ? highlight?.index : undefined} />}
-                <div className="bg-dark text-light text-lg font-bold" style={{ writingMode: 'vertical-rl' }}>
+                <div className="bg-dark text-light font-bold" style={{ writingMode: 'vertical-rl' }}>
                     <p className="w-full text-center rotate-180">{extended ? name : nickname}</p>
                 </div>
                 {outputs && <Params params={outputs || []} input={false} setHighlight={setHighlightHandler} extended={extended} highlight={highlight?.input ? undefined : highlight?.index} />}
             </div>
             {extended &&
-                <div id="description" className="bg-gray p-1">
+                <div id="description" className="bg-gray p-1 text-sm">
                     {highlight?.description || description}
                 </div>
             }
@@ -110,28 +110,45 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ name, nickname, d
 };
 
 interface GrasshopperCatalogueProps {
-    components: GrasshopperComponentProps[];
-}
+    [group: string]: {
+        [exposure: number]: GrasshopperComponentProps[];
+    };
+};
 
-const GrasshopperCatalogue: FC<GrasshopperCatalogueProps> = ({ components }) => {
+const GrasshopperCatalogue: FC<GrasshopperCatalogueProps> = (props) => {
+    // Sort group names alphabetically
+    const groups = Object.keys(props).sort();
     return (
-        // <Tabs className="w-full h-full">
-        //     <TabsList className="">
-        //         {components.map((component, index) => (
-        //             <TabsTrigger key={index} value={component.name}>{component.icon}</TabsTrigger>
-        //         ))}
-        //     </TabsList>
-        //     {components.map((component, index) => (
-        //         <TabsContent key={index} value={component.name}><GrasshopperComponent key={index} {...component} /></TabsContent>
-        //     ))}
-        // </Tabs>
-        <div className="flex flex-row flex-wrap gap-2 p-2 ">
-            {
-                components.map((component, index) => (
-                    <GrasshopperComponent key={index} {...component} />
-                ))
-            }
-        </div>
+        <Tabs className="w-full h-full" defaultValue={groups[0]}>
+            <TabsList>
+                {groups.map((group) => (
+                    <TabsTrigger key={group} value={group}>{group}</TabsTrigger>
+                ))}
+            </TabsList>
+            {groups.map((group) => {
+                const exposures = Object.keys(props[group]).sort((a, b) => Number(a) - Number(b));
+                return (
+                    <TabsContent key={group} value={group}>
+                        <Tabs className="w-full h-full" defaultValue={exposures[0]}>
+                            <TabsList>
+                                {exposures.map((exposure) => (
+                                    <TabsTrigger key={exposure} value={exposure}>{exposure}</TabsTrigger>
+                                ))}
+                            </TabsList>
+                            {exposures.map((exposure) => (
+                                <TabsContent key={exposure} value={exposure}>
+                                    <div className="flex flex-row flex-wrap gap-2 p-2">
+                                        {(props[group][Number(exposure)] as GrasshopperComponentProps[]).map((component: GrasshopperComponentProps, idx: number) => (
+                                            <GrasshopperComponent key={idx} {...component} />
+                                        ))}
+                                    </div>
+                                </TabsContent>
+                            ))}
+                        </Tabs>
+                    </TabsContent>
+                );
+            })}
+        </Tabs>
     );
 };
 

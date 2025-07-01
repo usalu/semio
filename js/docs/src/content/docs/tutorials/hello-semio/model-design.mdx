@@ -5,170 +5,156 @@ sidebar:
   order: 3
 ---
 
-🧱 This section shows how to use the brick molds you've built — your **Types** and **Variants** — to actually build something with them.
+This section shows how to **turn your brick molds** — the **Types** and **Variants** you’ve defined — into real, usable building blocks 🧱
 
-📐 As mentioned in *[Think in Semio]*, what you've made so far are just **blueprints** — molds that define the logic and shape of your bricks.  
-But a mold alone isn't a brick you can snap into place.
+As explained in *[Think in Semio]*, a Type is just a **blueprint**. It defines how a brick should look and behave — but it’s not a brick yet 📐
+
+To actually build a design, you need to create **Pieces** — the bricks made from your molds, ready to place, connect, and assemble 🧩
 
 ---
 
-## 🔖 Place Your Bricks (Model Pieces - Pcs)
+## 🔖 Place Your Bricks (Model Pieces – Pcs)
 
-🧩 Now it's time to **cast those molds** into real, usable bricks — called **Pieces**.  
-🎯 These are the actual building blocks you'll place, connect, and arrange in your design.
+Now it’s time to **turn your molds into actual bricks** — called **Pieces** 🧩  
+These are the elements you’ll place, move, and connect in your design 🎯
 
 ![📤 sketch drawing](/sketch-drawing-piece.png)
 
-When you model a Piece, you're telling Semio:  
-🧱 *"Cast this specific version of a brick mold (a Type and its Variant) to create an actual, usable brick."*
+When you create a Piece, you're telling Semio:  
+*"Take this specific mold (Type + Variant) and make a real, usable brick from it."* 🧱
 
 ---
 
-Each **Piece** automatically inherits everything defined in its mold:
+Each **Piece** automatically includes everything from its mold:
 
-- 🧱 **Geometry (Representation)**  
-  The shape from the Variant's assigned geometry file or model
+- **Geometry (Representation)** — the shape defined by the Variant’s geometry file 🧱  
+- **Ports** — the snap points and their directions from the Type ⚓  
+- **Semantic Data** — the Type name, Variant identity, and design role 🧠  
+- **Metadata** — any extra info like function, material, or tags 📄  
 
-- ⚓ **Ports**  
-  The snap points and directions from the mold
-
-- 🧠 **Semantic structure**  
-  Its Type name, Variant origin (if applicable), and how it behaves or connects within the design
-
-- 📄 **Metadata**  
-  Any design-relevant info added to the Type — such as function, material, or custom properties
-
-In other words: it carries everything you baked into the mold.
+In short: a Piece is a fully formed brick, based on the rules and shape you defined earlier 🔁
 
 ---
 
 ### 🆔 Name the Pieces
 
 Each Piece needs a unique name — its ID — so Semio can 🧭 track, 🔗 reference, and 🧩 connect it later on.
-Think of it as your brick’s personal label 🏷️
+Think of it as giving your brick a personal label 🏷️
 
-In this example, we name the Pieces based on the original Semio logo — using both color and position as references 🎨:
+In this example, we name the Pieces based on the Semio logo — using both **color** and **position** for clarity 🎨
 
-🟨 Yel → yellow piece on the left
+- 🟨 `Yel` → yellow piece on the left  
+- 🔴 `Red-T` → red piece at the top  
+- 🔴 `Red-R` → red piece on the right  
+- 🔵 `Blu-T` → blue piece at the top  
+- 🔵 `Blu-B` → blue piece at the bottom  
 
-🔴 Red-T → red piece at the top
+As always in Semio, naming is flexible 🔤  
+But a clear and consistent system makes your design easier to understand, build, and share 🧠
 
-🔴 Red-R → red piece on the right
-
-🔵 Blu-T → blue piece at the top
-
-🔵 Blu-B → blue piece at the bottom
-
-As always in Semio, naming is flexible 🔤 —
-but using a systematic and meaningful convention 🧠 helps make your design easier to understand, build, and share.
-
-
-> 💡 Think of it as putting a sticker on each brick in your box so you know exactly which one goes where.
+> 💡 It’s like putting a sticker on each LEGO brick so you always know which one goes where 🧱
 
 ---
 
 ### 🧬 Link to the Mold
 
-To actually model the Piece, Semio needs to know **which mold it came from**.  
-You do this by linking it to a specific **Type** and **Variant**:
+To model a Piece, Semio needs to know **which mold it’s made from** 🔗  
+That means linking it to a specific **Type** and **Variant**:
 
 - 🏷️ **Type name** → e.g. `'Profile'`  
-- 🔢 **Variant number** → e.g. `2`, `4`, or `5`
+- 🔢 **Variant number** → e.g. `2`, `4`, or `5`  
 
-👉 **Without this reference**, the Piece has no shape or logic — it won't know what to look like or how to connect.
-
+👉 Without this reference, the Piece has no identity — it won’t know what shape to take or how to connect ⚠️
 
 ---
 
 ##### 📐 Example from the Sketch
 
-In our example, the final **Design** includes five Pieces, built from three different Variants:
+In our example, the final **Design** includes five Pieces, built from **three different Variants**:
 
-- 2× Variant 2  
-- 1× Variant 4  
-- 2× Variant 5
+- 2× Variant `2`  
+- 1× Variant `4`  
+- 2× Variant `5`  
 
-We'll give each of these Pieces a unique ID, like so:
+We'll give each of these Pieces a **unique ID**, like so:
 
-| Variant | Piece IDs      |
-| ------- | -------------- |
-| `4`     | `Yel`            |
+| Variant | Piece IDs            |
+| ------- | -------------------- |
+| `4`     | `Yel`                |
 | `5`     | `Red-T`, `Red-R`     |
 | `2`     | `Blu-T`, `Blu-B`     |
 
-These are the actual bricks we'll be placing into our model.
+These are the **actual bricks** you'll be placing into your model 🧱
 
---- 
+---
 
-##### **🛠️ In Grasshopper**
+##### 🛠️ In Grasshopper
 
+Now that you understand what a Piece is, let's learn how to **cast them** using the Semio plugin in **Grasshopper** 🦗
 
-Now that you understand what a Piece is, let's learn how to actually **cast** them using the Semio plugin in Grasshopper.  
+As shown in the image, you’ll use the **Model Piece `Pce` component** and provide three key inputs:
 
-As shown in the image, you use the model Piece `Pce` component and provide three main inputs:
+1. 🆔 **Piece IDs** → Unique names for each brick (e.g. `Yel`, `Blu-B`)  
+2. 🔢 **Variant Numbers** → Tell Semio which Variant of the mold to use (e.g. `2`, `5`)  
+3. 🏷️ **Type Name** → The shared name of the mold (e.g. `'Profile'`)
 
-1. 🆔 **Piece IDs** — unique names for each individual brick (e.g. `Yel`, `Blu-B`)  
-2. 🔢 **Variant numbers** — telling Semio which version of the mold to use (e.g. `4`, `5`)  
-3. 🏷️ **Type name** — the shared name of the mold they all come from (e.g. `'Profile'`)
+Each row becomes a new **Piece**, named by its ID — like `Pce(Yel)` or `Pce(Red-R)` —  
+each one inherits geometry, ports, and semantic logic from its **Type** and **Variant** 🔁
 
-Each row of input becomes one new **Piece**, named after its ID — like `Pce(Yel)` or `Pce(Red-R)` —  
-each inheriting geometry, ports, and semantic structure from its parent mold
-
-🧱 Let’s start by modeling the first two Pieces from the sketch.
+🧱 Let’s start by modeling the first two Pieces from the sketch
 
 ![Model Piece Component](/model-piece-10Alpha.png)
 
-Once all five are complete, your model will look like this:
+Once all five Pieces are created, your model will look like this:
 
 ![Model Piece Component](/model-5pieces-10Alpha-V2.png)
 
+> ✅ Your bricks are now cast and ready  
+> Next step: **placing and connecting them** to build your final model 🔗
 
-> 🧱 Your bricks are now cast and ready. The next step will be placing and connecting them to build your model.
 
 ---
 
 ## 🔗 Connect the Bricks (Model Connections - Con)
 
-
-Now that you've placed your Pieces, it's time to tell semio how they connect. Think of this like giving the assembly instructions for snapping bricks together 🧱🧲
+Now that you've placed your **Pieces**, it's time to tell Semio how they connect 🔗  
+Think of this like writing the **assembly instructions** for snapping bricks together 🧲
 
 Each **Connection** says:  
-👉 "Connect this Port on one Piece to a Port on another Piece."
+👉 *"Connect this Port on one Piece to a Port on another Piece"*
 <br />
 
 ![📤 sketch drawing](/sketch-drawing-connections.png)
 
-### 🔀 Set Connection
 
+### 🧭 Set the Connection
 
+To create a connection, you need to define four values:
 
-
-To create a connection, you need to define four key values:
-
-1. **Connected Piece ID (CdPc)** – the ID of the piece you're snapping from (**From Piece**)  
-2. **Connected Piece Port ID (CdPo)** – the specific port on that piece you're connecting from (**From Port**)  
-3. **Connecting Piece ID (CgPc)** – the ID of the piece you're snapping to (**To Piece**)  
-4. **Connecting Piece Port ID (CgPo)** – the specific port on the other piece you're connecting to (**To Port**)
+1. 🆔 **Connected Piece ID (`CdPc`)** → the Piece you're connecting *from*  
+2. ⚓ **Connected Piece Port ID (`CdPo`)** → the Port you're connecting *from*  
+3. 🆔 **Connecting Piece ID (`CgPc`)** → the Piece you're connecting *to*  
+4. ⚓ **Connecting Piece Port ID (`CgPo`)** → the Port you're connecting *to*
 
 ---
 
-**That's it! Just tell Semio:**  
-**Connect this Port on this Piece → to that Port on that Piece.**
+Put simply:  
+➡️ **Connect this Port on this Piece → to that Port on that Piece**
+
 
 ---
 
 ##### 🧩 Example: Connecting Two Pieces
 
+🧱 Before snapping the full model together, let’s start small — by connecting the **first two bricks**.  
+We’ll connect Piece `Yel` to Piece `Red-T`, using their **west-facing Ports**.
 
-🧱 Before we snap the full model together, let’s start small — by connecting the first two bricks.
-We’ll connect Piece Yel to Piece Red-T, using their west-facing Ports.
-
-From the sketch, we see:
+From the sketch, we can tell:
 
 - Use the **`w` (west)** Port of `Yel`  
 - Connect it to the **`w` (west)** Port of `Red-T`
 
-**So the connection is written as:**  
+So the connection looks like this: 
 `Con(Yel:w → Red-T:w)`
 
 ![Connection Example](/mode-connection-grasshopper.png)
@@ -178,7 +164,7 @@ This tells Semio:
 
 ![Set Connection](/set-connection-2pcs-alpha.png)
 
-🧩 Once this first connection is in place, you can continue snapping all remaining bricks together using similar logic
+Once this first connection is in place, you can continue snapping all remaining bricks together using similar logic 🧩 
 
 ![Set Connection](/mode-connection-5pcs-grasshopper.png)
 
@@ -203,34 +189,31 @@ This tells Semio:
 ![Set Connection](/set-connection-all-pcs-alpha.png)
 
 
-:::note
-🔗 The number of Connections is always one less than the number of Pieces, because each Connection links two Pieces.
-So with 2 Pieces, you need 1 Connection — with 3 Pieces, 2 Connections — and so on.
-:::
-
----
-
 
 ### 🎯 Adjust Snap *(Optional Step)*
 
-When two Pieces are connected through Ports, Semio lets you fine-tune how the connected Piece is placed —  
-not by changing the Port itself, but by shifting or rotating the geometry that comes with it.
+When two Pieces are connected through Ports, Semio gives you control over **how the attached geometry is positioned** —  
+without changing the Port itself.
 
-These adjustments are relative to the orientation of the Port on the connected Piece — as originally defined in the Type (your mold).
+These adjustments are applied **relative to the orientation of the Port**, based on how it was defined in the mold (Type).
 
-📌 Use this when the geometry needs to land slightly beyond or offset from the Port point.
+📌 Use this when the geometry needs to be slightly offset — to float, shift, or align more precisely.
 
 ---
 
-#### 🔁 Moving (Translation)
+#### 🔁 Move (Translation)
 
-These are local movements based on the direction the Port was defined in:
+You can move the geometry in three local directions:
 
-- **Gap** → Creates a gap between two connected elements by pushing the Piece forward or backward along the Port's axis.
-- **Shift** → Shifts the Piece side to side, across the plane of the Port.
-  📐 Like nudging a LEGO brick left or right to align with studs underneath.
-- **Raise** → Raises the Piece up or down, perpendicular to the face it connects to.
-  🪜 Like lifting a brick slightly higher or lowering it onto the studs.
+- **Gap** ⬅️➡️ → Creates a space between two connected elements by pushing the Piece forward or backward along the Port's axis 
+  Ideal for separating elements or creating breathing room between parts
+
+- **Shift** ↔️ → Moves the Piece side to side, across the plane of the Port  
+  📐 Like nudging a LEGO brick left or right to line it up with studs underneath
+
+- **Raise** ⬆️⬇️ → Lifts or lowers the Piece vertically, perpendicular to the face it connects to  
+  🪜 Like lifting a brick slightly higher or lowering it onto the studs
+  
 
   ![Connection Adjustment](/translation-parameter.gif)
 
@@ -239,12 +222,12 @@ These are local movements based on the direction the Port was defined in:
 
 #### 🔄 Rotating (Orientation)
 
-- **Rotate** → Rotates the Piece flat, around the Port's main vector.
-  🧭 Like spinning a round LEGO tile in place.
-- **Turn** → Turns the Piece sideways, rotating it horizontally.
-  🔄 Like twisting a LEGO hinge side to side.
-- **Tilt** → Tilts the Piece forward or backward, around a vertical axis.
-  🤸 Like tilting a ramp or slope brick up or down.
+- **Rotate** 🔃  → Rotates the Piece flat, around the Port's main vector
+  🧭 Like spinning a round LEGO tile in place
+- **Turn** 🔄 → Turns the Piece sideways, rotating it horizontally
+  🌀 Like twisting a LEGO hinge side to side
+- **Tilt** 🤸 → Tilts the Piece forward or backward, around a vertical axis
+  🎢 Like tilting a ramp or slope brick up or down
 
   ![Connection Adjustment](/Rotation-parameter.gif)
 
@@ -256,9 +239,12 @@ As we can see, the two Pieces we connected earlier don’t align exactly as show
 ![📤 sketch drawing](/sketch-drawing-45.png)
 <br />
 This is where the optional step of adjusting the snap comes in 🛠️
-Here is how to use them to fine-tune the position and rotation of a Piece after it snaps.
 
+Semio lets you fine-tune the position of a connected Piece after snapping 🧲  
+You’re not changing the Port itself ⚓  
+Instead, you're offsetting the **geometry** that comes with it 📐
 
+<br />
 ![Set Connection](/set-connection-2pcs.gif)
 
 
@@ -267,12 +253,21 @@ Here is how to use them to fine-tune the position and rotation of a Piece after 
 ---
 
 
-##### ➕ Connecting the rest of the Pieces
+##### ➕ Connecting the Rest of the Pieces
 
-Once i and L1 are correctly aligned, we can continue connecting the rest of the Pieces ➕
-Following the sketch, each new Piece is snapped to the previous one using their matching Ports — adjusting alignment when needed
-🌀 If a connected Piece isn’t oriented properly, you can simply rotate it into position. Semio allows per-piece rotation without breaking the logic
-🔗 And thanks to Semio’s chain behavior, when you move or rotate one Piece, all the connected Pieces after it update automatically
+Once `i` and `L1` are correctly aligned ➡️  
+you can continue connecting the remaining Pieces one by one ➕
+
+📌 Just follow the sketch:  
+Each new Piece is snapped to the previous one using their matching **Ports** ⚓  
+— and adjusted as needed to match the layout.
+
+🌀 If a connected Piece isn’t facing the right way,  
+you can **rotate it individually** — Semio allows per-piece rotation without breaking the connection logic 🔄
+
+🔗 And thanks to Semio’s **chain behavior**,  
+when you move or rotate one Piece, all the connected Pieces after it will **update automatically** 💫
+
 
 ![Set Connection](/set-connection-3pcs.gif)
 
@@ -280,78 +275,91 @@ Following the sketch, each new Piece is snapped to the previous one using their 
 
 ---
 
-##### 🧠 Port Placement vs. Adjustment
+:::note
+📌 You can place Ports exactly where the geometry should land — or adjust the Piece after snapping using Gap, Shift, Raise, or Rotate.  
+emio supports both strategies — choose what fits your design logic best 🧱✨
+:::
 
-You can often skip manual adjustments by placing Ports **exactly where the geometry should land**  
-But when working with Variants or non-aligned shapes, small transformations give you added flexibility
-
-Keeping Port positions consistent across Variants makes your Types easier to reuse and align
-
-> **Semio supports both strategies** — place Ports precisely, or adjust Pieces after snapping  
-> 🧱 Just like LEGO: studs cover the whole surface, but you only use the ones that fit your logic
 
 
 ---
 
 ## 🏗️ Build the Design (Model Design - Dsn)
 
-Now that you've created your **Pieces** and defined how they connect using **Connections**, it's time to assemble everything into a complete **Design** — the final model you want to build.
+Now that you've created your **Pieces** and defined their **Connections**, it's time to bring them all together into a final **Design** 🧰
 
-##### 🧩 What is a Design?
 
-A **Design** in Semio is the full set of instructions for your model.  
-It’s the final assembly where you place specific Pieces and connect them using logic — not just forming geometry, but encoding meaning and relationships.
+### 🧩 What is a Design?
 
-🧱 Think of it as your finished LEGO model — built from smart bricks, arranged by intent.  
-This is where everything comes together into a structured system.
+
+
+A **Design** in Semio is your full model — created by snapping together specific **Pieces** 🧱 using their **Connections** 🔗
+
+It doesn’t just describe geometry 👁️ — it defines how each part fits, aligns, and works within the system 🧠  
+You're building not just a shape, but a **smart, modular structure** 🧬
+
+🧱 Think of it like a finished LEGO build:  
+You’re not just stacking bricks — you’re creating a model where every part has a **role** 🎭, a **position** 📍, and a **purpose** 🎯
+
 
 
 ---
 
 ### 🛠️ Assembling the Design
 
-To create your Design in semio (for example, in Grasshopper), use the `Model Design` component. You'll provide three main inputs:
+To build your Design in Semio (e.g. in Grasshopper), you’ll use the `Model Design` component.  
+This is where you **bring together all the Pieces and Connections** to form your complete model 🧩
 
-1. **Design Name** (Dn) : 
-   Give your model a unique name, like `"Spaceship"` or `"Logo Example"`.
+You’ll provide three main inputs:
 
-2. **Pieces** (Pcs) :
-   Pass in the list of Pieces you've created — each one is an instance of a Variant, with its own ID.
+1. **Design Name** (`Dn`) 🏷️  
+   A unique name for your model — like `"Logo Example"` or `"Spaceship"`.
 
-3. **Connections** (Con) :
-   Pass in the list of Connections — each one describes how two Pieces are snapped together via their Ports.
+2. **Pieces** (`Pcs`) 🧱  
+   A list of the Pieces you’ve created — each one linked to a Type, Variant, and unique ID.
+
+3. **Connections** (`Con`) 🔗  
+   A list of the snapping rules — telling Semio how the Pieces are connected through their Ports.
+
+---
+
 
 **Example:**
 
 ![Model Design Example](/model-design.png)
+
 
 ---
 ## ⚙️ Workflow Mechanics 
 
 
 Now that we've covered the core concepts of Semio, let's take a closer look at how the components actually work —  
-and explore the key features of the Semio workflow inside Grasshopper.
+and explore the key features of the Semio workflow inside Grasshopper
 
 ### 🛠️ Grasshopper Workflow
 
-Semio doesn’t change **how** Grasshopper works — it changes **what** you’re working with..
-You're not wiring geometry anymore — you're wiring **design intent**
-- 🧱 **Types** – brick molds with meaning, not just shapes  
-- 🧩 **Pieces** – placed bricks that follow system logic   
-- 🔗 **Connections** – rules that control how elements relate  
-- 🧰 **Designs** – full assemblies of smart, connected pieces 
+Semio doesn’t change **how** Grasshopper works — it changes **what** you’re working with.  
+You’re no longer just wiring geometry — you’re wiring **design intent** 💡
 
-This shift lets you build not just geometry — but structured, adaptable systems
+- **Types** 🧱 – Brick molds with meaning, not just shapes  
+- **Pieces** 🧩 – Placed bricks that follow system logic  
+- **Connections** 🔗 – Rules that control how elements relate  
+- **Designs** 🧰 – Full assemblies of smart, connected pieces
+
+This shift lets you create not just geometry — but structured, adaptable systems 🧠
 
 ---
 
-Semio components behave just like regular Grasshopper components 🧩:
+Semio components behave just like regular Grasshopper components 🧩
 
-- 📋 You still use **lists** and  **data trees**  
+- 📋 You still work with **lists** and **data trees**  
 - 🔢 Items are matched by **index** or **branch**
 
-If you want to set something like a **gap** ↔️ or **rotation** 🔄, just provide a matching list of values:  
-Each value will apply to the corresponding item in the list of Connections or Pieces 🔗
+Want to set a **gap** ⬅️➡️ or a **rotation** 🔁?  
+Just provide a matching list of values — each one applies to the corresponding item in your list of **Connections** or **Pieces**.
+
+---
+
 
 ---
 
@@ -401,46 +409,66 @@ Only the inputs you change will be updated — everything else stays exactly as 
 
 ---
 ### 🧪 Example Use Case
+<br />
 
-#### 🧩 Modify a Piece  
+#### 🧩 Modify a Piece
 
-→ You can modify **any aspect** of a Piece — like its placement, name, or other construction parameters   
-by feeding its `Pc` output back into a new `Model Piece` component 
-semio overrides only what you redefine while keeping the rest intact.
+You can modify **any aspect** of a Piece — such as its **name**, **placement**, or other construction parameters by feeding its `Pc` output back into a new `Model Piece` component 🧩
 
-_E.g. In the Hello Semio logo, flipping the first Piece by rotating its plane causes all connected Pieces to follow — since they’re linked._
+Semio will only override the inputs you change — everything else stays exactly the same 🎯
+
+> _E.g. In the "Hello Semio" logo example, rotating the first Piece flips all connected Pieces as well — because they’re linked logically_  
+_
 
 
   ![Reconstruct Piece](/reconruct-piece-2.png)
 
   ![Reconstruct Piece](/reconruct-piece.png)
 
-#### 🔗 Adjust a Connection  
+#### 🔗 Adjust a Connection
 
-→ Plug the `Cn` output from the **Model Connection** component back into a new **Model Connection** component 🔁  
-to **update the transformation or rotation** parameters 🔄 — Semio will override only the values you redefine, while keeping the rest untouched.
+You can adjust any **transformation or rotation parameters** of a Connection by  
+plugging the `Cn` output back into a new `Model Connection` component 🔁
+
+Semio will only update the values you change — all other settings will remain as they were 🔒  
+This makes it easy to fine-tune how two Pieces are connected without rebuilding the whole logic 🔧
+
+> _E.g. You can change the gap, shift, or rotation of an existing Connection, and all downstream geometry will update automatically._
+
 
 
   ![Reconstruct Con](/reconstruct-connection.png)
   ![Reconstruct Con](/reconstruct-connection-2.png)
   ![Reconstruct Con](/reconstruct-connection-3.png)
 
-#### 🧱 Update a Type  
-→ Feed the `Ty` output from `Model Type` back into the same component to update the  
-**Representations**, **Ports**, or **metadata** of a Type.  
-Only the changed inputs are overwritten.
+#### 🧱 Update a Type
 
-_E.g. Swapping a simplified geometry file for a detailed one, or updating tags like material or category._
+You can update a **Type** by feeding its `Ty` output back into the same `Model Type` component 🔁  
+This lets you modify its **Representation**, **Ports**, or **metadata** — without changing anything else.
+
+> _E.g. Swapping a simplified geometry file for a detailed one, or updating tags like material or category._
+
 
 ---
 
-#### 🧰 Refactor a Design  
-→ Use the `Ds` output from `Model Design` as input again to update the **Design name**,  
-reorganize components, or rebuild part of the structure.
+#### 🧰 Refactor a Design
 
-_E.g. Renaming a layout or modifying how a few bricks are connected — without touching the rest._
+To modify a full **Design**, feed its `Ds` output into a new `Model Design` component 🔁  
+You can update the **Design name**, reorganize the structure, or tweak how certain Pieces are connected.
 
-##### 🖼️ What Happens Next?
+> _E.g. Renaming a layout, replacing a few bricks, or adjusting a connection — without touching the rest._
 
-Once you've built your Design, you can visualize it using the `Preview Design` component (see the next page). This will render your assembled model, showing all the Pieces in their correct positions and how they're connected.
+---
 
+#### 🖼️ What Happens Next?
+
+To **see** your model, plug everything into the `Preview Design` component 👀  
+It displays all your Pieces in place — fully connected, correctly oriented, and ready to go 🧱
+
+
+:::note
+In Semio, nothing is visualized automatically
+
+This logic stays abstract until you pass it to the `Show Design` component —  
+only then is everything **combined and visualized** as a complete model
+:::
