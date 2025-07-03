@@ -58,8 +58,12 @@ export default defineConfig({
             },
             {
                 label: '📝 Tutorials',
-                autogenerate: { directory: 'tutorials' }
-
+                items: [
+                    {
+                        label: '👋 Hello semio',
+                        autogenerate: { directory: 'tutorials/hello-semio' }
+                    }
+                ]
             },
             {
                 label: '🔀 Integrations',
