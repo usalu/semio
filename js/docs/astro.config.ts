@@ -13,7 +13,7 @@ export default defineConfig({
         title: {
             en: 'semio docs',
         },
-        tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 4 },
+        // tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },
         defaultLocale: 'root',
         locales: {
             root: {
@@ -44,17 +44,16 @@ export default defineConfig({
                         label: '🥇 Intro',
                         items: [
                             'intro',
-                            'why-semio',
+                            'design-information-modeling',
                             'think-in-semio',
-                            'core-concepts',
+                            'kit-of-parts-architecture',
                         ],
                     },
-                    'toolkit',
                     'installation',
-                    'starter'
+                    'starter',
                 ],
                 translations: {
-                    'de': '🚀 Erste Schritte',
+                    'de': 'Erste Schritte',
                 },
             },
             {

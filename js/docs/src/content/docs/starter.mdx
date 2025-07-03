@@ -9,43 +9,41 @@ description: 📝 Jump right into action with semio 🎛️
 {/* - Minimum amount of components: (Model Representation), Model Port, Model Type, (Model Piece), (Model Connection), (Model Design), Show Design */}
 
 import { Steps, FileTree, Aside } from "@astrojs/starlight/components";
-import { File, Sketchpad } from "@semio/js";
-
-
+import { File } from "@semio/js";
 
 {/* prettier-ignore */}
-{/* <div className="pt-2">
+{/* <div class="flex flex-col sm:flex-row gap-4 justify-center h-[400px] sm:h-[300px]">
 
-  <Sketchpad client:load />
+  <Model
+    client:load
+    src="/colorful-sphere.glb"
+    environment="/schlenker-shed.hdr"
+  />
+  <Model
+    client:load
+    src="/pattern-sphere.glb"
+    environment="/schlenker-shed.hdr"
+  />
 </div> */}
 
 {/* prettier-ignore */}
-{/* <File client:load src="../../../../../examples/geometry/representations/colorful-sphere.glb"/> */}
+{/* ## ✏️ sketchpad
 
-{/*## 🦗 Grasshoper */}
+<div className="pt-2">
+  <Sketchpad client:load />
+</div>
+*/}
 
-## 👋 Your First Semio Sketch
+{/* prettier-ignore */}
+{/* <Model client:load src="../../../../../examples/geometry/representations/colorful-sphere.glb"/> */}
 
-This is your “Hello World” moment in Semio — but with geometry 🔧✨
-
-You’ll load a small modular system and see how it comes together using **Ports** and **Connections** 🧩  
-No need to understand everything yet 
-just explore, adjust, and play around with it 🎮  
-
-We’ll explore the example using the **Semio Grasshopper plugin** 🦗  
-So make sure you’ve got **Semio already installed** before jumping in ✅
-
-
-<Aside type="caution">
-  You need the latest version `5.3.0-beta` of semio Grasshopper to run this
-  example ▶️
-</Aside>
+## 🦗 Grasshoper
 
 <Steps>
 
-1. #### [Download the example file `starter.gh`](https://raw.githubusercontent.com/usalu/geometry/starter/starter.gh) ⬇️
+1. [Download the example file `starter.gh`](https://raw.githubusercontent.com/usalu/geometry/starter/starter.gh) ⬇️
 
-2. #### Open the `starter.gh` file 📂
+2. Open the `starter.gh` file 📂
 
    In Grasshoper you should see:
    ![Definition](../../../../../assets/images/starter-grasshopper.png)
@@ -53,7 +51,7 @@ So make sure you’ve got **Semio already installed** before jumping in ✅
    In Rhino you should see:
    ![Preview](../../../../../assets/images/starter-grasshopper-preview.png)
 
-3. #### Change the ports from 1:`red` to `white` and 2:`cyan` to `black` 🎨
+3. Change the ports from 1:`red` to `white` and 2:`cyan` to `black` 🎨
 
    In Grasshoper you should see:
    ![Ports](../../../../../assets/images/starter-grasshopper-ports.png)
@@ -65,7 +63,7 @@ So make sure you’ve got **Semio already installed** before jumping in ✅
      They are a connection point with an out direction that is aligned ↗️
    </Aside>
 
-4. #### Change the connection parameters (1:`Gap`, 2:`Shift`, 3;`Raise`, 4:`Rotation`, 5:`Turn`, 6:`Tilt`) 🎛️
+4. Change the connection parameters (1:`Gap`, 2:`Shift`, 3;`Raise`, 4:`Rotation`, 5:`Turn`, 6:`Tilt`) 🎛️
 
    In Grasshoper you should see:
    ![Ports](../../../../../assets/images/starter-grasshopper-connection.png)
