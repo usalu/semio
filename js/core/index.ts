@@ -8,6 +8,7 @@ export { default as File } from '@semio/js/components/ui/File';
 export { default as Model } from '@semio/js/components/ui/Model';
 export { default as Diagram } from '@semio/js/components/ui/Diagram';
 export { default as Sketchpad, Mode, Theme } from '@semio/js/components/ui/Sketchpad';
+export { default as GrasshopperCatalogue } from '@semio/js/components/ui/GrasshopperCatalogue';
 export { default as eslintConfig } from '@semio/js/eslint.config';
 export { default as postcssConfig } from '@semio/js/postcss.config';
 export { default as tailwindConfig } from '@semio/js/tailwind.config';

@@ -46,7 +46,6 @@ export default defineConfig({
                             'intro',
                             'design-information-modeling',
                             'think-in-semio',
-                            'kit-of-parts-architecture',
                         ],
                     },
                     'installation',
