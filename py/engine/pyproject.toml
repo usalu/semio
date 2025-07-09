@@ -1,60 +1,72 @@
-[tool.poetry]
+[project]
 name = "semio-engine"
-version = "4.3.0-beta"
-description = "The engine that powers semio."
-authors = ["Ueli Saluz <ueli@semio-tech.com>"]
-maintainers = ["Ueli Saluz <ueli@semio-tech.com>"]
+version = "4.4.0"
+description = "⚙️ Shared fat client for all desktop apps in semio 🏘️"
+authors = [{ name = "Ueli Saluz", email = "ueli@semio-tech.com" }]
+requires-python = ">=3.13,<3.14"
 license = "AGPL-3.0-or-later"
-repository = "https://github.com/usalu/semio"
-homepage = "https://github.com/usalu/semio"
-packages = [{ include = "engine.py" }]
+maintainers = [{ name = "Ueli Saluz", email = "ueli@semio-tech.com" }]
+dependencies = [
+    "fastapi[standard]>=0.115.12,<0.116",
+    "graphene>=3.4.3,<4",
+    "graphene-pydantic>=0.6.1,<0.7",
+    "graphene-sqlalchemy>=3.0.0rc2,<4",
+    "jinja2>=3.1.6,<4",
+    "lark>=1.2.2,<2",
+    "networkx~=3.5",
+    "numpy>=2.2.6,<3",
+    "openai>=1.83.0,<2",
+    "pint>=0.24.4,<0.25",
+    "pydantic>=2.11.5,<3",
+    "pyside6>=6.9.1,<7",
+    "python-dotenv>=1.1.0,<2",
+    "pytransform3d>=3.14.1,<4",
+    "requests>=2.32.3,<3",
+    "sqlalchemy>=2.0.41,<3",
+    "sqlmodel>=0.0.24,<0.0.25",
+    "starlette>=0.46.2,<0.47",
+    "starlette-graphene3>=0.6.0,<0.7",
+    "uvicorn[standard]>=0.34.3,<0.35",
+    "loguru>=0.7.3,<0.8",
+]
 
-[tool.poetry.dependencies]
-fastapi = { extras = ["standard"], version = "^0.115.12" }
-graphene = "^3.4.3"
-graphene-pydantic = "^0.6.1"
-graphene-sqlalchemy = { version = "^3.0.0rc2", allow-prereleases = true }
-jinja2 = "^3.1.6"
-lark = "^1.2.2"
-networkx = "^3.5"
-numpy = "^2.2.6"
-openai = "^1.83.0"
-pint = "^0.24.4"
-pydantic = "^2.11.5"
-pyside6 = "^6.9.1"
-python = ">=3.13,<3.14"
-python-dotenv = "^1.1.0"
-pytransform3d = "^3.14.1"
-requests = "^2.32.3"
-sqlalchemy = "^2.0.41"
-sqlmodel = "^0.0.24"
-starlette = "^0.46.2"
-starlette-graphene3 = "^0.6.0"
-uvicorn = { extras = ["standard"], version = "^0.34.3" }
-loguru = "^0.7.3"
+[project.urls]
+Homepage = "https://github.com/usalu/semio"
+Repository = "https://github.com/usalu/semio"
 
-[tool.poetry.group.test.dependencies]
-pytest = "^8.4.0"
-deepdiff = "^8.5.0"
-pytest-cov = "^6.1.1"
-
-[tool.poetry.group.dev.dependencies]
-debugpy = "^1.8.14"
-pre-commit = "^4.2.0"
-black = "^25.1.0"
-
-[tool.poetry.group.build.dependencies]
-pyinstaller = "^6.13.0"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.scripts]
-# engine = "engine:main" #doesn't work. Use instead: poetry run python engine.py
-# dev = "python -m debugpy --listen 5678 --wait-for-client engine.py"
+[project.scripts]
 run = "engine:run"
 dev = "engine:dev"
+
+[dependency-groups]
+test = [
+    "pytest>=8.4.0,<9",
+    "deepdiff>=8.5.0,<9",
+    "pytest-cov>=6.1.1,<7",
+]
+dev = [
+    "debugpy>=1.8.14,<2",
+    "pre-commit>=4.2.0,<5",
+    "black>=25.1.0,<26",
+]
+build = ["pyinstaller>=6.13.0,<7"]
+
+[tool.uv]
+default-groups = [
+    "test",
+    "dev",
+    "build",
+]
+
+[tool.hatch.build.targets.sdist]
+include = ["engine.py"]
+
+[tool.hatch.build.targets.wheel]
+include = ["engine.py"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.coverage.run]
 branch = true

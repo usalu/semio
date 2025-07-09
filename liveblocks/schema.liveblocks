@@ -86,18 +86,18 @@ type Connection {
 
 # 🧱 A side of a piece in a connection.
 type Side {
-    piece: PieceID;
-    port: PortID;
+    piece: PieceId;
+    port: PortId;
 }
 
 # 🪪 The props to identify the piece within the parent design.
-type PieceID {
+type PieceId {
     # 🆔 The id of the piece.
     id_?: string;
 }
 
 # 🪪 The props to identify the port within the parent type.
-type PortID {
+type PortId {
     # 🆔 The id of the port.
     id_?: string;
 }
@@ -111,7 +111,7 @@ type Piece {
     # ◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.
     plane?: null | Plane;
     # 🧩 The type of the piece.
-    type: TypeID;
+    type: TypeId;
 }
 
 # 📺 A 2d-point (xy) of integers in screen coordinate system.
@@ -153,7 +153,7 @@ type Vector {
 }
 
 # 🪪 The props to identify the type.
-type TypeID {
+type TypeId {
     # 📛 The name of the type.
     name: string;
     # 🔀 The optional variant of the type. No variant means the default variant.

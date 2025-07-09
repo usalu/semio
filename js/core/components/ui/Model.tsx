@@ -2,7 +2,7 @@ import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef, useCall
 import { Canvas, ThreeEvent, useLoader } from '@react-three/fiber';
 import { Center, Environment, GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, Select, Sphere, Stage, TransformControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { Design, Piece, Plane, Type, flattenDesign, DesignEditorSelection, getPieceRepresentationUrls, planeToMatrix, ToThreeQuaternion, ToThreeRotation, ToSemioRotation } from '@semio/js';
+import { Kit, Design, DesignId, Piece, Plane, Type, flattenDesign, DesignEditorSelection, getPieceRepresentationUrls, planeToMatrix, ToThreeQuaternion, ToThreeRotation, ToSemioRotation } from '@semio/js';
 
 const getComputedColor = (variable: string): string => {
     return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -127,19 +127,29 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, upda
 };
 
 interface ModelDesignProps {
-    design: Design;
-    types: Type[];
+    kit: Kit;
+    designId: DesignId;
     fileUrls: Map<string, string>;
     selection: DesignEditorSelection;
-    onSelectionChange: (selection: DesignEditorSelection) => void;
     onDesignChange: (design: Design) => void;
+    onSelectionChange: (selection: DesignEditorSelection) => void;
 }
 
-const ModelDesign: FC<ModelDesignProps> = ({ design, types, fileUrls, selection, onSelectionChange, onDesignChange }) => {
+const ModelDesign: FC<ModelDesignProps> = ({ kit, designId, fileUrls, selection, onSelectionChange, onDesignChange }) => {
+    const normalize = (val: string | undefined) => val === undefined ? "" : val;
+    const design = kit.designs?.find(d =>
+        d.name === designId.name &&
+        (normalize(d.variant) === normalize(designId.variant)) &&
+        (normalize(d.view) === normalize(designId.view))
+    );
+    if (!design) {
+        return null;
+    }
+    const types = kit?.types ?? [];
     const piecePlanes = useMemo(() => {
-        const flatDesign = flattenDesign(design, types);
+        const flatDesign = flattenDesign(kit, designId);
         return flatDesign.pieces?.map(p => p.plane!) || [];
-    }, [design, types]);
+    }, [kit, designId]);
 
     const pieceRepresentationUrls = useMemo(() => {
         return getPieceRepresentationUrls(design, types);
@@ -235,23 +245,20 @@ const Gizmo: FC = (): JSX.Element => {
 }
 
 interface ModelProps {
-    design: Design;
-    types: Type[];
+    kit: Kit;
+    designId: DesignId;
     fileUrls: Map<string, string>;
-    fullscreen: boolean;
-    onPanelDoubleClick?: () => void;
-    selection: DesignEditorSelection;
-    onSelectionChange: (selection: DesignEditorSelection) => void;
+    fullscreen?: boolean;
+    selection?: DesignEditorSelection;
     onDesignChange: (design: Design) => void;
-    onPieceUpdate: (piece: Piece) => void;
+    onSelectionChange: (selection: DesignEditorSelection) => void;
+    onPanelDoubleClick?: () => void;
 }
-const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design, types, fileUrls, selection, onSelectionChange, onDesignChange }) => {
+const Model: FC<ModelProps> = ({ kit, designId, fileUrls, fullscreen, selection, onDesignChange, onSelectionChange, onPanelDoubleClick }) => {
     const [gridColors, setGridColors] = useState({
         sectionColor: getComputedColor('--foreground'),
         cellColor: getComputedColor('--accent-foreground')
     });
-
-    // Update colors when theme changes
     useEffect(() => {
         const updateColors = () => {
             setGridColors({
@@ -282,7 +289,7 @@ const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design, types, 
     }, [onSelectionChange]);
 
     return (
-        <div className="w-full h-full">
+        <div id="model" className="w-full h-full">
             <Canvas
                 onDoubleClickCapture={handleDoubleClick}
                 onPointerMissed={handlePointerMissed}>
@@ -298,7 +305,7 @@ const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design, types, 
                 {/* <Suspense fallback={null}>
                         <Gltf src={src} />
                     </Suspense> */}
-                <ModelDesign design={design} types={types} fileUrls={fileUrls} selection={selection} onSelectionChange={onSelectionChange} onDesignChange={onDesignChange} />
+                <ModelDesign kit={kit} designId={designId} fileUrls={fileUrls} selection={selection} onSelectionChange={onSelectionChange} onDesignChange={onDesignChange} />
                 <Environment files={'schlenker-shed.hdr'} />
                 <Grid
                     infiniteGrid={true}

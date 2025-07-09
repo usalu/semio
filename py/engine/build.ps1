@@ -2,7 +2,7 @@ param (
     [switch]$SkipPostBuild
 )
 if (-not (Test-Path ".venv")) {
-    poetry install
+    ux sync
 }
 .venv/Scripts/activate.ps1
 .\generate-schemas.ps1

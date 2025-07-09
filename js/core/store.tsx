@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import * as Y from 'yjs';
-import React, { createContext, useContext, useEffect, useState, useMemo, FC } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo, FC, useSyncExternalStore } from 'react';
 import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import JSZip, { file } from 'jszip';
@@ -9,7 +9,8 @@ import initSqlJs from 'sql.js';
 import sqlWasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 
 import { Generator } from '@semio/js/lib/utils';
-import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint, Point, Vector, Quality, Author, Side, flattenDesign } from '@semio/js';
+import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint, Point, Vector, Quality, Author, Side, flattenDesign, DesignId } from '@semio/js';
+import { KitId } from './semio';
 
 // import { default as metabolism } from '@semio/assets/semio/kit_metabolism.json';
 
@@ -90,10 +91,10 @@ class StudioStore {
         this.listeners.forEach(listener => listener());
     }
 
-    subscribe(callback: () => void): () => void {
-        this.listeners.add(callback);
+    subscribe(listener: () => void): () => void {
+        this.listeners.add(listener);
         return () => {
-            this.listeners.delete(callback);
+            this.listeners.delete(listener);
         };
     }
 
@@ -1609,6 +1610,35 @@ export const StudioStoreProvider: FC<{ userId: string, children: React.ReactNode
     );
 };
 
+const KitContext = createContext<Kit | null>(null);
+
+export const KitProvider: FC<{ kitName: string, kitVersion: string, children: React.ReactNode }> = ({ kitName, kitVersion, children }) => {
+    const studioStore = useStudioStore();
+    const kit = useSyncExternalStore(
+        studioStore.subscribe,
+        () => {
+            try {
+                return studioStore.getKit(kitName, kitVersion);
+            } catch (e) {
+                return null;
+            }
+        }
+    );
+    return (
+        <KitContext.Provider value={kit}>
+            {children}
+        </KitContext.Provider>
+    );
+};
+
+export const useKit = () => {
+    const kit = useContext(KitContext);
+    if (!kit) {
+        throw new Error('useKit must be used within a KitProvider');
+    }
+    return kit;
+};
+
 export interface DesignEditorSelection {
     selectedPieceIds: string[];
     selectedConnections: {
@@ -1656,12 +1686,12 @@ class DesignEditorStore {
         this.listeners.forEach(listener => listener());
     }
 
-    getDesignId(): [string, string, string] {
-        return [this.yDesign.get('name'), this.yDesign.get('variant'), this.yDesign.get('view')];
+    getDesignId(): DesignId {
+        return { name: this.yDesign.get('name'), variant: this.yDesign.get('variant'), view: this.yDesign.get('view') };
     }
 
-    getKitId(): [string, string] {
-        return [this.yKit.get('name'), this.yKit.get('version')];
+    getKitId(): KitId {
+        return { name: this.yKit.get('name'), version: this.yKit.get('version') };
     }
 
     updateDesignEditorSelection = (selection: DesignEditorSelection): void => {
@@ -1670,12 +1700,11 @@ class DesignEditorStore {
 
     deleteSelectedPiecesAndConnections(): void {
         const { selection } = this.state;
-
-        const [kitName, kitVersion] = this.getKitId();
-        const [designName, designVariant, designView] = this.getDesignId();
-        const types = this.studioStore.getTypes(kitName, kitVersion);
-        const design = this.studioStore.getDesign(kitName, kitVersion, designName, designVariant, designView);
-        const flatDesign = flattenDesign(design, types);
+        const kitId = this.getKitId();
+        const designId = this.getDesignId();
+        const kit = this.studioStore.getKit(kitId.name, kitId.version);
+        const flatDesign = flattenDesign(kit, designId);
+        const types = this.studioStore.getTypes(kitId.name, kitId.version);
 
         // First delete all selected connections
         if (selection.selectedConnections.length > 0) {

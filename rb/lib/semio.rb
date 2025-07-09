@@ -16,13 +16,13 @@ module Semio
   Location = Struct.new(:longitude, :latitude, keyword_init: true)
 
   # 🪪 Identifier for a type, potentially including a variant.
-  TypeID = Struct.new(:name, :variant, keyword_init: true)
+  TypeId = Struct.new(:name, :variant, keyword_init: true)
 
   # 🪪 Identifier for a piece within a design.
-  PieceID = Struct.new(:id_, keyword_init: true)
+  PieceId = Struct.new(:id_, keyword_init: true)
 
   # 🪪 Identifier for a port within a type.
-  PortID = Struct.new(:id_, keyword_init: true)
+  PortId = Struct.new(:id_, keyword_init: true)
 
   # 📏 Represents a quality, a named property with an optional value, unit, and definition.
   Quality = Struct.new(:name, :value, :unit, :definition, keyword_init: true)

@@ -2,6 +2,7 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { default as animals } from "@semio/assets/lists/animals.json"
 import { default as adjectives } from "@semio/assets/lists/adjectives.json"
+import JSZip from 'jszip'
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
@@ -57,4 +58,28 @@ export const jaccard = (a: string[] | undefined, b: string[] | undefined) => {
     const union = setA.size + setB.size - intersection
     if (union === 0) return 0
     return intersection / union
+}
+
+export const extractFilesAndCreateUrls = async (url: string): Promise<Map<string, string>> => {
+    const fileUrls: Map<string, string> = new Map()
+
+    try {
+        const zipData = await fetch(url).then(res => res.arrayBuffer())
+        const zip = await JSZip.loadAsync(zipData)
+
+        for (const fileEntry of Object.values(zip.files)) {
+            if (!fileEntry.dir) {
+                const fileData = await fileEntry.async("uint8array")
+                const mimeType = fileEntry.name.split(".").pop() || ""
+                const blob = new Blob([fileData], { type: mimeType })
+                const blobUrl = URL.createObjectURL(blob)
+                fileUrls.set(fileEntry.name, blobUrl)
+            }
+        }
+    } catch (error) {
+        console.error(`Failed to extract files from ${url}:`, error)
+        throw new Error(`Failed to extract files from ${url}`)
+    }
+
+    return fileUrls
 }

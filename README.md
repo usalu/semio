@@ -363,7 +363,7 @@ If not, then you are probably good 👌
 
 In our understanding, rule-of-thumbs are most useful when they are concrete 🔨
 
-Besides that we are sure you know about <strong>KISS</strong> (Keep-It-Simple-Stupid), <strong>DRY</strong> (Dont-Repeat-Yourself), <strong>YAGNI</strong> (You-Aren't-Gonna-Need-It), <strong>SoC</strong> (Separation-of-Concerns), <strong>Avoid Premature Optimization</strong>, <strong>Law of Demeter</strong>, <strong>LCHC</strong> (Low-Coupling-High-Cohesion), <strong>SOLID</strong> (Single Responsibility (<strong>SR</strong>), Open/Closed (<strong>OC</strong>), Liskov's Substitution (<strong>LS</strong>), Interface Segregation (<strong>IS</strong>), Dependency Inversion (<strong>DI</strong>)), …
+Besides that we are sure you know about <strong>KISS</strong> (Keep-It-Simple-Stupid), <strong>DRY</strong> (Dont-Repeat-Yourself) vs <strong>WET</strong> (Write-Every-Thing-Twice)/<strong>RUG</strong> (Repeat-Until-Good), <strong>YAGNI</strong> (You-Aren't-Gonna-Need-It), <strong>SoC</strong> (Separation-of-Concerns), <strong>Avoid Premature Optimization</strong>, <strong>Law of Demeter</strong>, <strong>LCHC</strong> (Low-Coupling-High-Cohesion), <strong>SOLID</strong> (<strong>SR</strong> (Single Responsibility), <strong>OC</strong> (Open/Closed), <strong>LS</strong> (Liskov's Substitution), <strong>IS</strong> (Interface Segregation), <strong>DI</strong> (Dependency Inversion)), …
 
 But as always, the devil is in the details 😈
 
@@ -374,6 +374,21 @@ Even if 95% of the codebase follows those principles, there are good reasons for
 **🚩 Don't worry, you'll figure out the possibilities and make the right choice for the specific problems ✅**
 
 ## 🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)
+
+### 🦑 GitKraken [↑](#-git-)
+
+> [!NOTE]  
+> It is free for open-source projects like this one ❤️
+
+We use [GitKraken Desktop](https://www.gitkraken.com/git-client) as our git client 🖱️
+
+It is the only nice chronological graphical overview for all branches at the same time that we found 🔍
+
+### 💬 Discord [↑](#-git-)
+
+Most git events are synchronized with our [repo channel](https://discord.com/channels/1338232508264747130/1339164626658525246) 💬
+
+It is perfect to find the latest activities and the history 🔍
 
 ### 📢 Release [↑](#-gitstyle-)
 
@@ -418,7 +433,9 @@ We have two different types of tags:
 
 The `main` branch is the default archive branch 🔒
 
-The `dev` branch is the default general-purpose development branch 🛠️
+Every [contributor](#-contributor-) has their own `FIRSTNAME` general-purpose development branch 🛠️
+
+In [GitKraken](#-gitkraken-) you will quickly find the latest development branch 👀
 
 Other branches are created for [components](#-components-), [specific features](https://github.com/usalu/semio/labels/enhancement) or [bug fixes](https://github.com/usalu/semio/labels/bug) 🐛
 
@@ -489,17 +506,53 @@ Most of our [codebase](#-principles-) is heavily optimized for AI agents 🤖
 
 ### 🖱️ [Cursor](/.cursor) [↑](#-ai-)
 
-We use [Cursor](https://www.cursor.com) as general editor mostly with [Tab](https://docs.cursor.com/tab/overview) ➡️
+<details>
+<summary><strong>📚 Resources:</strong></summary>
+
+- [Rules](https://docs.cursor.com/context/rules)
+
+</details>
+
+We use [Cursor](https://www.cursor.com) as general editor for typing code mostly with [Tab](https://docs.cursor.com/tab/overview) ➡️
 
 For brain-heavy tasks we prepare good tickets and use [Gemini 2.5 Pro](https://gemini.google.com/gemini-2.5-pro) ⚡
 
-We parllely work on two tasks that are unrelated to each other in order switch between them during waiting times ⌛
+We parallely work on two tasks that are unrelated to each other in order to switch between them during waiting times ⌛
 
 ### ✈️ Copilot [↑](#-ai-)
 
+<details>
+<summary><strong>📚 Resources:</strong></summary>
+
+- [Chat modes](https://code.visualstudio.com/docs/copilot/chat/chat-modes)
+
+</details>
+
 For monkey-tasks we use the free [Copilot](https://github.com/features/copilot) with [GPT-4.1](https://docs.github.com/en/copilot/using-github-copilot/ai-models/using-openai-gpt-41-in-github-copilot) 🚀
 
+## 🔄 CI/CD [↑](#-development-)
+
+<details>
+<summary><strong>📺 Channels:</strong></summary>
+
+- [TechWorld with Nana](https://www.youtube.com/@TechWorldwithNana) - `devops`
+
+</details>
+
 # ♻️ Ecosystems [↑](#-overview)
+
+<details>
+<summary><strong>📺 Channels:</strong></summary>
+
+- [FreeCodeCamp](https://www.youtube.com/@FreeCodeCamp) - `full-projects`
+- [Programming with Mosh](https://www.youtube.com/@programmingwithmosh) - `beginner`
+- [Fireship](https://www.youtube.com/@Fireship) - `quaffable`
+  - [… in 100 Seconds](https://www.youtube.com/watch?v=DC471a9qrU4&list=PL0vfts4VzfNiI1BsIK5u7LpPaIDKMJIDN) - `high-level`
+- [Lex Fridman](https://www.youtube.com/@lexfridman) - `interviews`
+- [Amigoscode](https://www.youtube.com/@amigoscode) - `java`
+- [tsoding](https://www.youtube.com/@tsoding) - `haskell`
+
+</details>
 
 You might have noticed that the individual components can be closely related such as [sketchpad](#️-sketchpad-), [Grasshopper](#-semiogh-) and [engine](#️-engine-) but they are in totally different folders 📂
 
@@ -510,7 +563,7 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 ## 🟨 [JavaScript](https://github.com/usalu/semio/tree/main/js) [↑](#%EF%B8%8F-ecosystems-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [JavaScript](https://developer.mozilla.org/docs/Web/JavaScript)
 - [Node](https://nodejs.org/en/learn/getting-started/introduction-to-nodejs)
@@ -520,17 +573,37 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 - [Wasm](https://developer.mozilla.org/docs/WebAssembly)
   - [C/C++](https://developer.mozilla.org/docs/WebAssembly/Guides/C_to_Wasm)
   - [Rust](https://developer.mozilla.org/docs/WebAssembly/Rust_to_Wasm)
-  </details>
+
+</details>
+
+<details>
+<summary><strong>📺 Channels:</strong></summary>
+
+- [WebDevSimplified](https://www.youtube.com/@WebDevSimplified) - `beginner`
+- [Jack Herrington](https://www.youtube.com/@jherr) - `react`
+- [The Net Ninja](https://www.youtube.com/@NetNinja) - `everything`
+- [Fireship](https://www.youtube.com/@Fireship) - `quaffable`
+- [Theo - t3.gg](https://www.youtube.com/@t3dotgg) - `opinionated`
+- [The Primeagen](https://www.youtube.com/@ThePrimeagen) - `entertainment`
+
+</details>
 
 ## 🟪 [.NET](https://github.com/usalu/semio/tree/main/dotnet) [↑](#%EF%B8%8F-ecosystems-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [.NET](https://dotnet.microsoft.com)
 - [C#](https://learn.microsoft.com/dotnet/csharp)
 - [NuGet](https://www.nuget.org)
 
+</details>
+
+<details>
+<summary><strong>📺 Channels:</strong></summary>
+
+- [IAmTimCorey](https://www.youtube.com/@IAmTimCorey)
+- [Nick Chapsas](https://www.youtube.com/@NickChapsas)
 </details>
 
 A .NET core for semio 🥜
@@ -542,10 +615,22 @@ A .NET core for semio 🥜
 ## 🐍 [Python](https://github.com/usalu/semio/tree/main/python) [↑](#%EF%B8%8F-ecosystems-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [Python](https://www.python.org)
 - [Poetry](https://python-poetry.org)
+
+</details>
+
+<details>
+<summary><strong>📺 Channels:</strong></summary>
+
+- [mCoding](https://www.youtube.com/@mCoding) - `advanced`
+- [Anthony writes code](https://www.youtube.com/@anthonywritescode) - `advanced`
+  - [Anthony explains](https://www.youtube.com/playlist?list=PLWBKAf81pmOaP9naRiNAqug6EBnkPakvY) - `features`
+- [Corey Schafer](https://www.youtube.com/@coreyms) - `everything`
+- [ArjanCodes](https://www.youtube.com/@ArjanCodes) - `beginner`
+- [Tech with Tim](https://www.youtube.com/@TechWithTim) - `beginner`
 
 </details>
 
@@ -558,7 +643,7 @@ A component is a piece of software which is packaged independently 🏝️
 ## 🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js) [↑](#-components-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [React](https://www.npmjs.com/package/react)
   - [Docs](https://react.dev)
@@ -618,12 +703,19 @@ A component is a piece of software which is packaged independently 🏝️
 
 </details>
 
+<details>
+<summary><strong>📼 Videos:</strong></summary>
+
+- [React State Managment](https://www.youtube.com/watch?v=-bEzt5ISACA)
+
+</details>
+
 The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 
 ## ✏️ [@semio/sketchpad](https://github.com/usalu/semio/tree/main/js/sketchpad) [↑](#-components-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [Electron](https://www.npmjs.com/package/electron)
   - [Docs](https://www.electronjs.org/docs)
@@ -639,7 +731,7 @@ An electron-based desktop app primarly working for with local kits 💾
 ## 🤖 [@semio/assistant](https://github.com/usalu/semio/tree/main/js/assistant) [↑](#-components-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [Model Context Protocol](https://modelcontextprotocol.io)
 - [OpenAI](https://platform.openai.com/docs)
@@ -654,12 +746,19 @@ Mostly a [Large Language Model](https://en.wikipedia.org/wiki/Large_language_mod
 ## 📚 [@semio/docs](https://github.com/usalu/semio/tree/main/js/docs) [↑](#-components-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [Markdown](https://www.markdownguide.org)
 - [MDX](https://mdxjs.com/docs)
 - [Astro](https://astro.build/docs)
 - [Starlight](https://starlight.astro.build)
+
+</details>
+
+<details>
+<summary><strong>📺 Channels:</strong></summary>
+
+- [Coding in Public](https://www.youtube.com/@CodinginPublic) - `astro`
 
 </details>
 
@@ -670,7 +769,7 @@ A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
 ## 🟪 [@semio/net](https://github.com/usalu/semio/tree/main/dotnet) [↑](#-components-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [Fluent Validation](https://www.nuget.org/packages/FluentValidation)
   - [Docs](https://docs.fluentvalidation.net)
@@ -706,15 +805,23 @@ The core which is shared in the [semio .NET ecosystem](#-net-) 🥜
 ## 🦗 [@semio/grasshopper](https://github.com/usalu/semio/tree/main/dotnet/Semio.Grasshopper) [↑](#-components-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [Rhino](https://www.rhino3d.com)
+
   - [Rhino Developer](https://developer.rhino3d.com)
     - [Rhino Developer API](https://developer.rhino3d.com/api)
     - [RhinoCommon API](https://developer.rhino3d.com/api/rhinocommon)
   - [Grasshopper](https://www.grasshopper3d.com)
     - [Grasshopper SDK](https://mcneel.github.io/grasshopper-api-docs/api/grasshopper)
   - [Forum](https://discourse.mcneel.com)
+  </details>
+
+  <details>
+  <summary><strong>📺 Channels:</strong></summary>
+
+  - [Nono Martínez Alonso](https://www.youtube.com/c/NonoMart%C3%ADnezAlonso)
+
   </details>
 
 A full-blown Grasshopper Plugin that has (almost) everything 💯
@@ -784,7 +891,7 @@ Grasshopper is an amazing tool if you know the system that you want to create bu
 ## ⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-components-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [Pydantic](https://pypi.org/project/pydantic)
   - [Docs](https://docs.pydantic.dev)
@@ -1044,6 +1151,14 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
       </td>
     </tr>
 </table>
+
+# ⚖️ License
+
+The code in this repository is licensed under the [GNU Affero General Public License](https://www.gnu.org/licenses/#AGPL) unless otherwise described. Please note that some modules, extensions or code herein might be otherwise licensed. This is indicated either in the root of the containing folder under a different license file, or in the respective file's header. If you have any questions, please don't hesitate to get in touch with [us over email](mail@semio-tech.com) 📧
+
+# 🔒 Security
+
+If you have any security vulnerabilities or concerns, please contact [us over email](security@semio-tech.com) and don't open an issue, discussion or write into our public discord server 🥷
 
 # 📊 [Stats](https://stats.docs.semio-tech.com)
 

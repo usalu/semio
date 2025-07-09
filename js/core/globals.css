@@ -141,11 +141,16 @@
 /* https://reactflow.dev/learn/customization/theming */
 
 .react-flow {
-    /* --xy-background-color-default: var(--color-light) !important; */
+  /* --xy-background-color-default: var(--color-light) !important; */
 }
 
 .react-flow.dark {
-    /* --xy-background-color-default: var(--color-dark) !important; */
+  /* --xy-background-color-default: var(--color-dark) !important; */
+}
+
+.temp .react-flow__edge-path {
+  stroke: #e98787;
+  stroke-dasharray: 5 5;
 }
 
 @theme inline {
