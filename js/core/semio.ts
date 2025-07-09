@@ -783,6 +783,7 @@ export const flattenDesign = (design: Design, types: Type[]): Design => {
     };
 
     const flatDesign: Design = JSON.parse(JSON.stringify(design));
+    if (!flatDesign.pieces) flatDesign.pieces = [];
 
     const piecePlanes: { [pieceId: string]: Plane } = {};
     const pieceMap: { [pieceId: string]: Piece } = {};
@@ -835,11 +836,10 @@ export const flattenDesign = (design: Design, types: Type[]): Design => {
         }
 
         piecePlanes[rootPiece.id_] = rootPlane;
-        const flatRootPiece: Piece = {
-            ...rootPiece,
-            plane: rootPlane,
-        };
-        flatDesign.pieces?.push(flatRootPiece);
+        const rootPieceIndex = flatDesign.pieces!.findIndex(p => p.id_ === rootPiece.id_);
+        if (rootPieceIndex !== -1) {
+            flatDesign.pieces![rootPieceIndex].plane = rootPlane;
+        }
 
         const bfs = cy.elements().bfs({
             roots: `#${rootNode.id()}`,

@@ -1,11 +1,11 @@
 import React, { FC, useCallback, useMemo, useState, useEffect } from 'react';
-import { addEdge, Background, BackgroundVariant, BaseEdge, BuiltInNode, ConnectionMode, Controls, Edge, EdgeProps, getBezierPath, getStraightPath, Handle, HandleProps, MiniMap, MiniMapNodeProps, Node, NodeProps, OnConnect, OnEdgesChange, OnNodesChange, Panel, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useOnViewportChange, useReactFlow, useStoreApi, useViewport, Viewport, ViewportPortal, useStore } from '@xyflow/react';
+import { addEdge, Background, BackgroundVariant, BaseEdge, BuiltInNode, ConnectionMode, Controls, Edge, EdgeProps, getBezierPath, getStraightPath, Handle, HandleProps, MiniMap, MiniMapNodeProps, Node, NodeProps, OnConnect, OnEdgesChange, OnNodesChange, Panel, Position, ReactFlow, ReactFlowProvider, useEdgesState, useNodesState, useOnViewportChange, useReactFlow, useStoreApi, useViewport, Viewport, ViewportPortal, useStore, XYPosition } from '@xyflow/react';
 import * as THREE from 'three';
 import { useDroppable } from '@dnd-kit/core';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Sphere } from '@react-three/drei';
 
-import { Connection, Design, flattenDesign, ICON_WIDTH, Kit, Piece, Port, Type, TypeID } from '@semio/js/semio'
+import { Connection, Design, DiagramPoint, flattenDesign, ICON_WIDTH, Kit, Piece, Port, Type, TypeID } from '@semio/js/semio'
 import { Avatar, AvatarFallback, AvatarImage } from '@semio/js/components/ui/Avatar';
 
 // import '@xyflow/react/dist/base.css';
@@ -134,33 +134,61 @@ export const MiniMapNode: React.FC<MiniMapNodeProps> = ({ x, y, selected }) => {
     return <circle className={selected ? 'fill-primary' : 'fill-foreground'} cx={x} cy={y} r="10" />;
 }
 
+interface DragState {
+    nodeStartPosition: XYPosition | undefined;
+    nodeIntermediatePosition: XYPosition | undefined;
+}
 
-const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, onPanelDoubleClick, onSelectionChange, onDesignChange }) => {
+const pieceToNode = (piece: Piece, type: Type, selected: boolean): PieceNode => ({
+    type: 'piece',
+    id: piece.id_,
+    position: { x: piece.center!.x * ICON_WIDTH || 0, y: -piece.center!.y * ICON_WIDTH || 0 },
+    selected,
+    data: { piece, type },
+});
+
+const connectionToEdge = (connection: Connection, selected: boolean): ConnectionEdge => ({
+
+    type: 'connection',
+    id: `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`,
+    source: connection.connecting.piece.id_,
+    sourceHandle: connection.connecting.port.id_,
+    target: connection.connected.piece.id_,
+    targetHandle: connection.connected.port.id_,
+    data: { connection, selected },
+});
+
+
+const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, onPanelDoubleClick, onSelectionChange, onPiecesDragEnd }) => {
+    const nodeTypes = useMemo(() => ({ piece: PieceNodeComponent }), []);
+    const edgeTypes = useMemo(() => ({ connection: ConnectionEdgeComponent }), []);
+
+    const [dragState, setDragState] = useState<DragState | null>(null);
+
     const { setNodeRef } = useDroppable({
         id: 'diagram',
     });
 
     const flatDesign = design ? flattenDesign(design, types) : null;
+    const pieceNodes = flatDesign?.pieces?.map((piece) => pieceToNode(
+        piece,
+        types.find((t) => t.name === piece.type.name && (t.variant ?? '') === (piece.type.variant ?? ''))!,
+        selection?.selectedPieceIds.includes(piece.id_) ?? false
+    ));
+    const connectionEdges = design.connections?.map((connection) => connectionToEdge(
+        connection,
+        selection?.selectedConnections.some((c) => c.connectingPieceId === connection.connecting.piece.id_ && c.connectedPieceId === connection.connected.piece.id_) ?? false
+    ));
 
-    const nodes = flatDesign?.pieces?.map((piece) => ({
-        type: 'piece',
-        id: piece.id_,
-        position: { x: piece.center!.x * ICON_WIDTH || 0, y: -piece.center!.y * ICON_WIDTH || 0 },
-        selected: selection?.selectedPieceIds.includes(piece.id_),
-        data: { piece, type: types.find((t) => t.name === piece.type.name && (t.variant ?? '') === (piece.type.variant ?? '')) },
-    }));
+    // intermediate piece are selected pieces that are dragged
+    const intermediatePieceNodes = dragState?.nodeIntermediatePosition ? flatDesign?.pieces?.filter((p) => selection?.selectedPieceIds.includes(p.id_))?.map((p) => pieceToNode(
+        p,
+        types.find((t) => t.name === p.type.name && (t.variant ?? '') === (p.type.variant ?? ''))!, true)) : [];
 
-    const edges = design.connections?.map((connection) => ({
-        type: 'connection',
-        id: `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`,
-        source: connection.connecting.piece.id_,
-        sourceHandle: connection.connecting.port.id_,
-        target: connection.connected.piece.id_,
-        targetHandle: connection.connected.port.id_,
-        data: { connection, selected: selection?.selectedConnections.some((c) => c.connectingPieceId === connection.connecting.piece.id_ && c.connectedPieceId === connection.connected.piece.id_) },
-    }));
 
-    // const edges = design.connections?.map((connection) => ({
+    const nodes = pieceNodes.concat(intermediatePieceNodes);
+
+    // const connectionEdges = design.connections?.map((connection) => ({
     //     type: 'connection',
     //     id: connection.id_,
     //     source: connection.source.id_,
@@ -197,20 +225,18 @@ const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, o
     //     });
     // }
 
-    const nodeTypes = useMemo(() => ({ piece: PieceNodeComponent }), []);
-    const edgeTypes = useMemo(() => ({ connection: ConnectionEdgeComponent }), []);
 
-    // const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-    // const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+    // const [pieceNodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+    // const [connectionEdges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
     // const onConnect = useCallback(
     //     (params: any) => setEdges((eds) => addEdge(params, eds)),
     //     [setEdges],
     // );
 
-    const MIN_DISTANCE = 100;
-    // const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-    // const [edges, setEdges, onEdgesState] = useEdgesState(initialEdges);
+    // const MIN_DISTANCE = 100;
+    // const [pieceNodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+    // const [connectionEdges, setEdges, onEdgesState] = useEdgesState(initialEdges);
     // const { getInternalNode } = useReactFlow();
 
     // const onConnect = useCallback(
@@ -363,9 +389,38 @@ const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, o
         }
     }, [selection, onSelectionChange]);
 
+    const onNodeDragStart = useCallback((e: React.MouseEvent, node: Node) => {
+        // if dragged node is not part of selection, deselect all pieceNodes, add dragged node to selection
+        if (!selection?.selectedPieceIds.includes(node.data.piece.id_)) {
+            onSelectionChange?.({
+                ...selection,
+                selectedPieceIds: [node.data.piece.id_],
+            });
+        }
+        setDragState({
+            nodeStartPosition: node.position,
+            nodeIntermediatePosition: node.position,
+        });
+        console.log("onNodeDragStart", dragState, e, node);
+    }, [setDragState, dragState]);
+
     const onNodeDrag = useCallback((e: React.MouseEvent, node: Node) => {
         console.log("onNodeDrag", e, node);
     }, []);
+
+    const onNodeDragStop = useCallback((e: React.MouseEvent, node: Node) => {
+        const selectedFixedPieces = pieceNodes?.filter((n) => n.selected && n.data.piece.center).map((n) => n.data.piece);
+        const offset = {
+            x: (node.position.x - dragState!.nodeStartPosition!.x) / ICON_WIDTH,
+            y: -(node.position.y - dragState!.nodeStartPosition!.y) / ICON_WIDTH,
+        };
+        const offsettedPieces = selectedFixedPieces?.map((p) => ({
+            ...p,
+            center: { x: p.center!.x + offset.x, y: p.center!.y + offset.y },
+        }));
+        onPiecesDragEnd?.(offsettedPieces!);
+        setDragState(null);
+    }, [dragState, pieceNodes, selection, onSelectionChange, onPiecesDragEnd]);
 
     const onDoubleClickCapture = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
@@ -376,7 +431,7 @@ const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, o
         <ReactFlow
             ref={setNodeRef}
             nodes={nodes}
-            edges={edges}
+            edges={connectionEdges}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             connectionMode={ConnectionMode.Loose}
@@ -385,19 +440,17 @@ const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, o
             maxZoom={12}
             // onNodesChange={onNodesChange}
             // onEdgesChange={onEdgesChange}
-            // onNodeDrag={onNodeDrag}
-            // onNodeDragStop={onNodeDragStop}
             // onConnect={onConnect}
             // TODO: Whenever another components updates the selection, onSelectionChange is called. Figure out how to prevent this.
-            // onSelectionChange={({ nodes, edges }) => {
-            //     const selectedPieceIds = nodes.map((node) => node.id);
-            //     const selectedConnections = edges.map((edge) => {
+            // onSelectionChange={({ pieceNodes, connectionEdges }) => {
+            //     const selectedPieceIds = pieceNodes.map((node) => node.id);
+            //     const selectedConnections = connectionEdges.map((edge) => {
             //         return {
             //             connectedPieceId: edge.source,
             //             connectingPieceId: edge.target,
             //         }
             //     });
-            //     // When another component updates the selection, nodes and edges are empty but we don't want this to reset the selection
+            //     // When another component updates the selection, pieceNodes and connectionEdges are empty but we don't want this to reset the selection
             //     if (selectedPieceIds.length === 0 && selectedConnections.length === 0) {
             //         return;
             //     }
@@ -423,8 +476,10 @@ const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, o
             //         });
             //     }
             // }}
-            onNodeClick={onNodeClick}
+            onNodeDragStart={onNodeDragStart}
             onNodeDrag={onNodeDrag}
+            onNodeDragStop={onNodeDragStop}
+            onNodeClick={onNodeClick}
             zoomOnDoubleClick={false}
             onDoubleClickCapture={onDoubleClickCapture}
             panOnDrag={[0]} //left mouse button
@@ -447,11 +502,11 @@ interface DiagramProps {
     fileUrls: Map<string, string>;
     onPanelDoubleClick?: () => void;
     onSelectionChange?: (selection: DesignEditorSelection) => void;
-    onDesignChange?: (design: Design) => void;
+    onPiecesDragEnd?: (pieces: Piece[]) => void;
 }
 
 
-const Diagram: FC<DiagramProps> = ({ design, types, fullscreen, selection, fileUrls, onPanelDoubleClick, onSelectionChange, onDesignChange }) => {
+const Diagram: FC<DiagramProps> = ({ design, types, fullscreen, selection, fileUrls, onPanelDoubleClick, onSelectionChange, onPiecesDragEnd }) => {
     return (
         <div id="diagram" className="h-full w-full">
             <DiagramCore
@@ -462,7 +517,7 @@ const Diagram: FC<DiagramProps> = ({ design, types, fullscreen, selection, fileU
                 selection={selection}
                 fileUrls={fileUrls}
                 onSelectionChange={onSelectionChange}
-                onDesignChange={onDesignChange} />
+                onPiecesDragEnd={onPiecesDragEnd} />
         </div>
     );
 };

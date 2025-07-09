@@ -699,6 +699,15 @@ const DesignEditorCore: FC = () => {
         setActiveDraggedDesign(null);
     };
 
+    const onPiecesDiagramDragEnd = (pieces: Piece[]) => {
+        designEditorStore.transact(() => {
+            pieces.forEach((piece) => {
+                studioStore.updatePiece(kitName, kitVersion, designName, designVariant, designView, piece);
+            });
+        });
+        forceUpdate();
+    };
+
     const fileUrls = studioStore.getFileUrls()
     return (
         <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
@@ -720,6 +729,7 @@ const DesignEditorCore: FC = () => {
                                     selection={selection}
                                     fileUrls={fileUrls}
                                     onSelectionChange={designEditorStore.updateDesignEditorSelection}
+                                    onPiecesDragEnd={onPiecesDiagramDragEnd}
                                 />
                             ) : (
                                 <div className="flex items-center justify-center h-full text-muted-foreground">No design loaded</div>
