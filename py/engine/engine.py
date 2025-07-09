@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
+## Header ##
+
 # engine.py
+
 # 2020-2025 Ueli Saluz
 
 # This program is free software: you can redistribute it and/or modify
@@ -15,6 +18,8 @@
 
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+## endregion ##
 
 
 """
@@ -136,21 +141,21 @@ import difflib
 import enum
 import functools
 import inspect
+import io
 import json
 import logging
 import multiprocessing
 import os
 import pathlib
+import shutil
+import signal
 import sqlite3
+import stat
+import sys
 import time
 import typing
 import urllib
 import zipfile
-import io
-import shutil
-import stat
-import signal
-import sys
 
 import dotenv
 import fastapi
@@ -158,9 +163,9 @@ import fastapi.openapi
 import graphene
 import graphene_pydantic
 import graphene_sqlalchemy
+import jinja2
 import lark
 import loguru
-import jinja2
 import openai
 import pydantic
 import PySide6.QtCore
@@ -173,7 +178,6 @@ import sqlmodel
 import starlette
 import starlette_graphene3
 import uvicorn
-
 
 # Type Hints #
 
@@ -3205,15 +3209,15 @@ class ConnectionShiftField(RealField, abc.ABC):
     """↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.."""
 
 
-class ConnectionRaiseField(MaskedField, abc.ABC):
-    """🪜 The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."""
+class ConnectionRiseField(MaskedField, abc.ABC):
+    """🪜 The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."""
 
-    raise_: float = sqlmodel.Field(
+    rise: float = sqlmodel.Field(
         alias="raise",
         default=0,
-        description="🪜 The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+        description="🪜 The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
     )
-    """🪜 The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."""
+    """🪜 The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."""
 
 
 class ConnectionRotationField(RealField, abc.ABC):
@@ -3292,7 +3296,7 @@ class ConnectionProps(
     ConnectionTiltField,
     ConnectionTurnField,
     ConnectionRotationField,
-    ConnectionRaiseField,
+    ConnectionRiseField,
     ConnectionShiftField,
     ConnectionGapField,
     ConnectionDescriptionField,
@@ -3307,7 +3311,7 @@ class ConnectionInput(
     ConnectionTiltField,
     ConnectionTurnField,
     ConnectionRotationField,
-    ConnectionRaiseField,
+    ConnectionRiseField,
     ConnectionShiftField,
     ConnectionGapField,
     ConnectionDescriptionField,
@@ -3331,7 +3335,7 @@ class ConnectionContext(
     ConnectionTiltField,
     ConnectionTurnField,
     ConnectionRotationField,
-    ConnectionRaiseField,
+    ConnectionRiseField,
     ConnectionShiftField,
     ConnectionGapField,
     ConnectionDescriptionField,
@@ -3355,7 +3359,7 @@ class ConnectionOutput(
     ConnectionTiltField,
     ConnectionTurnField,
     ConnectionRotationField,
-    ConnectionRaiseField,
+    ConnectionRiseField,
     ConnectionShiftField,
     ConnectionGapField,
     ConnectionDescriptionField,
@@ -3379,7 +3383,7 @@ class ConnectionPrediction(
     ConnectionTiltField,
     ConnectionTurnField,
     ConnectionRotationField,
-    ConnectionRaiseField,
+    ConnectionRiseField,
     ConnectionShiftField,
     ConnectionGapField,
     ConnectionDescriptionField,
@@ -3403,7 +3407,7 @@ class Connection(
     ConnectionTiltField,
     ConnectionTurnField,
     ConnectionRotationField,
-    ConnectionRaiseField,
+    ConnectionRiseField,
     ConnectionShiftField,
     ConnectionGapField,
     ConnectionDescriptionField,
@@ -3583,7 +3587,7 @@ class Connection(
         except KeyError:
             pass
         try:
-            entity.raise_ = obj["raise"]
+            entity.rise = obj["rise"]
         except KeyError:
             pass
         try:
@@ -4797,7 +4801,7 @@ def cache(remoteUri: str) -> str:
 
     try:
         response = requests.get(remoteUri)
-        response.raise_for_status()
+        response.risefor_status()
     except requests.exceptions.HTTPError as e:
         # TODO: Better error message.
         raise KitNotFound(remoteUri)
@@ -5248,7 +5252,7 @@ designResponseFormat = json.loads(
                         },
                         "raise": {
                             "type": "number",
-                            "description": "The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
+                            "description": "The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
                         },
                         "rotation": {
                             "type": "number",

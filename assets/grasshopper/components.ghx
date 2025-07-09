@@ -6048,9 +6048,9 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_input" index="9">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">0a83ab9e-14b5-43d7-a1f8-0f67094c9477</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Raise</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Rise</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Rs?</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">true</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -6465,9 +6465,9 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_output" index="9">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">75e42e5f-4f93-4bbe-a4a7-30c768116edd</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Raise</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Rise</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Rs?</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>

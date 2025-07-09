@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: 'npm'
+    directory: '/js/core'
+    schedule:
+      interval: 'weekly'
+  - package-ecosystem: 'npm'
+    directory: '/js/sketchpad'
+    schedule:
+      interval: 'weekly'
+  - package-ecosystem: 'npm'
+    directory: '/js/docs'
+    schedule:
+      interval: 'weekly'
+  - package-ecosystem: 'uv'
+    directory: '/py/engine'
+    schedule:
+      interval: 'weekly'
+  - package-ecosystem: 'nuget'
+    directory: '/net/Semio'
+    schedule:
+      interval: 'weekly'
+  - package-ecosystem: 'nuget'
+    directory: '/net/Semio.Grasshopper'
+    schedule:
+      interval: 'weekly'

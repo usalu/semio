@@ -2,26 +2,26 @@
 name: semio
 version: 6.0.0
 authors:
-- Ueli Saluz
+  - Ueli Saluz
 description: >
- 🧩 Design-Information-Modeling for Kit-of-Parts Architecture 🏘️
+  🧩 Design-Information-Modeling for Kit-of-Parts 🏘️
 url: https://github.com/usalu/semio
 keywords:
-- kit-of-parts
-- port-based_thinking
-- shape_grammar
-- graph-based_design
-- graph_transformations
-- graph_rewriting
-- design_prototypes
-- design_systems
-- computer-based_design_synthesis
-- computer-generated_architecture
-- generative_design
-- procedural_modeling
-- parametric_design
-- computer_aided_architectural_design
-- building_information_modeling
-- guid:fe587cbf-5f7d-4091-aa6d-d9d30cf80b64
+  - kit-of-parts
+  - port-based_thinking
+  - shape_grammar
+  - graph-based_design
+  - graph_transformations
+  - graph_rewriting
+  - design_prototypes
+  - design_systems
+  - computer-based_design_synthesis
+  - computer-generated_architecture
+  - generative_design
+  - procedural_modeling
+  - parametric_design
+  - computer_aided_architectural_design
+  - building_information_modeling
+  - guid:fe587cbf-5f7d-4091-aa6d-d9d30cf80b64
 platform: win
 icon: semio_512x512.png

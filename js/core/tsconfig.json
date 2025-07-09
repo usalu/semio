@@ -1,12 +1,25 @@
+//tsconfig.json
+//2025 Ueli Saluz
+
+//This program is free software: you can redistribute it and/or modify
+//it under the terms of the GNU Lesser General Public License as
+//published by the Free Software Foundation, either version 3 of the
+//License, or (at your option) any later version.
+
+//This program is distributed in the hope that it will be useful,
+//but WITHOUT ANY WARRANTY; without even the implied warranty of
+//MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//GNU Lesser General Public License for more details.
+
+//You should have received a copy of the GNU Lesser General Public License
+//along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
     "target": "ESNext", // Must be present for MarkDoc, value must be >= es2015
     "module": "ESNext",
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
+    "lib": ["DOM", "ESNext"],
     "moduleResolution": "bundler", // Don't change. Needed for Vite
     "jsx": "preserve", // Don't change. Needed for Nextjs
     "strict": true, // Must be present for Nextjs, value optional
@@ -19,16 +32,11 @@
     "noEmit": true, // Must be present for Nextjs, value optional
     // "verbatimModuleSyntax": true, // Recommended for astro to avoid bundling issues, value optional
     // "sourceMap": true,
-    "types": [
-      "react",
-      "react-dom"
-    ],
+    "types": ["react", "react-dom"]
   },
-  "exclude": [
-    "node_modules"
-  ],
+  "exclude": ["node_modules"],
   "ts-node": {
     "esm": true,
     "experimentalSpecifierResolution": "node"
-  },
+  }
 }

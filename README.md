@@ -3,17 +3,26 @@
 <p align="center">
     <a href="https://docs.semio-tech.com">
       <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="assets/logo/semio-horizontal-dark.svg">
-          <source media="(prefers-color-scheme: light)" srcset="assets/logo/semio-horizontal.svg">
-          <img alt="semio" href="https://github.com/usalu/semio/" src="assets/logo/semio-horizontal.svg">
+          <source media="(prefers-color-scheme: dark)" srcset="assets/logo/semio_horizontal_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="assets/logo/semio_horizontal.svg">
+          <img alt="semio" href="https://github.com/usalu/semio/" src="assets/logo/semio_horizontal.svg">
       </picture>
     </a>
     <br/>
-    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="assets/badges/doi-zenodo.svg" alt="Cite"></a>
-    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="assets/badges/license-agpl-v3.svg" alt="AGPLv3 License"></a>
+    <a href="https://play.semio-tech.com"><img src="assets/badges/site-play.svg" alt="A free online playground to toy with semio without login."></a>
+    <a href="https://docs.semio-tech.com"><img src="assets/badges/site-docs.svg" alt="The documentation page to learn semio."></a>
+    <a href="https://js.semio-tech.com"><img src="assets/badges/dev-js.svg" alt="The semio storybook for all javascript components and tests."></a>
     <a href="https://discord.gg/m6nnf6pQRc"><img src="https://img.shields.io/discord/1338232508264747130?style=flat-square&color=ff344f" alt="Discord"></a>
     <br/>
-    <a href="https://www.grasshopper3d.com/"><img src="assets/badges/ui-browser.svg" alt="Browser"></a>
+     <a href="https://github.com/usalu/semio"><img src="assets/badges/repo-semio.svg" alt="The semio repository."></a>
+    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="assets/badges/cite-zenodo.svg" alt="Cite"></a>
+    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="assets/badges/license-agpl-v3.svg" alt="Affero General Public License v3.0 or later"></a>
+    <br/>
+    <a href="https://eg-ice-25.semio-tech.com"><img src="assets/badges/presentation-egice25.svg" alt="The presentation of our latest research paper on LLMs with semio."></a>
+    <a href="https://doi.org/10.17868/strath.00093288"><img src="assets/badges/latest-research.svg" alt="The latest research paper on LLMs with semio."></a>
+    <a href="https://eg-ice-23.semio-tech.com"><img src="assets/badges/presentation-egice23.svg" alt="The presentation of our previous research paper on formalizing architecture."></a>
+    <br/>
+    <a href="https://play.semio-tech.com"><img src="assets/badges/ui-browser.svg" alt="Browser"></a>
     <a href="https://www.grasshopper3d.com/"><img src="assets/badges/ui-grasshopper.svg" alt="Grasshopper"></a>
     <a href="https://www.microsoft.com/windows/windows-11"><img src="assets/badges/ui-windows.svg" alt="Windows"></a>
     <a href="https://apple.com/macos"><img src="assets/badges/ui-macos.svg" alt="macOS"></a>
@@ -22,16 +31,17 @@
     <a href="https://www.python.org/"><img src="assets/badges/powered-by-python.svg" alt="Python"></a>
     <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="assets/badges/powered-by-csharp.svg" alt="C#"></a>
     <br/>
-    <i>🧩 Design-Information-Modeling for Kit-of-Parts Architecture 🏘️ </i>
+    <br/>
+    <i>🧩 Design-Information-Modeling for Kit-of-Parts 🏘️ </i>
 </p>
 <br/>
 
-You want to 🧩 the next 🏘️🏛️🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣️👥🖱️⌨️ takes all your ⌚? Then try to 🧠 the 🧬 and let semio 💉🖥️✒️🖨️🪄🚀.
+You want to 🧩 the next 🏘️🏛️🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣️👥🖱️⌨️ takes all your ⌚? Then try to 🧠 the 🧬 and let semio 💉🖥️✒️🖨️🪄🚀
 
 # 👋 Hello contributor
 
 > [!NOTE]
-> Are you a user of semio? Then you probably want to visit our [docs](https://docs.semio-tech.com) 👀
+> Are you a user or new to semio? Then you might want to first check out our [docs](https://docs.semio-tech.com) 📖
 
 Glad to see you!
 
@@ -41,7 +51,7 @@ Let me walk you through 🚶
 
 1. [🛍️ Products](#%EF%B8%8F-products-)
    - [✏️ sketchpad](#%EF%B8%8F-sketchpad-)
-   - [👀 studio](#-studio-)
+   - [👥 studio](#-studio-)
    - [🤖 assistant](#-assistant-)
    - [🦗 semio.gh](#-semiogh-)
    - [🐝 semio.wasp](#-semiowasp-)
@@ -97,6 +107,8 @@ Let me walk you through 🚶
    - [🌈 Colors](#-colors-)
    - [📄 Typography](#-typography-)
    - [👀 Visual elements](#-visual-elements-)
+1. [⚖️ License](#-license-)
+1. [🔒Security](#-security-)
 1. [✨ Contributors](#-contributors-)
 
 # 🛍️ Products [↑](#-overview)
@@ -109,7 +121,7 @@ sketchpad is a simple-to-use, accessible and browser-based user interface for se
 
 ![sketchpad demo](/assets/images/sketchpad-demo.gif)
 
-## 👀 studio [↑](#%EF%B8%8F-products-)
+## 👥 studio [↑](#%EF%B8%8F-products-)
 
 A studio is a synchronous collaboriation environment for teams to work together in semio 🤝
 
@@ -183,7 +195,7 @@ A [`type`](#-type-) is a resuable component with different [**`representations`*
 
 ## 🔗 Connection [↑](#-specs-)
 
-A [`connection`](#-connection-) is a 3D-Link between two [`pieces`](#-piece-) with the _translation_ parameters **gap** (offset in y-direction), **shift** (offset in x-direction) and **raise** (offset in z-direction), and the _rotation_ parameters **rotation** (rotation around y-axis), **turn** (rotation around z-axis) and **tilt** (rotation around x-axis) 🪢
+A [`connection`](#-connection-) is a 3D-Link between two [`pieces`](#-piece-) with the _translation_ parameters **gap** (offset in y-direction), **shift** (offset in x-direction) and **rise** (offset in z-direction), and the _rotation_ parameters **rotation** (rotation around y-axis), **turn** (rotation around z-axis) and **tilt** (rotation around x-axis) 🪢
 
 The _translation_ is applied first, then the _rotation_ 🥈
 
@@ -223,9 +235,9 @@ The similarity of [`representations`](#-representation-) is determined by the [j
 
 ## 📏 Quality [↑](#-specs-)
 
-A [`quality`](#-quality-) is metadata with a **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
+A [`quality`](#-quality-) is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
 
-The **name** is [kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) and with `.`-separated string similar to [toml keys](https://toml.io/en/v1.0.0#keys) 🔑
+The **name** is[kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) and with `.`-separated string similar to [toml keys](https://toml.io/en/v1.0.0#keys) 🔑
 
 No **value** is equivalent to the boolean _true_ where the **name** is the category of the quality 🔑
 
@@ -243,6 +255,8 @@ The **unit** is a [unit identifier](https://en.wikipedia.org/wiki/Unit_of_measur
 - `m/s` for meter per second, `m²/s` for square meter per second, `m³/s` for cubic meter per second
 - `Pa` for pascal, `kPa` for kilopascal, `MPa` for megapascal
 - …
+
+A list of [qualities](#-quality-) is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value** ↔️
 
 ## 🏷️ Tag [↑](#-specs-)
 
@@ -290,6 +304,73 @@ You will be surprised
 </details>
 
 <details>
+<summary><strong>🙃 Write and read code upside down ✅</strong></summary>
+
+Whenever something is referenced it should be above in the source code ⬆️
+
+This means that all the building blocks (functions, classes, components, …) are first defined and then used below ⬇️
+
+If you have a cyclic depedency (really?!) then put the object with lower complexity first 🥇
+
+This means that when you start with unknown code, it is probably best to start on the bottom and go upwards 🖱️
+
+Why? LLMs, reflection, … , work best left-to-write 🤖
+
+[But Fill-in-the-Middle training is for free!?](https://arxiv.org/abs/2207.14255)
+
+Yeah, if you consider only FiM for code, then yes 🆗
+
+But we want it all!
+
+And is really so hard to start reading a from the bottom?
+
+</details>
+
+<details>
+<summary><strong>📑 If a class, function, component, … is only used once, then don't create it ❌</strong></summary>
+
+Probably, you learned to group code by classes, functions, components, … even if those definitions are only used once 🥇
+
+It hides the actual complexity and makes it harder to navigate the code 🔍
+
+</details>
+
+<details>
+<summary><strong>📺 Inline everything that bearly fits onto the screen ✅</strong></summary>
+
+The smaller the code, the easier it is to browse and show diffs 🔍
+
+If you are not sure what the code does, you can ask [ai](#-ai-) 💬
+
+</details>
+
+<details>
+<summary><strong>🗣️ Don't use comments or if you must, only tag code at the end of the line ❌</strong></summary>
+
+The smaller the code, the easier it is to browse and show diffs 🔍
+
+If you are not sure what the code does, you can ask [ai](#-ai-) 💬
+
+</details>
+
+<details>
+<summary><strong>📑 Use regions to structure your code ✅</strong></summary>
+
+Because you are not using classes, functions, components, … and you are inlining everything, your code will become long 📃
+
+To organize your code, you can use nested regions 📂
+
+In general, our files follow this structure:
+
+1. Header
+2. TODOs
+3. Imports
+4. Constants
+5. CODE
+
+</details>
+
+<details>
 <summary><strong>📁 If a folder doesn't make your life dramatically easier, don't create it ❌</strong></summary>
 
 We all know this `./src/**` folder that has made it into a lot of starters 🚀
@@ -322,7 +403,7 @@ Cutting components vertically (a bit of logic with a bit of UI) instead of horiz
 </details>
 
 <details>
-<summary><strong>📑 If multiple people work longterm on the same part, then one file for each part should be created ✅</strong></summary>
+<summary><strong>📄 If multiple people work longterm on the same part, then one file for each part should be created ✅</strong></summary>
 
 Trust me, it will make collaboration much easier 🔀
 
@@ -363,7 +444,7 @@ If not, then you are probably good 👌
 
 In our understanding, rule-of-thumbs are most useful when they are concrete 🔨
 
-Besides that we are sure you know about <strong>KISS</strong> (Keep-It-Simple-Stupid), <strong>DRY</strong> (Dont-Repeat-Yourself), <strong>YAGNI</strong> (You-Aren't-Gonna-Need-It), <strong>SoC</strong> (Separation-of-Concerns), <strong>Avoid Premature Optimization</strong>, <strong>Law of Demeter</strong>, <strong>LCHC</strong> (Low-Coupling-High-Cohesion), <strong>SOLID</strong> (Single Responsibility (<strong>SR</strong>), Open/Closed (<strong>OC</strong>), Liskov's Substitution (<strong>LS</strong>), Interface Segregation (<strong>IS</strong>), Dependency Inversion (<strong>DI</strong>)), …
+Besides that we are sure you know about <strong>KISS</strong> (Keep-It-Simple-Stupid), <strong>DRY</strong> (Dont-Repeat-Yourself) vs <strong>WET</strong> (Write-Every-Thing-Twice)/<strong>RUG</strong> (Repeat-Until-Good), <strong>YAGNI</strong> (You-Aren't-Gonna-Need-It), <strong>SoC</strong> (Separation-of-Concerns), <strong>Avoid Premature Optimization</strong>, <strong>Law of Demeter</strong>, <strong>LCHC</strong> (Low-Coupling-High-Cohesion), <strong>SOLID</strong> (<strong>SR</strong> (Single Responsibility), <strong>OC</strong> (Open/Closed), <strong>LS</strong> (Liskov's Substitution), <strong>IS</strong> (Interface Segregation), <strong>DI</strong> (Dependency Inversion)), …
 
 But as always, the devil is in the details 😈
 
@@ -374,6 +455,21 @@ Even if 95% of the codebase follows those principles, there are good reasons for
 **🚩 Don't worry, you'll figure out the possibilities and make the right choice for the specific problems ✅**
 
 ## 🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)
+
+### 🦑 GitKraken [↑](#-git-)
+
+> [!NOTE]  
+> It is free for open-source projects like this one ❤️
+
+We use [GitKraken Desktop](https://www.gitkraken.com/git-client) as our git client 🖱️
+
+It is the only nice chronological graphical overview for **all** branches at the same time that we found 🔍
+
+### 💬 Discord [↑](#-git-)
+
+Most git events are synchronized with our [repo channel](https://discord.com/channels/1338232508264747130/1339164626658525246) 💬
+
+It is perfect to find the latest activities and the history 🔍
 
 ### 📢 Release [↑](#-gitstyle-)
 
@@ -418,7 +514,9 @@ We have two different types of tags:
 
 The `main` branch is the default archive branch 🔒
 
-The `dev` branch is the default general-purpose development branch 🛠️
+Every [contributor](#-contributor-) has their own `FIRSTNAME` general-purpose development branch 🛠️
+
+In [GitKraken](#-gitkraken-) you will quickly find the latest development branch 👀
 
 Other branches are created for [components](#-components-), [specific features](https://github.com/usalu/semio/labels/enhancement) or [bug fixes](https://github.com/usalu/semio/labels/bug) 🐛
 
@@ -489,17 +587,53 @@ Most of our [codebase](#-principles-) is heavily optimized for AI agents 🤖
 
 ### 🖱️ [Cursor](/.cursor) [↑](#-ai-)
 
-We use [Cursor](https://www.cursor.com) as general editor mostly with [Tab](https://docs.cursor.com/tab/overview) ➡️
+<details>
+<summary><strong>📚 Resources:</strong></summary>
+
+- [Rules](https://docs.cursor.com/context/rules)
+
+</details>
+
+We use [Cursor](https://www.cursor.com) as general editor for typing code mostly with [Tab](https://docs.cursor.com/tab/overview) ➡️
 
 For brain-heavy tasks we prepare good tickets and use [Gemini 2.5 Pro](https://gemini.google.com/gemini-2.5-pro) ⚡
 
-We parllely work on two tasks that are unrelated to each other in order switch between them during waiting times ⌛
+We parallely work on two tasks that are unrelated to each other in order to switch between them during waiting times ⌛
 
 ### ✈️ Copilot [↑](#-ai-)
 
+<details>
+<summary><strong>📚 Resources:</strong></summary>
+
+- [Chat modes](https://code.visualstudio.com/docs/copilot/chat/chat-modes)
+
+</details>
+
 For monkey-tasks we use the free [Copilot](https://github.com/features/copilot) with [GPT-4.1](https://docs.github.com/en/copilot/using-github-copilot/ai-models/using-openai-gpt-41-in-github-copilot) 🚀
 
+## 🔄 CI/CD [↑](#-development-)
+
+<details>
+<summary><strong>📺 Channels:</strong></summary>
+
+- [TechWorld with Nana](https://www.youtube.com/@TechWorldwithNana) - `devops`
+
+</details>
+
 # ♻️ Ecosystems [↑](#-overview)
+
+<details>
+<summary><strong>📺 Channels:</strong></summary>
+
+- [FreeCodeCamp](https://www.youtube.com/@FreeCodeCamp) - `full-projects`
+- [Programming with Mosh](https://www.youtube.com/@programmingwithmosh) - `beginner`
+- [Fireship](https://www.youtube.com/@Fireship) - `quaffable`
+  - [… in 100 Seconds](https://www.youtube.com/watch?v=DC471a9qrU4&list=PL0vfts4VzfNiI1BsIK5u7LpPaIDKMJIDN) - `high-level`
+- [Lex Fridman](https://www.youtube.com/@lexfridman) - `interviews`
+- [Amigoscode](https://www.youtube.com/@amigoscode) - `java`
+- [tsoding](https://www.youtube.com/@tsoding) - `haskell`
+
+</details>
 
 You might have noticed that the individual components can be closely related such as [sketchpad](#️-sketchpad-), [Grasshopper](#-semiogh-) and [engine](#️-engine-) but they are in totally different folders 📂
 
@@ -510,7 +644,7 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 ## 🟨 [JavaScript](https://github.com/usalu/semio/tree/main/js) [↑](#%EF%B8%8F-ecosystems-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [JavaScript](https://developer.mozilla.org/docs/Web/JavaScript)
 - [Node](https://nodejs.org/en/learn/getting-started/introduction-to-nodejs)
@@ -520,17 +654,37 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 - [Wasm](https://developer.mozilla.org/docs/WebAssembly)
   - [C/C++](https://developer.mozilla.org/docs/WebAssembly/Guides/C_to_Wasm)
   - [Rust](https://developer.mozilla.org/docs/WebAssembly/Rust_to_Wasm)
-  </details>
+
+</details>
+
+<details>
+<summary><strong>📺 Channels:</strong></summary>
+
+- [WebDevSimplified](https://www.youtube.com/@WebDevSimplified) - `beginner`
+- [Jack Herrington](https://www.youtube.com/@jherr) - `react`
+- [The Net Ninja](https://www.youtube.com/@NetNinja) - `everything`
+- [Fireship](https://www.youtube.com/@Fireship) - `quaffable`
+- [Theo - t3.gg](https://www.youtube.com/@t3dotgg) - `opinionated`
+- [The Primeagen](https://www.youtube.com/@ThePrimeagen) - `entertainment`
+
+</details>
 
 ## 🟪 [.NET](https://github.com/usalu/semio/tree/main/dotnet) [↑](#%EF%B8%8F-ecosystems-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [.NET](https://dotnet.microsoft.com)
 - [C#](https://learn.microsoft.com/dotnet/csharp)
 - [NuGet](https://www.nuget.org)
 
+</details>
+
+<details>
+<summary><strong>📺 Channels:</strong></summary>
+
+- [IAmTimCorey](https://www.youtube.com/@IAmTimCorey)
+- [Nick Chapsas](https://www.youtube.com/@NickChapsas)
 </details>
 
 A .NET core for semio 🥜
@@ -542,10 +696,22 @@ A .NET core for semio 🥜
 ## 🐍 [Python](https://github.com/usalu/semio/tree/main/python) [↑](#%EF%B8%8F-ecosystems-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [Python](https://www.python.org)
 - [Poetry](https://python-poetry.org)
+
+</details>
+
+<details>
+<summary><strong>📺 Channels:</strong></summary>
+
+- [mCoding](https://www.youtube.com/@mCoding) - `advanced`
+- [Anthony writes code](https://www.youtube.com/@anthonywritescode) - `advanced`
+  - [Anthony explains](https://www.youtube.com/playlist?list=PLWBKAf81pmOaP9naRiNAqug6EBnkPakvY) - `features`
+- [Corey Schafer](https://www.youtube.com/@coreyms) - `everything`
+- [ArjanCodes](https://www.youtube.com/@ArjanCodes) - `beginner`
+- [Tech with Tim](https://www.youtube.com/@TechWithTim) - `beginner`
 
 </details>
 
@@ -558,7 +724,7 @@ A component is a piece of software which is packaged independently 🏝️
 ## 🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js) [↑](#-components-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [React](https://www.npmjs.com/package/react)
   - [Docs](https://react.dev)
@@ -618,12 +784,19 @@ A component is a piece of software which is packaged independently 🏝️
 
 </details>
 
+<details>
+<summary><strong>📼 Videos:</strong></summary>
+
+- [React State Managment](https://www.youtube.com/watch?v=-bEzt5ISACA)
+
+</details>
+
 The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 
 ## ✏️ [@semio/sketchpad](https://github.com/usalu/semio/tree/main/js/sketchpad) [↑](#-components-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [Electron](https://www.npmjs.com/package/electron)
   - [Docs](https://www.electronjs.org/docs)
@@ -639,7 +812,7 @@ An electron-based desktop app primarly working for with local kits 💾
 ## 🤖 [@semio/assistant](https://github.com/usalu/semio/tree/main/js/assistant) [↑](#-components-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [Model Context Protocol](https://modelcontextprotocol.io)
 - [OpenAI](https://platform.openai.com/docs)
@@ -654,12 +827,19 @@ Mostly a [Large Language Model](https://en.wikipedia.org/wiki/Large_language_mod
 ## 📚 [@semio/docs](https://github.com/usalu/semio/tree/main/js/docs) [↑](#-components-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [Markdown](https://www.markdownguide.org)
 - [MDX](https://mdxjs.com/docs)
 - [Astro](https://astro.build/docs)
 - [Starlight](https://starlight.astro.build)
+
+</details>
+
+<details>
+<summary><strong>📺 Channels:</strong></summary>
+
+- [Coding in Public](https://www.youtube.com/@CodinginPublic) - `astro`
 
 </details>
 
@@ -670,7 +850,7 @@ A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
 ## 🟪 [@semio/net](https://github.com/usalu/semio/tree/main/dotnet) [↑](#-components-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [Fluent Validation](https://www.nuget.org/packages/FluentValidation)
   - [Docs](https://docs.fluentvalidation.net)
@@ -706,7 +886,7 @@ The core which is shared in the [semio .NET ecosystem](#-net-) 🥜
 ## 🦗 [@semio/grasshopper](https://github.com/usalu/semio/tree/main/dotnet/Semio.Grasshopper) [↑](#-components-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [Rhino](https://www.rhino3d.com)
   - [Rhino Developer](https://developer.rhino3d.com)
@@ -715,6 +895,12 @@ The core which is shared in the [semio .NET ecosystem](#-net-) 🥜
   - [Grasshopper](https://www.grasshopper3d.com)
     - [Grasshopper SDK](https://mcneel.github.io/grasshopper-api-docs/api/grasshopper)
   - [Forum](https://discourse.mcneel.com)
+  </details>
+
+  <details>
+  <summary><strong>📺 Channels:</strong></summary>
+  - [Nono Martínez Alonso](https://www.youtube.com/c/NonoMart%C3%ADnezAlonso)
+
   </details>
 
 A full-blown Grasshopper Plugin that has (almost) everything 💯
@@ -784,7 +970,7 @@ Grasshopper is an amazing tool if you know the system that you want to create bu
 ## ⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-components-)
 
 <details>
-<summary><strong>🔗 Useful links:</strong></summary>
+<summary><strong>📚 Resources:</strong></summary>
 
 - [Pydantic](https://pypi.org/project/pydantic)
   - [Docs](https://docs.pydantic.dev)
@@ -853,7 +1039,7 @@ It offers two APIs to other clients:
 
 If you go to `http://127.0.0.1:2412/api/docs/` you find the Swagger UI:
 
-![GraphQL Query](openapi/docs/swagger.png)
+![GraphQL Query](assets/images/swagger.png)
 
 ### ⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5095)
 
@@ -861,7 +1047,7 @@ If you go to `http://127.0.0.1:2412/api/docs/` you find the Swagger UI:
 
 If you go to `http://127.0.0.1:2412/graphql/` you find the GraphiQL UI:
 
-![GraphQL Query](graphql/docs/graphiql.png)
+![GraphQL Query](assets/images/graphiql.png)
 
 ## 🛍️ [@semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-components-)
 
@@ -971,6 +1157,24 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 - Borders □
 - Basic geometric shapes ⚪
 
+# ⚖️ License
+
+The files in this repository are licensed under the [GNU Affero General Public License](https://www.gnu.org/licenses/#AGPL) unless otherwise described. Most libraries, modules, extensions, objects or code herein are explicitly licensed. This is indicated in the root of the containing folder under a different license file, or in the configuration files of a project or in the respective file's header.
+
+As a reference, different type of components have usually different licenses:
+
+- software libraries: [LGPLv3 or later - GNU Lesser General Public License Version 3](https://www.gnu.org/licenses/lgpl-3.0.en.html)
+- applications: [AGPLv3 or later - GNU Affero General Public License Version 3](https://www.gnu.org/licenses/agpl-3.0.en.html)
+- examples: [MIT - The MIT License](https://mit-license.org)
+- templates: [CC0 - No Rights Reserved](https://creativecommons.org/public-domain/cc0/)
+- assets: [CC BY-ND 4.0 - Attribution-NoDerivatives 4.0 International](https://creativecommons.org/licenses/by-nd/4.0/)
+
+If you have any questions, please don't hesitate to get in touch with [us over email](mail@semio-tech.com) 📧
+
+# 🔒 Security
+
+If you have any security vulnerabilities or concerns, please contact [us over email](security@semio-tech.com) and don't open an issue, discussion or write into our public discord server 🥷
+
 # ✨ [Contributors](https://github.com/usalu/semio/pulse/monthly) [↑](#-overview)
 
 <table style="border-collapse: collapse; border: none;">
@@ -1019,6 +1223,13 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <sub><b>Christian Hödtke</b></sub></a>
         <br />
         <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a>
+      </td>
+      <td align="center" valign="top" width="145px"><a href="https://github.com/AdrianoCelentano">
+        <img src="assets/contributors/AdrianoCelentano_round_90.png" width="90px" alt="AdrianoCelentano" style="border-radius: 50%;"/>
+        <br />
+        <sub><b>AdrianoCelentano</b></sub></a>
+        <br />
+        <a href="#-semiojs-" title="🟨@semio/js"><sub>🟨<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/drymuzzle">
         <img src="assets/contributors/drymuzzle_round_90.png" width="90px" alt="drymuzzle" style="border-radius: 50%;"/>
