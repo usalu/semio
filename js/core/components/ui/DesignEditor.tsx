@@ -16,7 +16,7 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from "@semio/js/components/ui/Resizable";
-import { Design, Type, Piece, flattenDesign, getPieceRepresentationUrls } from '@semio/js';
+import { Design, Type, Piece, flattenDesign, getPieceRepresentationUrls, Kit } from '@semio/js';
 import { ICON_WIDTH } from '@semio/js/semio';
 import { Avatar, AvatarFallback, AvatarImage } from "@semio/js/components/ui/Avatar";
 import { default as Diagram } from "@semio/js/components/ui/Diagram";
@@ -29,7 +29,7 @@ import { ScrollArea } from '@semio/js/components/ui/ScrollArea';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/components/ui/HoverCard";
 import { Textarea } from '@semio/js/components/ui/Textarea';
 import { Generator } from '@semio/js/lib/utils';
-import { useDesignEditorStore, useStudioStore } from '@semio/js/store';
+import { DesignEditorSelection, useDesignEditorStore, useStudioStore } from '@semio/js/store';
 import { useSketchpad } from '@semio/js/components/ui/Sketchpad';
 import { Input } from '@semio/js/components/ui/Input';
 import { Slider } from '@semio/js/components/ui/Slider';
@@ -234,9 +234,11 @@ const DesignAvatar: FC<DesignAvatarProps> = ({ design, showHoverCard = false }) 
 }
 
 // Workbench panel component
-interface WorkbenchProps extends ResizablePanelProps { }
+interface WorkbenchProps extends ResizablePanelProps {
+    kit: Kit;
+}
 
-const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
+const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width, kit }) => {
     if (!visible) return null;
     const [isResizeHovered, setIsResizeHovered] = useState(false);
     const [isResizing, setIsResizing] = useState(false);
@@ -266,8 +268,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     };
 
     // const { kit } = useKit();
-    const kit = useStudioStore().getKit("Metabolism", "r25.07-1");
-    if (!kit?.types) return null;
+    if (!kit?.types || !kit?.designs) return null;
 
     const typesByName = kit.types.reduce((acc, type) => {
         acc[type.name] = acc[type.name] || [];
@@ -513,31 +514,35 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
     );
 }
 
-const DesignEditorCore: FC = () => {
-    const [, forceUpdate] = useReducer(x => x + 1, 0);
+interface DesignEditorCoreProps {
+    kit: Kit;
+    design: Design;
+    selection: DesignEditorSelection;
+    fileUrls: Map<string, string>;
+    setNavbarToolbar: (toolbar: ReactNode) => void;
+    onSelectionChange: (selection: DesignEditorSelection) => void;
+    onPieceCreate: (piece: Piece) => void;
+    onPiecesUpdate: (pieces: Piece[]) => void;
+    onSelectionDelete: () => void;
+    onUndo: () => void;
+    onRedo: () => void;
+}
 
-    const studioStore = useStudioStore();
-    const designEditorStore = useDesignEditorStore();
 
-    useEffect(() => {
-        const unsubscribe = designEditorStore.subscribe(() => {
-            forceUpdate();
-        });
-        return () => unsubscribe();
-    }, [designEditorStore]);
-
+const DesignEditorCore: FC<DesignEditorCoreProps> = ({
+    kit,
+    design,
+    selection,
+    fileUrls,
+    setNavbarToolbar,
+    onSelectionChange,
+    onPieceCreate,
+    onPiecesUpdate,
+    onSelectionDelete,
+    onUndo,
+    onRedo
+}) => {
     const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null);
-    const { setNavbarToolbar } = useSketchpad();
-    const [kitName, kitVersion] = designEditorStore.getKitId();
-    const kit = studioStore.getKit(kitName, kitVersion);
-    if (!kit) return null;
-
-    if (!kit.types) throw new Error(`Kit ${kitName} ${kitVersion} has no types`);
-
-    const [designName, designVariant, designView] = designEditorStore.getDesignId();
-    const design = studioStore.getDesign(kitName, kitVersion, designName, designVariant, designView);
-
-    const selection = designEditorStore.getState().selection;
 
     const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
         workbench: false,
@@ -579,15 +584,15 @@ const DesignEditorCore: FC = () => {
     useHotkeys('mod+x', (e) => { e.preventDefault(); console.log('Cut selected'); });
     useHotkeys('delete', (e) => {
         e.preventDefault();
-        designEditorStore.transact(() => {
-            designEditorStore.deleteSelectedPiecesAndConnections();
-        });
+        onSelectionDelete();
+    });
+    useHotkeys('mod+z', (e) => { // Swapped y and z for conventional undo/redo
+        e.preventDefault();
+        onUndo();
     });
     useHotkeys('mod+y', (e) => {
-        e.preventDefault(); designEditorStore.undo();
-    });
-    useHotkeys('mod+z', (e) => {
-        e.preventDefault(); designEditorStore.redo();
+        e.preventDefault();
+        onRedo();
     });
     useHotkeys('mod+w', (e) => { e.preventDefault(); console.log('Close design'); });
 
@@ -629,12 +634,6 @@ const DesignEditorCore: FC = () => {
     const [activeDraggedType, setActiveDraggedType] = useState<Type | null>(null);
     const [activeDraggedDesign, setActiveDraggedDesign] = useState<Design | null>(null);
 
-    const createPiece = (piece: Piece) => {
-        designEditorStore.transact(() => {
-            studioStore.createPiece(kitName, kitVersion, designName, designVariant, designView, piece);
-        });
-    };
-
     const onDragStart = (event: DragStartEvent) => {
         const { active } = event;
         const id = active.id.toString();
@@ -673,9 +672,7 @@ const DesignEditorCore: FC = () => {
                     },
                     center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 }
                 };
-                designEditorStore.transact(() => {
-                    createPiece(piece);
-                });
+                onPieceCreate(piece);
             } else if (activeDraggedDesign) {
                 const correspondingType = kit?.types?.find(t => t.name === activeDraggedDesign.name && t.variant === activeDraggedDesign.variant);
                 if (correspondingType) {
@@ -687,9 +684,7 @@ const DesignEditorCore: FC = () => {
                             variant: correspondingType.variant
                         }
                     };
-                    designEditorStore.transact(() => {
-                        createPiece(piece);
-                    });
+                    onPieceCreate(piece);
                 } else {
                     console.warn(`Could not find corresponding Type for dragged Design: ${activeDraggedDesign.name} / ${activeDraggedDesign.variant}`);
                 }
@@ -699,16 +694,6 @@ const DesignEditorCore: FC = () => {
         setActiveDraggedDesign(null);
     };
 
-    const onPiecesDiagramDragEnd = (pieces: Piece[]) => {
-        designEditorStore.transact(() => {
-            pieces.forEach((piece) => {
-                studioStore.updatePiece(kitName, kitVersion, designName, designVariant, designView, piece);
-            });
-        });
-        forceUpdate();
-    };
-
-    const fileUrls = studioStore.getFileUrls()
     return (
         <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
 
@@ -728,8 +713,8 @@ const DesignEditorCore: FC = () => {
                                     types={kit?.types ?? []}
                                     selection={selection}
                                     fileUrls={fileUrls}
-                                    onSelectionChange={designEditorStore.updateDesignEditorSelection}
-                                    onPiecesDragEnd={onPiecesDiagramDragEnd}
+                                    onSelectionChange={onSelectionChange}
+                                    onPiecesDragEnd={onPiecesUpdate}
                                 />
                             ) : (
                                 <div className="flex items-center justify-center h-full text-muted-foreground">No design loaded</div>
@@ -749,7 +734,7 @@ const DesignEditorCore: FC = () => {
                                     types={kit?.types ?? []}
                                     selection={selection}
                                     fileUrls={fileUrls}
-                                    onSelectionChange={designEditorStore.updateDesignEditorSelection}
+                                    onSelectionChange={onSelectionChange}
                                 />
                             ) : (
                                 <div className="flex items-center justify-center h-full text-muted-foreground">No design loaded</div>
@@ -761,6 +746,7 @@ const DesignEditorCore: FC = () => {
                     visible={visiblePanels.workbench}
                     onWidthChange={setWorkbenchWidth}
                     width={workbenchWidth}
+                    kit={kit}
                 />
                 <Details
                     visible={visiblePanels.details}
@@ -793,13 +779,25 @@ const DesignEditorCore: FC = () => {
     )
 }
 
-interface DesignEditorProps { }
+interface DesignEditorProps {
+    kit: Kit;
+    design: Design;
+    selection: DesignEditorSelection;
+    fileUrls: Map<string, string>;
+    setNavbarToolbar: (toolbar: ReactNode) => void;
+    onSelectionChange: (selection: DesignEditorSelection) => void;
+    onPieceCreate: (piece: Piece) => void;
+    onPiecesUpdate: (pieces: Piece[]) => void;
+    onSelectionDelete: () => void;
+    onUndo: () => void;
+    onRedo: () => void;
+}
 
-const DesignEditor: FC<DesignEditorProps> = () => {
+const DesignEditor: FC<DesignEditorProps> = (props) => {
 
     return (
         <ReactFlowProvider>
-            <DesignEditorCore />
+            <DesignEditorCore {...props} />
         </ReactFlowProvider>
     );
 };

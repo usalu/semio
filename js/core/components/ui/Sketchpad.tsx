@@ -1,4 +1,4 @@
-import { FC, Suspense, ReactNode, useState, useEffect, createContext, useContext, useMemo, useReducer } from 'react';
+import { FC, Suspense, ReactNode, useState, useEffect, createContext, useContext, useMemo, useReducer, useSyncExternalStore } from 'react';
 import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X, MessageCircle, Home, Sun, Moon, Monitor, Sofa, Glasses, AppWindow } from 'lucide-react';
 import {
     DndContext,
@@ -15,20 +15,19 @@ import {
     ResizablePanelGroup,
 } from "@semio/js/components/ui/Resizable"
 import { Avatar, AvatarFallback, AvatarImage } from "@semio/js/components/ui/Avatar";
-import { Design, Kit, Type } from '@semio/js';
+import { Design, Kit, Piece, Type } from '@semio/js';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@semio/js/components/ui/Tooltip"
 import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGroup"
 import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible';
 import { createPortal } from 'react-dom';
-import { useStudioStore, StudioStoreProvider, DesignEditorStoreProvider } from '@semio/js/store';
+import { useStudioStore, StudioStoreProvider, DesignEditorStoreProvider, useDesignEditorStore } from '@semio/js/store';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@semio/js/components/ui/Breadcrumb';
 import { Button } from "@semio/js/components/ui/Button";
 import { useHotkeys } from 'react-hotkeys-hook';
 import { Toggle } from '@semio/js/components/ui/Toggle';
 import { Fingerprint } from 'lucide-react';
 import { Generator } from '@semio/js/lib/utils';
-import { Piece } from '@semio/js';
 import DesignEditor from './DesignEditor';
 
 export enum Mode {
@@ -191,36 +190,113 @@ interface ViewProps {
 }
 
 const View: FC<ViewProps> = ({ }) => {
-    const [, forceUpdate] = useReducer(x => x + 1, 0);
     const studioStore = useStudioStore();
     const [designEditorId, setDesignEditorId] = useState<string>('');
+    const { setNavbarToolbar } = useSketchpad();
 
+    const kitName = "Metabolism";
+    const kitVersion = "r25.07-1";
+    const designName = "Nakagin Capsule Tower";
+    const designVariant = "";
+    const designView = "";
 
-    if (!designEditorId) {
-        try {
-            // Consider moving this logic if it needs to react to props or other state changes
-            const editorId = studioStore.createDesignEditorStore("Metabolism", "r25.07-1", "Nakagin Capsule Tower", "", "");
-            setDesignEditorId(editorId);
-        } catch (error) {
-            console.error("Error creating design editor store:", error);
+    const kit = useSyncExternalStore(
+        studioStore.subscribe,
+        () => {
+            try {
+                return studioStore.getKit(kitName, kitVersion);
+            } catch (e) {
+                return null;
+            }
         }
+    );
+
+    if (!kit) return null;
+
+    useEffect(() => {
+        if (kit && !designEditorId) {
+            try {
+                const editorId = studioStore.createDesignEditorStore(kitName, kitVersion, designName, designVariant, designView);
+                setDesignEditorId(editorId);
+            } catch (error) {
+                console.error("Error creating design editor store:", error);
+            }
+        }
+    }, [kit, designEditorId, studioStore, kitName, kitVersion, designName, designVariant, designView]);
+
+    const designEditorStore = useMemo(() => {
+        if (!designEditorId) return null;
+        return studioStore.getDesignEditorStore(designEditorId);
+    }, [designEditorId, studioStore]);
+
+    const design = useSyncExternalStore(
+        studioStore.subscribe,
+        () => {
+            if (!designEditorStore || !kit) return null;
+            try {
+                const [dName, dVariant, dView] = designEditorStore.getDesignId();
+                return studioStore.getDesign(kit.name, kit.version, dName, dVariant, dView);
+            } catch (e) {
+                console.error(e);
+                return null;
+            }
+        }
+    );
+
+    const selection = useSyncExternalStore(
+        (listener) => designEditorStore?.subscribe(listener) ?? (() => { }),
+        () => designEditorStore?.getState().selection ?? { selectedPieceIds: [], selectedConnections: [] }
+    );
+
+    const fileUrls = useSyncExternalStore(
+        studioStore.subscribe,
+        () => studioStore.getFileUrls()
+    );
+
+
+    if (!designEditorId || !kit || !design || !designEditorStore) {
+        return null; // Or a loading indicator
     }
 
-    if (!designEditorId) {
-        return <Button onClick={() => {
-            forceUpdate()
-        }}>Refresh</Button>;
-    }
+    const handlePieceCreate = (piece: Piece) => {
+        designEditorStore.transact(() => {
+            studioStore.createPiece(kit.name, kit.version, design.name, design.variant || '', design.view || '', piece);
+        });
+    };
+
+    const handlePiecesUpdate = (pieces: Piece[]) => {
+        designEditorStore.transact(() => {
+            pieces.forEach((piece) => {
+                studioStore.updatePiece(kit.name, kit.version, design.name, design.variant || '', design.view || '', piece);
+            });
+        });
+    };
+
+    const handleDeleteSelection = () => {
+        designEditorStore.transact(() => {
+            designEditorStore.deleteSelectedPiecesAndConnections();
+        });
+    };
+
+    const handleUndo = () => designEditorStore.undo();
+    const handleRedo = () => designEditorStore.redo();
 
     return (
-        <>
-            <Button onClick={() => {
-                forceUpdate()
-            }}>Refresh</Button>;
-            <DesignEditorStoreProvider designEditorId={designEditorId}>
-                <DesignEditor />
-            </DesignEditorStoreProvider>
-        </>
+        <DesignEditorStoreProvider designEditorId={designEditorId}>
+            <DesignEditor
+                kit={kit}
+                design={design}
+                selection={selection}
+                fileUrls={fileUrls}
+                setNavbarToolbar={setNavbarToolbar}
+                onSelectionChange={designEditorStore.updateDesignEditorSelection}
+                onPieceCreate={handlePieceCreate}
+                onPiecesUpdate={handlePiecesUpdate}
+                onSelectionDelete={handleDeleteSelection}
+                onUndo={handleUndo}
+                onRedo={handleRedo}
+            />
+        </DesignEditorStoreProvider>
     );
 }
 

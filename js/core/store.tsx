@@ -90,10 +90,10 @@ class StudioStore {
         this.listeners.forEach(listener => listener());
     }
 
-    subscribe(callback: () => void): () => void {
-        this.listeners.add(callback);
+    subscribe(listener: () => void): () => void {
+        this.listeners.add(listener);
         return () => {
-            this.listeners.delete(callback);
+            this.listeners.delete(listener);
         };
     }
 
