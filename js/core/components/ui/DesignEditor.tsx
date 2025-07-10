@@ -16,7 +16,7 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from "@semio/js/components/ui/Resizable";
-import { Design, Type, Piece, flattenDesign, getPieceRepresentationUrls, Kit } from '@semio/js';
+import { Design, Type, Piece, flattenDesign, getPieceRepresentationUrls, Kit, DesignId } from '@semio/js';
 import { ICON_WIDTH } from '@semio/js/semio';
 import { Avatar, AvatarFallback, AvatarImage } from "@semio/js/components/ui/Avatar";
 import { default as Diagram } from "@semio/js/components/ui/Diagram";
@@ -516,7 +516,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
 
 interface DesignEditorCoreProps {
     kit: Kit;
-    design: Design;
+    designId: DesignId;
     selection: DesignEditorSelection;
     fileUrls: Map<string, string>;
     setNavbarToolbar: (toolbar: ReactNode) => void;
@@ -531,7 +531,7 @@ interface DesignEditorCoreProps {
 
 const DesignEditorCore: FC<DesignEditorCoreProps> = ({
     kit,
-    design,
+    designId,
     selection,
     fileUrls,
     setNavbarToolbar,
@@ -542,6 +542,8 @@ const DesignEditorCore: FC<DesignEditorCoreProps> = ({
     onUndo,
     onRedo
 }) => {
+    const design = kit.designs?.find(d => d.name === designId.name && d.variant === designId.variant && d.view === designId.view);
+
     const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null);
 
     const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
@@ -781,7 +783,7 @@ const DesignEditorCore: FC<DesignEditorCoreProps> = ({
 
 interface DesignEditorProps {
     kit: Kit;
-    design: Design;
+    designId: DesignId;
     selection: DesignEditorSelection;
     fileUrls: Map<string, string>;
     setNavbarToolbar: (toolbar: ReactNode) => void;

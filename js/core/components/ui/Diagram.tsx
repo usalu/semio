@@ -5,7 +5,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Sphere } from '@react-three/drei';
 
-import { Connection, Design, DiagramPoint, flattenDesign, ICON_WIDTH, Kit, Piece, Port, Type, TypeID } from '@semio/js/semio'
+import { Connection, Design, DiagramPoint, flattenDesign, ICON_WIDTH, Kit, Piece, Port, Type, TypeId } from '@semio/js/semio'
 import { Avatar, AvatarFallback, AvatarImage } from '@semio/js/components/ui/Avatar';
 
 // import '@xyflow/react/dist/base.css';

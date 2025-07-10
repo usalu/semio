@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import * as Y from 'yjs';
-import React, { createContext, useContext, useEffect, useState, useMemo, FC } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo, FC, useSyncExternalStore } from 'react';
 import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
 import JSZip, { file } from 'jszip';
@@ -1607,6 +1607,35 @@ export const StudioStoreProvider: FC<{ userId: string, children: React.ReactNode
             {children}
         </StudioStoreContext.Provider>
     );
+};
+
+const KitContext = createContext<Kit | null>(null);
+
+export const KitProvider: FC<{ kitName: string, kitVersion: string, children: React.ReactNode }> = ({ kitName, kitVersion, children }) => {
+    const studioStore = useStudioStore();
+    const kit = useSyncExternalStore(
+        studioStore.subscribe,
+        () => {
+            try {
+                return studioStore.getKit(kitName, kitVersion);
+            } catch (e) {
+                return null;
+            }
+        }
+    );
+    return (
+        <KitContext.Provider value={kit}>
+            {children}
+        </KitContext.Provider>
+    );
+};
+
+export const useKit = () => {
+    const kit = useContext(KitContext);
+    if (!kit) {
+        throw new Error('useKit must be used within a KitProvider');
+    }
+    return kit;
 };
 
 export interface DesignEditorSelection {

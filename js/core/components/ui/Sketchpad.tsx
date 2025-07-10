@@ -21,7 +21,7 @@ import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGrou
 import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible';
 import { createPortal } from 'react-dom';
-import { useStudioStore, StudioStoreProvider, DesignEditorStoreProvider, useDesignEditorStore } from '@semio/js/store';
+import { useStudioStore, StudioStoreProvider, DesignEditorStoreProvider, useDesignEditorStore, KitProvider, useKit } from '@semio/js/store';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@semio/js/components/ui/Breadcrumb';
 import { Button } from "@semio/js/components/ui/Button";
 import { useHotkeys } from 'react-hotkeys-hook';
@@ -194,54 +194,33 @@ const View: FC<ViewProps> = ({ }) => {
     const [designEditorId, setDesignEditorId] = useState<string>('');
     const { setNavbarToolbar } = useSketchpad();
 
-    const kitName = "Metabolism";
-    const kitVersion = "r25.07-1";
+    const kit = useKit();
     const designName = "Nakagin Capsule Tower";
     const designVariant = "";
     const designView = "";
-
-    const kit = useSyncExternalStore(
-        studioStore.subscribe,
-        () => {
-            try {
-                return studioStore.getKit(kitName, kitVersion);
-            } catch (e) {
-                return null;
-            }
-        }
-    );
-
-    if (!kit) return null;
+    const designId = {
+        name: designName,
+        variant: designVariant,
+        view: designView
+    }
 
     useEffect(() => {
-        if (kit && !designEditorId) {
+        if (!designEditorId) {
             try {
-                const editorId = studioStore.createDesignEditorStore(kitName, kitVersion, designName, designVariant, designView);
+                const editorId = studioStore.createDesignEditorStore(kit.name, kit.version, designName, designVariant, designView);
                 setDesignEditorId(editorId);
             } catch (error) {
                 console.error("Error creating design editor store:", error);
             }
         }
-    }, [kit, designEditorId, studioStore, kitName, kitVersion, designName, designVariant, designView]);
+    }, [designEditorId, studioStore, designName, designVariant, designView]);
 
     const designEditorStore = useMemo(() => {
         if (!designEditorId) return null;
         return studioStore.getDesignEditorStore(designEditorId);
     }, [designEditorId, studioStore]);
 
-    const design = useSyncExternalStore(
-        studioStore.subscribe,
-        () => {
-            if (!designEditorStore || !kit) return null;
-            try {
-                const [dName, dVariant, dView] = designEditorStore.getDesignId();
-                return studioStore.getDesign(kit.name, kit.version, dName, dVariant, dView);
-            } catch (e) {
-                console.error(e);
-                return null;
-            }
-        }
-    );
+    if (!designEditorStore) return null;
 
     const selection = useSyncExternalStore(
         (listener) => designEditorStore?.subscribe(listener) ?? (() => { }),
@@ -253,48 +232,43 @@ const View: FC<ViewProps> = ({ }) => {
         () => studioStore.getFileUrls()
     );
 
-
-    if (!designEditorId || !kit || !design || !designEditorStore) {
-        return null; // Or a loading indicator
-    }
-
-    const handlePieceCreate = (piece: Piece) => {
+    const onPieceCreate = (piece: Piece) => {
         designEditorStore.transact(() => {
-            studioStore.createPiece(kit.name, kit.version, design.name, design.variant || '', design.view || '', piece);
+            studioStore.createPiece(kit.name, kit.version, designName, designVariant, designView, piece);
         });
     };
 
-    const handlePiecesUpdate = (pieces: Piece[]) => {
+    const onPiecesUpdate = (pieces: Piece[]) => {
         designEditorStore.transact(() => {
             pieces.forEach((piece) => {
-                studioStore.updatePiece(kit.name, kit.version, design.name, design.variant || '', design.view || '', piece);
+                studioStore.updatePiece(kit.name, kit.version, designName, designVariant, designView, piece);
             });
         });
     };
 
-    const handleDeleteSelection = () => {
+    const onDeleteSelection = () => {
         designEditorStore.transact(() => {
             designEditorStore.deleteSelectedPiecesAndConnections();
         });
     };
 
-    const handleUndo = () => designEditorStore.undo();
-    const handleRedo = () => designEditorStore.redo();
+    const onUndo = () => designEditorStore.undo();
+    const onRedo = () => designEditorStore.redo();
 
     return (
         <DesignEditorStoreProvider designEditorId={designEditorId}>
             <DesignEditor
                 kit={kit}
-                design={design}
+                designId={designId}
                 selection={selection}
                 fileUrls={fileUrls}
                 setNavbarToolbar={setNavbarToolbar}
                 onSelectionChange={designEditorStore.updateDesignEditorSelection}
-                onPieceCreate={handlePieceCreate}
-                onPiecesUpdate={handlePiecesUpdate}
-                onSelectionDelete={handleDeleteSelection}
-                onUndo={handleUndo}
-                onRedo={handleRedo}
+                onPieceCreate={onPieceCreate}
+                onPiecesUpdate={onPiecesUpdate}
+                onSelectionDelete={onDeleteSelection}
+                onUndo={onUndo}
+                onRedo={onRedo}
             />
         </DesignEditorStoreProvider>
     );
@@ -339,28 +313,33 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
         }
     }, [currentLayout]);
 
+    const kitName = "Metabolism";
+    const kitVersion = "r25.07-1";
+
     return (
         <TooltipProvider>
             <StudioStoreProvider userId={userId}>
-                <SketchpadContext.Provider value={{
-                    mode: mode,
-                    layout: currentLayout,
-                    setLayout: setCurrentLayout,
-                    theme: currentTheme,
-                    setTheme: setCurrentTheme,
-                    setNavbarToolbar: setNavbarToolbar,
-                }}>
-                    <div
-                        key={`layout-${currentLayout}`}
-                        className="h-full w-full flex flex-col bg-background text-foreground"
-                    >
-                        <Navbar
-                            toolbarContent={navbarToolbar}
-                            onWindowEvents={onWindowEvents}
-                        />
-                        <View />
-                    </div>
-                </SketchpadContext.Provider>
+                <KitProvider kitName={kitName} kitVersion={kitVersion}>
+                    <SketchpadContext.Provider value={{
+                        mode: mode,
+                        layout: currentLayout,
+                        setLayout: setCurrentLayout,
+                        theme: currentTheme,
+                        setTheme: setCurrentTheme,
+                        setNavbarToolbar: setNavbarToolbar,
+                    }}>
+                        <div
+                            key={`layout-${currentLayout}`}
+                            className="h-full w-full flex flex-col bg-background text-foreground"
+                        >
+                            <Navbar
+                                toolbarContent={navbarToolbar}
+                                onWindowEvents={onWindowEvents}
+                            />
+                            <View />
+                        </div>
+                    </SketchpadContext.Provider>
+                </KitProvider>
             </StudioStoreProvider>
         </TooltipProvider>
     );

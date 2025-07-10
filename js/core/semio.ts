@@ -84,6 +84,16 @@ export type Design = {
     qualities?: Quality[];
 }
 
+// 🪪 Identifier for a design within a kit.
+export type DesignId = {
+    // 📛 The name of the design
+    name: string;
+    // 🔀 The variant of the design
+    variant: string;
+    // 🥽 The view of the design
+    view: string;
+}
+
 // 📑 Represents an author.
 export type Author = {
     // 📛 The name of the author
@@ -123,19 +133,19 @@ export type Connection = {
 // 🧱 A side of a piece in a connection, identifying a specific port on a specific piece.
 export type Side = {
     // ⭕ The piece involved in this side of the connection
-    piece: PieceID; // Represents Piece identifier
+    piece: PieceId; // Represents Piece identifier
     // 🔌 The port involved in this side of the connection
-    port: PortID;   // Represents Port identifier
+    port: PortId;   // Represents Port identifier
 }
 
 // 🪪 Identifier for a piece within a design.
-export type PieceID = {
+export type PieceId = {
     // 🆔 The id of the piece
     id_: string;
 }
 
 // 🪪 Identifier for a port within a type.
-export type PortID = {
+export type PortId = {
     // 🆔 The id of the port
     id_?: string;
 }
@@ -147,7 +157,7 @@ export type Piece = {
     // 💬 The human-readable description of the piece
     description?: string;
     // 🧩 The type defining this piece
-    type: TypeID; // Represents Type identifier
+    type: TypeId; // Represents Type identifier
     // ◳ The optional plane (position and orientation) of the piece
     plane?: Plane;
     // 📺 The optional center of the piece in the diagram
@@ -195,7 +205,7 @@ export type Vector = {
 }
 
 // 🪪 Identifier for a type, potentially including a variant.
-export type TypeID = {
+export type TypeId = {
     // 📛 The name of the type
     name: string;
     // 🔀 The optional variant of the type
@@ -539,19 +549,19 @@ const typeMap: any = {
         { json: "qualities", js: "qualities", typ: u(undefined, a(r("Quality"))) },
     ], "any"),
     "Side": o([
-        { json: "piece", js: "piece", typ: r("PieceID") },
-        { json: "port", js: "port", typ: r("PortID") },
+        { json: "piece", js: "piece", typ: r("PieceId") },
+        { json: "port", js: "port", typ: r("PortId") },
     ], "any"),
-    "PieceID": o([
+    "PieceId": o([
         { json: "id_", js: "id_", typ: u(undefined, "") },
     ], "any"),
-    "PortID": o([
+    "PortId": o([
         { json: "id_", js: "id_", typ: u(undefined, "") },
     ], "any"),
     "Piece": o([
         { json: "id_", js: "id_", typ: u(undefined, "") },
         { json: "description", js: "description", typ: "" },
-        { json: "type", js: "type", typ: r("TypeID") },
+        { json: "type", js: "type", typ: r("TypeId") },
         { json: "plane", js: "plane", typ: u(undefined, r("Plane")) }, // Now optional object
         { json: "center", js: "center", typ: r("DiagramPoint") }, // Now required object
         { json: "qualities", js: "qualities", typ: u(undefined, a(r("Quality"))) },
@@ -576,7 +586,7 @@ const typeMap: any = {
         { json: "y", js: "y", typ: 0 },
         { json: "z", js: "z", typ: 0 },
     ], "any"),
-    "TypeID": o([
+    "TypeId": o([
         { json: "name", js: "name", typ: "" },
         { json: "variant", js: "variant", typ: u(undefined, "") },
     ], "any"),
@@ -774,10 +784,10 @@ export const flattenDesign = (design: Design, types: Type[]): Design => {
         if (!typesDict[t.name]) typesDict[t.name] = {};
         typesDict[t.name][t.variant || ''] = t;
     });
-    const getType = (typeId: TypeID): Type | undefined => {
+    const getType = (typeId: TypeId): Type | undefined => {
         return typesDict[typeId.name]?.[typeId.variant || ''];
     };
-    const getPort = (type: Type | undefined, portId: PortID | undefined): Port | undefined => {
+    const getPort = (type: Type | undefined, portId: PortId | undefined): Port | undefined => {
         if (!type?.ports) return undefined;
         return portId?.id_ ? type.ports.find(p => p.id_ === portId.id_) : type.ports[0];
     };
