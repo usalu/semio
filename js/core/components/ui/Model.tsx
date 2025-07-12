@@ -127,15 +127,25 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, upda
 };
 
 interface ModelDesignProps {
-    design: Design;
-    types: Type[];
+    kit: Kit;
+    designId: DesignId;
     fileUrls: Map<string, string>;
     selection: DesignEditorSelection;
     onSelectionChange: (selection: DesignEditorSelection) => void;
     onDesignChange: (design: Design) => void;
 }
 
-const ModelDesign: FC<ModelDesignProps> = ({ design, types, fileUrls, selection, onSelectionChange, onDesignChange }) => {
+const ModelDesign: FC<ModelDesignProps> = ({ kit, designId, fileUrls, selection, onSelectionChange, onDesignChange }) => {
+    const normalize = (val: string | undefined) => val === undefined ? "" : val;
+    const design = kit.designs?.find(d =>
+        d.name === designId.name &&
+        (normalize(d.variant) === normalize(designId.variant)) &&
+        (normalize(d.view) === normalize(designId.view))
+    );
+    if (!design) {
+        return null;
+    }
+    const types = kit?.types ?? [];
     const piecePlanes = useMemo(() => {
         const flatDesign = flattenDesign(design, types);
         return flatDesign.pieces?.map(p => p.plane!) || [];
@@ -250,17 +260,6 @@ const Model: FC<ModelProps> = ({ kit, designId, fileUrls, fullscreen, onPanelDou
         sectionColor: getComputedColor('--foreground'),
         cellColor: getComputedColor('--accent-foreground')
     });
-    const normalize = (val: string | undefined) => val === undefined ? "" : val;
-    const design = kit.designs?.find(d =>
-        d.name === designId.name &&
-        (normalize(d.variant) === normalize(designId.variant)) &&
-        (normalize(d.view) === normalize(designId.view))
-    );
-    if (!design) {
-        return null;
-    }
-    const types = kit?.types ?? [];
-    // Update colors when theme changes
     useEffect(() => {
         const updateColors = () => {
             setGridColors({
@@ -307,7 +306,7 @@ const Model: FC<ModelProps> = ({ kit, designId, fileUrls, fullscreen, onPanelDou
                 {/* <Suspense fallback={null}>
                         <Gltf src={src} />
                     </Suspense> */}
-                <ModelDesign design={design} types={types} fileUrls={fileUrls} selection={selection} onSelectionChange={onSelectionChange} onDesignChange={onDesignChange} />
+                <ModelDesign kit={kit} designId={designId} fileUrls={fileUrls} selection={selection} onSelectionChange={onSelectionChange} onDesignChange={onDesignChange} />
                 <Environment files={'schlenker-shed.hdr'} />
                 <Grid
                     infiniteGrid={true}
