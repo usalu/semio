@@ -160,7 +160,19 @@ const connectionToEdge = (connection: Connection, selected: boolean): Connection
 });
 
 
-const DiagramCore: FC<DiagramProps> = ({ kit, designId, fullscreen, selection, onPanelDoubleClick, onSelectionChange, onPiecesDragEnd }) => {
+interface DiagramProps {
+    kit: Kit;
+    designId: DesignId;
+    fileUrls: Map<string, string>;
+    fullscreen?: boolean;
+    selection?: DesignEditorSelection;
+    onDesignUpdate?: (design: Design) => void;
+    onSelectionChange?: (selection: DesignEditorSelection) => void;
+    onPanelDoubleClick?: () => void;
+}
+
+
+const Diagram: FC<DiagramProps> = ({ kit, designId, fullscreen, selection, onPanelDoubleClick, onDesignUpdate, onSelectionChange }) => {
     const nodeTypes = useMemo(() => ({ piece: PieceNodeComponent }), []);
     const edgeTypes = useMemo(() => ({ connection: ConnectionEdgeComponent }), []);
 
@@ -429,9 +441,12 @@ const DiagramCore: FC<DiagramProps> = ({ kit, designId, fullscreen, selection, o
             ...p,
             center: { x: p.center!.x + offset.x, y: p.center!.y + offset.y },
         }));
-        onPiecesDragEnd?.(offsettedPieces!);
+        onDesignUpdate?.({
+            ...design,
+            pieces: design.pieces?.map((p) => offsettedPieces?.find((op) => op.id_ === p.id_) || p),
+        });
         setDragState(null);
-    }, [dragState, pieceNodes, selection, onSelectionChange, onPiecesDragEnd]);
+    }, [dragState, pieceNodes, selection, onDesignUpdate]);
 
     const onDoubleClickCapture = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
@@ -439,98 +454,71 @@ const DiagramCore: FC<DiagramProps> = ({ kit, designId, fullscreen, selection, o
     }, [onPanelDoubleClick]);
 
     return (
-        <ReactFlow
-            ref={setNodeRef}
-            nodes={nodes}
-            edges={connectionEdges}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            connectionMode={ConnectionMode.Loose}
-            elementsSelectable
-            minZoom={0.1}
-            maxZoom={12}
-            // onNodesChange={onNodesChange}
-            // onEdgesChange={onEdgesChange}
-            // onConnect={onConnect}
-            // TODO: Whenever another components updates the selection, onSelectionChange is called. Figure out how to prevent this.
-            // onSelectionChange={({ pieceNodes, connectionEdges }) => {
-            //     const selectedPieceIds = pieceNodes.map((node) => node.id);
-            //     const selectedConnections = connectionEdges.map((edge) => {
-            //         return {
-            //             connectedPieceId: edge.source,
-            //             connectingPieceId: edge.target,
-            //         }
-            //     });
-            //     // When another component updates the selection, pieceNodes and connectionEdges are empty but we don't want this to reset the selection
-            //     if (selectedPieceIds.length === 0 && selectedConnections.length === 0) {
-            //         return;
-            //     }
+        <div id="diagram" className="h-full w-full">
+            <ReactFlow
+                ref={setNodeRef}
+                nodes={nodes}
+                edges={connectionEdges}
+                nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
+                connectionMode={ConnectionMode.Loose}
+                elementsSelectable
+                minZoom={0.1}
+                maxZoom={12}
+                // onNodesChange={onNodesChange}
+                // onEdgesChange={onEdgesChange}
+                // onConnect={onConnect}
+                // TODO: Whenever another components updates the selection, onSelectionChange is called. Figure out how to prevent this.
+                // onSelectionChange={({ pieceNodes, connectionEdges }) => {
+                //     const selectedPieceIds = pieceNodes.map((node) => node.id);
+                //     const selectedConnections = connectionEdges.map((edge) => {
+                //         return {
+                //             connectedPieceId: edge.source,
+                //             connectingPieceId: edge.target,
+                //         }
+                //     });
+                //     // When another component updates the selection, pieceNodes and connectionEdges are empty but we don't want this to reset the selection
+                //     if (selectedPieceIds.length === 0 && selectedConnections.length === 0) {
+                //         return;
+                //     }
 
-            //     // Only trigger onSelectionChange if the selection actually changed
-            //     const currentSelection = selection || { selectedPieceIds: [], selectedConnections: [] };
-            //     const piecesChanged =
-            //         selectedPieceIds.length !== currentSelection.selectedPieceIds.length ||
-            //         selectedPieceIds.some(id => !currentSelection.selectedPieceIds.includes(id));
-            //     const connectionsChanged =
-            //         selectedConnections.length !== currentSelection.selectedConnections.length ||
-            //         selectedConnections.some(conn =>
-            //             !currentSelection.selectedConnections.some(
-            //                 currConn => currConn.connectedPieceId === conn.connectedPieceId &&
-            //                     currConn.connectingPieceId === conn.connectingPieceId
-            //             )
-            //         );
+                //     // Only trigger onSelectionChange if the selection actually changed
+                //     const currentSelection = selection || { selectedPieceIds: [], selectedConnections: [] };
+                //     const piecesChanged =
+                //         selectedPieceIds.length !== currentSelection.selectedPieceIds.length ||
+                //         selectedPieceIds.some(id => !currentSelection.selectedPieceIds.includes(id));
+                //     const connectionsChanged =
+                //         selectedConnections.length !== currentSelection.selectedConnections.length ||
+                //         selectedConnections.some(conn =>
+                //             !currentSelection.selectedConnections.some(
+                //                 currConn => currConn.connectedPieceId === conn.connectedPieceId &&
+                //                     currConn.connectingPieceId === conn.connectingPieceId
+                //             )
+                //         );
 
-            //     if (piecesChanged || connectionsChanged) {
-            //         onSelectionChange?.({
-            //             selectedPieceIds,
-            //             selectedConnections
-            //         });
-            //     }
-            // }}
-            onNodeDragStart={onNodeDragStart}
-            onNodeDrag={onNodeDrag}
-            onNodeDragStop={onNodeDragStop}
-            onNodeClick={onNodeClick}
-            zoomOnDoubleClick={false}
-            onDoubleClickCapture={onDoubleClickCapture}
-            panOnDrag={[0]} //left mouse button
-            proOptions={{ hideAttribution: true }}
-            multiSelectionKeyCode="Shift"
-        >
-            {fullscreen && <Controls className="border" showZoom={false} showInteractive={false} />}
-            {fullscreen && < MiniMap className="border" maskColor='var(--accent)' bgColor='var(--background)' nodeComponent={MiniMapNode} />}
-            <ViewportPortal>⌞</ViewportPortal>
-        </ReactFlow>
+                //     if (piecesChanged || connectionsChanged) {
+                //         onSelectionChange?.({
+                //             selectedPieceIds,
+                //             selectedConnections
+                //         });
+                //     }
+                // }}
+                onNodeDragStart={onNodeDragStart}
+                onNodeDrag={onNodeDrag}
+                onNodeDragStop={onNodeDragStop}
+                onNodeClick={onNodeClick}
+                zoomOnDoubleClick={false}
+                onDoubleClickCapture={onDoubleClickCapture}
+                panOnDrag={[0]} //left mouse button
+                proOptions={{ hideAttribution: true }}
+                multiSelectionKeyCode="Shift"
+            >
+                {fullscreen && <Controls className="border" showZoom={false} showInteractive={false} />}
+                {fullscreen && < MiniMap className="border" maskColor='var(--accent)' bgColor='var(--background)' nodeComponent={MiniMapNode} />}
+                <ViewportPortal>⌞</ViewportPortal>
+            </ReactFlow>
+        </div>
     )
 }
-
-
-interface DiagramProps {
-    kit: Kit;
-    designId: DesignId;
-    fullscreen?: boolean;
-    selection?: DesignEditorSelection;
-    fileUrls: Map<string, string>;
-    onPanelDoubleClick?: () => void;
-    onSelectionChange?: (selection: DesignEditorSelection) => void;
-    onPiecesDragEnd?: (pieces: Piece[]) => void;
-}
-
-
-const Diagram: FC<DiagramProps> = ({ kit, designId, fullscreen, selection, fileUrls, onPanelDoubleClick, onSelectionChange, onPiecesDragEnd }) => {
-    return (
-        <div id="diagram" className="h-full w-full">
-            <DiagramCore
-                fullscreen={fullscreen}
-                onPanelDoubleClick={onPanelDoubleClick}
-                kit={kit}
-                designId={designId}
-                selection={selection}
-                fileUrls={fileUrls}
-                onSelectionChange={onSelectionChange}
-                onPiecesDragEnd={onPiecesDragEnd} />
-        </div>
-    );
-};
 
 export default Diagram;

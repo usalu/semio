@@ -131,8 +131,8 @@ interface ModelDesignProps {
     designId: DesignId;
     fileUrls: Map<string, string>;
     selection: DesignEditorSelection;
-    onSelectionChange: (selection: DesignEditorSelection) => void;
     onDesignChange: (design: Design) => void;
+    onSelectionChange: (selection: DesignEditorSelection) => void;
 }
 
 const ModelDesign: FC<ModelDesignProps> = ({ kit, designId, fileUrls, selection, onSelectionChange, onDesignChange }) => {
@@ -248,14 +248,13 @@ interface ModelProps {
     kit: Kit;
     designId: DesignId;
     fileUrls: Map<string, string>;
-    fullscreen: boolean;
-    onPanelDoubleClick?: () => void;
-    selection: DesignEditorSelection;
-    onSelectionChange: (selection: DesignEditorSelection) => void;
+    fullscreen?: boolean;
+    selection?: DesignEditorSelection;
     onDesignChange: (design: Design) => void;
-    onPieceUpdate: (piece: Piece) => void;
+    onSelectionChange: (selection: DesignEditorSelection) => void;
+    onPanelDoubleClick?: () => void;
 }
-const Model: FC<ModelProps> = ({ kit, designId, fileUrls, fullscreen, onPanelDoubleClick, selection, onSelectionChange, onDesignChange }) => {
+const Model: FC<ModelProps> = ({ kit, designId, fileUrls, fullscreen, selection, onDesignChange, onSelectionChange, onPanelDoubleClick }) => {
     const [gridColors, setGridColors] = useState({
         sectionColor: getComputedColor('--foreground'),
         cellColor: getComputedColor('--accent-foreground')
@@ -290,7 +289,7 @@ const Model: FC<ModelProps> = ({ kit, designId, fileUrls, fullscreen, onPanelDou
     }, [onSelectionChange]);
 
     return (
-        <div className="w-full h-full">
+        <div id="model" className="w-full h-full">
             <Canvas
                 onDoubleClickCapture={handleDoubleClick}
                 onPointerMissed={handlePointerMissed}>

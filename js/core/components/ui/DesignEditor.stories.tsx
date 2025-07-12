@@ -30,17 +30,11 @@ export const NakaginCapsuleTower: Story = {
     }),
   ],
   args: {
-    kit: Metabolism as any,
+    initialKit: Metabolism,
     designId: {
       name: "Nakagin Capsule Tower"
     },
-    selection: { selectedPieceIds: [], selectedConnections: [] },
-    onSelectionChange: fn(),
-    onPieceCreate: fn(),
-    onPiecesUpdate: fn(),
-    onSelectionDelete: fn(),
-    onUndo: fn(),
-    onRedo: fn(),
+    initialSelection: { selectedPieceIds: [], selectedConnections: [] },
   },
   render: (args, { loaded: { fileUrls } }) => (
     <DesignEditor {...args} fileUrls={fileUrls} />

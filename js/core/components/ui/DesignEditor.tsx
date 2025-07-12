@@ -1,4 +1,4 @@
-import { FC, ReactNode, useState, useEffect, useReducer } from 'react';
+import { FC, ReactNode, useState, useEffect, useReducer, useMemo } from 'react';
 import {
     DndContext,
     DragEndEvent,
@@ -515,36 +515,67 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
     );
 }
 
-interface DesignEditorCoreProps {
+interface ControlledDesignEditorCoreProps {
     kit: Kit;
     designId: DesignId;
-    selection: DesignEditorSelection;
     fileUrls: Map<string, string>;
+    selection: DesignEditorSelection;
     onSelectionChange: (selection: DesignEditorSelection) => void;
     onPieceCreate: (piece: Piece) => void;
     onPiecesUpdate: (pieces: Piece[]) => void;
     onSelectionDelete: () => void;
-    onUndo: () => void;
-    onRedo: () => void;
-    onToolbarChange: (toolbar: ReactNode) => void;
+    onUndo?: () => void;
+    onRedo?: () => void;
 }
 
+interface UncontrolledDesignEditorCoreProps {
+    initialKit: Kit;
+    designId: DesignId;
+    fileUrls: Map<string, string>;
+    initialSelection: DesignEditorSelection;
+    onUndo?: () => void;
+    onRedo?: () => void;
+}
 
-const DesignEditorCore: FC<DesignEditorCoreProps> = ({
-    kit,
-    designId,
-    selection,
-    fileUrls,
-    onSelectionChange,
-    onPieceCreate,
-    onPiecesUpdate,
-    onSelectionDelete,
-    onUndo,
-    onRedo,
-    onToolbarChange
-}) => {
+type DesignEditorCoreProps = {
+    onToolbarChange: (toolbar: ReactNode) => void;
+} & (ControlledDesignEditorCoreProps | UncontrolledDesignEditorCoreProps);
+
+
+const DesignEditorCore: FC<DesignEditorCoreProps> = (props) => {
+    const { onToolbarChange, designId, fileUrls, onUndo, onRedo } = props;
+
+    const isKitControlled = 'kit' in props;
+    const isSelectionControlled = 'selection' in props;
+
+    const [internalKit, setInternalKit] = useState(!isKitControlled ? props.initialKit : undefined);
+    const [internalSelection, setInternalSelection] = useState(!isSelectionControlled ? props.initialSelection : undefined);
+
+    const kit = isKitControlled ? props.kit : internalKit;
+    const selection = isSelectionControlled ? props.selection : internalSelection;
+
+    const normalize = (val: string | undefined) => val === undefined ? "" : val;
+    const design = kit?.designs?.find(d =>
+        d.name === designId.name &&
+        (normalize(d.variant) === normalize(designId.variant)) &&
+        (normalize(d.view) === normalize(designId.view))
+    );
+    if (!design) {
+        return null;
+    }
+
+    const onDesignUpdate = isKitControlled ? props.onDesignUpdate : (design: Design) => {
+        setInternalKit(currentKit => {
+            if (!currentKit) return currentKit;
+            return { ...currentKit, designs: currentKit.designs?.map(d => d.name === design.name && normalize(d.variant) === normalize(design.variant) && normalize(d.view) === normalize(design.view) ? design : d) };
+        });
+    }
+
+    const onSelectionChange = isSelectionControlled ? props.onSelectionChange : (selection: DesignEditorSelection) => {
+        setInternalSelection(selection);
+    }
+
     const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null);
-
     const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
         workbench: false,
         console: false,
@@ -585,15 +616,15 @@ const DesignEditorCore: FC<DesignEditorCoreProps> = ({
     useHotkeys('mod+x', (e) => { e.preventDefault(); console.log('Cut selected'); });
     useHotkeys('delete', (e) => {
         e.preventDefault();
-        onSelectionDelete();
+        onSelectionDelete?.();
     });
     useHotkeys('mod+z', (e) => { // Swapped y and z for conventional undo/redo
         e.preventDefault();
-        onUndo();
+        onUndo?.();
     });
     useHotkeys('mod+y', (e) => {
         e.preventDefault();
-        onRedo();
+        onRedo?.();
     });
     useHotkeys('mod+w', (e) => { e.preventDefault(); console.log('Close design'); });
 
@@ -673,7 +704,7 @@ const DesignEditorCore: FC<DesignEditorCoreProps> = ({
                     },
                     center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 }
                 };
-                onPieceCreate(piece);
+                onPieceCreate?.(piece);
             } else if (activeDraggedDesign) {
                 const correspondingType = kit?.types?.find(t => t.name === activeDraggedDesign.name && t.variant === activeDraggedDesign.variant);
                 if (correspondingType) {
@@ -685,7 +716,7 @@ const DesignEditorCore: FC<DesignEditorCoreProps> = ({
                             variant: correspondingType.variant
                         }
                     };
-                    onPieceCreate(piece);
+                    onPieceCreate?.(piece);
                 } else {
                     console.warn(`Could not find corresponding Type for dragged Design: ${activeDraggedDesign.name} / ${activeDraggedDesign.variant}`);
                 }
@@ -706,14 +737,14 @@ const DesignEditorCore: FC<DesignEditorCoreProps> = ({
                             onDoubleClick={() => handlePanelDoubleClick('diagram')}
                         >
                             <Diagram
-                                fullscreen={fullscreenPanel === 'diagram'}
-                                onPanelDoubleClick={() => handlePanelDoubleClick('diagram')}
                                 kit={kit}
                                 designId={designId}
-                                selection={selection}
                                 fileUrls={fileUrls}
+                                selection={selection}
+                                fullscreen={fullscreenPanel === 'diagram'}
+                                onDesignUpdate={onDesignUpdate}
                                 onSelectionChange={onSelectionChange}
-                                onPiecesDragEnd={onPiecesUpdate}
+                                onPanelDoubleClick={() => handlePanelDoubleClick('diagram')}
                             />
                         </ResizablePanel>
                         <ResizableHandle className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`} />
@@ -723,15 +754,14 @@ const DesignEditorCore: FC<DesignEditorCoreProps> = ({
                             onDoubleClick={() => handlePanelDoubleClick('model')}
                         >
                             <Model
-                                fullscreen={fullscreenPanel === 'model'}
-                                onPanelDoubleClick={() => handlePanelDoubleClick('model')}
                                 kit={kit}
                                 designId={designId}
-                                selection={selection}
                                 fileUrls={fileUrls}
+                                selection={selection}
+                                fullscreen={fullscreenPanel === 'model'}
+                                onDesignUpdate={onDesignUpdate}
                                 onSelectionChange={onSelectionChange}
-                            // onDesignChange={onDesignChange}
-                            // onPieceUpdate={onPieceUpdate}
+                                onPanelDoubleClick={() => handlePanelDoubleClick('model')}
                             />
                         </ResizablePanel>
                     </ResizablePanelGroup>
@@ -774,16 +804,18 @@ const DesignEditorCore: FC<DesignEditorCoreProps> = ({
 }
 
 interface DesignEditorProps {
-    kit: Kit;
+    kit?: Kit;
+    initialKit?: Kit;
     designId: DesignId;
-    selection: DesignEditorSelection;
     fileUrls: Map<string, string>;
-    onSelectionChange: (selection: DesignEditorSelection) => void;
-    onPieceCreate: (piece: Piece) => void;
-    onPiecesUpdate: (pieces: Piece[]) => void;
-    onSelectionDelete: () => void;
-    onUndo: () => void;
-    onRedo: () => void;
+    selection?: DesignEditorSelection;
+    initialSelection?: DesignEditorSelection;
+    onSelectionChange?: (selection: DesignEditorSelection) => void;
+    onPieceCreate?: (piece: Piece) => void;
+    onPiecesUpdate?: (pieces: Piece[]) => void;
+    onSelectionDelete?: () => void;
+    onUndo?: () => void;
+    onRedo?: () => void;
     mode?: Mode;
     layout?: Layout
     theme?: Theme;
@@ -797,10 +829,12 @@ interface DesignEditorProps {
 }
 
 const DesignEditor: FC<DesignEditorProps> = ({
-    kit, designId, selection, fileUrls, onSelectionChange, onPieceCreate, onPiecesUpdate, onSelectionDelete, onUndo, onRedo,
+    initialKit, kit, designId, initialSelection, selection, fileUrls, onSelectionChange, onPieceCreate, onPiecesUpdate, onSelectionDelete, onUndo, onRedo,
     mode, layout, theme, setLayout, setTheme, onWindowEvents }) => {
 
     const [toolbarContent, setToolbarContent] = useState<ReactNode>(null);
+
+    const isControlled = kit !== undefined && selection !== undefined;
 
     return (
         <div
@@ -817,19 +851,31 @@ const DesignEditor: FC<DesignEditorProps> = ({
                 onWindowEvents={onWindowEvents}
             />
             <ReactFlowProvider>
-                <DesignEditorCore
-                    kit={kit}
-                    designId={designId}
-                    selection={selection}
-                    fileUrls={fileUrls}
-                    onSelectionChange={onSelectionChange}
-                    onPieceCreate={onPieceCreate}
-                    onPiecesUpdate={onPiecesUpdate}
-                    onSelectionDelete={onSelectionDelete}
-                    onUndo={onUndo}
-                    onRedo={onRedo}
-                    onToolbarChange={setToolbarContent}
-                />
+                {isControlled ? (
+                    <DesignEditorCore
+                        kit={kit}
+                        designId={designId}
+                        selection={selection}
+                        fileUrls={fileUrls}
+                        onSelectionChange={onSelectionChange!}
+                        onPieceCreate={onPieceCreate!}
+                        onPiecesUpdate={onPiecesUpdate!}
+                        onSelectionDelete={onSelectionDelete!}
+                        onUndo={onUndo}
+                        onRedo={onRedo}
+                        onToolbarChange={setToolbarContent}
+                    />
+                ) : (
+                    <DesignEditorCore
+                        initialKit={initialKit!}
+                        designId={designId}
+                        initialSelection={initialSelection!}
+                        fileUrls={fileUrls}
+                        onUndo={onUndo}
+                        onRedo={onRedo}
+                        onToolbarChange={setToolbarContent}
+                    />
+                )}
             </ReactFlowProvider>
         </div>
 
