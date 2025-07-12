@@ -30,9 +30,10 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/compone
 import { Textarea } from '@semio/js/components/ui/Textarea';
 import { Generator } from '@semio/js/lib/utils';
 import { DesignEditorSelection, useDesignEditorStore, useStudioStore } from '@semio/js/store';
-import { useSketchpad } from '@semio/js/components/ui/Sketchpad';
+import { Layout, Mode, Theme } from '@semio/js/components/ui/Sketchpad';
 import { Input } from '@semio/js/components/ui/Input';
 import { Slider } from '@semio/js/components/ui/Slider';
+import { default as Navbar } from '@semio/js/components/ui/Navbar';
 
 // Type for panel visibility toggles
 interface PanelToggles {
@@ -519,13 +520,13 @@ interface DesignEditorCoreProps {
     designId: DesignId;
     selection: DesignEditorSelection;
     fileUrls: Map<string, string>;
-    setNavbarToolbar: (toolbar: ReactNode) => void;
     onSelectionChange: (selection: DesignEditorSelection) => void;
     onPieceCreate: (piece: Piece) => void;
     onPiecesUpdate: (pieces: Piece[]) => void;
     onSelectionDelete: () => void;
     onUndo: () => void;
     onRedo: () => void;
+    onToolbarChange: (toolbar: ReactNode) => void;
 }
 
 
@@ -534,13 +535,13 @@ const DesignEditorCore: FC<DesignEditorCoreProps> = ({
     designId,
     selection,
     fileUrls,
-    setNavbarToolbar,
     onSelectionChange,
     onPieceCreate,
     onPiecesUpdate,
     onSelectionDelete,
     onUndo,
-    onRedo
+    onRedo,
+    onToolbarChange
 }) => {
     const design = kit.designs?.find(d => d.name === designId.name && d.variant === designId.variant && d.view === designId.view);
 
@@ -628,9 +629,9 @@ const DesignEditorCore: FC<DesignEditorCoreProps> = ({
     );
 
     useEffect(() => {
-        setNavbarToolbar(designEditorToolbar);
-        return () => setNavbarToolbar(null);
-    }, [setNavbarToolbar, visiblePanels]);
+        onToolbarChange(designEditorToolbar);
+        return () => onToolbarChange(null);
+    }, [visiblePanels]);
 
     const { screenToFlowPosition } = useReactFlow();
     const [activeDraggedType, setActiveDraggedType] = useState<Type | null>(null);
@@ -698,7 +699,6 @@ const DesignEditorCore: FC<DesignEditorCoreProps> = ({
 
     return (
         <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
-
             <div className="canvas flex-1 relative">
                 <div id="sketchpad-edgeless" className="h-full">
                     <ResizablePanelGroup direction="horizontal">
@@ -786,21 +786,61 @@ interface DesignEditorProps {
     designId: DesignId;
     selection: DesignEditorSelection;
     fileUrls: Map<string, string>;
-    setNavbarToolbar: (toolbar: ReactNode) => void;
     onSelectionChange: (selection: DesignEditorSelection) => void;
     onPieceCreate: (piece: Piece) => void;
     onPiecesUpdate: (pieces: Piece[]) => void;
     onSelectionDelete: () => void;
     onUndo: () => void;
     onRedo: () => void;
+    mode?: Mode;
+    layout?: Layout
+    theme?: Theme;
+    setLayout?: (layout: Layout) => void;
+    setTheme?: (theme: Theme) => void;
+    onWindowEvents?: {
+        minimize: () => void;
+        maximize: () => void;
+        close: () => void;
+    }
 }
 
-const DesignEditor: FC<DesignEditorProps> = (props) => {
+const DesignEditor: FC<DesignEditorProps> = ({
+    kit, designId, selection, fileUrls, onSelectionChange, onPieceCreate, onPiecesUpdate, onSelectionDelete, onUndo, onRedo,
+    mode, layout, theme, setLayout, setTheme, onWindowEvents }) => {
+
+    const [toolbarContent, setToolbarContent] = useState<ReactNode>(null);
 
     return (
-        <ReactFlowProvider>
-            <DesignEditorCore {...props} />
-        </ReactFlowProvider>
+        <div
+            key={`layout-${layout}`}
+            className="h-full w-full flex flex-col bg-background text-foreground"
+        >
+            <Navbar
+                mode={mode}
+                toolbarContent={toolbarContent}
+                layout={layout}
+                theme={theme}
+                setLayout={setLayout}
+                setTheme={setTheme}
+                onWindowEvents={onWindowEvents}
+            />
+            <ReactFlowProvider>
+                <DesignEditorCore
+                    kit={kit}
+                    designId={designId}
+                    selection={selection}
+                    fileUrls={fileUrls}
+                    onSelectionChange={onSelectionChange}
+                    onPieceCreate={onPieceCreate}
+                    onPiecesUpdate={onPiecesUpdate}
+                    onSelectionDelete={onSelectionDelete}
+                    onUndo={onUndo}
+                    onRedo={onRedo}
+                    onToolbarChange={setToolbarContent}
+                />
+            </ReactFlowProvider>
+        </div>
+
     );
 };
 

@@ -89,9 +89,9 @@ export type DesignId = {
     // 📛 The name of the design
     name: string;
     // 🔀 The variant of the design
-    variant: string;
+    variant?: string;
     // 🥽 The view of the design
-    view: string;
+    view?: string;
 }
 
 // 📑 Represents an author.

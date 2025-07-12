@@ -46,153 +46,14 @@ export enum Layout {
     TOUCH = 'touch',
 }
 
-interface SketchpadContextType {
-    mode: Mode;
-    layout: Layout;
-    setLayout: (layout: Layout) => void;
-    theme: Theme;
-    setTheme: (theme: Theme) => void;
-    setNavbarToolbar: (toolbar: ReactNode) => void;
+
+
+interface DesignEditorPageProps {
 }
 
-const SketchpadContext = createContext<SketchpadContextType | null>(null);
-
-
-export const useSketchpad = () => {
-    const context = useContext(SketchpadContext);
-    if (!context) {
-        throw new Error('useSketchpad must be used within a SketchpadProvider');
-    }
-    return context;
-};
-
-interface NavbarProps {
-    toolbarContent?: ReactNode;
-    onWindowEvents?: {
-        minimize: () => void;
-        maximize: () => void;
-        close: () => void;
-    }
-}
-
-const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
-    const { mode, layout, setLayout, theme, setTheme } = useSketchpad();
-
-    return (
-        <div className={`w-full h-12 bg-background border-b flex items-center justify-between px-4`}>
-            <div className="flex items-center">
-                <Breadcrumb>
-                    <BreadcrumbList>
-                        <BreadcrumbItem>
-                            <BreadcrumbLink href="/"><Home size={16} /></BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator items={[
-                            { label: "Starter", href: "/metabolism/starter" },
-                            { label: "Geometry", href: "/metabolism/geometry" }
-                        ]} onNavigate={(href) => console.log('Navigate to:', href)} />
-                        <BreadcrumbItem>
-                            <BreadcrumbLink href="/metabolism">Metabolism</BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator items={[
-                            { label: "Types", href: "/designs/types" },
-                            { label: "Representations", href: "/designs/representations" }
-                        ]} onNavigate={(href) => console.log('Navigate to:', href)} />
-                        <BreadcrumbItem>
-                            <BreadcrumbLink href="/designs">Designs</BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator items={[
-                            { label: "Capsule Dream", href: "/designs/nakagin/capsule-dream" }
-                        ]} onNavigate={(href) => console.log('Navigate to:', href)} />
-                        <BreadcrumbItem>
-                            <BreadcrumbLink href="/designs/nakagin">Nakagin Capsule Tower</BreadcrumbLink>
-                        </BreadcrumbItem>
-                    </BreadcrumbList>
-                </Breadcrumb>
-            </div>
-            <div className="flex items-center gap-4">
-                {toolbarContent}
-                <ToggleCycle
-                    value={theme}
-                    onValueChange={setTheme}
-                    items={[
-                        {
-                            value: Theme.LIGHT,
-                            tooltip: "Turn theme dark",
-                            label: <Moon />
-                        },
-                        {
-                            value: Theme.DARK,
-                            tooltip: "Turn theme light",
-                            label: <Sun />
-                        }
-                    ]}
-                />
-                <ToggleCycle
-                    value={layout}
-                    onValueChange={setLayout}
-                    items={[
-                        {
-                            value: Layout.NORMAL,
-                            tooltip: "Turn touch layout on",
-                            label: <Fingerprint />
-                        },
-                        {
-                            value: Layout.TOUCH,
-                            tooltip: "Return to normal layout",
-                            label: <AppWindow />
-                        }
-                    ]}
-                />
-
-                <Avatar className="h-8 w-8">
-                    <AvatarImage src="https://github.com/usalu.png" />
-                    <AvatarFallback>US</AvatarFallback>
-                </Avatar>
-
-                <Toggle
-                    variant="outline"
-                    tooltip="Share"
-                >
-                    <Share2 />
-                </Toggle>
-
-                {onWindowEvents && (
-                    <div className="flex items-center gap-2 ml-4">
-                        <ToggleGroup type="single">
-                            <ToggleGroupItem
-                                value="minimize"
-                                onClick={onWindowEvents.minimize}
-                            >
-                                <Minus size={16} />
-                            </ToggleGroupItem>
-                            <ToggleGroupItem
-                                value="maximize"
-                                onClick={onWindowEvents.maximize}
-                            >
-                                <Square size={16} />
-                            </ToggleGroupItem>
-                            <ToggleGroupItem
-                                value="close"
-                                onClick={onWindowEvents.close}
-                                className="hover:bg-danger"
-                            >
-                                <X size={16} />
-                            </ToggleGroupItem>
-                        </ToggleGroup>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
-
-interface ViewProps {
-}
-
-const View: FC<ViewProps> = ({ }) => {
+const DesignEditorPage: FC<DesignEditorPageProps> = ({ }) => {
     const studioStore = useStudioStore();
     const [designEditorId, setDesignEditorId] = useState<string>('');
-    const { setNavbarToolbar } = useSketchpad();
 
     const kit = useKit();
     const designName = "Nakagin Capsule Tower";
@@ -262,7 +123,6 @@ const View: FC<ViewProps> = ({ }) => {
                 designId={designId}
                 selection={selection}
                 fileUrls={fileUrls}
-                setNavbarToolbar={setNavbarToolbar}
                 onSelectionChange={designEditorStore.updateDesignEditorSelection}
                 onPieceCreate={onPieceCreate}
                 onPiecesUpdate={onPiecesUpdate}
@@ -276,8 +136,6 @@ const View: FC<ViewProps> = ({ }) => {
 
 interface SketchpadProps {
     mode?: Mode;
-    theme?: Theme;
-    layout?: Layout;
     readonly?: boolean;
     onWindowEvents?: {
         minimize: () => void;
@@ -287,11 +145,10 @@ interface SketchpadProps {
     userId: string;
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layout.NORMAL, onWindowEvents, userId }) => {
+const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, onWindowEvents, userId }) => {
     const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
-    const [currentLayout, setCurrentLayout] = useState<Layout>(layout);
+    const [currentLayout, setCurrentLayout] = useState<Layout>(Layout.NORMAL);
     const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
-        if (theme) return theme;
         if (typeof window !== 'undefined') {
             return window.matchMedia('(prefers-color-scheme: dark)').matches ? Theme.DARK : Theme.LIGHT;
         }
@@ -320,25 +177,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
         <TooltipProvider>
             <StudioStoreProvider userId={userId}>
                 <KitProvider kitName={kitName} kitVersion={kitVersion}>
-                    <SketchpadContext.Provider value={{
-                        mode: mode,
-                        layout: currentLayout,
-                        setLayout: setCurrentLayout,
-                        theme: currentTheme,
-                        setTheme: setCurrentTheme,
-                        setNavbarToolbar: setNavbarToolbar,
-                    }}>
-                        <div
-                            key={`layout-${currentLayout}`}
-                            className="h-full w-full flex flex-col bg-background text-foreground"
-                        >
-                            <Navbar
-                                toolbarContent={navbarToolbar}
-                                onWindowEvents={onWindowEvents}
-                            />
-                            <View />
-                        </div>
-                    </SketchpadContext.Provider>
+                    <DesignEditorPage />
                 </KitProvider>
             </StudioStoreProvider>
         </TooltipProvider>
