@@ -8,12 +8,10 @@
     "--attribute-naming-style=camelCase",
     "--class-naming-style=PascalCase"
   ],
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter",
   },
-  // "[json]": {
-  //     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  // },
   "python.analysis.typeCheckingMode": "off",
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
@@ -30,16 +28,16 @@
   "sqltools.connections": [
     {
       "name": "metabolism",
-      "database": "./examples/metabolism/.semio/kit.sqlite3",
+      "database": "./examples/metabolism/.semio/kit.db",
       "driver": "SQLite",
       "previewLimit": 50
     },
     {
       "name": "tests",
-      "database": "./dotnet/Semio.Grasshopper.UnitTests/local/kit/.semio/kit.sqlite3",
+      "database": "./net/Semio.Grasshopper.UnitTests/local/kit/.semio/kit.db",
       "driver": "SQLite",
       "previewLimit": 50
     }
   ],
-  "dotnet.defaultSolution": "dotnet/Semio.sln"
+  "dotnet.defaultSolution": "net/Semio.sln"
 }
