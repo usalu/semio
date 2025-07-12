@@ -34,7 +34,6 @@ export const NakaginCapsuleTower: Story = {
     designId: {
       name: "Nakagin Capsule Tower"
     },
-    initialSelection: { selectedPieceIds: [], selectedConnections: [] },
   },
   render: (args, { loaded: { fileUrls } }) => (
     <DesignEditor {...args} fileUrls={fileUrls} />

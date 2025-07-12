@@ -515,44 +515,16 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
     );
 }
 
-interface ControlledDesignEditorCoreProps {
-    kit: Kit;
-    designId: DesignId;
-    fileUrls: Map<string, string>;
-    selection: DesignEditorSelection;
-    onSelectionChange: (selection: DesignEditorSelection) => void;
-    onPieceCreate: (piece: Piece) => void;
-    onPiecesUpdate: (pieces: Piece[]) => void;
-    onSelectionDelete: () => void;
-    onUndo?: () => void;
-    onRedo?: () => void;
-}
+const DesignEditorCore: FC<DesignEditorProps> = (props) => {
+    const { onToolbarChange, designId, fileUrls } = props;
 
-interface UncontrolledDesignEditorCoreProps {
-    initialKit: Kit;
-    designId: DesignId;
-    fileUrls: Map<string, string>;
-    initialSelection: DesignEditorSelection;
-    onUndo?: () => void;
-    onRedo?: () => void;
-}
+    const isControlled = props.kit !== undefined;
 
-type DesignEditorCoreProps = {
-    onToolbarChange: (toolbar: ReactNode) => void;
-} & (ControlledDesignEditorCoreProps | UncontrolledDesignEditorCoreProps);
+    const [internalKit, setInternalKit] = useState(!isControlled ? props.initialKit : undefined);
+    const [internalSelection, setInternalSelection] = useState(!isControlled ? props.initialSelection : undefined);
 
-
-const DesignEditorCore: FC<DesignEditorCoreProps> = (props) => {
-    const { onToolbarChange, designId, fileUrls, onUndo, onRedo } = props;
-
-    const isKitControlled = 'kit' in props;
-    const isSelectionControlled = 'selection' in props;
-
-    const [internalKit, setInternalKit] = useState(!isKitControlled ? props.initialKit : undefined);
-    const [internalSelection, setInternalSelection] = useState(!isSelectionControlled ? props.initialSelection : undefined);
-
-    const kit = isKitControlled ? props.kit : internalKit;
-    const selection = isSelectionControlled ? props.selection : internalSelection;
+    const kit = isControlled ? props.kit : internalKit;
+    const selection = (isControlled ? props.selection : internalSelection) || { selectedPieceIds: [], selectedConnections: [] };
 
     const normalize = (val: string | undefined) => val === undefined ? "" : val;
     const design = kit?.designs?.find(d =>
@@ -564,14 +536,14 @@ const DesignEditorCore: FC<DesignEditorCoreProps> = (props) => {
         return null;
     }
 
-    const onDesignUpdate = isKitControlled ? props.onDesignUpdate : (design: Design) => {
+    const onDesignChange = isControlled ? props.onDesignChange : (design: Design) => {
         setInternalKit(currentKit => {
             if (!currentKit) return currentKit;
             return { ...currentKit, designs: currentKit.designs?.map(d => d.name === design.name && normalize(d.variant) === normalize(design.variant) && normalize(d.view) === normalize(design.view) ? design : d) };
         });
     }
 
-    const onSelectionChange = isSelectionControlled ? props.onSelectionChange : (selection: DesignEditorSelection) => {
+    const onSelectionChange = isControlled ? props.onSelectionChange : (selection: DesignEditorSelection) => {
         setInternalSelection(selection);
     }
 
@@ -704,22 +676,9 @@ const DesignEditorCore: FC<DesignEditorCoreProps> = (props) => {
                     },
                     center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 }
                 };
-                onPieceCreate?.(piece);
+                onDesignChange?.({ ...design, pieces: [...(design.pieces || []), piece] });
             } else if (activeDraggedDesign) {
-                const correspondingType = kit?.types?.find(t => t.name === activeDraggedDesign.name && t.variant === activeDraggedDesign.variant);
-                if (correspondingType) {
-                    const piece: Piece = {
-                        id_: Generator.randomId(),
-                        description: activeDraggedDesign.description || '',
-                        type: {
-                            name: correspondingType.name,
-                            variant: correspondingType.variant
-                        }
-                    };
-                    onPieceCreate?.(piece);
-                } else {
-                    console.warn(`Could not find corresponding Type for dragged Design: ${activeDraggedDesign.name} / ${activeDraggedDesign.variant}`);
-                }
+                throw new Error('Not implemented');
             }
         }
         setActiveDraggedType(null);
@@ -742,7 +701,7 @@ const DesignEditorCore: FC<DesignEditorCoreProps> = (props) => {
                                 fileUrls={fileUrls}
                                 selection={selection}
                                 fullscreen={fullscreenPanel === 'diagram'}
-                                onDesignUpdate={onDesignUpdate}
+                                onDesignChange={onDesignChange}
                                 onSelectionChange={onSelectionChange}
                                 onPanelDoubleClick={() => handlePanelDoubleClick('diagram')}
                             />
@@ -759,7 +718,7 @@ const DesignEditorCore: FC<DesignEditorCoreProps> = (props) => {
                                 fileUrls={fileUrls}
                                 selection={selection}
                                 fullscreen={fullscreenPanel === 'model'}
-                                onDesignUpdate={onDesignUpdate}
+                                onDesignChange={onDesignChange}
                                 onSelectionChange={onSelectionChange}
                                 onPanelDoubleClick={() => handlePanelDoubleClick('model')}
                             />
@@ -803,19 +762,26 @@ const DesignEditorCore: FC<DesignEditorCoreProps> = (props) => {
     )
 }
 
-interface DesignEditorProps {
-    kit?: Kit;
-    initialKit?: Kit;
+interface ControlledDesignEditorProps {
+    kit: Kit;
     designId: DesignId;
     fileUrls: Map<string, string>;
-    selection?: DesignEditorSelection;
-    initialSelection?: DesignEditorSelection;
-    onSelectionChange?: (selection: DesignEditorSelection) => void;
-    onPieceCreate?: (piece: Piece) => void;
-    onPiecesUpdate?: (pieces: Piece[]) => void;
-    onSelectionDelete?: () => void;
+    selection: DesignEditorSelection;
+    onDesignChange: (design: Design) => void;
+    onSelectionChange: (selection: DesignEditorSelection) => void;
     onUndo?: () => void;
     onRedo?: () => void;
+}
+
+interface UncontrolledDesignEditorProps {
+    initialKit: Kit;
+    designId: DesignId;
+    fileUrls: Map<string, string>;
+    initialSelection?: DesignEditorSelection;
+}
+
+interface DesignEditorProps extends ControlledDesignEditorProps, UncontrolledDesignEditorProps {
+    onToolbarChange: (toolbar: ReactNode) => void;
     mode?: Mode;
     layout?: Layout
     theme?: Theme;
@@ -828,13 +794,13 @@ interface DesignEditorProps {
     }
 }
 
+
 const DesignEditor: FC<DesignEditorProps> = ({
-    initialKit, kit, designId, initialSelection, selection, fileUrls, onSelectionChange, onPieceCreate, onPiecesUpdate, onSelectionDelete, onUndo, onRedo,
-    mode, layout, theme, setLayout, setTheme, onWindowEvents }) => {
+    mode, layout, theme, setLayout, setTheme, onWindowEvents,
+    initialKit, kit, designId, initialSelection, selection, fileUrls, onDesignChange, onSelectionChange, onUndo, onRedo,
+}) => {
 
     const [toolbarContent, setToolbarContent] = useState<ReactNode>(null);
-
-    const isControlled = kit !== undefined && selection !== undefined;
 
     return (
         <div
@@ -851,31 +817,19 @@ const DesignEditor: FC<DesignEditorProps> = ({
                 onWindowEvents={onWindowEvents}
             />
             <ReactFlowProvider>
-                {isControlled ? (
-                    <DesignEditorCore
-                        kit={kit}
-                        designId={designId}
-                        selection={selection}
-                        fileUrls={fileUrls}
-                        onSelectionChange={onSelectionChange!}
-                        onPieceCreate={onPieceCreate!}
-                        onPiecesUpdate={onPiecesUpdate!}
-                        onSelectionDelete={onSelectionDelete!}
-                        onUndo={onUndo}
-                        onRedo={onRedo}
-                        onToolbarChange={setToolbarContent}
-                    />
-                ) : (
-                    <DesignEditorCore
-                        initialKit={initialKit!}
-                        designId={designId}
-                        initialSelection={initialSelection!}
-                        fileUrls={fileUrls}
-                        onUndo={onUndo}
-                        onRedo={onRedo}
-                        onToolbarChange={setToolbarContent}
-                    />
-                )}
+                <DesignEditorCore
+                    kit={kit}
+                    designId={designId}
+                    fileUrls={fileUrls}
+                    selection={selection}
+                    initialKit={initialKit}
+                    initialSelection={initialSelection}
+                    onDesignChange={onDesignChange!}
+                    onSelectionChange={onSelectionChange!}
+                    onUndo={onUndo}
+                    onRedo={onRedo}
+                    onToolbarChange={setToolbarContent}
+                />
             </ReactFlowProvider>
         </div>
 

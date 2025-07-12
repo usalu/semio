@@ -147,9 +147,9 @@ const ModelDesign: FC<ModelDesignProps> = ({ kit, designId, fileUrls, selection,
     }
     const types = kit?.types ?? [];
     const piecePlanes = useMemo(() => {
-        const flatDesign = flattenDesign(design, types);
+        const flatDesign = flattenDesign(kit, designId);
         return flatDesign.pieces?.map(p => p.plane!) || [];
-    }, [design, types]);
+    }, [kit, designId]);
 
     const pieceRepresentationUrls = useMemo(() => {
         return getPieceRepresentationUrls(design, types);

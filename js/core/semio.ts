@@ -2,6 +2,7 @@ import cytoscape from 'cytoscape'
 import * as THREE from 'three'
 
 import { jaccard } from '@semio/js/lib/utils';
+import { normalize } from 'path';
 // TODOs
 // Update to latest schema and unify docstrings
 
@@ -50,6 +51,14 @@ export type Kit = {
     designs?: Design[];
     // 📏 The qualities associated with the kit
     qualities?: Quality[];
+}
+
+// 🪪 Identifier for a kit.
+export type KitId = {
+    // 📛 The name of the kit
+    name: string;
+    // 🔀 The version of the kit
+    version: string;
 }
 
 // 🏙️ A design is a collection of connected pieces.
@@ -776,7 +785,17 @@ const computeChildPlane = (
 };
 
 
-export const flattenDesign = (design: Design, types: Type[]): Design => {
+export const flattenDesign = (kit: Kit, designId: DesignId): Design => {
+    const normalize = (val: string | undefined) => val === undefined ? "" : val;
+    const design = kit.designs?.find(d =>
+        d.name === designId.name &&
+        (normalize(d.variant) === normalize(designId.variant)) &&
+        (normalize(d.view) === normalize(designId.view))
+    );
+    if (!design) {
+        throw new Error(`Design ${designId.name} not found in kit ${kit.name}`);
+    }
+    const types = kit.types ?? [];
     if (!design.pieces || design.pieces.length === 0) return design;
 
     const typesDict: { [key: string]: { [key: string]: Type } } = {};

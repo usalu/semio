@@ -136,8 +136,8 @@ export const MiniMapNode: React.FC<MiniMapNodeProps> = ({ x, y, selected }) => {
 }
 
 interface DragState {
-    nodeStartPosition: XYPosition | undefined;
-    nodeIntermediatePosition: XYPosition | undefined;
+    nodeStartPosition: XYPosition;
+    nodeIntermediatePosition?: XYPosition;
 }
 
 const pieceToNode = (piece: Piece, type: Type, selected: boolean): PieceNode => ({
@@ -166,13 +166,13 @@ interface DiagramProps {
     fileUrls: Map<string, string>;
     fullscreen?: boolean;
     selection?: DesignEditorSelection;
-    onDesignUpdate?: (design: Design) => void;
+    onDesignChange?: (design: Design) => void;
     onSelectionChange?: (selection: DesignEditorSelection) => void;
     onPanelDoubleClick?: () => void;
 }
 
 
-const Diagram: FC<DiagramProps> = ({ kit, designId, fullscreen, selection, onPanelDoubleClick, onDesignUpdate, onSelectionChange }) => {
+const Diagram: FC<DiagramProps> = ({ kit, designId, fullscreen, selection, onPanelDoubleClick, onDesignChange, onSelectionChange }) => {
     const nodeTypes = useMemo(() => ({ piece: PieceNodeComponent }), []);
     const edgeTypes = useMemo(() => ({ connection: ConnectionEdgeComponent }), []);
 
@@ -191,209 +191,39 @@ const Diagram: FC<DiagramProps> = ({ kit, designId, fullscreen, selection, onPan
     if (!design) {
         return null;
     }
+    const flatDesign = design ? flattenDesign(kit, designId) : null;
     const types = kit?.types ?? [];
-    const flatDesign = design ? flattenDesign(design, types) : null;
-    const pieceNodes = flatDesign?.pieces?.map((piece) => pieceToNode(
-        piece,
-        types.find((t) => t.name === piece.type.name && (t.variant ?? '') === (piece.type.variant ?? ''))!,
-        selection?.selectedPieceIds.includes(piece.id_) ?? false
-    ));
+    const pieceNodes = flatDesign!.pieces?.map((flatPiece) => pieceToNode(
+        flatPiece,
+        types.find((t) => t.name === flatPiece.type.name && (t.variant ?? '') === (flatPiece.type.variant ?? ''))!,
+        selection?.selectedPieceIds.includes(flatPiece.id_) ?? false
+    )) ?? [];
     const connectionEdges = design.connections?.map((connection) => connectionToEdge(
         connection,
         selection?.selectedConnections.some((c) => c.connectingPieceId === connection.connecting.piece.id_ && c.connectedPieceId === connection.connected.piece.id_) ?? false
-    ));
+    )) ?? [];
 
     // intermediate piece are selected pieces that are dragged
-    const intermediatePieceNodes = dragState?.nodeIntermediatePosition ? flatDesign?.pieces?.filter((p) => selection?.selectedPieceIds.includes(p.id_))?.map((p) => pieceToNode(
-        p,
-        types.find((t) => t.name === p.type.name && (t.variant ?? '') === (p.type.variant ?? ''))!, true)) : [];
-
-
-    const nodes = pieceNodes.concat(intermediatePieceNodes);
-
-    // const connectionEdges = design.connections?.map((connection) => ({
-    //     type: 'connection',
-    //     id: connection.id_,
-    //     source: connection.source.id_,
-    //     target: connection.target.id_,
-    // }));
-
-
-    // const types: Type[] = [
-    //     { name: 'base', ports: [{ id_: 't', t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }] },
-    //     { name: 'tambour', ports: [{ id_: 't', t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 0, z: 0 } }] },
-    // ];
-    // const initialNodes: PieceNode[] = [
-    //     { type: 'piece', id: 'b', position: { x: 0, y: 100 }, data: { piece: { id_: 'b', type: { name: "base" } } } },
-    //     { type: 'piece', id: 't', position: { x: 0, y: 0 }, data: { piece: { id_: 't', type: { name: "tambour" } } } },
-    // ];
-    // const initialEdges: ConnectionEdge[] = [{ type: 'connection', id: 'base:top -- bottom:tambour', source: 'b', sourceHandle: 't', target: 't', targetHandle: 'sw' }];
-
-    // const setPresence = usePresenceSetter()
-    // const presenceMap = usePresence();
-
-    // const viewport = useViewport();
-
-    // const onUpdateCursor = (event) => {
-    //     if (event === null || event === undefined) {
-    //         return;
-    //     }
-    //     // TODO: Figure out how to get the x and y of the mouse pointer in the viewport coordinate system
-    //     const x = Math.round((event.clientX) - viewport.x);
-    //     const y = Math.round((event.clientY) - viewport.y);
-    //     // console.log(`mX: ${event.clientX}, mY: ${event.clientY}`);
-    //     // console.log(`vX: ${viewport.x}, vY: ${viewport.y}, z: ${viewport.zoom}`);
-    //     setPresence({
-    //         cursor: { x, y },
-    //     });
-    // }
-
-
-    // const [pieceNodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-    // const [connectionEdges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-
-    // const onConnect = useCallback(
-    //     (params: any) => setEdges((eds) => addEdge(params, eds)),
-    //     [setEdges],
-    // );
-
-    // const MIN_DISTANCE = 100;
-    // const [pieceNodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-    // const [connectionEdges, setEdges, onEdgesState] = useEdgesState(initialEdges);
-    // const { getInternalNode } = useReactFlow();
-
-    // const onConnect = useCallback(
-    //     (params) => setEdges((eds) => addEdge(params, eds)),
-    //     [setEdges],
-    // );
-
-    // const getClosestEdge = useCallback((node) => {
-    //     const { nodeLookup } = store.getState();
-    //     const internalNode = getInternalNode(node.id);
-
-    //     const closestNode = Array.from(nodeLookup.values()).reduce(
-    //         (res, n) => {
-    //             if (n.id !== internalNode.id) {
-    //                 const dx =
-    //                     n.internals.positionAbsolute.x -
-    //                     internalNode.internals.positionAbsolute.x;
-    //                 const dy =
-    //                     n.internals.positionAbsolute.y -
-    //                     internalNode.internals.positionAbsolute.y;
-    //                 const d = Math.sqrt(dx * dx + dy * dy);
-
-    //                 if (d < res.distance && d < MIN_DISTANCE) {
-    //                     res.distance = d;
-    //                     res.node = n;
-    //                 }
-    //             }
-
-    //             return res;
-    //         },
-    //         {
-    //             distance: Number.MAX_VALUE,
-    //             node: null,
-    //         },
-    //     );
-
-    //     if (!closestNode.node) {
-    //         return null;
-    //     }
-
-    //     // '// Find the closest source and target handles
-    //     // let closestInternalHandle = null;
-    //     // let closestClosestHandle = null;
-    //     // let minHandleDistance = MIN_DISTANCE + ICON_WIDTH;
-
-    //     // console.log('closestNode', internalNode['type'], closestNode.node['type']);
-    //     // const internalHandles = nodeTypes[].handles || [];
-    //     // const closestHandles = nodeTypes[closestNode['type']].handles || [];
-
-    //     // internalHandles.forEach((sourceHandle) => {
-    //     //     closestHandles.forEach((targetHandle) => {
-    //     //         const dx =
-    //     //             targetHandle.positionAbsolute.x -
-    //     //             sourceHandle.positionAbsolute.x;
-    //     //         const dy =
-    //     //             targetHandle.positionAbsolute.y -
-    //     //             sourceHandle.positionAbsolute.y;
-    //     //         const handleDistance = Math.sqrt(dx * dx + dy * dy);
-    //     //         console.log('handleDistance', handleDistance, sourceHandle.id, targetHandle.id);
-
-    //     //         if (handleDistance < minHandleDistance) {
-    //     //             minHandleDistance = handleDistance;
-    //     //             closestInternalHandle = sourceHandle;
-    //     //             closestClosestHandle = targetHandle;
-    //     //         }
-    //     //     });
-    //     // });
-
-    //     // if (!closestInternalHandle || !closestClosestHandle) {
-    //     //     return null;
-    //     // }
-
-    //     const closeNodeIsSource =
-    //         closestNode.node.internals.positionAbsolute.x <
-    //         internalNode.internals.positionAbsolute.x;
-
-    //     return {
-    //         id: closeNodeIsSource
-    //             ? `${closestNode.node.id}-${node.id}`
-    //             : `${node.id}-${closestNode.node.id}`,
-    //         type: 'connection',
-    //         source: closeNodeIsSource ? closestNode.node.id : node.id,
-    //         // sourceHandle: closeNodeIsSource ? closestInternalHandle.id : closestClosestHandle.id,
-    //         target: closeNodeIsSource ? node.id : closestNode.node.id,
-    //         // targetHandle: closeNodeIsSource ? closestClosestHandle.id : closestInternalHandle.id,
-    //     };
-    // }, []);
-
-    // const onNodeDrag = useCallback(
-    //     (_, node) => {
-    //         const closeEdge = getClosestEdge(node);
-
-    //         setEdges((es) => {
-    //             const nextEdges = es.filter((e) => e.className !== 'temp');
-
-    //             if (
-    //                 closeEdge &&
-    //                 !nextEdges.find(
-    //                     (ne) =>
-    //                         ne.source === closeEdge.source && ne.target === closeEdge.target,
-    //                 )
-    //             ) {
-    //                 closeEdge.className = 'temp';
-    //                 nextEdges.push(closeEdge);
-    //             }
-
-    //             return nextEdges;
-    //         });
-    //     },
-    //     [getClosestEdge, setEdges],
-    // );
-
-    // const onNodeDragStop = useCallback(
-    //     (_, node) => {
-    //         const closeEdge = getClosestEdge(node);
-
-    //         setEdges((es) => {
-    //             const nextEdges = es.filter((e) => e.className !== 'temp');
-
-    //             if (
-    //                 closeEdge &&
-    //                 !nextEdges.find(
-    //                     (ne) =>
-    //                         ne.source === closeEdge.source && ne.target === closeEdge.target,
-    //                 )
-    //             ) {
-    //                 nextEdges.push(closeEdge);
-    //             }
-
-    //             return nextEdges;
-    //         });
-    //     },
-    //     [getClosestEdge],
-    // );
+    const [intermediatePieceNodes, setIntermediatePieceNodes] = useState<PieceNode[]>([]);
+    
+    // During drag, grey out the original selected nodes
+    const nodesWithDragStyling = useMemo(() => {
+        if (dragState && intermediatePieceNodes.length > 0) {
+            return pieceNodes.map(node => {
+                if (node.selected) {
+                    return {
+                        ...node,
+                        style: { opacity: 0.3 },
+                        draggable: false,
+                    };
+                }
+                return node;
+            });
+        }
+        return pieceNodes;
+    }, [pieceNodes, dragState, intermediatePieceNodes.length]);
+    
+    const nodes = nodesWithDragStyling.concat(intermediatePieceNodes);
 
     const onNodeClick = useCallback((e: React.MouseEvent, node: Node) => {
         e.stopPropagation();
@@ -414,22 +244,60 @@ const Diagram: FC<DiagramProps> = ({ kit, designId, fullscreen, selection, onPan
 
     const onNodeDragStart = useCallback((e: React.MouseEvent, node: Node) => {
         // if dragged node is not part of selection, deselect all pieceNodes, add dragged node to selection
-        if (!selection?.selectedPieceIds.includes(node.data.piece.id_)) {
+        if (!selection?.selectedPieceIds.includes((node as PieceNode).data.piece.id_)) {
             onSelectionChange?.({
                 ...selection,
-                selectedPieceIds: [node.data.piece.id_],
+                selectedPieceIds: [(node as PieceNode).data.piece.id_],
+                selectedConnections: selection?.selectedConnections ?? [],
             });
         }
         setDragState({
             nodeStartPosition: node.position,
             nodeIntermediatePosition: node.position,
         });
+        
+        // Create intermediate nodes for all selected pieces - styled like normal nodes
+        const selectedNodes = pieceNodes.filter(n => n.selected);
+        const intermediateNodes = selectedNodes.map(selectedNode => ({
+            ...selectedNode,
+            id: `intermediate-${selectedNode.id}`,
+            position: selectedNode.position,
+            selected: true, // Keep selection styling
+            draggable: false,
+        }));
+        setIntermediatePieceNodes(intermediateNodes);
+        
         console.log("onNodeDragStart", dragState, e, node);
-    }, [setDragState, dragState]);
+    }, [setDragState, dragState, pieceNodes, selection, onSelectionChange]);
 
     const onNodeDrag = useCallback((e: React.MouseEvent, node: Node) => {
+        if (dragState) {
+            const dragOffset = {
+                x: node.position.x - dragState.nodeStartPosition.x,
+                y: node.position.y - dragState.nodeStartPosition.y,
+            };
+            
+            // Update intermediate nodes positions - styled like normal nodes
+            const selectedNodes = pieceNodes.filter(n => n.selected);
+            const updatedIntermediateNodes = selectedNodes.map(selectedNode => ({
+                ...selectedNode,
+                id: `intermediate-${selectedNode.id}`,
+                position: {
+                    x: selectedNode.position.x + dragOffset.x,
+                    y: selectedNode.position.y + dragOffset.y,
+                },
+                selected: true, // Keep selection styling
+                draggable: false,
+            }));
+            setIntermediatePieceNodes(updatedIntermediateNodes);
+            
+            setDragState({
+                ...dragState,
+                nodeIntermediatePosition: node.position,
+            });
+        }
         console.log("onNodeDrag", e, node);
-    }, []);
+    }, [dragState, pieceNodes]);
 
     const onNodeDragStop = useCallback((e: React.MouseEvent, node: Node) => {
         const selectedFixedPieces = pieceNodes?.filter((n) => n.selected && n.data.piece.center).map((n) => n.data.piece);
@@ -441,12 +309,15 @@ const Diagram: FC<DiagramProps> = ({ kit, designId, fullscreen, selection, onPan
             ...p,
             center: { x: p.center!.x + offset.x, y: p.center!.y + offset.y },
         }));
-        onDesignUpdate?.({
+        onDesignChange?.({
             ...design,
             pieces: design.pieces?.map((p) => offsettedPieces?.find((op) => op.id_ === p.id_) || p),
         });
+        
+        // Clear intermediate nodes
+        setIntermediatePieceNodes([]);
         setDragState(null);
-    }, [dragState, pieceNodes, selection, onDesignUpdate]);
+    }, [dragState, pieceNodes, selection, onDesignChange, design]);
 
     const onDoubleClickCapture = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
