@@ -5,13 +5,14 @@ import { useDroppable } from '@dnd-kit/core';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Sphere } from '@react-three/drei';
 
-import { Connection, Design, DiagramPoint, flattenDesign, ICON_WIDTH, Kit, Piece, Port, Type, TypeId } from '@semio/js/semio'
+import { Connection, Design, DesignId, DiagramPoint, flattenDesign, ICON_WIDTH, Kit, Piece, Port, Type, TypeId } from '@semio/js/semio'
 import { Avatar, AvatarFallback, AvatarImage } from '@semio/js/components/ui/Avatar';
 
 // import '@xyflow/react/dist/base.css';
 import '@xyflow/react/dist/style.css';
 import "@semio/js/globals.css";
 import { DesignEditorSelection } from '../..';
+import { normalize } from 'path';
 
 type PieceNodeProps = {
     piece: Piece;
@@ -159,7 +160,7 @@ const connectionToEdge = (connection: Connection, selected: boolean): Connection
 });
 
 
-const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, onPanelDoubleClick, onSelectionChange, onPiecesDragEnd }) => {
+const DiagramCore: FC<DiagramProps> = ({ kit, designId, fullscreen, selection, onPanelDoubleClick, onSelectionChange, onPiecesDragEnd }) => {
     const nodeTypes = useMemo(() => ({ piece: PieceNodeComponent }), []);
     const edgeTypes = useMemo(() => ({ connection: ConnectionEdgeComponent }), []);
 
@@ -169,6 +170,16 @@ const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, o
         id: 'diagram',
     });
 
+    const normalize = (val: string | undefined) => val === undefined ? "" : val;
+    const design = kit.designs?.find(d =>
+        d.name === designId.name &&
+        (normalize(d.variant) === normalize(designId.variant)) &&
+        (normalize(d.view) === normalize(designId.view))
+    );
+    if (!design) {
+        return null;
+    }
+    const types = kit?.types ?? [];
     const flatDesign = design ? flattenDesign(design, types) : null;
     const pieceNodes = flatDesign?.pieces?.map((piece) => pieceToNode(
         piece,
@@ -495,8 +506,8 @@ const DiagramCore: FC<DiagramProps> = ({ design, types, fullscreen, selection, o
 
 
 interface DiagramProps {
-    design: Design;
-    types: Type[];
+    kit: Kit;
+    designId: DesignId;
     fullscreen?: boolean;
     selection?: DesignEditorSelection;
     fileUrls: Map<string, string>;
@@ -506,14 +517,14 @@ interface DiagramProps {
 }
 
 
-const Diagram: FC<DiagramProps> = ({ design, types, fullscreen, selection, fileUrls, onPanelDoubleClick, onSelectionChange, onPiecesDragEnd }) => {
+const Diagram: FC<DiagramProps> = ({ kit, designId, fullscreen, selection, fileUrls, onPanelDoubleClick, onSelectionChange, onPiecesDragEnd }) => {
     return (
         <div id="diagram" className="h-full w-full">
             <DiagramCore
                 fullscreen={fullscreen}
                 onPanelDoubleClick={onPanelDoubleClick}
-                design={design}
-                types={types}
+                kit={kit}
+                designId={designId}
                 selection={selection}
                 fileUrls={fileUrls}
                 onSelectionChange={onSelectionChange}

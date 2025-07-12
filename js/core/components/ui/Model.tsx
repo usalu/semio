@@ -2,7 +2,7 @@ import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef, useCall
 import { Canvas, ThreeEvent, useLoader } from '@react-three/fiber';
 import { Center, Environment, GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, Select, Sphere, Stage, TransformControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { Design, Piece, Plane, Type, flattenDesign, DesignEditorSelection, getPieceRepresentationUrls, planeToMatrix, ToThreeQuaternion, ToThreeRotation, ToSemioRotation } from '@semio/js';
+import { Kit, Design, DesignId, Piece, Plane, Type, flattenDesign, DesignEditorSelection, getPieceRepresentationUrls, planeToMatrix, ToThreeQuaternion, ToThreeRotation, ToSemioRotation } from '@semio/js';
 
 const getComputedColor = (variable: string): string => {
     return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -235,8 +235,8 @@ const Gizmo: FC = (): JSX.Element => {
 }
 
 interface ModelProps {
-    design: Design;
-    types: Type[];
+    kit: Kit;
+    designId: DesignId;
     fileUrls: Map<string, string>;
     fullscreen: boolean;
     onPanelDoubleClick?: () => void;
@@ -245,12 +245,21 @@ interface ModelProps {
     onDesignChange: (design: Design) => void;
     onPieceUpdate: (piece: Piece) => void;
 }
-const Model: FC<ModelProps> = ({ fullscreen, onPanelDoubleClick, design, types, fileUrls, selection, onSelectionChange, onDesignChange }) => {
+const Model: FC<ModelProps> = ({ kit, designId, fileUrls, fullscreen, onPanelDoubleClick, selection, onSelectionChange, onDesignChange }) => {
     const [gridColors, setGridColors] = useState({
         sectionColor: getComputedColor('--foreground'),
         cellColor: getComputedColor('--accent-foreground')
     });
-
+    const normalize = (val: string | undefined) => val === undefined ? "" : val;
+    const design = kit.designs?.find(d =>
+        d.name === designId.name &&
+        (normalize(d.variant) === normalize(designId.variant)) &&
+        (normalize(d.view) === normalize(designId.view))
+    );
+    if (!design) {
+        return null;
+    }
+    const types = kit?.types ?? [];
     // Update colors when theme changes
     useEffect(() => {
         const updateColors = () => {

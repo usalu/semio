@@ -543,8 +543,6 @@ const DesignEditorCore: FC<DesignEditorCoreProps> = ({
     onRedo,
     onToolbarChange
 }) => {
-    const design = kit.designs?.find(d => d.name === designId.name && d.variant === designId.variant && d.view === designId.view);
-
     const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null);
 
     const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
@@ -707,20 +705,16 @@ const DesignEditorCore: FC<DesignEditorCoreProps> = ({
                             className={`${fullscreenPanel === 'model' ? 'hidden' : 'block'}`}
                             onDoubleClick={() => handlePanelDoubleClick('diagram')}
                         >
-                            {design ? (
-                                <Diagram
-                                    fullscreen={fullscreenPanel === 'diagram'}
-                                    onPanelDoubleClick={() => handlePanelDoubleClick('diagram')}
-                                    design={design}
-                                    types={kit?.types ?? []}
-                                    selection={selection}
-                                    fileUrls={fileUrls}
-                                    onSelectionChange={onSelectionChange}
-                                    onPiecesDragEnd={onPiecesUpdate}
-                                />
-                            ) : (
-                                <div className="flex items-center justify-center h-full text-muted-foreground">No design loaded</div>
-                            )}
+                            <Diagram
+                                fullscreen={fullscreenPanel === 'diagram'}
+                                onPanelDoubleClick={() => handlePanelDoubleClick('diagram')}
+                                kit={kit}
+                                designId={designId}
+                                selection={selection}
+                                fileUrls={fileUrls}
+                                onSelectionChange={onSelectionChange}
+                                onPiecesDragEnd={onPiecesUpdate}
+                            />
                         </ResizablePanel>
                         <ResizableHandle className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`} />
                         <ResizablePanel
@@ -728,19 +722,17 @@ const DesignEditorCore: FC<DesignEditorCoreProps> = ({
                             className={`${fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
                             onDoubleClick={() => handlePanelDoubleClick('model')}
                         >
-                            {design ? (
-                                <Model
-                                    fullscreen={fullscreenPanel === 'model'}
-                                    onPanelDoubleClick={() => handlePanelDoubleClick('model')}
-                                    design={design}
-                                    types={kit?.types ?? []}
-                                    selection={selection}
-                                    fileUrls={fileUrls}
-                                    onSelectionChange={onSelectionChange}
-                                />
-                            ) : (
-                                <div className="flex items-center justify-center h-full text-muted-foreground">No design loaded</div>
-                            )}
+                            <Model
+                                fullscreen={fullscreenPanel === 'model'}
+                                onPanelDoubleClick={() => handlePanelDoubleClick('model')}
+                                kit={kit}
+                                designId={designId}
+                                selection={selection}
+                                fileUrls={fileUrls}
+                                onSelectionChange={onSelectionChange}
+                            // onDesignChange={onDesignChange}
+                            // onPieceUpdate={onPieceUpdate}
+                            />
                         </ResizablePanel>
                     </ResizablePanelGroup>
                 </div>
