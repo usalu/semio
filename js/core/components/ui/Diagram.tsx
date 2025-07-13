@@ -41,6 +41,7 @@ import {
   ViewportPortal,
   useStore,
   XYPosition,
+  Node as RFNode,
 } from "@xyflow/react";
 import * as THREE from "three";
 import { useDroppable } from "@dnd-kit/core";
@@ -81,20 +82,78 @@ const Diagram: FC<DiagramProps> = ({
   onDesignChange,
   onSelectionChange,
 }) => {
-  const nodesAndEdges = mapDesignToNodesAndEdges({
-    kit,
-    designId,
-    selection,
-  });
-  console.log("render");
+  // Track drag state
+  const [dragState, setDragState] = useState<{
+    nodeId: string;
+    offset: XYPosition;
+    position: XYPosition;
+  } | null>(null);
+
+  // Always use the original nodes/edges
+  const nodesAndEdges = useMemo(
+    () => mapDesignToNodesAndEdges({ kit, designId, selection }),
+    [kit, designId, selection],
+  );
   if (!nodesAndEdges) return null;
   const { nodes, edges } = nodesAndEdges;
+
+  // Handle node drag start: set dragState with initial position
+  const handleNodeDragStart = useCallback((event: any, node: RFNode) => {
+    setDragState({
+      nodeId: node.id,
+      offset: { x: 0, y: 0 },
+      position: node.position,
+    });
+  }, []);
+
+  // Handle node drag: update dragState.position in React state
+  const handleNodeDrag = useCallback(
+    (event: any, node: RFNode) => {
+      if (!dragState) return;
+      setDragState((prev) =>
+        prev
+          ? {
+              ...prev,
+              position: node.position,
+            }
+          : null,
+      );
+    },
+    [dragState],
+  );
+
+  // Handle node drag stop: clear dragState
+  const handleNodeDragStop = useCallback(() => {
+    setDragState(null);
+  }, []);
+
+  const displayNodes = useMemo(() => {
+    if (!dragState) return nodes;
+    const nodeBeingDragged = nodes.find((n) => n.id === dragState.nodeId);
+    if (!nodeBeingDragged) return nodes;
+
+    // Grey out the original node
+    const nodesWithAlpha = nodes.map((n) =>
+      n.id === dragState.nodeId
+        ? { ...n, data: { ...n.data, ghost: true } }
+        : n,
+    );
+
+    const ghostNode = {
+      ...nodeBeingDragged,
+      id: "ghost" + nodeBeingDragged.id,
+      position: dragState.position,
+      data: { ...nodeBeingDragged.data, ghost: false },
+      selected: true,
+    };
+    return [...nodesWithAlpha, ghostNode];
+  }, [nodes, dragState]);
 
   return (
     <div id="diagram" className="h-full w-full">
       <ReactFlow
         ref={useDiagramDroppableNodeRef()}
-        nodes={nodes}
+        nodes={displayNodes}
         edges={edges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
@@ -109,11 +168,9 @@ const Diagram: FC<DiagramProps> = ({
         onNodeClick={(event, node) => {
           toggleNodeSelection(node.id, selection, onSelectionChange);
         }}
-        onNodeDragStart={(event, node) => {
-          toggleNodeSelection(node.id, selection, onSelectionChange);
-        }}
-        onNodeDrag={() => {}}
-        onNodeDragStop={() => {}}
+        onNodeDragStart={handleNodeDragStart}
+        onNodeDrag={handleNodeDrag}
+        onNodeDragStop={handleNodeDragStop}
       >
         {fullscreen && (
           <Controls
@@ -234,46 +291,38 @@ const PortHandle: React.FC<PortHandleProps> = ({ port }) => {
   );
 };
 
-const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = ({
-  id,
-  data,
-  selected,
-}) => {
-  // const { zoom } = useViewport();
-
-  if (selected) {
-    console.log("selected one");
-  }
-
-  const {
-    piece: { id_ },
-    type: { ports },
-  } = data;
-  return (
-    <div>
-      <svg width={ICON_WIDTH} height={ICON_WIDTH} className="cursor-pointer">
-        <circle
-          cx={ICON_WIDTH / 2}
-          cy={ICON_WIDTH / 2}
-          r={ICON_WIDTH / 2 - 1}
-          className={`stroke-foreground stroke-2 ${selected ? "fill-primary " : "fill-transparent"} `}
-        />
-        {/* {zoom < 10 && */}
-        <text
-          x={ICON_WIDTH / 2}
-          y={ICON_WIDTH / 2}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          className={`text-xs font-bold fill-foreground`}
-        >
-          {id_}
-        </text>
-        {/* } */}
-      </svg>
-      {ports?.map((port) => <PortHandle key={port.id_} port={port} />)}
-    </div>
-  );
-};
+// Patch PieceNodeComponent to support ghost/alpha rendering
+const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(
+  ({ id, data, selected }) => {
+    const {
+      piece: { id_ },
+      type: { ports },
+      ghost,
+    } = data as any;
+    return (
+      <div style={{ opacity: ghost ? 0.5 : 1 }}>
+        <svg width={ICON_WIDTH} height={ICON_WIDTH} className="cursor-pointer">
+          <circle
+            cx={ICON_WIDTH / 2}
+            cy={ICON_WIDTH / 2}
+            r={ICON_WIDTH / 2 - 1}
+            className={`stroke-foreground stroke-2 ${selected ? "fill-primary " : "fill-transparent"} `}
+          />
+          <text
+            x={ICON_WIDTH / 2}
+            y={ICON_WIDTH / 2}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            className={`text-xs font-bold fill-foreground`}
+          >
+            {id_}
+          </text>
+        </svg>
+        {ports?.map((port: Port) => <PortHandle key={port.id_} port={port} />)}
+      </div>
+    );
+  },
+);
 
 const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
   source,
