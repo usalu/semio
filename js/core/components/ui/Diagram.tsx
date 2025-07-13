@@ -90,9 +90,6 @@ const Diagram: FC<DiagramProps> = ({
   if (!nodesAndEdges) return null;
   const { nodes, edges } = nodesAndEdges;
 
-  logIfAnyNodeSelected(nodes);
-  useLogNodeArrayStability(nodes);
-
   return (
     <div id="diagram" className="h-full w-full">
       <ReactFlow
@@ -112,7 +109,9 @@ const Diagram: FC<DiagramProps> = ({
         onNodeClick={(event, node) => {
           toggleNodeSelection(node.id, selection, onSelectionChange);
         }}
-        onNodeDragStart={() => {}}
+        onNodeDragStart={(event, node) => {
+          toggleNodeSelection(node.id, selection, onSelectionChange);
+        }}
         onNodeDrag={() => {}}
         onNodeDragStop={() => {}}
       >
@@ -160,15 +159,6 @@ function toggleNodeSelection(
       selectedPieceIds: [nodeId].concat(currentSelectedIds),
       selectedConnections: [],
     });
-  }
-}
-
-function logIfAnyNodeSelected(nodes: Node[]) {
-  const anySelected = nodes.some((node) => node.selected);
-  if (anySelected) {
-    console.log("At least one node is selected.");
-  } else {
-    console.log("No nodes are selected.");
   }
 }
 
@@ -315,42 +305,6 @@ export const MiniMapNode: React.FC<MiniMapNodeProps> = ({ x, y, selected }) => {
 interface DragState {
   nodeStartPosition: XYPosition;
   nodeIntermediatePosition?: XYPosition;
-}
-
-function useLogNodeArrayStability(nodes: Node[]) {
-  const prevNodesRef = useRef<Node[]>([]);
-
-  useEffect(() => {
-    const prevNodes = prevNodesRef.current;
-    const currIds = nodes.map((n) => n.id);
-    const prevIds = prevNodes.map((n) => n.id);
-
-    // Check for changes
-    const sameLength = currIds.length === prevIds.length;
-    const sameOrder = sameLength && currIds.every((id, i) => id === prevIds[i]);
-    const sameSet =
-      sameLength &&
-      currIds.every((id) => prevIds.includes(id)) &&
-      prevIds.every((id) => currIds.includes(id));
-
-    // Log details
-    console.log("---- Node Array Stability Check ----");
-    console.log("Current IDs:", currIds);
-    console.log("Previous IDs:", prevIds);
-    console.log("Same length:", sameLength);
-    console.log("Same order:", sameOrder);
-    console.log("Same set:", sameSet);
-    if (!sameOrder) {
-      console.warn("Node order changed!");
-    }
-    if (!sameSet) {
-      console.warn("Node set changed (IDs added/removed)!");
-    }
-    if (!sameLength) {
-      console.warn("Node count changed!");
-    }
-    prevNodesRef.current = nodes;
-  }, [nodes]);
 }
 
 function mapDesignToNodesAndEdges({
