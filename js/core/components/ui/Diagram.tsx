@@ -42,6 +42,9 @@ import {
   useStore,
   XYPosition,
   Node as RFNode,
+  InternalNode,
+  applyNodeChanges,
+  NodeChange,
 } from "@xyflow/react";
 import * as THREE from "three";
 import { useDroppable } from "@dnd-kit/core";
@@ -82,6 +85,7 @@ const Diagram: FC<DiagramProps> = ({
   onDesignChange,
   onSelectionChange,
 }) => {
+  console.log("[Diagram] Rendering");
   // Mapping the semio design to react flow nodes and edges
   const nodesAndEdges = useMemo(
     () => mapDesignToNodesAndEdges({ kit, designId, selection }),
@@ -99,6 +103,25 @@ const Diagram: FC<DiagramProps> = ({
   const { handleNodeDragStart, handleNodeDrag, handleNodeDragStop } =
     useDragHandle(setDragState);
 
+  // --- Log closest edge for node being dragged ---
+  const reactFlowInstance = useReactFlow();
+
+  // const handleNodeDragWithClosestEdge = useCallback(
+  //   (event: any, node: RFNode) => {
+  //     handleNodeDrag(event, node);
+
+  //     if (!nodes || !reactFlowInstance.getInternalNode) return;
+
+  //     const closestEdge = getClosestEdge(
+  //       node,
+  //       nodes,
+  //       reactFlowInstance.getInternalNode,
+  //     );
+  //     console.log("[Drag] Closest edge:", closestEdge);
+  //   },
+  //   [handleNodeDrag, nodes, reactFlowInstance],
+  // );
+
   // update nodes state
   const displayNodes = useDisplayNodes(dragState, nodes, selection);
 
@@ -107,7 +130,7 @@ const Diagram: FC<DiagramProps> = ({
       <ReactFlow
         ref={useDiagramDroppableNodeRef()}
         nodes={displayNodes}
-        edges={edges}
+        edges={[]}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         connectionMode={ConnectionMode.Loose}
@@ -192,6 +215,7 @@ function useDisplayNodes(
   nodes: PieceNode[],
   selection: { selectedPieceIds?: string[] },
 ) {
+  const reactFlowInstance = useReactFlow();
   return useMemo(() => {
     if (!dragState) return nodes;
     const { offset } = dragState;
@@ -208,6 +232,7 @@ function useDisplayNodes(
       .map((id) => {
         const orig = nodes.find((n) => n.id === id);
         if (!orig) return undefined;
+        // Copy all properties from the original node, only override what needs to be unique
         return {
           ...orig,
           id: "ghost" + id,
@@ -221,6 +246,16 @@ function useDisplayNodes(
         };
       })
       .filter(Boolean) as PieceNode[];
+
+    if (ghostNodes && ghostNodes.length !== 0) {
+      const closestEdge = getClosestEdge(
+        ghostNodes[0],
+        nodes,
+        reactFlowInstance.getInternalNode,
+      );
+      console.log("[Drag] Closest edge:", closestEdge);
+    }
+
     return [...nodesWithGreyedOut, ...ghostNodes];
   }, [nodes, dragState, selection]);
 }
@@ -461,3 +496,103 @@ interface DiagramProps {
 }
 
 export default Diagram;
+
+export const MIN_DISTANCE = 150;
+
+function getClosestEdge(
+  node: Node,
+  nodes: PieceNode[],
+  getInternalNode: (id: string) => InternalNode<Node> | undefined,
+): Edge | null {
+  const draggedNode = getInternalNode(node.id);
+  if (!draggedNode) return null;
+
+  console.log("[Drag] Dragged node:", node);
+
+  // Get all handles on the dragged node
+  const draggedHandles = getAbsoluteHandlePositions(draggedNode);
+  console.log("[Drag] Dragged node:", draggedNode);
+  console.log("[Drag] Dragged handles:", draggedHandles);
+
+  let closest = {
+    distance: Number.MAX_VALUE,
+    source: null as null | { nodeId: string; handleId: string },
+    target: null as null | { nodeId: string; handleId: string },
+  };
+
+  // Iterate over all other nodes in the array
+  for (const otherNode of nodes) {
+    if (otherNode.id === draggedNode.id) continue;
+    const otherInternalNode = getInternalNode(otherNode.id);
+    // console.log("[Drag] Other node:", otherNode);
+    if (!otherInternalNode) continue;
+    // Get all handles on the other node
+    const otherHandles = getAbsoluteHandlePositions(otherInternalNode);
+    // console.log("[Drag] Other handles:", otherHandles);
+    // Compare all handles between dragged node and other node
+    for (const draggedHandle of draggedHandles) {
+      // console.log("[Drag] Dragged handle:", draggedHandle);
+      for (const otherHandle of otherHandles) {
+        // console.log("[Drag] Other handle:", otherHandle);
+        const dx = draggedHandle.x - otherHandle.x;
+        const dy = draggedHandle.y - otherHandle.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        // console.log("[Drag] Distance:", distance);
+        if (distance < closest.distance && distance < MIN_DISTANCE) {
+          // Always assign the node with the lower id as source for consistency
+          if (draggedNode.id < otherNode.id) {
+            closest = {
+              distance,
+              source: {
+                nodeId: draggedNode.id,
+                handleId: draggedHandle.handleId,
+              },
+              target: { nodeId: otherNode.id, handleId: otherHandle.handleId },
+            };
+          } else {
+            closest = {
+              distance,
+              source: { nodeId: otherNode.id, handleId: otherHandle.handleId },
+              target: {
+                nodeId: draggedNode.id,
+                handleId: draggedHandle.handleId,
+              },
+            };
+          }
+        }
+      }
+    }
+  }
+  // console.log("[Drag] Closest edge:", closest);
+
+  // If no close handle pair found, return null
+  if (!closest.source || !closest.target) {
+    // console.log("[Drag] No closest edge found");
+    return null;
+  }
+
+  // Return an edge connecting the closest handles
+  return {
+    id: `${closest.source.nodeId}-${closest.source.handleId}__${closest.target.nodeId}-${closest.target.handleId}`,
+    source: closest.source.nodeId,
+    sourceHandle: closest.source.handleId,
+    target: closest.target.nodeId,
+    targetHandle: closest.target.handleId,
+  };
+}
+
+// Helper to get absolute handle positions for a node (all handles are undirected)
+function getAbsoluteHandlePositions(node: InternalNode<Node>): Array<{
+  handleId: string;
+  x: number;
+  y: number;
+}> {
+  const handles = node.internals.handleBounds?.source || [];
+  return handles
+    .filter((handle) => typeof handle.id === "string" && handle.id)
+    .map((handle) => ({
+      handleId: handle.id as string,
+      x: node.internals.positionAbsolute.x + handle.x + handle.width / 2,
+      y: node.internals.positionAbsolute.y + handle.y + handle.height / 2,
+    }));
+}
