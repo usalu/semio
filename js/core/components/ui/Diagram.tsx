@@ -82,16 +82,6 @@ const Diagram: FC<DiagramProps> = ({
   onDesignChange,
   onSelectionChange,
 }) => {
-  //TODO on drag save drag state
-  //TODO add copies of all selected nodes with drag position offset
-
-  // Track drag state
-  const [dragState, setDragState] = useState<{
-    nodeId: string;
-    offset: XYPosition;
-    position: XYPosition;
-  } | null>(null);
-
   // Mapping the semio design to react flow nodes and edges
   const nodesAndEdges = useMemo(
     () => mapDesignToNodesAndEdges({ kit, designId, selection }),
@@ -100,11 +90,17 @@ const Diagram: FC<DiagramProps> = ({
   if (!nodesAndEdges) return null;
   const { nodes, edges } = nodesAndEdges;
 
-  const { handleNodeDragStart, handleNodeDrag, handleNodeDragStop } =
-    useDragHandle(setDragState, dragState);
+  // drage state
+  const [dragState, setDragState] = useState<{
+    origin: XYPosition;
+    offset: XYPosition;
+  } | null>(null);
 
-  // render nodes
-  const displayNodes = useDisplayNodes(dragState, nodes);
+  const { handleNodeDragStart, handleNodeDrag, handleNodeDragStop } =
+    useDragHandle(setDragState);
+
+  // update nodes state
+  const displayNodes = useDisplayNodes(dragState, nodes, selection);
 
   return (
     <div id="diagram" className="h-full w-full">
@@ -153,42 +149,35 @@ const Diagram: FC<DiagramProps> = ({
 function useDragHandle(
   setDragState: React.Dispatch<
     React.SetStateAction<{
-      nodeId: string;
+      origin: XYPosition;
       offset: XYPosition;
-      position: XYPosition;
     } | null>
   >,
-  dragState: {
-    nodeId: string;
-    offset: XYPosition;
-    position: XYPosition;
-  } | null,
 ) {
   const handleNodeDragStart = useCallback((event: any, node: RFNode) => {
     setDragState({
-      nodeId: node.id,
+      origin: { x: node.position.x, y: node.position.y },
       offset: { x: 0, y: 0 },
-      position: node.position,
     });
   }, []);
 
-  // Handle node drag: update dragState.position in React state
   const handleNodeDrag = useCallback(
     (event: any, node: RFNode) => {
-      if (!dragState) return;
       setDragState((prev) =>
         prev
           ? {
               ...prev,
-              position: node.position,
+              offset: {
+                x: node.position.x - prev.origin.x,
+                y: node.position.y - prev.origin.y,
+              },
             }
           : null,
       );
     },
-    [dragState],
+    [setDragState],
   );
 
-  // Handle node drag stop: clear dragState
   const handleNodeDragStop = useCallback(() => {
     setDragState(null);
   }, []);
@@ -197,32 +186,43 @@ function useDragHandle(
 
 function useDisplayNodes(
   dragState: {
-    nodeId: string;
+    origin: XYPosition;
     offset: XYPosition;
-    position: XYPosition;
   } | null,
   nodes: PieceNode[],
+  selection: { selectedPieceIds?: string[] },
 ) {
   return useMemo(() => {
     if (!dragState) return nodes;
-    const nodeBeingDragged = nodes.find((node) => node.id === dragState.nodeId);
-    if (!nodeBeingDragged) return nodes;
+    const { offset } = dragState;
+    const selectedNodeIds = selection.selectedPieceIds ?? [];
 
-    // Grey out the original node
-    const nodesWithGreyedOutNodes = nodes.map((node) => {
-      if (node.id !== nodeBeingDragged.id) return node;
-      else return { ...node, data: { ...node.data, ghost: true } };
-    });
-
-    const ghostNode = {
-      ...nodeBeingDragged,
-      id: "ghost" + nodeBeingDragged.id,
-      position: dragState.position,
-      data: { ...nodeBeingDragged.data, ghost: false },
-      selected: true,
-    };
-    return [...nodesWithGreyedOutNodes, ghostNode];
-  }, [nodes, dragState]);
+    // Grey out all originals being dragged
+    const nodesWithGreyedOut = nodes.map((node) =>
+      selectedNodeIds.includes(node.id)
+        ? { ...node, data: { ...node.data, isBeingDragged: true } }
+        : node,
+    );
+    // Add ghost nodes for all being dragged
+    const ghostNodes: PieceNode[] = selectedNodeIds
+      .map((id) => {
+        const orig = nodes.find((n) => n.id === id);
+        if (!orig) return undefined;
+        return {
+          ...orig,
+          id: "ghost" + id,
+          position: {
+            x: orig.position.x + offset.x,
+            y: orig.position.y + offset.y,
+          },
+          data: { ...orig.data, ghost: false },
+          selected: true,
+          isGhost: true,
+        };
+      })
+      .filter(Boolean) as PieceNode[];
+    return [...nodesWithGreyedOut, ...ghostNodes];
+  }, [nodes, dragState, selection]);
 }
 
 function toggleNodeSelection(
@@ -264,6 +264,8 @@ function toggleNodeSelection(
 type PieceNodeProps = {
   piece: Piece;
   type: Type;
+  isBeingDragged: boolean;
+  isGhost: boolean;
 };
 
 type PieceNode = Node<PieceNodeProps, "piece">;
@@ -304,7 +306,7 @@ const pieceToNode = (
     y: -piece.center!.y * ICON_WIDTH || 0,
   },
   selected,
-  data: { piece, type },
+  data: { piece, type, isBeingDragged: false, isGhost: false },
 });
 
 const connectionToEdge = (
@@ -333,16 +335,16 @@ const PortHandle: React.FC<PortHandleProps> = ({ port }) => {
   );
 };
 
-// Patch PieceNodeComponent to support ghost/alpha rendering
 const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(
   ({ id, data, selected }) => {
     const {
       piece: { id_ },
       type: { ports },
-      ghost,
+      isBeingDragged,
+      isGhost,
     } = data as any;
     return (
-      <div style={{ opacity: ghost ? 0.5 : 1 }}>
+      <div style={{ opacity: isBeingDragged ? 0.5 : 1 }}>
         <svg width={ICON_WIDTH} height={ICON_WIDTH} className="cursor-pointer">
           <circle
             cx={ICON_WIDTH / 2}
