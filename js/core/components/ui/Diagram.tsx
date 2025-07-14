@@ -82,6 +82,9 @@ const Diagram: FC<DiagramProps> = ({
   onDesignChange,
   onSelectionChange,
 }) => {
+  //TODO on drag save drag state
+  //TODO add copies of all selected nodes with drag position offset
+
   // Track drag state
   const [dragState, setDragState] = useState<{
     nodeId: string;
@@ -89,7 +92,7 @@ const Diagram: FC<DiagramProps> = ({
     position: XYPosition;
   } | null>(null);
 
-  // Always use the original nodes/edges
+  // Mapping the semio design to react flow nodes and edges
   const nodesAndEdges = useMemo(
     () => mapDesignToNodesAndEdges({ kit, designId, selection }),
     [kit, designId, selection],
@@ -97,7 +100,70 @@ const Diagram: FC<DiagramProps> = ({
   if (!nodesAndEdges) return null;
   const { nodes, edges } = nodesAndEdges;
 
-  // Handle node drag start: set dragState with initial position
+  const { handleNodeDragStart, handleNodeDrag, handleNodeDragStop } =
+    useDragHandle(setDragState, dragState);
+
+  // render nodes
+  const displayNodes = useDisplayNodes(dragState, nodes);
+
+  return (
+    <div id="diagram" className="h-full w-full">
+      <ReactFlow
+        ref={useDiagramDroppableNodeRef()}
+        nodes={displayNodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        connectionMode={ConnectionMode.Loose}
+        elementsSelectable={false}
+        minZoom={0.1}
+        maxZoom={12}
+        zoomOnDoubleClick={false}
+        panOnDrag={[0]} //left mouse button
+        proOptions={{ hideAttribution: true }}
+        multiSelectionKeyCode="Shift"
+        onNodeClick={(event, node) => {
+          toggleNodeSelection(node.id, selection, onSelectionChange, event);
+        }}
+        onNodeDragStart={handleNodeDragStart}
+        onNodeDrag={handleNodeDrag}
+        onNodeDragStop={handleNodeDragStop}
+      >
+        {fullscreen && (
+          <Controls
+            className="border"
+            showZoom={false}
+            showInteractive={false}
+          />
+        )}
+        {fullscreen && (
+          <MiniMap
+            className="border"
+            maskColor="var(--accent)"
+            bgColor="var(--background)"
+            nodeComponent={MiniMapNode}
+          />
+        )}
+        <ViewportPortal>⌞</ViewportPortal>
+      </ReactFlow>
+    </div>
+  );
+};
+
+function useDragHandle(
+  setDragState: React.Dispatch<
+    React.SetStateAction<{
+      nodeId: string;
+      offset: XYPosition;
+      position: XYPosition;
+    } | null>
+  >,
+  dragState: {
+    nodeId: string;
+    offset: XYPosition;
+    position: XYPosition;
+  } | null,
+) {
   const handleNodeDragStart = useCallback((event: any, node: RFNode) => {
     setDragState({
       nodeId: node.id,
@@ -126,18 +192,27 @@ const Diagram: FC<DiagramProps> = ({
   const handleNodeDragStop = useCallback(() => {
     setDragState(null);
   }, []);
+  return { handleNodeDragStart, handleNodeDrag, handleNodeDragStop };
+}
 
-  const displayNodes = useMemo(() => {
+function useDisplayNodes(
+  dragState: {
+    nodeId: string;
+    offset: XYPosition;
+    position: XYPosition;
+  } | null,
+  nodes: PieceNode[],
+) {
+  return useMemo(() => {
     if (!dragState) return nodes;
-    const nodeBeingDragged = nodes.find((n) => n.id === dragState.nodeId);
+    const nodeBeingDragged = nodes.find((node) => node.id === dragState.nodeId);
     if (!nodeBeingDragged) return nodes;
 
     // Grey out the original node
-    const nodesWithAlpha = nodes.map((n) =>
-      n.id === dragState.nodeId
-        ? { ...n, data: { ...n.data, ghost: true } }
-        : n,
-    );
+    const nodesWithGreyedOutNodes = nodes.map((node) => {
+      if (node.id !== nodeBeingDragged.id) return node;
+      else return { ...node, data: { ...node.data, ghost: true } };
+    });
 
     const ghostNode = {
       ...nodeBeingDragged,
@@ -146,52 +221,9 @@ const Diagram: FC<DiagramProps> = ({
       data: { ...nodeBeingDragged.data, ghost: false },
       selected: true,
     };
-    return [...nodesWithAlpha, ghostNode];
+    return [...nodesWithGreyedOutNodes, ghostNode];
   }, [nodes, dragState]);
-
-  return (
-    <div id="diagram" className="h-full w-full">
-      <ReactFlow
-        ref={useDiagramDroppableNodeRef()}
-        nodes={displayNodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        connectionMode={ConnectionMode.Loose}
-        elementsSelectable={false}
-        minZoom={0.1}
-        maxZoom={12}
-        zoomOnDoubleClick={false}
-        panOnDrag={[0]} //left mouse button
-        proOptions={{ hideAttribution: true }}
-        multiSelectionKeyCode="Shift"
-        onNodeClick={(event, node) => {
-          toggleNodeSelection(node.id, selection, onSelectionChange);
-        }}
-        onNodeDragStart={handleNodeDragStart}
-        onNodeDrag={handleNodeDrag}
-        onNodeDragStop={handleNodeDragStop}
-      >
-        {fullscreen && (
-          <Controls
-            className="border"
-            showZoom={false}
-            showInteractive={false}
-          />
-        )}
-        {fullscreen && (
-          <MiniMap
-            className="border"
-            maskColor="var(--accent)"
-            bgColor="var(--background)"
-            nodeComponent={MiniMapNode}
-          />
-        )}
-        <ViewportPortal>⌞</ViewportPortal>
-      </ReactFlow>
-    </div>
-  );
-};
+}
 
 function toggleNodeSelection(
   nodeId: string,
@@ -200,20 +232,30 @@ function toggleNodeSelection(
     selectedPieceIds: string[];
     selectedConnections: any[];
   }) => void,
+  event?: React.MouseEvent,
 ) {
   const currentSelectedIds = selection?.selectedPieceIds ?? [];
   const isNodeSelected = currentSelectedIds.includes(nodeId);
+  const isMultiSelect =
+    event && (event.shiftKey || event.metaKey || event.ctrlKey);
 
-  if (isNodeSelected) {
-    // Unselect the node
-    onSelectionChange({
-      selectedPieceIds: currentSelectedIds.filter((id) => id !== nodeId),
-      selectedConnections: [],
-    });
+  if (isMultiSelect) {
+    // Multi-select: toggle node in selection
+    if (isNodeSelected) {
+      onSelectionChange({
+        selectedPieceIds: currentSelectedIds.filter((id) => id !== nodeId),
+        selectedConnections: [],
+      });
+    } else {
+      onSelectionChange({
+        selectedPieceIds: [...currentSelectedIds, nodeId],
+        selectedConnections: [],
+      });
+    }
   } else {
-    // Select the node
+    // Single select: only this node
     onSelectionChange({
-      selectedPieceIds: [nodeId].concat(currentSelectedIds),
+      selectedPieceIds: [nodeId],
       selectedConnections: [],
     });
   }
