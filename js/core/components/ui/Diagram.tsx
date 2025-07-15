@@ -89,6 +89,7 @@ const Diagram: FC<DiagramProps> = ({
 }) => {
   console.log("[Diagram] Rendering");
   // Mapping the semio design to react flow nodes and edges
+
   const nodesAndEdges = useMemo(
     () => mapDesignToNodesAndEdges({ kit, designId, selection }),
     [kit, designId, selection],
@@ -96,26 +97,38 @@ const Diagram: FC<DiagramProps> = ({
   if (!nodesAndEdges) return null;
   const { nodes, edges: initialEdges } = nodesAndEdges;
 
-  // For now using local edges, later will be updated in the design
-  const [edges, setEdges, onEdgesChange] = useEdgesState(
-    initialEdges as Edge[],
-  );
+  // Drage state
 
-  // drage state
   const [dragState, setDragState] = useState<{
     origin: XYPosition;
     offset: XYPosition;
   } | null>(null);
 
-  // update nodes state
-  const displayNodes = useDisplayNodes(dragState, nodes, selection);
+  // Nodes rendering
+
+  const displayNodes = useDisplayGhostNodes(dragState, nodes, selection);
+
+  // Edges rendering
+
+  // For now using local edges, later will be updated in the design
+  const [edges, setEdges, onEdgesChange] = useEdgesState(
+    initialEdges as Edge[],
+  );
 
   const reactFlowInstance = useReactFlow();
-
   const ghostEdges = useMemo(
     () => getProximityEdges(displayNodes, nodes, reactFlowInstance, selection),
     [displayNodes, nodes, reactFlowInstance, selection],
   );
+
+  const displayEdges: Edge[] = useMemo(() => {
+    if (ghostEdges.length > 0) {
+      return [...edges, ...ghostEdges];
+    }
+    return edges;
+  }, [edges, ghostEdges]);
+
+  // Drag handling
 
   const { handleNodeDragStart, handleNodeDrag, handleNodeDragStop } =
     useDragHandle(
@@ -131,12 +144,15 @@ const Diagram: FC<DiagramProps> = ({
       onDesignChange,
     );
 
-  const displayEdges: Edge[] = useMemo(() => {
-    if (ghostEdges.length > 0) {
-      return [...edges, ...ghostEdges];
-    }
-    return edges;
-  }, [edges, ghostEdges]);
+  // Double click handling
+
+  const onDoubleClickCapture = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onPanelDoubleClick?.();
+    },
+    [onPanelDoubleClick],
+  );
 
   return (
     <div id="diagram" className="h-full w-full">
@@ -161,6 +177,7 @@ const Diagram: FC<DiagramProps> = ({
         onNodeDrag={handleNodeDrag}
         onNodeDragStop={handleNodeDragStop}
         onEdgesChange={onEdgesChange}
+        onDoubleClick={onDoubleClickCapture}
       >
         {fullscreen && (
           <Controls
@@ -503,6 +520,7 @@ function toggleNodeSelection(
   }) => void,
   event?: React.MouseEvent,
 ) {
+  event?.stopPropagation();
   const currentSelectedIds = selection?.selectedPieceIds ?? [];
   const isNodeSelected = currentSelectedIds.includes(nodeId);
 
@@ -524,7 +542,7 @@ function toggleNodeSelection(
 
 //#region Display Nodes
 
-function useDisplayNodes(
+function useDisplayGhostNodes(
   dragState: {
     origin: XYPosition;
     offset: XYPosition;
