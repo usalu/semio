@@ -4,7 +4,8 @@
       "investment-costs-construction-phase": {
         "land-costs": {
           "land": {
-            "land-value": null,            "ancillary-land-costs": {
+            "land-value": null,
+            "ancillary-land-costs": {
               "surveying-fees": null,
               "court-fees": null,
               "notary-fees": null,
@@ -18,7 +19,8 @@
             "third-party-rights": {
               "compensations": null,
               "redemption-of-real-rights": null,
-              "other": null            },
+              "other": null
+            },
             "compensations": null,
             "redemption-of-real-rights": null,
             "other": null
@@ -26,7 +28,8 @@
           "other": null
         },
         "development-costs": {
-          "preparatory-measures": {            "site-preparation": {
+          "preparatory-measures": {
+            "site-preparation": {
               "safety-measures": null,
               "demolition-measures": null,
               "contaminated-site-remediation": null,
@@ -55,7 +58,8 @@
             "transitional-measures": {
               "structural-measures": null,
               "organizational-measures": null,
-              "other": null            }
+              "other": null
+            }
           },
           "other": null
         },
@@ -86,7 +90,8 @@
             "prefabricated-external-wall-structures": null,
             "light-protection-kg-330": null,
             "other": null
-          },          "internal-walls-vertical-structural-components-inside": {
+          },
+          "internal-walls-vertical-structural-components-inside": {
             "load-bearing-internal-walls": null,
             "non-load-bearing-internal-walls": null,
             "internal-columns": null,
@@ -112,7 +117,8 @@
             "prefabricated-roof-structures": null,
             "light-protection-kg-360": null,
             "other": null
-          },          "infrastructure-facilities": {
+          },
+          "infrastructure-facilities": {
             "road-traffic-facilities": null,
             "rail-traffic-facilities": null,
             "air-traffic-facilities": null,
@@ -144,7 +150,8 @@
             "temporary-structural-components": null,
             "other": null
           }
-        },        "technical-systems": {
+        },
+        "technical-systems": {
           "wastewater-water-gas-systems": {
             "wastewater-systems": null,
             "water-systems": null,
@@ -174,7 +181,8 @@
             "lightning-protection-and-grounding-systems": null,
             "catenary-systems": null,
             "other": null
-          },          "communication-safety-and-information-technology-systems": {
+          },
+          "communication-safety-and-information-technology-systems": {
             "telecommunication-systems": null,
             "search-and-signal-systems": null,
             "time-service-systems": null,
@@ -201,7 +209,8 @@
             "fire-extinguishing-systems": null,
             "process-heat-cold-and-air-systems": null,
             "other": null
-          },          "building-and-facility-automation": {
+          },
+          "building-and-facility-automation": {
             "automation-devices": null,
             "control-cabinets-automation-hubs": null,
             "automation-management": null,
@@ -221,7 +230,8 @@
             "other": null
           }
         },
-        "outdoor-facilities-and-open-spaces": {          "earthworks": {
+        "outdoor-facilities-and-open-spaces": {
+          "earthworks": {
             "construction": null,
             "enclosure": null,
             "water-management": null,
@@ -257,7 +267,8 @@
             "canal-and-shaft-structures": null,
             "water-basins": null,
             "other": null
-          },          "technical-systems": {
+          },
+          "technical-systems": {
             "wastewater-systems": null,
             "water-systems": null,
             "gas-and-liquid-systems": null,
@@ -284,7 +295,8 @@
         "equipment-and-artworks": {
           "general-equipment": null,
           "special-equipment": null,
-          "information-technology-equipment": null,          "artistic-equipment": {
+          "information-technology-equipment": null,
+          "artistic-equipment": {
             "art-objects": null,
             "artistic-design-of-the-building": null,
             "artistic-design-of-outdoor-facilities-and-open-spaces": null,
@@ -315,7 +327,8 @@
             "civil-engineering-structures": null,
             "traffic-facilities": null,
             "other": null
-          },          "specialist-planning": {
+          },
+          "specialist-planning": {
             "structural-planning": null,
             "technical-equipment": null,
             "building-physics": null,
@@ -355,7 +368,8 @@
         "taxes-and-duties": null,
         "grants-subsidies": null,
         "income": null
-      },      "operating-costs-ongoing-use": {
+      },
+      "operating-costs-ongoing-use": {
         "operational-management-costs": {
           "property-management": null,
           "caretaker": null,
