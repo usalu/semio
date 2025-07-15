@@ -1,130 +1,70 @@
-import { FC, ReactNode, useState, useEffect, useReducer, useMemo } from "react";
-import {
-  DndContext,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-  useDraggable,
-} from "@dnd-kit/core";
-import { createPortal } from "react-dom";
-import { useHotkeys } from "react-hotkeys-hook";
-import {
-  Wrench,
-  Terminal,
-  Info,
-  MessageCircle,
-  ChevronDown,
-  ChevronRight,
-  Folder,
-  Circle,
-} from "lucide-react";
-import { ReactFlowProvider, useReactFlow } from "@xyflow/react";
+import { FC, ReactNode, useState, useEffect, useReducer, useMemo } from 'react'
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable } from '@dnd-kit/core'
+import { createPortal } from 'react-dom'
+import { useHotkeys } from 'react-hotkeys-hook'
+import { Wrench, Terminal, Info, MessageCircle, ChevronDown, ChevronRight, Folder, Circle } from 'lucide-react'
+import { ReactFlowProvider, useReactFlow } from '@xyflow/react'
 
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@semio/js/components/ui/Resizable";
-import {
-  Design,
-  Type,
-  Piece,
-  flattenDesign,
-  getPieceRepresentationUrls,
-  Kit,
-  DesignId,
-} from "@semio/js";
-import { ICON_WIDTH } from "@semio/js/semio";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@semio/js/components/ui/Avatar";
-import { default as Diagram } from "@semio/js/components/ui/Diagram";
-import { default as Model } from "@semio/js/components/ui/Model";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@semio/js/components/ui/Tooltip";
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@semio/js/components/ui/ToggleGroup";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "@semio/js/components/ui/Tabs";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@semio/js/components/ui/Collapsible";
-import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@semio/js/components/ui/HoverCard";
-import { Textarea } from "@semio/js/components/ui/Textarea";
-import { Generator } from "@semio/js/lib/utils";
-import {
-  DesignEditorSelection,
-  useDesignEditorStore,
-  useStudioStore,
-} from "@semio/js/store";
-import { Layout, Mode, Theme } from "@semio/js/components/ui/Sketchpad";
-import { Input } from "@semio/js/components/ui/Input";
-import { Slider } from "@semio/js/components/ui/Slider";
-import { default as Navbar } from "@semio/js/components/ui/Navbar";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@semio/js/components/ui/Resizable'
+import { Design, Type, Piece, flattenDesign, getPieceRepresentationUrls, Kit, DesignId } from '@semio/js'
+import { ICON_WIDTH } from '@semio/js/semio'
+import { Avatar, AvatarFallback, AvatarImage } from '@semio/js/components/ui/Avatar'
+import { default as Diagram } from '@semio/js/components/ui/Diagram'
+import { default as Model } from '@semio/js/components/ui/Model'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@semio/js/components/ui/Tooltip'
+import { ToggleGroup, ToggleGroupItem } from '@semio/js/components/ui/ToggleGroup'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@semio/js/components/ui/Tabs'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible'
+import { ScrollArea } from '@semio/js/components/ui/ScrollArea'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@semio/js/components/ui/HoverCard'
+import { Textarea } from '@semio/js/components/ui/Textarea'
+import { Generator } from '@semio/js/lib/utils'
+import { DesignEditorSelection, useDesignEditorStore, useStudioStore } from '@semio/js/store'
+import { Layout, Mode, Theme } from '@semio/js/components/ui/Sketchpad'
+import { Input } from '@semio/js/components/ui/Input'
+import { Slider } from '@semio/js/components/ui/Slider'
+import { default as Navbar } from '@semio/js/components/ui/Navbar'
 
 // Type for panel visibility toggles
 interface PanelToggles {
-  workbench: boolean;
-  console: boolean;
-  details: boolean;
-  chat: boolean;
+  workbench: boolean
+  console: boolean
+  details: boolean
+  chat: boolean
 }
 
 // Basic panel props
 interface PanelProps {
-  visible: boolean;
+  visible: boolean
 }
 
 // Props for resizable panels
 interface ResizablePanelProps extends PanelProps {
-  onWidthChange?: (width: number) => void;
-  width: number;
+  onWidthChange?: (width: number) => void
+  width: number
 }
 
 // TreeNode component for sidebar navigation
 interface TreeNodeProps {
-  label: ReactNode;
-  icon?: ReactNode;
-  children?: ReactNode;
-  level?: number;
-  collapsible?: boolean;
-  defaultOpen?: boolean;
-  isLeaf?: boolean;
+  label: ReactNode
+  icon?: ReactNode
+  children?: ReactNode
+  level?: number
+  collapsible?: boolean
+  defaultOpen?: boolean
+  isLeaf?: boolean
 }
 
 // TreeSection component for top-level sections
 interface TreeSectionProps {
-  label: string;
-  icon?: ReactNode;
-  children?: ReactNode;
-  defaultOpen?: boolean;
+  label: string
+  icon?: ReactNode
+  children?: ReactNode
+  defaultOpen?: boolean
 }
 
-const TreeSection: FC<TreeSectionProps> = ({
-  label,
-  icon,
-  children,
-  defaultOpen = true,
-}) => {
-  const [open, setOpen] = useState(defaultOpen);
+const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defaultOpen = true }) => {
+  const [open, setOpen] = useState(defaultOpen)
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -135,20 +75,14 @@ const TreeSection: FC<TreeSectionProps> = ({
           ) : (
             <ChevronRight size={14} className="flex-shrink-0" />
           )}
-          {icon && (
-            <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
-              {icon}
-            </span>
-          )}
-          <span className="flex-1 text-sm text-muted-foreground uppercase tracking-wide truncate">
-            {label}
-          </span>
+          {icon && <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">{icon}</span>}
+          <span className="flex-1 text-sm text-muted-foreground uppercase tracking-wide truncate">{label}</span>
         </div>
       </CollapsibleTrigger>
       <CollapsibleContent>{children}</CollapsibleContent>
     </Collapsible>
-  );
-};
+  )
+}
 
 const TreeNode: FC<TreeNodeProps> = ({
   label,
@@ -157,13 +91,13 @@ const TreeNode: FC<TreeNodeProps> = ({
   level = 0,
   collapsible = false,
   defaultOpen = true,
-  isLeaf = false,
+  isLeaf = false
 }) => {
-  const [open, setOpen] = useState(defaultOpen);
-  const indentStyle = { paddingLeft: `${level * 1.25}rem` };
+  const [open, setOpen] = useState(defaultOpen)
+  const indentStyle = { paddingLeft: `${level * 1.25}rem` }
 
-  const Trigger = collapsible ? CollapsibleTrigger : "div";
-  const Content = collapsible ? CollapsibleContent : "div";
+  const Trigger = collapsible ? CollapsibleTrigger : 'div'
+  const Content = collapsible ? CollapsibleContent : 'div'
 
   const triggerContent = (
     <div
@@ -177,14 +111,10 @@ const TreeNode: FC<TreeNodeProps> = ({
         ) : (
           <ChevronRight size={14} className="flex-shrink-0" />
         ))}
-      {icon && (
-        <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
-          {icon}
-        </span>
-      )}
+      {icon && <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">{icon}</span>}
       <span className="flex-1 text-sm font-normal truncate">{label}</span>
     </div>
-  );
+  )
 
   if (collapsible) {
     return (
@@ -192,46 +122,39 @@ const TreeNode: FC<TreeNodeProps> = ({
         <Trigger asChild>{triggerContent}</Trigger>
         <Content>{children}</Content>
       </Collapsible>
-    );
+    )
   } else if (isLeaf) {
-    return triggerContent;
+    return triggerContent
   } else {
     return (
       <>
         {triggerContent}
         {children}
       </>
-    );
+    )
   }
-};
+}
 
 // Type Avatar component
 interface TypeAvatarProps {
-  type: Type;
-  showHoverCard?: boolean;
+  type: Type
+  showHoverCard?: boolean
 }
 
 const TypeAvatar: FC<TypeAvatarProps> = ({ type, showHoverCard = false }) => {
   const { attributes, listeners, setNodeRef } = useDraggable({
-    id: `type-${type.name}-${type.variant || ""}`,
-  });
+    id: `type-${type.name}-${type.variant || ''}`
+  })
 
   const avatar = (
-    <Avatar
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      className="cursor-grab"
-    >
+    <Avatar ref={setNodeRef} {...listeners} {...attributes} className="cursor-grab">
       {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
-      <AvatarFallback>
-        {type.variant.substring(0, 2).toUpperCase()}
-      </AvatarFallback>
+      <AvatarFallback>{type.variant.substring(0, 2).toUpperCase()}</AvatarFallback>
     </Avatar>
-  );
+  )
 
   if (!showHoverCard) {
-    return avatar;
+    return avatar
   }
 
   return (
@@ -242,56 +165,40 @@ const TypeAvatar: FC<TypeAvatarProps> = ({ type, showHoverCard = false }) => {
           {type.variant ? (
             <>
               <h4 className="text-sm font-semibold">{type.variant}</h4>
-              <p className="text-sm">
-                {type.description || "No description available."}
-              </p>
+              <p className="text-sm">{type.description || 'No description available.'}</p>
             </>
           ) : (
-            <p className="text-sm">
-              {type.description || "No description available."}
-            </p>
+            <p className="text-sm">{type.description || 'No description available.'}</p>
           )}
         </div>
       </HoverCardContent>
     </HoverCard>
-  );
-};
+  )
+}
 
 // Design Avatar component
 interface DesignAvatarProps {
-  design: Design;
-  showHoverCard?: boolean;
+  design: Design
+  showHoverCard?: boolean
 }
 
-const DesignAvatar: FC<DesignAvatarProps> = ({
-  design,
-  showHoverCard = false,
-}) => {
+const DesignAvatar: FC<DesignAvatarProps> = ({ design, showHoverCard = false }) => {
   const { attributes, listeners, setNodeRef } = useDraggable({
-    id: `design-${design.name}-${design.variant || ""}-${design.view || ""}`,
-  });
+    id: `design-${design.name}-${design.variant || ''}-${design.view || ''}`
+  })
 
   // Determine if this is the default variant and view
-  const isDefault =
-    (!design.variant || design.variant === design.name) &&
-    (!design.view || design.view === "Default");
+  const isDefault = (!design.variant || design.variant === design.name) && (!design.view || design.view === 'Default')
 
   const avatar = (
-    <Avatar
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      className="cursor-grab"
-    >
+    <Avatar ref={setNodeRef} {...listeners} {...attributes} className="cursor-grab">
       {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
-      <AvatarFallback>
-        {design.variant.substring(0, 2).toUpperCase()}
-      </AvatarFallback>
+      <AvatarFallback>{design.variant.substring(0, 2).toUpperCase()}</AvatarFallback>
     </Avatar>
-  );
+  )
 
   if (!showHoverCard) {
-    return avatar;
+    return avatar
   }
 
   return (
@@ -302,106 +209,89 @@ const DesignAvatar: FC<DesignAvatarProps> = ({
           {!isDefault && (
             <h4 className="text-sm font-semibold">
               {design.variant || design.name}
-              {design.view && design.view !== "Default" && ` (${design.view})`}
+              {design.view && design.view !== 'Default' && ` (${design.view})`}
             </h4>
           )}
-          <p className="text-sm">
-            {design.description || "No description available."}
-          </p>
+          <p className="text-sm">{design.description || 'No description available.'}</p>
         </div>
       </HoverCardContent>
     </HoverCard>
-  );
-};
+  )
+}
 
 // Workbench panel component
 interface WorkbenchProps extends ResizablePanelProps {
-  kit: Kit;
+  kit: Kit
 }
 
-const Workbench: FC<WorkbenchProps> = ({
-  visible,
-  onWidthChange,
-  width,
-  kit,
-}) => {
-  if (!visible) return null;
-  const [isResizeHovered, setIsResizeHovered] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
+const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width, kit }) => {
+  if (!visible) return null
+  const [isResizeHovered, setIsResizeHovered] = useState(false)
+  const [isResizing, setIsResizing] = useState(false)
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
+    e.preventDefault()
+    setIsResizing(true)
 
-    const startX = e.clientX;
-    const startWidth = width;
+    const startX = e.clientX
+    const startWidth = width
 
     const handleMouseMove = (e: MouseEvent) => {
-      const newWidth = startWidth + (e.clientX - startX);
+      const newWidth = startWidth + (e.clientX - startX)
       if (newWidth >= 150 && newWidth <= 500) {
-        onWidthChange?.(newWidth);
+        onWidthChange?.(newWidth)
       }
-    };
+    }
 
     const handleMouseUp = () => {
-      setIsResizing(false);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
+      setIsResizing(false)
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
 
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-  };
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }
 
   // const { kit } = useKit();
-  if (!kit?.types || !kit?.designs) return null;
+  if (!kit?.types || !kit?.designs) return null
 
   const typesByName = kit.types.reduce(
     (acc, type) => {
-      acc[type.name] = acc[type.name] || [];
-      acc[type.name].push(type);
-      return acc;
+      acc[type.name] = acc[type.name] || []
+      acc[type.name].push(type)
+      return acc
     },
-    {} as Record<string, Type[]>,
-  );
+    {} as Record<string, Type[]>
+  )
 
   const designsByName = kit.designs.reduce(
     (acc, design) => {
-      const nameKey = design.name;
-      acc[nameKey] = acc[nameKey] || [];
-      acc[nameKey].push(design);
-      return acc;
+      const nameKey = design.name
+      acc[nameKey] = acc[nameKey] || []
+      acc[nameKey].push(design)
+      return acc
     },
-    {} as Record<string, Design[]>,
-  );
+    {} as Record<string, Design[]>
+  )
 
   return (
     <div
       className={`absolute top-4 left-4 bottom-4 z-20 bg-background-level-2 text-foreground border
-                ${isResizing || isResizeHovered ? "border-r-primary" : "border-r"}`}
+                ${isResizing || isResizeHovered ? 'border-r-primary' : 'border-r'}`}
       style={{ width: `${width}px` }}
     >
       <ScrollArea className="h-full">
         <div className="p-1">
           <TreeSection label="Types" defaultOpen={true}>
             {Object.entries(typesByName).map(([name, variants]) => (
-              <TreeNode
-                key={name}
-                label={name}
-                collapsible={true}
-                level={1}
-                defaultOpen={false}
-              >
+              <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
                 <div
                   className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
                   style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}
                 >
                   {variants.map((type) => (
-                    <TypeAvatar
-                      key={`${type.name}-${type.variant}`}
-                      type={type}
-                      showHoverCard={true}
-                    />
+                    <TypeAvatar key={`${type.name}-${type.variant}`} type={type} showHoverCard={true} />
                   ))}
                 </div>
               </TreeNode>
@@ -409,13 +299,7 @@ const Workbench: FC<WorkbenchProps> = ({
           </TreeSection>
           <TreeSection label="Designs" defaultOpen={true}>
             {Object.entries(designsByName).map(([name, designs]) => (
-              <TreeNode
-                key={name}
-                label={name}
-                collapsible={true}
-                level={1}
-                defaultOpen={false}
-              >
+              <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
                 <div
                   className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
                   style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}
@@ -440,17 +324,17 @@ const Workbench: FC<WorkbenchProps> = ({
         onMouseLeave={() => !isResizing && setIsResizeHovered(false)}
       />
     </div>
-  );
-};
+  )
+}
 
 interface ConsoleProps {
-  visible: boolean;
-  leftPanelVisible: boolean;
-  rightPanelVisible: boolean;
-  leftPanelWidth?: number;
-  rightPanelWidth?: number;
-  height: number;
-  setHeight: (height: number) => void;
+  visible: boolean
+  leftPanelVisible: boolean
+  rightPanelVisible: boolean
+  leftPanelWidth?: number
+  rightPanelWidth?: number
+  height: number
+  setHeight: (height: number) => void
 }
 
 const Console: FC<ConsoleProps> = ({
@@ -460,49 +344,45 @@ const Console: FC<ConsoleProps> = ({
   leftPanelWidth = 230,
   rightPanelWidth = 230,
   height,
-  setHeight,
+  setHeight
 }) => {
-  if (!visible) return null;
+  if (!visible) return null
 
-  const [isResizeHovered, setIsResizeHovered] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
+  const [isResizeHovered, setIsResizeHovered] = useState(false)
+  const [isResizing, setIsResizing] = useState(false)
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
+    e.preventDefault()
+    setIsResizing(true)
 
-    const startY = e.clientY;
-    const startHeight = height;
+    const startY = e.clientY
+    const startHeight = height
 
     const handleMouseMove = (e: MouseEvent) => {
-      const newHeight = startHeight - (e.clientY - startY);
+      const newHeight = startHeight - (e.clientY - startY)
       if (newHeight >= 100 && newHeight <= 600) {
-        setHeight(newHeight);
+        setHeight(newHeight)
       }
-    };
+    }
 
     const handleMouseUp = () => {
-      setIsResizing(false);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
+      setIsResizing(false)
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
 
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-  };
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }
 
   return (
     <div
-      className={`absolute z-30 bg-background-level-2 text-foreground border ${isResizing || isResizeHovered ? "border-t-primary" : ""}`}
+      className={`absolute z-30 bg-background-level-2 text-foreground border ${isResizing || isResizeHovered ? 'border-t-primary' : ''}`}
       style={{
-        left: leftPanelVisible
-          ? `calc(${leftPanelWidth}px + calc(var(--spacing) * 8))`
-          : `calc(var(--spacing) * 4)`,
-        right: rightPanelVisible
-          ? `calc(${rightPanelWidth}px + calc(var(--spacing) * 8))`
-          : `calc(var(--spacing) * 4)`,
+        left: leftPanelVisible ? `calc(${leftPanelWidth}px + calc(var(--spacing) * 8))` : `calc(var(--spacing) * 4)`,
+        right: rightPanelVisible ? `calc(${rightPanelWidth}px + calc(var(--spacing) * 8))` : `calc(var(--spacing) * 4)`,
         bottom: `calc(var(--spacing) * 4)`,
-        height: `${height}px`,
+        height: `${height}px`
       }}
     >
       <div
@@ -515,44 +395,44 @@ const Console: FC<ConsoleProps> = ({
         <div className="font-semibold p-4">Console</div>
       </ScrollArea>
     </div>
-  );
-};
+  )
+}
 
 interface DetailsProps extends ResizablePanelProps {}
 
 const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
-  if (!visible) return null;
-  const [isResizeHovered, setIsResizeHovered] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
+  if (!visible) return null
+  const [isResizeHovered, setIsResizeHovered] = useState(false)
+  const [isResizing, setIsResizing] = useState(false)
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
+    e.preventDefault()
+    setIsResizing(true)
 
-    const startX = e.clientX;
-    const startWidth = width;
+    const startX = e.clientX
+    const startWidth = width
 
     const handleMouseMove = (e: MouseEvent) => {
-      const newWidth = startWidth - (e.clientX - startX);
+      const newWidth = startWidth - (e.clientX - startX)
       if (newWidth >= 150 && newWidth <= 500) {
-        onWidthChange?.(newWidth);
+        onWidthChange?.(newWidth)
       }
-    };
+    }
 
     const handleMouseUp = () => {
-      setIsResizing(false);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
+      setIsResizing(false)
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
 
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-  };
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }
 
   return (
     <div
       className={`absolute top-4 right-4 bottom-4 z-20 bg-background-level-2 text-foreground border
-                ${isResizing || isResizeHovered ? "border-l-primary" : "border-l"}`}
+                ${isResizing || isResizeHovered ? 'border-l-primary' : 'border-l'}`}
       style={{ width: `${width}px` }}
     >
       <ScrollArea className="h-full">
@@ -578,44 +458,44 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
         onMouseLeave={() => !isResizing && setIsResizeHovered(false)}
       />
     </div>
-  );
-};
+  )
+}
 
 interface ChatProps extends ResizablePanelProps {}
 
 const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
-  if (!visible) return null;
-  const [isResizeHovered, setIsResizeHovered] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
+  if (!visible) return null
+  const [isResizeHovered, setIsResizeHovered] = useState(false)
+  const [isResizing, setIsResizing] = useState(false)
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
+    e.preventDefault()
+    setIsResizing(true)
 
-    const startX = e.clientX;
-    const startWidth = width;
+    const startX = e.clientX
+    const startWidth = width
 
     const handleMouseMove = (e: MouseEvent) => {
-      const newWidth = startWidth - (e.clientX - startX);
+      const newWidth = startWidth - (e.clientX - startX)
       if (newWidth >= 150 && newWidth <= 500) {
-        onWidthChange?.(newWidth);
+        onWidthChange?.(newWidth)
       }
-    };
+    }
 
     const handleMouseUp = () => {
-      setIsResizing(false);
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
+      setIsResizing(false)
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
 
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
-  };
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }
 
   return (
     <div
       className={`absolute top-4 right-4 bottom-4 z-20 bg-background-level-2 text-foreground border
-                ${isResizing || isResizeHovered ? "border-l-primary" : "border-l"}`}
+                ${isResizing || isResizeHovered ? 'border-l-primary' : 'border-l'}`}
       style={{ width: `${width}px` }}
     >
       <ScrollArea className="h-full">
@@ -631,43 +511,39 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
         onMouseLeave={() => !isResizing && setIsResizeHovered(false)}
       />
     </div>
-  );
-};
+  )
+}
 
 const DesignEditorCore: FC<DesignEditorProps> = (props) => {
-  const { onToolbarChange, designId, fileUrls } = props;
+  const { onToolbarChange, designId, fileUrls } = props
 
-  const isControlled = props.kit !== undefined;
+  const isControlled = props.kit !== undefined
 
-  const [internalKit, setInternalKit] = useState(
-    !isControlled ? props.initialKit : undefined,
-  );
-  const [internalSelection, setInternalSelection] = useState(
-    !isControlled ? props.initialSelection : undefined,
-  );
+  const [internalKit, setInternalKit] = useState(!isControlled ? props.initialKit : undefined)
+  const [internalSelection, setInternalSelection] = useState(!isControlled ? props.initialSelection : undefined)
 
-  const kit = isControlled ? props.kit : internalKit;
+  const kit = isControlled ? props.kit : internalKit
   const selection = (isControlled ? props.selection : internalSelection) || {
     selectedPieceIds: [],
-    selectedConnections: [],
-  };
+    selectedConnections: []
+  }
 
-  const normalize = (val: string | undefined) => (val === undefined ? "" : val);
+  const normalize = (val: string | undefined) => (val === undefined ? '' : val)
   const design = kit?.designs?.find(
     (d) =>
       d.name === designId.name &&
       normalize(d.variant) === normalize(designId.variant) &&
-      normalize(d.view) === normalize(designId.view),
-  );
+      normalize(d.view) === normalize(designId.view)
+  )
   if (!design) {
-    return null;
+    return null
   }
 
   const onDesignChange = isControlled
     ? props.onDesignChange
     : (design: Design) => {
         setInternalKit((currentKit) => {
-          if (!currentKit) return currentKit;
+          if (!currentKit) return currentKit
           return {
             ...currentKit,
             designs: currentKit.designs?.map((d) =>
@@ -675,121 +551,117 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
               normalize(d.variant) === normalize(design.variant) &&
               normalize(d.view) === normalize(design.view)
                 ? design
-                : d,
-            ),
-          };
-        });
-      };
+                : d
+            )
+          }
+        })
+      }
 
   const onSelectionChange = isControlled
     ? props.onSelectionChange
     : (selection: DesignEditorSelection) => {
-        setInternalSelection(selection);
-      };
+        setInternalSelection(selection)
+      }
 
-  const [fullscreenPanel, setFullscreenPanel] = useState<
-    "diagram" | "model" | null
-  >(null);
+  const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null)
   const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
     workbench: false,
     console: false,
     details: false,
-    chat: false,
-  });
-  const [workbenchWidth, setWorkbenchWidth] = useState(230);
-  const [detailsWidth, setDetailsWidth] = useState(230);
-  const [consoleHeight, setConsoleHeight] = useState(200);
-  const [chatWidth, setChatWidth] = useState(230);
+    chat: false
+  })
+  const [workbenchWidth, setWorkbenchWidth] = useState(230)
+  const [detailsWidth, setDetailsWidth] = useState(230)
+  const [consoleHeight, setConsoleHeight] = useState(200)
+  const [chatWidth, setChatWidth] = useState(230)
 
   const togglePanel = (panel: keyof PanelToggles) => {
     setVisiblePanels((prev) => {
-      const newState = { ...prev };
-      if (panel === "chat" && !prev.chat) {
-        newState.details = false;
+      const newState = { ...prev }
+      if (panel === 'chat' && !prev.chat) {
+        newState.details = false
       }
-      if (panel === "details" && !prev.details) {
-        newState.chat = false;
+      if (panel === 'details' && !prev.details) {
+        newState.chat = false
       }
-      newState[panel] = !prev[panel];
-      return newState;
-    });
-  };
+      newState[panel] = !prev[panel]
+      return newState
+    })
+  }
 
-  useHotkeys("mod+j", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    togglePanel("workbench");
-  });
-  useHotkeys("mod+k", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    togglePanel("console");
-  });
-  useHotkeys("mod+l", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    togglePanel("details");
-  });
-  useHotkeys(["mod+[", "mod+semicolon", "mod+ö"], (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    togglePanel("chat");
-  });
+  useHotkeys('mod+j', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    togglePanel('workbench')
+  })
+  useHotkeys('mod+k', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    togglePanel('console')
+  })
+  useHotkeys('mod+l', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    togglePanel('details')
+  })
+  useHotkeys(['mod+[', 'mod+semicolon', 'mod+ö'], (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    togglePanel('chat')
+  })
 
-  useHotkeys("mod+a", (e) => {
-    e.preventDefault();
-    console.log("Select all pieces and connections");
-  });
-  useHotkeys("mod+i", (e) => {
-    e.preventDefault();
-    console.log("Invert selection");
-  });
-  useHotkeys("mod+d", (e) => {
-    e.preventDefault();
-    console.log("Select closest piece with same variant");
-  });
-  useHotkeys("mod+shift+d", (e) => {
-    e.preventDefault();
-    console.log("Select all pieces with same variant");
-  });
-  useHotkeys("mod+c", (e) => {
-    e.preventDefault();
-    console.log("Copy selected");
-  });
+  useHotkeys('mod+a', (e) => {
+    e.preventDefault()
+    console.log('Select all pieces and connections')
+  })
+  useHotkeys('mod+i', (e) => {
+    e.preventDefault()
+    console.log('Invert selection')
+  })
+  useHotkeys('mod+d', (e) => {
+    e.preventDefault()
+    console.log('Select closest piece with same variant')
+  })
+  useHotkeys('mod+shift+d', (e) => {
+    e.preventDefault()
+    console.log('Select all pieces with same variant')
+  })
+  useHotkeys('mod+c', (e) => {
+    e.preventDefault()
+    console.log('Copy selected')
+  })
 
-  useHotkeys("mod+v", (e) => {
-    e.preventDefault();
-    console.log("Paste");
-  });
-  useHotkeys("mod+x", (e) => {
-    e.preventDefault();
-    console.log("Cut selected");
-  });
-  useHotkeys("delete", (e) => {
-    e.preventDefault();
-    onSelectionDelete?.();
-  });
-  useHotkeys("mod+z", (e) => {
+  useHotkeys('mod+v', (e) => {
+    e.preventDefault()
+    console.log('Paste')
+  })
+  useHotkeys('mod+x', (e) => {
+    e.preventDefault()
+    console.log('Cut selected')
+  })
+  useHotkeys('delete', (e) => {
+    e.preventDefault()
+    onSelectionDelete?.()
+  })
+  useHotkeys('mod+z', (e) => {
     // Swapped y and z for conventional undo/redo
-    e.preventDefault();
-    onUndo?.();
-  });
-  useHotkeys("mod+y", (e) => {
-    e.preventDefault();
-    onRedo?.();
-  });
-  useHotkeys("mod+w", (e) => {
-    e.preventDefault();
-    console.log("Close design");
-  });
+    e.preventDefault()
+    onUndo?.()
+  })
+  useHotkeys('mod+y', (e) => {
+    e.preventDefault()
+    onRedo?.()
+  })
+  useHotkeys('mod+w', (e) => {
+    e.preventDefault()
+    console.log('Close design')
+  })
 
-  const handlePanelDoubleClick = (panel: "diagram" | "model") => {
-    setFullscreenPanel((currentPanel) =>
-      currentPanel === panel ? null : panel,
-    );
-  };
+  const handlePanelDoubleClick = (panel: 'diagram' | 'model') => {
+    setFullscreenPanel((currentPanel) => (currentPanel === panel ? null : panel))
+  }
 
-  const rightPanelVisible = visiblePanels.details || visiblePanels.chat;
+  const rightPanelVisible = visiblePanels.details || visiblePanels.chat
 
   const designEditorToolbar = (
     <ToggleGroup
@@ -799,12 +671,12 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
         .map(([key]) => key)}
       onValueChange={(values) => {
         Object.keys(visiblePanels).forEach((key) => {
-          const isCurrentlyVisible = visiblePanels[key as keyof PanelToggles];
-          const shouldBeVisible = values.includes(key);
+          const isCurrentlyVisible = visiblePanels[key as keyof PanelToggles]
+          const shouldBeVisible = values.includes(key)
           if (isCurrentlyVisible !== shouldBeVisible) {
-            togglePanel(key as keyof PanelToggles);
+            togglePanel(key as keyof PanelToggles)
           }
-        });
+        })
       }}
     >
       <ToggleGroupItem value="workbench" tooltip="Workbench" hotkey="⌘J">
@@ -820,75 +692,68 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
         <MessageCircle />
       </ToggleGroupItem>
     </ToggleGroup>
-  );
+  )
 
   useEffect(() => {
-    onToolbarChange(designEditorToolbar);
-    return () => onToolbarChange(null);
-  }, [visiblePanels]);
+    onToolbarChange(designEditorToolbar)
+    return () => onToolbarChange(null)
+  }, [visiblePanels])
 
-  const { screenToFlowPosition } = useReactFlow();
-  const [activeDraggedType, setActiveDraggedType] = useState<Type | null>(null);
-  const [activeDraggedDesign, setActiveDraggedDesign] = useState<Design | null>(
-    null,
-  );
+  const { screenToFlowPosition } = useReactFlow()
+  const [activeDraggedType, setActiveDraggedType] = useState<Type | null>(null)
+  const [activeDraggedDesign, setActiveDraggedDesign] = useState<Design | null>(null)
 
   const onDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    const id = active.id.toString();
-    if (id.startsWith("type-")) {
-      const [_, name, variant] = id.split("-");
-      const type = kit?.types?.find(
-        (t: Type) => t.name === name && t.variant === (variant || undefined),
-      );
-      setActiveDraggedType(type || null);
-    } else if (id.startsWith("design-")) {
-      const [_, name, variant, view] = id.split("-");
+    const { active } = event
+    const id = active.id.toString()
+    if (id.startsWith('type-')) {
+      const [_, name, variant] = id.split('-')
+      const type = kit?.types?.find((t: Type) => t.name === name && t.variant === (variant || undefined))
+      setActiveDraggedType(type || null)
+    } else if (id.startsWith('design-')) {
+      const [_, name, variant, view] = id.split('-')
       const draggedDesign = kit?.designs?.find(
-        (d) =>
-          d.name === name &&
-          d.variant === (variant || undefined) &&
-          d.view === (view || undefined),
-      );
-      setActiveDraggedDesign(draggedDesign || null);
+        (d) => d.name === name && d.variant === (variant || undefined) && d.view === (view || undefined)
+      )
+      setActiveDraggedDesign(draggedDesign || null)
     }
-  };
+  }
 
   const onDragEnd = (event: DragEndEvent) => {
-    const { over } = event;
-    if (over?.id === "diagram") {
+    const { over } = event
+    if (over?.id === 'diagram') {
       if (!(event.activatorEvent instanceof PointerEvent)) {
-        return;
+        return
       }
       if (activeDraggedType) {
         const { x, y } = screenToFlowPosition({
           x: event.activatorEvent.clientX + event.delta.x,
-          y: event.activatorEvent.clientY + event.delta.y,
-        });
+          y: event.activatorEvent.clientY + event.delta.y
+        })
         const piece: Piece = {
           id_: Generator.randomId(),
           type: {
             name: activeDraggedType.name,
-            variant: activeDraggedType.variant,
+            variant: activeDraggedType.variant
           },
           plane: {
             origin: { x: 0, y: 0, z: 0 },
             xAxis: { x: 1, y: 0, z: 0 },
-            yAxis: { x: 0, y: 1, z: 0 },
+            yAxis: { x: 0, y: 1, z: 0 }
           },
-          center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
-        };
+          center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 }
+        }
         onDesignChange?.({
           ...design,
-          pieces: [...(design.pieces || []), piece],
-        });
+          pieces: [...(design.pieces || []), piece]
+        })
       } else if (activeDraggedDesign) {
-        throw new Error("Not implemented");
+        throw new Error('Not implemented')
       }
     }
-    setActiveDraggedType(null);
-    setActiveDraggedDesign(null);
-  };
+    setActiveDraggedType(null)
+    setActiveDraggedDesign(null)
+  }
 
   return (
     <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
@@ -896,38 +761,36 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
         <div id="sketchpad-edgeless" className="h-full">
           <ResizablePanelGroup direction="horizontal">
             <ResizablePanel
-              defaultSize={fullscreenPanel === "diagram" ? 100 : 50}
-              className={`${fullscreenPanel === "model" ? "hidden" : "block"}`}
-              onDoubleClick={() => handlePanelDoubleClick("diagram")}
+              defaultSize={fullscreenPanel === 'diagram' ? 100 : 50}
+              className={`${fullscreenPanel === 'model' ? 'hidden' : 'block'}`}
+              onDoubleClick={() => handlePanelDoubleClick('diagram')}
             >
               <Diagram
                 kit={kit}
                 designId={designId}
                 fileUrls={fileUrls}
                 selection={selection}
-                fullscreen={fullscreenPanel === "diagram"}
+                fullscreen={fullscreenPanel === 'diagram'}
                 onDesignChange={onDesignChange}
                 onSelectionChange={onSelectionChange}
-                onPanelDoubleClick={() => handlePanelDoubleClick("diagram")}
+                onPanelDoubleClick={() => handlePanelDoubleClick('diagram')}
               />
             </ResizablePanel>
-            <ResizableHandle
-              className={`border-r ${fullscreenPanel !== null ? "hidden" : "block"}`}
-            />
+            <ResizableHandle className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`} />
             <ResizablePanel
-              defaultSize={fullscreenPanel === "model" ? 100 : 50}
-              className={`${fullscreenPanel === "diagram" ? "hidden" : "block"}`}
-              onDoubleClick={() => handlePanelDoubleClick("model")}
+              defaultSize={fullscreenPanel === 'model' ? 100 : 50}
+              className={`${fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
+              onDoubleClick={() => handlePanelDoubleClick('model')}
             >
               <Model
                 kit={kit}
                 designId={designId}
                 fileUrls={fileUrls}
                 selection={selection}
-                fullscreen={fullscreenPanel === "model"}
+                fullscreen={fullscreenPanel === 'model'}
                 onDesignChange={onDesignChange}
                 onSelectionChange={onSelectionChange}
-                onPanelDoubleClick={() => handlePanelDoubleClick("model")}
+                onPanelDoubleClick={() => handlePanelDoubleClick('model')}
               />
             </ResizablePanel>
           </ResizablePanelGroup>
@@ -938,11 +801,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
           width={workbenchWidth}
           kit={kit}
         />
-        <Details
-          visible={visiblePanels.details}
-          onWidthChange={setDetailsWidth}
-          width={detailsWidth}
-        />
+        <Details visible={visiblePanels.details} onWidthChange={setDetailsWidth} width={detailsWidth} />
         <Console
           visible={visiblePanels.console}
           leftPanelVisible={visiblePanels.workbench}
@@ -952,57 +811,49 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
           height={consoleHeight}
           setHeight={setConsoleHeight}
         />
-        <Chat
-          visible={visiblePanels.chat}
-          onWidthChange={setChatWidth}
-          width={chatWidth}
-        />
+        <Chat visible={visiblePanels.chat} onWidthChange={setChatWidth} width={chatWidth} />
         {createPortal(
           <DragOverlay>
             {activeDraggedType && <TypeAvatar type={activeDraggedType} />}
-            {activeDraggedDesign && (
-              <DesignAvatar design={activeDraggedDesign} />
-            )}
+            {activeDraggedDesign && <DesignAvatar design={activeDraggedDesign} />}
           </DragOverlay>,
-          document.body,
+          document.body
         )}
       </div>
     </DndContext>
-  );
-};
+  )
+}
 
 interface ControlledDesignEditorProps {
-  kit: Kit;
-  designId: DesignId;
-  fileUrls: Map<string, string>;
-  selection: DesignEditorSelection;
-  onDesignChange: (design: Design) => void;
-  onSelectionChange: (selection: DesignEditorSelection) => void;
-  onUndo?: () => void;
-  onRedo?: () => void;
+  kit: Kit
+  designId: DesignId
+  fileUrls: Map<string, string>
+  selection: DesignEditorSelection
+  onDesignChange: (design: Design) => void
+  onSelectionChange: (selection: DesignEditorSelection) => void
+  onUndo?: () => void
+  onRedo?: () => void
 }
 
 interface UncontrolledDesignEditorProps {
-  initialKit: Kit;
-  designId: DesignId;
-  fileUrls: Map<string, string>;
-  initialSelection?: DesignEditorSelection;
+  initialKit: Kit
+  designId: DesignId
+  fileUrls: Map<string, string>
+  initialSelection?: DesignEditorSelection
 }
 
-interface DesignEditorProps
-  extends ControlledDesignEditorProps,
-    UncontrolledDesignEditorProps {
-  onToolbarChange: (toolbar: ReactNode) => void;
-  mode?: Mode;
-  layout?: Layout;
-  theme?: Theme;
-  setLayout?: (layout: Layout) => void;
-  setTheme?: (theme: Theme) => void;
+interface DesignEditorProps extends ControlledDesignEditorProps, UncontrolledDesignEditorProps {
+  onToolbarChange: (toolbar: ReactNode) => void
+  mode?: Mode
+  layout?: Layout
+  theme?: Theme
+  setLayout?: (layout: Layout) => void
+  setTheme?: (theme: Theme) => void
   onWindowEvents?: {
-    minimize: () => void;
-    maximize: () => void;
-    close: () => void;
-  };
+    minimize: () => void
+    maximize: () => void
+    close: () => void
+  }
 }
 
 const DesignEditor: FC<DesignEditorProps> = ({
@@ -1021,15 +872,12 @@ const DesignEditor: FC<DesignEditorProps> = ({
   onDesignChange,
   onSelectionChange,
   onUndo,
-  onRedo,
+  onRedo
 }) => {
-  const [toolbarContent, setToolbarContent] = useState<ReactNode>(null);
+  const [toolbarContent, setToolbarContent] = useState<ReactNode>(null)
 
   return (
-    <div
-      key={`layout-${layout}`}
-      className="h-full w-full flex flex-col bg-background text-foreground"
-    >
+    <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
       <Navbar
         mode={mode}
         toolbarContent={toolbarContent}
@@ -1055,7 +903,7 @@ const DesignEditor: FC<DesignEditorProps> = ({
         />
       </ReactFlowProvider>
     </div>
-  );
-};
+  )
+}
 
-export default DesignEditor;
+export default DesignEditor
