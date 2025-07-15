@@ -1152,6 +1152,14 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
     </tr>
 </table>
 
+# ⚖️ License
+
+The code in this repository is licensed under the [GNU Affero General Public License](https://www.gnu.org/licenses/#AGPL) unless otherwise described. Please note that some modules, extensions or code herein might be otherwise licensed. This is indicated either in the root of the containing folder under a different license file, or in the respective file's header. If you have any questions, please don't hesitate to get in touch with [us over email](mail@semio-tech.com) 📧
+
+# 🔒 Security
+
+If you have any security vulnerabilities or concerns, please contact [us over email](security@semio-tech.com) and don't open an issue, discussion or write into our public discord server 🥷
+
 # 📊 [Stats](https://stats.docs.semio-tech.com)
 
 We use [Goatcounter](https://www.goatcounter.com) for gaining insights about our [docs](#-semiodocs-) 📈
