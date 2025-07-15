@@ -3,10 +3,7 @@
     "TYPE": "VENDOR",
     "area": {
       "TYPE": "TAXONOMY",
-      "UNITS": [
-        "m²",
-        "ft²"
-      ],
+      "UNITS": ["m²", "ft²"],
       "NAME": "Floor Area",
       "TRANSLATIONS": {
         "DE": "Grundfläche"
@@ -823,10 +820,7 @@
       },
       "volume": {
         "TYPE": "TAXONOMY",
-        "UNITS": [
-          "m³",
-          "ft³"
-        ],
+        "UNITS": ["m³", "ft³"],
         "gross-volume": {
           "net-volume": {
             "NAME": "Net Volume",
@@ -844,9 +838,7 @@
       },
       "people": {
         "TYPE": "TAXONOMY",
-        "UNITS": [
-          "count"
-        ],
+        "UNITS": ["count"],
         "stationary": {
           "living": {
             "residents": {
@@ -990,9 +982,7 @@
         "TYPE": "CLASSIFICATION",
         "primary demand": {
           "TYPE": "TAXONOMY",
-          "UNITS": [
-            "kWh/m²a"
-          ],
+          "UNITS": ["kWh/m²a"],
           "NAME": "Primary Energy Demand",
           "TRANSLATIONS": {
             "DE": ""
@@ -1117,10 +1107,7 @@
       },
       "global-warming-potential": {
         "TYPE": "TAXONOMY",
-        "UNITS": [
-          "tCO₂e",
-          "MtCO₂e"
-        ],
+        "UNITS": ["tCO₂e", "MtCO₂e"],
         "embodied": {
           "construction": {
             "NAME": "Construction GWP",
@@ -1182,9 +1169,7 @@
           "TRANSLATIONS": {
             "DE": "Globale Lebenszykluskosten"
           },
-          "UNITS": [
-            "currency"
-          ],
+          "UNITS": ["currency"],
           "life-cycle-costs": {
             "NAME": "Life Cycle Costs",
             "TRANSLATIONS": {
