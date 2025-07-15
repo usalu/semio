@@ -101,24 +101,24 @@ const Diagram: FC<DiagramProps> = ({
   } | null>(null);
 
   const { handleNodeDragStart, handleNodeDrag, handleNodeDragStop } =
-    useDragHandle(setDragState);
+    useDragHandle(setDragState, selection, onSelectionChange);
 
   // update nodes state
   const displayNodes = useDisplayNodes(dragState, nodes, selection);
 
   const reactFlowInstance = useReactFlow();
 
-  const ghostEdge = useMemo(
-    () => getProximityEdge(displayNodes, nodes, reactFlowInstance),
-    [displayNodes, nodes, reactFlowInstance],
+  const ghostEdges = useMemo(
+    () => getProximityEdges(displayNodes, nodes, reactFlowInstance, selection),
+    [displayNodes, nodes, reactFlowInstance, selection],
   );
 
   const displayEdges = useMemo(() => {
-    if (ghostEdge) {
-      return [...edges, ghostEdge];
+    if (ghostEdges.length > 0) {
+      return [...edges, ...ghostEdges];
     }
     return edges;
-  }, [edges, ghostEdge]);
+  }, [edges, ghostEdges]);
 
   return (
     <div id="diagram" className="h-full w-full">
@@ -135,7 +135,7 @@ const Diagram: FC<DiagramProps> = ({
         zoomOnDoubleClick={false}
         panOnDrag={[0]} //left mouse button
         proOptions={{ hideAttribution: true }}
-        multiSelectionKeyCode="Shift"
+        selectionOnDrag={true}
         onNodeClick={(event, node) => {
           toggleNodeSelection(node.id, selection, onSelectionChange, event);
         }}
@@ -164,35 +164,39 @@ const Diagram: FC<DiagramProps> = ({
   );
 };
 
-function getProximityEdge(
+function getProximityEdges(
   displayNodes: PieceNode[],
   nodes: PieceNode[],
   reactFlowInstance: ReactFlowInstance,
-): Edge | null {
-  const ghostNode = displayNodes.find((node) => node.data.isGhost);
+  selection: DesignEditorSelection,
+): Edge[] {
+  const ghostNodes = displayNodes.filter((node) => node.data.isGhost);
 
-  if (!ghostNode) {
-    return null;
+  if (ghostNodes.length === 0) {
+    return [];
   }
 
-  const closestEdge = getClosestEdge(
-    ghostNode,
-    nodes,
-    reactFlowInstance.getInternalNode,
-  );
+  const proximityEdges: Edge[] = [];
+  for (const ghostNode of ghostNodes) {
+    const closestEdge = getClosestEdge(
+      ghostNode,
+      nodes,
+      reactFlowInstance.getInternalNode,
+      selection,
+    );
 
-  if (!closestEdge) {
-    return null;
+    if (closestEdge) {
+      proximityEdges.push({
+        id: "ghost-edge-" + ghostNode.id,
+        source: closestEdge.source,
+        sourceHandle: closestEdge.sourceHandle,
+        target: closestEdge.target,
+        targetHandle: closestEdge.targetHandle,
+        className: "temp",
+      });
+    }
   }
-
-  return {
-    id: "ghost-edge",
-    source: closestEdge.source,
-    sourceHandle: closestEdge.sourceHandle,
-    target: closestEdge.target,
-    targetHandle: closestEdge.targetHandle,
-    className: "temp",
-  };
+  return proximityEdges;
 }
 
 function useDragHandle(
@@ -202,13 +206,28 @@ function useDragHandle(
       offset: XYPosition;
     } | null>
   >,
+  selection: DesignEditorSelection,
+  onSelectionChange: (selection: DesignEditorSelection) => void,
 ) {
-  const handleNodeDragStart = useCallback((event: any, node: Node) => {
-    setDragState({
-      origin: { x: node.position.x, y: node.position.y },
-      offset: { x: 0, y: 0 },
-    });
-  }, []);
+  const handleNodeDragStart = useCallback(
+    (event: any, node: Node) => {
+      const currentSelectedIds = selection?.selectedPieceIds ?? [];
+      const isNodeSelected = currentSelectedIds.includes(node.id);
+
+      if (!isNodeSelected) {
+        onSelectionChange({
+          selectedPieceIds: [...currentSelectedIds, node.id],
+          selectedConnections: [],
+        });
+      }
+
+      setDragState({
+        origin: { x: node.position.x, y: node.position.y },
+        offset: { x: 0, y: 0 },
+      });
+    },
+    [setDragState, selection, onSelectionChange],
+  );
 
   const handleNodeDrag = useCallback(
     (event: any, node: Node) => {
@@ -287,26 +306,16 @@ function toggleNodeSelection(
 ) {
   const currentSelectedIds = selection?.selectedPieceIds ?? [];
   const isNodeSelected = currentSelectedIds.includes(nodeId);
-  const isMultiSelect =
-    event && (event.shiftKey || event.metaKey || event.ctrlKey);
 
-  if (isMultiSelect) {
-    // Multi-select: toggle node in selection
-    if (isNodeSelected) {
-      onSelectionChange({
-        selectedPieceIds: currentSelectedIds.filter((id) => id !== nodeId),
-        selectedConnections: [],
-      });
-    } else {
-      onSelectionChange({
-        selectedPieceIds: [...currentSelectedIds, nodeId],
-        selectedConnections: [],
-      });
-    }
-  } else {
-    // Single select: only this node
+  // Multi-select: toggle node in selection
+  if (isNodeSelected) {
     onSelectionChange({
-      selectedPieceIds: [nodeId],
+      selectedPieceIds: currentSelectedIds.filter((id) => id !== nodeId),
+      selectedConnections: [],
+    });
+  } else {
+    onSelectionChange({
+      selectedPieceIds: [...currentSelectedIds, nodeId],
       selectedConnections: [],
     });
   }
@@ -434,7 +443,7 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
   const HANDLE_HEIGHT = 5;
   const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`;
 
-  const isGhost = id === "ghost-edge";
+  const isGhost = id?.startsWith("ghost-edge");
   console.log("[Drag] Edge:", id, isGhost);
   console.log("qwer");
 
@@ -636,6 +645,7 @@ function getClosestEdge(
   node: Node,
   nodes: PieceNode[],
   getInternalNode: (id: string) => InternalNode<Node> | undefined,
+  selection: DesignEditorSelection,
 ): Edge | null {
   let draggedHandles: Array<{ handleId: string; x: number; y: number }>;
 
@@ -667,10 +677,15 @@ function getClosestEdge(
   };
 
   const originalDraggedId = node.data.isGhost ? node.id.slice(5) : null;
+  const selectedNodeIds = selection.selectedPieceIds ?? [];
 
   // Iterate over all other nodes in the array
   for (const otherNode of nodes) {
-    if (otherNode.id === node.id || otherNode.id === originalDraggedId)
+    if (
+      otherNode.id === node.id ||
+      otherNode.id === originalDraggedId ||
+      selectedNodeIds.includes(otherNode.id)
+    )
       continue;
     const otherInternalNode = getInternalNode(otherNode.id);
     if (!otherInternalNode) continue;
@@ -729,9 +744,7 @@ function getAbsoluteHandlePositions(node: InternalNode<Node>): Array<{
   x: number;
   y: number;
 }> {
-  const sourceHandles = node.internals.handleBounds?.source ?? [];
-  const targetHandles = node.internals.handleBounds?.target ?? [];
-  const handles = [...sourceHandles, ...targetHandles];
+  const handles = node.internals.handleBounds?.source ?? [];
   return handles
     .filter((handle) => handle.id !== null && handle.id !== undefined)
     .map((handle) => ({
