@@ -79,7 +79,6 @@ import { Layout, Mode, Theme } from "@semio/js/components/ui/Sketchpad";
 import { Input } from "@semio/js/components/ui/Input";
 import { Slider } from "@semio/js/components/ui/Slider";
 import { default as Navbar } from "@semio/js/components/ui/Navbar";
-import { dummyKit, dummyDesignId } from "./Diagram.dummy";
 
 // Type for panel visibility toggles
 interface PanelToggles {
@@ -901,20 +900,10 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
               className={`${fullscreenPanel === "model" ? "hidden" : "block"}`}
               onDoubleClick={() => handlePanelDoubleClick("diagram")}
             >
-              {/* <Diagram
+              <Diagram
                 kit={kit}
                 designId={designId}
                 fileUrls={fileUrls}
-                selection={selection}
-                fullscreen={fullscreenPanel === "diagram"}
-                onDesignChange={onDesignChange}
-                onSelectionChange={onSelectionChange}
-                onPanelDoubleClick={() => handlePanelDoubleClick("diagram")}
-              /> */}
-              <Diagram
-                kit={dummyKit}
-                designId={dummyDesignId}
-                fileUrls={new Map()}
                 selection={selection}
                 fullscreen={fullscreenPanel === "diagram"}
                 onDesignChange={onDesignChange}
