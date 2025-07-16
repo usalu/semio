@@ -26,25 +26,25 @@ export type Kit = {
     // 📛 The name of the kit
     name: string;
     // 💬 The human-readable description of the kit
-    description: string;
+    description?: string;
     // 🪙 The icon [ emoji | logogram | url ] of the kit
-    icon: string;
+    icon?: string;
     // 🖼️ The URL to the image of the kit
-    image: string;
+    image?: string;
     // 🔮 The URL of the preview image of the kit
-    preview: string;
+    preview?: string;
     // 🔀 The version of the kit
-    version: string;
+    version?: string;
     // ☁️ The Unique Resource Locator (URL) where to fetch the kit remotely
-    remote: string;
+    remote?: string;
     // 🏠 The URL of the homepage of the kit
-    homepage: string;
+    homepage?: string;
     // ⚖️ The license [ spdx id | url ] of the kit
-    license: string;
+    license?: string;
     // 🕒 The creation date of the kit
-    created: Date;
+    created?: Date;
     // 🕒 The last update date of the kit
-    updated: Date;
+    updated?: Date;
     // 🧩 The types defined within the kit
     types?: Type[];
     // 🏙️ The designs defined within the kit
@@ -58,7 +58,7 @@ export type KitId = {
     // 📛 The name of the kit
     name: string;
     // 🔀 The version of the kit
-    version: string;
+    version?: string;
 };
 
 // 🏙️ A design is a collection of connected pieces.
@@ -66,23 +66,23 @@ export type Design = {
     // 📛 The name of the design
     name: string;
     // 💬 The human-readable description of the design
-    description: string;
+    description?: string;
     // 🪙 The icon [ emoji | logogram | url ] of the design
-    icon: string;
+    icon?: string;
     // 🖼️ The URL to the image of the design
-    image: string;
+    image?: string;
     // 🔀 The variant of the design
-    variant: string;
+    variant?: string;
     // 🥽 The view of the design
-    view: string;
+    view?: string;
     // 📍 The location of the design
     location?: Location;
     // 📏 The unit of the design
     unit: string;
     // 🕒 The creation date of the design
-    created: Date;
+    created?: Date;
     // 🕒 The last update date of the design
-    updated: Date;
+    updated?: Date;
     // 🧩 The pieces included in the design
     pieces?: Piece[];
     // 🖇️ The connections between pieces in the design
@@ -118,23 +118,23 @@ export type Connection = {
     // 🧲 The connecting side of the connection
     connecting: Side;
     // 💬 The human-readable description of the connection
-    description: string;
+    description?: string;
     // ↕️ The longitudinal gap between connected pieces
-    gap: number;
+    gap?: number;
     // ↔️ The lateral shift between connected pieces
-    shift: number;
+    shift?: number;
     // 🪜 The vertical rise between connected pieces
-    rise: number;
+    rise?: number;
     // 🔄 The horizontal rotation between connected pieces in degrees
-    rotation: number;
+    rotation?: number;
     // 🛞 The turn between connected pieces in degrees
-    turn: number;
+    turn?: number;
     // ↗️ The horizontal tilt between connected pieces in degrees
-    tilt: number;
+    tilt?: number;
     // ➡️ The offset in x direction in the diagram
-    x: number;
+    x?: number;
     // ⬆️ The offset in y direction in the diagram
-    y: number;
+    y?: number;
     // 📏 The qualities associated with the connection
     qualities?: Quality[];
 };
@@ -238,13 +238,13 @@ export type Type = {
     // 📛 The name of the type
     name: string;
     // 💬 The human-readable description of the type
-    description: string;
+    description?: string;
     // 🪙 The icon [ emoji | logogram | url ] of the type
-    icon: string;
+    icon?: string;
     // 🖼️ The URL to the image of the type
-    image: string;
+    image?: string;
     // 🔀 The variant of the type
-    variant: string;
+    variant?: string;
     // 📦 The number of items in stock
     stock?: number;
     // 👻 The optional virtual flag of the type
@@ -252,9 +252,9 @@ export type Type = {
     // Ⓜ️ The length unit used by the type's geometry
     unit: string;
     // 🕒 The creation date of the type
-    created: Date;
+    created?: Date;
     // 🕒 The last update date of the type
-    updated: Date;
+    updated?: Date;
     // 🗺️ The optional location of the type
     location?: Location;
     // 💾 Representations (e.g., CAD files) of the type
@@ -272,15 +272,15 @@ export type Port = {
     // 🆔 The id of the port
     id_?: string;
     // 💬 The human-readable description of the port
-    description: string;
+    description?: string;
     // 👨‍👩‍👧‍👦 The family of the port for compatibility checks
-    family: string;
+    family?: string;
     // 💯 Whether the port is mandatory. A mandatory port must be connected in a design.
     mandatory?: boolean;
     // 💍 The parameter t [0,1[ for diagram visualization
     t: number;
     // ✅ Other compatible port families
-    compatibleFamilies: string[];
+    compatibleFamilies?: string[];
     // ✖️ The connection point geometry
     point: Point;
     // ➡️ The connection direction vector
@@ -294,9 +294,9 @@ export type Representation = {
     // 🔗 The URL to the resource
     url: string;
     // 💬 The human-readable description of the representation
-    description: string;
+    description?: string;
     // 🏷️ Tags to group or filter representations
-    tags: string[];
+    tags?: string[];
     // 📏 Qualities associated with the representation
     qualities?: Quality[];
 };
@@ -843,9 +843,9 @@ const computeChildPlane = (
     const childDirection = vectorToThree(childPort.direction).normalize();
 
     const { gap, shift, rise, rotation, turn, tilt } = connection;
-    const rotationRad = THREE.MathUtils.degToRad(rotation);
-    const turnRad = THREE.MathUtils.degToRad(turn);
-    const tiltRad = THREE.MathUtils.degToRad(tilt);
+    const rotationRad = THREE.MathUtils.degToRad(rotation ?? 0);
+    const turnRad = THREE.MathUtils.degToRad(turn ?? 0);
+    const tiltRad = THREE.MathUtils.degToRad(tilt ?? 0);
 
     const reverseChildDirection = childDirection.clone().negate();
 
@@ -925,19 +925,19 @@ const computeChildPlane = (
     );
 
     const gapTransform = new THREE.Matrix4().makeTranslation(
-        gapDirection.x * gap,
-        gapDirection.y * gap,
-        gapDirection.z * gap,
+        gapDirection.x * (gap ?? 0),
+        gapDirection.y * (gap ?? 0),
+        gapDirection.z * (gap ?? 0),
     );
     const shiftTransform = new THREE.Matrix4().makeTranslation(
-        shiftDirection.x * shift,
-        shiftDirection.y * shift,
-        shiftDirection.z * shift,
+        shiftDirection.x * (shift ?? 0),
+        shiftDirection.y * (shift ?? 0),
+        shiftDirection.z * (shift ?? 0),
     );
     const raiseTransform = new THREE.Matrix4().makeTranslation(
-        raiseDirection.x * rise,
-        raiseDirection.y * rise,
-        raiseDirection.z * rise,
+        raiseDirection.x * (rise ?? 0),
+        raiseDirection.y * (rise ?? 0),
+        raiseDirection.z * (rise ?? 0),
     );
 
     const translationT = raiseTransform
