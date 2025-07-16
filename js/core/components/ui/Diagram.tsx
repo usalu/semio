@@ -38,6 +38,7 @@ const Diagram: FC<DiagramProps> = ({
   onDesignChange,
   onSelectionChange
 }) => {
+  if (!kit) return null // Prevents error if kit is undefined
   // Mapping the semio design to react flow nodes and edges
   const nodesAndEdges = useMemo(
     () => mapDesignToNodesAndEdges({ kit, designId, selection }),
@@ -303,6 +304,7 @@ function useDragHandle(
   designId: DesignId,
   onDesignChange: ((design: Design) => void) | undefined
 ) {
+  const reactFlowInstance = useReactFlow()
   const handleNodeDragStart = useCallback(
     (event: any, node: Node) => {
       const currentSelectedIds = selection?.selectedPieceIds ?? []
@@ -341,52 +343,95 @@ function useDragHandle(
   )
 
   const handleNodeDragStop = useCallback(() => {
-    // TODO updateDesignPieces();
-    // TODO Update edges and remove ghost edges
+    updateDesign()
     setDragState(null)
-  }, [dragState, onDesignChange, kit, designId, selection, setDragState])
+  }, [dragState, onDesignChange, kit, designId, selection, setDragState, reactFlowInstance])
   return { handleNodeDragStart, handleNodeDrag, handleNodeDragStop }
 
-  function updateDesignPieces() {
+  function updateDesign() {
     if (dragState && onDesignChange) {
+      const nodesAndEdges = mapDesignToNodesAndEdges({ kit, designId, selection })
+      if (!nodesAndEdges) return
+
       const { offset } = dragState
+      const { nodes } = nodesAndEdges
+
+      // Recreate ghost nodes to calculate proximity edges
+      const selectedNodeIds = new Set(selection.selectedPieceIds ?? [])
+      const ghostNodes: PieceNode[] = Array.from(selectedNodeIds)
+        .map((id) => {
+          const orig = nodes.find((n) => n.id === id)
+          if (!orig) return undefined
+          return {
+            ...orig,
+            id: 'ghost' + id,
+            position: {
+              x: orig.position.x + offset.x,
+              y: orig.position.y + offset.y
+            },
+            data: { ...orig.data, isGhost: true }
+          }
+        })
+        .filter(Boolean) as PieceNode[]
+
+      const proximityEdges = getProximityEdges([...nodes, ...ghostNodes], nodes, reactFlowInstance, selection)
 
       const normalize = (value: string | undefined) => (value === undefined ? '' : value)
       const design = kit.designs?.find(
         (d) =>
           d.name === designId.name &&
-          normalize(d.variant) === normalize(d.variant) &&
-          normalize(d.view) === normalize(d.view)
+          normalize(d.variant) === normalize(designId.variant) &&
+          normalize(d.view) === normalize(designId.view)
       )
 
       if (design) {
+        // Update pieces that have moved
         const scaledOffset = {
           x: offset.x / ICON_WIDTH,
           y: -offset.y / ICON_WIDTH
         }
-
-        const selectedPieceIds = new Set(selection.selectedPieceIds ?? [])
-
         const updatedPieces = design.pieces?.map((piece) => {
-          if (selectedPieceIds.has(piece.id_)) {
-            const oldCenter = piece.center || { x: 0, y: 0, z: 0 }
+          if (selectedNodeIds.has(piece.id_) && piece.center) {
             return {
               ...piece,
               center: {
-                x: oldCenter.x + scaledOffset.x,
-                y: oldCenter.y + scaledOffset.y,
-                z: (oldCenter as any).z ?? 0
+                x: piece.center.x + scaledOffset.x,
+                y: piece.center.y + scaledOffset.y,
+                z: (piece.center as any).z ?? 0
               }
             }
           }
           return piece
         })
 
-        console.log('[Diagram] updatedPieces', updatedPieces)
-        // TODO: shouldnt this give us the current design instead of passing it down the stream
+        // Convert proximity edges to new Semio connections
+        const newConnections = proximityEdges.map((edge): Connection => {
+          const sourceId = edge.source!.startsWith('ghost') ? edge.source!.substring(5) : edge.source!
+          const targetId = edge.target!.startsWith('ghost') ? edge.target!.substring(5) : edge.target!
+          return {
+            connecting: { piece: { id_: sourceId }, port: { id_: edge.sourceHandle! } },
+            connected: { piece: { id_: targetId }, port: { id_: edge.targetHandle! } },
+            description: '',
+            gap: 0,
+            shift: 0,
+            raise_: 0,
+            rotation: 0,
+            turn: 0,
+            tilt: 0,
+            x: 0,
+            y: 0
+          }
+        })
+
+        // Filter out old connections of moved pieces and add new ones
+        const originalConnections = design.connections ?? []
+
+        const updatedConnections = [...originalConnections, ...newConnections]
+
         onDesignChange({
           ...design,
-          pieces: updatedPieces
+          pieces: updatedPieces,
+          connections: updatedConnections
         })
       }
     }
