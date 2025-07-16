@@ -25,7 +25,7 @@
                 "rise": {
                     "default": 0,
                     "description": "\ud83e\ude9c The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
-                    "title": "Raise",
+                    "title": "Rise",
                     "type": "number"
                 },
                 "rotation": {

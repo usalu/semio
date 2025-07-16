@@ -1392,7 +1392,7 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         pManager.AddNumberParameter("Shift", "Sf?",
             "The optional lateral shift (applied after rotation and tilt in port direction) between the connected and the connecting piece.",
             GH_ParamAccess.item);
-        pManager.AddNumberParameter("Raise", "Rs?",
+        pManager.AddNumberParameter("Rise", "Rs?",
             "The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
             GH_ParamAccess.item);
         pManager.AddNumberParameter("Rotation", "Rt?",
@@ -1446,7 +1446,7 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         if (DA.GetData(8, ref shift))
             connectionGoo.Value.Shift = (float)shift;
         if (DA.GetData(9, ref raise))
-            connectionGoo.Value.Raise = (float)raise;
+            connectionGoo.Value.Rise = (float)raise;
         if (DA.GetData(10, ref rotation))
             connectionGoo.Value.Rotation = (float)rotation;
         if (DA.GetData(11, ref turn))
@@ -1470,7 +1470,7 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         DA.SetData(6, connectionGoo.Value.Description);
         DA.SetData(7, connectionGoo.Value.Gap);
         DA.SetData(8, connectionGoo.Value.Shift);
-        DA.SetData(9, connectionGoo.Value.Raise);
+        DA.SetData(9, connectionGoo.Value.Rise);
         DA.SetData(10, connectionGoo.Value.Rotation);
         DA.SetData(11, connectionGoo.Value.Turn);
         DA.SetData(12, connectionGoo.Value.Tilt);

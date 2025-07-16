@@ -3205,7 +3205,7 @@ class ConnectionShiftField(RealField, abc.ABC):
     """↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.."""
 
 
-class ConnectionRaiseField(MaskedField, abc.ABC):
+class ConnectionRiseField(MaskedField, abc.ABC):
     """🪜 The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."""
 
     rise: float = sqlmodel.Field(
@@ -3292,7 +3292,7 @@ class ConnectionProps(
     ConnectionTiltField,
     ConnectionTurnField,
     ConnectionRotationField,
-    ConnectionRaiseField,
+    ConnectionRiseField,
     ConnectionShiftField,
     ConnectionGapField,
     ConnectionDescriptionField,
@@ -3307,7 +3307,7 @@ class ConnectionInput(
     ConnectionTiltField,
     ConnectionTurnField,
     ConnectionRotationField,
-    ConnectionRaiseField,
+    ConnectionRiseField,
     ConnectionShiftField,
     ConnectionGapField,
     ConnectionDescriptionField,
@@ -3331,7 +3331,7 @@ class ConnectionContext(
     ConnectionTiltField,
     ConnectionTurnField,
     ConnectionRotationField,
-    ConnectionRaiseField,
+    ConnectionRiseField,
     ConnectionShiftField,
     ConnectionGapField,
     ConnectionDescriptionField,
@@ -3355,7 +3355,7 @@ class ConnectionOutput(
     ConnectionTiltField,
     ConnectionTurnField,
     ConnectionRotationField,
-    ConnectionRaiseField,
+    ConnectionRiseField,
     ConnectionShiftField,
     ConnectionGapField,
     ConnectionDescriptionField,
@@ -3379,7 +3379,7 @@ class ConnectionPrediction(
     ConnectionTiltField,
     ConnectionTurnField,
     ConnectionRotationField,
-    ConnectionRaiseField,
+    ConnectionRiseField,
     ConnectionShiftField,
     ConnectionGapField,
     ConnectionDescriptionField,
@@ -3403,7 +3403,7 @@ class Connection(
     ConnectionTiltField,
     ConnectionTurnField,
     ConnectionRotationField,
-    ConnectionRaiseField,
+    ConnectionRiseField,
     ConnectionShiftField,
     ConnectionGapField,
     ConnectionDescriptionField,

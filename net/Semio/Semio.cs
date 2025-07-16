@@ -1827,7 +1827,7 @@ public class Connection : Model<Connection>
     public float Shift { get; set; } = 0;
 
     /// <summary>
-    ///     🪜 The optional vertical raise in port direction between the connected and the connecting piece. Set this only when
+    ///     🪜 The optional vertical rise in port direction between the connected and the connecting piece. Set this only when
     ///     necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it
     ///     yields a different result.
     /// </summary>

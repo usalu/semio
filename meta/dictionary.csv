@@ -58,7 +58,7 @@ Symbol,Code,Abbreviation,Name,Description
 🔮,Pv,Prv,Preview,"The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB."
 📏,Ql,Qal,Quality,"A quality is a named value with a unit and a definition."
 📏,Ql*,Qals*,Qualities,"The optional qualities of the {{NAME}}."
-🪜,Rs?,Ris?,Raise,"The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
+🪜,Rs?,Ris?,Rise,"The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
 🍾,Rl,Rel,Release,"The release of the engine that created this database."
 ☁️,Rm?,Rmt?,Remote,"The optional Unique Resource Locator (URL) where to fetch the kit remotely."
 💾,Rp,Rep,Representation,"A representation is a link to a resource that describes a type for a certain level of detail and tags."
