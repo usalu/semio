@@ -1833,8 +1833,8 @@ public class Connection : Model<Connection>
     /// </summary>
 
     [NumberProp("🪜", "Rs", "Ris",
-        "The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.")]
-    public float Raise { get; set; } = 0;
+        "The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.")]
+    public float Rise { get; set; } = 0;
 
     /// <summary>
     ///     🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
@@ -2142,7 +2142,7 @@ public class Design : Model<Design>
                         isParentConnected ? connection.Connecting.Port.Id : connection.Connected.Port.Id];
                 var childPlane = computeChildPlane(parentPlane, parentPort.Point, parentPort.Direction,
                     childPort.Point, childPort.Direction,
-                    connection.Gap, connection.Shift, connection.Raise,
+                    connection.Gap, connection.Shift, connection.Rise,
                     connection.Rotation, connection.Turn, connection.Tilt);
                 child.Plane = childPlane;
 

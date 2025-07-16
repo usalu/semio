@@ -3206,14 +3206,14 @@ class ConnectionShiftField(RealField, abc.ABC):
 
 
 class ConnectionRaiseField(MaskedField, abc.ABC):
-    """🪜 The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."""
+    """🪜 The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."""
 
-    raise_: float = sqlmodel.Field(
+    rise: float = sqlmodel.Field(
         alias="raise",
         default=0,
-        description="🪜 The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+        description="🪜 The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
     )
-    """🪜 The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."""
+    """🪜 The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."""
 
 
 class ConnectionRotationField(RealField, abc.ABC):
@@ -3583,7 +3583,7 @@ class Connection(
         except KeyError:
             pass
         try:
-            entity.raise_ = obj["raise"]
+            entity.rise = obj["rise"]
         except KeyError:
             pass
         try:
@@ -4797,7 +4797,7 @@ def cache(remoteUri: str) -> str:
 
     try:
         response = requests.get(remoteUri)
-        response.raise_for_status()
+        response.risefor_status()
     except requests.exceptions.HTTPError as e:
         # TODO: Better error message.
         raise KitNotFound(remoteUri)
@@ -5248,7 +5248,7 @@ designResponseFormat = json.loads(
                         },
                         "raise": {
                             "type": "number",
-                            "description": "The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
+                            "description": "The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
                         },
                         "rotation": {
                             "type": "number",

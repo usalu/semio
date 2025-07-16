@@ -63,7 +63,7 @@ module Semio
     :description,
     :gap,
     :shift,
-    :raise_,
+    :rise,
     :rotation,
     :turn,
     :tilt,

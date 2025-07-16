@@ -686,7 +686,7 @@ class StudioStore {
         yConnection.set('description', connection.description || '');
         yConnection.set('gap', connection.gap || 0);
         yConnection.set('shift', connection.shift || 0);
-        yConnection.set('raise_', connection.raise_ || 0);
+        yConnection.set('rise', connection.rise || 0);
         yConnection.set('rotation', connection.rotation || 0);
         yConnection.set('turn', connection.turn || 0);
         yConnection.set('tilt', connection.tilt || 0);
@@ -722,7 +722,7 @@ class StudioStore {
             connecting: connectingSide,
             gap: yConnection.get('gap'),
             shift: yConnection.get('shift'),
-            raise_: yConnection.get('raise_'),
+            rise: yConnection.get('rise'),
             rotation: yConnection.get('rotation'),
             turn: yConnection.get('turn'),
             tilt: yConnection.get('tilt'),
@@ -1187,7 +1187,7 @@ class StudioStore {
                             pieceIdMap[pieceId] = piece.id_;
                         }
                     }
-                    const connRes = kitDb.exec("SELECT c.id, c.description, c.gap, c.shift, c.raise_, c.rotation, c.turn, c.tilt, c.x, c.y, c.connected_piece_id, cp.local_id AS connected_port_id, c.connecting_piece_id, cnp.local_id AS connecting_port_id FROM connection c JOIN port cp ON c.connected_port_id = cp.id JOIN port cnp ON c.connecting_port_id = cnp.id WHERE c.design_id = ?", [designId]);
+                    const connRes = kitDb.exec("SELECT c.id, c.description, c.gap, c.shift, c.rise, c.rotation, c.turn, c.tilt, c.x, c.y, c.connected_piece_id, cp.local_id AS connected_port_id, c.connecting_piece_id, cnp.local_id AS connecting_port_id FROM connection c JOIN port cp ON c.connected_port_id = cp.id JOIN port cnp ON c.connecting_port_id = cnp.id WHERE c.design_id = ?", [designId]);
                     if (connRes && connRes.length > 0 && connRes[0].values) {
                         for (const connRow of connRes[0].values) {
                             const connectedPieceLocalId = pieceIdMap[connRow[10]];
@@ -1197,7 +1197,7 @@ class StudioStore {
                                 continue;
                             }
                             const connection: Connection = {
-                                description: connRow[1], gap: connRow[2], shift: connRow[3], raise_: connRow[4], rotation: connRow[5],
+                                description: connRow[1], gap: connRow[2], shift: connRow[3], rise: connRow[4], rotation: connRow[5],
                                 turn: connRow[6], tilt: connRow[7], x: connRow[8], y: connRow[9],
                                 connected: { piece: { id_: connectedPieceLocalId }, port: { id_: connRow[11] } },
                                 connecting: { piece: { id_: connectingPieceLocalId }, port: { id_: connRow[13] } },
@@ -1249,7 +1249,7 @@ class StudioStore {
             CREATE TABLE compatible_family ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, port_id INTEGER, FOREIGN KEY(port_id) REFERENCES port (id) );
             CREATE TABLE plane ( id INTEGER NOT NULL PRIMARY KEY, origin_x FLOAT, origin_y FLOAT, origin_z FLOAT, x_axis_x FLOAT, x_axis_y FLOAT, x_axis_z FLOAT, y_axis_x FLOAT, y_axis_y FLOAT, y_axis_z FLOAT );
             CREATE TABLE piece ( description VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, local_id VARCHAR(128), type_id INTEGER, plane_id INTEGER, center_x FLOAT, center_y FLOAT, design_id INTEGER, UNIQUE (local_id, design_id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(plane_id) REFERENCES plane (id), FOREIGN KEY(design_id) REFERENCES design (id) );
-            CREATE TABLE connection ( description VARCHAR(512) NOT NULL, gap FLOAT NOT NULL, shift FLOAT NOT NULL, raise_ FLOAT NOT NULL, rotation FLOAT NOT NULL, turn FLOAT NOT NULL, tilt FLOAT NOT NULL, x FLOAT NOT NULL, y FLOAT NOT NULL, id INTEGER NOT NULL PRIMARY KEY, connected_piece_id INTEGER, connected_port_id INTEGER, connecting_piece_id INTEGER, connecting_port_id INTEGER, design_id INTEGER, CONSTRAINT "no reflexive connection" CHECK (connecting_piece_id != connected_piece_id), FOREIGN KEY(connected_piece_id) REFERENCES piece (id), FOREIGN KEY(connected_port_id) REFERENCES port (id), FOREIGN KEY(connecting_piece_id) REFERENCES piece (id), FOREIGN KEY(connecting_port_id) REFERENCES port (id), FOREIGN KEY(design_id) REFERENCES design (id) );
+            CREATE TABLE connection ( description VARCHAR(512) NOT NULL, gap FLOAT NOT NULL, shift FLOAT NOT NULL, rise FLOAT NOT NULL, rotation FLOAT NOT NULL, turn FLOAT NOT NULL, tilt FLOAT NOT NULL, x FLOAT NOT NULL, y FLOAT NOT NULL, id INTEGER NOT NULL PRIMARY KEY, connected_piece_id INTEGER, connected_port_id INTEGER, connecting_piece_id INTEGER, connecting_port_id INTEGER, design_id INTEGER, CONSTRAINT "no reflexive connection" CHECK (connecting_piece_id != connected_piece_id), FOREIGN KEY(connected_piece_id) REFERENCES piece (id), FOREIGN KEY(connected_port_id) REFERENCES port (id), FOREIGN KEY(connecting_piece_id) REFERENCES piece (id), FOREIGN KEY(connecting_port_id) REFERENCES port (id), FOREIGN KEY(design_id) REFERENCES design (id) );
             CREATE TABLE quality ( name VARCHAR(64) NOT NULL, value VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, definition VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, representation_id INTEGER, port_id INTEGER, type_id INTEGER, piece_id INTEGER, connection_id INTEGER, design_id INTEGER, kit_id INTEGER, FOREIGN KEY(representation_id) REFERENCES representation (id), FOREIGN KEY(port_id) REFERENCES port (id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(piece_id) REFERENCES piece (id), FOREIGN KEY(connection_id) REFERENCES connection (id), FOREIGN KEY(design_id) REFERENCES design (id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
             CREATE TABLE author ( name VARCHAR(64) NOT NULL, email VARCHAR(128) NOT NULL, rank INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, type_id INTEGER, design_id INTEGER, FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(design_id) REFERENCES design (id) );
         `;
@@ -1347,7 +1347,7 @@ class StudioStore {
                 const designStmt = db.prepare("INSERT INTO design (name, description, icon, image, variant, \"view\", unit, created, updated, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 const planeStmt = db.prepare("INSERT INTO plane (id, origin_x, origin_y, origin_z, x_axis_x, x_axis_y, x_axis_z, y_axis_x, y_axis_y, y_axis_z) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 const pieceStmt = db.prepare("INSERT INTO piece (local_id, description, type_id, plane_id, center_x, center_y, design_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
-                const connStmt = db.prepare("INSERT INTO connection (description, gap, shift, raise_, rotation, turn, tilt, x, y, connected_piece_id, connected_port_id, connecting_piece_id, connecting_port_id, design_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                const connStmt = db.prepare("INSERT INTO connection (description, gap, shift, rise, rotation, turn, tilt, x, y, connected_piece_id, connected_port_id, connecting_piece_id, connecting_port_id, design_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 for (const design of kit.designs) {
                     const designKey = `${design.name}:${design.variant || ''}:${design.view || ''}`;
                     designStmt.run([design.name, design.description, design.icon, design.image, design.variant || '', design.view || '', design.unit, design.created.toISOString(), design.updated.toISOString(), kitId]);
@@ -1406,7 +1406,7 @@ class StudioStore {
                                 console.warn(`Could not find port DB IDs for connection between ${conn.connected.piece.id_}:${conn.connected.port.id_} and ${conn.connecting.piece.id_}:${conn.connecting.port.id_}`);
                                 continue;
                             }
-                            connStmt.run([conn.description, conn.gap, conn.shift, conn.raise_, conn.rotation, conn.turn, conn.tilt, conn.x, conn.y, connectedPieceDbId, connectedPortDbId, connectingPieceDbId, connectingPortDbId, designDbId]);
+                            connStmt.run([conn.description, conn.gap, conn.shift, conn.rise, conn.rotation, conn.turn, conn.tilt, conn.x, conn.y, connectedPieceDbId, connectedPortDbId, connectingPieceDbId, connectingPortDbId, designDbId]);
                             const connDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
                             insertQualities(conn.qualities, 'connection_id', connDbId);
                         }

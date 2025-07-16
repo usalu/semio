@@ -1393,7 +1393,7 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
             "The optional lateral shift (applied after rotation and tilt in port direction) between the connected and the connecting piece.",
             GH_ParamAccess.item);
         pManager.AddNumberParameter("Raise", "Rs?",
-            "The optional vertical raise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+            "The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
             GH_ParamAccess.item);
         pManager.AddNumberParameter("Rotation", "Rt?",
             "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",

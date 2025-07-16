@@ -143,7 +143,7 @@ CREATE TABLE connection (
 	description VARCHAR(512) NOT NULL, 
 	gap FLOAT NOT NULL, 
 	shift FLOAT NOT NULL, 
-	raise_ FLOAT NOT NULL, 
+	rise FLOAT NOT NULL, 
 	rotation FLOAT NOT NULL, 
 	turn FLOAT NOT NULL, 
 	tilt FLOAT NOT NULL, 
