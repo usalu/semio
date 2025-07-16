@@ -390,24 +390,18 @@ function useDragHandle(
           x: offset.x / ICON_WIDTH,
           y: -offset.y / ICON_WIDTH
         }
-        const updatedPieces = design.pieces?.map((piece) => {
-          if (selectedNodeIds.has(piece.id_) && piece.center) {
-            return {
-              ...piece,
-              center: {
-                x: piece.center.x + scaledOffset.x,
-                y: piece.center.y + scaledOffset.y,
-                z: (piece.center as any).z ?? 0
-              }
-            }
-          }
-          return piece
-        })
+
+        const newChildPieceIds = new Set<string>()
 
         // Convert proximity edges to new Semio connections
         const newConnections = proximityEdges.map((edge): Connection => {
           const sourceId = edge.source!.startsWith('ghost') ? edge.source!.substring(5) : edge.source!
           const targetId = edge.target!.startsWith('ghost') ? edge.target!.substring(5) : edge.target!
+
+          // Identify which piece was dragged to become a child
+          if (selectedNodeIds.has(sourceId)) newChildPieceIds.add(sourceId)
+          if (selectedNodeIds.has(targetId)) newChildPieceIds.add(targetId)
+
           return {
             connecting: { piece: { id_: sourceId }, port: { id_: edge.sourceHandle! } },
             connected: { piece: { id_: targetId }, port: { id_: edge.targetHandle! } },
@@ -421,6 +415,30 @@ function useDragHandle(
             x: 0,
             y: 0
           }
+        })
+
+        const updatedPieces = design.pieces?.map((piece) => {
+          // If a dragged piece is now connected, it becomes a child.
+          // Its absolute position is removed, to be derived from its parent.
+          if (newChildPieceIds.has(piece.id_)) {
+            const { center, plane, ...rest } = piece
+            return rest
+          }
+
+          // If a dragged piece was NOT connected, it just moves.
+          if (selectedNodeIds.has(piece.id_) && piece.center) {
+            return {
+              ...piece,
+              center: {
+                x: piece.center.x + scaledOffset.x,
+                y: piece.center.y + scaledOffset.y,
+                z: (piece.center as any).z ?? 0
+              }
+            }
+          }
+
+          // Other pieces are unchanged.
+          return piece
         })
 
         // Filter out old connections of moved pieces and add new ones
