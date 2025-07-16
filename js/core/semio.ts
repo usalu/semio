@@ -1125,14 +1125,14 @@ export const flattenDesign = (kit: Kit, designId: DesignId): Design => {
                     computeChildPlane(parentPlane, parentPort, childPort, connection),
                 );
                 piecePlanes[childPiece.id_] = childPlane;
-                const direction = vectorToThree({
-                    x: connection.x,
-                    y: connection.y,
+                const direction = vectorToThree({ // icon offset in direction
+                    x: connection.x ?? 0,
+                    y: connection.y ?? 0,
                     z: 0,
                 }).normalize();
                 const childCenter = {
-                    x: round(parentPiece.center!.x + connection.x + direction.x),
-                    y: round(parentPiece.center!.y + connection.y + direction.y),
+                    x: round(parentPiece.center!.x + (connection.x ?? 0) + direction.x),
+                    y: round(parentPiece.center!.y + (connection.y ?? 0) + direction.y),
                 };
 
                 const flatChildPiece: Piece = {
