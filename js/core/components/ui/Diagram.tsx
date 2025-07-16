@@ -40,17 +40,14 @@ const Diagram: FC<DiagramProps> = ({
 }) => {
   if (!kit) return null // Prevents error if kit is undefined
   // Mapping the semio design to react flow nodes and edges
-  const nodesAndEdges = useMemo(
-    () => mapDesignToNodesAndEdges({ kit, designId, selection }),
-    [kit, designId, selection]
-  )
+  const nodesAndEdges = mapDesignToNodesAndEdges({ kit, designId, selection })
   if (!nodesAndEdges) return null
   const { nodes, edges: edges } = nodesAndEdges
 
   // Drage handling
   const [dragState, setDragState] = useState<{
     origin: XYPosition
-    offset: XYPosition
+    offset: XYPosition | null
   } | null>(null)
 
   const { handleNodeDragStart, handleNodeDrag, handleNodeDragStop } = useDragHandle(
@@ -152,11 +149,8 @@ function getProximityEdges(
 
     if (closestEdge) {
       proximityEdges.push({
+        ...closestEdge,
         id: 'ghost-edge-' + ghostNode.id,
-        source: closestEdge.source,
-        sourceHandle: closestEdge.sourceHandle,
-        target: closestEdge.target,
-        targetHandle: closestEdge.targetHandle,
         className: 'temp'
       })
     }
@@ -178,7 +172,9 @@ function getClosestEdge(
   let closestHandle = {
     distance: Number.MAX_VALUE,
     source: null as null | { nodeId: string; handleId: string },
-    target: null as null | { nodeId: string; handleId: string }
+    target: null as null | { nodeId: string; handleId: string },
+    dx: 0,
+    dy: 0
   }
 
   const originalDraggedId = node.data.isGhost ? node.id.slice(5) : null
@@ -201,7 +197,7 @@ function getClosestEdge(
         const distance = Math.sqrt(dx * dx + dy * dy)
         if (distance < closestHandle.distance && distance < MIN_DISTANCE) {
           // Always assign the node with the lower id as source for consistency
-          closestHandle = createHandle(otherNode, distance, draggedHandle, otherHandle)
+          closestHandle = createHandle(otherNode, distance, draggedHandle, otherHandle, dx, dy)
         }
       }
     }
@@ -218,16 +214,20 @@ function getClosestEdge(
     source: closestHandle.source.nodeId,
     sourceHandle: closestHandle.source.handleId,
     target: closestHandle.target.nodeId,
-    targetHandle: closestHandle.target.handleId
+    targetHandle: closestHandle.target.handleId,
+    data: { dx: closestHandle.dx, dy: closestHandle.dy }
   }
 
   function createHandle(
     otherNode: PieceNode,
     distance: number,
     draggedHandle: { handleId: string; x: number; y: number },
-    otherHandle: { handleId: string; x: number; y: number }
+    otherHandle: { handleId: string; x: number; y: number },
+    dx: number,
+    dy: number
   ) {
     if (node.id < otherNode.id) {
+      // source: node, target: otherNode. Vector from source to target is other - node = -dx, -dy
       return {
         distance,
         source: {
@@ -237,9 +237,12 @@ function getClosestEdge(
         target: {
           nodeId: otherNode.id,
           handleId: otherHandle.handleId
-        }
+        },
+        dx: -dx,
+        dy: -dy
       }
     } else {
+      // source: otherNode, target: node. Vector from source to target is node - other = dx, dy
       return {
         distance,
         source: {
@@ -249,7 +252,9 @@ function getClosestEdge(
         target: {
           nodeId: node.id,
           handleId: draggedHandle.handleId
-        }
+        },
+        dx: dx,
+        dy: dy
       }
     }
   }
@@ -291,11 +296,11 @@ function getClosestEdge(
 //#region Interaction
 
 function useDragHandle(
-  dragState: { origin: XYPosition; offset: XYPosition } | null,
+  dragState: { origin: XYPosition; offset: XYPosition | null } | null,
   setDragState: React.Dispatch<
     React.SetStateAction<{
       origin: XYPosition
-      offset: XYPosition
+      offset: XYPosition | null
     } | null>
   >,
   selection: DesignEditorSelection,
@@ -349,7 +354,7 @@ function useDragHandle(
   return { handleNodeDragStart, handleNodeDrag, handleNodeDragStop }
 
   function updateDesign() {
-    if (dragState && onDesignChange) {
+    if (dragState && dragState.offset && onDesignChange) {
       const nodesAndEdges = mapDesignToNodesAndEdges({ kit, designId, selection })
       if (!nodesAndEdges) return
 
@@ -402,18 +407,21 @@ function useDragHandle(
           if (selectedNodeIds.has(sourceId)) newChildPieceIds.add(sourceId)
           if (selectedNodeIds.has(targetId)) newChildPieceIds.add(targetId)
 
+          const dx = typeof edge.data?.dx === 'number' ? edge.data.dx : 0
+          const dy = typeof edge.data?.dy === 'number' ? edge.data.dy : 0
+
           return {
             connecting: { piece: { id_: sourceId }, port: { id_: edge.sourceHandle! } },
             connected: { piece: { id_: targetId }, port: { id_: edge.targetHandle! } },
             description: '',
             gap: 0,
             shift: 0,
-            raise_: 0,
+            rise: 0,
             rotation: 0,
             turn: 0,
             tilt: 0,
-            x: 0,
-            y: 0
+            x: dx / ICON_WIDTH,
+            y: -dy / ICON_WIDTH
           }
         })
 
@@ -431,8 +439,7 @@ function useDragHandle(
               ...piece,
               center: {
                 x: piece.center.x + scaledOffset.x,
-                y: piece.center.y + scaledOffset.y,
-                z: (piece.center as any).z ?? 0
+                y: piece.center.y + scaledOffset.y
               }
             }
           }
@@ -443,13 +450,32 @@ function useDragHandle(
 
         // Filter out old connections of moved pieces and add new ones
         const originalConnections = design.connections ?? []
+        const preservedConnections = originalConnections.filter((c) => {
+          const sourceSelected = selectedNodeIds.has(c.connecting.piece.id_)
+          const targetSelected = selectedNodeIds.has(c.connected.piece.id_)
+          // Keep connections that are not attached to moved pieces OR are internal to the selection
+          return (!sourceSelected && !targetSelected) || (sourceSelected && targetSelected)
+        })
 
-        const updatedConnections = [...originalConnections, ...newConnections]
+        const allConnections = [...preservedConnections, ...newConnections]
+        const uniqueConnections: Connection[] = []
+        const connectionKeys = new Set<string>()
+
+        for (const conn of allConnections) {
+          // Create a canonical key to handle A--B and B--A as the same connection.
+          const ids = [conn.connecting.piece.id_, conn.connected.piece.id_].sort()
+          const key = ids.join('--')
+
+          if (!connectionKeys.has(key)) {
+            uniqueConnections.push(conn)
+            connectionKeys.add(key)
+          }
+        }
 
         onDesignChange({
           ...design,
           pieces: updatedPieces,
-          connections: updatedConnections
+          connections: uniqueConnections
         })
       }
     }
@@ -487,13 +513,13 @@ function toggleNodeSelection(
 function useDisplayGhostNodes(
   dragState: {
     origin: XYPosition
-    offset: XYPosition
+    offset: XYPosition | null
   } | null,
   nodes: PieceNode[],
   selection: { selectedPieceIds?: string[] }
 ) {
   return useMemo(() => {
-    if (!dragState) return nodes
+    if (!dragState || !dragState.offset) return nodes
     const { offset } = dragState
     const selectedNodeIds = selection.selectedPieceIds ?? []
 
