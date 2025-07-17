@@ -93,7 +93,7 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, upda
     }, [onSelect, piece]);
 
     const transformControlRef = useRef(null)
-    const handleMouseUp = useCallback((e: ThreeEvent<MouseEvent>) => {
+    const handleMouseUp = useCallback((e?: THREE.Event) => {
         console.log("handleMouseUp", e);
     }, [plane]);
 
@@ -162,7 +162,10 @@ const ModelDesign: FC<ModelDesignProps> = ({ kit, designId, fileUrls, selection,
     }, [fileUrls]);
 
     design.pieces?.forEach(p => {
-        const type = types.find(t => t.name === p.type.name && t.variant === p.type.variant);
+        const type = types.find(t => 
+            t.name === p.type.name && 
+            normalize(t.variant) === normalize(p.type.variant)
+        );
         if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`);
     });
 
@@ -305,7 +308,7 @@ const Model: FC<ModelProps> = ({ kit, designId, fileUrls, fullscreen, selection,
                 {/* <Suspense fallback={null}>
                         <Gltf src={src} />
                     </Suspense> */}
-                <ModelDesign kit={kit} designId={designId} fileUrls={fileUrls} selection={selection} onSelectionChange={onSelectionChange} onDesignChange={onDesignChange} />
+                <ModelDesign kit={kit} designId={designId} fileUrls={fileUrls} selection={selection || { selectedPieceIds: [], selectedConnections: [] }} onSelectionChange={onSelectionChange} onDesignChange={onDesignChange} />
                 <Environment files={'schlenker-shed.hdr'} />
                 <Grid
                     infiniteGrid={true}

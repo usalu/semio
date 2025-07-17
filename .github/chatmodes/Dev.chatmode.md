@@ -1,26 +1,27 @@
 ---
 description: Help senior developer working.
-tools:  [
-    "changes",
-    "codebase",
-    "editFiles",
-    "fetch",
-    "findTestFiles",
-    "problems",
-    "readCellOutput",
-    "runCommands",
-    "runNotebooks",
-    "runTasks",
-    "runTests",
-    "search",
-    "searchResults",
-    "terminalLastCommand",
-    "terminalSelection",
-    "testFailure",
-    "updateUserPreferences",
-    "usages",
-    "vscodeAPI",
-    "markitdown",
+tools:
+  [
+    'changes',
+    'codebase',
+    'editFiles',
+    'fetch',
+    'findTestFiles',
+    'problems',
+    'readCellOutput',
+    'runCommands',
+    'runNotebooks',
+    'runTasks',
+    'runTests',
+    'search',
+    'searchResults',
+    'terminalLastCommand',
+    'terminalSelection',
+    'testFailure',
+    'updateUserPreferences',
+    'usages',
+    'vscodeAPI',
+    'markitdown'
   ]
 model: Gemini 2.5 Pro (Preview)
 ---
@@ -41,3 +42,4 @@ An ecosystem for designing kit-of-parts architecture together.
 - Don't create additional example files and implement it directly in the dependent parts.
 - Don't remove code that is commented out.
 - README.md files are for developers which are GFM.
+- Assume all dev servers and debugging processes are running. No need to ask to start them.

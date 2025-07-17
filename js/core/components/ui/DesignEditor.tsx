@@ -146,10 +146,11 @@ const TypeAvatar: FC<TypeAvatarProps> = ({ type, showHoverCard = false }) => {
     id: `type-${type.name}-${type.variant || ''}`
   })
 
+  const displayVariant = type.variant || type.name
   const avatar = (
     <Avatar ref={setNodeRef} {...listeners} {...attributes} className="cursor-grab">
       {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
-      <AvatarFallback>{type.variant.substring(0, 2).toUpperCase()}</AvatarFallback>
+      <AvatarFallback>{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
     </Avatar>
   )
 
@@ -190,10 +191,11 @@ const DesignAvatar: FC<DesignAvatarProps> = ({ design, showHoverCard = false }) 
   // Determine if this is the default variant and view
   const isDefault = (!design.variant || design.variant === design.name) && (!design.view || design.view === 'Default')
 
+  const displayVariant = design.variant || design.name
   const avatar = (
     <Avatar ref={setNodeRef} {...listeners} {...attributes} className="cursor-grab">
       {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
-      <AvatarFallback>{design.variant.substring(0, 2).toUpperCase()}</AvatarFallback>
+      <AvatarFallback>{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
     </Avatar>
   )
 
@@ -398,7 +400,7 @@ const Console: FC<ConsoleProps> = ({
   )
 }
 
-interface DetailsProps extends ResizablePanelProps {}
+interface DetailsProps extends ResizablePanelProps { }
 
 const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
   if (!visible) return null
@@ -461,7 +463,7 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
   )
 }
 
-interface ChatProps extends ResizablePanelProps {}
+interface ChatProps extends ResizablePanelProps { }
 
 const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
   if (!visible) return null
@@ -515,7 +517,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
 }
 
 const DesignEditorCore: FC<DesignEditorProps> = (props) => {
-  const { onToolbarChange, designId, fileUrls } = props
+  const { onToolbarChange, designId, fileUrls, onUndo, onRedo } = props
 
   const isControlled = props.kit !== undefined
 
@@ -542,26 +544,26 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   const onDesignChange = isControlled
     ? props.onDesignChange
     : (design: Design) => {
-        setInternalKit((currentKit) => {
-          if (!currentKit) return currentKit
-          return {
-            ...currentKit,
-            designs: currentKit.designs?.map((d) =>
-              d.name === design.name &&
+      setInternalKit((currentKit) => {
+        if (!currentKit) return currentKit
+        return {
+          ...currentKit,
+          designs: currentKit.designs?.map((d) =>
+            d.name === design.name &&
               normalize(d.variant) === normalize(design.variant) &&
               normalize(d.view) === normalize(design.view)
-                ? design
-                : d
-            )
-          }
-        })
-      }
+              ? design
+              : d
+          )
+        }
+      })
+    }
 
   const onSelectionChange = isControlled
     ? props.onSelectionChange
     : (selection: DesignEditorSelection) => {
-        setInternalSelection(selection)
-      }
+      setInternalSelection(selection)
+    }
 
   const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null)
   const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
@@ -641,7 +643,8 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   })
   useHotkeys('delete', (e) => {
     e.preventDefault()
-    onSelectionDelete?.()
+    // TODO: Implement selection deletion
+    console.log('Delete selected')
   })
   useHotkeys('mod+z', (e) => {
     // Swapped y and z for conventional undo/redo
@@ -708,12 +711,21 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
     const id = active.id.toString()
     if (id.startsWith('type-')) {
       const [_, name, variant] = id.split('-')
-      const type = kit?.types?.find((t: Type) => t.name === name && t.variant === (variant || undefined))
+      // Normalize variants so that undefined, null and empty string are treated the same
+      const normalizeVariant = (v: string | undefined | null) => (v ?? '')
+      const type = kit?.types?.find(
+        (t: Type) => t.name === name && normalizeVariant(t.variant) === normalizeVariant(variant)
+      )
       setActiveDraggedType(type || null)
     } else if (id.startsWith('design-')) {
       const [_, name, variant, view] = id.split('-')
+      // Normalize variant and view similarly
+      const normalize = (v: string | undefined | null) => (v ?? '')
       const draggedDesign = kit?.designs?.find(
-        (d) => d.name === name && d.variant === (variant || undefined) && d.view === (view || undefined)
+        (d) =>
+          d.name === name &&
+          normalize(d.variant) === normalize(variant) &&
+          normalize(d.view) === normalize(view)
       )
       setActiveDraggedDesign(draggedDesign || null)
     }
@@ -734,7 +746,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
           id_: Generator.randomId(),
           type: {
             name: activeDraggedType.name,
-            variant: activeDraggedType.variant
+            variant: activeDraggedType.variant || undefined
           },
           plane: {
             origin: { x: 0, y: 0, z: 0 },
@@ -766,7 +778,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
               onDoubleClick={() => handlePanelDoubleClick('diagram')}
             >
               <Diagram
-                kit={kit}
+                kit={kit!}
                 designId={designId}
                 fileUrls={fileUrls}
                 selection={selection}
@@ -783,7 +795,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
               onDoubleClick={() => handlePanelDoubleClick('model')}
             >
               <Model
-                kit={kit}
+                kit={kit!}
                 designId={designId}
                 fileUrls={fileUrls}
                 selection={selection}
@@ -799,7 +811,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
           visible={visiblePanels.workbench}
           onWidthChange={setWorkbenchWidth}
           width={workbenchWidth}
-          kit={kit}
+          kit={kit!}
         />
         <Details visible={visiblePanels.details} onWidthChange={setDetailsWidth} width={detailsWidth} />
         <Console

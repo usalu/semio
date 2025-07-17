@@ -1182,9 +1182,10 @@ export const getPieceRepresentationUrls = (
     tags: string[] = [],
 ): Map<string, string> => {
     const representationUrls = new Map<string, string>();
+    const normalizeVariant = (v: string | undefined | null) => (v ?? "");
     design.pieces?.forEach((p) => {
         const type = types.find(
-            (t) => t.name === p.type.name && t.variant === p.type.variant,
+            (t) => t.name === p.type.name && normalizeVariant(t.variant) === normalizeVariant(p.type.variant),
         );
         if (!type)
             throw new Error(

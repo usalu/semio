@@ -290,6 +290,29 @@ You will be surprised
 </details>
 
 <details>
+<summary><strong>🙃 Write and read code upside down ✅</strong></summary>
+
+Whenever something is referenced it should be above in the source code ⬆️
+
+This means that all the building blocks (functions, classes, components, …) are first defined and then used below ⬇️
+
+If you have a cyclic depedency (really?!) then put the object with lower complexity first 🥇
+
+This means that when you start with unknown code, it is probably best to start on the bottom and go upwards 🖱️
+
+Why? LLMs, reflection, … , work best left-to-write 🤖
+
+[But Fill-in-the-Middle training is for free!?](https://arxiv.org/abs/2207.14255)
+
+Yeah, if you consider only FiM for code, then yes 🆗
+
+But we want it all!
+
+And is really so hard to start reading a from the bottom?
+
+</details>
+
+<details>
 <summary><strong>📁 If a folder doesn't make your life dramatically easier, don't create it ❌</strong></summary>
 
 We all know this `./src/**` folder that has made it into a lot of starters 🚀
