@@ -162,8 +162,8 @@ const ModelDesign: FC<ModelDesignProps> = ({ kit, designId, fileUrls, selection,
     }, [fileUrls]);
 
     design.pieces?.forEach(p => {
-        const type = types.find(t => 
-            t.name === p.type.name && 
+        const type = types.find(t =>
+            t.name === p.type.name &&
             normalize(t.variant) === normalize(p.type.variant)
         );
         if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`);
@@ -218,7 +218,7 @@ const ModelDesign: FC<ModelDesignProps> = ({ kit, designId, fileUrls, selection,
                         fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_)!)!}
                         selected={selection.selectedPieceIds.includes(piece.id_)}
                         onSelect={handlePieceSelect}
-                        updating
+                    // updating
                     />
                     // <PlaneThree key={`plane-${piece.id_}`} plane={piecePlanes![index]} />
                 ))}

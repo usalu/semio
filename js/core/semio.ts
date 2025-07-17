@@ -139,6 +139,14 @@ export type Connection = {
     qualities?: Quality[];
 };
 
+// 🪪 Identifier for a connection within a design.
+export type ConnectionId = {
+    // 🧲 The connected side of the connection
+    connected: SideId;
+    // 🧲 The connecting side of the connection
+    connecting: SideId;
+}
+
 // 🧱 A side of a piece in a connection, identifying a specific port on a specific piece.
 export type Side = {
     // ⭕ The piece involved in this side of the connection
@@ -146,6 +154,12 @@ export type Side = {
     // 🔌 The port involved in this side of the connection
     port: PortId; // Represents Port identifier
 };
+
+// 🪪 Identifier for a side within a connection.
+export type SideId = {
+    // ⭕ The piece involved in this side of the connection
+    piece: PieceId;
+}
 
 // 🪪 Identifier for a piece within a design.
 export type PieceId = {
@@ -308,6 +322,55 @@ export type Location = {
     // ↕️ The latitude of the location in degrees.
     latitude: number;
 };
+
+export type PieceDiff = {
+    id_: string;
+    name?: string;
+    description?: string;
+    type?: TypeId;
+    plane?: Plane;
+    center?: DiagramPoint;
+    qualities?: Quality[];
+}
+
+export type PiecesDiff = {
+    removed?: PieceId[];
+    updated?: PieceDiff[];
+    added?: Piece[];
+}
+
+export type ConnectionDiff = {
+    connected?: Side;
+    connecting?: Side;
+    description?: string;
+    gap?: number;
+    shift?: number;
+    rise?: number;
+    rotation?: number;
+    turn?: number;
+    tilt?: number;
+    x?: number;
+    y?: number;
+}
+
+export type ConnectionsDiff = {
+    removed?: ConnectionId[];
+    updated?: ConnectionDiff[];
+    added?: Connection[];
+}
+
+export type DesignDiff = {
+    name?: string;
+    description?: string;
+    icon?: string;
+    image?: string;
+    variant?: string;
+    view?: string;
+    location?: Location;
+    unit?: string;
+    pieces: PiecesDiff;
+    connections: ConnectionsDiff;
+}
 
 // Converts JSON strings to/from your types
 // and asserts the results of JSON.parse at runtime

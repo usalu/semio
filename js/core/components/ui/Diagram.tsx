@@ -16,7 +16,9 @@ import {
   ViewportPortal,
   XYPosition,
   InternalNode,
-  ReactFlowInstance
+  ReactFlowInstance,
+  ConnectionLineComponentProps,
+  Connection as RFConnection
 } from '@xyflow/react'
 import { useDroppable } from '@dnd-kit/core'
 
@@ -26,6 +28,72 @@ import { Connection, Design, DesignId, flattenDesign, ICON_WIDTH, Kit, Piece, Po
 import '@xyflow/react/dist/style.css'
 import '@semio/js/globals.css'
 import { DesignEditorSelection } from '../..'
+
+//#region Data Mapping
+
+function mapDesignToNodesAndEdges({
+  kit,
+  designId,
+  selection
+}: {
+  kit: Kit
+  designId: DesignId
+  selection?: DesignEditorSelection
+}): { nodes: PieceNode[]; edges: ConnectionEdge[] } | null {
+  const types = kit?.types ?? []
+  const normalize = (value: string | undefined) => (value === undefined ? '' : value)
+  const design = kit.designs?.find(
+    (design) =>
+      design.name === designId.name &&
+      normalize(design.variant) === normalize(designId.variant) &&
+      normalize(design.view) === normalize(designId.view)
+  )
+  if (!design) return null
+  const flatDesign = flattenDesign(kit, designId)
+  const pieceNodes =
+    flatDesign!.pieces?.map((flatPiece) =>
+      pieceToNode(
+        flatPiece,
+        types.find((t) => t.name === flatPiece.type.name && (t.variant ?? '') === (flatPiece.type.variant ?? ''))!,
+        selection?.selectedPieceIds.includes(flatPiece.id_) ?? false
+      )
+    ) ?? []
+  const connectionEdges =
+    design.connections?.map((connection) =>
+      connectionToEdge(
+        connection,
+        selection?.selectedConnections.some(
+          (c) =>
+            c.connectingPieceId === connection.connecting.piece.id_ &&
+            c.connectedPieceId === connection.connected.piece.id_
+        ) ?? false
+      )
+    ) ?? []
+  return { nodes: pieceNodes, edges: connectionEdges }
+}
+
+const pieceToNode = (piece: Piece, type: Type, selected: boolean): PieceNode => ({
+  type: 'piece',
+  id: piece.id_,
+  position: {
+    x: piece.center!.x * ICON_WIDTH || 0,
+    y: -piece.center!.y * ICON_WIDTH || 0
+  },
+  selected,
+  data: { piece, type, isBeingDragged: false, isGhost: false }
+})
+
+const connectionToEdge = (connection: Connection, selected: boolean): ConnectionEdge => ({
+  type: 'connection',
+  id: `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`,
+  source: connection.connecting.piece.id_,
+  sourceHandle: connection.connecting.port.id_,
+  target: connection.connected.piece.id_,
+  targetHandle: connection.connected.port.id_,
+  data: { connection } // removed 'selected' property
+})
+
+//#endregion
 
 //#region Diagram Component
 
@@ -59,6 +127,81 @@ const Diagram: FC<DiagramProps> = ({
     designId,
     onDesignChange
   )
+
+  const reactFlowInstance = useReactFlow()
+
+  const onConnect = useCallback((params: RFConnection) => {
+    if (params.source === params.target) return
+
+    const sourceInternal = reactFlowInstance.getInternalNode(params.source)
+    const targetInternal = reactFlowInstance.getInternalNode(params.target)
+
+    if (!sourceInternal || !targetInternal) return
+
+    const sourceHandles = sourceInternal.internals.handleBounds?.source ?? []
+    const targetHandles = targetInternal.internals.handleBounds?.target ?? []
+
+    const sourceHandle = sourceHandles.find((h) => h.id === params.sourceHandle)
+    const targetHandle = targetHandles.find((h) => h.id === params.targetHandle)
+
+    if (!sourceHandle || !targetHandle) return
+
+    const sourcePos = {
+      x: sourceInternal.internals.positionAbsolute.x + sourceHandle.x + sourceHandle.width / 2,
+      y: sourceInternal.internals.positionAbsolute.y + sourceHandle.y + sourceHandle.height / 2
+    }
+
+    const targetPos = {
+      x: targetInternal.internals.positionAbsolute.x + targetHandle.x + targetHandle.width / 2,
+      y: targetInternal.internals.positionAbsolute.y + targetHandle.y + targetHandle.height / 2
+    }
+
+    const dx = targetPos.x - sourcePos.x
+    const dy = targetPos.y - sourcePos.y
+
+    const scaledX = dx / ICON_WIDTH
+    const scaledY = -dy / ICON_WIDTH
+
+    const normalize = (value: string | undefined) => (value === undefined ? '' : value)
+
+    const design = kit.designs?.find(
+      (d) =>
+        d.name === designId.name &&
+        normalize(d.variant) === normalize(designId.variant) &&
+        normalize(d.view) === normalize(designId.view)
+    )
+
+    if (!design || !onDesignChange) return
+
+    const newConnection = {
+      connecting: { piece: { id_: params.source! }, port: { id_: params.sourceHandle! } },
+      connected: { piece: { id_: params.target! }, port: { id_: params.targetHandle! } },
+      description: '',
+      gap: 0,
+      shift: 0,
+      rise: 0,
+      rotation: 0,
+      turn: 0,
+      tilt: 0,
+      x: scaledX,
+      y: scaledY
+    }
+
+    const originalConnections = design.connections ?? []
+
+    const idsA = [newConnection.connecting.piece.id_, newConnection.connected.piece.id_].sort().join('--')
+
+    const isDuplicate = originalConnections.some((c) => {
+      const idsB = [c.connecting.piece.id_, c.connected.piece.id_].sort().join('--')
+      return idsA === idsB
+    })
+
+    if (isDuplicate) return
+
+    const newConnections = [...originalConnections, newConnection]
+
+    onDesignChange({ ...design, connections: newConnections })
+  }, [kit, designId, onDesignChange, reactFlowInstance])
 
   // Double click handling
   const onDoubleClickCapture = useCallback(
@@ -97,7 +240,10 @@ const Diagram: FC<DiagramProps> = ({
         onNodeDragStart={handleNodeDragStart}
         onNodeDrag={handleNodeDrag}
         onNodeDragStop={handleNodeDragStop}
+        onPaneClick={() => onSelectionChange({ selectedPieceIds: [], selectedConnections: [] })}
         onDoubleClick={onDoubleClickCapture}
+        onConnect={onConnect}
+        connectionLineComponent={ConnectionConnectionLine}
       >
         {fullscreen && <Controls className="border" showZoom={false} showInteractive={false} />}
         {fullscreen && (
@@ -263,11 +409,10 @@ function getClosestEdge(
     const pieceNode = node as PieceNode
     const ports = pieceNode.data.type.ports || []
     const handlePositions = ports
-      .filter((port) => port.id_)
       .map((port) => {
         const { x: portX, y: portY } = portPositionStyle(port)
         return {
-          handleId: port.id_ as string,
+          handleId: port.id_ || '',
           x: pieceNode.position.x + portX + ICON_WIDTH / 2,
           y: pieceNode.position.y + portY
         }
@@ -335,12 +480,12 @@ function useDragHandle(
       setDragState((prev) =>
         prev
           ? {
-              ...prev,
-              offset: {
-                x: node.position.x - prev.origin.x,
-                y: node.position.y - prev.origin.y
-              }
+            ...prev,
+            offset: {
+              x: node.position.x - prev.origin.x,
+              y: node.position.y - prev.origin.y
             }
+          }
           : null
       )
     },
@@ -602,7 +747,12 @@ const portPositionStyle = (port: Port): { x: number; y: number } => {
 const PortHandle: React.FC<PortHandleProps> = ({ port }) => {
   const { x, y } = portPositionStyle(port)
 
-  return <Handle id={port.id_} type="source" style={{ left: x + ICON_WIDTH / 2, top: y }} position={Position.Top} />
+  return (
+    <>
+      <Handle id={port.id_} type="source" style={{ left: x + ICON_WIDTH / 2, top: y }} position={Position.Top} />
+      <Handle id={port.id_} type="target" style={{ left: x + ICON_WIDTH / 2, top: y }} position={Position.Top} />
+    </>
+  )
 }
 
 const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, data, selected }) => {
@@ -647,7 +797,6 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
   sourceHandleId,
   targetHandleId
 }) => {
-  const { getNode } = useReactFlow()
   const HANDLE_HEIGHT = 5
   const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`
 
@@ -664,78 +813,19 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
   )
 }
 
-export const MiniMapNode: React.FC<MiniMapNodeProps> = ({ x, y, selected }) => {
+const ConnectionConnectionLine: React.FC<ConnectionLineComponentProps> = (props: ConnectionLineComponentProps) => {
+  const { fromX, fromY, toX, toY } = props
+  const HANDLE_HEIGHT = 5
+  const path = `M ${fromX} ${fromY + HANDLE_HEIGHT / 2} L ${toX} ${toY + HANDLE_HEIGHT / 2}`
+  return <BaseEdge path={path} style={{ stroke: 'grey' }} />
+}
+
+export const MiniMapNode: React.FC<MiniMapNodeProps> = ({ x, y, selected }: MiniMapNodeProps) => {
   return <circle className={selected ? 'fill-primary' : 'fill-foreground'} cx={x} cy={y} r="10" />
 }
 
 const nodeTypes = { piece: PieceNodeComponent }
 const edgeTypes = { connection: ConnectionEdgeComponent }
-
-//#endregion
-
-//#region Data Mapping
-
-function mapDesignToNodesAndEdges({
-  kit,
-  designId,
-  selection
-}: {
-  kit: Kit
-  designId: DesignId
-  selection?: DesignEditorSelection
-}): { nodes: PieceNode[]; edges: ConnectionEdge[] } | null {
-  const types = kit?.types ?? []
-  const normalize = (value: string | undefined) => (value === undefined ? '' : value)
-  const design = kit.designs?.find(
-    (design) =>
-      design.name === designId.name &&
-      normalize(design.variant) === normalize(designId.variant) &&
-      normalize(design.view) === normalize(designId.view)
-  )
-  if (!design) return null
-  const flatDesign = flattenDesign(kit, designId)
-  const pieceNodes =
-    flatDesign!.pieces?.map((flatPiece) =>
-      pieceToNode(
-        flatPiece,
-        types.find((t) => t.name === flatPiece.type.name && (t.variant ?? '') === (flatPiece.type.variant ?? ''))!,
-        selection?.selectedPieceIds.includes(flatPiece.id_) ?? false
-      )
-    ) ?? []
-  const connectionEdges =
-    design.connections?.map((connection) =>
-      connectionToEdge(
-        connection,
-        selection?.selectedConnections.some(
-          (c) =>
-            c.connectingPieceId === connection.connecting.piece.id_ &&
-            c.connectedPieceId === connection.connected.piece.id_
-        ) ?? false
-      )
-    ) ?? []
-  return { nodes: pieceNodes, edges: connectionEdges }
-}
-
-const pieceToNode = (piece: Piece, type: Type, selected: boolean): PieceNode => ({
-  type: 'piece',
-  id: piece.id_,
-  position: {
-    x: piece.center!.x * ICON_WIDTH || 0,
-    y: -piece.center!.y * ICON_WIDTH || 0
-  },
-  selected,
-  data: { piece, type, isBeingDragged: false, isGhost: false }
-})
-
-const connectionToEdge = (connection: Connection, selected: boolean): ConnectionEdge => ({
-  type: 'connection',
-  id: `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`,
-  source: connection.connecting.piece.id_,
-  sourceHandle: connection.connecting.port.id_,
-  target: connection.connected.piece.id_,
-  targetHandle: connection.connected.port.id_,
-  data: { connection } // removed 'selected' property
-})
 
 //#endregion
 
