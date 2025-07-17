@@ -490,3 +490,5 @@ FodyWeavers.xsd
 !.axoCover/settings.json
 !**/[Pp]ackages/build/
 !rb/lib
+.cursor\rules\nx-rules.mdc
+.github\instructions\nx.instructions.md

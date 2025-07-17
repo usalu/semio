@@ -10,14 +10,12 @@
   ],
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.defaultFormatter": "ms-python.black-formatter"
   },
   "python.analysis.typeCheckingMode": "off",
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
-  "python.testing.pytestArgs": [
-    "."
-  ],
+  "python.testing.pytestArgs": ["."],
   // "python.testing.pytestArgs": [
   //     "--cov",
   //     "--cov-config=pyproject.toml",
@@ -39,5 +37,14 @@
       "previewLimit": 50
     }
   ],
-  "dotnet.defaultSolution": "net/Semio.sln"
+  "dotnet.defaultSolution": "net/Semio.sln",
+  "nxConsole.generateAiAgentRules": true,
+  "chat.mcp.serverSampling": {
+    "semio/.cursor/mcp.json: nx-mcp": {
+      "allowedModels": [
+        "github.copilot-chat/gpt-4.1",
+        "github.copilot-chat/gemini-2.0-flash-001"
+      ]
+    }
+  }
 }
