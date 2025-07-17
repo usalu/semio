@@ -200,7 +200,16 @@ const Diagram: FC<DiagramProps> = ({
 
     const newConnections = [...originalConnections, newConnection]
 
-    onDesignChange({ ...design, connections: newConnections })
+    // Update the target piece to remove center and plane (it becomes a child)
+    const updatedPieces = design.pieces?.map((piece) => {
+      if (piece.id_ === params.target) {
+        const { center, plane, ...rest } = piece
+        return rest
+      }
+      return piece
+    })
+
+    onDesignChange({ ...design, connections: newConnections, pieces: updatedPieces })
   }, [kit, designId, onDesignChange, reactFlowInstance])
 
   // Double click handling
@@ -535,12 +544,36 @@ function useDragHandle(
       )
 
       if (design) {
-        // Update pieces that have moved
         const scaledOffset = {
           x: offset.x / ICON_WIDTH,
           y: -offset.y / ICON_WIDTH
         }
 
+        // If there are no proximity edges, this is a simple position update
+        if (proximityEdges.length === 0) {
+          const updatedPieces = design.pieces?.map((piece) => {
+            // If a dragged piece, just update its position
+            if (selectedNodeIds.has(piece.id_) && piece.center) {
+              return {
+                ...piece,
+                center: {
+                  x: piece.center.x + scaledOffset.x,
+                  y: piece.center.y + scaledOffset.y
+                }
+              }
+            }
+            // Other pieces are unchanged
+            return piece
+          })
+
+          onDesignChange({
+            ...design,
+            pieces: updatedPieces
+          })
+          return
+        }
+
+        // Handle connection creation when proximity edges exist
         const newChildPieceIds = new Set<string>()
 
         // Convert proximity edges to new Semio connections
