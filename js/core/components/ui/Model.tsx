@@ -2,7 +2,7 @@ import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef, useCall
 import { Canvas, ThreeEvent, useLoader } from '@react-three/fiber';
 import { Center, Environment, GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, Select, Sphere, Stage, TransformControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { Kit, Design, DesignId, Piece, Plane, Type, flattenDesign, DesignEditorSelection, getPieceRepresentationUrls, planeToMatrix, ToThreeQuaternion, ToThreeRotation, ToSemioRotation } from '@semio/js';
+import { Kit, Design, DesignId, Piece, Plane, Type, flattenDesign, DesignEditorSelection, getPieceRepresentationUrls, planeToMatrix, ToThreeQuaternion, ToThreeRotation, ToSemioRotation, PiecesDiff, DesignDiff } from '@semio/js';
 import { DesignEditorState, DesignEditorDispatcher, DesignEditorAction } from './DesignEditor';
 import { Matrix4, Vector3, Quaternion } from 'three';
 
@@ -32,10 +32,11 @@ interface ModelPieceProps {
     fileUrl: string;
     selected?: boolean;
     updating?: boolean;
+    status?: 'added' | 'removed' | 'modified' | 'unchanged';
     onSelect: (piece: Piece) => void
 }
 
-const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, updating, onSelect }) => {
+const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, updating, status = 'unchanged', onSelect }) => {
     const fixed = piece.plane !== undefined;
     const matrix = useMemo(() => {
         // const threeToSemioRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
@@ -57,9 +58,30 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, upda
         planeRotationMatrix.multiply(ToSemioRotation())
         return planeRotationMatrix
     }, [plane]);
-    const scene = useMemo(() => {
-        return useGLTF(fileUrl).scene.clone()
-    }, [fileUrl])
+    const baseScene = useMemo(() => useGLTF(fileUrl).scene.clone(), [fileUrl]);
+
+    const getMaterial = (color: string, opacity = 1) => new THREE.MeshBasicMaterial({ color, transparent: opacity < 1, opacity });
+
+    const applyMaterial = (scene: THREE.Group, color: string, opacity = 1) => {
+        scene.traverse((object) => {
+            if (object instanceof THREE.Mesh) {
+                object.material = getMaterial(color, opacity);
+            } else if (object instanceof THREE.Line) {
+                object.material = new THREE.LineBasicMaterial({ color, transparent: opacity < 1, opacity });
+            }
+        });
+        return scene;
+    };
+
+    const styledScene = useMemo(() => {
+        if (status === 'added') return applyMaterial(baseScene.clone(), 'green');
+        if (status === 'removed') return applyMaterial(baseScene.clone(), 'red', 0.5);
+        if (status === 'modified') return applyMaterial(baseScene.clone(), 'yellow');
+        if (selected) return applyMaterial(baseScene.clone(), getComputedColor('--color-primary'));
+        if (updating) return applyMaterial(baseScene.clone(), getComputedColor('--color-foreground'), 0.1);
+        return baseScene.clone();
+    }, [baseScene, status, selected, updating]);
+
     const selectedScene = useMemo(() => {
         const sceneClone = scene.clone()
         sceneClone.traverse((object) => {
@@ -110,7 +132,7 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, upda
             // position={[plane!.origin.x, plane!.origin.z, -plane!.origin.y]}
             userData={{ pieceId: piece.id_ }}
             onClick={handleClick}>
-            <primitive object={selected ? selectedScene : updating ? updatingScene : scene} />
+            <primitive object={styledScene} />
         </group>
     )
 
@@ -135,7 +157,7 @@ interface ModelDesignProps {
 
 const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDispatcher }) => {
     const normalize = (val: string | undefined) => val === undefined ? "" : val;
-    const { kit, designId, fileUrls, selection } = designEditorState;
+    const { kit, designId, fileUrls, selection, designDiff } = designEditorState;
     const design = kit.designs?.find(d =>
         d.name === designId.name &&
         (normalize(d.variant) === normalize(designId.variant)) &&
@@ -173,6 +195,17 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
             if (!fileUrls.has(url)) throw new Error(`Representation url ${url} for piece ${id} not found in fileUrls map`);
         });
     }, [pieceRepresentationUrls, fileUrls]);
+
+    function getPieceStatus(id: string, piecesDiff: PiecesDiff): 'added' | 'removed' | 'modified' | 'unchanged' {
+        if (piecesDiff.added?.some((p: Piece) => p.id_ === id)) return 'added';
+        if (piecesDiff.removed?.some((pid: { id_: string }) => pid.id_ === id)) return 'removed';
+        if (piecesDiff.updated?.some((pd: { id_: string }) => pd.id_ === id)) return 'modified';
+        return 'unchanged';
+    }
+
+    const pieceStatuses = useMemo(() => {
+        return design.pieces?.map(piece => getPieceStatus(piece.id_, designDiff.pieces)) || [];
+    }, [design, designDiff]);
 
 
     const handleSelectionChange = useCallback((selected: THREE.Object3D[]) => {
@@ -225,8 +258,8 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
                         plane={piecePlanes![index!]}
                         fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_)!)!}
                         selected={selection.selectedPieceIds.includes(piece.id_)}
+                        status={pieceStatuses[index]}
                         onSelect={handlePieceSelect}
-                    // updating
                     />
                     // <PlaneThree key={`plane-${piece.id_}`} plane={piecePlanes![index]} />
                 ))}

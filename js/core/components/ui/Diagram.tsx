@@ -22,7 +22,8 @@ import {
 } from '@xyflow/react'
 import { useDroppable } from '@dnd-kit/core'
 
-import { Connection, Design, DesignId, flattenDesign, ICON_WIDTH, Kit, Piece, Port, Type } from '@semio/js/semio'
+import { Connection, Design, DesignId, flattenDesign, ICON_WIDTH, Kit, Port, Type } from '@semio/js/semio'
+import { DesignDiff, PiecesDiff, ConnectionsDiff, ConnectionId, Piece, PieceId, PieceDiff } from '@semio/js';
 
 // import '@xyflow/react/dist/base.css';
 import '@xyflow/react/dist/style.css'
@@ -31,14 +32,31 @@ import { DesignEditorSelection, DesignEditorState, DesignEditorDispatcher, Desig
 
 //#region Data Mapping
 
+function getPieceStatus(id: string, piecesDiff: PiecesDiff): 'added' | 'removed' | 'modified' | 'unchanged' {
+  if (piecesDiff.added?.some((p: Piece) => p.id_ === id)) return 'added';
+  if (piecesDiff.removed?.some((pid: PieceId) => pid.id_ === id)) return 'removed';
+  if (piecesDiff.updated?.some((pd: PieceDiff) => pd.id_ === id)) return 'modified';
+  return 'unchanged';
+}
+
+function getConnectionStatus(conn: Connection, connDiff: ConnectionsDiff): 'added' | 'removed' | 'modified' | 'unchanged' {
+  const connId = { connected: { piece: conn.connected.piece }, connecting: { piece: conn.connecting.piece } };
+  if (connDiff.added?.some(c => c.connected.piece.id_ === conn.connected.piece.id_ && c.connecting.piece.id_ === conn.connecting.piece.id_ && (c.connected.port?.id_ || '') === (conn.connected.port?.id_ || '') && (c.connecting.port?.id_ || '') === (conn.connecting.port?.id_ || ''))) return 'added';
+  if (connDiff.removed?.some(cid => cid.connected.piece.id_ === conn.connected.piece.id_ && cid.connecting.piece.id_ === conn.connecting.piece.id_)) return 'removed';
+  if (connDiff.updated?.some(cd => cd.connected?.piece.id_ === conn.connected.piece.id_ && cd.connecting?.piece.id_ === conn.connecting.piece.id_ && (cd.connected?.port?.id_ || '') === (conn.connected.port?.id_ || '') && (cd.connecting?.port?.id_ || '') === (conn.connecting.port?.id_ || ''))) return 'modified';
+  return 'unchanged';
+}
+
 function mapDesignToNodesAndEdges({
   kit,
   designId,
-  selection
+  selection,
+  designDiff
 }: {
   kit: Kit
   designId: DesignId
   selection?: DesignEditorSelection
+  designDiff: DesignDiff
 }): { nodes: PieceNode[]; edges: ConnectionEdge[] } | null {
   const types = kit?.types ?? []
   const normalize = (value: string | undefined) => (value === undefined ? '' : value)
@@ -51,28 +69,33 @@ function mapDesignToNodesAndEdges({
   if (!design) return null
   const flatDesign = flattenDesign(kit, designId)
   const pieceNodes =
-    flatDesign!.pieces?.map((flatPiece) =>
-      pieceToNode(
+    flatDesign!.pieces?.map((flatPiece) => {
+      const type = types.find((t) => t.name === flatPiece.type.name && (t.variant ?? '') === (flatPiece.type.variant ?? ''))
+      const pieceStatus = getPieceStatus(flatPiece.id_, designDiff.pieces)
+      return pieceToNode(
         flatPiece,
-        types.find((t) => t.name === flatPiece.type.name && (t.variant ?? '') === (flatPiece.type.variant ?? ''))!,
-        selection?.selectedPieceIds.includes(flatPiece.id_) ?? false
+        type!,
+        selection?.selectedPieceIds.includes(flatPiece.id_) ?? false,
+        pieceStatus
       )
-    ) ?? []
+    }) ?? []
   const connectionEdges =
-    design.connections?.map((connection) =>
-      connectionToEdge(
+    design.connections?.map((connection) => {
+      const connStatus = getConnectionStatus(connection, designDiff.connections)
+      return connectionToEdge(
         connection,
         selection?.selectedConnections.some(
           (c) =>
             c.connectingPieceId === connection.connecting.piece.id_ &&
             c.connectedPieceId === connection.connected.piece.id_
-        ) ?? false
+        ) ?? false,
+        connStatus
       )
-    ) ?? []
+    }) ?? []
   return { nodes: pieceNodes, edges: connectionEdges }
 }
 
-const pieceToNode = (piece: Piece, type: Type, selected: boolean): PieceNode => ({
+const pieceToNode = (piece: Piece, type: Type, selected: boolean, status: 'added' | 'removed' | 'modified' | 'unchanged'): PieceNode => ({
   type: 'piece',
   id: piece.id_,
   position: {
@@ -80,17 +103,17 @@ const pieceToNode = (piece: Piece, type: Type, selected: boolean): PieceNode => 
     y: -piece.center!.y * ICON_WIDTH || 0
   },
   selected,
-  data: { piece, type, isBeingDragged: false, isGhost: false }
+  data: { piece, type, isBeingDragged: false, isIntermediate: false, status }
 })
 
-const connectionToEdge = (connection: Connection, selected: boolean): ConnectionEdge => ({
+const connectionToEdge = (connection: Connection, selected: boolean, status: 'added' | 'removed' | 'modified' | 'unchanged'): ConnectionEdge => ({
   type: 'connection',
   id: `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`,
   source: connection.connecting.piece.id_,
   sourceHandle: connection.connecting.port.id_,
   target: connection.connected.piece.id_,
   targetHandle: connection.connected.port.id_,
-  data: { connection } // removed 'selected' property
+  data: { connection, status }
 })
 
 //#endregion
@@ -99,7 +122,7 @@ const connectionToEdge = (connection: Connection, selected: boolean): Connection
 
 const Diagram: FC<{ designEditorState: DesignEditorState, designEditorDispatcher: DesignEditorDispatcher }> = ({ designEditorState, designEditorDispatcher }) => {
 
-  const { kit, designId, selection, fullscreenPanel } = designEditorState; // fullscreen is fullscreenPanel === 'diagram'
+  const { kit, designId, selection, fullscreenPanel, designDiff } = designEditorState; // fullscreen is fullscreenPanel === 'diagram'
 
   const onDesignChange = (design: Design) => designEditorDispatcher.dispatch({ type: DesignEditorAction.SET_DESIGN, payload: design });
 
@@ -111,7 +134,7 @@ const Diagram: FC<{ designEditorState: DesignEditorState, designEditorDispatcher
 
   if (!kit) return null // Prevents error if kit is undefined
   // Mapping the semio design to react flow nodes and edges
-  const nodesAndEdges = mapDesignToNodesAndEdges({ kit, designId, selection })
+  const nodesAndEdges = mapDesignToNodesAndEdges({ kit, designId, selection, designDiff })
   if (!nodesAndEdges) return null
   const { nodes, edges: edges } = nodesAndEdges
 
@@ -224,11 +247,11 @@ const Diagram: FC<{ designEditorState: DesignEditorState, designEditorDispatcher
     [onPanelDoubleClick]
   )
 
-  // Ghost nodes rendering
-  const displayNodes = useDisplayGhostNodes(dragState, nodes, selection)
+  // Intermediate nodes rendering
+  const displayNodes = useDisplayIntermediateNodes(dragState, nodes, selection)
 
-  // Ghost edges rendering
-  const displayEdges = useDisplayGhostEdges(displayNodes, nodes, selection, edges)
+  // Intermediate edges rendering
+  const displayEdges = useDisplayIntermediateEdges(displayNodes, nodes, selection, edges)
 
   return (
     <div id="diagram" className="h-full w-full">
@@ -289,20 +312,20 @@ function getProximityEdges(
   reactFlowInstance: ReactFlowInstance,
   selection: DesignEditorSelection
 ): Edge[] {
-  const ghostNodes = displayNodes.filter((node) => node.data.isGhost)
+  const intermediateNodes = displayNodes.filter((node) => node.data.isIntermediate)
 
-  if (ghostNodes.length === 0) {
+  if (intermediateNodes.length === 0) {
     return []
   }
 
   const proximityEdges: Edge[] = []
-  for (const ghostNode of ghostNodes) {
-    const closestEdge = getClosestEdge(ghostNode, nodes, reactFlowInstance.getInternalNode, selection)
+  for (const intermediateNode of intermediateNodes) {
+    const closestEdge = getClosestEdge(intermediateNode, nodes, reactFlowInstance.getInternalNode, selection)
 
     if (closestEdge) {
       proximityEdges.push({
         ...closestEdge,
-        id: 'ghost-edge-' + ghostNode.id,
+        id: 'intermediate-edge-' + intermediateNode.id,
         className: 'temp'
       })
     }
@@ -329,7 +352,7 @@ function getClosestEdge(
     dy: 0
   }
 
-  const originalDraggedId = node.data.isGhost ? node.id.slice(5) : null
+  const originalDraggedId = node.data.isIntermediate ? node.id.slice(5) : null
   const selectedNodeIds = selection.selectedPieceIds ?? []
 
   // Iterate over all other nodes in the array
@@ -506,31 +529,31 @@ function useDragHandle(
 
   function updateDesign() {
     if (dragState && dragState.offset && onDesignChange) {
-      const nodesAndEdges = mapDesignToNodesAndEdges({ kit, designId, selection })
+      const nodesAndEdges = mapDesignToNodesAndEdges({ kit, designId, selection, designDiff })
       if (!nodesAndEdges) return
 
       const { offset } = dragState
       const { nodes } = nodesAndEdges
 
-      // Recreate ghost nodes to calculate proximity edges
+      // Recreate intermediate nodes to calculate proximity edges
       const selectedNodeIds = new Set(selection.selectedPieceIds ?? [])
-      const ghostNodes: PieceNode[] = Array.from(selectedNodeIds)
+      const intermediateNodes: PieceNode[] = Array.from(selectedNodeIds)
         .map((id) => {
           const orig = nodes.find((n) => n.id === id)
           if (!orig) return undefined
           return {
             ...orig,
-            id: 'ghost' + id,
+            id: 'intermediate' + id,
             position: {
               x: orig.position.x + offset.x,
               y: orig.position.y + offset.y
             },
-            data: { ...orig.data, isGhost: true }
+            data: { ...orig.data, isIntermediate: true }
           }
         })
         .filter(Boolean) as PieceNode[]
 
-      const proximityEdges = getProximityEdges([...nodes, ...ghostNodes], nodes, reactFlowInstance, selection)
+      const proximityEdges = getProximityEdges([...nodes, ...intermediateNodes], nodes, reactFlowInstance, selection)
 
       const normalize = (value: string | undefined) => (value === undefined ? '' : value)
       const design = kit.designs?.find(
@@ -575,8 +598,8 @@ function useDragHandle(
 
         // Convert proximity edges to new Semio connections
         const newConnections = proximityEdges.map((edge): Connection => {
-          const sourceId = edge.source!.startsWith('ghost') ? edge.source!.substring(5) : edge.source!
-          const targetId = edge.target!.startsWith('ghost') ? edge.target!.substring(5) : edge.target!
+          const sourceId = edge.source!.startsWith('intermediate') ? edge.source!.substring(5) : edge.source!
+          const targetId = edge.target!.startsWith('intermediate') ? edge.target!.substring(5) : edge.target!
 
           // Identify which piece was dragged to become a child
           if (selectedNodeIds.has(sourceId)) newChildPieceIds.add(sourceId)
@@ -685,7 +708,7 @@ function toggleNodeSelection(
 
 //#region Display Nodes and Edges
 
-function useDisplayGhostNodes(
+function useDisplayIntermediateNodes(
   dragState: {
     origin: XYPosition
     offset: XYPosition | null
@@ -702,30 +725,30 @@ function useDisplayGhostNodes(
     const nodesWithGreyedOut = nodes.map((node) =>
       selectedNodeIds.includes(node.id) ? { ...node, data: { ...node.data, isBeingDragged: true } } : node
     )
-    // Add ghost nodes for all being dragged
-    const ghostNodes: PieceNode[] = selectedNodeIds
+    // Add intermediate nodes for all being dragged
+    const intermediateNodes: PieceNode[] = selectedNodeIds
       .map((id) => {
         const orig = nodes.find((n) => n.id === id)
         if (!orig) return undefined
         // Copy all properties from the original node, only override what needs to be unique
         return {
           ...orig,
-          id: 'ghost' + id,
+          id: 'intermediate' + id,
           position: {
             x: orig.position.x + offset.x,
             y: orig.position.y + offset.y
           },
-          data: { ...orig.data, isGhost: true },
+          data: { ...orig.data, isIntermediate: true },
           selected: true
         }
       })
       .filter(Boolean) as PieceNode[]
 
-    return [...nodesWithGreyedOut, ...ghostNodes]
+    return [...nodesWithGreyedOut, ...intermediateNodes]
   }, [nodes, dragState, selection])
 }
 
-function useDisplayGhostEdges(
+function useDisplayIntermediateEdges(
   displayNodes: PieceNode[],
   nodes: PieceNode[],
   selection: DesignEditorSelection,
@@ -733,9 +756,9 @@ function useDisplayGhostEdges(
 ) {
   const reactFlowInstance = useReactFlow()
   return useMemo(() => {
-    const ghostEdges = getProximityEdges(displayNodes, nodes, reactFlowInstance, selection)
-    if (ghostEdges.length > 0) {
-      return [...edges, ...ghostEdges]
+    const intermediateEdges = getProximityEdges(displayNodes, nodes, reactFlowInstance, selection)
+    if (intermediateEdges.length > 0) {
+      return [...edges, ...intermediateEdges]
     }
     return edges
   }, [displayNodes, nodes, reactFlowInstance, selection, edges])
@@ -749,13 +772,14 @@ type PieceNodeProps = {
   piece: Piece
   type: Type
   isBeingDragged: boolean
-  isGhost: boolean
+  isIntermediate: boolean
+  status: 'added' | 'removed' | 'modified' | 'unchanged'
 }
 
 type PieceNode = Node<PieceNodeProps, 'piece'>
 type DiagramNode = PieceNode
 
-type ConnectionEdge = Edge<{ connection: Connection }, 'connection'>
+type ConnectionEdge = Edge<{ connection: Connection; status: 'added' | 'removed' | 'modified' | 'unchanged' }, 'connection'>
 type DiagramEdge = ConnectionEdge
 
 type PortHandleProps = { port: Port }
@@ -790,16 +814,34 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
     piece: { id_ },
     type: { ports },
     isBeingDragged,
-    isGhost
-  } = data as PieceNodeProps
+    isIntermediate,
+    status // Add status prop
+  } = data as PieceNodeProps & { status: 'added' | 'removed' | 'modified' | 'unchanged' };
+
+  let fillClass = '';
+  let strokeClass = 'stroke-foreground';
+  let opacity = isBeingDragged ? 0.5 : 1;
+
+  if (status === 'added') {
+    fillClass = selected ? 'fill-green-600' : 'fill-green-400';
+  } else if (status === 'removed') {
+    fillClass = 'fill-red-400';
+    strokeClass = 'stroke-red-600';
+    opacity *= 0.5; // transparent
+  } else if (status === 'modified') {
+    fillClass = selected ? 'fill-yellow-600' : 'fill-yellow-400';
+  } else {
+    fillClass = selected ? 'fill-primary' : 'fill-transparent';
+  }
+
   return (
-    <div style={{ opacity: isBeingDragged ? 0.5 : 1 }}>
+    <div style={{ opacity }}>
       <svg width={ICON_WIDTH} height={ICON_WIDTH} className="cursor-pointer">
         <circle
           cx={ICON_WIDTH / 2}
           cy={ICON_WIDTH / 2}
           r={ICON_WIDTH / 2 - 1}
-          className={`stroke-foreground stroke-2 ${selected ? 'fill-primary ' : 'fill-transparent'} `}
+          className={`${strokeClass} stroke-2 ${fillClass}`}
         />
         <text
           x={ICON_WIDTH / 2}
@@ -813,8 +855,8 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
       </svg>
       {ports?.map((port: Port) => <PortHandle key={port.id_} port={port} />)}
     </div>
-  )
-})
+  );
+});
 
 const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
   id,
@@ -825,23 +867,39 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
   targetX,
   targetY,
   sourceHandleId,
-  targetHandleId
+  targetHandleId,
+  data
 }) => {
-  const HANDLE_HEIGHT = 5
-  const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`
+  const HANDLE_HEIGHT = 5;
+  const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`;
 
-  const isGhost = id?.startsWith('ghost-edge')
+  const isIntermediate = id?.startsWith('intermediate-edge');
+  const status = data?.status || 'unchanged';
+
+  let stroke = isIntermediate ? 'var(--primary)' : 'var(--foreground)';
+  let dasharray = isIntermediate ? '5 5' : undefined;
+  let opacity = 1;
+
+  if (status === 'added') {
+    stroke = 'green';
+  } else if (status === 'removed') {
+    stroke = 'red';
+    opacity = 0.5;
+  } else if (status === 'modified') {
+    stroke = 'yellow';
+  }
 
   return (
     <BaseEdge
       path={path}
       style={{
-        strokeDasharray: isGhost ? '5 5' : undefined,
-        stroke: isGhost ? 'var(--primary)' : 'var(--foreground)'
+        strokeDasharray: dasharray,
+        stroke,
+        opacity
       }}
     />
-  )
-}
+  );
+};
 
 const ConnectionConnectionLine: React.FC<ConnectionLineComponentProps> = (props: ConnectionLineComponentProps) => {
   const { fromX, fromY, toX, toY } = props

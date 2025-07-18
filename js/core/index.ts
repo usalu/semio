@@ -1,7 +1,7 @@
 export type {
     Kit, Design, Type, Piece, Connection, Port, Representation, Quality,
     Author, Side, DiagramPoint, Plane, Point, Vector, PieceId, PortId, TypeId, DesignId, KitId,
-    ConnectionId, SideId, DesignDiff, PieceDiff, ConnectionsDiff,
+    ConnectionId, SideId, DesignDiff, PieceDiff, PiecesDiff, ConnectionsDiff,
 } from '@semio/js/semio';
 export { ICON_WIDTH } from '@semio/js/semio';
 export { flattenDesign, getPieceRepresentationUrls, planeToMatrix, ToThreeQuaternion, ToSemioQuaternion, ToThreeRotation, ToSemioRotation } from '@semio/js/semio';

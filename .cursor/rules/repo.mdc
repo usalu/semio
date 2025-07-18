@@ -1,12 +1,15 @@
 ---
-description: 
-globs: 
+description:
+globs:
 alwaysApply: true
 ---
+
 # Project
+
 An ecosystem for designing kit-of-parts architecture together.
 
 # Guidelines
+
 - Toolfriendly over intuitive.
 - Almost everything is in a single file if possible.
 - Folders are avoided if possible.
@@ -18,3 +21,4 @@ An ecosystem for designing kit-of-parts architecture together.
 - Don't remove code that is commented out.
 - README.md files are for developers which are GFM.
 - Assume all dev servers and debugging processes are running. No need to ask to start them.
+- All definitions, classes, interfaces, …, are defined before they are used. The statements rise in complexity from top to bottom.
