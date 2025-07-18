@@ -2,7 +2,8 @@ import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef, useCall
 import { Canvas, ThreeEvent, useLoader } from '@react-three/fiber';
 import { Center, Environment, GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, Select, Sphere, Stage, TransformControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { Kit, Design, DesignId, Piece, Plane, Type, flattenDesign, DesignEditorSelection, getPieceRepresentationUrls, planeToMatrix, ToThreeQuaternion, ToThreeRotation, ToSemioRotation, PiecesDiff, DesignDiff } from '@semio/js';
+import { Kit, Design, DesignId, Piece, Plane, Type, flattenDesign, DesignEditorSelection, getPieceRepresentationUrls, planeToMatrix, ToThreeQuaternion, ToThreeRotation, ToSemioRotation, DesignDiff, PiecesDiff } from '@semio/js';
+import { PieceId, PieceDiff } from '@semio/js';
 import { DesignEditorState, DesignEditorDispatcher, DesignEditorAction } from './DesignEditor';
 import { Matrix4, Vector3, Quaternion } from 'three';
 
@@ -82,8 +83,9 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, upda
         return baseScene.clone();
     }, [baseScene, status, selected, updating]);
 
+    // Update selectedScene and updatingScene to use baseScene
     const selectedScene = useMemo(() => {
-        const sceneClone = scene.clone()
+        const sceneClone = baseScene.clone()
         sceneClone.traverse((object) => {
             if (object instanceof THREE.Mesh) {
                 const meshColor = new THREE.Color(getComputedColor('--color-primary'))
@@ -95,9 +97,10 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, upda
             }
         })
         return sceneClone
-    }, [scene])
+    }, [baseScene])
+
     const updatingScene = useMemo(() => {
-        const sceneClone = scene.clone()
+        const sceneClone = baseScene.clone()
         sceneClone.traverse((object) => {
             if (object instanceof THREE.Mesh) {
                 const meshColor = new THREE.Color(getComputedColor('--color-foreground'))
@@ -109,7 +112,7 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, upda
             }
         })
         return sceneClone
-    }, [scene])
+    }, [baseScene])
 
     const handleClick = useCallback((e: ThreeEvent<MouseEvent>) => {
         onSelect(piece);
@@ -198,13 +201,13 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
 
     function getPieceStatus(id: string, piecesDiff: PiecesDiff): 'added' | 'removed' | 'modified' | 'unchanged' {
         if (piecesDiff.added?.some((p: Piece) => p.id_ === id)) return 'added';
-        if (piecesDiff.removed?.some((pid: { id_: string }) => pid.id_ === id)) return 'removed';
-        if (piecesDiff.updated?.some((pd: { id_: string }) => pd.id_ === id)) return 'modified';
+        if (piecesDiff.removed?.some((pid: PieceId) => pid.id_ === id)) return 'removed';
+        if (piecesDiff.updated?.some((pd: PieceDiff) => pd.id_ === id)) return 'modified';
         return 'unchanged';
     }
 
     const pieceStatuses = useMemo(() => {
-        return design.pieces?.map(piece => getPieceStatus(piece.id_, designDiff.pieces)) || [];
+        return design.pieces?.map(piece => getPieceStatus(piece.id_, designDiff?.pieces ?? { added: [], removed: [], updated: [] })) || [];
     }, [design, designDiff]);
 
 

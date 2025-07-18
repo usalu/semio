@@ -32,14 +32,16 @@ import { DesignEditorSelection, DesignEditorState, DesignEditorDispatcher, Desig
 
 //#region Data Mapping
 
-function getPieceStatus(id: string, piecesDiff: PiecesDiff): 'added' | 'removed' | 'modified' | 'unchanged' {
+function getPieceStatus(id: string, piecesDiff?: PiecesDiff): 'added' | 'removed' | 'modified' | 'unchanged' {
+  if (!piecesDiff) return 'unchanged';
   if (piecesDiff.added?.some((p: Piece) => p.id_ === id)) return 'added';
   if (piecesDiff.removed?.some((pid: PieceId) => pid.id_ === id)) return 'removed';
   if (piecesDiff.updated?.some((pd: PieceDiff) => pd.id_ === id)) return 'modified';
   return 'unchanged';
 }
 
-function getConnectionStatus(conn: Connection, connDiff: ConnectionsDiff): 'added' | 'removed' | 'modified' | 'unchanged' {
+function getConnectionStatus(conn: Connection, connDiff?: ConnectionsDiff): 'added' | 'removed' | 'modified' | 'unchanged' {
+  if (!connDiff) return 'unchanged';
   const connId = { connected: { piece: conn.connected.piece }, connecting: { piece: conn.connecting.piece } };
   if (connDiff.added?.some(c => c.connected.piece.id_ === conn.connected.piece.id_ && c.connecting.piece.id_ === conn.connecting.piece.id_ && (c.connected.port?.id_ || '') === (conn.connected.port?.id_ || '') && (c.connecting.port?.id_ || '') === (conn.connecting.port?.id_ || ''))) return 'added';
   if (connDiff.removed?.some(cid => cid.connected.piece.id_ === conn.connected.piece.id_ && cid.connecting.piece.id_ === conn.connecting.piece.id_)) return 'removed';
@@ -71,7 +73,7 @@ function mapDesignToNodesAndEdges({
   const pieceNodes =
     flatDesign!.pieces?.map((flatPiece) => {
       const type = types.find((t) => t.name === flatPiece.type.name && (t.variant ?? '') === (flatPiece.type.variant ?? ''))
-      const pieceStatus = getPieceStatus(flatPiece.id_, designDiff.pieces)
+      const pieceStatus = getPieceStatus(flatPiece.id_, designDiff?.pieces);
       return pieceToNode(
         flatPiece,
         type!,
@@ -81,7 +83,7 @@ function mapDesignToNodesAndEdges({
     }) ?? []
   const connectionEdges =
     design.connections?.map((connection) => {
-      const connStatus = getConnectionStatus(connection, designDiff.connections)
+      const connStatus = getConnectionStatus(connection, designDiff?.connections);
       return connectionToEdge(
         connection,
         selection?.selectedConnections.some(
@@ -151,7 +153,8 @@ const Diagram: FC<{ designEditorState: DesignEditorState, designEditorDispatcher
     onSelectionChange,
     kit,
     designId,
-    onDesignChange
+    onDesignChange,
+    designDiff
   )
 
   const reactFlowInstance = useReactFlow()
@@ -481,7 +484,8 @@ function useDragHandle(
   onSelectionChange: (selection: DesignEditorSelection) => void,
   kit: Kit,
   designId: DesignId,
-  onDesignChange: ((design: Design) => void) | undefined
+  onDesignChange: ((design: Design) => void) | undefined,
+  designDiff: DesignDiff
 ) {
   const reactFlowInstance = useReactFlow()
   const handleNodeDragStart = useCallback(
