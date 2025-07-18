@@ -3,6 +3,8 @@ import { Canvas, ThreeEvent, useLoader } from '@react-three/fiber';
 import { Center, Environment, GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, Select, Sphere, Stage, TransformControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { Kit, Design, DesignId, Piece, Plane, Type, flattenDesign, DesignEditorSelection, getPieceRepresentationUrls, planeToMatrix, ToThreeQuaternion, ToThreeRotation, ToSemioRotation } from '@semio/js';
+import { DesignEditorState, DesignEditorDispatcher, DesignEditorAction } from './DesignEditor';
+import { Matrix4, Vector3, Quaternion } from 'three';
 
 const getComputedColor = (variable: string): string => {
     return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -131,8 +133,9 @@ interface ModelDesignProps {
     designEditorDispatcher: DesignEditorDispatcher
 }
 
-const ModelDesign: FC<ModelDesignProps> = ({ kit, designId, fileUrls, selection, onSelectionChange, onDesignChange }) => {
+const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDispatcher }) => {
     const normalize = (val: string | undefined) => val === undefined ? "" : val;
+    const { kit, designId, fileUrls, selection } = designEditorState;
     const design = kit.designs?.find(d =>
         d.name === designId.name &&
         (normalize(d.variant) === normalize(designId.variant)) &&
@@ -179,26 +182,35 @@ const ModelDesign: FC<ModelDesignProps> = ({ kit, designId, fileUrls, selection,
             newSelectedPieceIds.length !== selection.selectedPieceIds.length ||
             newSelectedPieceIds.some((id, index) => id !== selection.selectedPieceIds[index])) {
 
-            onSelectionChange({
-                ...selection,
-                selectedPieceIds: newSelectedPieceIds
+            designEditorDispatcher.dispatch({
+                type: DesignEditorAction.SET_SELECTION,
+                payload: {
+                    ...selection,
+                    selectedPieceIds: newSelectedPieceIds
+                }
             });
         }
-    }, [selection, onSelectionChange]);
+    }, [selection, designEditorDispatcher]);
 
     const handlePieceSelect = useCallback((piece: Piece) => {
         if (selection.selectedPieceIds.includes(piece.id_)) {
-            onSelectionChange({
-                ...selection,
-                selectedPieceIds: selection.selectedPieceIds.filter(id => id !== piece.id_)
-            })
+            designEditorDispatcher.dispatch({
+                type: DesignEditorAction.SET_SELECTION,
+                payload: {
+                    ...selection,
+                    selectedPieceIds: selection.selectedPieceIds.filter(id => id !== piece.id_)
+                }
+            });
         } else {
-            onSelectionChange({
-                ...selection,
-                selectedPieceIds: [...selection.selectedPieceIds, piece.id_]
-            })
+            designEditorDispatcher.dispatch({
+                type: DesignEditorAction.SET_SELECTION,
+                payload: {
+                    ...selection,
+                    selectedPieceIds: [...selection.selectedPieceIds, piece.id_]
+                }
+            });
         }
-    }, [selection, onSelectionChange]);
+    }, [selection, designEditorDispatcher]);
 
 
     return (
@@ -244,16 +256,10 @@ const Gizmo: FC = (): JSX.Element => {
 }
 
 interface ModelProps {
-    kit: Kit;
-    designId: DesignId;
-    fileUrls: Map<string, string>;
-    fullscreen?: boolean;
-    selection?: DesignEditorSelection;
-    onDesignChange: (design: Design) => void;
-    onSelectionChange: (selection: DesignEditorSelection) => void;
-    onPanelDoubleClick?: () => void;
+    designEditorState: DesignEditorState;
+    designEditorDispatcher: DesignEditorDispatcher;
 }
-const Model: FC<ModelProps> = ({ kit, designId, fileUrls, fullscreen, selection, onDesignChange, onSelectionChange, onPanelDoubleClick }) => {
+const Model: FC<ModelProps> = ({ designEditorState, designEditorDispatcher }) => {
     const [gridColors, setGridColors] = useState({
         sectionColor: getComputedColor('--foreground'),
         cellColor: getComputedColor('--accent-foreground')
@@ -277,15 +283,25 @@ const Model: FC<ModelProps> = ({ kit, designId, fileUrls, fullscreen, selection,
 
     const handleDoubleClick = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
-        if (onPanelDoubleClick) onPanelDoubleClick();
-    }, [onPanelDoubleClick]);
+        designEditorDispatcher.dispatch({ type: DesignEditorAction.SET_FULLSCREEN, payload: designEditorState.fullscreenPanel === 'model' ? null : 'model' });
+    }, [designEditorState.fullscreenPanel, designEditorDispatcher]);
 
     const handlePointerMissed = useCallback(() => {
-        onSelectionChange({
-            selectedPieceIds: [],
-            selectedConnections: []
-        })
-    }, [onSelectionChange]);
+        designEditorDispatcher.dispatch({
+            type: DesignEditorAction.SET_SELECTION,
+            payload: {
+                selectedPieceIds: [],
+                selectedConnections: []
+            }
+        });
+    }, [designEditorDispatcher]);
+
+    const { kit, designId, fileUrls, selection } = designEditorState;
+    const fullscreen = designEditorState.fullscreenPanel === 'model';
+
+    const onDesignChange = (design: Design) => designEditorDispatcher.dispatch({ type: DesignEditorAction.SET_DESIGN, payload: design });
+    const onSelectionChange = (sel: DesignEditorSelection) => designEditorDispatcher.dispatch({ type: DesignEditorAction.SET_SELECTION, payload: sel });
+    const onPanelDoubleClick = () => designEditorDispatcher.dispatch({ type: DesignEditorAction.SET_FULLSCREEN, payload: designEditorState.fullscreenPanel === 'model' ? null : 'model' });
 
     return (
         <div id="model" className="w-full h-full">
@@ -304,7 +320,7 @@ const Model: FC<ModelProps> = ({ kit, designId, fileUrls, fullscreen, selection,
                 {/* <Suspense fallback={null}>
                         <Gltf src={src} />
                     </Suspense> */}
-                <ModelDesign kit={kit} designId={designId} fileUrls={fileUrls} selection={selection || { selectedPieceIds: [], selectedConnections: [] }} onSelectionChange={onSelectionChange} onDesignChange={onDesignChange} />
+                <ModelDesign designEditorState={designEditorState} designEditorDispatcher={designEditorDispatcher} />
                 <Environment files={'schlenker-shed.hdr'} />
                 <Grid
                     infiniteGrid={true}

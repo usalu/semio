@@ -10,7 +10,7 @@ export { default as File } from '@semio/js/components/ui/File';
 export { default as Model } from '@semio/js/components/ui/Model';
 export { default as Diagram } from '@semio/js/components/ui/Diagram';
 export type { DesignEditorState, DesignEditorDispatcher } from '@semio/js/components/ui/DesignEditor';
-export { default as DesignEditor } from '@semio/js/components/ui/DesignEditor';
+export { default as DesignEditor, DesignEditorAction } from '@semio/js/components/ui/DesignEditor';
 export { default as Sketchpad, Mode, Theme, Layout } from '@semio/js/components/ui/Sketchpad';
 export { default as GrasshopperCatalogue } from '@semio/js/components/ui/GrasshopperCatalogue';
 export { default as eslintConfig } from '@semio/js/eslint.config';

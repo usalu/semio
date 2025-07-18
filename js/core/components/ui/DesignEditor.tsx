@@ -1,4 +1,4 @@
-import { FC, ReactNode, useState, useEffect, useReducer, useMemo } from 'react'
+import { FC, ReactNode, useState, useEffect, useReducer, useMemo, useCallback } from 'react'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable } from '@dnd-kit/core'
 import { createPortal } from 'react-dom'
 import { useHotkeys } from 'react-hotkeys-hook'
@@ -519,7 +519,7 @@ export interface DesignEditorState {
   kit: Kit
   designId: DesignId
   fileUrls: Map<string, string>
-  fullscreen?: boolean
+  fullscreenPanel?: 'diagram' | 'model' | null
   selection: DesignEditorSelection,
   designDiff: DesignDiff,
 }
@@ -532,22 +532,57 @@ export enum DesignEditorAction {
 }
 
 export interface DesignEditorDispatcher {
-  dispatch: (action: DesignEditorAction) => void
+  dispatch: (action: { type: DesignEditorAction; payload: any }) => void
 }
 
 const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   const { onToolbarChange, designId, fileUrls, onUndo, onRedo } = props
 
-  const isControlled = props.kit !== undefined
+  const isControlled = props.kit !== undefined;
 
-  const [internalKit, setInternalKit] = useState(!isControlled ? props.initialKit : undefined)
-  const [internalSelection, setInternalSelection] = useState(!isControlled ? props.initialSelection : undefined)
+  const initialState: DesignEditorState = {
+    kit: isControlled ? props.kit : props.initialKit,
+    designId: props.designId,
+    fileUrls: props.fileUrls,
+    fullscreenPanel: null as 'diagram' | 'model' | null,
+    selection: isControlled ? props.selection : props.initialSelection || { selectedPieceIds: [], selectedConnections: [] },
+    designDiff: {},
+  };
 
-  const kit = isControlled ? props.kit : internalKit
-  const selection = (isControlled ? props.selection : internalSelection) || {
-    selectedPieceIds: [],
-    selectedConnections: []
-  }
+  const designEditorReducer = (state: DesignEditorState, action: { type: DesignEditorAction; payload: any }): DesignEditorState => {
+    switch (action.type) {
+      case DesignEditorAction.SET_FULLSCREEN:
+        return { ...state, fullscreenPanel: action.payload };
+      case DesignEditorAction.SET_SELECTION:
+        return { ...state, selection: action.payload };
+      case DesignEditorAction.SET_DESIGN:
+        const newDesign = action.payload;
+        const normalize = (v?: string) => v || '';
+        const updatedDesigns = (state.kit.designs || []).map((d: Design) =>
+          d.name === newDesign.name && normalize(d.variant) === normalize(newDesign.variant) && normalize(d.view) === normalize(newDesign.view)
+            ? newDesign
+            : d
+        );
+        return { ...state, kit: { ...state.kit, designs: updatedDesigns } };
+      case DesignEditorAction.SET_DESIGN_DIFF:
+        return { ...state, designDiff: action.payload };
+      default:
+        return state;
+    }
+  };
+
+  const [state, reducerDispatch] = useReducer(designEditorReducer, initialState);
+
+  const dispatch = useCallback((action: { type: DesignEditorAction; payload: any }) => {
+    reducerDispatch(action);
+    if (isControlled) {
+      if (action.type === DesignEditorAction.SET_DESIGN) props.onDesignChange?.(action.payload);
+      if (action.type === DesignEditorAction.SET_SELECTION) props.onSelectionChange?.(action.payload);
+    }
+  }, [isControlled, props.onDesignChange, props.onSelectionChange]);
+
+  const kit = state.kit
+  const selection = state.selection
 
   const normalize = (val: string | undefined) => (val === undefined ? '' : val)
   const design = kit?.designs?.find(
@@ -563,28 +598,15 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   const onDesignChange = isControlled
     ? props.onDesignChange
     : (design: Design) => {
-      setInternalKit((currentKit) => {
-        if (!currentKit) return currentKit
-        return {
-          ...currentKit,
-          designs: currentKit.designs?.map((d) =>
-            d.name === design.name &&
-              normalize(d.variant) === normalize(design.variant) &&
-              normalize(d.view) === normalize(design.view)
-              ? design
-              : d
-          )
-        }
-      })
+      dispatch({ type: DesignEditorAction.SET_DESIGN, payload: design })
     }
 
   const onSelectionChange = isControlled
     ? props.onSelectionChange
     : (selection: DesignEditorSelection) => {
-      setInternalSelection(selection)
+      dispatch({ type: DesignEditorAction.SET_SELECTION, payload: selection })
     }
 
-  const [fullscreenPanel, setFullscreenPanel] = useState<'diagram' | 'model' | null>(null)
   const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
     workbench: false,
     console: false,
@@ -632,9 +654,10 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   })
 
   useHotkeys('mod+a', (e) => {
-    e.preventDefault()
-    console.log('Select all pieces and connections')
-  })
+    e.preventDefault();
+    const allIds = design.pieces?.map(p => p.id_) || [];
+    dispatch({ type: DesignEditorAction.SET_SELECTION, payload: { selectedPieceIds: allIds, selectedConnections: [] } });
+  });
   useHotkeys('mod+i', (e) => {
     e.preventDefault()
     console.log('Invert selection')
@@ -680,7 +703,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   })
 
   const handlePanelDoubleClick = (panel: 'diagram' | 'model') => {
-    setFullscreenPanel((currentPanel) => (currentPanel === panel ? null : panel))
+    dispatch({ type: DesignEditorAction.SET_FULLSCREEN, payload: panel })
   }
 
   const rightPanelVisible = visiblePanels.details || visiblePanels.chat
@@ -774,10 +797,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
           },
           center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 }
         }
-        onDesignChange?.({
-          ...design,
-          pieces: [...(design.pieces || []), piece]
-        })
+        dispatch({ type: DesignEditorAction.SET_DESIGN, payload: { ...design, pieces: [...(design.pieces || []), piece] } })
       } else if (activeDraggedDesign) {
         throw new Error('Not implemented')
       }
@@ -792,24 +812,24 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
         <div id="sketchpad-edgeless" className="h-full">
           <ResizablePanelGroup direction="horizontal">
             <ResizablePanel
-              defaultSize={fullscreenPanel === 'diagram' ? 100 : 50}
-              className={`${fullscreenPanel === 'model' ? 'hidden' : 'block'}`}
+              defaultSize={state.fullscreenPanel === 'diagram' ? 100 : 50}
+              className={`${state.fullscreenPanel === 'model' ? 'hidden' : 'block'}`}
               onDoubleClick={() => handlePanelDoubleClick('diagram')}
             >
               <Diagram
-                designEditorState={designEditorState}
-                designEditorDispatcher={designEditorDispatcher}
+                designEditorState={state}
+                designEditorDispatcher={{ dispatch }}
               />
             </ResizablePanel>
-            <ResizableHandle className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`} />
+            <ResizableHandle className={`border-r ${state.fullscreenPanel !== null ? 'hidden' : 'block'}`} />
             <ResizablePanel
-              defaultSize={fullscreenPanel === 'model' ? 100 : 50}
-              className={`${fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
+              defaultSize={state.fullscreenPanel === 'model' ? 100 : 50}
+              className={`${state.fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
               onDoubleClick={() => handlePanelDoubleClick('model')}
             >
               <Model
-                designEditorState={designEditorState}
-                designEditorDispatcher={designEditorDispatcher}
+                designEditorState={state}
+                designEditorDispatcher={{ dispatch }}
               />
             </ResizablePanel>
           </ResizablePanelGroup>

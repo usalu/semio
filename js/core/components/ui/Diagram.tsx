@@ -27,7 +27,7 @@ import { Connection, Design, DesignId, flattenDesign, ICON_WIDTH, Kit, Piece, Po
 // import '@xyflow/react/dist/base.css';
 import '@xyflow/react/dist/style.css'
 import '@semio/js/globals.css'
-import { DesignEditorSelection, DesignEditorState } from '../..'
+import { DesignEditorSelection, DesignEditorState, DesignEditorDispatcher, DesignEditorAction } from '../..'
 
 //#region Data Mapping
 
@@ -97,15 +97,18 @@ const connectionToEdge = (connection: Connection, selected: boolean): Connection
 
 //#region Diagram Component
 
-const Diagram: FC<DiagramProps> = ({
-  kit,
-  designId,
-  fullscreen,
-  selection,
-  onPanelDoubleClick,
-  onDesignChange,
-  onSelectionChange
-}) => {
+const Diagram: FC<{ designEditorState: DesignEditorState, designEditorDispatcher: DesignEditorDispatcher }> = ({ designEditorState, designEditorDispatcher }) => {
+
+  const { kit, designId, selection, fullscreenPanel } = designEditorState; // fullscreen is fullscreenPanel === 'diagram'
+
+  const onDesignChange = (design: Design) => designEditorDispatcher.dispatch({ type: DesignEditorAction.SET_DESIGN, payload: design });
+
+  const onSelectionChange = (sel: DesignEditorSelection) => designEditorDispatcher.dispatch({ type: DesignEditorAction.SET_SELECTION, payload: sel });
+
+  const onPanelDoubleClick = () => designEditorDispatcher.dispatch({ type: DesignEditorAction.SET_FULLSCREEN, payload: fullscreenPanel === 'diagram' ? null : 'diagram' })
+
+  const fullscreen = fullscreenPanel === 'diagram';
+
   if (!kit) return null // Prevents error if kit is undefined
   // Mapping the semio design to react flow nodes and edges
   const nodesAndEdges = mapDesignToNodesAndEdges({ kit, designId, selection })
@@ -254,8 +257,8 @@ const Diagram: FC<DiagramProps> = ({
         onConnect={onConnect}
         connectionLineComponent={ConnectionConnectionLine}
       >
-        {fullscreen && <Controls className="border" showZoom={false} showInteractive={false} />}
-        {fullscreen && (
+        {fullscreenPanel === 'diagram' && <Controls className="border" showZoom={false} showInteractive={false} />}
+        {fullscreenPanel === 'diagram' && (
           <MiniMap
             className="border"
             maskColor="var(--accent)"
@@ -788,7 +791,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
     type: { ports },
     isBeingDragged,
     isGhost
-  } = data as any
+  } = data as PieceNodeProps
   return (
     <div style={{ opacity: isBeingDragged ? 0.5 : 1 }}>
       <svg width={ICON_WIDTH} height={ICON_WIDTH} className="cursor-pointer">
