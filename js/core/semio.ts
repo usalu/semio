@@ -1120,6 +1120,13 @@ export const flattenDesign = (kit: Kit, designId: DesignId): Design => {
         if (!rootNode) return;
         const rootPiece = pieceMap[rootNode.id()];
         if (!rootPiece || !rootPiece.id_) return;
+        rootPiece.qualities = rootPiece.qualities ?? [];
+        rootPiece.qualities.push({
+            name: "semio",
+            value: JSON.stringify({
+                fixedPieceId: rootPiece.id_,
+            }),
+        });
         let rootPlane: Plane;
         if (rootPiece.plane) {
             rootPlane = rootPiece.plane;
@@ -1207,6 +1214,7 @@ export const flattenDesign = (kit: Kit, designId: DesignId): Design => {
                         {
                             name: "semio",
                             value: JSON.stringify({
+                                fixedPieceId: JSON.parse(parentPiece.qualities?.find((q) => q.name === "semio")?.value ?? "{}").fixedPieceId,
                                 parentPieceId: parentPiece.id_,
                                 depth: depth,
                             }),
@@ -1222,6 +1230,34 @@ export const flattenDesign = (kit: Kit, designId: DesignId): Design => {
     flatDesign.connections = [];
     return flatDesign;
 };
+
+export const applyDesignDiff = (base: Design, diff: DesignDiff): Design => {
+    const effectivePieces: Piece[] = base.pieces
+        ? base.pieces.map((p: Piece) => {
+            const pd = diff.pieces.updated?.find((up: PieceDiff) => up.id_ === p.id_)
+            return pd ? { ...p, ...pd } : p
+        }).filter((p: Piece) => !diff.pieces.removed?.some((rp: PieceId) => rp.id_ === p.id_))
+            .concat(diff.pieces.added || [])
+        : diff.pieces.added || []
+
+    const effectiveConnections: Connection[] = base.connections
+        ? base.connections.map((c: Connection) => {
+            const cd = diff.connections.updated?.find((ud: any) =>
+                ud.connected?.piece?.id_ === c.connected.piece.id_ &&
+                ud.connecting?.piece?.id_ === c.connecting.piece.id_ &&
+                (ud.connected?.port?.id_ || '') === (c.connected.port?.id_ || '') &&
+                (ud.connecting?.port?.id_ || '') === (c.connecting.port?.id_ || '')
+            )
+            return cd ? { ...c, ...cd } : c
+        }).filter((c: Connection) => !diff.connections.removed?.some((rc: ConnectionId) =>
+            rc.connected.piece.id_ === c.connected.piece.id_ &&
+            rc.connecting.piece.id_ === c.connecting.piece.id_
+        ))
+            .concat(diff.connections.added || [])
+        : diff.connections.added || []
+
+    return { ...base, pieces: effectivePieces, connections: effectiveConnections }
+}
 
 const selectRepresentation = (
     representations: Representation[],

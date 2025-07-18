@@ -23,7 +23,7 @@ import {
 import { useDroppable } from '@dnd-kit/core'
 
 import { Connection, Design, DesignId, flattenDesign, ICON_WIDTH, Kit, Port, Type } from '@semio/js/semio'
-import { DesignDiff, PiecesDiff, ConnectionsDiff, ConnectionId, Piece, PieceId, PieceDiff } from '@semio/js';
+import { DesignDiff, PiecesDiff, ConnectionsDiff, ConnectionId, Piece, PieceId, PieceDiff, applyDesignDiff } from '@semio/js';
 
 // import '@xyflow/react/dist/base.css';
 import '@xyflow/react/dist/style.css'
@@ -69,7 +69,16 @@ function mapDesignToNodesAndEdges({
       normalize(design.view) === normalize(designId.view)
   )
   if (!design) return null
-  const flatDesign = flattenDesign(kit, designId)
+  const effectiveDesign = applyDesignDiff(design, designDiff)
+  const tempKit = {
+    ...kit, designs: kit.designs!.map((d: Design) => {
+      if (d.name === designId.name && normalize(d.variant) === normalize(designId.variant) && normalize(d.view) === normalize(designId.view)) {
+        return effectiveDesign
+      }
+      return d
+    })
+  }
+  const flatDesign = flattenDesign(tempKit, designId)
   const pieceNodes =
     flatDesign!.pieces?.map((flatPiece) => {
       const type = types.find((t) => t.name === flatPiece.type.name && (t.variant ?? '') === (flatPiece.type.variant ?? ''))
@@ -81,19 +90,18 @@ function mapDesignToNodesAndEdges({
         pieceStatus
       )
     }) ?? []
-  const connectionEdges =
-    design.connections?.map((connection) => {
-      const connStatus = getConnectionStatus(connection, designDiff?.connections);
-      return connectionToEdge(
-        connection,
-        selection?.selectedConnections.some(
-          (c) =>
-            c.connectingPieceId === connection.connecting.piece.id_ &&
-            c.connectedPieceId === connection.connected.piece.id_
-        ) ?? false,
-        connStatus
-      )
-    }) ?? []
+  const connectionEdges = effectiveDesign.connections?.map((connection) => {
+    const connStatus = getConnectionStatus(connection, designDiff?.connections);
+    return connectionToEdge(
+      connection,
+      selection?.selectedConnections.some(
+        (c) =>
+          c.connectingPieceId === connection.connecting.piece.id_ &&
+          c.connectedPieceId === connection.connected.piece.id_
+      ) ?? false,
+      connStatus
+    )
+  }) ?? []
   return { nodes: pieceNodes, edges: connectionEdges }
 }
 
@@ -154,7 +162,8 @@ const Diagram: FC<{ designEditorState: DesignEditorState, designEditorDispatcher
     kit,
     designId,
     onDesignChange,
-    designDiff
+    designDiff,
+    designEditorDispatcher
   )
 
   const reactFlowInstance = useReactFlow()
@@ -485,7 +494,8 @@ function useDragHandle(
   kit: Kit,
   designId: DesignId,
   onDesignChange: ((design: Design) => void) | undefined,
-  designDiff: DesignDiff
+  designDiff: DesignDiff,
+  designEditorDispatcher: DesignEditorDispatcher
 ) {
   const reactFlowInstance = useReactFlow()
   const handleNodeDragStart = useCallback(
@@ -602,8 +612,8 @@ function useDragHandle(
 
         // Convert proximity edges to new Semio connections
         const newConnections = proximityEdges.map((edge): Connection => {
-          const sourceId = edge.source!.startsWith('intermediate') ? edge.source!.substring(5) : edge.source!
-          const targetId = edge.target!.startsWith('intermediate') ? edge.target!.substring(5) : edge.target!
+          const sourceId = edge.source!.startsWith('intermediate') ? edge.source!.substring(11) : edge.source!
+          const targetId = edge.target!.startsWith('intermediate') ? edge.target!.substring(11) : edge.target!
 
           // Identify which piece was dragged to become a child
           if (selectedNodeIds.has(sourceId)) newChildPieceIds.add(sourceId)
@@ -886,9 +896,11 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
 
   if (status === 'added') {
     stroke = 'green';
+    dasharray = '5 5';
   } else if (status === 'removed') {
     stroke = 'red';
     opacity = 0.5;
+    dasharray = '5 5';
   } else if (status === 'modified') {
     stroke = 'yellow';
   }

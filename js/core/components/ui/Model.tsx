@@ -2,7 +2,7 @@ import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef, useCall
 import { Canvas, ThreeEvent, useLoader } from '@react-three/fiber';
 import { Center, Environment, GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, Select, Sphere, Stage, TransformControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { Kit, Design, DesignId, Piece, Plane, Type, flattenDesign, DesignEditorSelection, getPieceRepresentationUrls, planeToMatrix, ToThreeQuaternion, ToThreeRotation, ToSemioRotation, DesignDiff, PiecesDiff } from '@semio/js';
+import { Kit, Design, DesignId, Piece, Plane, Type, flattenDesign, DesignEditorSelection, getPieceRepresentationUrls, planeToMatrix, ToThreeQuaternion, ToThreeRotation, ToSemioRotation, DesignDiff, PiecesDiff, applyDesignDiff } from '@semio/js';
 import { PieceId, PieceDiff } from '@semio/js';
 import { DesignEditorState, DesignEditorDispatcher, DesignEditorAction } from './DesignEditor';
 import { Matrix4, Vector3, Quaternion } from 'three';
@@ -175,9 +175,23 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
         return flatDesign.pieces?.map(p => p.plane!) || [];
     }, [kit, designId]);
 
+    const effectiveDesign = useMemo(() => applyDesignDiff(design, designDiff), [design, designDiff]);
+    const tempKit = {
+        ...kit, designs: kit.designs?.map(d => {
+            if (d.name === designId.name && normalize(d.variant) === normalize(designId.variant) && normalize(d.view) === normalize(designId.view)) {
+                return effectiveDesign
+            }
+            return d
+        }) ?? []
+    }
+    const piecePlanesFromEffectiveDesign = useMemo(() => {
+        const flatDesign = flattenDesign(tempKit, designId);
+        return flatDesign.pieces?.map(p => p.plane!) || [];
+    }, [tempKit, designId]);
+
     const pieceRepresentationUrls = useMemo(() => {
-        return getPieceRepresentationUrls(design, types);
-    }, [design, types]);
+        return getPieceRepresentationUrls(effectiveDesign, types);
+    }, [effectiveDesign, types]);
 
     useEffect(() => {
         fileUrls.forEach((url, id) => {
@@ -185,7 +199,7 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
         });
     }, [fileUrls]);
 
-    design.pieces?.forEach(p => {
+    effectiveDesign.pieces?.forEach(p => {
         const type = types.find(t =>
             t.name === p.type.name &&
             normalize(t.variant) === normalize(p.type.variant)
@@ -207,8 +221,8 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
     }
 
     const pieceStatuses = useMemo(() => {
-        return design.pieces?.map(piece => getPieceStatus(piece.id_, designDiff?.pieces ?? { added: [], removed: [], updated: [] })) || [];
-    }, [design, designDiff]);
+        return effectiveDesign.pieces?.map(piece => getPieceStatus(piece.id_, designDiff?.pieces ?? { added: [], removed: [], updated: [] })) || [];
+    }, [effectiveDesign, designDiff]);
 
 
     const handleSelectionChange = useCallback((selected: THREE.Object3D[]) => {
@@ -254,11 +268,11 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
             <group
                 quaternion={new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)}
             >
-                {design.pieces?.map((piece, index) => (
+                {effectiveDesign.pieces?.map((piece, index) => (
                     <ModelPiece
                         key={`piece-${piece.id_}`}
                         piece={piece}
-                        plane={piecePlanes![index!]}
+                        plane={piecePlanesFromEffectiveDesign[index!]}
                         fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_)!)!}
                         selected={selection.selectedPieceIds.includes(piece.id_)}
                         status={pieceStatuses[index]}

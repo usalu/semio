@@ -4,7 +4,7 @@ export type {
     ConnectionId, SideId, DesignDiff, PieceDiff, PiecesDiff, ConnectionsDiff,
 } from '@semio/js/semio';
 export { ICON_WIDTH } from '@semio/js/semio';
-export { flattenDesign, getPieceRepresentationUrls, planeToMatrix, ToThreeQuaternion, ToSemioQuaternion, ToThreeRotation, ToSemioRotation } from '@semio/js/semio';
+export { flattenDesign, applyDesignDiff, getPieceRepresentationUrls, planeToMatrix, ToThreeQuaternion, ToSemioQuaternion, ToThreeRotation, ToSemioRotation } from '@semio/js/semio';
 export type { DesignEditorSelection, DesignEditorStoreState } from '@semio/js/store';
 export { default as File } from '@semio/js/components/ui/File';
 export { default as Model } from '@semio/js/components/ui/Model';

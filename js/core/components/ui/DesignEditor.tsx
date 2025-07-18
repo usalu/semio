@@ -546,7 +546,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
     fileUrls: props.fileUrls,
     fullscreenPanel: null as 'diagram' | 'model' | null,
     selection: isControlled ? props.selection : props.initialSelection || { selectedPieceIds: [], selectedConnections: [] },
-    designDiff: {},
+    designDiff: { pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } },
   };
 
   const designEditorReducer = (state: DesignEditorState, action: { type: DesignEditorAction; payload: any }): DesignEditorState => {

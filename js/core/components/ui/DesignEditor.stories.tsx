@@ -39,3 +39,22 @@ export const NakaginCapsuleTower: Story = {
     <DesignEditor {...args} fileUrls={fileUrls} />
   ),
 };
+
+export const NakaginCapsuleTowerWithDiff: Story = {
+  loaders: [
+    async () => ({
+      fileUrls: await extractFilesAndCreateUrls("metabolism.zip"),
+    }),
+  ],
+  args: {
+    initialKit: Metabolism,
+    designId: {
+      name: "Nakagin Capsule Tower"
+    },
+    designDiff: {
+
+    },
+    render: (args, { loaded: { fileUrls } }) => (
+      <DesignEditor {...args} fileUrls={fileUrls} />
+    ),
+  };
