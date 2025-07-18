@@ -1231,32 +1231,112 @@ export const flattenDesign = (kit: Kit, designId: DesignId): Design => {
     return flatDesign;
 };
 
-export const applyDesignDiff = (base: Design, diff: DesignDiff): Design => {
-    const effectivePieces: Piece[] = base.pieces
-        ? base.pieces.map((p: Piece) => {
-            const pd = diff.pieces.updated?.find((up: PieceDiff) => up.id_ === p.id_)
-            return pd ? { ...p, ...pd } : p
-        }).filter((p: Piece) => !diff.pieces.removed?.some((rp: PieceId) => rp.id_ === p.id_))
-            .concat(diff.pieces.added || [])
-        : diff.pieces.added || []
+export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean = false): Design => {
+    if (inplace) {
+        // In-place mode: include all pieces and connections with status qualities
+        const effectivePieces: Piece[] = base.pieces
+            ? base.pieces.map((p: Piece) => {
+                const pd = diff.pieces?.updated?.find((up: PieceDiff) => up.id_ === p.id_)
+                const isRemoved = diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_)
+                const baseWithUpdate = pd ? { ...p, ...pd } : p
+                
+                // Add or update semio.status quality
+                const existingQualities = baseWithUpdate.qualities || []
+                const nonStatusQualities = existingQualities.filter(q => q.name !== 'semio.status')
+                const status = isRemoved ? 'removed' : (pd ? 'modified' : 'unchanged')
+                
+                return {
+                    ...baseWithUpdate,
+                    qualities: [
+                        ...nonStatusQualities,
+                        { name: 'semio.status', value: status }
+                    ]
+                }
+            }).concat((diff.pieces?.added || []).map((p: Piece) => ({
+                ...p,
+                qualities: [
+                    ...(p.qualities || []).filter(q => q.name !== 'semio.status'),
+                    { name: 'semio.status', value: 'added' }
+                ]
+            })))
+            : (diff.pieces?.added || []).map((p: Piece) => ({
+                ...p,
+                qualities: [
+                    ...(p.qualities || []).filter(q => q.name !== 'semio.status'),
+                    { name: 'semio.status', value: 'added' }
+                ]
+            }))
 
-    const effectiveConnections: Connection[] = base.connections
-        ? base.connections.map((c: Connection) => {
-            const cd = diff.connections.updated?.find((ud: any) =>
-                ud.connected?.piece?.id_ === c.connected.piece.id_ &&
-                ud.connecting?.piece?.id_ === c.connecting.piece.id_ &&
-                (ud.connected?.port?.id_ || '') === (c.connected.port?.id_ || '') &&
-                (ud.connecting?.port?.id_ || '') === (c.connecting.port?.id_ || '')
-            )
-            return cd ? { ...c, ...cd } : c
-        }).filter((c: Connection) => !diff.connections.removed?.some((rc: ConnectionId) =>
-            rc.connected.piece.id_ === c.connected.piece.id_ &&
-            rc.connecting.piece.id_ === c.connecting.piece.id_
-        ))
-            .concat(diff.connections.added || [])
-        : diff.connections.added || []
+        const effectiveConnections: Connection[] = base.connections
+            ? base.connections.map((c: Connection) => {
+                const cd = diff.connections?.updated?.find((ud: any) =>
+                    ud.connected?.piece?.id_ === c.connected.piece.id_ &&
+                    ud.connecting?.piece?.id_ === c.connecting.piece.id_ &&
+                    (ud.connected?.port?.id_ || '') === (c.connected.port?.id_ || '') &&
+                    (ud.connecting?.port?.id_ || '') === (c.connecting.port?.id_ || '')
+                )
+                const isRemoved = diff.connections?.removed?.some((rc: ConnectionId) =>
+                    rc.connected.piece.id_ === c.connected.piece.id_ &&
+                    rc.connecting.piece.id_ === c.connecting.piece.id_
+                )
+                const baseWithUpdate = cd ? { ...c, ...cd } : c
+                
+                // Add or update semio.status quality
+                const existingQualities = baseWithUpdate.qualities || []
+                const nonStatusQualities = existingQualities.filter(q => q.name !== 'semio.status')
+                const status = isRemoved ? 'removed' : (cd ? 'modified' : 'unchanged')
+                
+                return {
+                    ...baseWithUpdate,
+                    qualities: [
+                        ...nonStatusQualities,
+                        { name: 'semio.status', value: status }
+                    ]
+                }
+            }).concat((diff.connections?.added || []).map((c: Connection) => ({
+                ...c,
+                qualities: [
+                    ...(c.qualities || []).filter(q => q.name !== 'semio.status'),
+                    { name: 'semio.status', value: 'added' }
+                ]
+            })))
+            : (diff.connections?.added || []).map((c: Connection) => ({
+                ...c,
+                qualities: [
+                    ...(c.qualities || []).filter(q => q.name !== 'semio.status'),
+                    { name: 'semio.status', value: 'added' }
+                ]
+            }))
 
-    return { ...base, pieces: effectivePieces, connections: effectiveConnections }
+        return { ...base, pieces: effectivePieces, connections: effectiveConnections }
+    } else {
+        // Original mode: filter out removed pieces and connections
+        const effectivePieces: Piece[] = base.pieces
+            ? base.pieces.map((p: Piece) => {
+                const pd = diff.pieces?.updated?.find((up: PieceDiff) => up.id_ === p.id_)
+                return pd ? { ...p, ...pd } : p
+            }).filter((p: Piece) => !diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_))
+                .concat(diff.pieces?.added || [])
+            : diff.pieces?.added || []
+
+        const effectiveConnections: Connection[] = base.connections
+            ? base.connections.map((c: Connection) => {
+                const cd = diff.connections?.updated?.find((ud: any) =>
+                    ud.connected?.piece?.id_ === c.connected.piece.id_ &&
+                    ud.connecting?.piece?.id_ === c.connecting.piece.id_ &&
+                    (ud.connected?.port?.id_ || '') === (c.connected.port?.id_ || '') &&
+                    (ud.connecting?.port?.id_ || '') === (c.connecting.port?.id_ || '')
+                )
+                return cd ? { ...c, ...cd } : c
+            }).filter((c: Connection) => !diff.connections?.removed?.some((rc: ConnectionId) =>
+                rc.connected.piece.id_ === c.connected.piece.id_ &&
+                rc.connecting.piece.id_ === c.connecting.piece.id_
+            ))
+                .concat(diff.connections?.added || [])
+            : diff.connections?.added || []
+
+        return { ...base, pieces: effectivePieces, connections: effectiveConnections }
+    }
 }
 
 const selectRepresentation = (

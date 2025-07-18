@@ -515,46 +515,45 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
   )
 }
 
+export enum FullscreenPanel {
+  None = 'none',
+  Diagram = 'diagram',
+  Model = 'model',
+}
+
 export interface DesignEditorState {
-  kit: Kit
-  designId: DesignId
-  fileUrls: Map<string, string>
-  fullscreenPanel?: 'diagram' | 'model' | null
+  kit: Kit,
+  designId: DesignId,
+  fileUrls: Map<string, string>,
+  fullscreenPanel: FullscreenPanel
   selection: DesignEditorSelection,
   designDiff: DesignDiff,
 }
 
 export enum DesignEditorAction {
-  SET_FULLSCREEN = 'SET_FULLSCREEN',
-  SET_SELECTION = 'SET_SELECTION',
   SET_DESIGN = 'SET_DESIGN',
   SET_DESIGN_DIFF = 'SET_DESIGN_DIFF',
+  SET_SELECTION = 'SET_SELECTION',
+  SET_FULLSCREEN = 'SET_FULLSCREEN',
 }
 
-export interface DesignEditorDispatcher {
-  dispatch: (action: { type: DesignEditorAction; payload: any }) => void
-}
+export type DesignEditorDispatcher = (action: { type: DesignEditorAction; payload: any }) => void
 
 const DesignEditorCore: FC<DesignEditorProps> = (props) => {
-  const { onToolbarChange, designId, fileUrls, onUndo, onRedo } = props
+  const { onToolbarChange, designId, onUndo, onRedo } = props
 
   const isControlled = props.kit !== undefined;
 
-  const initialState: DesignEditorState = {
-    kit: isControlled ? props.kit : props.initialKit,
+  const initialUncontrolledState: DesignEditorState = {
+    kit: props.initialKit!,
     designId: props.designId,
     fileUrls: props.fileUrls,
-    fullscreenPanel: null as 'diagram' | 'model' | null,
-    selection: isControlled ? props.selection : props.initialSelection || { selectedPieceIds: [], selectedConnections: [] },
-    designDiff: { pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } },
+    fullscreenPanel: FullscreenPanel.None,
+    selection: props.initialSelection || { selectedPieceIds: [], selectedConnections: [] },
+    designDiff: props.initialDesignDiff || { pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } },
   };
-
-  const designEditorReducer = (state: DesignEditorState, action: { type: DesignEditorAction; payload: any }): DesignEditorState => {
+  const uncontrolledDesignEditorReducer = (state: DesignEditorState, action: { type: DesignEditorAction; payload: any }): DesignEditorState => {
     switch (action.type) {
-      case DesignEditorAction.SET_FULLSCREEN:
-        return { ...state, fullscreenPanel: action.payload };
-      case DesignEditorAction.SET_SELECTION:
-        return { ...state, selection: action.payload };
       case DesignEditorAction.SET_DESIGN:
         const newDesign = action.payload;
         const normalize = (v?: string) => v || '';
@@ -566,26 +565,38 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
         return { ...state, kit: { ...state.kit, designs: updatedDesigns } };
       case DesignEditorAction.SET_DESIGN_DIFF:
         return { ...state, designDiff: action.payload };
+      case DesignEditorAction.SET_SELECTION:
+        return { ...state, selection: action.payload };
+      case DesignEditorAction.SET_FULLSCREEN:
+        return { ...state, fullscreenPanel: action.payload };
       default:
         return state;
     }
   };
+  const [uncontrolledState, uncontrolledDispatch] = useReducer(uncontrolledDesignEditorReducer, initialUncontrolledState);
 
-  const [state, reducerDispatch] = useReducer(designEditorReducer, initialState);
 
-  const dispatch = useCallback((action: { type: DesignEditorAction; payload: any }) => {
-    reducerDispatch(action);
-    if (isControlled) {
-      if (action.type === DesignEditorAction.SET_DESIGN) props.onDesignChange?.(action.payload);
-      if (action.type === DesignEditorAction.SET_SELECTION) props.onSelectionChange?.(action.payload);
-    }
-  }, [isControlled, props.onDesignChange, props.onSelectionChange]);
+  const controlledState = useMemo(() => {
+    return {
+      kit: props.kit!,
+      designId: props.designId,
+      fileUrls: props.fileUrls,
+      selection: props.selection,
+      designDiff: props.designDiff,
+      fullscreenPanel: FullscreenPanel.None,
+    } as DesignEditorState
+  }, [props.kit, props.designId, props.fileUrls, props.selection, props.designDiff]);
+  const controlledDispatch = useCallback((action: { type: DesignEditorAction; payload: any }) => {
+    if (action.type === DesignEditorAction.SET_DESIGN) props.onDesignChange?.(action.payload);
+    if (action.type === DesignEditorAction.SET_SELECTION) props.onSelectionChange?.(action.payload);
+  }, [props.onDesignChange, props.onSelectionChange]);
 
-  const kit = state.kit
-  const selection = state.selection
+
+  const state = isControlled ? controlledState : uncontrolledState;
+  const dispatch = isControlled ? controlledDispatch : uncontrolledDispatch;
 
   const normalize = (val: string | undefined) => (val === undefined ? '' : val)
-  const design = kit?.designs?.find(
+  const design = state.kit.designs?.find(
     (d) =>
       d.name === designId.name &&
       normalize(d.variant) === normalize(designId.variant) &&
@@ -595,18 +606,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
     return null
   }
 
-  const onDesignChange = isControlled
-    ? props.onDesignChange
-    : (design: Design) => {
-      dispatch({ type: DesignEditorAction.SET_DESIGN, payload: design })
-    }
-
-  const onSelectionChange = isControlled
-    ? props.onSelectionChange
-    : (selection: DesignEditorSelection) => {
-      dispatch({ type: DesignEditorAction.SET_SELECTION, payload: selection })
-    }
-
+  // #region Panels
   const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
     workbench: false,
     console: false,
@@ -631,7 +631,9 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
       return newState
     })
   }
+  // #endregion Panels
 
+  // #region Hotkeys
   useHotkeys('mod+j', (e) => {
     e.preventDefault()
     e.stopPropagation()
@@ -655,7 +657,12 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
 
   useHotkeys('mod+a', (e) => {
     e.preventDefault();
-    const allIds = design.pieces?.map(p => p.id_) || [];
+    const allIds = state.kit.designs?.find(
+      (d) =>
+        d.name === designId.name &&
+        normalize(d.variant) === normalize(designId.variant) &&
+        normalize(d.view) === normalize(designId.view)
+    )?.pieces?.map(p => p.id_) || [];
     dispatch({ type: DesignEditorAction.SET_SELECTION, payload: { selectedPieceIds: allIds, selectedConnections: [] } });
   });
   useHotkeys('mod+i', (e) => {
@@ -701,10 +708,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
     e.preventDefault()
     console.log('Close design')
   })
-
-  const handlePanelDoubleClick = (panel: 'diagram' | 'model') => {
-    dispatch({ type: DesignEditorAction.SET_FULLSCREEN, payload: panel })
-  }
+  // #endregion Hotkeys
 
   const rightPanelVisible = visiblePanels.details || visiblePanels.chat
 
@@ -755,7 +759,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
       const [_, name, variant] = id.split('-')
       // Normalize variants so that undefined, null and empty string are treated the same
       const normalizeVariant = (v: string | undefined | null) => (v ?? '')
-      const type = kit?.types?.find(
+      const type = state.kit?.types?.find(
         (t: Type) => t.name === name && normalizeVariant(t.variant) === normalizeVariant(variant)
       )
       setActiveDraggedType(type || null)
@@ -763,11 +767,11 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
       const [_, name, variant, view] = id.split('-')
       // Normalize variant and view similarly
       const normalize = (v: string | undefined | null) => (v ?? '')
-      const draggedDesign = kit?.designs?.find(
-        (d) =>
+      const draggedDesign = state.kit?.designs?.find(
+        (d: Design) =>
           d.name === name &&
-          normalize(d.variant) === normalize(variant) &&
-          normalize(d.view) === normalize(view)
+          normalize(d.variant) === normalize(d.variant) &&
+          normalize(d.view) === normalize(d.view)
       )
       setActiveDraggedDesign(draggedDesign || null)
     }
@@ -812,24 +816,24 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
         <div id="sketchpad-edgeless" className="h-full">
           <ResizablePanelGroup direction="horizontal">
             <ResizablePanel
-              defaultSize={state.fullscreenPanel === 'diagram' ? 100 : 50}
-              className={`${state.fullscreenPanel === 'model' ? 'hidden' : 'block'}`}
-              onDoubleClick={() => handlePanelDoubleClick('diagram')}
+              defaultSize={state.fullscreenPanel === FullscreenPanel.Diagram ? 100 : 50}
+              className={`${state.fullscreenPanel === FullscreenPanel.Model ? 'hidden' : 'block'}`}
+              onDoubleClick={() => dispatch({ type: DesignEditorAction.SET_FULLSCREEN, payload: FullscreenPanel.Diagram })}
             >
               <Diagram
                 designEditorState={state}
-                designEditorDispatcher={{ dispatch }}
+                designEditorDispatcher={dispatch}
               />
             </ResizablePanel>
-            <ResizableHandle className={`border-r ${state.fullscreenPanel !== null ? 'hidden' : 'block'}`} />
+            <ResizableHandle className={`border-r ${state.fullscreenPanel !== FullscreenPanel.None ? 'hidden' : 'block'}`} />
             <ResizablePanel
-              defaultSize={state.fullscreenPanel === 'model' ? 100 : 50}
-              className={`${state.fullscreenPanel === 'diagram' ? 'hidden' : 'block'}`}
-              onDoubleClick={() => handlePanelDoubleClick('model')}
+              defaultSize={state.fullscreenPanel === FullscreenPanel.Model ? 100 : 50}
+              className={`${state.fullscreenPanel === FullscreenPanel.Diagram ? 'hidden' : 'block'}`}
+              onDoubleClick={() => dispatch({ type: DesignEditorAction.SET_FULLSCREEN, payload: FullscreenPanel.Model })}
             >
               <Model
                 designEditorState={state}
-                designEditorDispatcher={{ dispatch }}
+                designEditorDispatcher={dispatch}
               />
             </ResizablePanel>
           </ResizablePanelGroup>
@@ -838,7 +842,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
           visible={visiblePanels.workbench}
           onWidthChange={setWorkbenchWidth}
           width={workbenchWidth}
-          kit={kit!}
+          kit={state.kit!}
         />
         <Details visible={visiblePanels.details} onWidthChange={setDetailsWidth} width={detailsWidth} />
         <Console
@@ -865,23 +869,24 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
 
 interface ControlledDesignEditorProps {
   kit: Kit
-  designId: DesignId
-  fileUrls: Map<string, string>
   selection: DesignEditorSelection
+  designDiff: DesignDiff
   onDesignChange: (design: Design) => void
+  onDesignDiffChange: (designDiff: DesignDiff) => void
   onSelectionChange: (selection: DesignEditorSelection) => void
-  onUndo?: () => void
-  onRedo?: () => void
+  onUndo: () => void
+  onRedo: () => void
 }
 
 interface UncontrolledDesignEditorProps {
   initialKit: Kit
-  designId: DesignId
-  fileUrls: Map<string, string>
+  initialDesignDiff: DesignDiff
   initialSelection?: DesignEditorSelection
 }
 
 interface DesignEditorProps extends ControlledDesignEditorProps, UncontrolledDesignEditorProps {
+  designId: DesignId
+  fileUrls: Map<string, string>
   onToolbarChange: (toolbar: ReactNode) => void
   mode?: Mode
   layout?: Layout
@@ -902,13 +907,16 @@ const DesignEditor: FC<DesignEditorProps> = ({
   setLayout,
   setTheme,
   onWindowEvents,
-  initialKit,
-  kit,
   designId,
-  initialSelection,
+  kit,
+  designDiff,
   selection,
+  initialKit,
+  initialDesignDiff,
+  initialSelection,
   fileUrls,
   onDesignChange,
+  onDesignDiffChange,
   onSelectionChange,
   onUndo,
   onRedo
@@ -931,10 +939,13 @@ const DesignEditor: FC<DesignEditorProps> = ({
           kit={kit}
           designId={designId}
           fileUrls={fileUrls}
+          designDiff={designDiff}
           selection={selection}
           initialKit={initialKit}
+          initialDesignDiff={initialDesignDiff}
           initialSelection={initialSelection}
           onDesignChange={onDesignChange!}
+          onDesignDiffChange={onDesignDiffChange!}
           onSelectionChange={onSelectionChange!}
           onUndo={onUndo}
           onRedo={onRedo}

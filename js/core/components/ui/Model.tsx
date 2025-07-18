@@ -76,7 +76,7 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, upda
 
     const styledScene = useMemo(() => {
         if (status === 'added') return applyMaterial(baseScene.clone(), 'green');
-        if (status === 'removed') return applyMaterial(baseScene.clone(), 'red', 0.5);
+        if (status === 'removed') return applyMaterial(baseScene.clone(), 'red', 0.2);
         if (status === 'modified') return applyMaterial(baseScene.clone(), 'yellow');
         if (selected) return applyMaterial(baseScene.clone(), getComputedColor('--color-primary'));
         if (updating) return applyMaterial(baseScene.clone(), getComputedColor('--color-foreground'), 0.1);
@@ -175,7 +175,9 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
         return flatDesign.pieces?.map(p => p.plane!) || [];
     }, [kit, designId]);
 
-    const effectiveDesign = useMemo(() => applyDesignDiff(design, designDiff), [design, designDiff]);
+    // Use inplace mode to get all pieces including removed ones with status qualities
+    const effectiveDesign = useMemo(() => applyDesignDiff(design, designDiff, true), [design, designDiff]);
+    
     const tempKit = {
         ...kit, designs: kit.designs?.map(d => {
             if (d.name === designId.name && normalize(d.variant) === normalize(designId.variant) && normalize(d.view) === normalize(designId.view)) {
@@ -213,16 +215,14 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
         });
     }, [pieceRepresentationUrls, fileUrls]);
 
-    function getPieceStatus(id: string, piecesDiff: PiecesDiff): 'added' | 'removed' | 'modified' | 'unchanged' {
-        if (piecesDiff.added?.some((p: Piece) => p.id_ === id)) return 'added';
-        if (piecesDiff.removed?.some((pid: PieceId) => pid.id_ === id)) return 'removed';
-        if (piecesDiff.updated?.some((pd: PieceDiff) => pd.id_ === id)) return 'modified';
-        return 'unchanged';
+    function getPieceStatusFromQuality(piece: Piece): 'added' | 'removed' | 'modified' | 'unchanged' {
+        const statusQuality = piece.qualities?.find(q => q.name === 'semio.status');
+        return (statusQuality?.value as 'added' | 'removed' | 'modified' | 'unchanged') || 'unchanged';
     }
 
     const pieceStatuses = useMemo(() => {
-        return effectiveDesign.pieces?.map(piece => getPieceStatus(piece.id_, designDiff?.pieces ?? { added: [], removed: [], updated: [] })) || [];
-    }, [effectiveDesign, designDiff]);
+        return effectiveDesign.pieces?.map(piece => getPieceStatusFromQuality(piece)) || [];
+    }, [effectiveDesign]);
 
 
     const handleSelectionChange = useCallback((selected: THREE.Object3D[]) => {
@@ -232,7 +232,7 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
             newSelectedPieceIds.length !== selection.selectedPieceIds.length ||
             newSelectedPieceIds.some((id, index) => id !== selection.selectedPieceIds[index])) {
 
-            designEditorDispatcher.dispatch({
+            designEditorDispatcher({
                 type: DesignEditorAction.SET_SELECTION,
                 payload: {
                     ...selection,
@@ -244,7 +244,7 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
 
     const handlePieceSelect = useCallback((piece: Piece) => {
         if (selection.selectedPieceIds.includes(piece.id_)) {
-            designEditorDispatcher.dispatch({
+            designEditorDispatcher({
                 type: DesignEditorAction.SET_SELECTION,
                 payload: {
                     ...selection,
@@ -252,7 +252,7 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
                 }
             });
         } else {
-            designEditorDispatcher.dispatch({
+            designEditorDispatcher({
                 type: DesignEditorAction.SET_SELECTION,
                 payload: {
                     ...selection,
@@ -333,11 +333,11 @@ const Model: FC<ModelProps> = ({ designEditorState, designEditorDispatcher }) =>
 
     const handleDoubleClick = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
-        designEditorDispatcher.dispatch({ type: DesignEditorAction.SET_FULLSCREEN, payload: designEditorState.fullscreenPanel === 'model' ? null : 'model' });
+        designEditorDispatcher({ type: DesignEditorAction.SET_FULLSCREEN, payload: designEditorState.fullscreenPanel === 'model' ? null : 'model' });
     }, [designEditorState.fullscreenPanel, designEditorDispatcher]);
 
     const handlePointerMissed = useCallback(() => {
-        designEditorDispatcher.dispatch({
+        designEditorDispatcher({
             type: DesignEditorAction.SET_SELECTION,
             payload: {
                 selectedPieceIds: [],
@@ -346,12 +346,7 @@ const Model: FC<ModelProps> = ({ designEditorState, designEditorDispatcher }) =>
         });
     }, [designEditorDispatcher]);
 
-    const { kit, designId, fileUrls, selection } = designEditorState;
     const fullscreen = designEditorState.fullscreenPanel === 'model';
-
-    const onDesignChange = (design: Design) => designEditorDispatcher.dispatch({ type: DesignEditorAction.SET_DESIGN, payload: design });
-    const onSelectionChange = (sel: DesignEditorSelection) => designEditorDispatcher.dispatch({ type: DesignEditorAction.SET_SELECTION, payload: sel });
-    const onPanelDoubleClick = () => designEditorDispatcher.dispatch({ type: DesignEditorAction.SET_FULLSCREEN, payload: designEditorState.fullscreenPanel === 'model' ? null : 'model' });
 
     return (
         <div id="model" className="w-full h-full">
