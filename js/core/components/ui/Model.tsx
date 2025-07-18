@@ -127,12 +127,8 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, upda
 };
 
 interface ModelDesignProps {
-    kit: Kit;
-    designId: DesignId;
-    fileUrls: Map<string, string>;
-    selection: DesignEditorSelection;
-    onDesignChange: (design: Design) => void;
-    onSelectionChange: (selection: DesignEditorSelection) => void;
+    designEditorState: DesignEditorState
+    designEditorDispatcher: DesignEditorDispatcher
 }
 
 const ModelDesign: FC<ModelDesignProps> = ({ kit, designId, fileUrls, selection, onSelectionChange, onDesignChange }) => {

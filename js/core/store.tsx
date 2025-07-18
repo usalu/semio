@@ -1647,7 +1647,7 @@ export interface DesignEditorSelection {
     }[];
 }
 
-export interface DesignEditorState {
+export interface DesignEditorStoreState {
     selection: DesignEditorSelection;
 }
 
@@ -1658,7 +1658,7 @@ class DesignEditorStore {
     private yKit: Y.Map<any>;
     private yDesign: Y.Map<any>;
     private undoManager: UndoManager;
-    private state: DesignEditorState;
+    private state: DesignEditorStoreState;
     private listeners: Set<() => void> = new Set();
 
     constructor(studioStore: StudioStore, id: string, yDoc: Y.Doc, yKit: Y.Map<any>, yDesign: Y.Map<any>) {
@@ -1677,11 +1677,11 @@ class DesignEditorStore {
         };
     }
 
-    getState(): DesignEditorState {
+    getState(): DesignEditorStoreState {
         return this.state;
     }
 
-    setState(state: DesignEditorState): void {
+    setState(state: DesignEditorStoreState): void {
         this.state = state;
         this.listeners.forEach(listener => listener());
     }

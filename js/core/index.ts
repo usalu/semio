@@ -3,11 +3,14 @@ export type {
     Author, Side, DiagramPoint, Plane, Point, Vector, PieceId, PortId, TypeId, DesignId, KitId,
     ConnectionId, SideId, DesignDiff, PieceDiff, ConnectionsDiff,
 } from '@semio/js/semio';
+export { ICON_WIDTH } from '@semio/js/semio';
 export { flattenDesign, getPieceRepresentationUrls, planeToMatrix, ToThreeQuaternion, ToSemioQuaternion, ToThreeRotation, ToSemioRotation } from '@semio/js/semio';
-export type { DesignEditorSelection, DesignEditorState } from '@semio/js/store';
+export type { DesignEditorSelection, DesignEditorStoreState } from '@semio/js/store';
 export { default as File } from '@semio/js/components/ui/File';
 export { default as Model } from '@semio/js/components/ui/Model';
 export { default as Diagram } from '@semio/js/components/ui/Diagram';
+export type { DesignEditorState, DesignEditorDispatcher } from '@semio/js/components/ui/DesignEditor';
+export { default as DesignEditor } from '@semio/js/components/ui/DesignEditor';
 export { default as Sketchpad, Mode, Theme, Layout } from '@semio/js/components/ui/Sketchpad';
 export { default as GrasshopperCatalogue } from '@semio/js/components/ui/GrasshopperCatalogue';
 export { default as eslintConfig } from '@semio/js/eslint.config';

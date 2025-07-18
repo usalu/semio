@@ -27,7 +27,7 @@ import { Connection, Design, DesignId, flattenDesign, ICON_WIDTH, Kit, Piece, Po
 // import '@xyflow/react/dist/base.css';
 import '@xyflow/react/dist/style.css'
 import '@semio/js/globals.css'
-import { DesignEditorSelection } from '../..'
+import { DesignEditorSelection, DesignEditorState } from '../..'
 
 //#region Data Mapping
 
@@ -270,14 +270,8 @@ const Diagram: FC<DiagramProps> = ({
 }
 
 interface DiagramProps {
-  kit: Kit
-  designId: DesignId
-  fileUrls: Map<string, string>
-  fullscreen?: boolean
-  selection: DesignEditorSelection
-  onDesignChange?: (design: Design) => void
-  onSelectionChange: (selection: DesignEditorSelection) => void
-  onPanelDoubleClick?: () => void
+  designEditorState: DesignEditorState
+  designEditorDispatcher: DesignEditorDispatcher
 }
 
 export default Diagram

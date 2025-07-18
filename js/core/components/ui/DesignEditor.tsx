@@ -6,8 +6,7 @@ import { Wrench, Terminal, Info, MessageCircle, ChevronDown, ChevronRight, Folde
 import { ReactFlowProvider, useReactFlow } from '@xyflow/react'
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@semio/js/components/ui/Resizable'
-import { Design, Type, Piece, flattenDesign, getPieceRepresentationUrls, Kit, DesignId } from '@semio/js'
-import { ICON_WIDTH } from '@semio/js/semio'
+import { Design, Type, Piece, Kit, DesignId, DesignDiff, ICON_WIDTH } from '@semio/js'
 import { Avatar, AvatarFallback, AvatarImage } from '@semio/js/components/ui/Avatar'
 import { default as Diagram } from '@semio/js/components/ui/Diagram'
 import { default as Model } from '@semio/js/components/ui/Model'
@@ -516,6 +515,26 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
   )
 }
 
+export interface DesignEditorState {
+  kit: Kit
+  designId: DesignId
+  fileUrls: Map<string, string>
+  fullscreen?: boolean
+  selection: DesignEditorSelection,
+  designDiff: DesignDiff,
+}
+
+export enum DesignEditorAction {
+  SET_FULLSCREEN = 'SET_FULLSCREEN',
+  SET_SELECTION = 'SET_SELECTION',
+  SET_DESIGN = 'SET_DESIGN',
+  SET_DESIGN_DIFF = 'SET_DESIGN_DIFF',
+}
+
+export interface DesignEditorDispatcher {
+  dispatch: (action: DesignEditorAction) => void
+}
+
 const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   const { onToolbarChange, designId, fileUrls, onUndo, onRedo } = props
 
@@ -778,14 +797,8 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
               onDoubleClick={() => handlePanelDoubleClick('diagram')}
             >
               <Diagram
-                kit={kit!}
-                designId={designId}
-                fileUrls={fileUrls}
-                selection={selection}
-                fullscreen={fullscreenPanel === 'diagram'}
-                onDesignChange={onDesignChange}
-                onSelectionChange={onSelectionChange}
-                onPanelDoubleClick={() => handlePanelDoubleClick('diagram')}
+                designEditorState={designEditorState}
+                designEditorDispatcher={designEditorDispatcher}
               />
             </ResizablePanel>
             <ResizableHandle className={`border-r ${fullscreenPanel !== null ? 'hidden' : 'block'}`} />
@@ -795,14 +808,8 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
               onDoubleClick={() => handlePanelDoubleClick('model')}
             >
               <Model
-                kit={kit!}
-                designId={designId}
-                fileUrls={fileUrls}
-                selection={selection}
-                fullscreen={fullscreenPanel === 'model'}
-                onDesignChange={onDesignChange}
-                onSelectionChange={onSelectionChange}
-                onPanelDoubleClick={() => handlePanelDoubleClick('model')}
+                designEditorState={designEditorState}
+                designEditorDispatcher={designEditorDispatcher}
               />
             </ResizablePanel>
           </ResizablePanelGroup>
