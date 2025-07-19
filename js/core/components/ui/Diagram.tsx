@@ -22,8 +22,8 @@ import {
 } from '@xyflow/react'
 import { useDroppable } from '@dnd-kit/core'
 
-import { Connection, Design, DesignId, flattenDesign, ICON_WIDTH, Kit, Port, Type } from '@semio/js/semio'
-import { DesignDiff, PiecesDiff, ConnectionsDiff, ConnectionId, Piece, PieceId, PieceDiff, applyDesignDiff } from '@semio/js';
+import { Connection, Design, DesignId, flattenDesign, ICON_WIDTH, Kit, Port, Type, Status } from '@semio/js/semio'
+import { DesignDiff, PiecesDiff, ConnectionsDiff, ConnectionId, Piece, PieceId, PieceDiff, applyDesignDiff } from '@semio/js/semio';
 
 // import '@xyflow/react/dist/base.css';
 import '@xyflow/react/dist/style.css'
@@ -32,14 +32,14 @@ import { DesignEditorSelection, DesignEditorState, DesignEditorDispatcher, Desig
 
 //#region Data Mapping
 
-function getPieceStatusFromQuality(piece: Piece): 'added' | 'removed' | 'modified' | 'unchanged' {
+function getPieceStatusFromQuality(piece: Piece): Status {
   const statusQuality = piece.qualities?.find(q => q.name === 'semio.status');
-  return (statusQuality?.value as 'added' | 'removed' | 'modified' | 'unchanged') || 'unchanged';
+  return (statusQuality?.value as Status) || Status.Unchanged;
 }
 
-function getConnectionStatusFromQuality(conn: Connection): 'added' | 'removed' | 'modified' | 'unchanged' {
+function getConnectionStatusFromQuality(conn: Connection): Status {
   const statusQuality = conn.qualities?.find(q => q.name === 'semio.status');
-  return (statusQuality?.value as 'added' | 'removed' | 'modified' | 'unchanged') || 'unchanged';
+  return (statusQuality?.value as Status) || Status.Unchanged;
 }
 
 function mapDesignToNodesAndEdges({
@@ -98,7 +98,7 @@ function mapDesignToNodesAndEdges({
   return { nodes: pieceNodes, edges: connectionEdges }
 }
 
-const pieceToNode = (piece: Piece, type: Type, selected: boolean, status: 'added' | 'removed' | 'modified' | 'unchanged'): PieceNode => ({
+const pieceToNode = (piece: Piece, type: Type, selected: boolean, status: Status): PieceNode => ({
   type: 'piece',
   id: piece.id_,
   position: {
@@ -109,7 +109,7 @@ const pieceToNode = (piece: Piece, type: Type, selected: boolean, status: 'added
   data: { piece, type, isBeingDragged: false, isIntermediate: false, status }
 })
 
-const connectionToEdge = (connection: Connection, selected: boolean, status: 'added' | 'removed' | 'modified' | 'unchanged'): ConnectionEdge => ({
+const connectionToEdge = (connection: Connection, selected: boolean, status: Status): ConnectionEdge => ({
   type: 'connection',
   id: `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`,
   source: connection.connecting.piece.id_,
@@ -780,13 +780,13 @@ type PieceNodeProps = {
   type: Type
   isBeingDragged: boolean
   isIntermediate: boolean
-  status: 'added' | 'removed' | 'modified' | 'unchanged'
+  status: Status
 }
 
 type PieceNode = Node<PieceNodeProps, 'piece'>
 type DiagramNode = PieceNode
 
-type ConnectionEdge = Edge<{ connection: Connection; status: 'added' | 'removed' | 'modified' | 'unchanged' }, 'connection'>
+type ConnectionEdge = Edge<{ connection: Connection; status: Status }, 'connection'>
 type DiagramEdge = ConnectionEdge
 
 type PortHandleProps = { port: Port }
@@ -822,20 +822,20 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
     type: { ports },
     isBeingDragged,
     isIntermediate,
-    status // Add status prop
-  } = data as PieceNodeProps & { status: 'added' | 'removed' | 'modified' | 'unchanged' };
+    status
+  } = data as PieceNodeProps;
 
   let fillClass = '';
   let strokeClass = 'stroke-foreground';
   let opacity = isBeingDragged ? 0.5 : 1;
 
-  if (status === 'added') {
+  if (status === Status.Added) {
     fillClass = selected ? 'fill-green-600' : 'fill-green-400';
-  } else if (status === 'removed') {
+  } else if (status === Status.Removed) {
     fillClass = 'fill-red-400';
     strokeClass = 'stroke-red-600';
     opacity *= 0.5; // transparent
-  } else if (status === 'modified') {
+  } else if (status === Status.Modified) {
     fillClass = selected ? 'fill-yellow-600' : 'fill-yellow-400';
   } else {
     fillClass = selected ? 'fill-primary' : 'fill-transparent';
@@ -881,20 +881,20 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
   const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`;
 
   const isIntermediate = id?.startsWith('intermediate-edge');
-  const status = data?.status || 'unchanged';
+  const status = data?.status || Status.Unchanged;
 
   let stroke = isIntermediate ? 'var(--primary)' : 'var(--foreground)';
   let dasharray = isIntermediate ? '5 5' : undefined;
   let opacity = 1;
 
-  if (status === 'added') {
+  if (status === Status.Added) {
     stroke = 'green';
     dasharray = '5 5';
-  } else if (status === 'removed') {
+  } else if (status === Status.Removed) {
     stroke = 'red';
     opacity = 0.5;
     dasharray = '5 5';
-  } else if (status === 'modified') {
+  } else if (status === Status.Modified) {
     stroke = 'yellow';
   }
 

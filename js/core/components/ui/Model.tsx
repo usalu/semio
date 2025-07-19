@@ -2,7 +2,8 @@ import React, { FC, JSX, Suspense, useMemo, useEffect, useState, useRef, useCall
 import { Canvas, ThreeEvent, useLoader } from '@react-three/fiber';
 import { Center, Environment, GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, Select, Sphere, Stage, TransformControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { Kit, Design, DesignId, Piece, Plane, Type, flattenDesign, DesignEditorSelection, getPieceRepresentationUrls, planeToMatrix, ToThreeQuaternion, ToThreeRotation, ToSemioRotation, DesignDiff, PiecesDiff, applyDesignDiff } from '@semio/js';
+import { Kit, Design, DesignId, Piece, Plane, Type, flattenDesign, getPieceRepresentationUrls, planeToMatrix, ToThreeQuaternion, ToThreeRotation, ToSemioRotation, DesignDiff, PiecesDiff, applyDesignDiff, Status } from '@semio/js/semio';
+import { DesignEditorSelection } from '@semio/js/store';
 import { PieceId, PieceDiff } from '@semio/js';
 import { DesignEditorState, DesignEditorDispatcher, DesignEditorAction } from './DesignEditor';
 import { Matrix4, Vector3, Quaternion } from 'three';
@@ -33,11 +34,11 @@ interface ModelPieceProps {
     fileUrl: string;
     selected?: boolean;
     updating?: boolean;
-    status?: 'added' | 'removed' | 'modified' | 'unchanged';
+    status?: Status;
     onSelect: (piece: Piece) => void
 }
 
-const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, updating, status = 'unchanged', onSelect }) => {
+const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, updating, status = Status.Unchanged, onSelect }) => {
     const fixed = piece.plane !== undefined;
     const matrix = useMemo(() => {
         // const threeToSemioRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
@@ -75,9 +76,9 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, upda
     };
 
     const styledScene = useMemo(() => {
-        if (status === 'added') return applyMaterial(baseScene.clone(), 'green');
-        if (status === 'removed') return applyMaterial(baseScene.clone(), 'red', 0.2);
-        if (status === 'modified') return applyMaterial(baseScene.clone(), 'yellow');
+        if (status === Status.Added) return applyMaterial(baseScene.clone(), 'green');
+        if (status === Status.Removed) return applyMaterial(baseScene.clone(), 'red', 0.2);
+        if (status === Status.Modified) return applyMaterial(baseScene.clone(), 'yellow');
         if (selected) return applyMaterial(baseScene.clone(), getComputedColor('--color-primary'));
         if (updating) return applyMaterial(baseScene.clone(), getComputedColor('--color-foreground'), 0.1);
         return baseScene.clone();
@@ -215,9 +216,9 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
         });
     }, [pieceRepresentationUrls, fileUrls]);
 
-    function getPieceStatusFromQuality(piece: Piece): 'added' | 'removed' | 'modified' | 'unchanged' {
+    function getPieceStatusFromQuality(piece: Piece): Status {
         const statusQuality = piece.qualities?.find(q => q.name === 'semio.status');
-        return (statusQuality?.value as 'added' | 'removed' | 'modified' | 'unchanged') || 'unchanged';
+        return (statusQuality?.value as Status) || Status.Unchanged;
     }
 
     const pieceStatuses = useMemo(() => {

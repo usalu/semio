@@ -24,6 +24,7 @@ import { Input } from '@semio/js/components/ui/Input'
 import { Slider } from '@semio/js/components/ui/Slider'
 import { default as Navbar } from '@semio/js/components/ui/Navbar'
 
+
 // Type for panel visibility toggles
 interface PanelToggles {
   workbench: boolean

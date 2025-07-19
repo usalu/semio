@@ -3,6 +3,7 @@ import * as THREE from "three";
 
 import { jaccard } from "@semio/js/lib/utils";
 import { normalize } from "path";
+
 // TODOs
 // Update to latest schema and unify docstrings
 
@@ -20,6 +21,13 @@ import { normalize } from "path";
 
 export const ICON_WIDTH = 50;
 export const TOLERANCE = 1e-5;
+
+export enum Status {
+    Unchanged = 'unchanged',
+    Added = 'added',
+    Removed = 'removed',
+    Modified = 'modified'
+}
 
 // ↗️ Represents a Kit, the top-level container for types and designs.
 export type Kit = {
@@ -1239,12 +1247,12 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
                 const pd = diff.pieces?.updated?.find((up: PieceDiff) => up.id_ === p.id_)
                 const isRemoved = diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_)
                 const baseWithUpdate = pd ? { ...p, ...pd } : p
-                
+
                 // Add or update semio.status quality
                 const existingQualities = baseWithUpdate.qualities || []
                 const nonStatusQualities = existingQualities.filter(q => q.name !== 'semio.status')
-                const status = isRemoved ? 'removed' : (pd ? 'modified' : 'unchanged')
-                
+                const status = isRemoved ? Status.Removed : (pd ? Status.Modified : Status.Unchanged)
+
                 return {
                     ...baseWithUpdate,
                     qualities: [
@@ -1256,14 +1264,14 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
                 ...p,
                 qualities: [
                     ...(p.qualities || []).filter(q => q.name !== 'semio.status'),
-                    { name: 'semio.status', value: 'added' }
+                    { name: 'semio.status', value: Status.Added }
                 ]
             })))
             : (diff.pieces?.added || []).map((p: Piece) => ({
                 ...p,
                 qualities: [
                     ...(p.qualities || []).filter(q => q.name !== 'semio.status'),
-                    { name: 'semio.status', value: 'added' }
+                    { name: 'semio.status', value: Status.Added }
                 ]
             }))
 
@@ -1280,12 +1288,12 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
                     rc.connecting.piece.id_ === c.connecting.piece.id_
                 )
                 const baseWithUpdate = cd ? { ...c, ...cd } : c
-                
+
                 // Add or update semio.status quality
                 const existingQualities = baseWithUpdate.qualities || []
                 const nonStatusQualities = existingQualities.filter(q => q.name !== 'semio.status')
-                const status = isRemoved ? 'removed' : (cd ? 'modified' : 'unchanged')
-                
+                const status = isRemoved ? Status.Removed : (cd ? Status.Modified : Status.Unchanged)
+
                 return {
                     ...baseWithUpdate,
                     qualities: [
@@ -1297,14 +1305,14 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
                 ...c,
                 qualities: [
                     ...(c.qualities || []).filter(q => q.name !== 'semio.status'),
-                    { name: 'semio.status', value: 'added' }
+                    { name: 'semio.status', value: Status.Added }
                 ]
             })))
             : (diff.connections?.added || []).map((c: Connection) => ({
                 ...c,
                 qualities: [
                     ...(c.qualities || []).filter(q => q.name !== 'semio.status'),
-                    { name: 'semio.status', value: 'added' }
+                    { name: 'semio.status', value: Status.Added }
                 ]
             }))
 
