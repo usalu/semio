@@ -1,139 +1,68 @@
-import React, { FC, useCallback, useMemo, useState } from 'react'
+import { useDroppable } from '@dnd-kit/core'
 import {
   BaseEdge,
+  ConnectionLineComponentProps,
   ConnectionMode,
   Controls,
   Edge,
   EdgeProps,
   Handle,
+  InternalNode,
   MiniMap,
   MiniMapNodeProps,
   Node,
   NodeProps,
   Position,
   ReactFlow,
+  ReactFlowInstance,
+  Connection as RFConnection,
   useReactFlow,
   ViewportPortal,
-  XYPosition,
-  InternalNode,
-  ReactFlowInstance,
-  ConnectionLineComponentProps,
-  Connection as RFConnection
+  XYPosition
 } from '@xyflow/react'
-import { useDroppable } from '@dnd-kit/core'
+import React, { FC, useCallback, useMemo, useState } from 'react'
 
-import { Connection, Design, DesignId, flattenDesign, ICON_WIDTH, Kit, Port, Type } from '@semio/js/semio'
-import { DesignDiff, PiecesDiff, ConnectionsDiff, ConnectionId, Piece, PieceId, PieceDiff, applyDesignDiff } from '@semio/js';
+import {
+  applyDesignDiff,
+  Connection,
+  Design,
+  DesignDiff,
+  DesignId,
+  flattenDesign,
+  getDesign,
+  ICON_WIDTH,
+  Kit,
+  Piece,
+  Port,
+  Type
+} from '@semio/js'
 
 // import '@xyflow/react/dist/base.css';
-import '@xyflow/react/dist/style.css'
 import '@semio/js/globals.css'
-import { DesignEditorSelection, DesignEditorState, DesignEditorDispatcher, DesignEditorAction } from '../..'
-
-//#region Data Mapping
-
-function getPieceStatusFromQuality(piece: Piece): 'added' | 'removed' | 'modified' | 'unchanged' {
-  const statusQuality = piece.qualities?.find(q => q.name === 'semio.status');
-  return (statusQuality?.value as 'added' | 'removed' | 'modified' | 'unchanged') || 'unchanged';
-}
-
-function getConnectionStatusFromQuality(conn: Connection): 'added' | 'removed' | 'modified' | 'unchanged' {
-  const statusQuality = conn.qualities?.find(q => q.name === 'semio.status');
-  return (statusQuality?.value as 'added' | 'removed' | 'modified' | 'unchanged') || 'unchanged';
-}
-
-function mapDesignToNodesAndEdges({
-  kit,
-  designId,
-  selection,
-  designDiff
-}: {
-  kit: Kit
-  designId: DesignId
-  selection?: DesignEditorSelection
-  designDiff: DesignDiff
-}): { nodes: PieceNode[]; edges: ConnectionEdge[] } | null {
-  const types = kit?.types ?? []
-  const normalize = (value: string | undefined) => (value === undefined ? '' : value)
-  const design = kit.designs?.find(
-    (design) =>
-      design.name === designId.name &&
-      normalize(design.variant) === normalize(designId.variant) &&
-      normalize(design.view) === normalize(designId.view)
-  )
-  if (!design) return null
-  const effectiveDesign = applyDesignDiff(design, designDiff, true)
-  const tempKit = {
-    ...kit, designs: kit.designs!.map((d: Design) => {
-      if (d.name === designId.name && normalize(d.variant) === normalize(designId.variant) && normalize(d.view) === normalize(designId.view)) {
-        return effectiveDesign
-      }
-      return d
-    })
-  }
-  const flatDesign = flattenDesign(tempKit, designId)
-  const pieceNodes =
-    flatDesign!.pieces?.map((flatPiece) => {
-      const type = types.find((t) => t.name === flatPiece.type.name && (t.variant ?? '') === (flatPiece.type.variant ?? ''))
-      const pieceStatus = getPieceStatusFromQuality(flatPiece);
-      return pieceToNode(
-        flatPiece,
-        type!,
-        selection?.selectedPieceIds.includes(flatPiece.id_) ?? false,
-        pieceStatus
-      )
-    }) ?? []
-  const connectionEdges = effectiveDesign.connections?.map((connection) => {
-    const connStatus = getConnectionStatusFromQuality(connection);
-    return connectionToEdge(
-      connection,
-      selection?.selectedConnections.some(
-        (c) =>
-          c.connectingPieceId === connection.connecting.piece.id_ &&
-          c.connectedPieceId === connection.connected.piece.id_
-      ) ?? false,
-      connStatus
-    )
-  }) ?? []
-  return { nodes: pieceNodes, edges: connectionEdges }
-}
-
-const pieceToNode = (piece: Piece, type: Type, selected: boolean, status: 'added' | 'removed' | 'modified' | 'unchanged'): PieceNode => ({
-  type: 'piece',
-  id: piece.id_,
-  position: {
-    x: piece.center!.x * ICON_WIDTH || 0,
-    y: -piece.center!.y * ICON_WIDTH || 0
-  },
-  selected,
-  data: { piece, type, isBeingDragged: false, isIntermediate: false, status }
-})
-
-const connectionToEdge = (connection: Connection, selected: boolean, status: 'added' | 'removed' | 'modified' | 'unchanged'): ConnectionEdge => ({
-  type: 'connection',
-  id: `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`,
-  source: connection.connecting.piece.id_,
-  sourceHandle: connection.connecting.port.id_,
-  target: connection.connected.piece.id_,
-  targetHandle: connection.connected.port.id_,
-  data: { connection, status }
-})
-
-//#endregion
+import '@xyflow/react/dist/style.css'
+import { DesignEditorAction, DesignEditorDispatcher, DesignEditorSelection, DesignEditorState } from '../..'
 
 //#region Diagram Component
 
-const Diagram: FC<{ designEditorState: DesignEditorState, designEditorDispatcher: DesignEditorDispatcher }> = ({ designEditorState, designEditorDispatcher }) => {
+const Diagram: FC<{ designEditorState: DesignEditorState; designEditorDispatcher: DesignEditorDispatcher }> = ({
+  designEditorState,
+  designEditorDispatcher
+}) => {
+  const { kit, designId, selection, fullscreenPanel, designDiff } = designEditorState // fullscreen is fullscreenPanel === 'diagram'
 
-  const { kit, designId, selection, fullscreenPanel, designDiff } = designEditorState; // fullscreen is fullscreenPanel === 'diagram'
+  const onDesignChange = (design: Design) =>
+    designEditorDispatcher({ type: DesignEditorAction.SetDesign, payload: design })
 
-  const onDesignChange = (design: Design) => designEditorDispatcher({ type: DesignEditorAction.SET_DESIGN, payload: design });
+  const onSelectionChange = (sel: DesignEditorSelection) =>
+    designEditorDispatcher({ type: DesignEditorAction.SetSelection, payload: sel })
 
-  const onSelectionChange = (sel: DesignEditorSelection) => designEditorDispatcher({ type: DesignEditorAction.SET_SELECTION, payload: sel });
+  const onPanelDoubleClick = () =>
+    designEditorDispatcher({
+      type: DesignEditorAction.SetFullscreen,
+      payload: fullscreenPanel === 'diagram' ? null : 'diagram'
+    })
 
-  const onPanelDoubleClick = () => designEditorDispatcher({ type: DesignEditorAction.SET_FULLSCREEN, payload: fullscreenPanel === 'diagram' ? null : 'diagram' })
-
-  const fullscreen = fullscreenPanel === 'diagram';
+  const fullscreen = fullscreenPanel === 'diagram'
 
   if (!kit) return null // Prevents error if kit is undefined
   // Mapping the semio design to react flow nodes and edges
@@ -161,87 +90,83 @@ const Diagram: FC<{ designEditorState: DesignEditorState, designEditorDispatcher
 
   const reactFlowInstance = useReactFlow()
 
-  const onConnect = useCallback((params: RFConnection) => {
-    if (params.source === params.target) return
+  const onConnect = useCallback(
+    (params: RFConnection) => {
+      if (params.source === params.target) return
 
-    const sourceInternal = reactFlowInstance.getInternalNode(params.source)
-    const targetInternal = reactFlowInstance.getInternalNode(params.target)
+      const sourceInternal = reactFlowInstance.getInternalNode(params.source)
+      const targetInternal = reactFlowInstance.getInternalNode(params.target)
 
-    if (!sourceInternal || !targetInternal) return
+      if (!sourceInternal || !targetInternal) return
 
-    const sourceHandles = sourceInternal.internals.handleBounds?.source ?? []
-    const targetHandles = targetInternal.internals.handleBounds?.target ?? []
+      const sourceHandles = sourceInternal.internals.handleBounds?.source ?? []
+      const targetHandles = targetInternal.internals.handleBounds?.target ?? []
 
-    const sourceHandle = sourceHandles.find((h) => h.id === params.sourceHandle)
-    const targetHandle = targetHandles.find((h) => h.id === params.targetHandle)
+      const sourceHandle = sourceHandles.find((h) => h.id === params.sourceHandle)
+      const targetHandle = targetHandles.find((h) => h.id === params.targetHandle)
 
-    if (!sourceHandle || !targetHandle) return
+      if (!sourceHandle || !targetHandle) return
 
-    const sourcePos = {
-      x: sourceInternal.internals.positionAbsolute.x + sourceHandle.x + sourceHandle.width / 2,
-      y: sourceInternal.internals.positionAbsolute.y + sourceHandle.y + sourceHandle.height / 2
-    }
-
-    const targetPos = {
-      x: targetInternal.internals.positionAbsolute.x + targetHandle.x + targetHandle.width / 2,
-      y: targetInternal.internals.positionAbsolute.y + targetHandle.y + targetHandle.height / 2
-    }
-
-    const dx = targetPos.x - sourcePos.x
-    const dy = targetPos.y - sourcePos.y
-
-    const scaledX = dx / ICON_WIDTH
-    const scaledY = -dy / ICON_WIDTH
-
-    const normalize = (value: string | undefined) => (value === undefined ? '' : value)
-
-    const design = kit.designs?.find(
-      (d) =>
-        d.name === designId.name &&
-        normalize(d.variant) === normalize(designId.variant) &&
-        normalize(d.view) === normalize(designId.view)
-    )
-
-    if (!design || !onDesignChange) return
-
-    const newConnection = {
-      connecting: { piece: { id_: params.source! }, port: { id_: params.sourceHandle! } },
-      connected: { piece: { id_: params.target! }, port: { id_: params.targetHandle! } },
-      description: '',
-      gap: 0,
-      shift: 0,
-      rise: 0,
-      rotation: 0,
-      turn: 0,
-      tilt: 0,
-      x: scaledX,
-      y: scaledY
-    }
-
-    const originalConnections = design.connections ?? []
-
-    const idsA = [newConnection.connecting.piece.id_, newConnection.connected.piece.id_].sort().join('--')
-
-    const isDuplicate = originalConnections.some((c) => {
-      const idsB = [c.connecting.piece.id_, c.connected.piece.id_].sort().join('--')
-      return idsA === idsB
-    })
-
-    if (isDuplicate) return
-
-    const newConnections = [...originalConnections, newConnection]
-
-    // Update the target piece to remove center and plane (it becomes a child)
-    const updatedPieces = design.pieces?.map((piece) => {
-      if (piece.id_ === params.target) {
-        const { center, plane, ...rest } = piece
-        return rest
+      const sourcePos = {
+        x: sourceInternal.internals.positionAbsolute.x + sourceHandle.x + sourceHandle.width / 2,
+        y: sourceInternal.internals.positionAbsolute.y + sourceHandle.y + sourceHandle.height / 2
       }
-      return piece
-    })
 
-    onDesignChange({ ...design, connections: newConnections, pieces: updatedPieces })
-  }, [kit, designId, onDesignChange, reactFlowInstance])
+      const targetPos = {
+        x: targetInternal.internals.positionAbsolute.x + targetHandle.x + targetHandle.width / 2,
+        y: targetInternal.internals.positionAbsolute.y + targetHandle.y + targetHandle.height / 2
+      }
+
+      const dx = targetPos.x - sourcePos.x
+      const dy = targetPos.y - sourcePos.y
+
+      const scaledX = dx / ICON_WIDTH
+      const scaledY = -dy / ICON_WIDTH
+
+      const design = getDesign(kit, designId)
+
+      if (!design || !onDesignChange) return
+
+      const newConnection = {
+        connecting: { piece: { id_: params.source! }, port: { id_: params.sourceHandle! } },
+        connected: { piece: { id_: params.target! }, port: { id_: params.targetHandle! } },
+        description: '',
+        gap: 0,
+        shift: 0,
+        rise: 0,
+        rotation: 0,
+        turn: 0,
+        tilt: 0,
+        x: scaledX,
+        y: scaledY
+      }
+
+      const originalConnections = design.connections ?? []
+
+      const idsA = [newConnection.connecting.piece.id_, newConnection.connected.piece.id_].sort().join('--')
+
+      const isDuplicate = originalConnections.some((c) => {
+        const idsB = [c.connecting.piece.id_, c.connected.piece.id_].sort().join('--')
+        return idsA === idsB
+      })
+
+      if (isDuplicate) return
+
+      const newConnections = [...originalConnections, newConnection]
+
+      // Update the target piece to remove center and plane (it becomes a child)
+      const updatedPieces = design.pieces?.map((piece) => {
+        if (piece.id_ === params.target) {
+          const { center, plane, ...rest } = piece
+          return rest
+        }
+        return piece
+      })
+
+      onDesignChange({ ...design, connections: newConnections, pieces: updatedPieces })
+    },
+    [kit, designId, onDesignChange, reactFlowInstance]
+  )
 
   // Double click handling
   const onDoubleClickCapture = useCallback(
@@ -306,6 +231,99 @@ interface DiagramProps {
 }
 
 export default Diagram
+
+//#endregion
+
+//#region Data Mapping
+
+function getPieceStatusFromQuality(piece: Piece): 'added' | 'removed' | 'modified' | 'unchanged' {
+  const statusQuality = piece.qualities?.find((q) => q.name === 'semio.status')
+  return (statusQuality?.value as 'added' | 'removed' | 'modified' | 'unchanged') || 'unchanged'
+}
+
+function getConnectionStatusFromQuality(conn: Connection): 'added' | 'removed' | 'modified' | 'unchanged' {
+  const statusQuality = conn.qualities?.find((q) => q.name === 'semio.status')
+  return (statusQuality?.value as 'added' | 'removed' | 'modified' | 'unchanged') || 'unchanged'
+}
+
+function mapDesignToNodesAndEdges({
+  kit,
+  designId,
+  selection,
+  designDiff
+}: {
+  kit: Kit
+  designId: DesignId
+  selection?: DesignEditorSelection
+  designDiff: DesignDiff
+}): { nodes: PieceNode[]; edges: ConnectionEdge[] } | null {
+  const types = kit?.types ?? []
+  const design = getDesign(kit, designId)
+  if (!design) return null
+  const effectiveDesign = applyDesignDiff(design, designDiff, true)
+  const tempKit = {
+    ...kit,
+    designs: kit.designs!.map((d: Design) => {
+      if (getDesign(kit, designId) === d) {
+        return effectiveDesign
+      }
+      return d
+    })
+  }
+  const flatDesign = flattenDesign(tempKit, designId)
+  const pieceNodes =
+    flatDesign!.pieces?.map((flatPiece) => {
+      const type = types.find(
+        (t) => t.name === flatPiece.type.name && (t.variant ?? '') === (flatPiece.type.variant ?? '')
+      )
+      const pieceStatus = getPieceStatusFromQuality(flatPiece)
+      return pieceToNode(flatPiece, type!, selection?.selectedPieceIds.includes(flatPiece.id_) ?? false, pieceStatus)
+    }) ?? []
+  const connectionEdges =
+    effectiveDesign.connections?.map((connection) => {
+      const connStatus = getConnectionStatusFromQuality(connection)
+      return connectionToEdge(
+        connection,
+        selection?.selectedConnections.some(
+          (c) =>
+            c.connectingPieceId === connection.connecting.piece.id_ &&
+            c.connectedPieceId === connection.connected.piece.id_
+        ) ?? false,
+        connStatus
+      )
+    }) ?? []
+  return { nodes: pieceNodes, edges: connectionEdges }
+}
+
+const pieceToNode = (
+  piece: Piece,
+  type: Type,
+  selected: boolean,
+  status: 'added' | 'removed' | 'modified' | 'unchanged'
+): PieceNode => ({
+  type: 'piece',
+  id: piece.id_,
+  position: {
+    x: piece.center!.x * ICON_WIDTH || 0,
+    y: -piece.center!.y * ICON_WIDTH || 0
+  },
+  selected,
+  data: { piece, type, isBeingDragged: false, isIntermediate: false, status }
+})
+
+const connectionToEdge = (
+  connection: Connection,
+  selected: boolean,
+  status: 'added' | 'removed' | 'modified' | 'unchanged'
+): ConnectionEdge => ({
+  type: 'connection',
+  id: `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`,
+  source: connection.connecting.piece.id_,
+  sourceHandle: connection.connecting.port.id_,
+  target: connection.connected.piece.id_,
+  targetHandle: connection.connected.port.id_,
+  data: { connection, status }
+})
 
 //#endregion
 
@@ -442,15 +460,14 @@ function getClosestEdge(
   function getHandlePositions(node: Node) {
     const pieceNode = node as PieceNode
     const ports = pieceNode.data.type.ports || []
-    const handlePositions = ports
-      .map((port) => {
-        const { x: portX, y: portY } = portPositionStyle(port)
-        return {
-          handleId: port.id_ || '',
-          x: pieceNode.position.x + portX + ICON_WIDTH / 2,
-          y: pieceNode.position.y + portY
-        }
-      })
+    const handlePositions = ports.map((port) => {
+      const { x: portX, y: portY } = portPositionStyle(port)
+      return {
+        handleId: port.id_ || '',
+        x: pieceNode.position.x + portX + ICON_WIDTH / 2,
+        y: pieceNode.position.y + portY
+      }
+    })
     return handlePositions
   }
 
@@ -516,12 +533,12 @@ function useDragHandle(
       setDragState((prev) =>
         prev
           ? {
-            ...prev,
-            offset: {
-              x: node.position.x - prev.origin.x,
-              y: node.position.y - prev.origin.y
+              ...prev,
+              offset: {
+                x: node.position.x - prev.origin.x,
+                y: node.position.y - prev.origin.y
+              }
             }
-          }
           : null
       )
     },
@@ -562,13 +579,7 @@ function useDragHandle(
 
       const proximityEdges = getProximityEdges([...nodes, ...intermediateNodes], nodes, reactFlowInstance, selection)
 
-      const normalize = (value: string | undefined) => (value === undefined ? '' : value)
-      const design = kit.designs?.find(
-        (d) =>
-          d.name === designId.name &&
-          normalize(d.variant) === normalize(designId.variant) &&
-          normalize(d.view) === normalize(designId.view)
-      )
+      const design = getDesign(kit, designId)
 
       if (design) {
         const scaledOffset = {
@@ -786,7 +797,10 @@ type PieceNodeProps = {
 type PieceNode = Node<PieceNodeProps, 'piece'>
 type DiagramNode = PieceNode
 
-type ConnectionEdge = Edge<{ connection: Connection; status: 'added' | 'removed' | 'modified' | 'unchanged' }, 'connection'>
+type ConnectionEdge = Edge<
+  { connection: Connection; status: 'added' | 'removed' | 'modified' | 'unchanged' },
+  'connection'
+>
 type DiagramEdge = ConnectionEdge
 
 type PortHandleProps = { port: Port }
@@ -823,22 +837,22 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
     isBeingDragged,
     isIntermediate,
     status // Add status prop
-  } = data as PieceNodeProps & { status: 'added' | 'removed' | 'modified' | 'unchanged' };
+  } = data as PieceNodeProps & { status: 'added' | 'removed' | 'modified' | 'unchanged' }
 
-  let fillClass = '';
-  let strokeClass = 'stroke-foreground';
-  let opacity = isBeingDragged ? 0.5 : 1;
+  let fillClass = ''
+  let strokeClass = 'stroke-foreground'
+  let opacity = isBeingDragged ? 0.5 : 1
 
   if (status === 'added') {
-    fillClass = selected ? 'fill-green-600' : 'fill-green-400';
+    fillClass = selected ? 'fill-green-600' : 'fill-green-400'
   } else if (status === 'removed') {
-    fillClass = 'fill-red-400';
-    strokeClass = 'stroke-red-600';
-    opacity *= 0.5; // transparent
+    fillClass = 'fill-red-400'
+    strokeClass = 'stroke-red-600'
+    opacity *= 0.5 // transparent
   } else if (status === 'modified') {
-    fillClass = selected ? 'fill-yellow-600' : 'fill-yellow-400';
+    fillClass = selected ? 'fill-yellow-600' : 'fill-yellow-400'
   } else {
-    fillClass = selected ? 'fill-primary' : 'fill-transparent';
+    fillClass = selected ? 'fill-primary' : 'fill-transparent'
   }
 
   return (
@@ -862,8 +876,8 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
       </svg>
       {ports?.map((port: Port) => <PortHandle key={port.id_} port={port} />)}
     </div>
-  );
-});
+  )
+})
 
 const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
   id,
@@ -877,25 +891,25 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
   targetHandleId,
   data
 }) => {
-  const HANDLE_HEIGHT = 5;
-  const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`;
+  const HANDLE_HEIGHT = 5
+  const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`
 
-  const isIntermediate = id?.startsWith('intermediate-edge');
-  const status = data?.status || 'unchanged';
+  const isIntermediate = id?.startsWith('intermediate-edge')
+  const status = data?.status || 'unchanged'
 
-  let stroke = isIntermediate ? 'var(--primary)' : 'var(--foreground)';
-  let dasharray = isIntermediate ? '5 5' : undefined;
-  let opacity = 1;
+  let stroke = isIntermediate ? 'var(--primary)' : 'var(--foreground)'
+  let dasharray = isIntermediate ? '5 5' : undefined
+  let opacity = 1
 
   if (status === 'added') {
-    stroke = 'green';
-    dasharray = '5 5';
+    stroke = 'green'
+    dasharray = '5 5'
   } else if (status === 'removed') {
-    stroke = 'red';
-    opacity = 0.5;
-    dasharray = '5 5';
+    stroke = 'red'
+    opacity = 0.5
+    dasharray = '5 5'
   } else if (status === 'modified') {
-    stroke = 'yellow';
+    stroke = 'yellow'
   }
 
   return (
@@ -907,8 +921,8 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
         opacity
       }}
     />
-  );
-};
+  )
+}
 
 const ConnectionConnectionLine: React.FC<ConnectionLineComponentProps> = (props: ConnectionLineComponentProps) => {
   const { fromX, fromY, toX, toY } = props

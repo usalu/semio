@@ -1,28 +1,26 @@
-import { FC, ReactNode, useState, useEffect, useReducer, useMemo, useCallback } from 'react'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable } from '@dnd-kit/core'
+import { ReactFlowProvider, useReactFlow } from '@xyflow/react'
+import { ChevronDown, ChevronRight, Info, MessageCircle, Terminal, Wrench } from 'lucide-react'
+import { FC, ReactNode, useCallback, useEffect, useMemo, useReducer, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useHotkeys } from 'react-hotkeys-hook'
-import { Wrench, Terminal, Info, MessageCircle, ChevronDown, ChevronRight, Folder, Circle } from 'lucide-react'
-import { ReactFlowProvider, useReactFlow } from '@xyflow/react'
 
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@semio/js/components/ui/Resizable'
-import { Design, Type, Piece, Kit, DesignId, DesignDiff, ICON_WIDTH } from '@semio/js'
-import { Avatar, AvatarFallback, AvatarImage } from '@semio/js/components/ui/Avatar'
-import { default as Diagram } from '@semio/js/components/ui/Diagram'
-import { default as Model } from '@semio/js/components/ui/Model'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@semio/js/components/ui/Tooltip'
-import { ToggleGroup, ToggleGroupItem } from '@semio/js/components/ui/ToggleGroup'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@semio/js/components/ui/Tabs'
+import { Design, DesignDiff, DesignId, ICON_WIDTH, Kit, Piece, Type, getDesign } from '@semio/js'
+import { Avatar, AvatarFallback } from '@semio/js/components/ui/Avatar'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible'
-import { ScrollArea } from '@semio/js/components/ui/ScrollArea'
+import { default as Diagram } from '@semio/js/components/ui/Diagram'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@semio/js/components/ui/HoverCard'
-import { Textarea } from '@semio/js/components/ui/Textarea'
-import { Generator } from '@semio/js/lib/utils'
-import { DesignEditorSelection, useDesignEditorStore, useStudioStore } from '@semio/js/store'
-import { Layout, Mode, Theme } from '@semio/js/components/ui/Sketchpad'
 import { Input } from '@semio/js/components/ui/Input'
-import { Slider } from '@semio/js/components/ui/Slider'
+import { default as Model } from '@semio/js/components/ui/Model'
 import { default as Navbar } from '@semio/js/components/ui/Navbar'
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@semio/js/components/ui/Resizable'
+import { ScrollArea } from '@semio/js/components/ui/ScrollArea'
+import { Layout, Mode, Theme } from '@semio/js/components/ui/Sketchpad'
+import { Slider } from '@semio/js/components/ui/Slider'
+import { Textarea } from '@semio/js/components/ui/Textarea'
+import { ToggleGroup, ToggleGroupItem } from '@semio/js/components/ui/ToggleGroup'
+import { Generator } from '@semio/js/lib/utils'
+import { DesignEditorSelection } from '@semio/js/store'
 
 // Type for panel visibility toggles
 interface PanelToggles {
@@ -42,6 +40,8 @@ interface ResizablePanelProps extends PanelProps {
   onWidthChange?: (width: number) => void
   width: number
 }
+
+//#region Tree Components
 
 // TreeNode component for sidebar navigation
 interface TreeNodeProps {
@@ -134,7 +134,10 @@ const TreeNode: FC<TreeNodeProps> = ({
   }
 }
 
-// Type Avatar component
+//#endregion
+
+//#region Type Avatar component
+
 interface TypeAvatarProps {
   type: Type
   showHoverCard?: boolean
@@ -176,7 +179,10 @@ const TypeAvatar: FC<TypeAvatarProps> = ({ type, showHoverCard = false }) => {
   )
 }
 
-// Design Avatar component
+//#endregion
+
+//#region Design Avatar component
+
 interface DesignAvatarProps {
   design: Design
   showHoverCard?: boolean
@@ -220,7 +226,10 @@ const DesignAvatar: FC<DesignAvatarProps> = ({ design, showHoverCard = false }) 
   )
 }
 
-// Workbench panel component
+//#endregion
+
+//#region Workbench panel component
+
 interface WorkbenchProps extends ResizablePanelProps {
   kit: Kit
 }
@@ -328,6 +337,10 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width, kit }) =
   )
 }
 
+//#endregion
+
+//#region Console panel component
+
 interface ConsoleProps {
   visible: boolean
   leftPanelVisible: boolean
@@ -399,7 +412,11 @@ const Console: FC<ConsoleProps> = ({
   )
 }
 
-interface DetailsProps extends ResizablePanelProps { }
+//#endregion
+
+//#region Details panel component
+
+interface DetailsProps extends ResizablePanelProps {}
 
 const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
   if (!visible) return null
@@ -462,7 +479,11 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
   )
 }
 
-interface ChatProps extends ResizablePanelProps { }
+//#endregion
+
+//#region Chat panel component
+
+interface ChatProps extends ResizablePanelProps {}
 
 const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
   if (!visible) return null
@@ -515,34 +536,44 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
   )
 }
 
+//#endregion
+
+//#region Design Editor State and Actions
+
+export interface DesignEditorState {
+  kit: Kit
+  designId: DesignId
+  fileUrls: Map<string, string>
+  fullscreenPanel: FullscreenPanel
+  selection: DesignEditorSelection
+  designDiff: DesignDiff
+}
+
 export enum FullscreenPanel {
   None = 'none',
   Diagram = 'diagram',
-  Model = 'model',
-}
-
-export interface DesignEditorState {
-  kit: Kit,
-  designId: DesignId,
-  fileUrls: Map<string, string>,
-  fullscreenPanel: FullscreenPanel
-  selection: DesignEditorSelection,
-  designDiff: DesignDiff,
+  Model = 'model'
 }
 
 export enum DesignEditorAction {
-  SET_DESIGN = 'SET_DESIGN',
-  SET_DESIGN_DIFF = 'SET_DESIGN_DIFF',
-  SET_SELECTION = 'SET_SELECTION',
-  SET_FULLSCREEN = 'SET_FULLSCREEN',
+  SetDesign = 'SET_DESIGN',
+  SetDesignDiff = 'SET_DESIGN_DIFF',
+  SetSelection = 'SET_SELECTION',
+  SetFullscreen = 'SET_FULLSCREEN'
 }
 
 export type DesignEditorDispatcher = (action: { type: DesignEditorAction; payload: any }) => void
 
+//#endregion
+
+//#region Design Editor Core
+
 const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   const { onToolbarChange, designId, onUndo, onRedo } = props
 
-  const isControlled = props.kit !== undefined;
+  // #region resolve state and dispatcher
+
+  const isControlled = props.kit !== undefined
 
   const initialUncontrolledState: DesignEditorState = {
     kit: props.initialKit!,
@@ -550,31 +581,41 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
     fileUrls: props.fileUrls,
     fullscreenPanel: FullscreenPanel.None,
     selection: props.initialSelection || { selectedPieceIds: [], selectedConnections: [] },
-    designDiff: props.initialDesignDiff || { pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } },
-  };
-  const uncontrolledDesignEditorReducer = (state: DesignEditorState, action: { type: DesignEditorAction; payload: any }): DesignEditorState => {
+    designDiff: props.initialDesignDiff || {
+      pieces: { added: [], removed: [], updated: [] },
+      connections: { added: [], removed: [], updated: [] }
+    }
+  }
+  const uncontrolledDesignEditorReducer = (
+    state: DesignEditorState,
+    action: { type: DesignEditorAction; payload: any }
+  ): DesignEditorState => {
     switch (action.type) {
-      case DesignEditorAction.SET_DESIGN:
-        const newDesign = action.payload;
-        const normalize = (v?: string) => v || '';
+      case DesignEditorAction.SetDesign:
+        const newDesign = action.payload
+        const normalize = (v?: string) => v || ''
         const updatedDesigns = (state.kit.designs || []).map((d: Design) =>
-          d.name === newDesign.name && normalize(d.variant) === normalize(newDesign.variant) && normalize(d.view) === normalize(newDesign.view)
+          d.name === newDesign.name &&
+          normalize(d.variant) === normalize(newDesign.variant) &&
+          normalize(d.view) === normalize(newDesign.view)
             ? newDesign
             : d
-        );
-        return { ...state, kit: { ...state.kit, designs: updatedDesigns } };
-      case DesignEditorAction.SET_DESIGN_DIFF:
-        return { ...state, designDiff: action.payload };
-      case DesignEditorAction.SET_SELECTION:
-        return { ...state, selection: action.payload };
-      case DesignEditorAction.SET_FULLSCREEN:
-        return { ...state, fullscreenPanel: action.payload };
+        )
+        return { ...state, kit: { ...state.kit, designs: updatedDesigns } }
+      case DesignEditorAction.SetDesignDiff:
+        return { ...state, designDiff: action.payload }
+      case DesignEditorAction.SetSelection:
+        return { ...state, selection: action.payload }
+      case DesignEditorAction.SetFullscreen:
+        return { ...state, fullscreenPanel: action.payload }
       default:
-        return state;
+        return state
     }
-  };
-  const [uncontrolledState, uncontrolledDispatch] = useReducer(uncontrolledDesignEditorReducer, initialUncontrolledState);
-
+  }
+  const [uncontrolledState, uncontrolledDispatch] = useReducer(
+    uncontrolledDesignEditorReducer,
+    initialUncontrolledState
+  )
 
   const controlledState = useMemo(() => {
     return {
@@ -583,25 +624,23 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
       fileUrls: props.fileUrls,
       selection: props.selection,
       designDiff: props.designDiff,
-      fullscreenPanel: FullscreenPanel.None,
+      fullscreenPanel: FullscreenPanel.None
     } as DesignEditorState
-  }, [props.kit, props.designId, props.fileUrls, props.selection, props.designDiff]);
-  const controlledDispatch = useCallback((action: { type: DesignEditorAction; payload: any }) => {
-    if (action.type === DesignEditorAction.SET_DESIGN) props.onDesignChange?.(action.payload);
-    if (action.type === DesignEditorAction.SET_SELECTION) props.onSelectionChange?.(action.payload);
-  }, [props.onDesignChange, props.onSelectionChange]);
-
-
-  const state = isControlled ? controlledState : uncontrolledState;
-  const dispatch = isControlled ? controlledDispatch : uncontrolledDispatch;
-
-  const normalize = (val: string | undefined) => (val === undefined ? '' : val)
-  const design = state.kit.designs?.find(
-    (d) =>
-      d.name === designId.name &&
-      normalize(d.variant) === normalize(designId.variant) &&
-      normalize(d.view) === normalize(designId.view)
+  }, [props.kit, props.designId, props.fileUrls, props.selection, props.designDiff])
+  const controlledDispatch = useCallback(
+    (action: { type: DesignEditorAction; payload: any }) => {
+      if (action.type === DesignEditorAction.SetDesign) props.onDesignChange?.(action.payload)
+      if (action.type === DesignEditorAction.SetSelection) props.onSelectionChange?.(action.payload)
+    },
+    [props.onDesignChange, props.onSelectionChange]
   )
+
+  // #endregion resolve state and dispatcher
+
+  const state = isControlled ? controlledState : uncontrolledState
+  const dispatch = isControlled ? controlledDispatch : uncontrolledDispatch
+
+  const design = getDesign(state.kit, designId)
   if (!design) {
     return null
   }
@@ -656,15 +695,10 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   })
 
   useHotkeys('mod+a', (e) => {
-    e.preventDefault();
-    const allIds = state.kit.designs?.find(
-      (d) =>
-        d.name === designId.name &&
-        normalize(d.variant) === normalize(designId.variant) &&
-        normalize(d.view) === normalize(designId.view)
-    )?.pieces?.map(p => p.id_) || [];
-    dispatch({ type: DesignEditorAction.SET_SELECTION, payload: { selectedPieceIds: allIds, selectedConnections: [] } });
-  });
+    e.preventDefault()
+    const allIds = design?.pieces?.map((p) => p.id_) || []
+    dispatch({ type: DesignEditorAction.SetSelection, payload: { selectedPieceIds: allIds, selectedConnections: [] } })
+  })
   useHotkeys('mod+i', (e) => {
     e.preventDefault()
     console.log('Invert selection')
@@ -752,27 +786,23 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   const [activeDraggedType, setActiveDraggedType] = useState<Type | null>(null)
   const [activeDraggedDesign, setActiveDraggedDesign] = useState<Design | null>(null)
 
+  // #region Drag and Drop
+
   const onDragStart = (event: DragStartEvent) => {
     const { active } = event
     const id = active.id.toString()
     if (id.startsWith('type-')) {
       const [_, name, variant] = id.split('-')
       // Normalize variants so that undefined, null and empty string are treated the same
-      const normalizeVariant = (v: string | undefined | null) => (v ?? '')
+      const normalizeVariant = (v: string | undefined | null) => v ?? ''
       const type = state.kit?.types?.find(
         (t: Type) => t.name === name && normalizeVariant(t.variant) === normalizeVariant(variant)
       )
       setActiveDraggedType(type || null)
     } else if (id.startsWith('design-')) {
       const [_, name, variant, view] = id.split('-')
-      // Normalize variant and view similarly
-      const normalize = (v: string | undefined | null) => (v ?? '')
-      const draggedDesign = state.kit?.designs?.find(
-        (d: Design) =>
-          d.name === name &&
-          normalize(d.variant) === normalize(d.variant) &&
-          normalize(d.view) === normalize(d.view)
-      )
+      const draggedDesignId: DesignId = { name, variant: variant || undefined, view: view || undefined }
+      const draggedDesign = getDesign(state.kit, draggedDesignId)
       setActiveDraggedDesign(draggedDesign || null)
     }
   }
@@ -801,7 +831,10 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
           },
           center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 }
         }
-        dispatch({ type: DesignEditorAction.SET_DESIGN, payload: { ...design, pieces: [...(design.pieces || []), piece] } })
+        dispatch({
+          type: DesignEditorAction.SetDesign,
+          payload: { ...design, pieces: [...(design.pieces || []), piece] }
+        })
       } else if (activeDraggedDesign) {
         throw new Error('Not implemented')
       }
@@ -809,6 +842,8 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
     setActiveDraggedType(null)
     setActiveDraggedDesign(null)
   }
+
+  // #endregion Drag and Drop
 
   return (
     <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
@@ -818,23 +853,21 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
             <ResizablePanel
               defaultSize={state.fullscreenPanel === FullscreenPanel.Diagram ? 100 : 50}
               className={`${state.fullscreenPanel === FullscreenPanel.Model ? 'hidden' : 'block'}`}
-              onDoubleClick={() => dispatch({ type: DesignEditorAction.SET_FULLSCREEN, payload: FullscreenPanel.Diagram })}
+              onDoubleClick={() =>
+                dispatch({ type: DesignEditorAction.SetFullscreen, payload: FullscreenPanel.Diagram })
+              }
             >
-              <Diagram
-                designEditorState={state}
-                designEditorDispatcher={dispatch}
-              />
+              <Diagram designEditorState={state} designEditorDispatcher={dispatch} />
             </ResizablePanel>
-            <ResizableHandle className={`border-r ${state.fullscreenPanel !== FullscreenPanel.None ? 'hidden' : 'block'}`} />
+            <ResizableHandle
+              className={`border-r ${state.fullscreenPanel !== FullscreenPanel.None ? 'hidden' : 'block'}`}
+            />
             <ResizablePanel
               defaultSize={state.fullscreenPanel === FullscreenPanel.Model ? 100 : 50}
               className={`${state.fullscreenPanel === FullscreenPanel.Diagram ? 'hidden' : 'block'}`}
-              onDoubleClick={() => dispatch({ type: DesignEditorAction.SET_FULLSCREEN, payload: FullscreenPanel.Model })}
+              onDoubleClick={() => dispatch({ type: DesignEditorAction.SetFullscreen, payload: FullscreenPanel.Model })}
             >
-              <Model
-                designEditorState={state}
-                designEditorDispatcher={dispatch}
-              />
+              <Model designEditorState={state} designEditorDispatcher={dispatch} />
             </ResizablePanel>
           </ResizablePanelGroup>
         </div>
@@ -957,3 +990,5 @@ const DesignEditor: FC<DesignEditorProps> = ({
 }
 
 export default DesignEditor
+
+//#endregion

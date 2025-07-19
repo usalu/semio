@@ -1,5 +1,8 @@
 {
   "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "always"
+  },
   "python.defaultInterpreterPath": "${workspaceFolder}\\python\\engine\\.venv\\Scripts\\python.exe",
   "pylint.args": [
     "--variable-naming-style=camelCase",
