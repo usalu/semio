@@ -13,6 +13,7 @@ import { Canvas, ThreeEvent } from '@react-three/fiber'
 import {
   Piece,
   Plane,
+  Status,
   ToSemioRotation,
   applyDesignDiff,
   flattenDesign,
@@ -56,7 +57,7 @@ interface ModelPieceProps {
   fileUrl: string
   selected?: boolean
   updating?: boolean
-  status?: 'added' | 'removed' | 'modified' | 'unchanged'
+  status?: Status
   onSelect: (piece: Piece) => void
 }
 
@@ -66,7 +67,7 @@ const ModelPiece: FC<ModelPieceProps> = ({
   fileUrl,
   selected,
   updating,
-  status = 'unchanged',
+  status = Status.Unchanged,
   onSelect
 }) => {
   const fixed = piece.plane !== undefined
@@ -107,9 +108,9 @@ const ModelPiece: FC<ModelPieceProps> = ({
   }
 
   const styledScene = useMemo(() => {
-    if (status === 'added') return applyMaterial(baseScene.clone(), 'green')
-    if (status === 'removed') return applyMaterial(baseScene.clone(), 'red', 0.2)
-    if (status === 'modified') return applyMaterial(baseScene.clone(), 'yellow')
+    if (status === Status.Added) return applyMaterial(baseScene.clone(), 'green')
+    if (status === Status.Removed) return applyMaterial(baseScene.clone(), 'red', 0.2)
+    if (status === Status.Modified) return applyMaterial(baseScene.clone(), 'yellow')
     if (selected) return applyMaterial(baseScene.clone(), getComputedColor('--color-primary'))
     if (updating) return applyMaterial(baseScene.clone(), getComputedColor('--color-foreground'), 0.1)
     return baseScene.clone()
@@ -243,9 +244,9 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
     })
   }, [pieceRepresentationUrls, fileUrls])
 
-  function getPieceStatusFromQuality(piece: Piece): 'added' | 'removed' | 'modified' | 'unchanged' {
+  function getPieceStatusFromQuality(piece: Piece): Status {
     const statusQuality = piece.qualities?.find((q) => q.name === 'semio.status')
-    return (statusQuality?.value as 'added' | 'removed' | 'modified' | 'unchanged') || 'unchanged'
+    return (statusQuality?.value as Status) || Status.Unchanged
   }
 
   const pieceStatuses = useMemo(() => {
@@ -333,7 +334,7 @@ const Gizmo: FC = (): JSX.Element => {
         labels={['X', 'Z', '-Y']}
         axisColors={colors}
 
-        // font='Anta'
+      // font='Anta'
       />
     </GizmoHelper>
   )

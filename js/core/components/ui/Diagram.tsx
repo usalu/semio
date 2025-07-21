@@ -34,6 +34,7 @@ import {
   Kit,
   Piece,
   Port,
+  Status,
   Type
 } from '@semio/js'
 
@@ -236,14 +237,14 @@ export default Diagram
 
 //#region Data Mapping
 
-function getPieceStatusFromQuality(piece: Piece): 'added' | 'removed' | 'modified' | 'unchanged' {
+function getPieceStatusFromQuality(piece: Piece): Status {
   const statusQuality = piece.qualities?.find((q) => q.name === 'semio.status')
-  return (statusQuality?.value as 'added' | 'removed' | 'modified' | 'unchanged') || 'unchanged'
+  return (statusQuality?.value as Status) || Status.Unchanged
 }
 
-function getConnectionStatusFromQuality(conn: Connection): 'added' | 'removed' | 'modified' | 'unchanged' {
+function getConnectionStatusFromQuality(conn: Connection): Status {
   const statusQuality = conn.qualities?.find((q) => q.name === 'semio.status')
-  return (statusQuality?.value as 'added' | 'removed' | 'modified' | 'unchanged') || 'unchanged'
+  return (statusQuality?.value as Status) || Status.Unchanged
 }
 
 function mapDesignToNodesAndEdges({
@@ -299,7 +300,7 @@ const pieceToNode = (
   piece: Piece,
   type: Type,
   selected: boolean,
-  status: 'added' | 'removed' | 'modified' | 'unchanged'
+  status: Status
 ): PieceNode => ({
   type: 'piece',
   id: piece.id_,
@@ -314,7 +315,7 @@ const pieceToNode = (
 const connectionToEdge = (
   connection: Connection,
   selected: boolean,
-  status: 'added' | 'removed' | 'modified' | 'unchanged'
+  status: Status
 ): ConnectionEdge => ({
   type: 'connection',
   id: `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`,
@@ -375,7 +376,7 @@ function getClosestEdge(
     dy: 0
   }
 
-  const originalDraggedId = node.data.isIntermediate ? node.id.slice(5) : null
+  const originalDraggedId = node.data.isIntermediate ? node.id.slice(12) : null
   const selectedNodeIds = selection.selectedPieceIds ?? []
 
   // Iterate over all other nodes in the array
@@ -533,12 +534,12 @@ function useDragHandle(
       setDragState((prev) =>
         prev
           ? {
-              ...prev,
-              offset: {
-                x: node.position.x - prev.origin.x,
-                y: node.position.y - prev.origin.y
-              }
+            ...prev,
+            offset: {
+              x: node.position.x - prev.origin.x,
+              y: node.position.y - prev.origin.y
             }
+          }
           : null
       )
     },
@@ -615,31 +616,89 @@ function useDragHandle(
         const newChildPieceIds = new Set<string>()
 
         // Convert proximity edges to new Semio connections
-        const newConnections = proximityEdges.map((edge): Connection => {
-          const sourceId = edge.source!.startsWith('intermediate') ? edge.source!.substring(11) : edge.source!
-          const targetId = edge.target!.startsWith('intermediate') ? edge.target!.substring(11) : edge.target!
+        const newConnections = proximityEdges
+          .map((edge): Connection | null => {
+            const sourceId = edge.source!.startsWith('intermediate') ? edge.source!.substring(12) : edge.source!
+            const targetId = edge.target!.startsWith('intermediate') ? edge.target!.substring(12) : edge.target!
 
-          // Identify which piece was dragged to become a child
-          if (selectedNodeIds.has(sourceId)) newChildPieceIds.add(sourceId)
-          if (selectedNodeIds.has(targetId)) newChildPieceIds.add(targetId)
+            // Validate connection: no self-connections
+            if (sourceId === targetId) return null
 
-          const dx = typeof edge.data?.dx === 'number' ? edge.data.dx : 0
-          const dy = typeof edge.data?.dy === 'number' ? edge.data.dy : 0
+            // Validate handles exist
+            if (!edge.sourceHandle || !edge.targetHandle) return null
 
-          return {
-            connecting: { piece: { id_: sourceId }, port: { id_: edge.sourceHandle! } },
-            connected: { piece: { id_: targetId }, port: { id_: edge.targetHandle! } },
-            description: '',
-            gap: 0,
-            shift: 0,
-            rise: 0,
-            rotation: 0,
-            turn: 0,
-            tilt: 0,
-            x: dx / ICON_WIDTH,
-            y: -dy / ICON_WIDTH
-          }
-        })
+            // Ensure we don't connect two dragged pieces to each other
+            const sourceDragged = selectedNodeIds.has(sourceId)
+            const targetDragged = selectedNodeIds.has(targetId)
+            if (sourceDragged && targetDragged) return null
+
+            // Identify which piece was dragged to become a child
+            if (sourceDragged) newChildPieceIds.add(sourceId)
+            if (targetDragged) newChildPieceIds.add(targetId)
+
+            const dx = typeof edge.data?.dx === 'number' ? edge.data.dx : 0
+            const dy = typeof edge.data?.dy === 'number' ? edge.data.dy : 0
+
+            const scaledDx = dx / ICON_WIDTH
+            const scaledDy = -dy / ICON_WIDTH
+
+            // Validate that the offset is not zero (required by the backend)
+            if (Math.abs(scaledDx) < 0.001 && Math.abs(scaledDy) < 0.001) {
+              console.warn('Skipping connection with zero offset:', { sourceId, targetId, dx, dy })
+              return null
+            }
+
+            const newConnection = {
+              connecting: { piece: { id_: sourceId }, port: { id_: edge.sourceHandle } },
+              connected: { piece: { id_: targetId }, port: { id_: edge.targetHandle } },
+              description: '',
+              gap: 0,
+              shift: 0,
+              rise: 0,
+              rotation: 0,
+              turn: 0,
+              tilt: 0,
+              x: scaledDx,
+              y: scaledDy
+            }
+
+            // Debug log to help identify issues
+            console.log('Creating proximity connection:', {
+              source: sourceId,
+              target: targetId,
+              sourceHandle: edge.sourceHandle,
+              targetHandle: edge.targetHandle,
+              dx: scaledDx,
+              dy: scaledDy
+            })
+
+            return newConnection
+          })
+          .filter(Boolean) as Connection[]
+
+        // If no valid connections were created, treat this as a simple position update
+        if (newConnections.length === 0) {
+          const updatedPieces = design.pieces?.map((piece) => {
+            // If a dragged piece, just update its position
+            if (selectedNodeIds.has(piece.id_) && piece.center) {
+              return {
+                ...piece,
+                center: {
+                  x: piece.center.x + scaledOffset.x,
+                  y: piece.center.y + scaledOffset.y
+                }
+              }
+            }
+            // Other pieces are unchanged
+            return piece
+          })
+
+          onDesignChange({
+            ...design,
+            pieces: updatedPieces
+          })
+          return
+        }
 
         const updatedPieces = design.pieces?.map((piece) => {
           // If a dragged piece is now connected, it becomes a child.
@@ -673,25 +732,31 @@ function useDragHandle(
           return (!sourceSelected && !targetSelected) || (sourceSelected && targetSelected)
         })
 
-        const allConnections = [...preservedConnections, ...newConnections]
-        const uniqueConnections: Connection[] = []
-        const connectionKeys = new Set<string>()
+        // Check for duplicates before adding new connections
+        const validNewConnections: Connection[] = []
+        const processedConnectionKeys = new Set<string>()
 
-        for (const conn of allConnections) {
-          // Create a canonical key to handle A--B and B--A as the same connection.
-          const ids = [conn.connecting.piece.id_, conn.connected.piece.id_].sort()
-          const key = ids.join('--')
+        for (const newConn of newConnections) {
+          const newIds = [newConn.connecting.piece.id_, newConn.connected.piece.id_].sort().join('--')
 
-          if (!connectionKeys.has(key)) {
-            uniqueConnections.push(conn)
-            connectionKeys.add(key)
+          // Check against existing preserved connections
+          const isDuplicatePreserved = preservedConnections.some((c) => {
+            const existingIds = [c.connecting.piece.id_, c.connected.piece.id_].sort().join('--')
+            return newIds === existingIds
+          })
+
+          // Check if we've already processed this connection pair
+          if (!isDuplicatePreserved && !processedConnectionKeys.has(newIds)) {
+            validNewConnections.push(newConn)
+            processedConnectionKeys.add(newIds)
           }
         }
 
+        const allConnections = [...preservedConnections, ...validNewConnections]
         onDesignChange({
           ...design,
           pieces: updatedPieces,
-          connections: uniqueConnections
+          connections: allConnections
         })
       }
     }
@@ -791,14 +856,14 @@ type PieceNodeProps = {
   type: Type
   isBeingDragged: boolean
   isIntermediate: boolean
-  status: 'added' | 'removed' | 'modified' | 'unchanged'
+  status: Status
 }
 
 type PieceNode = Node<PieceNodeProps, 'piece'>
 type DiagramNode = PieceNode
 
 type ConnectionEdge = Edge<
-  { connection: Connection; status: 'added' | 'removed' | 'modified' | 'unchanged' },
+  { connection: Connection; status: Status },
   'connection'
 >
 type DiagramEdge = ConnectionEdge
@@ -837,19 +902,19 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
     isBeingDragged,
     isIntermediate,
     status // Add status prop
-  } = data as PieceNodeProps & { status: 'added' | 'removed' | 'modified' | 'unchanged' }
+  } = data as PieceNodeProps & { status: Status }
 
   let fillClass = ''
   let strokeClass = 'stroke-foreground'
   let opacity = isBeingDragged ? 0.5 : 1
 
-  if (status === 'added') {
+  if (status === Status.Added) {
     fillClass = selected ? 'fill-green-600' : 'fill-green-400'
-  } else if (status === 'removed') {
+  } else if (status === Status.Removed) {
     fillClass = 'fill-red-400'
     strokeClass = 'stroke-red-600'
     opacity *= 0.5 // transparent
-  } else if (status === 'modified') {
+  } else if (status === Status.Modified) {
     fillClass = selected ? 'fill-yellow-600' : 'fill-yellow-400'
   } else {
     fillClass = selected ? 'fill-primary' : 'fill-transparent'
@@ -895,20 +960,20 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
   const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`
 
   const isIntermediate = id?.startsWith('intermediate-edge')
-  const status = data?.status || 'unchanged'
+  const status = data?.status || Status.Unchanged
 
   let stroke = isIntermediate ? 'var(--primary)' : 'var(--foreground)'
   let dasharray = isIntermediate ? '5 5' : undefined
   let opacity = 1
 
-  if (status === 'added') {
+  if (status === Status.Added) {
     stroke = 'green'
     dasharray = '5 5'
-  } else if (status === 'removed') {
+  } else if (status === Status.Removed) {
     stroke = 'red'
     opacity = 0.5
     dasharray = '5 5'
-  } else if (status === 'modified') {
+  } else if (status === Status.Modified) {
     stroke = 'yellow'
   }
 

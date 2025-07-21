@@ -223,9 +223,9 @@ The similarity of [`representations`](#-representation-) is determined by the [j
 
 ## 📏 Quality [↑](#-specs-)
 
-A [`quality`](#-quality-) is metadata with a **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
+A [`quality`](#-quality-) is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
 
-The **name** is [kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) and with `.`-separated string similar to [toml keys](https://toml.io/en/v1.0.0#keys) 🔑
+The **name** is[kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) and with `.`-separated string similar to [toml keys](https://toml.io/en/v1.0.0#keys) 🔑
 
 No **value** is equivalent to the boolean _true_ where the **name** is the category of the quality 🔑
 
@@ -243,6 +243,8 @@ The **unit** is a [unit identifier](https://en.wikipedia.org/wiki/Unit_of_measur
 - `m/s` for meter per second, `m²/s` for square meter per second, `m³/s` for cubic meter per second
 - `Pa` for pascal, `kPa` for kilopascal, `MPa` for megapascal
 - …
+
+A list of [qualities](#-quality-) is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value** ↔️
 
 ## 🏷️ Tag [↑](#-specs-)
 

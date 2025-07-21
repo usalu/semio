@@ -1,7 +1,7 @@
 import cytoscape from 'cytoscape'
 import * as THREE from 'three'
 
-import { jaccard } from '@semio/js/lib/utils'
+import { findDesign, jaccard, setQualities, setQuality } from '@semio/js/lib/utils'
 // TODOs
 // Update to latest schema and unify docstrings
 
@@ -371,6 +371,14 @@ export type DesignDiff = {
   connections: ConnectionsDiff
 }
 
+export enum Status {
+  Unchanged = 'unchanged',
+  Added = 'added',
+  Removed = 'removed',
+  Modified = 'modified'
+}
+
+
 // Converts JSON strings to/from your types
 // and asserts the results of JSON.parse at runtime
 export class Convert {
@@ -443,7 +451,7 @@ function transform(val: any, typ: any, getProps: any, key: any = '', parent: any
       const typ = typs[i]
       try {
         return transform(val, typ, getProps)
-      } catch (_) {}
+      } catch (_) { }
     }
     return invalidValue(typs, val, key, parent)
   }
@@ -976,13 +984,7 @@ const computeChildPlane = (parentPlane: Plane, parentPort: Port, childPort: Port
  * @throws If the design is not found in the kit
  */
 export const flattenDesign = (kit: Kit, designId: DesignId): Design => {
-  const normalize = (val: string | undefined) => (val === undefined ? '' : val)
-  const design = kit.designs?.find(
-    (d) =>
-      d.name === designId.name &&
-      normalize(d.variant) === normalize(designId.variant) &&
-      normalize(d.view) === normalize(designId.view)
-  )
+  const design = findDesign(kit, designId)
   if (!design) {
     throw new Error(`Design ${designId.name} not found in kit ${kit.name}`)
   }
@@ -1045,13 +1047,7 @@ export const flattenDesign = (kit: Kit, designId: DesignId): Design => {
     if (!rootNode) return
     const rootPiece = pieceMap[rootNode.id()]
     if (!rootPiece || !rootPiece.id_) return
-    rootPiece.qualities = rootPiece.qualities ?? []
-    rootPiece.qualities.push({
-      name: 'semio',
-      value: JSON.stringify({
-        fixedPieceId: rootPiece.id_
-      })
-    })
+    rootPiece.qualities = setQuality(rootPiece.qualities, 'semio.fixedPieceId', rootPiece.id_)
     let rootPlane: Plane
     if (rootPiece.plane) {
       rootPlane = rootPiece.plane
@@ -1122,18 +1118,20 @@ export const flattenDesign = (kit: Kit, designId: DesignId): Design => {
           ...childPiece,
           plane: childPlane,
           center: childCenter,
-          qualities: [
-            ...(childPiece.qualities ?? []),
+          qualities: setQualities(childPiece.qualities, [
             {
-              name: 'semio',
-              value: JSON.stringify({
-                fixedPieceId: JSON.parse(parentPiece.qualities?.find((q) => q.name === 'semio')?.value ?? '{}')
-                  .fixedPieceId,
-                parentPieceId: parentPiece.id_,
-                depth: depth
-              })
+              name: 'semio.fixedPieceId',
+              value: parentPiece.qualities?.find((q) => q.name === 'semio.fixedPieceId')?.value ?? ''
+            },
+            {
+              name: 'semio.parentPieceId',
+              value: parentPiece.id_
+            },
+            {
+              name: 'semio.depth',
+              value: depth.toString()
             }
-          ]
+          ])
         }
         pieceMap[childId] = flatChildPiece
       },
@@ -1150,114 +1148,98 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
     // In-place mode: include all pieces and connections with status qualities
     const effectivePieces: Piece[] = base.pieces
       ? base.pieces
-          .map((p: Piece) => {
-            const pd = diff.pieces?.updated?.find((up: PieceDiff) => up.id_ === p.id_)
-            const isRemoved = diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_)
-            const baseWithUpdate = pd ? { ...p, ...pd } : p
+        .map((p: Piece) => {
+          const pd = diff.pieces?.updated?.find((up: PieceDiff) => up.id_ === p.id_)
+          const isRemoved = diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_)
+          const baseWithUpdate = pd ? { ...p, ...pd } : p
 
-            // Add or update semio.status quality
-            const existingQualities = baseWithUpdate.qualities || []
-            const nonStatusQualities = existingQualities.filter((q) => q.name !== 'semio.status')
-            const status = isRemoved ? 'removed' : pd ? 'modified' : 'unchanged'
+          // Add or update semio.status quality
+          const status = isRemoved ? Status.Removed : pd ? Status.Modified : Status.Unchanged
 
-            return {
-              ...baseWithUpdate,
-              qualities: [...nonStatusQualities, { name: 'semio.status', value: status }]
-            }
-          })
-          .concat(
-            (diff.pieces?.added || []).map((p: Piece) => ({
-              ...p,
-              qualities: [
-                ...(p.qualities || []).filter((q) => q.name !== 'semio.status'),
-                { name: 'semio.status', value: 'added' }
-              ]
-            }))
-          )
+          return {
+            ...baseWithUpdate,
+            qualities: setQuality(baseWithUpdate.qualities, 'semio.status', status)
+          }
+        })
+        .concat(
+          (diff.pieces?.added || []).map((p: Piece) => ({
+            ...p,
+            qualities: setQuality(p.qualities, 'semio.status', Status.Added)
+          }))
+        )
       : (diff.pieces?.added || []).map((p: Piece) => ({
-          ...p,
-          qualities: [
-            ...(p.qualities || []).filter((q) => q.name !== 'semio.status'),
-            { name: 'semio.status', value: 'added' }
-          ]
-        }))
+        ...p,
+        qualities: setQuality(p.qualities, 'semio.status', Status.Added)
+      }))
 
     const effectiveConnections: Connection[] = base.connections
       ? base.connections
-          .map((c: Connection) => {
-            const cd = diff.connections?.updated?.find(
-              (ud: any) =>
-                ud.connected?.piece?.id_ === c.connected.piece.id_ &&
-                ud.connecting?.piece?.id_ === c.connecting.piece.id_ &&
-                (ud.connected?.port?.id_ || '') === (c.connected.port?.id_ || '') &&
-                (ud.connecting?.port?.id_ || '') === (c.connecting.port?.id_ || '')
-            )
-            const isRemoved = diff.connections?.removed?.some(
-              (rc: ConnectionId) =>
-                rc.connected.piece.id_ === c.connected.piece.id_ && rc.connecting.piece.id_ === c.connecting.piece.id_
-            )
-            const baseWithUpdate = cd ? { ...c, ...cd } : c
-
-            // Add or update semio.status quality
-            const existingQualities = baseWithUpdate.qualities || []
-            const nonStatusQualities = existingQualities.filter((q) => q.name !== 'semio.status')
-            const status = isRemoved ? 'removed' : cd ? 'modified' : 'unchanged'
-
-            return {
-              ...baseWithUpdate,
-              qualities: [...nonStatusQualities, { name: 'semio.status', value: status }]
-            }
-          })
-          .concat(
-            (diff.connections?.added || []).map((c: Connection) => ({
-              ...c,
-              qualities: [
-                ...(c.qualities || []).filter((q) => q.name !== 'semio.status'),
-                { name: 'semio.status', value: 'added' }
-              ]
-            }))
+        .map((c: Connection) => {
+          const cd = diff.connections?.updated?.find(
+            (ud: any) =>
+              ud.connected?.piece?.id_ === c.connected.piece.id_ &&
+              ud.connecting?.piece?.id_ === c.connecting.piece.id_ &&
+              (ud.connected?.port?.id_ || '') === (c.connected.port?.id_ || '') &&
+              (ud.connecting?.port?.id_ || '') === (c.connecting.port?.id_ || '')
           )
+          const isRemoved = diff.connections?.removed?.some(
+            (rc: ConnectionId) =>
+              rc.connected.piece.id_ === c.connected.piece.id_ && rc.connecting.piece.id_ === c.connecting.piece.id_
+          )
+          const baseWithUpdate = cd ? { ...c, ...cd } : c
+
+          // Add or update semio.status quality
+          const status = isRemoved ? Status.Removed : cd ? Status.Modified : Status.Unchanged
+
+          return {
+            ...baseWithUpdate,
+            qualities: setQuality(baseWithUpdate.qualities, 'semio.status', status)
+          }
+        })
+        .concat(
+          (diff.connections?.added || []).map((c: Connection) => ({
+            ...c,
+            qualities: setQuality(c.qualities, 'semio.status', Status.Added)
+          }))
+        )
       : (diff.connections?.added || []).map((c: Connection) => ({
-          ...c,
-          qualities: [
-            ...(c.qualities || []).filter((q) => q.name !== 'semio.status'),
-            { name: 'semio.status', value: 'added' }
-          ]
-        }))
+        ...c,
+        qualities: setQuality(c.qualities, 'semio.status', Status.Added)
+      }))
 
     return { ...base, pieces: effectivePieces, connections: effectiveConnections }
   } else {
     // Original mode: filter out removed pieces and connections
     const effectivePieces: Piece[] = base.pieces
       ? base.pieces
-          .map((p: Piece) => {
-            const pd = diff.pieces?.updated?.find((up: PieceDiff) => up.id_ === p.id_)
-            return pd ? { ...p, ...pd } : p
-          })
-          .filter((p: Piece) => !diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_))
-          .concat(diff.pieces?.added || [])
+        .map((p: Piece) => {
+          const pd = diff.pieces?.updated?.find((up: PieceDiff) => up.id_ === p.id_)
+          return pd ? { ...p, ...pd } : p
+        })
+        .filter((p: Piece) => !diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_))
+        .concat(diff.pieces?.added || [])
       : diff.pieces?.added || []
 
     const effectiveConnections: Connection[] = base.connections
       ? base.connections
-          .map((c: Connection) => {
-            const cd = diff.connections?.updated?.find(
-              (ud: any) =>
-                ud.connected?.piece?.id_ === c.connected.piece.id_ &&
-                ud.connecting?.piece?.id_ === c.connecting.piece.id_ &&
-                (ud.connected?.port?.id_ || '') === (c.connected.port?.id_ || '') &&
-                (ud.connecting?.port?.id_ || '') === (c.connecting.port?.id_ || '')
-            )
-            return cd ? { ...c, ...cd } : c
-          })
-          .filter(
-            (c: Connection) =>
-              !diff.connections?.removed?.some(
-                (rc: ConnectionId) =>
-                  rc.connected.piece.id_ === c.connected.piece.id_ && rc.connecting.piece.id_ === c.connecting.piece.id_
-              )
+        .map((c: Connection) => {
+          const cd = diff.connections?.updated?.find(
+            (ud: any) =>
+              ud.connected?.piece?.id_ === c.connected.piece.id_ &&
+              ud.connecting?.piece?.id_ === c.connecting.piece.id_ &&
+              (ud.connected?.port?.id_ || '') === (c.connected.port?.id_ || '') &&
+              (ud.connecting?.port?.id_ || '') === (c.connecting.port?.id_ || '')
           )
-          .concat(diff.connections?.added || [])
+          return cd ? { ...c, ...cd } : c
+        })
+        .filter(
+          (c: Connection) =>
+            !diff.connections?.removed?.some(
+              (rc: ConnectionId) =>
+                rc.connected.piece.id_ === c.connected.piece.id_ && rc.connecting.piece.id_ === c.connecting.piece.id_
+            )
+        )
+        .concat(diff.connections?.added || [])
       : diff.connections?.added || []
 
     return { ...base, pieces: effectivePieces, connections: effectiveConnections }
@@ -1300,11 +1282,5 @@ export const getPieceRepresentationUrls = (design: Design, types: Type[], tags: 
  * @returns The design if found, undefined otherwise
  */
 export const getDesign = (kit: Kit, designId: DesignId): Design | undefined => {
-  const normalize = (val: string | undefined) => (val === undefined ? '' : val)
-  return kit.designs?.find(
-    (d) =>
-      d.name === designId.name &&
-      normalize(d.variant) === normalize(designId.variant) &&
-      normalize(d.view) === normalize(designId.view)
-  )
+  return findDesign(kit, designId)
 }

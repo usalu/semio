@@ -1,6 +1,7 @@
 ---
 description: Help senior developer working.
-tools:  [
+tools:
+  [
     'changes',
     'codebase',
     'editFiles',
@@ -41,7 +42,7 @@ An ecosystem for designing kit-of-parts architecture together.
 - Don't create additional example files and implement it directly in the dependent parts.
 - Don't remove code that is commented out.
 - README.md files are for developers which are GFM.
-- Assume all dev servers and debugging processes are running. No need to ask to start them.
+- Assume all dev servers and debugging processes are running. No need to ask to start them. Don't ask to run commands for building, testing, linting, etc.
 
 # Glossary
 
