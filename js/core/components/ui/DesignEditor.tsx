@@ -1,6 +1,8 @@
+// #region Header
+
 // DesignEditor.tsx
+
 // 2025 Ueli Saluz
-// 2025 AdrianoCelentano
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -14,6 +16,9 @@
 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion
+
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable } from '@dnd-kit/core'
 import { ReactFlowProvider, useReactFlow } from '@xyflow/react'
 import { ChevronDown, ChevronRight, Info, MessageCircle, Terminal, Wrench } from 'lucide-react'
@@ -432,7 +437,7 @@ const Console: FC<ConsoleProps> = ({
 
 //#region Details panel component
 
-interface DetailsProps extends ResizablePanelProps {}
+interface DetailsProps extends ResizablePanelProps { }
 
 const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
   if (!visible) return null
@@ -499,7 +504,7 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
 
 //#region Chat panel component
 
-interface ChatProps extends ResizablePanelProps {}
+interface ChatProps extends ResizablePanelProps { }
 
 const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
   if (!visible) return null
@@ -612,8 +617,8 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
         const normalize = (v?: string) => v || ''
         const updatedDesigns = (state.kit.designs || []).map((d: Design) =>
           d.name === newDesign.name &&
-          normalize(d.variant) === normalize(newDesign.variant) &&
-          normalize(d.view) === normalize(newDesign.view)
+            normalize(d.variant) === normalize(newDesign.variant) &&
+            normalize(d.view) === normalize(newDesign.view)
             ? newDesign
             : d
         )

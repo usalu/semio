@@ -1,34 +1,31 @@
-import { FC, Suspense, ReactNode, useState, useEffect, createContext, useContext, useMemo, useReducer, useSyncExternalStore } from 'react';
-import { Folder, FlaskConical, ChevronDown, ChevronRight, Wrench, Terminal, Info, ChevronDownIcon, Share2, Minus, Square, X, MessageCircle, Home, Sun, Moon, Monitor, Sofa, Glasses, AppWindow } from 'lucide-react';
-import {
-    DndContext,
-    DragEndEvent,
-    DragOverlay,
-    DragStartEvent,
-    UniqueIdentifier,
-    useDraggable,
-    useDroppable
-} from '@dnd-kit/core';
-import {
-    ResizableHandle,
-    ResizablePanel,
-    ResizablePanelGroup,
-} from "@semio/js/components/ui/Resizable"
+// #region Header
+
+// Navbar.tsx
+
+// 2025 Ueli Saluz
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion
+import { Layout, Mode, Theme } from '@semio/js';
 import { Avatar, AvatarFallback, AvatarImage } from "@semio/js/components/ui/Avatar";
-import { Design, Kit, Mode, Layout, Piece, Type, Theme } from '@semio/js';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@semio/js/components/ui/Tooltip"
-import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGroup"
-import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible';
-import { createPortal } from 'react-dom';
-import { useStudioStore, StudioStoreProvider, DesignEditorStoreProvider, useDesignEditorStore, KitProvider, useKit } from '@semio/js/store';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@semio/js/components/ui/Breadcrumb';
-import { Button } from "@semio/js/components/ui/Button";
-import { useHotkeys } from 'react-hotkeys-hook';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@semio/js/components/ui/Breadcrumb';
 import { Toggle } from '@semio/js/components/ui/Toggle';
-import { Fingerprint } from 'lucide-react';
-import { Generator } from '@semio/js/lib/utils';
-import DesignEditor from './DesignEditor';
+import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle";
+import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGroup";
+import { AppWindow, Fingerprint, Home, Minus, Moon, Share2, Square, Sun, X } from 'lucide-react';
+import { FC, ReactNode } from 'react';
 
 
 interface NavbarProps {

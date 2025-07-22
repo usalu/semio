@@ -1,3 +1,23 @@
+// #region Header
+
+// index.ts
+
+// 2025 Ueli Saluz
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion
 export { default as DesignEditor, DesignEditorAction } from '@semio/js/components/ui/DesignEditor'
 export type { DesignEditorDispatcher, DesignEditorState } from '@semio/js/components/ui/DesignEditor'
 export { default as Diagram } from '@semio/js/components/ui/Diagram'
@@ -9,14 +29,14 @@ export { default as eslintConfig } from '@semio/js/eslint.config'
 export { findDesign, setQualities, setQuality } from '@semio/js/lib/utils'
 export { default as postcssConfig } from '@semio/js/postcss.config'
 export {
-  applyDesignDiff,
-  flattenDesign,
-  getDesign,
-  getPieceRepresentationUrls, ICON_WIDTH, planeToMatrix, Status,
+  ICON_WIDTH, Status,
   ToSemioQuaternion,
   ToSemioRotation,
   ToThreeQuaternion,
-  ToThreeRotation
+  ToThreeRotation, applyDesignDiff,
+  flattenDesign,
+  getDesign,
+  getPieceRepresentationUrls, planeToMatrix
 } from '@semio/js/semio'
 export type {
   Author,

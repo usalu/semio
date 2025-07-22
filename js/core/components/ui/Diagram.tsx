@@ -15,6 +15,9 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
 
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 // #endregion
 
 import { useDroppable } from '@dnd-kit/core'
@@ -39,11 +42,12 @@ import {
   ViewportPortal,
   XYPosition
 } from '@xyflow/react'
-import React, { FC, useCallback, useMemo, useState } from 'react'
+import React, { FC, useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
   applyDesignDiff,
   Connection,
+  ConnectionsDiff,
   Design,
   DesignDiff,
   DesignId,
@@ -202,6 +206,86 @@ const Diagram: FC<{ designEditorState: DesignEditorState; designEditorDispatcher
 
   // Intermediate edges rendering
   const displayEdges = useDisplayIntermediateEdges(displayNodes, nodes, selection, edges)
+
+  useEffect(() => {
+    const proximityEdges = getProximityEdges(displayNodes, nodes, reactFlowInstance, selection);
+
+    const design = getDesign(kit, designId);
+    if (!design) return;
+
+    const originalConnections = design.connections ?? [];
+    const currentAdded = designDiff.connections?.added ?? [];
+
+    const isDuplicate = (sourceId: string, targetId: string) => {
+      const idsA = [sourceId, targetId].sort().join('--');
+      return originalConnections.some(c => {
+        const idsB = [c.connecting.piece.id_, c.connected.piece.id_].sort().join('--');
+        return idsA === idsB;
+      }) || currentAdded.some(c => {
+        const idsB = [c.connecting.piece.id_, c.connected.piece.id_].sort().join('--');
+        return idsA === idsB;
+      });
+    };
+
+    const intermediateConns: Connection[] = proximityEdges
+      .map(edge => {
+        let sourceId = edge.source!;
+        let targetId = edge.target!;
+        let sourceHandle = edge.sourceHandle ?? '';
+        let targetHandle = edge.targetHandle ?? '';
+
+        if (sourceId.startsWith('intermediate')) sourceId = sourceId.substring(12);
+        if (targetId.startsWith('intermediate')) targetId = targetId.substring(12);
+
+        if (isDuplicate(sourceId, targetId)) return null;
+
+        const dx = typeof edge.data?.dx === 'number' ? edge.data.dx : 0;
+        const dy = typeof edge.data?.dy === 'number' ? edge.data.dy : 0;
+
+        const scaledDx = dx / ICON_WIDTH;
+        const scaledDy = -dy / ICON_WIDTH;
+
+        if (Math.abs(scaledDx) < 0.001 && Math.abs(scaledDy) < 0.001) return null;
+
+        // Determine connecting and connected based on original order
+        // Assuming source is connecting, target is connected
+        return {
+          connecting: { piece: { id_: sourceId }, port: { id_: sourceHandle } },
+          connected: { piece: { id_: targetId }, port: { id_: targetHandle } },
+          description: '',
+          gap: 0,
+          shift: 0,
+          rise: 0,
+          rotation: 0,
+          turn: 0,
+          tilt: 0,
+          x: scaledDx,
+          y: scaledDy,
+          qualities: [{ name: 'semio.intermediate', value: 'true' }]
+        } as Connection;
+      })
+      .filter(Boolean) as Connection[];
+
+    // Filter out previous intermediate from current added
+    const nonIntermediateAdded = currentAdded.filter(c =>
+      !c.qualities?.some(q => q.name === 'semio.intermediate' && q.value === 'true')
+    );
+
+    const newAdded = [...nonIntermediateAdded, ...intermediateConns];
+
+    const newConnectionsDiff: ConnectionsDiff = {
+      ...(designDiff.connections ?? {}),
+      added: newAdded.length > 0 ? newAdded : undefined
+    };
+
+    const newDesignDiff: DesignDiff = {
+      ...designDiff,
+      connections: newConnectionsDiff
+    };
+
+    if (JSON.stringify(newDesignDiff) === JSON.stringify(designDiff)) return;
+    designEditorDispatcher({ type: DesignEditorAction.SetDesignDiff, payload: newDesignDiff });
+  }, [displayNodes, nodes, selection, kit, designId, designDiff, reactFlowInstance, designEditorDispatcher]);
 
   return (
     <div id="diagram" className="h-full w-full">
@@ -544,12 +628,12 @@ function useDragHandle(
       setDragState((prev) =>
         prev
           ? {
-              ...prev,
-              offset: {
-                x: node.position.x - prev.origin.x,
-                y: node.position.y - prev.origin.y
-              }
+            ...prev,
+            offset: {
+              x: node.position.x - prev.origin.x,
+              y: node.position.y - prev.origin.y
             }
+          }
           : null
       )
     },
@@ -615,6 +699,12 @@ function useDragHandle(
             return piece
           })
 
+          const newDesignDiffAfter = {
+            ...designDiff,
+            pieces: updatedPieces
+          };
+
+          if (JSON.stringify(newDesignDiffAfter) === JSON.stringify(designDiff)) return;
           onDesignChange({
             ...design,
             pieces: updatedPieces
@@ -703,6 +793,12 @@ function useDragHandle(
             return piece
           })
 
+          const newDesignDiffAfter = {
+            ...designDiff,
+            pieces: updatedPieces
+          };
+
+          if (JSON.stringify(newDesignDiffAfter) === JSON.stringify(designDiff)) return;
           onDesignChange({
             ...design,
             pieces: updatedPieces
@@ -763,6 +859,13 @@ function useDragHandle(
         }
 
         const allConnections = [...preservedConnections, ...validNewConnections]
+        const newDesignDiffAfter = {
+          ...designDiff,
+          pieces: updatedPieces,
+          connections: allConnections
+        };
+
+        if (JSON.stringify(newDesignDiffAfter) === JSON.stringify(designDiff)) return;
         onDesignChange({
           ...design,
           pieces: updatedPieces,
@@ -966,22 +1069,28 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
   const HANDLE_HEIGHT = 5
   const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`
 
-  const isIntermediate = id?.startsWith('intermediate-edge')
+  const isIntermediate = data?.connection?.qualities?.some(q => q.name === 'semio.intermediate') ?? id?.startsWith('intermediate-edge');
   const status = data?.status || Status.Unchanged
 
-  let stroke = isIntermediate ? 'var(--primary)' : 'var(--foreground)'
-  let dasharray = isIntermediate ? '5 5' : undefined
-  let opacity = 1
+  let stroke: string;
+  let dasharray: string | undefined;
+  let opacity = 1;
 
-  if (status === Status.Added) {
-    stroke = 'green'
-    dasharray = '5 5'
-  } else if (status === Status.Removed) {
-    stroke = 'red'
-    opacity = 0.5
-    dasharray = '5 5'
-  } else if (status === Status.Modified) {
-    stroke = 'yellow'
+  if (isIntermediate) {
+    stroke = 'var(--primary)';
+    dasharray = '5 5';
+  } else {
+    stroke = 'var(--foreground)';
+    if (status === Status.Added) {
+      stroke = 'green';
+      dasharray = '5 5';
+    } else if (status === Status.Removed) {
+      stroke = 'red';
+      opacity = 0.5;
+      dasharray = '5 5';
+    } else if (status === Status.Modified) {
+      stroke = 'yellow';
+    }
   }
 
   return (

@@ -1,15 +1,35 @@
+// #region Header
+
+// store.tsx
+
+// 2025 Ueli Saluz
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion
+import JSZip from 'jszip';
+import React, { FC, createContext, useContext, useMemo, useSyncExternalStore } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import * as Y from 'yjs';
-import React, { createContext, useContext, useEffect, useState, useMemo, FC, useSyncExternalStore } from 'react';
-import { UndoManager } from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
-import JSZip, { file } from 'jszip';
+import * as Y from 'yjs';
+import { UndoManager } from 'yjs';
 // Import initSqlJs
 import initSqlJs from 'sql.js';
 import sqlWasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 
+import { Author, Connection, Design, DesignId, DiagramPoint, Kit, Piece, Plane, Point, Port, Quality, Representation, Side, Type, Vector, flattenDesign } from '@semio/js';
 import { Generator } from '@semio/js/lib/utils';
-import { Kit, Port, Representation, Piece, Connection, Type, Design, Plane, DiagramPoint, Point, Vector, Quality, Author, Side, flattenDesign, DesignId } from '@semio/js';
 import { KitId } from './semio';
 
 // import { default as metabolism } from '@semio/assets/semio/kit_metabolism.json';
