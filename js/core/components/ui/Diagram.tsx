@@ -1,3 +1,22 @@
+// #region Header
+
+// Diagram.tsx
+
+// 2025 Ueli Saluz
+// 2025 AdrianoCelentano
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// #endregion
+
 import { useDroppable } from '@dnd-kit/core'
 import {
   BaseEdge,
@@ -296,12 +315,7 @@ function mapDesignToNodesAndEdges({
   return { nodes: pieceNodes, edges: connectionEdges }
 }
 
-const pieceToNode = (
-  piece: Piece,
-  type: Type,
-  selected: boolean,
-  status: Status
-): PieceNode => ({
+const pieceToNode = (piece: Piece, type: Type, selected: boolean, status: Status): PieceNode => ({
   type: 'piece',
   id: piece.id_,
   position: {
@@ -312,11 +326,7 @@ const pieceToNode = (
   data: { piece, type, isBeingDragged: false, isIntermediate: false, status }
 })
 
-const connectionToEdge = (
-  connection: Connection,
-  selected: boolean,
-  status: Status
-): ConnectionEdge => ({
+const connectionToEdge = (connection: Connection, selected: boolean, status: Status): ConnectionEdge => ({
   type: 'connection',
   id: `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`,
   source: connection.connecting.piece.id_,
@@ -534,12 +544,12 @@ function useDragHandle(
       setDragState((prev) =>
         prev
           ? {
-            ...prev,
-            offset: {
-              x: node.position.x - prev.origin.x,
-              y: node.position.y - prev.origin.y
+              ...prev,
+              offset: {
+                x: node.position.x - prev.origin.x,
+                y: node.position.y - prev.origin.y
+              }
             }
-          }
           : null
       )
     },
@@ -862,10 +872,7 @@ type PieceNodeProps = {
 type PieceNode = Node<PieceNodeProps, 'piece'>
 type DiagramNode = PieceNode
 
-type ConnectionEdge = Edge<
-  { connection: Connection; status: Status },
-  'connection'
->
+type ConnectionEdge = Edge<{ connection: Connection; status: Status }, 'connection'>
 type DiagramEdge = ConnectionEdge
 
 type PortHandleProps = { port: Port }
