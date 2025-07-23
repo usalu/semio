@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
+## Header ##
+
 # engine.py
+
 # 2020-2025 Ueli Saluz
 
 # This program is free software: you can redistribute it and/or modify
@@ -15,6 +18,8 @@
 
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+## endregion ##
 
 
 """
@@ -136,21 +141,21 @@ import difflib
 import enum
 import functools
 import inspect
+import io
 import json
 import logging
 import multiprocessing
 import os
 import pathlib
+import shutil
+import signal
 import sqlite3
+import stat
+import sys
 import time
 import typing
 import urllib
 import zipfile
-import io
-import shutil
-import stat
-import signal
-import sys
 
 import dotenv
 import fastapi
@@ -158,9 +163,9 @@ import fastapi.openapi
 import graphene
 import graphene_pydantic
 import graphene_sqlalchemy
+import jinja2
 import lark
 import loguru
-import jinja2
 import openai
 import pydantic
 import PySide6.QtCore
@@ -173,7 +178,6 @@ import sqlmodel
 import starlette
 import starlette_graphene3
 import uvicorn
-
 
 # Type Hints #
 

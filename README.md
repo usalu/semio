@@ -1152,6 +1152,13 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
         <br />
         <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a>
       </td>
+      <td align="center" valign="top" width="145px"><a href="https://github.com/AdrianoCelentano">
+        <img src="assets/contributors/AdrianoCelentano_round_90.png" width="90px" alt="AdrianoCelentano" style="border-radius: 50%;"/>
+        <br />
+        <sub><b>AdrianoCelentano</b></sub></a>
+        <br />
+        <a href="#-semiojs-" title="🟨@semio/js"><sub>🟨<sub></a>
+      </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/drymuzzle">
         <img src="assets/contributors/drymuzzle_round_90.png" width="90px" alt="drymuzzle" style="border-radius: 50%;"/>
         <br />
@@ -1179,7 +1186,17 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 
 # ⚖️ License
 
-The code in this repository is licensed under the [GNU Affero General Public License](https://www.gnu.org/licenses/#AGPL) unless otherwise described. Please note that some modules, extensions or code herein might be otherwise licensed. This is indicated either in the root of the containing folder under a different license file, or in the respective file's header. If you have any questions, please don't hesitate to get in touch with [us over email](mail@semio-tech.com) 📧
+The files in this repository are licensed under the [GNU Affero General Public License](https://www.gnu.org/licenses/#AGPL) unless otherwise described. Most libraries, modules, extensions, objects or code herein are explicitly licensed. This is indicated in the root of the containing folder under a different license file, or in the configuration files of a project or in the respective file's header.
+
+As a reference, different type of components have usually different licenses:
+
+- software libraries: [LGPLv3 or later - GNU Lesser General Public License Version 3](https://www.gnu.org/licenses/lgpl-3.0.en.html)
+- applications: [AGPLv3 or later - GNU Affero General Public License Version 3](https://www.gnu.org/licenses/agpl-3.0.en.html)
+- examples: [MIT - The MIT License](https://mit-license.org)
+- templates: [CC0 - No Rights Reserved](https://creativecommons.org/public-domain/cc0/)
+- assets: [CC BY-ND 4.0 - Attribution-NoDerivatives 4.0 International](https://creativecommons.org/licenses/by-nd/4.0/)
+
+If you have any questions, please don't hesitate to get in touch with [us over email](mail@semio-tech.com) 📧
 
 # 🔒 Security
 

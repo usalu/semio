@@ -3,6 +3,10 @@
   "editor.codeActionsOnSave": {
     "source.organizeImports": "always"
   },
+  "editor.folding.markers": {
+    "start": "^\\s*##.*##\\b",
+    "end": "^\\s*##.*##\\b"
+  },
   "python.defaultInterpreterPath": "${workspaceFolder}\\python\\engine\\.venv\\Scripts\\python.exe",
   "pylint.args": [
     "--variable-naming-style=camelCase",
@@ -19,7 +23,9 @@
   "python.analysis.typeCheckingMode": "off",
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
-  "python.testing.pytestArgs": ["."],
+  "python.testing.pytestArgs": [
+    "."
+  ],
   // "python.testing.pytestArgs": [
   //     "--cov",
   //     "--cov-config=pyproject.toml",
