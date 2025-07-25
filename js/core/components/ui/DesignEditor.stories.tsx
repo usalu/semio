@@ -21,8 +21,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { default as Metabolism } from "@semio/assets/semio/kit_metabolism.json";
-import { default as DesignEditor } from "@semio/js/components/ui/DesignEditor";
-import { extractFilesAndCreateUrls } from '../../lib/utils';
+import { DesignEditor, extractFilesAndCreateUrls } from '@semio/js';
 
 const meta = {
   title: 'Studio/DesignEditor',

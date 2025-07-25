@@ -26,13 +26,11 @@ import { FC, ReactNode, useCallback, useEffect, useMemo, useReducer, useState } 
 import { createPortal } from 'react-dom'
 import { useHotkeys } from 'react-hotkeys-hook'
 
-import { Design, DesignDiff, DesignId, ICON_WIDTH, Kit, Piece, Type, getDesign } from '@semio/js'
+import { Design, DesignDiff, DesignId, Diagram, findDesign, ICON_WIDTH, Kit, Model, Piece, Type } from '@semio/js'
 import { Avatar, AvatarFallback } from '@semio/js/components/ui/Avatar'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible'
-import { default as Diagram } from '@semio/js/components/ui/Diagram'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@semio/js/components/ui/HoverCard'
 import { Input } from '@semio/js/components/ui/Input'
-import { default as Model } from '@semio/js/components/ui/Model'
 import { default as Navbar } from '@semio/js/components/ui/Navbar'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@semio/js/components/ui/Resizable'
 import { ScrollArea } from '@semio/js/components/ui/ScrollArea'
@@ -661,7 +659,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   const state = isControlled ? controlledState : uncontrolledState
   const dispatch = isControlled ? controlledDispatch : uncontrolledDispatch
 
-  const design = getDesign(state.kit, designId)
+  const design = findDesign(state.kit, designId)
   if (!design) {
     return null
   }
@@ -823,7 +821,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
     } else if (id.startsWith('design-')) {
       const [_, name, variant, view] = id.split('-')
       const draggedDesignId: DesignId = { name, variant: variant || undefined, view: view || undefined }
-      const draggedDesign = getDesign(state.kit, draggedDesignId)
+      const draggedDesign = findDesign(state.kit, draggedDesignId)
       setActiveDraggedDesign(draggedDesign || null)
     }
   }

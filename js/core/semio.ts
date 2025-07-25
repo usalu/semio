@@ -21,7 +21,6 @@
 import cytoscape from 'cytoscape'
 import * as THREE from 'three'
 
-import { findDesign, jaccard, setQualities, setQuality } from '@semio/js/lib/utils'
 // TODOs
 // Update to latest schema and unify docstrings
 
@@ -39,6 +38,8 @@ import { findDesign, jaccard, setQualities, setQuality } from '@semio/js/lib/uti
 
 export const ICON_WIDTH = 50
 export const TOLERANCE = 1e-5
+
+//#region Types
 
 // ↗️ Represents a Kit, the top-level container for types and designs.
 export type Kit = {
@@ -391,7 +392,7 @@ export type DesignDiff = {
   connections: ConnectionsDiff
 }
 
-export enum Status {
+export enum DiffStatus {
   Unchanged = 'unchanged',
   Added = 'added',
   Removed = 'removed',
@@ -830,6 +831,132 @@ const typeMap: any = {
   )
 }
 
+//#endregion
+
+//#region Functions
+
+
+export const jaccard = (a: string[] | undefined, b: string[] | undefined) => {
+  if ((a === undefined && b === undefined) || (a?.length === 0 && b?.length === 0)) return 1
+  const setA = new Set(a)
+  const setB = new Set(b)
+  const intersection = [...setA].filter((x) => setB.has(x)).length
+  const union = setA.size + setB.size - intersection
+  if (union === 0) return 0
+  return intersection / union
+}
+
+
+/**
+ * Sets a quality in a qualities array. If a quality with the same name exists, it is overwritten.
+ * @param qualities - The array of qualities to modify
+ * @param name - The name of the quality to set
+ * @param value - The value of the quality
+ * @param unit - Optional unit of the quality
+ * @param definition - Optional definition of the quality
+ * @returns The updated qualities array
+ */
+export const setQuality = (
+  qualities: Array<{ name: string, value?: string, unit?: string, definition?: string }> | undefined,
+  name: string,
+  value?: string,
+  unit?: string,
+  definition?: string
+): Array<{ name: string, value?: string, unit?: string, definition?: string }> => {
+  const qualitiesArray = qualities || []
+  const existingIndex = qualitiesArray.findIndex(q => q.name === name)
+
+  const newQuality = { name, value, unit, definition }
+
+  if (existingIndex >= 0) {
+    // Replace existing quality
+    qualitiesArray[existingIndex] = newQuality
+  } else {
+    // Add new quality
+    qualitiesArray.push(newQuality)
+  }
+
+  return qualitiesArray
+}
+
+/**
+ * Sets multiple qualities in a qualities array. For each quality, if one with the same name exists, it is overwritten.
+ * @param qualities - The array of qualities to modify
+ * @param newQualities - Array of qualities to set
+ * @returns The updated qualities array
+ */
+export const setQualities = (
+  qualities: Array<{ name: string, value?: string, unit?: string, definition?: string }> | undefined,
+  newQualities: Array<{ name: string, value?: string, unit?: string, definition?: string }>
+): Array<{ name: string, value?: string, unit?: string, definition?: string }> => {
+  return newQualities.reduce((acc, quality) =>
+    setQuality(acc, quality.name, quality.value, quality.unit, quality.definition),
+    qualities || []
+  )
+}
+
+/**
+ * Normalizes a value by converting undefined to empty string
+ * @param val - The value to normalize
+ * @returns Empty string if value is undefined, otherwise the original value
+ */
+const normalize = (val: string | undefined): string => (val === undefined ? '' : val)
+
+export const findType = <T extends { name: string, variant?: string }>(
+  kit: { types?: T[] },
+  typeId: { name: string, variant?: string }
+): T | undefined => {
+  return kit.types?.find(
+    (t) => t.name === typeId.name && normalize(t.variant) === normalize(typeId.variant)
+  )
+}
+
+/**
+ * Finds a design in a kit by its design ID
+ * @param kit - The kit containing the designs
+ * @param designId - The design identifier with name, variant, and view
+ * @returns The matching design or undefined if not found
+ */
+export const findDesign = <T extends { name: string, variant?: string, view?: string }>(
+  kit: { designs?: T[] },
+  designId: { name: string, variant?: string, view?: string }
+): T | undefined => {
+  return kit.designs?.find(
+    (d) =>
+      d.name === designId.name &&
+      normalize(d.variant) === normalize(designId.variant) &&
+      normalize(d.view) === normalize(designId.view)
+  )
+}
+
+export const sameRepresentation = (representation: Representation, other: Representation): boolean => {
+  return representation.tags?.every(tag => other.tags?.includes(tag)) ?? true
+}
+
+export const samePort = (port: Port | PortId, other: Port | PortId): boolean => {
+  return normalize(port.id_) === normalize(other.id_)
+}
+
+export const sameType = (type: Type | TypeId, other: Type | TypeId): boolean => {
+  return type.name === other.name && normalize(type.variant) === normalize(other.variant)
+}
+
+export const samePiece = (piece: Piece | PieceId, other: Piece | PieceId): boolean => {
+  return normalize(piece.id_) === normalize(other.id_)
+}
+
+export const sameConnection = (connection: Connection | ConnectionId, other: Connection | ConnectionId): boolean => {
+  return connection.connecting.piece.id_ === other.connecting.piece.id_ && connection.connected.piece.id_ === other.connected.piece.id_
+}
+
+export const sameDesign = (design: Design | DesignId, other: Design | DesignId): boolean => {
+  return design.name === other.name && normalize(design.variant) === normalize(other.variant) && normalize(design.view) === normalize(other.view)
+}
+
+export const sameKit = (kit: Kit | KitId, other: Kit | KitId): boolean => {
+  return kit.name === other.name && normalize(kit.version) === normalize(other.version)
+}
+
 const round = (value: number): number => {
   return Math.round(value / TOLERANCE) * TOLERANCE
 }
@@ -1165,31 +1292,28 @@ export const flattenDesign = (kit: Kit, designId: DesignId): Design => {
 
 export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean = false): Design => {
   if (inplace) {
-    // In-place mode: include all pieces and connections with status qualities
+    // In-place mode: include all pieces and connections with diff qualities
     const effectivePieces: Piece[] = base.pieces
       ? base.pieces
         .map((p: Piece) => {
           const pd = diff.pieces?.updated?.find((up: PieceDiff) => up.id_ === p.id_)
           const isRemoved = diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_)
           const baseWithUpdate = pd ? { ...p, ...pd } : p
-
-          // Add or update semio.status quality
-          const status = isRemoved ? Status.Removed : pd ? Status.Modified : Status.Unchanged
-
+          const diffStatus = isRemoved ? DiffStatus.Removed : pd ? DiffStatus.Modified : DiffStatus.Unchanged
           return {
             ...baseWithUpdate,
-            qualities: setQuality(baseWithUpdate.qualities, 'semio.status', status)
+            qualities: setQuality(baseWithUpdate.qualities, 'semio.diffStatus', diffStatus)
           }
         })
         .concat(
           (diff.pieces?.added || []).map((p: Piece) => ({
             ...p,
-            qualities: setQuality(p.qualities, 'semio.status', Status.Added)
+            qualities: setQuality(p.qualities, 'semio.diffStatus', DiffStatus.Added)
           }))
         )
       : (diff.pieces?.added || []).map((p: Piece) => ({
         ...p,
-        qualities: setQuality(p.qualities, 'semio.status', Status.Added)
+        qualities: setQuality(p.qualities, 'semio.diffStatus', DiffStatus.Added)
       }))
 
     const effectiveConnections: Connection[] = base.connections
@@ -1207,24 +1331,21 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
               rc.connected.piece.id_ === c.connected.piece.id_ && rc.connecting.piece.id_ === c.connecting.piece.id_
           )
           const baseWithUpdate = cd ? { ...c, ...cd } : c
-
-          // Add or update semio.status quality
-          const status = isRemoved ? Status.Removed : cd ? Status.Modified : Status.Unchanged
-
+          const diffStatus = isRemoved ? DiffStatus.Removed : cd ? DiffStatus.Modified : DiffStatus.Unchanged
           return {
             ...baseWithUpdate,
-            qualities: setQuality(baseWithUpdate.qualities, 'semio.status', status)
+            qualities: setQuality(baseWithUpdate.qualities, 'semio.diffStatus', diffStatus)
           }
         })
         .concat(
           (diff.connections?.added || []).map((c: Connection) => ({
             ...c,
-            qualities: setQuality(c.qualities, 'semio.status', Status.Added)
+            qualities: setQuality(c.qualities, 'semio.diffStatus', DiffStatus.Added)
           }))
         )
       : (diff.connections?.added || []).map((c: Connection) => ({
         ...c,
-        qualities: setQuality(c.qualities, 'semio.status', Status.Added)
+        qualities: setQuality(c.qualities, 'semio.diffStatus', DiffStatus.Added)
       }))
 
     return { ...base, pieces: effectivePieces, connections: effectiveConnections }
@@ -1295,12 +1416,4 @@ export const getPieceRepresentationUrls = (design: Design, types: Type[], tags: 
   return representationUrls
 }
 
-/**
- * 🏙️ Extension function to get a design from a kit by its DesignId.
- * @param kit - The kit containing the designs
- * @param designId - The identifier of the design to find
- * @returns The design if found, undefined otherwise
- */
-export const getDesign = (kit: Kit, designId: DesignId): Design | undefined => {
-  return findDesign(kit, designId)
-}
+//#endregion

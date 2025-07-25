@@ -50,15 +50,17 @@ import {
 } from '@react-three/drei'
 import { Canvas, ThreeEvent } from '@react-three/fiber'
 import {
+  DiffStatus,
   Piece,
   Plane,
-  Status,
   ToSemioRotation,
+  Vector,
   applyDesignDiff,
+  findDesign,
   flattenDesign,
-  getDesign,
   getPieceRepresentationUrls,
-  planeToMatrix
+  planeToMatrix,
+  sameDesign
 } from '@semio/js'
 import React, { FC, JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
@@ -96,8 +98,9 @@ interface ModelPieceProps {
   fileUrl: string
   selected?: boolean
   updating?: boolean
-  status?: Status
+  diffStatus?: DiffStatus
   onSelect: (piece: Piece) => void
+  onPieceUpdate: (piece: Piece) => void
 }
 
 const ModelPiece: FC<ModelPieceProps> = ({
@@ -106,30 +109,19 @@ const ModelPiece: FC<ModelPieceProps> = ({
   fileUrl,
   selected,
   updating,
-  status = Status.Unchanged,
-  onSelect
+  diffStatus = DiffStatus.Unchanged,
+  onSelect,
+  onPieceUpdate
 }) => {
+  const [drag, setDrag] = useState<Vector | null>(null)
+  const [dragKey, setDragKey] = useState(0)
   const fixed = piece.plane !== undefined
   const matrix = useMemo(() => {
-    // const threeToSemioRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
-    // const semioToThreeRotation = new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
-    // // const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
-    // const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z);
-    // const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z);
-    // const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis);
-    // const planeRotationMatrix = new THREE.Matrix4();
-    // planeRotationMatrix.makeBasis(xAxis.normalize(), yAxis.normalize(), zAxis.normalize());
-    // // planeRotationMatrix.setPosition(origin);
-    // const m = new THREE.Matrix4();
-    // m.multiply(threeToSemioRotation);
-    // m.multiply(planeRotationMatrix);
-    // m.multiply(semioToThreeRotation);
-    // m.multiply(new THREE.Matrix4().makeTranslation(plane.origin.x, -plane.origin.z, plane.origin.y));
-    // return m
+    // const draggedPlane = drag ? { ...plane, origin: { x: plane.origin.x + drag?.x, y: plane.origin.y + drag?.y, z: plane.origin.z + drag?.z } } : plane
     const planeRotationMatrix = planeToMatrix(plane)
     planeRotationMatrix.multiply(ToSemioRotation())
     return planeRotationMatrix
-  }, [plane])
+  }, [plane, drag])
   const baseScene = useMemo(() => useGLTF(fileUrl).scene.clone(), [fileUrl])
 
   const getMaterial = (color: string, opacity = 1) =>
@@ -147,13 +139,13 @@ const ModelPiece: FC<ModelPieceProps> = ({
   }
 
   const styledScene = useMemo(() => {
-    if (status === Status.Added) return applyMaterial(baseScene.clone(), 'green')
-    if (status === Status.Removed) return applyMaterial(baseScene.clone(), 'red', 0.2)
-    if (status === Status.Modified) return applyMaterial(baseScene.clone(), 'yellow')
+    if (diffStatus === DiffStatus.Added) return applyMaterial(baseScene.clone(), 'green')
+    if (diffStatus === DiffStatus.Removed) return applyMaterial(baseScene.clone(), 'red', 0.2)
+    if (diffStatus === DiffStatus.Modified) return applyMaterial(baseScene.clone(), 'yellow')
     if (selected) return applyMaterial(baseScene.clone(), getComputedColor('--color-primary'))
     if (updating) return applyMaterial(baseScene.clone(), getComputedColor('--color-foreground'), 0.1)
     return baseScene.clone()
-  }, [baseScene, status, selected, updating])
+  }, [baseScene, diffStatus, selected, updating])
 
   // Update selectedScene and updatingScene to use baseScene
   const selectedScene = useMemo(() => {
@@ -234,7 +226,7 @@ interface ModelDesignProps {
 
 const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDispatcher }) => {
   const { kit, designId, fileUrls, selection, designDiff } = designEditorState
-  const design = getDesign(kit, designId)
+  const design = findDesign(kit, designId)
   if (!design) {
     return null
   }
@@ -244,23 +236,13 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
     return flatDesign.pieces?.map((p) => p.plane!) || []
   }, [kit, designId])
 
-  // Use inplace mode to get all pieces including removed ones with status qualities
+  // Use inplace mode to get all pieces including removed ones with diff qualities
   const effectiveDesign = useMemo(() => applyDesignDiff(design, designDiff, true), [design, designDiff])
-
-  const tempKit = {
-    ...kit,
-    designs:
-      kit.designs?.map((d) => {
-        if (getDesign(kit, designId) === d) {
-          return effectiveDesign
-        }
-        return d
-      }) ?? []
-  }
+  const effectiveKit = { ...kit, designs: kit.designs?.map((d) => (sameDesign(design, d) ? effectiveDesign : d)) ?? [] }
   const piecePlanesFromEffectiveDesign = useMemo(() => {
-    const flatDesign = flattenDesign(tempKit, designId)
+    const flatDesign = flattenDesign(effectiveKit, designId)
     return flatDesign.pieces?.map((p) => p.plane!) || []
-  }, [tempKit, designId])
+  }, [effectiveKit, designId])
 
   const pieceRepresentationUrls = useMemo(() => {
     return getPieceRepresentationUrls(effectiveDesign, types)
@@ -283,13 +265,13 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
     })
   }, [pieceRepresentationUrls, fileUrls])
 
-  function getPieceStatusFromQuality(piece: Piece): Status {
-    const statusQuality = piece.qualities?.find((q) => q.name === 'semio.status')
-    return (statusQuality?.value as Status) || Status.Unchanged
+  function getPieceDiffFromQuality(piece: Piece): DiffStatus {
+    const diffQuality = piece.qualities?.find((q) => q.name === 'semio.diffStatus')
+    return (diffQuality?.value as DiffStatus) || DiffStatus.Unchanged
   }
 
-  const pieceStatuses = useMemo(() => {
-    return effectiveDesign.pieces?.map((piece) => getPieceStatusFromQuality(piece)) || []
+  const pieceDiffStatuses = useMemo(() => {
+    return effectiveDesign.pieces?.map((piece) => getPieceDiffFromQuality(piece)) || []
   }, [effectiveDesign])
 
   const handleSelectionChange = useCallback(
@@ -336,6 +318,19 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
     [selection, designEditorDispatcher]
   )
 
+  const onPieceUpdate = useCallback(
+    (piece: Piece) => {
+      if (!design) return
+
+      const newDesign = { ...design, pieces: design.pieces?.map((p) => p.id_ === piece.id_ ? piece : p) }
+
+      designEditorDispatcher({
+        type: DesignEditorAction.SetDesign,
+        payload: newDesign
+      })
+    },
+    [design, designEditorDispatcher]
+  )
   return (
     <Select box multiple onChange={handleSelectionChange} filter={(items) => items}>
       <group quaternion={new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)}>
@@ -346,8 +341,9 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
             plane={piecePlanesFromEffectiveDesign[index!]}
             fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_)!)!}
             selected={selection.selectedPieceIds.includes(piece.id_)}
-            status={pieceStatuses[index]}
+            diffStatus={pieceDiffStatuses[index]}
             onSelect={handlePieceSelect}
+            onPieceUpdate={onPieceUpdate}
           />
           // <PlaneThree key={`plane-${piece.id_}`} plane={piecePlanes![index]} />
         ))}

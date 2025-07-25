@@ -26,17 +26,12 @@ export { default as GrasshopperCatalogue } from '@semio/js/components/ui/Grassho
 export { default as Model } from '@semio/js/components/ui/Model'
 export { Layout, Mode, default as Sketchpad, Theme } from '@semio/js/components/ui/Sketchpad'
 export { default as eslintConfig } from '@semio/js/eslint.config'
-export { findDesign, setQualities, setQuality } from '@semio/js/lib/utils'
+export { extractFilesAndCreateUrls } from '@semio/js/lib/utils'
 export { default as postcssConfig } from '@semio/js/postcss.config'
 export {
-  ICON_WIDTH, Status,
-  ToSemioQuaternion,
-  ToSemioRotation,
-  ToThreeQuaternion,
-  ToThreeRotation, applyDesignDiff,
-  flattenDesign,
-  getDesign,
-  getPieceRepresentationUrls, planeToMatrix
+  applyDesignDiff, DiffStatus, findDesign, findType, flattenDesign, getPieceRepresentationUrls, ICON_WIDTH, planeToMatrix,
+  sameConnection, sameDesign, samePiece, samePort, sameRepresentation, sameType,
+  setQualities, setQuality, ToSemioQuaternion, ToSemioRotation, ToThreeQuaternion, ToThreeRotation
 } from '@semio/js/semio'
 export type {
   Author,
