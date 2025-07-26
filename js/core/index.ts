@@ -29,8 +29,7 @@ export { default as eslintConfig } from '@semio/js/eslint.config'
 export { extractFilesAndCreateUrls } from '@semio/js/lib/utils'
 export { default as postcssConfig } from '@semio/js/postcss.config'
 export {
-  applyDesignDiff, DiffStatus, findConnection, findConnections, findDesign, findPiece, findType, flattenDesign, getPieceRepresentationUrls, ICON_WIDTH, piecesMetadata, planeToMatrix,
-  sameConnection, sameDesign, samePiece, samePort, sameRepresentation, sameType,
+  applyDesignDiff, arePortsCompatible, DiffStatus, findConnection, findConnections, findDesign, findPiece, findPort, findType, flattenDesign, getPieceRepresentationUrls, hasConnection, ICON_WIDTH, isPortInUse, piecesMetadata, planeToMatrix, sameConnection, sameDesign, samePiece, samePort, sameRepresentation, sameType,
   setQualities, setQuality, ToSemioQuaternion, ToSemioRotation, ToThreeQuaternion, ToThreeRotation
 } from '@semio/js/semio'
 export type {

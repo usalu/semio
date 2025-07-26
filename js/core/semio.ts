@@ -365,8 +365,8 @@ export type SideDiff = {
 }
 
 export type ConnectionDiff = {
-  connected?: SideDiff
-  connecting?: SideDiff
+  connected: SideDiff
+  connecting: SideDiff
   description?: string
   gap?: number
   shift?: number
@@ -892,7 +892,29 @@ export const setQualities = (
 }
 
 
-const normalize = (val: string | undefined): string => (val === undefined ? '' : val)
+const normalize = (val: string | undefined | null): string => ((val === undefined || val === null) ? '' : val)
+
+
+export const arePortsCompatible = (port: Port, otherPort: Port): boolean => {
+  if ((normalize(port.family) === '' || normalize(otherPort.family) === '')) return true
+  return (port.compatibleFamilies ?? []).includes(normalize(otherPort.family)) || (otherPort.compatibleFamilies ?? []).includes(normalize(port.family)) || false
+}
+
+export const findPort = (type: Type, portId: PortId): Port => {
+  const port = type.ports?.find((p) => normalize(p.id_) === normalize(portId.id_))
+  if (!port) throw new Error(`Port ${portId.id_} not found in type ${type.name}`)
+  return port
+}
+
+export const isPortInUse = (design: Design, piece: Piece | PieceId, port: Port | PortId): boolean => {
+  const connections = findConnections(design, piece)
+  for (const connection of connections) {
+    const isPieceConnected = connection.connected.piece.id_ === piece.id_
+    const isPortConnected = isPieceConnected ? connection.connected.port.id_ === port.id_ : connection.connecting.port.id_ === port.id_
+    if (isPortConnected) return true
+  }
+  return false
+}
 
 export const findPiece = (design: Design, pieceId: PieceId): Piece => {
   const piece = design.pieces?.find((p) => p.id_ === pieceId.id_)
@@ -908,6 +930,10 @@ export const findConnection = (design: Design, connectionId: ConnectionId, stric
 
 export const findConnections = (design: Design, piece: Piece | PieceId): Connection[] => {
   return design.connections?.filter((c) => c.connected.piece.id_ === piece.id_ || c.connecting.piece.id_ === piece.id_) ?? []
+}
+
+export const hasConnection = (design: Design, connection: Connection | ConnectionId): boolean => {
+  return design.connections?.some((c) => sameConnection(c, connection)) ?? false
 }
 
 export const findType = (kit: Kit, typeId: TypeId): Type => {

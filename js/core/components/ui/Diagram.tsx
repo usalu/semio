@@ -44,6 +44,7 @@ import React, { FC, useState } from 'react'
 
 import {
   applyDesignDiff,
+  arePortsCompatible,
   Connection,
   ConnectionDiff,
   Design,
@@ -53,9 +54,11 @@ import {
   DiffStatus,
   findConnection,
   findDesign,
+  findPort,
   findType,
   flattenDesign,
   ICON_WIDTH,
+  isPortInUse,
   Kit,
   Piece,
   PieceDiff,
@@ -106,7 +109,7 @@ const PortHandle: React.FC<PortHandleProps> = ({ port }) => {
   const { x, y } = getPortPositionStyle(port)
 
   return (
-    <Handle id={port.id_} type="source" style={{ left: x + ICON_WIDTH / 2, top: y }} position={Position.Top} />
+    <Handle id={port.id_ ?? ''} type="source" style={{ left: x + ICON_WIDTH / 2, top: y }} position={Position.Top} />
   )
 }
 
@@ -326,18 +329,21 @@ const Diagram: FC<DiagramProps> = ({
     let updatedConnections: ConnectionDiff[] = []
 
     for (const selectedNode of nodes.filter((n) => selection?.selectedPieceIds.includes(n.id))) {
+      const piece = selectedNode.data.piece
+      const type = selectedNode.data.type
       let closestConnection: Connection | null = null
-      const selectedInternalNode = reactFlowInstance.getInternalNode(selectedNode.id)
-      if (!selectedInternalNode) throw new Error(`Internal node not found for ${selectedNode.id}`)
-      const handles = selectedInternalNode.internals.handleBounds?.source ?? []
       let closestDistance = Number.MAX_VALUE
+      const selectedInternalNode = reactFlowInstance.getInternalNode(selectedNode.id)!
       for (const otherNode of nodes.filter((n) => !(selection.selectedPieceIds ?? []).includes(n.id))) {
         const existingConnection = design.connections?.find((c) => sameConnection(c, { connected: { piece: { id_: selectedNode.id } }, connecting: { piece: { id_: otherNode.id } } }))
         if (existingConnection) continue
-        const otherInternalNode = reactFlowInstance.getInternalNode(otherNode.id)
-        if (!otherInternalNode) throw new Error(`Internal node not found for ${otherNode.id}`)
-        for (const handle of handles) {
+        const otherInternalNode = reactFlowInstance.getInternalNode(otherNode.id)!
+        for (const handle of selectedInternalNode.internals.handleBounds?.source ?? []) {
+          const port = findPort(type, { id_: handle.id! })
           for (const otherHandle of otherInternalNode.internals.handleBounds?.source ?? []) {
+            const otherPort = findPort(otherNode.data.type, { id_: otherHandle.id! })
+            // check if ports are compatible and other port is not already connected
+            if (!arePortsCompatible(port, otherPort) || isPortInUse(effectiveDesign, otherNode.data.piece, otherPort)) continue
             const dx = (selectedInternalNode.internals.positionAbsolute.x + handle.x) - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x)
             const dy = (selectedInternalNode.internals.positionAbsolute.y + handle.y) - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y)
             const distance = Math.sqrt(dx * dx + dy * dy)
@@ -355,59 +361,31 @@ const Diagram: FC<DiagramProps> = ({
       }
 
       if (closestConnection) {
-        // Should be like this:
-        // addedConnections.push(closestConnection)
-        // updatedPieces.push({ ...selectedNode.data.piece, center: undefined, plane: undefined })
-
-        // Temporary fix for the jump when dragging a node:
-        const pieceWithoutCenter = { ...selectedNode.data.piece, center: undefined, plane: undefined };
-        const tempDesign = applyDesignDiff(design, {
-          pieces: { updated: [pieceWithoutCenter] },
-          connections: { added: [closestConnection] }
-        });
-        const flatDesign = flattenDesign({ ...kit, designs: [tempDesign] }, designId);
-        const pieceWithCalculatedCenter = flatDesign.pieces!.find(p => p.id_ === selectedNode.id)!;
-        const calculatedCenter = pieceWithCalculatedCenter.center!;
-        // The position from the drag event corresponds to this center
-        const currentCenter = {
-          x: node.position.x / ICON_WIDTH,
-          y: -node.position.y / ICON_WIDTH
-        };
-        // The jump is the difference between where the node is and where flattenDesign puts it
-        const dx = currentCenter.x - calculatedCenter.x;
-        const dy = currentCenter.y - calculatedCenter.y;
-        // Adjust the connection offset to cancel the jump
-        const adjustedConnection = {
-          ...closestConnection,
-          x: (closestConnection.x ?? 0) + dx,
-          y: (closestConnection.y ?? 0) + dy
-        };
-
-        addedConnections.push(adjustedConnection);
-        updatedPieces.push(pieceWithoutCenter);
+        addedConnections.push(closestConnection)
+        updatedPieces.push({ ...selectedNode.data.piece, center: undefined, plane: undefined })
       }
       else {
-        const piece = selectedNode.data.piece
-        if (piece.center) {
-          const scaledOffset = { x: (node.position.x - last.x) / ICON_WIDTH, y: -(node.position.y - last.y) / ICON_WIDTH }
-          updatedPieces.push({ ...piece, center: { x: piece.center!.x + scaledOffset.x, y: piece.center!.y + scaledOffset.y } })
-        }
-        else {
+        if (!piece.center) {
+
           const parentPieceId = metadata.get(selectedNode.id)!.parentPieceId!
           const parentInternalNode = reactFlowInstance.getInternalNode(parentPieceId)
           if (!parentInternalNode) throw new Error(`Internal node not found for ${parentPieceId}`)
           const parentConnection = findConnection(effectiveDesign, { connected: { piece: { id_: selectedNode.id } }, connecting: { piece: { id_: parentPieceId } } })
-          const isSelectedConnecting = parentConnection.connecting.piece.id_ === selectedNode.id
-          const selectedInternalNode = reactFlowInstance.getInternalNode(selectedNode.id)!
-          const handle = selectedInternalNode.internals.handleBounds?.source?.find((h) => h.id === (isSelectedConnecting ? parentConnection.connected.port.id_ : parentConnection.connecting.port.id_))
-          if (!handle) throw new Error(`Handle not found for ${parentConnection.connecting.port.id_}`)
-          const parentHandle = parentInternalNode.internals.handleBounds?.source?.find((h) => h.id === (isSelectedConnecting ? parentConnection.connecting.port.id_ : parentConnection.connected.port.id_))
-          if (!parentHandle) throw new Error(`Handle not found for ${parentConnection.connected.port.id_}`)
+          // const isSelectedConnecting = parentConnection.connecting.piece.id_ === selectedNode.id
+          // const selectedInternalNode = reactFlowInstance.getInternalNode(selectedNode.id)!
+          // const handle = selectedInternalNode.internals.handleBounds?.source?.find((h) => h.id === (isSelectedConnecting ? parentConnection.connected.port.id_ : parentConnection.connecting.port.id_))
+          // if (!handle) throw new Error(`Handle not found for ${parentConnection.connecting.port.id_}`)
+          // const parentHandle = parentInternalNode.internals.handleBounds?.source?.find((h) => h.id === (isSelectedConnecting ? parentConnection.connecting.port.id_ : parentConnection.connected.port.id_))
+          // if (!parentHandle) throw new Error(`Handle not found for ${parentConnection.connected.port.id_}`)
           updatedConnections.push({
             ...parentConnection,
             x: (parentConnection.x ?? 0) + ((node.position.x - last.x) / ICON_WIDTH),
             y: (parentConnection.y ?? 0) - ((node.position.y - last.y) / ICON_WIDTH)
           })
+        }
+        else {
+          const scaledOffset = { x: (node.position.x - last.x) / ICON_WIDTH, y: -(node.position.y - last.y) / ICON_WIDTH }
+          updatedPieces.push({ ...piece, center: { x: piece.center!.x + scaledOffset.x, y: piece.center!.y + scaledOffset.y } })
         }
       }
 
