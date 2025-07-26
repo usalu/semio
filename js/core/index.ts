@@ -19,7 +19,7 @@
 
 // #endregion
 export { default as DesignEditor, DesignEditorAction } from '@semio/js/components/ui/DesignEditor'
-export type { DesignEditorDispatcher, DesignEditorState } from '@semio/js/components/ui/DesignEditor'
+export type { DesignEditorDispatcher, DesignEditorSelection, DesignEditorState } from '@semio/js/components/ui/DesignEditor'
 export { default as Diagram } from '@semio/js/components/ui/Diagram'
 export { default as File } from '@semio/js/components/ui/File'
 export { default as GrasshopperCatalogue } from '@semio/js/components/ui/GrasshopperCatalogue'
@@ -29,16 +29,14 @@ export { default as eslintConfig } from '@semio/js/eslint.config'
 export { extractFilesAndCreateUrls } from '@semio/js/lib/utils'
 export { default as postcssConfig } from '@semio/js/postcss.config'
 export {
-  applyDesignDiff, DiffStatus, findDesign, findType, flattenDesign, getPieceRepresentationUrls, ICON_WIDTH, planeToMatrix,
+  applyDesignDiff, DiffStatus, findConnection, findConnections, findDesign, findPiece, findType, flattenDesign, getPieceRepresentationUrls, ICON_WIDTH, piecesMetadata, planeToMatrix,
   sameConnection, sameDesign, samePiece, samePort, sameRepresentation, sameType,
   setQualities, setQuality, ToSemioQuaternion, ToSemioRotation, ToThreeQuaternion, ToThreeRotation
 } from '@semio/js/semio'
 export type {
   Author,
-  Connection,
-  ConnectionId,
-  ConnectionsDiff,
-  Design,
+  Connection, ConnectionDiff, ConnectionId,
+  ConnectionsDiff, Design,
   DesignDiff,
   DesignId,
   DiagramPoint,
@@ -54,13 +52,13 @@ export type {
   PortId,
   Quality,
   Representation,
-  Side,
+  Side, SideDiff,
   SideId,
   Type,
   TypeId,
   Vector
 } from '@semio/js/semio'
-export type { DesignEditorSelection, DesignEditorStoreState } from '@semio/js/store'
+export type { DesignEditorStoreState } from '@semio/js/store'
 export { default as tailwindConfig } from '@semio/js/tailwind.config'
 // Exporting vite configs blows up storybook and nextjs
 // export { default as viteConfig } from '@semio/js/vite.config';

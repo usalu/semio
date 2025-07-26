@@ -23,6 +23,14 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { default as Metabolism } from "@semio/assets/semio/kit_metabolism.json";
 import { DesignEditor, extractFilesAndCreateUrls } from '@semio/js';
 
+const metabolismWithEmptyDesign = {
+  ...Metabolism,
+  designs: [
+    ...Metabolism.designs,
+    { name: "New Design", pieces: [], connections: [] }
+  ]
+}
+
 const meta = {
   title: 'Studio/DesignEditor',
   component: DesignEditor,
@@ -40,6 +48,23 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const NewDesign: Story = {
+  loaders: [
+    async () => ({
+      fileUrls: await extractFilesAndCreateUrls("metabolism.zip"),
+    }),
+  ],
+  args: {
+    initialKit: metabolismWithEmptyDesign,
+    designId: {
+      name: "New Design"
+    },
+  },
+  render: (args, { loaded: { fileUrls } }) => (
+    <DesignEditor {...args} fileUrls={fileUrls} />
+  ),
+}
 
 export const NakaginCapsuleTower: Story = {
   loaders: [

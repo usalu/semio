@@ -39,7 +39,14 @@ import { Slider } from '@semio/js/components/ui/Slider'
 import { Textarea } from '@semio/js/components/ui/Textarea'
 import { ToggleGroup, ToggleGroupItem } from '@semio/js/components/ui/ToggleGroup'
 import { Generator } from '@semio/js/lib/utils'
-import { DesignEditorSelection } from '@semio/js/store'
+
+export interface DesignEditorSelection {
+  selectedPieceIds: string[];
+  selectedConnections: {
+    connectingPieceId: string;
+    connectedPieceId: string;
+  }[];
+}
 
 // Type for panel visibility toggles
 interface PanelToggles {
@@ -659,10 +666,10 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   const state = isControlled ? controlledState : uncontrolledState
   const dispatch = isControlled ? controlledDispatch : uncontrolledDispatch
 
+  if (!state.kit) return null
+
   const design = findDesign(state.kit, designId)
-  if (!design) {
-    return null
-  }
+  if (!design) return null
 
   // #region Panels
   const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({

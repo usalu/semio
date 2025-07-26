@@ -28,7 +28,7 @@ import { UndoManager } from 'yjs';
 import initSqlJs from 'sql.js';
 import sqlWasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 
-import { Author, Connection, Design, DesignId, DiagramPoint, Kit, Piece, Plane, Point, Port, Quality, Representation, Side, Type, Vector, flattenDesign } from '@semio/js';
+import { Author, Connection, Design, DesignEditorSelection, DesignId, DiagramPoint, Kit, Piece, Plane, Point, Port, Quality, Representation, Side, Type, Vector, flattenDesign } from '@semio/js';
 import { Generator } from '@semio/js/lib/utils';
 import { KitId } from './semio';
 
@@ -1658,14 +1658,6 @@ export const useKit = () => {
     }
     return kit;
 };
-
-export interface DesignEditorSelection {
-    selectedPieceIds: string[];
-    selectedConnections: {
-        connectingPieceId: string;
-        connectedPieceId: string;
-    }[];
-}
 
 export interface DesignEditorStoreState {
     selection: DesignEditorSelection;

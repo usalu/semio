@@ -45,19 +45,25 @@ import React, { FC, useState } from 'react'
 import {
   applyDesignDiff,
   Connection,
+  ConnectionDiff,
   Design,
   DesignDiff,
   DesignId,
   DiagramPoint,
   DiffStatus,
+  findConnection,
   findDesign,
   findType,
   flattenDesign,
   ICON_WIDTH,
   Kit,
   Piece,
+  PieceDiff,
+  piecesMetadata,
   Port,
+  sameConnection,
   sameDesign,
+  samePiece,
   Type
 } from '@semio/js'
 
@@ -168,15 +174,14 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
   const HANDLE_HEIGHT = 5
   const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`
 
-  const isIntermediate = data?.connection?.qualities?.some(q => q.name === 'semio.intermediate') ?? id?.startsWith('intermediate-edge');
   const diff = data?.connection?.qualities?.find(q => q.name === 'semio.diffStatus')?.value as DiffStatus || DiffStatus.Unchanged;
 
-  let stroke = 'var(--foreground)';
+  let stroke = 'var(--color-foreground)';
   let dasharray: string | undefined;
-  let opacity = isIntermediate ? 0.5 : 1;
+  let opacity = 1;
 
   if (selected) {
-    stroke = 'var(--primary)';
+    stroke = 'var(--color-primary)';
   } else if (diff === DiffStatus.Added) {
     stroke = 'green';
     dasharray = '5 5';
@@ -235,24 +240,14 @@ const connectionToEdge = (connection: Connection, selected: boolean): Connection
   selected
 })
 
-const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEditorSelection, designDiff: DesignDiff) => {
+const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEditorSelection) => {
   const design = findDesign(kit, designId)
   if (!design) return null
-  const effectiveDesign = applyDesignDiff(design, designDiff, true)
-  const effectiveKit = {
-    ...kit,
-    designs: kit.designs!.map((d: Design) => {
-      if (sameDesign(design, d)) {
-        return effectiveDesign
-      }
-      return d
-    })
-  }
-  const centers = flattenDesign(effectiveKit, designId).pieces?.map(p => p.center)
-  const pieceNodes = effectiveDesign.pieces?.map(
+  const centers = flattenDesign(kit, designId).pieces?.map(p => p.center)
+  const pieceNodes = design.pieces?.map(
     (piece, i) => pieceToNode(piece, findType(kit, piece.type)!, centers![i]!, selection?.selectedPieceIds.includes(piece.id_) ?? false)) ?? []
   const connectionEdges =
-    effectiveDesign.connections?.map((connection) => connectionToEdge(connection, selection?.selectedConnections.some(
+    design.connections?.map((connection) => connectionToEdge(connection, selection?.selectedConnections.some(
       (c) =>
         c.connectingPieceId === connection.connecting.piece.id_ &&
         c.connectedPieceId === connection.connected.piece.id_
@@ -276,21 +271,33 @@ const Diagram: FC<DiagramProps> = ({
   //#region State
   const { kit, designId, selection, fullscreenPanel, designDiff } = designEditorState
   const [dragState, setDragState] = useState<{
-    origin: XYPosition
-    offset: XYPosition | null
-    diff: DesignDiff | null
+    start: XYPosition
+    last: XYPosition
   } | null>(null)
   const fullscreen = fullscreenPanel === 'diagram'
   const onDesignChange = (d: Design) => designEditorDispatcher({ type: DesignEditorAction.SetDesign, payload: d })
+  const onDesignDiffChange = (d: DesignDiff) => designEditorDispatcher({ type: DesignEditorAction.SetDesignDiff, payload: d })
   const onSelectionChange = (s: DesignEditorSelection) => designEditorDispatcher({ type: DesignEditorAction.SetSelection, payload: s })
   if (!kit) return null
+  const design = findDesign(kit, designId)
+  if (!design) return null
+  const effectiveDesign = applyDesignDiff(design, designDiff, true)
+  const effectiveKit = {
+    ...kit,
+    designs: kit.designs!.map((d: Design) => {
+      if (sameDesign(design, d)) {
+        return effectiveDesign
+      }
+      return d
+    })
+  }
   //#endregion
 
-  const { nodes, edges } = designToNodesAndEdges(kit, designId, selection, designDiff) ?? { nodes: [], edges: [] }
+  const { nodes, edges } = designToNodesAndEdges(effectiveKit, designId, selection) ?? { nodes: [], edges: [] }
   const reactFlowInstance = useReactFlow()
 
   //#region Dragging
-  const handleNodeDragStart =
+  const onNodeDragStart =
     (event: any, node: Node) => {
       const currentSelectedIds = selection?.selectedPieceIds ?? []
       const isNodeSelected = currentSelectedIds.includes(node.id)
@@ -303,414 +310,145 @@ const Diagram: FC<DiagramProps> = ({
       }
 
       setDragState({
-        origin: { x: node.position.x, y: node.position.y },
-        offset: { x: 0, y: 0 },
-        diff: null
+        start: { x: node.position.x, y: node.position.y },
+        last: { x: node.position.x, y: node.position.y }
       })
     }
 
-  const handleNodeDrag = (event: any, node: Node) => {
+  const onNodeDrag = (event: any, node: Node) => {
+    // TODO: Fix the reset after proximity connect is estabilished
+    const MIN_DISTANCE = 150
+    const { start, last } = dragState!
+    const metadata = piecesMetadata(effectiveKit, designId)
 
-    const proximityConnections: Connection[] = []
+    const addedConnections: Connection[] = []
+    let updatedPieces: PieceDiff[] = []
+    let updatedConnections: ConnectionDiff[] = []
+
     for (const selectedNode of nodes.filter((n) => selection?.selectedPieceIds.includes(n.id))) {
-
-      const MIN_DISTANCE = 150
-      const pieceNode = selectedNode as PieceNode
-      const ports = pieceNode.data.type.ports || []
-      const handlePositions = ports.map((port) => {
-        const { x: portX, y: portY } = getPortPositionStyle(port)
-        const draggedHandles = {
-          handleId: port.id_ || '',
-          x: pieceNode.position.x + portX + ICON_WIDTH / 2,
-          y: pieceNode.position.y + portY
-        }
-      })
-
-      let closestHandle = {
-        distance: Number.MAX_VALUE,
-        source: null as null | { nodeId: string; handleId: string },
-        target: null as null | { nodeId: string; handleId: string },
-        dx: 0,
-        dy: 0
-      }
-
-      const originalDraggedId = selectedNode.id.slice(12)
-      const selectedNodeIds = selection.selectedPieceIds ?? []
-
-      // Iterate over all other nodes in the array
-      for (const otherNode of nodes) {
-        // Skip the selectedNode itself, the original dragged selectedNode, and any selected nodes
-        if (|| otherNode.id === originalDraggedId || selectedNodeIds.includes(otherNode.id))
-          continue
+      let closestConnection: Connection | null = null
+      const selectedInternalNode = reactFlowInstance.getInternalNode(selectedNode.id)
+      if (!selectedInternalNode) throw new Error(`Internal node not found for ${selectedNode.id}`)
+      const handles = selectedInternalNode.internals.handleBounds?.source ?? []
+      let closestDistance = Number.MAX_VALUE
+      for (const otherNode of nodes.filter((n) => !(selection.selectedPieceIds ?? []).includes(n.id))) {
+        const existingConnection = design.connections?.find((c) => sameConnection(c, { connected: { piece: { id_: selectedNode.id } }, connecting: { piece: { id_: otherNode.id } } }))
+        if (existingConnection) continue
         const otherInternalNode = reactFlowInstance.getInternalNode(otherNode.id)
-        if (!otherInternalNode) continue
-        // Get all handles on the other selectedNode
-        const handles = otherInternalNode.internals.handleBounds?.source ?? []
-        const otherHandles = handles
-          .filter((handle) => handle.id !== null && handle.id !== undefined)
-          .map((handle) => ({
-            handleId: handle.id as string,
-            x: otherInternalNode.internals.positionAbsolute.x + handle.x + handle.width / 2,
-            y: otherInternalNode.internals.positionAbsolute.y + handle.y + handle.height / 2
-          }))
-        // Compare all handles between dragged selectedNode and other selectedNode
-        for (const draggedHandle of draggedHandles) {
-          for (const otherHandle of otherHandles) {
-            const dx = draggedHandle.x - otherHandle.x
-            const dy = draggedHandle.y - otherHandle.y
+        if (!otherInternalNode) throw new Error(`Internal node not found for ${otherNode.id}`)
+        for (const handle of handles) {
+          for (const otherHandle of otherInternalNode.internals.handleBounds?.source ?? []) {
+            const dx = (selectedInternalNode.internals.positionAbsolute.x + handle.x) - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x)
+            const dy = (selectedInternalNode.internals.positionAbsolute.y + handle.y) - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y)
             const distance = Math.sqrt(dx * dx + dy * dy)
-            if (distance < closestHandle.distance && distance < MIN_DISTANCE) {
-              // Always assign the selectedNode with the lower id as source for consistency
-              if (node.id < otherNode.id) {
-                // source: node, target: otherNode. Vector from source to target is other - node = -dx, -dy
-                return {
-                  distance,
-                  source: {
-                    nodeId: node.id,
-                    handleId: draggedHandle.handleId
-                  },
-                  target: {
-                    nodeId: otherNode.id,
-                    handleId: otherHandle.handleId
-                  },
-                  dx: -dx,
-                  dy: -dy
-                }
-              } else {
-                // source: otherNode, target: node. Vector from source to target is node - other = dx, dy
-                closestHandle = {
-                  distance,
-                  source: {
-                    nodeId: otherNode.id,
-                    handleId: otherHandle.handleId
-                  },
-                  target: {
-                    nodeId: node.id,
-                    handleId: draggedHandle.handleId
-                  },
-                  dx: dx,
-                  dy: dy
-                }
+            if (distance < closestDistance && distance < MIN_DISTANCE) {
+              closestConnection = {
+                connected: { piece: { id_: otherNode.id }, port: { id_: otherHandle.id! } },
+                connecting: { piece: { id_: selectedInternalNode.id }, port: { id_: handle.id! } },
+                x: ((selectedInternalNode.internals.positionAbsolute.x + handle.x) - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x)) / ICON_WIDTH,
+                y: -(((selectedInternalNode.internals.positionAbsolute.y + handle.y) - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y)) / ICON_WIDTH)
               }
+              closestDistance = distance
             }
           }
         }
-
-        const closestEdge = {
-          id: `${closestHandle.source.nodeId}-${closestHandle.source.handleId}__${closestHandle.target.nodeId}-${closestHandle.target.handleId}`,
-          source: closestHandle.source.nodeId,
-          sourceHandle: closestHandle.source.handleId,
-          target: closestHandle.target.nodeId,
-          targetHandle: closestHandle.target.handleId,
-          data: { dx: closestHandle.dx, dy: closestHandle.dy }
-        }
-
-        proximityEdges.push({
-          ...closestEdge,
-          id: 'intermediate-edge-' + selectedNode.id,
-          className: 'temp'
-        })
-
-      }
-    }
-
-    // Recreate intermediate nodes to calculate proximity edges
-    const selectedNodeIds = new Set(selection.selectedPieceIds ?? [])
-    const intermediateNodes: PieceNode[] = Array.from(selectedNodeIds)
-      .map((id) => {
-        const orig = nodes.find((n) => n.id === id)
-        if (!orig) return undefined
-        return {
-          ...orig,
-          id: 'intermediate' + id,
-          position: {
-            x: orig.position.x + offset.x,
-            y: orig.position.y + offset.y
-          },
-          data: { ...orig.data, isIntermediate: true }
-        }
-      })
-      .filter(Boolean) as PieceNode[]
-
-    const design = getDesign(kit, designId)
-
-    if (design) {
-      const scaledOffset = {
-        x: offset.x / ICON_WIDTH,
-        y: -offset.y / ICON_WIDTH
       }
 
-      // If there are no proximity edges, this is a simple position update
-      if (dragState.diff) {
-        const updatedPieces = design.pieces?.map((piece) => {
-          // If a dragged piece, just update its position
-          if (selectedNodeIds.has(piece.id_) && piece.center) {
-            return {
-              ...piece,
-              center: {
-                x: piece.center.x + scaledOffset.x,
-                y: piece.center.y + scaledOffset.y
-              }
-            }
-          }
-          // Other pieces are unchanged
-          return piece
-        })
+      if (closestConnection) {
+        // Should be like this:
+        // addedConnections.push(closestConnection)
+        // updatedPieces.push({ ...selectedNode.data.piece, center: undefined, plane: undefined })
 
-        const newDesignDiffAfter = {
-          ...designDiff,
-          pieces: updatedPieces
+        // Temporary fix for the jump when dragging a node:
+        const pieceWithoutCenter = { ...selectedNode.data.piece, center: undefined, plane: undefined };
+        const tempDesign = applyDesignDiff(design, {
+          pieces: { updated: [pieceWithoutCenter] },
+          connections: { added: [closestConnection] }
+        });
+        const flatDesign = flattenDesign({ ...kit, designs: [tempDesign] }, designId);
+        const pieceWithCalculatedCenter = flatDesign.pieces!.find(p => p.id_ === selectedNode.id)!;
+        const calculatedCenter = pieceWithCalculatedCenter.center!;
+        // The position from the drag event corresponds to this center
+        const currentCenter = {
+          x: node.position.x / ICON_WIDTH,
+          y: -node.position.y / ICON_WIDTH
+        };
+        // The jump is the difference between where the node is and where flattenDesign puts it
+        const dx = currentCenter.x - calculatedCenter.x;
+        const dy = currentCenter.y - calculatedCenter.y;
+        // Adjust the connection offset to cancel the jump
+        const adjustedConnection = {
+          ...closestConnection,
+          x: (closestConnection.x ?? 0) + dx,
+          y: (closestConnection.y ?? 0) + dy
         };
 
-        if (JSON.stringify(newDesignDiffAfter) === JSON.stringify(designDiff)) return;
-        onDesignChange({
-          ...design,
-          pieces: updatedPieces
-        })
-        return
+        addedConnections.push(adjustedConnection);
+        updatedPieces.push(pieceWithoutCenter);
       }
-
-      // Handle connection creation when proximity edges exist
-      const newChildPieceIds = new Set<string>()
-
-      // Convert proximity edges to new Semio connections
-      const newConnections = dragState.diff!.connections.
-          .map((edge): Connection | null => {
-        const sourceId = edge.source!.startsWith('intermediate') ? edge.source!.substring(12) : edge.source!
-        const targetId = edge.target!.startsWith('intermediate') ? edge.target!.substring(12) : edge.target!
-
-        // Validate connection: no self-connections
-        if (sourceId === targetId) return null
-
-        // Validate handles exist
-        if (!edge.sourceHandle || !edge.targetHandle) return null
-
-        // Ensure we don't connect two dragged pieces to each other
-        const sourceDragged = selectedNodeIds.has(sourceId)
-        const targetDragged = selectedNodeIds.has(targetId)
-        if (sourceDragged && targetDragged) return null
-
-        // Identify which piece was dragged to become a child
-        if (sourceDragged) newChildPieceIds.add(sourceId)
-        if (targetDragged) newChildPieceIds.add(targetId)
-
-        const dx = typeof edge.data?.dx === 'number' ? edge.data.dx : 0
-        const dy = typeof edge.data?.dy === 'number' ? edge.data.dy : 0
-
-        const scaledDx = dx / ICON_WIDTH
-        const scaledDy = -dy / ICON_WIDTH
-
-        // Validate that the offset is not zero (required by the backend)
-        if (Math.abs(scaledDx) < 0.001 && Math.abs(scaledDy) < 0.001) {
-          console.warn('Skipping connection with zero offset:', { sourceId, targetId, dx, dy })
-          return null
+      else {
+        const piece = selectedNode.data.piece
+        if (piece.center) {
+          const scaledOffset = { x: (node.position.x - last.x) / ICON_WIDTH, y: -(node.position.y - last.y) / ICON_WIDTH }
+          updatedPieces.push({ ...piece, center: { x: piece.center!.x + scaledOffset.x, y: piece.center!.y + scaledOffset.y } })
         }
-
-        const newConnection = {
-          connecting: { piece: { id_: sourceId }, port: { id_: edge.sourceHandle } },
-          connected: { piece: { id_: targetId }, port: { id_: edge.targetHandle } },
-          description: '',
-          gap: 0,
-          shift: 0,
-          rise: 0,
-          rotation: 0,
-          turn: 0,
-          tilt: 0,
-          x: scaledDx,
-          y: scaledDy
-        }
-
-        // Debug log to help identify issues
-        console.log('Creating proximity connection:', {
-          source: sourceId,
-          target: targetId,
-          sourceHandle: edge.sourceHandle,
-          targetHandle: edge.targetHandle,
-          dx: scaledDx,
-          dy: scaledDy
-        })
-
-        return newConnection
-      })
-        .filter(Boolean) as Connection[]
-
-      // If no valid connections were created, treat this as a simple position update
-      if (newConnections.length === 0) {
-        const updatedPieces = design.pieces?.map((piece) => {
-          // If a dragged piece, just update its position
-          if (selectedNodeIds.has(piece.id_) && piece.center) {
-            return {
-              ...piece,
-              center: {
-                x: piece.center.x + scaledOffset.x,
-                y: piece.center.y + scaledOffset.y
-              }
-            }
-          }
-          // Other pieces are unchanged
-          return piece
-        })
-
-        const newDesignDiffAfter = {
-          ...designDiff,
-          pieces: updatedPieces
-        };
-
-        if (JSON.stringify(newDesignDiffAfter) === JSON.stringify(designDiff)) return;
-        onDesignChange({
-          ...design,
-          pieces: updatedPieces
-        })
-        return
-      }
-
-      const updatedPieces = design.pieces?.map((piece) => {
-        // If a dragged piece is now connected, it becomes a child.
-        // Its absolute position is removed, to be derived from its parent.
-        if (newChildPieceIds.has(piece.id_)) {
-          const { center, plane, ...rest } = piece
-          return rest
-        }
-
-        // If a dragged piece was NOT connected, it just moves.
-        if (selectedNodeIds.has(piece.id_) && piece.center) {
-          return {
-            ...piece,
-            center: {
-              x: piece.center.x + scaledOffset.x,
-              y: piece.center.y + scaledOffset.y
-            }
-          }
-        }
-
-        // Other pieces are unchanged.
-        return piece
-      })
-
-      // Filter out old connections of moved pieces and add new ones
-      const originalConnections = design.connections ?? []
-      const preservedConnections = originalConnections.filter((c) => {
-        const sourceSelected = selectedNodeIds.has(c.connecting.piece.id_)
-        const targetSelected = selectedNodeIds.has(c.connected.piece.id_)
-        // Keep connections that are not attached to moved pieces OR are internal to the selection
-        return (!sourceSelected && !targetSelected) || (sourceSelected && targetSelected)
-      })
-
-      // Check for duplicates before adding new connections
-      const validNewConnections: Connection[] = []
-      const processedConnectionKeys = new Set<string>()
-
-      for (const newConn of newConnections) {
-        const newIds = [newConn.connecting.piece.id_, newConn.connected.piece.id_].sort().join('--')
-
-        // Check against existing preserved connections
-        const isDuplicatePreserved = preservedConnections.some((c) => {
-          const existingIds = [c.connecting.piece.id_, c.connected.piece.id_].sort().join('--')
-          return newIds === existingIds
-        })
-
-        // Check if we've already processed this connection pair
-        if (!isDuplicatePreserved && !processedConnectionKeys.has(newIds)) {
-          validNewConnections.push(newConn)
-          processedConnectionKeys.add(newIds)
+        else {
+          const parentPieceId = metadata.get(selectedNode.id)!.parentPieceId!
+          const parentInternalNode = reactFlowInstance.getInternalNode(parentPieceId)
+          if (!parentInternalNode) throw new Error(`Internal node not found for ${parentPieceId}`)
+          const parentConnection = findConnection(effectiveDesign, { connected: { piece: { id_: selectedNode.id } }, connecting: { piece: { id_: parentPieceId } } })
+          const isSelectedConnecting = parentConnection.connecting.piece.id_ === selectedNode.id
+          const selectedInternalNode = reactFlowInstance.getInternalNode(selectedNode.id)!
+          const handle = selectedInternalNode.internals.handleBounds?.source?.find((h) => h.id === (isSelectedConnecting ? parentConnection.connected.port.id_ : parentConnection.connecting.port.id_))
+          if (!handle) throw new Error(`Handle not found for ${parentConnection.connecting.port.id_}`)
+          const parentHandle = parentInternalNode.internals.handleBounds?.source?.find((h) => h.id === (isSelectedConnecting ? parentConnection.connecting.port.id_ : parentConnection.connected.port.id_))
+          if (!parentHandle) throw new Error(`Handle not found for ${parentConnection.connected.port.id_}`)
+          updatedConnections.push({
+            ...parentConnection,
+            x: (parentConnection.x ?? 0) + ((node.position.x - last.x) / ICON_WIDTH),
+            y: (parentConnection.y ?? 0) - ((node.position.y - last.y) / ICON_WIDTH)
+          })
         }
       }
 
-      const allConnections = [...preservedConnections, ...validNewConnections]
-      const newDesignDiffAfter = {
-        ...designDiff,
-        pieces: updatedPieces,
-        connections: allConnections
-      };
+      onDesignDiffChange({ pieces: { updated: updatedPieces }, connections: { added: addedConnections, updated: updatedConnections } })
+      setDragState({ ...dragState!, last: node.position })
 
-      if (JSON.stringify(newDesignDiffAfter) === JSON.stringify(designDiff)) return;
-      onDesignChange({
-        ...design,
-        pieces: updatedPieces,
-        connections: allConnections
-      })
     }
+
   }
 
   const handleNodeDragStop = () => {
+    const updatedDesign = applyDesignDiff(design, designDiff)
+    onDesignChange(updatedDesign)
+    onDesignDiffChange({})
     setDragState(null)
   }
-
   //#endregion
 
   const onConnect =
     (params: RFConnection) => {
       if (params.source === params.target) return
 
-      const sourceInternal = reactFlowInstance.getInternalNode(params.source)
-      const targetInternal = reactFlowInstance.getInternalNode(params.target)
+      const sourceInternalNode = reactFlowInstance.getInternalNode(params.source)
+      const targetInternalNode = reactFlowInstance.getInternalNode(params.target)
+      if (!sourceInternalNode || !targetInternalNode) return
 
-      if (!sourceInternal || !targetInternal) return
-
-      const sourceHandles = sourceInternal.internals.handleBounds?.source ?? []
-      const targetHandles = targetInternal.internals.handleBounds?.target ?? []
-
-      const sourceHandle = sourceHandles.find((h) => h.id === params.sourceHandle)
-      const targetHandle = targetHandles.find((h) => h.id === params.targetHandle)
-
+      const sourceHandle = (sourceInternalNode.internals.handleBounds?.source ?? []).find((h) => h.id === params.sourceHandle)
+      const targetHandle = (targetInternalNode.internals.handleBounds?.source ?? []).find((h) => h.id === params.targetHandle)
       if (!sourceHandle || !targetHandle) return
 
-      const sourcePos = {
-        x: sourceInternal.internals.positionAbsolute.x + sourceHandle.x + sourceHandle.width / 2,
-        y: sourceInternal.internals.positionAbsolute.y + sourceHandle.y + sourceHandle.height / 2
+      const newConnection = {
+        connected: { piece: { id_: params.source! }, port: { id_: params.sourceHandle! } },
+        connecting: { piece: { id_: params.target! }, port: { id_: params.targetHandle! } },
+        x: ((sourceInternalNode.internals.positionAbsolute.x + sourceHandle.x) - (targetInternalNode.internals.positionAbsolute.x + targetHandle.x)) / ICON_WIDTH,
+        y: -(((sourceInternalNode.internals.positionAbsolute.y + sourceHandle.y) - (targetInternalNode.internals.positionAbsolute.y + targetHandle.y)) / ICON_WIDTH)
       }
-
-      const targetPos = {
-        x: targetInternal.internals.positionAbsolute.x + targetHandle.x + targetHandle.width / 2,
-        y: targetInternal.internals.positionAbsolute.y + targetHandle.y + targetHandle.height / 2
-      }
-
-      const dx = targetPos.x - sourcePos.x
-      const dy = targetPos.y - sourcePos.y
-
-      const scaledX = dx / ICON_WIDTH
-      const scaledY = -dy / ICON_WIDTH
 
       const design = findDesign(kit, designId)
-
-      if (!design || !onDesignChange) return
-
-      const newConnection = {
-        connecting: { piece: { id_: params.source! }, port: { id_: params.sourceHandle! } },
-        connected: { piece: { id_: params.target! }, port: { id_: params.targetHandle! } },
-        description: '',
-        gap: 0,
-        shift: 0,
-        rise: 0,
-        rotation: 0,
-        turn: 0,
-        tilt: 0,
-        x: scaledX,
-        y: scaledY
-      }
-
-      const originalConnections = design.connections ?? []
-
-      const idsA = [newConnection.connecting.piece.id_, newConnection.connected.piece.id_].sort().join('--')
-
-      const isDuplicate = originalConnections.some((c) => {
-        const idsB = [c.connecting.piece.id_, c.connected.piece.id_].sort().join('--')
-        return idsA === idsB
-      })
-
-      if (isDuplicate) return
-
-      const newConnections = [...originalConnections, newConnection]
-
-      // Update the target piece to remove center and plane (it becomes a child)
-      const updatedPieces = design.pieces?.map((piece) => {
-        if (piece.id_ === params.target) {
-          const { center, plane, ...rest } = piece
-          return rest
-        }
-        return piece
-      })
-
+      if ((design.connections ?? []).find((c) => sameConnection(c, newConnection))) return
+      const newConnections = [...(design.connections ?? []), newConnection]
+      const updatedPieces = design.pieces?.map((piece) => (samePiece(piece, { id_: params.source! })) ? { ...piece, center: undefined, plane: undefined } : piece)
       onDesignChange({ ...design, connections: newConnections, pieces: updatedPieces })
     }
 
@@ -749,9 +487,16 @@ const Diagram: FC<DiagramProps> = ({
             })
           }
         }}
-        onNodeDragStart={handleNodeDragStart}
-        onNodeDrag={handleNodeDrag}
+        onNodeDragStart={onNodeDragStart}
+        onNodeDrag={onNodeDrag}
         onNodeDragStop={handleNodeDragStop}
+        onEdgeClick={(event, edge) => {
+          event?.stopPropagation()
+          onSelectionChange({
+            selectedPieceIds: [],
+            selectedConnections: [{ connectingPieceId: edge.source!, connectedPieceId: edge.target! }]
+          })
+        }}
         onPaneClick={() => onSelectionChange({ selectedPieceIds: [], selectedConnections: [] })}
         onDoubleClick={(e: React.MouseEvent) => {
           e.stopPropagation()

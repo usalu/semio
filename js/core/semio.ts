@@ -108,7 +108,7 @@ export type Design = {
   // 🖇️ The connections between pieces in the design
   connections?: Connection[]
   // 📑 The authors of the design
-  authors: Author[]
+  authors?: Author[]
   // 📏 The qualities associated with the design
   qualities?: Quality[]
 }
@@ -296,7 +296,7 @@ export type Type = {
   // 🔌 Connection points (ports) of the type
   ports?: Port[]
   // 📑 Authors of the type
-  authors: Author[]
+  authors?: Author[]
   // 📏 Qualities associated with the type
   qualities?: Quality[]
 }
@@ -359,9 +359,14 @@ export type PiecesDiff = {
   added?: Piece[]
 }
 
+export type SideDiff = {
+  piece: PieceId
+  port?: PortId
+}
+
 export type ConnectionDiff = {
-  connected?: Side
-  connecting?: Side
+  connected?: SideDiff
+  connecting?: SideDiff
   description?: string
   gap?: number
   shift?: number
@@ -388,8 +393,8 @@ export type DesignDiff = {
   view?: string
   location?: Location
   unit?: string
-  pieces: PiecesDiff
-  connections: ConnectionsDiff
+  pieces?: PiecesDiff
+  connections?: ConnectionsDiff
 }
 
 export enum DiffStatus {
@@ -846,6 +851,12 @@ export const jaccard = (a: string[] | undefined, b: string[] | undefined) => {
   return intersection / union
 }
 
+export const findQualityValue = (entity: Kit | Type | Design | Piece | Connection | Representation | Port, name: string, defaultValue?: string | null): string | null => {
+  const quality = entity.qualities?.find((q) => q.name === name)
+  if (!quality && defaultValue === undefined) throw new Error(`Quality ${name} not found in ${entity}`)
+  if (quality?.value === undefined && defaultValue === null) return null
+  return quality?.value ?? defaultValue ?? ''
+}
 
 /**
  * Sets a quality in a qualities array. If a quality with the same name exists, it is overwritten.
@@ -857,25 +868,13 @@ export const jaccard = (a: string[] | undefined, b: string[] | undefined) => {
  * @returns The updated qualities array
  */
 export const setQuality = (
-  qualities: Array<{ name: string, value?: string, unit?: string, definition?: string }> | undefined,
-  name: string,
-  value?: string,
-  unit?: string,
-  definition?: string
-): Array<{ name: string, value?: string, unit?: string, definition?: string }> => {
+  quality: Quality,
+  qualities: Quality[] | undefined,
+): Quality[] => {
   const qualitiesArray = qualities || []
-  const existingIndex = qualitiesArray.findIndex(q => q.name === name)
-
-  const newQuality = { name, value, unit, definition }
-
-  if (existingIndex >= 0) {
-    // Replace existing quality
-    qualitiesArray[existingIndex] = newQuality
-  } else {
-    // Add new quality
-    qualitiesArray.push(newQuality)
-  }
-
+  const existingIndex = qualitiesArray.findIndex(q => q.name === quality.name)
+  if (existingIndex >= 0) qualitiesArray[existingIndex] = quality
+  else qualitiesArray.push(quality)
   return qualitiesArray
 }
 
@@ -886,47 +885,48 @@ export const setQuality = (
  * @returns The updated qualities array
  */
 export const setQualities = (
-  qualities: Array<{ name: string, value?: string, unit?: string, definition?: string }> | undefined,
-  newQualities: Array<{ name: string, value?: string, unit?: string, definition?: string }>
-): Array<{ name: string, value?: string, unit?: string, definition?: string }> => {
-  return newQualities.reduce((acc, quality) =>
-    setQuality(acc, quality.name, quality.value, quality.unit, quality.definition),
-    qualities || []
-  )
+  qualities: Quality[] | undefined,
+  newQualities: Quality[]
+): Quality[] => {
+  return newQualities.reduce((acc, quality) => setQuality(quality, acc), qualities || [])
 }
 
-/**
- * Normalizes a value by converting undefined to empty string
- * @param val - The value to normalize
- * @returns Empty string if value is undefined, otherwise the original value
- */
+
 const normalize = (val: string | undefined): string => (val === undefined ? '' : val)
 
-export const findType = <T extends { name: string, variant?: string }>(
-  kit: { types?: T[] },
-  typeId: { name: string, variant?: string }
-): T | undefined => {
-  return kit.types?.find(
-    (t) => t.name === typeId.name && normalize(t.variant) === normalize(typeId.variant)
-  )
+export const findPiece = (design: Design, pieceId: PieceId): Piece => {
+  const piece = design.pieces?.find((p) => p.id_ === pieceId.id_)
+  if (!piece) throw new Error(`Piece ${pieceId.id_} not found in design ${design.name}`)
+  return piece
 }
 
-/**
- * Finds a design in a kit by its design ID
- * @param kit - The kit containing the designs
- * @param designId - The design identifier with name, variant, and view
- * @returns The matching design or undefined if not found
- */
-export const findDesign = <T extends { name: string, variant?: string, view?: string }>(
-  kit: { designs?: T[] },
-  designId: { name: string, variant?: string, view?: string }
-): T | undefined => {
-  return kit.designs?.find(
+export const findConnection = (design: Design, connectionId: ConnectionId, strict: boolean = false): Connection => {
+  const connection = design.connections?.find((c) => sameConnection(c, connectionId, strict))
+  if (!connection) throw new Error(`Connection ${connectionId.connected.piece.id_} -> ${connectionId.connecting.piece.id_} not found in design ${design.name}`)
+  return connection
+}
+
+export const findConnections = (design: Design, piece: Piece | PieceId): Connection[] => {
+  return design.connections?.filter((c) => c.connected.piece.id_ === piece.id_ || c.connecting.piece.id_ === piece.id_) ?? []
+}
+
+export const findType = (kit: Kit, typeId: TypeId): Type => {
+  const type = kit.types?.find(
+    (t) => t.name === typeId.name && normalize(t.variant) === normalize(typeId.variant)
+  )
+  if (!type) throw new Error(`Type ${typeId.name} not found in kit ${kit.name}`)
+  return type
+}
+
+export const findDesign = (kit: Kit, designId: DesignId): Design => {
+  const design = kit.designs?.find(
     (d) =>
       d.name === designId.name &&
       normalize(d.variant) === normalize(designId.variant) &&
       normalize(d.view) === normalize(designId.view)
   )
+  if (!design) throw new Error(`Design ${designId.name} not found in kit ${kit.name}`)
+  return design
 }
 
 export const sameRepresentation = (representation: Representation, other: Representation): boolean => {
@@ -945,8 +945,11 @@ export const samePiece = (piece: Piece | PieceId, other: Piece | PieceId): boole
   return normalize(piece.id_) === normalize(other.id_)
 }
 
-export const sameConnection = (connection: Connection | ConnectionId, other: Connection | ConnectionId): boolean => {
-  return connection.connecting.piece.id_ === other.connecting.piece.id_ && connection.connected.piece.id_ === other.connected.piece.id_
+export const sameConnection = (connection: Connection | ConnectionId | ConnectionDiff, other: Connection | ConnectionId | ConnectionDiff, strict: boolean = false): boolean => {
+  const isExactlySame = connection.connecting.piece.id_ === other.connecting.piece.id_ && connection.connected.piece.id_ === other.connected.piece.id_
+  if (strict) return isExactlySame
+  const isSwappedSame = connection.connecting.piece.id_ === other.connected.piece.id_ && connection.connected.piece.id_ === other.connecting.piece.id_
+  return isExactlySame || isSwappedSame
 }
 
 export const sameDesign = (design: Design | DesignId, other: Design | DesignId): boolean => {
@@ -1194,7 +1197,8 @@ export const flattenDesign = (kit: Kit, designId: DesignId): Design => {
     if (!rootNode) return
     const rootPiece = pieceMap[rootNode.id()]
     if (!rootPiece || !rootPiece.id_) return
-    rootPiece.qualities = setQuality(rootPiece.qualities, 'semio.fixedPieceId', rootPiece.id_)
+    rootPiece.qualities = setQuality({ name: 'semio.fixedPieceId', value: rootPiece.id_ }, rootPiece.qualities)
+    rootPiece.qualities = setQuality({ name: 'semio.depth', value: '0' }, rootPiece.qualities)
     let rootPlane: Plane
     if (rootPiece.plane) {
       rootPlane = rootPiece.plane
@@ -1302,18 +1306,18 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
           const diffStatus = isRemoved ? DiffStatus.Removed : pd ? DiffStatus.Modified : DiffStatus.Unchanged
           return {
             ...baseWithUpdate,
-            qualities: setQuality(baseWithUpdate.qualities, 'semio.diffStatus', diffStatus)
+            qualities: setQuality({ name: 'semio.diffStatus', value: diffStatus }, baseWithUpdate.qualities)
           }
         })
         .concat(
           (diff.pieces?.added || []).map((p: Piece) => ({
             ...p,
-            qualities: setQuality(p.qualities, 'semio.diffStatus', DiffStatus.Added)
+            qualities: setQuality({ name: 'semio.diffStatus', value: DiffStatus.Added }, p.qualities)
           }))
         )
       : (diff.pieces?.added || []).map((p: Piece) => ({
         ...p,
-        qualities: setQuality(p.qualities, 'semio.diffStatus', DiffStatus.Added)
+        qualities: setQuality({ name: 'semio.diffStatus', value: DiffStatus.Added }, p.qualities)
       }))
 
     const effectiveConnections: Connection[] = base.connections
@@ -1334,18 +1338,18 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
           const diffStatus = isRemoved ? DiffStatus.Removed : cd ? DiffStatus.Modified : DiffStatus.Unchanged
           return {
             ...baseWithUpdate,
-            qualities: setQuality(baseWithUpdate.qualities, 'semio.diffStatus', diffStatus)
+            qualities: setQuality({ name: 'semio.diffStatus', value: diffStatus }, baseWithUpdate.qualities)
           }
         })
         .concat(
           (diff.connections?.added || []).map((c: Connection) => ({
             ...c,
-            qualities: setQuality(c.qualities, 'semio.diffStatus', DiffStatus.Added)
+            qualities: setQuality({ name: 'semio.diffStatus', value: DiffStatus.Added }, c.qualities)
           }))
         )
       : (diff.connections?.added || []).map((c: Connection) => ({
         ...c,
-        qualities: setQuality(c.qualities, 'semio.diffStatus', DiffStatus.Added)
+        qualities: setQuality({ name: 'semio.diffStatus', value: DiffStatus.Added }, c.qualities)
       }))
 
     return { ...base, pieces: effectivePieces, connections: effectiveConnections }
@@ -1417,3 +1421,12 @@ export const getPieceRepresentationUrls = (design: Design, types: Type[], tags: 
 }
 
 //#endregion
+
+export const piecesMetadata = (kit: Kit, designId: DesignId): Map<string, { fixedPieceId: string, parentPieceId: string | null, depth: number }> => {
+  const flatDesign = flattenDesign(kit, designId)
+  const fixedPieceIds = flatDesign.pieces?.map((p) => findQualityValue(p, 'semio.fixedPieceId'))
+  const parentPieceIds = flatDesign.pieces?.map((p) => findQualityValue(p, 'semio.parentPieceId', null))
+  const depths = flatDesign.pieces?.map((p) => parseInt(findQualityValue(p, 'semio.depth', '0')!))
+  return new Map(flatDesign.pieces?.map((p, index) => [p.id_, { fixedPieceId: fixedPieceIds![index], parentPieceId: parentPieceIds![index], depth: depths![index] }]))
+}
+
