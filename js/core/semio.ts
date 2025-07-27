@@ -851,6 +851,334 @@ export const jaccard = (a: string[] | undefined, b: string[] | undefined) => {
   return intersection / union
 }
 
+
+//#region CRUDs
+
+export const addPieceToDesign = (design: Design, piece: Piece): Design => ({ ...design, pieces: [...(design.pieces || []), piece] })
+export const setPieceInDesign = (design: Design, piece: Piece): Design => ({ ...design, pieces: (design.pieces || []).map(p => p.id_ === piece.id_ ? piece : p) })
+export const removePieceFromDesign = (design: Design, pieceId: PieceId): Design => ({
+  ...design, pieces: (design.pieces || []).filter(p => p.id_ !== pieceId.id_),
+  connections: (design.connections || []).filter(c => c.connected.piece.id_ !== pieceId.id_ && c.connecting.piece.id_ !== pieceId.id_)
+})
+
+
+export const addPiecesToDesign = (design: Design, pieces: Piece[]): Design => ({ ...design, pieces: [...(design.pieces || []), ...pieces] })
+export const setPiecesInDesign = (design: Design, pieces: Piece[]): Design => ({ ...design, pieces: (design.pieces || []).map(p => pieces.find(p2 => p2.id_ === p.id_) || p) })
+export const removePiecesFromDesign = (design: Design, pieceIds: PieceId[]): Design => ({
+  ...design, pieces: (design.pieces || []).filter(p => !pieceIds.some(p2 => p2.id_ === p.id_)),
+  connections: (design.connections || []).filter(c =>
+    !pieceIds.some(p2 => p2.id_ === c.connected.piece.id_) && !pieceIds.some(p2 => p2.id_ === c.connecting.piece.id_)
+  )
+})
+
+
+
+export const addConnectionToDesign = (design: Design, connection: Connection): Design => ({ ...design, connections: [...(design.connections || []), connection] })
+
+export const addConnectionsToDesign = (design: Design, connections: Connection[]): Design => ({ ...design, connections: [...(design.connections || []), ...connections] })
+
+export const removeConnectionFromDesign = (design: Design, connectionId: ConnectionId): Design => ({ ...design, connections: (design.connections || []).filter(c => !sameConnection(c, connectionId)) })
+
+export const removeConnectionsFromDesign = (design: Design, connectionIds: ConnectionId[]): Design => ({
+  ...design,
+  connections: (design.connections || []).filter(c =>
+    !connectionIds.some(cId => sameConnection(c, cId))
+  )
+})
+
+export const setConnectionInDesign = (design: Design, connection: Connection): Design => {
+  const connectionId: ConnectionId = { connected: connection.connected, connecting: connection.connecting }
+  return ({
+    ...design,
+    connections: (design.connections || []).map(c =>
+      sameConnection(c, connectionId) ? connection : c
+    )
+  }
+}
+
+export const setConnectionsInDesign = (design: Design, connections: Connection[]): Design => {
+  const connectionsMap = new Map(connections.map(c => [
+    `${c.connected.piece.id_}:${c.connected.port.id_ || ''}:${c.connecting.piece.id_}:${c.connecting.port.id_ || ''}`,
+    c
+  ]))
+
+  return {
+    ...design,
+    connections: (design.connections || []).map(c => {
+      const key = `${c.connected.piece.id_}:${c.connected.port.id_ || ''}:${c.connecting.piece.id_}:${c.connecting.port.id_ || ''}`
+      return connectionsMap.get(key) || c
+    })
+  }
+}
+
+//#endregion Design Manipulation Utilities
+
+//#region DesignDiff Manipulation Utilities
+
+export const addPieceToDesignDiff = (designDiff: any, piece: Piece): any => {
+  return {
+    ...designDiff,
+    pieces: {
+      ...designDiff.pieces,
+      added: [...(designDiff.pieces?.added || []), piece]
+    }
+  }
+}
+
+export const addPiecesToDesignDiff = (designDiff: any, pieces: Piece[]): any => {
+  return {
+    ...designDiff,
+    pieces: {
+      ...designDiff.pieces,
+      added: [...(designDiff.pieces?.added || []), ...pieces]
+    }
+  }
+}
+
+export const removePieceFromDesignDiff = (designDiff: any, pieceId: PieceId): any => {
+  return {
+    ...designDiff,
+    pieces: {
+      ...designDiff.pieces,
+      removed: [...(designDiff.pieces?.removed || []), pieceId]
+    }
+  }
+}
+
+export const removePiecesFromDesignDiff = (designDiff: any, pieceIds: PieceId[]): any => {
+  return {
+    ...designDiff,
+    pieces: {
+      ...designDiff.pieces,
+      removed: [...(designDiff.pieces?.removed || []), ...pieceIds]
+    }
+  }
+}
+
+export const setPieceInDesignDiff = (designDiff: any, pieceDiff: PieceDiff): any => {
+  const existingIndex = (designDiff.pieces?.updated || []).findIndex((p: PieceDiff) => p.id_ === pieceDiff.id_)
+  const updated = [...(designDiff.pieces?.updated || [])]
+
+  if (existingIndex >= 0) {
+    updated[existingIndex] = pieceDiff
+  } else {
+    updated.push(pieceDiff)
+  }
+
+  return {
+    ...designDiff,
+    pieces: {
+      ...designDiff.pieces,
+      updated
+    }
+  }
+}
+
+export const setPiecesInDesignDiff = (designDiff: any, pieceDiffs: PieceDiff[]): any => {
+  const piecesMap = new Map(pieceDiffs.map(p => [p.id_, p]))
+  const updated = [...(designDiff.pieces?.updated || [])]
+
+  pieceDiffs.forEach(pieceDiff => {
+    const existingIndex = updated.findIndex(p => p.id_ === pieceDiff.id_)
+    if (existingIndex >= 0) {
+      updated[existingIndex] = pieceDiff
+    } else {
+      updated.push(pieceDiff)
+    }
+  })
+
+  return {
+    ...designDiff,
+    pieces: {
+      ...designDiff.pieces,
+      updated
+    }
+  }
+}
+
+export const addConnectionToDesignDiff = (designDiff: any, connection: Connection): any => {
+  return {
+    ...designDiff,
+    connections: {
+      ...designDiff.connections,
+      added: [...(designDiff.connections?.added || []), connection]
+    }
+  }
+}
+
+export const addConnectionsToDesignDiff = (designDiff: any, connections: Connection[]): any => {
+  return {
+    ...designDiff,
+    connections: {
+      ...designDiff.connections,
+      added: [...(designDiff.connections?.added || []), ...connections]
+    }
+  }
+}
+
+export const removeConnectionFromDesignDiff = (designDiff: any, connectionId: ConnectionId): any => {
+  return {
+    ...designDiff,
+    connections: {
+      ...designDiff.connections,
+      removed: [...(designDiff.connections?.removed || []), connectionId]
+    }
+  }
+}
+
+export const removeConnectionsFromDesignDiff = (designDiff: any, connectionIds: ConnectionId[]): any => {
+  return {
+    ...designDiff,
+    connections: {
+      ...designDiff.connections,
+      removed: [...(designDiff.connections?.removed || []), ...connectionIds]
+    }
+  }
+}
+
+export const setConnectionInDesignDiff = (designDiff: any, connectionDiff: ConnectionDiff): any => {
+  const connectionId: ConnectionId = { connected: connectionDiff.connected, connecting: connectionDiff.connecting }
+  const existingIndex = (designDiff.connections?.updated || []).findIndex((c: ConnectionDiff) =>
+    sameConnection(c, connectionId)
+  )
+  const updated = [...(designDiff.connections?.updated || [])]
+
+  if (existingIndex >= 0) {
+    updated[existingIndex] = connectionDiff
+  } else {
+    updated.push(connectionDiff)
+  }
+
+  return {
+    ...designDiff,
+    connections: {
+      ...designDiff.connections,
+      updated
+    }
+  }
+}
+
+export const setConnectionsInDesignDiff = (designDiff: any, connectionDiffs: ConnectionDiff[]): any => {
+  const updated = [...(designDiff.connections?.updated || [])]
+
+  connectionDiffs.forEach(connectionDiff => {
+    const connectionId: ConnectionId = { connected: connectionDiff.connected, connecting: connectionDiff.connecting }
+    const existingIndex = updated.findIndex(c => sameConnection(c, connectionId))
+    if (existingIndex >= 0) {
+      updated[existingIndex] = connectionDiff
+    } else {
+      updated.push(connectionDiff)
+    }
+  })
+
+  return {
+    ...designDiff,
+    connections: {
+      ...designDiff.connections,
+      updated
+    }
+  }
+}
+
+//#endregion DesignDiff Manipulation Utilities
+
+//#region Selection Manipulation Utilities
+
+export const addPieceToSelection = (selection: any, pieceId: string): any => {
+  if (selection.selectedPieceIds.includes(pieceId)) {
+    return selection
+  }
+  return {
+    ...selection,
+    selectedPieceIds: [...selection.selectedPieceIds, pieceId]
+  }
+}
+
+export const addPiecesToSelection = (selection: any, pieceIds: string[]): any => {
+  const existingIds = new Set(selection.selectedPieceIds)
+  const newIds = pieceIds.filter(id => !existingIds.has(id))
+  return {
+    ...selection,
+    selectedPieceIds: [...selection.selectedPieceIds, ...newIds]
+  }
+}
+
+export const removePieceFromSelection = (selection: any, pieceId: string): any => {
+  return {
+    ...selection,
+    selectedPieceIds: selection.selectedPieceIds.filter((id: string) => id !== pieceId)
+  }
+}
+
+export const removePiecesFromSelection = (selection: any, pieceIds: string[]): any => {
+  const idsToRemove = new Set(pieceIds)
+  return {
+    ...selection,
+    selectedPieceIds: selection.selectedPieceIds.filter((id: string) => !idsToRemove.has(id))
+  }
+}
+
+export const addConnectionToSelection = (selection: any, connection: { connectingPieceId: string; connectedPieceId: string }): any => {
+  const exists = selection.selectedConnections.some((c: any) =>
+    (c.connectingPieceId === connection.connectingPieceId && c.connectedPieceId === connection.connectedPieceId) ||
+    (c.connectingPieceId === connection.connectedPieceId && c.connectedPieceId === connection.connectingPieceId)
+  )
+
+  if (exists) {
+    return selection
+  }
+
+  return {
+    ...selection,
+    selectedConnections: [...selection.selectedConnections, connection]
+  }
+}
+
+export const addConnectionsToSelection = (selection: any, connections: { connectingPieceId: string; connectedPieceId: string }[]): any => {
+  const existingConnections = new Set(
+    selection.selectedConnections.map((c: any) => `${c.connectingPieceId}:${c.connectedPieceId}`)
+  )
+
+  const newConnections = connections.filter(conn => {
+    const key1 = `${conn.connectingPieceId}:${conn.connectedPieceId}`
+    const key2 = `${conn.connectedPieceId}:${conn.connectingPieceId}`
+    return !existingConnections.has(key1) && !existingConnections.has(key2)
+  })
+
+  return {
+    ...selection,
+    selectedConnections: [...selection.selectedConnections, ...newConnections]
+  }
+}
+
+export const removeConnectionFromSelection = (selection: any, connection: { connectingPieceId: string; connectedPieceId: string }): any => {
+  return {
+    ...selection,
+    selectedConnections: selection.selectedConnections.filter((c: any) =>
+      !(c.connectingPieceId === connection.connectingPieceId && c.connectedPieceId === connection.connectedPieceId) &&
+      !(c.connectingPieceId === connection.connectedPieceId && c.connectedPieceId === connection.connectingPieceId)
+    )
+  }
+}
+
+export const removeConnectionsFromSelection = (selection: any, connections: { connectingPieceId: string; connectedPieceId: string }[]): any => {
+  const connectionsToRemove = new Set()
+  connections.forEach(conn => {
+    connectionsToRemove.add(`${conn.connectingPieceId}:${conn.connectedPieceId}`)
+    connectionsToRemove.add(`${conn.connectedPieceId}:${conn.connectingPieceId}`)
+  })
+
+  return {
+    ...selection,
+    selectedConnections: selection.selectedConnections.filter((c: any) => {
+      const key = `${c.connectingPieceId}:${c.connectedPieceId}`
+      return !connectionsToRemove.has(key)
+    })
+  }
+}
+
+//#endregion
+
 export const findQualityValue = (entity: Kit | Type | Design | Piece | Connection | Representation | Port, name: string, defaultValue?: string | null): string | null => {
   const quality = entity.qualities?.find((q) => q.name === name)
   if (!quality && defaultValue === undefined) throw new Error(`Quality ${name} not found in ${entity}`)

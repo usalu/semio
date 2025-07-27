@@ -275,7 +275,7 @@ const Diagram: FC<DiagramProps> = ({
   const { kit, designId, selection, fullscreenPanel, designDiff } = designEditorState
   const [dragState, setDragState] = useState<{
     start: XYPosition
-    last: XYPosition
+    lastPostition: XYPosition
   } | null>(null)
   const fullscreen = fullscreenPanel === 'diagram'
   const onDesignChange = (d: Design) => designEditorDispatcher({ type: DesignEditorAction.SetDesign, payload: d })
@@ -314,14 +314,14 @@ const Diagram: FC<DiagramProps> = ({
 
       setDragState({
         start: { x: node.position.x, y: node.position.y },
-        last: { x: node.position.x, y: node.position.y }
+        lastPostition: { x: node.position.x, y: node.position.y }
       })
     }
 
   const onNodeDrag = (event: any, node: Node) => {
     // TODO: Fix the reset after proximity connect is estabilished
     const MIN_DISTANCE = 150
-    const { start, last } = dragState!
+    const { start, lastPostition } = dragState!
     const metadata = piecesMetadata(effectiveKit, designId)
 
     const addedConnections: Connection[] = []
@@ -342,7 +342,6 @@ const Diagram: FC<DiagramProps> = ({
           const port = findPort(type, { id_: handle.id! })
           for (const otherHandle of otherInternalNode.internals.handleBounds?.source ?? []) {
             const otherPort = findPort(otherNode.data.type, { id_: otherHandle.id! })
-            // check if ports are compatible and other port is not already connected
             if (!arePortsCompatible(port, otherPort) || isPortInUse(effectiveDesign, otherNode.data.piece, otherPort)) continue
             const dx = (selectedInternalNode.internals.positionAbsolute.x + handle.x) - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x)
             const dy = (selectedInternalNode.internals.positionAbsolute.y + handle.y) - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y)
@@ -379,18 +378,18 @@ const Diagram: FC<DiagramProps> = ({
           // if (!parentHandle) throw new Error(`Handle not found for ${parentConnection.connected.port.id_}`)
           updatedConnections.push({
             ...parentConnection,
-            x: (parentConnection.x ?? 0) + ((node.position.x - last.x) / ICON_WIDTH),
-            y: (parentConnection.y ?? 0) - ((node.position.y - last.y) / ICON_WIDTH)
+            x: (parentConnection.x ?? 0) + ((node.position.x - lastPostition.x) / ICON_WIDTH),
+            y: (parentConnection.y ?? 0) - ((node.position.y - lastPostition.y) / ICON_WIDTH)
           })
         }
         else {
-          const scaledOffset = { x: (node.position.x - last.x) / ICON_WIDTH, y: -(node.position.y - last.y) / ICON_WIDTH }
+          const scaledOffset = { x: (node.position.x - lastPostition.x) / ICON_WIDTH, y: -(node.position.y - lastPostition.y) / ICON_WIDTH }
           updatedPieces.push({ ...piece, center: { x: piece.center!.x + scaledOffset.x, y: piece.center!.y + scaledOffset.y } })
         }
       }
 
       onDesignDiffChange({ pieces: { updated: updatedPieces }, connections: { added: addedConnections, updated: updatedConnections } })
-      setDragState({ ...dragState!, last: node.position })
+      setDragState({ ...dragState!, lastPostition: node.position })
 
     }
 

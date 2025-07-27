@@ -26,7 +26,44 @@ import { FC, ReactNode, useCallback, useEffect, useMemo, useReducer, useState } 
 import { createPortal } from 'react-dom'
 import { useHotkeys } from 'react-hotkeys-hook'
 
-import { Design, DesignDiff, DesignId, Diagram, findDesign, ICON_WIDTH, Kit, Model, Piece, Type } from '@semio/js'
+import {
+  Design, DesignDiff, DesignId, Diagram,
+  ICON_WIDTH, Kit, Model, Piece, Type,
+  addConnectionToDesign,
+  addConnectionToDesignDiff,
+  addConnectionToSelection,
+  addConnectionsToDesign,
+  addConnectionsToDesignDiff,
+  addConnectionsToSelection,
+  addPieceToDesign,
+  addPieceToDesignDiff,
+  addPieceToSelection,
+  addPiecesToDesign,
+  addPiecesToDesignDiff,
+  addPiecesToSelection,
+  findDesign,
+  removeConnectionFromDesign,
+  removeConnectionFromDesignDiff,
+  removeConnectionFromSelection,
+  removeConnectionsFromDesign,
+  removeConnectionsFromDesignDiff,
+  removeConnectionsFromSelection,
+  removePieceFromDesign,
+  removePieceFromDesignDiff,
+  removePieceFromSelection,
+  removePiecesFromDesign,
+  removePiecesFromDesignDiff,
+  removePiecesFromSelection,
+  sameDesign,
+  setConnectionInDesign,
+  setConnectionInDesignDiff,
+  setConnectionsInDesign,
+  setConnectionsInDesignDiff,
+  setPieceInDesign,
+  setPieceInDesignDiff,
+  setPiecesInDesign,
+  setPiecesInDesignDiff
+} from '@semio/js'
 import { Avatar, AvatarFallback } from '@semio/js/components/ui/Avatar'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@semio/js/components/ui/HoverCard'
@@ -40,6 +77,8 @@ import { Textarea } from '@semio/js/components/ui/Textarea'
 import { ToggleGroup, ToggleGroupItem } from '@semio/js/components/ui/ToggleGroup'
 import { Generator } from '@semio/js/lib/utils'
 
+//#region State
+
 export interface DesignEditorSelection {
   selectedPieceIds: string[];
   selectedConnections: {
@@ -48,7 +87,66 @@ export interface DesignEditorSelection {
   }[];
 }
 
-// Type for panel visibility toggles
+export interface DesignEditorState {
+  kit: Kit
+  designId: DesignId
+  fileUrls: Map<string, string>
+  fullscreenPanel: FullscreenPanel
+  selection: DesignEditorSelection
+  designDiff: DesignDiff
+}
+
+export enum FullscreenPanel {
+  None = 'none',
+  Diagram = 'diagram',
+  Model = 'model'
+}
+
+export enum DesignEditorAction {
+  SetDesign = 'SET_DESIGN',
+  AddPieceToDesign = 'ADD_PIECE_TO_DESIGN',
+  SetPieceInDesign = 'SET_PIECE_IN_DESIGN',
+  RemovePieceFromDesign = 'REMOVE_PIECE_FROM_DESIGN',
+  AddPiecesToDesign = 'ADD_PIECES_TO_DESIGN',
+  SetPiecesInDesign = 'SET_PIECES_IN_DESIGN',
+  RemovePiecesFromDesign = 'REMOVE_PIECES_FROM_DESIGN',
+  AddConnectionToDesign = 'ADD_CONNECTION_TO_DESIGN',
+  SetConnectionInDesign = 'SET_CONNECTION_IN_DESIGN',
+  RemoveConnectionFromDesign = 'REMOVE_CONNECTION_FROM_DESIGN',
+  AddConnectionsToDesign = 'ADD_CONNECTIONS_TO_DESIGN',
+  SetConnectionsInDesign = 'SET_CONNECTIONS_IN_DESIGN',
+  RemoveConnectionsFromDesign = 'REMOVE_CONNECTIONS_FROM_DESIGN',
+  SetDesignDiff = 'SET_DESIGN_DIFF',
+  AddPieceToDesignDiff = 'ADD_PIECE_TO_DESIGN_DIFF',
+  SetPieceInDesignDiff = 'SET_PIECE_IN_DESIGN_DIFF',
+  RemovePieceFromDesignDiff = 'REMOVE_PIECE_FROM_DESIGN_DIFF',
+  AddPiecesToDesignDiff = 'ADD_PIECES_TO_DESIGN_DIFF',
+  SetPiecesInDesignDiff = 'SET_PIECES_IN_DESIGN_DIFF',
+  RemovePiecesFromDesignDiff = 'REMOVE_PIECES_FROM_DESIGN_DIFF',
+  AddConnectionToDesignDiff = 'ADD_CONNECTION_TO_DESIGN_DIFF',
+  SetConnectionInDesignDiff = 'SET_CONNECTION_IN_DESIGN_DIFF',
+  RemoveConnectionFromDesignDiff = 'REMOVE_CONNECTION_FROM_DESIGN_DIFF',
+  AddConnectionsToDesignDiff = 'ADD_CONNECTIONS_TO_DESIGN_DIFF',
+  SetConnectionsInDesignDiff = 'SET_CONNECTIONS_IN_DESIGN_DIFF',
+  RemoveConnectionsFromDesignDiff = 'REMOVE_CONNECTIONS_FROM_DESIGN_DIFF',
+  SetSelection = 'SET_SELECTION',
+  AddPieceToSelection = 'ADD_PIECE_TO_SELECTION',
+  RemovePieceFromSelection = 'REMOVE_PIECE_FROM_SELECTION',
+  AddPiecesToSelection = 'ADD_PIECES_TO_SELECTION',
+  RemovePiecesFromSelection = 'REMOVE_PIECES_FROM_SELECTION',
+  AddConnectionToSelection = 'ADD_CONNECTION_TO_SELECTION',
+  RemoveConnectionFromSelection = 'REMOVE_CONNECTION_FROM_SELECTION',
+  AddConnectionsToSelection = 'ADD_CONNECTIONS_TO_SELECTION',
+  RemoveConnectionsFromSelection = 'REMOVE_CONNECTIONS_FROM_SELECTION',
+  SetFullscreen = 'SET_FULLSCREEN'
+}
+
+export type DesignEditorDispatcher = (action: { type: DesignEditorAction; payload: any }) => void
+
+//#endregion
+
+//#region Panels
+
 interface PanelToggles {
   workbench: boolean
   console: boolean
@@ -56,20 +154,15 @@ interface PanelToggles {
   chat: boolean
 }
 
-// Basic panel props
 interface PanelProps {
   visible: boolean
 }
 
-// Props for resizable panels
 interface ResizablePanelProps extends PanelProps {
   onWidthChange?: (width: number) => void
   width: number
 }
 
-//#region Tree Components
-
-// TreeNode component for sidebar navigation
 interface TreeNodeProps {
   label: ReactNode
   icon?: ReactNode
@@ -80,7 +173,6 @@ interface TreeNodeProps {
   isLeaf?: boolean
 }
 
-// TreeSection component for top-level sections
 interface TreeSectionProps {
   label: string
   icon?: ReactNode
@@ -160,10 +252,6 @@ const TreeNode: FC<TreeNodeProps> = ({
   }
 }
 
-//#endregion
-
-//#region Type Avatar component
-
 interface TypeAvatarProps {
   type: Type
   showHoverCard?: boolean
@@ -204,10 +292,6 @@ const TypeAvatar: FC<TypeAvatarProps> = ({ type, showHoverCard = false }) => {
     </HoverCard>
   )
 }
-
-//#endregion
-
-//#region Design Avatar component
 
 interface DesignAvatarProps {
   design: Design
@@ -251,10 +335,6 @@ const DesignAvatar: FC<DesignAvatarProps> = ({ design, showHoverCard = false }) 
     </HoverCard>
   )
 }
-
-//#endregion
-
-//#region Workbench panel component
 
 interface WorkbenchProps extends ResizablePanelProps {
   kit: Kit
@@ -363,10 +443,6 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width, kit }) =
   )
 }
 
-//#endregion
-
-//#region Console panel component
-
 interface ConsoleProps {
   visible: boolean
   leftPanelVisible: boolean
@@ -438,10 +514,6 @@ const Console: FC<ConsoleProps> = ({
   )
 }
 
-//#endregion
-
-//#region Details panel component
-
 interface DetailsProps extends ResizablePanelProps { }
 
 const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
@@ -505,10 +577,6 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
   )
 }
 
-//#endregion
-
-//#region Chat panel component
-
 interface ChatProps extends ResizablePanelProps { }
 
 const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
@@ -562,37 +630,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
   )
 }
 
-//#endregion
-
-//#region Design Editor State and Actions
-
-export interface DesignEditorState {
-  kit: Kit
-  designId: DesignId
-  fileUrls: Map<string, string>
-  fullscreenPanel: FullscreenPanel
-  selection: DesignEditorSelection
-  designDiff: DesignDiff
-}
-
-export enum FullscreenPanel {
-  None = 'none',
-  Diagram = 'diagram',
-  Model = 'model'
-}
-
-export enum DesignEditorAction {
-  SetDesign = 'SET_DESIGN',
-  SetDesignDiff = 'SET_DESIGN_DIFF',
-  SetSelection = 'SET_SELECTION',
-  SetFullscreen = 'SET_FULLSCREEN'
-}
-
-export type DesignEditorDispatcher = (action: { type: DesignEditorAction; payload: any }) => void
-
-//#endregion
-
-//#region Design Editor Core
+//#endregion Panels
 
 const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   const { onToolbarChange, designId, onUndo, onRedo } = props
@@ -616,24 +654,130 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
     state: DesignEditorState,
     action: { type: DesignEditorAction; payload: any }
   ): DesignEditorState => {
+    const currentDesign = findDesign(state.kit, state.designId)
+
+    // Helper function to update a design in the kit
+    const updateDesignInKit = (updatedDesign: Design): DesignEditorState => {
+      const updatedDesigns = (state.kit.designs || []).map((d: Design) =>
+        sameDesign(d, currentDesign) ? updatedDesign : d
+      )
+      return { ...state, kit: { ...state.kit, designs: updatedDesigns } }
+    }
+
     switch (action.type) {
       case DesignEditorAction.SetDesign:
-        const newDesign = action.payload
-        const normalize = (v?: string) => v || ''
-        const updatedDesigns = (state.kit.designs || []).map((d: Design) =>
-          d.name === newDesign.name &&
-            normalize(d.variant) === normalize(newDesign.variant) &&
-            normalize(d.view) === normalize(newDesign.view)
-            ? newDesign
-            : d
-        )
-        return { ...state, kit: { ...state.kit, designs: updatedDesigns } }
+        return updateDesignInKit(action.payload)
+
+      // Design piece manipulation
+      case DesignEditorAction.AddPieceToDesign:
+        return updateDesignInKit(addPieceToDesign(currentDesign, action.payload))
+
+      case DesignEditorAction.AddPiecesToDesign:
+        return updateDesignInKit(addPiecesToDesign(currentDesign, action.payload))
+
+      case DesignEditorAction.RemovePieceFromDesign:
+        return updateDesignInKit(removePieceFromDesign(currentDesign, action.payload))
+
+      case DesignEditorAction.RemovePiecesFromDesign:
+        return updateDesignInKit(removePiecesFromDesign(currentDesign, action.payload))
+
+      case DesignEditorAction.SetPieceInDesign:
+        return updateDesignInKit(setPieceInDesign(currentDesign, action.payload))
+
+      case DesignEditorAction.SetPiecesInDesign:
+        return updateDesignInKit(setPiecesInDesign(currentDesign, action.payload))
+
+      // Design connection manipulation
+      case DesignEditorAction.AddConnectionToDesign:
+        return updateDesignInKit(addConnectionToDesign(currentDesign, action.payload))
+
+      case DesignEditorAction.AddConnectionsToDesign:
+        return updateDesignInKit(addConnectionsToDesign(currentDesign, action.payload))
+
+      case DesignEditorAction.RemoveConnectionFromDesign:
+        return updateDesignInKit(removeConnectionFromDesign(currentDesign, action.payload))
+
+      case DesignEditorAction.RemoveConnectionsFromDesign:
+        return updateDesignInKit(removeConnectionsFromDesign(currentDesign, action.payload))
+
+      case DesignEditorAction.SetConnectionInDesign:
+        return updateDesignInKit(setConnectionInDesign(currentDesign, action.payload))
+
+      case DesignEditorAction.SetConnectionsInDesign:
+        return updateDesignInKit(setConnectionsInDesign(currentDesign, action.payload))
+
+      // DesignDiff manipulation
       case DesignEditorAction.SetDesignDiff:
         return { ...state, designDiff: action.payload }
+
+      case DesignEditorAction.AddPieceToDesignDiff:
+        return { ...state, designDiff: addPieceToDesignDiff(state.designDiff, action.payload) }
+
+      case DesignEditorAction.AddPiecesToDesignDiff:
+        return { ...state, designDiff: addPiecesToDesignDiff(state.designDiff, action.payload) }
+
+      case DesignEditorAction.RemovePieceFromDesignDiff:
+        return { ...state, designDiff: removePieceFromDesignDiff(state.designDiff, action.payload) }
+
+      case DesignEditorAction.RemovePiecesFromDesignDiff:
+        return { ...state, designDiff: removePiecesFromDesignDiff(state.designDiff, action.payload) }
+
+      case DesignEditorAction.SetPieceInDesignDiff:
+        return { ...state, designDiff: setPieceInDesignDiff(state.designDiff, action.payload) }
+
+      case DesignEditorAction.SetPiecesInDesignDiff:
+        return { ...state, designDiff: setPiecesInDesignDiff(state.designDiff, action.payload) }
+
+      case DesignEditorAction.AddConnectionToDesignDiff:
+        return { ...state, designDiff: addConnectionToDesignDiff(state.designDiff, action.payload) }
+
+      case DesignEditorAction.AddConnectionsToDesignDiff:
+        return { ...state, designDiff: addConnectionsToDesignDiff(state.designDiff, action.payload) }
+
+      case DesignEditorAction.RemoveConnectionFromDesignDiff:
+        return { ...state, designDiff: removeConnectionFromDesignDiff(state.designDiff, action.payload) }
+
+      case DesignEditorAction.RemoveConnectionsFromDesignDiff:
+        return { ...state, designDiff: removeConnectionsFromDesignDiff(state.designDiff, action.payload) }
+
+      case DesignEditorAction.SetConnectionInDesignDiff:
+        return { ...state, designDiff: setConnectionInDesignDiff(state.designDiff, action.payload) }
+
+      case DesignEditorAction.SetConnectionsInDesignDiff:
+        return { ...state, designDiff: setConnectionsInDesignDiff(state.designDiff, action.payload) }
+
+      // Selection manipulation
       case DesignEditorAction.SetSelection:
         return { ...state, selection: action.payload }
+
+      case DesignEditorAction.AddPieceToSelection:
+        return { ...state, selection: addPieceToSelection(state.selection, action.payload) }
+
+      case DesignEditorAction.AddPiecesToSelection:
+        return { ...state, selection: addPiecesToSelection(state.selection, action.payload) }
+
+      case DesignEditorAction.RemovePieceFromSelection:
+        return { ...state, selection: removePieceFromSelection(state.selection, action.payload) }
+
+      case DesignEditorAction.RemovePiecesFromSelection:
+        return { ...state, selection: removePiecesFromSelection(state.selection, action.payload) }
+
+      case DesignEditorAction.AddConnectionToSelection:
+        return { ...state, selection: addConnectionToSelection(state.selection, action.payload) }
+
+      case DesignEditorAction.AddConnectionsToSelection:
+        return { ...state, selection: addConnectionsToSelection(state.selection, action.payload) }
+
+      case DesignEditorAction.RemoveConnectionFromSelection:
+        return { ...state, selection: removeConnectionFromSelection(state.selection, action.payload) }
+
+      case DesignEditorAction.RemoveConnectionsFromSelection:
+        return { ...state, selection: removeConnectionsFromSelection(state.selection, action.payload) }
+
+      // Other actions
       case DesignEditorAction.SetFullscreen:
         return { ...state, fullscreenPanel: action.payload }
+
       default:
         return state
     }
@@ -739,7 +883,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   })
   useHotkeys('mod+c', (e) => {
     e.preventDefault()
-    console.log('Copy selected')
+    navigator.clipboard.writeText(JSON.stringify(findDesign(state.kit, designId)))
   })
 
   useHotkeys('mod+v', (e) => {

@@ -28,10 +28,7 @@ export { Layout, Mode, default as Sketchpad, Theme } from '@semio/js/components/
 export { default as eslintConfig } from '@semio/js/eslint.config'
 export { extractFilesAndCreateUrls } from '@semio/js/lib/utils'
 export { default as postcssConfig } from '@semio/js/postcss.config'
-export {
-  applyDesignDiff, arePortsCompatible, DiffStatus, findConnection, findConnections, findDesign, findPiece, findPort, findType, flattenDesign, getPieceRepresentationUrls, hasConnection, ICON_WIDTH, isPortInUse, piecesMetadata, planeToMatrix, sameConnection, sameDesign, samePiece, samePort, sameRepresentation, sameType,
-  setQualities, setQuality, ToSemioQuaternion, ToSemioRotation, ToThreeQuaternion, ToThreeRotation
-} from '@semio/js/semio'
+export { addConnectionsToDesign, addConnectionsToDesignDiff, addConnectionsToSelection, addConnectionToDesign, addConnectionToDesignDiff, addConnectionToSelection, addPiecesToDesign, addPiecesToDesignDiff, addPiecesToSelection, addPieceToDesign, addPieceToDesignDiff, addPieceToSelection, applyDesignDiff, arePortsCompatible, DiffStatus, findConnection, findConnections, findDesign, findPiece, findPort, findType, flattenDesign, getPieceRepresentationUrls, hasConnection, ICON_WIDTH, isPortInUse, piecesMetadata, planeToMatrix, removeConnectionFromDesign, removeConnectionFromDesignDiff, removeConnectionFromSelection, removeConnectionsFromDesign, removeConnectionsFromDesignDiff, removeConnectionsFromSelection, removePieceFromDesign, removePieceFromDesignDiff, removePieceFromSelection, removePiecesFromDesign, removePiecesFromDesignDiff, removePiecesFromSelection, sameConnection, sameDesign, samePiece, samePort, sameRepresentation, sameType, setConnectionInDesign, setConnectionInDesignDiff, setConnectionsInDesign, setConnectionsInDesignDiff, setPieceInDesign, setPieceInDesignDiff, setPiecesInDesign, setPiecesInDesignDiff, setQualities, setQuality, ToSemioQuaternion, ToSemioRotation, ToThreeQuaternion, ToThreeRotation } from '@semio/js/semio'
 export type {
   Author,
   Connection, ConnectionDiff, ConnectionId,
