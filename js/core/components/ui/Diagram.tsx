@@ -35,6 +35,7 @@ import {
   NodeProps,
   Position,
   ReactFlow,
+  ReactFlowProvider,
   Connection as RFConnection,
   useReactFlow,
   ViewportPortal,
@@ -47,9 +48,7 @@ import {
   arePortsCompatible,
   Connection,
   ConnectionDiff,
-  ConnectionId,
   Design,
-  DesignDiff,
   DesignId,
   DiagramPoint,
   DiffStatus,
@@ -61,22 +60,22 @@ import {
   FullscreenPanel,
   ICON_WIDTH,
   isPortInUse,
+  isSameConnection,
+  isSameDesign,
+  isSamePiece,
   Kit,
   Piece,
   PieceDiff,
-  PieceId,
   piecesMetadata,
   Port,
-  sameConnection,
-  sameDesign,
-  samePiece,
   Type
 } from '@semio/js'
 
 // import '@xyflow/react/dist/base.css';
 import '@semio/js/globals.css'
 import '@xyflow/react/dist/style.css'
-import { DesignEditorAction, DesignEditorDispatcher, DesignEditorSelection, DesignEditorState } from '../..'
+import { DesignEditorSelection } from '../..'
+import { useDesignEditor } from './DesignEditor'
 
 
 //#region React Flow
@@ -184,28 +183,30 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
 
   const diff = data?.connection?.qualities?.find(q => q.name === 'semio.diffStatus')?.value as DiffStatus || DiffStatus.Unchanged;
 
-  let strokeColor = 'theme(colors.dark)';
+  let stroke = 'var(--color-dark)';
+  let strokeWidth = 2;
   let dasharray: string | undefined;
   let opacity = 1;
 
   if (diff === DiffStatus.Added) {
-    strokeColor = selected ? 'color-mix(in srgb, theme(colors.success) 50%, theme(colors.primary) 50%)' : 'theme(colors.success)';
+    stroke = selected ? 'color-mix(in srgb, var(--color-success) 50%, var(--color-primary) 50%)' : 'var(--color-success)';
     dasharray = '5 5';
   } else if (diff === DiffStatus.Removed) {
-    strokeColor = selected ? 'color-mix(in srgb, theme(colors.danger) 50%, theme(colors.primary) 50%)' : 'theme(colors.danger)';
+    stroke = selected ? 'color-mix(in srgb, var(--color-danger) 50%, var(--color-primary) 50%)' : 'var(--color-danger)';
     opacity = 0.25;
   } else if (diff === DiffStatus.Modified) {
-    strokeColor = selected ? 'color-mix(in srgb, theme(colors.warning) 50%, theme(colors.primary) 50%)' : 'theme(colors.warning)';
+    stroke = selected ? 'color-mix(in srgb, var(--color-warning) 50%, var(--color-primary) 50%)' : 'var(--color-warning)';
   } else if (selected) {
-    strokeColor = 'theme(colors.primary)';
+    stroke = 'var(--color-primary)';
   }
 
   return (
     <BaseEdge
       path={path}
       style={{
+        stroke,
+        strokeWidth,
         strokeDasharray: dasharray,
-        stroke: strokeColor,
         opacity
       }}
     />
@@ -263,19 +264,8 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
 //#endregion
 
 
-interface DiagramProps {
-  designEditorState: DesignEditorState
-  designEditorDispatcher: DesignEditorDispatcher
-}
-
-const Diagram: FC<DiagramProps> = ({
-  designEditorState,
-  designEditorDispatcher
-}) => {
-  //#region State
-  const nodeTypes = useMemo(() => ({ piece: PieceNodeComponent }), [])
-  const edgeTypes = useMemo(() => ({ connection: ConnectionEdgeComponent }), [])
-  const { kit, designId, selection, fullscreenPanel, designDiff } = designEditorState
+const Diagram: FC = () => {
+  const { kit, designId, selection, fullscreenPanel, designDiff, setDesign, setDesignDiff, setSelection, deselectAll, selectPiece, addPieceToSelection, removePieceFromSelection, selectConnection, addConnectionToSelection, removeConnectionFromSelection, toggleDiagramFullscreen } = useDesignEditor();
   if (!kit) return null
   const design = findDesignInKit(kit, designId)
   if (!design) return null
@@ -283,7 +273,7 @@ const Diagram: FC<DiagramProps> = ({
   const effectiveKit = {
     ...kit,
     designs: kit.designs!.map((d: Design) => {
-      if (sameDesign(design, d)) {
+      if (isSameDesign(design, d)) {
         return effectiveDesign
       }
       return d
@@ -292,50 +282,34 @@ const Diagram: FC<DiagramProps> = ({
   const { nodes, edges } = designToNodesAndEdges(effectiveKit, designId, selection) ?? { nodes: [], edges: [] }
   const reactFlowInstance = useReactFlow()
   const [dragState, setDragState] = useState<{
-    start: XYPosition
     lastPostition: XYPosition
   } | null>(null)
   const fullscreen = fullscreenPanel === FullscreenPanel.Diagram
   //#endregion State
 
   //#region Actions
-  const onDesignChange = useCallback((d: Design) => designEditorDispatcher({ type: DesignEditorAction.SetDesign, payload: d }), [designEditorDispatcher])
-  const onDesignDiffChange = useCallback((d: DesignDiff) => designEditorDispatcher({ type: DesignEditorAction.SetDesignDiff, payload: d }), [designEditorDispatcher])
-  const onSelectionChange = useCallback((s: DesignEditorSelection) => designEditorDispatcher({ type: DesignEditorAction.SetSelection, payload: s }), [designEditorDispatcher])
-  const onDeselectAll = useCallback(() => designEditorDispatcher({ type: DesignEditorAction.DeselectAll, payload: null }), [designEditorDispatcher])
-  const onSelectPiece = useCallback((p: Piece | PieceId) => designEditorDispatcher({ type: DesignEditorAction.SelectPiece, payload: p }), [designEditorDispatcher])
-  const onAddPieceToSelection = useCallback((p: Piece | PieceId) => designEditorDispatcher({ type: DesignEditorAction.AddPieceToSelection, payload: p }), [designEditorDispatcher])
-  const onRemovePieceFromSelection = useCallback((p: Piece | PieceId) => designEditorDispatcher({ type: DesignEditorAction.RemovePieceFromSelection, payload: p }), [designEditorDispatcher])
-  const onSelectConnection = useCallback((c: Connection | ConnectionId) => designEditorDispatcher({ type: DesignEditorAction.SelectConnection, payload: c }), [designEditorDispatcher])
-  const onAddConnectionToSelection = useCallback((c: Connection | ConnectionId) => designEditorDispatcher({ type: DesignEditorAction.AddConnectionToSelection, payload: c }), [designEditorDispatcher])
-  const onRemoveConnectionFromSelection = useCallback((c: Connection | ConnectionId) => designEditorDispatcher({ type: DesignEditorAction.RemoveConnectionFromSelection, payload: c }), [designEditorDispatcher])
-  const onToggleDiagramFullscreen = useCallback(() => designEditorDispatcher({ type: DesignEditorAction.ToggleDiagramFullscreen, payload: null }), [designEditorDispatcher])
-
-  const ref = useCallback(useDroppable({ id: 'diagram' }).setNodeRef, [])
-  const onDoubleClick = useCallback((e: React.MouseEvent) => {
+  const onNodeClick = (e: React.MouseEvent, node: DiagramNode) => {
     e.stopPropagation()
-    onToggleDiagramFullscreen()
-  }, [onToggleDiagramFullscreen])
+    if (e.ctrlKey || e.metaKey) removePieceFromSelection({ id_: node.data.piece.id_ })
+    else if (e.shiftKey) addPieceToSelection({ id_: node.data.piece.id_ })
+    else selectPiece({ id_: node.data.piece.id_ })
+  }
+
+  const onEdgeClick = (e: React.MouseEvent, edge: DiagramEdge) => {
+    e.stopPropagation()
+    if (e.ctrlKey || e.metaKey) removeConnectionFromSelection(edge.data!.connection)
+    else if (e.shiftKey) addConnectionToSelection(edge.data!.connection)
+    else selectConnection(edge.data!.connection)
+  }
+
+  const onPaneClick = (e: React.MouseEvent) => { if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) deselectAll() }
+
+  const onDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    toggleDiagramFullscreen()
+  }
 
   //#region Selection
-  const onNodeClick = useCallback((e: React.MouseEvent, node: DiagramNode) => {
-    e.stopPropagation()
-    if (e.ctrlKey || e.metaKey) onRemovePieceFromSelection(node.data.piece)
-    else if (e.shiftKey) onAddPieceToSelection(node.data.piece)
-    else onSelectPiece(node.data.piece)
-  }, [onRemovePieceFromSelection, onAddPieceToSelection, onSelectPiece])
-
-  const onEdgeClick = useCallback((e: React.MouseEvent, edge: DiagramEdge) => {
-    e.stopPropagation()
-    if (e.ctrlKey || e.metaKey) onRemoveConnectionFromSelection(edge.data!.connection)
-    else if (e.shiftKey) onAddConnectionToSelection(edge.data!.connection)
-    else onSelectConnection(edge.data!.connection)
-  }, [onRemoveConnectionFromSelection, onAddConnectionToSelection, onSelectConnection])
-
-  const onPaneClick = useCallback((e: React.MouseEvent) => { if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) onDeselectAll() }, [onDeselectAll])
-  //#endregion Selection
-
-  //#region Dragging
   const onNodeDragStart =
     useCallback(
       (event: any, node: Node) => {
@@ -346,35 +320,32 @@ const Diagram: FC<DiagramProps> = ({
 
         if (ctrlKey) {
           if (isNodeSelected) {
-            designEditorDispatcher({ type: DesignEditorAction.RemovePieceFromSelection, payload: node.id })
+            removePieceFromSelection({ id_: node.id })
           } else {
-            designEditorDispatcher({ type: DesignEditorAction.AddPieceToSelection, payload: node.id })
+            addPieceToSelection({ id_: node.id })
           }
         } else if (shiftKey) {
           if (!isNodeSelected) {
-            designEditorDispatcher({ type: DesignEditorAction.AddPieceToSelection, payload: node.id })
+            addPieceToSelection({ id_: node.id })
           }
         } else {
           if (!isNodeSelected) {
-            onSelectionChange({
-              selectedPieceIds: [node.id],
-              selectedConnections: []
-            })
+            setSelection({ selectedPieceIds: [node.id], selectedConnections: [] })
           }
         }
 
         setDragState({
-          start: { x: node.position.x, y: node.position.y },
           lastPostition: { x: node.position.x, y: node.position.y }
         })
       },
-      [onSelectionChange, designEditorDispatcher]
+      [setSelection, removePieceFromSelection, addPieceToSelection]
     )
 
   const onNodeDrag = useCallback((event: any, node: Node) => {
     // TODO: Fix the reset after proximity connect is estabilished
     const MIN_DISTANCE = 150
-    const { start, lastPostition } = dragState!
+    if (!dragState) return
+    const { lastPostition } = dragState
     const metadata = piecesMetadata(effectiveKit, designId)
 
     const addedConnections: Connection[] = []
@@ -388,7 +359,7 @@ const Diagram: FC<DiagramProps> = ({
       let closestDistance = Number.MAX_VALUE
       const selectedInternalNode = reactFlowInstance.getInternalNode(selectedNode.id)!
       for (const otherNode of nodes.filter((n) => !(selection.selectedPieceIds ?? []).includes(n.id))) {
-        const existingConnection = design.connections?.find((c) => sameConnection(c, { connected: { piece: { id_: selectedNode.id } }, connecting: { piece: { id_: otherNode.id } } }))
+        const existingConnection = design.connections?.find((c) => isSameConnection(c, { connected: { piece: { id_: selectedNode.id } }, connecting: { piece: { id_: otherNode.id } } }))
         if (existingConnection) continue
         const otherInternalNode = reactFlowInstance.getInternalNode(otherNode.id)!
         for (const handle of selectedInternalNode.internals.handleBounds?.source ?? []) {
@@ -441,19 +412,19 @@ const Diagram: FC<DiagramProps> = ({
         }
       }
 
-      onDesignDiffChange({ pieces: { updated: updatedPieces }, connections: { added: addedConnections, updated: updatedConnections } })
+      setDesignDiff({ pieces: { updated: updatedPieces }, connections: { added: addedConnections, updated: updatedConnections } })
       setDragState({ ...dragState!, lastPostition: node.position })
 
     }
 
-  }, [onDesignDiffChange, onDesignChange, effectiveKit, designId, reactFlowInstance, selection, nodes, design, effectiveDesign])
+  }, [setDesignDiff, setDesign, effectiveKit, designId, reactFlowInstance, selection, nodes, design, effectiveDesign])
 
   const onNodeDragStop = useCallback(() => {
     const updatedDesign = applyDesignDiff(design, designDiff)
-    onDesignChange(updatedDesign)
-    onDesignDiffChange({})
+    setDesign(updatedDesign)
+    setDesignDiff({})
     setDragState(null)
-  }, [onDesignDiffChange, onDesignChange, design, designDiff])
+  }, [setDesignDiff, setDesign, design, designDiff])
   //#endregion
 
   const onConnect = useCallback(
@@ -476,19 +447,22 @@ const Diagram: FC<DiagramProps> = ({
       }
 
       const design = findDesignInKit(kit, designId)
-      if ((design.connections ?? []).find((c) => sameConnection(c, newConnection))) return
+      if ((design.connections ?? []).find((c) => isSameConnection(c, newConnection))) return
       const newConnections = [...(design.connections ?? []), newConnection]
-      const updatedPieces = design.pieces?.map((piece) => (samePiece(piece, { id_: params.source! })) ? { ...piece, center: undefined, plane: undefined } : piece)
-      onDesignChange({ ...design, connections: newConnections, pieces: updatedPieces })
+      const updatedPieces = design.pieces?.map((piece) => (isSamePiece(piece, { id_: params.source! })) ? { ...piece, center: undefined, plane: undefined } : piece)
+      setDesign({ ...design, connections: newConnections, pieces: updatedPieces })
     },
-    [onDesignChange, effectiveKit, designId, reactFlowInstance, design]
+    [setDesign, effectiveKit, designId, reactFlowInstance, design]
   )
   //#endregion Actions
+
+  const nodeTypes = useMemo(() => ({ piece: PieceNodeComponent }), [])
+  const edgeTypes = useMemo(() => ({ connection: ConnectionEdgeComponent }), [])
 
   return (
     <div id="diagram" className="h-full w-full">
       <ReactFlow
-        ref={ref}
+        ref={useDroppable({ id: 'diagram' }).setNodeRef}
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}

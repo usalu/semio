@@ -19,53 +19,21 @@
 
 // #endregion
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@semio/js/components/ui/Avatar";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator
-} from "@semio/js/components/ui/Breadcrumb";
-import { Button } from "@semio/js/components/ui/Button";
-import { Toggle } from "@semio/js/components/ui/Toggle";
-import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle";
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@semio/js/components/ui/ToggleGroup";
-import {
   TooltipProvider
 } from "@semio/js/components/ui/Tooltip";
-import {
-  DesignEditorStoreProvider,
-  StudioStoreProvider,
-  useStudioStore,
-} from "@semio/js/store";
-import {
-  AppWindow,
-  Fingerprint,
-  Home,
-  Minus,
-  Moon,
-  Share2,
-  Square,
-  Sun,
-  X
-} from "lucide-react";
 import {
   createContext,
   FC,
   ReactNode,
   useContext,
   useEffect,
-  useReducer,
   useState
 } from "react";
 import DesignEditor from "./DesignEditor";
+
+import { default as Metabolism } from "@semio/assets/semio/kit_metabolism.json";
+import { extractFilesAndCreateUrls } from "../../lib/utils";
+
 
 export enum Mode {
   USER = "user",
@@ -102,191 +70,67 @@ export const useSketchpad = () => {
   return context;
 };
 
-interface NavbarProps {
-  toolbarContent?: ReactNode;
-  onWindowEvents?: {
-    minimize: () => void;
-    maximize: () => void;
-    close: () => void;
-  };
-}
-
-const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
-  const { mode, layout, setLayout, theme, setTheme } = useSketchpad();
-
-  return (
-    <div
-      className={`w-full h-12 bg-background border-b flex items-center justify-between px-4`}
-    >
-      <div className="flex items-center">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/">
-                <Home size={16} />
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator
-              items={[
-                { label: "Starter", href: "/metabolism/starter" },
-                { label: "Geometry", href: "/metabolism/geometry" },
-              ]}
-              onNavigate={(href) => console.log("Navigate to:", href)}
-            />
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/metabolism">Metabolism</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator
-              items={[
-                { label: "Types", href: "/designs/types" },
-                { label: "Representations", href: "/designs/representations" },
-              ]}
-              onNavigate={(href) => console.log("Navigate to:", href)}
-            />
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/designs">Designs</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator
-              items={[
-                {
-                  label: "Capsule Dream",
-                  href: "/designs/nakagin/capsule-dream",
-                },
-              ]}
-              onNavigate={(href) => console.log("Navigate to:", href)}
-            />
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/designs/nakagin">
-                Nakagin Capsule Tower
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
-      <div className="flex items-center gap-4">
-        {toolbarContent}
-        <ToggleCycle
-          value={theme}
-          onValueChange={setTheme}
-          items={[
-            {
-              value: Theme.LIGHT,
-              tooltip: "Turn theme dark",
-              label: <Moon />,
-            },
-            {
-              value: Theme.DARK,
-              tooltip: "Turn theme light",
-              label: <Sun />,
-            },
-          ]}
-        />
-        <ToggleCycle
-          value={layout}
-          onValueChange={setLayout}
-          items={[
-            {
-              value: Layout.NORMAL,
-              tooltip: "Turn touch layout on",
-              label: <Fingerprint />,
-            },
-            {
-              value: Layout.TOUCH,
-              tooltip: "Return to normal layout",
-              label: <AppWindow />,
-            },
-          ]}
-        />
-
-        <Avatar className="h-8 w-8">
-          <AvatarImage src="https://github.com/usalu.png" />
-          <AvatarFallback>US</AvatarFallback>
-        </Avatar>
-
-        <Toggle variant="outline" tooltip="Share">
-          <Share2 />
-        </Toggle>
-
-        {onWindowEvents && (
-          <div className="flex items-center gap-2 ml-4">
-            <ToggleGroup type="single">
-              <ToggleGroupItem
-                value="minimize"
-                onClick={onWindowEvents.minimize}
-              >
-                <Minus size={16} />
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                value="maximize"
-                onClick={onWindowEvents.maximize}
-              >
-                <Square size={16} />
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                value="close"
-                onClick={onWindowEvents.close}
-                className="hover:bg-danger"
-              >
-                <X size={16} />
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
 interface ViewProps { }
 
-const View: FC<ViewProps> = ({ }) => {
-  const [, forceUpdate] = useReducer((x) => x + 1, 0);
-  const studioStore = useStudioStore();
-  const [designEditorId, setDesignEditorId] = useState<string>("");
+// const View: FC<ViewProps> = ({ }) => {
+//   const [, forceUpdate] = useReducer((x) => x + 1, 0);
+//   const studioStore = useStudioStore();
+//   const [designEditorId, setDesignEditorId] = useState<string>("");
 
-  if (!designEditorId) {
-    try {
-      // Consider moving this logic if it needs to react to props or other state changes
-      const editorId = studioStore.createDesignEditorStore(
-        "Metabolism",
-        "r25.07-1",
-        "Nakagin Capsule Tower",
-        "",
-        "",
-      );
-      setDesignEditorId(editorId);
-    } catch (error) {
-      console.error("Error creating design editor store:", error);
-    }
-  }
+//   if (!designEditorId) {
+//     try {
+//       // Consider moving this logic if it needs to react to props or other state changes
+//       const editorId = studioStore.createDesignEditorStore(
+//         "Metabolism",
+//         "r25.07-1",
+//         "Nakagin Capsule Tower",
+//         "",
+//         "",
+//       );
+//       setDesignEditorId(editorId);
+//     } catch (error) {
+//       console.error("Error creating design editor store:", error);
+//     }
+//   }
 
-  if (!designEditorId) {
-    return (
-      <Button
-        onClick={() => {
-          forceUpdate();
-        }}
-      >
-        Refresh
-      </Button>
-    );
-  }
+//   if (!designEditorId) {
+//     return (
+//       <Button
+//         onClick={() => {
+//           forceUpdate();
+//         }}
+//       >
+//         Refresh
+//       </Button>
+//     );
+//   }
 
-  return (
-    <>
-      <Button
-        onClick={() => {
-          forceUpdate();
-        }}
-      >
-        Refresh
-      </Button>
-      ;
-      <DesignEditorStoreProvider designEditorId={designEditorId}>
-        <DesignEditor />
-      </DesignEditorStoreProvider>
-    </>
-  );
+//   return (
+//     <>
+//       <Button
+//         onClick={() => {
+//           forceUpdate();
+//         }}
+//       >
+//         Refresh
+//       </Button>
+//       ;
+//       <DesignEditorStoreProvider designEditorId={designEditorId}>
+//         <DesignEditor />
+//       </DesignEditorStoreProvider>
+//     </>
+//   );
+// };
+
+
+
+const View = () => {
+  const [fileUrls, setFileUrls] = useState<Map<string, string>>(new Map());
+  extractFilesAndCreateUrls("metabolism.zip").then((urls) => {
+    setFileUrls(urls);
+  });
+  if (fileUrls.size === 0) return <div>Loading...</div>;
+  return <DesignEditor initialKit={Metabolism} designId={{ name: "Nakagin Capsule Tower" }} fileUrls={fileUrls} />;
 };
 
 interface SketchpadProps {
@@ -338,29 +182,25 @@ const Sketchpad: FC<SketchpadProps> = ({
 
   return (
     <TooltipProvider>
-      <StudioStoreProvider userId={userId}>
-        <SketchpadContext.Provider
-          value={{
-            mode: mode,
-            layout: currentLayout,
-            setLayout: setCurrentLayout,
-            theme: currentTheme,
-            setTheme: setCurrentTheme,
-            setNavbarToolbar: setNavbarToolbar,
-          }}
+      {/* <StudioStoreProvider userId={userId}> */}
+      <SketchpadContext.Provider
+        value={{
+          mode: mode,
+          layout: currentLayout,
+          setLayout: setCurrentLayout,
+          theme: currentTheme,
+          setTheme: setCurrentTheme,
+          setNavbarToolbar: setNavbarToolbar,
+        }}
+      >
+        <div
+          key={`layout-${currentLayout}`}
+          className="h-full w-full flex flex-col bg-background text-foreground"
         >
-          <div
-            key={`layout-${currentLayout}`}
-            className="h-full w-full flex flex-col bg-background text-foreground"
-          >
-            <Navbar
-              toolbarContent={navbarToolbar}
-              onWindowEvents={onWindowEvents}
-            />
-            <View />
-          </div>
-        </SketchpadContext.Provider>
-      </StudioStoreProvider>
+          <View />
+        </div>
+      </SketchpadContext.Provider>
+      {/* </StudioStoreProvider> */}
     </TooltipProvider>
   );
 };

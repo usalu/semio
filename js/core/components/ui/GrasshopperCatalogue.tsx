@@ -22,7 +22,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@semio/js/components/ui/Tabs'
 import { FC, useLayoutEffect, useRef, useState } from 'react'
-import { default as Components } from '../../../../assets/grasshopper/components.json'
+// import { default as Components } from '../../../../assets/grasshopper/components.json'
 
 interface ParamProps {
   name: string
@@ -155,15 +155,15 @@ const GrasshopperComponent: FC<GrasshopperComponentProps> = ({ name, nickname, d
   )
 }
 
-// interface GrasshopperCatalogueProps {
-//     [group: string]: {
-//         [exposure: number]: GrasshopperComponentProps[];
-//     };
-// };
+interface GrasshopperCatalogueProps {
+  [group: string]: {
+    [exposure: number]: GrasshopperComponentProps[];
+  };
+};
 
-const GrasshopperCatalogue: FC = () => {
+const GrasshopperCatalogue: FC<GrasshopperCatalogueProps> = ({ props }) => {
   // Sort group names alphabetically
-  const groups = Object.keys(Components).sort()
+  const groups = Object.keys(props).sort()
   return (
     <Tabs className="w-full h-full" defaultValue={groups[0]}>
       <TabsList>
@@ -174,7 +174,7 @@ const GrasshopperCatalogue: FC = () => {
         ))}
       </TabsList>
       {groups.map((group) => {
-        const exposures = Object.keys(Components[group]).sort((a, b) => Number(a) - Number(b))
+        const exposures = Object.keys(props[group]).sort((a, b) => Number(a) - Number(b))
         return (
           <TabsContent key={group} value={group}>
             <Tabs className="w-full h-full" defaultValue={exposures[0]}>
@@ -188,7 +188,7 @@ const GrasshopperCatalogue: FC = () => {
               {exposures.map((exposure) => (
                 <TabsContent key={exposure} value={exposure}>
                   <div className="flex flex-row flex-wrap gap-2 p-2">
-                    {(Components[group][Number(exposure)] as GrasshopperComponentProps[]).map(
+                    {(props[group][Number(exposure)] as GrasshopperComponentProps[]).map(
                       (component: GrasshopperComponentProps, idx: number) => (
                         <GrasshopperComponent key={idx} {...component} />
                       )

@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "@semio/js/theme.css";
+@import 'tailwindcss';
+@import '@semio/js/theme.css';
 
 /* https://tailwindcss.com/docs/theme */
 /* https://ui.shadcn.com/docs/theming */
@@ -140,13 +140,13 @@
 
 /* https://reactflow.dev/learn/customization/theming */
 
-.react-flow {
-  /* --xy-background-color-default: var(--color-light) !important; */
-}
+/* .react-flow { */
+/* --xy-background-color-default: var(--color-light) !important; */
+/* } */
 
-.react-flow.dark {
-  /* --xy-background-color-default: var(--color-dark) !important; */
-}
+/* .react-flow.dark { */
+/* --xy-background-color-default: var(--color-dark) !important; */
+/* } */
 
 .temp .react-flow__edge-path {
   stroke: #e98787;

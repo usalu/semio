@@ -17,7 +17,6 @@ tools:  [
     'terminalLastCommand',
     'terminalSelection',
     'testFailure',
-    'updateUserPreferences',
     'usages',
     'vscodeAPI',
     'markitdown'

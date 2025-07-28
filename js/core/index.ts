@@ -18,7 +18,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-export { default as DesignEditor, DesignEditorAction, FullscreenPanel } from '@semio/js/components/ui/DesignEditor'
+export { default as DesignEditor, FullscreenPanel, useDesignEditor } from '@semio/js/components/ui/DesignEditor'
 export type { DesignEditorDispatcher, DesignEditorSelection, DesignEditorState } from '@semio/js/components/ui/DesignEditor'
 export { default as Diagram } from '@semio/js/components/ui/Diagram'
 export { default as File } from '@semio/js/components/ui/File'
@@ -28,7 +28,17 @@ export { Layout, Mode, default as Sketchpad, Theme } from '@semio/js/components/
 export { default as eslintConfig } from '@semio/js/eslint.config'
 export { extractFilesAndCreateUrls } from '@semio/js/lib/utils'
 export { default as postcssConfig } from '@semio/js/postcss.config'
-export { addConnectionsToDesign, addConnectionsToDesignDiff, addConnectionToDesign, addConnectionToDesignDiff, addPiecesToDesign, addPiecesToDesignDiff, addPieceToDesign, addPieceToDesignDiff, applyDesignDiff, arePortsCompatible, DiffStatus, findConnectionInDesign, findDesignInKit, findPieceConnectionsInDesign, findPieceInDesign, findPort, findStaleConnectionsInDesign, findTypeInKit, flattenDesign, getPieceRepresentationUrls, ICON_WIDTH, isConnectionInDesign, isPortInUse, mergeDesigns, piecesMetadata, planeToMatrix, removeConnectionFromDesign, removeConnectionFromDesignDiff, removeConnectionsFromDesign, removeConnectionsFromDesignDiff, removePieceFromDesign, removePieceFromDesignDiff, removePiecesAndConnectionsFromDesign, removePiecesFromDesign, removePiecesFromDesignDiff, sameConnection, sameDesign, samePiece, samePort, sameRepresentation, sameType, setConnectionInDesign, setConnectionInDesignDiff, setConnectionsInDesign, setConnectionsInDesignDiff, setPieceInDesign, setPieceInDesignDiff, setPiecesInDesign, setPiecesInDesignDiff, setQualities, setQuality, ToSemioQuaternion, ToSemioRotation, ToThreeQuaternion, ToThreeRotation } from '@semio/js/semio'
+export {
+  addConnectionsToDesign, addConnectionsToDesignDiff, addConnectionToDesign, addConnectionToDesignDiff, addPiecesToDesign, addPiecesToDesignDiff, addPieceToDesign, addPieceToDesignDiff, applyDesignDiff, arePortsCompatible,
+  connectionIdLikeToConnectionId, ConnectionSchema, deserialize, designIdLikeToDesignId, DesignSchema, DiffStatus,
+  findConnectionInDesign, findDesignInKit, findPieceConnectionsInDesign, findPieceInDesign, findPort, findStaleConnectionsInDesign, findTypeInKit, flattenDesign,
+  getPieceRepresentationUrls, ICON_WIDTH, isConnectionInDesign, isPortInUse, isSameConnection, isSameDesign, isSamePiece, isSamePort, isSameRepresentation, isSameType, kitIdLikeToKitId,
+  KitSchema, mergeDesigns, pieceIdLikeToPieceId, PieceSchema, piecesMetadata, PlaneSchema, planeToMatrix, PointSchema, portIdLikeToPortId, PortSchema, qualityIdLikeToQualityId, QualitySchema,
+  removeConnectionFromDesign, removeConnectionFromDesignDiff, removeConnectionsFromDesign, removeConnectionsFromDesignDiff, removePieceFromDesign, removePieceFromDesignDiff, removePiecesAndConnectionsFromDesign, removePiecesFromDesign, removePiecesFromDesignDiff,
+  representationIdLikeToRepresentationId, RepresentationSchema, safeParse, schemas, serialize,
+  setConnectionInDesign, setConnectionInDesignDiff, setConnectionsInDesign, setConnectionsInDesignDiff, setPieceInDesign, setPieceInDesignDiff, setPiecesInDesign, setPiecesInDesignDiff, setQualities, setQuality,
+  toSemioQuaternion, toSemioRotation, toThreeQuaternion, toThreeRotation, typeIdLikeToTypeId, TypeSchema, updateDesignInKit, validate, VectorSchema
+} from '@semio/js/semio'
 export type {
   Author,
   Connection, ConnectionDiff, ConnectionId,

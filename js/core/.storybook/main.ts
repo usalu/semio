@@ -18,6 +18,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
+
 import type { StorybookConfig } from '@storybook/react-vite';
 
 import { dirname, join } from "path";
@@ -50,6 +51,9 @@ const config: StorybookConfig = {
 
   typescript: {
     reactDocgen: "react-docgen-typescript"
+  },
+  core: {
+    disableTelemetry: true
   }
 };
 export default config;

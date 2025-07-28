@@ -51,21 +51,18 @@ import {
 } from '@react-three/drei'
 import { Canvas, ThreeEvent } from '@react-three/fiber'
 import {
-  Design,
-  DesignEditorAction,
-  DesignEditorDispatcher,
-  DesignEditorState,
-  DiffStatus,
-  FullscreenPanel,
-  Piece,
-  Plane,
-  ToSemioRotation,
   applyDesignDiff,
+  DiffStatus,
   findDesignInKit,
   flattenDesign,
+  FullscreenPanel,
   getPieceRepresentationUrls,
+  isSameDesign,
+  Piece,
+  Plane,
   planeToMatrix,
-  sameDesign
+  toSemioRotation,
+  useDesignEditor
 } from '@semio/js'
 import React, { FC, JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
@@ -120,7 +117,7 @@ const ModelPiece: FC<ModelPieceProps> = ({
   const fixed = piece.plane !== undefined
   const matrix = useMemo(() => {
     const planeRotationMatrix = planeToMatrix(plane)
-    planeRotationMatrix.multiply(ToSemioRotation())
+    planeRotationMatrix.multiply(toSemioRotation())
     return planeRotationMatrix
   }, [plane])
   const styledScene = useMemo(() => {
@@ -216,13 +213,10 @@ const ModelPiece: FC<ModelPieceProps> = ({
   )
 }
 
-interface ModelDesignProps {
-  designEditorState: DesignEditorState
-  designEditorDispatcher: DesignEditorDispatcher
-}
+interface ModelDesignProps { }
 
-const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDispatcher }) => {
-  const { kit, designId, fileUrls, selection, designDiff } = designEditorState
+const ModelDesign: FC<ModelDesignProps> = () => {
+  const { kit, designId, fileUrls, selection, designDiff } = useDesignEditor()
   const design = findDesignInKit(kit, designId)
   if (!design) {
     return null
@@ -235,7 +229,7 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
 
   // Use inplace mode to get all pieces including removed ones with diff qualities
   const effectiveDesign = useMemo(() => applyDesignDiff(design, designDiff, true), [design, designDiff])
-  const effectiveKit = { ...kit, designs: kit.designs?.map((d) => (sameDesign(design, d) ? effectiveDesign : d)) ?? [] }
+  const effectiveKit = { ...kit, designs: kit.designs?.map((d) => (isSameDesign(design, d) ? effectiveDesign : d)) ?? [] }
   const piecePlanesFromEffectiveDesign = useMemo(() => {
     const flatDesign = flattenDesign(effectiveKit, designId)
     return flatDesign.pieces?.map((p) => p.plane!) || []
@@ -272,12 +266,7 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
   }, [effectiveDesign])
 
   //#region Actions
-  const onDesignChange = useCallback((d: Design) => designEditorDispatcher({ type: DesignEditorAction.SetDesign, payload: d }), [designEditorDispatcher])
-  const onSelectPiece = useCallback((p: Piece) => designEditorDispatcher({ type: DesignEditorAction.SelectPiece, payload: p }), [designEditorDispatcher])
-  const onAddPieceToSelection = useCallback((p: Piece) => designEditorDispatcher({ type: DesignEditorAction.AddPieceToSelection, payload: p }), [designEditorDispatcher])
-  const onRemovePieceFromSelection = useCallback((p: Piece) => designEditorDispatcher({ type: DesignEditorAction.RemovePieceFromSelection, payload: p }), [designEditorDispatcher])
-  const onSetPieceInDesign = useCallback((p: Piece) => designEditorDispatcher({ type: DesignEditorAction.SetPieceInDesign, payload: p }), [designEditorDispatcher])
-  const onSelectPieces = useCallback((pieceIds: string[]) => designEditorDispatcher({ type: DesignEditorAction.SelectPieces, payload: pieceIds.map(id => ({ id_: id })) }), [designEditorDispatcher])
+  const { setDesign, selectPiece, addPieceToSelection, removePieceFromSelection, setPieceInDesign, selectPieces } = useDesignEditor()
   //#endregion Actions
 
   const onChange = useCallback(
@@ -289,31 +278,31 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
         newSelectedPieceIds.length !== selection.selectedPieceIds.length ||
         newSelectedPieceIds.some((id, index) => id !== selection.selectedPieceIds[index])
       ) {
-        onSelectPieces(newSelectedPieceIds)
+        selectPieces(newSelectedPieceIds.map(id => ({ id_: id })))
       }
     },
-    [selection, onSelectPieces]
+    [selection, selectPieces]
   )
 
   const onSelect = useCallback(
     (piece: Piece, e?: MouseEvent) => {
       if (e?.ctrlKey || e?.metaKey) {
-        onRemovePieceFromSelection(piece)
+        removePieceFromSelection(piece)
       } else if (e?.shiftKey) {
-        onAddPieceToSelection(piece)
+        addPieceToSelection(piece)
       } else {
-        onSelectPiece(piece)
+        selectPiece(piece)
       }
     },
-    [onRemovePieceFromSelection, onAddPieceToSelection, onSelectPiece]
+    [removePieceFromSelection, addPieceToSelection, selectPiece]
   )
 
   const onPieceUpdate = useCallback(
     (piece: Piece) => {
       if (!design) return
-      onSetPieceInDesign(piece)
+      setPieceInDesign(piece)
     },
-    [design, onSetPieceInDesign]
+    [design, setPieceInDesign]
   )
   return (
     <Select box multiple onChange={onChange} filter={(items) => items}>
@@ -349,8 +338,9 @@ const Gizmo: FC = (): JSX.Element => {
   )
 }
 
-const ModelCore: FC<ModelProps> = ({ designEditorState, designEditorDispatcher }) => {
-  const fullscreen = designEditorState.fullscreenPanel === FullscreenPanel.Model
+const ModelCore: FC = () => {
+  const { fullscreenPanel } = useDesignEditor()
+  const fullscreen = fullscreenPanel === FullscreenPanel.Model
   const [gridColors, setGridColors] = useState({
     sectionColor: getComputedColor('--foreground'),
     cellColor: getComputedColor('--accent-foreground')
@@ -376,7 +366,7 @@ const ModelCore: FC<ModelProps> = ({ designEditorState, designEditorDispatcher }
       />
       <ambientLight intensity={1} />
       {/* <Stage center={{ disable: true }} environment={null}> */}
-      <ModelDesign designEditorState={designEditorState} designEditorDispatcher={designEditorDispatcher} />
+      <ModelDesign />
       {/* </Stage> */}
       <Environment files={'schlenker-shed.hdr'} />
       <Grid infiniteGrid={true} sectionColor={gridColors.sectionColor} cellColor={gridColors.cellColor} />
@@ -385,22 +375,17 @@ const ModelCore: FC<ModelProps> = ({ designEditorState, designEditorDispatcher }
   )
 }
 
-interface ModelProps {
-  designEditorState: DesignEditorState
-  designEditorDispatcher: DesignEditorDispatcher
-}
-const Model: FC<ModelProps> = ({ designEditorState, designEditorDispatcher }) => {
-  //#region Actions  
-  const onDeselectAll = useCallback(() => designEditorDispatcher({ type: DesignEditorAction.DeselectAll, payload: null }), [designEditorDispatcher])
-  const onToggleModelFullscreen = useCallback(() => designEditorDispatcher({ type: DesignEditorAction.ToggleModelFullscreen, payload: null }), [designEditorDispatcher])
-  //#endregion Actions
-
-  const onDoubleClickCapture = useCallback((e: React.MouseEvent) => { e.stopPropagation(); onToggleModelFullscreen() }, [onToggleModelFullscreen])
-  const onPointerMissed = useCallback((e: MouseEvent) => { if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) onDeselectAll() }, [onDeselectAll])
+const Model: FC = () => {
+  const { deselectAll, toggleModelFullscreen } = useDesignEditor();
+  const onDoubleClickCapture = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    toggleModelFullscreen()
+  }, [toggleModelFullscreen])
+  const onPointerMissed = useCallback((e: MouseEvent) => { if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) deselectAll() }, [deselectAll])
   return (
     <div id="model" className="h-full w-full">
       <Canvas onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed}>
-        <ModelCore designEditorState={designEditorState} designEditorDispatcher={designEditorDispatcher} />
+        <ModelCore />
       </Canvas>
     </div>
   )
