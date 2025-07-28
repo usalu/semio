@@ -1,7 +1,6 @@
 ---
 description: Help senior developer working.
-tools:
-  [
+tools:  [
     'changes',
     'codebase',
     'editFiles',
@@ -23,7 +22,7 @@ tools:
     'vscodeAPI',
     'markitdown'
   ]
-model: Gemini 2.5 Pro (Preview)
+model: Claude Sonnet 4
 ---
 
 # Project
@@ -43,6 +42,9 @@ An ecosystem for designing kit-of-parts architecture together.
 - Don't remove code that is commented out.
 - README.md files are for developers which are GFM.
 - Assume all dev servers and debugging processes are running. No need to ask to start them. Don't ask to run commands for building, testing, linting, etc.
+- Don't add comments to the code.
+- Always use inline syntax if possible.
+- If a variable is only used once, use it inline unless the line of code exceeds the screen.
 
 # Glossary
 

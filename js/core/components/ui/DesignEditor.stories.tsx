@@ -39,7 +39,7 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div className="w-full h-[800px]">
+      <div className="h-[700px] w-full">
         <Story />
       </div>
     ),

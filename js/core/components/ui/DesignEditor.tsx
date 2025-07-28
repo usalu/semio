@@ -27,33 +27,30 @@ import { createPortal } from 'react-dom'
 import { useHotkeys } from 'react-hotkeys-hook'
 
 import {
+  Connection,
+  ConnectionId,
   Design, DesignDiff, DesignId, Diagram,
-  ICON_WIDTH, Kit, Model, Piece, Type,
+  ICON_WIDTH, Kit, Model, Piece, PieceId, Type,
   addConnectionToDesign,
   addConnectionToDesignDiff,
-  addConnectionToSelection,
   addConnectionsToDesign,
   addConnectionsToDesignDiff,
-  addConnectionsToSelection,
   addPieceToDesign,
   addPieceToDesignDiff,
-  addPieceToSelection,
   addPiecesToDesign,
   addPiecesToDesignDiff,
-  addPiecesToSelection,
   findDesign,
+  mergeDesigns,
   removeConnectionFromDesign,
   removeConnectionFromDesignDiff,
-  removeConnectionFromSelection,
   removeConnectionsFromDesign,
   removeConnectionsFromDesignDiff,
-  removeConnectionsFromSelection,
   removePieceFromDesign,
   removePieceFromDesignDiff,
-  removePieceFromSelection,
+  removePiecesAndConnectionsFromDesign,
   removePiecesFromDesign,
   removePiecesFromDesignDiff,
-  removePiecesFromSelection,
+  sameConnection,
   sameDesign,
   setConnectionInDesign,
   setConnectionInDesignDiff,
@@ -129,21 +126,208 @@ export enum DesignEditorAction {
   AddConnectionsToDesignDiff = 'ADD_CONNECTIONS_TO_DESIGN_DIFF',
   SetConnectionsInDesignDiff = 'SET_CONNECTIONS_IN_DESIGN_DIFF',
   RemoveConnectionsFromDesignDiff = 'REMOVE_CONNECTIONS_FROM_DESIGN_DIFF',
+  RemovePiecesAndConnectionsFromDesign = 'REMOVE_PIECES_AND_CONNECTIONS_FROM_DESIGN',
   SetSelection = 'SET_SELECTION',
+  SelectAll = 'SELECT_ALL',
+  DeselectAll = 'DESELECT_ALL',
+  InvertSelection = 'INVERT_SELECTION',
+  InvertPiecesSelection = 'INVERT_PIECES_SELECTION',
+  InvertConnectionsSelection = 'INVERT_CONNECTIONS_SELECTION',
+  AddAllPiecesToSelection = 'ADD_ALL_PIECES_TO_SELECTION',
+  RemoveAllPiecesFromSelection = 'REMOVE_ALL_PIECES_FROM_SELECTION',
+  AddAllConnectionsToSelection = 'ADD_ALL_CONNECTIONS_TO_SELECTION',
+  RemoveAllConnectionsFromSelection = 'REMOVE_ALL_CONNECTIONS_FROM_SELECTION',
+  SelectPiece = 'SELECT_PIECE',
   AddPieceToSelection = 'ADD_PIECE_TO_SELECTION',
   RemovePieceFromSelection = 'REMOVE_PIECE_FROM_SELECTION',
+  SelectPieces = 'SELECT_PIECES',
   AddPiecesToSelection = 'ADD_PIECES_TO_SELECTION',
   RemovePiecesFromSelection = 'REMOVE_PIECES_FROM_SELECTION',
+  SelectConnection = 'SELECT_CONNECTION',
   AddConnectionToSelection = 'ADD_CONNECTION_TO_SELECTION',
   RemoveConnectionFromSelection = 'REMOVE_CONNECTION_FROM_SELECTION',
+  SelectConnections = 'SELECT_CONNECTIONS',
   AddConnectionsToSelection = 'ADD_CONNECTIONS_TO_SELECTION',
   RemoveConnectionsFromSelection = 'REMOVE_CONNECTIONS_FROM_SELECTION',
-  SetFullscreen = 'SET_FULLSCREEN'
+  CopyToClipboard = 'COPY_TO_CLIPBOARD',
+  CutToClipboard = 'CUT_TO_CLIPBOARD',
+  PasteFromClipboard = 'PASTE_FROM_CLIPBOARD',
+  DeleteSelected = 'DELETE_SELECTED',
+  SetFullscreen = 'SET_FULLSCREEN',
+  ToggleDiagramFullscreen = 'TOGGLE_DIAGRAM_FULLSCREEN',
+  ToggleModelFullscreen = 'TOGGLE_MODEL_FULLSCREEN'
 }
 
 export type DesignEditorDispatcher = (action: { type: DesignEditorAction; payload: any }) => void
 
-//#endregion
+//#region Selection
+
+const selectionConnectionToConnectionId = (selectionConnection: { connectingPieceId: string; connectedPieceId: string }): ConnectionId => ({
+  connected: { piece: { id_: selectionConnection.connectedPieceId } }, connecting: { piece: { id_: selectionConnection.connectingPieceId } }
+})
+const connectionToSelectionConnection = (connection: Connection | ConnectionId): { connectingPieceId: string; connectedPieceId: string } => ({
+  connectingPieceId: connection.connecting.piece.id_, connectedPieceId: connection.connected.piece.id_
+})
+
+const selectAll = (design: Design): DesignEditorSelection => ({
+  selectedPieceIds: design.pieces?.map((p: Piece) => p.id_) || [],
+  selectedConnections: design.connections?.map((c: Connection) => ({ connectedPieceId: c.connected.piece.id_, connectingPieceId: c.connecting.piece.id_ })) || []
+})
+const deselectAll = (selection: DesignEditorSelection): DesignEditorSelection => ({ selectedPieceIds: [], selectedConnections: [] })
+const addAllPiecesToSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
+  const existingIds = new Set(selection.selectedPieceIds)
+  const allPieceIds = design.pieces?.map((p: Piece) => p.id_) || []
+  const newIds = allPieceIds.filter(id => !existingIds.has(id))
+  return { selectedPieceIds: [...selection.selectedPieceIds, ...newIds], selectedConnections: selection.selectedConnections }
+}
+const removeAllPiecesFromSelection = (selection: DesignEditorSelection): DesignEditorSelection => ({ selectedPieceIds: [], selectedConnections: selection.selectedConnections })
+const addAllConnectionsToSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
+  const allConnections = design.connections?.map((c: Connection) => connectionToSelectionConnection(c)) || []
+  const newConnections = allConnections.filter(conn => {
+    const connectionId = selectionConnectionToConnectionId(conn)
+    return !selection.selectedConnections.some((c) => {
+      const existingConnectionId = selectionConnectionToConnectionId(c)
+      return sameConnection(existingConnectionId, connectionId)
+    })
+  })
+  return { selectedPieceIds: selection.selectedPieceIds, selectedConnections: [...selection.selectedConnections, ...newConnections] }
+}
+const removeAllConnectionsFromSelection = (selection: DesignEditorSelection): DesignEditorSelection => ({ selectedPieceIds: selection.selectedPieceIds, selectedConnections: [] })
+
+const selectPiece = (piece: Piece | PieceId): DesignEditorSelection => ({ selectedPieceIds: [typeof piece === 'string' ? piece : piece.id_], selectedConnections: [] })
+const addPieceToSelection = (selection: DesignEditorSelection, piece: Piece | PieceId): DesignEditorSelection => {
+  const pieceId = typeof piece === 'string' ? piece : piece.id_
+  const existingPieceIds = new Set(selection.selectedPieceIds)
+  const newPieceIds = existingPieceIds.has(pieceId) ? selection.selectedPieceIds.filter((id: string) => id !== pieceId) : [...selection.selectedPieceIds, pieceId]
+  return ({ selectedPieceIds: newPieceIds, selectedConnections: selection.selectedConnections })
+}
+const removePieceFromSelection = (selection: DesignEditorSelection, piece: Piece | PieceId): DesignEditorSelection => {
+  return ({
+    selectedPieceIds: selection.selectedPieceIds.filter((id: string) => id !== (typeof piece === 'string' ? piece : piece.id_)),
+    selectedConnections: selection.selectedConnections
+  })
+}
+
+const selectPieces = (pieces: (Piece | PieceId)[]): DesignEditorSelection => ({ selectedPieceIds: pieces.map(p => typeof p === 'string' ? p : p.id_), selectedConnections: [] })
+const addPiecesToSelection = (selection: DesignEditorSelection, pieces: (Piece | PieceId)[]): DesignEditorSelection => {
+  const existingIds = new Set(selection.selectedPieceIds)
+  const newIds = pieces
+    .map(p => typeof p === 'string' ? p : p.id_)
+    .filter(id => !existingIds.has(id))
+  return ({ ...selection, selectedPieceIds: [...selection.selectedPieceIds, ...newIds] })
+}
+const removePiecesFromSelection = (selection: DesignEditorSelection, pieces: (Piece | PieceId)[]): DesignEditorSelection => {
+  const idsToRemove = new Set(pieces.map(p => typeof p === 'string' ? p : p.id_))
+  return ({ ...selection, selectedPieceIds: selection.selectedPieceIds.filter((id: string) => !idsToRemove.has(id)) })
+}
+
+const selectConnection = (connection: Connection | ConnectionId): DesignEditorSelection => ({ selectedConnections: [connectionToSelectionConnection(connection)], selectedPieceIds: [] })
+const addConnectionToSelection = (selection: DesignEditorSelection, connection: Connection | ConnectionId): DesignEditorSelection => {
+  const connectionObj = connectionToSelectionConnection(connection)
+
+  const exists = selection.selectedConnections.some((c) => {
+    const existingConnectionId = selectionConnectionToConnectionId(c)
+    return sameConnection(existingConnectionId, connection)
+  })
+
+  if (exists) return selection
+  return ({ selectedConnections: [...selection.selectedConnections, connectionObj], selectedPieceIds: selection.selectedPieceIds })
+}
+const removeConnectionFromSelection = (selection: DesignEditorSelection, connection: Connection | ConnectionId): DesignEditorSelection => {
+  return ({
+    selectedConnections: selection.selectedConnections.filter((c: { connectingPieceId: string; connectedPieceId: string }) => {
+      const existingConnectionId = selectionConnectionToConnectionId(c)
+      return !sameConnection(existingConnectionId, connection)
+    }),
+    selectedPieceIds: selection.selectedPieceIds
+  })
+}
+
+const selectConnections = (connections: (Connection | ConnectionId)[]): DesignEditorSelection => ({ selectedConnections: connections.map(conn => connectionToSelectionConnection(conn)), selectedPieceIds: [] })
+const addConnectionsToSelection = (selection: DesignEditorSelection, connections: (Connection | ConnectionId)[]): DesignEditorSelection => {
+  const newConnections = connections
+    .map(conn => connectionToSelectionConnection(conn))
+    .filter(conn => {
+      const connectionId = selectionConnectionToConnectionId(conn)
+      return !selection.selectedConnections.some((c) => {
+        const existingConnectionId = selectionConnectionToConnectionId(c)
+        return sameConnection(existingConnectionId, connectionId)
+      })
+    })
+  return ({ ...selection, selectedConnections: [...selection.selectedConnections, ...newConnections] })
+}
+const removeConnectionsFromSelection = (selection: DesignEditorSelection, connections: (Connection | ConnectionId)[]): DesignEditorSelection => {
+  return ({
+    selectedConnections: selection.selectedConnections.filter((c: { connectingPieceId: string; connectedPieceId: string }) => {
+      const existingConnectionId = selectionConnectionToConnectionId(c)
+      return !connections.some(conn => sameConnection(existingConnectionId, conn))
+    }),
+    selectedPieceIds: selection.selectedPieceIds
+  })
+}
+
+const invertSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
+  const allPieceIds = design.pieces?.map((p: Piece) => p.id_) || []
+  const allConnections = design.connections?.map((c: Connection) => connectionToSelectionConnection(c)) || []
+  const newSelectedPieceIds = allPieceIds.filter(id => !selection.selectedPieceIds.includes(id))
+  const newSelectedConnections = allConnections.filter(conn => {
+    const connectionId = selectionConnectionToConnectionId(conn)
+    return !selection.selectedConnections.some(selected => {
+      const selectedConnectionId = selectionConnectionToConnectionId(selected)
+      return sameConnection(selectedConnectionId, connectionId)
+    })
+  })
+  return ({ selectedPieceIds: newSelectedPieceIds, selectedConnections: newSelectedConnections })
+}
+
+const invertPiecesSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
+  const allPieceIds = design.pieces?.map((p: Piece) => p.id_) || []
+  const newSelectedPieceIds = allPieceIds.filter(id => !selection.selectedPieceIds.includes(id))
+  return ({ selectedPieceIds: newSelectedPieceIds, selectedConnections: selection.selectedConnections })
+}
+const invertConnectionsSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
+  const allConnections = design.connections?.map((c: Connection) => connectionToSelectionConnection(c)) || []
+  const newSelectedConnections = allConnections.filter(conn => {
+    const connectionId = selectionConnectionToConnectionId(conn)
+    return !selection.selectedConnections.some(selected => {
+      const selectedConnectionId = selectionConnectionToConnectionId(selected)
+      return sameConnection(selectedConnectionId, connectionId)
+    })
+  })
+  return ({ selectedPieceIds: selection.selectedPieceIds, selectedConnections: newSelectedConnections })
+}
+
+const subDesignFromSelection = (design: Design, selection: DesignEditorSelection): Design => {
+  const subPieces = design.pieces?.filter(p => selection.selectedPieceIds.includes(p.id_))
+  const subConnections = design.connections?.filter(c => selection.selectedConnections.some(sc => sameConnection(selectionConnectionToConnectionId(sc), c)))
+  return { ...design, pieces: subPieces, connections: subConnections }
+}
+
+const copyToClipboard = (design: Design, selection: DesignEditorSelection): void => { navigator.clipboard.writeText(JSON.stringify(subDesignFromSelection(design, selection))) }
+const cutToClipboard = (design: Design, selection: DesignEditorSelection): Design => {
+  const subDesign = subDesignFromSelection(design, selection)
+  navigator.clipboard.writeText(JSON.stringify(subDesign))
+  return subDesign
+}
+const pasteFromClipboard = (design: Design): Design => {
+  navigator.clipboard.readText().then(text => {
+    const pastedDesign = JSON.parse(text)
+    return mergeDesigns([design, pastedDesign]) // merge the pasted design with the current design
+  })
+  return design
+}
+const deleteSelected = (kit: Kit, designId: DesignId, selection: DesignEditorSelection): { design: Design, selection: DesignEditorSelection } => {
+  const selectedPieces = selection.selectedPieceIds.map(id => ({ id_: id }))
+  const selectedConnections = selection.selectedConnections.map(conn => ({ connecting: { piece: { id_: conn.connectingPieceId } }, connected: { piece: { id_: conn.connectedPieceId } } }))
+  const updatedDesign = removePiecesAndConnectionsFromDesign(kit, designId, selectedPieces, selectedConnections)
+  return { design: updatedDesign, selection: deselectAll(selection) }
+}
+
+
+//#endregion Selection
+
+
+//#endregion State
 
 //#region Panels
 
@@ -635,7 +819,7 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
 const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   const { onToolbarChange, designId, onUndo, onRedo } = props
 
-  // #region resolve state and dispatcher
+  // #region State
 
   const isControlled = props.kit !== undefined
 
@@ -655,129 +839,124 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
     action: { type: DesignEditorAction; payload: any }
   ): DesignEditorState => {
     const currentDesign = findDesign(state.kit, state.designId)
-
-    // Helper function to update a design in the kit
     const updateDesignInKit = (updatedDesign: Design): DesignEditorState => {
-      const updatedDesigns = (state.kit.designs || []).map((d: Design) =>
-        sameDesign(d, currentDesign) ? updatedDesign : d
-      )
+      const updatedDesigns = (state.kit.designs || []).map((d: Design) => sameDesign(d, currentDesign) ? updatedDesign : d)
       return { ...state, kit: { ...state.kit, designs: updatedDesigns } }
     }
 
     switch (action.type) {
+      // Design
       case DesignEditorAction.SetDesign:
         return updateDesignInKit(action.payload)
-
-      // Design piece manipulation
       case DesignEditorAction.AddPieceToDesign:
         return updateDesignInKit(addPieceToDesign(currentDesign, action.payload))
-
-      case DesignEditorAction.AddPiecesToDesign:
-        return updateDesignInKit(addPiecesToDesign(currentDesign, action.payload))
-
-      case DesignEditorAction.RemovePieceFromDesign:
-        return updateDesignInKit(removePieceFromDesign(currentDesign, action.payload))
-
-      case DesignEditorAction.RemovePiecesFromDesign:
-        return updateDesignInKit(removePiecesFromDesign(currentDesign, action.payload))
-
       case DesignEditorAction.SetPieceInDesign:
         return updateDesignInKit(setPieceInDesign(currentDesign, action.payload))
-
+      case DesignEditorAction.RemovePieceFromDesign:
+        return updateDesignInKit(removePieceFromDesign(state.kit, state.designId, action.payload))
+      case DesignEditorAction.AddPiecesToDesign:
+        return updateDesignInKit(addPiecesToDesign(currentDesign, action.payload))
       case DesignEditorAction.SetPiecesInDesign:
         return updateDesignInKit(setPiecesInDesign(currentDesign, action.payload))
-
-      // Design connection manipulation
+      case DesignEditorAction.RemovePiecesFromDesign:
+        return updateDesignInKit(removePiecesFromDesign(state.kit, state.designId, action.payload))
       case DesignEditorAction.AddConnectionToDesign:
         return updateDesignInKit(addConnectionToDesign(currentDesign, action.payload))
-
-      case DesignEditorAction.AddConnectionsToDesign:
-        return updateDesignInKit(addConnectionsToDesign(currentDesign, action.payload))
-
-      case DesignEditorAction.RemoveConnectionFromDesign:
-        return updateDesignInKit(removeConnectionFromDesign(currentDesign, action.payload))
-
-      case DesignEditorAction.RemoveConnectionsFromDesign:
-        return updateDesignInKit(removeConnectionsFromDesign(currentDesign, action.payload))
-
       case DesignEditorAction.SetConnectionInDesign:
         return updateDesignInKit(setConnectionInDesign(currentDesign, action.payload))
-
+      case DesignEditorAction.RemoveConnectionFromDesign:
+        return updateDesignInKit(removeConnectionFromDesign(state.kit, state.designId, action.payload))
+      case DesignEditorAction.AddConnectionsToDesign:
+        return updateDesignInKit(addConnectionsToDesign(currentDesign, action.payload))
       case DesignEditorAction.SetConnectionsInDesign:
         return updateDesignInKit(setConnectionsInDesign(currentDesign, action.payload))
-
-      // DesignDiff manipulation
+      case DesignEditorAction.RemoveConnectionsFromDesign:
+        return updateDesignInKit(removeConnectionsFromDesign(state.kit, state.designId, action.payload))
+      case DesignEditorAction.RemovePiecesAndConnectionsFromDesign:
+        return updateDesignInKit(removePiecesAndConnectionsFromDesign(state.kit, state.designId, action.payload.pieceIds, action.payload.connectionIds))
+      // DesignDiff
       case DesignEditorAction.SetDesignDiff:
         return { ...state, designDiff: action.payload }
-
       case DesignEditorAction.AddPieceToDesignDiff:
         return { ...state, designDiff: addPieceToDesignDiff(state.designDiff, action.payload) }
-
-      case DesignEditorAction.AddPiecesToDesignDiff:
-        return { ...state, designDiff: addPiecesToDesignDiff(state.designDiff, action.payload) }
-
-      case DesignEditorAction.RemovePieceFromDesignDiff:
-        return { ...state, designDiff: removePieceFromDesignDiff(state.designDiff, action.payload) }
-
-      case DesignEditorAction.RemovePiecesFromDesignDiff:
-        return { ...state, designDiff: removePiecesFromDesignDiff(state.designDiff, action.payload) }
-
       case DesignEditorAction.SetPieceInDesignDiff:
         return { ...state, designDiff: setPieceInDesignDiff(state.designDiff, action.payload) }
-
+      case DesignEditorAction.RemovePieceFromDesignDiff:
+        return { ...state, designDiff: removePieceFromDesignDiff(state.designDiff, action.payload) }
+      case DesignEditorAction.AddPiecesToDesignDiff:
+        return { ...state, designDiff: addPiecesToDesignDiff(state.designDiff, action.payload) }
       case DesignEditorAction.SetPiecesInDesignDiff:
         return { ...state, designDiff: setPiecesInDesignDiff(state.designDiff, action.payload) }
-
+      case DesignEditorAction.RemovePiecesFromDesignDiff:
+        return { ...state, designDiff: removePiecesFromDesignDiff(state.designDiff, action.payload) }
       case DesignEditorAction.AddConnectionToDesignDiff:
         return { ...state, designDiff: addConnectionToDesignDiff(state.designDiff, action.payload) }
-
-      case DesignEditorAction.AddConnectionsToDesignDiff:
-        return { ...state, designDiff: addConnectionsToDesignDiff(state.designDiff, action.payload) }
-
-      case DesignEditorAction.RemoveConnectionFromDesignDiff:
-        return { ...state, designDiff: removeConnectionFromDesignDiff(state.designDiff, action.payload) }
-
-      case DesignEditorAction.RemoveConnectionsFromDesignDiff:
-        return { ...state, designDiff: removeConnectionsFromDesignDiff(state.designDiff, action.payload) }
-
       case DesignEditorAction.SetConnectionInDesignDiff:
         return { ...state, designDiff: setConnectionInDesignDiff(state.designDiff, action.payload) }
-
+      case DesignEditorAction.RemoveConnectionFromDesignDiff:
+        return { ...state, designDiff: removeConnectionFromDesignDiff(state.designDiff, action.payload) }
+      case DesignEditorAction.AddConnectionsToDesignDiff:
+        return { ...state, designDiff: addConnectionsToDesignDiff(state.designDiff, action.payload) }
       case DesignEditorAction.SetConnectionsInDesignDiff:
         return { ...state, designDiff: setConnectionsInDesignDiff(state.designDiff, action.payload) }
-
-      // Selection manipulation
+      case DesignEditorAction.RemoveConnectionsFromDesignDiff:
+        return { ...state, designDiff: removeConnectionsFromDesignDiff(state.designDiff, action.payload) }
+      // Selection
       case DesignEditorAction.SetSelection:
         return { ...state, selection: action.payload }
-
+      case DesignEditorAction.SelectAll:
+        return { ...state, selection: selectAll(currentDesign) }
+      case DesignEditorAction.DeselectAll:
+        return { ...state, selection: deselectAll(state.selection) }
+      case DesignEditorAction.InvertSelection:
+        return { ...state, selection: invertSelection(state.selection, currentDesign) }
+      case DesignEditorAction.InvertPiecesSelection:
+        return { ...state, selection: invertPiecesSelection(state.selection, currentDesign) }
+      case DesignEditorAction.InvertConnectionsSelection:
+        return { ...state, selection: invertConnectionsSelection(state.selection, currentDesign) }
+      case DesignEditorAction.AddAllPiecesToSelection:
+        return { ...state, selection: addAllPiecesToSelection(state.selection, currentDesign) }
+      case DesignEditorAction.RemoveAllPiecesFromSelection:
+        return { ...state, selection: removeAllPiecesFromSelection(state.selection) }
+      case DesignEditorAction.AddAllConnectionsToSelection:
+        return { ...state, selection: addAllConnectionsToSelection(state.selection, currentDesign) }
+      case DesignEditorAction.RemoveAllConnectionsFromSelection:
+        return { ...state, selection: removeAllConnectionsFromSelection(state.selection) }
+      case DesignEditorAction.SelectPiece:
+        return { ...state, selection: selectPiece(action.payload) }
       case DesignEditorAction.AddPieceToSelection:
         return { ...state, selection: addPieceToSelection(state.selection, action.payload) }
-
-      case DesignEditorAction.AddPiecesToSelection:
-        return { ...state, selection: addPiecesToSelection(state.selection, action.payload) }
-
       case DesignEditorAction.RemovePieceFromSelection:
         return { ...state, selection: removePieceFromSelection(state.selection, action.payload) }
-
+      case DesignEditorAction.SelectPieces:
+        return { ...state, selection: selectPieces(action.payload) }
+      case DesignEditorAction.AddPiecesToSelection:
+        return { ...state, selection: addPiecesToSelection(state.selection, action.payload) }
       case DesignEditorAction.RemovePiecesFromSelection:
         return { ...state, selection: removePiecesFromSelection(state.selection, action.payload) }
-
+      case DesignEditorAction.SelectConnection:
+        return { ...state, selection: selectConnection(action.payload) }
       case DesignEditorAction.AddConnectionToSelection:
         return { ...state, selection: addConnectionToSelection(state.selection, action.payload) }
-
-      case DesignEditorAction.AddConnectionsToSelection:
-        return { ...state, selection: addConnectionsToSelection(state.selection, action.payload) }
-
       case DesignEditorAction.RemoveConnectionFromSelection:
         return { ...state, selection: removeConnectionFromSelection(state.selection, action.payload) }
-
+      case DesignEditorAction.SelectConnections:
+        return { ...state, selection: selectConnections(action.payload) }
+      case DesignEditorAction.AddConnectionsToSelection:
+        return { ...state, selection: addConnectionsToSelection(state.selection, action.payload) }
       case DesignEditorAction.RemoveConnectionsFromSelection:
         return { ...state, selection: removeConnectionsFromSelection(state.selection, action.payload) }
-
-      // Other actions
+      // Other
+      case DesignEditorAction.DeleteSelected:
+        const { design: updatedDesign, selection: updatedSelection } = deleteSelected(state.kit, designId, state.selection)
+        const updatedKit = { ...state.kit, designs: (state.kit.designs || []).map(d => sameDesign(d, currentDesign) ? updatedDesign : d) }
+        return { ...state, kit: updatedKit, selection: updatedSelection }
       case DesignEditorAction.SetFullscreen:
         return { ...state, fullscreenPanel: action.payload }
-
+      case DesignEditorAction.ToggleDiagramFullscreen:
+        return { ...state, fullscreenPanel: state.fullscreenPanel === FullscreenPanel.Diagram ? FullscreenPanel.None : FullscreenPanel.Diagram }
+      case DesignEditorAction.ToggleModelFullscreen:
+        return { ...state, fullscreenPanel: state.fullscreenPanel === FullscreenPanel.Model ? FullscreenPanel.None : FullscreenPanel.Model }
       default:
         return state
     }
@@ -799,13 +978,75 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   }, [props.kit, props.designId, props.fileUrls, props.selection, props.designDiff])
   const controlledDispatch = useCallback(
     (action: { type: DesignEditorAction; payload: any }) => {
+      // Design actions
       if (action.type === DesignEditorAction.SetDesign) props.onDesignChange?.(action.payload)
-      if (action.type === DesignEditorAction.SetSelection) props.onSelectionChange?.(action.payload)
-    },
-    [props.onDesignChange, props.onSelectionChange]
-  )
+      if (action.type === DesignEditorAction.AddPieceToDesign) {
+        const currentDesign = findDesign(props.kit!, props.designId)
+        if (currentDesign) {
+          const updatedDesign = addPieceToDesign(currentDesign, action.payload)
+          props.onDesignChange?.(updatedDesign)
+        }
+      }
+      if (action.type === DesignEditorAction.SetPieceInDesign) {
+        const currentDesign = findDesign(props.kit!, props.designId)
+        if (currentDesign) {
+          const updatedDesign = setPieceInDesign(currentDesign, action.payload)
+          props.onDesignChange?.(updatedDesign)
+        }
+      }
+      if (action.type === DesignEditorAction.RemovePieceFromDesign) {
+        const currentDesign = findDesign(props.kit!, props.designId)
+        if (currentDesign) {
+          const updatedDesign = removePieceFromDesign(props.kit!, props.designId, action.payload)
+          props.onDesignChange?.(updatedDesign)
+        }
+      }
+      if (action.type === DesignEditorAction.AddConnectionToDesign) {
+        const currentDesign = findDesign(props.kit!, props.designId)
+        if (currentDesign) {
+          const updatedDesign = addConnectionToDesign(currentDesign, action.payload)
+          props.onDesignChange?.(updatedDesign)
+        }
+      }
 
-  // #endregion resolve state and dispatcher
+      // Selection actions
+      if (action.type === DesignEditorAction.SetSelection) props.onSelectionChange?.(action.payload)
+      if (action.type === DesignEditorAction.SelectAll) {
+        const currentDesign = findDesign(props.kit!, props.designId)
+        if (currentDesign) {
+          props.onSelectionChange?.(selectAll(currentDesign))
+        }
+      }
+      if (action.type === DesignEditorAction.DeselectAll) {
+        props.onSelectionChange?.(deselectAll(props.selection))
+      }
+      if (action.type === DesignEditorAction.InvertSelection) {
+        const currentDesign = findDesign(props.kit!, props.designId)
+        if (currentDesign) {
+          props.onSelectionChange?.(invertSelection(props.selection, currentDesign))
+        }
+      }
+      if (action.type === DesignEditorAction.SelectPiece) {
+        props.onSelectionChange?.(selectPiece(action.payload))
+      }
+      if (action.type === DesignEditorAction.AddPieceToSelection) {
+        props.onSelectionChange?.(addPieceToSelection(props.selection, action.payload))
+      }
+      if (action.type === DesignEditorAction.RemovePieceFromSelection) {
+        props.onSelectionChange?.(removePieceFromSelection(props.selection, action.payload))
+      }
+      if (action.type === DesignEditorAction.SelectConnection) {
+        props.onSelectionChange?.(selectConnection(action.payload))
+      }
+      if (action.type === DesignEditorAction.AddConnectionToSelection) {
+        props.onSelectionChange?.(addConnectionToSelection(props.selection, action.payload))
+      }
+      if (action.type === DesignEditorAction.RemoveConnectionFromSelection) {
+        props.onSelectionChange?.(removeConnectionFromSelection(props.selection, action.payload))
+      }
+    },
+    [props.onDesignChange, props.onSelectionChange, props.kit, props.designId, props.selection]
+  )
 
   const state = isControlled ? controlledState : uncontrolledState
   const dispatch = isControlled ? controlledDispatch : uncontrolledDispatch
@@ -815,7 +1056,10 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   const design = findDesign(state.kit, designId)
   if (!design) return null
 
+  // #endregion State
+
   // #region Panels
+
   const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
     workbench: false,
     console: false,
@@ -840,6 +1084,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
       return newState
     })
   }
+
   // #endregion Panels
 
   // #region Hotkeys
@@ -866,12 +1111,11 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
 
   useHotkeys('mod+a', (e) => {
     e.preventDefault()
-    const allIds = design?.pieces?.map((p) => p.id_) || []
-    dispatch({ type: DesignEditorAction.SetSelection, payload: { selectedPieceIds: allIds, selectedConnections: [] } })
+    dispatch({ type: DesignEditorAction.SelectAll, payload: null })
   })
   useHotkeys('mod+i', (e) => {
     e.preventDefault()
-    console.log('Invert selection')
+    dispatch({ type: DesignEditorAction.InvertSelection, payload: null })
   })
   useHotkeys('mod+d', (e) => {
     e.preventDefault()
@@ -883,21 +1127,20 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   })
   useHotkeys('mod+c', (e) => {
     e.preventDefault()
-    navigator.clipboard.writeText(JSON.stringify(findDesign(state.kit, designId)))
+    copyToClipboard(design, state.selection)
   })
 
   useHotkeys('mod+v', (e) => {
     e.preventDefault()
-    console.log('Paste')
+    dispatch({ type: DesignEditorAction.PasteFromClipboard, payload: null })
   })
   useHotkeys('mod+x', (e) => {
     e.preventDefault()
-    console.log('Cut selected')
+    cutToClipboard(design, state.selection)
   })
   useHotkeys('delete', (e) => {
     e.preventDefault()
-    // TODO: Implement selection deletion
-    console.log('Delete selected')
+    dispatch({ type: DesignEditorAction.DeleteSelected, payload: null })
   })
   useHotkeys('mod+z', (e) => {
     // Swapped y and z for conventional undo/redo
@@ -1002,8 +1245,8 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
           center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 }
         }
         dispatch({
-          type: DesignEditorAction.SetDesign,
-          payload: { ...design, pieces: [...(design.pieces || []), piece] }
+          type: DesignEditorAction.AddPieceToDesign,
+          payload: piece
         })
       } else if (activeDraggedDesign) {
         throw new Error('Not implemented')

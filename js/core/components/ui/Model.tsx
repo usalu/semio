@@ -44,17 +44,22 @@ import {
   Grid,
   Line,
   OrbitControls,
+  OrthographicCamera,
   Select,
   TransformControls,
   useGLTF
 } from '@react-three/drei'
 import { Canvas, ThreeEvent } from '@react-three/fiber'
 import {
+  Design,
+  DesignEditorAction,
+  DesignEditorDispatcher,
+  DesignEditorState,
   DiffStatus,
+  FullscreenPanel,
   Piece,
   Plane,
   ToSemioRotation,
-  Vector,
   applyDesignDiff,
   findDesign,
   flattenDesign,
@@ -64,7 +69,6 @@ import {
 } from '@semio/js'
 import React, { FC, JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
-import { DesignEditorAction, DesignEditorDispatcher, DesignEditorState } from './DesignEditor'
 
 const getComputedColor = (variable: string): string => {
   return getComputedStyle(document.documentElement).getPropertyValue(variable).trim()
@@ -99,7 +103,7 @@ interface ModelPieceProps {
   selected?: boolean
   updating?: boolean
   diffStatus?: DiffStatus
-  onSelect: (piece: Piece) => void
+  onSelect: (piece: Piece, e?: MouseEvent) => void
   onPieceUpdate: (piece: Piece) => void
 }
 
@@ -113,74 +117,67 @@ const ModelPiece: FC<ModelPieceProps> = ({
   onSelect,
   onPieceUpdate
 }) => {
-  const [drag, setDrag] = useState<Vector | null>(null)
-  const [dragKey, setDragKey] = useState(0)
   const fixed = piece.plane !== undefined
   const matrix = useMemo(() => {
-    // const draggedPlane = drag ? { ...plane, origin: { x: plane.origin.x + drag?.x, y: plane.origin.y + drag?.y, z: plane.origin.z + drag?.z } } : plane
     const planeRotationMatrix = planeToMatrix(plane)
     planeRotationMatrix.multiply(ToSemioRotation())
     return planeRotationMatrix
-  }, [plane, drag])
-  const baseScene = useMemo(() => useGLTF(fileUrl).scene.clone(), [fileUrl])
+  }, [plane])
+  const styledScene = useMemo(() => {
+    const scene = useGLTF(fileUrl).scene.clone()
+    let meshColor: THREE.Color
+    let meshOpacity = 1
+    let lineOpacity = 1
 
-  const getMaterial = (color: string, opacity = 1) =>
-    new THREE.MeshBasicMaterial({ color, transparent: opacity < 1, opacity })
+    if (diffStatus === DiffStatus.Added) {
+      meshColor = new THREE.Color(getComputedColor('--color-success'))
+      if (selected) {
+        const selectedColor = new THREE.Color(getComputedColor('--color-primary'))
+        meshColor.lerp(selectedColor, 0.5)
+      }
+    } else if (diffStatus === DiffStatus.Modified) {
+      meshColor = new THREE.Color(getComputedColor('--color-warning'))
+      if (selected) {
+        const selectedColor = new THREE.Color(getComputedColor('--color-primary'))
+        meshColor.lerp(selectedColor, 0.5)
+      }
+    } else if (diffStatus === DiffStatus.Removed) {
+      meshColor = new THREE.Color(getComputedColor('--color-error'))
+      meshOpacity = 0.2
+      lineOpacity = 0.25
+      if (selected) {
+        const selectedColor = new THREE.Color(getComputedColor('--color-primary'))
+        meshColor.lerp(selectedColor, 0.5)
+      }
+    } else if (selected) {
+      meshColor = new THREE.Color(getComputedColor('--color-primary'))
+    } else {
+      return scene
+    }
 
-  const applyMaterial = (scene: THREE.Group, color: string, opacity = 1) => {
+    const lineColor = new THREE.Color(getComputedColor('--color-foreground'))
     scene.traverse((object) => {
       if (object instanceof THREE.Mesh) {
-        object.material = getMaterial(color, opacity)
-      } else if (object instanceof THREE.Line) {
-        object.material = new THREE.LineBasicMaterial({ color, transparent: opacity < 1, opacity })
+        object.material = new THREE.MeshBasicMaterial({
+          color: meshColor,
+          transparent: meshOpacity < 1,
+          opacity: meshOpacity
+        })
+      }
+      if (object instanceof THREE.Line) {
+        object.material = new THREE.LineBasicMaterial({
+          color: lineColor,
+          transparent: lineOpacity < 1,
+          opacity: lineOpacity
+        })
       }
     })
     return scene
-  }
-
-  const styledScene = useMemo(() => {
-    if (diffStatus === DiffStatus.Added) return applyMaterial(baseScene.clone(), 'green')
-    if (diffStatus === DiffStatus.Removed) return applyMaterial(baseScene.clone(), 'red', 0.2)
-    if (diffStatus === DiffStatus.Modified) return applyMaterial(baseScene.clone(), 'yellow')
-    if (selected) return applyMaterial(baseScene.clone(), getComputedColor('--color-primary'))
-    if (updating) return applyMaterial(baseScene.clone(), getComputedColor('--color-foreground'), 0.1)
-    return baseScene.clone()
-  }, [baseScene, diffStatus, selected, updating])
-
-  // Update selectedScene and updatingScene to use baseScene
-  const selectedScene = useMemo(() => {
-    const sceneClone = baseScene.clone()
-    sceneClone.traverse((object) => {
-      if (object instanceof THREE.Mesh) {
-        const meshColor = new THREE.Color(getComputedColor('--color-primary'))
-        object.material = new THREE.MeshBasicMaterial({ color: meshColor })
-      }
-      if (object instanceof THREE.Line) {
-        const lineColor = new THREE.Color(getComputedColor('--color-foreground'))
-        object.material = new THREE.LineBasicMaterial({ color: lineColor })
-      }
-    })
-    return sceneClone
-  }, [baseScene])
-
-  const updatingScene = useMemo(() => {
-    const sceneClone = baseScene.clone()
-    sceneClone.traverse((object) => {
-      if (object instanceof THREE.Mesh) {
-        const meshColor = new THREE.Color(getComputedColor('--color-foreground'))
-        object.material = new THREE.MeshBasicMaterial({ color: meshColor, transparent: true, opacity: 0.1 })
-      }
-      if (object instanceof THREE.Line) {
-        const lineColor = new THREE.Color(getComputedColor('--color-background'))
-        object.material = new THREE.LineBasicMaterial({ color: lineColor, transparent: true, opacity: 0.15 })
-      }
-    })
-    return sceneClone
-  }, [baseScene])
+  }, [fileUrl, diffStatus, selected])
 
   const handleClick = useCallback(
     (e: ThreeEvent<MouseEvent>) => {
-      onSelect(piece)
+      onSelect(piece, e.nativeEvent)
       e.stopPropagation()
     },
     [onSelect, piece]
@@ -274,65 +271,52 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
     return effectiveDesign.pieces?.map((piece) => getPieceDiffFromQuality(piece)) || []
   }, [effectiveDesign])
 
-  const handleSelectionChange = useCallback(
+  //#region Actions
+  const onDesignChange = useCallback((d: Design) => designEditorDispatcher({ type: DesignEditorAction.SetDesign, payload: d }), [designEditorDispatcher])
+  const onSelectPiece = useCallback((p: Piece) => designEditorDispatcher({ type: DesignEditorAction.SelectPiece, payload: p }), [designEditorDispatcher])
+  const onAddPieceToSelection = useCallback((p: Piece) => designEditorDispatcher({ type: DesignEditorAction.AddPieceToSelection, payload: p }), [designEditorDispatcher])
+  const onRemovePieceFromSelection = useCallback((p: Piece) => designEditorDispatcher({ type: DesignEditorAction.RemovePieceFromSelection, payload: p }), [designEditorDispatcher])
+  const onSetPieceInDesign = useCallback((p: Piece) => designEditorDispatcher({ type: DesignEditorAction.SetPieceInDesign, payload: p }), [designEditorDispatcher])
+  const onSelectPieces = useCallback((pieceIds: string[]) => designEditorDispatcher({ type: DesignEditorAction.SelectPieces, payload: pieceIds.map(id => ({ id_: id })) }), [designEditorDispatcher])
+  //#endregion Actions
+
+  const onChange = useCallback(
     (selected: THREE.Object3D[]) => {
-      const newSelectedPieceIds = selected.map((item) => item.parent?.userData.pieceId)
+      const newSelectedPieceIds = selected.map((item) => item.parent?.userData.pieceId).filter(Boolean)
 
       if (
         !Array.isArray(selection.selectedPieceIds) ||
         newSelectedPieceIds.length !== selection.selectedPieceIds.length ||
         newSelectedPieceIds.some((id, index) => id !== selection.selectedPieceIds[index])
       ) {
-        designEditorDispatcher({
-          type: DesignEditorAction.SetSelection,
-          payload: {
-            ...selection,
-            selectedPieceIds: newSelectedPieceIds
-          }
-        })
+        onSelectPieces(newSelectedPieceIds)
       }
     },
-    [selection, designEditorDispatcher]
+    [selection, onSelectPieces]
   )
 
-  const handlePieceSelect = useCallback(
-    (piece: Piece) => {
-      if (selection.selectedPieceIds.includes(piece.id_)) {
-        designEditorDispatcher({
-          type: DesignEditorAction.SetSelection,
-          payload: {
-            ...selection,
-            selectedPieceIds: selection.selectedPieceIds.filter((id) => id !== piece.id_)
-          }
-        })
+  const onSelect = useCallback(
+    (piece: Piece, e?: MouseEvent) => {
+      if (e?.ctrlKey || e?.metaKey) {
+        onRemovePieceFromSelection(piece)
+      } else if (e?.shiftKey) {
+        onAddPieceToSelection(piece)
       } else {
-        designEditorDispatcher({
-          type: DesignEditorAction.SetSelection,
-          payload: {
-            ...selection,
-            selectedPieceIds: [...selection.selectedPieceIds, piece.id_]
-          }
-        })
+        onSelectPiece(piece)
       }
     },
-    [selection, designEditorDispatcher]
+    [onRemovePieceFromSelection, onAddPieceToSelection, onSelectPiece]
   )
 
   const onPieceUpdate = useCallback(
     (piece: Piece) => {
       if (!design) return
-
-      const newDesign = { ...design, pieces: design.pieces?.map((p) => p.id_ === piece.id_ ? piece : p) }
-
-      designEditorDispatcher({
-        type: DesignEditorAction.SetDesign,
-        payload: newDesign
-      })
+      onSetPieceInDesign(piece)
     },
-    [design, designEditorDispatcher]
+    [design, onSetPieceInDesign]
   )
   return (
-    <Select box multiple onChange={handleSelectionChange} filter={(items) => items}>
+    <Select box multiple onChange={onChange} filter={(items) => items}>
       <group quaternion={new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)}>
         {effectiveDesign.pieces?.map((piece, index) => (
           <ModelPiece
@@ -342,7 +326,7 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
             fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_)!)!}
             selected={selection.selectedPieceIds.includes(piece.id_)}
             diffStatus={pieceDiffStatuses[index]}
-            onSelect={handlePieceSelect}
+            onSelect={onSelect}
             onPieceUpdate={onPieceUpdate}
           />
           // <PlaneThree key={`plane-${piece.id_}`} plane={piecePlanes![index]} />
@@ -353,25 +337,51 @@ const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDisp
 }
 
 const Gizmo: FC = (): JSX.Element => {
-  const colors = useMemo(
-    () =>
-      [
-        getComputedColor('--color-primary'),
-        getComputedColor('--color-tertiary'),
-        getComputedColor('--color-secondary')
-      ] as [string, string, string],
-    []
-  )
-
+  const colors = useMemo(() => [getComputedColor('--color-primary'), getComputedColor('--color-tertiary'), getComputedColor('--color-secondary')] as [string, string, string], [])
   return (
     <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
       <GizmoViewport
         labels={['X', 'Z', '-Y']}
         axisColors={colors}
-
       // font='Anta'
       />
     </GizmoHelper>
+  )
+}
+
+const ModelCore: FC<ModelProps> = ({ designEditorState, designEditorDispatcher }) => {
+  const fullscreen = designEditorState.fullscreenPanel === FullscreenPanel.Model
+  const [gridColors, setGridColors] = useState({
+    sectionColor: getComputedColor('--foreground'),
+    cellColor: getComputedColor('--accent-foreground')
+  })
+  useEffect(() => {
+    const updateColors = () => { setGridColors({ sectionColor: getComputedColor('--foreground'), cellColor: getComputedColor('--accent-foreground') }) }
+    updateColors()
+    const observer = new MutationObserver(updateColors)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+  const camera = useRef<THREE.OrthographicCamera>(null)
+  return (
+    <>
+      <OrthographicCamera ref={camera} />
+      <OrbitControls
+        makeDefault
+        mouseButtons={{
+          LEFT: THREE.MOUSE.ROTATE, // Left mouse button for orbit/pan
+          MIDDLE: undefined,
+          RIGHT: undefined // Right button disabled to allow selection
+        }}
+      />
+      <ambientLight intensity={1} />
+      {/* <Stage center={{ disable: true }} environment={null}> */}
+      <ModelDesign designEditorState={designEditorState} designEditorDispatcher={designEditorDispatcher} />
+      {/* </Stage> */}
+      <Environment files={'schlenker-shed.hdr'} />
+      <Grid infiniteGrid={true} sectionColor={gridColors.sectionColor} cellColor={gridColors.cellColor} />
+      {fullscreen && <Gizmo />}
+    </>
   )
 }
 
@@ -380,69 +390,17 @@ interface ModelProps {
   designEditorDispatcher: DesignEditorDispatcher
 }
 const Model: FC<ModelProps> = ({ designEditorState, designEditorDispatcher }) => {
-  const [gridColors, setGridColors] = useState({
-    sectionColor: getComputedColor('--foreground'),
-    cellColor: getComputedColor('--accent-foreground')
-  })
-  useEffect(() => {
-    const updateColors = () => {
-      setGridColors({
-        sectionColor: getComputedColor('--foreground'),
-        cellColor: getComputedColor('--accent-foreground')
-      })
-    }
-    updateColors()
-    const observer = new MutationObserver(updateColors)
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class']
-    })
+  //#region Actions  
+  const onDeselectAll = useCallback(() => designEditorDispatcher({ type: DesignEditorAction.DeselectAll, payload: null }), [designEditorDispatcher])
+  const onToggleModelFullscreen = useCallback(() => designEditorDispatcher({ type: DesignEditorAction.ToggleModelFullscreen, payload: null }), [designEditorDispatcher])
+  //#endregion Actions
 
-    return () => observer.disconnect()
-  }, [])
-
-  const handleDoubleClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation()
-      designEditorDispatcher({
-        type: DesignEditorAction.SetFullscreen,
-        payload: designEditorState.fullscreenPanel === 'model' ? null : 'model'
-      })
-    },
-    [designEditorState.fullscreenPanel, designEditorDispatcher]
-  )
-
-  const handlePointerMissed = useCallback(() => {
-    designEditorDispatcher({
-      type: DesignEditorAction.SetSelection,
-      payload: {
-        selectedPieceIds: [],
-        selectedConnections: []
-      }
-    })
-  }, [designEditorDispatcher])
-
-  const fullscreen = designEditorState.fullscreenPanel === 'model'
-
+  const onDoubleClickCapture = useCallback((e: React.MouseEvent) => { e.stopPropagation(); onToggleModelFullscreen() }, [onToggleModelFullscreen])
+  const onPointerMissed = useCallback((e: MouseEvent) => { if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) onDeselectAll() }, [onDeselectAll])
   return (
-    <div id="model" className="w-full h-full">
-      <Canvas onDoubleClickCapture={handleDoubleClick} onPointerMissed={handlePointerMissed}>
-        <OrbitControls
-          makeDefault
-          mouseButtons={{
-            LEFT: THREE.MOUSE.ROTATE, // Left mouse button for orbit/pan
-            MIDDLE: undefined,
-            RIGHT: undefined // Right button disabled to allow selection
-          }}
-        />
-        <ambientLight intensity={1} />
-        {/* <Suspense fallback={null}>
-                        <Gltf src={src} />
-                    </Suspense> */}
-        <ModelDesign designEditorState={designEditorState} designEditorDispatcher={designEditorDispatcher} />
-        <Environment files={'schlenker-shed.hdr'} />
-        <Grid infiniteGrid={true} sectionColor={gridColors.sectionColor} cellColor={gridColors.cellColor} />
-        {fullscreen && <Gizmo />}
+    <div id="model" className="h-full w-full">
+      <Canvas onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed}>
+        <ModelCore designEditorState={designEditorState} designEditorDispatcher={designEditorDispatcher} />
       </Canvas>
     </div>
   )
