@@ -39,7 +39,7 @@ import {
   addPieceToDesignDiff,
   addPiecesToDesign,
   addPiecesToDesignDiff,
-  findDesign,
+  findDesignInKit,
   mergeDesigns,
   removeConnectionFromDesign,
   removeConnectionFromDesignDiff,
@@ -838,7 +838,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
     state: DesignEditorState,
     action: { type: DesignEditorAction; payload: any }
   ): DesignEditorState => {
-    const currentDesign = findDesign(state.kit, state.designId)
+    const currentDesign = findDesignInKit(state.kit, state.designId)
     const updateDesignInKit = (updatedDesign: Design): DesignEditorState => {
       const updatedDesigns = (state.kit.designs || []).map((d: Design) => sameDesign(d, currentDesign) ? updatedDesign : d)
       return { ...state, kit: { ...state.kit, designs: updatedDesigns } }
@@ -981,28 +981,28 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
       // Design actions
       if (action.type === DesignEditorAction.SetDesign) props.onDesignChange?.(action.payload)
       if (action.type === DesignEditorAction.AddPieceToDesign) {
-        const currentDesign = findDesign(props.kit!, props.designId)
+        const currentDesign = findDesignInKit(props.kit!, props.designId)
         if (currentDesign) {
           const updatedDesign = addPieceToDesign(currentDesign, action.payload)
           props.onDesignChange?.(updatedDesign)
         }
       }
       if (action.type === DesignEditorAction.SetPieceInDesign) {
-        const currentDesign = findDesign(props.kit!, props.designId)
+        const currentDesign = findDesignInKit(props.kit!, props.designId)
         if (currentDesign) {
           const updatedDesign = setPieceInDesign(currentDesign, action.payload)
           props.onDesignChange?.(updatedDesign)
         }
       }
       if (action.type === DesignEditorAction.RemovePieceFromDesign) {
-        const currentDesign = findDesign(props.kit!, props.designId)
+        const currentDesign = findDesignInKit(props.kit!, props.designId)
         if (currentDesign) {
           const updatedDesign = removePieceFromDesign(props.kit!, props.designId, action.payload)
           props.onDesignChange?.(updatedDesign)
         }
       }
       if (action.type === DesignEditorAction.AddConnectionToDesign) {
-        const currentDesign = findDesign(props.kit!, props.designId)
+        const currentDesign = findDesignInKit(props.kit!, props.designId)
         if (currentDesign) {
           const updatedDesign = addConnectionToDesign(currentDesign, action.payload)
           props.onDesignChange?.(updatedDesign)
@@ -1012,7 +1012,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
       // Selection actions
       if (action.type === DesignEditorAction.SetSelection) props.onSelectionChange?.(action.payload)
       if (action.type === DesignEditorAction.SelectAll) {
-        const currentDesign = findDesign(props.kit!, props.designId)
+        const currentDesign = findDesignInKit(props.kit!, props.designId)
         if (currentDesign) {
           props.onSelectionChange?.(selectAll(currentDesign))
         }
@@ -1021,7 +1021,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
         props.onSelectionChange?.(deselectAll(props.selection))
       }
       if (action.type === DesignEditorAction.InvertSelection) {
-        const currentDesign = findDesign(props.kit!, props.designId)
+        const currentDesign = findDesignInKit(props.kit!, props.designId)
         if (currentDesign) {
           props.onSelectionChange?.(invertSelection(props.selection, currentDesign))
         }
@@ -1053,7 +1053,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
 
   if (!state.kit) return null
 
-  const design = findDesign(state.kit, designId)
+  const design = findDesignInKit(state.kit, designId)
   if (!design) return null
 
   // #endregion State
@@ -1215,7 +1215,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
     } else if (id.startsWith('design-')) {
       const [_, name, variant, view] = id.split('-')
       const draggedDesignId: DesignId = { name, variant: variant || undefined, view: view || undefined }
-      const draggedDesign = findDesign(state.kit, draggedDesignId)
+      const draggedDesign = findDesignInKit(state.kit, draggedDesignId)
       setActiveDraggedDesign(draggedDesign || null)
     }
   }

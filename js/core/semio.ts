@@ -18,321 +18,140 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
+
+// #region TODOs
+
+// TODOs
+// TODO: Group and reorder functions by similar functionality
+// TODO: Conventionalize error throwing and logging
+// TODO: Migrate to zod
+
+// #endregion TODOs
+
 import cytoscape from 'cytoscape'
 import * as THREE from 'three'
 
-// TODOs
-// Update to latest schema and unify docstrings
-
-// Initially created from json-schema-to-typescript: https://app.quicktype.io/
-// Manually edited to align with GraphQL schema.
-
-// To parse this data:
-//
-//   import { Convert, Kit } from "./file";
-//
-//   const kit = Convert.toKit(json);
-//
-// These functions will throw an error if the JSON doesn't
-// match the expected interface, even if the JSON is valid.
+// #region Constants
 
 export const ICON_WIDTH = 50
 export const TOLERANCE = 1e-5
 
+// #endregion Constants
+
 //#region Types
 
-// ↗️ Represents a Kit, the top-level container for types and designs.
-export type Kit = {
-  // 📛 The name of the kit
-  name: string
-  // 💬 The human-readable description of the kit
-  description?: string
-  // 🪙 The icon [ emoji | logogram | url ] of the kit
-  icon?: string
-  // 🖼️ The URL to the image of the kit
-  image?: string
-  // 🔮 The URL of the preview image of the kit
-  preview?: string
-  // 🔀 The version of the kit
-  version?: string
-  // ☁️ The Unique Resource Locator (URL) where to fetch the kit remotely
-  remote?: string
-  // 🏠 The URL of the homepage of the kit
-  homepage?: string
-  // ⚖️ The license [ spdx id | url ] of the kit
-  license?: string
-  // 🕒 The creation date of the kit
-  created?: Date
-  // 🕒 The last update date of the kit
-  updated?: Date
-  // 🧩 The types defined within the kit
-  types?: Type[]
-  // 🏙️ The designs defined within the kit
-  designs?: Design[]
-  // 📏 The qualities associated with the kit
-  qualities?: Quality[]
-}
-
-// 🪪 Identifier for a kit.
-export type KitId = {
-  // 📛 The name of the kit
-  name: string
-  // 🔀 The version of the kit
-  version?: string
-}
-
-// 🏙️ A design is a collection of connected pieces.
-export type Design = {
-  // 📛 The name of the design
-  name: string
-  // 💬 The human-readable description of the design
-  description?: string
-  // 🪙 The icon [ emoji | logogram | url ] of the design
-  icon?: string
-  // 🖼️ The URL to the image of the design
-  image?: string
-  // 🔀 The variant of the design
-  variant?: string
-  // 🥽 The view of the design
-  view?: string
-  // 📍 The location of the design
-  location?: Location
-  // 📏 The unit of the design
-  unit: string
-  // 🕒 The creation date of the design
-  created?: Date
-  // 🕒 The last update date of the design
-  updated?: Date
-  // 🧩 The pieces included in the design
-  pieces?: Piece[]
-  // 🖇️ The connections between pieces in the design
-  connections?: Connection[]
-  // 📑 The authors of the design
-  authors?: Author[]
-  // 📏 The qualities associated with the design
-  qualities?: Quality[]
-}
-
-// 🪪 Identifier for a design within a kit.
-export type DesignId = {
-  // 📛 The name of the design
-  name: string
-  // 🔀 The variant of the design
-  variant?: string
-  // 🥽 The view of the design
-  view?: string
-}
-
-// 📑 Represents an author.
-export type Author = {
-  // 📛 The name of the author
-  name: string
-  // 📧 The email of the author
-  email: string
-}
-
-// 🖇️ A bidirectional connection between two pieces of a design.
-export type Connection = {
-  // 🧲 The connected side of the connection
-  connected: Side
-  // 🧲 The connecting side of the connection
-  connecting: Side
-  // 💬 The human-readable description of the connection
-  description?: string
-  // ↕️ The longitudinal gap between connected pieces
-  gap?: number
-  // ↔️ The lateral shift between connected pieces
-  shift?: number
-  // 🪜 The vertical rise between connected pieces
-  rise?: number
-  // 🔄 The horizontal rotation between connected pieces in degrees
-  rotation?: number
-  // 🛞 The turn between connected pieces in degrees
-  turn?: number
-  // ↗️ The horizontal tilt between connected pieces in degrees
-  tilt?: number
-  // ➡️ The offset in x direction in the diagram
-  x?: number
-  // ⬆️ The offset in y direction in the diagram
-  y?: number
-  // 📏 The qualities associated with the connection
-  qualities?: Quality[]
-}
-
-// 🪪 Identifier for a connection within a design.
-export type ConnectionId = {
-  // 🧲 The connected side of the connection
-  connected: SideId
-  // 🧲 The connecting side of the connection
-  connecting: SideId
-}
-
-// 🧱 A side of a piece in a connection, identifying a specific port on a specific piece.
-export type Side = {
-  // ⭕ The piece involved in this side of the connection
-  piece: PieceId // Represents Piece identifier
-  // 🔌 The port involved in this side of the connection
-  port: PortId // Represents Port identifier
-}
-
-// 🪪 Identifier for a side within a connection.
-export type SideId = {
-  // ⭕ The piece involved in this side of the connection
-  piece: PieceId
-}
-
-// 🪪 Identifier for a piece within a design.
-export type PieceId = {
-  // 🆔 The id of the piece
-  id_: string
-}
-
-// 🪪 Identifier for a port within a type.
-export type PortId = {
-  // 🆔 The id of the port
-  id_?: string
-}
-
-// ⭕ A piece is a 3D instance of a type within a design.
-export type Piece = {
-  // 🆔 The id of the piece
-  id_: string
-  // 💬 The human-readable description of the piece
-  description?: string
-  // 🧩 The type defining this piece
-  type: TypeId // Represents Type identifier
-  // ◳ The optional plane (position and orientation) of the piece
-  plane?: Plane
-  // 📺 The optional center of the piece in the diagram
-  center?: DiagramPoint
-  // 📏 The qualities associated with the piece
-  qualities?: Quality[]
-}
-
-// 📺 A 2D point (xy) in the diagram coordinate system.
-export type DiagramPoint = {
-  // 🏁 The x-coordinate in the diagram
-  x: number
-  // 🏁 The y-coordinate in the diagram
-  y: number
-}
-
-// ◳ A plane defined by an origin point and two axes vectors.
-export type Plane = {
-  // ⌱ The origin point of the plane
-  origin: Point
-  // ➡️ The x-axis vector of the plane
-  xAxis: Vector
-  // ➡️ The y-axis vector of the plane
-  yAxis: Vector
-}
-
-// ✖️ A 3D point (xyz) with floating-point coordinates.
-export type Point = {
-  // 🎚️ The x-coordinate of the point
-  x: number
-  // 🎚️ The y-coordinate of the point
-  y: number
-  // 🎚️ The z-coordinate of the point
-  z: number
-}
-
-// ➡️ A 3D vector (xyz) with floating-point coordinates.
-export type Vector = {
-  // 🎚️ The x-coordinate of the vector
-  x: number
-  // 🎚️ The y-coordinate of the vector
-  y: number
-  // 🎚️ The z-coordinate of the vector
-  z: number
-}
-
-// 🪪 Identifier for a type, potentially including a variant.
-export type TypeId = {
-  // 📛 The name of the type
-  name: string
-  // 🔀 The optional variant of the type
-  variant?: string
-}
-
-// 📏 Represents a quality, a named property with an optional value, unit, and definition.
+// 📏 A quality is a named value with a unit and a definition.
 export type Quality = {
-  // 📛 The name of the quality
+  // 📛 The name of the quality.
   name: string
-  // ❓ The optional value of the quality
+  // 🔢 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
   value?: string
-  // 📐 The optional unit of the quality's value
+  // Ⓜ️ The optional unit of the value of the quality.
   unit?: string
-  // 📖 The optional definition [ text | url ] of the quality
+  // 📖 The optional definition [ text | uri ] of the quality.
   definition?: string
 }
 
-// 🧩 A type is a reusable element blueprint with ports for connection.
-export type Type = {
-  // 📛 The name of the type
+export type QualityId = {
+  // 📛 The name of the quality.
   name: string
-  // 💬 The human-readable description of the type
+}
+
+export type QualityIdLike = Quality | QualityId | string
+
+// 💾 A representation is a link to a resource that describes a type for a certain level of detail and tags.
+export type Representation = {
+  // 🔗 The Unique Resource Locator (URL) to the resource of the representation.
+  url: string
+  // 💬 The optional human-readable description of the representation.
   description?: string
-  // 🪙 The icon [ emoji | logogram | url ] of the type
-  icon?: string
-  // 🖼️ The URL to the image of the type
-  image?: string
-  // 🔀 The variant of the type
-  variant?: string
-  // 📦 The number of items in stock
-  stock?: number
-  // 👻 The optional virtual flag of the type
-  virtual?: boolean
-  // Ⓜ️ The length unit used by the type's geometry
-  unit: string
-  // 🕒 The creation date of the type
-  created?: Date
-  // 🕒 The last update date of the type
-  updated?: Date
-  // 🗺️ The optional location of the type
-  location?: Location
-  // 💾 Representations (e.g., CAD files) of the type
-  representations?: Representation[]
-  // 🔌 Connection points (ports) of the type
-  ports?: Port[]
-  // 📑 Authors of the type
-  authors?: Author[]
-  // 📏 Qualities associated with the type
+  // 🏷️ The optional tags to group representations. No tags means default.
+  tags?: string[]
+  // 📏 The optional qualities of the representation.
   qualities?: Quality[]
 }
 
-// 🔌 A port is a connection point on a type, defined by a point and direction.
+export type RepresentationId = {
+  // 🏷️ The optional tags to group representations. No tags means default.
+  tags?: string[]
+}
+
+export type RepresentationIdLike = Representation | RepresentationId | string[] | string | null | undefined
+
+// 📺 A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.
+export type DiagramPoint = {
+  // 🎚️ The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
+  x: number
+  // �️ The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
+  y: number
+}
+
+// ✖️ A 3-point (xyz) of floating point numbers.
+export type Point = {
+  // 🎚️ The x-coordinate of the point.
+  x: number
+  // 🎚️ The y-coordinate of the point.
+  y: number
+  // 🎚️ The z-coordinate of the point.
+  z: number
+}
+
+// ➡️ A 3d-vector (xyz) of floating point numbers.
+export type Vector = {
+  // 🎚️ The x-coordinate of the vector.
+  x: number
+  // 🎚️ The y-coordinate of the vector.
+  y: number
+  // 🎚️ The z-coordinate of the vector.
+  z: number
+}
+
+// ◳ A plane is an origin (point) and an orientation (x-axis and y-axis).
+export type Plane = {
+  // ⌱ The origin of the plane.
+  origin: Point
+  // ➡️ The x-axis of the plane.
+  xAxis: Vector
+  // ➡️ The y-axis of the plane.
+  yAxis: Vector
+}
+
+// 🔌 A port is a connection point (with a direction) of a type.
 export type Port = {
-  // 🆔 The id of the port
+  // 🆔 The optional local identifier of the port within the type. No id means the default port.
   id_?: string
-  // 💬 The human-readable description of the port
+  // 💬 The optional human-readable description of the port.
   description?: string
-  // 👨‍👩‍👧‍👦 The family of the port for compatibility checks
+  // 👨‍👩‍👧‍👦 The optional family of the port. This allows to define explicit compatibility with other ports.
   family?: string
   // 💯 Whether the port is mandatory. A mandatory port must be connected in a design.
   mandatory?: boolean
-  // 💍 The parameter t [0,1[ for diagram visualization
+  // 💍 The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.
   t: number
-  // ✅ Other compatible port families
+  // ✅ The optional other compatible families of the port. An empty list means this port is compatible with all other ports.
   compatibleFamilies?: string[]
-  // ✖️ The connection point geometry
+  // ✖️ The connection point of the port that is attracted to another connection point.
   point: Point
-  // ➡️ The connection direction vector
+  // ➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.
   direction: Vector
-  // 📏 Qualities associated with the port
+  // 📏 The optional qualities of the port.
   qualities?: Quality[]
 }
 
-// 💾 A representation links to a resource (e.g., file) describing a type.
-export type Representation = {
-  // 🔗 The URL to the resource
-  url: string
-  // 💬 The human-readable description of the representation
-  description?: string
-  // 🏷️ Tags to group or filter representations
-  tags?: string[]
-  // 📏 Qualities associated with the representation
-  qualities?: Quality[]
+// 🔌 The optional local identifier of the port within the type. No id means the default port.
+export type PortId = {
+  // 🆔 The optional local identifier of the port within the type. No id means the default port.
+  id_?: string
+}
+
+export type PortIdLike = Port | PortId | string | null | undefined
+
+// � The information about the author.
+export type Author = {
+  // 📛 The name of the author.
+  name: string
+  // 📧 The email of the author.
+  email: string
 }
 
 // 📍 A location on the earth surface (longitude, latitude).
@@ -342,6 +161,214 @@ export type Location = {
   // ↕️ The latitude of the location in degrees.
   latitude: number
 }
+
+// 🧩 A type is a reusable element that can be connected with other types over ports.
+export type Type = {
+  // 📛 The name of the type
+  name: string
+  // 💬 The optional human-readable description of the type
+  description?: string
+  // 🪙 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.
+  icon?: string
+  // 🖼️ The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.
+  image?: string
+  // 🔀 The optional variant of the type. No variant means the default variant.
+  variant?: string
+  // 📦 The optional number of items in stock. 2147483647 (=2^31-1) means infinite stock.
+  stock?: number
+  // 👻 Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.
+  virtual?: boolean
+  // Ⓜ️ The length unit of the point and the direction of the ports of the type.
+  unit: string
+  // 🕒 The creation date of the type
+  created?: Date
+  // � The last update date of the type
+  updated?: Date
+  // � The optional location of the type.
+  location?: Location
+  // 💾 The optional representations of the type.
+  representations?: Representation[]
+  // 🔌 The optional ports of the type.
+  ports?: Port[]
+  // � The optional authors of the type.
+  authors?: Author[]
+  // 📏 The optional qualities of the type.
+  qualities?: Quality[]
+}
+
+// �  identifier of the type within the kit.
+export type TypeId = {
+  // 📛 The name of the type.
+  name: string
+  // 🔀 The optional variant of the type. No variant means the default variant.
+  variant?: string
+}
+
+export type TypeIdLike = Type | TypeId | [string, string | undefined] | string
+
+// ⭕ A piece is a 3d-instance of a type in a design.
+export type Piece = {
+  // 🆔 The optional local identifier of the piece within the design. No id means the default piece.
+  id_: string
+  // 💬 The optional human-readable description of the piece.
+  description?: string
+  // 🧩 The local identifier of the type of the piece within the kit.
+  type: TypeId
+  // ◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.
+  plane?: Plane
+  // ⌖ The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.
+  center?: DiagramPoint
+  // 📏 The optional qualities of the piece.
+  qualities?: Quality[]
+}
+
+// ⭕ The optional local identifier of the piece within the design. No id means the default piece.
+export type PieceId = {
+  // 🆔 The optional local identifier of the piece within the design. No id means the default piece.
+  id_: string
+}
+
+export type PieceIdLike = Piece | PieceId | string
+
+// 🧱 A side of a piece in a connection.
+export type Side = {
+  // ⭕ The piece-related information of the side.
+  piece: PieceId
+  // 🔌 The local identifier of the port within the type.
+  port: PortId
+}
+
+// � Identifier for a side within a connection.
+export type SideId = {
+  // ⭕ The piece-related information of the side.
+  piece: PieceId
+}
+
+export type SideIdLike = Side | SideId | [string, string | undefined] | string
+
+// � A bidirectional connection between two pieces of a design.
+export type Connection = {
+  // 🧲 The connected side of the piece of the connection.
+  connected: Side
+  // 🧲 The connected side of the piece of the connection.
+  connecting: Side
+  // 💬 The optional human-readable description of the connection.
+  description?: string
+  // ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.
+  gap?: number
+  // ↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.
+  shift?: number
+  // 🪜 The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.
+  rise?: number
+  // 🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
+  rotation?: number
+  // 🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.
+  turn?: number
+  // ∡ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.
+  tilt?: number
+  // ➡️ The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.
+  x?: number
+  // ⬆️ The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.
+  y?: number
+  // 📏 The optional qualities of the connection.
+  qualities?: Quality[]
+}
+
+// 🔗 Identifier for a connection within a design.
+export type ConnectionId = {
+  // 🧲 The connected side of the piece of the connection.
+  connected: SideId
+  // 🧲 The connected side of the piece of the connection.
+  connecting: SideId
+}
+
+export type ConnectionIdLike = Connection | ConnectionId | [string, string] | string
+
+// 🏙️ A design is a collection of pieces that are connected.
+export type Design = {
+  // 📛 The name of the design.
+  name: string
+  // 💬 The optional human-readable description of the design.
+  description?: string
+  // 🪙 The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.
+  icon?: string
+  // 🖼️ The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.
+  image?: string
+  // 🔀 The optional variant of the design. No variant means the default variant.
+  variant?: string
+  // 🥽 The optional view of the design. No view means the default view.
+  view?: string
+  // 📍 The optional location of the design.
+  location?: Location
+  // Ⓜ️ The length unit for all distance-related information of the design.
+  unit: string
+  // 🕒 The creation date of the design
+  created?: Date
+  // 🕒 The last update date of the design
+  updated?: Date
+  // ⭕ The optional pieces of the design.
+  pieces?: Piece[]
+  // 🔗 The optional connections of the design.
+  connections?: Connection[]
+  // � The optional authors of the design.
+  authors?: Author[]
+  // 📏 The optional qualities of the design.
+  qualities?: Quality[]
+}
+
+// 🏙️ The local identifier of the design within the kit.
+export type DesignId = {
+  // 📛 The name of the design.
+  name: string
+  // 🔀 The optional variant of the design. No variant means the default variant.
+  variant?: string
+  // 🥽 The optional view of the design. No view means the default view.
+  view?: string
+}
+
+export type DesignIdLike = Design | DesignId | [string, string | undefined, string | undefined] | [string, string | undefined] | string
+
+// 🗃️ A kit is a collection of types and designs.
+export type Kit = {
+  // 📛 The name of the kit.
+  name: string
+  // 💬 The optional human-readable description of the kit.
+  description?: string
+  // 🪙 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.
+  icon?: string
+  // 🖼️ The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.
+  image?: string
+  // 🔮 The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.
+  preview?: string
+  // 🔀 The optional version of the kit. No version means the latest version.
+  version?: string
+  // ☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely.
+  remote?: string
+  // 🏠 The optional Unique Resource Locator (URL) of the homepage of the kit.
+  homepage?: string
+  // ⚖️ The optional license [ spdx id | url ] of the kit.
+  license?: string
+  // � The creation date of the kit
+  created?: Date
+  // � The last update date of the kit
+  updated?: Date
+  // 🧩 The optional types of the kit.
+  types?: Type[]
+  // 🏙️ The optional designs of the kit.
+  designs?: Design[]
+  // 📏 The optional qualities of the kit.
+  qualities?: Quality[]
+}
+
+// 🗃️ Identifier for a kit.
+export type KitId = {
+  // 📛 The name of the kit.
+  name: string
+  // 🔀 The optional version of the kit. No version means the latest version.
+  version?: string
+}
+
+export type KitIdLike = Kit | KitId | [string, string | undefined] | string
 
 export type PieceDiff = {
   id_: string
@@ -404,9 +431,8 @@ export enum DiffStatus {
   Modified = 'modified'
 }
 
+// #region Serialization
 
-// Converts JSON strings to/from your types
-// and asserts the results of JSON.parse at runtime
 export class Convert {
   public static toKit(json: string): Kit {
     return cast(JSON.parse(json), r('Kit'))
@@ -415,8 +441,6 @@ export class Convert {
   public static kitToJson(value: Kit): string {
     return JSON.stringify(uncast(value, r('Kit')), null, 2)
   }
-
-  // Add similar methods for other top-level types if needed
 }
 
 function invalidValue(typ: any, val: any, key: any, parent: any = ''): never {
@@ -836,6 +860,8 @@ const typeMap: any = {
   )
 }
 
+//#endregion Serialization
+
 //#endregion Types
 
 //#region Functions
@@ -852,47 +878,81 @@ export const jaccard = (a: string[] | undefined, b: string[] | undefined) => {
   return intersection / union
 }
 
+//#region Mapping
+
+const qualityIdLikeToQualityId = (qualityId: QualityIdLike): QualityId => {
+  if (typeof qualityId === 'string') return { name: qualityId }
+  return { name: qualityId.name }
+}
+
+const representationIdLikeToRepresentationId = (representationId: RepresentationIdLike): RepresentationId => {
+  if (representationId === undefined || representationId === null) return { tags: [] }
+  if (typeof representationId === 'string') return { tags: [representationId] }
+  if (Array.isArray(representationId)) return { tags: representationId }
+  return { tags: representationId.tags ?? [] }
+}
+
+const portIdLikeToPortId = (portId: PortIdLike): PortId => {
+  if (portId === undefined || portId === null) return { id_: '' }
+  if (typeof portId === 'string') return { id_: portId }
+  return { id_: portId.id_ }
+}
+
+const typeIdLikeToTypeId = (typeId: TypeIdLike): TypeId => {
+  if (typeof typeId === 'string') return { name: typeId }
+  if (Array.isArray(typeId)) return { name: typeId[0], variant: typeId[1] ?? undefined }
+  return { name: typeId.name, variant: typeId.variant ?? undefined }
+}
+
+const pieceIdLikeToPieceId = (pieceId: PieceIdLike): PieceId => {
+  if (typeof pieceId === 'string') return { id_: pieceId }
+  return { id_: pieceId.id_ }
+}
+
+const connectionIdLikeToConnectionId = (connectionId: ConnectionIdLike): ConnectionId => {
+  if (typeof connectionId === 'string') {
+    const [connectedPieceId, connectingPieceId] = connectionId.split('--')
+    return { connected: { piece: { id_: connectedPieceId } }, connecting: { piece: { id_: connectingPieceId } } }
+  }
+  if (Array.isArray(connectionId)) {
+    const [connectedPieceId, connectingPieceId] = connectionId
+    return { connected: { piece: { id_: connectedPieceId } }, connecting: { piece: { id_: connectingPieceId } } }
+  }
+  return { connected: { piece: { id_: connectionId.connected.piece.id_ } }, connecting: { piece: { id_: connectionId.connecting.piece.id_ } } }
+}
+
+export const designIdLikeToDesignId = (designId: DesignIdLike): DesignId => {
+  if (typeof designId === 'string') return { name: designId }
+  if (Array.isArray(designId)) return { name: designId[0], variant: designId[1] ?? undefined, view: designId[2] ?? undefined }
+  return { name: designId.name, variant: designId.variant ?? undefined, view: designId.view ?? undefined }
+}
+
+export const kitIdLikeToKitId = (kitId: KitIdLike): KitId => {
+  if (typeof kitId === 'string') return { name: kitId }
+  if (Array.isArray(kitId)) return { name: kitId[0], version: kitId[1] ?? undefined }
+  return { name: kitId.name, version: kitId.version ?? undefined }
+}
+
+//#endregion Mapping
+
 //#region CRUDs
 
 //#region Design
 
+export const updateDesignInKit = (kit: Kit, design: Design): Kit => {
+  return { ...kit, designs: (kit.designs || []).map(d => sameDesign(d, design) ? design : d) }
+}
+
 export const addPieceToDesign = (design: Design, piece: Piece): Design => ({ ...design, pieces: [...(design.pieces || []), piece] })
 export const setPieceInDesign = (design: Design, piece: Piece): Design => ({ ...design, pieces: (design.pieces || []).map(p => p.id_ === piece.id_ ? piece : p) })
 export const removePieceFromDesign = (kit: Kit, designId: DesignId, pieceId: PieceId): Design => {
-  // TODO: this is wrong
-  const design = findDesign(kit, designId)
-  const metadata = piecesMetadata(kit, designId)
-  const connections = findConnections(design, pieceId)
-  const newFixedPieces: Piece[] = []
-  for (const connection of connections) {
-    const otherPiece = findPiece(design, connection.connected.piece.id_ === pieceId.id_ ? connection.connecting.piece : connection.connected.piece)
-    const updatedOtherPiece = { ...otherPiece, plane: metadata.get(otherPiece.id_)!.plane, center: metadata.get(otherPiece.id_)!.center }
-    newFixedPieces.push(updatedOtherPiece)
-  }
-  const updatedPieces = [...(design.pieces || []).filter(p => p.id_ !== pieceId.id_), ...newFixedPieces]
-  const updatedDesign = { ...design, pieces: updatedPieces }
-  return removeConnectionsFromDesign(updatedDesign, findStaleConnections(updatedDesign))
+  throw new Error("Not implemented");
 }
 
 export const addPiecesToDesign = (design: Design, pieces: Piece[]): Design => ({ ...design, pieces: [...(design.pieces || []), ...pieces] })
 export const setPiecesInDesign = (design: Design, pieces: Piece[]): Design => ({ ...design, pieces: (design.pieces || []).map(p => pieces.find(p2 => p2.id_ === p.id_) || p) })
 export const removePiecesFromDesign = (kit: Kit, designId: DesignId, pieceIds: PieceId[]): Design => {
-  // TODO: this is wrong
-  const design = findDesign(kit, designId)
-  const metadata = piecesMetadata(kit, designId)
-  const connections = pieceIds.flatMap(pieceId => findConnections(design, pieceId))
-  const newFixedPieces: Piece[] = []
-  for (const connection of connections) {
-    const isConnectedPiece = !pieceIds.some(p2 => p2.id_ === connection.connected.piece.id_)
-    const isConnectingPiece = !pieceIds.some(p2 => p2.id_ === connection.connecting.piece.id_)
-    if (!isConnectedPiece && !isConnectingPiece) continue
-    const otherPiece = findPiece(design, connection.connected.piece)
-    const updatedOtherPiece = { ...otherPiece, plane: metadata.get(otherPiece.id_)!.plane, center: metadata.get(otherPiece.id_)!.center }
-    newFixedPieces.push(updatedOtherPiece)
-  }
-  const updatedPieces = [...(design.pieces || []).filter(p => !pieceIds.some(p2 => p2.id_ === p.id_)), ...newFixedPieces]
-  const updatedDesign = { ...design, pieces: updatedPieces }
-  return removeConnectionsFromDesign(updatedDesign, findStaleConnections(updatedDesign))
+  throw new Error("Not implemented");
 }
 
 export const addConnectionToDesign = (design: Design, connection: Connection): Design => ({ ...design, connections: [...(design.connections || []), connection] })
@@ -900,10 +960,7 @@ export const setConnectionInDesign = (design: Design, connection: Connection): D
   return ({ ...design, connections: (design.connections || []).map(c => sameConnection(c, { connected: connection.connected, connecting: connection.connecting }) ? connection : c) })
 }
 export const removeConnectionFromDesign = (kit: Kit, designId: DesignId, connectionId: ConnectionId): Design => {
-  // TODO: this is wrong
-  const design = findDesign(kit, designId)
-  const updatedConnections = (design.connections || []).filter(c => !sameConnection(c, connectionId))
-  return { ...design, connections: updatedConnections }
+  throw new Error("Not implemented");
 }
 
 
@@ -913,19 +970,26 @@ export const setConnectionsInDesign = (design: Design, connections: Connection[]
   return ({ ...design, connections: (design.connections || []).map(c => connectionsMap.get(`${c.connected.piece.id_}:${c.connected.port.id_ || ''}:${c.connecting.piece.id_}:${c.connecting.port.id_ || ''}`) || c) })
 }
 export const removeConnectionsFromDesign = (kit: Kit, designId: DesignId, connectionIds: ConnectionId[]): Design => {
-  // TODO: this is wrong
-  const design = findDesign(kit, designId)
-  const updatedConnections = (design.connections || []).filter(c =>
-    !connectionIds.some(cId => sameConnection(c, cId))
-  )
-  return { ...design, connections: updatedConnections }
+  throw new Error("Not implemented");
 }
 
 export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: DesignId, pieceIds: PieceId[], connectionIds: ConnectionId[]): Design => {
-  // TODO: this is wrong
-  const updatedDesign = removePiecesFromDesign(kit, designId, pieceIds)
-  const updatedDesign = removeConnectionsFromDesign(updatedDesign, connectionIds)
-  return updatedDesign
+  const design = findDesignInKit(kit, designId)
+  const metadata = piecesMetadata(kit, designId)
+  const connections = findConnectionsInDesign(design, connectionIds)
+  const updatedDesign = { ...design, pieces: (design.pieces || []).filter(p => !pieceIds.some(p2 => p2.id_ === p.id_)), connections: (design.connections || []).filter(c => !connectionIds.some(c2 => sameConnection(c, c2))) }
+  const staleConnections = findStaleConnectionsInDesign(updatedDesign)
+  const removedConnections = [...connections, ...staleConnections]
+  const updatedPieces: Piece[] = updatedDesign.pieces.map(p => {
+    try {
+      findPieceConnections(removedConnections, p)
+      const pieceMetadata = metadata.get(p.id_)
+      return { ...p, plane: pieceMetadata?.plane, center: pieceMetadata?.center }
+    } catch (error) {
+      return p
+    }
+  })
+  return { ...updatedDesign, pieces: updatedPieces }
 }
 //#endregion Design
 
@@ -1058,7 +1122,7 @@ export const findPort = (type: Type, portId: PortId): Port => {
 }
 
 export const isPortInUse = (design: Design, piece: Piece | PieceId, port: Port | PortId): boolean => {
-  const connections = findConnections(design, piece)
+  const connections = findPieceConnectionsInDesign(design, piece)
   for (const connection of connections) {
     const isPieceConnected = connection.connected.piece.id_ === piece.id_
     const isPortConnected = isPieceConnected ? connection.connected.port.id_ === port.id_ : connection.connecting.port.id_ === port.id_
@@ -1067,34 +1131,43 @@ export const isPortInUse = (design: Design, piece: Piece | PieceId, port: Port |
   return false
 }
 
-export const findPiece = (design: Design, pieceId: PieceId): Piece => {
-  const piece = design.pieces?.find((p) => p.id_ === pieceId.id_)
-  if (!piece) throw new Error(`Piece ${pieceId.id_} not found in design ${design.name}`)
+export const findPiece = (pieces: Piece[], pieceId: PieceId): Piece => {
+  const piece = pieces.find((p) => p.id_ === pieceId.id_)
+  if (!piece) throw new Error(`Piece ${pieceId.id_} not found in pieces`)
   return piece
 }
-export const findConnection = (design: Design, connectionId: ConnectionId, strict: boolean = false): Connection => {
-  const connection = design.connections?.find((c) => sameConnection(c, connectionId, strict))
-  if (!connection) throw new Error(`Connection ${connectionId.connected.piece.id_} -> ${connectionId.connecting.piece.id_} not found in design ${design.name}`)
+export const findPieceInDesign = (design: Design, pieceId: PieceId): Piece => findPiece(design.pieces ?? [], pieceId)
+export const findConnection = (connections: Connection[], connectionId: ConnectionId, strict: boolean = false): Connection => {
+  const connection = connections.find((c) => sameConnection(c, connectionId, strict))
+  if (!connection) throw new Error(`Connection ${connectionId.connected.piece.id_} -> ${connectionId.connecting.piece.id_} not found in connections`)
   return connection
 }
-export const findConnections = (design: Design, piece: Piece | PieceId | string): Connection[] => {
-  const pieceId = typeof piece === 'string' ? { id_: piece } : piece
-  return design.connections?.filter((c) => c.connected.piece.id_ === pieceId.id_ || c.connecting.piece.id_ === pieceId.id_) ?? []
+export const findConnectionInDesign = (design: Design, connectionId: ConnectionId, strict: boolean = false): Connection => {
+  return findConnection(design.connections ?? [], connectionId, strict)
 }
-export const findConnectionPieces = (design: Design, connection: Connection | ConnectionId): { connectingPiece: Piece, connectedPiece: Piece } => {
-  return { connectedPiece: findPiece(design, connection.connected.piece), connectingPiece: findPiece(design, connection.connecting.piece) }
+export const findConnectionsInDesign = (design: Design, connectionIds: ConnectionId[]): Connection[] => {
+  return connectionIds.map((connectionId) => findConnectionInDesign(design, connectionId))
 }
-export const findStaleConnections = (design: Design): Connection[] => {
+export const findPieceConnections = (connections: Connection[], pieceId: PieceIdLike): Connection => {
+  return connections.filter((c) => c.connected.piece.id_ === pieceId.id_ || c.connecting.piece.id_ === pieceId.id_)
+}
+export const findPieceConnectionsInDesign = (design: Design, pieceId: PieceIdLike): Connection[] => {
+  return findPieceConnections(design.connections ?? [], pieceId)
+}
+export const findConnectionPiecesInDesign = (design: Design, connection: Connection | ConnectionId): { connecting: Piece, connected: Piece } => {
+  return { connected: findPieceInDesign(design, connection.connected.piece), connecting: findPieceInDesign(design, connection.connecting.piece) }
+}
+export const findStaleConnectionsInDesign = (design: Design): Connection[] => {
   return design.connections?.filter(c => !design.pieces?.some(p => p.id_ === c.connected.piece.id_ || p.id_ === c.connecting.piece.id_)) ?? []
 }
-export const findType = (kit: Kit, typeId: TypeId): Type => {
+export const findTypeInKit = (kit: Kit, typeId: TypeId): Type => {
   const type = kit.types?.find(
     (t) => t.name === typeId.name && normalize(t.variant) === normalize(typeId.variant)
   )
   if (!type) throw new Error(`Type ${typeId.name} not found in kit ${kit.name}`)
   return type
 }
-export const findDesign = (kit: Kit, designId: DesignId): Design => {
+export const findDesignInKit = (kit: Kit, designId: DesignId): Design => {
   const design = kit.designs?.find(
     (d) =>
       d.name === designId.name &&
@@ -1105,7 +1178,7 @@ export const findDesign = (kit: Kit, designId: DesignId): Design => {
   return design
 }
 
-export const hasConnection = (design: Design, connection: Connection | ConnectionId): boolean => {
+export const isConnectionInDesign = (design: Design, connection: Connection | ConnectionId): boolean => {
   return design.connections?.some((c) => sameConnection(c, connection)) ?? false
 }
 
@@ -1123,8 +1196,12 @@ export const sameConnection = (connection: Connection | ConnectionId | Connectio
   const isSwappedSame = connection.connecting.piece.id_ === other.connected.piece.id_ && connection.connected.piece.id_ === other.connecting.piece.id_
   return isExactlySame || isSwappedSame
 }
-export const sameDesign = (design: Design | DesignId, other: Design | DesignId): boolean => {
-  return design.name === other.name && normalize(design.variant) === normalize(other.variant) && normalize(design.view) === normalize(other.view)
+export const sameDesign = (design: DesignIdLike, other: DesignIdLike): boolean => {
+  const d1 = typeof design === 'string' ? { name: design, variant: undefined, view: undefined } :
+    Array.isArray(design) ? { name: design[0], variant: design[1], view: design[2] } : design
+  const d2 = typeof other === 'string' ? { name: other, variant: undefined, view: undefined } :
+    Array.isArray(other) ? { name: other[0], variant: other[1], view: other[2] } : other
+  return d1.name === d2.name && normalize(d1.variant) === normalize(d2.variant) && normalize(d1.view) === normalize(d2.view)
 }
 export const sameKit = (kit: Kit | KitId, other: Kit | KitId): boolean => {
   return kit.name === other.name && normalize(kit.version) === normalize(other.version)
@@ -1274,7 +1351,7 @@ const computeChildPlane = (parentPlane: Plane, parentPort: Port, childPort: Port
  * @throws If the design is not found in the kit
  */
 export const flattenDesign = (kit: Kit, designId: DesignId): Design => {
-  const design = findDesign(kit, designId)
+  const design = findDesignInKit(kit, designId)
   if (!design) {
     throw new Error(`Design ${designId.name} not found in kit ${kit.name}`)
   }
@@ -1463,7 +1540,7 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
       ? base.connections
         .map((c: Connection) => {
           const cd = diff.connections?.updated?.find(
-            (ud: any) =>
+            (ud: ConnectionDiff) =>
               ud.connected?.piece?.id_ === c.connected.piece.id_ &&
               ud.connecting?.piece?.id_ === c.connecting.piece.id_ &&
               (ud.connected?.port?.id_ || '') === (c.connected.port?.id_ || '') &&
@@ -1473,7 +1550,12 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
             (rc: ConnectionId) =>
               rc.connected.piece.id_ === c.connected.piece.id_ && rc.connecting.piece.id_ === c.connecting.piece.id_
           )
-          const baseWithUpdate = cd ? { ...c, ...cd } : c
+          const baseWithUpdate = cd ? {
+            ...c,
+            ...cd,
+            connected: { piece: cd.connected.piece, port: cd.connected.port || c.connected.port },
+            connecting: { piece: cd.connecting.piece, port: cd.connecting.port || c.connecting.port }
+          } : c
           const diffStatus = isRemoved ? DiffStatus.Removed : cd ? DiffStatus.Modified : DiffStatus.Unchanged
           return {
             ...baseWithUpdate,
@@ -1507,13 +1589,18 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
       ? base.connections
         .map((c: Connection) => {
           const cd = diff.connections?.updated?.find(
-            (ud: any) =>
+            (ud: ConnectionDiff) =>
               ud.connected?.piece?.id_ === c.connected.piece.id_ &&
               ud.connecting?.piece?.id_ === c.connecting.piece.id_ &&
               (ud.connected?.port?.id_ || '') === (c.connected.port?.id_ || '') &&
               (ud.connecting?.port?.id_ || '') === (c.connecting.port?.id_ || '')
           )
-          return cd ? { ...c, ...cd } : c
+          return cd ? {
+            ...c,
+            ...cd,
+            connected: { piece: cd.connected.piece, port: cd.connected.port || c.connected.port },
+            connecting: { piece: cd.connecting.piece, port: cd.connecting.port || c.connecting.port }
+          } : c
         })
         .filter(
           (c: Connection) =>
@@ -1558,13 +1645,13 @@ export const getPieceRepresentationUrls = (design: Design, types: Type[], tags: 
   return representationUrls
 }
 
-//#endregion
 
 export const piecesMetadata = (kit: Kit, designId: DesignId): Map<string, { plane: Plane, center: DiagramPoint, fixedPieceId: string, parentPieceId: string | null, depth: number }> => {
   const flatDesign = flattenDesign(kit, designId)
-  const fixedPieceIds = flatDesign.pieces?.map((p) => findQualityValue(p, 'semio.fixedPieceId'))
+  const fixedPieceIds = flatDesign.pieces?.map((p) => findQualityValue(p, 'semio.fixedPieceId') || p.id_)
   const parentPieceIds = flatDesign.pieces?.map((p) => findQualityValue(p, 'semio.parentPieceId', null))
   const depths = flatDesign.pieces?.map((p) => parseInt(findQualityValue(p, 'semio.depth', '0')!))
   return new Map(flatDesign.pieces?.map((p, index) => [p.id_, { plane: p.plane!, center: p.center!, fixedPieceId: fixedPieceIds![index], parentPieceId: parentPieceIds![index], depth: depths![index] }]))
 }
 
+//#endregion

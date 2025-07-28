@@ -53,10 +53,10 @@ import {
   DesignId,
   DiagramPoint,
   DiffStatus,
-  findConnection,
-  findDesign,
+  findConnectionInDesign,
+  findDesignInKit,
   findPort,
-  findType,
+  findTypeInKit,
   flattenDesign,
   FullscreenPanel,
   ICON_WIDTH,
@@ -246,11 +246,11 @@ const connectionToEdge = (connection: Connection, selected: boolean): Connection
 })
 
 const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEditorSelection) => {
-  const design = findDesign(kit, designId)
+  const design = findDesignInKit(kit, designId)
   if (!design) return null
   const centers = flattenDesign(kit, designId).pieces?.map(p => p.center)
   const pieceNodes = design.pieces?.map(
-    (piece, i) => pieceToNode(piece, findType(kit, piece.type)!, centers![i]!, selection?.selectedPieceIds.includes(piece.id_) ?? false)) ?? []
+    (piece, i) => pieceToNode(piece, findTypeInKit(kit, piece.type)!, centers![i]!, selection?.selectedPieceIds.includes(piece.id_) ?? false)) ?? []
   const connectionEdges =
     design.connections?.map((connection) => connectionToEdge(connection, selection?.selectedConnections.some(
       (c) =>
@@ -277,7 +277,7 @@ const Diagram: FC<DiagramProps> = ({
   const edgeTypes = useMemo(() => ({ connection: ConnectionEdgeComponent }), [])
   const { kit, designId, selection, fullscreenPanel, designDiff } = designEditorState
   if (!kit) return null
-  const design = findDesign(kit, designId)
+  const design = findDesignInKit(kit, designId)
   if (!design) return null
   const effectiveDesign = applyDesignDiff(design, designDiff, true)
   const effectiveKit = {
@@ -422,7 +422,7 @@ const Diagram: FC<DiagramProps> = ({
           const parentPieceId = metadata.get(selectedNode.id)!.parentPieceId!
           const parentInternalNode = reactFlowInstance.getInternalNode(parentPieceId)
           if (!parentInternalNode) throw new Error(`Internal node not found for ${parentPieceId}`)
-          const parentConnection = findConnection(effectiveDesign, { connected: { piece: { id_: selectedNode.id } }, connecting: { piece: { id_: parentPieceId } } })
+          const parentConnection = findConnectionInDesign(effectiveDesign, { connected: { piece: { id_: selectedNode.id } }, connecting: { piece: { id_: parentPieceId } } })
           // const isSelectedConnecting = parentConnection.connecting.piece.id_ === selectedNode.id
           // const selectedInternalNode = reactFlowInstance.getInternalNode(selectedNode.id)!
           // const handle = selectedInternalNode.internals.handleBounds?.source?.find((h) => h.id === (isSelectedConnecting ? parentConnection.connected.port.id_ : parentConnection.connecting.port.id_))
@@ -475,7 +475,7 @@ const Diagram: FC<DiagramProps> = ({
         y: -(((sourceInternalNode.internals.positionAbsolute.y + sourceHandle.y) - (targetInternalNode.internals.positionAbsolute.y + targetHandle.y)) / ICON_WIDTH)
       }
 
-      const design = findDesign(kit, designId)
+      const design = findDesignInKit(kit, designId)
       if ((design.connections ?? []).find((c) => sameConnection(c, newConnection))) return
       const newConnections = [...(design.connections ?? []), newConnection]
       const updatedPieces = design.pieces?.map((piece) => (samePiece(piece, { id_: params.source! })) ? { ...piece, center: undefined, plane: undefined } : piece)

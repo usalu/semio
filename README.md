@@ -315,6 +315,50 @@ And is really so hard to start reading a from the bottom?
 </details>
 
 <details>
+<summary><strong>📑 If a class, function, component, … is only used once, then don't create it ❌</strong></summary>
+
+Probably, you learned to group code by classes, functions, components, … even if those definitions are only used once 🥇
+
+It hides the actual complexity and makes it harder to navigate the code 🔍
+
+</details>
+
+<details>
+<summary><strong>📺 Inline everything that bearly fits onto the screen ✅</strong></summary>
+
+The smaller the code, the easier it is to browse and show diffs 🔍
+
+If you are not sure what the code does, you can ask [ai](#-ai-) 💬
+
+</details>
+
+<details>
+<summary><strong>🗣️ Don't use comments or if you must, only tag code at the end of the line ❌</strong></summary>
+
+The smaller the code, the easier it is to browse and show diffs 🔍
+
+If you are not sure what the code does, you can ask [ai](#-ai-) 💬
+
+</details>
+
+<details>
+<summary><strong>📑 Use regions to structure your code ✅</strong></summary>
+
+Because you are not using classes, functions, components, … and you are inlining everything, your code will become long 📃
+
+To organize your code, you can use nested regions 📂
+
+In general, our files follow this structure:
+
+1. Header
+2. TODOs
+3. Imports
+4. Constants
+5. CODE
+
+</details>
+
+<details>
 <summary><strong>📁 If a folder doesn't make your life dramatically easier, don't create it ❌</strong></summary>
 
 We all know this `./src/**` folder that has made it into a lot of starters 🚀
@@ -347,7 +391,7 @@ Cutting components vertically (a bit of logic with a bit of UI) instead of horiz
 </details>
 
 <details>
-<summary><strong>📑 If multiple people work longterm on the same part, then one file for each part should be created ✅</strong></summary>
+<summary><strong>📄 If multiple people work longterm on the same part, then one file for each part should be created ✅</strong></summary>
 
 Trust me, it will make collaboration much easier 🔀
 
@@ -407,7 +451,7 @@ Even if 95% of the codebase follows those principles, there are good reasons for
 
 We use [GitKraken Desktop](https://www.gitkraken.com/git-client) as our git client 🖱️
 
-It is the only nice chronological graphical overview for all branches at the same time that we found 🔍
+It is the only nice chronological graphical overview for **all** branches at the same time that we found 🔍
 
 ### 💬 Discord [↑](#-git-)
 

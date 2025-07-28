@@ -61,7 +61,7 @@ import {
   Plane,
   ToSemioRotation,
   applyDesignDiff,
-  findDesign,
+  findDesignInKit,
   flattenDesign,
   getPieceRepresentationUrls,
   planeToMatrix,
@@ -223,7 +223,7 @@ interface ModelDesignProps {
 
 const ModelDesign: FC<ModelDesignProps> = ({ designEditorState, designEditorDispatcher }) => {
   const { kit, designId, fileUrls, selection, designDiff } = designEditorState
-  const design = findDesign(kit, designId)
+  const design = findDesignInKit(kit, designId)
   if (!design) {
     return null
   }
