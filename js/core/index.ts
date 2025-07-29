@@ -29,12 +29,12 @@ export { default as eslintConfig } from '@semio/js/eslint.config'
 export { extractFilesAndCreateUrls } from '@semio/js/lib/utils'
 export { default as postcssConfig } from '@semio/js/postcss.config'
 export {
-  ConnectionSchema, DesignSchema, DiffStatus, ICON_WIDTH, KitSchema, PieceSchema, PlaneSchema, PointSchema, PortSchema, QualitySchema, RepresentationSchema, TypeSchema, VectorSchema, addConnectionToDesign, addConnectionToDesignDiff, addConnectionsToDesign, addConnectionsToDesignDiff, addPieceToDesign, addPieceToDesignDiff, addPiecesToDesign, addPiecesToDesignDiff, applyDesignDiff, arePortsCompatible,
-  connectionIdLikeToConnectionId, deserialize, designIdLikeToDesignId, findConnectionInDesign, findDesignInKit, findPieceConnectionsInDesign, findPieceInDesign, findPortInType, findReplacableTypesForPieceInDesign, findReplacableTypesForPiecesInDesign, findStaleConnectionsInDesign, findTypeInKit, flattenDesign,
-  getPieceRepresentationUrls, isConnectionInDesign, isPortInUse, isSameConnection, isSameDesign, isSamePiece, isSamePort, isSameRepresentation, isSameType, kitIdLikeToKitId, mergeDesigns, pieceIdLikeToPieceId, piecesMetadata, planeToMatrix, portIdLikeToPortId, qualityIdLikeToQualityId, removeConnectionFromDesign, removeConnectionFromDesignDiff, removeConnectionsFromDesign, removeConnectionsFromDesignDiff, removePieceFromDesign, removePieceFromDesignDiff, removePiecesAndConnectionsFromDesign, removePiecesFromDesign, removePiecesFromDesignDiff,
-  representationIdLikeToRepresentationId, safeParse, schemas, serialize,
+  addConnectionsToDesign, addConnectionsToDesignDiff, addConnectionToDesign, addConnectionToDesignDiff, addPiecesToDesign, addPiecesToDesignDiff, addPieceToDesign, addPieceToDesignDiff, applyDesignDiff, arePortsCompatible,
+  connectionIdLikeToConnectionId, ConnectionSchema, deserialize, designIdLikeToDesignId, DesignSchema, DiffStatus, findConnectionInDesign, findDesignInKit, findPieceConnectionsInDesign, findPieceInDesign, findPortInType, findReplacableTypesForPieceInDesign, findReplacableTypesForPiecesInDesign, findStaleConnectionsInDesign, findTypeInKit, fixPieceInDesign, flattenDesign,
+  getPieceRepresentationUrls, ICON_WIDTH, isConnectionInDesign, isPortInUse, isSameConnection, isSameDesign, isSamePiece, isSamePort, isSameRepresentation, isSameType, kitIdLikeToKitId, KitSchema, mergeDesigns, pieceIdLikeToPieceId, PieceSchema, piecesMetadata, PlaneSchema, planeToMatrix, PointSchema, portIdLikeToPortId, PortSchema, qualityIdLikeToQualityId, QualitySchema, removeConnectionFromDesign, removeConnectionFromDesignDiff, removeConnectionsFromDesign, removeConnectionsFromDesignDiff, removePieceFromDesign, removePieceFromDesignDiff, removePiecesAndConnectionsFromDesign, removePiecesFromDesign, removePiecesFromDesignDiff,
+  representationIdLikeToRepresentationId, RepresentationSchema, safeParse, schemas, serialize,
   setConnectionInDesign, setConnectionInDesignDiff, setConnectionsInDesign, setConnectionsInDesignDiff, setPieceInDesign, setPieceInDesignDiff, setPiecesInDesign, setPiecesInDesignDiff, setQualities, setQuality,
-  toSemioQuaternion, toSemioRotation, toThreeQuaternion, toThreeRotation, typeIdLikeToTypeId, updateDesignInKit, validate
+  toSemioQuaternion, toSemioRotation, toThreeQuaternion, toThreeRotation, typeIdLikeToTypeId, TypeSchema, updateDesignInKit, validate, VectorSchema
 } from '@semio/js/semio'
 export type {
   Author,

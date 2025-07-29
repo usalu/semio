@@ -636,145 +636,6 @@ export const kitIdLikeToKitId = (kitId: KitIdLike): KitId => {
 
 //#endregion Mapping
 
-//#region CRUDs
-
-//#region Design
-
-export const updateDesignInKit = (kit: Kit, design: Design): Kit => {
-  return { ...kit, designs: (kit.designs || []).map(d => isSameDesign(d, design) ? design : d) }
-}
-
-export const addPieceToDesign = (design: Design, piece: Piece): Design => ({ ...design, pieces: [...(design.pieces || []), piece] })
-export const setPieceInDesign = (design: Design, piece: Piece): Design => ({ ...design, pieces: (design.pieces || []).map(p => p.id_ === piece.id_ ? piece : p) })
-export const removePieceFromDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Design => {
-  throw new Error("Not implemented");
-}
-
-export const addPiecesToDesign = (design: Design, pieces: Piece[]): Design => ({ ...design, pieces: [...(design.pieces || []), ...pieces] })
-export const setPiecesInDesign = (design: Design, pieces: Piece[]): Design => ({ ...design, pieces: (design.pieces || []).map(p => pieces.find(p2 => p2.id_ === p.id_) || p) })
-export const removePiecesFromDesign = (kit: Kit, designId: DesignIdLike, pieceIds: PieceIdLike[]): Design => {
-  throw new Error("Not implemented");
-}
-
-export const addConnectionToDesign = (design: Design, connection: Connection): Design => ({ ...design, connections: [...(design.connections || []), connection] })
-export const setConnectionInDesign = (design: Design, connection: Connection): Design => {
-  return ({ ...design, connections: (design.connections || []).map(c => isSameConnection(c, { connected: connection.connected, connecting: connection.connecting }) ? connection : c) })
-}
-export const removeConnectionFromDesign = (kit: Kit, designId: DesignIdLike, connectionId: ConnectionIdLike): Design => {
-  throw new Error("Not implemented");
-}
-
-
-export const addConnectionsToDesign = (design: Design, connections: Connection[]): Design => ({ ...design, connections: [...(design.connections || []), ...connections] })
-export const setConnectionsInDesign = (design: Design, connections: Connection[]): Design => {
-  const connectionsMap = new Map(connections.map(c => [`${c.connected.piece.id_}:${c.connected.port.id_ || ''}:${c.connecting.piece.id_}:${c.connecting.port.id_ || ''}`, c]))
-  return ({ ...design, connections: (design.connections || []).map(c => connectionsMap.get(`${c.connected.piece.id_}:${c.connected.port.id_ || ''}:${c.connecting.piece.id_}:${c.connecting.port.id_ || ''}`) || c) })
-}
-export const removeConnectionsFromDesign = (kit: Kit, designId: DesignIdLike, connectionIds: ConnectionIdLike[]): Design => {
-  throw new Error("Not implemented");
-}
-
-export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: DesignIdLike, pieceIds: PieceIdLike[], connectionIds: ConnectionIdLike[]): Design => {
-  const normalizedDesignId = designIdLikeToDesignId(designId)
-  const normalizedPieceIds = pieceIds.map(pieceIdLikeToPieceId)
-  const normalizedConnectionIds = connectionIds.map(connectionIdLikeToConnectionId)
-  const design = findDesignInKit(kit, normalizedDesignId)
-  const metadata = piecesMetadata(kit, normalizedDesignId)
-  const connectionsToRemove = findConnectionsInDesign(design, normalizedConnectionIds)
-  const updatedDesign = { ...design, pieces: (design.pieces || []).filter(p => !normalizedPieceIds.some(p2 => p2.id_ === p.id_)), connections: (design.connections || []).filter(c => !normalizedConnectionIds.some(c2 => isSameConnection(c, c2))) }
-  const staleConnections = findStaleConnectionsInDesign(updatedDesign)
-  const removedConnections = [...connectionsToRemove, ...staleConnections]
-  const updatedConnections = (design.connections || []).filter(c => !removedConnections.some(c2 => isSameConnection(c, c2)))
-  const updatedPieces: Piece[] = updatedDesign.pieces.map(p => {
-    const pieceMetadata = metadata.get(p.id_)!
-    if (pieceMetadata.parentPieceId) {
-      try {
-        findConnection(removedConnections, { connected: { piece: { id_: pieceMetadata.parentPieceId } }, connecting: { piece: { id_: p.id_ } } })
-        return { ...p, plane: pieceMetadata.plane, center: pieceMetadata.center }
-      } catch (error) { }
-    }
-    return p
-  })
-  return { ...updatedDesign, pieces: updatedPieces, connections: updatedConnections }
-}
-//#endregion Design
-
-//#region DesignDiff
-export const addPieceToDesignDiff = (designDiff: any, piece: Piece): any => {
-  return { ...designDiff, pieces: { ...designDiff.pieces, added: [...(designDiff.pieces?.added || []), piece] } }
-}
-export const setPieceInDesignDiff = (designDiff: any, pieceDiff: PieceDiff): any => {
-  const existingIndex = (designDiff.pieces?.updated || []).findIndex((p: PieceDiff) => p.id_ === pieceDiff.id_)
-  const updated = [...(designDiff.pieces?.updated || [])]
-  if (existingIndex >= 0) {
-    updated[existingIndex] = pieceDiff
-  } else {
-    updated.push(pieceDiff)
-  }
-  return { ...designDiff, pieces: { ...designDiff.pieces, updated } }
-}
-export const removePieceFromDesignDiff = (designDiff: any, pieceId: PieceId): any => {
-  return { ...designDiff, pieces: { ...designDiff.pieces, removed: [...(designDiff.pieces?.removed || []), pieceId] } }
-}
-
-export const addPiecesToDesignDiff = (designDiff: any, pieces: Piece[]): any => {
-  return { ...designDiff, pieces: { ...designDiff.pieces, added: [...(designDiff.pieces?.added || []), ...pieces] } }
-}
-export const setPiecesInDesignDiff = (designDiff: any, pieceDiffs: PieceDiff[]): any => {
-  const updated = [...(designDiff.pieces?.updated || [])]
-  pieceDiffs.forEach((pieceDiff: PieceDiff) => {
-    const existingIndex = updated.findIndex((p: PieceDiff) => p.id_ === pieceDiff.id_)
-    if (existingIndex >= 0) {
-      updated[existingIndex] = pieceDiff
-    } else {
-      updated.push(pieceDiff)
-    }
-  })
-  return { ...designDiff, pieces: { ...designDiff.pieces, updated } }
-}
-export const removePiecesFromDesignDiff = (designDiff: any, pieceIds: PieceId[]): any => {
-  return { ...designDiff, pieces: { ...designDiff.pieces, removed: [...(designDiff.pieces?.removed || []), ...pieceIds] } }
-}
-
-
-export const addConnectionToDesignDiff = (designDiff: any, connection: Connection): any => {
-  return { ...designDiff, connections: { ...designDiff.connections, added: [...(designDiff.connections?.added || []), connection] } }
-}
-export const setConnectionInDesignDiff = (designDiff: any, connectionDiff: ConnectionDiff): any => {
-  const existingIndex = (designDiff.connections?.updated || []).findIndex((c: ConnectionDiff) => isSameConnection(c, connectionDiff))
-  const updated = [...(designDiff.connections?.updated || [])]
-  if (existingIndex >= 0) {
-    updated[existingIndex] = connectionDiff
-  } else {
-    updated.push(connectionDiff)
-  }
-  return ({ ...designDiff, connections: { ...designDiff.connections, updated } })
-}
-export const removeConnectionFromDesignDiff = (designDiff: any, connectionId: ConnectionId): any => {
-  return { ...designDiff, connections: { ...designDiff.connections, removed: [...(designDiff.connections?.removed || []), connectionId] } }
-}
-
-export const addConnectionsToDesignDiff = (designDiff: any, connections: Connection[]): any => {
-  return { ...designDiff, connections: { ...designDiff.connections, added: [...(designDiff.connections?.added || []), ...connections] } }
-}
-export const setConnectionsInDesignDiff = (designDiff: any, connectionDiffs: ConnectionDiff[]): any => {
-  const updated = [...(designDiff.connections?.updated || [])]
-  connectionDiffs.forEach((connectionDiff: ConnectionDiff) => {
-    const existingIndex = updated.findIndex((c: ConnectionDiff) => isSameConnection(c, connectionDiff))
-    if (existingIndex >= 0) {
-      updated[existingIndex] = connectionDiff
-    } else {
-      updated.push(connectionDiff)
-    }
-  })
-  return ({ ...designDiff, connections: { ...designDiff.connections, updated } })
-}
-export const removeConnectionsFromDesignDiff = (designDiff: any, connectionIds: ConnectionId[]): any => {
-  return { ...designDiff, connections: { ...designDiff.connections, removed: [...(designDiff.connections?.removed || []), ...connectionIds] } }
-}
-//#endregion DesignDiff
-
-//#endregion CRUDs
 
 //#region Querying
 
@@ -898,6 +759,21 @@ export const findPieceConnections = (connections: Connection[], pieceId: PieceId
 export const findPieceConnectionsInDesign = (design: Design, pieceId: PieceIdLike): Connection[] => {
   return findPieceConnections(design.connections ?? [], pieceId)
 }
+export const findParentPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Piece => {
+  const normalizedPieceId = pieceIdLikeToPieceId(pieceId)
+  const parentPieceId = piecesMetadata(kit, designId).get(normalizedPieceId.id_)?.parentPieceId
+  if (!parentPieceId) throw new Error(`Piece ${normalizedPieceId.id_} has no parent piece`)
+  return findPieceInDesign(findDesignInKit(kit, designId), parentPieceId)
+}
+export const findParentConnectionForPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Connection => {
+  const normalizedPieceId = pieceIdLikeToPieceId(pieceId)
+  const parentPieceId = piecesMetadata(kit, designId).get(normalizedPieceId.id_)?.parentPieceId
+  if (!parentPieceId) throw new Error(`Piece ${normalizedPieceId.id_} has no parent piece and connection`)
+  return findConnectionInDesign(findDesignInKit(kit, designId), parentPieceId)
+}
+export const findChildrenPiecesInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Piece[] => {
+  throw new Error('Not implemented')
+}
 export const findConnectionPiecesInDesign = (design: Design, connection: Connection | ConnectionId): { connecting: Piece, connected: Piece } => {
   return { connected: findPieceInDesign(design, connection.connected.piece), connecting: findPieceInDesign(design, connection.connecting.piece) }
 }
@@ -996,6 +872,10 @@ export const findReplacableTypesForPiecesInDesign = (kit: Kit, designId: DesignI
 
 //#endregion Querying
 
+//#region CRUDs
+
+//#region Quality
+
 /**
  * Sets a quality in a qualities array. If a quality with the same name exists, it is overwritten.
  * @param qualities - The array of qualities to modify
@@ -1029,6 +909,28 @@ export const setQualities = (
   return newQualities.reduce((acc, quality) => setQuality(quality, acc), qualities || [])
 }
 
+//#endregion Quality
+
+//#region Plane
+
+const roundPlane = (plane: Plane): Plane => ({
+  origin: { x: round(plane.origin.x), y: round(plane.origin.y), z: round(plane.origin.z) },
+  xAxis: { x: round(plane.xAxis.x), y: round(plane.xAxis.y), z: round(plane.xAxis.z) },
+  yAxis: { x: round(plane.yAxis.x), y: round(plane.yAxis.y), z: round(plane.yAxis.z) }
+})
+
+//#endregion Plane
+
+//#region Kit
+
+export const updateDesignInKit = (kit: Kit, design: Design): Kit => {
+  return { ...kit, designs: (kit.designs || []).map(d => isSameDesign(d, design) ? design : d) }
+}
+
+//#endregion Kit
+
+//#region Design
+
 export const mergeDesigns = (designs: Design[]): Design => {
   const pieces = designs.flatMap(d => d.pieces ?? [])
   const connections = designs.flatMap(d => d.connections ?? [])
@@ -1042,123 +944,28 @@ export const orientDesign = (design: Design, plane?: Plane, center?: DiagramPoin
   return { ...design, pieces: design.pieces?.map(p => fixedPieces.find(fp => fp.id_ === p.id_) ?? p) ?? [] }
 }
 
-const roundPlane = (plane: Plane): Plane => ({
-  origin: { x: round(plane.origin.x), y: round(plane.origin.y), z: round(plane.origin.z) },
-  xAxis: { x: round(plane.xAxis.x), y: round(plane.xAxis.y), z: round(plane.xAxis.z) },
-  yAxis: { x: round(plane.yAxis.x), y: round(plane.yAxis.y), z: round(plane.yAxis.z) }
-})
-
-export const toThreeRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1)
-export const toSemioRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1)
-export const toThreeQuaternion = (): THREE.Quaternion => new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)
-export const toSemioQuaternion = (): THREE.Quaternion => new THREE.Quaternion(0.7071067811865476, 0, 0, -0.7071067811865476)
-
-export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
-  const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z)
-  const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z)
-  const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z)
-  const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis).normalize()
-  const orthoYAxis = new THREE.Vector3().crossVectors(zAxis, xAxis).normalize()
-  const matrix = new THREE.Matrix4().makeBasis(xAxis.normalize(), orthoYAxis, zAxis).setPosition(origin)
-  return matrix
-}
-export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
-  const origin = new THREE.Vector3()
-  const xAxis = new THREE.Vector3()
-  const yAxis = new THREE.Vector3()
-  const zAxis = new THREE.Vector3()
-  matrix.decompose(origin, new THREE.Quaternion(), new THREE.Vector3())
-  matrix.extractBasis(xAxis, yAxis, zAxis)
-  return {
-    origin: { x: origin.x, y: origin.y, z: origin.z },
-    xAxis: { x: xAxis.x, y: xAxis.y, z: xAxis.z },
-    yAxis: { x: yAxis.x, y: yAxis.y, z: yAxis.z }
-  }
-}
-
-export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vector3(v.x, v.y, v.z)
-
-const computeChildPlane = (parentPlane: Plane, parentPort: Port, childPort: Port, connection: Connection): Plane => {
-  const parentMatrix = planeToMatrix(parentPlane)
-  const parentPoint = vectorToThree(parentPort.point)
-  const parentDirection = vectorToThree(parentPort.direction).normalize()
-  const childPoint = vectorToThree(childPort.point)
-  const childDirection = vectorToThree(childPort.direction).normalize()
-
-  const { gap, shift, rise, rotation, turn, tilt } = connection
-  const rotationRad = THREE.MathUtils.degToRad(rotation ?? 0)
-  const turnRad = THREE.MathUtils.degToRad(turn ?? 0)
-  const tiltRad = THREE.MathUtils.degToRad(tilt ?? 0)
-
-  const reverseChildDirection = childDirection.clone().negate()
-
-  let alignQuat: THREE.Quaternion
-  if (new THREE.Vector3().crossVectors(parentDirection, reverseChildDirection).length() < 0.01) {
-    // Parallel vectors
-    // Idea taken from: // https://github.com/dfki-ric/pytransform3d/blob/143943b028fc776adfc6939b1d7c2c6edeaa2d90/pytransform3d/rotations/_utils.py#L253
-    if (Math.abs(parentDirection.z) < TOLERANCE) {
-      alignQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI) // 180* around z axis
-    } else {
-      // 180* around cross product of z and parentDirection
-      const axis = new THREE.Vector3(0, 0, 1).cross(parentDirection).normalize()
-      alignQuat = new THREE.Quaternion().setFromAxisAngle(axis, Math.PI)
+export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: DesignIdLike, pieceIds: PieceIdLike[], connectionIds: ConnectionIdLike[]): Design => {
+  const normalizedDesignId = designIdLikeToDesignId(designId)
+  const normalizedPieceIds = pieceIds.map(pieceIdLikeToPieceId)
+  const normalizedConnectionIds = connectionIds.map(connectionIdLikeToConnectionId)
+  const design = findDesignInKit(kit, normalizedDesignId)
+  const metadata = piecesMetadata(kit, normalizedDesignId)
+  const connectionsToRemove = findConnectionsInDesign(design, normalizedConnectionIds)
+  const updatedDesign = { ...design, pieces: (design.pieces || []).filter(p => !normalizedPieceIds.some(p2 => p2.id_ === p.id_)), connections: (design.connections || []).filter(c => !normalizedConnectionIds.some(c2 => isSameConnection(c, c2))) }
+  const staleConnections = findStaleConnectionsInDesign(updatedDesign)
+  const removedConnections = [...connectionsToRemove, ...staleConnections]
+  const updatedConnections = (design.connections || []).filter(c => !removedConnections.some(c2 => isSameConnection(c, c2)))
+  const updatedPieces: Piece[] = updatedDesign.pieces.map(p => {
+    const pieceMetadata = metadata.get(p.id_)!
+    if (pieceMetadata.parentPieceId) {
+      try {
+        findConnection(removedConnections, { connected: { piece: { id_: pieceMetadata.parentPieceId } }, connecting: { piece: { id_: p.id_ } } })
+        return { ...p, plane: pieceMetadata.plane, center: pieceMetadata.center }
+      } catch (error) { }
     }
-  } else {
-    alignQuat = new THREE.Quaternion().setFromUnitVectors(reverseChildDirection, parentDirection)
-  }
-
-  const directionT = new THREE.Matrix4().makeRotationFromQuaternion(alignQuat)
-
-  const yAxis = new THREE.Vector3(0, 1, 0)
-  const parentPortQuat = new THREE.Quaternion().setFromUnitVectors(yAxis, parentDirection)
-  const parentRotationT = new THREE.Matrix4().makeRotationFromQuaternion(parentPortQuat)
-
-  const gapDirection = new THREE.Vector3(0, 1, 0).applyMatrix4(parentRotationT)
-  const shiftDirection = new THREE.Vector3(1, 0, 0).applyMatrix4(parentRotationT)
-  const raiseDirection = new THREE.Vector3(0, 0, 1).applyMatrix4(parentRotationT)
-  const turnAxis = new THREE.Vector3(0, 0, 1).applyMatrix4(parentRotationT)
-  const tiltAxis = new THREE.Vector3(1, 0, 0).applyMatrix4(parentRotationT)
-
-  let orientationT = directionT.clone()
-
-  const rotateT = new THREE.Matrix4().makeRotationAxis(parentDirection, -rotationRad)
-  orientationT.premultiply(rotateT)
-
-  turnAxis.applyMatrix4(rotateT)
-  tiltAxis.applyMatrix4(rotateT)
-
-  const turnT = new THREE.Matrix4().makeRotationAxis(turnAxis, turnRad)
-  orientationT.premultiply(turnT)
-
-  const tiltT = new THREE.Matrix4().makeRotationAxis(tiltAxis, tiltRad)
-  orientationT.premultiply(tiltT)
-
-  const centerChildT = new THREE.Matrix4().makeTranslation(-childPoint.x, -childPoint.y, -childPoint.z)
-  let transform = new THREE.Matrix4().multiplyMatrices(orientationT, centerChildT)
-
-  const gapTransform = new THREE.Matrix4().makeTranslation(
-    gapDirection.x * (gap ?? 0),
-    gapDirection.y * (gap ?? 0),
-    gapDirection.z * (gap ?? 0)
-  )
-  const shiftTransform = new THREE.Matrix4().makeTranslation(
-    shiftDirection.x * (shift ?? 0),
-    shiftDirection.y * (shift ?? 0),
-    shiftDirection.z * (shift ?? 0)
-  )
-  const raiseTransform = new THREE.Matrix4().makeTranslation(
-    raiseDirection.x * (rise ?? 0),
-    raiseDirection.y * (rise ?? 0),
-    raiseDirection.z * (rise ?? 0)
-  )
-
-  const translationT = raiseTransform.clone().multiply(shiftTransform).multiply(gapTransform)
-  transform.premultiply(translationT)
-  const moveToParentT = new THREE.Matrix4().makeTranslation(parentPoint.x, parentPoint.y, parentPoint.z)
-  transform.premultiply(moveToParentT)
-  const finalMatrix = new THREE.Matrix4().multiplyMatrices(parentMatrix, transform)
-
-  return matrixToPlane(finalMatrix)
+    return p
+  })
+  return { ...updatedDesign, pieces: updatedPieces, connections: updatedConnections }
 }
 
 /**
@@ -1302,7 +1109,6 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
         const childPlane = roundPlane(computeChildPlane(parentPlane, parentPort, childPort, connection))
         piecePlanes[childPiece.id_] = childPlane
         const direction = vectorToThree({
-          // icon offset in direction
           x: connection.x ?? 0,
           y: connection.y ?? 0,
           z: 0
@@ -1339,6 +1145,156 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
   flatDesign.pieces = flatDesign.pieces?.map((p) => pieceMap[p.id_ ?? ''])
   flatDesign.connections = []
   return flatDesign
+}
+
+//#endregion Design
+
+//#region Piece
+
+export const addPieceToDesign = (design: Design, piece: Piece): Design => ({ ...design, pieces: [...(design.pieces || []), piece] })
+export const setPieceInDesign = (design: Design, piece: Piece): Design => ({ ...design, pieces: (design.pieces || []).map(p => p.id_ === piece.id_ ? piece : p) })
+export const removePieceFromDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Design => {
+  throw new Error("Not implemented");
+}
+
+export const addPiecesToDesign = (design: Design, pieces: Piece[]): Design => ({ ...design, pieces: [...(design.pieces || []), ...pieces] })
+export const setPiecesInDesign = (design: Design, pieces: Piece[]): Design => ({ ...design, pieces: (design.pieces || []).map(p => pieces.find(p2 => p2.id_ === p.id_) || p) })
+export const removePiecesFromDesign = (kit: Kit, designId: DesignIdLike, pieceIds: PieceIdLike[]): Design => {
+  throw new Error("Not implemented");
+}
+
+/**
+ * 🔗 Returns a map of piece ids to representation urls for the given design and types.
+ * @param design - The design with the pieces to get the representation urls for.
+ * @param types - The types of the pieces with the representations.
+ * @returns A map of piece ids to representation urls.
+ */
+export const getPieceRepresentationUrls = (design: Design, types: Type[], tags: string[] = []): Map<string, string> => {
+  const representationUrls = new Map<string, string>()
+  const normalizeVariant = (v: string | undefined | null) => v ?? ''
+  design.pieces?.forEach((p) => {
+    const type = types.find(
+      (t) => t.name === p.type.name && normalizeVariant(t.variant) === normalizeVariant(p.type.variant)
+    )
+    if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`)
+    if (!type.representations)
+      throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} has no representations`)
+    const representation = selectRepresentation(type.representations, tags)
+    representationUrls.set(p.id_, representation.url)
+  })
+  return representationUrls
+}
+
+export const piecesMetadata = (kit: Kit, designId: DesignIdLike): Map<string, { plane: Plane, center: DiagramPoint, fixedPieceId: string, parentPieceId: string | null, depth: number }> => {
+  const normalizedDesignId = designIdLikeToDesignId(designId)
+  const flatDesign = flattenDesign(kit, normalizedDesignId)
+  const fixedPieceIds = flatDesign.pieces?.map((p) => findQualityValue(p, 'semio.fixedPieceId') || p.id_)
+  const parentPieceIds = flatDesign.pieces?.map((p) => findQualityValue(p, 'semio.parentPieceId', null))
+  const depths = flatDesign.pieces?.map((p) => parseInt(findQualityValue(p, 'semio.depth', '0')!))
+  return new Map(flatDesign.pieces?.map((p, index) => [p.id_, { plane: p.plane!, center: p.center!, fixedPieceId: fixedPieceIds![index], parentPieceId: parentPieceIds![index], depth: depths![index] }]))
+}
+export const fixPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Design => {
+  const normalizedDesignId = designIdLikeToDesignId(designId)
+  const normalizedPieceId = pieceIdLikeToPieceId(pieceId)
+  const parentConnection = findParentConnectionForPieceInDesign(kit, normalizedDesignId, normalizedPieceId)
+  return removeConnectionFromDesign(kit, normalizedDesignId, parentConnection)
+}
+
+//#endregion Piece
+
+//#region Connection
+
+export const addConnectionToDesign = (design: Design, connection: Connection): Design => ({ ...design, connections: [...(design.connections || []), connection] })
+export const setConnectionInDesign = (design: Design, connection: Connection): Design => {
+  return ({ ...design, connections: (design.connections || []).map(c => isSameConnection(c, { connected: connection.connected, connecting: connection.connecting }) ? connection : c) })
+}
+export const removeConnectionFromDesign = (kit: Kit, designId: DesignIdLike, connectionId: ConnectionIdLike): Design => {
+  throw new Error("Not implemented");
+}
+
+export const addConnectionsToDesign = (design: Design, connections: Connection[]): Design => ({ ...design, connections: [...(design.connections || []), ...connections] })
+export const setConnectionsInDesign = (design: Design, connections: Connection[]): Design => {
+  const connectionsMap = new Map(connections.map(c => [`${c.connected.piece.id_}:${c.connected.port.id_ || ''}:${c.connecting.piece.id_}:${c.connecting.port.id_ || ''}`, c]))
+  return ({ ...design, connections: (design.connections || []).map(c => connectionsMap.get(`${c.connected.piece.id_}:${c.connected.port.id_ || ''}:${c.connecting.piece.id_}:${c.connecting.port.id_ || ''}`) || c) })
+}
+export const removeConnectionsFromDesign = (kit: Kit, designId: DesignIdLike, connectionIds: ConnectionIdLike[]): Design => {
+  throw new Error("Not implemented");
+}
+
+//#endregion Connection
+
+//#region DesignDiff
+
+export const addPieceToDesignDiff = (designDiff: any, piece: Piece): any => {
+  return { ...designDiff, pieces: { ...designDiff.pieces, added: [...(designDiff.pieces?.added || []), piece] } }
+}
+export const setPieceInDesignDiff = (designDiff: any, pieceDiff: PieceDiff): any => {
+  const existingIndex = (designDiff.pieces?.updated || []).findIndex((p: PieceDiff) => p.id_ === pieceDiff.id_)
+  const updated = [...(designDiff.pieces?.updated || [])]
+  if (existingIndex >= 0) {
+    updated[existingIndex] = pieceDiff
+  } else {
+    updated.push(pieceDiff)
+  }
+  return { ...designDiff, pieces: { ...designDiff.pieces, updated } }
+}
+export const removePieceFromDesignDiff = (designDiff: any, pieceId: PieceId): any => {
+  return { ...designDiff, pieces: { ...designDiff.pieces, removed: [...(designDiff.pieces?.removed || []), pieceId] } }
+}
+
+export const addPiecesToDesignDiff = (designDiff: any, pieces: Piece[]): any => {
+  return { ...designDiff, pieces: { ...designDiff.pieces, added: [...(designDiff.pieces?.added || []), ...pieces] } }
+}
+export const setPiecesInDesignDiff = (designDiff: any, pieceDiffs: PieceDiff[]): any => {
+  const updated = [...(designDiff.pieces?.updated || [])]
+  pieceDiffs.forEach((pieceDiff: PieceDiff) => {
+    const existingIndex = updated.findIndex((p: PieceDiff) => p.id_ === pieceDiff.id_)
+    if (existingIndex >= 0) {
+      updated[existingIndex] = pieceDiff
+    } else {
+      updated.push(pieceDiff)
+    }
+  })
+  return { ...designDiff, pieces: { ...designDiff.pieces, updated } }
+}
+export const removePiecesFromDesignDiff = (designDiff: any, pieceIds: PieceId[]): any => {
+  return { ...designDiff, pieces: { ...designDiff.pieces, removed: [...(designDiff.pieces?.removed || []), ...pieceIds] } }
+}
+
+export const addConnectionToDesignDiff = (designDiff: any, connection: Connection): any => {
+  return { ...designDiff, connections: { ...designDiff.connections, added: [...(designDiff.connections?.added || []), connection] } }
+}
+export const setConnectionInDesignDiff = (designDiff: any, connectionDiff: ConnectionDiff): any => {
+  const existingIndex = (designDiff.connections?.updated || []).findIndex((c: ConnectionDiff) => isSameConnection(c, connectionDiff))
+  const updated = [...(designDiff.connections?.updated || [])]
+  if (existingIndex >= 0) {
+    updated[existingIndex] = connectionDiff
+  } else {
+    updated.push(connectionDiff)
+  }
+  return ({ ...designDiff, connections: { ...designDiff.connections, updated } })
+}
+export const removeConnectionFromDesignDiff = (designDiff: any, connectionId: ConnectionId): any => {
+  return { ...designDiff, connections: { ...designDiff.connections, removed: [...(designDiff.connections?.removed || []), connectionId] } }
+}
+
+export const addConnectionsToDesignDiff = (designDiff: any, connections: Connection[]): any => {
+  return { ...designDiff, connections: { ...designDiff.connections, added: [...(designDiff.connections?.added || []), ...connections] } }
+}
+export const setConnectionsInDesignDiff = (designDiff: any, connectionDiffs: ConnectionDiff[]): any => {
+  const updated = [...(designDiff.connections?.updated || [])]
+  connectionDiffs.forEach((connectionDiff: ConnectionDiff) => {
+    const existingIndex = updated.findIndex((c: ConnectionDiff) => isSameConnection(c, connectionDiff))
+    if (existingIndex >= 0) {
+      updated[existingIndex] = connectionDiff
+    } else {
+      updated.push(connectionDiff)
+    }
+  })
+  return ({ ...designDiff, connections: { ...designDiff.connections, updated } })
+}
+export const removeConnectionsFromDesignDiff = (designDiff: any, connectionIds: ConnectionId[]): any => {
+  return { ...designDiff, connections: { ...designDiff.connections, removed: [...(designDiff.connections?.removed || []), ...connectionIds] } }
 }
 
 export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean = false): Design => {
@@ -1446,43 +1402,129 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
   }
 }
 
+//#endregion DesignDiff
+
+//#endregion CRUDs
+
+
+export const toThreeRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1)
+export const toSemioRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1)
+export const toThreeQuaternion = (): THREE.Quaternion => new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)
+export const toSemioQuaternion = (): THREE.Quaternion => new THREE.Quaternion(0.7071067811865476, 0, 0, -0.7071067811865476)
+
+export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
+  const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z)
+  const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z)
+  const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z)
+  const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis).normalize()
+  const orthoYAxis = new THREE.Vector3().crossVectors(zAxis, xAxis).normalize()
+  const matrix = new THREE.Matrix4().makeBasis(xAxis.normalize(), orthoYAxis, zAxis).setPosition(origin)
+  return matrix
+}
+export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
+  const origin = new THREE.Vector3()
+  const xAxis = new THREE.Vector3()
+  const yAxis = new THREE.Vector3()
+  const zAxis = new THREE.Vector3()
+  matrix.decompose(origin, new THREE.Quaternion(), new THREE.Vector3())
+  matrix.extractBasis(xAxis, yAxis, zAxis)
+  return {
+    origin: { x: origin.x, y: origin.y, z: origin.z },
+    xAxis: { x: xAxis.x, y: xAxis.y, z: xAxis.z },
+    yAxis: { x: yAxis.x, y: yAxis.y, z: yAxis.z }
+  }
+}
+
+export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vector3(v.x, v.y, v.z)
+
+const computeChildPlane = (parentPlane: Plane, parentPort: Port, childPort: Port, connection: Connection): Plane => {
+  const parentMatrix = planeToMatrix(parentPlane)
+  const parentPoint = vectorToThree(parentPort.point)
+  const parentDirection = vectorToThree(parentPort.direction).normalize()
+  const childPoint = vectorToThree(childPort.point)
+  const childDirection = vectorToThree(childPort.direction).normalize()
+
+  const { gap, shift, rise, rotation, turn, tilt } = connection
+  const rotationRad = THREE.MathUtils.degToRad(rotation ?? 0)
+  const turnRad = THREE.MathUtils.degToRad(turn ?? 0)
+  const tiltRad = THREE.MathUtils.degToRad(tilt ?? 0)
+
+  const reverseChildDirection = childDirection.clone().negate()
+
+  let alignQuat: THREE.Quaternion
+  if (new THREE.Vector3().crossVectors(parentDirection, reverseChildDirection).length() < 0.01) {
+    // Parallel vectors
+    // Idea taken from: // https://github.com/dfki-ric/pytransform3d/blob/143943b028fc776adfc6939b1d7c2c6edeaa2d90/pytransform3d/rotations/_utils.py#L253
+    if (Math.abs(parentDirection.z) < TOLERANCE) {
+      alignQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI) // 180* around z axis
+    } else {
+      // 180* around cross product of z and parentDirection
+      const axis = new THREE.Vector3(0, 0, 1).cross(parentDirection).normalize()
+      alignQuat = new THREE.Quaternion().setFromAxisAngle(axis, Math.PI)
+    }
+  } else {
+    alignQuat = new THREE.Quaternion().setFromUnitVectors(reverseChildDirection, parentDirection)
+  }
+
+  const directionT = new THREE.Matrix4().makeRotationFromQuaternion(alignQuat)
+
+  const yAxis = new THREE.Vector3(0, 1, 0)
+  const parentPortQuat = new THREE.Quaternion().setFromUnitVectors(yAxis, parentDirection)
+  const parentRotationT = new THREE.Matrix4().makeRotationFromQuaternion(parentPortQuat)
+
+  const gapDirection = new THREE.Vector3(0, 1, 0).applyMatrix4(parentRotationT)
+  const shiftDirection = new THREE.Vector3(1, 0, 0).applyMatrix4(parentRotationT)
+  const raiseDirection = new THREE.Vector3(0, 0, 1).applyMatrix4(parentRotationT)
+  const turnAxis = new THREE.Vector3(0, 0, 1).applyMatrix4(parentRotationT)
+  const tiltAxis = new THREE.Vector3(1, 0, 0).applyMatrix4(parentRotationT)
+
+  let orientationT = directionT.clone()
+
+  const rotateT = new THREE.Matrix4().makeRotationAxis(parentDirection, -rotationRad)
+  orientationT.premultiply(rotateT)
+
+  turnAxis.applyMatrix4(rotateT)
+  tiltAxis.applyMatrix4(rotateT)
+
+  const turnT = new THREE.Matrix4().makeRotationAxis(turnAxis, turnRad)
+  orientationT.premultiply(turnT)
+
+  const tiltT = new THREE.Matrix4().makeRotationAxis(tiltAxis, tiltRad)
+  orientationT.premultiply(tiltT)
+
+  const centerChildT = new THREE.Matrix4().makeTranslation(-childPoint.x, -childPoint.y, -childPoint.z)
+  let transform = new THREE.Matrix4().multiplyMatrices(orientationT, centerChildT)
+
+  const gapTransform = new THREE.Matrix4().makeTranslation(
+    gapDirection.x * (gap ?? 0),
+    gapDirection.y * (gap ?? 0),
+    gapDirection.z * (gap ?? 0)
+  )
+  const shiftTransform = new THREE.Matrix4().makeTranslation(
+    shiftDirection.x * (shift ?? 0),
+    shiftDirection.y * (shift ?? 0),
+    shiftDirection.z * (shift ?? 0)
+  )
+  const raiseTransform = new THREE.Matrix4().makeTranslation(
+    raiseDirection.x * (rise ?? 0),
+    raiseDirection.y * (rise ?? 0),
+    raiseDirection.z * (rise ?? 0)
+  )
+
+  const translationT = raiseTransform.clone().multiply(shiftTransform).multiply(gapTransform)
+  transform.premultiply(translationT)
+  const moveToParentT = new THREE.Matrix4().makeTranslation(parentPoint.x, parentPoint.y, parentPoint.z)
+  transform.premultiply(moveToParentT)
+  const finalMatrix = new THREE.Matrix4().multiplyMatrices(parentMatrix, transform)
+
+  return matrixToPlane(finalMatrix)
+}
+
 const selectRepresentation = (representations: Representation[], tags: string[]): Representation => {
   const indices = representations.map((r) => jaccard(r.tags, tags))
   const maxIndex = Math.max(...indices)
   const maxIndexIndex = indices.indexOf(maxIndex)
   return representations[maxIndexIndex]
-}
-
-/**
- * 🔗 Returns a map of piece ids to representation urls for the given design and types.
- * @param design - The design with the pieces to get the representation urls for.
- * @param types - The types of the pieces with the representations.
- * @returns A map of piece ids to representation urls.
- */
-export const getPieceRepresentationUrls = (design: Design, types: Type[], tags: string[] = []): Map<string, string> => {
-  const representationUrls = new Map<string, string>()
-  const normalizeVariant = (v: string | undefined | null) => v ?? ''
-  design.pieces?.forEach((p) => {
-    const type = types.find(
-      (t) => t.name === p.type.name && normalizeVariant(t.variant) === normalizeVariant(p.type.variant)
-    )
-    if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`)
-    if (!type.representations)
-      throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} has no representations`)
-    const representation = selectRepresentation(type.representations, tags)
-    representationUrls.set(p.id_, representation.url)
-  })
-  return representationUrls
-}
-
-
-export const piecesMetadata = (kit: Kit, designId: DesignIdLike): Map<string, { plane: Plane, center: DiagramPoint, fixedPieceId: string, parentPieceId: string | null, depth: number }> => {
-  const normalizedDesignId = designIdLikeToDesignId(designId)
-  const flatDesign = flattenDesign(kit, normalizedDesignId)
-  const fixedPieceIds = flatDesign.pieces?.map((p) => findQualityValue(p, 'semio.fixedPieceId') || p.id_)
-  const parentPieceIds = flatDesign.pieces?.map((p) => findQualityValue(p, 'semio.parentPieceId', null))
-  const depths = flatDesign.pieces?.map((p) => parseInt(findQualityValue(p, 'semio.depth', '0')!))
-  return new Map(flatDesign.pieces?.map((p, index) => [p.id_, { plane: p.plane!, center: p.center!, fixedPieceId: fixedPieceIds![index], parentPieceId: parentPieceIds![index], depth: depths![index] }]))
 }
 
 //#endregion

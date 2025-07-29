@@ -9,6 +9,7 @@ interface StepperProps {
     max?: number
     step?: number
     onChange?: (value: number) => void
+    label?: string
 }
 
 const Stepper: FC<StepperProps> = ({
@@ -17,7 +18,8 @@ const Stepper: FC<StepperProps> = ({
     min,
     max,
     step = 1,
-    onChange
+    onChange,
+    label
 }) => {
     const [internalValue, setInternalValue] = useState(value ?? defaultValue)
 
@@ -59,32 +61,35 @@ const Stepper: FC<StepperProps> = ({
     const canStepUp = max === undefined || internalValue < max
 
     return (
-        <div className="flex items-center">
-            <button
-                type="button"
-                onClick={handleStepDown}
-                disabled={!canStepDown}
-                className="h-9 w-9 border border-r-0 rounded-l-md bg-background hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-                <Minus className="h-4 w-4" />
-            </button>
-            <Input
-                type="number"
-                value={internalValue.toString()}
-                onChange={handleInputChange}
-                className="rounded-none border-l-0 border-r-0 text-center"
-                step={step}
-                min={min}
-                max={max}
-            />
-            <button
-                type="button"
-                onClick={handleStepUp}
-                disabled={!canStepUp}
-                className="h-9 w-9 border border-l-0 rounded-r-md bg-background hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-                <Plus className="h-4 w-4" />
-            </button>
+        <div className="flex items-center gap-2 border-b border-border pb-1">
+            {label && <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left">{label}</span>}
+            <div className="flex items-center flex-1">
+                <button
+                    type="button"
+                    onClick={handleStepDown}
+                    disabled={!canStepDown}
+                    className="h-9 w-9 border border-r-0 rounded-l-md bg-background hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                    <Minus className="h-4 w-4" />
+                </button>
+                <Input
+                    type="number"
+                    value={internalValue.toString()}
+                    onChange={handleInputChange}
+                    className="rounded-none border-l-0 border-r-0 text-center"
+                    step={step}
+                    min={min}
+                    max={max}
+                />
+                <button
+                    type="button"
+                    onClick={handleStepUp}
+                    disabled={!canStepUp}
+                    className="h-9 w-9 border border-l-0 rounded-r-md bg-background hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                    <Plus className="h-4 w-4" />
+                </button>
+            </div>
         </div>
     )
 }

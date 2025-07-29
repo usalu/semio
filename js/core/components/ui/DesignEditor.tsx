@@ -27,7 +27,7 @@ const COMMAND_STACK_MAX = 50
 
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable } from '@dnd-kit/core'
 import { ReactFlowProvider, useReactFlow } from '@xyflow/react'
-import { Info, MessageCircle, Terminal, Wrench } from 'lucide-react'
+import { Info, MessageCircle, Minus, Pin, Plus, Terminal, Wrench } from 'lucide-react'
 import { FC, ReactNode, createContext, useCallback, useContext, useEffect, useReducer, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useHotkeys } from 'react-hotkeys-hook'
@@ -53,6 +53,7 @@ import {
   findPieceInDesign,
   findReplacableTypesForPieceInDesign,
   findReplacableTypesForPiecesInDesign,
+  fixPieceInDesign,
   isSameConnection,
   isSameDesign,
   mergeDesigns,
@@ -77,7 +78,6 @@ import {
   updateDesignInKit
 } from '@semio/js'
 import { Avatar, AvatarFallback } from '@semio/js/components/ui/Avatar'
-import { Button } from '@semio/js/components/ui/Button'
 import Combobox from '@semio/js/components/ui/Combobox'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@semio/js/components/ui/HoverCard'
 import { Input } from '@semio/js/components/ui/Input'
@@ -89,7 +89,7 @@ import { Slider } from '@semio/js/components/ui/Slider'
 import Stepper from '@semio/js/components/ui/Stepper'
 import { Textarea } from '@semio/js/components/ui/Textarea'
 import { ToggleGroup, ToggleGroupItem } from '@semio/js/components/ui/ToggleGroup'
-import { Tree, TreeItem, TreeNode, TreeSection } from '@semio/js/components/ui/Tree'
+import { Tree, TreeItem, TreeSection } from '@semio/js/components/ui/Tree'
 import { Generator } from '@semio/js/lib/utils'
 import { orientDesign } from '../../semio'
 
@@ -103,7 +103,7 @@ export interface DesignEditorSelection {
   }[];
 }
 
-export interface CommandStackEntry {
+export interface OperationStackEntry {
   design: Design
   selection: DesignEditorSelection
   designDiff: DesignDiff
@@ -116,8 +116,8 @@ export interface DesignEditorState {
   fullscreenPanel: FullscreenPanel
   selection: DesignEditorSelection
   designDiff: DesignDiff
-  commandStack: CommandStackEntry[]
-  commandIndex: number
+  operationStack: OperationStackEntry[]
+  operationIndex: number
 }
 
 export enum FullscreenPanel {
@@ -153,6 +153,8 @@ export enum DesignEditorAction {
   AddConnectionsToDesignDiff = 'ADD_CONNECTIONS_TO_DESIGN_DIFF',
   SetConnectionsInDesignDiff = 'SET_CONNECTIONS_IN_DESIGN_DIFF',
   RemoveConnectionsFromDesignDiff = 'REMOVE_CONNECTIONS_FROM_DESIGN_DIFF',
+  FinalizeDesignDiff = 'FINALIZE_DESIGN_DIFF',
+  ResetDesignDiff = 'RESET_DESIGN_DIFF',
   RemovePiecesAndConnectionsFromDesign = 'REMOVE_PIECES_AND_CONNECTIONS_FROM_DESIGN',
   SetSelection = 'SET_SELECTION',
   SelectAll = 'SELECT_ALL',
@@ -355,55 +357,55 @@ const deleteSelected = (kit: Kit, designId: DesignId, selection: DesignEditorSel
 
 //#endregion Selection
 
-//#region Command Stack
+//#region Operation Stack
 
-const pushToCommandStack = (state: DesignEditorState): DesignEditorState => {
+const pushToOperationStack = (state: DesignEditorState): DesignEditorState => {
   const currentDesign = findDesignInKit(state.kit, state.designId)
-  const newEntry: CommandStackEntry = {
+  const newEntry: OperationStackEntry = {
     design: JSON.parse(JSON.stringify(currentDesign)),
     selection: JSON.parse(JSON.stringify(state.selection)),
     designDiff: JSON.parse(JSON.stringify(state.designDiff))
   }
 
-  let newCommandStack: CommandStackEntry[]
-  let newCommandIndex: number
+  let newOperationStack: OperationStackEntry[]
+  let newOperationIndex: number
 
-  if (state.commandIndex < state.commandStack.length - 1) {
-    newCommandStack = state.commandStack.slice(0, state.commandIndex + 1)
+  if (state.operationIndex < state.operationStack.length - 1) {
+    newOperationStack = state.operationStack.slice(0, state.operationIndex + 1)
   } else {
-    newCommandStack = [...state.commandStack]
+    newOperationStack = [...state.operationStack]
   }
 
-  newCommandStack.push(newEntry)
+  newOperationStack.push(newEntry)
 
-  if (newCommandStack.length > COMMAND_STACK_MAX) {
-    newCommandStack.shift()
-    newCommandIndex = newCommandStack.length - 1
+  if (newOperationStack.length > COMMAND_STACK_MAX) {
+    newOperationStack.shift()
+    newOperationIndex = newOperationStack.length - 1
   } else {
-    newCommandIndex = newCommandStack.length - 1
+    newOperationIndex = newOperationStack.length - 1
   }
 
   return {
     ...state,
-    commandStack: newCommandStack,
-    commandIndex: newCommandIndex
+    operationStack: newOperationStack,
+    operationIndex: newOperationIndex
   }
 }
 
 const canUndo = (state: DesignEditorState): boolean => {
-  if (state.commandStack.length === 0) return false
-  return state.commandIndex > 0 && state.commandStack.length > 1
+  if (state.operationStack.length === 0) return false
+  return state.operationIndex > 0 && state.operationStack.length > 1
 }
 
 const canRedo = (state: DesignEditorState): boolean => {
-  if (state.commandStack.length === 0) return false
-  return state.commandIndex < state.commandStack.length - 1
+  if (state.operationStack.length === 0) return false
+  return state.operationIndex < state.operationStack.length - 1
 }
 
 const undo = (state: DesignEditorState): DesignEditorState => {
   if (!canUndo(state)) return state
 
-  const previousEntry = state.commandStack[state.commandIndex - 1]
+  const previousEntry = state.operationStack[state.operationIndex - 1]
   const currentDesign = findDesignInKit(state.kit, state.designId)
   const updatedDesigns = (state.kit.designs || []).map((d: Design) =>
     isSameDesign(d, currentDesign)
@@ -415,14 +417,14 @@ const undo = (state: DesignEditorState): DesignEditorState => {
     kit: { ...state.kit, designs: updatedDesigns },
     selection: previousEntry.selection,
     designDiff: previousEntry.designDiff,
-    commandIndex: state.commandIndex - 1
+    operationIndex: state.operationIndex - 1
   }
 }
 
 const redo = (state: DesignEditorState): DesignEditorState => {
   if (!canRedo(state)) return state
 
-  const nextEntry = state.commandStack[state.commandIndex + 1]
+  const nextEntry = state.operationStack[state.operationIndex + 1]
   const currentDesign = findDesignInKit(state.kit, state.designId)
   const updatedDesigns = (state.kit.designs || []).map((d: Design) =>
     isSameDesign(d, currentDesign)
@@ -434,11 +436,11 @@ const redo = (state: DesignEditorState): DesignEditorState => {
     kit: { ...state.kit, designs: updatedDesigns },
     selection: nextEntry.selection,
     designDiff: nextEntry.designDiff,
-    commandIndex: state.commandIndex + 1
+    operationIndex: state.operationIndex + 1
   }
 }
 
-//#endregion Command Stack
+//#endregion Operation Stack
 
 
 export const DesignEditorContext = createContext<{ state: DesignEditorState; dispatch: DesignEditorDispatcher } | undefined>(undefined);
@@ -476,6 +478,7 @@ export const useDesignEditor = () => {
   const addConnectionsToDesignDiff = useCallback((cs: Connection[]) => dispatch({ type: DesignEditorAction.AddConnectionsToDesignDiff, payload: cs }), [dispatch]);
   const setConnectionsInDesignDiff = useCallback((cs: Connection[]) => dispatch({ type: DesignEditorAction.SetConnectionsInDesignDiff, payload: cs }), [dispatch]);
   const removeConnectionsFromDesignDiff = useCallback((cs: Connection[]) => dispatch({ type: DesignEditorAction.RemoveConnectionsFromDesignDiff, payload: cs }), [dispatch]);
+  const resetDesignDiff = useCallback(() => dispatch({ type: DesignEditorAction.ResetDesignDiff, payload: null }), [dispatch]);
   const setSelection = useCallback((s: DesignEditorSelection) => dispatch({ type: DesignEditorAction.SetSelection, payload: s }), [dispatch]);
   const selectAll = useCallback(() => dispatch({ type: DesignEditorAction.SelectAll, payload: null }), [dispatch]);
   const deselectAll = useCallback(() => dispatch({ type: DesignEditorAction.DeselectAll, payload: null }), [dispatch]);
@@ -499,6 +502,7 @@ export const useDesignEditor = () => {
   const addConnectionsToSelection = useCallback((cs: (Connection | ConnectionId)[]) => dispatch({ type: DesignEditorAction.AddConnectionsToSelection, payload: cs }), [dispatch]);
   const removeConnectionsFromSelection = useCallback((cs: (Connection | ConnectionId)[]) => dispatch({ type: DesignEditorAction.RemoveConnectionsFromSelection, payload: cs }), [dispatch]);
   const deleteSelected = useCallback((plane?: Plane, center?: DiagramPoint) => dispatch({ type: DesignEditorAction.DeleteSelected, payload: { plane, center } }), [dispatch]);
+  const finalizeDesignDiff = useCallback(() => dispatch({ type: DesignEditorAction.FinalizeDesignDiff, payload: null }), [dispatch]);
   const setFullscreen = useCallback((fp: FullscreenPanel) => dispatch({ type: DesignEditorAction.SetFullscreen, payload: fp }), [dispatch]);
   const toggleDiagramFullscreen = useCallback(() => dispatch({ type: DesignEditorAction.ToggleDiagramFullscreen, payload: null }), [dispatch]);
   const toggleModelFullscreen = useCallback(() => dispatch({ type: DesignEditorAction.ToggleModelFullscreen, payload: null }), [dispatch]);
@@ -560,6 +564,8 @@ export const useDesignEditor = () => {
     addConnectionsToSelection,
     removeConnectionsFromSelection,
     deleteSelected,
+    finalizeDesignDiff,
+    resetDesignDiff,
     setFullscreen,
     toggleDiagramFullscreen,
     toggleModelFullscreen,
@@ -574,48 +580,51 @@ const designEditorReducer = (
 ): DesignEditorState => {
   const currentDesign = findDesignInKit(state.kit, state.designId)
 
-  const updateDesignInDesignEditorStateWithCommandStack = (updatedDesign: Design): DesignEditorState => {
-    const stateWithCommand = pushToCommandStack(state)
-    const updatedDesigns = (stateWithCommand.kit.designs || []).map((d: Design) => isSameDesign(d, currentDesign) ? updatedDesign : d)
-    return { ...stateWithCommand, kit: { ...stateWithCommand.kit, designs: updatedDesigns } }
+  const updateDesignInDesignEditorStateWithOperationStack = (updatedDesign: Design): DesignEditorState => {
+    const stateWithOperation = pushToOperationStack(state)
+    const updatedDesigns = (stateWithOperation.kit.designs || []).map((d: Design) => isSameDesign(d, currentDesign) ? updatedDesign : d)
+    return { ...stateWithOperation, kit: { ...stateWithOperation.kit, designs: updatedDesigns } }
   }
 
   switch (action.type) {
-    // Design changes that should push to command stack
+    // Design changes that should push to operation stack
     case DesignEditorAction.SetDesign:
-      return updateDesignInDesignEditorStateWithCommandStack(action.payload)
+      return updateDesignInDesignEditorStateWithOperationStack(action.payload)
     case DesignEditorAction.AddPieceToDesign:
-      return updateDesignInDesignEditorStateWithCommandStack(addPieceToDesign(currentDesign, action.payload))
+      return updateDesignInDesignEditorStateWithOperationStack(addPieceToDesign(currentDesign, action.payload))
     case DesignEditorAction.SetPieceInDesign:
-      return updateDesignInDesignEditorStateWithCommandStack(setPieceInDesign(currentDesign, action.payload))
+      return updateDesignInDesignEditorStateWithOperationStack(setPieceInDesign(currentDesign, action.payload))
     case DesignEditorAction.RemovePieceFromDesign:
-      return updateDesignInDesignEditorStateWithCommandStack(removePieceFromDesign(state.kit, state.designId, action.payload))
+      return updateDesignInDesignEditorStateWithOperationStack(removePieceFromDesign(state.kit, state.designId, action.payload))
     case DesignEditorAction.AddPiecesToDesign:
-      return updateDesignInDesignEditorStateWithCommandStack(addPiecesToDesign(currentDesign, action.payload))
+      return updateDesignInDesignEditorStateWithOperationStack(addPiecesToDesign(currentDesign, action.payload))
     case DesignEditorAction.SetPiecesInDesign:
-      return updateDesignInDesignEditorStateWithCommandStack(setPiecesInDesign(currentDesign, action.payload))
+      return updateDesignInDesignEditorStateWithOperationStack(setPiecesInDesign(currentDesign, action.payload))
     case DesignEditorAction.RemovePiecesFromDesign:
-      return updateDesignInDesignEditorStateWithCommandStack(removePiecesFromDesign(state.kit, state.designId, action.payload))
+      return updateDesignInDesignEditorStateWithOperationStack(removePiecesFromDesign(state.kit, state.designId, action.payload))
     case DesignEditorAction.AddConnectionToDesign:
-      return updateDesignInDesignEditorStateWithCommandStack(addConnectionToDesign(currentDesign, action.payload))
+      return updateDesignInDesignEditorStateWithOperationStack(addConnectionToDesign(currentDesign, action.payload))
     case DesignEditorAction.SetConnectionInDesign:
-      return updateDesignInDesignEditorStateWithCommandStack(setConnectionInDesign(currentDesign, action.payload))
+      return updateDesignInDesignEditorStateWithOperationStack(setConnectionInDesign(currentDesign, action.payload))
     case DesignEditorAction.RemoveConnectionFromDesign:
-      return updateDesignInDesignEditorStateWithCommandStack(removeConnectionFromDesign(state.kit, state.designId, action.payload))
+      return updateDesignInDesignEditorStateWithOperationStack(removeConnectionFromDesign(state.kit, state.designId, action.payload))
     case DesignEditorAction.AddConnectionsToDesign:
-      return updateDesignInDesignEditorStateWithCommandStack(addConnectionsToDesign(currentDesign, action.payload))
+      return updateDesignInDesignEditorStateWithOperationStack(addConnectionsToDesign(currentDesign, action.payload))
     case DesignEditorAction.SetConnectionsInDesign:
-      return updateDesignInDesignEditorStateWithCommandStack(setConnectionsInDesign(currentDesign, action.payload))
+      return updateDesignInDesignEditorStateWithOperationStack(setConnectionsInDesign(currentDesign, action.payload))
     case DesignEditorAction.RemoveConnectionsFromDesign:
-      return updateDesignInDesignEditorStateWithCommandStack(removeConnectionsFromDesign(state.kit, state.designId, action.payload))
+      return updateDesignInDesignEditorStateWithOperationStack(removeConnectionsFromDesign(state.kit, state.designId, action.payload))
     case DesignEditorAction.RemovePiecesAndConnectionsFromDesign:
-      return updateDesignInDesignEditorStateWithCommandStack(removePiecesAndConnectionsFromDesign(state.kit, state.designId, action.payload.pieceIds, action.payload.connectionIds))
+      return updateDesignInDesignEditorStateWithOperationStack(removePiecesAndConnectionsFromDesign(state.kit, state.designId, action.payload.pieceIds, action.payload.connectionIds))
     case DesignEditorAction.DeleteSelected:
-      const stateWithDeleteCommand = pushToCommandStack(state)
-      const updatedDesign = deleteSelected(stateWithDeleteCommand.kit, stateWithDeleteCommand.designId, stateWithDeleteCommand.selection)
-      return { ...stateWithDeleteCommand, kit: updateDesignInKit(stateWithDeleteCommand.kit, updatedDesign), selection: deselectAll(stateWithDeleteCommand.selection) }
+      const stateWithDeleteOperation = pushToOperationStack(state)
+      const selectionToDelete = stateWithDeleteOperation.selection
+      const updatedDesign = deleteSelected(stateWithDeleteOperation.kit, stateWithDeleteOperation.designId, selectionToDelete)
+      const entryWithCorrectSelection = stateWithDeleteOperation.operationStack[stateWithDeleteOperation.operationIndex]
+      entryWithCorrectSelection.selection = selectionToDelete
+      return { ...stateWithDeleteOperation, kit: updateDesignInKit(stateWithDeleteOperation.kit, updatedDesign), selection: deselectAll(stateWithDeleteOperation.selection) }
 
-    // DesignDiff changes (no command stack)
+    // DesignDiff changes (no operation stack)
     case DesignEditorAction.SetDesignDiff:
       return { ...state, designDiff: action.payload }
     case DesignEditorAction.AddPieceToDesignDiff:
@@ -642,8 +651,25 @@ const designEditorReducer = (
       return { ...state, designDiff: setConnectionsInDesignDiff(state.designDiff, action.payload) }
     case DesignEditorAction.RemoveConnectionsFromDesignDiff:
       return { ...state, designDiff: removeConnectionsFromDesignDiff(state.designDiff, action.payload) }
+    case DesignEditorAction.FinalizeDesignDiff:
+      const finalizedDesign = applyDesignDiff(currentDesign, state.designDiff, false)
+      const emptyDesignDiff: DesignDiff = {
+        pieces: { added: [], removed: [], updated: [] },
+        connections: { added: [], removed: [], updated: [] }
+      }
+      const stateWithFinalizedOperation = updateDesignInDesignEditorStateWithOperationStack(finalizedDesign)
+      const entryWithCorrectState = stateWithFinalizedOperation.operationStack[stateWithFinalizedOperation.operationIndex]
+      entryWithCorrectState.selection = state.selection
+      entryWithCorrectState.designDiff = state.designDiff
+      return { ...stateWithFinalizedOperation, designDiff: emptyDesignDiff }
+    case DesignEditorAction.ResetDesignDiff:
+      const resetDesignDiff: DesignDiff = {
+        pieces: { added: [], removed: [], updated: [] },
+        connections: { added: [], removed: [], updated: [] }
+      }
+      return { ...state, designDiff: resetDesignDiff }
 
-    // Selection changes (no command stack)
+    // Selection changes (no operation stack)
     case DesignEditorAction.SetSelection:
       return { ...state, selection: action.payload }
     case DesignEditorAction.SelectAll:
@@ -695,7 +721,7 @@ const designEditorReducer = (
     case DesignEditorAction.Redo:
       return redo(state)
 
-    // Other (no command stack)
+    // Other (no operation stack)
     case DesignEditorAction.SetFullscreen:
       return { ...state, fullscreenPanel: action.payload }
     case DesignEditorAction.ToggleDiagramFullscreen:
@@ -739,7 +765,7 @@ function useControllableReducer(props: DesignEditorProps) {
       pieces: { added: [], removed: [], updated: [] },
       connections: { added: [], removed: [], updated: [] }
     },
-    commandStack: [{
+    operationStack: [{
       design: JSON.parse(JSON.stringify(initialDesign)),
       selection: JSON.parse(JSON.stringify(initialSelection || { selectedPieceIds: [], selectedConnections: [] })),
       designDiff: JSON.parse(JSON.stringify(initialDesignDiff || {
@@ -747,7 +773,7 @@ function useControllableReducer(props: DesignEditorProps) {
         connections: { added: [], removed: [], updated: [] }
       }))
     }],
-    commandIndex: 0
+    operationIndex: 0
   }
 
   const [internalState, dispatch] = useReducer(designEditorReducer, initialState)
@@ -757,8 +783,8 @@ function useControllableReducer(props: DesignEditorProps) {
     kit: isKitControlled ? controlledKit : internalState.kit,
     designDiff: isDesignDiffControlled ? controlledDesignDiff : internalState.designDiff,
     selection: isSelectionControlled ? controlledSelection : internalState.selection,
-    commandStack: isKitControlled || isDesignDiffControlled || isSelectionControlled ? [] : internalState.commandStack,
-    commandIndex: isKitControlled || isDesignDiffControlled || isSelectionControlled ? -1 : internalState.commandIndex
+    operationStack: isKitControlled || isDesignDiffControlled || isSelectionControlled ? [] : internalState.operationStack,
+    operationIndex: isKitControlled || isDesignDiffControlled || isSelectionControlled ? -1 : internalState.operationIndex
   }
 
   const dispatchWrapper = useCallback((action: { type: DesignEditorAction; payload: any }) => {
@@ -956,7 +982,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width, kit }) =
           <Tree>
             <TreeSection label="Types" defaultOpen={true}>
               {Object.entries(typesByName).map(([name, variants]) => (
-                <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
+                <TreeSection key={name} label={name} defaultOpen={false}>
                   <div
                     className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
                     style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}
@@ -965,12 +991,12 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width, kit }) =
                       <TypeAvatar key={`${type.name}-${type.variant}`} type={type} showHoverCard={true} />
                     ))}
                   </div>
-                </TreeNode>
+                </TreeSection>
               ))}
             </TreeSection>
             <TreeSection label="Designs" defaultOpen={true}>
               {Object.entries(designsByName).map(([name, designs]) => (
-                <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
+                <TreeSection key={name} label={name} defaultOpen={false}>
                   <div
                     className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
                     style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}
@@ -983,7 +1009,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width, kit }) =
                       />
                     ))}
                   </div>
-                </TreeNode>
+                </TreeSection>
               ))}
             </TreeSection>
           </Tree>
@@ -1067,14 +1093,14 @@ const Console: FC<ConsoleProps> = ({
         <div className="p-1">
           <Tree>
             <TreeSection label="Messages" defaultOpen={true}>
-              <TreeItem label="System started" level={1} />
-              <TreeItem label="Design loaded successfully" level={1} />
+              <TreeItem label="System started" />
+              <TreeItem label="Design loaded successfully" />
             </TreeSection>
             <TreeSection label="Errors" defaultOpen={false}>
-              <TreeItem label="No errors" level={1} />
+              <TreeItem label="No errors" />
             </TreeSection>
             <TreeSection label="Warnings" defaultOpen={false}>
-              <TreeItem label="No warnings" level={1} />
+              <TreeItem label="No warnings" />
             </TreeSection>
           </Tree>
         </div>
@@ -1086,7 +1112,7 @@ const Console: FC<ConsoleProps> = ({
 interface DetailsProps extends ResizablePanelProps { }
 
 const PieceDetails: FC<{ pieceId: string }> = ({ pieceId }) => {
-  const { kit, designId, designDiff, setPieceInDesignDiff, setConnectionInDesignDiff } = useDesignEditor()
+  const { kit, designId, designDiff, setPieceInDesignDiff, setConnectionInDesignDiff, setDesign } = useDesignEditor()
   const design = findDesignInKit(kit, designId)
   const effectiveDesign = applyDesignDiff(design, designDiff, false)
   const piece = findPieceInDesign(effectiveDesign, pieceId)
@@ -1101,10 +1127,17 @@ const PieceDetails: FC<{ pieceId: string }> = ({ pieceId }) => {
     setConnectionInDesignDiff(updatedConnection)
   }
 
+  const fixPiece = () => {
+    const updatedDesign = fixPieceInDesign(kit, designId, pieceId)
+    setDesign(updatedDesign)
+  }
+
   const pieceVariants = piece.type.variant ? [piece.type.variant] : []
   const availableTypes = findReplacableTypesForPieceInDesign(kit, designId, pieceId, pieceVariants)
   const availableTypeNames = [...new Set(availableTypes.map(t => t.name))]
   const availableVariants = findReplacableTypesForPieceInDesign(kit, designId, pieceId).filter(t => t.name === piece.type.name).map(t => t.variant).filter((v): v is string => Boolean(v))
+
+  const isFixed = piece.plane && piece.center
 
   let parentConnection: Connection | null = null
   if (pieceMetadata?.parentPieceId) {
@@ -1128,225 +1161,179 @@ const PieceDetails: FC<{ pieceId: string }> = ({ pieceId }) => {
   return (
     <div className="p-1">
       <Tree>
-        <TreeSection label="Piece Details" defaultOpen={true}>
-          <div className="space-y-2 px-2">
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <label className="text-sm">ID</label>
-              </div>
-              <Input value={piece.id_} disabled />
-            </div>
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <label className="text-sm">Type Name</label>
-              </div>
+        <TreeSection
+          label="Piece"
+          defaultOpen={true}
+          actions={!isFixed ? [
+            {
+              icon: <Pin size={12} />,
+              onClick: fixPiece,
+              title: "Fix Piece"
+            }
+          ] : undefined}
+        >
+          <TreeItem>
+            <Input label="ID" value={piece.id_} disabled />
+          </TreeItem>
+          <TreeItem>
+            <Combobox
+              label="Type Name"
+              options={availableTypeNames.map(name => ({ value: name, label: name }))}
+              value={piece.type.name}
+              placeholder="Select type name"
+              onValueChange={(value) => handlePieceChange({ ...piece, type: { ...piece.type, name: value } })}
+            />
+          </TreeItem>
+          {(piece.type.variant || availableVariants.length > 0) && (
+            <TreeItem>
               <Combobox
-                options={availableTypeNames.map(name => ({ value: name, label: name }))}
-                value={piece.type.name}
-                placeholder="Select type name"
-                onValueChange={(value) => handlePieceChange({ ...piece, type: { ...piece.type, name: value } })}
+                label="Type Variant"
+                options={availableVariants.map(variant => ({ value: variant, label: variant }))}
+                value={piece.type.variant || ''}
+                placeholder="Select variant"
+                onValueChange={(value) => handlePieceChange({ ...piece, type: { ...piece.type, variant: value } })}
+                allowClear={true}
               />
-            </div>
-            {(piece.type.variant || availableVariants.length > 0) && (
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm">Type Variant</label>
-                </div>
-                <Combobox
-                  options={availableVariants.map(variant => ({ value: variant, label: variant }))}
-                  value={piece.type.variant || ''}
-                  placeholder="Select variant"
-                  onValueChange={(value) => handlePieceChange({ ...piece, type: { ...piece.type, variant: value } })}
-                  allowClear={true}
-                />
-              </div>
-            )}
-          </div>
+            </TreeItem>
+          )}
         </TreeSection>
         {piece.center && (
           <TreeSection label="Center" defaultOpen={false}>
-            <div className="space-y-2 px-2">
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm">X</label>
-                  <span className="text-xs text-muted-foreground">{piece.center.x}</span>
-                </div>
-                <Stepper
-                  value={piece.center.x}
-                  onChange={(value) => handlePieceChange({ ...piece, center: { ...piece.center!, x: value } })}
-                  step={0.1}
-                />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm">Y</label>
-                  <span className="text-xs text-muted-foreground">{piece.center.y}</span>
-                </div>
-                <Stepper
-                  value={piece.center.y}
-                  onChange={(value) => handlePieceChange({ ...piece, center: { ...piece.center!, y: value } })}
-                  step={0.1}
-                />
-              </div>
-            </div>
+            <TreeItem>
+              <Stepper
+                label="X"
+                value={piece.center.x}
+                onChange={(value) => handlePieceChange({ ...piece, center: { ...piece.center!, x: value } })}
+                step={0.1}
+              />
+            </TreeItem>
+            <TreeItem>
+              <Stepper
+                label="Y"
+                value={piece.center.y}
+                onChange={(value) => handlePieceChange({ ...piece, center: { ...piece.center!, y: value } })}
+                step={0.1}
+              />
+            </TreeItem>
           </TreeSection>
         )}
         {piece.plane && (
           <TreeSection label="Plane" defaultOpen={false}>
-            <div className="space-y-2 px-2">
-              <TreeNode label="Origin" collapsible={true} level={1} defaultOpen={true}>
-                <div className="space-y-2 px-2">
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm">X</label>
-                      <span className="text-xs text-muted-foreground">{piece.plane.origin.x}</span>
-                    </div>
-                    <Stepper
-                      value={piece.plane.origin.x}
-                      onChange={(value) =>
-                        handlePieceChange({
-                          ...piece,
-                          plane: { ...piece.plane!, origin: { ...piece.plane!.origin, x: value } }
-                        })
-                      }
-                      step={0.1}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm">Y</label>
-                      <span className="text-xs text-muted-foreground">{piece.plane.origin.y}</span>
-                    </div>
-                    <Stepper
-                      value={piece.plane.origin.y}
-                      onChange={(value) =>
-                        handlePieceChange({
-                          ...piece,
-                          plane: { ...piece.plane!, origin: { ...piece.plane!.origin, y: value } }
-                        })
-                      }
-                      step={0.1}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm">Z</label>
-                      <span className="text-xs text-muted-foreground">{piece.plane.origin.z}</span>
-                    </div>
-                    <Stepper
-                      value={piece.plane.origin.z}
-                      onChange={(value) =>
-                        handlePieceChange({
-                          ...piece,
-                          plane: { ...piece.plane!, origin: { ...piece.plane!.origin, z: value } }
-                        })
-                      }
-                      step={0.1}
-                    />
-                  </div>
-                </div>
-              </TreeNode>
-            </div>
+            <TreeSection label="Origin" defaultOpen={true}>
+              <TreeItem>
+                <Stepper
+                  label="X"
+                  value={piece.plane.origin.x}
+                  onChange={(value) =>
+                    handlePieceChange({
+                      ...piece,
+                      plane: { ...piece.plane!, origin: { ...piece.plane!.origin, x: value } }
+                    })
+                  }
+                  step={0.1}
+                />
+              </TreeItem>
+              <TreeItem>
+                <Stepper
+                  label="Y"
+                  value={piece.plane.origin.y}
+                  onChange={(value) =>
+                    handlePieceChange({
+                      ...piece,
+                      plane: { ...piece.plane!, origin: { ...piece.plane!.origin, y: value } }
+                    })
+                  }
+                  step={0.1}
+                />
+              </TreeItem>
+              <TreeItem>
+                <Stepper
+                  label="Z"
+                  value={piece.plane.origin.z}
+                  onChange={(value) =>
+                    handlePieceChange({
+                      ...piece,
+                      plane: { ...piece.plane!, origin: { ...piece.plane!.origin, z: value } }
+                    })
+                  }
+                  step={0.1}
+                />
+              </TreeItem>
+            </TreeSection>
           </TreeSection>
         )}
         {parentConnection && (
           <TreeSection label="Parent Connection" defaultOpen={true}>
-            <div className="space-y-2 px-2">
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm">Gap</label>
-                  <span className="text-xs text-muted-foreground">{parentConnection.gap ?? 0}</span>
-                </div>
-                <Stepper
-                  value={parentConnection.gap ?? 0}
-                  onChange={(value) => handleConnectionChange({ ...parentConnection, gap: value })}
-                  step={0.1}
-                />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm">Shift</label>
-                  <span className="text-xs text-muted-foreground">{parentConnection.shift ?? 0}</span>
-                </div>
-                <Stepper
-                  value={parentConnection.shift ?? 0}
-                  onChange={(value) => handleConnectionChange({ ...parentConnection, shift: value })}
-                  step={0.1}
-                />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm">Rise</label>
-                  <span className="text-xs text-muted-foreground">{parentConnection.rise ?? 0}</span>
-                </div>
-                <Stepper
-                  value={parentConnection.rise ?? 0}
-                  onChange={(value) => handleConnectionChange({ ...parentConnection, rise: value })}
-                  step={0.1}
-                />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm">Rotation</label>
-                  <span className="text-xs text-muted-foreground">{parentConnection.rotation ?? 0}°</span>
-                </div>
-                <Slider
-                  value={[parentConnection.rotation ?? 0]}
-                  onValueChange={([value]) => handleConnectionChange({ ...parentConnection, rotation: value })}
-                  min={-180}
-                  max={180}
-                  step={1}
-                />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm">Turn</label>
-                  <span className="text-xs text-muted-foreground">{parentConnection.turn ?? 0}°</span>
-                </div>
-                <Slider
-                  value={[parentConnection.turn ?? 0]}
-                  onValueChange={([value]) => handleConnectionChange({ ...parentConnection, turn: value })}
-                  min={-180}
-                  max={180}
-                  step={1}
-                />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm">Tilt</label>
-                  <span className="text-xs text-muted-foreground">{parentConnection.tilt ?? 0}°</span>
-                </div>
-                <Slider
-                  value={[parentConnection.tilt ?? 0]}
-                  onValueChange={([value]) => handleConnectionChange({ ...parentConnection, tilt: value })}
-                  min={-180}
-                  max={180}
-                  step={1}
-                />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm">X Offset</label>
-                  <span className="text-xs text-muted-foreground">{parentConnection.x ?? 0}</span>
-                </div>
-                <Stepper
-                  value={parentConnection.x ?? 0}
-                  onChange={(value) => handleConnectionChange({ ...parentConnection, x: value })}
-                  step={0.1}
-                />
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm">Y Offset</label>
-                  <span className="text-xs text-muted-foreground">{parentConnection.y ?? 0}</span>
-                </div>
-                <Stepper
-                  value={parentConnection.y ?? 0}
-                  onChange={(value) => handleConnectionChange({ ...parentConnection, y: value })}
-                  step={0.1}
-                />
-              </div>
-            </div>
+            <TreeItem>
+              <Stepper
+                label="Gap"
+                value={parentConnection.gap ?? 0}
+                onChange={(value) => handleConnectionChange({ ...parentConnection, gap: value })}
+                step={0.1}
+              />
+            </TreeItem>
+            <TreeItem>
+              <Stepper
+                label="Shift"
+                value={parentConnection.shift ?? 0}
+                onChange={(value) => handleConnectionChange({ ...parentConnection, shift: value })}
+                step={0.1}
+              />
+            </TreeItem>
+            <TreeItem>
+              <Stepper
+                label="Rise"
+                value={parentConnection.rise ?? 0}
+                onChange={(value) => handleConnectionChange({ ...parentConnection, rise: value })}
+                step={0.1}
+              />
+            </TreeItem>
+            <TreeItem>
+              <Slider
+                label="Rotation"
+                value={[parentConnection.rotation ?? 0]}
+                onValueChange={([value]) => handleConnectionChange({ ...parentConnection, rotation: value })}
+                min={-180}
+                max={180}
+                step={1}
+              />
+            </TreeItem>
+            <TreeItem>
+              <Slider
+                label="Turn"
+                value={[parentConnection.turn ?? 0]}
+                onValueChange={([value]) => handleConnectionChange({ ...parentConnection, turn: value })}
+                min={-180}
+                max={180}
+                step={1}
+              />
+            </TreeItem>
+            <TreeItem>
+              <Slider
+                label="Tilt"
+                value={[parentConnection.tilt ?? 0]}
+                onValueChange={([value]) => handleConnectionChange({ ...parentConnection, tilt: value })}
+                min={-180}
+                max={180}
+                step={1}
+              />
+            </TreeItem>
+            <TreeItem>
+              <Stepper
+                label="X Offset"
+                value={parentConnection.x ?? 0}
+                onChange={(value) => handleConnectionChange({ ...parentConnection, x: value })}
+                step={0.1}
+              />
+            </TreeItem>
+            <TreeItem>
+              <Stepper
+                label="Y Offset"
+                value={parentConnection.y ?? 0}
+                onChange={(value) => handleConnectionChange({ ...parentConnection, y: value })}
+                step={0.1}
+              />
+            </TreeItem>
           </TreeSection>
         )}
       </Tree>
@@ -1355,10 +1342,11 @@ const PieceDetails: FC<{ pieceId: string }> = ({ pieceId }) => {
 }
 
 const MultiPieceDetails: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
-  const { kit, designId, designDiff, setPiecesInDesignDiff } = useDesignEditor()
+  const { kit, designId, designDiff, setPiecesInDesignDiff, removeConnectionFromDesign } = useDesignEditor()
   const design = findDesignInKit(kit, designId)
   const effectiveDesign = applyDesignDiff(design, designDiff, false)
   const pieces = pieceIds.map(id => findPieceInDesign(effectiveDesign, id))
+  const metadata = piecesMetadata(kit, designId)
 
   const getCommonValue = <T,>(getter: (piece: Piece) => T | undefined): T | undefined => {
     const values = pieces.map(getter).filter(v => v !== undefined)
@@ -1375,6 +1363,29 @@ const MultiPieceDetails: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
   const handleTypeVariantChange = (value: string) => {
     const updatedPieces = pieces.map(piece => ({ ...piece, type: { ...piece.type, variant: value } }))
     setPiecesInDesignDiff(updatedPieces)
+  }
+
+  const fixPieces = () => {
+    let updatedDesign = effectiveDesign
+
+    // Fix each piece individually using the semio function
+    const fixedPieces = pieces.map(piece => {
+      updatedDesign = fixPieceInDesign(kit, { ...designId }, piece.id_)
+      return findPieceInDesign(updatedDesign, piece.id_)
+    })
+
+    setPiecesInDesignDiff(fixedPieces)
+
+    // Update connections if any were removed
+    const updatedConnections = updatedDesign.connections || []
+    const currentConnections = effectiveDesign.connections || []
+
+    if (updatedConnections.length < currentConnections.length) {
+      const removedConnections = currentConnections.filter(conn =>
+        !updatedConnections.some((updatedConn: Connection) => isSameConnection(conn, updatedConn))
+      )
+      removedConnections.forEach(conn => removeConnectionFromDesign(conn))
+    }
   }
 
   const handleCenterXChange = (value: number) => {
@@ -1423,6 +1434,7 @@ const MultiPieceDetails: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
   const hasCenter = pieces.some(p => p.center)
   const hasPlane = pieces.some(p => p.plane)
   const hasVariant = pieces.some(p => p.type.variant)
+  const hasUnfixedPieces = pieces.some(p => !p.plane || !p.center)
 
   const selectedVariants = [...new Set(pieces.map(p => p.type.variant).filter((v): v is string => Boolean(v)))]
   const availableTypes = findReplacableTypesForPiecesInDesign(kit, designId, pieceIds, selectedVariants)
@@ -1430,100 +1442,96 @@ const MultiPieceDetails: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
   const availableVariants = commonTypeName ? [...new Set(findReplacableTypesForPiecesInDesign(kit, designId, pieceIds).filter(t => t.name === commonTypeName).map(t => t.variant).filter((v): v is string => Boolean(v)))] : []
 
   return (
-    <div className="space-y-2 p-1">
-      <div className="text-sm font-medium mb-3">{pieceIds.length} pieces selected</div>
-
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <label className="text-sm">Type Name</label>
-        </div>
-        <Combobox
-          options={availableTypeNames.map(name => ({ value: name, label: name }))}
-          value={commonTypeName || ''}
-          placeholder={commonTypeName === undefined ? 'Mixed values' : 'Select type name'}
-          onValueChange={handleTypeNameChange}
-        />
-      </div>
-
-      {(hasVariant || availableVariants.length > 0) && (
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <label className="text-sm">Type Variant</label>
-          </div>
-          <Combobox
-            options={availableVariants.map(variant => ({ value: variant, label: variant }))}
-            value={commonTypeVariant || ''}
-            placeholder={commonTypeVariant === undefined ? 'Mixed values' : 'Select variant'}
-            onValueChange={handleTypeVariantChange}
-            allowClear={true}
-          />
-        </div>
-      )}
-
-      {hasCenter && (
-        <>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label className="text-sm">Center X</label>
-              <span className="text-xs text-muted-foreground">{commonCenterX !== undefined ? commonCenterX : 'Mixed'}</span>
-            </div>
-            <Stepper
-              value={commonCenterX}
-              onChange={handleCenterXChange}
-              step={0.1}
+    <div className="p-1">
+      <Tree>
+        <TreeSection label={`Multiple Pieces (${pieceIds.length})`} defaultOpen={true}>
+          <TreeItem>
+            <Combobox
+              label="Type Name"
+              options={availableTypeNames.map(name => ({ value: name, label: name }))}
+              value={commonTypeName || ''}
+              placeholder={commonTypeName === undefined ? 'Mixed values' : 'Select type name'}
+              onValueChange={handleTypeNameChange}
             />
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label className="text-sm">Center Y</label>
-              <span className="text-xs text-muted-foreground">{commonCenterY !== undefined ? commonCenterY : 'Mixed'}</span>
-            </div>
-            <Stepper
-              value={commonCenterY}
-              onChange={handleCenterYChange}
-              step={0.1}
-            />
-          </div>
-        </>
-      )}
-
-      {hasPlane && (
-        <>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label className="text-sm">Plane Origin X</label>
-              <span className="text-xs text-muted-foreground">{commonPlaneOriginX !== undefined ? commonPlaneOriginX : 'Mixed'}</span>
-            </div>
-            <Stepper
-              value={commonPlaneOriginX}
-              onChange={handlePlaneOriginXChange}
-              step={0.1}
-            />
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label className="text-sm">Plane Origin Y</label>
-              <span className="text-xs text-muted-foreground">{commonPlaneOriginY !== undefined ? commonPlaneOriginY : 'Mixed'}</span>
-            </div>
-            <Stepper
-              value={commonPlaneOriginY}
-              onChange={handlePlaneOriginYChange}
-              step={0.1}
-            />
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label className="text-sm">Plane Origin Z</label>
-              <span className="text-xs text-muted-foreground">{commonPlaneOriginZ !== undefined ? commonPlaneOriginZ : 'Mixed'}</span>
-            </div>
-            <Stepper
-              value={commonPlaneOriginZ}
-              onChange={handlePlaneOriginZChange}
-              step={0.1}
-            />
-          </div>
-        </>
-      )}
+          </TreeItem>
+          {(hasVariant || availableVariants.length > 0) && (
+            <TreeItem>
+              <Combobox
+                label="Type Variant"
+                options={availableVariants.map(variant => ({ value: variant, label: variant }))}
+                value={commonTypeVariant || ''}
+                placeholder={commonTypeVariant === undefined ? 'Mixed values' : 'Select variant'}
+                onValueChange={handleTypeVariantChange}
+                allowClear={true}
+              />
+            </TreeItem>
+          )}
+        </TreeSection>
+        {hasUnfixedPieces && (
+          <TreeSection
+            label="Fix pieces"
+            defaultOpen={false}
+            actions={[
+              {
+                icon: <Pin size={12} />,
+                onClick: fixPieces,
+                title: "Fix pieces"
+              }
+            ]}
+          >
+          </TreeSection>
+        )}
+        {hasCenter && (
+          <TreeSection label="Center" defaultOpen={false}>
+            <TreeItem>
+              <Stepper
+                label="X"
+                value={commonCenterX}
+                onChange={handleCenterXChange}
+                step={0.1}
+              />
+            </TreeItem>
+            <TreeItem>
+              <Stepper
+                label="Y"
+                value={commonCenterY}
+                onChange={handleCenterYChange}
+                step={0.1}
+              />
+            </TreeItem>
+          </TreeSection>
+        )}
+        {hasPlane && (
+          <TreeSection label="Plane" defaultOpen={false}>
+            <TreeSection label="Origin" defaultOpen={true}>
+              <TreeItem>
+                <Stepper
+                  label="X"
+                  value={commonPlaneOriginX}
+                  onChange={handlePlaneOriginXChange}
+                  step={0.1}
+                />
+              </TreeItem>
+              <TreeItem>
+                <Stepper
+                  label="Y"
+                  value={commonPlaneOriginY}
+                  onChange={handlePlaneOriginYChange}
+                  step={0.1}
+                />
+              </TreeItem>
+              <TreeItem>
+                <Stepper
+                  label="Z"
+                  value={commonPlaneOriginZ}
+                  onChange={handlePlaneOriginZChange}
+                  step={0.1}
+                />
+              </TreeItem>
+            </TreeSection>
+          </TreeSection>
+        )}
+      </Tree>
     </div>
   )
 }
@@ -1546,52 +1554,266 @@ const ConnectionDetails: FC<{ connectingPieceId: string; connectedPieceId: strin
   }
 
   return (
-    <div className="space-y-2 p-1">
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <label className="text-sm">Connecting Piece ID</label>
-        </div>
-        <Input value={connection.connecting.piece.id_} disabled />
-      </div>
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <label className="text-sm">Connecting Port ID</label>
-        </div>
-        <Input
-          value={connection.connecting.port.id_}
-          onChange={(e) =>
-            handleChange({ ...connection, connecting: { ...connection.connecting, port: { id_: e.target.value } } })
-          }
-        />
-      </div>
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <label className="text-sm">Connected Piece ID</label>
-        </div>
-        <Input value={connection.connected.piece.id_} disabled />
-      </div>
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <label className="text-sm">Connected Port ID</label>
-        </div>
-        <Input
-          value={connection.connected.port.id_}
-          onChange={(e) =>
-            handleChange({ ...connection, connected: { ...connection.connected, port: { id_: e.target.value } } })
-          }
-        />
-      </div>
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <label className="text-sm">Gap</label>
-          <span className="text-xs text-muted-foreground">{connection.gap ?? 0}</span>
-        </div>
-        <Input
-          type="number"
-          value={connection.gap ?? 0}
-          onChange={(e) => handleChange({ ...connection, gap: parseFloat(e.target.value) })}
-        />
-      </div>
+    <div className="p-1">
+      <Tree>
+        <TreeSection label="Connection Details" defaultOpen={true}>
+          <TreeItem>
+            <Input label="Connecting Piece ID" value={connection.connecting.piece.id_} disabled />
+          </TreeItem>
+          <TreeItem>
+            <Input
+              label="Connecting Port ID"
+              value={connection.connecting.port.id_}
+              onChange={(e) =>
+                handleChange({ ...connection, connecting: { ...connection.connecting, port: { id_: e.target.value } } })
+              }
+            />
+          </TreeItem>
+          <TreeItem>
+            <Input label="Connected Piece ID" value={connection.connected.piece.id_} disabled />
+          </TreeItem>
+          <TreeItem>
+            <Input
+              label="Connected Port ID"
+              value={connection.connected.port.id_}
+              onChange={(e) =>
+                handleChange({ ...connection, connected: { ...connection.connected, port: { id_: e.target.value } } })
+              }
+            />
+          </TreeItem>
+        </TreeSection>
+        <TreeSection label="Translation" defaultOpen={true}>
+          <TreeItem>
+            <Stepper
+              label="Gap"
+              value={connection.gap ?? 0}
+              onChange={(value) => handleChange({ ...connection, gap: value })}
+              step={0.1}
+            />
+          </TreeItem>
+          <TreeItem>
+            <Stepper
+              label="Shift"
+              value={connection.shift ?? 0}
+              onChange={(value) => handleChange({ ...connection, shift: value })}
+              step={0.1}
+            />
+          </TreeItem>
+          <TreeItem>
+            <Stepper
+              label="Rise"
+              value={connection.rise ?? 0}
+              onChange={(value) => handleChange({ ...connection, rise: value })}
+              step={0.1}
+            />
+          </TreeItem>
+          <TreeItem>
+            <Stepper
+              label="X Offset"
+              value={connection.x ?? 0}
+              onChange={(value) => handleChange({ ...connection, x: value })}
+              step={0.1}
+            />
+          </TreeItem>
+          <TreeItem>
+            <Stepper
+              label="Y Offset"
+              value={connection.y ?? 0}
+              onChange={(value) => handleChange({ ...connection, y: value })}
+              step={0.1}
+            />
+          </TreeItem>
+        </TreeSection>
+        <TreeSection label="Rotation" defaultOpen={false}>
+          <TreeItem>
+            <Slider
+              label="Rotation"
+              value={[connection.rotation ?? 0]}
+              onValueChange={([value]) => handleChange({ ...connection, rotation: value })}
+              min={-180}
+              max={180}
+              step={1}
+            />
+          </TreeItem>
+          <TreeItem>
+            <Slider
+              label="Turn"
+              value={[connection.turn ?? 0]}
+              onValueChange={([value]) => handleChange({ ...connection, turn: value })}
+              min={-180}
+              max={180}
+              step={1}
+            />
+          </TreeItem>
+          <TreeItem>
+            <Slider
+              label="Tilt"
+              value={[connection.tilt ?? 0]}
+              onValueChange={([value]) => handleChange({ ...connection, tilt: value })}
+              min={-180}
+              max={180}
+              step={1}
+            />
+          </TreeItem>
+        </TreeSection>
+      </Tree>
+    </div>
+  )
+}
+
+const MultiConnectionDetails: FC<{ connections: { connectingPieceId: string; connectedPieceId: string }[] }> = ({
+  connections
+}) => {
+  const { kit, designId, designDiff, setConnectionsInDesignDiff } = useDesignEditor()
+  const design = findDesignInKit(kit, designId)
+  const effectiveDesign = applyDesignDiff(design, designDiff, false)
+  const connectionObjects = connections.map(conn => {
+    const connectionId = {
+      connecting: { piece: { id_: conn.connectingPieceId } },
+      connected: { piece: { id_: conn.connectedPieceId } }
+    }
+    return findConnectionInDesign(effectiveDesign, connectionId)
+  })
+
+  const getCommonValue = <T,>(getter: (connection: Connection) => T | undefined): T | undefined => {
+    const values = connectionObjects.map(getter).filter(v => v !== undefined)
+    if (values.length === 0) return undefined
+    const firstValue = values[0]
+    return values.every(v => JSON.stringify(v) === JSON.stringify(firstValue)) ? firstValue : undefined
+  }
+
+  const handleGapChange = (value: number) => {
+    const updatedConnections = connectionObjects.map(connection => ({ ...connection, gap: value }))
+    setConnectionsInDesignDiff(updatedConnections)
+  }
+
+  const handleShiftChange = (value: number) => {
+    const updatedConnections = connectionObjects.map(connection => ({ ...connection, shift: value }))
+    setConnectionsInDesignDiff(updatedConnections)
+  }
+
+  const handleRiseChange = (value: number) => {
+    const updatedConnections = connectionObjects.map(connection => ({ ...connection, rise: value }))
+    setConnectionsInDesignDiff(updatedConnections)
+  }
+
+  const handleXOffsetChange = (value: number) => {
+    const updatedConnections = connectionObjects.map(connection => ({ ...connection, x: value }))
+    setConnectionsInDesignDiff(updatedConnections)
+  }
+
+  const handleYOffsetChange = (value: number) => {
+    const updatedConnections = connectionObjects.map(connection => ({ ...connection, y: value }))
+    setConnectionsInDesignDiff(updatedConnections)
+  }
+
+  const handleRotationChange = (value: number) => {
+    const updatedConnections = connectionObjects.map(connection => ({ ...connection, rotation: value }))
+    setConnectionsInDesignDiff(updatedConnections)
+  }
+
+  const handleTurnChange = (value: number) => {
+    const updatedConnections = connectionObjects.map(connection => ({ ...connection, turn: value }))
+    setConnectionsInDesignDiff(updatedConnections)
+  }
+
+  const handleTiltChange = (value: number) => {
+    const updatedConnections = connectionObjects.map(connection => ({ ...connection, tilt: value }))
+    setConnectionsInDesignDiff(updatedConnections)
+  }
+
+  const commonGap = getCommonValue(c => c.gap)
+  const commonShift = getCommonValue(c => c.shift)
+  const commonRise = getCommonValue(c => c.rise)
+  const commonXOffset = getCommonValue(c => c.x)
+  const commonYOffset = getCommonValue(c => c.y)
+  const commonRotation = getCommonValue(c => c.rotation)
+  const commonTurn = getCommonValue(c => c.turn)
+  const commonTilt = getCommonValue(c => c.tilt)
+
+  return (
+    <div className="p-1">
+      <Tree>
+        <TreeSection label={`Multiple Connections (${connections.length})`} defaultOpen={true}>
+          <TreeItem>
+            <p className="text-sm text-muted-foreground">Editing {connections.length} connections simultaneously</p>
+          </TreeItem>
+        </TreeSection>
+        <TreeSection label="Translation" defaultOpen={true}>
+          <TreeItem>
+            <Stepper
+              label="Gap"
+              value={commonGap ?? 0}
+              onChange={handleGapChange}
+              step={0.1}
+            />
+          </TreeItem>
+          <TreeItem>
+            <Stepper
+              label="Shift"
+              value={commonShift ?? 0}
+              onChange={handleShiftChange}
+              step={0.1}
+            />
+          </TreeItem>
+          <TreeItem>
+            <Stepper
+              label="Rise"
+              value={commonRise ?? 0}
+              onChange={handleRiseChange}
+              step={0.1}
+            />
+          </TreeItem>
+          <TreeItem>
+            <Stepper
+              label="X Offset"
+              value={commonXOffset ?? 0}
+              onChange={handleXOffsetChange}
+              step={0.1}
+            />
+          </TreeItem>
+          <TreeItem>
+            <Stepper
+              label="Y Offset"
+              value={commonYOffset ?? 0}
+              onChange={handleYOffsetChange}
+              step={0.1}
+            />
+          </TreeItem>
+        </TreeSection>
+        <TreeSection label="Rotation" defaultOpen={false}>
+          <TreeItem>
+            <Slider
+              label="Rotation"
+              value={[commonRotation ?? 0]}
+              onValueChange={([value]) => handleRotationChange(value)}
+              min={-180}
+              max={180}
+              step={1}
+            />
+          </TreeItem>
+          <TreeItem>
+            <Slider
+              label="Turn"
+              value={[commonTurn ?? 0]}
+              onValueChange={([value]) => handleTurnChange(value)}
+              min={-180}
+              max={180}
+              step={1}
+            />
+          </TreeItem>
+          <TreeItem>
+            <Slider
+              label="Tilt"
+              value={[commonTilt ?? 0]}
+              onValueChange={([value]) => handleTiltChange(value)}
+              min={-180}
+              max={180}
+              step={1}
+            />
+          </TreeItem>
+        </TreeSection>
+      </Tree>
     </div>
   )
 }
@@ -1613,195 +1835,146 @@ const DesignDetails: FC = () => {
   }
 
   return (
-    <div className="space-y-2 p-1">
-      <div className="text-sm font-medium mb-3">Design Properties</div>
-
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <label className="text-sm">Name</label>
-        </div>
-        <Input
-          value={design.name}
-          onChange={(e) => handleChange({ ...design, name: e.target.value })}
-        />
-      </div>
-
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <label className="text-sm">Description</label>
-        </div>
-        <Textarea
-          value={design.description || ''}
-          placeholder="Enter design description..."
-          onChange={(e) => handleChange({ ...design, description: e.target.value })}
-        />
-      </div>
-
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <label className="text-sm">Icon</label>
-        </div>
-        <Input
-          value={design.icon || ''}
-          placeholder="Emoji, name, or URL"
-          onChange={(e) => handleChange({ ...design, icon: e.target.value })}
-        />
-      </div>
-
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <label className="text-sm">Image URL</label>
-        </div>
-        <Input
-          value={design.image || ''}
-          placeholder="URL to design image"
-          onChange={(e) => handleChange({ ...design, image: e.target.value })}
-        />
-      </div>
-
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <label className="text-sm">Variant</label>
-        </div>
-        <Input
-          value={design.variant || ''}
-          placeholder="Design variant"
-          onChange={(e) => handleChange({ ...design, variant: e.target.value })}
-        />
-      </div>
-
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <label className="text-sm">View</label>
-        </div>
-        <Input
-          value={design.view || ''}
-          placeholder="Design view"
-          onChange={(e) => handleChange({ ...design, view: e.target.value })}
-        />
-      </div>
-
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <label className="text-sm">Unit</label>
-        </div>
-        <Input
-          value={design.unit}
-          onChange={(e) => handleChange({ ...design, unit: e.target.value })}
-        />
-      </div>
-
-      {design.location ? (
-        <>
-          <div className="flex items-center justify-between">
-            <label className="text-sm">Location</label>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={removeLocation}
-              className="text-destructive hover:text-destructive"
-            >
-              Remove
-            </Button>
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label className="text-xs text-muted-foreground">Longitude</label>
-              <span className="text-xs text-muted-foreground">{design.location.longitude}</span>
-            </div>
-            <Stepper
-              value={design.location.longitude}
-              onChange={(value) => handleChange({
-                ...design,
-                location: { ...design.location!, longitude: value }
-              })}
-              step={0.000001}
+    <div className="p-1">
+      <Tree>
+        <TreeSection label="Design Properties" defaultOpen={true}>
+          <TreeItem>
+            <Input
+              label="Name"
+              value={design.name}
+              onChange={(e) => handleChange({ ...design, name: e.target.value })}
             />
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label className="text-xs text-muted-foreground">Latitude</label>
-              <span className="text-xs text-muted-foreground">{design.location.latitude}</span>
-            </div>
-            <Stepper
-              value={design.location.latitude}
-              onChange={(value) => handleChange({
-                ...design,
-                location: { ...design.location!, latitude: value }
-              })}
-              step={0.000001}
+          </TreeItem>
+          <TreeItem>
+            <Textarea
+              label="Description"
+              value={design.description || ''}
+              placeholder="Enter design description..."
+              onChange={(e) => handleChange({ ...design, description: e.target.value })}
             />
-          </div>
-        </>
-      ) : (
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <label className="text-sm">Location</label>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={addLocation}
-            className="text-muted-foreground hover:text-foreground"
+          </TreeItem>
+          <TreeItem>
+            <Input
+              label="Icon"
+              value={design.icon || ''}
+              placeholder="Emoji, name, or URL"
+              onChange={(e) => handleChange({ ...design, icon: e.target.value })}
+            />
+          </TreeItem>
+          <TreeItem>
+            <Input
+              label="Image URL"
+              value={design.image || ''}
+              placeholder="URL to design image"
+              onChange={(e) => handleChange({ ...design, image: e.target.value })}
+            />
+          </TreeItem>
+          <TreeItem>
+            <Input
+              label="Variant"
+              value={design.variant || ''}
+              placeholder="Design variant"
+              onChange={(e) => handleChange({ ...design, variant: e.target.value })}
+            />
+          </TreeItem>
+          <TreeItem>
+            <Input
+              label="View"
+              value={design.view || ''}
+              placeholder="Design view"
+              onChange={(e) => handleChange({ ...design, view: e.target.value })}
+            />
+          </TreeItem>
+          <TreeItem>
+            <Input
+              label="Unit"
+              value={design.unit}
+              onChange={(e) => handleChange({ ...design, unit: e.target.value })}
+            />
+          </TreeItem>
+        </TreeSection>
+        {design.location ? (
+          <TreeSection
+            label="Location"
+            defaultOpen={false}
+            actions={[
+              {
+                icon: <Minus size={12} />,
+                onClick: removeLocation,
+                title: "Remove location"
+              }
+            ]}
           >
-            Add location
-          </Button>
-        </div>
-      )}
-
-      {design.created && (
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <label className="text-sm">Created</label>
-          </div>
-          <Input value={design.created.toISOString().split('T')[0]} disabled />
-        </div>
-      )}
-
-      {design.updated && (
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <label className="text-sm">Updated</label>
-          </div>
-          <Input value={design.updated.toISOString().split('T')[0]} disabled />
-        </div>
-      )}
-
-      {design.pieces && design.pieces.length > 0 && (
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <label className="text-sm">Pieces</label>
-          </div>
-          <Input value={`${design.pieces.length} pieces`} disabled />
-        </div>
-      )}
-
-      {design.connections && design.connections.length > 0 && (
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <label className="text-sm">Connections</label>
-          </div>
-          <Input value={`${design.connections.length} connections`} disabled />
-        </div>
-      )}
-
-      {design.authors && design.authors.length > 0 && (
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <label className="text-sm">Authors</label>
-          </div>
-          <Input value={`${design.authors.length} authors`} disabled />
-        </div>
-      )}
-
-      {design.qualities && design.qualities.length > 0 && (
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <label className="text-sm">Qualities</label>
-          </div>
-          <Input value={`${design.qualities.length} qualities`} disabled />
-        </div>
-      )}
+            <TreeItem>
+              <Stepper
+                label="Longitude"
+                value={design.location.longitude}
+                onChange={(value) => handleChange({
+                  ...design,
+                  location: { ...design.location!, longitude: value }
+                })}
+                step={0.000001}
+              />
+            </TreeItem>
+            <TreeItem>
+              <Stepper
+                label="Latitude"
+                value={design.location.latitude}
+                onChange={(value) => handleChange({
+                  ...design,
+                  location: { ...design.location!, latitude: value }
+                })}
+                step={0.000001}
+              />
+            </TreeItem>
+          </TreeSection>
+        ) : (
+          <TreeSection
+            label="Location"
+            defaultOpen={false}
+            actions={[
+              {
+                icon: <Plus size={12} />,
+                onClick: addLocation,
+                title: "Add location"
+              }
+            ]}
+          >
+          </TreeSection>
+        )}
+        <TreeSection label="Metadata" defaultOpen={false}>
+          {design.created && (
+            <TreeItem>
+              <Input label="Created" value={design.created.toISOString().split('T')[0]} disabled />
+            </TreeItem>
+          )}
+          {design.updated && (
+            <TreeItem>
+              <Input label="Updated" value={design.updated.toISOString().split('T')[0]} disabled />
+            </TreeItem>
+          )}
+          {design.pieces && design.pieces.length > 0 && (
+            <TreeItem>
+              <Input label="Pieces" value={`${design.pieces.length} pieces`} disabled />
+            </TreeItem>
+          )}
+          {design.connections && design.connections.length > 0 && (
+            <TreeItem>
+              <Input label="Connections" value={`${design.connections.length} connections`} disabled />
+            </TreeItem>
+          )}
+          {design.authors && design.authors.length > 0 && (
+            <TreeItem>
+              <Input label="Authors" value={`${design.authors.length} authors`} disabled />
+            </TreeItem>
+          )}
+          {design.qualities && design.qualities.length > 0 && (
+            <TreeItem>
+              <Input label="Qualities" value={`${design.qualities.length} qualities`} disabled />
+            </TreeItem>
+          )}
+        </TreeSection>
+      </Tree>
     </div>
   )
 }
@@ -1847,6 +2020,8 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
   } else if (selection.selectedPieceIds.length === 0 && selection.selectedConnections.length === 1) {
     const { connectingPieceId, connectedPieceId } = selection.selectedConnections[0]
     content = <ConnectionDetails connectingPieceId={connectingPieceId} connectedPieceId={connectedPieceId} />
+  } else if (selection.selectedPieceIds.length === 0 && selection.selectedConnections.length > 1) {
+    content = <MultiConnectionDetails connections={selection.selectedConnections} />
   } else if (selection.selectedPieceIds.length === 0 && selection.selectedConnections.length === 0) {
     content = <DesignDetails />
   } else {
@@ -1911,30 +2086,30 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
         <div className="p-1">
           <Tree>
             <TreeSection label="Conversation History" defaultOpen={true}>
-              <TreeNode label="Design Session #1" collapsible={true} level={1} defaultOpen={false}>
-                <TreeItem label="How can I add a new piece?" level={2} />
-                <TreeItem label="Can you help with connections?" level={2} />
-              </TreeNode>
-              <TreeNode label="Design Session #2" collapsible={true} level={1} defaultOpen={false}>
-                <TreeItem label="What are the available types?" level={2} />
-              </TreeNode>
+              <TreeSection label="Design Session #1" defaultOpen={false}>
+                <TreeItem label="How can I add a new piece?" />
+                <TreeItem label="Can you help with connections?" />
+              </TreeSection>
+              <TreeSection label="Design Session #2" defaultOpen={false}>
+                <TreeItem label="What are the available types?" />
+              </TreeSection>
             </TreeSection>
             <TreeSection label="Quick Actions" defaultOpen={true}>
-              <TreeItem label="Add random piece" level={1} />
-              <TreeItem label="Connect all pieces" level={1} />
-              <TreeItem label="Generate layout suggestions" level={1} />
+              <TreeItem label="Add random piece" />
+              <TreeItem label="Connect all pieces" />
+              <TreeItem label="Generate layout suggestions" />
             </TreeSection>
             <TreeSection label="Templates" defaultOpen={false}>
-              <TreeNode label="Common Questions" collapsible={true} level={1} defaultOpen={true}>
-                <TreeItem label="How do I create a connection?" level={2} />
-                <TreeItem label="How do I delete a piece?" level={2} />
-                <TreeItem label="How do I change piece properties?" level={2} />
-              </TreeNode>
-              <TreeNode label="Advanced Workflows" collapsible={true} level={1} defaultOpen={false}>
-                <TreeItem label="Batch operations" level={2} />
-                <TreeItem label="Complex layouts" level={2} />
-                <TreeItem label="Export/Import" level={2} />
-              </TreeNode>
+              <TreeSection label="Common Questions" defaultOpen={true}>
+                <TreeItem label="How do I create a connection?" />
+                <TreeItem label="How do I delete a piece?" />
+                <TreeItem label="How do I change piece properties?" />
+              </TreeSection>
+              <TreeSection label="Advanced Workflows" defaultOpen={false}>
+                <TreeItem label="Batch operations" />
+                <TreeItem label="Complex layouts" />
+                <TreeItem label="Export/Import" />
+              </TreeSection>
             </TreeSection>
           </Tree>
         </div>

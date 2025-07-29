@@ -29,6 +29,7 @@ interface ComboboxProps {
     onValueChange?: (value: string) => void
     className?: string
     allowClear?: boolean
+    label?: string
 }
 
 const Combobox: FC<ComboboxProps> = ({
@@ -38,7 +39,8 @@ const Combobox: FC<ComboboxProps> = ({
     emptyMessage = 'No options found.',
     onValueChange,
     className,
-    allowClear = false
+    allowClear = false,
+    label
 }) => {
     const [open, setOpen] = useState(false)
 
@@ -54,14 +56,15 @@ const Combobox: FC<ComboboxProps> = ({
     }
 
     return (
-        <div className={className}>
+        <div className={cn("flex items-center gap-2 border-b border-border pb-1", className)}>
+            {label && <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left">{label}</span>}
             <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                     <Button
                         variant="outline"
                         role="combobox"
                         aria-expanded={open}
-                        className="w-full justify-between"
+                        className="w-full justify-between flex-1"
                     >
                         {selectedOption ? selectedOption.label : placeholder}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

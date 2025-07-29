@@ -1,6 +1,14 @@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible'
 import { ChevronDown, ChevronRight } from 'lucide-react'
-import { FC, ReactNode, useState } from 'react'
+import { createContext, FC, ReactNode, useContext, useState } from 'react'
+
+const TreeContext = createContext<{ level: number }>({ level: 0 })
+
+export interface TreeSectionAction {
+    icon: ReactNode
+    onClick: () => void
+    title?: string
+}
 
 interface TreeSectionProps {
     label: string
@@ -8,126 +16,142 @@ interface TreeSectionProps {
     children?: ReactNode
     defaultOpen?: boolean
     className?: string
-}
-
-interface TreeNodeProps {
-    label: ReactNode
-    icon?: ReactNode
-    children?: ReactNode
-    level?: number
-    collapsible?: boolean
-    defaultOpen?: boolean
-    isLeaf?: boolean
-    onClick?: () => void
-    className?: string
-    isSelected?: boolean
-    isHighlighted?: boolean
+    actions?: TreeSectionAction[]
 }
 
 interface TreeItemProps {
-    label: ReactNode
+    label?: ReactNode
     icon?: ReactNode
-    level?: number
+    children?: ReactNode
     onClick?: () => void
     className?: string
     isSelected?: boolean
     isHighlighted?: boolean
 }
 
-export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defaultOpen = true, className = '' }) => {
+export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defaultOpen = true, className = '', actions = [] }) => {
     const [open, setOpen] = useState(defaultOpen)
-
-    return (
-        <Collapsible open={open} onOpenChange={setOpen}>
-            <CollapsibleTrigger asChild>
-                <div className={`flex items-center gap-2 py-1.5 px-2 hover:bg-muted cursor-pointer select-none overflow-hidden ${className}`}>
-                    {open ? (
-                        <ChevronDown size={14} className="flex-shrink-0" />
-                    ) : (
-                        <ChevronRight size={14} className="flex-shrink-0" />
-                    )}
-                    {icon && <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">{icon}</span>}
-                    <span className="flex-1 text-sm text-muted-foreground uppercase tracking-wide truncate">{label}</span>
-                </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent>{children}</CollapsibleContent>
-        </Collapsible>
-    )
-}
-
-export const TreeNode: FC<TreeNodeProps> = ({
-    label,
-    icon,
-    children,
-    level = 0,
-    collapsible = false,
-    defaultOpen = true,
-    isLeaf = false,
-    onClick,
-    className = '',
-    isSelected = false,
-    isHighlighted = false
-}) => {
-    const [open, setOpen] = useState(defaultOpen)
+    const [isHovered, setIsHovered] = useState(false)
+    const { level } = useContext(TreeContext)
     const indentStyle = { paddingLeft: `${level * 1.25}rem` }
+    const hasChildren = Boolean(children)
 
-    const Trigger = collapsible ? CollapsibleTrigger : 'div'
-    const Content = collapsible ? CollapsibleContent : 'div'
-
-    const baseClasses = "flex items-center gap-2 py-1 px-2 hover:bg-muted cursor-pointer select-none overflow-hidden"
-    const stateClasses = `${isSelected ? 'bg-accent' : ''} ${isHighlighted ? 'bg-accent/50' : ''}`
-    const triggerClasses = `${baseClasses} ${stateClasses} ${className}`
-
-    const triggerContent = (
-        <div
-            className={triggerClasses}
-            style={indentStyle}
-            onClick={onClick}
-        >
-            {collapsible &&
-                !isLeaf &&
-                (open ? (
-                    <ChevronDown size={14} className="flex-shrink-0" />
-                ) : (
-                    <ChevronRight size={14} className="flex-shrink-0" />
-                ))}
-            {icon && <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">{icon}</span>}
-            <span className="flex-1 text-sm font-normal truncate">{label}</span>
-        </div>
-    )
-
-    if (collapsible) {
+    if (!hasChildren) {
         return (
-            <Collapsible open={open} onOpenChange={setOpen}>
-                <Trigger asChild>{triggerContent}</Trigger>
-                <Content>{children}</Content>
-            </Collapsible>
-        )
-    } else if (isLeaf) {
-        return triggerContent
-    } else {
-        return (
-            <>
-                {triggerContent}
-                {children}
-            </>
+            <TreeContext.Provider value={{ level: level + 1 }}>
+                <div
+                    className={`flex items-center gap-2 py-1.5 px-2 hover:bg-muted select-none overflow-hidden group ${className}`}
+                    style={indentStyle}
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                >
+                    <div className="w-[14px] flex-shrink-0" />
+                    {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+                    <span className="flex-1 text-sm text-muted-foreground uppercase tracking-wide truncate">{label}</span>
+                    {actions.length > 0 && (
+                        <div className="flex items-center gap-1">
+                            {actions.map((action, index) => (
+                                <button
+                                    key={index}
+                                    className={`p-1 rounded-sm transition-opacity hover:bg-muted-foreground/10 ${isHovered ? 'opacity-100' : 'opacity-30 group-hover:opacity-60'}`}
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        action.onClick()
+                                    }}
+                                    title={action.title}
+                                >
+                                    {action.icon}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </TreeContext.Provider>
         )
     }
+
+    return (
+        <TreeContext.Provider value={{ level: level + 1 }}>
+            <Collapsible open={open} onOpenChange={setOpen}>
+                <CollapsibleTrigger asChild>
+                    <div
+                        className={`flex items-center gap-2 py-1.5 px-2 hover:bg-muted cursor-pointer select-none overflow-hidden group ${className}`}
+                        style={indentStyle}
+                        onMouseEnter={() => setIsHovered(true)}
+                        onMouseLeave={() => setIsHovered(false)}
+                    >
+                        {open ? (
+                            <ChevronDown size={14} className="flex-shrink-0" />
+                        ) : (
+                            <ChevronRight size={14} className="flex-shrink-0" />
+                        )}
+                        {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+                        <span className="flex-1 text-sm text-muted-foreground uppercase tracking-wide truncate">{label}</span>
+                        {actions.length > 0 && (
+                            <div className="flex items-center gap-1">
+                                {actions.map((action, index) => (
+                                    <button
+                                        key={index}
+                                        className={`p-1 rounded-sm transition-opacity hover:bg-muted-foreground/10 ${isHovered ? 'opacity-100' : 'opacity-30 group-hover:opacity-60'}`}
+                                        onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
+                                            action.onClick()
+                                        }}
+                                        title={action.title}
+                                    >
+                                        {action.icon}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>{children}</CollapsibleContent>
+            </Collapsible>
+        </TreeContext.Provider>
+    )
 }
 
 export const TreeItem: FC<TreeItemProps> = ({
     label,
     icon,
-    level = 0,
+    children,
     onClick,
     className = '',
     isSelected = false,
     isHighlighted = false
 }) => {
+    const { level } = useContext(TreeContext)
     const indentStyle = { paddingLeft: `${level * 1.25}rem` }
     const baseClasses = "flex items-center gap-2 py-1 px-2 hover:bg-muted cursor-pointer select-none overflow-hidden"
     const stateClasses = `${isSelected ? 'bg-accent' : ''} ${isHighlighted ? 'bg-accent/50' : ''}`
     const itemClasses = `${baseClasses} ${stateClasses} ${className}`
+
+    if (children) {
+        return (
+            <TreeContext.Provider value={{ level: level + 1 }}>
+                {label && (
+                    <div
+                        className={itemClasses}
+                        style={indentStyle}
+                        onClick={onClick}
+                    >
+                        {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
+                        <span className="flex-1 text-sm font-normal truncate">{label}</span>
+                    </div>
+                )}
+                <div className="px-2 pb-1">
+                    {children}
+                </div>
+            </TreeContext.Provider>
+        )
+    }
+
+    if (!label) {
+        return children || null
+    }
 
     return (
         <div
@@ -135,12 +159,16 @@ export const TreeItem: FC<TreeItemProps> = ({
             style={indentStyle}
             onClick={onClick}
         >
-            {icon && <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">{icon}</span>}
+            {icon && <span className="flex items-center justify-center flex-shrink-0">{icon}</span>}
             <span className="flex-1 text-sm font-normal truncate">{label}</span>
         </div>
     )
 }
 
 export const Tree: FC<{ children: ReactNode; className?: string }> = ({ children, className = '' }) => {
-    return <div className={`w-full ${className}`}>{children}</div>
+    return (
+        <TreeContext.Provider value={{ level: 0 }}>
+            <div className={`w-full ${className}`}>{children}</div>
+        </TreeContext.Provider>
+    )
 }

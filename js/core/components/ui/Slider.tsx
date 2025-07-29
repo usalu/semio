@@ -20,6 +20,7 @@
 // #endregion
 import * as SliderPrimitive from "@radix-ui/react-slider"
 import * as React from "react"
+import { Input } from "./Input"
 
 import { cn } from "@semio/js/lib/utils"
 
@@ -29,8 +30,12 @@ function Slider({
   value,
   min = 0,
   max = 100,
+  label,
   ...props
-}: React.ComponentProps<typeof SliderPrimitive.Root>) {
+}: React.ComponentProps<typeof SliderPrimitive.Root> & { label?: string }) {
+  const [isEditing, setIsEditing] = React.useState(false)
+  const [editValue, setEditValue] = React.useState("")
+
   const _values = React.useMemo(
     () =>
       Array.isArray(value)
@@ -41,41 +46,90 @@ function Slider({
     [value, defaultValue, min, max]
   )
 
+  const displayValue = _values[0] ?? min
+
+  const handleValueClick = () => {
+    setEditValue(displayValue.toString())
+    setIsEditing(true)
+  }
+
+  const handleEditKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      const newValue = parseFloat(editValue)
+      if (!isNaN(newValue) && newValue >= min && newValue <= max) {
+        props.onValueChange?.([newValue])
+      }
+      setIsEditing(false)
+    } else if (e.key === 'Escape') {
+      setIsEditing(false)
+    }
+  }
+
+  const handleEditBlur = () => {
+    setIsEditing(false)
+  }
+
   return (
-    <SliderPrimitive.Root
-      data-slot="slider"
-      defaultValue={defaultValue}
-      value={value}
-      min={min}
-      max={max}
-      className={cn(
-        "relative flex w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
-        className
-      )}
-      {...props}
-    >
-      <SliderPrimitive.Track
-        data-slot="slider-track"
-        className={cn(
-          "bg-muted relative grow overflow-hidden rounded-full data-[orientation=horizontal]:h-1 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1"
-        )}
-      >
-        <SliderPrimitive.Range
-          data-slot="slider-range"
+    <div className={cn("flex items-center gap-2 border-b border-border pb-1", className)}>
+      {label && <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left">{label}</span>}
+      <div className="flex items-center gap-2 flex-1">
+        <SliderPrimitive.Root
+          data-slot="slider"
+          defaultValue={defaultValue}
+          value={value}
+          min={min}
+          max={max}
           className={cn(
-            "bg-foreground absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full"
+            "relative flex w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col"
           )}
-        />
-      </SliderPrimitive.Track>
-      {Array.from({ length: _values.length }, (_, index) => (
-        <SliderPrimitive.Thumb
-          data-slot="slider-thumb"
-          key={index}
-          className="border-foreground bg-foreground ring-ring/50 block size-4 shrink-0 rounded-full border transition-colors hover:bg-accent focus-visible:bg-primary focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 active:bg-primary"
-        />
-      ))}
-    </SliderPrimitive.Root>
+          {...props}
+        >
+          <SliderPrimitive.Track
+            data-slot="slider-track"
+            className={cn(
+              "bg-muted relative grow overflow-hidden rounded-full data-[orientation=horizontal]:h-1 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1"
+            )}
+          >
+            <SliderPrimitive.Range
+              data-slot="slider-range"
+              className={cn(
+                "bg-foreground absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full"
+              )}
+            />
+          </SliderPrimitive.Track>
+          {Array.from({ length: _values.length }, (_, index) => (
+            <SliderPrimitive.Thumb
+              data-slot="slider-thumb"
+              key={index}
+              className="border-foreground bg-foreground ring-ring/50 block size-4 shrink-0 rounded-full border transition-colors hover:bg-accent focus-visible:bg-primary focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 active:bg-primary"
+            />
+          ))}
+        </SliderPrimitive.Root>
+        {isEditing ? (
+          <Input
+            type="number"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={handleEditKeyDown}
+            onBlur={handleEditBlur}
+            className="w-16 text-sm"
+            min={min}
+            max={max}
+            autoFocus
+          />
+        ) : (
+          <span
+            className="text-sm font-mono w-16 text-right cursor-pointer hover:bg-muted px-1 rounded select-none"
+            onDoubleClick={handleValueClick}
+            title="Double-click to edit"
+          >
+            {displayValue}
+          </span>
+        )}
+      </div>
+    </div>
   )
 }
 
 export { Slider }
+
