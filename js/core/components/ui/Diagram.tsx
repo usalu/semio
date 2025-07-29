@@ -35,7 +35,6 @@ import {
   NodeProps,
   Position,
   ReactFlow,
-  ReactFlowProvider,
   Connection as RFConnection,
   useReactFlow,
   ViewportPortal,
@@ -54,7 +53,7 @@ import {
   DiffStatus,
   findConnectionInDesign,
   findDesignInKit,
-  findPort,
+  findPortInType,
   findTypeInKit,
   flattenDesign,
   FullscreenPanel,
@@ -88,7 +87,7 @@ type PieceNodeProps = {
 type PieceNode = Node<PieceNodeProps, 'piece'>
 type DiagramNode = PieceNode
 
-type ConnectionEdge = Edge<{ connection: Connection }, 'connection'>
+type ConnectionEdge = Edge<{ connection: Connection; isParentConnection?: boolean }, 'connection'>
 type DiagramEdge = ConnectionEdge
 
 type PortHandleProps = { port: Port }
@@ -182,6 +181,7 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
   const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`
 
   const diff = data?.connection?.qualities?.find(q => q.name === 'semio.diffStatus')?.value as DiffStatus || DiffStatus.Unchanged;
+  const isParentConnection = data?.isParentConnection ?? false;
 
   let stroke = 'var(--color-dark)';
   let strokeWidth = 2;
@@ -198,6 +198,9 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
     stroke = selected ? 'color-mix(in srgb, var(--color-warning) 50%, var(--color-primary) 50%)' : 'var(--color-warning)';
   } else if (selected) {
     stroke = 'var(--color-primary)';
+  } else if (isParentConnection) {
+    stroke = 'var(--color-secondary)';
+    strokeWidth = 3;
   }
 
   return (
@@ -235,14 +238,14 @@ const pieceToNode = (piece: Piece, type: Type, center: DiagramPoint, selected: b
   data: { piece, type }
 })
 
-const connectionToEdge = (connection: Connection, selected: boolean): ConnectionEdge => ({
+const connectionToEdge = (connection: Connection, selected: boolean, isParentConnection: boolean = false): ConnectionEdge => ({
   type: 'connection',
   id: `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`,
   source: connection.connecting.piece.id_,
   sourceHandle: connection.connecting.port.id_,
   target: connection.connected.piece.id_,
   targetHandle: connection.connected.port.id_,
-  data: { connection },
+  data: { connection, isParentConnection },
   selected
 })
 
@@ -250,14 +253,35 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
   const design = findDesignInKit(kit, designId)
   if (!design) return null
   const centers = flattenDesign(kit, designId).pieces?.map(p => p.center)
+  const metadata = piecesMetadata(kit, designId)
+
   const pieceNodes = design.pieces?.map(
     (piece, i) => pieceToNode(piece, findTypeInKit(kit, piece.type)!, centers![i]!, selection?.selectedPieceIds.includes(piece.id_) ?? false)) ?? []
+
+  const parentConnectionId = selection?.selectedPieceIds.length === 1 && selection.selectedConnections.length === 0
+    ? (() => {
+      const selectedPieceId = selection.selectedPieceIds[0]
+      const pieceMetadata = metadata.get(selectedPieceId)
+      if (pieceMetadata?.parentPieceId) {
+        return `${pieceMetadata.parentPieceId} -- ${selectedPieceId}`
+      }
+      return null
+    })()
+    : null
+
   const connectionEdges =
-    design.connections?.map((connection) => connectionToEdge(connection, selection?.selectedConnections.some(
-      (c) =>
-        c.connectingPieceId === connection.connecting.piece.id_ &&
-        c.connectedPieceId === connection.connected.piece.id_
-    ) ?? false)) ?? []
+    design.connections?.map((connection) => {
+      const isSelected = selection?.selectedConnections.some(
+        (c) =>
+          c.connectingPieceId === connection.connecting.piece.id_ &&
+          c.connectedPieceId === connection.connected.piece.id_
+      ) ?? false
+
+      const connectionId = `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`
+      const isParentConnection = parentConnectionId === connectionId || parentConnectionId === `${connection.connected.piece.id_} -- ${connection.connecting.piece.id_}`
+
+      return connectionToEdge(connection, isSelected, isParentConnection)
+    }) ?? []
   return { nodes: pieceNodes, edges: connectionEdges }
 }
 
@@ -363,9 +387,9 @@ const Diagram: FC = () => {
         if (existingConnection) continue
         const otherInternalNode = reactFlowInstance.getInternalNode(otherNode.id)!
         for (const handle of selectedInternalNode.internals.handleBounds?.source ?? []) {
-          const port = findPort(type, { id_: handle.id! })
+          const port = findPortInType(type, { id_: handle.id! })
           for (const otherHandle of otherInternalNode.internals.handleBounds?.source ?? []) {
-            const otherPort = findPort(otherNode.data.type, { id_: otherHandle.id! })
+            const otherPort = findPortInType(otherNode.data.type, { id_: otherHandle.id! })
             if (!arePortsCompatible(port, otherPort) || isPortInUse(effectiveDesign, otherNode.data.piece, otherPort)) continue
             const dx = (selectedInternalNode.internals.positionAbsolute.x + handle.x) - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x)
             const dy = (selectedInternalNode.internals.positionAbsolute.y + handle.y) - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y)

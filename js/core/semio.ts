@@ -861,19 +861,22 @@ export const findQualityValue = (entity: Kit | Type | Design | Piece | Connectio
   if (quality?.value === undefined && defaultValue === null) return null
   return quality?.value ?? defaultValue ?? ''
 }
-
-export const findPort = (type: Type, portId: PortIdLike): Port => {
+export const findPort = (ports: Port[], portId: PortIdLike): Port => {
   const normalizedPortId = portIdLikeToPortId(portId)
-  const port = type.ports?.find((p) => normalize(p.id_) === normalize(normalizedPortId.id_))
-  if (!port) throw new Error(`Port ${normalizedPortId.id_} not found in type ${type.name}`)
+  const port = ports.find((p) => normalize(p.id_) === normalize(normalizedPortId.id_))
+  if (!port) throw new Error(`Port ${normalizedPortId.id_} not found in ports`)
   return port
 }
-
+export const findPortInType = (type: Type, portId: PortIdLike): Port => findPort(type.ports ?? [], portId)
 export const findPiece = (pieces: Piece[], pieceId: PieceIdLike): Piece => {
   const normalizedPieceId = pieceIdLikeToPieceId(pieceId)
   const piece = pieces.find((p) => p.id_ === normalizedPieceId.id_)
   if (!piece) throw new Error(`Piece ${normalizedPieceId.id_} not found in pieces`)
   return piece
+}
+export const findPortForPieceInConnection = (type: Type, connection: Connection, pieceId: PieceIdLike): Port => {
+  const portId = connection.connected.piece.id_ === pieceId ? connection.connected.port.id_ : connection.connecting.port.id_
+  return findPortInType(type, portId)
 }
 export const findPieceInDesign = (design: Design, pieceId: PieceIdLike): Piece => findPiece(design.pieces ?? [], pieceId)
 export const findConnection = (connections: Connection[], connectionId: ConnectionIdLike, strict: boolean = false): Connection => {
@@ -928,6 +931,66 @@ export const findDesignInKit = (kit: Kit, designId: DesignIdLike): Design => {
   if (!design) throw new Error(`Design ${normalizedDesignId.name} not found in kit ${kit.name}`)
   return design
 }
+export const findUsedPortsByPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Port[] => {
+  const design = findDesignInKit(kit, designId)
+  const piece = findPieceInDesign(design, pieceId)
+  const type = findTypeInKit(kit, piece.type)
+  const connections = findPieceConnectionsInDesign(design, pieceId)
+  return connections.map(c => findPortForPieceInConnection(type, c, pieceId))
+}
+export const findReplacableTypesForPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike, variants?: string[]): Type[] => {
+  const design = findDesignInKit(kit, designId)
+  const connections = findPieceConnectionsInDesign(design, pieceId)
+  const requiredPorts: Port[] = []
+  for (const connection of connections) {
+    try {
+      const otherPieceId = connection.connected.piece.id_ === pieceId ? connection.connecting.piece.id_ : connection.connected.piece.id_
+      const otherPiece = findPieceInDesign(design, otherPieceId)
+      const otherType = findTypeInKit(kit, otherPiece.type)
+      const otherPortId = connection.connected.piece.id_ === pieceId ? connection.connecting.port.id_ : connection.connected.port.id_
+      const otherPort = findPortInType(otherType, otherPortId || '')
+      requiredPorts.push(otherPort)
+    } catch (error) { continue }
+  }
+  return kit.types?.filter(replacementType => {
+    if (variants !== undefined && !variants.includes(replacementType.variant ?? '')) return false
+    if (!replacementType.ports || replacementType.ports.length === 0) return requiredPorts.length === 0
+    return requiredPorts.every(requiredPort => {
+      return replacementType.ports!.some(replacementPort => arePortsCompatible(replacementPort, requiredPort))
+    })
+  }) ?? []
+}
+export const findReplacableTypesForPiecesInDesign = (kit: Kit, designId: DesignIdLike, pieceIds: PieceIdLike[], variants?: string[]): Type[] => {
+  const design = findDesignInKit(kit, designId)
+  const normalizedPieceIds = pieceIds.map(id => typeof id === 'string' ? id : id.id_)
+  const pieces = pieceIds.map(id => findPieceInDesign(design, id))
+  const externalConnections: Array<{ connection: Connection, requiredPort: Port }> = []
+  for (const piece of pieces) {
+    const connections = findPieceConnectionsInDesign(design, piece.id_)
+    for (const connection of connections) {
+      const otherPieceId = connection.connected.piece.id_ === piece.id_ ? connection.connecting.piece.id_ : connection.connected.piece.id_
+      if (!normalizedPieceIds.includes(otherPieceId)) {
+        try {
+          const otherPiece = findPieceInDesign(design, otherPieceId)
+          const otherType = findTypeInKit(kit, otherPiece.type)
+          const otherPortId = connection.connected.piece.id_ === piece.id_
+            ? connection.connecting.port.id_
+            : connection.connected.port.id_
+          const otherPort = findPortInType(otherType, otherPortId || '')
+          externalConnections.push({ connection, requiredPort: otherPort })
+        } catch (error) { continue }
+      }
+    }
+  }
+  return kit.types?.filter(replacementType => {
+    if (variants !== undefined && !variants.includes(replacementType.variant ?? '')) return false
+    if (!replacementType.ports || replacementType.ports.length === 0) return externalConnections.length === 0
+    return externalConnections.every(({ requiredPort }) => {
+      return replacementType.ports!.some(replacementPort => arePortsCompatible(replacementPort, requiredPort))
+    })
+  }) ?? []
+}
+
 
 //#endregion Predicates
 

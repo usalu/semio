@@ -27,7 +27,7 @@ const COMMAND_STACK_MAX = 50
 
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable } from '@dnd-kit/core'
 import { ReactFlowProvider, useReactFlow } from '@xyflow/react'
-import { ChevronDown, ChevronRight, Info, MessageCircle, Terminal, Wrench } from 'lucide-react'
+import { Info, MessageCircle, Terminal, Wrench } from 'lucide-react'
 import { FC, ReactNode, createContext, useCallback, useContext, useEffect, useReducer, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useHotkeys } from 'react-hotkeys-hook'
@@ -37,7 +37,8 @@ import {
   ConnectionId,
   Design, DesignDiff, DesignId, Diagram,
   DiagramPoint,
-  ICON_WIDTH, Kit, Model, Piece, PieceId, Plane, Type,
+  ICON_WIDTH, Kit, Model, Piece, PieceId,
+  Plane, Type,
   addConnectionToDesign,
   addConnectionToDesignDiff,
   addConnectionsToDesign,
@@ -46,10 +47,16 @@ import {
   addPieceToDesignDiff,
   addPiecesToDesign,
   addPiecesToDesignDiff,
+  applyDesignDiff,
+  findConnectionInDesign,
   findDesignInKit,
+  findPieceInDesign,
+  findReplacableTypesForPieceInDesign,
+  findReplacableTypesForPiecesInDesign,
   isSameConnection,
   isSameDesign,
   mergeDesigns,
+  piecesMetadata,
   removeConnectionFromDesign,
   removeConnectionFromDesignDiff,
   removeConnectionsFromDesign,
@@ -70,7 +77,8 @@ import {
   updateDesignInKit
 } from '@semio/js'
 import { Avatar, AvatarFallback } from '@semio/js/components/ui/Avatar'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@semio/js/components/ui/Collapsible'
+import { Button } from '@semio/js/components/ui/Button'
+import Combobox from '@semio/js/components/ui/Combobox'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@semio/js/components/ui/HoverCard'
 import { Input } from '@semio/js/components/ui/Input'
 import { default as Navbar } from '@semio/js/components/ui/Navbar'
@@ -78,8 +86,10 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@semio/js/
 import { ScrollArea } from '@semio/js/components/ui/ScrollArea'
 import { Layout, Mode, Theme } from '@semio/js/components/ui/Sketchpad'
 import { Slider } from '@semio/js/components/ui/Slider'
+import Stepper from '@semio/js/components/ui/Stepper'
 import { Textarea } from '@semio/js/components/ui/Textarea'
 import { ToggleGroup, ToggleGroupItem } from '@semio/js/components/ui/ToggleGroup'
+import { Tree, TreeItem, TreeNode, TreeSection } from '@semio/js/components/ui/Tree'
 import { Generator } from '@semio/js/lib/utils'
 import { orientDesign } from '../../semio'
 
@@ -689,31 +699,9 @@ const designEditorReducer = (
     case DesignEditorAction.SetFullscreen:
       return { ...state, fullscreenPanel: action.payload }
     case DesignEditorAction.ToggleDiagramFullscreen:
-      return {
-        ...state,
-        fullscreenPanel:
-          state.fullscreenPanel === FullscreenPanel.Diagram ? FullscreenPanel.None : FullscreenPanel.Diagram
-      }
+      return { ...state, fullscreenPanel: state.fullscreenPanel === FullscreenPanel.Diagram ? FullscreenPanel.None : FullscreenPanel.Diagram }
     case DesignEditorAction.ToggleModelFullscreen:
-      return {
-        ...state,
-        fullscreenPanel: state.fullscreenPanel === FullscreenPanel.Model ? FullscreenPanel.None : FullscreenPanel.Model
-      }
-    case DesignEditorAction.ApplyDesignDiff:
-      const currentDesign = findDesignInKit(state.kit, state.designId)
-      const updatedDesign = applyDesignDiff(currentDesign, state.designDiff)
-      const stateWithCommand = pushToCommandStack(state)
-      const updatedDesigns = (stateWithCommand.kit.designs || []).map((d: Design) =>
-        isSameDesign(d, currentDesign) ? updatedDesign : d
-      )
-      return {
-        ...stateWithCommand,
-        kit: { ...stateWithCommand.kit, designs: updatedDesigns },
-        designDiff: {
-          pieces: { added: [], removed: [], updated: [] },
-          connections: { added: [], removed: [], updated: [] }
-        }
-      }
+      return { ...state, fullscreenPanel: state.fullscreenPanel === FullscreenPanel.Model ? FullscreenPanel.None : FullscreenPanel.Model }
     default:
       return state
   }
@@ -816,95 +804,6 @@ interface PanelProps {
 interface ResizablePanelProps extends PanelProps {
   onWidthChange?: (width: number) => void
   width: number
-}
-
-interface TreeNodeProps {
-  label: ReactNode
-  icon?: ReactNode
-  children?: ReactNode
-  level?: number
-  collapsible?: boolean
-  defaultOpen?: boolean
-  isLeaf?: boolean
-}
-
-interface TreeSectionProps {
-  label: string
-  icon?: ReactNode
-  children?: ReactNode
-  defaultOpen?: boolean
-}
-
-const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defaultOpen = true }) => {
-  const [open, setOpen] = useState(defaultOpen)
-
-  return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger asChild>
-        <div className="flex items-center gap-2 py-1.5 px-2 hover:bg-muted cursor-pointer select-none overflow-hidden">
-          {open ? (
-            <ChevronDown size={14} className="flex-shrink-0" />
-          ) : (
-            <ChevronRight size={14} className="flex-shrink-0" />
-          )}
-          {icon && <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">{icon}</span>}
-          <span className="flex-1 text-sm text-muted-foreground uppercase tracking-wide truncate">{label}</span>
-        </div>
-      </CollapsibleTrigger>
-      <CollapsibleContent>{children}</CollapsibleContent>
-    </Collapsible>
-  )
-}
-
-const TreeNode: FC<TreeNodeProps> = ({
-  label,
-  icon,
-  children,
-  level = 0,
-  collapsible = false,
-  defaultOpen = true,
-  isLeaf = false
-}) => {
-  const [open, setOpen] = useState(defaultOpen)
-  const indentStyle = { paddingLeft: `${level * 1.25}rem` }
-
-  const Trigger = collapsible ? CollapsibleTrigger : 'div'
-  const Content = collapsible ? CollapsibleContent : 'div'
-
-  const triggerContent = (
-    <div
-      className="flex items-center gap-2 py-1 px-2 hover:bg-muted cursor-pointer select-none overflow-hidden"
-      style={indentStyle}
-    >
-      {collapsible &&
-        !isLeaf &&
-        (open ? (
-          <ChevronDown size={14} className="flex-shrink-0" />
-        ) : (
-          <ChevronRight size={14} className="flex-shrink-0" />
-        ))}
-      {icon && <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">{icon}</span>}
-      <span className="flex-1 text-sm font-normal truncate">{label}</span>
-    </div>
-  )
-
-  if (collapsible) {
-    return (
-      <Collapsible open={open} onOpenChange={setOpen}>
-        <Trigger asChild>{triggerContent}</Trigger>
-        <Content>{children}</Content>
-      </Collapsible>
-    )
-  } else if (isLeaf) {
-    return triggerContent
-  } else {
-    return (
-      <>
-        {triggerContent}
-        {children}
-      </>
-    )
-  }
 }
 
 interface TypeAvatarProps {
@@ -1054,38 +953,40 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width, kit }) =
     >
       <ScrollArea className="h-full">
         <div className="p-1">
-          <TreeSection label="Types" defaultOpen={true}>
-            {Object.entries(typesByName).map(([name, variants]) => (
-              <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
-                <div
-                  className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
-                  style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}
-                >
-                  {variants.map((type) => (
-                    <TypeAvatar key={`${type.name}-${type.variant}`} type={type} showHoverCard={true} />
-                  ))}
-                </div>
-              </TreeNode>
-            ))}
-          </TreeSection>
-          <TreeSection label="Designs" defaultOpen={true}>
-            {Object.entries(designsByName).map(([name, designs]) => (
-              <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
-                <div
-                  className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
-                  style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}
-                >
-                  {designs.map((design) => (
-                    <DesignAvatar
-                      key={`${design.name}-${design.variant}-${design.view}`}
-                      design={design}
-                      showHoverCard={true}
-                    />
-                  ))}
-                </div>
-              </TreeNode>
-            ))}
-          </TreeSection>
+          <Tree>
+            <TreeSection label="Types" defaultOpen={true}>
+              {Object.entries(typesByName).map(([name, variants]) => (
+                <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
+                  <div
+                    className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
+                    style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}
+                  >
+                    {variants.map((type) => (
+                      <TypeAvatar key={`${type.name}-${type.variant}`} type={type} showHoverCard={true} />
+                    ))}
+                  </div>
+                </TreeNode>
+              ))}
+            </TreeSection>
+            <TreeSection label="Designs" defaultOpen={true}>
+              {Object.entries(designsByName).map(([name, designs]) => (
+                <TreeNode key={name} label={name} collapsible={true} level={1} defaultOpen={false}>
+                  <div
+                    className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
+                    style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}
+                  >
+                    {designs.map((design) => (
+                      <DesignAvatar
+                        key={`${design.name}-${design.variant}-${design.view}`}
+                        design={design}
+                        showHoverCard={true}
+                      />
+                    ))}
+                  </div>
+                </TreeNode>
+              ))}
+            </TreeSection>
+          </Tree>
         </div>
       </ScrollArea>
       <div
@@ -1163,109 +1064,464 @@ const Console: FC<ConsoleProps> = ({
         onMouseLeave={() => !isResizing && setIsResizeHovered(false)}
       />
       <ScrollArea className="h-full">
-        <div className="font-semibold p-4">Console</div>
+        <div className="p-1">
+          <Tree>
+            <TreeSection label="Messages" defaultOpen={true}>
+              <TreeItem label="System started" level={1} />
+              <TreeItem label="Design loaded successfully" level={1} />
+            </TreeSection>
+            <TreeSection label="Errors" defaultOpen={false}>
+              <TreeItem label="No errors" level={1} />
+            </TreeSection>
+            <TreeSection label="Warnings" defaultOpen={false}>
+              <TreeItem label="No warnings" level={1} />
+            </TreeSection>
+          </Tree>
+        </div>
       </ScrollArea>
     </div>
   )
 }
 
-interface DetailsProps extends ResizablePanelProps {}
+interface DetailsProps extends ResizablePanelProps { }
 
 const PieceDetails: FC<{ pieceId: string }> = ({ pieceId }) => {
-  const { state, setPieceInDesignDiff } = useDesignEditor()
-  const { kit, designId, designDiff } = state
+  const { kit, designId, designDiff, setPieceInDesignDiff, setConnectionInDesignDiff } = useDesignEditor()
   const design = findDesignInKit(kit, designId)
   const effectiveDesign = applyDesignDiff(design, designDiff, false)
   const piece = findPieceInDesign(effectiveDesign, pieceId)
+  const metadata = piecesMetadata(kit, designId)
+  const pieceMetadata = metadata.get(pieceId)
 
-  const handleChange = (updatedPiece: Piece) => {
+  const handlePieceChange = (updatedPiece: Piece) => {
     setPieceInDesignDiff(updatedPiece)
   }
 
+  const handleConnectionChange = (updatedConnection: Connection) => {
+    setConnectionInDesignDiff(updatedConnection)
+  }
+
+  const pieceVariants = piece.type.variant ? [piece.type.variant] : []
+  const availableTypes = findReplacableTypesForPieceInDesign(kit, designId, pieceId, pieceVariants)
+  const availableTypeNames = [...new Set(availableTypes.map(t => t.name))]
+  const availableVariants = findReplacableTypesForPieceInDesign(kit, designId, pieceId).filter(t => t.name === piece.type.name).map(t => t.variant).filter((v): v is string => Boolean(v))
+
+  let parentConnection: Connection | null = null
+  if (pieceMetadata?.parentPieceId) {
+    try {
+      parentConnection = findConnectionInDesign(effectiveDesign, {
+        connected: { piece: { id_: pieceId } },
+        connecting: { piece: { id_: pieceMetadata.parentPieceId } }
+      })
+    } catch {
+      try {
+        parentConnection = findConnectionInDesign(effectiveDesign, {
+          connected: { piece: { id_: pieceMetadata.parentPieceId } },
+          connecting: { piece: { id_: pieceId } }
+        })
+      } catch {
+        // No parent connection found
+      }
+    }
+  }
+
   return (
-    <div className="space-y-2 p-4">
+    <div className="p-1">
+      <Tree>
+        <TreeSection label="Piece Details" defaultOpen={true}>
+          <div className="space-y-2 px-2">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label className="text-sm">ID</label>
+              </div>
+              <Input value={piece.id_} disabled />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label className="text-sm">Type Name</label>
+              </div>
+              <Combobox
+                options={availableTypeNames.map(name => ({ value: name, label: name }))}
+                value={piece.type.name}
+                placeholder="Select type name"
+                onValueChange={(value) => handlePieceChange({ ...piece, type: { ...piece.type, name: value } })}
+              />
+            </div>
+            {(piece.type.variant || availableVariants.length > 0) && (
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm">Type Variant</label>
+                </div>
+                <Combobox
+                  options={availableVariants.map(variant => ({ value: variant, label: variant }))}
+                  value={piece.type.variant || ''}
+                  placeholder="Select variant"
+                  onValueChange={(value) => handlePieceChange({ ...piece, type: { ...piece.type, variant: value } })}
+                  allowClear={true}
+                />
+              </div>
+            )}
+          </div>
+        </TreeSection>
+        {piece.center && (
+          <TreeSection label="Center" defaultOpen={false}>
+            <div className="space-y-2 px-2">
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm">X</label>
+                  <span className="text-xs text-muted-foreground">{piece.center.x}</span>
+                </div>
+                <Stepper
+                  value={piece.center.x}
+                  onChange={(value) => handlePieceChange({ ...piece, center: { ...piece.center!, x: value } })}
+                  step={0.1}
+                />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm">Y</label>
+                  <span className="text-xs text-muted-foreground">{piece.center.y}</span>
+                </div>
+                <Stepper
+                  value={piece.center.y}
+                  onChange={(value) => handlePieceChange({ ...piece, center: { ...piece.center!, y: value } })}
+                  step={0.1}
+                />
+              </div>
+            </div>
+          </TreeSection>
+        )}
+        {piece.plane && (
+          <TreeSection label="Plane" defaultOpen={false}>
+            <div className="space-y-2 px-2">
+              <TreeNode label="Origin" collapsible={true} level={1} defaultOpen={true}>
+                <div className="space-y-2 px-2">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm">X</label>
+                      <span className="text-xs text-muted-foreground">{piece.plane.origin.x}</span>
+                    </div>
+                    <Stepper
+                      value={piece.plane.origin.x}
+                      onChange={(value) =>
+                        handlePieceChange({
+                          ...piece,
+                          plane: { ...piece.plane!, origin: { ...piece.plane!.origin, x: value } }
+                        })
+                      }
+                      step={0.1}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm">Y</label>
+                      <span className="text-xs text-muted-foreground">{piece.plane.origin.y}</span>
+                    </div>
+                    <Stepper
+                      value={piece.plane.origin.y}
+                      onChange={(value) =>
+                        handlePieceChange({
+                          ...piece,
+                          plane: { ...piece.plane!, origin: { ...piece.plane!.origin, y: value } }
+                        })
+                      }
+                      step={0.1}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm">Z</label>
+                      <span className="text-xs text-muted-foreground">{piece.plane.origin.z}</span>
+                    </div>
+                    <Stepper
+                      value={piece.plane.origin.z}
+                      onChange={(value) =>
+                        handlePieceChange({
+                          ...piece,
+                          plane: { ...piece.plane!, origin: { ...piece.plane!.origin, z: value } }
+                        })
+                      }
+                      step={0.1}
+                    />
+                  </div>
+                </div>
+              </TreeNode>
+            </div>
+          </TreeSection>
+        )}
+        {parentConnection && (
+          <TreeSection label="Parent Connection" defaultOpen={true}>
+            <div className="space-y-2 px-2">
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm">Gap</label>
+                  <span className="text-xs text-muted-foreground">{parentConnection.gap ?? 0}</span>
+                </div>
+                <Stepper
+                  value={parentConnection.gap ?? 0}
+                  onChange={(value) => handleConnectionChange({ ...parentConnection, gap: value })}
+                  step={0.1}
+                />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm">Shift</label>
+                  <span className="text-xs text-muted-foreground">{parentConnection.shift ?? 0}</span>
+                </div>
+                <Stepper
+                  value={parentConnection.shift ?? 0}
+                  onChange={(value) => handleConnectionChange({ ...parentConnection, shift: value })}
+                  step={0.1}
+                />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm">Rise</label>
+                  <span className="text-xs text-muted-foreground">{parentConnection.rise ?? 0}</span>
+                </div>
+                <Stepper
+                  value={parentConnection.rise ?? 0}
+                  onChange={(value) => handleConnectionChange({ ...parentConnection, rise: value })}
+                  step={0.1}
+                />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm">Rotation</label>
+                  <span className="text-xs text-muted-foreground">{parentConnection.rotation ?? 0}°</span>
+                </div>
+                <Slider
+                  value={[parentConnection.rotation ?? 0]}
+                  onValueChange={([value]) => handleConnectionChange({ ...parentConnection, rotation: value })}
+                  min={-180}
+                  max={180}
+                  step={1}
+                />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm">Turn</label>
+                  <span className="text-xs text-muted-foreground">{parentConnection.turn ?? 0}°</span>
+                </div>
+                <Slider
+                  value={[parentConnection.turn ?? 0]}
+                  onValueChange={([value]) => handleConnectionChange({ ...parentConnection, turn: value })}
+                  min={-180}
+                  max={180}
+                  step={1}
+                />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm">Tilt</label>
+                  <span className="text-xs text-muted-foreground">{parentConnection.tilt ?? 0}°</span>
+                </div>
+                <Slider
+                  value={[parentConnection.tilt ?? 0]}
+                  onValueChange={([value]) => handleConnectionChange({ ...parentConnection, tilt: value })}
+                  min={-180}
+                  max={180}
+                  step={1}
+                />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm">X Offset</label>
+                  <span className="text-xs text-muted-foreground">{parentConnection.x ?? 0}</span>
+                </div>
+                <Stepper
+                  value={parentConnection.x ?? 0}
+                  onChange={(value) => handleConnectionChange({ ...parentConnection, x: value })}
+                  step={0.1}
+                />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm">Y Offset</label>
+                  <span className="text-xs text-muted-foreground">{parentConnection.y ?? 0}</span>
+                </div>
+                <Stepper
+                  value={parentConnection.y ?? 0}
+                  onChange={(value) => handleConnectionChange({ ...parentConnection, y: value })}
+                  step={0.1}
+                />
+              </div>
+            </div>
+          </TreeSection>
+        )}
+      </Tree>
+    </div>
+  )
+}
+
+const MultiPieceDetails: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
+  const { kit, designId, designDiff, setPiecesInDesignDiff } = useDesignEditor()
+  const design = findDesignInKit(kit, designId)
+  const effectiveDesign = applyDesignDiff(design, designDiff, false)
+  const pieces = pieceIds.map(id => findPieceInDesign(effectiveDesign, id))
+
+  const getCommonValue = <T,>(getter: (piece: Piece) => T | undefined): T | undefined => {
+    const values = pieces.map(getter).filter(v => v !== undefined)
+    if (values.length === 0) return undefined
+    const firstValue = values[0]
+    return values.every(v => JSON.stringify(v) === JSON.stringify(firstValue)) ? firstValue : undefined
+  }
+
+  const handleTypeNameChange = (value: string) => {
+    const updatedPieces = pieces.map(piece => ({ ...piece, type: { ...piece.type, name: value } }))
+    setPiecesInDesignDiff(updatedPieces)
+  }
+
+  const handleTypeVariantChange = (value: string) => {
+    const updatedPieces = pieces.map(piece => ({ ...piece, type: { ...piece.type, variant: value } }))
+    setPiecesInDesignDiff(updatedPieces)
+  }
+
+  const handleCenterXChange = (value: number) => {
+    const updatedPieces = pieces.map(piece =>
+      piece.center ? { ...piece, center: { ...piece.center, x: value } } : piece
+    )
+    setPiecesInDesignDiff(updatedPieces)
+  }
+
+  const handleCenterYChange = (value: number) => {
+    const updatedPieces = pieces.map(piece =>
+      piece.center ? { ...piece, center: { ...piece.center, y: value } } : piece
+    )
+    setPiecesInDesignDiff(updatedPieces)
+  }
+
+  const handlePlaneOriginXChange = (value: number) => {
+    const updatedPieces = pieces.map(piece =>
+      piece.plane ? { ...piece, plane: { ...piece.plane, origin: { ...piece.plane.origin, x: value } } } : piece
+    )
+    setPiecesInDesignDiff(updatedPieces)
+  }
+
+  const handlePlaneOriginYChange = (value: number) => {
+    const updatedPieces = pieces.map(piece =>
+      piece.plane ? { ...piece, plane: { ...piece.plane, origin: { ...piece.plane.origin, y: value } } } : piece
+    )
+    setPiecesInDesignDiff(updatedPieces)
+  }
+
+  const handlePlaneOriginZChange = (value: number) => {
+    const updatedPieces = pieces.map(piece =>
+      piece.plane ? { ...piece, plane: { ...piece.plane, origin: { ...piece.plane.origin, z: value } } } : piece
+    )
+    setPiecesInDesignDiff(updatedPieces)
+  }
+
+  const commonTypeName = getCommonValue(p => p.type.name)
+  const commonTypeVariant = getCommonValue(p => p.type.variant)
+  const commonCenterX = getCommonValue(p => p.center?.x)
+  const commonCenterY = getCommonValue(p => p.center?.y)
+  const commonPlaneOriginX = getCommonValue(p => p.plane?.origin.x)
+  const commonPlaneOriginY = getCommonValue(p => p.plane?.origin.y)
+  const commonPlaneOriginZ = getCommonValue(p => p.plane?.origin.z)
+
+  const hasCenter = pieces.some(p => p.center)
+  const hasPlane = pieces.some(p => p.plane)
+  const hasVariant = pieces.some(p => p.type.variant)
+
+  const selectedVariants = [...new Set(pieces.map(p => p.type.variant).filter((v): v is string => Boolean(v)))]
+  const availableTypes = findReplacableTypesForPiecesInDesign(kit, designId, pieceIds, selectedVariants)
+  const availableTypeNames = [...new Set(availableTypes.map(t => t.name))]
+  const availableVariants = commonTypeName ? [...new Set(findReplacableTypesForPiecesInDesign(kit, designId, pieceIds).filter(t => t.name === commonTypeName).map(t => t.variant).filter((v): v is string => Boolean(v)))] : []
+
+  return (
+    <div className="space-y-2 p-1">
+      <div className="text-sm font-medium mb-3">{pieceIds.length} pieces selected</div>
+
       <div className="space-y-1">
-        <label className="text-sm">ID</label>
-        <Input value={piece.id_} disabled />
-      </div>
-      <div className="space-y-1">
-        <label className="text-sm">Type Name</label>
-        <Input
-          value={piece.type.name}
-          onChange={(e) => handleChange({ ...piece, type: { ...piece.type, name: e.target.value } })}
+        <div className="flex items-center justify-between">
+          <label className="text-sm">Type Name</label>
+        </div>
+        <Combobox
+          options={availableTypeNames.map(name => ({ value: name, label: name }))}
+          value={commonTypeName || ''}
+          placeholder={commonTypeName === undefined ? 'Mixed values' : 'Select type name'}
+          onValueChange={handleTypeNameChange}
         />
       </div>
-      {piece.type.variant && (
+
+      {(hasVariant || availableVariants.length > 0) && (
         <div className="space-y-1">
-          <label className="text-sm">Type Variant</label>
-          <Input
-            value={piece.type.variant}
-            onChange={(e) => handleChange({ ...piece, type: { ...piece.type, variant: e.target.value } })}
+          <div className="flex items-center justify-between">
+            <label className="text-sm">Type Variant</label>
+          </div>
+          <Combobox
+            options={availableVariants.map(variant => ({ value: variant, label: variant }))}
+            value={commonTypeVariant || ''}
+            placeholder={commonTypeVariant === undefined ? 'Mixed values' : 'Select variant'}
+            onValueChange={handleTypeVariantChange}
+            allowClear={true}
           />
         </div>
       )}
-      {piece.center && (
+
+      {hasCenter && (
         <>
           <div className="space-y-1">
-            <label className="text-sm">Center X</label>
-            <Input
-              type="number"
-              value={piece.center.x}
-              onChange={(e) => handleChange({ ...piece, center: { ...piece.center, x: parseFloat(e.target.value) } })}
+            <div className="flex items-center justify-between">
+              <label className="text-sm">Center X</label>
+              <span className="text-xs text-muted-foreground">{commonCenterX !== undefined ? commonCenterX : 'Mixed'}</span>
+            </div>
+            <Stepper
+              value={commonCenterX}
+              onChange={handleCenterXChange}
+              step={0.1}
             />
           </div>
           <div className="space-y-1">
-            <label className="text-sm">Center Y</label>
-            <Input
-              type="number"
-              value={piece.center.y}
-              onChange={(e) => handleChange({ ...piece, center: { ...piece.center, y: parseFloat(e.target.value) } })}
+            <div className="flex items-center justify-between">
+              <label className="text-sm">Center Y</label>
+              <span className="text-xs text-muted-foreground">{commonCenterY !== undefined ? commonCenterY : 'Mixed'}</span>
+            </div>
+            <Stepper
+              value={commonCenterY}
+              onChange={handleCenterYChange}
+              step={0.1}
             />
           </div>
         </>
       )}
-      {piece.plane && (
+
+      {hasPlane && (
         <>
           <div className="space-y-1">
-            <label className="text-sm">Plane Origin X</label>
-            <Input
-              type="number"
-              value={piece.plane.origin.x}
-              onChange={(e) =>
-                handleChange({
-                  ...piece,
-                  plane: { ...piece.plane, origin: { ...piece.plane.origin, x: parseFloat(e.target.value) } }
-                })
-              }
+            <div className="flex items-center justify-between">
+              <label className="text-sm">Plane Origin X</label>
+              <span className="text-xs text-muted-foreground">{commonPlaneOriginX !== undefined ? commonPlaneOriginX : 'Mixed'}</span>
+            </div>
+            <Stepper
+              value={commonPlaneOriginX}
+              onChange={handlePlaneOriginXChange}
+              step={0.1}
             />
           </div>
           <div className="space-y-1">
-            <label className="text-sm">Plane Origin Y</label>
-            <Input
-              type="number"
-              value={piece.plane.origin.y}
-              onChange={(e) =>
-                handleChange({
-                  ...piece,
-                  plane: { ...piece.plane, origin: { ...piece.plane.origin, y: parseFloat(e.target.value) } }
-                })
-              }
+            <div className="flex items-center justify-between">
+              <label className="text-sm">Plane Origin Y</label>
+              <span className="text-xs text-muted-foreground">{commonPlaneOriginY !== undefined ? commonPlaneOriginY : 'Mixed'}</span>
+            </div>
+            <Stepper
+              value={commonPlaneOriginY}
+              onChange={handlePlaneOriginYChange}
+              step={0.1}
             />
           </div>
           <div className="space-y-1">
-            <label className="text-sm">Plane Origin Z</label>
-            <Input
-              type="number"
-              value={piece.plane.origin.z}
-              onChange={(e) =>
-                handleChange({
-                  ...piece,
-                  plane: { ...piece.plane, origin: { ...piece.plane.origin, z: parseFloat(e.target.value) } }
-                })
-              }
+            <div className="flex items-center justify-between">
+              <label className="text-sm">Plane Origin Z</label>
+              <span className="text-xs text-muted-foreground">{commonPlaneOriginZ !== undefined ? commonPlaneOriginZ : 'Mixed'}</span>
+            </div>
+            <Stepper
+              value={commonPlaneOriginZ}
+              onChange={handlePlaneOriginZChange}
+              step={0.1}
             />
           </div>
-          {/* Similar for xAxis and yAxis */}
         </>
       )}
     </div>
@@ -1276,8 +1532,7 @@ const ConnectionDetails: FC<{ connectingPieceId: string; connectedPieceId: strin
   connectingPieceId,
   connectedPieceId
 }) => {
-  const { state, setConnectionInDesignDiff } = useDesignEditor()
-  const { kit, designId, designDiff } = state
+  const { kit, designId, designDiff, setConnectionInDesignDiff } = useDesignEditor()
   const design = findDesignInKit(kit, designId)
   const effectiveDesign = applyDesignDiff(design, designDiff, false)
   const connectionId = {
@@ -1291,13 +1546,17 @@ const ConnectionDetails: FC<{ connectingPieceId: string; connectedPieceId: strin
   }
 
   return (
-    <div className="space-y-2 p-4">
+    <div className="space-y-2 p-1">
       <div className="space-y-1">
-        <label className="text-sm">Connecting Piece ID</label>
+        <div className="flex items-center justify-between">
+          <label className="text-sm">Connecting Piece ID</label>
+        </div>
         <Input value={connection.connecting.piece.id_} disabled />
       </div>
       <div className="space-y-1">
-        <label className="text-sm">Connecting Port ID</label>
+        <div className="flex items-center justify-between">
+          <label className="text-sm">Connecting Port ID</label>
+        </div>
         <Input
           value={connection.connecting.port.id_}
           onChange={(e) =>
@@ -1306,11 +1565,15 @@ const ConnectionDetails: FC<{ connectingPieceId: string; connectedPieceId: strin
         />
       </div>
       <div className="space-y-1">
-        <label className="text-sm">Connected Piece ID</label>
+        <div className="flex items-center justify-between">
+          <label className="text-sm">Connected Piece ID</label>
+        </div>
         <Input value={connection.connected.piece.id_} disabled />
       </div>
       <div className="space-y-1">
-        <label className="text-sm">Connected Port ID</label>
+        <div className="flex items-center justify-between">
+          <label className="text-sm">Connected Port ID</label>
+        </div>
         <Input
           value={connection.connected.port.id_}
           onChange={(e) =>
@@ -1319,14 +1582,226 @@ const ConnectionDetails: FC<{ connectingPieceId: string; connectedPieceId: strin
         />
       </div>
       <div className="space-y-1">
-        <label className="text-sm">Gap</label>
+        <div className="flex items-center justify-between">
+          <label className="text-sm">Gap</label>
+          <span className="text-xs text-muted-foreground">{connection.gap ?? 0}</span>
+        </div>
         <Input
           type="number"
           value={connection.gap ?? 0}
           onChange={(e) => handleChange({ ...connection, gap: parseFloat(e.target.value) })}
         />
       </div>
-      {/* Similar for shift, rise, rotation, turn, tilt */}
+    </div>
+  )
+}
+
+const DesignDetails: FC = () => {
+  const { kit, designId, setDesign } = useDesignEditor()
+  const design = findDesignInKit(kit, designId)
+
+  const handleChange = (updatedDesign: Design) => {
+    setDesign(updatedDesign)
+  }
+
+  const addLocation = () => {
+    handleChange({ ...design, location: { longitude: 0, latitude: 0 } })
+  }
+
+  const removeLocation = () => {
+    handleChange({ ...design, location: undefined })
+  }
+
+  return (
+    <div className="space-y-2 p-1">
+      <div className="text-sm font-medium mb-3">Design Properties</div>
+
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <label className="text-sm">Name</label>
+        </div>
+        <Input
+          value={design.name}
+          onChange={(e) => handleChange({ ...design, name: e.target.value })}
+        />
+      </div>
+
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <label className="text-sm">Description</label>
+        </div>
+        <Textarea
+          value={design.description || ''}
+          placeholder="Enter design description..."
+          onChange={(e) => handleChange({ ...design, description: e.target.value })}
+        />
+      </div>
+
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <label className="text-sm">Icon</label>
+        </div>
+        <Input
+          value={design.icon || ''}
+          placeholder="Emoji, name, or URL"
+          onChange={(e) => handleChange({ ...design, icon: e.target.value })}
+        />
+      </div>
+
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <label className="text-sm">Image URL</label>
+        </div>
+        <Input
+          value={design.image || ''}
+          placeholder="URL to design image"
+          onChange={(e) => handleChange({ ...design, image: e.target.value })}
+        />
+      </div>
+
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <label className="text-sm">Variant</label>
+        </div>
+        <Input
+          value={design.variant || ''}
+          placeholder="Design variant"
+          onChange={(e) => handleChange({ ...design, variant: e.target.value })}
+        />
+      </div>
+
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <label className="text-sm">View</label>
+        </div>
+        <Input
+          value={design.view || ''}
+          placeholder="Design view"
+          onChange={(e) => handleChange({ ...design, view: e.target.value })}
+        />
+      </div>
+
+      <div className="space-y-1">
+        <div className="flex items-center justify-between">
+          <label className="text-sm">Unit</label>
+        </div>
+        <Input
+          value={design.unit}
+          onChange={(e) => handleChange({ ...design, unit: e.target.value })}
+        />
+      </div>
+
+      {design.location ? (
+        <>
+          <div className="flex items-center justify-between">
+            <label className="text-sm">Location</label>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={removeLocation}
+              className="text-destructive hover:text-destructive"
+            >
+              Remove
+            </Button>
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-muted-foreground">Longitude</label>
+              <span className="text-xs text-muted-foreground">{design.location.longitude}</span>
+            </div>
+            <Stepper
+              value={design.location.longitude}
+              onChange={(value) => handleChange({
+                ...design,
+                location: { ...design.location!, longitude: value }
+              })}
+              step={0.000001}
+            />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-muted-foreground">Latitude</label>
+              <span className="text-xs text-muted-foreground">{design.location.latitude}</span>
+            </div>
+            <Stepper
+              value={design.location.latitude}
+              onChange={(value) => handleChange({
+                ...design,
+                location: { ...design.location!, latitude: value }
+              })}
+              step={0.000001}
+            />
+          </div>
+        </>
+      ) : (
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <label className="text-sm">Location</label>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={addLocation}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Add location
+          </Button>
+        </div>
+      )}
+
+      {design.created && (
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <label className="text-sm">Created</label>
+          </div>
+          <Input value={design.created.toISOString().split('T')[0]} disabled />
+        </div>
+      )}
+
+      {design.updated && (
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <label className="text-sm">Updated</label>
+          </div>
+          <Input value={design.updated.toISOString().split('T')[0]} disabled />
+        </div>
+      )}
+
+      {design.pieces && design.pieces.length > 0 && (
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <label className="text-sm">Pieces</label>
+          </div>
+          <Input value={`${design.pieces.length} pieces`} disabled />
+        </div>
+      )}
+
+      {design.connections && design.connections.length > 0 && (
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <label className="text-sm">Connections</label>
+          </div>
+          <Input value={`${design.connections.length} connections`} disabled />
+        </div>
+      )}
+
+      {design.authors && design.authors.length > 0 && (
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <label className="text-sm">Authors</label>
+          </div>
+          <Input value={`${design.authors.length} authors`} disabled />
+        </div>
+      )}
+
+      {design.qualities && design.qualities.length > 0 && (
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <label className="text-sm">Qualities</label>
+          </div>
+          <Input value={`${design.qualities.length} qualities`} disabled />
+        </div>
+      )}
     </div>
   )
 }
@@ -1360,19 +1835,22 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
     document.addEventListener('mouseup', handleMouseUp)
   }
 
-  const { state, applyDesignDiff } = useDesignEditor()
-  const { kit, designId, selection, designDiff } = state
+  const { kit, designId, selection, designDiff } = useDesignEditor()
   const design = findDesignInKit(kit, designId)
   const effectiveDesign = applyDesignDiff(design, designDiff, false)
 
   let content: ReactNode
   if (selection.selectedPieceIds.length === 1 && selection.selectedConnections.length === 0) {
     content = <PieceDetails pieceId={selection.selectedPieceIds[0]} />
+  } else if (selection.selectedPieceIds.length > 1 && selection.selectedConnections.length === 0) {
+    content = <MultiPieceDetails pieceIds={selection.selectedPieceIds} />
   } else if (selection.selectedPieceIds.length === 0 && selection.selectedConnections.length === 1) {
     const { connectingPieceId, connectedPieceId } = selection.selectedConnections[0]
     content = <ConnectionDetails connectingPieceId={connectingPieceId} connectedPieceId={connectedPieceId} />
+  } else if (selection.selectedPieceIds.length === 0 && selection.selectedConnections.length === 0) {
+    content = <DesignDetails />
   } else {
-    content = <div className="p-4">Select a single piece or connection to edit details.</div>
+    content = <div className="p-1">Multiple selection types - select pieces or connections to edit details.</div>
   }
 
   return (
@@ -1382,9 +1860,6 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
       style={{ width: `${width}px` }}
     >
       <ScrollArea className="h-full">{content}</ScrollArea>
-      <div className="p-4 border-t">
-        <Button onClick={applyDesignDiff}>Apply Changes</Button>
-      </div>
       <div
         className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize"
         onMouseDown={handleMouseDown}
@@ -1433,9 +1908,38 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
       style={{ width: `${width}px` }}
     >
       <ScrollArea className="h-full">
-        <div className="font-semibold p-4">Chat</div>
-        <div className="p-4 space-y-4">
-          <Textarea />
+        <div className="p-1">
+          <Tree>
+            <TreeSection label="Conversation History" defaultOpen={true}>
+              <TreeNode label="Design Session #1" collapsible={true} level={1} defaultOpen={false}>
+                <TreeItem label="How can I add a new piece?" level={2} />
+                <TreeItem label="Can you help with connections?" level={2} />
+              </TreeNode>
+              <TreeNode label="Design Session #2" collapsible={true} level={1} defaultOpen={false}>
+                <TreeItem label="What are the available types?" level={2} />
+              </TreeNode>
+            </TreeSection>
+            <TreeSection label="Quick Actions" defaultOpen={true}>
+              <TreeItem label="Add random piece" level={1} />
+              <TreeItem label="Connect all pieces" level={1} />
+              <TreeItem label="Generate layout suggestions" level={1} />
+            </TreeSection>
+            <TreeSection label="Templates" defaultOpen={false}>
+              <TreeNode label="Common Questions" collapsible={true} level={1} defaultOpen={true}>
+                <TreeItem label="How do I create a connection?" level={2} />
+                <TreeItem label="How do I delete a piece?" level={2} />
+                <TreeItem label="How do I change piece properties?" level={2} />
+              </TreeNode>
+              <TreeNode label="Advanced Workflows" collapsible={true} level={1} defaultOpen={false}>
+                <TreeItem label="Batch operations" level={2} />
+                <TreeItem label="Complex layouts" level={2} />
+                <TreeItem label="Export/Import" level={2} />
+              </TreeNode>
+            </TreeSection>
+          </Tree>
+        </div>
+        <div className="p-4 border-t">
+          <Textarea placeholder="Ask a question about the design..." />
         </div>
       </ScrollArea>
       <div
