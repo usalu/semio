@@ -689,9 +689,31 @@ const designEditorReducer = (
     case DesignEditorAction.SetFullscreen:
       return { ...state, fullscreenPanel: action.payload }
     case DesignEditorAction.ToggleDiagramFullscreen:
-      return { ...state, fullscreenPanel: state.fullscreenPanel === FullscreenPanel.Diagram ? FullscreenPanel.None : FullscreenPanel.Diagram }
+      return {
+        ...state,
+        fullscreenPanel:
+          state.fullscreenPanel === FullscreenPanel.Diagram ? FullscreenPanel.None : FullscreenPanel.Diagram
+      }
     case DesignEditorAction.ToggleModelFullscreen:
-      return { ...state, fullscreenPanel: state.fullscreenPanel === FullscreenPanel.Model ? FullscreenPanel.None : FullscreenPanel.Model }
+      return {
+        ...state,
+        fullscreenPanel: state.fullscreenPanel === FullscreenPanel.Model ? FullscreenPanel.None : FullscreenPanel.Model
+      }
+    case DesignEditorAction.ApplyDesignDiff:
+      const currentDesign = findDesignInKit(state.kit, state.designId)
+      const updatedDesign = applyDesignDiff(currentDesign, state.designDiff)
+      const stateWithCommand = pushToCommandStack(state)
+      const updatedDesigns = (stateWithCommand.kit.designs || []).map((d: Design) =>
+        isSameDesign(d, currentDesign) ? updatedDesign : d
+      )
+      return {
+        ...stateWithCommand,
+        kit: { ...stateWithCommand.kit, designs: updatedDesigns },
+        designDiff: {
+          pieces: { added: [], removed: [], updated: [] },
+          connections: { added: [], removed: [], updated: [] }
+        }
+      }
     default:
       return state
   }
@@ -1147,7 +1169,167 @@ const Console: FC<ConsoleProps> = ({
   )
 }
 
-interface DetailsProps extends ResizablePanelProps { }
+interface DetailsProps extends ResizablePanelProps {}
+
+const PieceDetails: FC<{ pieceId: string }> = ({ pieceId }) => {
+  const { state, setPieceInDesignDiff } = useDesignEditor()
+  const { kit, designId, designDiff } = state
+  const design = findDesignInKit(kit, designId)
+  const effectiveDesign = applyDesignDiff(design, designDiff, false)
+  const piece = findPieceInDesign(effectiveDesign, pieceId)
+
+  const handleChange = (updatedPiece: Piece) => {
+    setPieceInDesignDiff(updatedPiece)
+  }
+
+  return (
+    <div className="space-y-2 p-4">
+      <div className="space-y-1">
+        <label className="text-sm">ID</label>
+        <Input value={piece.id_} disabled />
+      </div>
+      <div className="space-y-1">
+        <label className="text-sm">Type Name</label>
+        <Input
+          value={piece.type.name}
+          onChange={(e) => handleChange({ ...piece, type: { ...piece.type, name: e.target.value } })}
+        />
+      </div>
+      {piece.type.variant && (
+        <div className="space-y-1">
+          <label className="text-sm">Type Variant</label>
+          <Input
+            value={piece.type.variant}
+            onChange={(e) => handleChange({ ...piece, type: { ...piece.type, variant: e.target.value } })}
+          />
+        </div>
+      )}
+      {piece.center && (
+        <>
+          <div className="space-y-1">
+            <label className="text-sm">Center X</label>
+            <Input
+              type="number"
+              value={piece.center.x}
+              onChange={(e) => handleChange({ ...piece, center: { ...piece.center, x: parseFloat(e.target.value) } })}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm">Center Y</label>
+            <Input
+              type="number"
+              value={piece.center.y}
+              onChange={(e) => handleChange({ ...piece, center: { ...piece.center, y: parseFloat(e.target.value) } })}
+            />
+          </div>
+        </>
+      )}
+      {piece.plane && (
+        <>
+          <div className="space-y-1">
+            <label className="text-sm">Plane Origin X</label>
+            <Input
+              type="number"
+              value={piece.plane.origin.x}
+              onChange={(e) =>
+                handleChange({
+                  ...piece,
+                  plane: { ...piece.plane, origin: { ...piece.plane.origin, x: parseFloat(e.target.value) } }
+                })
+              }
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm">Plane Origin Y</label>
+            <Input
+              type="number"
+              value={piece.plane.origin.y}
+              onChange={(e) =>
+                handleChange({
+                  ...piece,
+                  plane: { ...piece.plane, origin: { ...piece.plane.origin, y: parseFloat(e.target.value) } }
+                })
+              }
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-sm">Plane Origin Z</label>
+            <Input
+              type="number"
+              value={piece.plane.origin.z}
+              onChange={(e) =>
+                handleChange({
+                  ...piece,
+                  plane: { ...piece.plane, origin: { ...piece.plane.origin, z: parseFloat(e.target.value) } }
+                })
+              }
+            />
+          </div>
+          {/* Similar for xAxis and yAxis */}
+        </>
+      )}
+    </div>
+  )
+}
+
+const ConnectionDetails: FC<{ connectingPieceId: string; connectedPieceId: string }> = ({
+  connectingPieceId,
+  connectedPieceId
+}) => {
+  const { state, setConnectionInDesignDiff } = useDesignEditor()
+  const { kit, designId, designDiff } = state
+  const design = findDesignInKit(kit, designId)
+  const effectiveDesign = applyDesignDiff(design, designDiff, false)
+  const connectionId = {
+    connecting: { piece: { id_: connectingPieceId } },
+    connected: { piece: { id_: connectedPieceId } }
+  }
+  const connection = findConnectionInDesign(effectiveDesign, connectionId)
+
+  const handleChange = (updatedConnection: Connection) => {
+    setConnectionInDesignDiff(updatedConnection)
+  }
+
+  return (
+    <div className="space-y-2 p-4">
+      <div className="space-y-1">
+        <label className="text-sm">Connecting Piece ID</label>
+        <Input value={connection.connecting.piece.id_} disabled />
+      </div>
+      <div className="space-y-1">
+        <label className="text-sm">Connecting Port ID</label>
+        <Input
+          value={connection.connecting.port.id_}
+          onChange={(e) =>
+            handleChange({ ...connection, connecting: { ...connection.connecting, port: { id_: e.target.value } } })
+          }
+        />
+      </div>
+      <div className="space-y-1">
+        <label className="text-sm">Connected Piece ID</label>
+        <Input value={connection.connected.piece.id_} disabled />
+      </div>
+      <div className="space-y-1">
+        <label className="text-sm">Connected Port ID</label>
+        <Input
+          value={connection.connected.port.id_}
+          onChange={(e) =>
+            handleChange({ ...connection, connected: { ...connection.connected, port: { id_: e.target.value } } })
+          }
+        />
+      </div>
+      <div className="space-y-1">
+        <label className="text-sm">Gap</label>
+        <Input
+          type="number"
+          value={connection.gap ?? 0}
+          onChange={(e) => handleChange({ ...connection, gap: parseFloat(e.target.value) })}
+        />
+      </div>
+      {/* Similar for shift, rise, rotation, turn, tilt */}
+    </div>
+  )
+}
 
 const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
   if (!visible) return null
@@ -1178,28 +1360,31 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
     document.addEventListener('mouseup', handleMouseUp)
   }
 
+  const { state, applyDesignDiff } = useDesignEditor()
+  const { kit, designId, selection, designDiff } = state
+  const design = findDesignInKit(kit, designId)
+  const effectiveDesign = applyDesignDiff(design, designDiff, false)
+
+  let content: ReactNode
+  if (selection.selectedPieceIds.length === 1 && selection.selectedConnections.length === 0) {
+    content = <PieceDetails pieceId={selection.selectedPieceIds[0]} />
+  } else if (selection.selectedPieceIds.length === 0 && selection.selectedConnections.length === 1) {
+    const { connectingPieceId, connectedPieceId } = selection.selectedConnections[0]
+    content = <ConnectionDetails connectingPieceId={connectingPieceId} connectedPieceId={connectedPieceId} />
+  } else {
+    content = <div className="p-4">Select a single piece or connection to edit details.</div>
+  }
+
   return (
     <div
       className={`absolute top-4 right-4 bottom-4 z-20 bg-background-level-2 text-foreground border
                 ${isResizing || isResizeHovered ? 'border-l-primary' : 'border-l'}`}
       style={{ width: `${width}px` }}
     >
-      <ScrollArea className="h-full">
-        <div id="type-properties" className="p-4 space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm">Name</label>
-            <Input placeholder="Name" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm">Rotation</label>
-            <Slider defaultValue={[33]} max={100} min={0} step={1} />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm">Description</label>
-            <Textarea />
-          </div>
-        </div>
-      </ScrollArea>
+      <ScrollArea className="h-full">{content}</ScrollArea>
+      <div className="p-4 border-t">
+        <Button onClick={applyDesignDiff}>Apply Changes</Button>
+      </div>
       <div
         className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize"
         onMouseDown={handleMouseDown}
