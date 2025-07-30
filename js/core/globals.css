@@ -148,6 +148,10 @@
 /* --xy-background-color-default: var(--color-dark) !important; */
 /* } */
 
+.react-flow__handle {
+  /* border: 0 !important; */
+}
+
 .temp .react-flow__edge-path {
   stroke: #e98787;
   stroke-dasharray: 5 5;

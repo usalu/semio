@@ -3,6 +3,7 @@
 // Model.tsx
 
 // 2025 Ueli Saluz
+// 2025 AdrianoCelentano
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -16,24 +17,6 @@
 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-// #endregion
-// #region Header
-
-// Model.tsx
-
-// 2025 Ueli Saluz
-// 2025 AdrianoCelentano
-
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as
-// published by the Free Software Foundation, either version 3 of the
-// License, or (at your option) any later version.
-
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
 
 // #endregion
 
@@ -51,6 +34,7 @@ import {
 } from '@react-three/drei'
 import { Canvas, ThreeEvent } from '@react-three/fiber'
 import {
+  applyDesignDiff,
   DiffStatus,
   findDesignInKit,
   flattenDesign,
@@ -60,9 +44,10 @@ import {
   Plane,
   planeToMatrix,
   toSemioRotation,
+  updateDesignInKit,
   useDesignEditor
 } from '@semio/js'
-import React, { FC, JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 
 const getComputedColor = (variable: string): string => {
@@ -74,9 +59,7 @@ interface PlaneThreeProps {
 }
 
 const PlaneThree: FC<PlaneThreeProps> = ({ plane }) => {
-  const matrix = useMemo(() => {
-    return planeToMatrix(plane)
-  }, [plane])
+  const matrix = useMemo(() => planeToMatrix(plane), [plane])
   return (
     <group matrix={matrix} matrixAutoUpdate={false}>
       <Line
@@ -234,28 +217,18 @@ const ModelPiece: FC<ModelPieceProps> = ({
   )
 }
 
-interface ModelDesignProps { }
+const ModelDesign: FC = () => {
+  const { kit: originalKit, designId, selection, designDiff, fileUrls, removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = useDesignEditor()
 
-const ModelDesign: FC<ModelDesignProps> = () => {
-  const { kit, designId, fileUrls, selection } = useDesignEditor()
-  const design = findDesignInKit(kit, designId)
-  if (!design) {
-    return null
-  }
+  if (!originalKit) return null
+  const design = applyDesignDiff(findDesignInKit(originalKit, designId), designDiff, true)
+  const kit = useMemo(() => updateDesignInKit(originalKit, design), [originalKit, design])
   const types = kit?.types ?? []
-  const piecePlanes = useMemo(() => {
-    const flatDesign = flattenDesign(kit, designId)
-    return flatDesign.pieces?.map((p) => p.plane!) || []
-  }, [kit, designId])
 
-  const piecePlanesFromDesign = useMemo(() => {
-    const flatDesign = flattenDesign(kit, designId)
-    return flatDesign.pieces?.map((p) => p.plane!) || []
-  }, [kit, designId])
+  const flatDesign = useMemo(() => flattenDesign(kit, designId), [kit, designId])
+  const piecePlanes = useMemo(() => flatDesign.pieces?.map((p) => p.plane!) || [], [flatDesign])
 
-  const pieceRepresentationUrls = useMemo(() => {
-    return getPieceRepresentationUrls(design, types)
-  }, [design, types])
+  const pieceRepresentationUrls = useMemo(() => getPieceRepresentationUrls(design, types), [design, types])
 
   useEffect(() => {
     fileUrls.forEach((url, id) => {
@@ -274,28 +247,18 @@ const ModelDesign: FC<ModelDesignProps> = () => {
     })
   }, [pieceRepresentationUrls, fileUrls])
 
-  function getPieceDiffFromQuality(piece: Piece): DiffStatus {
-    const diffQuality = piece.qualities?.find((q) => q.name === 'semio.diffStatus')
-    return (diffQuality?.value as DiffStatus) || DiffStatus.Unchanged
-  }
-
   const pieceDiffStatuses = useMemo(() => {
-    return design.pieces?.map((piece) => getPieceDiffFromQuality(piece)) || []
+    return design.pieces?.map((piece) => {
+      const diffQuality = piece.qualities?.find((q) => q.name === 'semio.diffStatus')
+      return (diffQuality?.value as DiffStatus) || DiffStatus.Unchanged
+    }) || []
   }, [design])
-
-  //#region Actions
-  const { setDesign, selectPiece, addPieceToSelection, removePieceFromSelection, updatePiece, selectPieces, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditor()
-  //#endregion Actions
 
   const onChange = useCallback(
     (selected: THREE.Object3D[]) => {
       const newSelectedPieceIds = selected.map((item) => item.parent?.userData.pieceId).filter(Boolean)
-
-      if (
-        !Array.isArray(selection.selectedPieceIds) ||
-        newSelectedPieceIds.length !== selection.selectedPieceIds.length ||
-        newSelectedPieceIds.some((id, index) => id !== selection.selectedPieceIds[index])
-      ) {
+      if (newSelectedPieceIds.length !== selection.selectedPieceIds.length ||
+        newSelectedPieceIds.some((id, index) => id !== selection.selectedPieceIds[index])) {
         selectPieces(newSelectedPieceIds.map(id => ({ id_: id })))
       }
     },
@@ -315,13 +278,7 @@ const ModelDesign: FC<ModelDesignProps> = () => {
     [removePieceFromSelection, addPieceToSelection, selectPiece]
   )
 
-  const onPieceUpdate = useCallback(
-    (piece: Piece) => {
-      if (!design) return
-      updatePiece(piece)
-    },
-    [design, updatePiece]
-  )
+  const onPieceUpdate = useCallback((piece: Piece) => setPiece(piece), [setPiece])
   return (
     <Select box multiple onChange={onChange} filter={(items) => items}>
       <group quaternion={new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)}>
@@ -329,29 +286,29 @@ const ModelDesign: FC<ModelDesignProps> = () => {
           <ModelPiece
             key={`piece-${piece.id_}`}
             piece={piece}
-            plane={piecePlanesFromDesign[index!]}
+            plane={piecePlanes[index!]}
             fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_)!)!}
             selected={selection.selectedPieceIds.includes(piece.id_)}
             diffStatus={pieceDiffStatuses[index]}
             onSelect={onSelect}
             onPieceUpdate={onPieceUpdate}
           />
-          // <PlaneThree key={`plane-${piece.id_}`} plane={piecePlanes![index]} />
         ))}
       </group>
     </Select>
   )
 }
 
-const Gizmo: FC = (): JSX.Element => {
-  const colors = useMemo(() => [getComputedColor('--color-primary'), getComputedColor('--color-tertiary'), getComputedColor('--color-secondary')] as [string, string, string], [])
+const Gizmo: FC = () => {
+  const colors = useMemo(() => [
+    getComputedColor('--color-primary'),
+    getComputedColor('--color-tertiary'),
+    getComputedColor('--color-secondary')
+  ] as [string, string, string], [])
+
   return (
     <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
-      <GizmoViewport
-        labels={['X', 'Z', '-Y']}
-        axisColors={colors}
-      // font='Anta'
-      />
+      <GizmoViewport labels={['X', 'Z', '-Y']} axisColors={colors} />
     </GizmoHelper>
   )
 }
@@ -363,8 +320,12 @@ const ModelCore: FC = () => {
     sectionColor: getComputedColor('--foreground'),
     cellColor: getComputedColor('--accent-foreground')
   })
+
   useEffect(() => {
-    const updateColors = () => { setGridColors({ sectionColor: getComputedColor('--foreground'), cellColor: getComputedColor('--accent-foreground') }) }
+    const updateColors = () => setGridColors({
+      sectionColor: getComputedColor('--foreground'),
+      cellColor: getComputedColor('--accent-foreground')
+    })
     updateColors()
     const observer = new MutationObserver(updateColors)
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
@@ -394,12 +355,15 @@ const ModelCore: FC = () => {
 }
 
 const Model: FC = () => {
-  const { deselectAll, toggleModelFullscreen } = useDesignEditor();
+  const { deselectAll, toggleModelFullscreen } = useDesignEditor()
   const onDoubleClickCapture = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
     toggleModelFullscreen()
   }, [toggleModelFullscreen])
-  const onPointerMissed = useCallback((e: MouseEvent) => { if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) deselectAll() }, [deselectAll])
+  const onPointerMissed = useCallback((e: MouseEvent) => {
+    if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) deselectAll()
+  }, [deselectAll])
+
   return (
     <div id="model" className="h-full w-full">
       <Canvas onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed}>

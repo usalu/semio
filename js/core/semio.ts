@@ -40,393 +40,134 @@ export const TOLERANCE = 1e-5
 
 //#region Types
 
-// 📏 A quality is a named value with a unit and a definition.
-export const QualitySchema = z.object({
-  // 📛 The name of the quality.
-  name: z.string(),
-  // 🔢 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
-  value: z.string().optional(),
-  // Ⓜ️ The optional unit of the value of the quality.
-  unit: z.string().optional(),
-  // 📖 The optional definition [ text | uri ] of the quality.
-  definition: z.string().optional()
-})
+//#region Persistence
 
-export const QualityIdSchema = z.object({
-  // 📛 The name of the quality.
-  name: z.string()
-})
-
+// https://github.com/usalu/semio#-quality-
+export const QualitySchema = z.object({ name: z.string(), value: z.string().optional(), unit: z.string().optional(), definition: z.string().optional() })
+export const QualityIdSchema = z.object({ name: z.string() })
 export const QualityIdLikeSchema = z.union([QualitySchema, QualityIdSchema, z.string()])
 
-// 💾 A representation is a link to a resource that describes a type for a certain level of detail and tags.
-export const RepresentationSchema = z.object({
-  // 🔗 The Unique Resource Locator (URL) to the resource of the representation.
-  url: z.string(),
-  // 💬 The optional human-readable description of the representation.
-  description: z.string().optional(),
-  // 🏷️ The optional tags to group representations. No tags means default.
-  tags: z.array(z.string()).optional(),
-  // 📏 The optional qualities of the representation.
-  qualities: z.array(QualitySchema).optional()
-})
-
-export const RepresentationIdSchema = z.object({
-  // 🏷️ The optional tags to group representations. No tags means default.
-  tags: z.array(z.string()).optional()
-})
-
+// https://github.com/usalu/semio#-representation-
+export const RepresentationSchema = z.object({ url: z.string(), description: z.string().optional(), tags: z.array(z.string()).optional(), qualities: z.array(QualitySchema).optional() })
+export const RepresentationIdSchema = z.object({ tags: z.array(z.string()).optional() })
 export const RepresentationIdLikeSchema = z.union([RepresentationSchema, RepresentationIdSchema, z.array(z.string()), z.string(), z.null(), z.undefined()])
 
-// 📺 A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.
-export const DiagramPointSchema = z.object({
-  // 🎚️ The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
-  x: z.number(),
-  // 🎚️ The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
-  y: z.number()
-})
+// https://github.com/usalu/semio#-diagrampoint-
+export const DiagramPointSchema = z.object({ x: z.number(), y: z.number() })
 
-// ✖️ A 3-point (xyz) of floating point numbers.
-export const PointSchema = z.object({
-  // 🎚️ The x-coordinate of the point.
-  x: z.number(),
-  // 🎚️ The y-coordinate of the point.
-  y: z.number(),
-  // 🎚️ The z-coordinate of the point.
-  z: z.number()
-})
+// https://github.com/usalu/semio#-point-
+export const PointSchema = z.object({ x: z.number(), y: z.number(), z: z.number() })
 
-// ➡️ A 3d-vector (xyz) of floating point numbers.
-export const VectorSchema = z.object({
-  // 🎚️ The x-coordinate of the vector.
-  x: z.number(),
-  // 🎚️ The y-coordinate of the vector.
-  y: z.number(),
-  // 🎚️ The z-coordinate of the vector.
-  z: z.number()
-})
+// https://github.com/usalu/semio#-vector-
+export const VectorSchema = z.object({ x: z.number(), y: z.number(), z: z.number() })
 
-// ◳ A plane is an origin (point) and an orientation (x-axis and y-axis).
-export const PlaneSchema = z.object({
-  // ⌱ The origin of the plane.
-  origin: PointSchema,
-  // ➡️ The x-axis of the plane.
-  xAxis: VectorSchema,
-  // ➡️ The y-axis of the plane.
-  yAxis: VectorSchema
-})
+// https://github.com/usalu/semio#-plane-
+export const PlaneSchema = z.object({ origin: PointSchema, xAxis: VectorSchema, yAxis: VectorSchema })
 
-// 🔌 A port is a connection point (with a direction) of a type.
+// https://github.com/usalu/semio#-port-
 export const PortSchema = z.object({
-  // 🆔 The optional local identifier of the port within the type. No id means the default port.
-  id_: z.string().optional(),
-  // 💬 The optional human-readable description of the port.
-  description: z.string().optional(),
-  // 👨‍👩‍👧‍👦 The optional family of the port. This allows to define explicit compatibility with other ports.
-  family: z.string().optional(),
-  // 💯 Whether the port is mandatory. A mandatory port must be connected in a design.
-  mandatory: z.boolean().optional(),
-  // 💍 The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.
-  t: z.number(),
-  // ✅ The optional other compatible families of the port. An empty list means this port is compatible with all other ports.
-  compatibleFamilies: z.array(z.string()).optional(),
-  // ✖️ The connection point of the port that is attracted to another connection point.
-  point: PointSchema,
-  // ➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.
-  direction: VectorSchema,
-  // 📏 The optional qualities of the port.
-  qualities: z.array(QualitySchema).optional()
+  id_: z.string().optional(), description: z.string().optional(), family: z.string().optional(), mandatory: z.boolean().optional(),
+  t: z.number(), compatibleFamilies: z.array(z.string()).optional(), point: PointSchema, direction: VectorSchema, qualities: z.array(QualitySchema).optional()
 })
-
-// 🔌 The optional local identifier of the port within the type. No id means the default port.
-export const PortIdSchema = z.object({
-  // 🆔 The optional local identifier of the port within the type. No id means the default port.
-  id_: z.string().optional()
-})
-
+export const PortIdSchema = z.object({ id_: z.string().optional() })
 export const PortIdLikeSchema = z.union([PortSchema, PortIdSchema, z.string(), z.null(), z.undefined()])
 
-// 👨‍💻 The information about the author.
-export const AuthorSchema = z.object({
-  // 📛 The name of the author.
-  name: z.string(),
-  // 📧 The email of the author.
-  email: z.string()
-})
+// https://github.com/usalu/semio#-author-
+export const AuthorSchema = z.object({ name: z.string(), email: z.string() })
 
-// 📍 A location on the earth surface (longitude, latitude).
-export const LocationSchema = z.object({
-  // ↔️ The longitude of the location in degrees.
-  longitude: z.number(),
-  // ↕️ The latitude of the location in degrees.
-  latitude: z.number()
-})
+// https://github.com/usalu/semio#-location-
+export const LocationSchema = z.object({ longitude: z.number(), latitude: z.number() })
 
-// 🧩 A type is a reusable element that can be connected with other types over ports.
+// https://github.com/usalu/semio#-type-
 export const TypeSchema = z.object({
-  // 📛 The name of the type
-  name: z.string(),
-  // 💬 The optional human-readable description of the type
-  description: z.string().optional(),
-  // 🪙 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.
-  icon: z.string().optional(),
-  // 🖼️ The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.
-  image: z.string().optional(),
-  // 🔀 The optional variant of the type. No variant means the default variant.
-  variant: z.string().optional(),
-  // 📦 The optional number of items in stock. 2147483647 (=2^31-1) means infinite stock.
-  stock: z.number().optional(),
-  // 👻 Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.
-  virtual: z.boolean().optional(),
-  // Ⓜ️ The length unit of the point and the direction of the ports of the type.
-  unit: z.string(),
-  // 🕒 The creation date of the type
-  created: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
-  // 🕒 The last update date of the type
-  updated: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
-  // 📍 The optional location of the type.
-  location: LocationSchema.optional(),
-  // 💾 The optional representations of the type.
-  representations: z.array(RepresentationSchema).optional(),
-  // 🔌 The optional ports of the type.
-  ports: z.array(PortSchema).optional(),
-  // 👨‍💻 The optional authors of the type.
-  authors: z.array(AuthorSchema).optional(),
-  // 📏 The optional qualities of the type.
-  qualities: z.array(QualitySchema).optional()
+  name: z.string(), description: z.string().optional(), icon: z.string().optional(), image: z.string().optional(), variant: z.string().optional(),
+  stock: z.number().optional(), virtual: z.boolean().optional(), unit: z.string(), created: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
+  updated: z.string().transform((val) => new Date(val)).or(z.date()).optional(), location: LocationSchema.optional(), representations: z.array(RepresentationSchema).optional(),
+  ports: z.array(PortSchema).optional(), authors: z.array(AuthorSchema).optional(), qualities: z.array(QualitySchema).optional()
 })
-
-// 🧩 identifier of the type within the kit.
-export const TypeIdSchema = z.object({
-  // 📛 The name of the type.
-  name: z.string(),
-  // 🔀 The optional variant of the type. No variant means the default variant.
-  variant: z.string().optional()
-})
-
+export const TypeIdSchema = z.object({ name: z.string(), variant: z.string().optional() })
 export const TypeIdLikeSchema = z.union([TypeSchema, TypeIdSchema, z.tuple([z.string(), z.string().optional()]), z.string()])
 
-// ⭕ A piece is a 3d-instance of a type in a design.
+// https://github.com/usalu/semio#-piece-
 export const PieceSchema = z.object({
-  // 🆔 The optional local identifier of the piece within the design. No id means the default piece.
-  id_: z.string(),
-  // 💬 The optional human-readable description of the piece.
-  description: z.string().optional(),
-  // 🧩 The local identifier of the type of the piece within the kit.
-  type: TypeIdSchema,
-  // ◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.
-  plane: PlaneSchema.optional(),
-  // ⌖ The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.
-  center: DiagramPointSchema.optional(),
-  // 📏 The optional qualities of the piece.
-  qualities: z.array(QualitySchema).optional()
+  id_: z.string(), description: z.string().optional(), type: TypeIdSchema, plane: PlaneSchema.optional(), center: DiagramPointSchema.optional(), qualities: z.array(QualitySchema).optional()
 })
-
-// ⭕ The optional local identifier of the piece within the design. No id means the default piece.
-export const PieceIdSchema = z.object({
-  // 🆔 The optional local identifier of the piece within the design. No id means the default piece.
-  id_: z.string()
-})
-
+export const PieceIdSchema = z.object({ id_: z.string() })
 export const PieceIdLikeSchema = z.union([PieceSchema, PieceIdSchema, z.string()])
 
-// 🧱 A side of a piece in a connection.
-export const SideSchema = z.object({
-  // ⭕ The piece-related information of the side.
-  piece: PieceIdSchema,
-  // 🔌 The local identifier of the port within the type.
-  port: PortIdSchema
-})
-
-// 🧱 Identifier for a side within a connection.
-export const SideIdSchema = z.object({
-  // ⭕ The piece-related information of the side.
-  piece: PieceIdSchema
-})
+// https://github.com/usalu/semio#-side-
+export const SideSchema = z.object({ piece: PieceIdSchema, port: PortIdSchema })
+export const SideIdSchema = z.object({ piece: PieceIdSchema })
 
 export const SideIdLikeSchema = z.union([SideSchema, SideIdSchema, z.tuple([z.string(), z.string().optional()]), z.string()])
 
-// 🔗 A bidirectional connection between two pieces of a design.
+// https://github.com/usalu/semio#-connection-
 export const ConnectionSchema = z.object({
-  // 🧲 The connected side of the piece of the connection.
-  connected: SideSchema,
-  // 🧲 The connected side of the piece of the connection.
-  connecting: SideSchema,
-  // 💬 The optional human-readable description of the connection.
-  description: z.string().optional(),
-  // ↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.
-  gap: z.number().optional(),
-  // ↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.
-  shift: z.number().optional(),
-  // 🪜 The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.
-  rise: z.number().optional(),
-  // 🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
-  rotation: z.number().optional(),
-  // 🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.
-  turn: z.number().optional(),
-  // ∡ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.
-  tilt: z.number().optional(),
-  // ➡️ The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.
-  x: z.number().optional(),
-  // ⬆️ The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.
-  y: z.number().optional(),
-  // 📏 The optional qualities of the connection.
-  qualities: z.array(QualitySchema).optional()
+  connected: SideSchema, connecting: SideSchema, description: z.string().optional(),
+  gap: z.number().optional(), shift: z.number().optional(), rise: z.number().optional(), rotation: z.number().optional(), turn: z.number().optional(),
+  tilt: z.number().optional(), x: z.number().optional(), y: z.number().optional(), qualities: z.array(QualitySchema).optional()
 })
-
-// 🔗 Identifier for a connection within a design.
-export const ConnectionIdSchema = z.object({
-  // 🧲 The connected side of the piece of the connection.
-  connected: SideIdSchema,
-  // 🧲 The connected side of the piece of the connection.
-  connecting: SideIdSchema
-})
-
+export const ConnectionIdSchema = z.object({ connected: SideIdSchema, connecting: SideIdSchema })
 export const ConnectionIdLikeSchema = z.union([ConnectionSchema, ConnectionIdSchema, z.tuple([z.string(), z.string()]), z.string()])
 
-// 🏙️ A design is a collection of pieces that are connected.
-export const DesignSchema = z.object({
-  // 📛 The name of the design.
-  name: z.string(),
-  // 💬 The optional human-readable description of the design.
-  description: z.string().optional(),
-  // 🪙 The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.
-  icon: z.string().optional(),
-  // 🖼️ The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.
-  image: z.string().optional(),
-  // 🔀 The optional variant of the design. No variant means the default variant.
-  variant: z.string().optional(),
-  // 🥽 The optional view of the design. No view means the default view.
-  view: z.string().optional(),
-  // 📍 The optional location of the design.
-  location: LocationSchema.optional(),
-  // Ⓜ️ The length unit for all distance-related information of the design.
-  unit: z.string(),
-  // 🕒 The creation date of the design
-  created: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
-  // 🕒 The last update date of the design
-  updated: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
-  // ⭕ The optional pieces of the design.
-  pieces: z.array(PieceSchema).optional(),
-  // 🔗 The optional connections of the design.
-  connections: z.array(ConnectionSchema).optional(),
-  // 👨‍💻 The optional authors of the design.
-  authors: z.array(AuthorSchema).optional(),
-  // 📏 The optional qualities of the design.
-  qualities: z.array(QualitySchema).optional()
-})
-
-// 🏙️ The local identifier of the design within the kit.
-export const DesignIdSchema = z.object({
-  // 📛 The name of the design.
-  name: z.string(),
-  // 🔀 The optional variant of the design. No variant means the default variant.
-  variant: z.string().optional(),
-  // 🥽 The optional view of the design. No view means the default view.
-  view: z.string().optional()
-})
-
+// https://github.com/usalu/semio#-design-
+export const DesignSchema = z.object({ name: z.string(), description: z.string().optional(), icon: z.string().optional(), image: z.string().optional(), variant: z.string().optional(), view: z.string().optional(), location: LocationSchema.optional(), unit: z.string(), created: z.string().transform((val) => new Date(val)).or(z.date()).optional(), updated: z.string().transform((val) => new Date(val)).or(z.date()).optional(), pieces: z.array(PieceSchema).optional(), connections: z.array(ConnectionSchema).optional(), authors: z.array(AuthorSchema).optional(), qualities: z.array(QualitySchema).optional() })
+export const DesignIdSchema = z.object({ name: z.string(), variant: z.string().optional(), view: z.string().optional() })
 export const DesignIdLikeSchema = z.union([DesignSchema, DesignIdSchema, z.tuple([z.string(), z.string().optional(), z.string().optional()]), z.tuple([z.string(), z.string().optional()]), z.string()])
 
-// 🗃️ A kit is a collection of types and designs.
-export const KitSchema = z.object({
-  // 📛 The name of the kit.
-  name: z.string(),
-  // 💬 The optional human-readable description of the kit.
-  description: z.string().optional(),
-  // 🪙 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.
-  icon: z.string().optional(),
-  // 🖼️ The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.
-  image: z.string().optional(),
-  // 🔮 The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.
-  preview: z.string().optional(),
-  // 🔀 The optional version of the kit. No version means the latest version.
-  version: z.string().optional(),
-  // ☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely.
-  remote: z.string().optional(),
-  // 🏠 The optional Unique Resource Locator (URL) of the homepage of the kit.
-  homepage: z.string().optional(),
-  // ⚖️ The optional license [ spdx id | url ] of the kit.
-  license: z.string().optional(),
-  // 🕒 The creation date of the kit
-  created: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
-  // 🕒 The last update date of the kit
-  updated: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
-  // 🧩 The optional types of the kit.
-  types: z.array(TypeSchema).optional(),
-  // 🏙️ The optional designs of the kit.
-  designs: z.array(DesignSchema).optional(),
-  // 📏 The optional qualities of the kit.
-  qualities: z.array(QualitySchema).optional()
-})
-
-// 🗃️ Identifier for a kit.
-export const KitIdSchema = z.object({
-  // 📛 The name of the kit.
-  name: z.string(),
-  // 🔀 The optional version of the kit. No version means the latest version.
-  version: z.string().optional()
-})
-
+// https://github.com/usalu/semio#-kit-
+export const KitSchema = z.object({ name: z.string(), description: z.string().optional(), icon: z.string().optional(), image: z.string().optional(), preview: z.string().optional(), version: z.string().optional(), remote: z.string().optional(), homepage: z.string().optional(), license: z.string().optional(), created: z.string().transform((val) => new Date(val)).or(z.date()).optional(), updated: z.string().transform((val) => new Date(val)).or(z.date()).optional(), types: z.array(TypeSchema).optional(), designs: z.array(DesignSchema).optional(), qualities: z.array(QualitySchema).optional() })
+export const KitIdSchema = z.object({ name: z.string(), version: z.string().optional() })
 export const KitIdLikeSchema = z.union([KitSchema, KitIdSchema, z.tuple([z.string(), z.string().optional()]), z.string()])
 
+//#endregion Persistence
+
+//#region Diffs
+
+export const AuthorDiffSchema = z.object({ name: z.string().optional(), email: z.string().optional() })
+export const AuthorsDiffSchema = z.object({ removed: z.array(z.string()).optional(), updated: z.array(AuthorDiffSchema).optional(), added: z.array(AuthorSchema).optional() })
+export const LocationDiffSchema = z.object({ longitude: z.number().optional(), latitude: z.number().optional() })
+export const QualityDiffSchema = z.object({ name: z.string().optional(), value: z.string().optional(), unit: z.string().optional(), definition: z.string().optional() })
+export const QualitiesDiffSchema = z.object({ removed: z.array(QualityIdSchema).optional(), updated: z.array(QualityDiffSchema).optional(), added: z.array(QualitySchema).optional() })
+export const RepresentationDiffSchema = z.object({ url: z.string().optional(), description: z.string().optional(), tags: z.array(z.string()).optional(), qualities: z.array(QualitySchema).optional() })
+export const RepresentationsDiffSchema = z.object({ removed: z.array(RepresentationIdSchema).optional(), updated: z.array(RepresentationDiffSchema).optional(), added: z.array(RepresentationSchema).optional() })
+export const PortDiffSchema = z.object({
+  id_: z.string().optional(), description: z.string().optional(), family: z.string().optional(), mandatory: z.boolean().optional(),
+  t: z.number().optional(), compatibleFamilies: z.array(z.string()).optional(), point: PointSchema.optional(), direction: VectorSchema.optional(), qualities: z.array(QualitySchema).optional()
+})
+export const PortsDiffSchema = z.object({ removed: z.array(PortIdSchema).optional(), updated: z.array(PortDiffSchema).optional(), added: z.array(PortSchema).optional() })
+export const TypeDiffSchema = z.object({
+  name: z.string().optional(), description: z.string().optional(), icon: z.string().optional(), image: z.string().optional(), variant: z.string().optional(),
+  stock: z.number().optional(), virtual: z.boolean().optional(), unit: z.string().optional(), created: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
+  updated: z.string().transform((val) => new Date(val)).or(z.date()).optional(), location: LocationSchema.optional(), representations: z.array(RepresentationSchema).optional(),
+  ports: z.array(PortSchema).optional(), authors: z.array(AuthorSchema).optional(), qualities: z.array(QualitySchema).optional()
+})
+export const TypesDiffSchema = z.object({ removed: z.array(TypeIdSchema).optional(), updated: z.array(TypeDiffSchema).optional(), added: z.array(TypeSchema).optional() })
 export const PieceDiffSchema = z.object({
-  id_: z.string(),
-  name: z.string().optional(),
-  description: z.string().optional(),
-  type: TypeIdSchema.optional(),
-  plane: PlaneSchema.optional(),
-  center: DiagramPointSchema.optional(),
-  qualities: z.array(QualitySchema).optional()
+  id_: z.string(), name: z.string().optional(), description: z.string().optional(), type: TypeIdSchema.optional(),
+  plane: PlaneSchema.optional(), center: DiagramPointSchema.optional(), qualities: z.array(QualitySchema).optional()
 })
-
-export const PiecesDiffSchema = z.object({
-  removed: z.array(PieceIdSchema).optional(),
-  updated: z.array(PieceDiffSchema).optional(),
-  added: z.array(PieceSchema).optional()
-})
-
-export const SideDiffSchema = z.object({
-  piece: PieceIdSchema,
-  port: PortIdSchema.optional()
-})
-
+export const PiecesDiffSchema = z.object({ removed: z.array(PieceIdSchema).optional(), updated: z.array(PieceDiffSchema).optional(), added: z.array(PieceSchema).optional() })
+export const SideDiffSchema = z.object({ piece: PieceIdSchema, port: PortIdSchema.optional() })
 export const ConnectionDiffSchema = z.object({
-  connected: SideDiffSchema,
-  connecting: SideDiffSchema,
-  description: z.string().optional(),
-  gap: z.number().optional(),
-  shift: z.number().optional(),
-  rise: z.number().optional(),
-  rotation: z.number().optional(),
-  turn: z.number().optional(),
-  tilt: z.number().optional(),
-  x: z.number().optional(),
-  y: z.number().optional()
+  connected: SideDiffSchema, connecting: SideDiffSchema, description: z.string().optional(), gap: z.number().optional(), shift: z.number().optional(), rise: z.number().optional(),
+  rotation: z.number().optional(), turn: z.number().optional(), tilt: z.number().optional(), x: z.number().optional(), y: z.number().optional()
 })
-
-export const ConnectionsDiffSchema = z.object({
-  removed: z.array(ConnectionIdSchema).optional(),
-  updated: z.array(ConnectionDiffSchema).optional(),
-  added: z.array(ConnectionSchema).optional()
-})
-
+export const ConnectionsDiffSchema = z.object({ removed: z.array(ConnectionIdSchema).optional(), updated: z.array(ConnectionDiffSchema).optional(), added: z.array(ConnectionSchema).optional() })
 export const DesignDiffSchema = z.object({
-  name: z.string().optional(),
-  description: z.string().optional(),
-  icon: z.string().optional(),
-  image: z.string().optional(),
-  variant: z.string().optional(),
-  view: z.string().optional(),
-  location: LocationSchema.optional(),
-  unit: z.string().optional(),
-  pieces: PiecesDiffSchema.optional(),
-  connections: ConnectionsDiffSchema.optional()
+  name: z.string().optional(), description: z.string().optional(), icon: z.string().optional(), image: z.string().optional(), variant: z.string().optional(), view: z.string().optional(),
+  location: LocationSchema.optional(), unit: z.string().optional(), pieces: PiecesDiffSchema.optional(), connections: ConnectionsDiffSchema.optional()
+})
+export const DesignsDiffSchema = z.object({ removed: z.array(DesignIdSchema).optional(), updated: z.array(DesignDiffSchema).optional(), added: z.array(DesignSchema).optional() })
+export const KitDiffSchema = z.object({
+  name: z.string().optional(), description: z.string().optional(), icon: z.string().optional(), image: z.string().optional(), preview: z.string().optional(), version: z.string().optional(),
+  remote: z.string().optional(), homepage: z.string().optional(), license: z.string().optional(), types: z.array(TypeDiffSchema).optional(), designs: z.array(DesignDiffSchema).optional(), qualities: z.array(QualityDiffSchema).optional()
 })
 
 export const DiffStatusSchema = z.enum(['unchanged', 'added', 'removed', 'modified'])
 
-// Export TypeScript types inferred from Zod schemas
+//#endregion Diffs
+
 export type Quality = z.infer<typeof QualitySchema>
 export type QualityId = z.infer<typeof QualityIdSchema>
 export type QualityIdLike = z.infer<typeof QualityIdLikeSchema>
@@ -466,13 +207,14 @@ export type SideDiff = z.infer<typeof SideDiffSchema>
 export type ConnectionDiff = z.infer<typeof ConnectionDiffSchema>
 export type ConnectionsDiff = z.infer<typeof ConnectionsDiffSchema>
 export type DesignDiff = z.infer<typeof DesignDiffSchema>
+export type KitDiff = z.infer<typeof KitDiffSchema>
+export type AuthorsDiff = z.infer<typeof AuthorsDiffSchema>
+export type QualitiesDiff = z.infer<typeof QualitiesDiffSchema>
+export type RepresentationsDiff = z.infer<typeof RepresentationsDiffSchema>
+export type PortsDiff = z.infer<typeof PortsDiffSchema>
+export type TypesDiff = z.infer<typeof TypesDiffSchema>
 
-export enum DiffStatus {
-  Unchanged = 'unchanged',
-  Added = 'added',
-  Removed = 'removed',
-  Modified = 'modified'
-}
+export enum DiffStatus { Unchanged = 'unchanged', Added = 'added', Removed = 'removed', Modified = 'modified' }
 
 //#endregion Types
 
@@ -634,6 +376,36 @@ export const kitIdLikeToKitId = (kitId: KitIdLike): KitId => {
   return { name: kitId.name, version: kitId.version ?? undefined }
 }
 
+export const toThreeRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1)
+export const toSemioRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1)
+export const toThreeQuaternion = (): THREE.Quaternion => new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)
+export const toSemioQuaternion = (): THREE.Quaternion => new THREE.Quaternion(0.7071067811865476, 0, 0, -0.7071067811865476)
+
+export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
+  const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z)
+  const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z)
+  const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z)
+  const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis).normalize()
+  const orthoYAxis = new THREE.Vector3().crossVectors(zAxis, xAxis).normalize()
+  const matrix = new THREE.Matrix4().makeBasis(xAxis.normalize(), orthoYAxis, zAxis).setPosition(origin)
+  return matrix
+}
+export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
+  const origin = new THREE.Vector3()
+  const xAxis = new THREE.Vector3()
+  const yAxis = new THREE.Vector3()
+  const zAxis = new THREE.Vector3()
+  matrix.decompose(origin, new THREE.Quaternion(), new THREE.Vector3())
+  matrix.extractBasis(xAxis, yAxis, zAxis)
+  return {
+    origin: { x: origin.x, y: origin.y, z: origin.z },
+    xAxis: { x: xAxis.x, y: xAxis.y, z: xAxis.z },
+    yAxis: { x: yAxis.x, y: yAxis.y, z: yAxis.z }
+  }
+}
+export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vector3(v.x, v.y, v.z)
+
+
 //#endregion Mapping
 
 
@@ -642,8 +414,10 @@ export const kitIdLikeToKitId = (kitId: KitIdLike): KitId => {
 //#region Propositional
 
 export const arePortsCompatible = (port: Port, otherPort: Port): boolean => {
-  if ((normalize(port.family) === '' || normalize(otherPort.family) === '')) return true
-  return (port.compatibleFamilies ?? []).includes(normalize(otherPort.family)) || (otherPort.compatibleFamilies ?? []).includes(normalize(port.family)) || false
+  const normalizedPortFamily = normalize(port.family)
+  const normalizedOtherPortFamily = normalize(otherPort.family)
+  if (normalizedPortFamily === '' || normalizedOtherPortFamily === '') return true
+  return (port.compatibleFamilies ?? []).includes(normalizedOtherPortFamily) || (otherPort.compatibleFamilies ?? []).includes(normalizedPortFamily)
 }
 
 export const isPortInUse = (design: Design, piece: Piece | PieceId, port: Port | PortId): boolean => {
@@ -722,6 +496,12 @@ export const findQualityValue = (entity: Kit | Type | Design | Piece | Connectio
   if (quality?.value === undefined && defaultValue === null) return null
   return quality?.value ?? defaultValue ?? ''
 }
+const findRepresentation = (representations: Representation[], tags: string[]): Representation => {
+  const indices = representations.map((r) => jaccard(r.tags, tags))
+  const maxIndex = Math.max(...indices)
+  const maxIndexIndex = indices.indexOf(maxIndex)
+  return representations[maxIndexIndex]
+}
 export const findPort = (ports: Port[], portId: PortIdLike): Port => {
   const normalizedPortId = portIdLikeToPortId(portId)
   const port = ports.find((p) => normalize(p.id_) === normalize(normalizedPortId.id_))
@@ -740,6 +520,7 @@ export const findPortForPieceInConnection = (type: Type, connection: Connection,
   return findPortInType(type, portId)
 }
 export const findPieceInDesign = (design: Design, pieceId: PieceIdLike): Piece => findPiece(design.pieces ?? [], pieceId)
+export const findPieceTypeInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Type => findTypeInKit(kit, findPieceInDesign(findDesignInKit(kit, designId), pieceId).type)
 export const findConnection = (connections: Connection[], connectionId: ConnectionIdLike, strict: boolean = false): Connection => {
   const normalizedConnectionId = connectionIdLikeToConnectionId(connectionId)
   const connection = connections.find((c) => isSameConnection(c, normalizedConnectionId, strict))
@@ -867,12 +648,30 @@ export const findReplacableTypesForPiecesInDesign = (kit: Kit, designId: DesignI
   }) ?? []
 }
 
+export const piecesMetadata = (kit: Kit, designId: DesignIdLike): Map<string, { plane: Plane, center: DiagramPoint, fixedPieceId: string, parentPieceId: string | null, depth: number }> => {
+  const normalizedDesignId = designIdLikeToDesignId(designId)
+  const flatDesign = flattenDesign(kit, normalizedDesignId)
+  const fixedPieceIds = flatDesign.pieces?.map((p) => findQualityValue(p, 'semio.fixedPieceId') || p.id_)
+  const parentPieceIds = flatDesign.pieces?.map((p) => findQualityValue(p, 'semio.parentPieceId', null))
+  const depths = flatDesign.pieces?.map((p) => parseInt(findQualityValue(p, 'semio.depth', '0')!))
+  return new Map(flatDesign.pieces?.map((p, index) => [p.id_, { plane: p.plane!, center: p.center!, fixedPieceId: fixedPieceIds![index], parentPieceId: parentPieceIds![index], depth: depths![index] }]))
+}
 
 //#endregion Predicates
 
 //#endregion Querying
 
 //#region CRUDs
+
+//#region Plane
+
+const roundPlane = (plane: Plane): Plane => ({
+  origin: { x: round(plane.origin.x), y: round(plane.origin.y), z: round(plane.origin.z) },
+  xAxis: { x: round(plane.xAxis.x), y: round(plane.xAxis.y), z: round(plane.xAxis.z) },
+  yAxis: { x: round(plane.yAxis.x), y: round(plane.yAxis.y), z: round(plane.yAxis.z) }
+})
+
+//#endregion Plane
 
 //#region Quality
 
@@ -911,23 +710,195 @@ export const setQualities = (
 
 //#endregion Quality
 
-//#region Plane
+//#region Port
 
-const roundPlane = (plane: Plane): Plane => ({
-  origin: { x: round(plane.origin.x), y: round(plane.origin.y), z: round(plane.origin.z) },
-  xAxis: { x: round(plane.xAxis.x), y: round(plane.xAxis.y), z: round(plane.xAxis.z) },
-  yAxis: { x: round(plane.yAxis.x), y: round(plane.yAxis.y), z: round(plane.yAxis.z) }
-})
+export const unifyPortFamiliesAndCompatibleFamiliesForTypes = (types: Type[]): Type[] => {
+  const allFamilies = new Set<string>()
+  for (const type of types) {
+    for (const port of type.ports || []) {
+      if (port.family && port.family !== '') allFamilies.add(port.family)
+      for (const compatibleFamily of port.compatibleFamilies || []) {
+        if (compatibleFamily && compatibleFamily !== '') allFamilies.add(compatibleFamily)
+      }
+    }
+  }
 
-//#endregion Plane
+  // Union-Find data structure
+  const parent = new Map<string, string>()
+  const rank = new Map<string, number>()
 
-//#region Kit
+  // Initialize each family as its own parent
+  for (const family of allFamilies) {
+    parent.set(family, family)
+    rank.set(family, 0)
+  }
 
-export const updateDesignInKit = (kit: Kit, design: Design): Kit => {
-  return { ...kit, designs: (kit.designs || []).map(d => isSameDesign(d, design) ? design : d) }
+  // Find with path compression
+  const find = (family: string): string => {
+    if (parent.get(family) !== family) parent.set(family, find(parent.get(family)!))
+    return parent.get(family)!
+  }
+
+  // Union by rank
+  const union = (family1: string, family2: string): void => {
+    const root1 = find(family1)
+    const root2 = find(family2)
+
+    if (root1 === root2) return
+
+    const rank1 = rank.get(root1)!
+    const rank2 = rank.get(root2)!
+
+    if (rank1 < rank2) {
+      parent.set(root1, root2)
+    } else if (rank1 > rank2) {
+      parent.set(root2, root1)
+    } else {
+      parent.set(root2, root1)
+      rank.set(root1, rank1 + 1)
+    }
+  }
+
+  // Build compatibility groups by examining all ports
+  for (const type of types) {
+    for (const port of type.ports || []) {
+      const portFamily = port.family
+      const compatibleFamilies = port.compatibleFamilies || []
+
+      if (portFamily && portFamily !== '') {
+        // Union port's family with all its compatible families
+        for (const compatibleFamily of compatibleFamilies) {
+          if (compatibleFamily && compatibleFamily !== '') {
+            union(portFamily, compatibleFamily)
+          }
+        }
+      }
+
+      // Also union all compatible families with each other
+      for (let i = 0; i < compatibleFamilies.length; i++) {
+        for (let j = i + 1; j < compatibleFamilies.length; j++) {
+          const family1 = compatibleFamilies[i]
+          const family2 = compatibleFamilies[j]
+          if (family1 && family1 !== '' && family2 && family2 !== '') {
+            union(family1, family2)
+          }
+        }
+      }
+    }
+  }
+
+  // Create mapping from any family to its representative
+  const familyToRepresentative = new Map<string, string>()
+  for (const family of allFamilies) {
+    familyToRepresentative.set(family, find(family))
+  }
+
+  // Update all types with unified port families
+  return types.map(type => ({
+    ...type,
+    ports: type.ports?.map(port => {
+      const portFamily = port.family
+      const compatibleFamilies = port.compatibleFamilies || []
+
+      // Determine the representative family for this port
+      let representative: string | undefined
+
+      if (portFamily && portFamily !== '') {
+        representative = familyToRepresentative.get(portFamily)
+      } else if (compatibleFamilies.length > 0) {
+        // If no family but has compatible families, use the first one's representative
+        const firstCompatible = compatibleFamilies.find(f => f && f !== '')
+        if (firstCompatible) {
+          representative = familyToRepresentative.get(firstCompatible)
+        }
+      }
+
+      if (representative) {
+        return {
+          ...port,
+          family: representative,
+          compatibleFamilies: [representative]
+        }
+      } else {
+        // No family information, keep as is
+        return port
+      }
+    })
+  }))
 }
 
-//#endregion Kit
+//#endregion Port
+
+//#region Piece
+
+export const addPieceToDesign = (design: Design, piece: Piece): Design => ({ ...design, pieces: [...(design.pieces || []), piece] })
+export const setPieceInDesign = (design: Design, piece: Piece): Design => ({ ...design, pieces: (design.pieces || []).map(p => p.id_ === piece.id_ ? piece : p) })
+export const removePieceFromDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Design => {
+  throw new Error("Not implemented");
+}
+
+export const addPiecesToDesign = (design: Design, pieces: Piece[]): Design => ({ ...design, pieces: [...(design.pieces || []), ...pieces] })
+export const setPiecesInDesign = (design: Design, pieces: Piece[]): Design => ({ ...design, pieces: (design.pieces || []).map(p => pieces.find(p2 => p2.id_ === p.id_) || p) })
+export const removePiecesFromDesign = (kit: Kit, designId: DesignIdLike, pieceIds: PieceIdLike[]): Design => {
+  throw new Error("Not implemented");
+}
+
+/**
+ * 🔗 Returns a map of piece ids to representation urls for the given design and types.
+ * @param design - The design with the pieces to get the representation urls for.
+ * @param types - The types of the pieces with the representations.
+ * @returns A map of piece ids to representation urls.
+ */
+export const getPieceRepresentationUrls = (design: Design, types: Type[], tags: string[] = []): Map<string, string> => {
+  const representationUrls = new Map<string, string>()
+  const normalizeVariant = (v: string | undefined | null) => v ?? ''
+  design.pieces?.forEach((p) => {
+    const type = types.find(
+      (t) => t.name === p.type.name && normalizeVariant(t.variant) === normalizeVariant(p.type.variant)
+    )
+    if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`)
+    if (!type.representations)
+      throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} has no representations`)
+    const representation = findRepresentation(type.representations, tags)
+    representationUrls.set(p.id_, representation.url)
+  })
+  return representationUrls
+}
+export const fixPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Design => {
+  const normalizedDesignId = designIdLikeToDesignId(designId)
+  const normalizedPieceId = pieceIdLikeToPieceId(pieceId)
+  const parentConnection = findParentConnectionForPieceInDesign(kit, normalizedDesignId, normalizedPieceId)
+  return removeConnectionFromDesign(kit, normalizedDesignId, parentConnection)
+}
+export const fixPiecesInDesign = (kit: Kit, designId: DesignIdLike, pieceIds: PieceIdLike[]): Design => {
+  const normalizedDesignId = designIdLikeToDesignId(designId)
+  const normalizedPieceIds = pieceIds.map(pieceIdLikeToPieceId)
+  const parentConnections = normalizedPieceIds.map(pieceId => findParentConnectionForPieceInDesign(kit, normalizedDesignId, pieceId))
+  return removeConnectionsFromDesign(kit, normalizedDesignId, parentConnections)
+}
+
+//#endregion Piece
+
+//#region Connection
+
+export const addConnectionToDesign = (design: Design, connection: Connection): Design => ({ ...design, connections: [...(design.connections || []), connection] })
+export const setConnectionInDesign = (design: Design, connection: Connection): Design => {
+  return ({ ...design, connections: (design.connections || []).map(c => isSameConnection(c, { connected: connection.connected, connecting: connection.connecting }) ? connection : c) })
+}
+export const removeConnectionFromDesign = (kit: Kit, designId: DesignIdLike, connectionId: ConnectionIdLike): Design => {
+  throw new Error("Not implemented");
+}
+
+export const addConnectionsToDesign = (design: Design, connections: Connection[]): Design => ({ ...design, connections: [...(design.connections || []), ...connections] })
+export const setConnectionsInDesign = (design: Design, connections: Connection[]): Design => {
+  const connectionsMap = new Map(connections.map(c => [`${c.connected.piece.id_}:${c.connected.port.id_ || ''}:${c.connecting.piece.id_}:${c.connecting.port.id_ || ''}`, c]))
+  return ({ ...design, connections: (design.connections || []).map(c => connectionsMap.get(`${c.connected.piece.id_}:${c.connected.port.id_ || ''}:${c.connecting.piece.id_}:${c.connecting.port.id_ || ''}`) || c) })
+}
+export const removeConnectionsFromDesign = (kit: Kit, designId: DesignIdLike, connectionIds: ConnectionIdLike[]): Design => {
+  throw new Error("Not implemented");
+}
+
+//#endregion Connection
 
 //#region Design
 
@@ -968,24 +939,88 @@ export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: DesignI
   return { ...updatedDesign, pieces: updatedPieces, connections: updatedConnections }
 }
 
-/**
- * Returns a 'flattened' version of a design from a kit, with all piece positions and planes resolved.
- *
- * Given a kit and a designId, this function finds the corresponding design and computes the absolute
- * placement (plane and center) for each piece by traversing the design's connection graph. It uses
- * breadth-first search to propagate placement information from root pieces (those with a defined plane)
- * to all connected pieces, resolving their positions in 3D space.
- *
- * Throws an error if the design is not found in the kit.
- *
- * This is useful for preparing a design for visualization or further processing, ensuring all pieces
- * have explicit placement information.
- *
- * @param kit - The kit containing the design and types
- * @param designId - The identifier for the design to flatten
- * @returns The flattened Design object with resolved piece positions and planes
- * @throws If the design is not found in the kit
- */
+const computeChildPlane = (parentPlane: Plane, parentPort: Port, childPort: Port, connection: Connection): Plane => {
+  const parentMatrix = planeToMatrix(parentPlane)
+  const parentPoint = vectorToThree(parentPort.point)
+  const parentDirection = vectorToThree(parentPort.direction).normalize()
+  const childPoint = vectorToThree(childPort.point)
+  const childDirection = vectorToThree(childPort.direction).normalize()
+
+  const { gap, shift, rise, rotation, turn, tilt } = connection
+  const rotationRad = THREE.MathUtils.degToRad(rotation ?? 0)
+  const turnRad = THREE.MathUtils.degToRad(turn ?? 0)
+  const tiltRad = THREE.MathUtils.degToRad(tilt ?? 0)
+
+  const reverseChildDirection = childDirection.clone().negate()
+
+  let alignQuat: THREE.Quaternion
+  if (new THREE.Vector3().crossVectors(parentDirection, reverseChildDirection).length() < 0.01) {
+    // Parallel vectors
+    // Idea taken from: // https://github.com/dfki-ric/pytransform3d/blob/143943b028fc776adfc6939b1d7c2c6edeaa2d90/pytransform3d/rotations/_utils.py#L253
+    if (Math.abs(parentDirection.z) < TOLERANCE) {
+      alignQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI) // 180* around z axis
+    } else {
+      // 180* around cross product of z and parentDirection
+      const axis = new THREE.Vector3(0, 0, 1).cross(parentDirection).normalize()
+      alignQuat = new THREE.Quaternion().setFromAxisAngle(axis, Math.PI)
+    }
+  } else {
+    alignQuat = new THREE.Quaternion().setFromUnitVectors(reverseChildDirection, parentDirection)
+  }
+
+  const directionT = new THREE.Matrix4().makeRotationFromQuaternion(alignQuat)
+
+  const yAxis = new THREE.Vector3(0, 1, 0)
+  const parentPortQuat = new THREE.Quaternion().setFromUnitVectors(yAxis, parentDirection)
+  const parentRotationT = new THREE.Matrix4().makeRotationFromQuaternion(parentPortQuat)
+
+  const gapDirection = new THREE.Vector3(0, 1, 0).applyMatrix4(parentRotationT)
+  const shiftDirection = new THREE.Vector3(1, 0, 0).applyMatrix4(parentRotationT)
+  const raiseDirection = new THREE.Vector3(0, 0, 1).applyMatrix4(parentRotationT)
+  const turnAxis = new THREE.Vector3(0, 0, 1).applyMatrix4(parentRotationT)
+  const tiltAxis = new THREE.Vector3(1, 0, 0).applyMatrix4(parentRotationT)
+
+  let orientationT = directionT.clone()
+
+  const rotateT = new THREE.Matrix4().makeRotationAxis(parentDirection, -rotationRad)
+  orientationT.premultiply(rotateT)
+
+  turnAxis.applyMatrix4(rotateT)
+  tiltAxis.applyMatrix4(rotateT)
+
+  const turnT = new THREE.Matrix4().makeRotationAxis(turnAxis, turnRad)
+  orientationT.premultiply(turnT)
+
+  const tiltT = new THREE.Matrix4().makeRotationAxis(tiltAxis, tiltRad)
+  orientationT.premultiply(tiltT)
+
+  const centerChildT = new THREE.Matrix4().makeTranslation(-childPoint.x, -childPoint.y, -childPoint.z)
+  let transform = new THREE.Matrix4().multiplyMatrices(orientationT, centerChildT)
+
+  const gapTransform = new THREE.Matrix4().makeTranslation(
+    gapDirection.x * (gap ?? 0),
+    gapDirection.y * (gap ?? 0),
+    gapDirection.z * (gap ?? 0)
+  )
+  const shiftTransform = new THREE.Matrix4().makeTranslation(
+    shiftDirection.x * (shift ?? 0),
+    shiftDirection.y * (shift ?? 0),
+    shiftDirection.z * (shift ?? 0)
+  )
+  const raiseTransform = new THREE.Matrix4().makeTranslation(
+    raiseDirection.x * (rise ?? 0),
+    raiseDirection.y * (rise ?? 0),
+    raiseDirection.z * (rise ?? 0)
+  )
+
+  const translationT = raiseTransform.clone().multiply(shiftTransform).multiply(gapTransform)
+  transform.premultiply(translationT)
+  const moveToParentT = new THREE.Matrix4().makeTranslation(parentPoint.x, parentPoint.y, parentPoint.z)
+  transform.premultiply(moveToParentT)
+  const finalMatrix = new THREE.Matrix4().multiplyMatrices(parentMatrix, transform)
+
+  return matrixToPlane(finalMatrix)
+}
 export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
   const normalizedDesignId = designIdLikeToDesignId(designId)
   const design = findDesignInKit(kit, normalizedDesignId)
@@ -1149,85 +1184,13 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
 
 //#endregion Design
 
-//#region Piece
+//#region Kit
 
-export const addPieceToDesign = (design: Design, piece: Piece): Design => ({ ...design, pieces: [...(design.pieces || []), piece] })
-export const setPieceInDesign = (design: Design, piece: Piece): Design => ({ ...design, pieces: (design.pieces || []).map(p => p.id_ === piece.id_ ? piece : p) })
-export const removePieceFromDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Design => {
-  throw new Error("Not implemented");
+export const updateDesignInKit = (kit: Kit, design: Design): Kit => {
+  return { ...kit, designs: (kit.designs || []).map(d => isSameDesign(d, design) ? design : d) }
 }
 
-export const addPiecesToDesign = (design: Design, pieces: Piece[]): Design => ({ ...design, pieces: [...(design.pieces || []), ...pieces] })
-export const setPiecesInDesign = (design: Design, pieces: Piece[]): Design => ({ ...design, pieces: (design.pieces || []).map(p => pieces.find(p2 => p2.id_ === p.id_) || p) })
-export const removePiecesFromDesign = (kit: Kit, designId: DesignIdLike, pieceIds: PieceIdLike[]): Design => {
-  throw new Error("Not implemented");
-}
-
-/**
- * 🔗 Returns a map of piece ids to representation urls for the given design and types.
- * @param design - The design with the pieces to get the representation urls for.
- * @param types - The types of the pieces with the representations.
- * @returns A map of piece ids to representation urls.
- */
-export const getPieceRepresentationUrls = (design: Design, types: Type[], tags: string[] = []): Map<string, string> => {
-  const representationUrls = new Map<string, string>()
-  const normalizeVariant = (v: string | undefined | null) => v ?? ''
-  design.pieces?.forEach((p) => {
-    const type = types.find(
-      (t) => t.name === p.type.name && normalizeVariant(t.variant) === normalizeVariant(p.type.variant)
-    )
-    if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`)
-    if (!type.representations)
-      throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} has no representations`)
-    const representation = selectRepresentation(type.representations, tags)
-    representationUrls.set(p.id_, representation.url)
-  })
-  return representationUrls
-}
-
-export const piecesMetadata = (kit: Kit, designId: DesignIdLike): Map<string, { plane: Plane, center: DiagramPoint, fixedPieceId: string, parentPieceId: string | null, depth: number }> => {
-  const normalizedDesignId = designIdLikeToDesignId(designId)
-  const flatDesign = flattenDesign(kit, normalizedDesignId)
-  const fixedPieceIds = flatDesign.pieces?.map((p) => findQualityValue(p, 'semio.fixedPieceId') || p.id_)
-  const parentPieceIds = flatDesign.pieces?.map((p) => findQualityValue(p, 'semio.parentPieceId', null))
-  const depths = flatDesign.pieces?.map((p) => parseInt(findQualityValue(p, 'semio.depth', '0')!))
-  return new Map(flatDesign.pieces?.map((p, index) => [p.id_, { plane: p.plane!, center: p.center!, fixedPieceId: fixedPieceIds![index], parentPieceId: parentPieceIds![index], depth: depths![index] }]))
-}
-export const fixPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Design => {
-  const normalizedDesignId = designIdLikeToDesignId(designId)
-  const normalizedPieceId = pieceIdLikeToPieceId(pieceId)
-  const parentConnection = findParentConnectionForPieceInDesign(kit, normalizedDesignId, normalizedPieceId)
-  return removeConnectionFromDesign(kit, normalizedDesignId, parentConnection)
-}
-export const fixPiecesInDesign = (kit: Kit, designId: DesignIdLike, pieceIds: PieceIdLike[]): Design => {
-  const normalizedDesignId = designIdLikeToDesignId(designId)
-  const normalizedPieceIds = pieceIds.map(pieceIdLikeToPieceId)
-  const parentConnections = normalizedPieceIds.map(pieceId => findParentConnectionForPieceInDesign(kit, normalizedDesignId, pieceId))
-  return removeConnectionsFromDesign(kit, normalizedDesignId, parentConnections)
-}
-
-//#endregion Piece
-
-//#region Connection
-
-export const addConnectionToDesign = (design: Design, connection: Connection): Design => ({ ...design, connections: [...(design.connections || []), connection] })
-export const setConnectionInDesign = (design: Design, connection: Connection): Design => {
-  return ({ ...design, connections: (design.connections || []).map(c => isSameConnection(c, { connected: connection.connected, connecting: connection.connecting }) ? connection : c) })
-}
-export const removeConnectionFromDesign = (kit: Kit, designId: DesignIdLike, connectionId: ConnectionIdLike): Design => {
-  throw new Error("Not implemented");
-}
-
-export const addConnectionsToDesign = (design: Design, connections: Connection[]): Design => ({ ...design, connections: [...(design.connections || []), ...connections] })
-export const setConnectionsInDesign = (design: Design, connections: Connection[]): Design => {
-  const connectionsMap = new Map(connections.map(c => [`${c.connected.piece.id_}:${c.connected.port.id_ || ''}:${c.connecting.piece.id_}:${c.connecting.port.id_ || ''}`, c]))
-  return ({ ...design, connections: (design.connections || []).map(c => connectionsMap.get(`${c.connected.piece.id_}:${c.connected.port.id_ || ''}:${c.connecting.piece.id_}:${c.connecting.port.id_ || ''}`) || c) })
-}
-export const removeConnectionsFromDesign = (kit: Kit, designId: DesignIdLike, connectionIds: ConnectionIdLike[]): Design => {
-  throw new Error("Not implemented");
-}
-
-//#endregion Connection
+//#endregion Kit
 
 //#region DesignDiff
 
@@ -1411,126 +1374,5 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
 //#endregion DesignDiff
 
 //#endregion CRUDs
-
-
-export const toThreeRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1)
-export const toSemioRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1)
-export const toThreeQuaternion = (): THREE.Quaternion => new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)
-export const toSemioQuaternion = (): THREE.Quaternion => new THREE.Quaternion(0.7071067811865476, 0, 0, -0.7071067811865476)
-
-export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
-  const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z)
-  const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z)
-  const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z)
-  const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis).normalize()
-  const orthoYAxis = new THREE.Vector3().crossVectors(zAxis, xAxis).normalize()
-  const matrix = new THREE.Matrix4().makeBasis(xAxis.normalize(), orthoYAxis, zAxis).setPosition(origin)
-  return matrix
-}
-export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
-  const origin = new THREE.Vector3()
-  const xAxis = new THREE.Vector3()
-  const yAxis = new THREE.Vector3()
-  const zAxis = new THREE.Vector3()
-  matrix.decompose(origin, new THREE.Quaternion(), new THREE.Vector3())
-  matrix.extractBasis(xAxis, yAxis, zAxis)
-  return {
-    origin: { x: origin.x, y: origin.y, z: origin.z },
-    xAxis: { x: xAxis.x, y: xAxis.y, z: xAxis.z },
-    yAxis: { x: yAxis.x, y: yAxis.y, z: yAxis.z }
-  }
-}
-
-export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vector3(v.x, v.y, v.z)
-
-const computeChildPlane = (parentPlane: Plane, parentPort: Port, childPort: Port, connection: Connection): Plane => {
-  const parentMatrix = planeToMatrix(parentPlane)
-  const parentPoint = vectorToThree(parentPort.point)
-  const parentDirection = vectorToThree(parentPort.direction).normalize()
-  const childPoint = vectorToThree(childPort.point)
-  const childDirection = vectorToThree(childPort.direction).normalize()
-
-  const { gap, shift, rise, rotation, turn, tilt } = connection
-  const rotationRad = THREE.MathUtils.degToRad(rotation ?? 0)
-  const turnRad = THREE.MathUtils.degToRad(turn ?? 0)
-  const tiltRad = THREE.MathUtils.degToRad(tilt ?? 0)
-
-  const reverseChildDirection = childDirection.clone().negate()
-
-  let alignQuat: THREE.Quaternion
-  if (new THREE.Vector3().crossVectors(parentDirection, reverseChildDirection).length() < 0.01) {
-    // Parallel vectors
-    // Idea taken from: // https://github.com/dfki-ric/pytransform3d/blob/143943b028fc776adfc6939b1d7c2c6edeaa2d90/pytransform3d/rotations/_utils.py#L253
-    if (Math.abs(parentDirection.z) < TOLERANCE) {
-      alignQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI) // 180* around z axis
-    } else {
-      // 180* around cross product of z and parentDirection
-      const axis = new THREE.Vector3(0, 0, 1).cross(parentDirection).normalize()
-      alignQuat = new THREE.Quaternion().setFromAxisAngle(axis, Math.PI)
-    }
-  } else {
-    alignQuat = new THREE.Quaternion().setFromUnitVectors(reverseChildDirection, parentDirection)
-  }
-
-  const directionT = new THREE.Matrix4().makeRotationFromQuaternion(alignQuat)
-
-  const yAxis = new THREE.Vector3(0, 1, 0)
-  const parentPortQuat = new THREE.Quaternion().setFromUnitVectors(yAxis, parentDirection)
-  const parentRotationT = new THREE.Matrix4().makeRotationFromQuaternion(parentPortQuat)
-
-  const gapDirection = new THREE.Vector3(0, 1, 0).applyMatrix4(parentRotationT)
-  const shiftDirection = new THREE.Vector3(1, 0, 0).applyMatrix4(parentRotationT)
-  const raiseDirection = new THREE.Vector3(0, 0, 1).applyMatrix4(parentRotationT)
-  const turnAxis = new THREE.Vector3(0, 0, 1).applyMatrix4(parentRotationT)
-  const tiltAxis = new THREE.Vector3(1, 0, 0).applyMatrix4(parentRotationT)
-
-  let orientationT = directionT.clone()
-
-  const rotateT = new THREE.Matrix4().makeRotationAxis(parentDirection, -rotationRad)
-  orientationT.premultiply(rotateT)
-
-  turnAxis.applyMatrix4(rotateT)
-  tiltAxis.applyMatrix4(rotateT)
-
-  const turnT = new THREE.Matrix4().makeRotationAxis(turnAxis, turnRad)
-  orientationT.premultiply(turnT)
-
-  const tiltT = new THREE.Matrix4().makeRotationAxis(tiltAxis, tiltRad)
-  orientationT.premultiply(tiltT)
-
-  const centerChildT = new THREE.Matrix4().makeTranslation(-childPoint.x, -childPoint.y, -childPoint.z)
-  let transform = new THREE.Matrix4().multiplyMatrices(orientationT, centerChildT)
-
-  const gapTransform = new THREE.Matrix4().makeTranslation(
-    gapDirection.x * (gap ?? 0),
-    gapDirection.y * (gap ?? 0),
-    gapDirection.z * (gap ?? 0)
-  )
-  const shiftTransform = new THREE.Matrix4().makeTranslation(
-    shiftDirection.x * (shift ?? 0),
-    shiftDirection.y * (shift ?? 0),
-    shiftDirection.z * (shift ?? 0)
-  )
-  const raiseTransform = new THREE.Matrix4().makeTranslation(
-    raiseDirection.x * (rise ?? 0),
-    raiseDirection.y * (rise ?? 0),
-    raiseDirection.z * (rise ?? 0)
-  )
-
-  const translationT = raiseTransform.clone().multiply(shiftTransform).multiply(gapTransform)
-  transform.premultiply(translationT)
-  const moveToParentT = new THREE.Matrix4().makeTranslation(parentPoint.x, parentPoint.y, parentPoint.z)
-  transform.premultiply(moveToParentT)
-  const finalMatrix = new THREE.Matrix4().multiplyMatrices(parentMatrix, transform)
-
-  return matrixToPlane(finalMatrix)
-}
-
-const selectRepresentation = (representations: Representation[], tags: string[]): Representation => {
-  const indices = representations.map((r) => jaccard(r.tags, tags))
-  const maxIndex = Math.max(...indices)
-  const maxIndexIndex = indices.indexOf(maxIndex)
-  return representations[maxIndexIndex]
-}
 
 //#endregion

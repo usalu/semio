@@ -43,6 +43,7 @@ import {
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
+  applyDesignDiff,
   arePortsCompatible,
   Connection,
   ConnectionDiff,
@@ -64,14 +65,15 @@ import {
   PieceDiff,
   piecesMetadata,
   Port,
-  Type
+  Type,
+  unifyPortFamiliesAndCompatibleFamiliesForTypes,
+  updateDesignInKit
 } from '@semio/js'
 
 // import '@xyflow/react/dist/base.css';
 import '@semio/js/globals.css'
 import '@xyflow/react/dist/style.css'
-import { DesignEditorSelection } from '../..'
-import { useDesignEditor } from './DesignEditor'
+import { DesignEditorSelection, useDesignEditor } from './DesignEditor'
 
 
 //#region React Flow
@@ -100,7 +102,12 @@ type DiagramNode = PieceNode
 type ConnectionEdge = Edge<{ connection: Connection; isParentConnection?: boolean }, 'connection'>
 type DiagramEdge = ConnectionEdge
 
-type PortHandleProps = { port: Port }
+type PortHandleProps = {
+  port: Port
+  pieceId: string
+  selected?: boolean
+  onPortClick: (port: Port) => void
+}
 
 const getPortPositionStyle = (port: Port): { x: number; y: number } => {
   // t is normalized in [0,1[ and clockwise and starts at 12 o'clock
@@ -116,19 +123,87 @@ const getPortPositionStyle = (port: Port): { x: number; y: number } => {
   }
 }
 
-const PortHandle: React.FC<PortHandleProps> = ({ port }) => {
+const getPortFamilyColor = (family?: string): string => {
+  if (!family || family === '') {
+    return 'var(--color-dark)'
+  }
+
+  // Create a simple hash from the family string
+  let hash = 0
+  for (let i = 0; i < family.length; i++) {
+    const char = family.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash // Convert to 32-bit integer
+  }
+
+  // Generate color variations based on primary, secondary, tertiary
+  const baseColors = [
+    { base: 'var(--color-primary)', variations: ['#ff344f', '#ff5569', '#ff7684', '#ff97a0'] },
+    { base: 'var(--color-secondary)', variations: ['#34d1bf', '#4dd7c9', '#66ddd3', '#80e3dd'] },
+    { base: 'var(--color-tertiary)', variations: ['#fa9500', '#fba320', '#fcb140', '#fdc060'] },
+    { base: 'var(--color-success)', variations: ['#7eb77f', '#8ec28f', '#9ecd9f', '#aed8af'] },
+    { base: 'var(--color-warning)', variations: ['#fccf05', '#fcd525', '#fddb45', '#fde165'] },
+    { base: 'var(--color-info)', variations: ['#dbbea1', '#e1c7ae', '#e7d0bb', '#edd9c8'] }
+  ]
+
+  const colorSetIndex = Math.abs(hash) % baseColors.length
+  const variationIndex = Math.abs(Math.floor(hash / baseColors.length)) % baseColors[colorSetIndex].variations.length
+
+  return baseColors[colorSetIndex].variations[variationIndex]
+}
+
+const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false, onPortClick }) => {
   const { x, y } = getPortPositionStyle(port)
+  const portColor = getPortFamilyColor(port.family)
+
+  const onClick = (event: React.MouseEvent) => {
+    event.stopPropagation()
+    onPortClick(port)
+  }
 
   return (
-    <Handle id={port.id_ ?? ''} type="source" className="left-1/2 top-0" style={{ left: x + ICON_WIDTH / 2, top: y }} position={Position.Top} />
+    <Handle
+      id={port.id_ ?? ''}
+      type="source"
+      className="left-1/2 top-0 cursor-pointer"
+      style={{
+        left: x + ICON_WIDTH / 2,
+        top: y,
+        backgroundColor: selected ? 'var(--color-primary)' : portColor,
+        border: selected ? '6px solid var(--color-primary)' : '0',
+        zIndex: selected ? 20 : 10
+      }}
+      position={Position.Top}
+      onClick={onClick}
+    />
   )
 }
 
 const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, data, selected }) => {
   const {
+    piece,
     piece: { id_, qualities },
     type: { ports }
   } = data as PieceNodeProps & { diffStatus: DiffStatus }
+
+  const { selection, selectPiecePort, deselectPiecePort, addConnection } = useDesignEditor()
+
+  const onPortClick = (port: Port) => {
+    const currentSelectedPort = selection.selectedPiecePortId
+
+    if (currentSelectedPort && (currentSelectedPort.pieceId !== piece.id_ || currentSelectedPort.portId !== port.id_)) {
+      // Create connection between the two selected ports
+      const connection: Connection = {
+        connecting: { piece: { id_: currentSelectedPort.pieceId }, port: { id_: port.id_ } },
+        connected: { piece: { id_: piece.id_ }, port: { id_: port.id_ } }
+      }
+      addConnection(connection)
+      deselectPiecePort()
+    } else if (currentSelectedPort && currentSelectedPort.pieceId === piece.id_ && currentSelectedPort.portId === port.id_) {
+      // Deselect if clicking the same port
+      deselectPiecePort()
+    } else if (port.id_) selectPiecePort(piece.id_, port.id_)
+  }
 
   let fillClass = ''
   let strokeClass = 'stroke-dark stroke-2'
@@ -169,7 +244,15 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
           {id_}
         </text>
       </svg>
-      {ports?.map((port: Port) => <PortHandle key={port.id_} port={port} />)}
+      {ports?.map((port: Port) => (
+        <PortHandle
+          key={port.id_}
+          port={port}
+          pieceId={id_}
+          selected={selection.selectedPiecePortId?.pieceId === id_ && selection.selectedPiecePortId?.portId === port.id_}
+          onPortClick={onPortClick}
+        />
+      ))}
     </div>
   )
 })
@@ -349,7 +432,7 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
   const connectionEdges =
     design.connections?.map((connection) => {
       const isSelected = selection?.selectedConnections.some(
-        (c) =>
+        (c: { connectingPieceId: string; connectedPieceId: string }) =>
           c.connectingPieceId === connection.connecting.piece.id_ &&
           c.connectedPieceId === connection.connected.piece.id_
       ) ?? false
@@ -366,9 +449,17 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
 
 
 const Diagram: FC = () => {
-  const { kit, designId, selection, fullscreenPanel, setDesign, deselectAll, selectPiece, addPieceToSelection, removePieceFromSelection, selectConnection, addConnectionToSelection, removeConnectionFromSelection, toggleDiagramFullscreen, startTransaction, finalizeTransaction, abortTransaction, updatePiece, updatePieces, addConnectionsToDesign, updateConnection, updateConnections } = useDesignEditor();
-  if (!kit) return null
-  const design = findDesignInKit(kit, designId)
+  const { kit: originalKit, designId, selection, designDiff, fullscreenPanel,
+    setDesign, deselectAll, selectPiece, addPieceToSelection, removePieceFromSelection, selectConnection, addConnectionToSelection, removeConnectionFromSelection,
+    toggleDiagramFullscreen, startTransaction, finalizeTransaction, abortTransaction, addConnections, setConnections, setPieces } = useDesignEditor();
+  if (!originalKit) return null
+  const design = applyDesignDiff(findDesignInKit(originalKit, designId), designDiff, true)
+
+  // Apply port family unification to ensure compatible ports have the same color
+  const unifiedTypes = useMemo(() => unifyPortFamiliesAndCompatibleFamiliesForTypes(originalKit.types || []), [originalKit.types])
+  const unifiedKit = useMemo(() => ({ ...originalKit, types: unifiedTypes }), [originalKit, unifiedTypes])
+  const kit = useMemo(() => { return updateDesignInKit(unifiedKit, design) }, [unifiedKit, design])
+
   if (!design) return null
   const { nodes, edges } = designToNodesAndEdges(kit, designId, selection) ?? { nodes: [], edges: [] }
   const reactFlowInstance = useReactFlow()
@@ -378,7 +469,6 @@ const Diagram: FC = () => {
   const [helperLines, setHelperLines] = useState<HelperLine[]>([])
   const fullscreen = fullscreenPanel === FullscreenPanel.Diagram
 
-  // Handle escape key to abort transactions
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && dragState) {
@@ -424,34 +514,20 @@ const Diagram: FC = () => {
         const ctrlKey = event.ctrlKey || event.metaKey
         const shiftKey = event.shiftKey
 
-        if (ctrlKey) {
-          if (isNodeSelected) {
-            removePieceFromSelection({ id_: node.id })
-          } else {
-            addPieceToSelection({ id_: node.id })
-          }
-        } else if (shiftKey) {
-          if (!isNodeSelected) {
-            addPieceToSelection({ id_: node.id })
-          }
-        } else {
-          if (!isNodeSelected) {
-            selectPiece({ id_: node.id })
-          }
-        }
+        if (ctrlKey) isNodeSelected ? removePieceFromSelection({ id_: node.id }) : addPieceToSelection({ id_: node.id })
+        else if (shiftKey) !isNodeSelected ? addPieceToSelection({ id_: node.id }) : selectPiece({ id_: node.id })
+        else if (!isNodeSelected) selectPiece({ id_: node.id })
 
-        // Start transaction for drag operation
         startTransaction()
-
-        setDragState({
-          lastPostition: { x: node.position.x, y: node.position.y }
-        })
+        setDragState({ lastPostition: { x: node.position.x, y: node.position.y } })
         setHelperLines([])
       },
       [selectPiece, removePieceFromSelection, addPieceToSelection, startTransaction]
     )
 
-  const onNodeDrag = useCallback((event: any, node: Node) => {
+  const onNodeDrag = useCallback((event: any, node: DiagramNode) => {
+    if (node.type !== 'piece') return
+    const piece = node.data.piece as Piece
     // TODO: Fix the reset after proximity connect is estabilished
     const MIN_DISTANCE = 150
     const SNAP_THRESHOLD = 20 // Distance in pixels for snapping to helper lines
@@ -459,68 +535,10 @@ const Diagram: FC = () => {
     const { lastPostition } = dragState
     const metadata = piecesMetadata(kit, designId)
 
-    // Calculate helper lines from non-selected pieces
     const currentHelperLines: HelperLine[] = []
-    const viewport = reactFlowInstance.getViewport()
-
     const nonSelectedNodes = nodes.filter((n) => !(selection?.selectedPieceIds ?? []).includes(n.id))
-
-    // Find the closest piece in each direction (positive x, negative x, positive y, negative y)
     const draggedCenterX = node.position.x + ICON_WIDTH / 2
     const draggedCenterY = node.position.y + ICON_WIDTH / 2
-
-    const rightPiece = nonSelectedNodes
-      .filter(n => n.position.x + ICON_WIDTH / 2 > draggedCenterX)
-      .reduce((closest, current) => {
-        const closestDistance = closest ? (closest.position.x + ICON_WIDTH / 2) - draggedCenterX : Infinity
-        const currentDistance = (current.position.x + ICON_WIDTH / 2) - draggedCenterX
-        return currentDistance < closestDistance ? current : closest
-      }, null as typeof nonSelectedNodes[0] | null)
-
-    const leftPiece = nonSelectedNodes
-      .filter(n => n.position.x + ICON_WIDTH / 2 < draggedCenterX)
-      .reduce((closest, current) => {
-        const closestDistance = closest ? draggedCenterX - (closest.position.x + ICON_WIDTH / 2) : Infinity
-        const currentDistance = draggedCenterX - (current.position.x + ICON_WIDTH / 2)
-        return currentDistance < closestDistance ? current : closest
-      }, null as typeof nonSelectedNodes[0] | null)
-
-    const bottomPiece = nonSelectedNodes
-      .filter(n => n.position.y + ICON_WIDTH / 2 > draggedCenterY)
-      .reduce((closest, current) => {
-        const closestDistance = closest ? (closest.position.y + ICON_WIDTH / 2) - draggedCenterY : Infinity
-        const currentDistance = (current.position.y + ICON_WIDTH / 2) - draggedCenterY
-        return currentDistance < closestDistance ? current : closest
-      }, null as typeof nonSelectedNodes[0] | null)
-
-    const topPiece = nonSelectedNodes
-      .filter(n => n.position.y + ICON_WIDTH / 2 < draggedCenterY)
-      .reduce((closest, current) => {
-        const closestDistance = closest ? draggedCenterY - (closest.position.y + ICON_WIDTH / 2) : Infinity
-        const currentDistance = draggedCenterY - (current.position.y + ICON_WIDTH / 2)
-        return currentDistance < closestDistance ? current : closest
-      }, null as typeof nonSelectedNodes[0] | null)
-
-    const closestNodes = [rightPiece, leftPiece, bottomPiece, topPiece].filter(Boolean) as typeof nonSelectedNodes
-
-    for (const otherNode of closestNodes) {
-      const centerX = otherNode.position.x + ICON_WIDTH / 2
-      const centerY = otherNode.position.y + ICON_WIDTH / 2
-
-      // Add horizontal line through center
-      currentHelperLines.push({
-        type: 'horizontal',
-        position: centerY,
-        relatedPieceId: otherNode.id
-      })
-
-      // Add vertical line through center
-      currentHelperLines.push({
-        type: 'vertical',
-        position: centerX,
-        relatedPieceId: otherNode.id
-      })
-    }
 
     const addedConnections: Connection[] = []
     let updatedPieces: PieceDiff[] = []
@@ -529,6 +547,7 @@ const Diagram: FC = () => {
     for (const selectedNode of nodes.filter((n) => selection?.selectedPieceIds.includes(n.id))) {
       const piece = selectedNode.data.piece
       const type = selectedNode.data.type
+      const fixedPieceId = metadata.get(piece.id_)!.fixedPieceId
       let closestConnection: Connection | null = null
       let closestDistance = Number.MAX_VALUE
       const selectedInternalNode = reactFlowInstance.getInternalNode(selectedNode.id)!
@@ -545,10 +564,10 @@ const Diagram: FC = () => {
       const EQUAL_DISTANCE_THRESHOLD = 15 // Pixels for snapping threshold
       let equalDistanceHelperLines: HelperLine[] = []
 
-      for (let i = 0; i < closestNodes.length; i++) {
-        for (let j = i + 1; j < closestNodes.length; j++) {
-          const node1 = closestNodes[i]
-          const node2 = closestNodes[j]
+      for (let i = 0; i < nonSelectedNodes.length; i++) {
+        for (let j = i + 1; j < nonSelectedNodes.length; j++) {
+          const node1 = nonSelectedNodes[i]
+          const node2 = nonSelectedNodes[j]
 
           const center1 = { x: node1.position.x + ICON_WIDTH / 2, y: node1.position.y + ICON_WIDTH / 2 }
           const center2 = { x: node2.position.x + ICON_WIDTH / 2, y: node2.position.y + ICON_WIDTH / 2 }
@@ -897,19 +916,31 @@ const Diagram: FC = () => {
       const updatedDraggedCenterY = draggedY + ICON_WIDTH / 2
 
       // Find closest horizontal line for snapping
-      for (const line of currentHelperLines.filter(l => l.type === 'horizontal' && l.position !== undefined)) {
-        const distance = Math.abs(updatedDraggedCenterY - line.position!)
+      for (const otherNode of nonSelectedNodes) {
+        const centerY = otherNode.position.y + ICON_WIDTH / 2
+        const distance = Math.abs(updatedDraggedCenterY - centerY)
         if (distance < SNAP_THRESHOLD) {
-          draggedY = line.position! - ICON_WIDTH / 2
+          draggedY = centerY - ICON_WIDTH / 2
+          currentHelperLines.push({
+            type: 'horizontal',
+            position: centerY,
+            relatedPieceId: otherNode.id
+          })
           break
         }
       }
 
       // Find closest vertical line for snapping
-      for (const line of currentHelperLines.filter(l => l.type === 'vertical' && l.position !== undefined)) {
-        const distance = Math.abs(updatedDraggedCenterX - line.position!)
+      for (const otherNode of nonSelectedNodes) {
+        const centerX = otherNode.position.x + ICON_WIDTH / 2
+        const distance = Math.abs(updatedDraggedCenterX - centerX)
         if (distance < SNAP_THRESHOLD) {
-          draggedX = line.position! - ICON_WIDTH / 2
+          draggedX = centerX - ICON_WIDTH / 2
+          currentHelperLines.push({
+            type: 'vertical',
+            position: centerX,
+            relatedPieceId: otherNode.id
+          })
           break
         }
       }
@@ -936,7 +967,8 @@ const Diagram: FC = () => {
           const port = findPortInType(type, { id_: handle.id! })
           for (const otherHandle of otherInternalNode.internals.handleBounds?.source ?? []) {
             const otherPort = findPortInType(otherNode.data.type, { id_: otherHandle.id! })
-            if (!arePortsCompatible(port, otherPort) || isPortInUse(design, otherNode.data.piece, otherPort)) continue
+            const haveSameFixedPiece = fixedPieceId === metadata.get(otherNode.data.piece.id_)!.fixedPieceId
+            if (haveSameFixedPiece || !arePortsCompatible(port, otherPort) || isPortInUse(design, piece, port) || isPortInUse(design, otherNode.data.piece, otherPort)) continue
             const dx = (selectedInternalNode.internals.positionAbsolute.x + handle.x) - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x)
             const dy = (selectedInternalNode.internals.positionAbsolute.y + handle.y) - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y)
             const distance = Math.sqrt(dx * dx + dy * dy)
@@ -987,33 +1019,15 @@ const Diagram: FC = () => {
           }
         }
       }
-
-      if (updatedPieces.length > 0) {
-        updatedPieces.forEach(piece => {
-          if (piece.type) {
-            updatePiece(piece as Piece)
-          }
-        })
-      }
-
-      if (addedConnections.length > 0) {
-        addConnectionsToDesign(addedConnections)
-      }
-
-      if (updatedConnections.length > 0) {
-        updatedConnections.forEach(connection => {
-          updateConnection(connection as Connection)
-        })
-      }
-
+      if (updatedPieces.length > 0) setPieces(updatedPieces.filter(piece => piece.type) as Piece[])
+      if (addedConnections.length > 0) addConnections(addedConnections)
+      if (updatedConnections.length > 0) setConnections(updatedConnections as Connection[])
       setDragState({ ...dragState!, lastPostition: { x: draggedX, y: draggedY } })
-
     }
 
-  }, [updatePiece, addConnectionsToDesign, updateConnection, design, reactFlowInstance, selection, nodes])
+  }, [setPieces, addConnections, setConnections, design, reactFlowInstance, selection, nodes])
 
   const onNodeDragStop = useCallback(() => {
-    // Finalize transaction instead of manually applying diff
     finalizeTransaction()
     setDragState(null)
     setHelperLines([])

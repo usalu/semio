@@ -25,11 +25,10 @@
 
 const COMMAND_STACK_MAX = 50
 
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, closestCenter } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable } from '@dnd-kit/core'
+import { arrayMove } from '@dnd-kit/sortable'
 import { ReactFlowProvider, useReactFlow } from '@xyflow/react'
-import { ChevronUp, ChevronDown, GripVertical, Info, MessageCircle, Minus, Pin, Plus, Terminal, Trash2, Wrench } from 'lucide-react'
+import { Info, MessageCircle, Minus, Pin, Plus, Terminal, Trash2, Wrench } from 'lucide-react'
 import { FC, ReactNode, createContext, useCallback, useContext, useEffect, useReducer, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useHotkeys } from 'react-hotkeys-hook'
@@ -42,28 +41,42 @@ import {
   ICON_WIDTH, Kit, Model, Piece, PieceId,
   Plane, Type,
   addConnectionToDesign,
+  addConnectionToDesignDiff,
   addConnectionsToDesign,
+  addConnectionsToDesignDiff,
   addPieceToDesign,
+  addPieceToDesignDiff,
   addPiecesToDesign,
+  addPiecesToDesignDiff,
+  applyDesignDiff,
   findConnectionInDesign,
   findDesignInKit,
   findPieceInDesign,
   findReplacableTypesForPieceInDesign,
   findReplacableTypesForPiecesInDesign,
+  findTypeInKit,
   fixPiecesInDesign,
   isSameConnection,
   isSameDesign,
   mergeDesigns,
   piecesMetadata,
   removeConnectionFromDesign,
+  removeConnectionFromDesignDiff,
   removeConnectionsFromDesign,
+  removeConnectionsFromDesignDiff,
   removePieceFromDesign,
+  removePieceFromDesignDiff,
   removePiecesAndConnectionsFromDesign,
   removePiecesFromDesign,
+  removePiecesFromDesignDiff,
   setConnectionInDesign,
+  setConnectionInDesignDiff,
   setConnectionsInDesign,
+  setConnectionsInDesignDiff,
   setPieceInDesign,
+  setPieceInDesignDiff,
   setPiecesInDesign,
+  setPiecesInDesignDiff,
   updateDesignInKit
 } from '@semio/js'
 import { Avatar, AvatarFallback } from '@semio/js/components/ui/Avatar'
@@ -78,7 +91,7 @@ import { Slider } from '@semio/js/components/ui/Slider'
 import Stepper from '@semio/js/components/ui/Stepper'
 import { Textarea } from '@semio/js/components/ui/Textarea'
 import { ToggleGroup, ToggleGroupItem } from '@semio/js/components/ui/ToggleGroup'
-import { Tree, TreeItem, TreeSection } from '@semio/js/components/ui/Tree'
+import { SortableTreeItems, Tree, TreeItem, TreeSection } from '@semio/js/components/ui/Tree'
 import { Generator } from '@semio/js/lib/utils'
 import { flattenDesign, orientDesign } from '../../semio'
 
@@ -91,6 +104,7 @@ export interface DesignEditorSelection {
     connectingPieceId: string;
     connectedPieceId: string;
   }[];
+  selectedPiecePortId?: { pieceId: string; portId: string }
 }
 
 export interface OperationStackEntry {
@@ -118,19 +132,19 @@ export enum FullscreenPanel {
 
 export enum DesignEditorAction {
   SetDesign = 'SET_DESIGN',
-  AddPieceToDesign = 'ADD_PIECE_TO_DESIGN',
-  SetPieceInDesign = 'SET_PIECE_IN_DESIGN',
-  RemovePieceFromDesign = 'REMOVE_PIECE_FROM_DESIGN',
-  AddPiecesToDesign = 'ADD_PIECES_TO_DESIGN',
-  SetPiecesInDesign = 'SET_PIECES_IN_DESIGN',
-  RemovePiecesFromDesign = 'REMOVE_PIECES_FROM_DESIGN',
-  AddConnectionToDesign = 'ADD_CONNECTION_TO_DESIGN',
-  SetConnectionInDesign = 'SET_CONNECTION_IN_DESIGN',
-  RemoveConnectionFromDesign = 'REMOVE_CONNECTION_FROM_DESIGN',
-  AddConnectionsToDesign = 'ADD_CONNECTIONS_TO_DESIGN',
-  SetConnectionsInDesign = 'SET_CONNECTIONS_IN_DESIGN',
-  RemoveConnectionsFromDesign = 'REMOVE_CONNECTIONS_FROM_DESIGN',
-  RemovePiecesAndConnectionsFromDesign = 'REMOVE_PIECES_AND_CONNECTIONS_FROM_DESIGN',
+  AddPiece = 'ADD_PIECE',
+  SetPiece = 'SET_PIECE',
+  RemovePiece = 'REMOVE_PIECE',
+  AddPieces = 'ADD_PIECES',
+  SetPieces = 'SET_PIECES',
+  RemovePieces = 'REMOVE_PIECES',
+  AddConnection = 'ADD_CONNECTION',
+  SetConnection = 'SET_CONNECTION',
+  RemoveConnection = 'REMOVE_CONNECTION',
+  AddConnections = 'ADD_CONNECTIONS',
+  SetConnections = 'SET_CONNECTIONS',
+  RemoveConnections = 'REMOVE_CONNECTIONS',
+  RemovePiecesAndConnections = 'REMOVE_PIECES_AND_CONNECTIONS',
   SetSelection = 'SET_SELECTION',
   SelectAll = 'SELECT_ALL',
   DeselectAll = 'DESELECT_ALL',
@@ -153,6 +167,8 @@ export enum DesignEditorAction {
   SelectConnections = 'SELECT_CONNECTIONS',
   AddConnectionsToSelection = 'ADD_CONNECTIONS_TO_SELECTION',
   RemoveConnectionsFromSelection = 'REMOVE_CONNECTIONS_FROM_SELECTION',
+  SelectPiecePort = 'SELECT_PIECE_PORT',
+  DeselectPiecePort = 'DESELECT_PIECE_PORT',
   CopyToClipboard = 'COPY_TO_CliPBOARD',
   CutToClipboard = 'CUT_TO_CliPBOARD',
   PasteFromClipboard = 'PASTE_FROM_CliPBOARD',
@@ -171,8 +187,6 @@ export type DesignEditorDispatcher = (action: { type: DesignEditorAction; payloa
 
 //#region Selection
 
-// TODO: Implement with proper world to world pattern
-
 const selectionConnectionToConnectionId = (selectionConnection: { connectingPieceId: string; connectedPieceId: string }): ConnectionId => ({
   connected: { piece: { id_: selectionConnection.connectedPieceId } }, connecting: { piece: { id_: selectionConnection.connectingPieceId } }
 })
@@ -182,16 +196,17 @@ const connectionToSelectionConnection = (connection: Connection | ConnectionId):
 
 const selectAll = (design: Design): DesignEditorSelection => ({
   selectedPieceIds: design.pieces?.map((p: Piece) => p.id_) || [],
-  selectedConnections: design.connections?.map((c: Connection) => ({ connectedPieceId: c.connected.piece.id_, connectingPieceId: c.connecting.piece.id_ })) || []
+  selectedConnections: design.connections?.map((c: Connection) => ({ connectedPieceId: c.connected.piece.id_, connectingPieceId: c.connecting.piece.id_ })) || [],
+  selectedPiecePortId: undefined
 })
-const deselectAll = (selection: DesignEditorSelection): DesignEditorSelection => ({ selectedPieceIds: [], selectedConnections: [] })
+const deselectAll = (selection: DesignEditorSelection): DesignEditorSelection => ({ selectedPieceIds: [], selectedConnections: [], selectedPiecePortId: undefined })
 const addAllPiecesToSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
   const existingIds = new Set(selection.selectedPieceIds)
   const allPieceIds = design.pieces?.map((p: Piece) => p.id_) || []
   const newIds = allPieceIds.filter(id => !existingIds.has(id))
-  return { selectedPieceIds: [...selection.selectedPieceIds, ...newIds], selectedConnections: selection.selectedConnections }
+  return { selectedPieceIds: [...selection.selectedPieceIds, ...newIds], selectedConnections: selection.selectedConnections, selectedPiecePortId: selection.selectedPiecePortId }
 }
-const removeAllPiecesFromSelection = (selection: DesignEditorSelection): DesignEditorSelection => ({ selectedPieceIds: [], selectedConnections: selection.selectedConnections })
+const removeAllPiecesFromSelection = (selection: DesignEditorSelection): DesignEditorSelection => ({ selectedPieceIds: [], selectedConnections: selection.selectedConnections, selectedPiecePortId: selection.selectedPiecePortId })
 const addAllConnectionsToSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
   const allConnections = design.connections?.map((c: Connection) => connectionToSelectionConnection(c)) || []
   const newConnections = allConnections.filter(conn => {
@@ -201,25 +216,26 @@ const addAllConnectionsToSelection = (selection: DesignEditorSelection, design: 
       return isSameConnection(existingConnectionId, connectionId)
     })
   })
-  return { selectedPieceIds: selection.selectedPieceIds, selectedConnections: [...selection.selectedConnections, ...newConnections] }
+  return { selectedPieceIds: selection.selectedPieceIds, selectedConnections: [...selection.selectedConnections, ...newConnections], selectedPiecePortId: selection.selectedPiecePortId }
 }
-const removeAllConnectionsFromSelection = (selection: DesignEditorSelection): DesignEditorSelection => ({ selectedPieceIds: selection.selectedPieceIds, selectedConnections: [] })
+const removeAllConnectionsFromSelection = (selection: DesignEditorSelection): DesignEditorSelection => ({ selectedPieceIds: selection.selectedPieceIds, selectedConnections: [], selectedPiecePortId: selection.selectedPiecePortId })
 
-const selectPiece = (piece: Piece | PieceId): DesignEditorSelection => ({ selectedPieceIds: [typeof piece === 'string' ? piece : piece.id_], selectedConnections: [] })
+const selectPiece = (piece: Piece | PieceId): DesignEditorSelection => ({ selectedPieceIds: [typeof piece === 'string' ? piece : piece.id_], selectedConnections: [], selectedPiecePortId: undefined })
 const addPieceToSelection = (selection: DesignEditorSelection, piece: Piece | PieceId): DesignEditorSelection => {
   const pieceId = typeof piece === 'string' ? piece : piece.id_
   const existingPieceIds = new Set(selection.selectedPieceIds)
   const newPieceIds = existingPieceIds.has(pieceId) ? selection.selectedPieceIds.filter((id: string) => id !== pieceId) : [...selection.selectedPieceIds, pieceId]
-  return ({ selectedPieceIds: newPieceIds, selectedConnections: selection.selectedConnections })
+  return ({ selectedPieceIds: newPieceIds, selectedConnections: selection.selectedConnections, selectedPiecePortId: selection.selectedPiecePortId })
 }
 const removePieceFromSelection = (selection: DesignEditorSelection, piece: Piece | PieceId): DesignEditorSelection => {
   return ({
     selectedPieceIds: selection.selectedPieceIds.filter((id: string) => id !== (typeof piece === 'string' ? piece : piece.id_)),
-    selectedConnections: selection.selectedConnections
+    selectedConnections: selection.selectedConnections,
+    selectedPiecePortId: selection.selectedPiecePortId
   })
 }
 
-const selectPieces = (pieces: (Piece | PieceId)[]): DesignEditorSelection => ({ selectedPieceIds: pieces.map(p => typeof p === 'string' ? p : p.id_), selectedConnections: [] })
+const selectPieces = (pieces: (Piece | PieceId)[]): DesignEditorSelection => ({ selectedPieceIds: pieces.map(p => typeof p === 'string' ? p : p.id_), selectedConnections: [], selectedPiecePortId: undefined })
 const addPiecesToSelection = (selection: DesignEditorSelection, pieces: (Piece | PieceId)[]): DesignEditorSelection => {
   const existingIds = new Set(selection.selectedPieceIds)
   const newIds = pieces
@@ -232,7 +248,7 @@ const removePiecesFromSelection = (selection: DesignEditorSelection, pieces: (Pi
   return ({ ...selection, selectedPieceIds: selection.selectedPieceIds.filter((id: string) => !idsToRemove.has(id)) })
 }
 
-const selectConnection = (connection: Connection | ConnectionId): DesignEditorSelection => ({ selectedConnections: [connectionToSelectionConnection(connection)], selectedPieceIds: [] })
+const selectConnection = (connection: Connection | ConnectionId): DesignEditorSelection => ({ selectedConnections: [connectionToSelectionConnection(connection)], selectedPieceIds: [], selectedPiecePortId: undefined })
 const addConnectionToSelection = (selection: DesignEditorSelection, connection: Connection | ConnectionId): DesignEditorSelection => {
   const connectionObj = connectionToSelectionConnection(connection)
 
@@ -242,7 +258,7 @@ const addConnectionToSelection = (selection: DesignEditorSelection, connection: 
   })
 
   if (exists) return selection
-  return ({ selectedConnections: [...selection.selectedConnections, connectionObj], selectedPieceIds: selection.selectedPieceIds })
+  return ({ selectedConnections: [...selection.selectedConnections, connectionObj], selectedPieceIds: selection.selectedPieceIds, selectedPiecePortId: selection.selectedPiecePortId })
 }
 const removeConnectionFromSelection = (selection: DesignEditorSelection, connection: Connection | ConnectionId): DesignEditorSelection => {
   return ({
@@ -250,11 +266,12 @@ const removeConnectionFromSelection = (selection: DesignEditorSelection, connect
       const existingConnectionId = selectionConnectionToConnectionId(c)
       return !isSameConnection(existingConnectionId, connection)
     }),
-    selectedPieceIds: selection.selectedPieceIds
+    selectedPieceIds: selection.selectedPieceIds,
+    selectedPiecePortId: selection.selectedPiecePortId
   })
 }
 
-const selectConnections = (connections: (Connection | ConnectionId)[]): DesignEditorSelection => ({ selectedConnections: connections.map(conn => connectionToSelectionConnection(conn)), selectedPieceIds: [] })
+const selectConnections = (connections: (Connection | ConnectionId)[]): DesignEditorSelection => ({ selectedConnections: connections.map(conn => connectionToSelectionConnection(conn)), selectedPieceIds: [], selectedPiecePortId: undefined })
 const addConnectionsToSelection = (selection: DesignEditorSelection, connections: (Connection | ConnectionId)[]): DesignEditorSelection => {
   const newConnections = connections
     .map(conn => connectionToSelectionConnection(conn))
@@ -273,9 +290,13 @@ const removeConnectionsFromSelection = (selection: DesignEditorSelection, connec
       const existingConnectionId = selectionConnectionToConnectionId(c)
       return !connections.some(conn => isSameConnection(existingConnectionId, conn))
     }),
-    selectedPieceIds: selection.selectedPieceIds
+    selectedPieceIds: selection.selectedPieceIds,
+    selectedPiecePortId: selection.selectedPiecePortId
   })
 }
+
+const selectPiecePort = (pieceId: string, portId: string): DesignEditorSelection => ({ selectedPieceIds: [], selectedConnections: [], selectedPiecePortId: { pieceId, portId } })
+const deselectPiecePort = (selection: DesignEditorSelection): DesignEditorSelection => ({ ...selection, selectedPiecePortId: undefined })
 
 const invertSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
   const allPieceIds = design.pieces?.map((p: Piece) => p.id_) || []
@@ -288,13 +309,13 @@ const invertSelection = (selection: DesignEditorSelection, design: Design): Desi
       return isSameConnection(selectedConnectionId, connectionId)
     })
   })
-  return ({ selectedPieceIds: newSelectedPieceIds, selectedConnections: newSelectedConnections })
+  return ({ selectedPieceIds: newSelectedPieceIds, selectedConnections: newSelectedConnections, selectedPiecePortId: undefined })
 }
 
 const invertPiecesSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
   const allPieceIds = design.pieces?.map((p: Piece) => p.id_) || []
   const newSelectedPieceIds = allPieceIds.filter(id => !selection.selectedPieceIds.includes(id))
-  return ({ selectedPieceIds: newSelectedPieceIds, selectedConnections: selection.selectedConnections })
+  return ({ selectedPieceIds: newSelectedPieceIds, selectedConnections: selection.selectedConnections, selectedPiecePortId: selection.selectedPiecePortId })
 }
 const invertConnectionsSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
   const allConnections = design.connections?.map((c: Connection) => connectionToSelectionConnection(c)) || []
@@ -305,7 +326,7 @@ const invertConnectionsSelection = (selection: DesignEditorSelection, design: De
       return isSameConnection(selectedConnectionId, connectionId)
     })
   })
-  return ({ selectedPieceIds: selection.selectedPieceIds, selectedConnections: newSelectedConnections })
+  return ({ selectedPieceIds: selection.selectedPieceIds, selectedConnections: newSelectedConnections, selectedPiecePortId: selection.selectedPiecePortId })
 }
 
 const subDesignFromSelection = (design: Design, selection: DesignEditorSelection): Design => {
@@ -321,7 +342,6 @@ const cutToClipboard = (design: Design, selection: DesignEditorSelection, plane?
   navigator.clipboard.writeText(JSON.stringify(subDesignFromSelection(orientDesign(design, plane, center), selection))).then(() => { })
 }
 const pasteFromClipboard = (design: Design, plane?: Plane, center?: DiagramPoint): Design => {
-  // TODO: Implement paste from clipboard
   navigator.clipboard.readText().then(text => mergeDesigns([design, orientDesign(JSON.parse(text), plane, center)]))
   return design
 }
@@ -417,6 +437,19 @@ const redo = (state: DesignEditorState): DesignEditorState => {
 
 //#endregion Operation Stack
 
+//#region DesignDiff Helpers
+
+const updateDesignDiffInState = (state: DesignEditorState, updatedDesignDiff: DesignDiff): DesignEditorState => {
+  return { ...state, designDiff: updatedDesignDiff }
+}
+
+const resetDesignDiff = (): DesignDiff => ({
+  pieces: { added: [], removed: [], updated: [] },
+  connections: { added: [], removed: [], updated: [] }
+})
+
+//#endregion DesignDiff Helpers
+
 
 export const DesignEditorContext = createContext<{ state: DesignEditorState; dispatch: DesignEditorDispatcher } | undefined>(undefined);
 
@@ -428,18 +461,18 @@ export const useDesignEditor = () => {
   const { state, dispatch } = context;
 
   const setDesign = useCallback((d: Design) => dispatch({ type: DesignEditorAction.SetDesign, payload: d }), [dispatch]);
-  const addPieceToDesign = useCallback((p: Piece) => dispatch({ type: DesignEditorAction.AddPieceToDesign, payload: p }), [dispatch]);
-  const setPieceInDesign = useCallback((p: Piece) => dispatch({ type: DesignEditorAction.SetPieceInDesign, payload: p }), [dispatch]);
-  const removePieceFromDesign = useCallback((p: Piece) => dispatch({ type: DesignEditorAction.RemovePieceFromDesign, payload: p }), [dispatch]);
-  const addPiecesToDesign = useCallback((ps: Piece[]) => dispatch({ type: DesignEditorAction.AddPiecesToDesign, payload: ps }), [dispatch]);
-  const setPiecesInDesign = useCallback((ps: Piece[]) => dispatch({ type: DesignEditorAction.SetPiecesInDesign, payload: ps }), [dispatch]);
-  const removePiecesFromDesign = useCallback((ps: Piece[]) => dispatch({ type: DesignEditorAction.RemovePiecesFromDesign, payload: ps }), [dispatch]);
-  const addConnectionToDesign = useCallback((c: Connection) => dispatch({ type: DesignEditorAction.AddConnectionToDesign, payload: c }), [dispatch]);
-  const setConnectionInDesign = useCallback((c: Connection) => dispatch({ type: DesignEditorAction.SetConnectionInDesign, payload: c }), [dispatch]);
-  const removeConnectionFromDesign = useCallback((c: Connection) => dispatch({ type: DesignEditorAction.RemoveConnectionFromDesign, payload: c }), [dispatch]);
-  const addConnectionsToDesign = useCallback((cs: Connection[]) => dispatch({ type: DesignEditorAction.AddConnectionsToDesign, payload: cs }), [dispatch]);
-  const setConnectionsInDesign = useCallback((cs: Connection[]) => dispatch({ type: DesignEditorAction.SetConnectionsInDesign, payload: cs }), [dispatch]);
-  const removeConnectionsFromDesign = useCallback((cs: Connection[]) => dispatch({ type: DesignEditorAction.RemoveConnectionsFromDesign, payload: cs }), [dispatch]);
+  const addPiece = useCallback((p: Piece) => dispatch({ type: DesignEditorAction.AddPiece, payload: p }), [dispatch]);
+  const setPiece = useCallback((p: Piece) => dispatch({ type: DesignEditorAction.SetPiece, payload: p }), [dispatch]);
+  const removePiece = useCallback((p: Piece) => dispatch({ type: DesignEditorAction.RemovePiece, payload: p }), [dispatch]);
+  const addPieces = useCallback((ps: Piece[]) => dispatch({ type: DesignEditorAction.AddPieces, payload: ps }), [dispatch]);
+  const setPieces = useCallback((ps: Piece[]) => dispatch({ type: DesignEditorAction.SetPieces, payload: ps }), [dispatch]);
+  const removePieces = useCallback((ps: Piece[]) => dispatch({ type: DesignEditorAction.RemovePieces, payload: ps }), [dispatch]);
+  const addConnection = useCallback((c: Connection) => dispatch({ type: DesignEditorAction.AddConnection, payload: c }), [dispatch]);
+  const setConnection = useCallback((c: Connection) => dispatch({ type: DesignEditorAction.SetConnection, payload: c }), [dispatch]);
+  const removeConnection = useCallback((c: Connection) => dispatch({ type: DesignEditorAction.RemoveConnection, payload: c }), [dispatch]);
+  const addConnections = useCallback((cs: Connection[]) => dispatch({ type: DesignEditorAction.AddConnections, payload: cs }), [dispatch]);
+  const setConnections = useCallback((cs: Connection[]) => dispatch({ type: DesignEditorAction.SetConnections, payload: cs }), [dispatch]);
+  const removeConnections = useCallback((cs: Connection[]) => dispatch({ type: DesignEditorAction.RemoveConnections, payload: cs }), [dispatch]);
   const setSelection = useCallback((s: DesignEditorSelection) => dispatch({ type: DesignEditorAction.SetSelection, payload: s }), [dispatch]);
   const selectAll = useCallback(() => dispatch({ type: DesignEditorAction.SelectAll, payload: null }), [dispatch]);
   const deselectAll = useCallback(() => dispatch({ type: DesignEditorAction.DeselectAll, payload: null }), [dispatch]);
@@ -462,6 +495,8 @@ export const useDesignEditor = () => {
   const selectConnections = useCallback((cs: (Connection | ConnectionId)[]) => dispatch({ type: DesignEditorAction.SelectConnections, payload: cs }), [dispatch]);
   const addConnectionsToSelection = useCallback((cs: (Connection | ConnectionId)[]) => dispatch({ type: DesignEditorAction.AddConnectionsToSelection, payload: cs }), [dispatch]);
   const removeConnectionsFromSelection = useCallback((cs: (Connection | ConnectionId)[]) => dispatch({ type: DesignEditorAction.RemoveConnectionsFromSelection, payload: cs }), [dispatch]);
+  const selectPiecePort = useCallback((pieceId: string, portId: string) => dispatch({ type: DesignEditorAction.SelectPiecePort, payload: { pieceId, portId } }), [dispatch]);
+  const deselectPiecePort = useCallback(() => dispatch({ type: DesignEditorAction.DeselectPiecePort, payload: null }), [dispatch]);
   const deleteSelected = useCallback((plane?: Plane, center?: DiagramPoint) => dispatch({ type: DesignEditorAction.DeleteSelected, payload: { plane, center } }), [dispatch]);
   const setFullscreen = useCallback((fp: FullscreenPanel) => dispatch({ type: DesignEditorAction.SetFullscreen, payload: fp }), [dispatch]);
   const toggleDiagramFullscreen = useCallback(() => dispatch({ type: DesignEditorAction.ToggleDiagramFullscreen, payload: null }), [dispatch]);
@@ -476,40 +511,23 @@ export const useDesignEditor = () => {
   const finalizeTransaction = useCallback(() => dispatch({ type: DesignEditorAction.FinalizeTransaction, payload: null }), [dispatch]);
   const abortTransaction = useCallback(() => dispatch({ type: DesignEditorAction.AbortTransaction, payload: null }), [dispatch]);
 
-  // High-level piece/connection modification functions that handle transactions
-  const updatePiece = useCallback((piece: Piece) => {
-    dispatch({ type: DesignEditorAction.SetPieceInDesign, payload: piece });
-  }, [dispatch]);
-
-  const updateConnection = useCallback((connection: Connection) => {
-    dispatch({ type: DesignEditorAction.SetConnectionInDesign, payload: connection });
-  }, [dispatch]);
-
-  const updatePieces = useCallback((pieces: Piece[]) => {
-    dispatch({ type: DesignEditorAction.SetPiecesInDesign, payload: pieces });
-  }, [dispatch]);
-
-  const updateConnections = useCallback((connections: Connection[]) => {
-    dispatch({ type: DesignEditorAction.SetConnectionsInDesign, payload: connections });
-  }, [dispatch]);
-
   return {
     ...state,
     canUndo: canUndo(state),
     canRedo: canRedo(state),
     setDesign,
-    addPieceToDesign,
-    setPieceInDesign,
-    removePieceFromDesign,
-    addPiecesToDesign,
-    setPiecesInDesign,
-    removePiecesFromDesign,
-    addConnectionToDesign,
-    setConnectionInDesign,
-    removeConnectionFromDesign,
-    addConnectionsToDesign,
-    setConnectionsInDesign,
-    removeConnectionsFromDesign,
+    addPiece,
+    setPiece,
+    removePiece,
+    addPieces,
+    setPieces,
+    removePieces,
+    addConnection,
+    setConnection,
+    removeConnection,
+    addConnections,
+    setConnections,
+    removeConnections,
     setSelection,
     selectAll,
     deselectAll,
@@ -532,6 +550,8 @@ export const useDesignEditor = () => {
     selectConnections,
     addConnectionsToSelection,
     removeConnectionsFromSelection,
+    selectPiecePort,
+    deselectPiecePort,
     deleteSelected,
     setFullscreen,
     toggleDiagramFullscreen,
@@ -541,11 +561,7 @@ export const useDesignEditor = () => {
     // Transaction functions
     startTransaction,
     finalizeTransaction,
-    abortTransaction,
-    updatePiece,
-    updateConnection,
-    updatePieces,
-    updateConnections
+    abortTransaction
   };
 };
 
@@ -573,83 +589,132 @@ const designEditorReducer = (
         return updateDesignInDesignEditorState(action.payload)
       }
       return updateDesignInDesignEditorStateWithOperationStack(action.payload)
-    case DesignEditorAction.AddPieceToDesign:
+    case DesignEditorAction.AddPiece:
+      if (state.isTransactionActive) {
+        const updatedDesignDiff = addPieceToDesignDiff(state.designDiff, action.payload)
+        return updateDesignDiffInState(state, updatedDesignDiff)
+      }
       const designWithAddedPiece = addPieceToDesign(currentDesign, action.payload)
-      if (state.isTransactionActive) {
-        return updateDesignInDesignEditorState(designWithAddedPiece)
-      }
       return updateDesignInDesignEditorStateWithOperationStack(designWithAddedPiece)
-    case DesignEditorAction.SetPieceInDesign:
+    case DesignEditorAction.SetPiece:
+      if (state.isTransactionActive) {
+        const updatedDesignDiff = setPieceInDesignDiff(state.designDiff, { id_: action.payload.id_, ...action.payload })
+        return updateDesignDiffInState(state, updatedDesignDiff)
+      }
       const designWithSetPiece = setPieceInDesign(currentDesign, action.payload)
-      if (state.isTransactionActive) {
-        return updateDesignInDesignEditorState(designWithSetPiece)
-      }
       return updateDesignInDesignEditorStateWithOperationStack(designWithSetPiece)
-    case DesignEditorAction.RemovePieceFromDesign:
+    case DesignEditorAction.RemovePiece:
+      if (state.isTransactionActive) {
+        const pieceId = typeof action.payload === 'string' ? { id_: action.payload } : { id_: action.payload.id_ }
+        const updatedDesignDiff = removePieceFromDesignDiff(state.designDiff, pieceId)
+        return updateDesignDiffInState(state, updatedDesignDiff)
+      }
       const designWithRemovedPiece = removePieceFromDesign(state.kit, state.designId, action.payload)
-      if (state.isTransactionActive) {
-        return updateDesignInDesignEditorState(designWithRemovedPiece)
-      }
       return updateDesignInDesignEditorStateWithOperationStack(designWithRemovedPiece)
-    case DesignEditorAction.AddPiecesToDesign:
+    case DesignEditorAction.AddPieces:
+      if (state.isTransactionActive) {
+        const updatedDesignDiff = addPiecesToDesignDiff(state.designDiff, action.payload)
+        return updateDesignDiffInState(state, updatedDesignDiff)
+      }
       const designWithAddedPieces = addPiecesToDesign(currentDesign, action.payload)
-      if (state.isTransactionActive) {
-        return updateDesignInDesignEditorState(designWithAddedPieces)
-      }
       return updateDesignInDesignEditorStateWithOperationStack(designWithAddedPieces)
-    case DesignEditorAction.SetPiecesInDesign:
+    case DesignEditorAction.SetPieces:
+      if (state.isTransactionActive) {
+        const pieceDiffs = action.payload.map((piece: Piece) => ({ ...piece, id_: piece.id_ }))
+        const updatedDesignDiff = setPiecesInDesignDiff(state.designDiff, pieceDiffs)
+        return updateDesignDiffInState(state, updatedDesignDiff)
+      }
       const designWithSetPieces = setPiecesInDesign(currentDesign, action.payload)
-      if (state.isTransactionActive) {
-        return updateDesignInDesignEditorState(designWithSetPieces)
-      }
       return updateDesignInDesignEditorStateWithOperationStack(designWithSetPieces)
-    case DesignEditorAction.RemovePiecesFromDesign:
+    case DesignEditorAction.RemovePieces:
+      if (state.isTransactionActive) {
+        const pieceIds = action.payload.map((piece: any) =>
+          typeof piece === 'string' ? { id_: piece } : { id_: piece.id_ }
+        )
+        const updatedDesignDiff = removePiecesFromDesignDiff(state.designDiff, pieceIds)
+        return updateDesignDiffInState(state, updatedDesignDiff)
+      }
       const designWithRemovedPieces = removePiecesFromDesign(state.kit, state.designId, action.payload)
-      if (state.isTransactionActive) {
-        return updateDesignInDesignEditorState(designWithRemovedPieces)
-      }
       return updateDesignInDesignEditorStateWithOperationStack(designWithRemovedPieces)
-    case DesignEditorAction.AddConnectionToDesign:
+    case DesignEditorAction.AddConnection:
+      if (state.isTransactionActive) {
+        const updatedDesignDiff = addConnectionToDesignDiff(state.designDiff, action.payload)
+        return updateDesignDiffInState(state, updatedDesignDiff)
+      }
       const designWithAddedConnection = addConnectionToDesign(currentDesign, action.payload)
-      if (state.isTransactionActive) {
-        return updateDesignInDesignEditorState(designWithAddedConnection)
-      }
       return updateDesignInDesignEditorStateWithOperationStack(designWithAddedConnection)
-    case DesignEditorAction.SetConnectionInDesign:
+    case DesignEditorAction.SetConnection:
+      if (state.isTransactionActive) {
+        const connectionDiff = {
+          ...action.payload,
+          connected: action.payload.connected,
+          connecting: action.payload.connecting
+        }
+        const updatedDesignDiff = setConnectionInDesignDiff(state.designDiff, connectionDiff)
+        return updateDesignDiffInState(state, updatedDesignDiff)
+      }
       const designWithSetConnection = setConnectionInDesign(currentDesign, action.payload)
-      if (state.isTransactionActive) {
-        return updateDesignInDesignEditorState(designWithSetConnection)
-      }
       return updateDesignInDesignEditorStateWithOperationStack(designWithSetConnection)
-    case DesignEditorAction.RemoveConnectionFromDesign:
+    case DesignEditorAction.RemoveConnection:
+      if (state.isTransactionActive) {
+        const connectionId = typeof action.payload === 'object' && 'connected' in action.payload
+          ? action.payload
+          : { connected: { piece: { id_: action.payload } }, connecting: { piece: { id_: '' } } }
+        const updatedDesignDiff = removeConnectionFromDesignDiff(state.designDiff, connectionId)
+        return updateDesignDiffInState(state, updatedDesignDiff)
+      }
       const designWithRemovedConnection = removeConnectionFromDesign(state.kit, state.designId, action.payload)
-      if (state.isTransactionActive) {
-        return updateDesignInDesignEditorState(designWithRemovedConnection)
-      }
       return updateDesignInDesignEditorStateWithOperationStack(designWithRemovedConnection)
-    case DesignEditorAction.AddConnectionsToDesign:
+    case DesignEditorAction.AddConnections:
+      if (state.isTransactionActive) {
+        const updatedDesignDiff = addConnectionsToDesignDiff(state.designDiff, action.payload)
+        return updateDesignDiffInState(state, updatedDesignDiff)
+      }
       const designWithAddedConnections = addConnectionsToDesign(currentDesign, action.payload)
-      if (state.isTransactionActive) {
-        return updateDesignInDesignEditorState(designWithAddedConnections)
-      }
       return updateDesignInDesignEditorStateWithOperationStack(designWithAddedConnections)
-    case DesignEditorAction.SetConnectionsInDesign:
+    case DesignEditorAction.SetConnections:
+      if (state.isTransactionActive) {
+        const connectionDiffs = action.payload.map((connection: Connection) => ({
+          ...connection,
+          connected: connection.connected,
+          connecting: connection.connecting
+        }))
+        const updatedDesignDiff = setConnectionsInDesignDiff(state.designDiff, connectionDiffs)
+        return updateDesignDiffInState(state, updatedDesignDiff)
+      }
       const designWithSetConnections = setConnectionsInDesign(currentDesign, action.payload)
-      if (state.isTransactionActive) {
-        return updateDesignInDesignEditorState(designWithSetConnections)
-      }
       return updateDesignInDesignEditorStateWithOperationStack(designWithSetConnections)
-    case DesignEditorAction.RemoveConnectionsFromDesign:
+    case DesignEditorAction.RemoveConnections:
+      if (state.isTransactionActive) {
+        const connectionIds = action.payload.map((connection: any) =>
+          typeof connection === 'object' && 'connected' in connection
+            ? connection
+            : { connected: { piece: { id_: connection } }, connecting: { piece: { id_: '' } } }
+        )
+        const updatedDesignDiff = removeConnectionsFromDesignDiff(state.designDiff, connectionIds)
+        return updateDesignDiffInState(state, updatedDesignDiff)
+      }
       const designWithRemovedConnections = removeConnectionsFromDesign(state.kit, state.designId, action.payload)
-      if (state.isTransactionActive) {
-        return updateDesignInDesignEditorState(designWithRemovedConnections)
-      }
       return updateDesignInDesignEditorStateWithOperationStack(designWithRemovedConnections)
-    case DesignEditorAction.RemovePiecesAndConnectionsFromDesign:
-      const designWithRemovedPiecesAndConnections = removePiecesAndConnectionsFromDesign(state.kit, state.designId, action.payload.pieceIds, action.payload.connectionIds)
+    case DesignEditorAction.RemovePiecesAndConnections:
       if (state.isTransactionActive) {
-        return updateDesignInDesignEditorState(designWithRemovedPiecesAndConnections)
+        // Handle pieces
+        const pieceIds = action.payload.pieceIds.map((piece: any) =>
+          typeof piece === 'string' ? { id_: piece } : { id_: piece.id_ }
+        )
+        let updatedDesignDiff = removePiecesFromDesignDiff(state.designDiff, pieceIds)
+
+        // Handle connections
+        const connectionIds = action.payload.connectionIds.map((connection: any) =>
+          typeof connection === 'object' && 'connected' in connection
+            ? connection
+            : { connected: { piece: { id_: connection } }, connecting: { piece: { id_: '' } } }
+        )
+        updatedDesignDiff = removeConnectionsFromDesignDiff(updatedDesignDiff, connectionIds)
+
+        return updateDesignDiffInState(state, updatedDesignDiff)
       }
+      const designWithRemovedPiecesAndConnections = removePiecesAndConnectionsFromDesign(state.kit, state.designId, action.payload.pieceIds, action.payload.connectionIds)
       return updateDesignInDesignEditorStateWithOperationStack(designWithRemovedPiecesAndConnections)
     case DesignEditorAction.DeleteSelected:
       const stateWithDeleteOperation = pushToOperationStack(state)
@@ -662,22 +727,22 @@ const designEditorReducer = (
     // Transaction actions
     case DesignEditorAction.StartTransaction:
       if (state.isTransactionActive) return state // Only one transaction at a time
-      return { ...state, isTransactionActive: true }
+      return { ...state, isTransactionActive: true, designDiff: resetDesignDiff() }
     case DesignEditorAction.FinalizeTransaction:
       if (!state.isTransactionActive) return state
-      // Push current state to operation stack
-      const stateWithFinalizedTransaction = pushToOperationStack(state)
+      // Apply the accumulated diff to the design and push to operation stack
+      const finalDesign = applyDesignDiff(currentDesign, state.designDiff)
+      const stateWithFinalizedTransaction = pushToOperationStack({ ...state, isTransactionActive: false, designDiff: resetDesignDiff() })
+      const updatedDesigns = (stateWithFinalizedTransaction.kit.designs || []).map((d: Design) =>
+        isSameDesign(d, currentDesign) ? finalDesign : d
+      )
       const entryWithCorrectTransactionState = stateWithFinalizedTransaction.operationStack[stateWithFinalizedTransaction.operationIndex]
       entryWithCorrectTransactionState.selection = state.selection
-      return { ...stateWithFinalizedTransaction, isTransactionActive: false }
+      return { ...stateWithFinalizedTransaction, kit: { ...stateWithFinalizedTransaction.kit, designs: updatedDesigns } }
     case DesignEditorAction.AbortTransaction:
       if (!state.isTransactionActive) return state
-      // Restore design to the state before transaction started
-      const previousEntry = state.operationStack[state.operationIndex]
-      const restoredDesigns = (state.kit.designs || []).map((d: Design) =>
-        isSameDesign(d, currentDesign) ? previousEntry.design : d
-      )
-      return { ...state, kit: { ...state.kit, designs: restoredDesigns }, isTransactionActive: false }
+      // Simply reset transaction state and discard the diff
+      return { ...state, isTransactionActive: false, designDiff: resetDesignDiff() }
 
     // Selection changes (no operation stack)
     case DesignEditorAction.SetSelection:
@@ -724,6 +789,10 @@ const designEditorReducer = (
       return { ...state, selection: addConnectionsToSelection(state.selection, action.payload) }
     case DesignEditorAction.RemoveConnectionsFromSelection:
       return { ...state, selection: removeConnectionsFromSelection(state.selection, action.payload) }
+    case DesignEditorAction.SelectPiecePort:
+      return { ...state, selection: selectPiecePort(action.payload.pieceId, action.payload.portId) }
+    case DesignEditorAction.DeselectPiecePort:
+      return { ...state, selection: deselectPiecePort(state.selection) }
 
     // Undo/Redo
     case DesignEditorAction.Undo:
@@ -766,14 +835,14 @@ function useControllableReducer(props: DesignEditorProps) {
     designId: designId,
     fileUrls: fileUrls,
     fullscreenPanel: FullscreenPanel.None,
-    selection: initialSelection || { selectedPieceIds: [], selectedConnections: [] },
+    selection: initialSelection || { selectedPieceIds: [], selectedConnections: [], selectedPiecePortId: undefined },
     designDiff: {
       pieces: { added: [], removed: [], updated: [] },
       connections: { added: [], removed: [], updated: [] }
     },
     operationStack: [{
       design: JSON.parse(JSON.stringify(initialDesign)),
-      selection: JSON.parse(JSON.stringify(initialSelection || { selectedPieceIds: [], selectedConnections: [] }))
+      selection: JSON.parse(JSON.stringify(initialSelection || { selectedPieceIds: [], selectedConnections: [], selectedPiecePortId: undefined }))
     }],
     operationIndex: 0,
     isTransactionActive: false
@@ -984,25 +1053,19 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width, kit }) =
           <Tree>
             <TreeSection label="Types" defaultOpen={true}>
               {Object.entries(typesByName).map(([name, variants]) => (
-                <TreeSection key={name} label={name} defaultOpen={false}>
-                  <div
-                    className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
-                    style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}
-                  >
+                <TreeItem key={name} label={name} defaultOpen={false}>
+                  <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
                     {variants.map((type) => (
                       <TypeAvatar key={`${type.name}-${type.variant}`} type={type} showHoverCard={true} />
                     ))}
                   </div>
-                </TreeSection>
+                </TreeItem>
               ))}
             </TreeSection>
             <TreeSection label="Designs" defaultOpen={true}>
               {Object.entries(designsByName).map(([name, designs]) => (
-                <TreeSection key={name} label={name} defaultOpen={false}>
-                  <div
-                    className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1"
-                    style={{ paddingLeft: `${(1 + 1) * 1.25}rem` }}
-                  >
+                <TreeItem key={name} label={name} defaultOpen={false}>
+                  <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
                     {designs.map((design) => (
                       <DesignAvatar
                         key={`${design.name}-${design.variant}-${design.view}`}
@@ -1011,7 +1074,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width, kit }) =
                       />
                     ))}
                   </div>
-                </TreeSection>
+                </TreeItem>
               ))}
             </TreeSection>
           </Tree>
@@ -1099,77 +1162,6 @@ const Console: FC<ConsoleProps> = ({
 
 interface DetailsProps extends ResizablePanelProps { }
 
-interface SortableTreeSectionProps {
-  id: string
-  index: number
-  totalItems: number
-  onMoveUp: () => void
-  onMoveDown: () => void
-  onRemove: () => void
-  children: ReactNode
-  label: string
-}
-
-const SortableTreeSection: FC<SortableTreeSectionProps> = ({ 
-  id, 
-  index,
-  totalItems,
-  onMoveUp,
-  onMoveDown,
-  onRemove,
-  children, 
-  label 
-}) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  }
-
-  const actions = [
-    {
-      icon: <div {...attributes} {...listeners} className="cursor-grab hover:text-primary"><GripVertical size={12} /></div>,
-      onClick: () => {},
-      title: "Drag to reorder"
-    },
-    {
-      icon: <ChevronUp size={12} className={index === 0 ? 'opacity-30' : ''} />,
-      onClick: index === 0 ? () => {} : onMoveUp,
-      title: index === 0 ? "Already at top" : "Move up"
-    },
-    {
-      icon: <ChevronDown size={12} className={index === totalItems - 1 ? 'opacity-30' : ''} />,
-      onClick: index === totalItems - 1 ? () => {} : onMoveDown,
-      title: index === totalItems - 1 ? "Already at bottom" : "Move down"
-    },
-    {
-      icon: <Trash2 size={12} />,
-      onClick: onRemove,
-      title: "Remove"
-    }
-  ]
-
-  return (
-    <div ref={setNodeRef} style={style}>
-      <TreeSection
-        label={label}
-        actions={actions}
-      >
-        {children}
-      </TreeSection>
-    </div>
-  )
-}
-
 const DesignSection: FC = () => {
   const { kit, designId, setDesign, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditor()
   const design = findDesignInKit(kit, designId)
@@ -1179,11 +1171,15 @@ const DesignSection: FC = () => {
   }
 
   const addLocation = () => {
+    startTransaction()
     handleChange({ ...design, location: { longitude: 0, latitude: 0 } })
+    finalizeTransaction()
   }
 
   const removeLocation = () => {
+    startTransaction()
     handleChange({ ...design, location: undefined })
+    finalizeTransaction()
   }
 
   return (
@@ -1194,6 +1190,8 @@ const DesignSection: FC = () => {
             label="Name"
             value={design.name}
             onChange={(e) => handleChange({ ...design, name: e.target.value })}
+            onFocus={startTransaction}
+            onBlur={finalizeTransaction}
           />
         </TreeItem>
         <TreeItem>
@@ -1202,6 +1200,8 @@ const DesignSection: FC = () => {
             value={design.description || ''}
             placeholder="Enter design description..."
             onChange={(e) => handleChange({ ...design, description: e.target.value })}
+            onFocus={startTransaction}
+            onBlur={finalizeTransaction}
           />
         </TreeItem>
         <TreeItem>
@@ -1210,6 +1210,8 @@ const DesignSection: FC = () => {
             value={design.icon || ''}
             placeholder="Emoji, name, or URL"
             onChange={(e) => handleChange({ ...design, icon: e.target.value })}
+            onFocus={startTransaction}
+            onBlur={finalizeTransaction}
           />
         </TreeItem>
         <TreeItem>
@@ -1218,6 +1220,8 @@ const DesignSection: FC = () => {
             value={design.image || ''}
             placeholder="URL to design image"
             onChange={(e) => handleChange({ ...design, image: e.target.value })}
+            onFocus={startTransaction}
+            onBlur={finalizeTransaction}
           />
         </TreeItem>
         <TreeItem>
@@ -1226,6 +1230,8 @@ const DesignSection: FC = () => {
             value={design.variant || ''}
             placeholder="Design variant"
             onChange={(e) => handleChange({ ...design, variant: e.target.value })}
+            onFocus={startTransaction}
+            onBlur={finalizeTransaction}
           />
         </TreeItem>
         <TreeItem>
@@ -1234,6 +1240,8 @@ const DesignSection: FC = () => {
             value={design.view || ''}
             placeholder="Design view"
             onChange={(e) => handleChange({ ...design, view: e.target.value })}
+            onFocus={startTransaction}
+            onBlur={finalizeTransaction}
           />
         </TreeItem>
         <TreeItem>
@@ -1241,6 +1249,8 @@ const DesignSection: FC = () => {
             label="Unit"
             value={design.unit}
             onChange={(e) => handleChange({ ...design, unit: e.target.value })}
+            onFocus={startTransaction}
+            onBlur={finalizeTransaction}
           />
         </TreeItem>
       </TreeSection>
@@ -1300,99 +1310,102 @@ const DesignSection: FC = () => {
         </TreeSection>
       )}
       {design.authors && design.authors.length > 0 ? (
-        <DndContext
-          collisionDetection={closestCenter}
-          onDragEnd={(event) => {
-            const { active, over } = event
-            if (over && active.id !== over.id) {
-              const oldIndex = design.authors!.findIndex((_, i) => `author-${i}` === active.id)
-              const newIndex = design.authors!.findIndex((_, i) => `author-${i}` === over.id)
+        <TreeSection
+          label="Authors"
+          actions={[
+            {
+              icon: <Plus size={12} />,
+              onClick: () => {
+                startTransaction()
+                handleChange({
+                  ...design,
+                  authors: [...(design.authors || []), { name: '', email: '' }]
+                })
+                finalizeTransaction()
+              },
+              title: "Add author"
+            }
+          ]}
+        >
+          <SortableTreeItems
+            items={design.authors.map((author, index) => ({ ...author, id: `author-${index}`, index }))}
+            onReorder={(oldIndex, newIndex) => {
+              startTransaction()
               handleChange({
                 ...design,
                 authors: arrayMove(design.authors!, oldIndex, newIndex)
               })
-            }
-          }}
-        >
-          <TreeSection
-            label="Authors"
-            actions={[
-              {
-                icon: <Plus size={12} />,
-                onClick: () => handleChange({
-                  ...design,
-                  authors: [...(design.authors || []), { name: '', email: '' }]
-                }),
-                title: "Add author"
-              }
-            ]}
+              finalizeTransaction()
+            }}
           >
-            <SortableContext items={design.authors.map((_, i) => `author-${i}`)} strategy={verticalListSortingStrategy}>
-              {design.authors.map((author, index) => (
-                <SortableTreeSection
-                  key={`author-${index}`}
-                  id={`author-${index}`}
-                  index={index}
-                  totalItems={design.authors!.length}
-                  label={author.name || `Author ${index + 1}`}
-                  onMoveUp={() => {
-                    if (index > 0) {
+            {(author, index) => (
+              <TreeItem
+                key={`author-${index}`}
+                label={author.name || `Author ${index + 1}`}
+                sortable={true}
+                sortableId={`author-${index}`}
+                isDragHandle={true}
+              >
+                <TreeItem>
+                  <Input
+                    label="Name"
+                    value={author.name}
+                    onChange={(e) => {
+                      const updatedAuthors = [...(design.authors || [])]
+                      updatedAuthors[index] = { ...author, name: e.target.value }
+                      handleChange({ ...design, authors: updatedAuthors })
+                    }}
+                    onFocus={startTransaction}
+                    onBlur={finalizeTransaction}
+                  />
+                </TreeItem>
+                <TreeItem>
+                  <Input
+                    label="Email"
+                    value={author.email}
+                    onChange={(e) => {
+                      const updatedAuthors = [...(design.authors || [])]
+                      updatedAuthors[index] = { ...author, email: e.target.value }
+                      handleChange({ ...design, authors: updatedAuthors })
+                    }}
+                    onFocus={startTransaction}
+                    onBlur={finalizeTransaction}
+                  />
+                </TreeItem>
+                <TreeItem>
+                  <button
+                    onClick={() => {
+                      startTransaction()
                       handleChange({
                         ...design,
-                        authors: arrayMove(design.authors!, index, index - 1)
+                        authors: design.authors?.filter((_, i) => i !== index)
                       })
-                    }
-                  }}
-                  onMoveDown={() => {
-                    if (index < design.authors!.length - 1) {
-                      handleChange({
-                        ...design,
-                        authors: arrayMove(design.authors!, index, index + 1)
-                      })
-                    }
-                  }}
-                  onRemove={() => handleChange({
-                    ...design,
-                    authors: design.authors?.filter((_, i) => i !== index)
-                  })}
-                >
-                  <TreeItem>
-                    <Input
-                      label="Name"
-                      value={author.name}
-                      onChange={(e) => {
-                        const updatedAuthors = [...(design.authors || [])]
-                        updatedAuthors[index] = { ...author, name: e.target.value }
-                        handleChange({ ...design, authors: updatedAuthors })
-                      }}
-                    />
-                  </TreeItem>
-                  <TreeItem>
-                    <Input
-                      label="Email"
-                      value={author.email}
-                      onChange={(e) => {
-                        const updatedAuthors = [...(design.authors || [])]
-                        updatedAuthors[index] = { ...author, email: e.target.value }
-                        handleChange({ ...design, authors: updatedAuthors })
-                      }}
-                    />
-                  </TreeItem>
-                </SortableTreeSection>
-              ))}
-            </SortableContext>
-          </TreeSection>
-        </DndContext>
+                      finalizeTransaction()
+                    }}
+                    className="text-destructive hover:text-destructive/80 p-1"
+                    title="Remove author"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </TreeItem>
+              </TreeItem>
+            )}
+          </SortableTreeItems>
+        </TreeSection>
       ) : (
         <TreeSection
           label="Authors"
           actions={[
             {
               icon: <Plus size={12} />,
-              onClick: () => handleChange({
-                ...design,
-                authors: [...(design.authors || []), { name: '', email: '' }]
-              }),
+              onClick: () => {
+                startTransaction()
+                handleChange({
+                  ...design,
+                  authors: [...(design.authors || []), { name: '', email: '' }]
+                })
+                finalizeTransaction()
+              },
               title: "Add author"
             }
           ]}
@@ -1400,124 +1413,131 @@ const DesignSection: FC = () => {
         </TreeSection>
       )}
       {design.qualities && design.qualities.length > 0 ? (
-        <DndContext
-          collisionDetection={closestCenter}
-          onDragEnd={(event) => {
-            const { active, over } = event
-            if (over && active.id !== over.id) {
-              const oldIndex = design.qualities!.findIndex((_, i) => `quality-${i}` === active.id)
-              const newIndex = design.qualities!.findIndex((_, i) => `quality-${i}` === over.id)
+        <TreeSection
+          label="Qualities"
+          actions={[
+            {
+              icon: <Plus size={12} />,
+              onClick: () => {
+                startTransaction()
+                handleChange({
+                  ...design,
+                  qualities: [...(design.qualities || []), { name: '' }]
+                })
+                finalizeTransaction()
+              },
+              title: "Add quality"
+            }
+          ]}
+        >
+          <SortableTreeItems
+            items={design.qualities.map((quality, index) => ({ ...quality, id: `quality-${index}`, index }))}
+            onReorder={(oldIndex, newIndex) => {
+              startTransaction()
               handleChange({
                 ...design,
                 qualities: arrayMove(design.qualities!, oldIndex, newIndex)
               })
-            }
-          }}
-        >
-          <TreeSection
-            label="Qualities"
-            actions={[
-              {
-                icon: <Plus size={12} />,
-                onClick: () => handleChange({
-                  ...design,
-                  qualities: [...(design.qualities || []), { name: '' }]
-                }),
-                title: "Add quality"
-              }
-            ]}
+              finalizeTransaction()
+            }}
           >
-            <SortableContext items={design.qualities.map((_, i) => `quality-${i}`)} strategy={verticalListSortingStrategy}>
-              {design.qualities.map((quality, index) => (
-                <SortableTreeSection
-                  key={`quality-${index}`}
-                  id={`quality-${index}`}
-                  index={index}
-                  totalItems={design.qualities!.length}
-                  label={quality.name || `Quality ${index + 1}`}
-                  onMoveUp={() => {
-                    if (index > 0) {
+            {(quality, index) => (
+              <TreeItem
+                key={`quality-${index}`}
+                label={quality.name || `Quality ${index + 1}`}
+                sortable={true}
+                sortableId={`quality-${index}`}
+                isDragHandle={true}
+              >
+                <TreeItem>
+                  <Input
+                    label="Name"
+                    value={quality.name}
+                    onChange={(e) => {
+                      const updatedQualities = [...(design.qualities || [])]
+                      updatedQualities[index] = { ...quality, name: e.target.value }
+                      handleChange({ ...design, qualities: updatedQualities })
+                    }}
+                    onFocus={startTransaction}
+                    onBlur={finalizeTransaction}
+                  />
+                </TreeItem>
+                <TreeItem>
+                  <Input
+                    label="Value"
+                    value={quality.value || ''}
+                    placeholder="Optional value"
+                    onChange={(e) => {
+                      const updatedQualities = [...(design.qualities || [])]
+                      updatedQualities[index] = { ...quality, value: e.target.value }
+                      handleChange({ ...design, qualities: updatedQualities })
+                    }}
+                    onFocus={startTransaction}
+                    onBlur={finalizeTransaction}
+                  />
+                </TreeItem>
+                <TreeItem>
+                  <Input
+                    label="Unit"
+                    value={quality.unit || ''}
+                    placeholder="Optional unit"
+                    onChange={(e) => {
+                      const updatedQualities = [...(design.qualities || [])]
+                      updatedQualities[index] = { ...quality, unit: e.target.value }
+                      handleChange({ ...design, qualities: updatedQualities })
+                    }}
+                    onFocus={startTransaction}
+                    onBlur={finalizeTransaction}
+                  />
+                </TreeItem>
+                <TreeItem>
+                  <Input
+                    label="Definition"
+                    value={quality.definition || ''}
+                    placeholder="Optional definition (text or URL)"
+                    onChange={(e) => {
+                      const updatedQualities = [...(design.qualities || [])]
+                      updatedQualities[index] = { ...quality, definition: e.target.value }
+                      handleChange({ ...design, qualities: updatedQualities })
+                    }}
+                    onFocus={startTransaction}
+                    onBlur={finalizeTransaction}
+                  />
+                </TreeItem>
+                <TreeItem>
+                  <button
+                    onClick={() => {
+                      startTransaction()
                       handleChange({
                         ...design,
-                        qualities: arrayMove(design.qualities!, index, index - 1)
+                        qualities: design.qualities?.filter((_, i) => i !== index)
                       })
-                    }
-                  }}
-                  onMoveDown={() => {
-                    if (index < design.qualities!.length - 1) {
-                      handleChange({
-                        ...design,
-                        qualities: arrayMove(design.qualities!, index, index + 1)
-                      })
-                    }
-                  }}
-                  onRemove={() => handleChange({
-                    ...design,
-                    qualities: design.qualities?.filter((_, i) => i !== index)
-                  })}
-                >
-                  <TreeItem>
-                    <Input
-                      label="Name"
-                      value={quality.name}
-                      onChange={(e) => {
-                        const updatedQualities = [...(design.qualities || [])]
-                        updatedQualities[index] = { ...quality, name: e.target.value }
-                        handleChange({ ...design, qualities: updatedQualities })
-                      }}
-                    />
-                  </TreeItem>
-                  <TreeItem>
-                    <Input
-                      label="Value"
-                      value={quality.value || ''}
-                      placeholder="Optional value"
-                      onChange={(e) => {
-                        const updatedQualities = [...(design.qualities || [])]
-                        updatedQualities[index] = { ...quality, value: e.target.value }
-                        handleChange({ ...design, qualities: updatedQualities })
-                      }}
-                    />
-                  </TreeItem>
-                  <TreeItem>
-                    <Input
-                      label="Unit"
-                      value={quality.unit || ''}
-                      placeholder="Optional unit"
-                      onChange={(e) => {
-                        const updatedQualities = [...(design.qualities || [])]
-                        updatedQualities[index] = { ...quality, unit: e.target.value }
-                        handleChange({ ...design, qualities: updatedQualities })
-                      }}
-                    />
-                  </TreeItem>
-                  <TreeItem>
-                    <Input
-                      label="Definition"
-                      value={quality.definition || ''}
-                      placeholder="Optional definition (text or URL)"
-                      onChange={(e) => {
-                        const updatedQualities = [...(design.qualities || [])]
-                        updatedQualities[index] = { ...quality, definition: e.target.value }
-                        handleChange({ ...design, qualities: updatedQualities })
-                      }}
-                    />
-                  </TreeItem>
-                </SortableTreeSection>
-              ))}
-            </SortableContext>
-          </TreeSection>
-        </DndContext>
+                      finalizeTransaction()
+                    }}
+                    className="text-destructive hover:text-destructive/80 p-1"
+                    title="Remove quality"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </TreeItem>
+              </TreeItem>
+            )}
+          </SortableTreeItems>
+        </TreeSection>
       ) : (
         <TreeSection
           label="Qualities"
           actions={[
             {
               icon: <Plus size={12} />,
-              onClick: () => handleChange({
-                ...design,
-                qualities: [...(design.qualities || []), { name: '' }]
-              }),
+              onClick: () => {
+                startTransaction()
+                handleChange({
+                  ...design,
+                  qualities: [...(design.qualities || []), { name: '' }]
+                })
+                finalizeTransaction()
+              },
               title: "Add quality"
             }
           ]}
@@ -1551,7 +1571,7 @@ const DesignSection: FC = () => {
 }
 
 const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
-  const { kit, designId, updatePiece, updatePieces, updateConnection, setDesign, removeConnectionFromDesign, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditor()
+  const { kit, designId, setPiece, setPieces, setConnection, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditor()
   const design = findDesignInKit(kit, designId)
   const pieces = pieceIds.map(id => findPieceInDesign(design, id))
   const metadata = piecesMetadata(kit, designId)
@@ -1567,82 +1587,90 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
   }
 
   const handleTypeNameChange = (value: string) => {
+    startTransaction()
     if (isSingle) {
-      updatePiece({ ...piece!, type: { ...piece!.type, name: value } })
+      setPiece({ ...piece!, type: { ...piece!.type, name: value } })
     } else {
       const updatedPieces = pieces.map(piece => ({ ...piece, type: { ...piece.type, name: value } }))
-      updatePieces(updatedPieces)
+      setPieces(updatedPieces)
     }
+    finalizeTransaction()
   }
 
   const handleTypeVariantChange = (value: string) => {
+    startTransaction()
     if (isSingle) {
-      updatePiece({ ...piece!, type: { ...piece!.type, variant: value } })
+      setPiece({ ...piece!, type: { ...piece!.type, variant: value } })
     } else {
       const updatedPieces = pieces.map(piece => ({ ...piece, type: { ...piece.type, variant: value } }))
-      updatePieces(updatedPieces)
+      setPieces(updatedPieces)
     }
+    finalizeTransaction()
   }
 
-  const fixPieces = () => fixPiecesInDesign(kit, designId, pieceIds)
+  const fixPieces = () => {
+    startTransaction()
+    fixPiecesInDesign(kit, designId, pieceIds)
+    finalizeTransaction()
+  }
 
   const handleCenterXChange = (value: number) => {
     if (isSingle) {
-      updatePiece(piece!.center ? { ...piece!, center: { ...piece!.center, x: value } } : piece!)
+      setPiece(piece!.center ? { ...piece!, center: { ...piece!.center, x: value } } : piece!)
     } else {
       const updatedPieces = pieces.map(piece =>
         piece.center ? { ...piece, center: { ...piece.center, x: value } } : piece
       )
-      updatePieces(updatedPieces)
+      setPieces(updatedPieces)
     }
   }
 
   const handleCenterYChange = (value: number) => {
     if (isSingle) {
-      updatePiece(piece!.center ? { ...piece!, center: { ...piece!.center, y: value } } : piece!)
+      setPiece(piece!.center ? { ...piece!, center: { ...piece!.center, y: value } } : piece!)
     } else {
       const updatedPieces = pieces.map(piece =>
         piece.center ? { ...piece, center: { ...piece.center, y: value } } : piece
       )
-      updatePieces(updatedPieces)
+      setPieces(updatedPieces)
     }
   }
 
   const handlePlaneOriginXChange = (value: number) => {
     if (isSingle) {
-      updatePiece(piece!.plane ? { ...piece!, plane: { ...piece!.plane, origin: { ...piece!.plane.origin, x: value } } } : piece!)
+      setPiece(piece!.plane ? { ...piece!, plane: { ...piece!.plane, origin: { ...piece!.plane.origin, x: value } } } : piece!)
     } else {
       const updatedPieces = pieces.map(piece =>
         piece.plane ? { ...piece, plane: { ...piece.plane, origin: { ...piece.plane.origin, x: value } } } : piece
       )
-      updatePieces(updatedPieces)
+      setPieces(updatedPieces)
     }
   }
 
   const handlePlaneOriginYChange = (value: number) => {
     if (isSingle) {
-      updatePiece(piece!.plane ? { ...piece!, plane: { ...piece!.plane, origin: { ...piece!.plane.origin, y: value } } } : piece!)
+      setPiece(piece!.plane ? { ...piece!, plane: { ...piece!.plane, origin: { ...piece!.plane.origin, y: value } } } : piece!)
     } else {
       const updatedPieces = pieces.map(piece =>
         piece.plane ? { ...piece, plane: { ...piece.plane, origin: { ...piece.plane.origin, y: value } } } : piece
       )
-      updatePieces(updatedPieces)
+      setPieces(updatedPieces)
     }
   }
 
   const handlePlaneOriginZChange = (value: number) => {
     if (isSingle) {
-      updatePiece(piece!.plane ? { ...piece!, plane: { ...piece!.plane, origin: { ...piece!.plane.origin, z: value } } } : piece!)
+      setPiece(piece!.plane ? { ...piece!, plane: { ...piece!.plane, origin: { ...piece!.plane.origin, z: value } } } : piece!)
     } else {
       const updatedPieces = pieces.map(piece =>
         piece.plane ? { ...piece, plane: { ...piece.plane, origin: { ...piece.plane.origin, z: value } } } : piece
       )
-      updatePieces(updatedPieces)
+      setPieces(updatedPieces)
     }
   }
 
   const handleConnectionChange = (updatedConnection: Connection) => {
-    updateConnection(updatedConnection)
+    setConnection(updatedConnection)
   }
 
   const handleMultipleConnectionsChange = (propertyName: keyof Connection, value: any) => {
@@ -1650,7 +1678,7 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
       ...conn,
       [propertyName]: value
     }))
-    updatedConnections.forEach(conn => updateConnection(conn))
+    updatedConnections.forEach(conn => setConnection(conn))
   }
 
   const getCommonConnectionValue = <T,>(getter: (connection: Connection) => T | undefined): T | undefined => {
@@ -1739,17 +1767,17 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
         )}
         <TreeItem>
           <Combobox
-            label="Type Name"
+            label="Type"
             options={availableTypeNames.map(name => ({ value: name, label: name }))}
             value={isSingle ? piece!.type.name : (commonTypeName || '')}
-            placeholder={!isSingle && commonTypeName === undefined ? 'Mixed values' : 'Select type name'}
+            placeholder={!isSingle && commonTypeName === undefined ? 'Mixed values' : 'Select type'}
             onValueChange={handleTypeNameChange}
           />
         </TreeItem>
         {(hasVariant || availableVariants.length > 0) && (
           <TreeItem>
             <Combobox
-              label="Type Variant"
+              label="Variant"
               options={availableVariants.map(variant => ({ value: variant, label: variant }))}
               value={isSingle ? (piece!.type.variant || '') : (commonTypeVariant || '')}
               placeholder={!isSingle && commonTypeVariant === undefined ? 'Mixed values' : 'Select variant'}
@@ -1921,7 +1949,7 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
 }
 
 const ConnectionsSection: FC<{ connections: { connectingPieceId: string; connectedPieceId: string }[] }> = ({ connections }) => {
-  const { kit, designId, updateConnection, updateConnections, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditor()
+  const { kit, designId, setConnection, setConnections, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditor()
   const design = findDesignInKit(kit, designId)
   const connectionObjects = connections.map(conn => {
     const connectionId = {
@@ -1941,80 +1969,46 @@ const ConnectionsSection: FC<{ connections: { connectingPieceId: string; connect
     return values.every(v => JSON.stringify(v) === JSON.stringify(firstValue)) ? firstValue : undefined
   }
 
-  const handleChange = (updatedConnection: Connection) => {
-    updateConnection(updatedConnection)
-  }
+  const handleChange = (updatedConnection: Connection) => setConnection(updatedConnection)
 
   const handleGapChange = (value: number) => {
-    if (isSingle) {
-      handleChange({ ...connection!, gap: value })
-    } else {
-      const updatedConnections = connectionObjects.map(connection => ({ ...connection, gap: value }))
-      updateConnections(updatedConnections)
-    }
+    if (isSingle) handleChange({ ...connection!, gap: value })
+    else setConnections(connectionObjects.map(connection => ({ ...connection, gap: value })))
   }
 
   const handleShiftChange = (value: number) => {
-    if (isSingle) {
-      handleChange({ ...connection!, shift: value })
-    } else {
-      const updatedConnections = connectionObjects.map(connection => ({ ...connection, shift: value }))
-      updateConnections(updatedConnections)
-    }
+    if (isSingle) handleChange({ ...connection!, shift: value })
+    else setConnections(connectionObjects.map(connection => ({ ...connection, shift: value })))
   }
 
   const handleRiseChange = (value: number) => {
-    if (isSingle) {
-      handleChange({ ...connection!, rise: value })
-    } else {
-      const updatedConnections = connectionObjects.map(connection => ({ ...connection, rise: value }))
-      updateConnections(updatedConnections)
-    }
+    if (isSingle) handleChange({ ...connection!, rise: value })
+    else setConnections(connectionObjects.map(connection => ({ ...connection, rise: value })))
   }
 
   const handleXOffsetChange = (value: number) => {
-    if (isSingle) {
-      handleChange({ ...connection!, x: value })
-    } else {
-      const updatedConnections = connectionObjects.map(connection => ({ ...connection, x: value }))
-      updateConnections(updatedConnections)
-    }
+    if (isSingle) handleChange({ ...connection!, x: value })
+    else setConnections(connectionObjects.map(connection => ({ ...connection, x: value })))
   }
 
   const handleYOffsetChange = (value: number) => {
-    if (isSingle) {
-      handleChange({ ...connection!, y: value })
-    } else {
-      const updatedConnections = connectionObjects.map(connection => ({ ...connection, y: value }))
-      updateConnections(updatedConnections)
-    }
+    if (isSingle) handleChange({ ...connection!, y: value })
+    else setConnections(connectionObjects.map(connection => ({ ...connection, y: value })))
   }
 
   const handleRotationChange = (value: number) => {
-    if (isSingle) {
-      handleChange({ ...connection!, rotation: value })
-    } else {
-      const updatedConnections = connectionObjects.map(connection => ({ ...connection, rotation: value }))
-      updateConnections(updatedConnections)
-    }
+    if (isSingle) handleChange({ ...connection!, rotation: value })
+    else setConnections(connectionObjects.map(connection => ({ ...connection, rotation: value })))
   }
 
   const handleTurnChange = (value: number) => {
-    if (isSingle) {
-      handleChange({ ...connection!, turn: value })
-    } else {
-      const updatedConnections = connectionObjects.map(connection => ({ ...connection, turn: value }))
-      updateConnections(updatedConnections)
-    }
+    if (isSingle) handleChange({ ...connection!, turn: value })
+    else setConnections(connectionObjects.map(connection => ({ ...connection, turn: value })))
   }
 
   const handleTiltChange = (value: number) => {
-    if (isSingle) {
-      handleChange({ ...connection!, tilt: value })
-    } else {
-      const updatedConnections = connectionObjects.map(connection => ({ ...connection, tilt: value }))
-      updateConnections(updatedConnections)
-    }
+    if (isSingle) handleChange({ ...connection!, tilt: value })
+    else setConnections(connectionObjects.map(connection => ({ ...connection, tilt: value })))
   }
 
   const commonGap = getCommonValue(c => c.gap)
@@ -2041,6 +2035,8 @@ const ConnectionsSection: FC<{ connections: { connectingPieceId: string; connect
                 onChange={(e) =>
                   handleChange({ ...connection!, connecting: { ...connection!.connecting, port: { id_: e.target.value } } })
                 }
+                onFocus={startTransaction}
+                onBlur={finalizeTransaction}
               />
             </TreeItem>
             <TreeItem>
@@ -2053,6 +2049,8 @@ const ConnectionsSection: FC<{ connections: { connectingPieceId: string; connect
                 onChange={(e) =>
                   handleChange({ ...connection!, connected: { ...connection!.connected, port: { id_: e.target.value } } })
                 }
+                onFocus={startTransaction}
+                onBlur={finalizeTransaction}
               />
             </TreeItem>
           </>
@@ -2165,6 +2163,43 @@ const ConnectionsSection: FC<{ connections: { connectingPieceId: string; connect
   )
 }
 
+const PortSection: FC<{ pieceId: string; portId: string }> = ({ pieceId, portId }) => {
+  const { kit, designId } = useDesignEditor()
+  const design = findDesignInKit(kit, designId)
+  const piece = design?.pieces?.find(p => p.id_ === pieceId)
+  const type = piece ? findTypeInKit(kit, piece.type) : null
+  const port = type?.ports?.find((p: any) => p.id_ === portId)
+
+  if (!piece || !type || !port) {
+    return (
+      <TreeSection label="Port" defaultOpen={true}>
+        <TreeItem>
+          <p className="text-sm text-muted-foreground">Port not found</p>
+        </TreeItem>
+      </TreeSection>
+    )
+  }
+
+  return (
+    <TreeSection label="Port" defaultOpen={true}>
+      <Input label="ID" value={port.id_ || 'DEFAULT'} disabled />
+      {port.description && (
+        <Textarea label="Description" value={port.description} disabled />
+      )}
+      {port.family && (
+        <Input label="Family" value={port.family} disabled />
+      )}
+      {port.mandatory !== undefined && (
+        <Input label="Mandatory" value={port.mandatory ? 'Yes' : 'No'} disabled />
+      )}
+      <Input label="Position" value={`(${port.point.x.toFixed(2)}, ${port.point.y.toFixed(2)}, ${port.point.z.toFixed(2)})`} disabled />
+      <Input label="Direction" value={`(${port.direction.x.toFixed(2)}, ${port.direction.y.toFixed(2)}, ${port.direction.z.toFixed(2)})`} disabled />
+      {port.compatibleFamilies && port.compatibleFamilies.map((family: string) => <TreeItem><Input label="Compatible Families" value={family} disabled /></TreeItem>)}
+      {port.qualities && port.qualities.map((quality: any) => <TreeItem><Input label="Qualities" value={`${quality.name}: ${quality.value || 'N/A'} ${quality.unit && `(${quality.unit})`}`} disabled /></TreeItem>)}
+    </TreeSection >
+  )
+}
+
 
 
 const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
@@ -2200,7 +2235,8 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
 
   const hasPieces = selection.selectedPieceIds.length > 0
   const hasConnections = selection.selectedConnections.length > 0
-  const hasSelection = hasPieces || hasConnections
+  const hasPortSelected = selection.selectedPiecePortId !== undefined
+  const hasSelection = hasPieces || hasConnections || hasPortSelected
 
   return (
     <div
@@ -2212,9 +2248,10 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
         <div className="p-1">
           <Tree>
             {!hasSelection && <DesignSection />}
-            {hasPieces && <PiecesSection pieceIds={selection.selectedPieceIds} />}
-            {hasConnections && <ConnectionsSection connections={selection.selectedConnections} />}
-            {hasPieces && hasConnections && (
+            {hasPortSelected && <PortSection pieceId={selection.selectedPiecePortId!.pieceId} portId={selection.selectedPiecePortId!.portId} />}
+            {hasPieces && !hasPortSelected && <PiecesSection pieceIds={selection.selectedPieceIds} />}
+            {hasConnections && !hasPortSelected && <ConnectionsSection connections={selection.selectedConnections} />}
+            {hasPieces && hasConnections && !hasPortSelected && (
               <TreeSection label="Mixed Selection" defaultOpen={true}>
                 <TreeItem>
                   <p className="text-sm text-muted-foreground">
@@ -2550,7 +2587,7 @@ const Cli: FC<{ designEditor: ReturnType<typeof useDesignEditor> }> = ({ designE
           center: { x: centerX, y: centerY }
         }
 
-        cli.designEditor.addPieceToDesign(piece)
+        cli.designEditor.addPiece(piece)
         cli.designEditor.finalizeTransaction()
 
         setState(prev => ({
@@ -2666,7 +2703,7 @@ const Cli: FC<{ designEditor: ReturnType<typeof useDesignEditor> }> = ({ designE
           tilt: 0
         }
 
-        cli.designEditor.addConnectionToDesign(connection)
+        cli.designEditor.addConnection(connection)
         cli.designEditor.finalizeTransaction()
 
         setState(prev => ({
@@ -2909,30 +2946,19 @@ const Cli: FC<{ designEditor: ReturnType<typeof useDesignEditor> }> = ({ designE
         const addMode = hasFlag(parsed, 'add') || hasFlag(parsed, 'a')
 
         // Use positional arguments as piece IDs
-        if (parsed.positional.length > 0) {
-          selectedPieceIds = parsed.positional.filter(id => pieces.some(p => p.id_ === id))
-        } else {
+        if (parsed.positional.length > 0) selectedPieceIds = parsed.positional.filter(id => pieces.some(p => p.id_ === id))
+        else {
           // Filter by flags
           let filteredPieces = pieces
-          if (typeFilter) {
-            filteredPieces = filteredPieces.filter(p => p.type.name === typeFilter)
-          }
-          if (variantFilter) {
-            filteredPieces = filteredPieces.filter(p => p.type.variant === variantFilter)
-          }
-          if (statusFilter) {
-            const isFixed = statusFilter.toLowerCase() === 'fixed'
-            filteredPieces = filteredPieces.filter(p => !!p.plane === isFixed)
-          }
+          if (typeFilter) filteredPieces = filteredPieces.filter(p => p.type.name === typeFilter)
+          if (variantFilter) filteredPieces = filteredPieces.filter(p => p.type.variant === variantFilter)
+          if (statusFilter) filteredPieces = filteredPieces.filter(p => !!p.plane === (statusFilter.toLowerCase() === 'fixed'))
           selectedPieceIds = filteredPieces.map(p => p.id_)
         }
 
         // If add mode, add to existing selection, otherwise replace
-        if (addMode) {
-          cli.designEditor.addPiecesToSelection(selectedPieceIds)
-        } else {
-          cli.designEditor.selectPieces(selectedPieceIds)
-        }
+        if (addMode) cli.designEditor.addPiecesToSelection(selectedPieceIds)
+        else cli.designEditor.selectPieces(selectedPieceIds)
       }
 
       if (selectedPieceIds.length === 0) {
@@ -3530,7 +3556,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
           center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 }
         }
         dispatch({
-          type: DesignEditorAction.AddPieceToDesign,
+          type: DesignEditorAction.AddPiece,
           payload: piece
         })
       } else if (activeDraggedDesign) {
