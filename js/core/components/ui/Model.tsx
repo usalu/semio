@@ -42,14 +42,16 @@ import {
   GizmoHelper,
   GizmoViewport,
   Grid,
+  KeyboardControls,
   Line,
   OrbitControls,
   OrthographicCamera,
   Select,
   TransformControls,
-  useGLTF
+  useGLTF,
+  useKeyboardControls
 } from '@react-three/drei'
-import { Canvas, ThreeEvent } from '@react-three/fiber'
+import { Canvas, ThreeEvent, useFrame, useThree } from '@react-three/fiber'
 import {
   DiffStatus,
   findDesignInKit,
@@ -67,6 +69,21 @@ import * as THREE from 'three'
 
 const getComputedColor = (variable: string): string => {
   return getComputedStyle(document.documentElement).getPropertyValue(variable).trim()
+}
+
+function CameraMover() {
+  const { camera } = useThree()
+  const [subscribeKeys, getKeys] = useKeyboardControls()
+  useFrame((state, delta) => {
+    const { forward, backward, left, right } = getKeys()
+    const speed = 50 * delta
+    if (backward) camera.position.z -= speed
+    if (forward) camera.position.z += speed
+    if (left) camera.position.x -= speed
+    if (right) camera.position.x += speed
+    camera.updateProjectionMatrix()
+  })
+  return null
 }
 
 interface PlaneThreeProps {
@@ -394,17 +411,36 @@ const ModelCore: FC = () => {
 }
 
 const Model: FC = () => {
-  const { deselectAll, toggleModelFullscreen } = useDesignEditor();
-  const onDoubleClickCapture = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
-    toggleModelFullscreen()
-  }, [toggleModelFullscreen])
-  const onPointerMissed = useCallback((e: MouseEvent) => { if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) deselectAll() }, [deselectAll])
+  const { deselectAll, toggleModelFullscreen } = useDesignEditor()
+  const onDoubleClickCapture = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      toggleModelFullscreen()
+    },
+    [toggleModelFullscreen]
+  )
+  const onPointerMissed = useCallback(
+    (e: MouseEvent) => {
+      if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) deselectAll()
+    },
+    [deselectAll]
+  )
+
   return (
     <div id="model" className="h-full w-full">
-      <Canvas onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed}>
-        <ModelCore />
-      </Canvas>
+      <KeyboardControls
+        map={[
+          { name: 'forward', keys: ['ArrowUp', 'w'] },
+          { name: 'backward', keys: ['ArrowDown', 's'] },
+          { name: 'left', keys: ['ArrowLeft', 'a'] },
+          { name: 'right', keys: ['ArrowRight', 'd'] }
+        ]}
+      >
+        <Canvas onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed}>
+          <ModelCore />
+          <CameraMover />
+        </Canvas>
+      </KeyboardControls>
     </div>
   )
 }

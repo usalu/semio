@@ -1,5 +1,5 @@
 {
-  "editor.formatOnSave": true,
+  "editor.formatOnSave": false,
   "editor.codeActionsOnSave": {
     "source.organizeImports": "always"
   },
@@ -15,17 +15,15 @@
     "--attribute-naming-style=camelCase",
     "--class-naming-style=PascalCase"
   ],
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "prettier.configPath": ".prettierrc.json",
+  // "editor.defaultFormatter": "esbenp.prettier-vscode",
+  // "prettier.configPath": ".prettierrc.json",
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter"
   },
   "python.analysis.typeCheckingMode": "off",
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
-  "python.testing.pytestArgs": [
-    "."
-  ],
+  "python.testing.pytestArgs": ["."],
   // "python.testing.pytestArgs": [
   //     "--cov",
   //     "--cov-config=pyproject.toml",
