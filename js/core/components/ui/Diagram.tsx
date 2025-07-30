@@ -40,14 +40,12 @@ import {
   ViewportPortal,
   XYPosition
 } from '@xyflow/react'
-import React, { FC, useCallback, useMemo, useState } from 'react'
+import React, { FC, useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
-  applyDesignDiff,
   arePortsCompatible,
   Connection,
   ConnectionDiff,
-  Design,
   DesignId,
   DiagramPoint,
   DiffStatus,
@@ -60,7 +58,6 @@ import {
   ICON_WIDTH,
   isPortInUse,
   isSameConnection,
-  isSameDesign,
   isSamePiece,
   Kit,
   Piece,
@@ -78,6 +75,19 @@ import { useDesignEditor } from './DesignEditor'
 
 
 //#region React Flow
+
+type HelperLine = {
+  type: 'horizontal' | 'vertical' | 'equalDistance'
+  position?: number
+  relatedPieceId: string
+  // For equal distance lines
+  x1?: number
+  y1?: number
+  x2?: number
+  y2?: number
+  distance?: number
+  referencePieceIds?: string[]
+}
 
 type PieceNodeProps = {
   piece: Piece
@@ -110,7 +120,7 @@ const PortHandle: React.FC<PortHandleProps> = ({ port }) => {
   const { x, y } = getPortPositionStyle(port)
 
   return (
-    <Handle id={port.id_ ?? ''} type="source" style={{ left: x + ICON_WIDTH / 2, top: y }} position={Position.Top} />
+    <Handle id={port.id_ ?? ''} type="source" className="left-1/2 top-0" style={{ left: x + ICON_WIDTH / 2, top: y }} position={Position.Top} />
   )
 }
 
@@ -212,6 +222,7 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({
         strokeDasharray: dasharray,
         opacity
       }}
+      className="transition-colors duration-200"
     />
   )
 }
@@ -220,11 +231,76 @@ const ConnectionConnectionLine: React.FC<ConnectionLineComponentProps> = (props:
   const { fromX, fromY, toX, toY } = props
   const HANDLE_HEIGHT = 5
   const path = `M ${fromX} ${fromY + HANDLE_HEIGHT / 2} L ${toX} ${toY + HANDLE_HEIGHT / 2}`
-  return <BaseEdge path={path} style={{ stroke: 'grey' }} />
+  return <BaseEdge path={path} style={{ stroke: 'grey' }} className="opacity-70" />
 }
 
 export const MiniMapNode: React.FC<MiniMapNodeProps> = ({ x, y, selected }: MiniMapNodeProps) => {
-  return <circle className={selected ? 'fill-primary' : 'fill-foreground'} cx={x} cy={y} r="10" />
+  return <circle className={`${selected ? 'fill-primary' : 'fill-foreground'} transition-colors duration-200`} cx={x} cy={y} r="10" />
+}
+
+const HelperLines: React.FC<{ lines: HelperLine[], nodes: { id: string, position: { x: number, y: number } }[] }> = ({ lines, nodes }) => {
+  const { getViewport } = useReactFlow()
+
+  if (lines.length === 0) return null
+
+  const viewport = getViewport()
+
+  return (
+    <div className="absolute inset-0 w-full h-full pointer-events-none z-[1000] overflow-hidden">
+      {lines.map((line, index) => {
+        if (line.type === 'horizontal' && line.position !== undefined) {
+          const screenY = line.position * viewport.zoom + viewport.y
+          return (
+            <div
+              key={`h-${line.relatedPieceId}-${index}`}
+              className="absolute left-0 w-full h-px border-t border-dashed border-primary opacity-60"
+              style={{ top: screenY }}
+            />
+          )
+        } else if (line.type === 'vertical' && line.position !== undefined) {
+          const screenX = line.position * viewport.zoom + viewport.x
+          return (
+            <div
+              key={`v-${line.relatedPieceId}-${index}`}
+              className="absolute top-0 w-px h-full border-l border-dashed border-primary opacity-60"
+              style={{ left: screenX }}
+            />
+          )
+        } else if (line.type === 'equalDistance' && line.x1 !== undefined && line.y1 !== undefined && line.x2 !== undefined && line.y2 !== undefined) {
+          const screenX1 = line.x1 * viewport.zoom + viewport.x
+          const screenY1 = line.y1 * viewport.zoom + viewport.y
+          const screenX2 = line.x2 * viewport.zoom + viewport.x
+          const screenY2 = line.y2 * viewport.zoom + viewport.y
+
+          // Different styles based on line type
+          const isMidLine = line.relatedPieceId.startsWith('mid-')
+          const strokeColor = 'var(--color-primary)'
+          const strokeWidth = isMidLine ? '3' : '2'
+          const opacity = isMidLine ? 1 : 0.7
+          const dashArray = isMidLine ? '4 4' : '8 4'
+
+          return (
+            <svg
+              key={`eq-${line.relatedPieceId}-${index}`}
+              className="absolute inset-0 w-full h-full pointer-events-none"
+            >
+              <line
+                x1={screenX1}
+                y1={screenY1}
+                x2={screenX2}
+                y2={screenY2}
+                stroke={strokeColor}
+                strokeWidth={strokeWidth}
+                strokeDasharray={dashArray}
+                opacity={opacity}
+              />
+            </svg>
+          )
+        }
+        return null
+      })}
+    </div>
+  )
 }
 
 const pieceToNode = (piece: Piece, type: Type, center: DiagramPoint, selected: boolean): PieceNode => ({
@@ -235,7 +311,8 @@ const pieceToNode = (piece: Piece, type: Type, center: DiagramPoint, selected: b
     y: -center.y * ICON_WIDTH || 0
   },
   selected,
-  data: { piece, type }
+  data: { piece, type },
+  className: selected ? 'selected' : ''
 })
 
 const connectionToEdge = (connection: Connection, selected: boolean, isParentConnection: boolean = false): ConnectionEdge => ({
@@ -289,26 +366,31 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
 
 
 const Diagram: FC = () => {
-  const { kit, designId, selection, fullscreenPanel, designDiff, setDesign, setDesignDiff, setSelection, deselectAll, selectPiece, addPieceToSelection, removePieceFromSelection, selectConnection, addConnectionToSelection, removeConnectionFromSelection, toggleDiagramFullscreen } = useDesignEditor();
+  const { kit, designId, selection, fullscreenPanel, setDesign, deselectAll, selectPiece, addPieceToSelection, removePieceFromSelection, selectConnection, addConnectionToSelection, removeConnectionFromSelection, toggleDiagramFullscreen, startTransaction, finalizeTransaction, abortTransaction, updatePiece, updatePieces, addConnectionsToDesign, updateConnection, updateConnections } = useDesignEditor();
   if (!kit) return null
   const design = findDesignInKit(kit, designId)
   if (!design) return null
-  const effectiveDesign = applyDesignDiff(design, designDiff, true)
-  const effectiveKit = {
-    ...kit,
-    designs: kit.designs!.map((d: Design) => {
-      if (isSameDesign(design, d)) {
-        return effectiveDesign
-      }
-      return d
-    })
-  }
-  const { nodes, edges } = designToNodesAndEdges(effectiveKit, designId, selection) ?? { nodes: [], edges: [] }
+  const { nodes, edges } = designToNodesAndEdges(kit, designId, selection) ?? { nodes: [], edges: [] }
   const reactFlowInstance = useReactFlow()
   const [dragState, setDragState] = useState<{
     lastPostition: XYPosition
   } | null>(null)
+  const [helperLines, setHelperLines] = useState<HelperLine[]>([])
   const fullscreen = fullscreenPanel === FullscreenPanel.Diagram
+
+  // Handle escape key to abort transactions
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && dragState) {
+        abortTransaction()
+        setDragState(null)
+      }
+    }
+
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [dragState, abortTransaction])
+
   //#endregion State
 
   //#region Actions
@@ -354,23 +436,91 @@ const Diagram: FC = () => {
           }
         } else {
           if (!isNodeSelected) {
-            setSelection({ selectedPieceIds: [node.id], selectedConnections: [] })
+            selectPiece({ id_: node.id })
           }
         }
+
+        // Start transaction for drag operation
+        startTransaction()
 
         setDragState({
           lastPostition: { x: node.position.x, y: node.position.y }
         })
+        setHelperLines([])
       },
-      [setSelection, removePieceFromSelection, addPieceToSelection]
+      [selectPiece, removePieceFromSelection, addPieceToSelection, startTransaction]
     )
 
   const onNodeDrag = useCallback((event: any, node: Node) => {
     // TODO: Fix the reset after proximity connect is estabilished
     const MIN_DISTANCE = 150
+    const SNAP_THRESHOLD = 20 // Distance in pixels for snapping to helper lines
     if (!dragState) return
     const { lastPostition } = dragState
-    const metadata = piecesMetadata(effectiveKit, designId)
+    const metadata = piecesMetadata(kit, designId)
+
+    // Calculate helper lines from non-selected pieces
+    const currentHelperLines: HelperLine[] = []
+    const viewport = reactFlowInstance.getViewport()
+
+    const nonSelectedNodes = nodes.filter((n) => !(selection?.selectedPieceIds ?? []).includes(n.id))
+
+    // Find the closest piece in each direction (positive x, negative x, positive y, negative y)
+    const draggedCenterX = node.position.x + ICON_WIDTH / 2
+    const draggedCenterY = node.position.y + ICON_WIDTH / 2
+
+    const rightPiece = nonSelectedNodes
+      .filter(n => n.position.x + ICON_WIDTH / 2 > draggedCenterX)
+      .reduce((closest, current) => {
+        const closestDistance = closest ? (closest.position.x + ICON_WIDTH / 2) - draggedCenterX : Infinity
+        const currentDistance = (current.position.x + ICON_WIDTH / 2) - draggedCenterX
+        return currentDistance < closestDistance ? current : closest
+      }, null as typeof nonSelectedNodes[0] | null)
+
+    const leftPiece = nonSelectedNodes
+      .filter(n => n.position.x + ICON_WIDTH / 2 < draggedCenterX)
+      .reduce((closest, current) => {
+        const closestDistance = closest ? draggedCenterX - (closest.position.x + ICON_WIDTH / 2) : Infinity
+        const currentDistance = draggedCenterX - (current.position.x + ICON_WIDTH / 2)
+        return currentDistance < closestDistance ? current : closest
+      }, null as typeof nonSelectedNodes[0] | null)
+
+    const bottomPiece = nonSelectedNodes
+      .filter(n => n.position.y + ICON_WIDTH / 2 > draggedCenterY)
+      .reduce((closest, current) => {
+        const closestDistance = closest ? (closest.position.y + ICON_WIDTH / 2) - draggedCenterY : Infinity
+        const currentDistance = (current.position.y + ICON_WIDTH / 2) - draggedCenterY
+        return currentDistance < closestDistance ? current : closest
+      }, null as typeof nonSelectedNodes[0] | null)
+
+    const topPiece = nonSelectedNodes
+      .filter(n => n.position.y + ICON_WIDTH / 2 < draggedCenterY)
+      .reduce((closest, current) => {
+        const closestDistance = closest ? draggedCenterY - (closest.position.y + ICON_WIDTH / 2) : Infinity
+        const currentDistance = draggedCenterY - (current.position.y + ICON_WIDTH / 2)
+        return currentDistance < closestDistance ? current : closest
+      }, null as typeof nonSelectedNodes[0] | null)
+
+    const closestNodes = [rightPiece, leftPiece, bottomPiece, topPiece].filter(Boolean) as typeof nonSelectedNodes
+
+    for (const otherNode of closestNodes) {
+      const centerX = otherNode.position.x + ICON_WIDTH / 2
+      const centerY = otherNode.position.y + ICON_WIDTH / 2
+
+      // Add horizontal line through center
+      currentHelperLines.push({
+        type: 'horizontal',
+        position: centerY,
+        relatedPieceId: otherNode.id
+      })
+
+      // Add vertical line through center
+      currentHelperLines.push({
+        type: 'vertical',
+        position: centerX,
+        relatedPieceId: otherNode.id
+      })
+    }
 
     const addedConnections: Connection[] = []
     let updatedPieces: PieceDiff[] = []
@@ -382,6 +532,402 @@ const Diagram: FC = () => {
       let closestConnection: Connection | null = null
       let closestDistance = Number.MAX_VALUE
       const selectedInternalNode = reactFlowInstance.getInternalNode(selectedNode.id)!
+
+      // Calculate current drag position with potential snapping
+      let draggedX = node.position.x
+      let draggedY = node.position.y
+
+      // Check for snapping to helper lines
+      const draggedCenterX = draggedX + ICON_WIDTH / 2
+      const draggedCenterY = draggedY + ICON_WIDTH / 2
+
+      // Check for equal distance snapping opportunities FIRST (before regular snapping)
+      const EQUAL_DISTANCE_THRESHOLD = 15 // Pixels for snapping threshold
+      let equalDistanceHelperLines: HelperLine[] = []
+
+      for (let i = 0; i < closestNodes.length; i++) {
+        for (let j = i + 1; j < closestNodes.length; j++) {
+          const node1 = closestNodes[i]
+          const node2 = closestNodes[j]
+
+          const center1 = { x: node1.position.x + ICON_WIDTH / 2, y: node1.position.y + ICON_WIDTH / 2 }
+          const center2 = { x: node2.position.x + ICON_WIDTH / 2, y: node2.position.y + ICON_WIDTH / 2 }
+
+          // Check for horizontal alignment with equal vertical spacing
+          if (Math.abs(center1.x - center2.x) < 5) { // Vertically aligned pieces
+            const distance = Math.abs(center2.y - center1.y)
+            const minY = Math.min(center1.y, center2.y)
+            const maxY = Math.max(center1.y, center2.y)
+            const midY = (center1.y + center2.y) / 2
+
+            if (distance > 40) {
+              // Check for middle position snapping
+              if (Math.abs(draggedCenterY - midY) < EQUAL_DISTANCE_THRESHOLD) {
+                draggedY = midY - ICON_WIDTH / 2
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `upper-${node1.id}-${node2.id}`,
+                  x1: center1.x - 50,
+                  y1: minY,
+                  x2: center1.x + 50,
+                  y2: minY,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `lower-${node1.id}-${node2.id}`,
+                  x1: center1.x - 50,
+                  y1: maxY,
+                  x2: center1.x + 50,
+                  y2: maxY,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `mid-${node1.id}-${node2.id}`,
+                  x1: center1.x - 30,
+                  y1: midY,
+                  x2: center1.x + 30,
+                  y2: midY,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+              }
+
+              // Check for extending the sequence (placing before first or after last)
+              const extendedMinY = minY - distance
+              const extendedMaxY = maxY + distance
+
+              if (Math.abs(draggedCenterY - extendedMinY) < EQUAL_DISTANCE_THRESHOLD) {
+                draggedY = extendedMinY - ICON_WIDTH / 2
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `extend-before-${node1.id}-${node2.id}`,
+                  x1: center1.x - 30,
+                  y1: extendedMinY,
+                  x2: center1.x + 30,
+                  y2: extendedMinY,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `ref1-${node1.id}-${node2.id}`,
+                  x1: center1.x - 50,
+                  y1: minY,
+                  x2: center1.x + 50,
+                  y2: minY,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `ref2-${node1.id}-${node2.id}`,
+                  x1: center1.x - 50,
+                  y1: maxY,
+                  x2: center1.x + 50,
+                  y2: maxY,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+              }
+
+              if (Math.abs(draggedCenterY - extendedMaxY) < EQUAL_DISTANCE_THRESHOLD) {
+                draggedY = extendedMaxY - ICON_WIDTH / 2
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `extend-after-${node1.id}-${node2.id}`,
+                  x1: center1.x - 30,
+                  y1: extendedMaxY,
+                  x2: center1.x + 30,
+                  y2: extendedMaxY,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `ref1-${node1.id}-${node2.id}`,
+                  x1: center1.x - 50,
+                  y1: minY,
+                  x2: center1.x + 50,
+                  y2: minY,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `ref2-${node1.id}-${node2.id}`,
+                  x1: center1.x - 50,
+                  y1: maxY,
+                  x2: center1.x + 50,
+                  y2: maxY,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+              }
+
+              // Check for perpendicular equal distance (horizontal placement relative to vertical alignment)
+              const extendedLeftX = center1.x - distance
+              const extendedRightX = center1.x + distance
+
+              if (Math.abs(draggedCenterX - extendedLeftX) < EQUAL_DISTANCE_THRESHOLD) {
+                draggedX = extendedLeftX - ICON_WIDTH / 2
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `perp-left-${node1.id}-${node2.id}`,
+                  x1: extendedLeftX,
+                  y1: midY - 30,
+                  x2: extendedLeftX,
+                  y2: midY + 30,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `perp-ref-${node1.id}-${node2.id}`,
+                  x1: center1.x,
+                  y1: midY - 50,
+                  x2: center1.x,
+                  y2: midY + 50,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+              }
+
+              if (Math.abs(draggedCenterX - extendedRightX) < EQUAL_DISTANCE_THRESHOLD) {
+                draggedX = extendedRightX - ICON_WIDTH / 2
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `perp-right-${node1.id}-${node2.id}`,
+                  x1: extendedRightX,
+                  y1: midY - 30,
+                  x2: extendedRightX,
+                  y2: midY + 30,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `perp-ref-${node1.id}-${node2.id}`,
+                  x1: center1.x,
+                  y1: midY - 50,
+                  x2: center1.x,
+                  y2: midY + 50,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+              }
+            }
+          }          // Check for vertical alignment with equal horizontal spacing
+          if (Math.abs(center1.y - center2.y) < 5) { // Horizontally aligned pieces
+            const distance = Math.abs(center2.x - center1.x)
+            const minX = Math.min(center1.x, center2.x)
+            const maxX = Math.max(center1.x, center2.x)
+            const midX = (center1.x + center2.x) / 2
+
+            if (distance > 40) {
+              // Check for middle position snapping
+              if (Math.abs(draggedCenterX - midX) < EQUAL_DISTANCE_THRESHOLD) {
+                draggedX = midX - ICON_WIDTH / 2
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `left-${node1.id}-${node2.id}`,
+                  x1: minX,
+                  y1: center1.y - 50,
+                  x2: minX,
+                  y2: center1.y + 50,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `right-${node1.id}-${node2.id}`,
+                  x1: maxX,
+                  y1: center1.y - 50,
+                  x2: maxX,
+                  y2: center1.y + 50,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `mid-${node1.id}-${node2.id}`,
+                  x1: midX,
+                  y1: center1.y - 30,
+                  x2: midX,
+                  y2: center1.y + 30,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+              }
+
+              // Check for extending the sequence (placing before first or after last)
+              const extendedMinX = minX - distance
+              const extendedMaxX = maxX + distance
+
+              if (Math.abs(draggedCenterX - extendedMinX) < EQUAL_DISTANCE_THRESHOLD) {
+                draggedX = extendedMinX - ICON_WIDTH / 2
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `extend-before-${node1.id}-${node2.id}`,
+                  x1: extendedMinX,
+                  y1: center1.y - 30,
+                  x2: extendedMinX,
+                  y2: center1.y + 30,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `ref1-${node1.id}-${node2.id}`,
+                  x1: minX,
+                  y1: center1.y - 50,
+                  x2: minX,
+                  y2: center1.y + 50,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `ref2-${node1.id}-${node2.id}`,
+                  x1: maxX,
+                  y1: center1.y - 50,
+                  x2: maxX,
+                  y2: center1.y + 50,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+              }
+
+              if (Math.abs(draggedCenterX - extendedMaxX) < EQUAL_DISTANCE_THRESHOLD) {
+                draggedX = extendedMaxX - ICON_WIDTH / 2
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `extend-after-${node1.id}-${node2.id}`,
+                  x1: extendedMaxX,
+                  y1: center1.y - 30,
+                  x2: extendedMaxX,
+                  y2: center1.y + 30,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `ref1-${node1.id}-${node2.id}`,
+                  x1: minX,
+                  y1: center1.y - 50,
+                  x2: minX,
+                  y2: center1.y + 50,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `ref2-${node1.id}-${node2.id}`,
+                  x1: maxX,
+                  y1: center1.y - 50,
+                  x2: maxX,
+                  y2: center1.y + 50,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+              }
+
+              // Check for perpendicular equal distance (vertical placement relative to horizontal alignment)
+              const extendedUpY = center1.y - distance
+              const extendedDownY = center1.y + distance
+
+              if (Math.abs(draggedCenterY - extendedUpY) < EQUAL_DISTANCE_THRESHOLD) {
+                draggedY = extendedUpY - ICON_WIDTH / 2
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `perp-up-${node1.id}-${node2.id}`,
+                  x1: midX - 30,
+                  y1: extendedUpY,
+                  x2: midX + 30,
+                  y2: extendedUpY,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `perp-ref-${node1.id}-${node2.id}`,
+                  x1: midX - 50,
+                  y1: center1.y,
+                  x2: midX + 50,
+                  y2: center1.y,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+              }
+
+              if (Math.abs(draggedCenterY - extendedDownY) < EQUAL_DISTANCE_THRESHOLD) {
+                draggedY = extendedDownY - ICON_WIDTH / 2
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `perp-down-${node1.id}-${node2.id}`,
+                  x1: midX - 30,
+                  y1: extendedDownY,
+                  x2: midX + 30,
+                  y2: extendedDownY,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+
+                equalDistanceHelperLines.push({
+                  type: 'equalDistance',
+                  relatedPieceId: `perp-ref-${node1.id}-${node2.id}`,
+                  x1: midX - 50,
+                  y1: center1.y,
+                  x2: midX + 50,
+                  y2: center1.y,
+                  referencePieceIds: [node1.id, node2.id]
+                })
+              }
+            }
+          }
+        }
+      }
+
+      // Always check regular snapping (combining with equal distance snapping)
+      // Update drag position based on current snapped position
+      const updatedDraggedCenterX = draggedX + ICON_WIDTH / 2
+      const updatedDraggedCenterY = draggedY + ICON_WIDTH / 2
+
+      // Find closest horizontal line for snapping
+      for (const line of currentHelperLines.filter(l => l.type === 'horizontal' && l.position !== undefined)) {
+        const distance = Math.abs(updatedDraggedCenterY - line.position!)
+        if (distance < SNAP_THRESHOLD) {
+          draggedY = line.position! - ICON_WIDTH / 2
+          break
+        }
+      }
+
+      // Find closest vertical line for snapping
+      for (const line of currentHelperLines.filter(l => l.type === 'vertical' && l.position !== undefined)) {
+        const distance = Math.abs(updatedDraggedCenterX - line.position!)
+        if (distance < SNAP_THRESHOLD) {
+          draggedX = line.position! - ICON_WIDTH / 2
+          break
+        }
+      }
+
+      // Add equal distance helper lines to the current helper lines
+      currentHelperLines.push(...equalDistanceHelperLines)
+
+      // Update helper lines with equal distance lines
+      setHelperLines(currentHelperLines)
+
+      // Update the node position with snapping applied
+      if (selectedNode.id === node.id) {
+        selectedInternalNode.internals.positionAbsolute.x = draggedX
+        selectedInternalNode.internals.positionAbsolute.y = draggedY
+        node.position.x = draggedX
+        node.position.y = draggedY
+      }
+
       for (const otherNode of nodes.filter((n) => !(selection.selectedPieceIds ?? []).includes(n.id))) {
         const existingConnection = design.connections?.find((c) => isSameConnection(c, { connected: { piece: { id_: selectedNode.id } }, connecting: { piece: { id_: otherNode.id } } }))
         if (existingConnection) continue
@@ -390,7 +936,7 @@ const Diagram: FC = () => {
           const port = findPortInType(type, { id_: handle.id! })
           for (const otherHandle of otherInternalNode.internals.handleBounds?.source ?? []) {
             const otherPort = findPortInType(otherNode.data.type, { id_: otherHandle.id! })
-            if (!arePortsCompatible(port, otherPort) || isPortInUse(effectiveDesign, otherNode.data.piece, otherPort)) continue
+            if (!arePortsCompatible(port, otherPort) || isPortInUse(design, otherNode.data.piece, otherPort)) continue
             const dx = (selectedInternalNode.internals.positionAbsolute.x + handle.x) - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x)
             const dy = (selectedInternalNode.internals.positionAbsolute.y + handle.y) - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y)
             const distance = Math.sqrt(dx * dx + dy * dy)
@@ -409,7 +955,10 @@ const Diagram: FC = () => {
 
       if (closestConnection) {
         addedConnections.push(closestConnection)
-        updatedPieces.push({ ...selectedNode.data.piece, center: undefined, plane: undefined })
+        const updatedPiece = { ...selectedNode.data.piece, center: undefined, plane: undefined }
+        if (updatedPiece.type) {
+          updatedPieces.push(updatedPiece as Piece)
+        }
       }
       else {
         if (!piece.center) {
@@ -417,7 +966,7 @@ const Diagram: FC = () => {
           const parentPieceId = metadata.get(selectedNode.id)!.parentPieceId!
           const parentInternalNode = reactFlowInstance.getInternalNode(parentPieceId)
           if (!parentInternalNode) throw new Error(`Internal node not found for ${parentPieceId}`)
-          const parentConnection = findConnectionInDesign(effectiveDesign, { connected: { piece: { id_: selectedNode.id } }, connecting: { piece: { id_: parentPieceId } } })
+          const parentConnection = findConnectionInDesign(design, { connected: { piece: { id_: selectedNode.id } }, connecting: { piece: { id_: parentPieceId } } })
           // const isSelectedConnecting = parentConnection.connecting.piece.id_ === selectedNode.id
           // const selectedInternalNode = reactFlowInstance.getInternalNode(selectedNode.id)!
           // const handle = selectedInternalNode.internals.handleBounds?.source?.find((h) => h.id === (isSelectedConnecting ? parentConnection.connected.port.id_ : parentConnection.connecting.port.id_))
@@ -426,29 +975,49 @@ const Diagram: FC = () => {
           // if (!parentHandle) throw new Error(`Handle not found for ${parentConnection.connected.port.id_}`)
           updatedConnections.push({
             ...parentConnection,
-            x: (parentConnection.x ?? 0) + ((node.position.x - lastPostition.x) / ICON_WIDTH),
-            y: (parentConnection.y ?? 0) - ((node.position.y - lastPostition.y) / ICON_WIDTH)
+            x: (parentConnection.x ?? 0) + ((draggedX - lastPostition.x) / ICON_WIDTH),
+            y: (parentConnection.y ?? 0) - ((draggedY - lastPostition.y) / ICON_WIDTH)
           })
         }
         else {
-          const scaledOffset = { x: (node.position.x - lastPostition.x) / ICON_WIDTH, y: -(node.position.y - lastPostition.y) / ICON_WIDTH }
-          updatedPieces.push({ ...piece, center: { x: piece.center!.x + scaledOffset.x, y: piece.center!.y + scaledOffset.y } })
+          const scaledOffset = { x: (draggedX - lastPostition.x) / ICON_WIDTH, y: -(draggedY - lastPostition.y) / ICON_WIDTH }
+          const updatedPiece = { ...piece, center: { x: piece.center!.x + scaledOffset.x, y: piece.center!.y + scaledOffset.y } }
+          if (updatedPiece.type) {
+            updatedPieces.push(updatedPiece as Piece)
+          }
         }
       }
 
-      setDesignDiff({ pieces: { updated: updatedPieces }, connections: { added: addedConnections, updated: updatedConnections } })
-      setDragState({ ...dragState!, lastPostition: node.position })
+      if (updatedPieces.length > 0) {
+        updatedPieces.forEach(piece => {
+          if (piece.type) {
+            updatePiece(piece as Piece)
+          }
+        })
+      }
+
+      if (addedConnections.length > 0) {
+        addConnectionsToDesign(addedConnections)
+      }
+
+      if (updatedConnections.length > 0) {
+        updatedConnections.forEach(connection => {
+          updateConnection(connection as Connection)
+        })
+      }
+
+      setDragState({ ...dragState!, lastPostition: { x: draggedX, y: draggedY } })
 
     }
 
-  }, [setDesignDiff, setDesign, effectiveKit, designId, reactFlowInstance, selection, nodes, design, effectiveDesign])
+  }, [updatePiece, addConnectionsToDesign, updateConnection, design, reactFlowInstance, selection, nodes])
 
   const onNodeDragStop = useCallback(() => {
-    const updatedDesign = applyDesignDiff(design, designDiff)
-    setDesign(updatedDesign)
-    setDesignDiff({})
+    // Finalize transaction instead of manually applying diff
+    finalizeTransaction()
     setDragState(null)
-  }, [setDesignDiff, setDesign, design, designDiff])
+    setHelperLines([])
+  }, [finalizeTransaction])
   //#endregion
 
   const onConnect = useCallback(
@@ -476,7 +1045,7 @@ const Diagram: FC = () => {
       const updatedPieces = design.pieces?.map((piece) => (isSamePiece(piece, { id_: params.source! })) ? { ...piece, center: undefined, plane: undefined } : piece)
       setDesign({ ...design, connections: newConnections, pieces: updatedPieces })
     },
-    [setDesign, effectiveKit, designId, reactFlowInstance, design]
+    [setDesign, kit, designId, reactFlowInstance, design]
   )
   //#endregion Actions
 
@@ -484,7 +1053,7 @@ const Diagram: FC = () => {
   const edgeTypes = useMemo(() => ({ connection: ConnectionEdgeComponent }), [])
 
   return (
-    <div id="diagram" className="h-full w-full">
+    <div id="diagram" className="h-full w-full relative">
       <ReactFlow
         ref={useDroppable({ id: 'diagram' }).setNodeRef}
         nodes={nodes}
@@ -497,10 +1066,8 @@ const Diagram: FC = () => {
         maxZoom={12}
         fitView
         zoomOnDoubleClick={false}
-        panOnDrag={[0]} //left mouse button
+        panOnDrag={[0]}
         proOptions={{ hideAttribution: true }}
-        // selectionOnDrag={true}
-        // selectionMode={SelectionMode.Partial}
         onNodeClick={onNodeClick}
         onEdgeClick={onEdgeClick}
         onNodeDragStart={onNodeDragStart}
@@ -510,11 +1077,12 @@ const Diagram: FC = () => {
         onDoubleClick={onDoubleClick}
         onConnect={onConnect}
         connectionLineComponent={ConnectionConnectionLine}
+        className="bg-background"
       >
-        {fullscreen && <Controls className="border" showZoom={false} showInteractive={false} />}
+        {fullscreen && <Controls className="border border-border bg-background rounded-md shadow-sm" showZoom={false} showInteractive={false} />}
         {fullscreen && (
           <MiniMap
-            className="border"
+            className="border border-border bg-background rounded-md shadow-sm"
             maskColor="var(--accent)"
             bgColor="var(--background)"
             nodeComponent={MiniMapNode}
@@ -522,6 +1090,7 @@ const Diagram: FC = () => {
         )}
         <ViewportPortal>⌞</ViewportPortal>
       </ReactFlow>
+      <HelperLines lines={helperLines} nodes={nodes} />
     </div>
   )
 }

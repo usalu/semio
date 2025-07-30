@@ -1,3 +1,27 @@
+// #region Header
+
+// Stepper.tsx
+
+// 2025 Ueli Saluz
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion
+
+// #region TODOs
+
+// #endregion TODOs
 import { Minus, Plus } from "lucide-react"
 import { FC, useEffect, useState } from "react"
 import { Input } from "./Input"
@@ -9,6 +33,9 @@ interface StepperProps {
     max?: number
     step?: number
     onChange?: (value: number) => void
+    onPointerDown?: () => void
+    onPointerUp?: () => void
+    onPointerCancel?: () => void
     label?: string
 }
 
@@ -19,6 +46,9 @@ const Stepper: FC<StepperProps> = ({
     max,
     step = 1,
     onChange,
+    onPointerDown,
+    onPointerUp,
+    onPointerCancel,
     label
 }) => {
     const [internalValue, setInternalValue] = useState(value ?? defaultValue)
@@ -66,6 +96,9 @@ const Stepper: FC<StepperProps> = ({
             <div className="flex items-center flex-1">
                 <button
                     type="button"
+                    onPointerDown={onPointerDown}
+                    onPointerUp={onPointerUp}
+                    onPointerCancel={onPointerCancel}
                     onClick={handleStepDown}
                     disabled={!canStepDown}
                     className="h-9 w-9 border border-r-0 rounded-l-md bg-background hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
@@ -76,6 +109,8 @@ const Stepper: FC<StepperProps> = ({
                     type="number"
                     value={internalValue.toString()}
                     onChange={handleInputChange}
+                    onFocus={onPointerDown}
+                    onBlur={onPointerUp}
                     className="rounded-none border-l-0 border-r-0 text-center"
                     step={step}
                     min={min}
@@ -83,6 +118,9 @@ const Stepper: FC<StepperProps> = ({
                 />
                 <button
                     type="button"
+                    onPointerDown={onPointerDown}
+                    onPointerUp={onPointerUp}
+                    onPointerCancel={onPointerCancel}
                     onClick={handleStepUp}
                     disabled={!canStepUp}
                     className="h-9 w-9 border border-l-0 rounded-r-md bg-background hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"

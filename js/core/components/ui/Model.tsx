@@ -51,13 +51,11 @@ import {
 } from '@react-three/drei'
 import { Canvas, ThreeEvent } from '@react-three/fiber'
 import {
-  applyDesignDiff,
   DiffStatus,
   findDesignInKit,
   flattenDesign,
   FullscreenPanel,
   getPieceRepresentationUrls,
-  isSameDesign,
   Piece,
   Plane,
   planeToMatrix,
@@ -114,6 +112,7 @@ const ModelPiece: FC<ModelPieceProps> = ({
   onSelect,
   onPieceUpdate
 }) => {
+  const { startTransaction, finalizeTransaction, abortTransaction } = useDesignEditor()
   const fixed = piece.plane !== undefined
   const matrix = useMemo(() => {
     const planeRotationMatrix = planeToMatrix(plane)
@@ -149,7 +148,7 @@ const ModelPiece: FC<ModelPieceProps> = ({
     } else if (selected) {
       meshColor = new THREE.Color(getComputedColor('--color-primary'))
     } else {
-      return scene
+      meshColor = new THREE.Color(getComputedColor('--color-background'))
     }
 
     const lineColor = new THREE.Color(getComputedColor('--color-foreground'))
@@ -181,12 +180,34 @@ const ModelPiece: FC<ModelPieceProps> = ({
   )
 
   const transformControlRef = useRef(null)
+
+  const handleMouseDown = useCallback(
+    (e?: THREE.Event) => {
+      console.log('handleMouseDown', e)
+      startTransaction()
+    },
+    [startTransaction]
+  )
+
   const handleMouseUp = useCallback(
     (e?: THREE.Event) => {
       console.log('handleMouseUp', e)
+      finalizeTransaction()
     },
-    [plane]
+    [finalizeTransaction]
   )
+
+  // Handle escape key to abort transactions during transform
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && selected && fixed) {
+        abortTransaction()
+      }
+    }
+
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [selected, fixed, abortTransaction])
 
   const transformControl = selected && fixed
   if (transformControl) {
@@ -205,7 +226,7 @@ const ModelPiece: FC<ModelPieceProps> = ({
   )
 
   return transformControl ? (
-    <TransformControls ref={transformControlRef} enabled={selected && fixed} onMouseUp={handleMouseUp}>
+    <TransformControls ref={transformControlRef} enabled={selected && fixed} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}>
       {group}
     </TransformControls>
   ) : (
@@ -216,7 +237,7 @@ const ModelPiece: FC<ModelPieceProps> = ({
 interface ModelDesignProps { }
 
 const ModelDesign: FC<ModelDesignProps> = () => {
-  const { kit, designId, fileUrls, selection, designDiff } = useDesignEditor()
+  const { kit, designId, fileUrls, selection } = useDesignEditor()
   const design = findDesignInKit(kit, designId)
   if (!design) {
     return null
@@ -227,17 +248,14 @@ const ModelDesign: FC<ModelDesignProps> = () => {
     return flatDesign.pieces?.map((p) => p.plane!) || []
   }, [kit, designId])
 
-  // Use inplace mode to get all pieces including removed ones with diff qualities
-  const effectiveDesign = useMemo(() => applyDesignDiff(design, designDiff, true), [design, designDiff])
-  const effectiveKit = { ...kit, designs: kit.designs?.map((d) => (isSameDesign(design, d) ? effectiveDesign : d)) ?? [] }
-  const piecePlanesFromEffectiveDesign = useMemo(() => {
-    const flatDesign = flattenDesign(effectiveKit, designId)
+  const piecePlanesFromDesign = useMemo(() => {
+    const flatDesign = flattenDesign(kit, designId)
     return flatDesign.pieces?.map((p) => p.plane!) || []
-  }, [effectiveKit, designId])
+  }, [kit, designId])
 
   const pieceRepresentationUrls = useMemo(() => {
-    return getPieceRepresentationUrls(effectiveDesign, types)
-  }, [effectiveDesign, types])
+    return getPieceRepresentationUrls(design, types)
+  }, [design, types])
 
   useEffect(() => {
     fileUrls.forEach((url, id) => {
@@ -245,7 +263,7 @@ const ModelDesign: FC<ModelDesignProps> = () => {
     })
   }, [fileUrls])
 
-  effectiveDesign.pieces?.forEach((p) => {
+  design.pieces?.forEach((p) => {
     const type = types.find((t) => t.name === p.type.name && (t.variant || '') === (p.type.variant || ''))
     if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`)
   })
@@ -262,11 +280,11 @@ const ModelDesign: FC<ModelDesignProps> = () => {
   }
 
   const pieceDiffStatuses = useMemo(() => {
-    return effectiveDesign.pieces?.map((piece) => getPieceDiffFromQuality(piece)) || []
-  }, [effectiveDesign])
+    return design.pieces?.map((piece) => getPieceDiffFromQuality(piece)) || []
+  }, [design])
 
   //#region Actions
-  const { setDesign, selectPiece, addPieceToSelection, removePieceFromSelection, setPieceInDesign, selectPieces } = useDesignEditor()
+  const { setDesign, selectPiece, addPieceToSelection, removePieceFromSelection, updatePiece, selectPieces, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditor()
   //#endregion Actions
 
   const onChange = useCallback(
@@ -300,18 +318,18 @@ const ModelDesign: FC<ModelDesignProps> = () => {
   const onPieceUpdate = useCallback(
     (piece: Piece) => {
       if (!design) return
-      setPieceInDesign(piece)
+      updatePiece(piece)
     },
-    [design, setPieceInDesign]
+    [design, updatePiece]
   )
   return (
     <Select box multiple onChange={onChange} filter={(items) => items}>
       <group quaternion={new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)}>
-        {effectiveDesign.pieces?.map((piece, index) => (
+        {design.pieces?.map((piece, index) => (
           <ModelPiece
             key={`piece-${piece.id_}`}
             piece={piece}
-            plane={piecePlanesFromEffectiveDesign[index!]}
+            plane={piecePlanesFromDesign[index!]}
             fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_)!)!}
             selected={selection.selectedPieceIds.includes(piece.id_)}
             diffStatus={pieceDiffStatuses[index]}

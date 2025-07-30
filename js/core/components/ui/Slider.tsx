@@ -18,11 +18,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-import * as SliderPrimitive from "@radix-ui/react-slider"
-import * as React from "react"
-import { Input } from "./Input"
+import * as SliderPrimitive from "@radix-ui/react-slider";
+import * as React from "react";
+import { Input } from "./Input";
 
-import { cn } from "@semio/js/lib/utils"
+import { cn } from "@semio/js/lib/utils";
 
 function Slider({
   className,
@@ -31,8 +31,17 @@ function Slider({
   min = 0,
   max = 100,
   label,
+  onValueChange,
+  onPointerDown,
+  onPointerUp,
+  onPointerCancel,
   ...props
-}: React.ComponentProps<typeof SliderPrimitive.Root> & { label?: string }) {
+}: React.ComponentProps<typeof SliderPrimitive.Root> & {
+  label?: string;
+  onPointerDown?: () => void;
+  onPointerUp?: () => void;
+  onPointerCancel?: () => void;
+}) {
   const [isEditing, setIsEditing] = React.useState(false)
   const [editValue, setEditValue] = React.useState("")
 
@@ -57,7 +66,7 @@ function Slider({
     if (e.key === 'Enter') {
       const newValue = parseFloat(editValue)
       if (!isNaN(newValue) && newValue >= min && newValue <= max) {
-        props.onValueChange?.([newValue])
+        onValueChange?.([newValue])
       }
       setIsEditing(false)
     } else if (e.key === 'Escape') {
@@ -79,6 +88,10 @@ function Slider({
           value={value}
           min={min}
           max={max}
+          onValueChange={onValueChange}
+          onPointerDown={onPointerDown}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
           className={cn(
             "relative flex w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col"
           )}
@@ -131,5 +144,5 @@ function Slider({
   )
 }
 
-export { Slider }
+export { Slider };
 

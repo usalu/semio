@@ -1199,6 +1199,12 @@ export const fixPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: Piec
   const parentConnection = findParentConnectionForPieceInDesign(kit, normalizedDesignId, normalizedPieceId)
   return removeConnectionFromDesign(kit, normalizedDesignId, parentConnection)
 }
+export const fixPiecesInDesign = (kit: Kit, designId: DesignIdLike, pieceIds: PieceIdLike[]): Design => {
+  const normalizedDesignId = designIdLikeToDesignId(designId)
+  const normalizedPieceIds = pieceIds.map(pieceIdLikeToPieceId)
+  const parentConnections = normalizedPieceIds.map(pieceId => findParentConnectionForPieceInDesign(kit, normalizedDesignId, pieceId))
+  return removeConnectionsFromDesign(kit, normalizedDesignId, parentConnections)
+}
 
 //#endregion Piece
 

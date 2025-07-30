@@ -11,14 +11,14 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/markdoc": "^0.15.1",
+    "@astrojs/markdoc": "^0.15.2",
     "@astrojs/mdx": "^4.3.1",
     "@astrojs/react": "^4.3.0",
     "@astrojs/sitemap": "^3.4.2",
     "@astrojs/starlight": "^0.34.8",
     "@astrojs/ts-plugin": "^1.10.4",
     "@semio/js": "^0.1.0",
-    "astro": "^5.12.4",
+    "astro": "^5.12.5",
     "sharp": "^0.34.3"
   },
   "author": {
