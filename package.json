@@ -9,6 +9,7 @@
     "py/engine",
     "js/core",
     "js/docs",
+    "js/playground",
     "js/sketchpad",
     "net/Semio",
     "net/Semio.Grasshopper",

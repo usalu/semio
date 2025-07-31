@@ -1,7 +1,7 @@
-import { defineConfig } from 'astro/config';
-import starlight from '@astrojs/starlight';
-import react from '@astrojs/react';
 import mdx from '@astrojs/mdx';
+import react from '@astrojs/react';
+import starlight from '@astrojs/starlight';
+import { defineConfig } from 'astro/config';
 // import markdoc from '@astrojs/markdoc';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
@@ -25,10 +25,10 @@ export default defineConfig({
                 lang: 'de',
             },
         },
-        social: {
-            github: 'https://github.com/usalu/semio',
-            discord: 'https://discord.gg/m6nnf6pQRc'
-        },
+        social: [
+            { icon: 'github', label: 'GitHub', href: 'https://github.com/usalu/semio' },
+            { icon: 'discord', label: 'Discord', href: 'https://discord.gg/m6nnf6pQRc' },
+        ],
         logo: {
             light: '../../assets/logo/emblem_round.svg',
             dark: '../../assets/logo/emblem_dark_round.svg',

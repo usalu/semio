@@ -74,13 +74,11 @@ import Diagram from '@semio/js/components/ui/Diagram'
 import Model from '@semio/js/components/ui/Model'
 import { default as Navbar } from '@semio/js/components/ui/Navbar'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@semio/js/components/ui/Resizable'
-import { ScrollArea } from '@semio/js/components/ui/ScrollArea'
 import { Layout, Mode, Theme } from '@semio/js/components/ui/Sketchpad'
-import { Textarea } from '@semio/js/components/ui/Textarea'
 import { ToggleGroup, ToggleGroupItem } from '@semio/js/components/ui/ToggleGroup'
-import { Tree, TreeItem, TreeSection } from '@semio/js/components/ui/Tree'
 import { Generator } from '@semio/js/lib/utils'
 import { Camera, orientDesign } from '../../semio'
+import Chat from '../Chat'
 import { CommandContext, ConsolePanel, commandRegistry, designEditorCommands } from './Console'
 import Details from './Details'
 import Workbench, { DesignAvatar, TypeAvatar } from './Workbench'
@@ -112,8 +110,6 @@ export interface Presence {
   cursor?: DiagramPoint
   camera?: Camera
 }
-
-export type PresenceOther = Presence
 
 export interface DesignEditorState {
   kit: Kit
@@ -960,7 +956,7 @@ function useControllableReducer(props: DesignEditorProps) {
 
 //#endregion State
 
-//#region Panels
+//#region Components
 
 interface PanelToggles {
   workbench: boolean
@@ -977,94 +973,6 @@ export interface ResizablePanelProps extends PanelProps {
   onWidthChange?: (width: number) => void
   width: number
 }
-
-
-interface ChatProps extends ResizablePanelProps { }
-
-const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
-  if (!visible) return null
-  const [isResizeHovered, setIsResizeHovered] = useState(false)
-  const [isResizing, setIsResizing] = useState(false)
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault()
-    setIsResizing(true)
-
-    const startX = e.clientX
-    const startWidth = width
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const newWidth = startWidth - (e.clientX - startX)
-      if (newWidth >= 150 && newWidth <= 500) {
-        onWidthChange?.(newWidth)
-      }
-    }
-
-    const handleMouseUp = () => {
-      setIsResizing(false)
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-    }
-
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
-  }
-
-  return (
-    <div
-      className={`absolute top-4 right-4 bottom-4 z-20 bg-background-level-2 text-foreground border
-                ${isResizing || isResizeHovered ? 'border-l-primary' : 'border-l'}`}
-      style={{ width: `${width}px` }}
-    >
-      <ScrollArea className="h-full">
-        <div className="p-1">
-          <Tree>
-            <TreeSection label="Conversation History" defaultOpen={true}>
-              <TreeSection label="Design Session #1">
-                <TreeItem label="How can I add a new piece?" />
-                <TreeItem label="Can you help with connections?" />
-              </TreeSection>
-              <TreeSection label="Design Session #2">
-                <TreeItem label="What are the available types?" />
-              </TreeSection>
-            </TreeSection>
-            <TreeSection label="Quick Actions" defaultOpen={true}>
-              <TreeItem label="Add random piece" />
-              <TreeItem label="Connect all pieces" />
-              <TreeItem label="Generate layout suggestions" />
-            </TreeSection>
-            <TreeSection label="Templates">
-              <TreeSection label="Common Questions" defaultOpen={true}>
-                <TreeItem label="How do I create a connection?" />
-                <TreeItem label="How do I delete a piece?" />
-                <TreeItem label="How do I change piece properties?" />
-              </TreeSection>
-              <TreeSection label="Advanced Workflows">
-                <TreeItem label="Batch operations" />
-                <TreeItem label="Complex layouts" />
-                <TreeItem label="Export/Import" />
-              </TreeSection>
-            </TreeSection>
-          </Tree>
-        </div>
-        <div className="p-4 border-t">
-          <Textarea placeholder="Ask a question about the design..." />
-        </div>
-      </ScrollArea>
-      <div
-        className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize"
-        onMouseDown={handleMouseDown}
-        onMouseEnter={() => setIsResizeHovered(true)}
-        onMouseLeave={() => !isResizing && setIsResizeHovered(false)}
-      />
-    </div>
-  )
-}
-
-
-
-
-//#region Main Component
 
 interface ControlledDesignEditorProps {
   kit?: Kit
@@ -1156,7 +1064,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   useEffect(() => {
     const users = [
       { name: 'Alice', cursor: { x: 2, y: 3 }, camera: { position: { x: 10, y: 5, z: 8 }, forward: { x: -1, y: 0, z: 0 }, up: { x: 0, y: 0, z: 1 } } },
-      { name: 'Bob', cursor: { x: -1, y: 25 }, camera: { position: { x: -5, y: 20, z: 55 }, forward: { x: 0, y: -1, z: 0 }, up: { x: 0, y: 0, z: 1 } } },
+      { name: 'Bob', cursor: { x: -1, y: 25 }, camera: { position: { x: -5, y: 10, z: 55 }, forward: { x: 0, y: -1, z: 0 }, up: { x: 0, y: 0, z: 1 } } },
       { name: 'Charlie', cursor: { x: 5, y: -2 }, camera: { position: { x: 15, y: -8, z: 6 }, forward: { x: -0.7, y: 0.7, z: 0 }, up: { x: 0, y: 0, z: 1 } } }
     ]
 
@@ -1501,4 +1409,4 @@ const DesignEditor: FC<DesignEditorProps> = ({
 
 export default DesignEditor
 
-//#endregion
+//#endregion Components

@@ -764,8 +764,8 @@ class TerminalConsole {
 
     private setupTerminalHandlers(): void {
         this.terminal.onData((data: string) => {
-            if (data === '\x03') { // Ctrl+C - handle this even during parameter gathering
-                this.handleCancel()
+            if (data === '\x03') { // Ctrl+C - check for selection first
+                this.handleCtrlC()
                 return
             }
 
@@ -775,14 +775,14 @@ class TerminalConsole {
 
             if (data === '\x1b') { // ESC
                 if (this.state.mode === 'command-output') {
-                    this.handleCancel()
+                    this.returnToInputMode()
                 }
                 return
             }
 
             if (data === '\r') { // Enter
                 if (this.state.mode === 'command-output') {
-                    this.handleCancel()
+                    this.returnToInputMode()
                 } else if (this.state.input.length > 0 &&
                     this.state.suggestions.length > 0 &&
                     this.state.selectedSuggestion >= 0 &&
@@ -802,6 +802,10 @@ class TerminalConsole {
             }
 
             if (data === '\x1b[A') { // Up arrow
+                if (this.state.mode === 'command-output') {
+                    this.returnToInputMode()
+                    return
+                }
                 // Check if we're in history navigation mode (empty input or already navigating history)
                 if (this.state.historyIndex > -1) {
                     // Already in history mode - navigate further back
@@ -832,6 +836,10 @@ class TerminalConsole {
             }
 
             if (data === '\x1b[B') { // Down arrow
+                if (this.state.mode === 'command-output') {
+                    this.returnToInputMode()
+                    return
+                }
                 // Check if we're in history navigation mode
                 if (this.state.historyIndex > -1) {
                     // Navigate command history
@@ -865,6 +873,11 @@ class TerminalConsole {
                 return
             }
 
+            if (data === '\t' && this.state.mode === 'command-output') { // Tab in command-output mode
+                this.returnToInputMode()
+                return
+            }
+
             if (this.state.mode === 'input') {
                 if (data === '\x7f') { // Backspace
                     this.updateState({
@@ -877,6 +890,27 @@ class TerminalConsole {
                     this.updateState({
                         ...this.state,
                         input: this.state.input + data,
+                        historyIndex: -1,
+                        selectedSuggestion: 0
+                    })
+                }
+            } else if (this.state.mode === 'command-output') {
+                // When in command-output mode, any input should transition back to input mode
+                if (data === '\x7f') { // Backspace
+                    this.updateState({
+                        ...this.state,
+                        mode: 'input',
+                        input: '',
+                        outputContent: undefined,
+                        historyIndex: -1,
+                        selectedSuggestion: 0
+                    })
+                } else if (data.length === 1 && data >= ' ') { // Printable character
+                    this.updateState({
+                        ...this.state,
+                        mode: 'input',
+                        input: data,
+                        outputContent: undefined,
                         historyIndex: -1,
                         selectedSuggestion: 0
                     })
@@ -907,6 +941,15 @@ class TerminalConsole {
         this.onStateChange(this.state)
     }
 
+    private returnToInputMode(): void {
+        this.updateState({
+            ...this.state,
+            mode: 'input',
+            outputContent: undefined
+        })
+        this.notifyStateChange()
+    }
+
     public updateDesignEditor(designEditor: any): void {
         this.designEditor = designEditor
     }
@@ -928,6 +971,26 @@ class TerminalConsole {
                 this.notifyStateChange()
                 this.executeCommandWithParameters(command)
             }
+        }
+    }
+
+    private async handleCtrlC(): Promise<void> {
+        // Check if there's selected text in the terminal
+        const selectedText = this.terminal.getSelection()
+
+        if (selectedText && selectedText.trim().length > 0) {
+            // Copy selected text to clipboard
+            try {
+                await navigator.clipboard.writeText(selectedText)
+                // Optionally show a brief feedback message
+                // this.writeColored('📋 Text copied to clipboard\r\n', 'green')
+            } catch (error) {
+                // Fallback for browsers that don't support clipboard API
+                console.warn('Could not copy to clipboard:', error)
+            }
+        } else {
+            // No text selected, proceed with cancel operation
+            this.handleCancel()
         }
     }
 
@@ -983,9 +1046,6 @@ class TerminalConsole {
                 mode: 'command-output'
             })
             this.notifyStateChange()
-            setTimeout(() => {
-                this.terminal.write('\r\n\x1b[90mPress Enter or Escape to continue...\x1b[0m')
-            }, 1000)
             return
         }
 
@@ -1140,9 +1200,6 @@ class TerminalConsole {
                         mode: 'command-output'
                     })
                     this.notifyStateChange()
-                    setTimeout(() => {
-                        this.terminal.write('\r\n\x1b[90mPress Enter or Escape to continue...\x1b[0m')
-                    }, 500)
                 }
             } else {
                 if (this.designEditor.startTransaction) {
@@ -1173,9 +1230,6 @@ class TerminalConsole {
                             mode: 'command-output'
                         })
                         this.notifyStateChange()
-                        setTimeout(() => {
-                            this.terminal.write('\r\n\x1b[90mPress Enter or Escape to continue...\x1b[0m')
-                        }, 500)
                     }
 
                     // Don't automatically return to prompt - wait for user input
@@ -1195,9 +1249,6 @@ class TerminalConsole {
                 mode: 'command-output'
             })
             this.notifyStateChange()
-            setTimeout(() => {
-                this.terminal.write('\r\n\x1b[90mPress Enter or Escape to continue...\x1b[0m')
-            }, 1000)
         }
     }
 
@@ -1239,11 +1290,6 @@ class TerminalConsole {
             outputContent: content
         })
         this.notifyStateChange()
-
-        // Show prompt to continue after 1 second
-        setTimeout(() => {
-            this.terminal.write('\r\n\x1b[90mPress Enter or Escape to continue...\x1b[0m')
-        }, 1000)
     }
 
     public resize(): void {
@@ -1473,12 +1519,11 @@ export const ConsolePanel: FC<ConsolePanelProps> = ({
 
     return (
         <div
-            className={`absolute z-20 bg-background-level-2 text-foreground border border-t
+            className={`absolute bottom-4 z-20 bg-background-level-2 text-foreground border
                       ${isResizing || isResizeHovered ? 'border-t-primary' : 'border-t'}`}
             style={{
-                left: leftPanelVisible ? `${leftPanelWidth + 16}px` : '16px',
-                right: rightPanelVisible ? `${rightPanelWidth + 16}px` : '16px',
-                bottom: '16px',
+                left: leftPanelVisible ? `${leftPanelWidth + 32}px` : '16px',
+                right: rightPanelVisible ? `${rightPanelWidth + 32}px` : '16px',
                 height: `${height}px`,
                 overflow: 'hidden',
                 display: 'flex',

@@ -877,7 +877,6 @@ The core which is shared in the [semio .NET ecosystem](#-net-) 🥜
 <summary><strong>📚 Resources:</strong></summary>
 
 - [Rhino](https://www.rhino3d.com)
-
   - [Rhino Developer](https://developer.rhino3d.com)
     - [Rhino Developer API](https://developer.rhino3d.com/api)
     - [RhinoCommon API](https://developer.rhino3d.com/api/rhinocommon)
@@ -888,7 +887,6 @@ The core which is shared in the [semio .NET ecosystem](#-net-) 🥜
 
   <details>
   <summary><strong>📺 Channels:</strong></summary>
-
   - [Nono Martínez Alonso](https://www.youtube.com/c/NonoMart%C3%ADnezAlonso)
 
   </details>
@@ -1029,7 +1027,7 @@ It offers two APIs to other clients:
 
 If you go to `http://127.0.0.1:2412/api/docs/` you find the Swagger UI:
 
-![GraphQL Query](openapi/docs/swagger.png)
+![GraphQL Query](assets/images/swagger.png)
 
 ### ⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5095)
 
@@ -1037,7 +1035,7 @@ If you go to `http://127.0.0.1:2412/api/docs/` you find the Swagger UI:
 
 If you go to `http://127.0.0.1:2412/graphql/` you find the GraphiQL UI:
 
-![GraphQL Query](graphql/docs/graphiql.png)
+![GraphQL Query](assets/images/graphiql.png)
 
 ## 🛍️ [@semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-components-)
 

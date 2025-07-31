@@ -49,18 +49,18 @@ import {
 } from '@semio/js'
 import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
-import { PresenceOther } from './DesignEditor'
+import { Presence } from './DesignEditor'
 
 const getComputedColor = (variable: string): string => {
   return getComputedStyle(document.documentElement).getPropertyValue(variable).trim()
 }
 
-const PresenceThree: FC<PresenceOther> = ({ name, cursor, camera }) => {
+const PresenceThree: FC<Presence> = ({ name, cursor, camera }) => {
   if (!camera) return null
   const cameraHelper = useMemo(() => {
     const perspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1)
-    perspectiveCamera.position.set(camera.position.x, -camera.position.z, camera.position.y)
-    perspectiveCamera.lookAt(new THREE.Vector3(camera.forward.x, -camera.forward.z, camera.forward.y))
+    perspectiveCamera.position.set(camera.position.x, camera.position.y, camera.position.z)
+    perspectiveCamera.lookAt(new THREE.Vector3(camera.forward.x, camera.forward.y, camera.forward.z))
     perspectiveCamera.updateProjectionMatrix()
     perspectiveCamera.updateMatrixWorld()
     return new THREE.CameraHelper(perspectiveCamera)
@@ -169,7 +169,7 @@ const ModelPiece: FC<ModelPieceProps> = ({
     return scene
   }, [fileUrl, diffStatus, selected])
 
-  const handleClick = useCallback(
+  const onClick = useCallback(
     (e: ThreeEvent<MouseEvent>) => {
       onSelect(piece, e.nativeEvent)
       e.stopPropagation()
@@ -217,7 +217,7 @@ const ModelPiece: FC<ModelPieceProps> = ({
       matrixAutoUpdate={false}
       // position={[plane!.origin.x, plane!.origin.z, -plane!.origin.y]}
       userData={{ pieceId: piece.id_ }}
-      onClick={handleClick}
+      onClick={onClick}
     >
       <primitive object={styledScene} />
     </group>
@@ -309,9 +309,7 @@ const ModelDesign: FC = () => {
             onPieceUpdate={onPieceUpdate}
           />
         ))}
-        {others.map(presence => (
-          <PresenceThree key={presence.name} {...presence} />
-        ))}
+        {others.map((presence, id) => (<PresenceThree key={id} {...presence} />))}
       </group>
     </Select>
   )

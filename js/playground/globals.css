@@ -1,0 +1,5 @@
+@import 'tailwindcss/preflight' layer(base);
+@import '@xyflow/react/dist/style.css';
+/* @import '@semio/js/theme.css'; */
+@import '@semio/js/globals.css';
+@import 'tailwindcss/utilities' layer(utilities);
