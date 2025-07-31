@@ -18,8 +18,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-export { default as Console } from '@semio/js/components/ui/Console'
+export { default as Console, commandRegistry as inkCommandRegistry } from '@semio/js/components/ui/Console'
 export { default as DesignEditor, FullscreenPanel, useDesignEditor } from '@semio/js/components/ui/DesignEditor'
+export { designEditorCommands } from '@semio/js/components/ui/designEditorCommands'
 export { default as Diagram } from '@semio/js/components/ui/Diagram'
 export { default as File } from '@semio/js/components/ui/File'
 export { default as GrasshopperCatalogue } from '@semio/js/components/ui/GrasshopperCatalogue'

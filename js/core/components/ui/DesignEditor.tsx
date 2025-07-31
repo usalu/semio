@@ -94,7 +94,7 @@ import { ToggleGroup, ToggleGroupItem } from '@semio/js/components/ui/ToggleGrou
 import { SortableTreeItems, Tree, TreeItem, TreeSection } from '@semio/js/components/ui/Tree'
 import { Generator } from '@semio/js/lib/utils'
 import { orientDesign } from '../../semio'
-import Console, { CommandContext, commandRegistry } from './Console'
+import { designEditorCommands } from './designEditorCommands'
 
 // Helper functions for commands
 const addPieceToDesign = (design: Design, piece: Piece): Design => ({
@@ -2474,141 +2474,10 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
 
   // Register built-in commands
   useEffect(() => {
-    const unregisterFunctions: (() => void)[] = []
-
-    // Register all built-in commands
-    // TODO: Re-implement registerBuiltInCommands function
-    // unregisterFunctions.push(registerBuiltInCommands(commandRegistry))
-
-    // Add Piece command
-    unregisterFunctions.push(commandRegistry.register({
-      id: 'add-piece',
-      name: 'Add Piece',
-      icon: '➕',
-      description: 'Add a new piece to the design',
-      parameters: [
-        { name: 'type', type: 'TypeId', description: 'Type of the piece', required: true },
-        { name: 'center', type: 'string', description: 'Center coordinates (x,y)', defaultValue: '0,0' },
-        { name: 'fixed', type: 'boolean', description: 'Fix piece at position', defaultValue: false }
-      ],
-      execute: async (context, payload) => {
-        const { kit, designId } = context
-        const design = findDesignInKit(kit, designId)
-
-        const center = payload.center ? payload.center.split(',').map((n: string) => parseFloat(n.trim())) : [0, 0]
-        const plane = payload.fixed ? {
-          origin: { x: center[0], y: center[1], z: 0 },
-          xAxis: { x: 1, y: 0, z: 0 },
-          yAxis: { x: 0, y: 1, z: 0 }
-        } : undefined
-
-        const piece = {
-          id_: `piece-${Date.now()}`,
-          type: payload.type,
-          center: { x: center[0], y: center[1] },
-          plane
-        }
-
-        return {
-          design: addPieceToDesign(design, piece),
-          content: <div className="p-2 text-xs text-success">✅ Added piece: {payload.type.name}</div>
-        }
-      }
-    }))
-
-    // Delete Selected command
-    unregisterFunctions.push(commandRegistry.register({
-      id: 'delete-selected',
-      name: 'Delete Selected',
-      icon: '🗑️',
-      description: 'Delete the selected pieces and connections',
-      parameters: [],
-      hotkey: 'delete',
-      execute: async (context) => {
-        const { kit, designId, selection } = context
-        const selectedPieces = selection.selectedPieceIds.map((id: string) => ({ id_: id }))
-        const selectedConnections = selection.selectedConnections.map((conn: any) => ({
-          connecting: { piece: { id_: conn.connectingPieceId } },
-          connected: { piece: { id_: conn.connectedPieceId } }
-        }))
-        return {
-          design: removePiecesAndConnectionsFromDesign(kit, designId, selectedPieces, selectedConnections),
-          selection: deselectAll(selection),
-          content: <div className="p-2 text-xs text-success">✅ Deleted {selectedPieces.length} pieces and {selectedConnections.length} connections</div>
-        }
-      }
-    }))
-
-    // Select All command
-    unregisterFunctions.push(commandRegistry.register({
-      id: 'select-all',
-      name: 'Select All',
-      icon: '🔘',
-      description: 'Select all pieces and connections',
-      parameters: [],
-      hotkey: 'mod+a',
-      editorOnly: true,
-      execute: async (context) => {
-        const design = findDesignInKit(context.kit, context.designId)
-        return {
-          selection: selectAll(design),
-          content: <div className="p-2 text-xs text-success">✅ Selected all pieces and connections</div>
-        }
-      }
-    }))
-
-    // Fix Selected Pieces command
-    unregisterFunctions.push(commandRegistry.register({
-      id: 'fix-selected-pieces',
-      name: 'Fix Selected Pieces',
-      icon: '📌',
-      description: 'Fix the selected pieces at their current positions',
-      parameters: [],
-      hotkey: 'f',
-      execute: async (context) => {
-        const { kit, designId, selection } = context
-        return {
-          content: <div className="p-2 text-xs text-warning">⚠️ Fix selected pieces functionality not yet implemented</div>
-        }
-      }
-    }))
-
-    // Help command
-    unregisterFunctions.push(commandRegistry.register({
-      id: 'help',
-      name: 'Help',
-      icon: '❓',
-      description: 'Show available commands',
-      parameters: [],
-      execute: async () => {
-        const commands = commandRegistry.getAll()
-        return {
-          content: (
-            <div className="p-2">
-              <div className="text-secondary text-xs mb-2">📚 Available Commands:</div>
-              {commands.map(cmd => (
-                <div key={cmd.id} className="mb-1">
-                  <div className="text-primary font-mono text-xs">{cmd.icon || '⚡'} {cmd.name}</div>
-                  <div className="text-gray-400 ml-2 text-xs">- {cmd.description}</div>
-                  {cmd.hotkey && <div className="text-warning ml-2 text-xs">({cmd.hotkey})</div>}
-                </div>
-              ))}
-            </div>
-          )
-        }
-      }
-    }))
-
-    // Clear command
-    unregisterFunctions.push(commandRegistry.register({
-      id: 'clear',
-      name: 'Clear',
-      icon: '🧹',
-      description: 'Clear the console',
-      parameters: [],
-      editorOnly: true,
-      execute: async () => ({ content: null })
-    }))
+    // Register all centralized commands
+    const unregisterFunctions = designEditorCommands.map(command =>
+      commandRegistry.register(command)
+    )
 
     return () => unregisterFunctions.forEach(fn => fn())
   }, [commandRegistry])
@@ -2636,47 +2505,16 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
     return () => document.removeEventListener('semio-command', handleCommand)
   }, [state.kit, designId, state.selection, dispatch])
 
-  // Register hotkeys for all commands (except undo/redo which are handled specially)
-  useHotkeys('f', (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const event = new CustomEvent('semio-command', { detail: { commandId: 'fix-selected-pieces' } })
-    document.dispatchEvent(event)
-  })
-
-  useHotkeys('delete', (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const event = new CustomEvent('semio-command', { detail: { commandId: 'delete-selected' } })
-    document.dispatchEvent(event)
-  })
-
-  useHotkeys('mod+a', (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const event = new CustomEvent('semio-command', { detail: { commandId: 'select-all' } })
-    document.dispatchEvent(event)
-  })
-
-  useHotkeys('mod+i', (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const event = new CustomEvent('semio-command', { detail: { commandId: 'invert-selection' } })
-    document.dispatchEvent(event)
-  })
-
-  useHotkeys('mod+c', (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const event = new CustomEvent('semio-command', { detail: { commandId: 'copy-to-clipboard' } })
-    document.dispatchEvent(event)
-  })
-
-  useHotkeys('mod+v', (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const event = new CustomEvent('semio-command', { detail: { commandId: 'paste-from-clipboard' } })
-    document.dispatchEvent(event)
+  // Register hotkeys for all commands automatically
+  designEditorCommands.forEach(command => {
+    if (command.hotkey) {
+      useHotkeys(command.hotkey, (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        const event = new CustomEvent('semio-command', { detail: { commandId: command.id } })
+        document.dispatchEvent(event)
+      }, { enableOnContentEditable: false })
+    }
   })
 
   useHotkeys('mod+x', (e) => {

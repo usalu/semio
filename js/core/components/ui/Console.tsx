@@ -1,6 +1,6 @@
 // #region Header
 
-// DesignEditor.tsx
+// Console.tsx
 
 // 2025 Ueli Saluz
 
@@ -19,13 +19,8 @@
 
 // #endregion
 
-// #region TODOs
-
-// #endregion TODOs
-
-const COMMAND_STACK_MAX = 50
-
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Box, Text, useInput } from 'ink'
+import { FC, useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
     Design,
@@ -33,6 +28,8 @@ import {
     Kit,
     useDesignEditor
 } from '@semio/js'
+
+const COMMAND_STACK_MAX = 50
 
 interface CommandParameter {
     name: string
@@ -68,18 +65,12 @@ export interface Command {
     execute: (context: CommandContext, payload: Record<string, any>) => Promise<CommandResult>
 }
 
-export interface ParameterForm {
-    type: CommandParameter['type']
-    component: FC<ParameterFormProps>
-}
-
 export interface ParameterFormProps {
     parameter: CommandParameter
     value?: any
     onSubmit: (value: any) => void
     onCancel: () => void
 }
-
 
 class EnhancedCommandRegistry {
     private commands = new Map<string, Command>()
@@ -118,28 +109,6 @@ class EnhancedCommandRegistry {
 }
 
 export const commandRegistry = new EnhancedCommandRegistry()
-
-
-export interface ConsoleState {
-    mode: 'input' | 'parameter-gathering' | 'command-output'
-    input: string
-    suggestions: string[]
-    selectedSuggestion: number
-    currentCommand?: Command
-    parameterIndex: number
-    gatheredParameters: Record<string, any>
-    outputContent?: React.ReactNode
-    commandHistory: string[]
-    historyIndex: number
-}
-
-
-export interface ParameterFormProps {
-    parameter: CommandParameter
-    value?: any
-    onSubmit: (value: any) => void
-    onCancel: () => void
-}
 
 export interface ConsoleState {
     mode: 'input' | 'parameter-gathering' | 'command-output'
@@ -181,22 +150,20 @@ const TypeIdForm: FC<ParameterFormProps> = ({ parameter, onSubmit, onCancel }) =
         setSelectedIndex(0)
     }, [currentItems, searchTerm])
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Escape') {
+    useInput((input, key) => {
+        if (key.escape) {
             onCancel()
             return
         }
 
-        if (e.key === 'Tab' && searchTerm) {
-            e.preventDefault()
+        if (key.tab && searchTerm) {
             if (filteredItems.length > 0) {
                 setSearchTerm(filteredItems[0])
             }
             return
         }
 
-        if (e.key === 'Enter') {
-            e.preventDefault()
+        if (key.return) {
             if (mode === 'type') {
                 const typeToSelect = filteredItems[selectedIndex] || searchTerm
                 if (typeNames.includes(typeToSelect)) {
@@ -212,99 +179,86 @@ const TypeIdForm: FC<ParameterFormProps> = ({ parameter, onSubmit, onCancel }) =
             return
         }
 
-        if (e.key === 'ArrowUp') {
-            e.preventDefault()
+        if (key.upArrow) {
             setSelectedIndex(prev => Math.max(0, prev - 1))
             return
         }
 
-        if (e.key === 'ArrowDown') {
-            e.preventDefault()
+        if (key.downArrow) {
             setSelectedIndex(prev => Math.min(filteredItems.length - 1, prev + 1))
             return
         }
-    }
+
+        if (input && !key.ctrl && !key.meta) {
+            setSearchTerm(prev => prev + input)
+        }
+
+        if (key.backspace) {
+            setSearchTerm(prev => prev.slice(0, -1))
+        }
+    })
 
     return (
-        <div className="p-2 border-b border-gray-400">
-            <div className="text-secondary text-xs mb-1">
+        <Box flexDirection="column" borderStyle="single" paddingX={1}>
+            <Text color="gray">
                 {mode === 'type' ? '🔧 Select Type:' : `🎨 Select Variant for ${selectedType}:`}
-            </div>
+            </Text>
 
-            <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="w-full bg-dark text-primary border border-gray-400 px-1 py-px mb-1 font-mono text-xs"
-                placeholder="Search..."
-                autoFocus
-            />
+            <Box marginY={1}>
+                <Text>Search: {searchTerm}▋</Text>
+            </Box>
 
-            <div className="max-h-24 overflow-y-auto text-xs">
-                {filteredItems.map((item, index) => (
-                    <div
-                        key={item}
-                        className={`px-1 py-px cursor-pointer font-mono ${index === selectedIndex ? 'bg-primary text-light' : 'text-primary hover:bg-gray-300'
-                            }`}
-                        onClick={() => {
-                            if (mode === 'type') {
-                                setSelectedType(item)
-                                setMode('variant')
-                                setSearchTerm('')
-                                setSelectedIndex(0)
-                            } else {
-                                onSubmit({ name: selectedType, variant: item || undefined })
-                            }
-                        }}
-                    >
+            <Box flexDirection="column" height={6}>
+                {filteredItems.slice(0, 5).map((item, index) => (
+                    <Text key={item} color={index === selectedIndex ? 'blue' : 'white'}>
                         {index === selectedIndex ? '> ' : '  '}{item}
-                    </div>
+                    </Text>
                 ))}
-            </div>
+            </Box>
 
-            <div className="text-gray-400 text-xs mt-1">
+            <Text color="gray" dimColor>
                 {mode === 'type'
                     ? 'Use ↑↓ to navigate, Tab for autocomplete, Enter to select'
                     : 'Use ↑↓ to navigate, Tab for autocomplete, Enter to confirm, or type custom variant'
                 }
-            </div>
-        </div>
+            </Text>
+        </Box>
     )
 }
 
 const StringForm: FC<ParameterFormProps> = ({ parameter, value, onSubmit, onCancel }) => {
     const [inputValue, setInputValue] = useState(value || parameter.defaultValue || '')
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Escape') {
+    useInput((input, key) => {
+        if (key.escape) {
             onCancel()
             return
         }
 
-        if (e.key === 'Enter') {
-            e.preventDefault()
+        if (key.return) {
             onSubmit(inputValue)
             return
         }
-    }
+
+        if (input && !key.ctrl && !key.meta) {
+            setInputValue((prev: string) => prev + input)
+        }
+
+        if (key.backspace) {
+            setInputValue((prev: string) => prev.slice(0, -1))
+        }
+    })
 
     return (
-        <div className="p-2 border-b border-gray-400">
-            <div className="text-secondary text-xs mb-1">📝 {parameter.description}:</div>
-            <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="w-full bg-dark text-primary border border-gray-400 px-1 py-px font-mono text-xs"
-                placeholder="Enter value..."
-                autoFocus
-            />
-            <div className="text-gray-400 text-xs mt-1">
+        <Box flexDirection="column" borderStyle="single" paddingX={1}>
+            <Text color="gray">📝 {parameter.description}:</Text>
+            <Box marginY={1}>
+                <Text>{inputValue}▋</Text>
+            </Box>
+            <Text color="gray" dimColor>
                 Type value and press Enter to confirm, Esc to cancel
-            </div>
-        </div>
+            </Text>
+        </Box>
     )
 }
 
@@ -312,110 +266,86 @@ const SelectForm: FC<ParameterFormProps> = ({ parameter, onSubmit, onCancel }) =
     const [selectedIndex, setSelectedIndex] = useState(0)
     const options = parameter.options || []
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Escape') {
+    useInput((input, key) => {
+        if (key.escape) {
             onCancel()
             return
         }
 
-        if (e.key === 'Enter') {
-            e.preventDefault()
+        if (key.return) {
             onSubmit(options[selectedIndex]?.value)
             return
         }
 
-        if (e.key === 'ArrowUp') {
-            e.preventDefault()
+        if (key.upArrow) {
             setSelectedIndex(prev => Math.max(0, prev - 1))
             return
         }
 
-        if (e.key === 'ArrowDown') {
-            e.preventDefault()
+        if (key.downArrow) {
             setSelectedIndex(prev => Math.min(options.length - 1, prev + 1))
             return
         }
-    }
+    })
 
     return (
-        <div className="p-2 border-b border-gray-400" onKeyDown={handleKeyDown} tabIndex={0}>
-            <div className="text-secondary text-xs mb-1">📋 {parameter.description}:</div>
+        <Box flexDirection="column" borderStyle="single" paddingX={1}>
+            <Text color="gray">📋 {parameter.description}:</Text>
 
-            <div className="max-h-24 overflow-y-auto text-xs">
+            <Box flexDirection="column" marginY={1} height={6}>
                 {options.map((option, index) => (
-                    <div
-                        key={option.value}
-                        className={`px-1 py-px cursor-pointer font-mono ${index === selectedIndex ? 'bg-primary text-light' : 'text-primary hover:bg-gray-300'
-                            }`}
-                        onClick={() => onSubmit(option.value)}
-                    >
+                    <Text key={option.value} color={index === selectedIndex ? 'blue' : 'white'}>
                         {index === selectedIndex ? '> ' : '  '}{option.label}
-                    </div>
+                    </Text>
                 ))}
-            </div>
+            </Box>
 
-            <div className="text-gray-400 text-xs mt-1">
+            <Text color="gray" dimColor>
                 Use ↑↓ to navigate, Enter to select, Esc to cancel
-            </div>
-        </div>
+            </Text>
+        </Box>
     )
 }
 
 const BooleanForm: FC<ParameterFormProps> = ({ parameter, onSubmit, onCancel }) => {
     const [value, setValue] = useState(false)
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Escape') {
+    useInput((input, key) => {
+        if (key.escape) {
             onCancel()
             return
         }
 
-        if (e.key === 'Enter') {
-            e.preventDefault()
+        if (key.return) {
             onSubmit(value)
             return
         }
 
-        if (e.key === 'y' || e.key === 'Y') {
+        if (input === 'y' || input === 'Y') {
             setValue(true)
         }
 
-        if (e.key === 'n' || e.key === 'N') {
+        if (input === 'n' || input === 'N') {
             setValue(false)
         }
 
-        if (e.key === ' ') {
-            e.preventDefault()
+        if (input === ' ') {
             setValue(prev => !prev)
         }
-    }
+    })
 
     return (
-        <div className="p-2 border-b border-gray-400" onKeyDown={handleKeyDown} tabIndex={0}>
-            <div className="text-secondary text-xs mb-1">❓ {parameter.description}:</div>
-            <div className="mb-1">
-                <span className={`font-mono text-xs ${value ? 'text-success' : 'text-danger'}`}>
+        <Box flexDirection="column" borderStyle="single" paddingX={1}>
+            <Text color="gray">❓ {parameter.description}:</Text>
+            <Box marginY={1}>
+                <Text color={value ? 'green' : 'red'}>
                     {value ? '✓ Yes' : '✗ No'}
-                </span>
-            </div>
-            <div className="flex gap-1">
-                <button
-                    onClick={() => setValue(true)}
-                    className={`px-2 py-px font-mono text-xs ${value ? 'bg-success text-light' : 'bg-gray-300 text-success'}`}
-                >
-                    Yes
-                </button>
-                <button
-                    onClick={() => setValue(false)}
-                    className={`px-2 py-px font-mono text-xs ${!value ? 'bg-danger text-light' : 'bg-gray-300 text-danger'}`}
-                >
-                    No
-                </button>
-            </div>
-            <div className="text-gray-400 text-xs mt-1">
+                </Text>
+            </Box>
+            <Text color="gray" dimColor>
                 Press Y/N, Space to toggle, Enter to confirm, Esc to cancel
-            </div>
-        </div>
+            </Text>
+        </Box>
     )
 }
 
@@ -424,26 +354,23 @@ const parameterForms: Map<CommandParameter['type'], FC<ParameterFormProps>> = ne
     ['string', StringForm],
     ['select', SelectForm],
     ['boolean', BooleanForm],
-    // Add more form types as needed
 ])
 
 //#endregion Forms
 
-
-
 const ConsoleCanvas: FC<{ content?: React.ReactNode }> = ({ content }) => {
     if (!content) {
         return (
-            <div className="p-2 border border-secondary bg-dark text-xs">
-                <div className="text-secondary">🎉 Welcome to Semio Console! Type "help" for available commands.</div>
-            </div>
+            <Box borderStyle="single" padding={1}>
+                <Text color="gray">🎉 Welcome to Semio Console! Type "help" for available commands.</Text>
+            </Box>
         )
     }
 
     return (
-        <div className="flex-1 border border-secondary bg-dark overflow-auto text-xs">
+        <Box flexDirection="column" borderStyle="single" padding={1} height={20}>
             {content}
-        </div>
+        </Box>
     )
 }
 
@@ -453,26 +380,18 @@ const ConsoleInput: FC<{
     onSubmit: () => void
     onCancel: () => void
 }> = ({ state, onInputChange, onSubmit, onCancel }) => {
-    const inputRef = useRef<HTMLInputElement>(null)
 
-    useEffect(() => {
-        if (inputRef.current && state.mode === 'input') {
-            inputRef.current.focus()
-        }
-    }, [state.mode])
-
-    const handleKeyDown = (e: React.KeyboardEvent) => {
+    useInput((input, key) => {
         if (state.mode === 'parameter-gathering') return
 
-        if (e.key === 'Escape') {
+        if (key.escape) {
             if (state.mode === 'command-output') {
                 onCancel()
             }
             return
         }
 
-        if (e.key === 'Enter') {
-            e.preventDefault()
+        if (key.return) {
             if (state.mode === 'command-output') {
                 onCancel()
             } else {
@@ -481,8 +400,7 @@ const ConsoleInput: FC<{
             return
         }
 
-        if (e.key === 'ArrowUp' && state.commandHistory.length > 0) {
-            e.preventDefault()
+        if (key.upArrow && state.commandHistory.length > 0) {
             const newIndex = Math.min(state.historyIndex + 1, state.commandHistory.length - 1)
             if (newIndex !== state.historyIndex) {
                 onInputChange(state.commandHistory[state.commandHistory.length - 1 - newIndex])
@@ -490,8 +408,7 @@ const ConsoleInput: FC<{
             return
         }
 
-        if (e.key === 'ArrowDown' && state.historyIndex > -1) {
-            e.preventDefault()
+        if (key.downArrow && state.historyIndex > -1) {
             const newIndex = state.historyIndex - 1
             if (newIndex === -1) {
                 onInputChange('')
@@ -501,56 +418,52 @@ const ConsoleInput: FC<{
             return
         }
 
-        if (e.key === 'Tab' && state.suggestions.length > 0) {
-            e.preventDefault()
+        if (key.tab && state.suggestions.length > 0) {
             onInputChange(state.suggestions[state.selectedSuggestion])
             return
         }
-    }
+
+        if (state.mode === 'input') {
+            if (input && !key.ctrl && !key.meta) {
+                onInputChange(state.input + input)
+            }
+
+            if (key.backspace) {
+                onInputChange(state.input.slice(0, -1))
+            }
+        }
+    })
 
     return (
-        <div className="">
+        <Box flexDirection="column">
             {state.suggestions.length > 0 && (
-                <div className=" text-xs">
-                    <span className="text-warning">Suggestions: </span>
+                <Box marginBottom={1}>
+                    <Text color="yellow">Suggestions: </Text>
                     {state.suggestions.slice(0, 5).map((suggestion, index) => (
-                        <span
-                            key={suggestion}
-                            className={`ml-2 cursor-pointer ${index === state.selectedSuggestion ? 'text-primary' : 'text-gray-400'}`}
-                            onClick={() => onInputChange(suggestion)}
-                        >
-                            {suggestion}
-                        </span>
+                        <Text key={suggestion} color={index === state.selectedSuggestion ? 'blue' : 'gray'}>
+                            {' '}{suggestion}
+                        </Text>
                     ))}
-                </div>
+                </Box>
             )}
 
-            <div className="p-1 flex items-center text-xs">
-                <span className="text-primary mr-1 font-mono">$</span>
-                <input
-                    ref={inputRef}
-                    type="text"
-                    value={state.input}
-                    onChange={(e) => onInputChange(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    className="flex-1 bg-transparent text-primary outline-none font-mono text-xs"
-                    placeholder="Type command..."
-                    disabled={state.mode !== 'input'}
-                />
-                <span className="text-primary ml-1 font-mono animate-pulse">▋</span>
-            </div>
+            <Box>
+                <Text color="blue">$ </Text>
+                <Text>{state.input}</Text>
+                {state.mode === 'input' && <Text>▋</Text>}
+            </Box>
 
-            <div className="px-1 pb-1">
-                <div className="text-gray-400 text-xs">
+            <Box marginTop={1}>
+                <Text color="gray" dimColor>
                     {state.mode === 'input'
                         ? 'Type command, Tab for autocomplete, ↑↓ for history'
                         : state.mode === 'command-output'
                             ? 'Press Esc or Enter to return to input mode'
                             : 'Gathering parameters...'
                     }
-                </div>
-            </div>
-        </div>
+                </Text>
+            </Box>
+        </Box>
     )
 }
 
@@ -581,7 +494,7 @@ const Console: FC = () => {
             suggestions,
             selectedSuggestion: Math.min(prev.selectedSuggestion, suggestions.length - 1)
         }))
-    }, [commandRegistry])
+    }, [])
 
     const handleInputChange = useCallback((input: string) => {
         setState(prev => ({ ...prev, input, historyIndex: -1 }))
@@ -598,12 +511,11 @@ const Console: FC = () => {
             setState(prev => ({
                 ...prev,
                 mode: 'command-output',
-                outputContent: <div className="p-2 text-xs text-danger">❌ Command not found: {commandName}</div>
+                outputContent: <Text color="red">❌ Command not found: {commandName}</Text>
             }))
 
-            // Auto-return to input mode after 2 seconds
             setTimeout(() => {
-                setState(prev => prev.mode === 'command-output' ? {
+                setState((prev: ConsoleState) => prev.mode === 'command-output' ? {
                     ...prev,
                     mode: 'input',
                     outputContent: undefined
@@ -619,11 +531,9 @@ const Console: FC = () => {
                 selection: designEditor.selection
             }
 
-            // If command has editorOnly flag, don't use transaction scope
             if (command.editorOnly) {
                 const result = await command.execute(context, payload)
 
-                // Apply editor-only changes
                 if (result.selection) {
                     designEditor.setSelection(result.selection)
                 }
@@ -631,25 +541,19 @@ const Console: FC = () => {
                 setState(prev => ({
                     ...prev,
                     mode: 'command-output',
-                    outputContent: result.content || <div className="p-2 text-xs text-success">✅ Command executed successfully</div>
+                    outputContent: result.content || <Text color="green">✅ Command executed successfully</Text>
                 }))
             } else {
-                // Use transaction scope for design-modifying commands
                 designEditor.startTransaction()
 
                 try {
                     const result = await command.execute(context, payload)
 
-                    // Apply changes through transaction
                     if (result.design) {
                         designEditor.setDesign(result.design)
                     }
                     if (result.selection) {
                         designEditor.setSelection(result.selection)
-                    }
-                    if (result.fullscreenPanel) {
-                        // TODO: Handle fullscreen panel - check if designEditor has this property
-                        // designEditor.setFullscreenPanel(result.fullscreenPanel)
                     }
 
                     designEditor.finalizeTransaction()
@@ -657,21 +561,9 @@ const Console: FC = () => {
                     setState(prev => ({
                         ...prev,
                         mode: 'command-output',
-                        outputContent: result.content || <div className="p-2 text-xs text-success">✅ Command executed successfully</div>
+                        outputContent: result.content || <Text color="green">✅ Command executed successfully</Text>
                     }))
 
-                    // Auto-return to input mode after 2 seconds unless it's clear command
-                    if (command.id !== 'clear') {
-                        setTimeout(() => {
-                            setState(prev => prev.mode === 'command-output' ? {
-                                ...prev,
-                                mode: 'input',
-                                outputContent: undefined
-                            } : prev)
-                        }, 2000)
-                    }
-
-                    // Auto-return to input mode after 2 seconds unless it's clear command
                     if (command.id !== 'clear') {
                         setTimeout(() => {
                             setState(prev => prev.mode === 'command-output' ? {
@@ -691,19 +583,18 @@ const Console: FC = () => {
             setState(prev => ({
                 ...prev,
                 mode: 'command-output',
-                outputContent: <div className="p-2 text-xs text-danger">❌ Error: {errorMessage}</div>
+                outputContent: <Text color="red">❌ Error: {errorMessage}</Text>
             }))
 
-            // Auto-return to input mode after 3 seconds for errors
             setTimeout(() => {
-                setState(prev => prev.mode === 'command-output' ? {
+                setState((prev: ConsoleState) => prev.mode === 'command-output' ? {
                     ...prev,
                     mode: 'input',
                     outputContent: undefined
                 } : prev)
             }, 3000)
         }
-    }, [commandRegistry, designEditor])
+    }, [designEditor])
 
     const executeCommandWithParameters = useCallback(async (commandName: string) => {
         const command = commandRegistry.getAll().find(cmd =>
@@ -715,7 +606,7 @@ const Console: FC = () => {
             setState(prev => ({
                 ...prev,
                 mode: 'command-output',
-                outputContent: <div className="p-2 text-xs text-danger">❌ Command not found: {commandName}</div>
+                outputContent: <Text color="red">❌ Command not found: {commandName}</Text>
             }))
             return
         }
@@ -723,7 +614,6 @@ const Console: FC = () => {
         if (command.parameters.length === 0) {
             await executeCommand(commandName, {})
         } else {
-            // Start parameter gathering
             setState(prev => ({
                 ...prev,
                 mode: 'parameter-gathering',
@@ -732,7 +622,7 @@ const Console: FC = () => {
                 gatheredParameters: {}
             }))
         }
-    }, [executeCommand, commandRegistry])
+    }, [executeCommand])
 
     const handleSubmit = useCallback(() => {
         if (state.mode === 'input') {
@@ -769,7 +659,6 @@ const Console: FC = () => {
         }
 
         if (state.parameterIndex >= state.currentCommand.parameters.length - 1) {
-            // All parameters gathered, execute command
             executeCommand(state.currentCommand.name, newParameters)
             setState(prev => ({
                 ...prev,
@@ -779,7 +668,6 @@ const Console: FC = () => {
                 gatheredParameters: {}
             }))
         } else {
-            // Move to next parameter
             setState(prev => ({
                 ...prev,
                 parameterIndex: prev.parameterIndex + 1,
@@ -788,7 +676,6 @@ const Console: FC = () => {
         }
     }, [state, executeCommand])
 
-    // Render parameter form if in parameter gathering mode
     const renderParameterForm = () => {
         if (state.mode !== 'parameter-gathering' || !state.currentCommand) return null
 
@@ -796,7 +683,7 @@ const Console: FC = () => {
         const FormComponent = parameterForms.get(parameter.type)
 
         if (!FormComponent) {
-            return <div className="p-2 text-xs text-danger">❌ Unsupported parameter type: {parameter.type}</div>
+            return <Text color="red">❌ Unsupported parameter type: {parameter.type}</Text>
         }
 
         return (
@@ -814,15 +701,17 @@ const Console: FC = () => {
         : state.outputContent
 
     return (
-        <div className="h-full flex flex-col justify-end">
-            <ConsoleCanvas content={upperContent} />
+        <Box flexDirection="column" height="100%">
+            <Box flexGrow={1}>
+                <ConsoleCanvas content={upperContent} />
+            </Box>
             <ConsoleInput
                 state={state}
                 onInputChange={handleInputChange}
                 onSubmit={handleSubmit}
                 onCancel={handleCancel}
             />
-        </div>
+        </Box>
     )
 }
 
