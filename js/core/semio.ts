@@ -657,6 +657,48 @@ export const piecesMetadata = (kit: Kit, designId: DesignIdLike): Map<string, { 
   return new Map(flatDesign.pieces?.map((p, index) => [p.id_, { plane: p.plane!, center: p.center!, fixedPieceId: fixedPieceIds![index], parentPieceId: parentPieceIds![index], depth: depths![index] }]))
 }
 
+const getColorForText = (text?: string): string => {
+  if (!text || text === '') {
+    return 'var(--color-dark)'
+  }
+
+  // Create a simple hash from the family string
+  let hash = 0
+  for (let i = 0; i < text.length; i++) {
+    const char = text.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash // Convert to 32-bit integer
+  }
+
+  // Generate color variations based on primary, secondary, tertiary
+  const baseColors = [
+    { base: 'var(--color-primary)', variations: ['#ff344f', '#ff5569', '#ff7684', '#ff97a0'] },
+    { base: 'var(--color-secondary)', variations: ['#34d1bf', '#4dd7c9', '#66ddd3', '#80e3dd'] },
+    { base: 'var(--color-tertiary)', variations: ['#fa9500', '#fba320', '#fcb140', '#fdc060'] },
+    { base: 'var(--color-success)', variations: ['#7eb77f', '#8ec28f', '#9ecd9f', '#aed8af'] },
+    { base: 'var(--color-warning)', variations: ['#fccf05', '#fcd525', '#fddb45', '#fde165'] },
+    { base: 'var(--color-info)', variations: ['#dbbea1', '#e1c7ae', '#e7d0bb', '#edd9c8'] }
+  ]
+
+  const colorSetIndex = Math.abs(hash) % baseColors.length
+  const variationIndex = Math.abs(Math.floor(hash / baseColors.length)) % baseColors[colorSetIndex].variations.length
+
+  return baseColors[colorSetIndex].variations[variationIndex]
+}
+
+export const colorPortsForTypes = (types: Type[]): Type[] => {
+  const coloredTypes: Type[] = []
+  for (const type of unifyPortFamiliesAndCompatibleFamiliesForTypes(types)) {
+    const coloredType: Type = { ...type }
+    for (const port of type.ports || []) {
+      const coloredPort = setQuality(port, { name: 'semio.color', value: getColorForText(port.family) })
+      coloredType.ports = [...(coloredType.ports || []), coloredPort]
+    }
+    coloredTypes.push(coloredType)
+  }
+  return coloredTypes
+}
+
 //#endregion Predicates
 
 //#endregion Querying
@@ -675,37 +717,22 @@ const roundPlane = (plane: Plane): Plane => ({
 
 //#region Quality
 
-/**
- * Sets a quality in a qualities array. If a quality with the same name exists, it is overwritten.
- * @param qualities - The array of qualities to modify
- * @param name - The name of the quality to set
- * @param value - The value of the quality
- * @param unit - Optional unit of the quality
- * @param definition - Optional definition of the quality
- * @returns The updated qualities array
- */
-export const setQuality = (
+export const setQuality = <T extends Kit | Design | Type | Piece | Connection | Representation | Port>(
+  entity: T,
   quality: Quality,
-  qualities: Quality[] | undefined,
-): Quality[] => {
-  const qualitiesArray = qualities || []
+): T => {
+  const qualitiesArray = entity.qualities || []
   const existingIndex = qualitiesArray.findIndex(q => q.name === quality.name)
   if (existingIndex >= 0) qualitiesArray[existingIndex] = quality
   else qualitiesArray.push(quality)
-  return qualitiesArray
+  return { ...entity, qualities: qualitiesArray }
 }
 
-/**
- * Sets multiple qualities in a qualities array. For each quality, if one with the same name exists, it is overwritten.
- * @param qualities - The array of qualities to modify
- * @param newQualities - Array of qualities to set
- * @returns The updated qualities array
- */
-export const setQualities = (
-  qualities: Quality[] | undefined,
-  newQualities: Quality[]
-): Quality[] => {
-  return newQualities.reduce((acc, quality) => setQuality(quality, acc), qualities || [])
+export const setQualities = <T extends Kit | Design | Type | Piece | Connection | Representation | Port>(
+  entity: T,
+  qualities: Quality[]
+): T => {
+  return qualities.reduce((acc, quality) => setQuality(acc, quality), entity)
 }
 
 //#endregion Quality
@@ -1086,8 +1113,11 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
     if (!rootNode) return
     const rootPiece = pieceMap[rootNode.id()]
     if (!rootPiece || !rootPiece.id_) return
-    rootPiece.qualities = setQuality({ name: 'semio.fixedPieceId', value: rootPiece.id_ }, rootPiece.qualities)
-    rootPiece.qualities = setQuality({ name: 'semio.depth', value: '0' }, rootPiece.qualities)
+    const updatedRootPiece = setQualities(rootPiece, [
+      { name: 'semio.fixedPieceId', value: rootPiece.id_ },
+      { name: 'semio.depth', value: '0' }
+    ])
+    pieceMap[rootNode.id()] = updatedRootPiece
     let rootPlane: Plane
     if (rootPiece.plane) {
       rootPlane = rootPiece.plane
@@ -1153,25 +1183,24 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
           y: round(parentPiece.center!.y + (connection.y ?? 0) + direction.y)
         }
 
-        const flatChildPiece: Piece = {
+        const flatChildPiece: Piece = setQualities({
           ...childPiece,
           plane: childPlane,
-          center: childCenter,
-          qualities: setQualities(childPiece.qualities, [
-            {
-              name: 'semio.fixedPieceId',
-              value: parentPiece.qualities?.find((q) => q.name === 'semio.fixedPieceId')?.value ?? ''
-            },
-            {
-              name: 'semio.parentPieceId',
-              value: parentPiece.id_
-            },
-            {
-              name: 'semio.depth',
-              value: depth.toString()
-            }
-          ])
-        }
+          center: childCenter
+        }, [
+          {
+            name: 'semio.fixedPieceId',
+            value: parentPiece.qualities?.find((q) => q.name === 'semio.fixedPieceId')?.value ?? ''
+          },
+          {
+            name: 'semio.parentPieceId',
+            value: parentPiece.id_
+          },
+          {
+            name: 'semio.depth',
+            value: depth.toString()
+          }
+        ])
         pieceMap[childId] = flatChildPiece
       },
       directed: false
@@ -1275,21 +1304,12 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
           const isRemoved = diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_)
           const baseWithUpdate = pd ? { ...p, ...pd } : p
           const diffStatus = isRemoved ? DiffStatus.Removed : pd ? DiffStatus.Modified : DiffStatus.Unchanged
-          return {
-            ...baseWithUpdate,
-            qualities: setQuality({ name: 'semio.diffStatus', value: diffStatus }, baseWithUpdate.qualities)
-          }
+          return setQuality(baseWithUpdate, { name: 'semio.diffStatus', value: diffStatus })
         })
         .concat(
-          (diff.pieces?.added || []).map((p: Piece) => ({
-            ...p,
-            qualities: setQuality({ name: 'semio.diffStatus', value: DiffStatus.Added }, p.qualities)
-          }))
+          (diff.pieces?.added || []).map((p: Piece) => setQuality(p, { name: 'semio.diffStatus', value: DiffStatus.Added }))
         )
-      : (diff.pieces?.added || []).map((p: Piece) => ({
-        ...p,
-        qualities: setQuality({ name: 'semio.diffStatus', value: DiffStatus.Added }, p.qualities)
-      }))
+      : (diff.pieces?.added || []).map((p: Piece) => setQuality(p, { name: 'semio.diffStatus', value: DiffStatus.Added }))
 
     const effectiveConnections: Connection[] = base.connections
       ? base.connections
@@ -1312,21 +1332,12 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
             connecting: { piece: cd.connecting.piece, port: cd.connecting.port || c.connecting.port }
           } : c
           const diffStatus = isRemoved ? DiffStatus.Removed : cd ? DiffStatus.Modified : DiffStatus.Unchanged
-          return {
-            ...baseWithUpdate,
-            qualities: setQuality({ name: 'semio.diffStatus', value: diffStatus }, baseWithUpdate.qualities)
-          }
+          return setQuality(baseWithUpdate, { name: 'semio.diffStatus', value: diffStatus })
         })
         .concat(
-          (diff.connections?.added || []).map((c: Connection) => ({
-            ...c,
-            qualities: setQuality({ name: 'semio.diffStatus', value: DiffStatus.Added }, c.qualities)
-          }))
+          (diff.connections?.added || []).map((c: Connection) => setQuality(c, { name: 'semio.diffStatus', value: DiffStatus.Added }))
         )
-      : (diff.connections?.added || []).map((c: Connection) => ({
-        ...c,
-        qualities: setQuality({ name: 'semio.diffStatus', value: DiffStatus.Added }, c.qualities)
-      }))
+      : (diff.connections?.added || []).map((c: Connection) => setQuality(c, { name: 'semio.diffStatus', value: DiffStatus.Added }))
 
     return { ...base, pieces: effectivePieces, connections: effectiveConnections }
   } else {

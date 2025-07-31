@@ -18,6 +18,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
+export { default as Console } from '@semio/js/components/ui/Console'
 export { default as DesignEditor, FullscreenPanel, useDesignEditor } from '@semio/js/components/ui/DesignEditor'
 export { default as Diagram } from '@semio/js/components/ui/Diagram'
 export { default as File } from '@semio/js/components/ui/File'
@@ -28,11 +29,8 @@ export { default as eslintConfig } from '@semio/js/eslint.config'
 export { extractFilesAndCreateUrls } from '@semio/js/lib/utils'
 export { default as postcssConfig } from '@semio/js/postcss.config'
 export {
-  addConnectionsToDesign, addConnectionsToDesignDiff, addConnectionToDesign, addConnectionToDesignDiff, addPiecesToDesign, addPiecesToDesignDiff, addPieceToDesign, addPieceToDesignDiff, applyDesignDiff, arePortsCompatible,
-  connectionIdLikeToConnectionId, ConnectionSchema, deserialize, designIdLikeToDesignId, DesignSchema, DiffStatus,
-  findConnectionInDesign, findDesignInKit, findPieceConnectionsInDesign, findPieceInDesign, findPieceTypeInDesign, findPortInType, findReplacableTypesForPieceInDesign,
-  findReplacableTypesForPiecesInDesign, findStaleConnectionsInDesign, findTypeInKit, fixPieceInDesign, fixPiecesInDesign, flattenDesign,
-  getPieceRepresentationUrls, ICON_WIDTH, isConnectionInDesign, isPortInUse, isSameConnection, isSameDesign, isSamePiece, isSamePort, isSameRepresentation, isSameType, kitIdLikeToKitId, KitSchema, mergeDesigns,
+  addConnectionsToDesign, addConnectionsToDesignDiff, addConnectionToDesign, addConnectionToDesignDiff, addPiecesToDesign, addPiecesToDesignDiff, addPieceToDesign, addPieceToDesignDiff, applyDesignDiff, arePortsCompatible, colorPortsForTypes, connectionIdLikeToConnectionId, ConnectionSchema, deserialize, designIdLikeToDesignId, DesignSchema, DiffStatus, findConnectionInDesign, findDesignInKit, findPieceConnectionsInDesign, findPieceInDesign, findPieceTypeInDesign, findPortInType, findQualityValue, findReplacableTypesForPieceInDesign,
+  findReplacableTypesForPiecesInDesign, findStaleConnectionsInDesign, findTypeInKit, fixPieceInDesign, fixPiecesInDesign, flattenDesign, getPieceRepresentationUrls, ICON_WIDTH, isConnectionInDesign, isPortInUse, isSameConnection, isSameDesign, isSamePiece, isSamePort, isSameRepresentation, isSameType, kitIdLikeToKitId, KitSchema, mergeDesigns,
   pieceIdLikeToPieceId, PieceSchema, piecesMetadata, PlaneSchema, planeToMatrix, PointSchema, portIdLikeToPortId, PortSchema, qualityIdLikeToQualityId, QualitySchema,
   removeConnectionFromDesign, removeConnectionFromDesignDiff, removeConnectionsFromDesign, removeConnectionsFromDesignDiff, removePieceFromDesign, removePieceFromDesignDiff, removePiecesAndConnectionsFromDesign, removePiecesFromDesign, removePiecesFromDesignDiff,
   representationIdLikeToRepresentationId, RepresentationSchema, safeParse, schemas, serialize,

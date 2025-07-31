@@ -29,22 +29,21 @@ import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable } f
 import { arrayMove } from '@dnd-kit/sortable'
 import { ReactFlowProvider, useReactFlow } from '@xyflow/react'
 import { Info, MessageCircle, Minus, Pin, Plus, Terminal, Trash2, Wrench } from 'lucide-react'
-import { FC, ReactNode, createContext, useCallback, useContext, useEffect, useReducer, useRef, useState } from 'react'
+import { FC, ReactNode, createContext, useCallback, useContext, useEffect, useReducer, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useHotkeys } from 'react-hotkeys-hook'
 
 import {
   Connection,
   ConnectionId,
-  Design, DesignDiff, DesignId, Diagram,
+  Design, DesignDiff, DesignId,
   DiagramPoint,
-  ICON_WIDTH, Kit, Model, Piece, PieceId,
+  ICON_WIDTH, Kit, Piece, PieceId,
   Plane, Type,
   addConnectionToDesign,
   addConnectionToDesignDiff,
   addConnectionsToDesign,
   addConnectionsToDesignDiff,
-  addPieceToDesign,
   addPieceToDesignDiff,
   addPiecesToDesign,
   addPiecesToDesignDiff,
@@ -55,7 +54,6 @@ import {
   findReplacableTypesForPieceInDesign,
   findReplacableTypesForPiecesInDesign,
   findTypeInKit,
-  fixPiecesInDesign,
   isSameConnection,
   isSameDesign,
   mergeDesigns,
@@ -81,8 +79,10 @@ import {
 } from '@semio/js'
 import { Avatar, AvatarFallback } from '@semio/js/components/ui/Avatar'
 import Combobox from '@semio/js/components/ui/Combobox'
+import Diagram from '@semio/js/components/ui/Diagram'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@semio/js/components/ui/HoverCard'
 import { Input } from '@semio/js/components/ui/Input'
+import Model from '@semio/js/components/ui/Model'
 import { default as Navbar } from '@semio/js/components/ui/Navbar'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@semio/js/components/ui/Resizable'
 import { ScrollArea } from '@semio/js/components/ui/ScrollArea'
@@ -93,8 +93,14 @@ import { Textarea } from '@semio/js/components/ui/Textarea'
 import { ToggleGroup, ToggleGroupItem } from '@semio/js/components/ui/ToggleGroup'
 import { SortableTreeItems, Tree, TreeItem, TreeSection } from '@semio/js/components/ui/Tree'
 import { Generator } from '@semio/js/lib/utils'
-import { flattenDesign, orientDesign } from '../../semio'
+import { orientDesign } from '../../semio'
+import Console, { CommandContext, commandRegistry } from './Console'
 
+// Helper functions for commands
+const addPieceToDesign = (design: Design, piece: Piece): Design => ({
+  ...design,
+  pieces: [...(design.pieces || []), piece]
+})
 
 //#region State
 
@@ -341,9 +347,15 @@ const copyToClipboard = (design: Design, selection: DesignEditorSelection, plane
 const cutToClipboard = (design: Design, selection: DesignEditorSelection, plane?: Plane, center?: DiagramPoint): void => {
   navigator.clipboard.writeText(JSON.stringify(subDesignFromSelection(orientDesign(design, plane, center), selection))).then(() => { })
 }
-const pasteFromClipboard = (design: Design, plane?: Plane, center?: DiagramPoint): Design => {
-  navigator.clipboard.readText().then(text => mergeDesigns([design, orientDesign(JSON.parse(text), plane, center)]))
-  return design
+const pasteFromClipboard = async (design: Design, plane?: Plane, center?: DiagramPoint): Promise<Design> => {
+  try {
+    const text = await navigator.clipboard.readText()
+    const clipboardDesign = JSON.parse(text)
+    return mergeDesigns([design, orientDesign(clipboardDesign, plane, center)])
+  } catch (error) {
+    console.warn('Failed to paste from clipboard:', error)
+    return design
+  }
 }
 const deleteSelected = (kit: Kit, designId: DesignId, selection: DesignEditorSelection): Design => {
   const selectedPieces = selection.selectedPieceIds.map(id => ({ id_: id }))
@@ -558,6 +570,34 @@ export const useDesignEditor = () => {
     toggleModelFullscreen,
     undo,
     redo,
+    // Command system
+    executeCommand: useCallback(async (commandId: string, payload: Record<string, any> = {}) => {
+      const context: CommandContext = {
+        kit: state.kit,
+        designId: state.designId,
+        selection: state.selection
+      }
+
+      // Always run commands in transactions
+      startTransaction()
+      try {
+        const result = await commandRegistry.execute(commandId, context, payload)
+        if (result.design) {
+          setDesign(result.design)
+        }
+        if (result.selection) {
+          setSelection(result.selection)
+        }
+        finalizeTransaction()
+      } catch (error) {
+        abortTransaction()
+        console.error('Command execution failed:', error)
+        throw error
+      }
+    }, [state.kit, state.designId, state.selection, startTransaction, setDesign, setSelection, finalizeTransaction, abortTransaction]),
+
+    getAvailableCommands: useCallback(() => commandRegistry.getAll(), []),
+    getCommand: useCallback((commandId: string) => commandRegistry.get(commandId), []),
     // Transaction functions
     startTransaction,
     finalizeTransaction,
@@ -1100,64 +1140,12 @@ interface ConsoleProps {
   setHeight: (height: number) => void
 }
 
-const Console: FC<ConsoleProps> = ({
-  visible,
-  leftPanelVisible,
-  rightPanelVisible,
-  leftPanelWidth = 230,
-  rightPanelWidth = 230,
-  height,
-  setHeight
-}) => {
-  if (!visible) return null
-
-  const [isResizeHovered, setIsResizeHovered] = useState(false)
-  const [isResizing, setIsResizing] = useState(false)
-  const designEditor = useDesignEditor()
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault()
-    setIsResizing(true)
-
-    const startY = e.clientY
-    const startHeight = height
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const newHeight = startHeight - (e.clientY - startY)
-      if (newHeight >= 100 && newHeight <= 600) {
-        setHeight(newHeight)
-      }
-    }
-
-    const handleMouseUp = () => {
-      setIsResizing(false)
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-    }
-
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
-  }
-
-  return (
-    <div
-      className={`absolute z-30 bg-background-level-2 text-foreground border ${isResizing || isResizeHovered ? 'border-t-primary' : ''}`}
-      style={{
-        left: leftPanelVisible ? `calc(${leftPanelWidth}px + calc(var(--spacing) * 8))` : `calc(var(--spacing) * 4)`,
-        right: rightPanelVisible ? `calc(${rightPanelWidth}px + calc(var(--spacing) * 8))` : `calc(var(--spacing) * 4)`,
-        bottom: `calc(var(--spacing) * 4)`,
-        height: `${height}px`
-      }}
-    >
-      <div
-        className={`absolute top-0 left-0 right-0 h-1 cursor-ns-resize`}
-        onMouseDown={handleMouseDown}
-        onMouseEnter={() => setIsResizeHovered(true)}
-        onMouseLeave={() => !isResizing && setIsResizeHovered(false)}
-      />
-      <Cli designEditor={designEditor} />
-    </div>
-  )
+interface ConsoleCommand {
+  id: string
+  name: string
+  description: string
+  icon?: string
+  execute: (args: any) => Promise<any>
 }
 
 interface DetailsProps extends ResizablePanelProps { }
@@ -1571,7 +1559,7 @@ const DesignSection: FC = () => {
 }
 
 const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
-  const { kit, designId, setPiece, setPieces, setConnection, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditor()
+  const { kit, designId, setPiece, setPieces, setConnection, startTransaction, finalizeTransaction, abortTransaction, executeCommand } = useDesignEditor()
   const design = findDesignInKit(kit, designId)
   const pieces = pieceIds.map(id => findPieceInDesign(design, id))
   const metadata = piecesMetadata(kit, designId)
@@ -1608,10 +1596,12 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
     finalizeTransaction()
   }
 
-  const fixPieces = () => {
-    startTransaction()
-    fixPiecesInDesign(kit, designId, pieceIds)
-    finalizeTransaction()
+  const fixPieces = async () => {
+    try {
+      await executeCommand('fix-selected-pieces')
+    } catch (error) {
+      console.error('Failed to fix pieces:', error)
+    }
   }
 
   const handleCenterXChange = (value: number) => {
@@ -2182,7 +2172,7 @@ const PortSection: FC<{ pieceId: string; portId: string }> = ({ pieceId, portId 
 
   return (
     <TreeSection label="Port" defaultOpen={true}>
-      <Input label="ID" value={port.id_ || 'DEFAULT'} disabled />
+      <Input label="ID" value={port.id_ || '~default~'} disabled />
       {port.description && (
         <Textarea label="Description" value={port.description} disabled />
       )}
@@ -2355,1014 +2345,48 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
   )
 }
 
-// Cli Component and interfaces
-interface CliCommand {
-  name: string
-  description: string
-  execute: (args: string[], cli: CliState) => Promise<void>
+
+
+
+//#region Main Component
+
+interface ControlledDesignEditorProps {
+  kit?: Kit
+  selection?: DesignEditorSelection
+  onDesignChange?: (design: Design) => void
+  onSelectionChange?: (selection: DesignEditorSelection) => void
+  onUndo?: () => void
+  onRedo?: () => void
 }
 
-interface CliState {
-  commands: CliCommand[]
-  history: string[]
-  currentInput: string
-  suggestions: string[]
-  isAwaitingInput: boolean
-  awaitingPrompt?: string
-  awaitingOptions?: { value: string; label: string }[]
-  awaitingType?: 'text' | 'select' | 'confirm'
-  onInputReceived?: (value: string) => void
-  designEditor: ReturnType<typeof useDesignEditor>
+interface UncontrolledDesignEditorProps {
+  initialKit?: Kit
+  initialSelection?: DesignEditorSelection
 }
 
-const Cli: FC<{ designEditor: ReturnType<typeof useDesignEditor> }> = ({ designEditor }) => {
-  const [state, setState] = useState<CliState>({
-    commands: [],
-    history: [],
-    currentInput: '',
-    suggestions: [],
-    isAwaitingInput: false,
-    designEditor
-  })
-
-  // Helper functions for interactive input
-  const askForInput = (prompt: string, type: 'text' | 'select' | 'confirm' = 'text', options?: { value: string; label: string }[]): Promise<string> => {
-    return new Promise((resolve) => {
-      setState(prev => ({
-        ...prev,
-        history: [prompt],
-        isAwaitingInput: true,
-        awaitingPrompt: prompt,
-        awaitingType: type,
-        awaitingOptions: options,
-        onInputReceived: resolve,
-        currentInput: ''
-      }))
-    })
+interface DesignEditorProps extends ControlledDesignEditorProps, UncontrolledDesignEditorProps {
+  designId: DesignId
+  fileUrls: Map<string, string>
+  onToolbarChange: (toolbar: ReactNode) => void
+  mode?: Mode
+  layout?: Layout
+  theme?: Theme
+  setLayout?: (layout: Layout) => void
+  setTheme?: (theme: Theme) => void
+  onWindowEvents?: {
+    minimize: () => void
+    maximize: () => void
+    close: () => void
   }
-
-  const askForText = (prompt: string, defaultValue?: string): Promise<string> => {
-    return askForInput(`${prompt}${defaultValue ? ` (default: ${defaultValue})` : ''}:`)
-  }
-
-  const askForSelect = (prompt: string, options: { value: string; label: string }[]): Promise<string> => {
-    const optionsText = options.map((opt, index) => `${index + 1}. ${opt.label}`).join('\n')
-    return askForInput(`${prompt}:\n${optionsText}\nSelect (1-${options.length}):`, 'select', options)
-  }
-
-  const askForConfirm = (prompt: string): Promise<boolean> => {
-    return askForInput(`${prompt} (y/n):`, 'confirm').then(answer =>
-      answer.toLowerCase().startsWith('y')
-    )
-  }
-
-  // Helper function to parse command arguments
-  const parseArgs = (args: string[]) => {
-    const parsed: { positional: string[], flags: Record<string, string | boolean> } = {
-      positional: [],
-      flags: {}
-    }
-
-    for (let i = 0; i < args.length; i++) {
-      const arg = args[i]
-
-      if (arg.startsWith('--')) {
-        // Long flag: --flag or --flag=value
-        const [key, value] = arg.slice(2).split('=', 2)
-        if (value !== undefined) {
-          parsed.flags[key] = value
-        } else if (i + 1 < args.length && !args[i + 1].startsWith('-')) {
-          // Next arg is the value
-          parsed.flags[key] = args[++i]
-        } else {
-          // Boolean flag
-          parsed.flags[key] = true
-        }
-      } else if (arg.startsWith('-') && arg.length > 1) {
-        // Short flag: -f or -f value
-        const key = arg.slice(1)
-        if (i + 1 < args.length && !args[i + 1].startsWith('-')) {
-          parsed.flags[key] = args[++i]
-        } else {
-          parsed.flags[key] = true
-        }
-      } else {
-        // Positional argument
-        parsed.positional.push(arg)
-      }
-    }
-
-    return parsed
-  }
-
-  const getArgValue = (parsed: ReturnType<typeof parseArgs>, key: string, positionalIndex?: number): string | undefined => {
-    // Check flags first (both long and short versions)
-    if (parsed.flags[key] !== undefined) {
-      return typeof parsed.flags[key] === 'string' ? parsed.flags[key] as string : undefined
-    }
-
-    // Check short flag version
-    const shortKey = key.length > 1 ? key[0] : key
-    if (parsed.flags[shortKey] !== undefined) {
-      return typeof parsed.flags[shortKey] === 'string' ? parsed.flags[shortKey] as string : undefined
-    }
-
-    // Check positional
-    if (positionalIndex !== undefined && parsed.positional[positionalIndex]) {
-      return parsed.positional[positionalIndex]
-    }
-
-    return undefined
-  }
-
-  const hasFlag = (parsed: ReturnType<typeof parseArgs>, key: string): boolean => {
-    return parsed.flags[key] === true || parsed.flags[key.length > 1 ? key[0] : key] === true
-  }
-
-  const addPieceCommand: CliCommand = {
-    name: 'add-piece',
-    description: '➕ Add a new piece to the design',
-    execute: async (args, cli) => {
-      cli.designEditor.startTransaction()
-
-      try {
-        // Get available types
-        const types = cli.designEditor.kit.types || []
-        const typeNames = [...new Set(types.map(t => t.name))]
-
-        if (typeNames.length === 0) {
-          throw new Error('No types available in kit')
-        }
-
-        const parsed = parseArgs(args)
-        const isInteractive = parsed.positional.length === 0 && Object.keys(parsed.flags).length === 0
-
-        // Piece ID
-        let pieceId: string
-        const idArg = getArgValue(parsed, 'id', 0)
-        if (idArg) {
-          pieceId = idArg === 'random' ? Generator.randomId() : idArg
-        } else if (!isInteractive) {
-          pieceId = Generator.randomId()
-        } else {
-          const idInput = await askForText('Enter piece ID (press Enter for random)', 'random')
-          pieceId = idInput.trim() === '' || idInput.toLowerCase() === 'random' ? Generator.randomId() : idInput
-        }
-
-        // Type selection
-        let selectedTypeName: string
-        const typeArg = getArgValue(parsed, 'type', 1)
-        if (typeArg && typeNames.includes(typeArg)) {
-          selectedTypeName = typeArg
-        } else if (!isInteractive && !typeArg) {
-          throw new Error('Type must be specified in non-interactive mode')
-        } else {
-          const typeOptions = typeNames.map(name => ({ value: name, label: name }))
-          const typeIndex = await askForSelect('Select type', typeOptions)
-          const selectedIndex = parseInt(typeIndex) - 1
-          if (selectedIndex < 0 || selectedIndex >= typeOptions.length) {
-            throw new Error('Invalid type selection')
-          }
-          selectedTypeName = typeOptions[selectedIndex].value
-        }
-
-        // Variant selection
-        const availableVariants = types
-          .filter(t => t.name === selectedTypeName && t.variant)
-          .map(t => t.variant!)
-
-        let selectedVariant: string | undefined
-        const variantArg = getArgValue(parsed, 'variant', 2)
-        if (variantArg && (variantArg === '' || availableVariants.includes(variantArg))) {
-          selectedVariant = variantArg === '' ? undefined : variantArg
-        } else if (availableVariants.length > 0 && (isInteractive || !variantArg)) {
-          const variantOptions = [
-            { value: '', label: 'None (default)' },
-            ...availableVariants.map(variant => ({ value: variant, label: variant }))
-          ]
-          const variantIndex = await askForSelect('Select variant', variantOptions)
-          const selectedIndex = parseInt(variantIndex) - 1
-          if (selectedIndex < 0 || selectedIndex >= variantOptions.length) {
-            throw new Error('Invalid variant selection')
-          }
-          selectedVariant = variantOptions[selectedIndex].value || undefined
-        }
-
-        // Position input
-        let centerX = 0, centerY = 0
-        const xArg = getArgValue(parsed, 'x')
-        if (xArg) {
-          centerX = parseFloat(xArg) || 0
-        } else if (isInteractive) {
-          const xInput = await askForText('Enter X position', '0')
-          centerX = parseFloat(xInput) || 0
-        }
-
-        const yArg = getArgValue(parsed, 'y')
-        if (yArg) {
-          centerY = parseFloat(yArg) || 0
-        } else if (isInteractive) {
-          const yInput = await askForText('Enter Y position', '0')
-          centerY = parseFloat(yInput) || 0
-        }
-
-        // Ask if piece should be fixed
-        let shouldFix = false
-        if (hasFlag(parsed, 'fixed')) {
-          shouldFix = true
-        } else if (isInteractive) {
-          shouldFix = await askForConfirm('Fix piece at position?')
-        }
-
-        const piece = {
-          id_: pieceId,
-          type: { name: selectedTypeName, variant: selectedVariant },
-          ...(shouldFix && {
-            plane: {
-              origin: { x: centerX, y: centerY, z: 0 },
-              xAxis: { x: 1, y: 0, z: 0 },
-              yAxis: { x: 0, y: 1, z: 0 }
-            }
-          }),
-          center: { x: centerX, y: centerY }
-        }
-
-        cli.designEditor.addPiece(piece)
-        cli.designEditor.finalizeTransaction()
-
-        setState(prev => ({
-          ...prev,
-          history: [`✓ Added piece ${piece.id_} of type ${selectedTypeName}${selectedVariant ? ` (${selectedVariant})` : ''} at (${centerX}, ${centerY})${shouldFix ? ' [FIXED]' : ''}`]
-        }))
-      } catch (error) {
-        cli.designEditor.abortTransaction()
-        setState(prev => ({
-          ...prev,
-          history: [`✗ Error adding piece: ${error}`]
-        }))
-      }
-    }
-  }
-
-  const connectPiecesCommand: CliCommand = {
-    name: 'connect-pieces',
-    description: '🔗 Connect two pieces',
-    execute: async (args, cli) => {
-      cli.designEditor.startTransaction()
-
-      try {
-        const design = findDesignInKit(cli.designEditor.kit, cli.designEditor.designId)
-        const availablePieces = design.pieces || []
-
-        if (availablePieces.length < 2) {
-          throw new Error('Need at least 2 pieces to create a connection')
-        }
-
-        const parsed = parseArgs(args)
-        const isInteractive = parsed.positional.length === 0 && Object.keys(parsed.flags).length === 0
-
-        // Select connecting piece
-        let connectingPieceId: string
-        const connectingArg = getArgValue(parsed, 'from', 0)
-        if (connectingArg && availablePieces.some(p => p.id_ === connectingArg)) {
-          connectingPieceId = connectingArg
-        } else if (!isInteractive && !connectingArg) {
-          throw new Error('Connecting piece ID must be specified in non-interactive mode')
-        } else {
-          const pieceOptions = availablePieces.map(piece => ({
-            value: piece.id_,
-            label: `${piece.id_} (${piece.type.name}${piece.type.variant ? ` - ${piece.type.variant}` : ''})`
-          }))
-          const connectingIndex = await askForSelect('Select connecting piece', pieceOptions)
-          const selectedIndex = parseInt(connectingIndex) - 1
-          if (selectedIndex < 0 || selectedIndex >= pieceOptions.length) {
-            throw new Error('Invalid connecting piece selection')
-          }
-          connectingPieceId = pieceOptions[selectedIndex].value
-        }
-
-        // Select connected piece
-        let connectedPieceId: string
-        const connectedArg = getArgValue(parsed, 'to', 1)
-        if (connectedArg && availablePieces.some(p => p.id_ === connectedArg) && connectedArg !== connectingPieceId) {
-          connectedPieceId = connectedArg
-        } else if (!isInteractive && !connectedArg) {
-          throw new Error('Connected piece ID must be specified in non-interactive mode')
-        } else {
-          const pieceOptions = availablePieces
-            .filter(piece => piece.id_ !== connectingPieceId)
-            .map(piece => ({
-              value: piece.id_,
-              label: `${piece.id_} (${piece.type.name}${piece.type.variant ? ` - ${piece.type.variant}` : ''})`
-            }))
-          const connectedIndex = await askForSelect('Select connected piece', pieceOptions)
-          const selectedIndex = parseInt(connectedIndex) - 1
-          if (selectedIndex < 0 || selectedIndex >= pieceOptions.length) {
-            throw new Error('Invalid connected piece selection')
-          }
-          connectedPieceId = pieceOptions[selectedIndex].value
-        }
-
-        // Connection parameters
-        let gap = 0, shift = 0, rise = 0
-
-        const gapArg = getArgValue(parsed, 'gap')
-        if (gapArg !== undefined) {
-          gap = parseFloat(gapArg) || 0
-        } else if (isInteractive) {
-          const gapInput = await askForText('Enter gap', '0')
-          gap = parseFloat(gapInput) || 0
-        }
-
-        const shiftArg = getArgValue(parsed, 'shift')
-        if (shiftArg !== undefined) {
-          shift = parseFloat(shiftArg) || 0
-        } else if (isInteractive) {
-          const shiftInput = await askForText('Enter shift', '0')
-          shift = parseFloat(shiftInput) || 0
-        }
-
-        const riseArg = getArgValue(parsed, 'rise')
-        if (riseArg !== undefined) {
-          rise = parseFloat(riseArg) || 0
-        } else if (isInteractive) {
-          const riseInput = await askForText('Enter rise', '0')
-          rise = parseFloat(riseInput) || 0
-        }
-
-        const connection = {
-          connecting: { piece: { id_: connectingPieceId }, port: { id_: '' } },
-          connected: { piece: { id_: connectedPieceId }, port: { id_: '' } },
-          gap,
-          shift,
-          rise,
-          x: 0,
-          y: 0,
-          rotation: 0,
-          turn: 0,
-          tilt: 0
-        }
-
-        cli.designEditor.addConnection(connection)
-        cli.designEditor.finalizeTransaction()
-
-        setState(prev => ({
-          ...prev,
-          history: [`✓ Connected piece ${connectingPieceId} to ${connectedPieceId} (gap: ${gap}, shift: ${shift}, rise: ${rise})`]
-        }))
-      } catch (error) {
-        cli.designEditor.abortTransaction()
-        setState(prev => ({
-          ...prev,
-          history: [`✗ Error connecting pieces: ${error}`]
-        }))
-      }
-    }
-  }
-
-  const flattenDesignCommand: CliCommand = {
-    name: 'flatten-design',
-    description: '⬇️ Flatten the current design',
-    execute: async (args, cli) => {
-      cli.designEditor.startTransaction()
-
-      try {
-        const flattened = flattenDesign(cli.designEditor.kit, cli.designEditor.designId)
-        cli.designEditor.setDesign(flattened)
-        cli.designEditor.finalizeTransaction()
-
-        setState(prev => ({
-          ...prev,
-          history: [`✓ Design flattened successfully`]
-        }))
-      } catch (error) {
-        cli.designEditor.abortTransaction()
-        setState(prev => ({
-          ...prev,
-          history: [`✗ Error flattening design: ${error}`]
-        }))
-      }
-    }
-  }
-
-  const selectAllCommand: CliCommand = {
-    name: 'select-all',
-    description: 'Select all pieces in the design',
-    execute: async (args, cli) => {
-      cli.designEditor.selectAll()
-      setState(prev => ({
-        ...prev,
-        history: [`✓ Selected all pieces`]
-      }))
-    }
-  }
-
-  const deselectAllCommand: CliCommand = {
-    name: 'deselect-all',
-    description: 'Deselect all pieces in the design',
-    execute: async (args, cli) => {
-      cli.designEditor.deselectAll()
-      setState(prev => ({
-        ...prev,
-        history: [`✓ Deselected all pieces`]
-      }))
-    }
-  }
-
-  const deleteSelectedCommand: CliCommand = {
-    name: 'delete-selected',
-    description: 'Delete currently selected pieces and connections',
-    execute: async (args, cli) => {
-      cli.designEditor.startTransaction()
-
-      try {
-        cli.designEditor.deleteSelected()
-        cli.designEditor.finalizeTransaction()
-
-        setState(prev => ({
-          ...prev,
-          history: [`✓ Deleted selected pieces and connections`]
-        }))
-      } catch (error) {
-        cli.designEditor.abortTransaction()
-        setState(prev => ({
-          ...prev,
-          history: [`✗ Error deleting selection: ${error}`]
-        }))
-      }
-    }
-  }
-
-  const listPiecesCommand: CliCommand = {
-    name: 'list-pieces',
-    description: '📋 List all pieces in the design',
-    execute: async (args, cli) => {
-      const design = findDesignInKit(cli.designEditor.kit, cli.designEditor.designId)
-      const pieces = design.pieces || []
-
-      if (pieces.length === 0) {
-        setState(prev => ({
-          ...prev,
-          history: ['No pieces in design']
-        }))
-        return
-      }
-
-      const parsed = parseArgs(args)
-      const showDetails = hasFlag(parsed, 'details') || hasFlag(parsed, 'd')
-      const filterType = getArgValue(parsed, 'type') || getArgValue(parsed, 't')
-      const filterVariant = getArgValue(parsed, 'variant') || getArgValue(parsed, 'v')
-
-      let filteredPieces = pieces
-      if (filterType) {
-        filteredPieces = filteredPieces.filter(p => p.type.name === filterType)
-      }
-      if (filterVariant) {
-        filteredPieces = filteredPieces.filter(p => p.type.variant === filterVariant)
-      }
-
-      if (filteredPieces.length === 0) {
-        setState(prev => ({
-          ...prev,
-          history: [`No pieces found${filterType ? ` with type "${filterType}"` : ''}${filterVariant ? ` and variant "${filterVariant}"` : ''}`]
-        }))
-        return
-      }
-
-      let output = `Found ${filteredPieces.length} pieces${filterType || filterVariant ? ' (filtered)' : ''}:\n`
-      filteredPieces.forEach((piece, index) => {
-        const position = piece.center ? `(${piece.center.x.toFixed(2)}, ${piece.center.y.toFixed(2)})` : 'No position'
-        const fixed = piece.plane ? '[FIXED]' : '[LINKED]'
-
-        if (showDetails) {
-          output += `${index + 1}. ${piece.id_}\n`
-          output += `   Type: ${piece.type.name}${piece.type.variant ? ` - ${piece.type.variant}` : ''}\n`
-          output += `   Position: ${position} ${fixed}\n`
-        } else {
-          output += `${index + 1}. ${piece.id_} (${piece.type.name}${piece.type.variant ? ` - ${piece.type.variant}` : ''}) ${position} ${fixed}\n`
-        }
-      })
-
-      setState(prev => ({
-        ...prev,
-        history: [output.trim()]
-      }))
-    }
-  }
-
-  const selectPiecesCommand: CliCommand = {
-    name: 'select-pieces',
-    description: '🎯 Select specific pieces by ID, type, or variant',
-    execute: async (args, cli) => {
-      const design = findDesignInKit(cli.designEditor.kit, cli.designEditor.designId)
-      const pieces = design.pieces || []
-
-      if (pieces.length === 0) {
-        setState(prev => ({
-          ...prev,
-          history: ['No pieces in design to select']
-        }))
-        return
-      }
-
-      const parsed = parseArgs(args)
-      const isInteractive = parsed.positional.length === 0 && Object.keys(parsed.flags).length === 0
-
-      let selectedPieceIds: string[] = []
-
-      if (isInteractive) {
-        // Interactive mode - ask what to select
-        const selectionOptions = [
-          { value: 'all', label: 'Select all pieces' },
-          { value: 'by-type', label: 'Select by type' },
-          { value: 'by-variant', label: 'Select by variant' },
-          { value: 'by-id', label: 'Select by ID' },
-          { value: 'by-status', label: 'Select by status (fixed/linked)' }
-        ]
-        const selectionIndex = await askForSelect('What would you like to select?', selectionOptions)
-        const selectedIndex = parseInt(selectionIndex) - 1
-        if (selectedIndex < 0 || selectedIndex >= selectionOptions.length) {
-          throw new Error('Invalid selection')
-        }
-
-        const selectionType = selectionOptions[selectedIndex].value
-
-        switch (selectionType) {
-          case 'all':
-            selectedPieceIds = pieces.map(p => p.id_)
-            break
-          case 'by-type':
-            const typeNames = [...new Set(pieces.map(p => p.type.name))]
-            const typeOptions = typeNames.map(name => ({ value: name, label: name }))
-            const typeIndex = await askForSelect('Select type', typeOptions)
-            const selectedTypeIndex = parseInt(typeIndex) - 1
-            if (selectedTypeIndex >= 0 && selectedTypeIndex < typeOptions.length) {
-              const selectedType = typeOptions[selectedTypeIndex].value
-              selectedPieceIds = pieces.filter(p => p.type.name === selectedType).map(p => p.id_)
-            }
-            break
-          case 'by-variant':
-            const variants = [...new Set(pieces.map(p => p.type.variant).filter(v => v))]
-            if (variants.length === 0) {
-              throw new Error('No variants available')
-            }
-            const variantOptions = variants.map(variant => ({ value: variant!, label: variant! }))
-            const variantIndex = await askForSelect('Select variant', variantOptions)
-            const selectedVariantIndex = parseInt(variantIndex) - 1
-            if (selectedVariantIndex >= 0 && selectedVariantIndex < variantOptions.length) {
-              const selectedVariant = variantOptions[selectedVariantIndex].value
-              selectedPieceIds = pieces.filter(p => p.type.variant === selectedVariant).map(p => p.id_)
-            }
-            break
-          case 'by-id':
-            const pieceOptions = pieces.map(piece => ({
-              value: piece.id_,
-              label: `${piece.id_} (${piece.type.name}${piece.type.variant ? ` - ${piece.type.variant}` : ''})`
-            }))
-            const pieceIndex = await askForSelect('Select piece', pieceOptions)
-            const selectedPieceIndex = parseInt(pieceIndex) - 1
-            if (selectedPieceIndex >= 0 && selectedPieceIndex < pieceOptions.length) {
-              selectedPieceIds = [pieceOptions[selectedPieceIndex].value]
-            }
-            break
-          case 'by-status':
-            const statusOptions = [
-              { value: 'fixed', label: 'Fixed pieces' },
-              { value: 'linked', label: 'Linked pieces' }
-            ]
-            const statusIndex = await askForSelect('Select status', statusOptions)
-            const selectedStatusIndex = parseInt(statusIndex) - 1
-            if (selectedStatusIndex >= 0 && selectedStatusIndex < statusOptions.length) {
-              const isFixed = statusOptions[selectedStatusIndex].value === 'fixed'
-              selectedPieceIds = pieces.filter(p => !!p.plane === isFixed).map(p => p.id_)
-            }
-            break
-        }
-      } else {
-        // Non-interactive mode
-        const typeFilter = getArgValue(parsed, 'type') || getArgValue(parsed, 't')
-        const variantFilter = getArgValue(parsed, 'variant') || getArgValue(parsed, 'v')
-        const statusFilter = getArgValue(parsed, 'status') || getArgValue(parsed, 's')
-        const addMode = hasFlag(parsed, 'add') || hasFlag(parsed, 'a')
-
-        // Use positional arguments as piece IDs
-        if (parsed.positional.length > 0) selectedPieceIds = parsed.positional.filter(id => pieces.some(p => p.id_ === id))
-        else {
-          // Filter by flags
-          let filteredPieces = pieces
-          if (typeFilter) filteredPieces = filteredPieces.filter(p => p.type.name === typeFilter)
-          if (variantFilter) filteredPieces = filteredPieces.filter(p => p.type.variant === variantFilter)
-          if (statusFilter) filteredPieces = filteredPieces.filter(p => !!p.plane === (statusFilter.toLowerCase() === 'fixed'))
-          selectedPieceIds = filteredPieces.map(p => p.id_)
-        }
-
-        // If add mode, add to existing selection, otherwise replace
-        if (addMode) cli.designEditor.addPiecesToSelection(selectedPieceIds)
-        else cli.designEditor.selectPieces(selectedPieceIds)
-      }
-
-      if (selectedPieceIds.length === 0) {
-        setState(prev => ({
-          ...prev,
-          history: ['No pieces matched the selection criteria']
-        }))
-        return
-      }
-
-      // Apply selection
-      if (!isInteractive && (hasFlag(parsed, 'add') || hasFlag(parsed, 'a'))) {
-        cli.designEditor.addPiecesToSelection(selectedPieceIds)
-      } else {
-        cli.designEditor.selectPieces(selectedPieceIds)
-      }
-
-      setState(prev => ({
-        ...prev,
-        history: [`✓ Selected ${selectedPieceIds.length} piece${selectedPieceIds.length === 1 ? '' : 's'}: ${selectedPieceIds.join(', ')}`]
-      }))
-    }
-  }
-
-  const listTypesCommand: CliCommand = {
-    name: 'list-types',
-    description: 'List all available types in the kit',
-    execute: async (args, cli) => {
-      const types = cli.designEditor.kit.types || []
-      const typeNames = [...new Set(types.map(t => t.name))]
-
-      setState(prev => ({
-        ...prev,
-        history: [`Available types: ${typeNames.join(', ')}`]
-      }))
-    }
-  }
-
-  const helpCommand: CliCommand = {
-    name: 'help',
-    description: 'Show available commands',
-    execute: async (args, cli) => {
-      const commandList = cli.commands.map(cmd => `  ${cmd.name.padEnd(20)} - ${cmd.description}`).join('\n')
-      const usage = `
-Usage examples:
-
-Positional arguments:
-  add-piece Wall                       - Add piece with type Wall (interactive for rest)
-  add-piece Wall Exterior              - Add piece with type Wall, variant Exterior
-  connect-pieces piece1 piece2         - Connect two pieces by ID
-  select-pieces piece1 piece2 piece3   - Select specific pieces by ID
-
-Flagged arguments:
-  add-piece --type Wall --variant Exterior --x 5 --y 3 --fixed
-  add-piece -t Wall -v Exterior -x 5 -y 3 --fixed
-  connect-pieces --from piece1 --to piece2 --gap 1.5 --shift 0
-  list-pieces --details --type Wall --variant Exterior
-  list-pieces -d -t Wall -v Exterior
-  select-pieces --type Wall --add      - Add Wall pieces to current selection
-
-Interactive mode (no arguments):
-  add-piece                           - Interactive guided setup
-  connect-pieces                      - Interactive piece selection
-  select-pieces                       - Interactive selection options
-
-Mixed arguments:
-  add-piece Wall --x 5 --y 3          - Type as positional, position as flags
-  connect-pieces piece1 --to piece2 --gap 1.5
-
-All commands support both short (-t) and long (--type) flag formats.
-Commands without arguments automatically enter interactive mode.`
-
-      setState(prev => ({
-        ...prev,
-        history: [`Available commands:\n${commandList}\n${usage}`]
-      }))
-    }
-  }
-
-  const clearCommand: CliCommand = {
-    name: 'clear',
-    description: 'Clear command history',
-    execute: async (args, cli) => {
-      setState(prev => ({
-        ...prev,
-        history: []
-      }))
-    }
-  }
-
-  // Initialize commands
-  useEffect(() => {
-    if (state.commands.length === 0) {
-      setState(prev => ({
-        ...prev,
-        commands: [addPieceCommand, connectPiecesCommand, flattenDesignCommand, selectAllCommand, deselectAllCommand, selectPiecesCommand, deleteSelectedCommand, listPiecesCommand, listTypesCommand, helpCommand, clearCommand]
-      }))
-    }
-  }, [])
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      handleInput(state.currentInput)
-    } else if (e.key === 'Tab') {
-      e.preventDefault()
-      if (state.suggestions.length > 0) {
-        if (state.isAwaitingInput && state.awaitingType === 'select') {
-          // For select mode, cycle through number suggestions
-          const currentIndex = state.suggestions.indexOf(state.currentInput)
-          const nextIndex = (currentIndex + 1) % state.suggestions.length
-          setState(prev => ({ ...prev, currentInput: state.suggestions[nextIndex] }))
-        } else {
-          // For normal commands or text input, use first suggestion
-          setState(prev => ({ ...prev, currentInput: prev.suggestions[0] }))
-        }
-      }
-    } else if (e.key === 'Escape' && state.isAwaitingInput) {
-      // Allow escape to cancel interactive input
-      setState(prev => ({
-        ...prev,
-        history: ['✗ Cancelled'],
-        isAwaitingInput: false,
-        awaitingPrompt: undefined,
-        awaitingType: undefined,
-        awaitingOptions: undefined,
-        onInputReceived: undefined,
-        currentInput: ''
-      }))
-    }
-
-    // Update cursor position after key handling
-    setTimeout(() => {
-      const input = inputRef.current
-      if (input) {
-        setCursorPosition(input.selectionStart || 0)
-      }
-    }, 0)
-  }
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target.value
-    updateSuggestions(input)
-
-    // Update cursor position
-    setTimeout(() => {
-      const inputEl = inputRef.current
-      if (inputEl) {
-        setCursorPosition(inputEl.selectionStart || 0)
-      }
-    }, 0)
-  }
-
-  const handleInput = (input: string) => {
-    // If awaiting input, handle the response
-    if (state.isAwaitingInput && state.onInputReceived) {
-      let processedInput = input.trim()
-
-      // Handle different input types
-      if (state.awaitingType === 'select' && state.awaitingOptions) {
-        const index = parseInt(processedInput) - 1
-        if (index >= 0 && index < state.awaitingOptions.length) {
-          processedInput = (index + 1).toString()
-        }
-      }
-
-      setState(prev => ({
-        ...prev,
-        history: [],
-        currentInput: '',
-        isAwaitingInput: false,
-        awaitingPrompt: undefined,
-        awaitingType: undefined,
-        awaitingOptions: undefined
-      }))
-
-      state.onInputReceived(processedInput)
-      return
-    }
-
-    // Parse command
-    const parts = input.trim().split(' ')
-    const commandName = parts[0]
-    const args = parts.slice(1)
-
-    if (!commandName) return
-
-    const command = state.commands.find(cmd => cmd.name === commandName)
-    if (command) {
-      setState(prev => ({
-        ...prev,
-        history: [],
-        currentInput: ''
-      }))
-      command.execute(args, state)
-    } else {
-      setState(prev => ({
-        ...prev,
-        history: [`✗ Unknown command: ${commandName}. Type 'help' for available commands.`],
-        currentInput: ''
-      }))
-    }
-  }
-
-  const updateSuggestions = (input: string) => {
-    // If awaiting input, show context-specific suggestions
-    if (state.isAwaitingInput) {
-      if (state.awaitingType === 'select' && state.awaitingOptions) {
-        const suggestions = state.awaitingOptions
-          .map((opt, index) => `${index + 1}`)
-          .filter(num => num.startsWith(input))
-        setState(prev => ({ ...prev, suggestions, currentInput: input }))
-      } else if (state.awaitingType === 'confirm') {
-        const suggestions = ['y', 'yes', 'n', 'no'].filter(opt => opt.startsWith(input.toLowerCase()))
-        setState(prev => ({ ...prev, suggestions, currentInput: input }))
-      } else {
-        setState(prev => ({ ...prev, suggestions: [], currentInput: input }))
-      }
-      return
-    }
-
-    // Normal command suggestions
-    const suggestions = state.commands
-      .filter(cmd => cmd.name.startsWith(input.toLowerCase()))
-      .map(cmd => cmd.name)
-    setState(prev => ({ ...prev, suggestions, currentInput: input }))
-  }
-
-  const [cursorPosition, setCursorPosition] = useState(0)
-  const [isFocused, setIsFocused] = useState(true)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  // Update cursor position when input changes or cursor moves
-  useEffect(() => {
-    const input = inputRef.current
-    if (input) {
-      const updateCursorPosition = () => {
-        setCursorPosition(input.selectionStart || 0)
-      }
-
-      input.addEventListener('select', updateCursorPosition)
-      input.addEventListener('click', updateCursorPosition)
-      input.addEventListener('keyup', updateCursorPosition)
-
-      return () => {
-        input.removeEventListener('select', updateCursorPosition)
-        input.removeEventListener('click', updateCursorPosition)
-        input.removeEventListener('keyup', updateCursorPosition)
-      }
-    }
-  }, [])
-
-  const handleOptionClick = (optionIndex: number) => {
-    if (state.isAwaitingInput && state.awaitingType === 'select') {
-      const optionNumber = (optionIndex + 1).toString()
-      setState(prev => ({ ...prev, currentInput: optionNumber }))
-      handleInput(optionNumber)
-    }
-  }
-
-  const renderInputWithCursor = () => {
-    const text = state.currentInput
-    const beforeCursor = text.slice(0, cursorPosition)
-    const atCursor = text[cursorPosition] || ' '
-    const afterCursor = text.slice(cursorPosition + 1)
-
-    return (
-      <div className="flex-1 relative">
-        <input
-          ref={inputRef}
-          type="text"
-          value={state.currentInput}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          className="w-full outline-none bg-transparent text-transparent caret-transparent"
-          placeholder={
-            state.isAwaitingInput
-              ? (state.awaitingType === 'select' ? "Enter number or click option..." :
-                state.awaitingType === 'confirm' ? "Enter y/n..." :
-                  "Enter value...")
-              : "Type a command..."
-          }
-          style={{ caretColor: 'transparent' }}
-          autoFocus
-        />
-        <div className="absolute inset-0 pointer-events-none flex items-center px-3">
-          <span className="text-primary">{beforeCursor}</span>
-          <span
-            className={`cli-cursor inline-block ${isFocused
-              ? (atCursor === ' '
-                ? 'bg-foreground w-2'
-                : 'bg-foreground text-background')
-              : (atCursor === ' '
-                ? 'border border-foreground w-2'
-                : 'border border-foreground text-foreground bg-transparent')
-              }`}
-            style={{
-              minWidth: '0.5rem',
-              height: '1.25rem'
-            }}
-          >
-            {atCursor === ' ' ? '\u00A0' : atCursor}
-          </span>
-          <span className="text-primary">{afterCursor}</span>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div
-      className="h-full flex flex-col text-sm p-2"
-      onClick={() => {
-        // Focus input when clicking anywhere in the console
-        if (inputRef.current) {
-          inputRef.current.focus()
-        }
-      }}
-    >
-      <div className="flex-1 overflow-y-auto mb-2">
-        {state.history.map((line, index) => {
-          // Check if this is a select prompt with options
-          if (state.isAwaitingInput && state.awaitingType === 'select' && state.awaitingOptions) {
-            const lines = line.split('\n')
-            return (
-              <div key={index} className="whitespace-pre-wrap text-primary">
-                {lines.map((singleLine, lineIndex) => {
-                  // Check if this line is an option (starts with number and dot)
-                  const optionMatch = singleLine.match(/^(\d+)\. (.+)$/)
-                  if (optionMatch) {
-                    const optionNumber = parseInt(optionMatch[1])
-                    const optionText = optionMatch[2]
-                    return (
-                      <div
-                        key={lineIndex}
-                        className="cursor-pointer hover:underline hover:text-primary-foreground"
-                        onClick={() => handleOptionClick(optionNumber - 1)}
-                      >
-                        {optionNumber}. {optionText}
-                      </div>
-                    )
-                  }
-                  return <div key={lineIndex}>{singleLine}</div>
-                })}
-              </div>
-            )
-          }
-
-          return (
-            <div key={index} className="whitespace-pre-wrap text-primary">
-              {line}
-            </div>
-          )
-        })}
-      </div>
-
-      <div className="flex items-center space-x-1">
-        <span className="text-foreground">
-          {state.isAwaitingInput ? "Input:" : "Command:"}
-        </span>
-        {renderInputWithCursor()}
-      </div>
-
-      {state.suggestions.length > 0 && (
-        <div className="mt-1 text-gray text-xs">
-          {state.isAwaitingInput
-            ? `Options: ${state.suggestions.join(', ')}`
-            : `Suggestions: ${state.suggestions.join(', ')}`
-          }
-        </div>
-      )}
-
-      {state.awaitingType === 'select' && state.awaitingOptions && (
-        <div className="mt-1 text-gray text-xs">
-          Tip: Type the number, click an option, use Tab to cycle, or press Escape to cancel
-        </div>
-      )}
-
-      {state.isAwaitingInput && state.awaitingType !== 'select' && (
-        <div className="mt-1 text-gray text-xs">
-          Tip: Press Escape to cancel
-        </div>
-      )}
-    </div>
-  )
 }
-
-//#endregion Panels
 
 const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   const { onToolbarChange, designId, onUndo: controlledOnUndo, onRedo: controlledOnRedo } = props
-
-  // #region State
 
   const [state, dispatch] = useControllableReducer(props)
   if (!state.kit) return null
   const design = findDesignInKit(state.kit, designId)
   if (!design) return null
-
-  // #endregion State
-
-  // #region Panels
 
   const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
     workbench: false,
@@ -3399,76 +2423,13 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
     dispatch({ type: DesignEditorAction.ToggleModelFullscreen, payload: null })
   }, [dispatch])
 
-  // #endregion Panels
+  const toggleWorkbench = useCallback(() => togglePanel('workbench'), [])
+  const toggleConsole = useCallback(() => togglePanel('console'), [])
+  const toggleDetails = useCallback(() => togglePanel('details'), [])
+  const toggleChat = useCallback(() => togglePanel('chat'), [])
 
-  // #region Hotkeys
-  useHotkeys('mod+j', (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    togglePanel('workbench')
-  })
-  useHotkeys('mod+k', (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    togglePanel('console')
-  })
-  useHotkeys('mod+l', (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    togglePanel('details')
-  })
-  useHotkeys(['mod+[', 'mod+semicolon', 'mod+ö'], (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    togglePanel('chat')
-  })
-  useHotkeys('mod+a', (e) => {
-    e.preventDefault()
-    dispatch({ type: DesignEditorAction.SelectAll, payload: null })
-  })
-  useHotkeys('mod+i', (e) => {
-    e.preventDefault()
-    dispatch({ type: DesignEditorAction.InvertSelection, payload: null })
-  })
-  useHotkeys('mod+d', (e) => {
-    e.preventDefault()
-    console.log('Select closest piece with same variant')
-  })
-  useHotkeys('mod+shift+d', (e) => {
-    e.preventDefault()
-    console.log('Select all pieces with same variant')
-  })
-  useHotkeys('mod+c', (e) => {
-    e.preventDefault()
-    copyToClipboard(design, state.selection)
-  })
-  useHotkeys('mod+v', (e) => {
-    e.preventDefault()
-    pasteFromClipboard(design)
-  })
-  useHotkeys('mod+x', (e) => {
-    e.preventDefault()
-    cutToClipboard(design, state.selection)
-  })
-  useHotkeys('delete', (e) => {
-    e.preventDefault()
-    dispatch({ type: DesignEditorAction.DeleteSelected, payload: null })
-  })
-  useHotkeys('mod+z', (e) => {
-    e.preventDefault()
-    dispatch({ type: DesignEditorAction.Redo, payload: null })
-  })
-  useHotkeys('mod+y', (e) => {
-    e.preventDefault()
-    dispatch({ type: DesignEditorAction.Undo, payload: null })
-  })
-  useHotkeys('mod+w', (e) => {
-    e.preventDefault()
-    console.log('Close design')
-  })
-  // #endregion Hotkeys
-
-  const rightPanelVisible = visiblePanels.details || visiblePanels.chat
+  const onUndo = controlledOnUndo || (() => dispatch({ type: DesignEditorAction.Undo, payload: null }))
+  const onRedo = controlledOnRedo || (() => dispatch({ type: DesignEditorAction.Redo, payload: null }))
 
   const designEditorToolbar = (
     <ToggleGroup
@@ -3510,14 +2471,250 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   const [activeDraggedType, setActiveDraggedType] = useState<Type | null>(null)
   const [activeDraggedDesign, setActiveDraggedDesign] = useState<Design | null>(null)
 
-  // #region Drag and Drop
+
+  // Register built-in commands
+  useEffect(() => {
+    const unregisterFunctions: (() => void)[] = []
+
+    // Register all built-in commands
+    // TODO: Re-implement registerBuiltInCommands function
+    // unregisterFunctions.push(registerBuiltInCommands(commandRegistry))
+
+    // Add Piece command
+    unregisterFunctions.push(commandRegistry.register({
+      id: 'add-piece',
+      name: 'Add Piece',
+      icon: '➕',
+      description: 'Add a new piece to the design',
+      parameters: [
+        { name: 'type', type: 'TypeId', description: 'Type of the piece', required: true },
+        { name: 'center', type: 'string', description: 'Center coordinates (x,y)', defaultValue: '0,0' },
+        { name: 'fixed', type: 'boolean', description: 'Fix piece at position', defaultValue: false }
+      ],
+      execute: async (context, payload) => {
+        const { kit, designId } = context
+        const design = findDesignInKit(kit, designId)
+
+        const center = payload.center ? payload.center.split(',').map((n: string) => parseFloat(n.trim())) : [0, 0]
+        const plane = payload.fixed ? {
+          origin: { x: center[0], y: center[1], z: 0 },
+          xAxis: { x: 1, y: 0, z: 0 },
+          yAxis: { x: 0, y: 1, z: 0 }
+        } : undefined
+
+        const piece = {
+          id_: `piece-${Date.now()}`,
+          type: payload.type,
+          center: { x: center[0], y: center[1] },
+          plane
+        }
+
+        return {
+          design: addPieceToDesign(design, piece),
+          content: <div className="p-2 text-xs text-success">✅ Added piece: {payload.type.name}</div>
+        }
+      }
+    }))
+
+    // Delete Selected command
+    unregisterFunctions.push(commandRegistry.register({
+      id: 'delete-selected',
+      name: 'Delete Selected',
+      icon: '🗑️',
+      description: 'Delete the selected pieces and connections',
+      parameters: [],
+      hotkey: 'delete',
+      execute: async (context) => {
+        const { kit, designId, selection } = context
+        const selectedPieces = selection.selectedPieceIds.map((id: string) => ({ id_: id }))
+        const selectedConnections = selection.selectedConnections.map((conn: any) => ({
+          connecting: { piece: { id_: conn.connectingPieceId } },
+          connected: { piece: { id_: conn.connectedPieceId } }
+        }))
+        return {
+          design: removePiecesAndConnectionsFromDesign(kit, designId, selectedPieces, selectedConnections),
+          selection: deselectAll(selection),
+          content: <div className="p-2 text-xs text-success">✅ Deleted {selectedPieces.length} pieces and {selectedConnections.length} connections</div>
+        }
+      }
+    }))
+
+    // Select All command
+    unregisterFunctions.push(commandRegistry.register({
+      id: 'select-all',
+      name: 'Select All',
+      icon: '🔘',
+      description: 'Select all pieces and connections',
+      parameters: [],
+      hotkey: 'mod+a',
+      editorOnly: true,
+      execute: async (context) => {
+        const design = findDesignInKit(context.kit, context.designId)
+        return {
+          selection: selectAll(design),
+          content: <div className="p-2 text-xs text-success">✅ Selected all pieces and connections</div>
+        }
+      }
+    }))
+
+    // Fix Selected Pieces command
+    unregisterFunctions.push(commandRegistry.register({
+      id: 'fix-selected-pieces',
+      name: 'Fix Selected Pieces',
+      icon: '📌',
+      description: 'Fix the selected pieces at their current positions',
+      parameters: [],
+      hotkey: 'f',
+      execute: async (context) => {
+        const { kit, designId, selection } = context
+        return {
+          content: <div className="p-2 text-xs text-warning">⚠️ Fix selected pieces functionality not yet implemented</div>
+        }
+      }
+    }))
+
+    // Help command
+    unregisterFunctions.push(commandRegistry.register({
+      id: 'help',
+      name: 'Help',
+      icon: '❓',
+      description: 'Show available commands',
+      parameters: [],
+      execute: async () => {
+        const commands = commandRegistry.getAll()
+        return {
+          content: (
+            <div className="p-2">
+              <div className="text-secondary text-xs mb-2">📚 Available Commands:</div>
+              {commands.map(cmd => (
+                <div key={cmd.id} className="mb-1">
+                  <div className="text-primary font-mono text-xs">{cmd.icon || '⚡'} {cmd.name}</div>
+                  <div className="text-gray-400 ml-2 text-xs">- {cmd.description}</div>
+                  {cmd.hotkey && <div className="text-warning ml-2 text-xs">({cmd.hotkey})</div>}
+                </div>
+              ))}
+            </div>
+          )
+        }
+      }
+    }))
+
+    // Clear command
+    unregisterFunctions.push(commandRegistry.register({
+      id: 'clear',
+      name: 'Clear',
+      icon: '🧹',
+      description: 'Clear the console',
+      parameters: [],
+      editorOnly: true,
+      execute: async () => ({ content: null })
+    }))
+
+    return () => unregisterFunctions.forEach(fn => fn())
+  }, [commandRegistry])
+
+  // Global command event handler
+  useEffect(() => {
+    const handleCommand = async (event: Event) => {
+      const customEvent = event as CustomEvent
+      const { commandId, payload = {} } = customEvent.detail
+
+      const context = { kit: state.kit, designId, selection: state.selection }
+      dispatch({ type: DesignEditorAction.StartTransaction, payload: null })
+      try {
+        const result = await commandRegistry.execute(commandId, context, payload)
+        if (result.design) dispatch({ type: DesignEditorAction.SetDesign, payload: result.design })
+        if (result.selection) dispatch({ type: DesignEditorAction.SetSelection, payload: result.selection })
+        dispatch({ type: DesignEditorAction.FinalizeTransaction, payload: null })
+      } catch (error) {
+        dispatch({ type: DesignEditorAction.AbortTransaction, payload: null })
+        console.error(`Error executing command ${commandId}:`, error)
+      }
+    }
+
+    document.addEventListener('semio-command', handleCommand)
+    return () => document.removeEventListener('semio-command', handleCommand)
+  }, [state.kit, designId, state.selection, dispatch])
+
+  // Register hotkeys for all commands (except undo/redo which are handled specially)
+  useHotkeys('f', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const event = new CustomEvent('semio-command', { detail: { commandId: 'fix-selected-pieces' } })
+    document.dispatchEvent(event)
+  })
+
+  useHotkeys('delete', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const event = new CustomEvent('semio-command', { detail: { commandId: 'delete-selected' } })
+    document.dispatchEvent(event)
+  })
+
+  useHotkeys('mod+a', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const event = new CustomEvent('semio-command', { detail: { commandId: 'select-all' } })
+    document.dispatchEvent(event)
+  })
+
+  useHotkeys('mod+i', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const event = new CustomEvent('semio-command', { detail: { commandId: 'invert-selection' } })
+    document.dispatchEvent(event)
+  })
+
+  useHotkeys('mod+c', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const event = new CustomEvent('semio-command', { detail: { commandId: 'copy-to-clipboard' } })
+    document.dispatchEvent(event)
+  })
+
+  useHotkeys('mod+v', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const event = new CustomEvent('semio-command', { detail: { commandId: 'paste-from-clipboard' } })
+    document.dispatchEvent(event)
+  })
+
+  useHotkeys('mod+x', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const event = new CustomEvent('semio-command', { detail: { commandId: 'cut-to-clipboard' } })
+    document.dispatchEvent(event)
+  })
+
+  // Keep special hotkeys for undo/redo since they're handled differently
+  useHotkeys('mod+z', async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onUndo()
+  })
+
+  useHotkeys('mod+y', async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onRedo()
+  })
+
+  useHotkeys('mod+shift+d', async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const context = { kit: state.kit, designId, selection: state.selection }
+    try {
+      await commandRegistry.execute('select-all-similar-pieces', context, {})
+    } catch (error) {
+      console.error('Error selecting all similar pieces:', error)
+    }
+  })
 
   const onDragStart = (event: DragStartEvent) => {
     const { active } = event
     const id = active.id.toString()
     if (id.startsWith('type-')) {
       const [_, name, variant] = id.split('-')
-      // Normalize variants so that undefined, null and empty string are treated the same
       const normalizeVariant = (v: string | undefined | null) => v ?? ''
       const type = state.kit?.types?.find(
         (t: Type) => t.name === name && normalizeVariant(t.variant) === normalizeVariant(variant)
@@ -3567,7 +2764,29 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
     setActiveDraggedDesign(null)
   }
 
-  // #endregion Drag and Drop
+  // Panel hotkeys (not commands)
+  useHotkeys('mod+j', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    togglePanel('workbench')
+  })
+  useHotkeys('mod+k', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    togglePanel('console')
+  })
+  useHotkeys('mod+l', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    togglePanel('details')
+  })
+  useHotkeys(['mod+[', 'mod+semicolon', 'mod+ö'], (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    togglePanel('chat')
+  })
+
+  const rightPanelVisible = visiblePanels.details || visiblePanels.chat
 
   return (
     <DesignEditorContext.Provider value={{ state, dispatch }}>
@@ -3601,15 +2820,41 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
             kit={state.kit!}
           />
           <Details visible={visiblePanels.details} onWidthChange={setDetailsWidth} width={detailsWidth} />
-          <Console
-            visible={visiblePanels.console}
-            leftPanelVisible={visiblePanels.workbench}
-            rightPanelVisible={rightPanelVisible}
-            leftPanelWidth={workbenchWidth}
-            rightPanelWidth={detailsWidth}
-            height={consoleHeight}
-            setHeight={setConsoleHeight}
-          />
+          <div
+            className={`absolute z-30 bg-slate-900 text-green-400 border border-slate-700 ${visiblePanels.console ? '' : 'hidden'}`}
+            style={{
+              left: visiblePanels.workbench ? `${workbenchWidth + 32}px` : '16px',
+              right: rightPanelVisible ? `${detailsWidth + 32}px` : '16px',
+              bottom: '16px',
+              height: `${consoleHeight}px`
+            }}
+          >
+            <div
+              className="absolute top-0 left-0 right-0 h-1 cursor-ns-resize bg-slate-700 hover:bg-blue-500"
+              onMouseDown={(e) => {
+                e.preventDefault()
+                const startY = e.clientY
+                const startHeight = consoleHeight
+
+                const handleMouseMove = (e: MouseEvent) => {
+                  const deltaY = startY - e.clientY
+                  const newHeight = Math.max(200, Math.min(800, startHeight + deltaY))
+                  setConsoleHeight(newHeight)
+                }
+
+                const handleMouseUp = () => {
+                  document.removeEventListener('mousemove', handleMouseMove)
+                  document.removeEventListener('mouseup', handleMouseUp)
+                }
+
+                document.addEventListener('mousemove', handleMouseMove)
+                document.addEventListener('mouseup', handleMouseUp)
+              }}
+            />
+            <div className="h-full pt-1">
+              <Console />
+            </div>
+          </div>
           <Chat visible={visiblePanels.chat} onWidthChange={setChatWidth} width={chatWidth} />
           {createPortal(
             <DragOverlay>
@@ -3622,36 +2867,6 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
       </DndContext>
     </DesignEditorContext.Provider>
   )
-}
-
-interface ControlledDesignEditorProps {
-  kit?: Kit
-  selection?: DesignEditorSelection
-  onDesignChange?: (design: Design) => void
-  onSelectionChange?: (selection: DesignEditorSelection) => void
-  onUndo?: () => void
-  onRedo?: () => void
-}
-
-interface UncontrolledDesignEditorProps {
-  initialKit?: Kit
-  initialSelection?: DesignEditorSelection
-}
-
-interface DesignEditorProps extends ControlledDesignEditorProps, UncontrolledDesignEditorProps {
-  designId: DesignId
-  fileUrls: Map<string, string>
-  onToolbarChange: (toolbar: ReactNode) => void
-  mode?: Mode
-  layout?: Layout
-  theme?: Theme
-  setLayout?: (layout: Layout) => void
-  setTheme?: (theme: Theme) => void
-  onWindowEvents?: {
-    minimize: () => void
-    maximize: () => void
-    close: () => void
-  }
 }
 
 const DesignEditor: FC<DesignEditorProps> = ({
@@ -3670,9 +2885,14 @@ const DesignEditor: FC<DesignEditorProps> = ({
   onDesignChange,
   onSelectionChange,
   onUndo,
-  onRedo
+  onRedo,
+  onToolbarChange
 }) => {
   const [toolbarContent, setToolbarContent] = useState<ReactNode>(null)
+
+  useEffect(() => {
+    onToolbarChange?.(toolbarContent)
+  }, [toolbarContent, onToolbarChange])
 
   return (
     <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
@@ -3698,6 +2918,12 @@ const DesignEditor: FC<DesignEditorProps> = ({
           onUndo={onUndo}
           onRedo={onRedo}
           onToolbarChange={setToolbarContent}
+          mode={mode}
+          layout={layout}
+          theme={theme}
+          setLayout={setLayout}
+          setTheme={setTheme}
+          onWindowEvents={onWindowEvents}
         />
       </ReactFlowProvider>
     </div>

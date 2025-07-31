@@ -45,6 +45,7 @@ import React, { FC, useCallback, useEffect, useMemo, useState } from 'react'
 import {
   applyDesignDiff,
   arePortsCompatible,
+  colorPortsForTypes,
   Connection,
   ConnectionDiff,
   DesignId,
@@ -53,6 +54,7 @@ import {
   findConnectionInDesign,
   findDesignInKit,
   findPortInType,
+  findQualityValue,
   findTypeInKit,
   flattenDesign,
   FullscreenPanel,
@@ -66,7 +68,6 @@ import {
   piecesMetadata,
   Port,
   Type,
-  unifyPortFamiliesAndCompatibleFamiliesForTypes,
   updateDesignInKit
 } from '@semio/js'
 
@@ -123,38 +124,9 @@ const getPortPositionStyle = (port: Port): { x: number; y: number } => {
   }
 }
 
-const getPortFamilyColor = (family?: string): string => {
-  if (!family || family === '') {
-    return 'var(--color-dark)'
-  }
-
-  // Create a simple hash from the family string
-  let hash = 0
-  for (let i = 0; i < family.length; i++) {
-    const char = family.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash = hash & hash // Convert to 32-bit integer
-  }
-
-  // Generate color variations based on primary, secondary, tertiary
-  const baseColors = [
-    { base: 'var(--color-primary)', variations: ['#ff344f', '#ff5569', '#ff7684', '#ff97a0'] },
-    { base: 'var(--color-secondary)', variations: ['#34d1bf', '#4dd7c9', '#66ddd3', '#80e3dd'] },
-    { base: 'var(--color-tertiary)', variations: ['#fa9500', '#fba320', '#fcb140', '#fdc060'] },
-    { base: 'var(--color-success)', variations: ['#7eb77f', '#8ec28f', '#9ecd9f', '#aed8af'] },
-    { base: 'var(--color-warning)', variations: ['#fccf05', '#fcd525', '#fddb45', '#fde165'] },
-    { base: 'var(--color-info)', variations: ['#dbbea1', '#e1c7ae', '#e7d0bb', '#edd9c8'] }
-  ]
-
-  const colorSetIndex = Math.abs(hash) % baseColors.length
-  const variationIndex = Math.abs(Math.floor(hash / baseColors.length)) % baseColors[colorSetIndex].variations.length
-
-  return baseColors[colorSetIndex].variations[variationIndex]
-}
-
 const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false, onPortClick }) => {
   const { x, y } = getPortPositionStyle(port)
-  const portColor = getPortFamilyColor(port.family)
+  const portColor = findQualityValue(port, 'semio.color', 'var(--color-foreground)')!
 
   const onClick = (event: React.MouseEvent) => {
     event.stopPropagation()
@@ -246,7 +218,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
       </svg>
       {ports?.map((port: Port) => (
         <PortHandle
-          key={port.id_}
+          key={`${id_}-${port.id_}`}
           port={port}
           pieceId={id_}
           selected={selection.selectedPiecePortId?.pieceId === id_ && selection.selectedPiecePortId?.portId === port.id_}
@@ -456,8 +428,8 @@ const Diagram: FC = () => {
   const design = applyDesignDiff(findDesignInKit(originalKit, designId), designDiff, true)
 
   // Apply port family unification to ensure compatible ports have the same color
-  const unifiedTypes = useMemo(() => unifyPortFamiliesAndCompatibleFamiliesForTypes(originalKit.types || []), [originalKit.types])
-  const unifiedKit = useMemo(() => ({ ...originalKit, types: unifiedTypes }), [originalKit, unifiedTypes])
+  const typesWithColoredPorts = useMemo(() => colorPortsForTypes(originalKit.types || []), [originalKit.types])
+  const unifiedKit = useMemo(() => ({ ...originalKit, types: typesWithColoredPorts }), [originalKit, typesWithColoredPorts])
   const kit = useMemo(() => { return updateDesignInKit(unifiedKit, design) }, [unifiedKit, design])
 
   if (!design) return null
