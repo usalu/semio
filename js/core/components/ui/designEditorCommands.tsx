@@ -130,7 +130,7 @@ export const designEditorCommands: Command[] = [
 
             return {
                 design: addPieceToDesignHelper(design, piece),
-                content: <div className="p-2 text-xs text-success">✅ Added piece: {payload.type.name}</div>
+                content: `✅ Added piece: ${payload.type.name}`
             }
         }
     },
@@ -171,7 +171,7 @@ export const designEditorCommands: Command[] = [
             return {
                 design: newDesign,
                 selection: { ...selection, selectedPieceIds: newPieceIds },
-                content: <div className="p-2 text-xs text-success">✅ Duplicated {newPieceIds.length} pieces</div>
+                content: `✅ Duplicated ${newPieceIds.length} pieces`
             }
         }
     },
@@ -205,7 +205,7 @@ export const designEditorCommands: Command[] = [
 
             return {
                 design: newDesign,
-                content: <div className="p-2 text-xs text-success">✅ Fixed {selection.selectedPieceIds.length} pieces</div>
+                content: `✅ Fixed ${selection.selectedPieceIds.length} pieces`
             }
         }
     },
@@ -232,7 +232,7 @@ export const designEditorCommands: Command[] = [
 
             return {
                 design: newDesign,
-                content: <div className="p-2 text-xs text-success">✅ Unfixed {selection.selectedPieceIds.length} pieces</div>
+                content: `✅ Unfixed ${selection.selectedPieceIds.length} pieces`
             }
         }
     },
@@ -255,7 +255,7 @@ export const designEditorCommands: Command[] = [
             return {
                 design: removePiecesAndConnectionsFromDesign(kit, designId, selectedPieces, selectedConnections),
                 selection: deselectAll(selection),
-                content: <div className="p-2 text-xs text-success">✅ Deleted {selectedPieces.length} pieces and {selectedConnections.length} connections</div>
+                content: `✅ Deleted ${selectedPieces.length} pieces and ${selectedConnections.length} connections`
             }
         }
     },
@@ -272,7 +272,7 @@ export const designEditorCommands: Command[] = [
             return {
                 design: { ...design, pieces: [], connections: [] },
                 selection: deselectAll(context.selection),
-                content: <div className="p-2 text-xs text-success">✅ Deleted all pieces and connections</div>
+                content: `✅ Deleted all pieces and connections`
             }
         }
     },
@@ -290,7 +290,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(context.kit, context.designId)
             return {
                 selection: selectAll(design),
-                content: <div className="p-2 text-xs text-success">✅ Selected all pieces and connections</div>
+                content: `✅ Selected all pieces and connections`
             }
         }
     },
@@ -306,7 +306,7 @@ export const designEditorCommands: Command[] = [
         execute: async (context) => {
             return {
                 selection: deselectAll(context.selection),
-                content: <div className="p-2 text-xs text-success">✅ Deselected all</div>
+                content: `✅ Deselected all`
             }
         }
     },
@@ -323,7 +323,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(context.kit, context.designId)
             return {
                 selection: invertSelection(context.selection, design),
-                content: <div className="p-2 text-xs text-success">✅ Inverted selection</div>
+                content: `✅ Inverted selection`
             }
         }
     },
@@ -339,7 +339,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(context.kit, context.designId)
             return {
                 selection: selectAllPieces(design),
-                content: <div className="p-2 text-xs text-success">✅ Selected all pieces</div>
+                content: `✅ Selected all pieces`
             }
         }
     },
@@ -355,7 +355,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(context.kit, context.designId)
             return {
                 selection: selectAllConnections(design),
-                content: <div className="p-2 text-xs text-success">✅ Selected all connections</div>
+                content: `✅ Selected all connections`
             }
         }
     },
@@ -371,7 +371,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(context.kit, context.designId)
             return {
                 selection: selectConnected(design, context.selection),
-                content: <div className="p-2 text-xs text-success">✅ Selected connected pieces</div>
+                content: `✅ Selected connected pieces`
             }
         }
     },
@@ -387,7 +387,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(context.kit, context.designId)
             return {
                 selection: selectDisconnected(design),
-                content: <div className="p-2 text-xs text-success">✅ Selected disconnected pieces</div>
+                content: `✅ Selected disconnected pieces`
             }
         }
     },
@@ -404,7 +404,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(context.kit, context.designId)
             return {
                 selection: selectPiecesOfType(design, payload.type),
-                content: <div className="p-2 text-xs text-success">✅ Selected pieces of type: {payload.type.name}</div>
+                content: `✅ Selected pieces of type: ${payload.type.name}`
             }
         }
     },
@@ -421,7 +421,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(kit, designId)
             return {
                 design: flattenDesign(kit, designId),
-                content: <div className="p-2 text-xs text-success">✅ Design flattened</div>
+                content: `✅ Design flattened`
             }
         }
     },
@@ -437,7 +437,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(kit, designId)
             return {
                 design: orientDesign(design),
-                content: <div className="p-2 text-xs text-success">✅ Design oriented</div>
+                content: `✅ Design oriented`
             }
         }
     },
@@ -453,7 +453,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(kit, designId)
 
             if (!design.pieces?.length) {
-                return { content: <div className="p-2 text-xs text-warning">⚠️ No pieces to center</div> }
+                return { content: `⚠️ No pieces to center` }
             }
 
             // Calculate centroid
@@ -473,7 +473,7 @@ export const designEditorCommands: Command[] = [
 
             return {
                 design: { ...design, pieces: centeredPieces },
-                content: <div className="p-2 text-xs text-success">✅ Design centered</div>
+                content: `✅ Design centered`
             }
         }
     },
@@ -508,7 +508,7 @@ export const designEditorCommands: Command[] = [
 
             return {
                 design: addConnectionToDesign(design, connection),
-                content: <div className="p-2 text-xs text-success">✅ Added connection</div>
+                content: `✅ Added connection`
             }
         }
     },
@@ -525,7 +525,7 @@ export const designEditorCommands: Command[] = [
             return {
                 design: { ...design, connections: [] },
                 selection: { ...context.selection, selectedConnections: [] },
-                content: <div className="p-2 text-xs text-success">✅ Deleted all connections</div>
+                content: `✅ Deleted all connections`
             }
         }
     },
@@ -550,7 +550,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(kit, designId)
 
             if (selection.selectedPieceIds.length < 2) {
-                return { content: <div className="p-2 text-xs text-warning">⚠️ Select at least 2 pieces to align</div> }
+                return { content: `⚠️ Select at least 2 pieces to align` }
             }
 
             const selectedPieces = design.pieces?.filter(p => selection.selectedPieceIds.includes(p.id_)) || []
@@ -574,7 +574,7 @@ export const designEditorCommands: Command[] = [
 
             return {
                 design: newDesign,
-                content: <div className="p-2 text-xs text-success">✅ Aligned {selectedPieces.length} pieces horizontally</div>
+                content: `✅ Aligned ${selectedPieces.length} pieces horizontally`
             }
         }
     },
@@ -598,7 +598,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(kit, designId)
 
             if (selection.selectedPieceIds.length < 2) {
-                return { content: <div className="p-2 text-xs text-warning">⚠️ Select at least 2 pieces to align</div> }
+                return { content: `⚠️ Select at least 2 pieces to align` }
             }
 
             const selectedPieces = design.pieces?.filter(p => selection.selectedPieceIds.includes(p.id_)) || []
@@ -622,7 +622,7 @@ export const designEditorCommands: Command[] = [
 
             return {
                 design: newDesign,
-                content: <div className="p-2 text-xs text-success">✅ Aligned {selectedPieces.length} pieces vertically</div>
+                content: `✅ Aligned ${selectedPieces.length} pieces vertically`
             }
         }
     },
@@ -638,7 +638,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(kit, designId)
 
             if (selection.selectedPieceIds.length < 3) {
-                return { content: <div className="p-2 text-xs text-warning">⚠️ Select at least 3 pieces to distribute</div> }
+                return { content: `⚠️ Select at least 3 pieces to distribute` }
             }
 
             const selectedPieces = design.pieces?.filter(p => selection.selectedPieceIds.includes(p.id_)) || []
@@ -660,7 +660,7 @@ export const designEditorCommands: Command[] = [
 
             return {
                 design: newDesign,
-                content: <div className="p-2 text-xs text-success">✅ Distributed {selectedPieces.length} pieces horizontally</div>
+                content: `✅ Distributed ${selectedPieces.length} pieces horizontally`
             }
         }
     },
@@ -676,7 +676,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(kit, designId)
 
             if (selection.selectedPieceIds.length < 3) {
-                return { content: <div className="p-2 text-xs text-warning">⚠️ Select at least 3 pieces to distribute</div> }
+                return { content: `⚠️ Select at least 3 pieces to distribute` }
             }
 
             const selectedPieces = design.pieces?.filter(p => selection.selectedPieceIds.includes(p.id_)) || []
@@ -698,7 +698,7 @@ export const designEditorCommands: Command[] = [
 
             return {
                 design: newDesign,
-                content: <div className="p-2 text-xs text-success">✅ Distributed {selectedPieces.length} pieces vertically</div>
+                content: `✅ Distributed ${selectedPieces.length} pieces vertically`
             }
         }
     },
@@ -719,7 +719,7 @@ export const designEditorCommands: Command[] = [
             const offset = payload.offset.split(',').map((n: string) => parseFloat(n.trim()))
 
             if (selection.selectedPieceIds.length === 0) {
-                return { content: <div className="p-2 text-xs text-warning">⚠️ No pieces selected to move</div> }
+                return { content: `⚠️ No pieces selected to move` }
             }
 
             let newDesign = design
@@ -739,7 +739,7 @@ export const designEditorCommands: Command[] = [
 
             return {
                 design: newDesign,
-                content: <div className="p-2 text-xs text-success">✅ Moved {selection.selectedPieceIds.length} pieces</div>
+                content: `✅ Moved ${selection.selectedPieceIds.length} pieces`
             }
         }
     },
@@ -758,7 +758,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(kit, designId)
 
             if (selection.selectedPieceIds.length === 0) {
-                return { content: <div className="p-2 text-xs text-warning">⚠️ No pieces selected to rotate</div> }
+                return { content: `⚠️ No pieces selected to rotate` }
             }
 
             const selectedPieces = design.pieces?.filter(p => selection.selectedPieceIds.includes(p.id_)) || []
@@ -789,7 +789,7 @@ export const designEditorCommands: Command[] = [
 
             return {
                 design: newDesign,
-                content: <div className="p-2 text-xs text-success">✅ Rotated {selectedPieces.length} pieces by {payload.angle}°</div>
+                content: `✅ Rotated ${selectedPieces.length} pieces by ${payload.angle}°`
             }
         }
     },
@@ -807,7 +807,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(kit, designId)
 
             if (selection.selectedPieceIds.length === 0) {
-                return { content: <div className="p-2 text-xs text-warning">⚠️ No pieces selected to scale</div> }
+                return { content: `⚠️ No pieces selected to scale` }
             }
 
             const selectedPieces = design.pieces?.filter(p => selection.selectedPieceIds.includes(p.id_)) || []
@@ -834,7 +834,7 @@ export const designEditorCommands: Command[] = [
 
             return {
                 design: newDesign,
-                content: <div className="p-2 text-xs text-success">✅ Scaled {selectedPieces.length} pieces by {payload.factor}x</div>
+                content: `✅ Scaled ${selectedPieces.length} pieces by ${payload.factor}x`
             }
         }
     },
@@ -866,20 +866,19 @@ export const designEditorCommands: Command[] = [
                 )
             }) || []
 
+            const typesList = Array.from(typeCount.entries())
+                .map(([type, count]) => `  • ${type}: ${count}`)
+                .join('\n')
+
             return {
-                content: (
-                    <div className="p-2 text-xs">
-                        <div className="text-secondary mb-2">📊 Design Analysis:</div>
-                        <div className="text-primary">• Pieces: {pieceCount}</div>
-                        <div className="text-primary">• Connections: {connectionCount}</div>
-                        <div className="text-primary">• Fixed pieces: {fixedPieces.length}</div>
-                        <div className="text-primary">• Disconnected pieces: {disconnectedPieces.length}</div>
-                        <div className="text-secondary mt-2">🏷️ Types used:</div>
-                        {Array.from(typeCount.entries()).map(([type, count]) => (
-                            <div key={type} className="text-primary ml-2">• {type}: {count}</div>
-                        ))}
-                    </div>
-                )
+                content: `📊 Design Analysis:
+• Pieces: ${pieceCount}
+• Connections: ${connectionCount}
+• Fixed pieces: ${fixedPieces.length}
+• Disconnected pieces: ${disconnectedPieces.length}
+
+🏷️ Types used:
+${typesList}`
             }
         }
     },
@@ -897,7 +896,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(kit, designId)
 
             if (selection.selectedPieceIds.length === 0) {
-                return { content: <div className="p-2 text-xs text-warning">⚠️ No pieces selected to randomize</div> }
+                return { content: `⚠️ No pieces selected to randomize` }
             }
 
             let newDesign = design
@@ -917,7 +916,7 @@ export const designEditorCommands: Command[] = [
 
             return {
                 design: newDesign,
-                content: <div className="p-2 text-xs text-success">✅ Randomized {selection.selectedPieceIds.length} piece positions</div>
+                content: `✅ Randomized ${selection.selectedPieceIds.length} piece positions`
             }
         }
     },
@@ -936,7 +935,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(kit, designId)
 
             if (selection.selectedPieceIds.length === 0) {
-                return { content: <div className="p-2 text-xs text-warning">⚠️ No pieces selected to arrange</div> }
+                return { content: `⚠️ No pieces selected to arrange` }
             }
 
             const selectedPieces = design.pieces?.filter(p => selection.selectedPieceIds.includes(p.id_)) || []
@@ -958,7 +957,7 @@ export const designEditorCommands: Command[] = [
 
             return {
                 design: newDesign,
-                content: <div className="p-2 text-xs text-success">✅ Arranged {selectedPieces.length} pieces in {columns}-column grid</div>
+                content: `✅ Arranged ${selectedPieces.length} pieces in ${columns}-column grid`
             }
         }
     },
@@ -974,7 +973,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(kit, designId)
 
             if (selection.selectedPieceIds.length === 0) {
-                return { content: <div className="p-2 text-xs text-warning">⚠️ No pieces selected to mirror</div> }
+                return { content: `⚠️ No pieces selected to mirror` }
             }
 
             const selectedPieces = design.pieces?.filter(p => selection.selectedPieceIds.includes(p.id_)) || []
@@ -998,7 +997,7 @@ export const designEditorCommands: Command[] = [
 
             return {
                 design: newDesign,
-                content: <div className="p-2 text-xs text-success">✅ Mirrored {selectedPieces.length} pieces horizontally</div>
+                content: `✅ Mirrored ${selectedPieces.length} pieces horizontally`
             }
         }
     },
@@ -1014,7 +1013,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(kit, designId)
 
             if (selection.selectedPieceIds.length === 0) {
-                return { content: <div className="p-2 text-xs text-warning">⚠️ No pieces selected to mirror</div> }
+                return { content: `⚠️ No pieces selected to mirror` }
             }
 
             const selectedPieces = design.pieces?.filter(p => selection.selectedPieceIds.includes(p.id_)) || []
@@ -1038,7 +1037,7 @@ export const designEditorCommands: Command[] = [
 
             return {
                 design: newDesign,
-                content: <div className="p-2 text-xs text-success">✅ Mirrored {selectedPieces.length} pieces vertically</div>
+                content: `✅ Mirrored ${selectedPieces.length} pieces vertically`
             }
         }
     },
@@ -1055,7 +1054,7 @@ export const designEditorCommands: Command[] = [
             const design = findDesignInKit(kit, designId)
 
             if (selection.selectedPieceIds.length === 0) {
-                return { content: <div className="p-2 text-xs text-warning">⚠️ No pieces selected to export</div> }
+                return { content: `⚠️ No pieces selected to export` }
             }
 
             const selectedPieces = design.pieces?.filter(p => selection.selectedPieceIds.includes(p.id_)) || []
@@ -1074,11 +1073,11 @@ export const designEditorCommands: Command[] = [
             try {
                 await navigator.clipboard.writeText(JSON.stringify(exportData, null, 2))
                 return {
-                    content: <div className="p-2 text-xs text-success">✅ Exported {selectedPieces.length} pieces and {selectedConnections.length} connections to clipboard</div>
+                    content: `✅ Exported ${selectedPieces.length} pieces and ${selectedConnections.length} connections to clipboard`
                 }
             } catch (error) {
                 return {
-                    content: <div className="p-2 text-xs text-error">❌ Failed to copy to clipboard</div>
+                    content: `❌ Failed to copy to clipboard`
                 }
             }
         }
@@ -1093,19 +1092,16 @@ export const designEditorCommands: Command[] = [
         parameters: [],
         execute: async () => {
             const commands = designEditorCommands
+            const commandsList = commands.map(cmd => {
+                const hotkey = cmd.hotkey ? ` (${cmd.hotkey})` : ''
+                return `${cmd.icon || '⚡'} ${cmd.name}${hotkey}
+  - ${cmd.description}`
+            }).join('\n\n')
+
             return {
-                content: (
-                    <div className="p-2">
-                        <div className="text-secondary text-xs mb-2">📚 Available Commands:</div>
-                        {commands.map(cmd => (
-                            <div key={cmd.id} className="mb-1">
-                                <div className="text-primary font-mono text-xs">{cmd.icon || '⚡'} {cmd.name}</div>
-                                <div className="text-gray-400 ml-2 text-xs">- {cmd.description}</div>
-                                {cmd.hotkey && <div className="text-warning ml-2 text-xs">({cmd.hotkey})</div>}
-                            </div>
-                        ))}
-                    </div>
-                )
+                content: `📚 Available Commands:
+
+${commandsList}`
             }
         }
     },

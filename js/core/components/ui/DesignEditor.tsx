@@ -94,6 +94,7 @@ import { ToggleGroup, ToggleGroupItem } from '@semio/js/components/ui/ToggleGrou
 import { SortableTreeItems, Tree, TreeItem, TreeSection } from '@semio/js/components/ui/Tree'
 import { Generator } from '@semio/js/lib/utils'
 import { orientDesign } from '../../semio'
+import Console, { CommandContext, commandRegistry } from './Console'
 import { designEditorCommands } from './designEditorCommands'
 
 // Helper functions for commands
