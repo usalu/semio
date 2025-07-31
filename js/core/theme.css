@@ -1,57 +1,57 @@
 @font-face {
-  font-family: "Anta";
-  src: url("../../assets/fonts/anta/latin.woff2") format("woff2");
+  font-family: 'Anta';
+  src: url('../../assets/fonts/anta/latin.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Anta Extended";
-  src: url("../../assets/fonts/anta/latin-ext.woff2") format("woff2");
+  font-family: 'Anta Extended';
+  src: url('../../assets/fonts/anta/latin-ext.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Anta Math";
-  src: url("../../assets/fonts/anta/math.woff2") format("woff2");
+  font-family: 'Anta Math';
+  src: url('../../assets/fonts/anta/math.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Anta Symbols";
-  src: url("../../assets/fonts/anta/symbols.woff2") format("woff2");
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Kelly Slab";
-  src: url("../../assets/fonts/kelly-slab/latin.woff2") format("woff2");
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Kelly Slab Extended";
-  src: url("../../assets/fonts/kelly-slab/latin-ext.woff2") format("woff2");
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Kelly Slab Cyrillic";
-  src: url("../../assets/fonts/kelly-slab/cyrillic.woff2") format("woff2");
+  font-family: 'Anta Symbols';
+  src: url('../../assets/fonts/anta/symbols.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Share Tech Mono";
-  src: url("../../assets/fonts/share-tech-mono/latin.woff2") format("woff2");
+  font-family: 'Kelly Slab';
+  src: url('../../assets/fonts/kelly-slab/latin.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Kelly Slab Extended';
+  src: url('../../assets/fonts/kelly-slab/latin-ext.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Kelly Slab Cyrillic';
+  src: url('../../assets/fonts/kelly-slab/cyrillic.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Share Tech Mono';
+  src: url('../../assets/fonts/share-tech-mono/latin.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -59,92 +59,92 @@
 
 /* Noto Emoji Font */
 @font-face {
-  font-family: "Noto Emoji";
-  src: url("../../assets/fonts/noto-emoji/emoji-400.woff2") format("woff2");
+  font-family: 'Noto Emoji';
+  src: url('../../assets/fonts/noto-emoji/emoji-400.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Noto Emoji 0";
-  src: url("../../assets/fonts/noto-emoji/0-400.woff2") format("woff2");
+  font-family: 'Noto Emoji 0';
+  src: url('../../assets/fonts/noto-emoji/0-400.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Noto Emoji 1";
-  src: url("../../assets/fonts/noto-emoji/1-400.woff2") format("woff2");
+  font-family: 'Noto Emoji 1';
+  src: url('../../assets/fonts/noto-emoji/1-400.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Noto Emoji 2";
-  src: url("../../assets/fonts/noto-emoji/2-400.woff2") format("woff2");
+  font-family: 'Noto Emoji 2';
+  src: url('../../assets/fonts/noto-emoji/2-400.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Noto Emoji 3";
-  src: url("../../assets/fonts/noto-emoji/3-400.woff2") format("woff2");
+  font-family: 'Noto Emoji 3';
+  src: url('../../assets/fonts/noto-emoji/3-400.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Noto Emoji 4";
-  src: url("../../assets/fonts/noto-emoji/4-400.woff2") format("woff2");
+  font-family: 'Noto Emoji 4';
+  src: url('../../assets/fonts/noto-emoji/4-400.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Noto Emoji 5";
-  src: url("../../assets/fonts/noto-emoji/5-400.woff2") format("woff2");
+  font-family: 'Noto Emoji 5';
+  src: url('../../assets/fonts/noto-emoji/5-400.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Noto Emoji 6";
-  src: url("../../assets/fonts/noto-emoji/6-400.woff2") format("woff2");
+  font-family: 'Noto Emoji 6';
+  src: url('../../assets/fonts/noto-emoji/6-400.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Noto Emoji 7";
-  src: url("../../assets/fonts/noto-emoji/7-400.woff2") format("woff2");
+  font-family: 'Noto Emoji 7';
+  src: url('../../assets/fonts/noto-emoji/7-400.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Noto Emoji 8";
-  src: url("../../assets/fonts/noto-emoji/8-400.woff2") format("woff2");
+  font-family: 'Noto Emoji 8';
+  src: url('../../assets/fonts/noto-emoji/8-400.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Noto Emoji 9";
-  src: url("../../assets/fonts/noto-emoji/9-400.woff2") format("woff2");
+  font-family: 'Noto Emoji 9';
+  src: url('../../assets/fonts/noto-emoji/9-400.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Noto Emoji 10";
-  src: url("../../assets/fonts/noto-emoji/10-400.woff2") format("woff2");
+  font-family: 'Noto Emoji 10';
+  src: url('../../assets/fonts/noto-emoji/10-400.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Noto Emoji 11";
-  src: url("../../assets/fonts/noto-emoji/11-400.woff2") format("woff2");
+  font-family: 'Noto Emoji 11';
+  src: url('../../assets/fonts/noto-emoji/11-400.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -196,20 +196,16 @@
   --color-light: #f7f3e3;
   /* Font families */
   --font-sans:
-    Anta, "Anta Extended", "Anta Math", "Anta Symbols", "Noto Emoji",
-    "Noto Emoji 0", "Noto Emoji 1", "Noto Emoji 2", "Noto Emoji 3",
-    "Noto Emoji 4", "Noto Emoji 5", "Noto Emoji 6", "Noto Emoji 7",
-    "Noto Emoji 8", "Noto Emoji 9", "Noto Emoji 10", "Noto Emoji 11";
+    Anta, 'Anta Extended', 'Anta Math', 'Anta Symbols', 'Noto Emoji', 'Noto Emoji 0', 'Noto Emoji 1', 'Noto Emoji 2',
+    'Noto Emoji 3', 'Noto Emoji 4', 'Noto Emoji 5', 'Noto Emoji 6', 'Noto Emoji 7', 'Noto Emoji 8', 'Noto Emoji 9',
+    'Noto Emoji 10', 'Noto Emoji 11';
   --font-serif:
-    "Kelly Slab", "Kelly Slab Extended", "Kelly Slab Cyrillic", "Noto Emoji",
-    "Noto Emoji 0", "Noto Emoji 1", "Noto Emoji 2", "Noto Emoji 3",
-    "Noto Emoji 4", "Noto Emoji 5", "Noto Emoji 6", "Noto Emoji 7",
-    "Noto Emoji 8", "Noto Emoji 9", "Noto Emoji 10", "Noto Emoji 11";
+    'Kelly Slab', 'Kelly Slab Extended', 'Kelly Slab Cyrillic', 'Noto Emoji', 'Noto Emoji 0', 'Noto Emoji 1',
+    'Noto Emoji 2', 'Noto Emoji 3', 'Noto Emoji 4', 'Noto Emoji 5', 'Noto Emoji 6', 'Noto Emoji 7', 'Noto Emoji 8',
+    'Noto Emoji 9', 'Noto Emoji 10', 'Noto Emoji 11';
   --font-mono:
-    "Shart Tech Mono", "Noto Emoji", "Noto Emoji 0", "Noto Emoji 1",
-    "Noto Emoji 2", "Noto Emoji 3", "Noto Emoji 4", "Noto Emoji 5",
-    "Noto Emoji 6", "Noto Emoji 7", "Noto Emoji 8", "Noto Emoji 9",
-    "Noto Emoji 10", "Noto Emoji 11";
+    'Share Tech Mono', 'Noto Emoji', 'Noto Emoji 0', 'Noto Emoji 1', 'Noto Emoji 2', 'Noto Emoji 3', 'Noto Emoji 4',
+    'Noto Emoji 5', 'Noto Emoji 6', 'Noto Emoji 7', 'Noto Emoji 8', 'Noto Emoji 9', 'Noto Emoji 10', 'Noto Emoji 11';
   /* Layout spacing */
   --spacing-compact: 0.2rem;
   --spacing-touch: 0.4rem;

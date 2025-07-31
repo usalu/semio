@@ -20,7 +20,6 @@
 // #endregion
 export { default as Console, commandRegistry as inkCommandRegistry } from '@semio/js/components/ui/Console'
 export { default as DesignEditor, FullscreenPanel, useDesignEditor } from '@semio/js/components/ui/DesignEditor'
-export { designEditorCommands } from '@semio/js/components/ui/designEditorCommands'
 export { default as Diagram } from '@semio/js/components/ui/Diagram'
 export { default as File } from '@semio/js/components/ui/File'
 export { default as GrasshopperCatalogue } from '@semio/js/components/ui/GrasshopperCatalogue'
@@ -30,7 +29,8 @@ export { default as eslintConfig } from '@semio/js/eslint.config'
 export { extractFilesAndCreateUrls } from '@semio/js/lib/utils'
 export { default as postcssConfig } from '@semio/js/postcss.config'
 export {
-  addConnectionsToDesign, addConnectionsToDesignDiff, addConnectionToDesign, addConnectionToDesignDiff, addPiecesToDesign, addPiecesToDesignDiff, addPieceToDesign, addPieceToDesignDiff, applyDesignDiff, arePortsCompatible, colorPortsForTypes, connectionIdLikeToConnectionId, ConnectionSchema, deserialize, designIdLikeToDesignId, DesignSchema, DiffStatus, findConnectionInDesign, findDesignInKit, findPieceConnectionsInDesign, findPieceInDesign, findPieceTypeInDesign, findPortInType, findQualityValue, findReplacableTypesForPieceInDesign,
+  addConnectionsToDesign, addConnectionsToDesignDiff, addConnectionToDesign, addConnectionToDesignDiff, addPiecesToDesign, addPiecesToDesignDiff, addPieceToDesign, addPieceToDesignDiff, applyDesignDiff, arePortsCompatible,
+  CameraSchema, colorPortsForTypes, connectionIdLikeToConnectionId, ConnectionSchema, deserialize, designIdLikeToDesignId, DesignSchema, DiffStatus, findConnectionInDesign, findDesignInKit, findPieceConnectionsInDesign, findPieceInDesign, findPieceTypeInDesign, findPortInType, findQualityValue, findReplacableTypesForPieceInDesign,
   findReplacableTypesForPiecesInDesign, findStaleConnectionsInDesign, findTypeInKit, fixPieceInDesign, fixPiecesInDesign, flattenDesign, getPieceRepresentationUrls, ICON_WIDTH, isConnectionInDesign, isPortInUse, isSameConnection, isSameDesign, isSamePiece, isSamePort, isSameRepresentation, isSameType, kitIdLikeToKitId, KitSchema, mergeDesigns,
   pieceIdLikeToPieceId, PieceSchema, piecesMetadata, PlaneSchema, planeToMatrix, PointSchema, portIdLikeToPortId, PortSchema, qualityIdLikeToQualityId, QualitySchema,
   removeConnectionFromDesign, removeConnectionFromDesignDiff, removeConnectionsFromDesign, removeConnectionsFromDesignDiff, removePieceFromDesign, removePieceFromDesignDiff, removePiecesAndConnectionsFromDesign, removePiecesFromDesign, removePiecesFromDesignDiff,
@@ -40,6 +40,7 @@ export {
 } from '@semio/js/semio'
 export type {
   Author,
+  Camera,
   Connection, ConnectionDiff, ConnectionId,
   ConnectionsDiff, Design,
   DesignDiff,

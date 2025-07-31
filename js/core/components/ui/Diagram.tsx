@@ -74,10 +74,32 @@ import {
 // import '@xyflow/react/dist/base.css';
 import '@semio/js/globals.css'
 import '@xyflow/react/dist/style.css'
-import { DesignEditorSelection, useDesignEditor } from './DesignEditor'
+import { DesignEditorSelection, Presence, useDesignEditor } from './DesignEditor'
 
 
 //#region React Flow
+
+const PresenceDiagram: FC<Presence> = ({ name, cursor, camera }) => {
+  if (!cursor) return null
+  return (
+    <ViewportPortal>
+      <div
+        style={{
+          transform: `translate(${cursor.x * ICON_WIDTH}px, ${-cursor.y * ICON_WIDTH}px)`,
+          position: 'absolute',
+          pointerEvents: 'none',
+          zIndex: 1000
+        }}
+      >
+        <div className="flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs shadow-lg">
+          <div className="w-2 h-2 bg-primary-foreground rounded-full"></div>
+          {name}
+        </div>
+      </div>
+    </ViewportPortal>
+  )
+}
+
 
 type HelperLine = {
   type: 'horizontal' | 'vertical' | 'equalDistance'
@@ -216,9 +238,9 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
           {id_}
         </text>
       </svg>
-      {ports?.map((port: Port) => (
+      {ports?.map((port: Port, portIndex: number) => (
         <PortHandle
-          key={`${id_}-${port.id_}`}
+          key={`${id}-port-${portIndex}-${port.id_}`}
           port={port}
           pieceId={id_}
           selected={selection.selectedPiecePortId?.pieceId === id_ && selection.selectedPiecePortId?.portId === port.id_}
@@ -358,9 +380,9 @@ const HelperLines: React.FC<{ lines: HelperLine[], nodes: { id: string, position
   )
 }
 
-const pieceToNode = (piece: Piece, type: Type, center: DiagramPoint, selected: boolean): PieceNode => ({
+const pieceToNode = (piece: Piece, type: Type, center: DiagramPoint, selected: boolean, index: number): PieceNode => ({
   type: 'piece',
-  id: piece.id_,
+  id: `piece-${index}-${piece.id_}`,
   position: {
     x: center.x * ICON_WIDTH || 0,
     y: -center.y * ICON_WIDTH || 0
@@ -370,16 +392,34 @@ const pieceToNode = (piece: Piece, type: Type, center: DiagramPoint, selected: b
   className: selected ? 'selected' : ''
 })
 
-const connectionToEdge = (connection: Connection, selected: boolean, isParentConnection: boolean = false): ConnectionEdge => ({
-  type: 'connection',
-  id: `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`,
-  source: connection.connecting.piece.id_,
-  sourceHandle: connection.connecting.port.id_,
-  target: connection.connected.piece.id_,
-  targetHandle: connection.connected.port.id_,
-  data: { connection, isParentConnection },
-  selected
-})
+// Utility function to extract piece ID from node ID (format: piece-{index}-{pieceId})
+const extractPieceIdFromNodeId = (nodeId: string): string => {
+  return nodeId.split('-').slice(2).join('-')
+}
+
+// Utility function to extract piece ID from node (works with both node.id and node.data.piece.id_)
+const getPieceIdFromNode = (node: DiagramNode): string => {
+  return node.data.piece.id_
+}
+
+const connectionToEdge = (connection: Connection, selected: boolean, isParentConnection: boolean = false, pieceIndexMap: Map<string, number>, connectionIndex: number = 0): ConnectionEdge => {
+  const sourceIndex = pieceIndexMap.get(connection.connecting.piece.id_) ?? 0
+  const targetIndex = pieceIndexMap.get(connection.connected.piece.id_) ?? 0
+  const connectingPortId = connection.connecting.port.id_ ?? 'undefined'
+  const connectedPortId = connection.connected.port.id_ ?? 'undefined'
+  const sourceNodeId = `piece-${sourceIndex}-${connection.connecting.piece.id_}`
+  const targetNodeId = `piece-${targetIndex}-${connection.connected.piece.id_}`
+  return {
+    type: 'connection',
+    id: `${sourceNodeId}:${connectingPortId} -- ${targetNodeId}:${connectedPortId}:${connectionIndex}`,
+    source: sourceNodeId,
+    sourceHandle: connection.connecting.port.id_,
+    target: targetNodeId,
+    targetHandle: connection.connected.port.id_,
+    data: { connection, isParentConnection },
+    selected
+  }
+}
 
 const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEditorSelection) => {
   const design = findDesignInKit(kit, designId)
@@ -388,7 +428,22 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
   const metadata = piecesMetadata(kit, designId)
 
   const pieceNodes = design.pieces?.map(
-    (piece, i) => pieceToNode(piece, findTypeInKit(kit, piece.type)!, centers![i]!, selection?.selectedPieceIds.includes(piece.id_) ?? false)) ?? []
+    (piece, i) => pieceToNode(piece, findTypeInKit(kit, piece.type)!, centers![i]!, selection?.selectedPieceIds.includes(piece.id_) ?? false, i)) ?? []
+
+  // Create a map of piece IDs to their array indices for unique node IDs
+  // Handle duplicate piece IDs by mapping to the first occurrence index
+  const pieceIndexMap = new Map<string, number>()
+  design.pieces?.forEach((piece, index) => {
+    if (!pieceIndexMap.has(piece.id_)) {
+      pieceIndexMap.set(piece.id_, index)
+    }
+  })
+
+  // Also create a map from the full node ID to the piece index for connections
+  const nodeIdToPieceIndexMap = new Map<string, number>()
+  design.pieces?.forEach((piece, index) => {
+    nodeIdToPieceIndexMap.set(`piece-${index}-${piece.id_}`, index)
+  })
 
   const parentConnectionId = selection?.selectedPieceIds.length === 1 && selection.selectedConnections.length === 0
     ? (() => {
@@ -402,7 +457,7 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
     : null
 
   const connectionEdges =
-    design.connections?.map((connection) => {
+    design.connections?.map((connection, connectionIndex) => {
       const isSelected = selection?.selectedConnections.some(
         (c: { connectingPieceId: string; connectedPieceId: string }) =>
           c.connectingPieceId === connection.connecting.piece.id_ &&
@@ -412,7 +467,7 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
       const connectionId = `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`
       const isParentConnection = parentConnectionId === connectionId || parentConnectionId === `${connection.connected.piece.id_} -- ${connection.connecting.piece.id_}`
 
-      return connectionToEdge(connection, isSelected, isParentConnection)
+      return connectionToEdge(connection, isSelected, isParentConnection, pieceIndexMap, connectionIndex)
     }) ?? []
   return { nodes: pieceNodes, edges: connectionEdges }
 }
@@ -421,7 +476,7 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
 
 
 const Diagram: FC = () => {
-  const { kit: originalKit, designId, selection, designDiff, fullscreenPanel,
+  const { kit: originalKit, designId, selection, designDiff, fullscreenPanel, others,
     setDesign, deselectAll, selectPiece, addPieceToSelection, removePieceFromSelection, selectConnection, addConnectionToSelection, removeConnectionFromSelection,
     toggleDiagramFullscreen, startTransaction, finalizeTransaction, abortTransaction, addConnections, setConnections, setPieces } = useDesignEditor();
   if (!originalKit) return null
@@ -458,9 +513,10 @@ const Diagram: FC = () => {
   //#region Actions
   const onNodeClick = (e: React.MouseEvent, node: DiagramNode) => {
     e.stopPropagation()
-    if (e.ctrlKey || e.metaKey) removePieceFromSelection({ id_: node.data.piece.id_ })
-    else if (e.shiftKey) addPieceToSelection({ id_: node.data.piece.id_ })
-    else selectPiece({ id_: node.data.piece.id_ })
+    const pieceId = getPieceIdFromNode(node)
+    if (e.ctrlKey || e.metaKey) removePieceFromSelection({ id_: pieceId })
+    else if (e.shiftKey) addPieceToSelection({ id_: pieceId })
+    else selectPiece({ id_: pieceId })
   }
 
   const onEdgeClick = (e: React.MouseEvent, edge: DiagramEdge) => {
@@ -482,13 +538,14 @@ const Diagram: FC = () => {
     useCallback(
       (event: any, node: Node) => {
         const currentSelectedIds = selection?.selectedPieceIds ?? []
-        const isNodeSelected = currentSelectedIds.includes(node.id)
+        const pieceId = getPieceIdFromNode(node as DiagramNode)
+        const isNodeSelected = currentSelectedIds.includes(pieceId)
         const ctrlKey = event.ctrlKey || event.metaKey
         const shiftKey = event.shiftKey
 
-        if (ctrlKey) isNodeSelected ? removePieceFromSelection({ id_: node.id }) : addPieceToSelection({ id_: node.id })
-        else if (shiftKey) !isNodeSelected ? addPieceToSelection({ id_: node.id }) : selectPiece({ id_: node.id })
-        else if (!isNodeSelected) selectPiece({ id_: node.id })
+        if (ctrlKey) isNodeSelected ? removePieceFromSelection({ id_: pieceId }) : addPieceToSelection({ id_: pieceId })
+        else if (shiftKey) !isNodeSelected ? addPieceToSelection({ id_: pieceId }) : selectPiece({ id_: pieceId })
+        else if (!isNodeSelected) selectPiece({ id_: pieceId })
 
         startTransaction()
         setDragState({ lastPostition: { x: node.position.x, y: node.position.y } })
@@ -508,7 +565,7 @@ const Diagram: FC = () => {
     const metadata = piecesMetadata(kit, designId)
 
     const currentHelperLines: HelperLine[] = []
-    const nonSelectedNodes = nodes.filter((n) => !(selection?.selectedPieceIds ?? []).includes(n.id))
+    const nonSelectedNodes = nodes.filter((n) => !(selection?.selectedPieceIds ?? []).includes(getPieceIdFromNode(n)))
     const draggedCenterX = node.position.x + ICON_WIDTH / 2
     const draggedCenterY = node.position.y + ICON_WIDTH / 2
 
@@ -516,7 +573,7 @@ const Diagram: FC = () => {
     let updatedPieces: PieceDiff[] = []
     let updatedConnections: ConnectionDiff[] = []
 
-    for (const selectedNode of nodes.filter((n) => selection?.selectedPieceIds.includes(n.id))) {
+    for (const selectedNode of nodes.filter((n) => selection?.selectedPieceIds.includes(getPieceIdFromNode(n)))) {
       const piece = selectedNode.data.piece
       const type = selectedNode.data.type
       const fixedPieceId = metadata.get(piece.id_)!.fixedPieceId
@@ -931,8 +988,8 @@ const Diagram: FC = () => {
         node.position.y = draggedY
       }
 
-      for (const otherNode of nodes.filter((n) => !(selection.selectedPieceIds ?? []).includes(n.id))) {
-        const existingConnection = design.connections?.find((c) => isSameConnection(c, { connected: { piece: { id_: selectedNode.id } }, connecting: { piece: { id_: otherNode.id } } }))
+      for (const otherNode of nodes.filter((n) => !(selection.selectedPieceIds ?? []).includes(getPieceIdFromNode(n)))) {
+        const existingConnection = design.connections?.find((c) => isSameConnection(c, { connected: { piece: { id_: selectedNode.data.piece.id_ } }, connecting: { piece: { id_: otherNode.data.piece.id_ } } }))
         if (existingConnection) continue
         const otherInternalNode = reactFlowInstance.getInternalNode(otherNode.id)!
         for (const handle of selectedInternalNode.internals.handleBounds?.source ?? []) {
@@ -946,8 +1003,8 @@ const Diagram: FC = () => {
             const distance = Math.sqrt(dx * dx + dy * dy)
             if (distance < closestDistance && distance < MIN_DISTANCE) {
               closestConnection = {
-                connected: { piece: { id_: otherNode.id }, port: { id_: otherHandle.id! } },
-                connecting: { piece: { id_: selectedInternalNode.id }, port: { id_: handle.id! } },
+                connected: { piece: { id_: otherNode.data.piece.id_ }, port: { id_: otherHandle.id! } },
+                connecting: { piece: { id_: selectedNode.data.piece.id_ }, port: { id_: handle.id! } },
                 x: ((selectedInternalNode.internals.positionAbsolute.x + handle.x) - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x)) / ICON_WIDTH,
                 y: -(((selectedInternalNode.internals.positionAbsolute.y + handle.y) - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y)) / ICON_WIDTH)
               }
@@ -967,10 +1024,13 @@ const Diagram: FC = () => {
       else {
         if (!piece.center) {
 
-          const parentPieceId = metadata.get(selectedNode.id)!.parentPieceId!
-          const parentInternalNode = reactFlowInstance.getInternalNode(parentPieceId)
-          if (!parentInternalNode) throw new Error(`Internal node not found for ${parentPieceId}`)
-          const parentConnection = findConnectionInDesign(design, { connected: { piece: { id_: selectedNode.id } }, connecting: { piece: { id_: parentPieceId } } })
+          const parentPieceId = metadata.get(selectedNode.data.piece.id_)!.parentPieceId!
+          // Find the parent node by looking for a node with the matching piece ID
+          const parentNode = nodes.find(n => n.data.piece.id_ === parentPieceId)
+          if (!parentNode) throw new Error(`Parent node not found for piece ${parentPieceId}`)
+          const parentInternalNode = reactFlowInstance.getInternalNode(parentNode.id)
+          if (!parentInternalNode) throw new Error(`Internal node not found for ${parentNode.id}`)
+          const parentConnection = findConnectionInDesign(design, { connected: { piece: { id_: selectedNode.data.piece.id_ } }, connecting: { piece: { id_: parentPieceId } } })
           // const isSelectedConnecting = parentConnection.connecting.piece.id_ === selectedNode.id
           // const selectedInternalNode = reactFlowInstance.getInternalNode(selectedNode.id)!
           // const handle = selectedInternalNode.internals.handleBounds?.source?.find((h) => h.id === (isSelectedConnecting ? parentConnection.connected.port.id_ : parentConnection.connecting.port.id_))
@@ -1018,9 +1078,13 @@ const Diagram: FC = () => {
       const targetHandle = (targetInternalNode.internals.handleBounds?.source ?? []).find((h) => h.id === params.targetHandle)
       if (!sourceHandle || !targetHandle) return
 
+      // Extract piece IDs from node IDs (format: piece-{index}-{pieceId})
+      const sourcePieceId = extractPieceIdFromNodeId(params.source!)
+      const targetPieceId = extractPieceIdFromNodeId(params.target!)
+
       const newConnection = {
-        connected: { piece: { id_: params.source! }, port: { id_: params.sourceHandle! } },
-        connecting: { piece: { id_: params.target! }, port: { id_: params.targetHandle! } },
+        connected: { piece: { id_: sourcePieceId }, port: { id_: params.sourceHandle! } },
+        connecting: { piece: { id_: targetPieceId }, port: { id_: params.targetHandle! } },
         x: ((sourceInternalNode.internals.positionAbsolute.x + sourceHandle.x) - (targetInternalNode.internals.positionAbsolute.x + targetHandle.x)) / ICON_WIDTH,
         y: -(((sourceInternalNode.internals.positionAbsolute.y + sourceHandle.y) - (targetInternalNode.internals.positionAbsolute.y + targetHandle.y)) / ICON_WIDTH)
       }
@@ -1028,7 +1092,7 @@ const Diagram: FC = () => {
       const design = findDesignInKit(kit, designId)
       if ((design.connections ?? []).find((c) => isSameConnection(c, newConnection))) return
       const newConnections = [...(design.connections ?? []), newConnection]
-      const updatedPieces = design.pieces?.map((piece) => (isSamePiece(piece, { id_: params.source! })) ? { ...piece, center: undefined, plane: undefined } : piece)
+      const updatedPieces = design.pieces?.map((piece) => (isSamePiece(piece, { id_: sourcePieceId })) ? { ...piece, center: undefined, plane: undefined } : piece)
       setDesign({ ...design, connections: newConnections, pieces: updatedPieces })
     },
     [setDesign, kit, designId, reactFlowInstance, design]
@@ -1075,6 +1139,9 @@ const Diagram: FC = () => {
           />
         )}
         <ViewportPortal>⌞</ViewportPortal>
+        {others.map((presence, idx) => (
+          <PresenceDiagram key={`presence-${idx}-${presence.name}-${presence.cursor?.x || 0}-${presence.cursor?.y || 0}`} {...presence} />
+        ))}
       </ReactFlow>
       <HelperLines lines={helperLines} nodes={nodes} />
     </div>

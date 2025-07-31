@@ -52,16 +52,13 @@ export const RepresentationSchema = z.object({ url: z.string(), description: z.s
 export const RepresentationIdSchema = z.object({ tags: z.array(z.string()).optional() })
 export const RepresentationIdLikeSchema = z.union([RepresentationSchema, RepresentationIdSchema, z.array(z.string()), z.string(), z.null(), z.undefined()])
 
-// https://github.com/usalu/semio#-diagrampoint-
+// https://github.com/usalu/semio#-diagram-
 export const DiagramPointSchema = z.object({ x: z.number(), y: z.number() })
-
-// https://github.com/usalu/semio#-point-
-export const PointSchema = z.object({ x: z.number(), y: z.number(), z: z.number() })
-
-// https://github.com/usalu/semio#-vector-
-export const VectorSchema = z.object({ x: z.number(), y: z.number(), z: z.number() })
+export const DiagramVectorSchema = z.object({ x: z.number(), y: z.number() })
 
 // https://github.com/usalu/semio#-plane-
+export const PointSchema = z.object({ x: z.number(), y: z.number(), z: z.number() })
+export const VectorSchema = z.object({ x: z.number(), y: z.number(), z: z.number() })
 export const PlaneSchema = z.object({ origin: PointSchema, xAxis: VectorSchema, yAxis: VectorSchema })
 
 // https://github.com/usalu/semio#-port-
@@ -122,7 +119,8 @@ export const KitIdLikeSchema = z.union([KitSchema, KitIdSchema, z.tuple([z.strin
 
 //#endregion Persistence
 
-//#region Diffs
+//#region Awareness
+export const CameraSchema = z.object({ position: PointSchema, forward: VectorSchema, up: VectorSchema })
 
 export const AuthorDiffSchema = z.object({ name: z.string().optional(), email: z.string().optional() })
 export const AuthorsDiffSchema = z.object({ removed: z.array(z.string()).optional(), updated: z.array(AuthorDiffSchema).optional(), added: z.array(AuthorSchema).optional() })
@@ -166,7 +164,7 @@ export const KitDiffSchema = z.object({
 
 export const DiffStatusSchema = z.enum(['unchanged', 'added', 'removed', 'modified'])
 
-//#endregion Diffs
+//#endregion Awareness
 
 export type Quality = z.infer<typeof QualitySchema>
 export type QualityId = z.infer<typeof QualityIdSchema>
@@ -175,6 +173,7 @@ export type Representation = z.infer<typeof RepresentationSchema>
 export type RepresentationId = z.infer<typeof RepresentationIdSchema>
 export type RepresentationIdLike = z.infer<typeof RepresentationIdLikeSchema>
 export type DiagramPoint = z.infer<typeof DiagramPointSchema>
+export type DiagramVector = z.infer<typeof DiagramVectorSchema>
 export type Point = z.infer<typeof PointSchema>
 export type Vector = z.infer<typeof VectorSchema>
 export type Plane = z.infer<typeof PlaneSchema>
@@ -213,6 +212,7 @@ export type QualitiesDiff = z.infer<typeof QualitiesDiffSchema>
 export type RepresentationsDiff = z.infer<typeof RepresentationsDiffSchema>
 export type PortsDiff = z.infer<typeof PortsDiffSchema>
 export type TypesDiff = z.infer<typeof TypesDiffSchema>
+export type Camera = z.infer<typeof CameraSchema>
 
 export enum DiffStatus { Unchanged = 'unchanged', Added = 'added', Removed = 'removed', Modified = 'modified' }
 
@@ -228,9 +228,14 @@ export const serialize = {
   connection: (value: Connection): string => JSON.stringify(ConnectionSchema.parse(value), null, 2),
   port: (value: Port): string => JSON.stringify(PortSchema.parse(value), null, 2),
   quality: (value: Quality): string => JSON.stringify(QualitySchema.parse(value), null, 2),
+  diagramPoint: (value: DiagramPoint): string => JSON.stringify(DiagramPointSchema.parse(value), null, 2),
+  diagramVector: (value: DiagramVector): string => JSON.stringify(DiagramVectorSchema.parse(value), null, 2),
   plane: (value: Plane): string => JSON.stringify(PlaneSchema.parse(value), null, 2),
   point: (value: Point): string => JSON.stringify(PointSchema.parse(value), null, 2),
-  vector: (value: Vector): string => JSON.stringify(VectorSchema.parse(value), null, 2)
+  vector: (value: Vector): string => JSON.stringify(VectorSchema.parse(value), null, 2),
+  author: (value: Author): string => JSON.stringify(AuthorSchema.parse(value), null, 2),
+  location: (value: Location): string => JSON.stringify(LocationSchema.parse(value), null, 2),
+  representation: (value: Representation): string => JSON.stringify(RepresentationSchema.parse(value), null, 2)
 }
 export const deserialize = {
   kit: (json: string): Kit => KitSchema.parse(JSON.parse(json)),
@@ -240,9 +245,14 @@ export const deserialize = {
   connection: (json: string): Connection => ConnectionSchema.parse(JSON.parse(json)),
   port: (json: string): Port => PortSchema.parse(JSON.parse(json)),
   quality: (json: string): Quality => QualitySchema.parse(JSON.parse(json)),
+  diagramPoint: (json: string): DiagramPoint => DiagramPointSchema.parse(JSON.parse(json)),
+  diagramVector: (json: string): DiagramVector => DiagramVectorSchema.parse(JSON.parse(json)),
   plane: (json: string): Plane => PlaneSchema.parse(JSON.parse(json)),
   point: (json: string): Point => PointSchema.parse(JSON.parse(json)),
-  vector: (json: string): Vector => VectorSchema.parse(JSON.parse(json))
+  vector: (json: string): Vector => VectorSchema.parse(JSON.parse(json)),
+  author: (json: string): Author => AuthorSchema.parse(JSON.parse(json)),
+  location: (json: string): Location => LocationSchema.parse(JSON.parse(json)),
+  representation: (json: string): Representation => RepresentationSchema.parse(JSON.parse(json))
 }
 
 export const validate = {
@@ -255,7 +265,10 @@ export const validate = {
   quality: (data: unknown): Quality => QualitySchema.parse(data),
   plane: (data: unknown): Plane => PlaneSchema.parse(data),
   point: (data: unknown): Point => PointSchema.parse(data),
-  vector: (data: unknown): Vector => VectorSchema.parse(data)
+  vector: (data: unknown): Vector => VectorSchema.parse(data),
+  author: (data: unknown): Author => AuthorSchema.parse(data),
+  location: (data: unknown): Location => LocationSchema.parse(data),
+  representation: (data: unknown): Representation => RepresentationSchema.parse(data)
 }
 
 export const safeParse = {
@@ -268,7 +281,10 @@ export const safeParse = {
   quality: (data: unknown) => QualitySchema.safeParse(data),
   plane: (data: unknown) => PlaneSchema.safeParse(data),
   point: (data: unknown) => PointSchema.safeParse(data),
-  vector: (data: unknown) => VectorSchema.safeParse(data)
+  vector: (data: unknown) => VectorSchema.safeParse(data),
+  author: (data: unknown) => AuthorSchema.safeParse(data),
+  location: (data: unknown) => LocationSchema.safeParse(data),
+  representation: (data: unknown) => RepresentationSchema.safeParse(data)
 }
 
 export const schemas = {
@@ -286,6 +302,7 @@ export const schemas = {
   Location: LocationSchema,
   Representation: RepresentationSchema,
   DiagramPoint: DiagramPointSchema,
+  DiagramVector: DiagramVectorSchema,
   TypeId: TypeIdSchema,
   PieceId: PieceIdSchema,
   PortId: PortIdSchema,

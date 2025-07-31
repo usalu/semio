@@ -49,9 +49,24 @@ import {
 } from '@semio/js'
 import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
+import { PresenceOther } from './DesignEditor'
 
 const getComputedColor = (variable: string): string => {
   return getComputedStyle(document.documentElement).getPropertyValue(variable).trim()
+}
+
+const PresenceThree: FC<PresenceOther> = ({ name, cursor, camera }) => {
+  if (!camera) return null
+  const cameraHelper = useMemo(() => {
+    const perspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1)
+    perspectiveCamera.position.set(camera.position.x, -camera.position.z, camera.position.y)
+    perspectiveCamera.lookAt(new THREE.Vector3(camera.forward.x, -camera.forward.z, camera.forward.y))
+    perspectiveCamera.updateProjectionMatrix()
+    perspectiveCamera.updateMatrixWorld()
+    return new THREE.CameraHelper(perspectiveCamera)
+  }, [camera.position.x, camera.position.y, camera.position.z, camera.forward.x, camera.forward.y, camera.forward.z])
+
+  return <primitive object={cameraHelper} />
 }
 
 interface PlaneThreeProps {
@@ -218,7 +233,7 @@ const ModelPiece: FC<ModelPieceProps> = ({
 }
 
 const ModelDesign: FC = () => {
-  const { kit: originalKit, designId, selection, designDiff, fileUrls, removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = useDesignEditor()
+  const { kit: originalKit, designId, selection, designDiff, fileUrls, others, removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = useDesignEditor()
 
   if (!originalKit) return null
   const design = applyDesignDiff(findDesignInKit(originalKit, designId), designDiff, true)
@@ -293,6 +308,9 @@ const ModelDesign: FC = () => {
             onSelect={onSelect}
             onPieceUpdate={onPieceUpdate}
           />
+        ))}
+        {others.map(presence => (
+          <PresenceThree key={presence.name} {...presence} />
         ))}
       </group>
     </Select>
