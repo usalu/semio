@@ -41,7 +41,7 @@
     "cmdk": "^1.1.1",
     "cytoscape": "^3.33.0",
     "jszip": "^3.10.1",
-    "lucide-react": "^0.479.0",
+    "lucide-react": "^0.536.0",
     "motion": "^12.23.11",
     "postcss-import": "^16.1.1",
     "postcss-nesting": "^13.0.2",
