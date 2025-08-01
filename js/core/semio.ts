@@ -1230,13 +1230,33 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
 
 //#endregion Design
 
-//#region Kit
+//#region Type
+
+export const addTypeToKit = (kit: Kit, type: Type): Kit => ({ ...kit, types: [...(kit.types || []), type] })
+export const setTypeInKit = (kit: Kit, type: Type): Kit => ({ ...kit, types: (kit.types || []).map(t => isSameType(t, type) ? type : t) })
+export const removeTypeFromKit = (kit: Kit, typeId: TypeIdLike): Kit => {
+  const normalizedTypeId = typeIdLikeToTypeId(typeId)
+  return { ...kit, types: (kit.types || []).filter(t => !isSameType(t, normalizedTypeId)) }
+}
+
+//#endregion Type
+
+//#region Design
+
+export const addDesignToKit = (kit: Kit, design: Design): Kit => ({ ...kit, designs: [...(kit.designs || []), design] })
+export const setDesignInKit = (kit: Kit, design: Design): Kit => ({ ...kit, designs: (kit.designs || []).map(d => isSameDesign(d, design) ? design : d) })
+export const removeDesignFromKit = (kit: Kit, designId: DesignIdLike): Kit => {
+  const normalizedDesignId = designIdLikeToDesignId(designId)
+  return { ...kit, designs: (kit.designs || []).filter(d => !isSameDesign(d, normalizedDesignId)) }
+}
 
 export const updateDesignInKit = (kit: Kit, design: Design): Kit => {
   return { ...kit, designs: (kit.designs || []).map(d => isSameDesign(d, design) ? design : d) }
 }
 
-//#endregion Kit
+//#endregion Design
+
+//#region Kit
 
 //#region DesignDiff
 

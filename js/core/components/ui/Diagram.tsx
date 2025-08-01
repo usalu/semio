@@ -67,8 +67,8 @@ import {
   PieceDiff,
   piecesMetadata,
   Port,
-  Type,
   TOLERANCE,
+  Type,
   updateDesignInKit
 } from '@semio/js'
 
@@ -565,6 +565,9 @@ const Diagram: FC = () => {
     const { lastPostition } = dragState
     const metadata = piecesMetadata(kit, designId)
 
+    // Check if Alt key is pressed to disable snapping and helper lines
+    const altPressed = event.altKey
+
     const currentHelperLines: HelperLine[] = []
     const nonSelectedNodes = nodes.filter((n) => !(selection?.selectedPieceIds ?? []).includes(getPieceIdFromNode(n)))
     const draggedCenterX = node.position.x + ICON_WIDTH / 2
@@ -586,415 +589,421 @@ const Diagram: FC = () => {
       let draggedX = node.position.x
       let draggedY = node.position.y
 
-      // Check for snapping to helper lines
-      const draggedCenterX = draggedX + ICON_WIDTH / 2
-      const draggedCenterY = draggedY + ICON_WIDTH / 2
+      // Only apply snapping and helper lines if Alt key is not pressed
+      if (!altPressed) {
+        // Check for snapping to helper lines
+        const draggedCenterX = draggedX + ICON_WIDTH / 2
+        const draggedCenterY = draggedY + ICON_WIDTH / 2
 
-      // Check for equal distance snapping opportunities FIRST (before regular snapping)
-      const EQUAL_DISTANCE_THRESHOLD = 15 // Pixels for snapping threshold
-      let equalDistanceHelperLines: HelperLine[] = []
-      const displayedDistances = new Set<number>() // Track distances already being displayed
+        // Check for equal distance snapping opportunities FIRST (before regular snapping)
+        const EQUAL_DISTANCE_THRESHOLD = 15 // Pixels for snapping threshold
+        let equalDistanceHelperLines: HelperLine[] = []
+        const displayedDistances = new Set<number>() // Track distances already being displayed
 
-      for (let i = 0; i < nonSelectedNodes.length; i++) {
-        for (let j = i + 1; j < nonSelectedNodes.length; j++) {
-          const node1 = nonSelectedNodes[i]
-          const node2 = nonSelectedNodes[j]
+        for (let i = 0; i < nonSelectedNodes.length; i++) {
+          for (let j = i + 1; j < nonSelectedNodes.length; j++) {
+            const node1 = nonSelectedNodes[i]
+            const node2 = nonSelectedNodes[j]
 
-          const center1 = { x: node1.position.x + ICON_WIDTH / 2, y: node1.position.y + ICON_WIDTH / 2 }
-          const center2 = { x: node2.position.x + ICON_WIDTH / 2, y: node2.position.y + ICON_WIDTH / 2 }
+            const center1 = { x: node1.position.x + ICON_WIDTH / 2, y: node1.position.y + ICON_WIDTH / 2 }
+            const center2 = { x: node2.position.x + ICON_WIDTH / 2, y: node2.position.y + ICON_WIDTH / 2 }
 
-          // Check for horizontal alignment with equal vertical spacing
-          if (Math.abs(center1.x - center2.x) < 5) { // Vertically aligned pieces
-            const distance = Math.abs(center2.y - center1.y)
-            const minY = Math.min(center1.y, center2.y)
-            const maxY = Math.max(center1.y, center2.y)
-            const midY = (center1.y + center2.y) / 2
+            // Check for horizontal alignment with equal vertical spacing
+            if (Math.abs(center1.x - center2.x) < 5) { // Vertically aligned pieces
+              const distance = Math.abs(center2.y - center1.y)
+              const minY = Math.min(center1.y, center2.y)
+              const maxY = Math.max(center1.y, center2.y)
+              const midY = (center1.y + center2.y) / 2
 
-            // Check if this distance is already being displayed
-            const isDistanceAlreadyDisplayed = Array.from(displayedDistances).some(existingDistance => 
-              Math.abs(existingDistance - distance) < TOLERANCE
-            )
+              // Check if this distance is already being displayed
+              const isDistanceAlreadyDisplayed = Array.from(displayedDistances).some(existingDistance =>
+                Math.abs(existingDistance - distance) < TOLERANCE
+              )
 
-            if (distance > 40 && !isDistanceAlreadyDisplayed) {
-              displayedDistances.add(distance)
+              if (distance > 40 && !isDistanceAlreadyDisplayed) {
+                displayedDistances.add(distance)
 
-              // Check for middle position snapping
-              if (Math.abs(draggedCenterY - midY) < EQUAL_DISTANCE_THRESHOLD) {
-                draggedY = midY - ICON_WIDTH / 2
+                // Check for middle position snapping
+                if (Math.abs(draggedCenterY - midY) < EQUAL_DISTANCE_THRESHOLD) {
+                  draggedY = midY - ICON_WIDTH / 2
 
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `upper-${node1.id}-${node2.id}`,
-                  x1: center1.x - 50,
-                  y1: minY,
-                  x2: center1.x + 50,
-                  y2: minY,
-                  referencePieceIds: [node1.id, node2.id]
-                })
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `upper-${node1.id}-${node2.id}`,
+                    x1: center1.x - 50,
+                    y1: minY,
+                    x2: center1.x + 50,
+                    y2: minY,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
 
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `lower-${node1.id}-${node2.id}`,
-                  x1: center1.x - 50,
-                  y1: maxY,
-                  x2: center1.x + 50,
-                  y2: maxY,
-                  referencePieceIds: [node1.id, node2.id]
-                })
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `lower-${node1.id}-${node2.id}`,
+                    x1: center1.x - 50,
+                    y1: maxY,
+                    x2: center1.x + 50,
+                    y2: maxY,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
 
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `mid-${node1.id}-${node2.id}`,
-                  x1: center1.x - 30,
-                  y1: midY,
-                  x2: center1.x + 30,
-                  y2: midY,
-                  referencePieceIds: [node1.id, node2.id]
-                })
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `mid-${node1.id}-${node2.id}`,
+                    x1: center1.x - 30,
+                    y1: midY,
+                    x2: center1.x + 30,
+                    y2: midY,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
+                }
+
+                // Check for extending the sequence (placing before first or after last)
+                const extendedMinY = minY - distance
+                const extendedMaxY = maxY + distance
+
+                if (Math.abs(draggedCenterY - extendedMinY) < EQUAL_DISTANCE_THRESHOLD) {
+                  draggedY = extendedMinY - ICON_WIDTH / 2
+
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `extend-before-${node1.id}-${node2.id}`,
+                    x1: center1.x - 30,
+                    y1: extendedMinY,
+                    x2: center1.x + 30,
+                    y2: extendedMinY,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
+
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `ref1-${node1.id}-${node2.id}`,
+                    x1: center1.x - 50,
+                    y1: minY,
+                    x2: center1.x + 50,
+                    y2: minY,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
+
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `ref2-${node1.id}-${node2.id}`,
+                    x1: center1.x - 50,
+                    y1: maxY,
+                    x2: center1.x + 50,
+                    y2: maxY,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
+                }
+
+                if (Math.abs(draggedCenterY - extendedMaxY) < EQUAL_DISTANCE_THRESHOLD) {
+                  draggedY = extendedMaxY - ICON_WIDTH / 2
+
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `extend-after-${node1.id}-${node2.id}`,
+                    x1: center1.x - 30,
+                    y1: extendedMaxY,
+                    x2: center1.x + 30,
+                    y2: extendedMaxY,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
+
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `ref1-${node1.id}-${node2.id}`,
+                    x1: center1.x - 50,
+                    y1: minY,
+                    x2: center1.x + 50,
+                    y2: minY,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
+
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `ref2-${node1.id}-${node2.id}`,
+                    x1: center1.x - 50,
+                    y1: maxY,
+                    x2: center1.x + 50,
+                    y2: maxY,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
+                }
+
+                // Check for perpendicular equal distance (horizontal placement relative to vertical alignment)
+                const extendedLeftX = center1.x - distance
+                const extendedRightX = center1.x + distance
+
+                if (Math.abs(draggedCenterX - extendedLeftX) < EQUAL_DISTANCE_THRESHOLD) {
+                  draggedX = extendedLeftX - ICON_WIDTH / 2
+
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `perp-left-${node1.id}-${node2.id}`,
+                    x1: extendedLeftX,
+                    y1: midY - 30,
+                    x2: extendedLeftX,
+                    y2: midY + 30,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
+
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `perp-ref-${node1.id}-${node2.id}`,
+                    x1: center1.x,
+                    y1: midY - 50,
+                    x2: center1.x,
+                    y2: midY + 50,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
+                }
+
+                if (Math.abs(draggedCenterX - extendedRightX) < EQUAL_DISTANCE_THRESHOLD) {
+                  draggedX = extendedRightX - ICON_WIDTH / 2
+
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `perp-right-${node1.id}-${node2.id}`,
+                    x1: extendedRightX,
+                    y1: midY - 30,
+                    x2: extendedRightX,
+                    y2: midY + 30,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
+
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `perp-ref-${node1.id}-${node2.id}`,
+                    x1: center1.x,
+                    y1: midY - 50,
+                    x2: center1.x,
+                    y2: midY + 50,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
+                }
               }
+            }          // Check for vertical alignment with equal horizontal spacing
+            if (Math.abs(center1.y - center2.y) < 5) { // Horizontally aligned pieces
+              const distance = Math.abs(center2.x - center1.x)
+              const minX = Math.min(center1.x, center2.x)
+              const maxX = Math.max(center1.x, center2.x)
+              const midX = (center1.x + center2.x) / 2
 
-              // Check for extending the sequence (placing before first or after last)
-              const extendedMinY = minY - distance
-              const extendedMaxY = maxY + distance
+              // Check if this distance is already being displayed
+              const isDistanceAlreadyDisplayed = Array.from(displayedDistances).some(existingDistance =>
+                Math.abs(existingDistance - distance) < TOLERANCE
+              )
 
-              if (Math.abs(draggedCenterY - extendedMinY) < EQUAL_DISTANCE_THRESHOLD) {
-                draggedY = extendedMinY - ICON_WIDTH / 2
+              if (distance > 40 && !isDistanceAlreadyDisplayed) {
+                displayedDistances.add(distance)
 
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `extend-before-${node1.id}-${node2.id}`,
-                  x1: center1.x - 30,
-                  y1: extendedMinY,
-                  x2: center1.x + 30,
-                  y2: extendedMinY,
-                  referencePieceIds: [node1.id, node2.id]
-                })
+                // Check for middle position snapping
+                if (Math.abs(draggedCenterX - midX) < EQUAL_DISTANCE_THRESHOLD) {
+                  draggedX = midX - ICON_WIDTH / 2
 
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `ref1-${node1.id}-${node2.id}`,
-                  x1: center1.x - 50,
-                  y1: minY,
-                  x2: center1.x + 50,
-                  y2: minY,
-                  referencePieceIds: [node1.id, node2.id]
-                })
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `left-${node1.id}-${node2.id}`,
+                    x1: minX,
+                    y1: center1.y - 50,
+                    x2: minX,
+                    y2: center1.y + 50,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
 
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `ref2-${node1.id}-${node2.id}`,
-                  x1: center1.x - 50,
-                  y1: maxY,
-                  x2: center1.x + 50,
-                  y2: maxY,
-                  referencePieceIds: [node1.id, node2.id]
-                })
-              }
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `right-${node1.id}-${node2.id}`,
+                    x1: maxX,
+                    y1: center1.y - 50,
+                    x2: maxX,
+                    y2: center1.y + 50,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
 
-              if (Math.abs(draggedCenterY - extendedMaxY) < EQUAL_DISTANCE_THRESHOLD) {
-                draggedY = extendedMaxY - ICON_WIDTH / 2
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `mid-${node1.id}-${node2.id}`,
+                    x1: midX,
+                    y1: center1.y - 30,
+                    x2: midX,
+                    y2: center1.y + 30,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
+                }
 
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `extend-after-${node1.id}-${node2.id}`,
-                  x1: center1.x - 30,
-                  y1: extendedMaxY,
-                  x2: center1.x + 30,
-                  y2: extendedMaxY,
-                  referencePieceIds: [node1.id, node2.id]
-                })
+                // Check for extending the sequence (placing before first or after last)
+                const extendedMinX = minX - distance
+                const extendedMaxX = maxX + distance
 
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `ref1-${node1.id}-${node2.id}`,
-                  x1: center1.x - 50,
-                  y1: minY,
-                  x2: center1.x + 50,
-                  y2: minY,
-                  referencePieceIds: [node1.id, node2.id]
-                })
+                if (Math.abs(draggedCenterX - extendedMinX) < EQUAL_DISTANCE_THRESHOLD) {
+                  draggedX = extendedMinX - ICON_WIDTH / 2
 
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `ref2-${node1.id}-${node2.id}`,
-                  x1: center1.x - 50,
-                  y1: maxY,
-                  x2: center1.x + 50,
-                  y2: maxY,
-                  referencePieceIds: [node1.id, node2.id]
-                })
-              }
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `extend-before-${node1.id}-${node2.id}`,
+                    x1: extendedMinX,
+                    y1: center1.y - 30,
+                    x2: extendedMinX,
+                    y2: center1.y + 30,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
 
-              // Check for perpendicular equal distance (horizontal placement relative to vertical alignment)
-              const extendedLeftX = center1.x - distance
-              const extendedRightX = center1.x + distance
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `ref1-${node1.id}-${node2.id}`,
+                    x1: minX,
+                    y1: center1.y - 50,
+                    x2: minX,
+                    y2: center1.y + 50,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
 
-              if (Math.abs(draggedCenterX - extendedLeftX) < EQUAL_DISTANCE_THRESHOLD) {
-                draggedX = extendedLeftX - ICON_WIDTH / 2
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `ref2-${node1.id}-${node2.id}`,
+                    x1: maxX,
+                    y1: center1.y - 50,
+                    x2: maxX,
+                    y2: center1.y + 50,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
+                }
 
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `perp-left-${node1.id}-${node2.id}`,
-                  x1: extendedLeftX,
-                  y1: midY - 30,
-                  x2: extendedLeftX,
-                  y2: midY + 30,
-                  referencePieceIds: [node1.id, node2.id]
-                })
+                if (Math.abs(draggedCenterX - extendedMaxX) < EQUAL_DISTANCE_THRESHOLD) {
+                  draggedX = extendedMaxX - ICON_WIDTH / 2
 
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `perp-ref-${node1.id}-${node2.id}`,
-                  x1: center1.x,
-                  y1: midY - 50,
-                  x2: center1.x,
-                  y2: midY + 50,
-                  referencePieceIds: [node1.id, node2.id]
-                })
-              }
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `extend-after-${node1.id}-${node2.id}`,
+                    x1: extendedMaxX,
+                    y1: center1.y - 30,
+                    x2: extendedMaxX,
+                    y2: center1.y + 30,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
 
-              if (Math.abs(draggedCenterX - extendedRightX) < EQUAL_DISTANCE_THRESHOLD) {
-                draggedX = extendedRightX - ICON_WIDTH / 2
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `ref1-${node1.id}-${node2.id}`,
+                    x1: minX,
+                    y1: center1.y - 50,
+                    x2: minX,
+                    y2: center1.y + 50,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
 
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `perp-right-${node1.id}-${node2.id}`,
-                  x1: extendedRightX,
-                  y1: midY - 30,
-                  x2: extendedRightX,
-                  y2: midY + 30,
-                  referencePieceIds: [node1.id, node2.id]
-                })
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `ref2-${node1.id}-${node2.id}`,
+                    x1: maxX,
+                    y1: center1.y - 50,
+                    x2: maxX,
+                    y2: center1.y + 50,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
+                }
 
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `perp-ref-${node1.id}-${node2.id}`,
-                  x1: center1.x,
-                  y1: midY - 50,
-                  x2: center1.x,
-                  y2: midY + 50,
-                  referencePieceIds: [node1.id, node2.id]
-                })
-              }
-            }
-          }          // Check for vertical alignment with equal horizontal spacing
-          if (Math.abs(center1.y - center2.y) < 5) { // Horizontally aligned pieces
-            const distance = Math.abs(center2.x - center1.x)
-            const minX = Math.min(center1.x, center2.x)
-            const maxX = Math.max(center1.x, center2.x)
-            const midX = (center1.x + center2.x) / 2
+                // Check for perpendicular equal distance (vertical placement relative to horizontal alignment)
+                const extendedUpY = center1.y - distance
+                const extendedDownY = center1.y + distance
 
-            // Check if this distance is already being displayed
-            const isDistanceAlreadyDisplayed = Array.from(displayedDistances).some(existingDistance => 
-              Math.abs(existingDistance - distance) < TOLERANCE
-            )
+                if (Math.abs(draggedCenterY - extendedUpY) < EQUAL_DISTANCE_THRESHOLD) {
+                  draggedY = extendedUpY - ICON_WIDTH / 2
 
-            if (distance > 40 && !isDistanceAlreadyDisplayed) {
-              displayedDistances.add(distance)
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `perp-up-${node1.id}-${node2.id}`,
+                    x1: midX - 30,
+                    y1: extendedUpY,
+                    x2: midX + 30,
+                    y2: extendedUpY,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
 
-              // Check for middle position snapping
-              if (Math.abs(draggedCenterX - midX) < EQUAL_DISTANCE_THRESHOLD) {
-                draggedX = midX - ICON_WIDTH / 2
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `perp-ref-${node1.id}-${node2.id}`,
+                    x1: midX - 50,
+                    y1: center1.y,
+                    x2: midX + 50,
+                    y2: center1.y,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
+                }
 
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `left-${node1.id}-${node2.id}`,
-                  x1: minX,
-                  y1: center1.y - 50,
-                  x2: minX,
-                  y2: center1.y + 50,
-                  referencePieceIds: [node1.id, node2.id]
-                })
+                if (Math.abs(draggedCenterY - extendedDownY) < EQUAL_DISTANCE_THRESHOLD) {
+                  draggedY = extendedDownY - ICON_WIDTH / 2
 
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `right-${node1.id}-${node2.id}`,
-                  x1: maxX,
-                  y1: center1.y - 50,
-                  x2: maxX,
-                  y2: center1.y + 50,
-                  referencePieceIds: [node1.id, node2.id]
-                })
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `perp-down-${node1.id}-${node2.id}`,
+                    x1: midX - 30,
+                    y1: extendedDownY,
+                    x2: midX + 30,
+                    y2: extendedDownY,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
 
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `mid-${node1.id}-${node2.id}`,
-                  x1: midX,
-                  y1: center1.y - 30,
-                  x2: midX,
-                  y2: center1.y + 30,
-                  referencePieceIds: [node1.id, node2.id]
-                })
-              }
-
-              // Check for extending the sequence (placing before first or after last)
-              const extendedMinX = minX - distance
-              const extendedMaxX = maxX + distance
-
-              if (Math.abs(draggedCenterX - extendedMinX) < EQUAL_DISTANCE_THRESHOLD) {
-                draggedX = extendedMinX - ICON_WIDTH / 2
-
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `extend-before-${node1.id}-${node2.id}`,
-                  x1: extendedMinX,
-                  y1: center1.y - 30,
-                  x2: extendedMinX,
-                  y2: center1.y + 30,
-                  referencePieceIds: [node1.id, node2.id]
-                })
-
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `ref1-${node1.id}-${node2.id}`,
-                  x1: minX,
-                  y1: center1.y - 50,
-                  x2: minX,
-                  y2: center1.y + 50,
-                  referencePieceIds: [node1.id, node2.id]
-                })
-
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `ref2-${node1.id}-${node2.id}`,
-                  x1: maxX,
-                  y1: center1.y - 50,
-                  x2: maxX,
-                  y2: center1.y + 50,
-                  referencePieceIds: [node1.id, node2.id]
-                })
-              }
-
-              if (Math.abs(draggedCenterX - extendedMaxX) < EQUAL_DISTANCE_THRESHOLD) {
-                draggedX = extendedMaxX - ICON_WIDTH / 2
-
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `extend-after-${node1.id}-${node2.id}`,
-                  x1: extendedMaxX,
-                  y1: center1.y - 30,
-                  x2: extendedMaxX,
-                  y2: center1.y + 30,
-                  referencePieceIds: [node1.id, node2.id]
-                })
-
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `ref1-${node1.id}-${node2.id}`,
-                  x1: minX,
-                  y1: center1.y - 50,
-                  x2: minX,
-                  y2: center1.y + 50,
-                  referencePieceIds: [node1.id, node2.id]
-                })
-
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `ref2-${node1.id}-${node2.id}`,
-                  x1: maxX,
-                  y1: center1.y - 50,
-                  x2: maxX,
-                  y2: center1.y + 50,
-                  referencePieceIds: [node1.id, node2.id]
-                })
-              }
-
-              // Check for perpendicular equal distance (vertical placement relative to horizontal alignment)
-              const extendedUpY = center1.y - distance
-              const extendedDownY = center1.y + distance
-
-              if (Math.abs(draggedCenterY - extendedUpY) < EQUAL_DISTANCE_THRESHOLD) {
-                draggedY = extendedUpY - ICON_WIDTH / 2
-
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `perp-up-${node1.id}-${node2.id}`,
-                  x1: midX - 30,
-                  y1: extendedUpY,
-                  x2: midX + 30,
-                  y2: extendedUpY,
-                  referencePieceIds: [node1.id, node2.id]
-                })
-
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `perp-ref-${node1.id}-${node2.id}`,
-                  x1: midX - 50,
-                  y1: center1.y,
-                  x2: midX + 50,
-                  y2: center1.y,
-                  referencePieceIds: [node1.id, node2.id]
-                })
-              }
-
-              if (Math.abs(draggedCenterY - extendedDownY) < EQUAL_DISTANCE_THRESHOLD) {
-                draggedY = extendedDownY - ICON_WIDTH / 2
-
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `perp-down-${node1.id}-${node2.id}`,
-                  x1: midX - 30,
-                  y1: extendedDownY,
-                  x2: midX + 30,
-                  y2: extendedDownY,
-                  referencePieceIds: [node1.id, node2.id]
-                })
-
-                equalDistanceHelperLines.push({
-                  type: 'equalDistance',
-                  relatedPieceId: `perp-ref-${node1.id}-${node2.id}`,
-                  x1: midX - 50,
-                  y1: center1.y,
-                  x2: midX + 50,
-                  y2: center1.y,
-                  referencePieceIds: [node1.id, node2.id]
-                })
+                  equalDistanceHelperLines.push({
+                    type: 'equalDistance',
+                    relatedPieceId: `perp-ref-${node1.id}-${node2.id}`,
+                    x1: midX - 50,
+                    y1: center1.y,
+                    x2: midX + 50,
+                    y2: center1.y,
+                    referencePieceIds: [node1.id, node2.id]
+                  })
+                }
               }
             }
           }
         }
-      }
 
-      // Always check regular snapping (combining with equal distance snapping)
-      // Update drag position based on current snapped position
-      const updatedDraggedCenterX = draggedX + ICON_WIDTH / 2
-      const updatedDraggedCenterY = draggedY + ICON_WIDTH / 2
+        // Always check regular snapping (combining with equal distance snapping)
+        // Update drag position based on current snapped position
+        const updatedDraggedCenterX = draggedX + ICON_WIDTH / 2
+        const updatedDraggedCenterY = draggedY + ICON_WIDTH / 2
 
-      // Find closest horizontal line for snapping
-      for (const otherNode of nonSelectedNodes) {
-        const centerY = otherNode.position.y + ICON_WIDTH / 2
-        const distance = Math.abs(updatedDraggedCenterY - centerY)
-        if (distance < SNAP_THRESHOLD) {
-          draggedY = centerY - ICON_WIDTH / 2
-          currentHelperLines.push({
-            type: 'horizontal',
-            position: centerY,
-            relatedPieceId: otherNode.id
-          })
-          break
+        // Find closest horizontal line for snapping
+        for (const otherNode of nonSelectedNodes) {
+          const centerY = otherNode.position.y + ICON_WIDTH / 2
+          const distance = Math.abs(updatedDraggedCenterY - centerY)
+          if (distance < SNAP_THRESHOLD) {
+            draggedY = centerY - ICON_WIDTH / 2
+            currentHelperLines.push({
+              type: 'horizontal',
+              position: centerY,
+              relatedPieceId: otherNode.id
+            })
+            break
+          }
         }
-      }
 
-      // Find closest vertical line for snapping
-      for (const otherNode of nonSelectedNodes) {
-        const centerX = otherNode.position.x + ICON_WIDTH / 2
-        const distance = Math.abs(updatedDraggedCenterX - centerX)
-        if (distance < SNAP_THRESHOLD) {
-          draggedX = centerX - ICON_WIDTH / 2
-          currentHelperLines.push({
-            type: 'vertical',
-            position: centerX,
-            relatedPieceId: otherNode.id
-          })
-          break
+        // Find closest vertical line for snapping
+        for (const otherNode of nonSelectedNodes) {
+          const centerX = otherNode.position.x + ICON_WIDTH / 2
+          const distance = Math.abs(updatedDraggedCenterX - centerX)
+          if (distance < SNAP_THRESHOLD) {
+            draggedX = centerX - ICON_WIDTH / 2
+            currentHelperLines.push({
+              type: 'vertical',
+              position: centerX,
+              relatedPieceId: otherNode.id
+            })
+            break
+          }
         }
+
+        // Add equal distance helper lines to the current helper lines
+        currentHelperLines.push(...equalDistanceHelperLines)
+
+        // Update helper lines with equal distance lines
+        setHelperLines(currentHelperLines)
+      } else {
+        // Clear helper lines when Alt is pressed
+        setHelperLines([])
       }
-
-      // Add equal distance helper lines to the current helper lines
-      currentHelperLines.push(...equalDistanceHelperLines)
-
-      // Update helper lines with equal distance lines
-      setHelperLines(currentHelperLines)
 
       // Update the node position with snapping applied
       if (selectedNode.id === node.id) {
@@ -1004,27 +1013,30 @@ const Diagram: FC = () => {
         node.position.y = draggedY
       }
 
-      for (const otherNode of nodes.filter((n) => !(selection.selectedPieceIds ?? []).includes(getPieceIdFromNode(n)))) {
-        const existingConnection = design.connections?.find((c) => isSameConnection(c, { connected: { piece: { id_: selectedNode.data.piece.id_ } }, connecting: { piece: { id_: otherNode.data.piece.id_ } } }))
-        if (existingConnection) continue
-        const otherInternalNode = reactFlowInstance.getInternalNode(otherNode.id)!
-        for (const handle of selectedInternalNode.internals.handleBounds?.source ?? []) {
-          const port = findPortInType(type, { id_: handle.id! })
-          for (const otherHandle of otherInternalNode.internals.handleBounds?.source ?? []) {
-            const otherPort = findPortInType(otherNode.data.type, { id_: otherHandle.id! })
-            const haveSameFixedPiece = fixedPieceId === metadata.get(otherNode.data.piece.id_)!.fixedPieceId
-            if (haveSameFixedPiece || !arePortsCompatible(port, otherPort) || isPortInUse(design, piece, port) || isPortInUse(design, otherNode.data.piece, otherPort)) continue
-            const dx = (selectedInternalNode.internals.positionAbsolute.x + handle.x) - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x)
-            const dy = (selectedInternalNode.internals.positionAbsolute.y + handle.y) - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y)
-            const distance = Math.sqrt(dx * dx + dy * dy)
-            if (distance < closestDistance && distance < MIN_DISTANCE) {
-              closestConnection = {
-                connected: { piece: { id_: otherNode.data.piece.id_ }, port: { id_: otherHandle.id! } },
-                connecting: { piece: { id_: selectedNode.data.piece.id_ }, port: { id_: handle.id! } },
-                x: ((selectedInternalNode.internals.positionAbsolute.x + handle.x) - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x)) / ICON_WIDTH,
-                y: -(((selectedInternalNode.internals.positionAbsolute.y + handle.y) - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y)) / ICON_WIDTH)
+      // Only check for automatic connections if Alt key is not pressed
+      if (!altPressed) {
+        for (const otherNode of nodes.filter((n) => !(selection.selectedPieceIds ?? []).includes(getPieceIdFromNode(n)))) {
+          const existingConnection = design.connections?.find((c) => isSameConnection(c, { connected: { piece: { id_: selectedNode.data.piece.id_ } }, connecting: { piece: { id_: otherNode.data.piece.id_ } } }))
+          if (existingConnection) continue
+          const otherInternalNode = reactFlowInstance.getInternalNode(otherNode.id)!
+          for (const handle of selectedInternalNode.internals.handleBounds?.source ?? []) {
+            const port = findPortInType(type, { id_: handle.id! })
+            for (const otherHandle of otherInternalNode.internals.handleBounds?.source ?? []) {
+              const otherPort = findPortInType(otherNode.data.type, { id_: otherHandle.id! })
+              const haveSameFixedPiece = fixedPieceId === metadata.get(otherNode.data.piece.id_)!.fixedPieceId
+              if (haveSameFixedPiece || !arePortsCompatible(port, otherPort) || isPortInUse(design, piece, port) || isPortInUse(design, otherNode.data.piece, otherPort)) continue
+              const dx = (selectedInternalNode.internals.positionAbsolute.x + handle.x) - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x)
+              const dy = (selectedInternalNode.internals.positionAbsolute.y + handle.y) - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y)
+              const distance = Math.sqrt(dx * dx + dy * dy)
+              if (distance < closestDistance && distance < MIN_DISTANCE) {
+                closestConnection = {
+                  connected: { piece: { id_: otherNode.data.piece.id_ }, port: { id_: otherHandle.id! } },
+                  connecting: { piece: { id_: selectedNode.data.piece.id_ }, port: { id_: handle.id! } },
+                  x: ((selectedInternalNode.internals.positionAbsolute.x + handle.x) - (otherInternalNode.internals.positionAbsolute.x + otherHandle.x)) / ICON_WIDTH,
+                  y: -(((selectedInternalNode.internals.positionAbsolute.y + handle.y) - (otherInternalNode.internals.positionAbsolute.y + otherHandle.y)) / ICON_WIDTH)
+                }
+                closestDistance = distance
               }
-              closestDistance = distance
             }
           }
         }

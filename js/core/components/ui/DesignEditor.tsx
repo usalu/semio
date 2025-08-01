@@ -79,9 +79,14 @@ import { ToggleGroup, ToggleGroupItem } from '@semio/js/components/ui/ToggleGrou
 import { Generator } from '@semio/js/lib/utils'
 import { Camera, orientDesign } from '../../semio'
 import Chat from './Chat'
-import { CommandContext, ConsolePanel, commandRegistry, designEditorCommands } from './Console'
+import { CommandContext, ConsolePanel, commandRegistry } from './Console'
 import Details from './Details'
 import Workbench, { DesignAvatar, TypeAvatar } from './Workbench'
+import { designEditorCommands } from './designEditorCommands'
+
+// Register all design editor commands
+designEditorCommands.forEach(command => commandRegistry.register(command))
+
 
 // Helper functions for commands
 const addPieceToDesign = (design: Design, piece: Piece): Design => ({
@@ -588,7 +593,30 @@ export const useDesignEditor = () => {
         selection: state.selection
       }
 
-      // Always run commands in transactions
+      const command = commandRegistry.get(commandId)
+      if (!command) {
+        throw new Error(`Command not found: ${commandId}`)
+      }
+
+      // Editor-only commands can always execute, even during transactions
+      if (command.editorOnly) {
+        const result = await commandRegistry.execute(commandId, context, payload)
+        if (result.selection) {
+          setSelection(result.selection)
+        }
+        if (result.fullscreenPanel !== undefined) {
+          setFullscreen(result.fullscreenPanel)
+        }
+        return result
+      }
+
+      // Design-modifying commands only execute when no transaction is active
+      if (state.isTransactionActive) {
+        console.warn(`Cannot execute design-modifying command "${commandId}" during active transaction`)
+        return
+      }
+
+      // Run design commands in transactions
       startTransaction()
       try {
         const result = await commandRegistry.execute(commandId, context, payload)
@@ -598,13 +626,17 @@ export const useDesignEditor = () => {
         if (result.selection) {
           setSelection(result.selection)
         }
+        if (result.fullscreenPanel !== undefined) {
+          setFullscreen(result.fullscreenPanel)
+        }
         finalizeTransaction()
+        return result
       } catch (error) {
         abortTransaction()
         console.error('Command execution failed:', error)
         throw error
       }
-    }, [state.kit, state.designId, state.selection, startTransaction, setDesign, setSelection, finalizeTransaction, abortTransaction]),
+    }, [state.kit, state.designId, state.selection, state.isTransactionActive, startTransaction, setDesign, setSelection, setFullscreen, finalizeTransaction, abortTransaction]),
 
     getAvailableCommands: useCallback(() => commandRegistry.getAll(), []),
     getCommand: useCallback((commandId: string) => commandRegistry.get(commandId), []),
@@ -1154,12 +1186,39 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
       const customEvent = event as CustomEvent
       const { commandId, payload = {} } = customEvent.detail
 
+      const command = commandRegistry.get(commandId)
+      if (!command) {
+        console.error(`Command not found: ${commandId}`)
+        return
+      }
+
       const context = { kit: state.kit, designId, selection: state.selection }
+
+      // Editor-only commands can always execute, even during transactions
+      if (command.editorOnly) {
+        try {
+          const result = await commandRegistry.execute(commandId, context, payload)
+          if (result.selection) dispatch({ type: DesignEditorAction.SetSelection, payload: result.selection })
+          if (result.fullscreenPanel !== undefined) dispatch({ type: DesignEditorAction.SetFullscreen, payload: result.fullscreenPanel })
+        } catch (error) {
+          console.error(`Error executing editor-only command ${commandId}:`, error)
+        }
+        return
+      }
+
+      // Design-modifying commands only execute when no transaction is active
+      if (state.isTransactionActive) {
+        console.warn(`Cannot execute design-modifying command "${commandId}" during active transaction`)
+        return
+      }
+
+      // Run design commands in transactions
       dispatch({ type: DesignEditorAction.StartTransaction, payload: null })
       try {
         const result = await commandRegistry.execute(commandId, context, payload)
         if (result.design) dispatch({ type: DesignEditorAction.SetDesign, payload: result.design })
         if (result.selection) dispatch({ type: DesignEditorAction.SetSelection, payload: result.selection })
+        if (result.fullscreenPanel !== undefined) dispatch({ type: DesignEditorAction.SetFullscreen, payload: result.fullscreenPanel })
         dispatch({ type: DesignEditorAction.FinalizeTransaction, payload: null })
       } catch (error) {
         dispatch({ type: DesignEditorAction.AbortTransaction, payload: null })
@@ -1169,28 +1228,36 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
 
     document.addEventListener('semio-command', handleCommand)
     return () => document.removeEventListener('semio-command', handleCommand)
-  }, [state.kit, designId, state.selection, dispatch])
+  }, [state.kit, designId, state.selection, state.isTransactionActive, dispatch])
 
-  // Register hotkeys for all commands automatically
-  designEditorCommands.forEach(command => {
+  // Register hotkeys for all commands automatically from the command registry
+  const allCommands = commandRegistry.getAll()
+  allCommands.forEach(command => {
     if (command.hotkey) {
       useHotkeys(command.hotkey, (e) => {
         e.preventDefault()
         e.stopPropagation()
+
+        // Editor-only commands can always execute
+        if (command.editorOnly) {
+          const event = new CustomEvent('semio-command', { detail: { commandId: command.id } })
+          document.dispatchEvent(event)
+          return
+        }
+
+        // Design-modifying commands only execute when no transaction is active
+        if (state.isTransactionActive) {
+          console.warn(`Cannot execute design-modifying command "${command.id}" during active transaction (hotkey: ${command.hotkey})`)
+          return
+        }
+
         const event = new CustomEvent('semio-command', { detail: { commandId: command.id } })
         document.dispatchEvent(event)
       }, { enableOnContentEditable: false })
     }
   })
 
-  useHotkeys('mod+x', (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const event = new CustomEvent('semio-command', { detail: { commandId: 'cut-to-clipboard' } })
-    document.dispatchEvent(event)
-  })
-
-  // Keep special hotkeys for undo/redo since they're handled differently
+  // Special hotkeys for undo/redo (handled outside command system)
   useHotkeys('mod+z', async (e) => {
     e.preventDefault()
     e.stopPropagation()
@@ -1201,17 +1268,6 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
     e.preventDefault()
     e.stopPropagation()
     onRedo()
-  })
-
-  useHotkeys('mod+shift+d', async (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const context = { kit: state.kit, designId, selection: state.selection }
-    try {
-      await commandRegistry.execute('select-all-similar-pieces', context, {})
-    } catch (error) {
-      console.error('Error selecting all similar pieces:', error)
-    }
   })
 
   const onDragStart = (event: DragStartEvent) => {

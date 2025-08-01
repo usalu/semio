@@ -21,7 +21,6 @@
 // #endregion
 
 import {
-  Environment,
   GizmoHelper,
   GizmoViewport,
   Grid,
@@ -363,7 +362,6 @@ const ModelCore: FC = () => {
       {/* <Stage center={{ disable: true }} environment={null}> */}
       <ModelDesign />
       {/* </Stage> */}
-      <Environment files={'schlenker-shed.hdr'} />
       <Grid infiniteGrid={true} sectionColor={gridColors.sectionColor} cellColor={gridColors.cellColor} />
       {fullscreen && <Gizmo />}
     </>
