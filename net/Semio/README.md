@@ -20,6 +20,6 @@
     <a href="https://www.python.org/"><img src="https://raw.githubusercontent.com/usalu/semio/main/assets/badges/powered-by-python.svg" alt="Python"></a>
     <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="https://raw.githubusercontent.com/usalu/semio/main/assets/badges/powered-by-csharp.svg" alt="C#"></a>
     <br/>
-    <i>🧩 Design-Information-Modeling for Kit-of-Parts Architecture 🏘️ </i>
+    <i>🧩 Design-Information-Modeling for Kit-of-Parts 🏘️ </i>
 </p>
 <br/>

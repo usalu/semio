@@ -146,10 +146,10 @@ const ModelPiece: FC<ModelPieceProps> = ({
     } else if (selected) {
       meshColor = new THREE.Color(getComputedColor('--color-primary'))
     } else {
-      meshColor = new THREE.Color(getComputedColor('--color-background'))
+      meshColor = new THREE.Color(getComputedColor('--color-light'))
     }
 
-    const lineColor = new THREE.Color(getComputedColor('--color-foreground'))
+    const lineColor = new THREE.Color(getComputedColor('--color-dark'))
     scene.traverse((object) => {
       if (object instanceof THREE.Mesh) {
         object.material = new THREE.MeshBasicMaterial({

@@ -78,7 +78,7 @@ import { Layout, Mode, Theme } from '@semio/js/components/ui/Sketchpad'
 import { ToggleGroup, ToggleGroupItem } from '@semio/js/components/ui/ToggleGroup'
 import { Generator } from '@semio/js/lib/utils'
 import { Camera, orientDesign } from '../../semio'
-import Chat from '../Chat'
+import Chat from './Chat'
 import { CommandContext, ConsolePanel, commandRegistry, designEditorCommands } from './Console'
 import Details from './Details'
 import Workbench, { DesignAvatar, TypeAvatar } from './Workbench'
@@ -932,7 +932,7 @@ function useControllableReducer(props: DesignEditorProps) {
 
   const dispatchWrapper = useCallback((action: { type: DesignEditorAction; payload: any }) => {
     console.log('ACTION:', action.type, action.payload)
-    console.log('OLDSTATE:', state)
+    // console.log('OLDSTATE:', state)
 
     if (action.type === DesignEditorAction.Undo && onUndo) {
       onUndo()
@@ -944,7 +944,7 @@ function useControllableReducer(props: DesignEditorProps) {
     }
 
     const newState = designEditorReducer(state, action)
-    console.log('NEWSTATE:', newState)
+    // console.log('NEWSTATE:', newState)
 
     if (!isKitControlled || !isSelectionControlled) dispatch(action)
     if (isKitControlled && newState.kit !== state.kit) onDesignChange?.(findDesignInKit(newState.kit, designId))

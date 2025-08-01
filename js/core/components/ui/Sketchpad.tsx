@@ -72,58 +72,6 @@ export const useSketchpad = () => {
 
 interface ViewProps { }
 
-// const View: FC<ViewProps> = ({ }) => {
-//   const [, forceUpdate] = useReducer((x) => x + 1, 0);
-//   const studioStore = useStudioStore();
-//   const [designEditorId, setDesignEditorId] = useState<string>("");
-
-//   if (!designEditorId) {
-//     try {
-//       // Consider moving this logic if it needs to react to props or other state changes
-//       const editorId = studioStore.createDesignEditorStore(
-//         "Metabolism",
-//         "r25.07-1",
-//         "Nakagin Capsule Tower",
-//         "",
-//         "",
-//       );
-//       setDesignEditorId(editorId);
-//     } catch (error) {
-//       console.error("Error creating design editor store:", error);
-//     }
-//   }
-
-//   if (!designEditorId) {
-//     return (
-//       <Button
-//         onClick={() => {
-//           forceUpdate();
-//         }}
-//       >
-//         Refresh
-//       </Button>
-//     );
-//   }
-
-//   return (
-//     <>
-//       <Button
-//         onClick={() => {
-//           forceUpdate();
-//         }}
-//       >
-//         Refresh
-//       </Button>
-//       ;
-//       <DesignEditorStoreProvider designEditorId={designEditorId}>
-//         <DesignEditor />
-//       </DesignEditorStoreProvider>
-//     </>
-//   );
-// };
-
-
-
 const View = () => {
   const [fileUrls, setFileUrls] = useState<Map<string, string>>(new Map());
   extractFilesAndCreateUrls("metabolism.zip").then((urls) => {

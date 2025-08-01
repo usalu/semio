@@ -88,7 +88,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
     if (!hasChildren) {
         return (
             <div
-                className={`flex items-center gap-1 py-1 px-2 hover:bg-muted select-none overflow-hidden group ${className}`}
+                className={`flex items-center gap-1 py-1 px-2 hover:bg-muted select-none overflow-hidden group min-w-0 ${className}`}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
@@ -121,7 +121,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
         <Collapsible open={open} onOpenChange={setOpen}>
             <CollapsibleTrigger asChild>
                 <div
-                    className={`flex items-center gap-1 py-1 px-2 hover:bg-muted cursor-pointer select-none overflow-hidden group ${className}`}
+                    className={`flex items-center gap-1 py-1 px-2 hover:bg-muted cursor-pointer select-none overflow-hidden group min-w-0 ${className}`}
                     onMouseEnter={() => setIsHovered(true)}
                     onMouseLeave={() => setIsHovered(false)}
                 >
@@ -152,7 +152,7 @@ export const TreeSection: FC<TreeSectionProps> = ({ label, icon, children, defau
                     )}
                 </div>
             </CollapsibleTrigger>
-            <CollapsibleContent className="pl-2">{children}</CollapsibleContent>
+            <CollapsibleContent className="pl-2 min-w-0 overflow-hidden">{children}</CollapsibleContent>
         </Collapsible>
     )
 }
@@ -188,7 +188,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({
         opacity: isDragging ? 0.5 : 1
     }
 
-    const baseClasses = "flex items-center gap-1 py-0.5 px-1 hover:bg-muted cursor-pointer select-none overflow-hidden"
+    const baseClasses = "flex items-center gap-1 py-0.5 px-1 hover:bg-muted cursor-pointer select-none overflow-hidden min-w-0"
     const stateClasses = `${isSelected ? 'bg-accent' : ''} ${isHighlighted ? 'bg-accent/50' : ''}`
     const itemClasses = `${baseClasses} ${stateClasses} ${className}`
 
@@ -227,7 +227,7 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({
                     </div>
                 )}
                 {open && (
-                    <div className="pb-0.5">
+                    <div className="pb-0.5 min-w-0 overflow-hidden">
                         {children}
                     </div>
                 )}
@@ -236,7 +236,11 @@ const SortableTreeItem: FC<SortableTreeItemProps> = ({
     }
 
     if (!label) {
-        return children || null
+        return (
+            <div className="min-w-0 overflow-hidden">
+                {children}
+            </div>
+        )
     }
 
     return (
@@ -316,7 +320,7 @@ export const TreeItem: FC<TreeItemProps> = ({
     const [open, setOpen] = useState(defaultOpen)
     const hasChildren = Boolean(children)
     const indentStyle = { paddingLeft: `${level * 1.25}rem` }
-    const baseClasses = "flex items-center gap-1 py-0.5 px-1 hover:bg-muted cursor-pointer select-none overflow-hidden"
+    const baseClasses = "flex items-center gap-1 py-0.5 px-1 hover:bg-muted cursor-pointer select-none overflow-hidden min-w-0"
     const stateClasses = `${isSelected ? 'bg-accent' : ''} ${isHighlighted ? 'bg-accent/50' : ''}`
     const itemClasses = `${baseClasses} ${stateClasses} ${className}`
 
@@ -344,7 +348,7 @@ export const TreeItem: FC<TreeItemProps> = ({
                     </div>
                 )}
                 {open && (
-                    <div className="pb-0.5">
+                    <div className="pb-0.5 min-w-0 overflow-hidden">
                         {children}
                     </div>
                 )}
@@ -353,7 +357,11 @@ export const TreeItem: FC<TreeItemProps> = ({
     }
 
     if (!label) {
-        return children || null
+        return (
+            <div className="min-w-0 overflow-hidden">
+                {children}
+            </div>
+        )
     }
 
     return (
@@ -371,7 +379,7 @@ export const TreeItem: FC<TreeItemProps> = ({
 export const Tree: FC<{ children: ReactNode; className?: string }> = ({ children, className = '' }) => {
     return (
         <TreeContext.Provider value={{ level: 0 }}>
-            <div className={`w-full ${className}`}>{children}</div>
+            <div className={`w-full min-w-0 overflow-hidden ${className}`}>{children}</div>
         </TreeContext.Provider>
     )
 }

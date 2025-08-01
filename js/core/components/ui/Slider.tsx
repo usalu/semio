@@ -79,9 +79,9 @@ function Slider({
   }
 
   return (
-    <div className={cn("flex items-center gap-2 border-b border-border pb-1", className)}>
-      {label && <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left">{label}</span>}
-      <div className="flex items-center gap-2 flex-1">
+    <div className={cn("flex items-center gap-2 border-b border-border pb-1 min-w-0", className)}>
+      {label && <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>{label}</span>}
+      <div className="flex items-center gap-2 flex-1 min-w-0">
         <SliderPrimitive.Root
           data-slot="slider"
           defaultValue={defaultValue}
@@ -125,14 +125,14 @@ function Slider({
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleEditKeyDown}
             onBlur={handleEditBlur}
-            className="w-16 text-sm"
+            className="w-20 text-sm"
             min={min}
             max={max}
             autoFocus
           />
         ) : (
           <span
-            className="text-sm font-mono w-16 text-right cursor-pointer hover:bg-muted px-1 rounded select-none"
+            className="text-sm w-20 text-right cursor-pointer hover:bg-muted px-1 rounded select-none"
             onDoubleClick={handleValueClick}
             title="Double-click to edit"
           >

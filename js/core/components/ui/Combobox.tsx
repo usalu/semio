@@ -56,15 +56,15 @@ const Combobox: FC<ComboboxProps> = ({
     }
 
     return (
-        <div className={cn("flex items-center gap-2 border-b border-border pb-1", className)}>
-            {label && <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left">{label}</span>}
+        <div className={cn("flex items-center gap-2 border-b border-border pb-1 min-w-0", className)}>
+            {label && <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate">{label}</span>}
             <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                     <Button
                         variant="outline"
                         role="combobox"
                         aria-expanded={open}
-                        className="w-full justify-between flex-1"
+                        className="w-full justify-between flex-1 min-w-0"
                     >
                         {selectedOption ? selectedOption.label : placeholder}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

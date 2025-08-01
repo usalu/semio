@@ -535,26 +535,6 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
         }
     }
 
-    const handleConnectionChange = (updatedConnection: Connection) => {
-        setConnection(updatedConnection)
-    }
-
-    const handleMultipleConnectionsChange = (propertyName: keyof Connection, value: any) => {
-        const updatedConnections = parentConnections.map(conn => ({
-            ...conn,
-            [propertyName]: value
-        }))
-        updatedConnections.forEach(conn => setConnection(conn))
-    }
-
-    const getCommonConnectionValue = <T,>(getter: (connection: Connection) => T | undefined): T | undefined => {
-        if (parentConnections.length === 0) return undefined
-        const values = parentConnections.map(getter).filter(v => v !== undefined)
-        if (values.length === 0) return undefined
-        const firstValue = values[0]
-        return values.every(v => JSON.stringify(v) === JSON.stringify(firstValue)) ? firstValue : undefined
-    }
-
     const commonTypeName = getCommonValue(p => p.type.name)
     const commonTypeVariant = getCommonValue(p => p.type.variant)
     const commonCenterX = getCommonValue(p => p.center?.x)
@@ -719,102 +699,21 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
                 </TreeSection>
             )}
             {(parentConnection || parentConnections.length > 0) && (
-                <TreeSection
-                    label={isSingle ? "Parent Connection" : `Parent Connections (${parentConnections.length})`}
-                    defaultOpen={true}
-                >
-                    <TreeItem>
-                        <Stepper
-                            label="Gap"
-                            value={isSingle ? (parentConnection?.gap ?? 0) : (getCommonConnectionValue(c => c.gap) ?? 0)}
-                            onChange={(value) => {
-                                if (isSingle && parentConnection) {
-                                    handleConnectionChange({ ...parentConnection, gap: value })
-                                } else {
-                                    handleMultipleConnectionsChange('gap', value)
-                                }
-                            }}
-                            onPointerDown={startTransaction}
-                            onPointerUp={finalizeTransaction}
-                            onPointerCancel={abortTransaction}
-                            step={0.1}
-                        />
-                    </TreeItem>
-                    <TreeItem>
-                        <Stepper
-                            label="Shift"
-                            value={isSingle ? (parentConnection?.shift ?? 0) : (getCommonConnectionValue(c => c.shift) ?? 0)}
-                            onChange={(value) => {
-                                if (isSingle && parentConnection) {
-                                    handleConnectionChange({ ...parentConnection, shift: value })
-                                } else {
-                                    handleMultipleConnectionsChange('shift', value)
-                                }
-                            }}
-                            onPointerDown={startTransaction}
-                            onPointerUp={finalizeTransaction}
-                            onPointerCancel={abortTransaction}
-                            step={0.1}
-                        />
-                    </TreeItem>
-                    <TreeItem>
-                        <Stepper
-                            label="Rise"
-                            value={isSingle ? (parentConnection?.rise ?? 0) : (getCommonConnectionValue(c => c.rise) ?? 0)}
-                            onChange={(value) => {
-                                if (isSingle && parentConnection) {
-                                    handleConnectionChange({ ...parentConnection, rise: value })
-                                } else {
-                                    handleMultipleConnectionsChange('rise', value)
-                                }
-                            }}
-                            onPointerDown={startTransaction}
-                            onPointerUp={finalizeTransaction}
-                            onPointerCancel={abortTransaction}
-                            step={0.1}
-                        />
-                    </TreeItem>
-                    <TreeItem>
-                        <Stepper
-                            label="X Offset"
-                            value={isSingle ? (parentConnection?.x ?? 0) : (getCommonConnectionValue(c => c.x) ?? 0)}
-                            onChange={(value) => {
-                                if (isSingle && parentConnection) {
-                                    handleConnectionChange({ ...parentConnection, x: value })
-                                } else {
-                                    handleMultipleConnectionsChange('x', value)
-                                }
-                            }}
-                            onPointerDown={startTransaction}
-                            onPointerUp={finalizeTransaction}
-                            onPointerCancel={abortTransaction}
-                            step={0.1}
-                        />
-                    </TreeItem>
-                    <TreeItem>
-                        <Stepper
-                            label="Y Offset"
-                            value={isSingle ? (parentConnection?.y ?? 0) : (getCommonConnectionValue(c => c.y) ?? 0)}
-                            onChange={(value) => {
-                                if (isSingle && parentConnection) {
-                                    handleConnectionChange({ ...parentConnection, y: value })
-                                } else {
-                                    handleMultipleConnectionsChange('y', value)
-                                }
-                            }}
-                            onPointerDown={startTransaction}
-                            onPointerUp={finalizeTransaction}
-                            onPointerCancel={abortTransaction}
-                            step={0.1}
-                        />
-                    </TreeItem>
-                </TreeSection>
+                <div style={{ marginTop: '0.5rem' }}>
+                    <ConnectionsSection
+                        connections={isSingle && parentConnection
+                            ? [{ connectingPieceId: parentConnection.connecting.piece.id_, connectedPieceId: parentConnection.connected.piece.id_ }]
+                            : parentConnections.map(conn => ({ connectingPieceId: conn.connecting.piece.id_, connectedPieceId: conn.connected.piece.id_ }))
+                        }
+                        sectionLabel={isSingle ? "Parent Connection" : `Parent Connections (${parentConnections.length})`}
+                    />
+                </div>
             )}
         </>
     )
 }
 
-const ConnectionsSection: FC<{ connections: { connectingPieceId: string; connectedPieceId: string }[] }> = ({ connections }) => {
+const ConnectionsSection: FC<{ connections: { connectingPieceId: string; connectedPieceId: string }[]; sectionLabel?: string }> = ({ connections, sectionLabel }) => {
     const { kit, designId, setConnection, setConnections, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditor()
     const design = findDesignInKit(kit, designId)
     const connectionObjects = connections.map(conn => {
@@ -887,80 +786,119 @@ const ConnectionsSection: FC<{ connections: { connectingPieceId: string; connect
     const commonTilt = getCommonValue(c => c.tilt)
 
     return (
-        <>
-            <TreeSection label={isSingle ? "Connection" : `Multiple Connections (${connections.length})`} defaultOpen={true}>
-                {isSingle && (
-                    <>
+        <TreeSection label={sectionLabel || (isSingle ? "Connection" : `Multiple Connections (${connections.length})`)} defaultOpen={true}>
+            {isSingle && (
+                <>
+                    <TreeItem label='Connecting'>
                         <TreeItem>
-                            <Input label="Connecting Piece ID" value={connection!.connecting.piece.id_} disabled />
+                            <Input label="Piece ID" value={connection!.connecting.piece.id_} disabled />
                         </TreeItem>
                         <TreeItem>
                             <Input
-                                label="Connecting Port ID"
+                                label="Port ID"
                                 value={connection!.connecting.port.id_}
-                                onChange={(e) =>
-                                    handleChange({ ...connection!, connecting: { ...connection!.connecting, port: { id_: e.target.value } } })
-                                }
-                                onFocus={startTransaction}
-                                onBlur={finalizeTransaction}
+                                disabled
                             />
                         </TreeItem>
+                    </TreeItem>
+                    <TreeItem label='Connected'>
                         <TreeItem>
-                            <Input label="Connected Piece ID" value={connection!.connected.piece.id_} disabled />
+                            <Input label="Piece ID" value={connection!.connected.piece.id_} disabled />
                         </TreeItem>
                         <TreeItem>
                             <Input
-                                label="Connected Port ID"
+                                label="Port ID"
                                 value={connection!.connected.port.id_}
-                                onChange={(e) =>
-                                    handleChange({ ...connection!, connected: { ...connection!.connected, port: { id_: e.target.value } } })
-                                }
-                                onFocus={startTransaction}
-                                onBlur={finalizeTransaction}
+                                disabled
                             />
                         </TreeItem>
-                    </>
-                )}
-                {!isSingle && (
-                    <TreeItem>
-                        <p className="text-sm text-muted-foreground">Editing {connections.length} connections simultaneously</p>
                     </TreeItem>
-                )}
-            </TreeSection>
-            <TreeSection label="Translation" defaultOpen={true}>
+                </>
+            )}
+            {!isSingle && (
                 <TreeItem>
-                    <Stepper
-                        label="Gap"
-                        value={isSingle ? (connection!.gap ?? 0) : (commonGap ?? 0)}
-                        onChange={handleGapChange}
-                        onPointerDown={startTransaction}
-                        onPointerUp={finalizeTransaction}
-                        onPointerCancel={abortTransaction}
-                        step={0.1}
-                    />
+                    <p className="text-sm text-muted-foreground">Editing {connections.length} connections simultaneously</p>
                 </TreeItem>
-                <TreeItem>
-                    <Stepper
-                        label="Shift"
-                        value={isSingle ? (connection!.shift ?? 0) : (commonShift ?? 0)}
-                        onChange={handleShiftChange}
-                        onPointerDown={startTransaction}
-                        onPointerUp={finalizeTransaction}
-                        onPointerCancel={abortTransaction}
-                        step={0.1}
-                    />
+            )}
+            <TreeItem label="Plane">
+                <TreeItem label="Translation" defaultOpen={true}>
+                    <TreeItem>
+                        <Stepper
+                            label="Gap"
+                            value={isSingle ? (connection!.gap ?? 0) : (commonGap ?? 0)}
+                            onChange={handleGapChange}
+                            onPointerDown={startTransaction}
+                            onPointerUp={finalizeTransaction}
+                            onPointerCancel={abortTransaction}
+                            step={0.1}
+                        />
+                    </TreeItem>
+                    <TreeItem>
+                        <Stepper
+                            label="Shift"
+                            value={isSingle ? (connection!.shift ?? 0) : (commonShift ?? 0)}
+                            onChange={handleShiftChange}
+                            onPointerDown={startTransaction}
+                            onPointerUp={finalizeTransaction}
+                            onPointerCancel={abortTransaction}
+                            step={0.1}
+                        />
+                    </TreeItem>
+                    <TreeItem>
+                        <Stepper
+                            label="Rise"
+                            value={isSingle ? (connection!.rise ?? 0) : (commonRise ?? 0)}
+                            onChange={handleRiseChange}
+                            onPointerDown={startTransaction}
+                            onPointerUp={finalizeTransaction}
+                            onPointerCancel={abortTransaction}
+                            step={0.1}
+                        />
+                    </TreeItem>
                 </TreeItem>
-                <TreeItem>
-                    <Stepper
-                        label="Rise"
-                        value={isSingle ? (connection!.rise ?? 0) : (commonRise ?? 0)}
-                        onChange={handleRiseChange}
-                        onPointerDown={startTransaction}
-                        onPointerUp={finalizeTransaction}
-                        onPointerCancel={abortTransaction}
-                        step={0.1}
-                    />
+                <TreeItem label="Orientation">
+                    <TreeItem>
+                        <Slider
+                            label="Rotation"
+                            value={[isSingle ? (connection!.rotation ?? 0) : (commonRotation ?? 0)]}
+                            onValueChange={([value]) => handleRotationChange(value)}
+                            onPointerDown={startTransaction}
+                            onPointerUp={finalizeTransaction}
+                            onPointerCancel={abortTransaction}
+                            min={-180}
+                            max={180}
+                            step={1}
+                        />
+                    </TreeItem>
+                    <TreeItem>
+                        <Slider
+                            label="Turn"
+                            value={[isSingle ? (connection!.turn ?? 0) : (commonTurn ?? 0)]}
+                            onValueChange={([value]) => handleTurnChange(value)}
+                            onPointerDown={startTransaction}
+                            onPointerUp={finalizeTransaction}
+                            onPointerCancel={abortTransaction}
+                            min={-180}
+                            max={180}
+                            step={1}
+                        />
+                    </TreeItem>
+                    <TreeItem>
+                        <Slider
+                            label="Tilt"
+                            value={[isSingle ? (connection!.tilt ?? 0) : (commonTilt ?? 0)]}
+                            onValueChange={([value]) => handleTiltChange(value)}
+                            onPointerDown={startTransaction}
+                            onPointerUp={finalizeTransaction}
+                            onPointerCancel={abortTransaction}
+                            min={-180}
+                            max={180}
+                            step={1}
+                        />
+                    </TreeItem>
                 </TreeItem>
+            </TreeItem>
+            <TreeItem label="Diagram" >
                 <TreeItem>
                     <Stepper
                         label="X Offset"
@@ -983,49 +921,9 @@ const ConnectionsSection: FC<{ connections: { connectingPieceId: string; connect
                         step={0.1}
                     />
                 </TreeItem>
-            </TreeSection>
-            <TreeSection label="Rotation">
-                <TreeItem>
-                    <Slider
-                        label="Rotation"
-                        value={[isSingle ? (connection!.rotation ?? 0) : (commonRotation ?? 0)]}
-                        onValueChange={([value]) => handleRotationChange(value)}
-                        onPointerDown={startTransaction}
-                        onPointerUp={finalizeTransaction}
-                        onPointerCancel={abortTransaction}
-                        min={-180}
-                        max={180}
-                        step={1}
-                    />
-                </TreeItem>
-                <TreeItem>
-                    <Slider
-                        label="Turn"
-                        value={[isSingle ? (connection!.turn ?? 0) : (commonTurn ?? 0)]}
-                        onValueChange={([value]) => handleTurnChange(value)}
-                        onPointerDown={startTransaction}
-                        onPointerUp={finalizeTransaction}
-                        onPointerCancel={abortTransaction}
-                        min={-180}
-                        max={180}
-                        step={1}
-                    />
-                </TreeItem>
-                <TreeItem>
-                    <Slider
-                        label="Tilt"
-                        value={[isSingle ? (connection!.tilt ?? 0) : (commonTilt ?? 0)]}
-                        onValueChange={([value]) => handleTiltChange(value)}
-                        onPointerDown={startTransaction}
-                        onPointerUp={finalizeTransaction}
-                        onPointerCancel={abortTransaction}
-                        min={-180}
-                        max={180}
-                        step={1}
-                    />
-                </TreeItem>
-            </TreeSection>
-        </>
+            </TreeItem >
+
+        </TreeSection >
     )
 }
 
@@ -1106,13 +1004,13 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
 
     return (
         <div
-            className={`absolute top-4 right-4 bottom-4 z-20 bg-background-level-2 text-foreground border
+            className={`absolute top-4 right-4 bottom-4 z-20 bg-background-level-2 text-foreground border min-w-0 overflow-hidden
                 ${isResizing || isResizeHovered ? 'border-l-primary' : 'border-l'}`}
             style={{ width: `${width}px` }}
         >
             <ScrollArea className="h-full">
-                <div className="p-1">
-                    <Tree>
+                <div className="p-1 overflow-hidden min-w-0">
+                    <Tree className="min-w-0 overflow-hidden">
                         {!hasSelection && <DesignSection />}
                         {hasPortSelected && <PortSection pieceId={selection.selectedPiecePortId!.pieceId} portId={selection.selectedPiecePortId!.portId} />}
                         {hasPieces && !hasPortSelected && <PiecesSection pieceIds={selection.selectedPieceIds} />}

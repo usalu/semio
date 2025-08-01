@@ -25,8 +25,8 @@ import { cn } from "@semio/js/lib/utils"
 function Textarea({ className, label, ...props }: React.ComponentProps<"textarea"> & { label?: string }) {
   if (label) {
     return (
-      <div className="flex items-start gap-2 border-b border-border pb-1">
-        <span className="text-sm font-medium flex-shrink-0 pt-2 min-w-[80px] text-left">{label}</span>
+      <div className="flex items-start gap-2 border-b border-border pb-1 min-w-0">
+        <span className="text-sm font-medium flex-shrink-0 pt-2 min-w-[80px] text-left truncate" title={label}>{label}</span>
         <textarea
           data-slot="textarea"
           className={cn(

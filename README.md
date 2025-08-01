@@ -3,15 +3,20 @@
 <p align="center">
     <a href="https://docs.semio-tech.com">
       <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="assets/logo/semio-horizontal-dark.svg">
-          <source media="(prefers-color-scheme: light)" srcset="assets/logo/semio-horizontal.svg">
-          <img alt="semio" href="https://github.com/usalu/semio/" src="assets/logo/semio-horizontal.svg">
+          <source media="(prefers-color-scheme: dark)" srcset="assets/logo/semio_horizontal_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="assets/logo/semio_horizontal.svg">
+          <img alt="semio" href="https://github.com/usalu/semio/" src="assets/logo/semio_horizontal.svg">
       </picture>
     </a>
     <br/>
     <a href="https://doi.org/10.5281/zenodo.8419156"><img src="assets/badges/doi-zenodo.svg" alt="Cite"></a>
     <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="assets/badges/license-agpl-v3.svg" alt="AGPLv3 License"></a>
     <a href="https://discord.gg/m6nnf6pQRc"><img src="https://img.shields.io/discord/1338232508264747130?style=flat-square&color=ff344f" alt="Discord"></a>
+    <br/>
+    <a href="https://play.semio-tech.com"><img src="https://img.shields.io/badge/sketchpad-play-folly?style=flat-square&color=ff344f" alt="Semio"></a>
+    <a href="https://docs.semio-tech.com"><img src="https://img.shields.io/badge/lern-docs-folly?style=flat-square&color=ff344f" alt="Semio"></a>
+    <a href="https://js.semio-tech.com"><img src="https://img.shields.io/badge/Storybook-js-folly?style=flat-square&color=ff344f" alt="Semio"></a>
+    <a href="https://js.semio-tech.com"><img src="https://img.shields.io/badge/research-eg--ice-folly?style=flat-square&color=ff344f" alt="Semio"></a>
     <br/>
     <a href="https://www.grasshopper3d.com/"><img src="assets/badges/ui-browser.svg" alt="Browser"></a>
     <a href="https://www.grasshopper3d.com/"><img src="assets/badges/ui-grasshopper.svg" alt="Grasshopper"></a>
@@ -22,16 +27,21 @@
     <a href="https://www.python.org/"><img src="assets/badges/powered-by-python.svg" alt="Python"></a>
     <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="assets/badges/powered-by-csharp.svg" alt="C#"></a>
     <br/>
-    <i>🧩 Design-Information-Modeling for Kit-of-Parts Architecture 🏘️ </i>
+    <br/>
+    <i>🧩 Design-Information-Modeling for Kit-of-Parts 🏘️ </i>
 </p>
 <br/>
 
-You want to 🧩 the next 🏘️🏛️🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣️👥🖱️⌨️ takes all your ⌚? Then try to 🧠 the 🧬 and let semio 💉🖥️✒️🖨️🪄🚀.
+You want to 🧩 the next 🏘️🏛️🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣️👥🖱️⌨️ takes all your ⌚? Then try to 🧠 the 🧬 and let semio 💉🖥️✒️🖨️🪄🚀
 
 # 👋 Hello contributor
 
 > [!NOTE]
-> Are you a user of semio? Then you probably want to visit our [docs](https://docs.semio-tech.com) 👀
+> You don't know semio? Just play [online](https://docs.semio-tech.com) 🎛️
+>
+> You want to lean semio? Check out our [docs](https://docs.semio-tech.com) 📖
+>
+> You want to lean semio? Check out our [docs](https://docs.semio-tech.com) 📖
 
 Glad to see you!
 
@@ -41,7 +51,7 @@ Let me walk you through 🚶
 
 1. [🛍️ Products](#%EF%B8%8F-products-)
    - [✏️ sketchpad](#%EF%B8%8F-sketchpad-)
-   - [👀 studio](#-studio-)
+   - [👥 studio](#-studio-)
    - [🤖 assistant](#-assistant-)
    - [🦗 semio.gh](#-semiogh-)
    - [🐝 semio.wasp](#-semiowasp-)
@@ -97,6 +107,8 @@ Let me walk you through 🚶
    - [🌈 Colors](#-colors-)
    - [📄 Typography](#-typography-)
    - [👀 Visual elements](#-visual-elements-)
+1. [⚖️ License](#-license-)
+1. [🔒Security](#-security-)
 1. [✨ Contributors](#-contributors-)
 
 # 🛍️ Products [↑](#-overview)
@@ -109,7 +121,7 @@ sketchpad is a simple-to-use, accessible and browser-based user interface for se
 
 ![sketchpad demo](/assets/images/sketchpad-demo.gif)
 
-## 👀 studio [↑](#%EF%B8%8F-products-)
+## 👥 studio [↑](#%EF%B8%8F-products-)
 
 A studio is a synchronous collaboriation environment for teams to work together in semio 🤝
 
@@ -1145,6 +1157,24 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 - Borders □
 - Basic geometric shapes ⚪
 
+# ⚖️ License
+
+The files in this repository are licensed under the [GNU Affero General Public License](https://www.gnu.org/licenses/#AGPL) unless otherwise described. Most libraries, modules, extensions, objects or code herein are explicitly licensed. This is indicated in the root of the containing folder under a different license file, or in the configuration files of a project or in the respective file's header.
+
+As a reference, different type of components have usually different licenses:
+
+- software libraries: [LGPLv3 or later - GNU Lesser General Public License Version 3](https://www.gnu.org/licenses/lgpl-3.0.en.html)
+- applications: [AGPLv3 or later - GNU Affero General Public License Version 3](https://www.gnu.org/licenses/agpl-3.0.en.html)
+- examples: [MIT - The MIT License](https://mit-license.org)
+- templates: [CC0 - No Rights Reserved](https://creativecommons.org/public-domain/cc0/)
+- assets: [CC BY-ND 4.0 - Attribution-NoDerivatives 4.0 International](https://creativecommons.org/licenses/by-nd/4.0/)
+
+If you have any questions, please don't hesitate to get in touch with [us over email](mail@semio-tech.com) 📧
+
+# 🔒 Security
+
+If you have any security vulnerabilities or concerns, please contact [us over email](security@semio-tech.com) and don't open an issue, discussion or write into our public discord server 🥷
+
 # ✨ [Contributors](https://github.com/usalu/semio/pulse/monthly) [↑](#-overview)
 
 <table style="border-collapse: collapse; border: none;">
@@ -1225,24 +1255,6 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
       </td>
     </tr>
 </table>
-
-# ⚖️ License
-
-The files in this repository are licensed under the [GNU Affero General Public License](https://www.gnu.org/licenses/#AGPL) unless otherwise described. Most libraries, modules, extensions, objects or code herein are explicitly licensed. This is indicated in the root of the containing folder under a different license file, or in the configuration files of a project or in the respective file's header.
-
-As a reference, different type of components have usually different licenses:
-
-- software libraries: [LGPLv3 or later - GNU Lesser General Public License Version 3](https://www.gnu.org/licenses/lgpl-3.0.en.html)
-- applications: [AGPLv3 or later - GNU Affero General Public License Version 3](https://www.gnu.org/licenses/agpl-3.0.en.html)
-- examples: [MIT - The MIT License](https://mit-license.org)
-- templates: [CC0 - No Rights Reserved](https://creativecommons.org/public-domain/cc0/)
-- assets: [CC BY-ND 4.0 - Attribution-NoDerivatives 4.0 International](https://creativecommons.org/licenses/by-nd/4.0/)
-
-If you have any questions, please don't hesitate to get in touch with [us over email](mail@semio-tech.com) 📧
-
-# 🔒 Security
-
-If you have any security vulnerabilities or concerns, please contact [us over email](security@semio-tech.com) and don't open an issue, discussion or write into our public discord server 🥷
 
 # 📊 [Stats](https://stats.docs.semio-tech.com)
 

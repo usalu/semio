@@ -769,14 +769,10 @@ class TerminalConsole {
                 return
             }
 
-            if (this.state.mode === 'parameter-gathering') {
-                return // Let form handle input
-            }
+            if (this.state.mode === 'parameter-gathering') return // Let form handle input
 
             if (data === '\x1b') { // ESC
-                if (this.state.mode === 'command-output') {
-                    this.returnToInputMode()
-                }
+                if (this.state.mode === 'command-output') this.returnToInputMode()
                 return
             }
 
@@ -1536,8 +1532,10 @@ export const ConsolePanel: FC<ConsolePanelProps> = ({
                 onMouseEnter={() => setIsResizeHovered(true)}
                 onMouseLeave={() => !isResizing && setIsResizeHovered(false)}
             />
-            <div className="flex-1 w-full" style={{ paddingTop: 4 }}>
-                <Console />
+            <div className="flex-1 w-full p-6">
+                <div className="h-full w-full border border-border/20 rounded-lg overflow-hidden">
+                    <Console />
+                </div>
             </div>
         </div>
     )

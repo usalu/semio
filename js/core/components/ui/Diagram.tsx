@@ -68,6 +68,7 @@ import {
   piecesMetadata,
   Port,
   Type,
+  TOLERANCE,
   updateDesignInKit
 } from '@semio/js'
 
@@ -592,6 +593,7 @@ const Diagram: FC = () => {
       // Check for equal distance snapping opportunities FIRST (before regular snapping)
       const EQUAL_DISTANCE_THRESHOLD = 15 // Pixels for snapping threshold
       let equalDistanceHelperLines: HelperLine[] = []
+      const displayedDistances = new Set<number>() // Track distances already being displayed
 
       for (let i = 0; i < nonSelectedNodes.length; i++) {
         for (let j = i + 1; j < nonSelectedNodes.length; j++) {
@@ -608,7 +610,14 @@ const Diagram: FC = () => {
             const maxY = Math.max(center1.y, center2.y)
             const midY = (center1.y + center2.y) / 2
 
-            if (distance > 40) {
+            // Check if this distance is already being displayed
+            const isDistanceAlreadyDisplayed = Array.from(displayedDistances).some(existingDistance => 
+              Math.abs(existingDistance - distance) < TOLERANCE
+            )
+
+            if (distance > 40 && !isDistanceAlreadyDisplayed) {
+              displayedDistances.add(distance)
+
               // Check for middle position snapping
               if (Math.abs(draggedCenterY - midY) < EQUAL_DISTANCE_THRESHOLD) {
                 draggedY = midY - ICON_WIDTH / 2
@@ -775,7 +784,14 @@ const Diagram: FC = () => {
             const maxX = Math.max(center1.x, center2.x)
             const midX = (center1.x + center2.x) / 2
 
-            if (distance > 40) {
+            // Check if this distance is already being displayed
+            const isDistanceAlreadyDisplayed = Array.from(displayedDistances).some(existingDistance => 
+              Math.abs(existingDistance - distance) < TOLERANCE
+            )
+
+            if (distance > 40 && !isDistanceAlreadyDisplayed) {
+              displayedDistances.add(distance)
+
               // Check for middle position snapping
               if (Math.abs(draggedCenterX - midX) < EQUAL_DISTANCE_THRESHOLD) {
                 draggedX = midX - ICON_WIDTH / 2

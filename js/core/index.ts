@@ -36,7 +36,7 @@ export {
   removeConnectionFromDesign, removeConnectionFromDesignDiff, removeConnectionsFromDesign, removeConnectionsFromDesignDiff, removePieceFromDesign, removePieceFromDesignDiff, removePiecesAndConnectionsFromDesign, removePiecesFromDesign, removePiecesFromDesignDiff,
   representationIdLikeToRepresentationId, RepresentationSchema, safeParse, schemas, serialize,
   setConnectionInDesign, setConnectionInDesignDiff, setConnectionsInDesign, setConnectionsInDesignDiff, setPieceInDesign, setPieceInDesignDiff, setPiecesInDesign, setPiecesInDesignDiff, setQualities, setQuality,
-  toSemioQuaternion, toSemioRotation, toThreeQuaternion, toThreeRotation, typeIdLikeToTypeId, TypeSchema, unifyPortFamiliesAndCompatibleFamiliesForTypes, updateDesignInKit, validate, VectorSchema
+  TOLERANCE, toSemioQuaternion, toSemioRotation, toThreeQuaternion, toThreeRotation, typeIdLikeToTypeId, TypeSchema, unifyPortFamiliesAndCompatibleFamiliesForTypes, updateDesignInKit, validate, VectorSchema
 } from '@semio/js/semio'
 export type {
   Author,

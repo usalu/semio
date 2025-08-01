@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import ReactDOM from 'react-dom/client'
+import { createRoot } from 'react-dom/client'
 
 import './globals.css'
 
@@ -68,7 +68,7 @@ function App() {
 
 export default App;
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <App />
     </React.StrictMode>,

@@ -13,7 +13,6 @@ const SketchpadWrapper: FC = () => {
     if (fileUrls.size === 0) return <div>Loading...</div>;
     return (
         <div className="h-screen w-screen">
-            <h1 className="text-2xl font-bold mb-4">Metabolism Design Editor</h1>
             <DesignEditor initialKit={Metabolism} designId={{ name: "Nakagin Capsule Tower" }} fileUrls={fileUrls} />
         </div>
     );
@@ -22,7 +21,7 @@ const SketchpadWrapper: FC = () => {
 createRoot(document.getElementById('root')!).render(
     <HashRouter>
         <Routes>
-            <Route path="/hello" element={<SketchpadWrapper />} />
+            <Route path="/" element={<SketchpadWrapper />} />
         </Routes>
     </HashRouter>,
 )

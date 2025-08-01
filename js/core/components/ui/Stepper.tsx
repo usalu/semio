@@ -23,7 +23,7 @@
 
 // #endregion TODOs
 import { Minus, Plus } from "lucide-react"
-import { FC, useEffect, useState } from "react"
+import { FC, useCallback, useEffect, useRef, useState } from "react"
 import { Input } from "./Input"
 
 interface StepperProps {
@@ -52,6 +52,8 @@ const Stepper: FC<StepperProps> = ({
     label
 }) => {
     const [internalValue, setInternalValue] = useState(value ?? defaultValue)
+    const intervalRef = useRef<NodeJS.Timeout | null>(null)
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
     useEffect(() => {
         if (value !== undefined) {
@@ -59,47 +61,104 @@ const Stepper: FC<StepperProps> = ({
         }
     }, [value])
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newValue = parseFloat(e.target.value)
-        if (!isNaN(newValue)) {
-            const clampedValue = clampValue(newValue)
-            setInternalValue(clampedValue)
-            onChange?.(clampedValue)
-        }
-    }
-
-    const handleStepUp = () => {
-        const newValue = clampValue(internalValue + step)
-        setInternalValue(newValue)
-        onChange?.(newValue)
-    }
-
-    const handleStepDown = () => {
-        const newValue = clampValue(internalValue - step)
-        setInternalValue(newValue)
-        onChange?.(newValue)
-    }
-
-    const clampValue = (val: number): number => {
+    const clampValue = useCallback((val: number): number => {
         let clampedValue = val
         if (min !== undefined) clampedValue = Math.max(clampedValue, min)
         if (max !== undefined) clampedValue = Math.min(clampedValue, max)
         return clampedValue
+    }, [min, max])
+
+    const updateValue = useCallback((newValue: number) => {
+        const clampedValue = clampValue(newValue)
+        setInternalValue(clampedValue)
+        onChange?.(clampedValue)
+    }, [clampValue, onChange])
+
+    const startContinuousChange = useCallback((increment: number) => {
+        // Clear any existing intervals
+        if (intervalRef.current) clearInterval(intervalRef.current)
+        if (timeoutRef.current) clearTimeout(timeoutRef.current)
+
+        // Start after a delay
+        timeoutRef.current = setTimeout(() => {
+            intervalRef.current = setInterval(() => {
+                setInternalValue(prev => {
+                    const newValue = clampValue(prev + increment)
+                    onChange?.(newValue)
+                    return newValue
+                })
+            }, 100) // Update every 100ms
+        }, 500) // Start continuous after 500ms
+    }, [clampValue, onChange])
+
+    const stopContinuousChange = useCallback(() => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current)
+            intervalRef.current = null
+        }
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current)
+            timeoutRef.current = null
+        }
+    }, [])
+
+    useEffect(() => {
+        return () => {
+            stopContinuousChange()
+        }
+    }, [stopContinuousChange])
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = parseFloat(e.target.value)
+        if (!isNaN(newValue)) {
+            updateValue(newValue)
+        }
+    }
+
+    const handleStepUp = () => {
+        updateValue(internalValue + step)
+    }
+
+    const handleStepDown = () => {
+        updateValue(internalValue - step)
+    }
+
+    const handleMouseDown = (increment: number) => {
+        return () => {
+            onPointerDown?.()
+            if (increment > 0) {
+                handleStepUp()
+            } else {
+                handleStepDown()
+            }
+            startContinuousChange(increment)
+        }
+    }
+
+    const handleMouseUp = () => {
+        stopContinuousChange()
+        onPointerUp?.()
+    }
+
+    const handleMouseLeave = () => {
+        stopContinuousChange()
+        onPointerCancel?.()
     }
 
     const canStepDown = min === undefined || internalValue > min
     const canStepUp = max === undefined || internalValue < max
 
     return (
-        <div className="flex items-center gap-2 border-b border-border pb-1">
-            {label && <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left">{label}</span>}
-            <div className="flex items-center flex-1">
+        <div className="flex items-center gap-2 border-b border-border pb-1 min-w-0">
+            {label && <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>{label}</span>}
+            <div className="flex items-center flex-1 min-w-0">
                 <button
                     type="button"
-                    onPointerDown={onPointerDown}
-                    onPointerUp={onPointerUp}
-                    onPointerCancel={onPointerCancel}
-                    onClick={handleStepDown}
+                    onMouseDown={handleMouseDown(-step)}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseLeave}
+                    onTouchStart={handleMouseDown(-step)}
+                    onTouchEnd={handleMouseUp}
                     disabled={!canStepDown}
                     className="h-9 w-9 border border-r-0 rounded-l-md bg-background hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
@@ -118,10 +177,11 @@ const Stepper: FC<StepperProps> = ({
                 />
                 <button
                     type="button"
-                    onPointerDown={onPointerDown}
-                    onPointerUp={onPointerUp}
-                    onPointerCancel={onPointerCancel}
-                    onClick={handleStepUp}
+                    onMouseDown={handleMouseDown(step)}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseLeave}
+                    onTouchStart={handleMouseDown(step)}
+                    onTouchEnd={handleMouseUp}
                     disabled={!canStepUp}
                     className="h-9 w-9 border border-l-0 rounded-r-md bg-background hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
