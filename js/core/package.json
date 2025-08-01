@@ -47,7 +47,7 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hotkeys-hook": "^5.1.0",
-    "react-resizable-panels": "^2.1.9",
+    "react-resizable-panels": "^3.0.4",
     "sql.js": "^1.13.0",
     "three": "^0.174.0",
     "uuid": "^11.1.0",
