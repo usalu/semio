@@ -1,1 +1,96 @@
-{"name":"Cylindric Capital","description":"A roof that has the skin of a cut extruded cylinder.","icon":"icons/cylindric-capital.svg","image":"images/cylindric-capital.png","variant":"","stock":2147483647,"virtual":false,"location":null,"unit":"m","representations":[{"url":"representations/cylindric-capital.glb","description":"","tags":["model/gltf-binary"],"qualities":[]},{"url":"representations/cylindric-capital_1to500.3dm","description":"","tags":["model/vnd.3dm","1to500"],"qualities":[]},{"url":"https://app.speckle.systems/projects/e7de1a2f8f/models/ae4ed21120","description":"","tags":["model/vnd.3dm","1to500","model/vnd.speckle+json"],"qualities":[]},{"url":"representations/cylindric-capital_1to200.3dm","description":"","tags":["model/vnd.3dm","1to200"],"qualities":[]},{"url":"https://app.speckle.systems/projects/e7de1a2f8f/models/9e40d26d9a","description":"","tags":["model/vnd.3dm","1to200","model/vnd.speckle+json"],"qualities":[]},{"url":"representations/cylindric-capital_collider.glb","description":"","tags":["model/gltf-binary","collider"],"qualities":[]}],"ports":[{"id_":"","description":"The center of the bottom.","mandatory":false,"family":"roof circular top","compatibleFamilies":["roof circular bottom"],"point":{"x":0.0,"y":0.0,"z":0.0},"direction":{"x":0.0,"y":0.0,"z":-1.0},"t":0.0,"qualities":[{"name":"bottom","value":"","unit":"","definition":""},{"name":"wasp rotation","value":"180","unit":"","definition":""}]}],"authors":[{"name":"Ueli Saluz","email":"ueli@semio-tech.org"}],"qualities":[{"name":"peak","value":"south west","unit":"","definition":""},{"name":"diameter","value":"6.5","unit":"m","definition":""},{"name":"height side","value":"5.5","unit":"m","definition":""},{"name":"height low","value":"1","unit":"m","definition":""},{"name":"wall thickness","value":"0.3","unit":"m","definition":""},{"name":"construction cost","value":"123029","unit":"€","definition":""},{"name":"maintenance expenses","value":"820","unit":"€/a","definition":""},{"name":"construction global warming potential","value":"8202","unit":"kgCO2e","definition":"https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"}]}
+{
+  "name": "Cylindric Capital",
+  "description": "A roof that has the skin of a cut extruded cylinder.",
+  "icon": "icons/cylindric-capital.svg",
+  "image": "images/cylindric-capital.png",
+  "variant": "",
+  "stock": 2147483647,
+  "virtual": false,
+  "location": null,
+  "unit": "m",
+  "representations": [
+    {
+      "url": "representations/cylindric-capital.glb",
+      "description": "",
+      "tags": ["model/gltf-binary"],
+      "qualities": []
+    },
+    {
+      "url": "representations/cylindric-capital_1to500.3dm",
+      "description": "",
+      "tags": ["model/vnd.3dm", "1to500"],
+      "qualities": []
+    },
+    {
+      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/ae4ed21120",
+      "description": "",
+      "tags": ["model/vnd.3dm", "1to500", "model/vnd.speckle+json"],
+      "qualities": []
+    },
+    {
+      "url": "representations/cylindric-capital_1to200.3dm",
+      "description": "",
+      "tags": ["model/vnd.3dm", "1to200"],
+      "qualities": []
+    },
+    {
+      "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/9e40d26d9a",
+      "description": "",
+      "tags": ["model/vnd.3dm", "1to200", "model/vnd.speckle+json"],
+      "qualities": []
+    },
+    {
+      "url": "representations/cylindric-capital_collider.glb",
+      "description": "",
+      "tags": ["model/gltf-binary", "collider"],
+      "qualities": []
+    }
+  ],
+  "ports": [
+    {
+      "id_": "",
+      "description": "The center of the bottom.",
+      "mandatory": false,
+      "family": "roof circular top",
+      "compatibleFamilies": ["roof circular bottom"],
+      "point": { "x": 0.0, "y": 0.0, "z": 0.0 },
+      "direction": { "x": 0.0, "y": 0.0, "z": -1.0 },
+      "t": 0.0,
+      "qualities": [
+        { "name": "bottom", "value": "", "unit": "", "definition": "" },
+        {
+          "name": "wasp rotation",
+          "value": "180",
+          "unit": "",
+          "definition": ""
+        }
+      ]
+    }
+  ],
+  "authors": [{ "name": "Ueli Saluz", "email": "ueli@semio-tech.org" }],
+  "qualities": [
+    { "name": "peak", "value": "south west", "unit": "", "definition": "" },
+    { "name": "diameter", "value": "6.5", "unit": "m", "definition": "" },
+    { "name": "height side", "value": "5.5", "unit": "m", "definition": "" },
+    { "name": "height low", "value": "1", "unit": "m", "definition": "" },
+    { "name": "wall thickness", "value": "0.3", "unit": "m", "definition": "" },
+    {
+      "name": "construction cost",
+      "value": "123029",
+      "unit": "€",
+      "definition": ""
+    },
+    {
+      "name": "maintenance expenses",
+      "value": "820",
+      "unit": "€/a",
+      "definition": ""
+    },
+    {
+      "name": "construction global warming potential",
+      "value": "8202",
+      "unit": "kgCO2e",
+      "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
+    }
+  ]
+}

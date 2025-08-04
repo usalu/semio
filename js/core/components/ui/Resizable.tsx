@@ -18,32 +18,18 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-import { GripVerticalIcon } from "lucide-react"
-import * as React from "react"
-import * as ResizablePrimitive from "react-resizable-panels"
+import { GripVerticalIcon } from "lucide-react";
+import * as React from "react";
+import * as ResizablePrimitive from "react-resizable-panels";
 
-import { cn } from "@semio/js/lib/utils"
+import { cn } from "@semio/js/lib/utils";
 
-function ResizablePanelGroup({
-  className,
-  ...props
-}: React.ComponentProps<typeof ResizablePrimitive.PanelGroup>) {
-  return (
-    <ResizablePrimitive.PanelGroup
-      data-slot="resizable-panel-group"
-      className={cn(
-        "flex h-full w-full data-[panel-group-direction=vertical]:flex-col",
-        className
-      )}
-      {...props}
-    />
-  )
+function ResizablePanelGroup({ className, ...props }: React.ComponentProps<typeof ResizablePrimitive.PanelGroup>) {
+  return <ResizablePrimitive.PanelGroup data-slot="resizable-panel-group" className={cn("flex h-full w-full data-[panel-group-direction=vertical]:flex-col", className)} {...props} />;
 }
 
-function ResizablePanel({
-  ...props
-}: React.ComponentProps<typeof ResizablePrimitive.Panel>) {
-  return <ResizablePrimitive.Panel data-slot="resizable-panel" {...props} />
+function ResizablePanel({ ...props }: React.ComponentProps<typeof ResizablePrimitive.Panel>) {
+  return <ResizablePrimitive.Panel data-slot="resizable-panel" {...props} />;
 }
 
 function ResizableHandle({
@@ -54,7 +40,7 @@ function ResizableHandle({
   onMouseLeave: externalOnMouseLeave,
   ...props
 }: React.ComponentProps<typeof ResizablePrimitive.PanelResizeHandle> & {
-  withHandle?: boolean
+  withHandle?: boolean;
 }) {
   const [isHovered, setIsHovered] = React.useState(false);
   const [isDragging, setIsDragging] = React.useState(false);
@@ -65,10 +51,10 @@ function ResizableHandle({
 
     const handleMouseUp = () => {
       setIsDragging(false);
-      document.removeEventListener('mouseup', handleMouseUp, true);
+      document.removeEventListener("mouseup", handleMouseUp, true);
     };
 
-    document.addEventListener('mouseup', handleMouseUp, true);
+    document.addEventListener("mouseup", handleMouseUp, true);
   };
 
   const handleMouseEnter: React.MouseEventHandler<HTMLDivElement> = (e) => {
@@ -102,7 +88,7 @@ function ResizableHandle({
         "data-[panel-group-direction=vertical]:after:left-0 data-[panel-group-direction=vertical]:after:h-1 data-[panel-group-direction=vertical]:after:w-full data-[panel-group-direction=vertical]:after:-translate-y-1/2 data-[panel-group-direction=vertical]:after:translate-x-0",
         "data-[panel-group-direction=vertical]:before:inset-x-0 data-[panel-group-direction=vertical]:before:-top-2 data-[panel-group-direction=vertical]:before:h-4 data-[panel-group-direction=vertical]:before:w-full data-[panel-group-direction=vertical]:before:cursor-ns-resize",
         "[&[data-panel-group-direction=vertical]>div]:rotate-90",
-        className
+        className,
       )}
       onMouseDown={handleMouseDown}
       onMouseEnter={handleMouseEnter}
@@ -110,16 +96,17 @@ function ResizableHandle({
       {...props}
     >
       {withHandle && (
-        <div className={cn(
-          "z-10 flex h-4 w-3 items-center justify-center border bg-background",
-          isDragging || isHovered ? "border-primary bg-primary" : "hover:border-primary" // Apply hover/drag to handle itself
-        )}>
+        <div
+          className={cn(
+            "z-10 flex h-4 w-3 items-center justify-center border bg-background",
+            isDragging || isHovered ? "border-primary bg-primary" : "hover:border-primary", // Apply hover/drag to handle itself
+          )}
+        >
           <GripVerticalIcon className="size-2.5" />
         </div>
       )}
     </ResizablePrimitive.PanelResizeHandle>
-  )
+  );
 }
 
-export { ResizableHandle, ResizablePanel, ResizablePanelGroup }
-
+export { ResizableHandle, ResizablePanel, ResizablePanelGroup };

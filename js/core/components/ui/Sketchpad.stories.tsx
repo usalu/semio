@@ -18,37 +18,37 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { Mode, Sketchpad } from '@semio/js';
+import { Mode, Sketchpad } from "@semio/js";
 
 const meta = {
-    title: 'Studio/Sketchpad',
-    component: Sketchpad,
-    parameters: {
-        layout: 'fullscreen',
-    },
-    decorators: [
-        (Story) => (
-            <div className="w-full h-[800px]">
-                <Story />
-            </div>
-        ),
-    ],
+  title: "Studio/Sketchpad",
+  component: Sketchpad,
+  parameters: {
+    layout: "fullscreen",
+  },
+  decorators: [
+    (Story) => (
+      <div className="w-full h-[800px]">
+        <Story />
+      </div>
+    ),
+  ],
 } satisfies Meta<typeof Sketchpad>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const User: Story = {
-    args: {
-        userId: "user-test",
-    },
+  args: {
+    userId: "user-test",
+  },
 };
 
 export const Guest: Story = {
-    args: {
-        userId: "guest-test",
-        mode: Mode.GUEST,
-    },
+  args: {
+    userId: "guest-test",
+    mode: Mode.GUEST,
+  },
 };

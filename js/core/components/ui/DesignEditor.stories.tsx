@@ -18,24 +18,21 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { default as Metabolism } from "@semio/assets/semio/kit_metabolism.json";
-import { DesignEditor, extractFilesAndCreateUrls } from '@semio/js';
+import { DesignEditor, extractFilesAndCreateUrls } from "@semio/js";
 
 const metabolismWithEmptyDesign = {
   ...Metabolism,
-  designs: [
-    ...Metabolism.designs,
-    { name: "New Design", pieces: [], connections: [] }
-  ]
-}
+  designs: [...Metabolism.designs, { name: "New Design", pieces: [], connections: [] }],
+};
 
 const meta = {
-  title: 'Studio/DesignEditor',
+  title: "Studio/DesignEditor",
   component: DesignEditor,
   parameters: {
-    layout: 'fullscreen',
+    layout: "fullscreen",
   },
   decorators: [
     (Story) => (
@@ -58,13 +55,11 @@ export const NewDesign: Story = {
   args: {
     initialKit: metabolismWithEmptyDesign,
     designId: {
-      name: "New Design"
+      name: "New Design",
     },
   },
-  render: (args, { loaded: { fileUrls } }) => (
-    <DesignEditor {...args} fileUrls={fileUrls} />
-  ),
-}
+  render: (args, { loaded: { fileUrls } }) => <DesignEditor {...args} fileUrls={fileUrls} />,
+};
 
 export const NakaginCapsuleTower: Story = {
   loaders: [
@@ -75,12 +70,10 @@ export const NakaginCapsuleTower: Story = {
   args: {
     initialKit: Metabolism,
     designId: {
-      name: "Nakagin Capsule Tower"
+      name: "Nakagin Capsule Tower",
     },
   },
-  render: (args, { loaded: { fileUrls } }) => (
-    <DesignEditor {...args} fileUrls={fileUrls} />
-  ),
+  render: (args, { loaded: { fileUrls } }) => <DesignEditor {...args} fileUrls={fileUrls} />,
 };
 
 export const NakaginCapsuleTowerWithDiff: Story = {
@@ -92,7 +85,7 @@ export const NakaginCapsuleTowerWithDiff: Story = {
   args: {
     initialKit: Metabolism,
     designId: {
-      name: "Nakagin Capsule Tower"
+      name: "Nakagin Capsule Tower",
     },
     initialDesignDiff: {
       name: "Modified Nakagin Capsule Tower",
@@ -112,9 +105,9 @@ export const NakaginCapsuleTowerWithDiff: Story = {
             plane: {
               origin: { x: 2.5, y: 1.0, z: 0.5 },
               xAxis: { x: 0.9659, y: 0.2588, z: 0.0 },
-              yAxis: { x: -0.2588, y: 0.9659, z: 0.0 }
+              yAxis: { x: -0.2588, y: 0.9659, z: 0.0 },
             },
-            center: { x: 2.5, y: 1.0 }
+            center: { x: 2.5, y: 1.0 },
           },
           // {
           //   id_: "cs_sl0_d0_t_f3_b_c0",
@@ -141,9 +134,9 @@ export const NakaginCapsuleTowerWithDiff: Story = {
             plane: {
               origin: { x: -13.05, y: -7.7, z: 45.0 },
               xAxis: { x: 1.0, y: 0.0, z: 0.0 },
-              yAxis: { x: 0.0, y: 1.0, z: 0.0 }
+              yAxis: { x: 0.0, y: 1.0, z: 0.0 },
             },
-            center: { x: 3, y: -2 }
+            center: { x: 3, y: -2 },
           },
           // {
           //   id_: "cs_sl0_d0_t_f15_bridge_01",
@@ -162,14 +155,14 @@ export const NakaginCapsuleTowerWithDiff: Story = {
           //     { name: "construction cost", value: "12000", unit: "CHF" }
           //   ]
           // }
-        ]
+        ],
       },
       connections: {
         // Remove connections to pieces that are being removed
         removed: [
           {
             connected: { piece: { id_: "t_f0_b_c0" } },
-            connecting: { piece: { id_: "cs_sl0_d0_t_f0_b_c0" } }
+            connecting: { piece: { id_: "cs_sl0_d0_t_f0_b_c0" } },
           },
           // {
           //   connected: { piece: { id_: "t_f0_b_c0" } },
@@ -292,10 +285,8 @@ export const NakaginCapsuleTowerWithDiff: Story = {
         //     ]
         //   }
         // ]
-      }
+      },
     },
   },
-  render: (args, { loaded: { fileUrls } }) => (
-    <DesignEditor {...args} fileUrls={fileUrls} />
-  ),
+  render: (args, { loaded: { fileUrls } }) => <DesignEditor {...args} fileUrls={fileUrls} />,
 };

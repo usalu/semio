@@ -18,22 +18,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-import {
-  TooltipProvider
-} from "@semio/js/components/ui/Tooltip";
-import {
-  createContext,
-  FC,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState
-} from "react";
+import { TooltipProvider } from "@semio/js/components/ui/Tooltip";
+import { createContext, FC, ReactNode, useContext, useEffect, useState } from "react";
 import DesignEditor from "./DesignEditor";
 
 import { default as Metabolism } from "@semio/assets/semio/kit_metabolism.json";
 import { extractFilesAndCreateUrls } from "../../lib/utils";
-
 
 export enum Mode {
   USER = "user",
@@ -70,7 +60,7 @@ export const useSketchpad = () => {
   return context;
 };
 
-interface ViewProps { }
+interface ViewProps {}
 
 const View = () => {
   const [fileUrls, setFileUrls] = useState<Map<string, string>>(new Map());
@@ -94,21 +84,13 @@ interface SketchpadProps {
   userId: string;
 }
 
-const Sketchpad: FC<SketchpadProps> = ({
-  mode = Mode.USER,
-  theme,
-  layout = Layout.NORMAL,
-  onWindowEvents,
-  userId,
-}) => {
+const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layout.NORMAL, onWindowEvents, userId }) => {
   const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
   const [currentLayout, setCurrentLayout] = useState<Layout>(layout);
   const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
     if (theme) return theme;
     if (typeof window !== "undefined") {
-      return window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? Theme.DARK
-        : Theme.LIGHT;
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? Theme.DARK : Theme.LIGHT;
     }
     return Theme.LIGHT;
   });
@@ -141,10 +123,7 @@ const Sketchpad: FC<SketchpadProps> = ({
           setNavbarToolbar: setNavbarToolbar,
         }}
       >
-        <div
-          key={`layout-${currentLayout}`}
-          className="h-full w-full flex flex-col bg-background text-foreground"
-        >
+        <div key={`layout-${currentLayout}`} className="h-full w-full flex flex-col bg-background text-foreground">
           <View />
         </div>
       </SketchpadContext.Provider>

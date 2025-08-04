@@ -1,499 +1,464 @@
 {
-    "$defs": {
-        "Author": {
-            "description": "\ud83d\udcd1 The output of an author.",
-            "properties": {
-                "name": {
-                    "description": "\ud83d\udcdb The name of the author.",
-                    "maxLength": 64,
-                    "title": "Name",
-                    "type": "string"
-                },
-                "email": {
-                    "description": "\ud83d\udce7 The email of the author.",
-                    "maxLength": 128,
-                    "title": "Email",
-                    "type": "string"
-                }
-            },
-            "required": [
-                "name",
-                "email"
-            ],
-            "title": "Author",
-            "type": "object"
-        },
-        "Connection": {
-            "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design.",
-            "properties": {
-                "description": {
-                    "default": "",
-                    "description": "\ud83d\udcac The optional human-readable description of the connection.",
-                    "maxLength": 512,
-                    "title": "Description",
-                    "type": "string"
-                },
-                "gap": {
-                    "default": 0,
-                    "description": "\u2195\ufe0f The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. ",
-                    "title": "Gap",
-                    "type": "number"
-                },
-                "shift": {
-                    "default": 0,
-                    "description": "\u2194\ufe0f The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
-                    "title": "Shift",
-                    "type": "number"
-                },
-                "rise": {
-                    "default": 0,
-                    "description": "\ud83e\ude9c The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
-                    "title": "Rise",
-                    "type": "number"
-                },
-                "rotation": {
-                    "default": 0,
-                    "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
-                    "exclusiveMaximum": 360,
-                    "minimum": 0,
-                    "title": "Rotation",
-                    "type": "number"
-                },
-                "turn": {
-                    "default": 0,
-                    "description": "\ud83d\udede The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
-                    "exclusiveMaximum": 360,
-                    "minimum": 0,
-                    "title": "Turn",
-                    "type": "number"
-                },
-                "tilt": {
-                    "default": 0,
-                    "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
-                    "exclusiveMaximum": 360,
-                    "minimum": 0,
-                    "title": "Tilt",
-                    "type": "number"
-                },
-                "x": {
-                    "default": 0,
-                    "description": "\u27a1\ufe0f The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
-                    "title": "X",
-                    "type": "number"
-                },
-                "y": {
-                    "default": 0,
-                    "description": "\u2b06\ufe0f The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
-                    "title": "Y",
-                    "type": "number"
-                },
-                "connected": {
-                    "$ref": "#/$defs/Side",
-                    "description": "\ud83e\uddf2 The connected side of the connection."
-                },
-                "connecting": {
-                    "$ref": "#/$defs/Side",
-                    "description": "\ud83e\uddf2 The connecting side of the connection."
-                }
-            },
-            "required": [
-                "connected",
-                "connecting"
-            ],
-            "title": "Connection",
-            "type": "object"
-        },
-        "DiagramPoint": {
-            "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system.",
-            "properties": {
-                "x": {
-                    "description": "\ud83c\udfc1 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
-                    "title": "X",
-                    "type": "number"
-                },
-                "y": {
-                    "description": "\ud83c\udfc1 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
-                    "title": "Y",
-                    "type": "number"
-                }
-            },
-            "required": [
-                "x",
-                "y"
-            ],
-            "title": "DiagramPoint",
-            "type": "object"
-        },
-        "Location": {
-            "description": "\ud83d\udccd The output of a location.",
-            "properties": {
-                "longitude": {
-                    "description": "\u2194\ufe0f The longitude of the location in degrees.",
-                    "title": "Longitude",
-                    "type": "number"
-                },
-                "latitude": {
-                    "description": "\u2195\ufe0f The latitude of the location in degrees.",
-                    "title": "Latitude",
-                    "type": "number"
-                }
-            },
-            "required": [
-                "longitude",
-                "latitude"
-            ],
-            "title": "Location",
-            "type": "object"
-        },
-        "PieceId": {
-            "description": "\ud83e\udeaa The props to identify the piece within the parent design.",
-            "properties": {
-                "id_": {
-                    "default": "",
-                    "description": "\ud83c\udd94 The id of the piece.",
-                    "maxLength": 128,
-                    "title": "Id",
-                    "type": "string"
-                }
-            },
-            "title": "PieceId",
-            "type": "object"
-        },
-        "Piece": {
-            "description": "\u2b55 A piece is a 3d-instance of a type in a design.",
-            "properties": {
-                "id_": {
-                    "default": "",
-                    "description": "\ud83c\udd94 The id of the piece.",
-                    "maxLength": 128,
-                    "title": "Id",
-                    "type": "string"
-                },
-                "description": {
-                    "default": "",
-                    "description": "\ud83d\udcac The optional human-readable description of the piece.",
-                    "maxLength": 512,
-                    "title": "Description",
-                    "type": "string"
-                },
-                "type": {
-                    "$ref": "#/$defs/TypeId",
-                    "description": "\ud83e\udde9 The type of the piece."
-                },
-                "plane": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/Plane"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
-                    "description": "\u25f3 The optional plane of the piece. When pieces are connected only one piece can have a plane."
-                },
-                "center": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/DiagramPoint"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
-                    "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
-                },
-                "qualities": {
-                    "description": "\ud83d\udccf The qualities of the piece.",
-                    "items": {
-                        "$ref": "#/$defs/Quality"
-                    },
-                    "title": "Qualities",
-                    "type": "array"
-                }
-            },
-            "required": [
-                "type"
-            ],
-            "title": "Piece",
-            "type": "object"
-        },
-        "Plane": {
-            "description": "\u25f3 A plane is an origin (point) and an orientation (x-axis and y-axis).",
-            "properties": {
-                "origin": {
-                    "$ref": "#/$defs/Point",
-                    "description": "\u2331 The origin of the plane."
-                },
-                "xAxis": {
-                    "$ref": "#/$defs/Vector",
-                    "description": "\u27a1\ufe0f The x-axis of the plane."
-                },
-                "yAxis": {
-                    "$ref": "#/$defs/Vector",
-                    "description": "\u27a1\ufe0f The y-axis of the plane."
-                }
-            },
-            "required": [
-                "origin",
-                "xAxis",
-                "yAxis"
-            ],
-            "title": "Plane",
-            "type": "object"
-        },
-        "Point": {
-            "description": "\u2716\ufe0f A 3d-point (xyz) of floating point numbers.",
-            "properties": {
-                "x": {
-                    "description": "\ud83c\udf9a\ufe0f The x-coordinate of the point.",
-                    "title": "X",
-                    "type": "number"
-                },
-                "y": {
-                    "description": "\ud83c\udf9a\ufe0f The y-coordinate of the point.",
-                    "title": "Y",
-                    "type": "number"
-                },
-                "z": {
-                    "description": "\ud83c\udf9a\ufe0f The z-coordinate of the point.",
-                    "title": "Z",
-                    "type": "number"
-                }
-            },
-            "required": [
-                "x",
-                "y",
-                "z"
-            ],
-            "title": "Point",
-            "type": "object"
-        },
-        "PortId": {
-            "description": "\ud83e\udeaa The props to identify the port within the parent type.",
-            "properties": {
-                "id_": {
-                    "default": "",
-                    "description": "\ud83c\udd94 The id of the port.",
-                    "maxLength": 128,
-                    "title": "Id",
-                    "type": "string"
-                }
-            },
-            "title": "PortId",
-            "type": "object"
-        },
-        "Quality": {
-            "description": "\ud83d\udccf A quality is a named value with a unit and a definition.",
-            "properties": {
-                "name": {
-                    "description": "\ud83d\udccf The name of the quality.",
-                    "maxLength": 64,
-                    "title": "Name",
-                    "type": "string"
-                },
-                "value": {
-                    "default": "",
-                    "description": "\ud83d\udccf The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
-                    "maxLength": 64,
-                    "title": "Value",
-                    "type": "string"
-                },
-                "unit": {
-                    "default": "",
-                    "description": "\ud83d\udccf The optional unit of the value of the quality.",
-                    "maxLength": 64,
-                    "title": "Unit",
-                    "type": "string"
-                },
-                "definition": {
-                    "default": "",
-                    "description": "\ud83d\udccf The optional definition [ text | uri ] of the quality.",
-                    "maxLength": 512,
-                    "title": "Definition",
-                    "type": "string"
-                }
-            },
-            "required": [
-                "name"
-            ],
-            "title": "Quality",
-            "type": "object"
-        },
-        "Side": {
-            "description": "\ud83e\uddf1 A side of a piece in a connection.",
-            "properties": {
-                "piece": {
-                    "$ref": "#/$defs/PieceId"
-                },
-                "port": {
-                    "$ref": "#/$defs/PortId"
-                }
-            },
-            "required": [
-                "piece",
-                "port"
-            ],
-            "title": "Side",
-            "type": "object"
-        },
-        "TypeId": {
-            "description": "\ud83e\udeaa The props to identify the type.",
-            "properties": {
-                "name": {
-                    "description": "\ud83d\udcdb The name of the type.",
-                    "maxLength": 64,
-                    "title": "Name",
-                    "type": "string"
-                },
-                "variant": {
-                    "default": "",
-                    "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
-                    "maxLength": 64,
-                    "title": "Variant",
-                    "type": "string"
-                }
-            },
-            "required": [
-                "name"
-            ],
-            "title": "TypeId",
-            "type": "object"
-        },
-        "Vector": {
-            "description": "\u27a1\ufe0f A 3d-vector (xyz) of floating point numbers.",
-            "properties": {
-                "x": {
-                    "description": "\ud83c\udf9a\ufe0f The x-coordinate of the vector.",
-                    "title": "X",
-                    "type": "number"
-                },
-                "y": {
-                    "description": "\ud83c\udf9a\ufe0f The y-coordinate of the vector.",
-                    "title": "Y",
-                    "type": "number"
-                },
-                "z": {
-                    "description": "\ud83c\udf9a\ufe0f The z-coordinate of the vector.",
-                    "title": "Z",
-                    "type": "number"
-                }
-            },
-            "required": [
-                "x",
-                "y",
-                "z"
-            ],
-            "title": "Vector",
-            "type": "object"
-        }
-    },
-    "description": "\ud83c\udfd9\ufe0f A design is a collection of pieces that are connected.",
-    "properties": {
+  "$defs": {
+    "Author": {
+      "description": "\ud83d\udcd1 The output of an author.",
+      "properties": {
         "name": {
-            "description": "\ud83d\udcdb The name of the design.",
-            "maxLength": 64,
-            "title": "Name",
-            "type": "string"
+          "description": "\ud83d\udcdb The name of the author.",
+          "maxLength": 64,
+          "title": "Name",
+          "type": "string"
+        },
+        "email": {
+          "description": "\ud83d\udce7 The email of the author.",
+          "maxLength": 128,
+          "title": "Email",
+          "type": "string"
+        }
+      },
+      "required": ["name", "email"],
+      "title": "Author",
+      "type": "object"
+    },
+    "Connection": {
+      "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design.",
+      "properties": {
+        "description": {
+          "default": "",
+          "description": "\ud83d\udcac The optional human-readable description of the connection.",
+          "maxLength": 512,
+          "title": "Description",
+          "type": "string"
+        },
+        "gap": {
+          "default": 0,
+          "description": "\u2195\ufe0f The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. ",
+          "title": "Gap",
+          "type": "number"
+        },
+        "shift": {
+          "default": 0,
+          "description": "\u2194\ufe0f The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
+          "title": "Shift",
+          "type": "number"
+        },
+        "rise": {
+          "default": 0,
+          "description": "\ud83e\ude9c The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+          "title": "Rise",
+          "type": "number"
+        },
+        "rotation": {
+          "default": 0,
+          "description": "\ud83d\udd04 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+          "exclusiveMaximum": 360,
+          "minimum": 0,
+          "title": "Rotation",
+          "type": "number"
+        },
+        "turn": {
+          "default": 0,
+          "description": "\ud83d\udede The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+          "exclusiveMaximum": 360,
+          "minimum": 0,
+          "title": "Turn",
+          "type": "number"
+        },
+        "tilt": {
+          "default": 0,
+          "description": "\u2197\ufe0f The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
+          "exclusiveMaximum": 360,
+          "minimum": 0,
+          "title": "Tilt",
+          "type": "number"
+        },
+        "x": {
+          "default": 0,
+          "description": "\u27a1\ufe0f The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "default": 0,
+          "description": "\u2b06\ufe0f The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+          "title": "Y",
+          "type": "number"
+        },
+        "connected": {
+          "$ref": "#/$defs/Side",
+          "description": "\ud83e\uddf2 The connected side of the connection."
+        },
+        "connecting": {
+          "$ref": "#/$defs/Side",
+          "description": "\ud83e\uddf2 The connecting side of the connection."
+        }
+      },
+      "required": ["connected", "connecting"],
+      "title": "Connection",
+      "type": "object"
+    },
+    "DiagramPoint": {
+      "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system.",
+      "properties": {
+        "x": {
+          "description": "\ud83c\udfc1 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "description": "\ud83c\udfc1 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "required": ["x", "y"],
+      "title": "DiagramPoint",
+      "type": "object"
+    },
+    "Location": {
+      "description": "\ud83d\udccd The output of a location.",
+      "properties": {
+        "longitude": {
+          "description": "\u2194\ufe0f The longitude of the location in degrees.",
+          "title": "Longitude",
+          "type": "number"
+        },
+        "latitude": {
+          "description": "\u2195\ufe0f The latitude of the location in degrees.",
+          "title": "Latitude",
+          "type": "number"
+        }
+      },
+      "required": ["longitude", "latitude"],
+      "title": "Location",
+      "type": "object"
+    },
+    "PieceId": {
+      "description": "\ud83e\udeaa The props to identify the piece within the parent design.",
+      "properties": {
+        "id_": {
+          "default": "",
+          "description": "\ud83c\udd94 The id of the piece.",
+          "maxLength": 128,
+          "title": "Id",
+          "type": "string"
+        }
+      },
+      "title": "PieceId",
+      "type": "object"
+    },
+    "Piece": {
+      "description": "\u2b55 A piece is a 3d-instance of a type in a design.",
+      "properties": {
+        "id_": {
+          "default": "",
+          "description": "\ud83c\udd94 The id of the piece.",
+          "maxLength": 128,
+          "title": "Id",
+          "type": "string"
         },
         "description": {
-            "default": "",
-            "description": "\ud83d\udcac The optional human-readable description of the design.",
-            "maxLength": 512,
-            "title": "Description",
-            "type": "string"
+          "default": "",
+          "description": "\ud83d\udcac The optional human-readable description of the piece.",
+          "maxLength": 512,
+          "title": "Description",
+          "type": "string"
         },
-        "icon": {
-            "default": "",
-            "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. The image must be at least 256x256 pixels and smaller than 1 MB.",
-            "maxLength": 1024,
-            "title": "Icon",
-            "type": "string"
+        "type": {
+          "$ref": "#/$defs/TypeId",
+          "description": "\ud83e\udde9 The type of the piece."
         },
-        "image": {
-            "default": "",
-            "description": "\ud83d\uddbc\ufe0f The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
-            "maxLength": 1024,
-            "title": "Image",
-            "type": "string"
-        },
-        "variant": {
-            "default": "",
-            "description": "\ud83d\udd00 The optional variant of the design. No variant means the default variant.",
-            "maxLength": 64,
-            "title": "Variant",
-            "type": "string"
-        },
-        "view": {
-            "default": "",
-            "description": "\ud83e\udd7d The optional view of the design. No view means the default view.",
-            "maxLength": 64,
-            "title": "View",
-            "type": "string"
-        },
-        "unit": {
-            "default": "",
-            "description": "\ud83d\udccf The unit of the design.",
-            "maxLength": 64,
-            "title": "Unit",
-            "type": "string"
-        },
-        "created": {
-            "description": "\ud83d\udd52 The creation date of the design.",
-            "format": "date-time",
-            "title": "Created",
-            "type": "string"
-        },
-        "updated": {
-            "description": "\ud83d\udd52 The last update date of the design.",
-            "format": "date-time",
-            "title": "Updated",
-            "type": "string"
-        },
-        "location": {
-            "anyOf": [
-                {
-                    "$ref": "#/$defs/Location"
-                },
-                {
-                    "type": "null"
-                }
-            ],
-            "default": null
-        },
-        "pieces": {
-            "items": {
-                "$ref": "#/$defs/Piece"
+        "plane": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Plane"
             },
-            "title": "Pieces",
-            "type": "array"
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "\u25f3 The optional plane of the piece. When pieces are connected only one piece can have a plane."
         },
-        "connections": {
-            "items": {
-                "$ref": "#/$defs/Connection"
+        "center": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DiagramPoint"
             },
-            "title": "Connections",
-            "type": "array"
-        },
-        "authors": {
-            "items": {
-                "$ref": "#/$defs/Author"
-            },
-            "title": "Authors",
-            "type": "array"
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
         },
         "qualities": {
-            "items": {
-                "$ref": "#/$defs/Quality"
-            },
-            "title": "Qualities",
-            "type": "array"
+          "description": "\ud83d\udccf The qualities of the piece.",
+          "items": {
+            "$ref": "#/$defs/Quality"
+          },
+          "title": "Qualities",
+          "type": "array"
         }
+      },
+      "required": ["type"],
+      "title": "Piece",
+      "type": "object"
     },
-    "required": [
-        "name"
-    ],
-    "title": "Design",
-    "type": "object"
+    "Plane": {
+      "description": "\u25f3 A plane is an origin (point) and an orientation (x-axis and y-axis).",
+      "properties": {
+        "origin": {
+          "$ref": "#/$defs/Point",
+          "description": "\u2331 The origin of the plane."
+        },
+        "xAxis": {
+          "$ref": "#/$defs/Vector",
+          "description": "\u27a1\ufe0f The x-axis of the plane."
+        },
+        "yAxis": {
+          "$ref": "#/$defs/Vector",
+          "description": "\u27a1\ufe0f The y-axis of the plane."
+        }
+      },
+      "required": ["origin", "xAxis", "yAxis"],
+      "title": "Plane",
+      "type": "object"
+    },
+    "Point": {
+      "description": "\u2716\ufe0f A 3d-point (xyz) of floating point numbers.",
+      "properties": {
+        "x": {
+          "description": "\ud83c\udf9a\ufe0f The x-coordinate of the point.",
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "description": "\ud83c\udf9a\ufe0f The y-coordinate of the point.",
+          "title": "Y",
+          "type": "number"
+        },
+        "z": {
+          "description": "\ud83c\udf9a\ufe0f The z-coordinate of the point.",
+          "title": "Z",
+          "type": "number"
+        }
+      },
+      "required": ["x", "y", "z"],
+      "title": "Point",
+      "type": "object"
+    },
+    "PortId": {
+      "description": "\ud83e\udeaa The props to identify the port within the parent type.",
+      "properties": {
+        "id_": {
+          "default": "",
+          "description": "\ud83c\udd94 The id of the port.",
+          "maxLength": 128,
+          "title": "Id",
+          "type": "string"
+        }
+      },
+      "title": "PortId",
+      "type": "object"
+    },
+    "Quality": {
+      "description": "\ud83d\udccf A quality is a named value with a unit and a definition.",
+      "properties": {
+        "name": {
+          "description": "\ud83d\udccf The name of the quality.",
+          "maxLength": 64,
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "default": "",
+          "description": "\ud83d\udccf The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
+          "maxLength": 64,
+          "title": "Value",
+          "type": "string"
+        },
+        "unit": {
+          "default": "",
+          "description": "\ud83d\udccf The optional unit of the value of the quality.",
+          "maxLength": 64,
+          "title": "Unit",
+          "type": "string"
+        },
+        "definition": {
+          "default": "",
+          "description": "\ud83d\udccf The optional definition [ text | uri ] of the quality.",
+          "maxLength": 512,
+          "title": "Definition",
+          "type": "string"
+        }
+      },
+      "required": ["name"],
+      "title": "Quality",
+      "type": "object"
+    },
+    "Side": {
+      "description": "\ud83e\uddf1 A side of a piece in a connection.",
+      "properties": {
+        "piece": {
+          "$ref": "#/$defs/PieceId"
+        },
+        "port": {
+          "$ref": "#/$defs/PortId"
+        }
+      },
+      "required": ["piece", "port"],
+      "title": "Side",
+      "type": "object"
+    },
+    "TypeId": {
+      "description": "\ud83e\udeaa The props to identify the type.",
+      "properties": {
+        "name": {
+          "description": "\ud83d\udcdb The name of the type.",
+          "maxLength": 64,
+          "title": "Name",
+          "type": "string"
+        },
+        "variant": {
+          "default": "",
+          "description": "\ud83d\udd00 The optional variant of the type. No variant means the default variant.",
+          "maxLength": 64,
+          "title": "Variant",
+          "type": "string"
+        }
+      },
+      "required": ["name"],
+      "title": "TypeId",
+      "type": "object"
+    },
+    "Vector": {
+      "description": "\u27a1\ufe0f A 3d-vector (xyz) of floating point numbers.",
+      "properties": {
+        "x": {
+          "description": "\ud83c\udf9a\ufe0f The x-coordinate of the vector.",
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "description": "\ud83c\udf9a\ufe0f The y-coordinate of the vector.",
+          "title": "Y",
+          "type": "number"
+        },
+        "z": {
+          "description": "\ud83c\udf9a\ufe0f The z-coordinate of the vector.",
+          "title": "Z",
+          "type": "number"
+        }
+      },
+      "required": ["x", "y", "z"],
+      "title": "Vector",
+      "type": "object"
+    }
+  },
+  "description": "\ud83c\udfd9\ufe0f A design is a collection of pieces that are connected.",
+  "properties": {
+    "name": {
+      "description": "\ud83d\udcdb The name of the design.",
+      "maxLength": 64,
+      "title": "Name",
+      "type": "string"
+    },
+    "description": {
+      "default": "",
+      "description": "\ud83d\udcac The optional human-readable description of the design.",
+      "maxLength": 512,
+      "title": "Description",
+      "type": "string"
+    },
+    "icon": {
+      "default": "",
+      "description": "\ud83e\ude99 The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. The image must be at least 256x256 pixels and smaller than 1 MB.",
+      "maxLength": 1024,
+      "title": "Icon",
+      "type": "string"
+    },
+    "image": {
+      "default": "",
+      "description": "\ud83d\uddbc\ufe0f The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
+      "maxLength": 1024,
+      "title": "Image",
+      "type": "string"
+    },
+    "variant": {
+      "default": "",
+      "description": "\ud83d\udd00 The optional variant of the design. No variant means the default variant.",
+      "maxLength": 64,
+      "title": "Variant",
+      "type": "string"
+    },
+    "view": {
+      "default": "",
+      "description": "\ud83e\udd7d The optional view of the design. No view means the default view.",
+      "maxLength": 64,
+      "title": "View",
+      "type": "string"
+    },
+    "unit": {
+      "default": "",
+      "description": "\ud83d\udccf The unit of the design.",
+      "maxLength": 64,
+      "title": "Unit",
+      "type": "string"
+    },
+    "created": {
+      "description": "\ud83d\udd52 The creation date of the design.",
+      "format": "date-time",
+      "title": "Created",
+      "type": "string"
+    },
+    "updated": {
+      "description": "\ud83d\udd52 The last update date of the design.",
+      "format": "date-time",
+      "title": "Updated",
+      "type": "string"
+    },
+    "location": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Location"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "pieces": {
+      "items": {
+        "$ref": "#/$defs/Piece"
+      },
+      "title": "Pieces",
+      "type": "array"
+    },
+    "connections": {
+      "items": {
+        "$ref": "#/$defs/Connection"
+      },
+      "title": "Connections",
+      "type": "array"
+    },
+    "authors": {
+      "items": {
+        "$ref": "#/$defs/Author"
+      },
+      "title": "Authors",
+      "type": "array"
+    },
+    "qualities": {
+      "items": {
+        "$ref": "#/$defs/Quality"
+      },
+      "title": "Qualities",
+      "type": "array"
+    }
+  },
+  "required": ["name"],
+  "title": "Design",
+  "type": "object"
 }

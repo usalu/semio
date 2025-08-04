@@ -42,45 +42,41 @@ function Slider({
   onPointerUp?: () => void;
   onPointerCancel?: () => void;
 }) {
-  const [isEditing, setIsEditing] = React.useState(false)
-  const [editValue, setEditValue] = React.useState("")
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [editValue, setEditValue] = React.useState("");
 
-  const _values = React.useMemo(
-    () =>
-      Array.isArray(value)
-        ? value
-        : Array.isArray(defaultValue)
-          ? defaultValue
-          : [min, max],
-    [value, defaultValue, min, max]
-  )
+  const _values = React.useMemo(() => (Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max]), [value, defaultValue, min, max]);
 
-  const displayValue = _values[0] ?? min
+  const displayValue = _values[0] ?? min;
 
   const handleValueClick = () => {
-    setEditValue(displayValue.toString())
-    setIsEditing(true)
-  }
+    setEditValue(displayValue.toString());
+    setIsEditing(true);
+  };
 
   const handleEditKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      const newValue = parseFloat(editValue)
+    if (e.key === "Enter") {
+      const newValue = parseFloat(editValue);
       if (!isNaN(newValue) && newValue >= min && newValue <= max) {
-        onValueChange?.([newValue])
+        onValueChange?.([newValue]);
       }
-      setIsEditing(false)
-    } else if (e.key === 'Escape') {
-      setIsEditing(false)
+      setIsEditing(false);
+    } else if (e.key === "Escape") {
+      setIsEditing(false);
     }
-  }
+  };
 
   const handleEditBlur = () => {
-    setIsEditing(false)
-  }
+    setIsEditing(false);
+  };
 
   return (
     <div className={cn("flex items-center gap-2 border-b border-border pb-1 min-w-0", className)}>
-      {label && <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>{label}</span>}
+      {label && (
+        <span className="text-sm font-medium flex-shrink-0 min-w-[80px] text-left truncate" title={label}>
+          {label}
+        </span>
+      )}
       <div className="flex items-center gap-2 flex-1 min-w-0">
         <SliderPrimitive.Root
           data-slot="slider"
@@ -93,22 +89,15 @@ function Slider({
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerCancel}
           className={cn(
-            "relative flex w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col"
+            "relative flex w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
           )}
           {...props}
         >
           <SliderPrimitive.Track
             data-slot="slider-track"
-            className={cn(
-              "bg-muted relative grow overflow-hidden rounded-full data-[orientation=horizontal]:h-1 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1"
-            )}
+            className={cn("bg-muted relative grow overflow-hidden rounded-full data-[orientation=horizontal]:h-1 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1")}
           >
-            <SliderPrimitive.Range
-              data-slot="slider-range"
-              className={cn(
-                "bg-foreground absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full"
-              )}
-            />
+            <SliderPrimitive.Range data-slot="slider-range" className={cn("bg-foreground absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full")} />
           </SliderPrimitive.Track>
           {Array.from({ length: _values.length }, (_, index) => (
             <SliderPrimitive.Thumb
@@ -119,30 +108,15 @@ function Slider({
           ))}
         </SliderPrimitive.Root>
         {isEditing ? (
-          <Input
-            type="number"
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            onKeyDown={handleEditKeyDown}
-            onBlur={handleEditBlur}
-            className="w-20 text-sm"
-            min={min}
-            max={max}
-            autoFocus
-          />
+          <Input type="number" value={editValue} onChange={(e) => setEditValue(e.target.value)} onKeyDown={handleEditKeyDown} onBlur={handleEditBlur} className="w-20 text-sm" min={min} max={max} autoFocus />
         ) : (
-          <span
-            className="text-sm w-20 text-right cursor-pointer hover:bg-muted px-1 rounded select-none"
-            onDoubleClick={handleValueClick}
-            title="Double-click to edit"
-          >
+          <span className="text-sm w-20 text-right cursor-pointer hover:bg-muted px-1 rounded select-none" onDoubleClick={handleValueClick} title="Double-click to edit">
             {displayValue}
           </span>
         )}
       </div>
     </div>
-  )
+  );
 }
 
 export { Slider };
-

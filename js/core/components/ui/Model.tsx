@@ -20,195 +20,157 @@
 
 // #endregion
 
-import {
-  GizmoHelper,
-  GizmoViewport,
-  Grid,
-  Line,
-  OrbitControls,
-  OrthographicCamera,
-  Select,
-  TransformControls,
-  useGLTF
-} from '@react-three/drei'
-import { Canvas, ThreeEvent } from '@react-three/fiber'
-import {
-  applyDesignDiff,
-  DiffStatus,
-  findDesignInKit,
-  flattenDesign,
-  FullscreenPanel,
-  getPieceRepresentationUrls,
-  Piece,
-  Plane,
-  planeToMatrix,
-  toSemioRotation,
-  updateDesignInKit,
-  useDesignEditor
-} from '@semio/js'
-import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import * as THREE from 'three'
-import { Presence } from './DesignEditor'
+import { GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, OrthographicCamera, Select, TransformControls, useGLTF } from "@react-three/drei";
+import { Canvas, ThreeEvent } from "@react-three/fiber";
+import { applyDesignDiff, DiffStatus, findDesignInKit, flattenDesign, FullscreenPanel, getPieceRepresentationUrls, Piece, Plane, planeToMatrix, toSemioRotation, updateDesignInKit, useDesignEditor } from "@semio/js";
+import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import * as THREE from "three";
+import { Presence } from "./DesignEditor";
 
 const getComputedColor = (variable: string): string => {
-  return getComputedStyle(document.documentElement).getPropertyValue(variable).trim()
-}
+  return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+};
 
 const PresenceThree: FC<Presence> = ({ name, cursor, camera }) => {
-  if (!camera) return null
+  if (!camera) return null;
   const cameraHelper = useMemo(() => {
-    const perspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1)
-    perspectiveCamera.position.set(camera.position.x, camera.position.y, camera.position.z)
-    perspectiveCamera.lookAt(new THREE.Vector3(camera.forward.x, camera.forward.y, camera.forward.z))
-    perspectiveCamera.updateProjectionMatrix()
-    perspectiveCamera.updateMatrixWorld()
-    return new THREE.CameraHelper(perspectiveCamera)
-  }, [camera.position.x, camera.position.y, camera.position.z, camera.forward.x, camera.forward.y, camera.forward.z])
+    const perspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1);
+    perspectiveCamera.position.set(camera.position.x, camera.position.y, camera.position.z);
+    perspectiveCamera.lookAt(new THREE.Vector3(camera.forward.x, camera.forward.y, camera.forward.z));
+    perspectiveCamera.updateProjectionMatrix();
+    perspectiveCamera.updateMatrixWorld();
+    return new THREE.CameraHelper(perspectiveCamera);
+  }, [camera.position.x, camera.position.y, camera.position.z, camera.forward.x, camera.forward.y, camera.forward.z]);
 
-  return <primitive object={cameraHelper} />
-}
+  return <primitive object={cameraHelper} />;
+};
 
 interface PlaneThreeProps {
-  plane: Plane
+  plane: Plane;
 }
 
 const PlaneThree: FC<PlaneThreeProps> = ({ plane }) => {
-  const matrix = useMemo(() => planeToMatrix(plane), [plane])
+  const matrix = useMemo(() => planeToMatrix(plane), [plane]);
   return (
     <group matrix={matrix} matrixAutoUpdate={false}>
-      <Line
-        points={[new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]}
-        color={new THREE.Color(getComputedColor('--color-primary'))}
-      />
-      <Line
-        points={[new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0)]}
-        color={new THREE.Color(getComputedColor('--color-primary'))}
-      />
+      <Line points={[new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]} color={new THREE.Color(getComputedColor("--color-primary"))} />
+      <Line points={[new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0)]} color={new THREE.Color(getComputedColor("--color-primary"))} />
     </group>
-  )
-}
+  );
+};
 
 interface ModelPieceProps {
-  piece: Piece
-  plane: Plane
-  fileUrl: string
-  selected?: boolean
-  updating?: boolean
-  diffStatus?: DiffStatus
-  onSelect: (piece: Piece, e?: MouseEvent) => void
-  onPieceUpdate: (piece: Piece) => void
+  piece: Piece;
+  plane: Plane;
+  fileUrl: string;
+  selected?: boolean;
+  updating?: boolean;
+  diffStatus?: DiffStatus;
+  onSelect: (piece: Piece, e?: MouseEvent) => void;
+  onPieceUpdate: (piece: Piece) => void;
 }
 
-const ModelPiece: FC<ModelPieceProps> = ({
-  piece,
-  plane,
-  fileUrl,
-  selected,
-  updating,
-  diffStatus = DiffStatus.Unchanged,
-  onSelect,
-  onPieceUpdate
-}) => {
-  const { startTransaction, finalizeTransaction, abortTransaction } = useDesignEditor()
-  const fixed = piece.plane !== undefined
+const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, updating, diffStatus = DiffStatus.Unchanged, onSelect, onPieceUpdate }) => {
+  const { startTransaction, finalizeTransaction, abortTransaction } = useDesignEditor();
+  const fixed = piece.plane !== undefined;
   const matrix = useMemo(() => {
-    const planeRotationMatrix = planeToMatrix(plane)
-    planeRotationMatrix.multiply(toSemioRotation())
-    return planeRotationMatrix
-  }, [plane])
+    const planeRotationMatrix = planeToMatrix(plane);
+    planeRotationMatrix.multiply(toSemioRotation());
+    return planeRotationMatrix;
+  }, [plane]);
   const styledScene = useMemo(() => {
-    const scene = useGLTF(fileUrl).scene.clone()
-    let meshColor: THREE.Color
-    let meshOpacity = 1
-    let lineOpacity = 1
+    const scene = useGLTF(fileUrl).scene.clone();
+    let meshColor: THREE.Color;
+    let meshOpacity = 1;
+    let lineOpacity = 1;
 
     if (diffStatus === DiffStatus.Added) {
-      meshColor = new THREE.Color(getComputedColor('--color-success'))
+      meshColor = new THREE.Color(getComputedColor("--color-success"));
       if (selected) {
-        const selectedColor = new THREE.Color(getComputedColor('--color-primary'))
-        meshColor.lerp(selectedColor, 0.5)
+        const selectedColor = new THREE.Color(getComputedColor("--color-primary"));
+        meshColor.lerp(selectedColor, 0.5);
       }
     } else if (diffStatus === DiffStatus.Modified) {
-      meshColor = new THREE.Color(getComputedColor('--color-warning'))
+      meshColor = new THREE.Color(getComputedColor("--color-warning"));
       if (selected) {
-        const selectedColor = new THREE.Color(getComputedColor('--color-primary'))
-        meshColor.lerp(selectedColor, 0.5)
+        const selectedColor = new THREE.Color(getComputedColor("--color-primary"));
+        meshColor.lerp(selectedColor, 0.5);
       }
     } else if (diffStatus === DiffStatus.Removed) {
-      meshColor = new THREE.Color(getComputedColor('--color-error'))
-      meshOpacity = 0.2
-      lineOpacity = 0.25
+      meshColor = new THREE.Color(getComputedColor("--color-error"));
+      meshOpacity = 0.2;
+      lineOpacity = 0.25;
       if (selected) {
-        const selectedColor = new THREE.Color(getComputedColor('--color-primary'))
-        meshColor.lerp(selectedColor, 0.5)
+        const selectedColor = new THREE.Color(getComputedColor("--color-primary"));
+        meshColor.lerp(selectedColor, 0.5);
       }
     } else if (selected) {
-      meshColor = new THREE.Color(getComputedColor('--color-primary'))
+      meshColor = new THREE.Color(getComputedColor("--color-primary"));
     } else {
-      meshColor = new THREE.Color(getComputedColor('--color-light'))
+      meshColor = new THREE.Color(getComputedColor("--color-light"));
     }
 
-    const lineColor = new THREE.Color(getComputedColor('--color-dark'))
+    const lineColor = new THREE.Color(getComputedColor("--color-dark"));
     scene.traverse((object) => {
       if (object instanceof THREE.Mesh) {
         object.material = new THREE.MeshBasicMaterial({
           color: meshColor,
           transparent: meshOpacity < 1,
-          opacity: meshOpacity
-        })
+          opacity: meshOpacity,
+        });
       }
       if (object instanceof THREE.Line) {
         object.material = new THREE.LineBasicMaterial({
           color: lineColor,
           transparent: lineOpacity < 1,
-          opacity: lineOpacity
-        })
+          opacity: lineOpacity,
+        });
       }
-    })
-    return scene
-  }, [fileUrl, diffStatus, selected])
+    });
+    return scene;
+  }, [fileUrl, diffStatus, selected]);
 
   const onClick = useCallback(
     (e: ThreeEvent<MouseEvent>) => {
-      onSelect(piece, e.nativeEvent)
-      e.stopPropagation()
+      onSelect(piece, e.nativeEvent);
+      e.stopPropagation();
     },
-    [onSelect, piece]
-  )
+    [onSelect, piece],
+  );
 
-  const transformControlRef = useRef(null)
+  const transformControlRef = useRef(null);
 
   const handleMouseDown = useCallback(
     (e?: THREE.Event) => {
-      console.log('handleMouseDown', e)
-      startTransaction()
+      console.log("handleMouseDown", e);
+      startTransaction();
     },
-    [startTransaction]
-  )
+    [startTransaction],
+  );
 
   const handleMouseUp = useCallback(
     (e?: THREE.Event) => {
-      console.log('handleMouseUp', e)
-      finalizeTransaction()
+      console.log("handleMouseUp", e);
+      finalizeTransaction();
     },
-    [finalizeTransaction]
-  )
+    [finalizeTransaction],
+  );
 
   // Handle escape key to abort transactions during transform
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && selected && fixed) {
-        abortTransaction()
+      if (event.key === "Escape" && selected && fixed) {
+        abortTransaction();
       }
-    }
+    };
 
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [selected, fixed, abortTransaction])
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [selected, fixed, abortTransaction]);
 
-  const transformControl = selected && fixed
+  const transformControl = selected && fixed;
   if (transformControl) {
-    console.log('transformControl', transformControl)
+    console.log("transformControl", transformControl);
   }
   const group = (
     <group
@@ -220,7 +182,7 @@ const ModelPiece: FC<ModelPieceProps> = ({
     >
       <primitive object={styledScene} />
     </group>
-  )
+  );
 
   return transformControl ? (
     <TransformControls ref={transformControlRef} enabled={selected && fixed} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}>
@@ -228,71 +190,72 @@ const ModelPiece: FC<ModelPieceProps> = ({
     </TransformControls>
   ) : (
     group
-  )
-}
+  );
+};
 
 const ModelDesign: FC = () => {
-  const { kit: originalKit, designId, selection, designDiff, fileUrls, others, removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = useDesignEditor()
+  const { kit: originalKit, designId, selection, designDiff, fileUrls, others, removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = useDesignEditor();
 
-  if (!originalKit) return null
-  const design = applyDesignDiff(findDesignInKit(originalKit, designId), designDiff, true)
-  const kit = useMemo(() => updateDesignInKit(originalKit, design), [originalKit, design])
-  const types = kit?.types ?? []
+  if (!originalKit) return null;
+  const design = applyDesignDiff(findDesignInKit(originalKit, designId), designDiff, true);
+  const kit = useMemo(() => updateDesignInKit(originalKit, design), [originalKit, design]);
+  const types = kit?.types ?? [];
 
-  const flatDesign = useMemo(() => flattenDesign(kit, designId), [kit, designId])
-  const piecePlanes = useMemo(() => flatDesign.pieces?.map((p) => p.plane!) || [], [flatDesign])
+  const flatDesign = useMemo(() => flattenDesign(kit, designId), [kit, designId]);
+  const piecePlanes = useMemo(() => flatDesign.pieces?.map((p) => p.plane!) || [], [flatDesign]);
 
-  const pieceRepresentationUrls = useMemo(() => getPieceRepresentationUrls(design, types), [design, types])
+  const pieceRepresentationUrls = useMemo(() => getPieceRepresentationUrls(design, types), [design, types]);
 
   useEffect(() => {
     fileUrls.forEach((url, id) => {
-      useGLTF.preload(id)
-    })
-  }, [fileUrls])
+      useGLTF.preload(id);
+    });
+  }, [fileUrls]);
 
   design.pieces?.forEach((p) => {
-    const type = types.find((t) => t.name === p.type.name && (t.variant || '') === (p.type.variant || ''))
-    if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`)
-  })
+    const type = types.find((t) => t.name === p.type.name && (t.variant || "") === (p.type.variant || ""));
+    if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`);
+  });
 
   useEffect(() => {
     pieceRepresentationUrls.forEach((url, id) => {
-      if (!fileUrls.has(url)) throw new Error(`Representation url ${url} for piece ${id} not found in fileUrls map`)
-    })
-  }, [pieceRepresentationUrls, fileUrls])
+      if (!fileUrls.has(url)) throw new Error(`Representation url ${url} for piece ${id} not found in fileUrls map`);
+    });
+  }, [pieceRepresentationUrls, fileUrls]);
 
   const pieceDiffStatuses = useMemo(() => {
-    return design.pieces?.map((piece) => {
-      const diffQuality = piece.qualities?.find((q) => q.name === 'semio.diffStatus')
-      return (diffQuality?.value as DiffStatus) || DiffStatus.Unchanged
-    }) || []
-  }, [design])
+    return (
+      design.pieces?.map((piece) => {
+        const diffQuality = piece.qualities?.find((q) => q.name === "semio.diffStatus");
+        return (diffQuality?.value as DiffStatus) || DiffStatus.Unchanged;
+      }) || []
+    );
+  }, [design]);
 
   const onChange = useCallback(
     (selected: THREE.Object3D[]) => {
-      const newSelectedPieceIds = selected.map((item) => item.parent?.userData.pieceId).filter(Boolean)
-      if (newSelectedPieceIds.length !== selection.selectedPieceIds.length ||
-        newSelectedPieceIds.some((id, index) => id !== selection.selectedPieceIds[index])) {
-        selectPieces(newSelectedPieceIds.map(id => ({ id_: id })))
+      const newSelectedPieceIds = selected.map((item) => item.parent?.userData.pieceId).filter(Boolean);
+      if (newSelectedPieceIds.length !== selection.selectedPieceIds.length || newSelectedPieceIds.some((id, index) => id !== selection.selectedPieceIds[index])) {
+        selectPieces(newSelectedPieceIds.map((id) => ({ id_: id })));
       }
     },
-    [selection, selectPieces]
-  )
+    [selection, selectPieces],
+  );
 
   const onSelect = useCallback(
     (piece: Piece, e?: MouseEvent) => {
       if (e?.ctrlKey || e?.metaKey) {
-        removePieceFromSelection(piece)
+        removePieceFromSelection(piece);
       } else if (e?.shiftKey) {
-        addPieceToSelection(piece)
+        addPieceToSelection(piece);
       } else {
-        selectPiece(piece)
+        selectPiece(piece);
       }
     },
-    [removePieceFromSelection, addPieceToSelection, selectPiece]
-  )
+    [removePieceFromSelection, addPieceToSelection, selectPiece],
+  );
 
-  const onPieceUpdate = useCallback((piece: Piece) => setPiece(piece), [setPiece])
+  const onPieceUpdate = useCallback((piece: Piece) => setPiece(piece), [setPiece]);
   return (
     <Select box multiple onChange={onChange} filter={(items) => items}>
       <group quaternion={new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)}>
@@ -308,45 +271,47 @@ const ModelDesign: FC = () => {
             onPieceUpdate={onPieceUpdate}
           />
         ))}
-        {others.map((presence, id) => (<PresenceThree key={id} {...presence} />))}
+        {others.map((presence, id) => (
+          <PresenceThree key={id} {...presence} />
+        ))}
       </group>
     </Select>
-  )
-}
+  );
+};
 
 const Gizmo: FC = () => {
-  const colors = useMemo(() => [
-    getComputedColor('--color-primary'),
-    getComputedColor('--color-tertiary'),
-    getComputedColor('--color-secondary')
-  ] as [string, string, string], [])
+  const colors = useMemo(() => [getComputedColor("--color-primary"), getComputedColor("--color-tertiary"), getComputedColor("--color-secondary")] as [string, string, string], []);
 
   return (
     <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
-      <GizmoViewport labels={['X', 'Z', '-Y']} axisColors={colors} />
+      <GizmoViewport labels={["X", "Z", "-Y"]} axisColors={colors} />
     </GizmoHelper>
-  )
-}
+  );
+};
 
 const ModelCore: FC = () => {
-  const { fullscreenPanel } = useDesignEditor()
-  const fullscreen = fullscreenPanel === FullscreenPanel.Model
+  const { fullscreenPanel } = useDesignEditor();
+  const fullscreen = fullscreenPanel === FullscreenPanel.Model;
   const [gridColors, setGridColors] = useState({
-    sectionColor: getComputedColor('--foreground'),
-    cellColor: getComputedColor('--accent-foreground')
-  })
+    sectionColor: getComputedColor("--foreground"),
+    cellColor: getComputedColor("--accent-foreground"),
+  });
 
   useEffect(() => {
-    const updateColors = () => setGridColors({
-      sectionColor: getComputedColor('--foreground'),
-      cellColor: getComputedColor('--accent-foreground')
-    })
-    updateColors()
-    const observer = new MutationObserver(updateColors)
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
-    return () => observer.disconnect()
-  }, [])
-  const camera = useRef<THREE.OrthographicCamera>(null)
+    const updateColors = () =>
+      setGridColors({
+        sectionColor: getComputedColor("--foreground"),
+        cellColor: getComputedColor("--accent-foreground"),
+      });
+    updateColors();
+    const observer = new MutationObserver(updateColors);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, []);
+  const camera = useRef<THREE.OrthographicCamera>(null);
   return (
     <>
       <OrthographicCamera ref={camera} />
@@ -355,7 +320,7 @@ const ModelCore: FC = () => {
         mouseButtons={{
           LEFT: THREE.MOUSE.ROTATE, // Left mouse button for orbit/pan
           MIDDLE: undefined,
-          RIGHT: undefined // Right button disabled to allow selection
+          RIGHT: undefined, // Right button disabled to allow selection
         }}
       />
       <ambientLight intensity={1} />
@@ -365,18 +330,24 @@ const ModelCore: FC = () => {
       <Grid infiniteGrid={true} sectionColor={gridColors.sectionColor} cellColor={gridColors.cellColor} />
       {fullscreen && <Gizmo />}
     </>
-  )
-}
+  );
+};
 
 const Model: FC = () => {
-  const { deselectAll, toggleModelFullscreen } = useDesignEditor()
-  const onDoubleClickCapture = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
-    toggleModelFullscreen()
-  }, [toggleModelFullscreen])
-  const onPointerMissed = useCallback((e: MouseEvent) => {
-    if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) deselectAll()
-  }, [deselectAll])
+  const { deselectAll, toggleModelFullscreen } = useDesignEditor();
+  const onDoubleClickCapture = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      toggleModelFullscreen();
+    },
+    [toggleModelFullscreen],
+  );
+  const onPointerMissed = useCallback(
+    (e: MouseEvent) => {
+      if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) deselectAll();
+    },
+    [deselectAll],
+  );
 
   return (
     <div id="model" className="h-full w-full">
@@ -384,7 +355,7 @@ const Model: FC = () => {
         <ModelCore />
       </Canvas>
     </div>
-  )
-}
+  );
+};
 
-export default Model
+export default Model;

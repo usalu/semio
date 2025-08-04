@@ -39,22 +39,22 @@
 
 // #endregion
 
-import { FC } from 'react'
+import { FC } from "react";
 
 interface CursorProps {
-  color: string
-  x?: number
-  y?: number
+  color: string;
+  x?: number;
+  y?: number;
 }
 
 const Cursor: FC<CursorProps> = ({ color, x = 0, y = 0 }) => {
   return (
     <svg
       style={{
-        position: 'absolute',
+        position: "absolute",
         left: 0,
         top: 0,
-        transform: `translateX(${x}px) translateY(${y}px)`
+        transform: `translateX(${x}px) translateY(${y}px)`,
       }}
       width="24"
       height="36"
@@ -62,12 +62,9 @@ const Cursor: FC<CursorProps> = ({ color, x = 0, y = 0 }) => {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path
-        d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7841 12.3673H5.65376Z"
-        fill={color}
-      />
+      <path d="M5.65376 12.3673H5.46026L5.31717 12.4976L0.500002 16.8829L0.500002 1.19841L11.7841 12.3673H5.65376Z" fill={color} />
     </svg>
-  )
-}
+  );
+};
 
-export default Cursor
+export default Cursor;

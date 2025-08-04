@@ -37,7 +37,7 @@
     "ms-python.isort",
     "ms-toolsai.jupyter",
     "ms-python.pylint",
-    "ms-python.python",
+    "ms-python.python"
   ],
   "unwantedRecommendations": []
 }

@@ -1,197 +1,161 @@
 {
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "dev everything",
+      "preLaunchTask": "dev",
+      // "postDebugTask": "kill dev",
+      "type": "debugpy", // hacky because the js debuggers are added automatically only python is missing
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5678
+      },
+      "pathMappings": [
         {
-            "name": "dev everything",
-            "preLaunchTask": "dev",
-            // "postDebugTask": "kill dev",
-            "type": "debugpy", // hacky because the js debuggers are added automatically only python is missing
-            "request": "attach",
-            "connect": {
-                "host": "localhost",
-                "port": 5678
-            },
-            "pathMappings": [
-                {
-                    "localRoot": "${workspaceFolder}/py/engine",
-                    "remoteRoot": ".",
-                }
-            ],
-        },
+          "localRoot": "${workspaceFolder}/py/engine",
+          "remoteRoot": "."
+        }
+      ]
+    },
+    {
+      "name": "dev engine",
+      "preLaunchTask": "dev engine",
+      // "postDebugTask": "kill dev",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "localhost",
+        "port": 5678
+      },
+      "pathMappings": [
         {
-            "name": "dev engine",
-            "preLaunchTask": "dev engine",
-            // "postDebugTask": "kill dev",
-            "type": "debugpy",
-            "request": "attach",
-            "connect": {
-                "host": "localhost",
-                "port": 5678
-            },
-            "pathMappings": [
-                {
-                    "localRoot": "${workspaceFolder}/py/engine",
-                    "remoteRoot": ".",
-                }
-            ],
-        },
-        {
-            "name": "dev everything js",
-            "type": "node",
-            "request": "launch",
-            "runtimeExecutable": "npx",
-            "runtimeArgs": [
-                "nx",
-                "run-many",
-                "-t",
-                "dev",
-                "--projects=@semio/js,@semio/docs,@semio/sketchpad"
-            ],
-            // "postDebugTask": "kill dev",
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "dev js",
-            "preLaunchTask": "dev js",
-            // "postDebugTask": "kill dev",
-            "type": "chrome",
-            "request": "launch",
-            "url": "http://localhost:6006",
-            "webRoot": "${workspaceRoot}/js/core",
-        },
-        {
-            "name": "dev docs",
-            "preLaunchTask": "dev docs",
-            // "postDebugTask": "kill dev",
-            "type": "chrome",
-            "request": "launch",
-            "url": "http://localhost:4321",
-            "webRoot": "${workspaceRoot}/js/docs",
-        },
-        {
-            "name": "dev sketchpad",
-            "type": "node",
-            "request": "launch",
-            "runtimeExecutable": "npx",
-            "runtimeArgs": [
-                "nx",
-                "dev",
-                "@semio/sketchpad"
-            ],
-            // "postDebugTask": "kill dev",
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "build assets",
-            "type": "node",
-            "request": "launch",
-            "runtimeExecutable": "npx",
-            "runtimeArgs": [
-                "nx",
-                "build",
-                "@semio/assets"
-            ],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "build icons",
-            "type": "PowerShell",
-            "request": "launch",
-            "script": "${workspaceFolder}/assets/icons/build.ps1",
-            "cwd": "${workspaceFolder}/assets/icons/"
-        },
-        // TODO: Invoke build task over nx and attach debugger to it
-        // Problem: Need to get process id or find a different way
-        // {
-        //     "name": "build icons",
-        //     "type": "PowerShell",
-        //     "request": "attach",
-        //     "preLaunchTask": "build icons"
-        // },
-        {
-            "name": "build engine",
-            "type": "node",
-            "request": "launch",
-            "runtimeExecutable": "npx",
-            "runtimeArgs": [
-                "nx",
-                "build",
-                "@semio/engine"
-            ],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "build everything js",
-            "type": "node",
-            "request": "launch",
-            "runtimeExecutable": "npx",
-            "runtimeArgs": [
-                "nx",
-                "run-many",
-                "-t",
-                "build",
-                "--projects=@semio/js,@semio/docs,@semio/sketchpad"
-            ],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "build js core",
-            "type": "node",
-            "request": "launch",
-            "runtimeExecutable": "npx",
-            "runtimeArgs": [
-                "nx",
-                "build",
-                "@semio/js"
-            ],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "build docs",
-            "type": "node",
-            "request": "launch",
-            "runtimeExecutable": "npx",
-            "runtimeArgs": [
-                "nx",
-                "build",
-                "@semio/docs"
-            ],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "build sketchpad",
-            "type": "node",
-            "request": "launch",
-            "runtimeExecutable": "npx",
-            "runtimeArgs": [
-                "nx",
-                "build",
-                "@semio/sketchpad"
-            ],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "PowerShell",
-            "type": "PowerShell",
-            "request": "launch",
-            "script": "${file}",
-            "cwd": "${fileDirname}"
-        },
-        {
-            "name": "Python",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal"
-        },
-    ]
+          "localRoot": "${workspaceFolder}/py/engine",
+          "remoteRoot": "."
+        }
+      ]
+    },
+    {
+      "name": "dev everything js",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["nx", "run-many", "-t", "dev", "--projects=@semio/js,@semio/docs,@semio/sketchpad"],
+      // "postDebugTask": "kill dev",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "dev js",
+      "preLaunchTask": "dev js",
+      // "postDebugTask": "kill dev",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:6006",
+      "webRoot": "${workspaceRoot}/js/core"
+    },
+    {
+      "name": "dev docs",
+      "preLaunchTask": "dev docs",
+      // "postDebugTask": "kill dev",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:4321",
+      "webRoot": "${workspaceRoot}/js/docs"
+    },
+    {
+      "name": "dev sketchpad",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["nx", "dev", "@semio/sketchpad"],
+      // "postDebugTask": "kill dev",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "build assets",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["nx", "build", "@semio/assets"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "build icons",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/assets/icons/build.ps1",
+      "cwd": "${workspaceFolder}/assets/icons/"
+    },
+    // TODO: Invoke build task over nx and attach debugger to it
+    // Problem: Need to get process id or find a different way
+    // {
+    //     "name": "build icons",
+    //     "type": "PowerShell",
+    //     "request": "attach",
+    //     "preLaunchTask": "build icons"
+    // },
+    {
+      "name": "build engine",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["nx", "build", "@semio/engine"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "build everything js",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["nx", "run-many", "-t", "build", "--projects=@semio/js,@semio/docs,@semio/sketchpad"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "build js core",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["nx", "build", "@semio/js"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "build docs",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["nx", "build", "@semio/docs"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "build sketchpad",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["nx", "build", "@semio/sketchpad"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "PowerShell",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${file}",
+      "cwd": "${fileDirname}"
+    },
+    {
+      "name": "Python",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal"
+    }
+  ]
 }
