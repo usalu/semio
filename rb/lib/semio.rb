@@ -24,14 +24,14 @@ module Semio
   # 🪪 Identifier for a port within a type.
   PortId = Struct.new(:id_, keyword_init: true)
 
-  # 📏 Represents a quality, a named property with an optional value, unit, and definition.
-  Quality = Struct.new(:name, :value, :unit, :definition, keyword_init: true)
+  # 🏷️ Represents a attribute, a named property with an optional value, unit, and definition.
+  Attribute = Struct.new(:name, :value, :unit, :definition, keyword_init: true)
 
   # 📑 Represents an author.
   Author = Struct.new(:name, :email, :rank, keyword_init: true)
 
   # 💾 A representation links to a resource (e.g., file) describing a type.
-  Representation = Struct.new(:url, :description, :tags, :qualities, keyword_init: true)
+  Representation = Struct.new(:url, :description, :tags, :attributes, keyword_init: true)
 
   # ◳ A plane defined by an origin point and two axes vectors.
   Plane = Struct.new(:origin, :x_axis, :y_axis, keyword_init: true)
@@ -46,12 +46,12 @@ module Semio
     :compatible_families,
     :point,
     :direction,
-    :qualities,
+    :attributes,
     keyword_init: true
   )
 
   # ⭕ A piece is a 3D instance of a type within a design.
-  Piece = Struct.new(:id_, :description, :type, :plane, :center, :qualities, keyword_init: true)
+  Piece = Struct.new(:id_, :description, :type, :plane, :center, :attributes, keyword_init: true)
 
   # 🧱 A side of a piece in a connection, identifying a specific port on a specific piece.
   Side = Struct.new(:piece, :port, keyword_init: true)
@@ -69,7 +69,7 @@ module Semio
     :tilt,
     :x,
     :y,
-    :qualities,
+    :attributes,
     keyword_init: true
   )
 
@@ -89,7 +89,7 @@ module Semio
     :representations,
     :ports,
     :authors,
-    :qualities,
+    :attributes,
     keyword_init: true
   )
 
@@ -108,7 +108,7 @@ module Semio
     :pieces,
     :connections,
     :authors,
-    :qualities,
+    :attributes,
     keyword_init: true
   )
 
@@ -127,7 +127,7 @@ module Semio
     :updated,
     :types,
     :designs,
-    :qualities,
+    :attributes,
     keyword_init: true
   )
 end

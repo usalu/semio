@@ -18,1794 +18,3392 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-import JSZip from 'jszip';
-import React, { FC, createContext, useContext, useMemo, useSyncExternalStore } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { IndexeddbPersistence } from 'y-indexeddb';
-import * as Y from 'yjs';
-import { UndoManager } from 'yjs';
-// Import initSqlJs
-import initSqlJs from 'sql.js';
-import sqlWasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 
-import { Author, Connection, Design, DesignEditorSelection, DesignId, DiagramPoint, Kit, Piece, Plane, Point, Port, Quality, Representation, Side, Type, Vector, flattenDesign } from '@semio/js';
-import { Generator } from '@semio/js/lib/utils';
-import { KitId } from './semio';
+import JSZip from "jszip";
+import React, { createContext, useCallback, useContext, useMemo, useRef, useSyncExternalStore } from "react";
+import type { Database, SqlJsStatic } from "sql.js";
+import initSqlJs from "sql.js";
+import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
+import { v4 as uuidv4 } from "uuid";
+import { IndexeddbPersistence } from "y-indexeddb";
+import * as Y from "yjs";
+import {
+  Attribute,
+  Author,
+  Camera,
+  Connection,
+  ConnectionDiff,
+  ConnectionId,
+  connectionIdLikeToConnectionId,
+  connectionIdToString,
+  Design,
+  DesignDiff,
+  DesignId,
+  designIdLikeToDesignId,
+  designIdToString,
+  DiagramPoint,
+  FileDiff,
+  fileIdLikeToFileId,
+  findDesignInKit,
+  Kit,
+  KitDiff,
+  KitId,
+  KitIdLike,
+  kitIdLikeToKitId,
+  kitIdToString,
+  Piece,
+  PieceDiff,
+  PieceId,
+  pieceIdLikeToPieceId,
+  pieceIdToString,
+  Port,
+  PortDiff,
+  PortId,
+  portIdLikeToPortId,
+  portIdToString,
+  Representation,
+  RepresentationDiff,
+  RepresentationId,
+  representationIdLikeToRepresentationId,
+  representationIdToString,
+  File as SemioFile,
+  Type,
+  TypeDiff,
+  TypeId,
+  typeIdLikeToTypeId,
+  typeIdToString,
+} from "./semio";
 
-// import { default as metabolism } from '@semio/assets/semio/kit_metabolism.json';
+// #region Constants
 
+export enum Mode {
+  USER = "user",
+  GUEST = "guest",
+}
 
-// type YType = {
-//     name: string;
-//     variant: string;
-//     description: string;
-//     icon: string;
-//     image: string;
-//     unit: string;
-//     ports: Y.Map<Port>;
-//     qualities: Y.Map<YQuality>;
-//     representations: Y.Map<YRepresentation>;
-// }
+export enum Theme {
+  SYSTEM = "system",
+  LIGHT = "light",
+  DARK = "dark",
+}
 
-// type YDesign = {
-//     name: string;
-//     variant: string;
-//     view: string;
-//     description: string;
-//     icon: string;
-//     image: string;
-//     unit: string;
-//     pieces: Y.Map<YPiece>;
-//     connections: Y.Map<YConnection>;
-//     qualities: Y.Map<YQuality>;
-// }
+export enum Layout {
+  NORMAL = "normal",
+  TOUCH = "touch",
+}
 
-// type YKit = {
-//     uri: string;
-//     name: string;
-//     description: string;
-//     icon: string;
-//     image: string;
-//     preview: string;
-//     version: string;
-//     remote: string;
-//     homepage: string;
-//     license: string[];
-//     types: Y.Map<Y.Map<YType>>;
-//     designs: Y.Map<Y.Map<Y.Map<YDesign>>>;
-//     qualities: Y.Map<YQuality>;
-// };
+// #endregion Constants
 
-// type YStudio = {
-//     kits: Y.Map<YKit>;
-//     files: Y.Map<Uint8Array>;
-// }
+// #region Api
 
-class StudioStore {
-    private userId: string;
-    private yDoc: Y.Doc;
-    private undoManager: UndoManager;
-    private designEditorStores: Map<string, DesignEditorStore> = new Map();;
-    private indexeddbProvider: IndexeddbPersistence;
-    private listeners: Set<() => void> = new Set();
-    private fileUrls: Map<string, string> = new Map();
+export type Subscribe = () => void;
+export type Unsubscribe = () => void;
+export type Disposable = () => void;
+export type Url = string;
+// Simplified merge type
+type Merge<A, B> = {
+  [K in keyof A | keyof B]: K extends keyof A ? (K extends keyof B ? (A[K] extends object ? (B[K] extends object ? Merge<A[K], B[K]> : A[K] | B[K]) : A[K] | B[K]) : A[K]) : K extends keyof B ? B[K] : never;
+};
 
-    constructor(userId: string) {
-        this.userId = userId;
-        this.yDoc = new Y.Doc();
-        // kits: Y.Map<Y.Map<any>> -> name -> version -> YKit
-        this.yDoc.getMap('kits');
-        this.yDoc.getMap('files');
-        this.undoManager = new UndoManager(this.yDoc, { trackedOrigins: new Set([this.userId]) });
-        this.indexeddbProvider = new IndexeddbPersistence(userId, this.yDoc);
-        this.indexeddbProvider.whenSynced.then(() => {
-            console.log(`Local changes are synchronized for user (${this.userId}) with client (${this.yDoc.clientID})`);
-            this.indexeddbProvider.clearData();
-            this.importKit('metabolism.zip');
-            this.notifyListeners();
+export interface DesignEditorStep {
+  diff?: KitDiff;
+  selection?: DesignEditorSelection;
+}
+
+export interface DesignEditorEdit {
+  do: DesignEditorStep;
+  undo: DesignEditorStep;
+}
+
+export interface YStore {}
+
+export interface FileSnapshot {
+  snapshot(): SemioFile;
+}
+export interface FileActions {
+  change: (diff: FileDiff) => void;
+}
+
+export interface FileSubscriptions {
+  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+}
+
+export interface FileStore extends FileSnapshot {}
+
+export interface FileStoreFull extends FileSnapshot, FileActions, FileSubscriptions {}
+
+export interface RepresentationSnapshot {
+  snapshot(): Representation;
+}
+
+export interface RepresentationActions {
+  change: (diff: RepresentationDiff) => void;
+}
+
+export interface RepresentationSubscriptions {
+  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+}
+
+export interface RepresentationStore extends RepresentationSnapshot {}
+
+export interface RepresentationStoreFull extends RepresentationSnapshot, RepresentationActions, RepresentationSubscriptions {}
+
+export interface PortSnapshot {
+  snapshot(): Port;
+}
+export interface PortActions {
+  change: (diff: PortDiff) => void;
+}
+export interface PortSubscriptions {
+  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+}
+export interface PortStore extends PortSnapshot {}
+export interface PortStoreFull extends PortSnapshot, PortActions, PortSubscriptions {}
+
+export interface TypeSnapshot {
+  snapshot(): Type;
+}
+export interface TypeActions {
+  change: (diff: TypeDiff) => void;
+}
+export interface TypeSubscriptions {
+  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+}
+export interface TypeChildStores {
+  representations: Map<string, RepresentationStore>;
+  ports: Map<string, PortStore>;
+}
+export interface TypeChildStoresFull {
+  representations: Map<string, RepresentationStoreFull>;
+  ports: Map<string, PortStoreFull>;
+}
+export interface TypeStore extends TypeSnapshot, TypeChildStores {}
+export interface TypeStoreFull extends TypeSnapshot, TypeChildStoresFull, TypeActions, TypeSubscriptions {}
+
+export interface PieceSnapshot {
+  snapshot(): Piece;
+}
+export interface PieceActions {
+  change: (diff: PieceDiff) => void;
+}
+export interface PieceSubscriptions {
+  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+}
+export interface PieceChildStores {}
+export interface PieceChildStoresFull {}
+export interface PieceStore extends PieceSnapshot, PieceChildStores {}
+export interface PieceStoreFull extends PieceSnapshot, PieceChildStoresFull, PieceActions, PieceSubscriptions {}
+
+export interface ConnectionSnapshot {
+  snapshot(): Connection;
+}
+export interface ConnectionActions {
+  change: (diff: ConnectionDiff) => void;
+}
+export interface ConnectionSubscriptions {
+  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+}
+export interface ConnectionStore extends ConnectionSnapshot {}
+export interface ConnectionStoreFull extends ConnectionSnapshot, ConnectionActions, ConnectionSubscriptions {}
+
+export interface DesignSnapshot {
+  snapshot(): Design;
+}
+export interface DesignActions {
+  change: (diff: DesignDiff) => void;
+}
+export interface DesignSubscriptions {
+  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+}
+export interface DesignChildStores {
+  pieces: Map<string, PieceStore>;
+  connections: Map<string, ConnectionStore>;
+}
+export interface DesignChildStoresFull {
+  pieces: Map<string, PieceStoreFull>;
+  connections: Map<string, ConnectionStoreFull>;
+}
+export interface DesignStore extends DesignSnapshot, DesignChildStores {}
+export interface DesignStoreFull extends DesignSnapshot, DesignActions, DesignSubscriptions, DesignChildStoresFull {}
+
+export interface KitSnapshot {
+  snapshot(): Kit;
+}
+export interface KitActions {
+  change: (diff: KitDiff) => void;
+}
+export interface KitFileUrls {
+  fileUrls(): Map<Url, Url>;
+}
+export interface KitSubscriptions {
+  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+}
+export interface KitCommandContext {
+  kit: Kit;
+  fileUrls: Map<Url, Url>;
+}
+export interface KitCommandResult {
+  diff?: KitDiff;
+  files?: File[];
+}
+export interface KitCommands {
+  execute<T>(command: string, ...rest: any[]): Promise<T>;
+}
+export interface KitCommandsFull {
+  execute<T>(command: string, ...rest: any[]): Promise<T>;
+  register(command: string, callback: (context: KitCommandContext, ...rest: any[]) => KitCommandResult): Disposable;
+}
+export interface KitChildStores {
+  types: Map<string, TypeStore>;
+  designs: Map<string, DesignStore>;
+  files: Map<Url, FileStore>;
+}
+export interface KitChildStoresFull {
+  types: Map<string, TypeStoreFull>;
+  designs: Map<string, DesignStoreFull>;
+  files: Map<Url, FileStoreFull>;
+}
+export interface KitStore extends KitSnapshot, KitChildStores, KitFileUrls, KitCommands, KitSubscriptions {}
+export interface KitStoreFull extends KitSnapshot, KitActions, KitSubscriptions, KitCommandsFull, KitChildStoresFull, KitFileUrls {}
+
+export interface DesignEditorId {
+  kitId: KitId;
+  designId: DesignId;
+}
+export interface DesignEditorSelection {
+  pieceIds?: PieceId[];
+  connectionIds?: ConnectionId[];
+  portId?: { pieceId: PieceId; designPieceId?: PieceId; portId: PortId };
+}
+export enum DesignEditorFullscreenPanel {
+  None = "none",
+  Diagram = "diagram",
+  Model = "model",
+}
+export interface DesignEditorPresence {
+  cursor?: DiagramPoint;
+  camera?: Camera;
+}
+export interface DesignEditorPresenceOther extends DesignEditorPresence {
+  name: string;
+}
+export interface DesignEditorState {
+  fullscreenPanel: DesignEditorFullscreenPanel;
+  selection: DesignEditorSelection;
+  presence: DesignEditorPresence;
+}
+export interface DesignEditorStateFull extends DesignEditorState {
+  isTransactionActive: boolean;
+  others: DesignEditorPresenceOther[];
+  diff: KitDiff;
+  currentTransactionStack: DesignEditorEdit[];
+  pastTransactionsStack: DesignEditorEdit[];
+}
+
+export interface DesignEditorSnapshot {
+  snapshot(): DesignEditorStateFull;
+}
+export interface DesignEditorStateDiff {
+  fullscreenPanel?: DesignEditorFullscreenPanel;
+  selection?: DesignEditorSelection;
+  presence?: DesignEditorPresence;
+  others?: DesignEditorPresenceOther[];
+}
+export interface DesignEditorActions {
+  change: (diff: DesignEditorStateDiff) => void;
+  undo: () => void;
+  redo: () => void;
+  transaction: {
+    start: () => void;
+    abort: () => void;
+    finalize: () => void;
+  };
+}
+export interface DesignEditorSubscriptions {
+  undone: (subscribe: Subscribe) => Unsubscribe;
+  redone: (subscribe: Subscribe) => Unsubscribe;
+  changed: (subscribe: Subscribe) => Unsubscribe;
+  transaction: {
+    started: (subscribe: Subscribe) => Unsubscribe;
+    aborted: (subscribe: Subscribe) => Unsubscribe;
+    finalized: (subscribe: Subscribe) => Unsubscribe;
+  };
+}
+export interface DesignEditorCommandContext extends KitCommandContext {
+  designEditor: DesignEditorStateFull;
+  designId: DesignId;
+}
+export interface DesignEditorCommandResult {
+  diff?: DesignEditorStateDiff;
+  kitDiff?: KitDiff;
+}
+export interface DesignEditorCommands {
+  execute<T>(command: string, ...rest: any[]): Promise<T>;
+}
+export interface DesignEditorCommandsFull {
+  execute<T>(command: string, ...rest: any[]): Promise<T>;
+  register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable;
+}
+export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands {}
+export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, Merge<DesignEditorActions, DesignEditorSubscriptions> {}
+export interface SketchpadState {
+  mode: Mode;
+  theme: Theme;
+  layout: Layout;
+  activeDesignEditor?: DesignEditorId;
+}
+export interface SketchpadStateFull extends SketchpadState {
+  persistantId?: string;
+}
+
+export interface SketchpadSnapshot {
+  snapshot(): SketchpadStateFull;
+}
+export interface SketchpadStateDiff {
+  mode?: Mode;
+  theme?: Theme;
+  layout?: Layout;
+  activeDesignEditor?: DesignEditorId;
+}
+export interface SketchpadActions {
+  create: {
+    kit: (kit: Kit) => void;
+    designEditor: (id: DesignEditorId) => void;
+  };
+  change: (diff: SketchpadStateDiff) => void;
+  delete: {
+    kit: (id: KitIdLike) => void;
+    designEditor: (id: DesignEditorId) => void;
+  };
+}
+export interface SketchpadSubscriptions {
+  created: {
+    kit: (subscribe: Subscribe) => Unsubscribe;
+    designEditor: (subscribe: Subscribe) => Unsubscribe;
+  };
+  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  deleted: {
+    kit: (subscribe: Subscribe) => Unsubscribe;
+    designEditor: (subscribe: Subscribe) => Unsubscribe;
+  };
+}
+export interface SketchpadChildStores {
+  kits: Map<string, KitStore>;
+  designEditors: Map<string, Map<string, DesignEditorStore>>;
+}
+export interface SketchpadChildStoresFull {
+  kits: Map<string, KitStoreFull>;
+  designEditors: Map<string, Map<string, DesignEditorStoreFull>>;
+}
+export interface SketchpadCommandContext {
+  sketchpad: SketchpadStateFull;
+  store: YSketchpadStore;
+}
+export interface SketchpadCommandResult {
+  diff?: SketchpadStateDiff;
+}
+export interface SketchpadCommands {
+  execute<T>(command: string, ...rest: any[]): Promise<T>;
+}
+export interface SketchpadCommandsFull {
+  execute<T>(command: string, ...rest: any[]): Promise<T>;
+  register(command: string, callback: (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult): Disposable;
+}
+export interface SketchpadStore extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStores {}
+export interface SketchpadStoreFull extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStoresFull, SketchpadActions {
+  on: SketchpadSubscriptions;
+}
+
+// #endregion Api
+
+// #region Stores
+
+// Base class for common functionality
+abstract class BaseYStore<TYObject extends Y.AbstractType<any>> {
+  protected abstract yObject: TYObject;
+
+  protected createObserver = (subscribe: Subscribe, deep?: boolean): Unsubscribe => {
+    return createObserver(this.yObject, subscribe, deep);
+  };
+
+  changed = (subscribe: Subscribe, deep?: boolean) => {
+    return this.createObserver(subscribe, deep);
+  };
+}
+
+type YAuthor = Y.Map<string>;
+type YAuthors = Y.Map<YAuthor>;
+type YAttribute = Y.Map<string>;
+type YAttributes = Y.Array<YAttribute>;
+type YStringArray = Y.Array<string>;
+type YLeafMapString = Y.Map<string>;
+type YLeafMapNumber = Y.Map<number>;
+type YVec3 = YLeafMapNumber;
+type YPlane = Y.Map<YVec3>;
+
+type YRepresentationVal = string | YStringArray | YAttributes;
+type YRepresentation = Y.Map<YRepresentationVal>;
+type YRepresentationMap = Y.Map<YRepresentation>;
+type YRepresentationId = string;
+
+type YPortVal = string | number | boolean | YLeafMapNumber | YAttributes | YStringArray;
+type YPort = Y.Map<YPortVal>;
+type YPortMap = Y.Map<YPort>;
+type YPortId = string;
+
+type YPieceVal = string | YLeafMapString | YLeafMapNumber | YPlane | YAttributes;
+type YPiece = Y.Map<YPieceVal>;
+type YPieceMap = Y.Map<YPiece>;
+type YPieceId = string;
+
+type YSide = Y.Map<YLeafMapString>;
+type YConnectionVal = string | number | YAttributes | YSide;
+type YConnection = Y.Map<YConnectionVal>;
+type YConnectionMap = Y.Map<YConnection>;
+type YConnectionId = string;
+
+type YTypeVal = string | number | boolean | YAuthors | YAttributes | YRepresentationMap | YPortMap;
+type YType = Y.Map<YTypeVal>;
+type YTypeMap = Y.Map<YType>;
+type YTypeId = string;
+
+type YDesignVal = string | YAuthors | YAttributes | YPieceMap | YConnectionMap;
+type YDesign = Y.Map<YDesignVal>;
+type YDesignMap = Y.Map<YDesign>;
+type YDesignId = string;
+
+type YDesignEditorStoreVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
+type YDesignEditorStoreValMap = Y.Map<YDesignEditorStoreVal>;
+type YDesignEditorStoreMap = Y.Map<YDesignEditorStore>;
+
+type YIdMap = Y.Map<string>;
+type YKitVal = string | YTypeMap | YDesignMap | YIdMap | YAttributes;
+type YKit = Y.Map<YKitVal>;
+type YKitMap = Y.Map<YKit>;
+type YKitId = string;
+
+type YSketchpadVal = string | boolean;
+type YSketchpad = Y.Map<YSketchpadVal>;
+
+type YSketchpadKeysMap = {
+  mode: string;
+  theme: string;
+  layout: string;
+  activeDesignEditorDesign: YDesign;
+};
+const getSketchpadStore = <K extends keyof YSketchpadKeysMap>(m: YSketchpad, k: K): YSketchpadKeysMap[K] => m.get(k as string) as YSketchpadKeysMap[K];
+
+// Helper functions for Yjs type conversion
+function createAttribute(attribute: Attribute): YAttribute {
+  const yMap = new Y.Map<string>();
+  yMap.set("key", attribute.key);
+  if (attribute.value !== undefined) yMap.set("value", attribute.value);
+  if (attribute.definition !== undefined) yMap.set("definition", attribute.definition);
+  return yMap;
+}
+
+function createAttributes(attributes: Attribute[] | undefined): YAttributes {
+  const yArr = new Y.Array<YAttribute>();
+  (attributes || []).forEach((attr) => yArr.push([createAttribute(attr)]));
+  return yArr;
+}
+
+function getAttributes(yArr: YAttributes | undefined): Attribute[] {
+  if (!yArr) return [];
+  const attributes: Attribute[] = [];
+  yArr.forEach((yMap: YAttribute) => {
+    attributes.push({
+      key: yMap.get("key") as string,
+      value: yMap.get("value") as string | undefined,
+      definition: yMap.get("definition") as string | undefined,
+    });
+  });
+  return attributes;
+}
+
+function createAuthor(author: Author): YAuthor {
+  const yAuthor = new Y.Map<string>();
+  yAuthor.set("name", author.name);
+  yAuthor.set("email", author.email || "");
+  return yAuthor;
+}
+
+function createAuthors(authors: Author[] | undefined): YAuthors {
+  const yAuthors = new Y.Map<YAuthor>();
+  (authors || []).forEach((author) => yAuthors.set(author.name, createAuthor(author)));
+  return yAuthors;
+}
+
+function getAuthors(yAuthors: YAuthors | undefined): Author[] {
+  if (!yAuthors) return [];
+  const authors: Author[] = [];
+  yAuthors.forEach((yAuthor: YAuthor) => {
+    authors.push({
+      name: yAuthor.get("name") as string,
+      email: (yAuthor.get("email") as string) || "",
+    });
+  });
+  return authors;
+}
+
+// Helper for creating Vec3 Y.Map objects
+function createVec3(vec: { x: number; y: number; z: number }): Y.Map<number> {
+  const yVec = new Y.Map<number>();
+  yVec.set("x", vec.x);
+  yVec.set("y", vec.y);
+  yVec.set("z", vec.z);
+  return yVec;
+}
+
+function getVec3(yVec: Y.Map<number>): { x: number; y: number; z: number } {
+  return {
+    x: yVec.get("x") as number,
+    y: yVec.get("y") as number,
+    z: yVec.get("z") as number,
+  };
+}
+
+function updateVec3(yVec: Y.Map<number>, diff: { x?: number; y?: number; z?: number }): void {
+  if (diff.x !== undefined) yVec.set("x", diff.x);
+  if (diff.y !== undefined) yVec.set("y", diff.y);
+  if (diff.z !== undefined) yVec.set("z", diff.z);
+}
+
+// Helper for creating Vec2 Y.Map objects
+function createVec2(vec: { x: number; y: number }): Y.Map<number> {
+  const yVec = new Y.Map<number>();
+  yVec.set("x", vec.x);
+  yVec.set("y", vec.y);
+  return yVec;
+}
+
+function getVec2(yVec: Y.Map<number>): { x: number; y: number } {
+  return {
+    x: yVec.get("x") as number,
+    y: yVec.get("y") as number,
+  };
+}
+
+function updateVec2(yVec: Y.Map<number>, diff: { x?: number; y?: number }): void {
+  if (diff.x !== undefined) yVec.set("x", diff.x);
+  if (diff.y !== undefined) yVec.set("y", diff.y);
+}
+
+// Helper for string arrays
+function createStringArray(items: string[]): Y.Array<string> {
+  const yArr = new Y.Array<string>();
+  items.forEach((item) => yArr.push([item]));
+  return yArr;
+}
+
+function updateStringArray(yArr: Y.Array<string>, items: string[]): void {
+  yArr.delete(0, yArr.length);
+  items.forEach((item) => yArr.push([item]));
+}
+
+// Helper for attributes update
+function updateAttributes(yAttributes: YAttributes, attributes: Attribute[]): void {
+  yAttributes.delete(0, yAttributes.length);
+  attributes.forEach((attr) => yAttributes.push([createAttribute(attr)]));
+}
+
+// Generic observer helper
+function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscribe, deep?: boolean): Unsubscribe {
+  const observer = () => subscribe();
+  if (deep) {
+    yObject.observeDeep(observer);
+    return () => yObject.unobserveDeep(observer);
+  } else {
+    yObject.observe(observer);
+    return () => yObject.unobserve(observer);
+  }
+}
+
+// Helper for UUID-based ID mapping operations
+class IdMapper<T> {
+  private readonly idToUuid = new Map<T, string>();
+
+  getId(item: T): string | undefined {
+    return this.idToUuid.get(item);
+  }
+
+  setId(item: T, uuid?: string): string {
+    const id = uuid || uuidv4();
+    this.idToUuid.set(item, id);
+    return id;
+  }
+
+  deleteId(item: T): boolean {
+    return this.idToUuid.delete(item);
+  }
+
+  has(item: T): boolean {
+    return this.idToUuid.has(item);
+  }
+}
+
+// Helper for conditional property assignment
+function setIfDefined<T>(map: Y.Map<any>, key: string, value: T | undefined): void {
+  if (value !== undefined) {
+    map.set(key, value);
+  }
+}
+
+// Helper for safe property access with defaults
+function getWithDefault<T>(map: Y.Map<any>, key: string, defaultValue: T): T {
+  const value = map.get(key);
+  return value !== undefined ? value : defaultValue;
+}
+
+// Helper for plane objects
+function createPlane(plane: { origin: { x: number; y: number; z: number }; xAxis: { x: number; y: number; z: number }; yAxis: { x: number; y: number; z: number } }): Y.Map<any> {
+  const yPlane = new Y.Map<any>();
+  yPlane.set("origin", createVec3(plane.origin));
+  yPlane.set("xAxis", createVec3(plane.xAxis));
+  yPlane.set("yAxis", createVec3(plane.yAxis));
+  return yPlane;
+}
+
+function getPlane(yPlane: Y.Map<any>): { origin: { x: number; y: number; z: number }; xAxis: { x: number; y: number; z: number }; yAxis: { x: number; y: number; z: number } } {
+  return {
+    origin: getVec3(yPlane.get("origin") as Y.Map<number>),
+    xAxis: getVec3(yPlane.get("xAxis") as Y.Map<number>),
+    yAxis: getVec3(yPlane.get("yAxis") as Y.Map<number>),
+  };
+}
+
+class YFileStore implements FileStoreFull {
+  public readonly parent: YKitStore;
+  public readonly yFile: Y.Map<string> = new Y.Map<string>();
+  private cachedSnapshot?: SemioFile;
+  private lastSnapshotHash?: string;
+
+  constructor(parent: YKitStore, file: SemioFile) {
+    this.parent = parent;
+    this.yFile.set("path", file.path);
+    this.yFile.set("remote", file.remote || "");
+    this.yFile.set("size", file.size?.toString() || "");
+    this.yFile.set("hash", file.hash || "");
+    this.yFile.set("created", file.created?.toISOString() || "");
+    this.yFile.set("updated", file.updated?.toISOString() || "");
+  }
+
+  get file(): SemioFile {
+    const path = this.yFile.get("path") as string;
+    const remote = this.yFile.get("remote") as string;
+    const file: SemioFile = { path, remote: remote || undefined };
+    const size = this.yFile.get("size");
+    if (size) file.size = parseInt(size as string);
+    const hash = this.yFile.get("hash");
+    if (hash) file.hash = hash as string;
+    const created = this.yFile.get("created");
+    if (created) file.created = new Date(created as string);
+    const updated = this.yFile.get("updated");
+    if (updated) file.updated = new Date(updated as string);
+    return file;
+  }
+
+  change = (diff: FileDiff) => {
+    if (diff.path !== undefined) this.yFile.set("path", diff.path);
+    if (diff.remote !== undefined) this.yFile.set("remote", diff.remote);
+    if (diff.size !== undefined) this.yFile.set("size", diff.size.toString());
+    if (diff.hash !== undefined) this.yFile.set("hash", diff.hash);
+    this.cachedSnapshot = undefined; // Invalidate cache when data changes
+    this.lastSnapshotHash = undefined; // Invalidate hash when data changes
+  };
+
+  snapshot = (): SemioFile => {
+    const currentData = {
+      path: this.yFile.get("path") as string,
+      remote: (this.yFile.get("remote") as string) || undefined,
+      size: this.yFile.get("size") ? parseInt(this.yFile.get("size") as string) : undefined,
+      hash: (this.yFile.get("hash") as string) || undefined,
+      created: this.yFile.get("created") ? new Date(this.yFile.get("created") as string) : undefined,
+      updated: this.yFile.get("updated") ? new Date(this.yFile.get("updated") as string) : undefined,
+    };
+    const currentHash = JSON.stringify({
+      path: currentData.path,
+      remote: currentData.remote,
+      size: currentData.size,
+      hash: currentData.hash,
+      created: currentData.created?.toISOString(),
+      updated: currentData.updated?.toISOString(),
+    });
+
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+
+    return this.cachedSnapshot;
+  };
+
+  changed = (subscribe: Subscribe, deep?: boolean) => {
+    return createObserver(this.yFile, subscribe, deep);
+  };
+}
+
+class YRepresentationStore implements RepresentationStoreFull {
+  public readonly parent: YKitStore;
+  public readonly yRepresentation: YRepresentation = new Y.Map<any>();
+  private cachedSnapshot?: Representation;
+  private lastSnapshotHash?: string;
+
+  constructor(parent: YKitStore, representation: Representation) {
+    this.parent = parent;
+    this.yRepresentation.set("url", representation.url);
+    this.yRepresentation.set("description", representation.description || "");
+    this.yRepresentation.set("tags", createStringArray(representation.tags || []));
+    this.yRepresentation.set("attributes", createAttributes(representation.attributes));
+  }
+
+  snapshot = (): Representation => {
+    const yTags = this.yRepresentation.get("tags") as Y.Array<string>;
+    const yAttributes = this.yRepresentation.get("attributes") as YAttributes;
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
         });
-        this.yDoc.on('update', () => this.notifyListeners());
+      });
     }
 
-    private notifyListeners(): void {
-        this.listeners.forEach(listener => listener());
+    const currentData = {
+      url: this.yRepresentation.get("url") as string,
+      description: (this.yRepresentation.get("description") as string) || "",
+      tags: yTags ? yTags.toArray() : [],
+      attributes: attributes,
+    };
+    const currentHash = JSON.stringify(currentData);
+
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
     }
 
-    subscribe(listener: () => void): () => void {
-        this.listeners.add(listener);
-        return () => {
-            this.listeners.delete(listener);
-        };
+    return this.cachedSnapshot;
+  };
+
+  change = (diff: RepresentationDiff) => {
+    if (diff.url !== undefined) this.yRepresentation.set("url", diff.url);
+    if (diff.description !== undefined) this.yRepresentation.set("description", diff.description);
+    if (diff.tags !== undefined) {
+      updateStringArray(this.yRepresentation.get("tags") as Y.Array<string>, diff.tags);
+    }
+    if (diff.attributes !== undefined) {
+      updateAttributes(this.yRepresentation.get("attributes") as YAttributes, diff.attributes);
+    }
+  };
+
+  changed = (subscribe: Subscribe, deep?: boolean) => {
+    return createObserver(this.yRepresentation, subscribe, deep);
+  };
+}
+
+class YPortStore implements PortStoreFull {
+  public readonly parent: YTypeStore;
+  public readonly yPort: YPort = new Y.Map<any>();
+  private cachedSnapshot?: Port;
+  private lastSnapshotHash?: string;
+
+  constructor(parent: YTypeStore, port: Port) {
+    this.parent = parent;
+    this.yPort.set("id_", port.id_ || "");
+    this.yPort.set("description", port.description || "");
+    this.yPort.set("mandatory", port.mandatory || false);
+    this.yPort.set("family", port.family || "");
+    this.yPort.set("t", port.t);
+    this.yPort.set("compatibleFamilies", createStringArray(port.compatibleFamilies || []));
+    this.yPort.set("point", createVec3(port.point));
+    this.yPort.set("direction", createVec3(port.direction));
+    this.yPort.set("attributes", createAttributes(port.attributes));
+  }
+
+  snapshot = (): Port => {
+    const yCompatibleFamilies = this.yPort.get("compatibleFamilies") as Y.Array<string>;
+    const yPoint = this.yPort.get("point") as Y.Map<number>;
+    const yDirection = this.yPort.get("direction") as Y.Map<number>;
+    const yAttributes = this.yPort.get("attributes") as YAttributes;
+
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
     }
 
-    private createQuality(quality: Quality): Y.Map<any> {
-        const yQuality = new Y.Map<any>();
-        yQuality.set('name', quality.name);
-        yQuality.set('value', quality.value || '');
-        yQuality.set('unit', quality.unit || '');
-        yQuality.set('definition', quality.definition || '');
-        return yQuality;
+    const currentData = {
+      id_: this.yPort.get("id_") as string,
+      description: (this.yPort.get("description") as string) || "",
+      mandatory: this.yPort.get("mandatory") as boolean,
+      family: (this.yPort.get("family") as string) || "",
+      compatibleFamilies: yCompatibleFamilies ? yCompatibleFamilies.toArray() : [],
+      point: {
+        x: yPoint.get("x") as number,
+        y: yPoint.get("y") as number,
+        z: yPoint.get("z") as number,
+      },
+      direction: {
+        x: yDirection.get("x") as number,
+        y: yDirection.get("y") as number,
+        z: yDirection.get("z") as number,
+      },
+      t: this.yPort.get("t") as number,
+      attributes: attributes,
+    };
+    const currentHash = JSON.stringify(currentData);
+
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
     }
 
-    private createQualities(qualities: Quality[] | undefined): Y.Map<any> {
-        const yQualities = new Y.Map<any>();
-        if (qualities && qualities.length > 0) {
-            qualities.forEach(q => yQualities.set(q.name, this.createQuality(q)));
-        }
-        return yQualities;
+    return this.cachedSnapshot;
+  };
+
+  change = (diff: PortDiff) => {
+    if (diff.id_ !== undefined) this.yPort.set("id_", diff.id_);
+    if (diff.description !== undefined) this.yPort.set("description", diff.description);
+    if (diff.mandatory !== undefined) this.yPort.set("mandatory", diff.mandatory);
+    if (diff.family !== undefined) this.yPort.set("family", diff.family);
+    if (diff.t !== undefined) this.yPort.set("t", diff.t);
+    if (diff.compatibleFamilies !== undefined) {
+      updateStringArray(this.yPort.get("compatibleFamilies") as Y.Array<string>, diff.compatibleFamilies);
     }
-
-    private getQuality(yMap: Y.Map<any>): Quality | null {
-        const name = yMap.get('name');
-        const value = yMap.get('value');
-        const unit = yMap.get('unit');
-        const definition = yMap.get('definition');
-        return { name, value, unit, definition };
+    if (diff.point !== undefined) {
+      updateVec3(this.yPort.get("point") as Y.Map<number>, diff.point);
     }
-
-    private getQualities(yQualitiesMap: Y.Map<any> | undefined): Quality[] {
-        const qualities: Quality[] = [];
-        if (yQualitiesMap && yQualitiesMap.size > 0) {
-            Array.from(yQualitiesMap.values()).forEach(qMap => {
-                const quality = this.getQuality(qMap);
-                if (quality) {
-                    qualities.push(quality);
-                }
-            });
-        }
-        return qualities;
+    if (diff.direction !== undefined) {
+      updateVec3(this.yPort.get("direction") as Y.Map<number>, diff.direction);
     }
-
-    private createAuthor(author: Author): Y.Map<any> {
-        const yAuthor = new Y.Map<any>();
-        yAuthor.set('name', author.name);
-        yAuthor.set('email', author.email);
-        return yAuthor;
+    if (diff.attributes !== undefined) {
+      updateAttributes(this.yPort.get("attributes") as YAttributes, diff.attributes);
     }
+  };
 
-    private createAuthors(authors: Author[] | undefined): Y.Map<any> {
-        const yAuthors = new Y.Map<any>();
-        if (authors && authors.length > 0) {
-            authors.forEach(a => yAuthors.set(a.name, this.createAuthor(a)));
-        }
-        return yAuthors;
-    }
+  changed = (subscribe: Subscribe, deep?: boolean) => {
+    return createObserver(this.yPort, subscribe, deep);
+  };
+}
 
-    private getAuthor(yMap: Y.Map<any>): Author | null {
-        const name = yMap.get('name');
-        const email = yMap.get('email');
-        return { name, email };
-    }
+class YTypeStore implements TypeStoreFull {
+  public readonly parent: YKitStore;
+  public readonly yType: YType = new Y.Map<any>();
+  public readonly representations: Map<string, YRepresentationStore> = new Map();
+  public readonly ports: Map<string, YPortStore> = new Map();
+  private readonly representationIds: Map<string, string> = new Map();
+  private readonly portIds: Map<string, string> = new Map();
+  private cachedSnapshot?: Type;
+  private lastSnapshotHash?: string;
 
-    private getAuthors(yAuthorsMap: Y.Map<any> | undefined): Author[] {
-        const authors: Author[] = [];
-        if (yAuthorsMap && yAuthorsMap.size > 0) {
-            Array.from(yAuthorsMap.values()).forEach(aMap => {
-                const author = this.getAuthor(aMap);
-                if (author) {
-                    authors.push(author);
-                }
-            });
-        }
-        return authors;
-    }
+  constructor(parent: YKitStore, type: Type) {
+    this.parent = parent;
+    this.yType.set("name", type.name);
+    this.yType.set("description", type.description || "");
+    this.yType.set("variant", type.variant || "");
+    this.yType.set("unit", type.unit);
+    this.yType.set("stock", type.stock || Number.POSITIVE_INFINITY);
+    this.yType.set("virtual", type.virtual || false);
+    this.yType.set("representations", new Y.Map() as YRepresentationMap);
+    this.yType.set("ports", new Y.Map() as YPortMap);
+    this.yType.set("authors", createAuthors(type.authors));
+    this.yType.set("attributes", createAttributes(type.attributes));
+    (type.representations || []).forEach((r) => this.representationIds.set(representationIdToString(representationIdLikeToRepresentationId(r)), uuidv4()));
+    (type.ports || []).forEach((p) => this.portIds.set(portIdToString(portIdLikeToPortId(p)), uuidv4()));
+  }
 
-    createKit(kit: Kit): void {
-        if (!kit.name) throw new Error("Kit name is required to create a kit.");
-        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
-        let versionMap = kits.get(kit.name) as Y.Map<any> | undefined;
-        if (!versionMap) {
-            versionMap = new Y.Map<any>();
-            kits.set(kit.name, versionMap);
-        }
-        if (versionMap.has(kit.version)) {
-            throw new Error(`Kit (${kit.name}, ${kit.version}) already exists.`);
-        }
-        const yKit = new Y.Map<any>();
-        yKit.set('name', kit.name);
-        yKit.set('description', kit.description || '');
-        yKit.set('icon', kit.icon || '');
-        yKit.set('image', kit.image || '');
-        yKit.set('version', kit.version || '');
-        yKit.set('preview', kit.preview || '');
-        yKit.set('remote', kit.remote || '');
-        yKit.set('homepage', kit.homepage || '');
-        yKit.set('license', kit.license || '');
-        yKit.set('types', new Y.Map<any>()); // name -> variant -> YType
-        yKit.set('designs', new Y.Map<any>()); // name -> variant -> view -> YDesign
-        yKit.set('qualities', this.createQualities(kit.qualities));
-        yKit.set('created', new Date().toISOString());
-        yKit.set('updated', new Date().toISOString());
+  type = (): Type => {
+    return this.snapshot();
+  };
 
-        versionMap.set(kit.version, yKit);
-        kit.types?.forEach(t => this.createType(kit.name, kit.version, t));
-        kit.designs?.forEach(d => this.createDesign(kit.name, kit.version, d));
-    }
-
-    getKit(name: string, version: string): Kit {
-        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
-        const yKit = kits.get(name)?.get(version) as Y.Map<any> | undefined;
-        if (!yKit) throw new Error(`Kit (${name}, ${version}) not found`);
-
-        const yTypesMap = yKit.get('types') as Y.Map<Y.Map<any>>; // name -> variant -> YType
-        const types = yTypesMap ? Array.from(yTypesMap.values()).flatMap(variantMap =>
-            Array.from(variantMap.values()).map((yType: Y.Map<any>) => this.getType(name, version, yType.get('name'), yType.get('variant')))
-        ).filter((t): t is Type => t !== null) : [];
-
-        const yDesignsMap = yKit.get('designs') as Y.Map<Y.Map<Y.Map<any>>>; // name -> variant -> view -> YDesign
-        const designs = yDesignsMap ? Array.from(yDesignsMap.values()).flatMap(variantMap =>
-            Array.from(variantMap.values()).flatMap(viewMap =>
-                Array.from(viewMap.values()).map((yDesign: Y.Map<any>) => this.getDesign(name, version, yDesign.get('name'), yDesign.get('variant'), yDesign.get('view')))
-            )
-        ).filter((d): d is Design => d !== null) : [];
-
-        return {
-            name: yKit.get('name'),
-            description: yKit.get('description'),
-            icon: yKit.get('icon'),
-            image: yKit.get('image'),
-            version: yKit.get('version'),
-            preview: yKit.get('preview'),
-            remote: yKit.get('remote'),
-            homepage: yKit.get('homepage'),
-            license: yKit.get('license')?.toArray ? yKit.get('license').toArray() : yKit.get('license'), // Handle potential Y.Array
-            created: new Date(yKit.get('created')),
-            updated: new Date(yKit.get('updated')),
-            designs,
-            types,
-            qualities: this.getQualities(yKit.get('qualities'))
-        };
-    }
-
-    updateKit(kit: Kit): Kit {
-        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
-        const yKit = kits.get(kit.name)?.get(kit.version) as Y.Map<any> | undefined;
-        if (!yKit) throw new Error(`Kit (${kit.name}, ${kit.version}) not found`);
-
-        if (kit.description !== undefined) yKit.set('description', kit.description);
-        if (kit.icon !== undefined) yKit.set('icon', kit.icon);
-        if (kit.image !== undefined) yKit.set('image', kit.image);
-        if (kit.preview !== undefined) yKit.set('preview', kit.preview);
-        if (kit.remote !== undefined) yKit.set('remote', kit.remote);
-        if (kit.homepage !== undefined) yKit.set('homepage', kit.homepage);
-        if (kit.license !== undefined) yKit.set('license', kit.license); // Assuming direct set works, adjust if Y.Array
-
-        // Updating nested structures (types, designs, qualities) is complex here.
-        // Recommend using specific update methods like updateType, updateDesign.
-        if (kit.qualities !== undefined) {
-            yKit.set('qualities', this.createQualities(kit.qualities));
-        }
-
-        yKit.set('updated', new Date().toISOString());
-        return this.getKit(kit.name, kit.version);
-    }
-
-    deleteKit(kitName: string, kitVersion: string): void {
-        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
-        const versionMap = kits.get(kitName) as Y.Map<any> | undefined;
-        if (versionMap) {
-            if (!versionMap.has(kitVersion)) {
-                throw new Error(`Kit version (${kitName}, ${kitVersion}) not found, cannot delete.`);
-            }
-            versionMap.delete(kitVersion);
-            if (versionMap.size === 0) {
-                kits.delete(kitName);
-            }
+  change = (diff: TypeDiff) => {
+    if (diff.name !== undefined) this.yType.set("name", diff.name);
+    if (diff.description !== undefined) this.yType.set("description", diff.description);
+    if (diff.variant !== undefined) this.yType.set("variant", diff.variant);
+    if (diff.unit !== undefined) this.yType.set("unit", diff.unit);
+    if (diff.stock !== undefined) this.yType.set("stock", diff.stock);
+    if (diff.virtual !== undefined) this.yType.set("virtual", diff.virtual);
+    if (diff.representations !== undefined) {
+      diff.representations.forEach((rep) => {
+        const repId = representationIdLikeToRepresentationId(rep);
+        const repIdStr = representationIdToString(repId);
+        if (!this.representationIds.get(repIdStr)) {
+          const uuid = uuidv4();
+          this.representationIds.set(repIdStr, uuid);
+          this.representations.set(repIdStr, new YRepresentationStore(this.parent, rep));
         } else {
-            throw new Error(`Kit name (${kitName}) not found, cannot delete version (${kitVersion})`);
+          this.representations.get(repIdStr)?.change(rep);
         }
+      });
     }
-
-    createType(kitName: string, kitVersion: string, type: Type): void {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const types = yKit.get('types') as Y.Map<any>;
-        let variantMap = types.get(type.name) as Y.Map<any> | undefined;
-        if (!variantMap) {
-            variantMap = new Y.Map<any>();
-            types.set(type.name, variantMap);
+    if (diff.ports !== undefined) {
+      diff.ports.forEach((port) => {
+        const portId = portIdLikeToPortId(port);
+        const portIdStr = portIdToString(portId);
+        if (!this.portIds.get(portIdStr)) {
+          const uuid = uuidv4();
+          this.portIds.set(portIdStr, uuid);
+          this.ports.set(portIdStr, new YPortStore(this, port));
+        } else {
+          this.ports.get(portIdStr)?.change(port);
         }
-        const yType = new Y.Map<any>();
-        yType.set('name', type.name);
-        yType.set('description', type.description || '');
-        yType.set('icon', type.icon || '');
-        yType.set('image', type.image || '');
-        yType.set('variant', type.variant || '');
-        yType.set('stock', type.stock || Number('Infinity'));
-        yType.set('virtual', type.virtual || false);
-        yType.set('unit', type.unit);
-        yType.set('representations', new Y.Map());
-        yType.set('ports', new Y.Map());
-        yType.set('authors', this.createAuthors(type.authors));
-        yType.set('qualities', this.createQualities(type.qualities) || []);
-        variantMap.set(type.variant || '', yType);
-        type.representations?.map(r => { this.createRepresentation(kitName, kitVersion, type.name, type.variant || '', r) });
-        type.ports?.map(p => { this.createPort(kitName, kitVersion, type.name, type.variant || '', p) });
-        yType.set('created', new Date().toISOString());
-        yType.set('updated', new Date().toISOString());
+      });
     }
-
-    getType(kitName: string, kitVersion: string, name: string, variant: string = ''): Type {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const types = yKit.get('types') as Y.Map<any>;
-        const yType = types.get(name)?.get(variant) as Y.Map<any> | undefined;
-        if (!yType) throw new Error(`Type (${name}, ${variant}) not found in kit (${kitName}, ${kitVersion})`);
-
-        const yRepresentationsMap = yType.get('representations') as Y.Map<Y.Map<any>>;
-        const representations = yRepresentationsMap ? Array.from(yRepresentationsMap.values()).map(rMap => this.getRepresentation(kitName, kitVersion, name, variant, rMap.get('tags')?.toArray() || [])).filter((r): r is Representation => r !== null) : [];
-        const yPortsMap = yType.get('ports') as Y.Map<Y.Map<any>>;
-        const ports = yPortsMap ? Array.from(yPortsMap.values()).map(pMap => this.getPort(kitName, kitVersion, name, variant, pMap.get('id_'))).filter((p): p is Port => p !== null) : [];
-        return {
-            name: yType.get('name'),
-            description: yType.get('description'),
-            icon: yType.get('icon'),
-            image: yType.get('image'),
-            variant: yType.get('variant'),
-            stock: yType.get('stock'),
-            virtual: yType.get('virtual'),
-            unit: yType.get('unit'),
-            ports,
-            representations,
-            qualities: this.getQualities(yType.get('qualities')),
-            authors: this.getAuthors(yType.get('authors')),
-            created: yType.get('created'),
-            updated: yType.get('updated'),
-        };
-    }
-
-    updateType(kitName: string, kitVersion: string, type: Type): Type {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const types = yKit.get('types');
-        const yType = types.get(type.name)?.get(type.variant || '');
-        if (!yType) throw new Error(`Type (${type.name}, ${type.variant}) not found in kit (${kitName}, ${kitVersion})`);
-
-        if (type.description !== undefined) yType.set('description', type.description);
-        if (type.icon !== undefined) yType.set('icon', type.icon);
-        if (type.image !== undefined) yType.set('image', type.image);
-        if (type.stock !== undefined) yType.set('stock', type.stock);
-        if (type.virtual !== undefined) yType.set('virtual', type.virtual);
-        if (type.unit !== undefined) yType.set('unit', type.unit);
-
-        if (type.ports !== undefined) {
-            const validPorts = type.ports.filter(p => p.id_ !== undefined);
-            const portsMap = new Y.Map(validPorts.map(p => [p.id_!, this.createPort(kitName, kitVersion, type.name, type.variant || '', p)]));
-            yType.set('ports', portsMap);
-        }
-        if (type.qualities !== undefined) {
-            const qualities = new Y.Map(type.qualities.map(q => [q.name, q]));
-            yType.set('qualities', qualities);
-        }
-        if (type.representations !== undefined) {
-            const representations = new Y.Map(type.representations.map(r => [`${r.url}:${r.tags?.join(',')}`, this.createRepresentation(kitName, kitVersion, type.name, type.variant || '', r)]));
-            yType.set('representations', representations);
-        }
-        if (type.authors !== undefined) {
-            const authors = new Y.Map(type.authors.map(a => [a.name, this.createAuthor(a)]));
-            yType.set('authors', authors);
-        }
-
-        yType.set('updated', new Date().toISOString());
-        return this.getType(kitName, kitVersion, type.name, type.variant);
-    }
-
-    deleteType(kitName: string, kitVersion: string, name: string, variant: string = ''): void {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit ${kitName} not found`);
-        const types = yKit.get('types') as Y.Map<any>;
-        const variantMap = types.get(name) as Y.Map<any> | undefined;
-        if (!variantMap) throw new Error(`Type (${name}, ${variant}) not found in kit (${kitName}, ${kitVersion})`);
-        variantMap.delete(variant);
-        if (variantMap.size === 0) {
-            types.delete(name);
-        }
-    }
-
-    createDesign(kitName: string, kitVersion: string, design: Design): void {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-
-        const designs = yKit.get('designs') as Y.Map<any>;
-        let variantMap = designs.get(design.name) as Y.Map<any> | undefined;
-        if (!variantMap) {
-            variantMap = new Y.Map<any>();
-            designs.set(design.name, variantMap);
-        }
-        let viewMap = variantMap.get(design.variant || '') as Y.Map<any> | undefined;
-        if (!viewMap) {
-            viewMap = new Y.Map<any>();
-            variantMap.set(design.variant || '', viewMap);
-        }
-        const yDesign = new Y.Map<any>();
-        yDesign.set('name', design.name);
-        yDesign.set('description', design.description || '');
-        yDesign.set('icon', design.icon || '');
-        yDesign.set('image', design.image || '');
-        yDesign.set('variant', design.variant || '');
-        yDesign.set('view', design.view || '');
-        yDesign.set('unit', design.unit || '');
-        yDesign.set('pieces', new Y.Map());
-        yDesign.set('connections', new Y.Map());
-        yDesign.set('qualities', this.createQualities(design.qualities) || []);
-        yDesign.set('authors', this.createAuthors(design.authors));
-        viewMap.set(design.view || '', yDesign);
-        design.pieces?.map(p => this.createPiece(kitName, kitVersion, design.name, design.variant, design.view, p));
-        design.connections?.map(c => this.createConnection(kitName, kitVersion, design.name, design.variant, design.view, c));
-        yDesign.set('created', new Date().toISOString());
-        yDesign.set('updated', new Date().toISOString());
-    }
-
-    getDesign(kitName: string, kitVersion: string, name: string, variant: string = '', view: string = ''): Design {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const designs = yKit.get('designs') as Y.Map<any>;
-        const yDesign = designs.get(name)?.get(variant)?.get(view) as Y.Map<any> | undefined;
-        if (!yDesign) throw new Error(`Design (${name}, ${variant}, ${view}) not found in kit (${kitName}, ${kitVersion})`);
-
-        const yPieces = yDesign.get('pieces') as Y.Map<any>;
-        const pieces = yPieces ? Array.from(yPieces.values()).map(pMap => this.getPiece(kitName, kitVersion, name, variant, view, pMap.get('id_'))).filter((p): p is Piece => p !== null) : [];
-        const yConnections = yDesign.get('connections') as Y.Map<any>;
-        const connections = yConnections ? Array.from(yConnections.values()).map(cMap => this.getConnection(kitName, kitVersion, name, variant, view, cMap.get('connected').get('piece').get('id_'), cMap.get('connecting').get('piece').get('id_'))).filter((c): c is Connection => c !== null) : [];
-        return {
-            name: yDesign.get('name'),
-            description: yDesign.get('description'),
-            icon: yDesign.get('icon'),
-            image: yDesign.get('image'),
-            variant: yDesign.get('variant'),
-            view: yDesign.get('view'),
-            unit: yDesign.get('unit'),
-            created: yDesign.get('created'),
-            updated: yDesign.get('updated'),
-            authors: this.getAuthors(yDesign.get('authors')),
-            pieces,
-            connections,
-            qualities: this.getQualities(yDesign.get('qualities')),
-        };
-    }
-
-    updateDesign(kitName: string, kitVersion: string, design: Design): Design {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-
-        const designs = yKit.get('designs');
-        const yDesign = designs.get(design.name)?.get(design.variant || '')?.get(design.view || '');
-        if (!yDesign) throw new Error(`Design (${design.name}, ${design.variant}, ${design.view}) not found in kit (${kitName}, ${kitVersion})`);
-
-        if (design.description !== undefined) yDesign.set('description', design.description);
-        if (design.icon !== undefined) yDesign.set('icon', design.icon);
-        if (design.image !== undefined) yDesign.set('image', design.image);
-        if (design.unit !== undefined) yDesign.set('unit', design.unit);
-
-        if (design.pieces !== undefined) {
-            const validPieces = design.pieces.filter(p => p.id_ !== undefined);
-            const piecesMap = new Y.Map(validPieces.map(p => [p.id_!, this.createPiece(kitName, kitVersion, design.name, design.variant || '', design.view || '', p)]));
-            yDesign.set('pieces', piecesMap);
-        }
-        if (design.connections !== undefined) {
-            const validConnections = design.connections.filter(c =>
-                c.connected?.piece?.id_ && c.connecting?.piece?.id_ && c.connected?.port?.id_ && c.connecting?.port?.id_
-            );
-            const getConnectionId = (c: Connection) => `${c.connected.piece.id_}--${c.connecting.piece.id_}`;
-            const connectionsMap = new Y.Map(validConnections.map(c => [getConnectionId(c), this.createConnection(kitName, kitVersion, design.name, design.variant || '', design.view || '', c)]));
-            yDesign.set('connections', connectionsMap);
-        }
-        if (design.qualities !== undefined) {
-            const qualities = new Y.Map(design.qualities.map(q => [q.name, q]));
-            yDesign.set('qualities', qualities);
-        }
-
-        return this.getDesign(kitName, kitVersion, design.name, design.variant, design.view);
-    }
-
-    deleteDesign(kitName: string, kitVersion: string, name: string, variant: string = '', view: string = ''): void {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit ${kitName} not found`);
-
-        const designs = yKit.get('designs') as Y.Map<any>;
-        const variantMap = designs.get(name) as Y.Map<any> | undefined;
-        if (!variantMap) throw new Error(`Design ${name} not found in kit ${kitName}`);
-        const viewMap = variantMap.get(variant) as Y.Map<any> | undefined;
-        if (!viewMap) throw new Error(`Design ${name} not found in kit ${kitName}`);
-        viewMap.delete(view);
-        if (viewMap.size === 0) {
-            variantMap.delete(variant);
-        }
-        if (variantMap.size === 0) {
-            designs.delete(name);
-        }
-    }
-
-    createPiece(kitName: string, kitVersion: string, designName: string, designVariant: string, view: string, piece: Piece): void {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit ${kitName} not found`);
-        const yDesigns = yKit.get('designs');
-        const yDesign = yDesigns.get(designName)?.get(designVariant)?.get(view);
-        if (!yDesign) throw new Error(`Design ${designName} not found in kit ${kitName}`);
-        const yPieces = yDesign.get('pieces');
-
-        const yPiece = new Y.Map<any>();
-        yPiece.set('id_', piece.id_ || Generator.randomId());
-        yPiece.set('description', piece.description || '');
-        const yType = new Y.Map<any>();
-        yType.set('name', piece.type.name);
-        yType.set('variant', piece.type.variant);
-        yPiece.set('type', yType);
-        if (piece.plane) {
-            const yPlane = new Y.Map<any>();
-            const yOrigin = new Y.Map<any>();
-            yOrigin.set('x', piece.plane.origin.x);
-            yOrigin.set('y', piece.plane.origin.y);
-            yOrigin.set('z', piece.plane.origin.z);
-            yPlane.set('origin', yOrigin);
-            const yXAxis = new Y.Map<any>();
-            yXAxis.set('x', piece.plane.xAxis.x);
-            yXAxis.set('y', piece.plane.xAxis.y);
-            yXAxis.set('z', piece.plane.xAxis.z);
-            yPlane.set('xAxis', yXAxis);
-            const yYAxis = new Y.Map<any>();
-            yYAxis.set('x', piece.plane.yAxis.x);
-            yYAxis.set('y', piece.plane.yAxis.y);
-            yYAxis.set('z', piece.plane.yAxis.z);
-            yPlane.set('yAxis', yYAxis);
-            yPiece.set('plane', yPlane);
-        }
-        if (piece.center) {
-            const yCenter = new Y.Map<any>();
-            yCenter.set('x', piece.center.x);
-            yCenter.set('y', piece.center.y);
-            yPiece.set('center', yCenter);
-        }
-        yPiece.set('qualities', this.createQualities(piece.qualities) || []);
-        yPieces.set(piece.id_, yPiece);
-    }
-
-    getPiece(kitName: string, kitVersion: string, designName: string, designVariant: string, view: string, pieceId: string): Piece {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const designs = yKit.get('designs');
-        const yDesign = designs.get(designName)?.get(designVariant)?.get(view);
-        if (!yDesign) throw new Error(`Design (${designName}, ${designVariant}, ${view}) not found in kit (${kitName}, ${kitVersion})`);
-        const pieces = yDesign.get('pieces');
-        const yPiece = pieces.get(pieceId);
-        if (!yPiece) throw new Error(`Piece (${pieceId}) not found in design (${designName}, ${designVariant}, ${view}) in kit (${kitName}, ${kitVersion})`);
-
-        const type = yPiece.get('type');
-        const typeName = type.get('name');
-        const typeVariant = type.get('variant');
-
-        const yPlane = yPiece.get('plane') as Y.Map<any> | undefined;
-        const yOrigin = yPlane?.get('origin');
-        const yXAxis = yPlane?.get('xAxis');
-        const yYAxis = yPlane?.get('yAxis');
-        const origin: Point | null = yOrigin ? {
-            x: yOrigin.get('x'),
-            y: yOrigin.get('y'),
-            z: yOrigin.get('z')
-        } : null;
-        const xAxis: Vector | null = yXAxis ? {
-            x: yXAxis.get('x'),
-            y: yXAxis.get('y'),
-            z: yXAxis.get('z')
-        } : null;
-        const yAxis: Vector | null = yYAxis ? {
-            x: yYAxis.get('x'),
-            y: yYAxis.get('y'),
-            z: yYAxis.get('z')
-        } : null;
-        const plane: Plane | null = origin && xAxis && yAxis ? {
-            origin,
-            xAxis,
-            yAxis
-        } : null;
-
-        const yCenter = yPiece.get('center') as Y.Map<any> | undefined;
-        const center: DiagramPoint | null = yCenter ? {
-            x: yCenter.get('x'),
-            y: yCenter.get('y'),
-        } : null;
-
-        return {
-            id_: yPiece.get('id_'),
-            description: yPiece.get('description'),
-            type: { name: typeName, variant: typeVariant },
-            plane: plane ?? undefined,
-            center: center ?? undefined,
-            qualities: this.getQualities(yPiece.get('qualities')),
-        };
-    }
-
-    updatePiece(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, piece: Piece): Piece {
-        if (!piece.id_) throw new Error("Piece ID is required for update.");
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit ${kitName} not found`);
-        const designs = yKit.get('designs');
-        const yDesign = designs.get(designName)?.get(designVariant)?.get(designView);
-        if (!yDesign) throw new Error(`Design ${designName} not found in kit ${kitName}`);
-        const pieces = yDesign.get('pieces');
-        const yPiece = pieces.get(piece.id_);
-        if (!yPiece) throw new Error(`Piece ${piece.id_} not found in design ${designName} in kit ${kitName}`);
-
-        if (piece.description !== undefined) yPiece.set('description', piece.description);
-        if (piece.type !== undefined) {
-            const yType = new Y.Map<any>();
-            yType.set('name', piece.type.name);
-            yType.set('variant', piece.type.variant);
-            yPiece.set('type', yType);
-        }
-        if (piece.center !== undefined && piece.center !== null) {
-            const yCenter = new Y.Map<any>();
-            yCenter.set('x', piece.center.x);
-            yCenter.set('y', piece.center.y);
-            yPiece.set('center', yCenter);
-        }
-        if (piece.plane !== undefined && piece.plane !== null) {
-            const yPlane = new Y.Map<any>();
-            const yOrigin = new Y.Map<any>();
-            yOrigin.set('x', piece.plane.origin.x);
-            yOrigin.set('y', piece.plane.origin.y);
-            yOrigin.set('z', piece.plane.origin.z);
-            yPlane.set('origin', yOrigin);
-            const yXAxis = new Y.Map<any>();
-            yXAxis.set('x', piece.plane.xAxis.x);
-            yXAxis.set('y', piece.plane.xAxis.y);
-            yXAxis.set('z', piece.plane.xAxis.z);
-            yPlane.set('xAxis', yXAxis);
-            const yYAxis = new Y.Map<any>();
-            yYAxis.set('x', piece.plane.yAxis.x);
-            yYAxis.set('y', piece.plane.yAxis.y);
-            yYAxis.set('z', piece.plane.yAxis.z);
-            yPlane.set('yAxis', yYAxis);
-            yPiece.set('plane', yPlane);
-        }
-
-        return this.getPiece(kitName, kitVersion, designName, designVariant, designView, piece.id_);
-    }
-
-    deletePiece(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, pieceId: string): boolean {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const designs = yKit.get('designs');
-        const yDesign = designs.get(designName)?.get(designVariant)?.get(designView);
-        if (!yDesign) throw new Error(`Design (${designName}, ${designVariant}, ${designView}) not found in kit (${kitName}, ${kitVersion})`);
-
-        const pieces = yDesign.get('pieces');
-        return pieces.delete(pieceId);
-    }
-
-    createConnection(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, connection: Connection): void {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const designs = yKit.get('designs');
-        const yDesign = designs.get(designName)?.get(designVariant)?.get(designView);
-        if (!yDesign) throw new Error(`Design(${designName}, ${designVariant}, ${designView}) not found in kit(${kitName}, ${kitVersion})`);
-        const connectionId = `${connection.connected.piece.id_}--${connection.connecting.piece.id_}`;
-        const reverseConnectionId = `${connection.connecting.piece.id_}--${connection.connected.piece.id_}`;
-        const connections = yDesign.get('connections');
-        if (connections.get(connectionId) || connections.get(reverseConnectionId)) {
-            throw new Error(`Connection (${connectionId}) already exists in design (${designName}, ${designVariant}, ${designView}) in kit (${kitName}, ${kitVersion})`);
-        }
-
-        const yConnection = new Y.Map<any>();
-        const yConnectedSide = new Y.Map<any>();
-        const yConnectedSidePiece = new Y.Map<any>();
-        yConnectedSidePiece.set('id_', connection.connected.piece.id_);
-        const yConnectedSidePort = new Y.Map<any>();
-        yConnectedSidePort.set('id_', connection.connected.port.id_);
-        yConnectedSide.set('piece', yConnectedSidePiece);
-        yConnectedSide.set('port', yConnectedSidePort);
-        yConnection.set('connected', yConnectedSide);
-        const yConnectingSide = new Y.Map<any>();
-        const yConnectingSidePiece = new Y.Map<any>();
-        yConnectingSidePiece.set('id_', connection.connecting.piece.id_);
-        const yConnectingSidePort = new Y.Map<any>();
-        yConnectingSidePort.set('id_', connection.connecting.port.id_);
-        yConnectingSide.set('piece', yConnectingSidePiece);
-        yConnectingSide.set('port', yConnectingSidePort);
-        yConnection.set('connecting', yConnectingSide);
-        yConnection.set('description', connection.description || '');
-        yConnection.set('gap', connection.gap || 0);
-        yConnection.set('shift', connection.shift || 0);
-        yConnection.set('rise', connection.rise || 0);
-        yConnection.set('rotation', connection.rotation || 0);
-        yConnection.set('turn', connection.turn || 0);
-        yConnection.set('tilt', connection.tilt || 0);
-        yConnection.set('x', connection.x || 0);
-        yConnection.set('y', connection.y || 0);
-        yConnection.set('qualities', this.createQualities(connection.qualities));
-        connections.set(connectionId, yConnection);
-    }
-
-    getConnection(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, connectedPieceId: string, connectingPieceId: string): Connection {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const designs = yKit.get('designs');
-        const yDesign = designs.get(designName)?.get(designVariant)?.get(designView);
-        if (!yDesign) throw new Error(`Design (${designName}, ${designVariant}, ${designView}) not found in kit (${kitName}, ${kitVersion})`);
-        const connections = yDesign.get('connections');
-        const yConnection = connections.get(`${connectedPieceId}--${connectingPieceId}`);
-        if (!yConnection) throw new Error(`Connection (${connectedPieceId}, ${connectingPieceId}) not found in design (${designName}, ${designVariant}, ${designView}) in kit (${kitName}, ${kitVersion})`);
-
-        const yConnected = yConnection.get('connected') as Y.Map<any>;
-        const connectedSide: Side = {
-            piece: { id_: yConnected?.get('piece')?.get('id_') || '' },
-            port: { id_: yConnected?.get('port')?.get('id_') || '' }
-        }
-        const yConnecting = yConnection.get('connecting') as Y.Map<any>;
-        const connectingSide: Side = {
-            piece: { id_: yConnecting?.get('piece')?.get('id_') || '' },
-            port: { id_: yConnecting?.get('port')?.get('id_') || '' }
-        }
-        return {
-            description: yConnection.get('description'),
-            connected: connectedSide,
-            connecting: connectingSide,
-            gap: yConnection.get('gap'),
-            shift: yConnection.get('shift'),
-            rise: yConnection.get('rise'),
-            rotation: yConnection.get('rotation'),
-            turn: yConnection.get('turn'),
-            tilt: yConnection.get('tilt'),
-            x: yConnection.get('x'),
-            y: yConnection.get('y'),
-            qualities: this.getQualities(yConnection.get('qualities'))
-        };
-    }
-
-    updateConnection(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, connection: Partial<Connection>): void {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const designs = yKit.get('designs');
-        const yDesign = designs.get(designName)?.get(designVariant)?.get(designView);
-        if (!yDesign) throw new Error(`Design (${designName}, ${designVariant}, ${designView}) not found in kit (${kitName}, ${kitVersion})`);
-        const connections = yDesign.get('connections');
-        const yConnection = connections.get(`${connection.connected?.piece.id_}--${connection.connecting?.piece.id_}`);
-        if (!yConnection) throw new Error(`Connection (${connection.connected?.piece.id_}, ${connection.connecting?.piece.id_}) not found in design (${designName}, ${designVariant}, ${designView}) in kit (${kitName}, ${kitVersion})`);
-
-        if (connection.description !== undefined) yConnection.set('description', connection.description);
-        if (connection.connected !== undefined) yConnection.set('connected', connection.connected);
-        if (connection.connecting !== undefined) yConnection.set('connecting', connection.connecting);
-        if (connection.gap !== undefined) yConnection.set('gap', connection.gap);
-        if (connection.rotation !== undefined) yConnection.set('rotation', connection.rotation);
-        if (connection.shift !== undefined) yConnection.set('shift', connection.shift);
-        if (connection.tilt !== undefined) yConnection.set('tilt', connection.tilt);
-        if (connection.x !== undefined) yConnection.set('x', connection.x);
-        if (connection.y !== undefined) yConnection.set('y', connection.y);
-
-        const yQualities = yConnection.get('qualities') || new Y.Array<Y.Map<any>>();
-        if (connection.qualities) {
-            yQualities.delete(0, yQualities.length);
-            connection.qualities.forEach(q => yQualities.push([this.createQuality(q)]));
-        }
-        yConnection.set('qualities', yQualities);
-    }
-
-    deleteConnection(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, connectedPieceId: string, connectingPieceId: string): void {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-
-        const designs = yKit.get('designs');
-        const yDesign = designs.get(designName)?.get(designVariant)?.get(designView);
-        if (!yDesign) throw new Error(`Design (${designName}, ${designVariant}, ${designView}) not found in kit (${kitName}, ${kitVersion})`);
-
-        const connections = yDesign.get('connections');
-        connections.delete(`${connectedPieceId}--${connectingPieceId}`);
-    }
-
-    createRepresentation(kitName: string, kitVersion: string, typeName: string, typeVariant: string, representation: Representation): void {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const types = yKit.get('types');
-        const yType = types.get(typeName)?.get(typeVariant);
-        if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitName}, ${kitVersion})`);
-
-        const representations = yType.get('representations');
-        const yRepresentation = new Y.Map<any>();
-        yRepresentation.set('url', representation.url);
-        yRepresentation.set('description', representation.description || '');
-        const yTags = Y.Array.from(representation.tags || []);
-        yRepresentation.set('tags', yTags);
-        yRepresentation.set('qualities', this.createQualities(representation.qualities || []));
-
-        const id = representation.tags?.join(',') || '';
-        representations.set(id, yRepresentation);
-    }
-
-    getRepresentation(kitName: string, kitVersion: string, typeName: string, typeVariant: string, tags: string[]): Representation {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const types = yKit.get('types');
-        const yType = types.get(typeName)?.get(typeVariant);
-        if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitName}, ${kitVersion})`);
-        const representations = yType.get('representations');
-        const yRepresentation = representations.get(`${tags?.join(',') || ''}`);
-        if (!yRepresentation) throw new Error(`Representation (${tags?.join(',') || ''}) not found in type (${typeName}, ${typeVariant}) in kit (${kitName}, ${kitVersion})`);
-
-        return {
-            url: yRepresentation.get('url'),
-            description: yRepresentation.get('description'),
-            tags: yRepresentation.get('tags').toArray(),
-            qualities: this.getQualities(yRepresentation.get('qualities'))
-        };
-    }
-
-    updateRepresentation(kitName: string, kitVersion: string, typeName: string, typeVariant: string, representation: Partial<Representation>): void {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const types = yKit.get('types');
-        const yType = types.get(typeName)?.get(typeVariant);
-        if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitName}, ${kitVersion})`);
-        const representations = yType.get('representations');
-        const id = `${representation.tags?.join(',') || ''}`;
-        const yRepresentation = representations.get(id);
-        if (!yRepresentation) throw new Error(`Representation (${id}) not found in type (${typeName}, ${typeVariant}) in kit (${kitName}, ${kitVersion})`);
-
-        if (representation.description !== undefined) yRepresentation.set('description', representation.description);
-        if (representation.tags !== undefined) {
-            const yTags = Y.Array.from(representation.tags || []);
-            yRepresentation.set('tags', yTags);
-        }
-        if (representation.qualities !== undefined) {
-            const yQualities = yRepresentation.get('qualities') || new Y.Array<Y.Map<any>>();
-            yQualities.delete(0, yQualities.length);
-            representation.qualities.forEach(q => yQualities.push([this.createQuality(q)]));
-            yRepresentation.set('qualities', yQualities);
-        }
-    }
-
-    deleteRepresentation(kitName: string, kitVersion: string, typeName: string, typeVariant: string, mime: string, tags: string[]): void {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const types = yKit.get('types');
-        const yType = types.get(typeName)?.get(typeVariant);
-        if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitName}, ${kitVersion})`);
-
-        const representations = yType.get('representations');
-        representations.delete(`${tags?.join(',') || ''}`);
-    }
-
-    createPort(kitName: string, kitVersion: string, typeName: string, typeVariant: string, port: Port): void {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const types = yKit.get('types');
-        const yType = types.get(typeName)?.get(typeVariant);
-        if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitName}, ${kitVersion})`);
-
-        const ports = yType.get('ports');
-        const yPort = new Y.Map<any>();
-        yPort.set('id_', port.id_ || "");
-        yPort.set('description', port.description || '');
-        yPort.set('mandatory', port.mandatory === undefined ? false : port.mandatory);
-        yPort.set('family', port.family || '');
-
-        const yCompatibleFamilies = Y.Array.from(port.compatibleFamilies || []);
-        yPort.set('compatibleFamilies', yCompatibleFamilies);
-
-        const yDirection = new Y.Map<any>();
-        yDirection.set('x', port.direction.x);
-        yDirection.set('y', port.direction.y);
-        yDirection.set('z', port.direction.z);
-        yPort.set('direction', yDirection);
-
-        const yPoint = new Y.Map<any>();
-        yPoint.set('x', port.point.x);
-        yPoint.set('y', port.point.y);
-        yPoint.set('z', port.point.z);
-        yPort.set('point', yPoint);
-
-        yPort.set('t', port.t || 0);
-        yPort.set('qualities', this.createQualities(port.qualities || []));
-
-        ports.set(port.id_, yPort);
-    }
-
-    getPort(kitName: string, kitVersion: string, typeName: string, typeVariant: string, id?: string): Port {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const types = yKit.get('types') as Y.Map<any>;
-        const yType = types.get(typeName)?.get(typeVariant) as Y.Map<any>;
-        if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitName}, ${kitVersion})`);
-        const ports = yType.get('ports');
-        if (!ports) throw new Error(`Ports not found in type (${typeName}, ${typeVariant})`);
-        const yPort = ports.get(id);
-        if (!yPort) throw new Error(`Port (${id}) not found in type (${typeName}, ${typeVariant})`);
-
-        const yDirection = yPort.get('direction');
-        if (!yDirection) throw new Error(`Direction not found in port (${id})`);
-        const yPoint = yPort.get('point');
-        if (!yPoint) throw new Error(`Point not found in port (${id})`);
-        return {
-            id_: yPort.get('id_'),
-            description: yPort.get('description'),
-            mandatory: yPort.get('mandatory'),
-            family: yPort.get('family'),
-            compatibleFamilies: yPort.get('compatibleFamilies')?.toArray() || [],
-            direction: {
-                x: yDirection.get('x'),
-                y: yDirection.get('y'),
-                z: yDirection.get('z')
-            },
-            point: {
-                x: yPoint.get('x'),
-                y: yPoint.get('y'),
-                z: yPoint.get('z')
-            },
-            t: yPort.get('t'),
-            qualities: this.getQualities(yPort.get('qualities'))
-        };
-    }
-
-    updatePort(kitName: string, kitVersion: string, typeName: string, typeVariant: string, portId: string, port: Partial<Port>): void {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit ${kitName} not found`);
-        const types = yKit.get('types');
-        const yType = types.get(typeName)?.get(typeVariant);
-        if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitName}, ${kitVersion})`);
-        const ports = yType.get('ports');
-        const yPort = ports.get(portId);
-        if (!yPort) throw new Error(`Port (${portId}) not found in type (${typeName}, ${typeVariant})`);
-
-        if (port.description !== undefined) yPort.set('description', port.description);
-        if (port.direction !== undefined) {
-            const yDirection = new Y.Map<any>();
-            yDirection.set('x', port.direction.x);
-            yDirection.set('y', port.direction.y);
-            yDirection.set('z', port.direction.z);
-            yPort.set('direction', yDirection);
-        }
-        if (port.point !== undefined) {
-            const yPoint = new Y.Map<any>();
-            yPoint.set('x', port.point.x);
-            yPoint.set('y', port.point.y);
-            yPoint.set('z', port.point.z);
-            yPort.set('point', yPoint);
-        }
-        if (port.t !== undefined) yPort.set('t', port.t);
-        if (port.qualities !== undefined) {
-            const yQualities = yPort.get('qualities') || new Y.Array<Y.Map<any>>();
-            yQualities.delete(0, yQualities.length);
-            port.qualities.forEach(q => yQualities.push([this.createQuality(q)]));
-            yPort.set('qualities', yQualities);
-        }
-        if (port.family !== undefined && yPort.set('family', port.family)) {
-            (yPort.get('compatibleFamilies') as Y.Array<string>).delete(0, (yPort.get('compatibleFamilies') as Y.Array<string>).length);
-            (port.compatibleFamilies || []).forEach(cf => (yPort.get('compatibleFamilies') as Y.Array<string>).push([cf]));
-        }
-        if (port.mandatory !== undefined && yPort.set('mandatory', port.mandatory)) {
-            (yPort.get('compatibleFamilies') as Y.Array<string>).delete(0, (yPort.get('compatibleFamilies') as Y.Array<string>).length);
-            (port.compatibleFamilies || []).forEach(cf => (yPort.get('compatibleFamilies') as Y.Array<string>).push([cf]));
-        }
-    }
-
-    deletePort(kitName: string, kitVersion: string, typeName: string, typeVariant: string, portId: string): void {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const types = yKit.get('types');
-        const yType = types.get(typeName)?.get(typeVariant);
-        if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitName}, ${kitVersion})`);
-        const ports = yType.get('ports');
-        ports.delete(portId);
-    }
-
-    createFile(url: string, data: Uint8Array, mime: string): void {
-        this.yDoc.getMap('files').set(url, data);
-        const blob = new Blob([data], { type: mime });
-        const blobUrl = URL.createObjectURL(blob);
-        this.fileUrls.set(url, blobUrl);
-    }
-
-    getFileUrl(url: string): string {
-        const fileUrl = this.fileUrls.get(url);
-        if (!fileUrl) throw new Error(`File (${url}) not found`);
-        return fileUrl;
-    }
-
-    getFileUrls(): Map<string, string> {
-        return this.fileUrls;
-    }
-
-    getFileData(url: string): Uint8Array {
-        const fileData = this.yDoc.getMap('files').get(url);
-        if (!fileData) throw new Error(`File (${url}) not found`);
-        return fileData as Uint8Array;
-    }
-
-    deleteFile(url: string): void {
-        this.yDoc.getMap('files').delete(url);
-        this.fileUrls.delete(url);
-    }
-
-    deleteFiles(): void {
-        this.yDoc.getMap('files').clear();
-        this.fileUrls.clear();
-    }
-
-    createDesignEditorStore(kitName: string, kitVersion: string, designName: string, designVariant: string, view: string): string {
-        const yKit = this.yDoc.getMap('kits').get(kitName)?.get(kitVersion) as Y.Map<any>;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const yDesign = yKit.get('designs').get(designName)?.get(designVariant)?.get(view);
-        if (!yDesign) throw new Error(`Design (${designName}, ${designVariant}, ${view}) not found in kit (${kitName}, ${kitVersion})`);
-        const id = uuidv4();
-        const designEditorStore = new DesignEditorStore(this, id, this.yDoc, yKit, yDesign);
-        this.designEditorStores.set(id, designEditorStore);
-        return id;
-    }
-
-    getDesignEditorStore(id: string): DesignEditorStore | null {
-        const designEditorStore = this.designEditorStores.get(id);
-        if (!designEditorStore) return null;
-        return designEditorStore;
-    }
-
-
-    deleteDesignEditorStore(id: string): void {
-        this.designEditorStores.delete(id);
-    }
-
-    undo(): void {
-        this.undoManager.undo();
-    }
-
-    redo(): void {
-        this.undoManager.redo();
-    }
-
-    transact(commands: () => void): void {
-        this.yDoc.transact(commands, new Set([this.userId]));
-    }
-
-    async importKit(url: string, complete = false): Promise<void> {
-        let SQL: any;
-        let kitDb: any;
-        try {
-            SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
-            console.log("SQL.js initialized for import.");
-        } catch (err) {
-            console.error("Failed to initialize SQL.js for import:", err);
-            throw new Error("SQL.js failed to initialize for import.");
-        }
-        const zipData = await fetch(url).then(res => res.arrayBuffer());
-        const zip = await JSZip.loadAsync(zipData);
-        if (complete) {
-            for (const fileEntry of Object.values(zip.files)) {
-                const fileData = await fileEntry.async("uint8array");
-                this.createFile(fileEntry.name, fileData, fileEntry.name.split(".").pop() || "");
-            }
-        }
-        const kitDbFileEntry = zip.file(".semio/kit.db");
-        if (!kitDbFileEntry) {
-            throw new Error("kit.db not found in the zip file at path ./semio/kit.db");
-        }
-        const kitDbFile = await kitDbFileEntry.async("uint8array");
-        kitDb = new SQL.Database(kitDbFile);
-        let kit: Kit | null = null;
-
-        try {
-            const kitRes = kitDb.exec("SELECT uri, name, description, icon, image, preview, version, remote, homepage, license, created, updated FROM kit LIMIT 1");
-            if (!kitRes || kitRes.length === 0 || !kitRes[0].values || kitRes[0].values.length === 0) throw new Error("Kit data not found in database.");
-            const kitRow: any[] = kitRes[0].values[0];
-            kit = {
-                name: kitRow[1], description: kitRow[2], icon: kitRow[3], image: kitRow[4], preview: kitRow[5],
-                version: kitRow[6], remote: kitRow[7], homepage: kitRow[8], license: kitRow[9],
-                created: new Date(kitRow[10]), updated: new Date(kitRow[11]),
-                types: [], designs: [], qualities: []
-            };
-            const kitIdRes = kitDb.exec("SELECT id FROM kit WHERE name = ? AND version = ?", [kit.name, kit.version]);
-            const kitId = kitIdRes[0].values[0][0];
-            const getQualities = (fkColumn: string, fkValue: number | string): Quality[] => {
-                const query = `SELECT name, value, unit, definition FROM quality WHERE ${fkColumn} = ?`;
-                const res = kitDb.exec(query, [fkValue]);
-                if (!res || res.length === 0 || !res[0].values) return [];
-                return res[0].values.map((row: any[]) => ({ name: row[0], value: row[1], unit: row[2], definition: row[3] }));
-            };
-            const getAuthors = (fkColumn: string, fkValue: number | string): Author[] => {
-                const query = `SELECT name, email FROM author WHERE ${fkColumn} = ? ORDER BY rank`;
-                const res = kitDb.exec(query, [fkValue]);
-                if (!res || res.length === 0 || !res[0].values) return [];
-                return res[0].values.map((row: any[]) => ({ name: row[0], email: row[1] }));
-            };
-            kit.qualities = getQualities('kit_id', kitId);
-            const typeRes = kitDb.exec("SELECT id, name, description, icon, image, variant, stock, virtual, unit, created, updated, location_longitude, location_latitude FROM type WHERE kit_id = ?", [kitId]);
-            if (typeRes && typeRes.length > 0 && typeRes[0].values) {
-                for (const typeRow of typeRes[0].values) {
-                    const typeId = typeRow[0];
-                    const type: Type = {
-                        name: typeRow[1], description: typeRow[2], icon: typeRow[3], image: typeRow[4], variant: typeRow[5],
-                        stock: typeRow[6], virtual: typeRow[7], unit: typeRow[8], created: new Date(typeRow[9]), updated: new Date(typeRow[10]),
-                        location: {
-                            longitude: typeRow[11], latitude: typeRow[12]
-                        },
-                        representations: [], ports: [], qualities: [], authors: []
-                    };
-                    const repRes = kitDb.exec("SELECT id, url, description FROM representation WHERE type_id = ?", [typeId]);
-                    if (repRes && repRes.length > 0 && repRes[0].values) {
-                        for (const repRow of repRes[0].values) {
-                            const representation: Representation = {
-                                url: repRow[1], description: repRow[2], tags: [], qualities: []
-                            };
-                            const repId = repRow[0];
-                            const tagRes = kitDb.exec("SELECT name FROM tag WHERE representation_id = ? ORDER BY \"order\"", [repId]);
-                            if (tagRes && tagRes.length > 0 && tagRes[0].values) {
-                                representation.tags = tagRes[0].values.map((row: any[]) => row[0]);
-                            }
-                            representation.qualities = getQualities('representation_id', repId);
-                            if (!complete && !this.fileUrls.has(representation.url)) {
-                                const fileEntry = zip.file(representation.url);
-                                if (fileEntry) {
-                                    const fileData = await fileEntry.async("uint8array");
-                                    this.createFile(representation.url, fileData, representation.mime);
-                                    if (representation.url !== repRow[1]) {
-                                        console.log(representation.url, representation, repRow[1], repRow);
-                                    }
-                                    if (repRow[1].includes("cyclindric-tambour")) {
-                                        console.log(representation, repRow);
-                                    }
-                                } else if (complete && !representation.url.startsWith("http")) {
-                                    console.warn(`Representation file not found in zip: ${representation.url}`);
-                                }
-                            }
-                            type.representations!.push(representation);
-                        }
-                    }
-                    const portRes = kitDb.exec("SELECT id, description, mandatory, family, t, local_id, point_x, point_y, point_z, direction_x, direction_y, direction_z FROM port WHERE type_id = ?", [typeId]);
-                    if (portRes && portRes.length > 0 && portRes[0].values) {
-                        for (const portRow of portRes[0].values) {
-                            const port: Port = {
-                                description: portRow[1], mandatory: portRow[2], family: portRow[3],
-                                compatibleFamilies: [], t: portRow[4],
-                                id_: portRow[5], point: {
-                                    x: portRow[6], y: portRow[7], z: portRow[8]
-                                }, direction: {
-                                    x: portRow[9], y: portRow[10], z: portRow[11]
-                                },
-                                qualities: []
-                            };
-                            const portId = portRow[0];
-                            const compFamRes = kitDb.exec("SELECT name FROM compatible_family WHERE port_id = ? ORDER BY \"order\"", [portId]);
-                            if (compFamRes && compFamRes.length > 0 && compFamRes[0].values) {
-                                port.compatibleFamilies = compFamRes[0].values.map((row: any[]) => row[0]);
-                            }
-                            port.qualities = getQualities('port_id', portId);
-                            type.ports!.push(port);
-                        }
-                    }
-                    type.qualities = getQualities('type_id', typeId);
-                    type.authors = getAuthors('type_id', typeId);
-                    kit.types!.push(type);
-                }
-            }
-            const designRes = kitDb.exec("SELECT id, name, description, icon, image, variant, view, unit, created, updated, location_longitude, location_latitude FROM design WHERE kit_id = ?", [kitId]);
-            if (designRes && designRes.length > 0 && designRes[0].values) {
-                for (const designRow of designRes[0].values) {
-                    const design: Design = {
-                        name: designRow[1], description: designRow[2], icon: designRow[3], image: designRow[4], variant: designRow[5],
-                        view: designRow[6], unit: designRow[7], created: new Date(designRow[8]), updated: new Date(designRow[9]),
-                        pieces: [], connections: [], qualities: [], authors: []
-                    };
-                    const designId = designRow[0];
-                    const pieceRes = kitDb.exec("SELECT p.id, p.local_id, p.description, t.name, t.variant, pl.origin_x, pl.origin_y, pl.origin_z, pl.x_axis_x, pl.x_axis_y, pl.x_axis_z, pl.y_axis_x, pl.y_axis_y, pl.y_axis_z, p.center_x, p.center_y FROM piece p JOIN type t ON p.type_id = t.id LEFT JOIN plane pl ON p.plane_id = pl.id WHERE p.design_id = ?", [designId]);
-                    const pieceMap: { [key: string]: Piece } = {};
-                    const pieceIdMap: { [dbId: number]: string } = {};
-                    if (pieceRes && pieceRes.length > 0 && pieceRes[0].values) {
-                        for (const pieceRow of pieceRes[0].values) {
-                            const piece: Piece = {
-                                id_: pieceRow[1],
-                                description: pieceRow[2],
-                                type: { name: pieceRow[3], variant: pieceRow[4] },
-                                plane: pieceRow[5] !== null ? {
-                                    origin: { x: pieceRow[5], y: pieceRow[6], z: pieceRow[7] },
-                                    xAxis: { x: pieceRow[8], y: pieceRow[9], z: pieceRow[10] },
-                                    yAxis: { x: pieceRow[11], y: pieceRow[12], z: pieceRow[13] }
-                                } : undefined,
-                                center: pieceRow[14] !== null ? { x: pieceRow[14], y: pieceRow[15] } : undefined,
-                                qualities: []
-                            };
-                            const pieceId = pieceRow[0];
-                            piece.qualities = getQualities('piece_id', pieceId);
-                            design.pieces!.push(piece);
-                            pieceMap[piece.id_ as string] = piece;
-                            pieceIdMap[pieceId] = piece.id_;
-                        }
-                    }
-                    const connRes = kitDb.exec("SELECT c.id, c.description, c.gap, c.shift, c.rise, c.rotation, c.turn, c.tilt, c.x, c.y, c.connected_piece_id, cp.local_id AS connected_port_id, c.connecting_piece_id, cnp.local_id AS connecting_port_id FROM connection c JOIN port cp ON c.connected_port_id = cp.id JOIN port cnp ON c.connecting_port_id = cnp.id WHERE c.design_id = ?", [designId]);
-                    if (connRes && connRes.length > 0 && connRes[0].values) {
-                        for (const connRow of connRes[0].values) {
-                            const connectedPieceLocalId = pieceIdMap[connRow[10]];
-                            const connectingPieceLocalId = pieceIdMap[connRow[12]];
-                            if (!connectedPieceLocalId || !connectingPieceLocalId) {
-                                console.warn(`Could not find piece local IDs for connection DB ID ${connRow[0]}`);
-                                continue;
-                            }
-                            const connection: Connection = {
-                                description: connRow[1], gap: connRow[2], shift: connRow[3], rise: connRow[4], rotation: connRow[5],
-                                turn: connRow[6], tilt: connRow[7], x: connRow[8], y: connRow[9],
-                                connected: { piece: { id_: connectedPieceLocalId }, port: { id_: connRow[11] } },
-                                connecting: { piece: { id_: connectingPieceLocalId }, port: { id_: connRow[13] } },
-                                qualities: []
-                            };
-                            const connId = connRow[0];
-                            connection.qualities = getQualities('connection_id', connId);
-                            design.connections!.push(connection);
-                        }
-                    }
-                    design.qualities = getQualities('design_id', designId);
-                    design.authors = getAuthors('design_id', designId);
-                    kit.designs!.push(design);
-                }
-            }
-            this.createKit(kit);
-            console.log(`Kit "${kit.name}" imported successfully from ${url}`);
-        } catch (error) {
-            console.error("Error importing kit:", error);
-            throw error;
-        } finally {
-            if (kitDb) {
-                kitDb.close();
-                console.log("SQL.js database closed for import.");
-            }
-        }
-    }
-
-    async exportKit(kitName: string, kitVersion: string, complete = false): Promise<Blob> {
-        let SQL: any;
-        let db: any;
-        try {
-            SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
-            console.log("SQL.js initialized for export.");
-        } catch (err) {
-            console.error("Failed to initialize SQL.js for export:", err);
-            throw new Error("SQL.js failed to initialize for export.");
-        }
-        const kit = this.getKit(kitName, kitVersion);
-        db = new SQL.Database();
-        const zip = new JSZip();
-        const schema = `
-            CREATE TABLE kit ( uri VARCHAR(2048) NOT NULL UNIQUE, name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, preview VARCHAR(1024) NOT NULL, version VARCHAR(64) NOT NULL, remote VARCHAR(1024) NOT NULL, homepage VARCHAR(1024) NOT NULL, license VARCHAR(1024) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY );
-            CREATE TABLE type ( name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, variant VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, CONSTRAINT "Unique name and variant" UNIQUE (name, variant, kit_id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
-            CREATE TABLE design ( name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, variant VARCHAR(64) NOT NULL, "view" VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, UNIQUE (name, variant, "view", kit_id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
-            CREATE TABLE representation ( url VARCHAR(1024) NOT NULL, description VARCHAR(512) NOT NULL, mime VARCHAR(64) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, type_id INTEGER, FOREIGN KEY(type_id) REFERENCES type (id) );
-            CREATE TABLE tag ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, representation_id INTEGER, FOREIGN KEY(representation_id) REFERENCES representation (id) );
-            CREATE TABLE port ( description VARCHAR(512) NOT NULL, family VARCHAR(64) NOT NULL, t FLOAT NOT NULL, id INTEGER NOT NULL PRIMARY KEY, local_id VARCHAR(128), point_x FLOAT, point_y FLOAT, point_z FLOAT, direction_x FLOAT, direction_y FLOAT, direction_z FLOAT, type_id INTEGER, CONSTRAINT "Unique local_id" UNIQUE (local_id, type_id), FOREIGN KEY(type_id) REFERENCES type (id) );
-            CREATE TABLE compatible_family ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, port_id INTEGER, FOREIGN KEY(port_id) REFERENCES port (id) );
-            CREATE TABLE plane ( id INTEGER NOT NULL PRIMARY KEY, origin_x FLOAT, origin_y FLOAT, origin_z FLOAT, x_axis_x FLOAT, x_axis_y FLOAT, x_axis_z FLOAT, y_axis_x FLOAT, y_axis_y FLOAT, y_axis_z FLOAT );
-            CREATE TABLE piece ( description VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, local_id VARCHAR(128), type_id INTEGER, plane_id INTEGER, center_x FLOAT, center_y FLOAT, design_id INTEGER, UNIQUE (local_id, design_id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(plane_id) REFERENCES plane (id), FOREIGN KEY(design_id) REFERENCES design (id) );
-            CREATE TABLE connection ( description VARCHAR(512) NOT NULL, gap FLOAT NOT NULL, shift FLOAT NOT NULL, rise FLOAT NOT NULL, rotation FLOAT NOT NULL, turn FLOAT NOT NULL, tilt FLOAT NOT NULL, x FLOAT NOT NULL, y FLOAT NOT NULL, id INTEGER NOT NULL PRIMARY KEY, connected_piece_id INTEGER, connected_port_id INTEGER, connecting_piece_id INTEGER, connecting_port_id INTEGER, design_id INTEGER, CONSTRAINT "no reflexive connection" CHECK (connecting_piece_id != connected_piece_id), FOREIGN KEY(connected_piece_id) REFERENCES piece (id), FOREIGN KEY(connected_port_id) REFERENCES port (id), FOREIGN KEY(connecting_piece_id) REFERENCES piece (id), FOREIGN KEY(connecting_port_id) REFERENCES port (id), FOREIGN KEY(design_id) REFERENCES design (id) );
-            CREATE TABLE quality ( name VARCHAR(64) NOT NULL, value VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, definition VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, representation_id INTEGER, port_id INTEGER, type_id INTEGER, piece_id INTEGER, connection_id INTEGER, design_id INTEGER, kit_id INTEGER, FOREIGN KEY(representation_id) REFERENCES representation (id), FOREIGN KEY(port_id) REFERENCES port (id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(piece_id) REFERENCES piece (id), FOREIGN KEY(connection_id) REFERENCES connection (id), FOREIGN KEY(design_id) REFERENCES design (id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
-            CREATE TABLE author ( name VARCHAR(64) NOT NULL, email VARCHAR(128) NOT NULL, rank INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, type_id INTEGER, design_id INTEGER, FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(design_id) REFERENCES design (id) );
-        `;
-
-        try {
-            db.run(schema);
-            const insertQualities = (qualities: Quality[] | undefined, fkColumn: string, fkValue: number) => {
-                if (!qualities) return;
-                const stmt = db.prepare(`INSERT INTO quality (name, value, unit, definition, ${fkColumn}) VALUES (?, ?, ?, ?, ?)`);
-                qualities.forEach(q => stmt.run([q.name, q.value, q.unit, q.definition, fkValue]));
-                stmt.free();
-            };
-            const insertAuthors = (authors: Author[] | undefined, fkColumn: string, fkValue: number) => {
-                if (!authors) return;
-                const stmt = db.prepare(`INSERT INTO author (name, email, rank, ${fkColumn}) VALUES (?, ?, ?, ?)`);
-                authors.forEach(a => stmt.run([a.name, a.email, a.rank, fkValue]));
-                stmt.free();
-            };
-
-            const kitStmt = db.prepare("INSERT INTO kit (uri, name, description, icon, image, preview, version, remote, homepage, license, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            kitStmt.run([kit.uri, kit.name, kit.description, kit.icon, kit.image, kit.preview, kit.version, kit.remote, kit.homepage, kit.license, kit.created.toISOString(), kit.updated.toISOString()]);
-            kitStmt.free();
-            const kitId = db.exec("SELECT last_insert_rowid()")[0].values[0][0];
-            insertQualities(kit.qualities, 'kit_id', kitId);
-            const typeIdMap: { [key: string]: number } = {}; // key: "name:variant"
-            const portIdMap: { [typeDbId: number]: { [localId: string]: number } } = {};
-            const repIdMap: { [typeDbId: number]: { [key: string]: number } } = {}; // key: "mime:tags"
-            if (kit.types) {
-                const typeStmt = db.prepare("INSERT INTO type (name, description, icon, image, variant, unit, created, updated, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                const repStmt = db.prepare("INSERT INTO representation (url, description, mime, type_id) VALUES (?, ?, ?, ?)");
-                const tagStmt = db.prepare("INSERT INTO tag (name, \"order\", representation_id) VALUES (?, ?, ?)");
-                const portStmt = db.prepare("INSERT INTO port (local_id, description, family, t, point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                const compFamStmt = db.prepare("INSERT INTO compatible_family (name, \"order\", port_id) VALUES (?, ?, ?)");
-                for (const type of kit.types) {
-                    const typeKey = `${type.name}:${type.variant || ''}`;
-                    typeStmt.run([type.name, type.description, type.icon, type.image, type.variant || '', type.unit, type.created.toISOString(), type.updated.toISOString(), kitId]);
-                    const typeDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
-                    typeIdMap[typeKey] = typeDbId;
-                    portIdMap[typeDbId] = {};
-                    repIdMap[typeDbId] = {};
-                    insertQualities(type.qualities, 'type_id', typeDbId);
-                    insertAuthors(type.authors, 'type_id', typeDbId);
-                    if (type.representations) {
-                        for (const rep of type.representations) {
-                            const repKey = `${rep.mime}:${rep.tags?.join(',') || ''}`;
-                            repStmt.run([rep.url, rep.description, rep.mime, typeDbId]);
-                            const repDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
-                            repIdMap[typeDbId][repKey] = repDbId;
-                            insertQualities(rep.qualities, 'representation_id', repDbId);
-                            if (rep.tags) {
-                                rep.tags.forEach((tag, index) => tagStmt.run([tag, index, repDbId]));
-                            }
-                            const fileData = this.getFileData(rep.url);
-                            if (fileData) {
-                                zip.file(rep.url, fileData);
-                            } else if (!complete && !rep.url.startsWith("http")) {
-                                console.warn(`File data for representation ${rep.url} not found in store.`);
-                            } else if (complete && !rep.url.startsWith("http")) {
-                                try {
-                                    const fetchedData = await fetch(rep.url).then(res => res.arrayBuffer());
-                                    zip.file(rep.url, fetchedData);
-                                } catch (fetchErr) {
-                                    console.error(`Could not fetch representation ${rep.url} for complete export`, fetchErr);
-                                }
-                            }
-                        }
-                    }
-                    if (type.ports) {
-                        for (const port of type.ports) {
-                            if (!port.id_) {
-                                console.warn(`Skipping port without local_id in type ${type.name}:${type.variant}`);
-                                continue;
-                            }
-                            portStmt.run([port.id_, port.description, port.family, port.t, port.point.x, port.point.y, port.point.z, port.direction.x, port.direction.y, port.direction.z, typeDbId]);
-                            const portDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
-                            portIdMap[typeDbId][port.id_] = portDbId;
-                            insertQualities(port.qualities, 'port_id', portDbId);
-                            if (port.compatibleFamilies) {
-                                port.compatibleFamilies.forEach((fam, index) => compFamStmt.run([fam, index, portDbId]));
-                            }
-                        }
-                    }
-                }
-                typeStmt.free();
-                repStmt.free();
-                tagStmt.free();
-                portStmt.free();
-                compFamStmt.free();
-            }
-            const designIdMap: { [key: string]: number } = {};
-            const pieceIdMap: { [designDbId: number]: { [localId: string]: number } } = {};
-            const planeIdMap: { [pieceDbId: number]: number } = {};
-            let nextPlaneId = 1;
-            if (kit.designs) {
-                const designStmt = db.prepare("INSERT INTO design (name, description, icon, image, variant, \"view\", unit, created, updated, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                const planeStmt = db.prepare("INSERT INTO plane (id, origin_x, origin_y, origin_z, x_axis_x, x_axis_y, x_axis_z, y_axis_x, y_axis_y, y_axis_z) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                const pieceStmt = db.prepare("INSERT INTO piece (local_id, description, type_id, plane_id, center_x, center_y, design_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
-                const connStmt = db.prepare("INSERT INTO connection (description, gap, shift, rise, rotation, turn, tilt, x, y, connected_piece_id, connected_port_id, connecting_piece_id, connecting_port_id, design_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                for (const design of kit.designs) {
-                    const designKey = `${design.name}:${design.variant || ''}:${design.view || ''}`;
-                    designStmt.run([design.name, design.description, design.icon, design.image, design.variant || '', design.view || '', design.unit, design.created.toISOString(), design.updated.toISOString(), kitId]);
-                    const designDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
-                    designIdMap[designKey] = designDbId;
-                    pieceIdMap[designDbId] = {};
-                    insertQualities(design.qualities, 'design_id', designDbId);
-                    insertAuthors(design.authors, 'design_id', designDbId);
-                    if (design.pieces) {
-                        for (const piece of design.pieces) {
-                            if (!piece.id_) {
-                                console.warn(`Skipping piece without local_id in design ${design.name}:${design.variant}:${design.view}`);
-                                continue;
-                            }
-                            const typeKey = `${piece.type.name}:${piece.type.variant || ''}`;
-                            const typeDbId = typeIdMap[typeKey];
-                            if (typeDbId === undefined) {
-                                console.warn(`Could not find type DB ID for piece ${piece.id_} (type: ${typeKey})`);
-                                continue;
-                            }
-                            let planeDbId: number | null = null;
-                            if (piece.plane) {
-                                planeDbId = nextPlaneId++;
-                                planeStmt.run([planeDbId, piece.plane.origin.x, piece.plane.origin.y, piece.plane.origin.z, piece.plane.xAxis.x, piece.plane.xAxis.y, piece.plane.xAxis.z, piece.plane.yAxis.x, piece.plane.yAxis.y, piece.plane.yAxis.z]);
-                            }
-                            pieceStmt.run([piece.id_, piece.description, typeDbId, planeDbId, piece.center?.x, piece.center?.y, designDbId]);
-                            const pieceDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
-                            pieceIdMap[designDbId][piece.id_] = pieceDbId;
-                            insertQualities(piece.qualities, 'piece_id', pieceDbId);
-                            if (planeDbId !== null) {
-                                planeIdMap[pieceDbId] = planeDbId;
-                            }
-                        }
-                    }
-                    if (design.connections) {
-                        for (const conn of design.connections) {
-                            const connectedPieceDbId = pieceIdMap[designDbId][conn.connected.piece.id_];
-                            const connectingPieceDbId = pieceIdMap[designDbId][conn.connecting.piece.id_];
-                            const connectedPiece = design.pieces?.find(p => p.id_ === conn.connected.piece.id_);
-                            const connectingPiece = design.pieces?.find(p => p.id_ === conn.connecting.piece.id_);
-                            if (!connectedPieceDbId || !connectingPieceDbId || !connectedPiece || !connectingPiece) {
-                                console.warn(`Could not find piece DB IDs for connection between ${conn.connected.piece.id_} and ${conn.connecting.piece.id_}`);
-                                continue;
-                            }
-                            const connectedTypeKey = `${connectedPiece.type.name}:${connectedPiece.type.variant || ''}`;
-                            const connectingTypeKey = `${connectingPiece.type.name}:${connectingPiece.type.variant || ''}`;
-                            const connectedTypeDbId = typeIdMap[connectedTypeKey];
-                            const connectingTypeDbId = typeIdMap[connectingTypeKey];
-                            if (connectedTypeDbId === undefined || connectingTypeDbId === undefined) {
-                                console.warn(`Could not find type DB IDs for connection pieces`);
-                                continue;
-                            }
-                            const connectedPortDbId = conn.connected.port.id_ ? portIdMap[connectedTypeDbId]?.[conn.connected.port.id_] : undefined;
-                            const connectingPortDbId = conn.connecting.port.id_ ? portIdMap[connectingTypeDbId]?.[conn.connecting.port.id_] : undefined;
-                            if (connectedPortDbId === undefined || connectingPortDbId === undefined) {
-                                console.warn(`Could not find port DB IDs for connection between ${conn.connected.piece.id_}:${conn.connected.port.id_} and ${conn.connecting.piece.id_}:${conn.connecting.port.id_}`);
-                                continue;
-                            }
-                            connStmt.run([conn.description, conn.gap, conn.shift, conn.rise, conn.rotation, conn.turn, conn.tilt, conn.x, conn.y, connectedPieceDbId, connectedPortDbId, connectingPieceDbId, connectingPortDbId, designDbId]);
-                            const connDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
-                            insertQualities(conn.qualities, 'connection_id', connDbId);
-                        }
-                    }
-                }
-                designStmt.free();
-                planeStmt.free();
-                pieceStmt.free();
-                connStmt.free();
-            }
-            const dbData = db.export();
-            zip.file("semio/kit.db", dbData);
-            const zipBlob = await zip.generateAsync({ type: 'blob' });
-            console.log(`Kit "${kit.name}" exported successfully.`);
-            return zipBlob;
-        } catch (error) {
-            console.error("Error exporting kit:", error);
-            throw error;
-        } finally {
-            if (db) {
-                db.close();
-                console.log("SQL.js database closed for export.");
-            }
-        }
-    }
-
-    getKits(): Map<string, string[]> {
-        const kitsMap = new Map<string, string[]>();
-        const yKits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
-        yKits.forEach((versionMap, name) => {
-            kitsMap.set(name, Array.from(versionMap.keys()));
+  };
+
+  snapshot = (): Type => {
+    const yAuthors = this.yType.get("authors") as YAuthors;
+    const yAttributes = this.yType.get("attributes") as YAttributes;
+
+    const authors: Author[] = [];
+    if (yAuthors) {
+      yAuthors.forEach((yAuthor: YAuthor) => {
+        authors.push({
+          name: yAuthor.get("name") as string,
+          email: (yAuthor.get("email") as string) || "",
         });
-        return kitsMap;
+      });
     }
 
-    getTypes(kitName: string, kitVersion: string): Type[] {
-        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
-        const versionMap = kits.get(kitName);
-        const yKit = versionMap?.get(kitVersion) as Y.Map<any> | undefined;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-
-        const types: Type[] = [];
-        const yTypesMap = yKit.get('types') as Y.Map<Y.Map<any>>; // name -> variant -> YType
-        if (yTypesMap) {
-            yTypesMap.forEach((variantMap, name) => {
-                variantMap.forEach((_, variant) => {
-                    try {
-                        types.push(this.getType(kitName, kitVersion, name, variant));
-                    } catch (error) {
-                        console.warn(`Error getting type (${name}, ${variant}) from kit (${kitName}, ${kitVersion}):`, error);
-                    }
-                });
-            });
-        }
-        return types;
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
     }
 
-    getDesigns(kitName: string, kitVersion: string): Design[] {
-        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
-        const versionMap = kits.get(kitName);
-        const yKit = versionMap?.get(kitVersion) as Y.Map<any> | undefined;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
+    const currentData = {
+      name: this.yType.get("name") as string,
+      description: (this.yType.get("description") as string) || "",
+      variant: this.yType.get("variant") as string | undefined,
+      unit: (this.yType.get("unit") as string) || "",
+      stock: this.yType.get("stock") as number | undefined,
+      virtual: this.yType.get("virtual") as boolean | undefined,
+      representations: Array.from(this.representations.values()).map((store) => store.snapshot()),
+      ports: Array.from(this.ports.values()).map((store) => store.snapshot()),
+      authors: authors,
+      attributes: attributes,
+    };
+    const currentHash = JSON.stringify(currentData);
 
-        const designs: Design[] = [];
-        const yDesignsMap = yKit.get('designs') as Y.Map<Y.Map<Y.Map<any>>>; // name -> variant -> view -> YDesign
-        if (yDesignsMap) {
-            yDesignsMap.forEach((variantMap, name) => {
-                variantMap.forEach((viewMap, variant) => {
-                    viewMap.forEach((_, view) => {
-                        try {
-                            designs.push(this.getDesign(kitName, kitVersion, name, variant, view));
-                        } catch (error) {
-                            console.warn(`Error getting design (${name}, ${variant}, ${view}) from kit (${kitName}, ${kitVersion}):`, error);
-                        }
-                    });
-                });
-            });
-        }
-        return designs;
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
     }
 
-    getPieces(kitName: string, kitVersion: string, designName: string, designVariant: string, view: string): Piece[] {
-        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
-        const versionMap = kits.get(kitName);
-        const yKit = versionMap?.get(kitVersion) as Y.Map<any> | undefined;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const designs = yKit.get('designs');
-        const variantMap = designs.get(designName);
-        const viewMap = variantMap?.get(designVariant);
-        const yDesign = viewMap?.get(view);
-        if (!yDesign) throw new Error(`Design (${designName}, ${designVariant}, ${view}) not found in kit (${kitName}, ${kitVersion})`);
+    return this.cachedSnapshot;
+  };
 
-        const pieces: Piece[] = [];
-        const yPieces = yDesign.get('pieces') as Y.Map<any>;
-        if (yPieces) {
-            yPieces.forEach((_, pieceId) => {
-                try {
-                    pieces.push(this.getPiece(kitName, kitVersion, designName, designVariant, view, pieceId));
-                } catch (error) {
-                    console.warn(`Error getting piece (${pieceId}) from design (${designName}, ${designVariant}, ${view}) in kit (${kitName}, ${kitVersion}):`, error);
-                }
-            });
-        }
-        return pieces;
-    }
-
-    getConnections(kitName: string, kitVersion: string, designName: string, designVariant: string, view: string): Connection[] {
-        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
-        const versionMap = kits.get(kitName);
-        const yKit = versionMap?.get(kitVersion) as Y.Map<any> | undefined;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const designs = yKit.get('designs');
-        const variantMap = designs.get(designName);
-        const viewMap = variantMap?.get(designVariant);
-        const yDesign = viewMap?.get(view);
-        if (!yDesign) throw new Error(`Design (${designName}, ${designVariant}, ${view}) not found in kit (${kitName}, ${kitVersion})`);
-
-        const connections: Connection[] = [];
-        const yConnections = yDesign.get('connections') as Y.Map<any>;
-        if (yConnections) {
-            yConnections.forEach((_, connectionId) => {
-                const [connectedPieceId, connectingPieceId] = connectionId.split('--');
-                if (connectedPieceId && connectingPieceId) {
-                    try {
-                        connections.push(this.getConnection(kitName, kitVersion, designName, designVariant, view, connectedPieceId, connectingPieceId));
-                    } catch (error) {
-                        console.warn(`Error getting connection (${connectedPieceId}, ${connectingPieceId}) from design (${designName}, ${designVariant}, ${view}) in kit (${kitName}, ${kitVersion}):`, error);
-                    }
-                }
-            });
-        }
-        return connections;
-    }
-
-    getRepresentations(kitName: string, kitVersion: string, typeName: string, typeVariant: string): Representation[] {
-        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
-        const versionMap = kits.get(kitName);
-        const yKit = versionMap?.get(kitVersion) as Y.Map<any> | undefined;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const types = yKit.get('types');
-        const variantMap = types.get(typeName);
-        const yType = variantMap?.get(typeVariant);
-        if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitName}, ${kitVersion})`);
-
-        const representations: Representation[] = [];
-        const yRepresentations = yType.get('representations') as Y.Map<any>;
-        if (yRepresentations) {
-            yRepresentations.forEach((yRep) => {
-                const tags = yRep.get('tags')?.toArray() || [];
-                try {
-                    representations.push(this.getRepresentation(kitName, kitVersion, typeName, typeVariant, tags));
-                } catch (error) {
-                    console.warn(`Error getting representation (${tags}) for type (${typeName}, ${typeVariant}) in kit (${kitName}, ${kitVersion}):`, error);
-                }
-            });
-        }
-        return representations;
-    }
-
-    getPorts(kitName: string, kitVersion: string, typeName: string, typeVariant: string): Port[] {
-        const kits = this.yDoc.getMap('kits') as Y.Map<Y.Map<any>>;
-        const versionMap = kits.get(kitName);
-        const yKit = versionMap?.get(kitVersion) as Y.Map<any> | undefined;
-        if (!yKit) throw new Error(`Kit (${kitName}, ${kitVersion}) not found`);
-        const types = yKit.get('types') as Y.Map<any>;
-        const variantMap = types.get(typeName);
-        const yType = variantMap?.get(typeVariant) as Y.Map<any>;
-        if (!yType) throw new Error(`Type (${typeName}, ${typeVariant}) not found in kit (${kitName}, ${kitVersion})`);
-
-        const ports: Port[] = [];
-        const yPorts = yType.get('ports') as Y.Map<any>;
-        if (yPorts) {
-            yPorts.forEach((_, portId) => {
-                try {
-                    ports.push(this.getPort(kitName, kitVersion, typeName, typeVariant, portId));
-                } catch (error) {
-                    console.warn(`Error getting port (${portId}) for type (${typeName}, ${typeVariant}) in kit (${kitName}, ${kitVersion}):`, error);
-                }
-            });
-        }
-        return ports;
-    }
+  changed = (subscribe: Subscribe, deep?: boolean) => {
+    return createObserver(this.yType, subscribe, deep);
+  };
 }
 
-const StudioStoreContext = createContext<StudioStore | null>(null);
+class YPieceStore implements PieceStoreFull {
+  public readonly parent: YDesignStore;
+  public readonly yPiece: YPiece = new Y.Map<any>();
+  private cachedSnapshot?: Piece;
+  private lastSnapshotHash?: string;
 
-export const useStudioStore = () => {
-    const studioStore = useContext(StudioStoreContext);
-    if (!studioStore) {
-        throw new Error('useStudioStore must be used within a StudioStoreProvider');
+  constructor(parent: YDesignStore, piece: Piece) {
+    this.parent = parent;
+    this.yPiece.set("id_", piece.id_);
+    this.yPiece.set("description", piece.description || "");
+    const yType = new Y.Map<string>();
+    yType.set("name", piece.type.name);
+    if (piece.type.variant) yType.set("variant", piece.type.variant);
+    this.yPiece.set("type", yType);
+    if (piece.plane) {
+      this.yPiece.set("plane", createPlane(piece.plane));
     }
-    return studioStore;
+    if (piece.center) {
+      this.yPiece.set("center", createVec2(piece.center));
+    }
+    this.yPiece.set("attributes", createAttributes(piece.attributes));
+  }
+
+  snapshot = (): Piece => {
+    const yType = this.yPiece.get("type") as Y.Map<string>;
+    const yPlane = this.yPiece.get("plane") as Y.Map<any> | undefined;
+    const yCenter = this.yPiece.get("center") as Y.Map<number> | undefined;
+    const yAttributes = this.yPiece.get("attributes") as YAttributes;
+
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
+    }
+
+    const currentData: Piece = {
+      id_: this.yPiece.get("id_") as string,
+      description: (this.yPiece.get("description") as string) || "",
+      type: {
+        name: yType.get("name") as string,
+        variant: yType.get("variant") as string | undefined,
+      },
+      attributes: attributes,
+    };
+
+    if (yPlane) {
+      const yOrigin = yPlane.get("origin") as Y.Map<number>;
+      const yXAxis = yPlane.get("xAxis") as Y.Map<number>;
+      const yYAxis = yPlane.get("yAxis") as Y.Map<number>;
+      currentData.plane = {
+        origin: {
+          x: yOrigin.get("x") as number,
+          y: yOrigin.get("y") as number,
+          z: yOrigin.get("z") as number,
+        },
+        xAxis: {
+          x: yXAxis.get("x") as number,
+          y: yXAxis.get("y") as number,
+          z: yXAxis.get("z") as number,
+        },
+        yAxis: {
+          x: yYAxis.get("x") as number,
+          y: yYAxis.get("y") as number,
+          z: yYAxis.get("z") as number,
+        },
+      };
+    }
+
+    if (yCenter) {
+      currentData.center = {
+        x: yCenter.get("x") as number,
+        y: yCenter.get("y") as number,
+      };
+    }
+
+    const currentHash = JSON.stringify(currentData);
+
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+
+    return this.cachedSnapshot;
+  };
+
+  change = (diff: PieceDiff) => {
+    if (diff.id_ !== undefined) this.yPiece.set("id_", diff.id_);
+    if (diff.description !== undefined) this.yPiece.set("description", diff.description);
+    if (diff.type !== undefined) {
+      const yType = this.yPiece.get("type") as Y.Map<string>;
+      yType.set("name", diff.type.name);
+      if (diff.type.variant !== undefined) yType.set("variant", diff.type.variant);
+    }
+    if (diff.plane !== undefined) {
+      const yPlane = this.yPiece.get("plane") as Y.Map<any>;
+      if (yPlane) {
+        if (diff.plane.origin !== undefined) {
+          updateVec3(yPlane.get("origin") as Y.Map<number>, diff.plane.origin);
+        }
+        if (diff.plane.xAxis !== undefined) {
+          updateVec3(yPlane.get("xAxis") as Y.Map<number>, diff.plane.xAxis);
+        }
+        if (diff.plane.yAxis !== undefined) {
+          updateVec3(yPlane.get("yAxis") as Y.Map<number>, diff.plane.yAxis);
+        }
+      }
+    }
+    if (diff.center !== undefined) {
+      const yCenter = this.yPiece.get("center") as Y.Map<number>;
+      if (yCenter) {
+        updateVec2(yCenter, diff.center);
+      }
+    }
+    if (diff.attributes !== undefined) {
+      updateAttributes(this.yPiece.get("attributes") as YAttributes, diff.attributes);
+    }
+  };
+
+  changed = (subscribe: Subscribe, deep?: boolean) => {
+    return createObserver(this.yPiece, subscribe, deep);
+  };
+}
+
+class YConnectionStore implements ConnectionStoreFull {
+  public readonly parent: YDesignStore;
+  public readonly yConnection: YConnection = new Y.Map<any>();
+  private cachedSnapshot?: Connection;
+  private lastSnapshotHash?: string;
+
+  constructor(parent: YDesignStore, connection: Connection) {
+    this.parent = parent;
+    const yConnected = new Y.Map<any>();
+    const yConnectedPiece = new Y.Map<string>();
+    yConnectedPiece.set("id_", connection.connected.piece.id_);
+    yConnected.set("piece", yConnectedPiece);
+    const yConnectedPort = new Y.Map<string>();
+    yConnectedPort.set("id_", connection.connected.port.id_ || "");
+    yConnected.set("port", yConnectedPort);
+    if (connection.connected.designPiece) {
+      const yConnectedDesignPiece = new Y.Map<string>();
+      yConnectedDesignPiece.set("id_", connection.connected.designPiece.id_);
+      yConnected.set("designPiece", yConnectedDesignPiece);
+    }
+    this.yConnection.set("connected", yConnected);
+    const yConnecting = new Y.Map<any>();
+    const yConnectingPiece = new Y.Map<string>();
+    yConnectingPiece.set("id_", connection.connecting.piece.id_);
+    yConnecting.set("piece", yConnectingPiece);
+    const yConnectingPort = new Y.Map<string>();
+    yConnectingPort.set("id_", connection.connecting.port.id_ || "");
+    yConnecting.set("port", yConnectingPort);
+    if (connection.connecting.designPiece) {
+      const yConnectingDesignPiece = new Y.Map<string>();
+      yConnectingDesignPiece.set("id_", connection.connecting.designPiece.id_);
+      yConnecting.set("designPiece", yConnectingDesignPiece);
+    }
+    this.yConnection.set("connecting", yConnecting);
+    this.yConnection.set("description", connection.description || "");
+    this.yConnection.set("gap", connection.gap || 0);
+    this.yConnection.set("shift", connection.shift || 0);
+    this.yConnection.set("rise", connection.rise || 0);
+    this.yConnection.set("rotation", connection.rotation || 0);
+    this.yConnection.set("turn", connection.turn || 0);
+    this.yConnection.set("tilt", connection.tilt || 0);
+    this.yConnection.set("x", connection.x || 0);
+    this.yConnection.set("y", connection.y || 0);
+    this.yConnection.set("attributes", createAttributes(connection.attributes));
+  }
+
+  snapshot = (): Connection => {
+    const yConnected = this.yConnection.get("connected") as Y.Map<any>;
+    const yConnecting = this.yConnection.get("connecting") as Y.Map<any>;
+    const yConnectedPiece = yConnected.get("piece") as Y.Map<string>;
+    const yConnectedDesignPiece = yConnected.get("designPiece") as Y.Map<string> | undefined;
+    const yConnectedPort = yConnected.get("port") as Y.Map<string>;
+    const yConnectingPiece = yConnecting.get("piece") as Y.Map<string>;
+    const yConnectingDesignPiece = yConnecting.get("designPiece") as Y.Map<string> | undefined;
+    const yConnectingPort = yConnecting.get("port") as Y.Map<string>;
+
+    const yAttributes = this.yConnection.get("attributes") as YAttributes;
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
+    }
+
+    const currentData = {
+      connected: {
+        piece: { id_: yConnectedPiece.get("id_") as string },
+        port: { id_: yConnectedPort.get("id_") as string },
+        designPiece: yConnectedDesignPiece ? { id_: yConnectedDesignPiece.get("id_") as string } : undefined,
+      },
+      connecting: {
+        piece: { id_: yConnectingPiece.get("id_") as string },
+        port: { id_: yConnectingPort.get("id_") as string },
+        designPiece: yConnectingDesignPiece ? { id_: yConnectingDesignPiece.get("id_") as string } : undefined,
+      },
+      description: (this.yConnection.get("description") as string) || "",
+      gap: this.yConnection.get("gap") as number,
+      shift: this.yConnection.get("shift") as number,
+      rise: this.yConnection.get("rise") as number,
+      rotation: this.yConnection.get("rotation") as number,
+      turn: this.yConnection.get("turn") as number,
+      tilt: this.yConnection.get("tilt") as number,
+      x: this.yConnection.get("x") as number,
+      y: this.yConnection.get("y") as number,
+      attributes: attributes,
+    };
+    const currentHash = JSON.stringify(currentData);
+
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+
+    return this.cachedSnapshot;
+  };
+
+  change = (diff: ConnectionDiff) => {
+    if (diff.description !== undefined) this.yConnection.set("description", diff.description);
+    if (diff.gap !== undefined) this.yConnection.set("gap", diff.gap);
+    if (diff.shift !== undefined) this.yConnection.set("shift", diff.shift);
+    if (diff.rise !== undefined) this.yConnection.set("rise", diff.rise);
+    if (diff.rotation !== undefined) this.yConnection.set("rotation", diff.rotation);
+    if (diff.turn !== undefined) this.yConnection.set("turn", diff.turn);
+    if (diff.tilt !== undefined) this.yConnection.set("tilt", diff.tilt);
+    if (diff.x !== undefined) this.yConnection.set("x", diff.x);
+    if (diff.y !== undefined) this.yConnection.set("y", diff.y);
+  };
+
+  changed = (subscribe: Subscribe, deep?: boolean) => {
+    return createObserver(this.yConnection, subscribe, deep);
+  };
+}
+
+class YDesignStore implements DesignStoreFull {
+  public readonly parent: YKitStore;
+  public readonly yDesign: YDesign = new Y.Map<any>();
+  public readonly pieces: Map<string, YPieceStore> = new Map();
+  public readonly connections: Map<string, YConnectionStore> = new Map();
+  private readonly pieceIds: Map<string, string> = new Map();
+  private readonly connectionIds: Map<string, string> = new Map();
+  private cachedSnapshot?: Design;
+  private lastSnapshotHash?: string;
+
+  constructor(parent: YKitStore, design: Design) {
+    this.parent = parent;
+    this.yDesign.set("name", design.name);
+    this.yDesign.set("description", design.description || "");
+    this.yDesign.set("variant", design.variant || "");
+    this.yDesign.set("view", design.view || "");
+    this.yDesign.set("unit", design.unit);
+    this.yDesign.set("pieces", new Y.Map() as YPieceMap);
+    this.yDesign.set("connections", new Y.Map() as YConnectionMap);
+    this.yDesign.set("authors", createAuthors(design.authors));
+    this.yDesign.set("attributes", createAttributes(design.attributes));
+    (design.pieces || []).forEach((piece) => {
+      const pieceId = pieceIdLikeToPieceId(piece);
+      const uuid = uuidv4();
+      const yPieceStore = new YPieceStore(this, piece);
+      (this.yDesign.get("pieces") as YPieceMap).set(uuid, yPieceStore.yPiece);
+      const pieceIdStr = pieceIdToString(pieceId);
+      this.pieceIds.set(pieceIdStr, uuid);
+      this.pieces.set(pieceIdStr, yPieceStore);
+    });
+    (design.connections || []).forEach((connection) => {
+      const connectionId = connectionIdLikeToConnectionId(connection);
+      const uuid = uuidv4();
+      const yConnectionStore = new YConnectionStore(this, connection);
+      (this.yDesign.get("connections") as YConnectionMap).set(uuid, yConnectionStore.yConnection);
+      const connectionIdStr = connectionIdToString(connectionId);
+      this.connectionIds.set(connectionIdStr, uuid);
+      this.connections.set(connectionIdStr, yConnectionStore);
+    });
+  }
+
+  snapshot = (): Design => {
+    const yAuthors = this.yDesign.get("authors") as YAuthors;
+    const yAttributes = this.yDesign.get("attributes") as YAttributes;
+
+    const authors: Author[] = [];
+    if (yAuthors) {
+      yAuthors.forEach((yAuthor: YAuthor) => {
+        authors.push({
+          name: yAuthor.get("name") as string,
+          email: (yAuthor.get("email") as string) || "",
+        });
+      });
+    }
+
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
+    }
+
+    const currentData = {
+      name: this.yDesign.get("name") as string,
+      description: this.yDesign.get("description") as string | undefined,
+      variant: this.yDesign.get("variant") as string | undefined,
+      view: this.yDesign.get("view") as string | undefined,
+      unit: this.yDesign.get("unit") as string,
+      pieces: Array.from(this.pieces.values()).map((p) => p.snapshot()),
+      connections: Array.from(this.connections.values()).map((c) => c.snapshot()),
+      authors: authors,
+      attributes: attributes,
+    };
+    const currentHash = JSON.stringify(currentData);
+
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+
+    return this.cachedSnapshot;
+  };
+
+  change = (diff: DesignDiff) => {
+    if (diff.name !== undefined) this.yDesign.set("name", diff.name);
+    if (diff.description !== undefined) this.yDesign.set("description", diff.description);
+    if (diff.variant !== undefined) this.yDesign.set("variant", diff.variant);
+    if (diff.view !== undefined) this.yDesign.set("view", diff.view);
+    if (diff.unit !== undefined) this.yDesign.set("unit", diff.unit);
+
+    if (diff.pieces) {
+      if (diff.pieces.added) {
+        diff.pieces.added.forEach((piece) => {
+          const pieceId = pieceIdLikeToPieceId(piece);
+          const pieceIdStr = pieceIdToString(pieceId);
+          if (!this.pieceIds.get(pieceIdStr)) {
+            const uuid = uuidv4();
+            const yPieceStore = new YPieceStore(this, piece);
+            (this.yDesign.get("pieces") as YPieceMap).set(uuid, yPieceStore.yPiece);
+            this.pieceIds.set(pieceIdStr, uuid);
+            this.pieces.set(pieceIdStr, yPieceStore);
+          }
+        });
+      }
+      if (diff.pieces.removed) {
+        diff.pieces.removed.forEach((pieceId) => {
+          const id = pieceIdLikeToPieceId(pieceId);
+          const idStr = pieceIdToString(id);
+          const uuid = this.pieceIds.get(idStr);
+          if (uuid) {
+            (this.yDesign.get("pieces") as YPieceMap).delete(uuid);
+            this.pieceIds.delete(idStr);
+            this.pieces.delete(idStr);
+          }
+        });
+      }
+      if (diff.pieces.updated) {
+        diff.pieces.updated.forEach((updatedItem) => {
+          const matchingPiece = Array.from(this.pieces.entries()).find(([_, store]) => {
+            const piece = store.snapshot();
+            return !updatedItem.diff.id_ || piece.id_ === updatedItem.id.id_;
+          });
+          if (matchingPiece) {
+            matchingPiece[1].change(updatedItem.diff);
+          }
+        });
+      }
+    }
+
+    if (diff.connections) {
+      if (diff.connections.added) {
+        diff.connections.added.forEach((connection) => {
+          const connectionId = connectionIdLikeToConnectionId(connection);
+          const connectionIdStr = connectionIdToString(connectionId);
+          if (!this.connectionIds.get(connectionIdStr)) {
+            const uuid = uuidv4();
+            const yConnectionStore = new YConnectionStore(this, connection);
+            (this.yDesign.get("connections") as YConnectionMap).set(uuid, yConnectionStore.yConnection);
+            this.connectionIds.set(connectionIdStr, uuid);
+            this.connections.set(connectionIdStr, yConnectionStore);
+          }
+        });
+      }
+      if (diff.connections.removed) {
+        diff.connections.removed.forEach((connectionId) => {
+          const id = connectionIdLikeToConnectionId(connectionId);
+          const idStr = connectionIdToString(id);
+          const uuid = this.connectionIds.get(idStr);
+          if (uuid) {
+            (this.yDesign.get("connections") as YConnectionMap).delete(uuid);
+            this.connectionIds.delete(idStr);
+            this.connections.delete(idStr);
+          }
+        });
+      }
+      if (diff.connections.updated) {
+        diff.connections.updated.forEach((updatedItem) => {
+          const matchingConnection = Array.from(this.connections.entries()).find(([_, store]) => {
+            const connection = store.snapshot();
+            return connection.connected.piece.id_ === updatedItem.id.connected.piece.id_ && connection.connecting.piece.id_ === updatedItem.id.connecting.piece.id_;
+          });
+          if (matchingConnection) {
+            matchingConnection[1].change(updatedItem.diff);
+          }
+        });
+      }
+    }
+  };
+
+  changed = (subscribe: Subscribe, deep?: boolean) => {
+    const observer = () => subscribe();
+    if (deep) {
+      this.yDesign.observeDeep(observer);
+      return () => this.yDesign.unobserveDeep(observer);
+    } else {
+      this.yDesign.observe(observer);
+      return () => this.yDesign.unobserve(observer);
+    }
+  };
+}
+
+class YKitStore implements KitStoreFull {
+  public readonly yKit: YKit = new Y.Map() as YKit;
+  public readonly types: Map<string, YTypeStore> = new Map();
+  public readonly designs: Map<string, YDesignStore> = new Map();
+  public readonly files: Map<Url, YFileStore> = new Map();
+  private readonly typeIds: Map<string, string> = new Map();
+  private readonly designIds: Map<string, string> = new Map();
+  private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult> = new Map();
+  private readonly regularFiles: Map<Url, string> = new Map();
+  private readonly parent: SketchpadStore;
+  private cachedSnapshot?: Kit;
+  private lastSnapshotHash?: string;
+
+  constructor(parent: SketchpadStore, kit: Kit) {
+    this.parent = parent;
+
+    this.yKit.set("uuid", uuidv4());
+    this.yKit.set("name", kit.name);
+    this.yKit.set("description", kit.description || "");
+    this.yKit.set("icon", kit.icon || "");
+    this.yKit.set("image", kit.image || "");
+    this.yKit.set("version", kit.version || "");
+    this.yKit.set("preview", kit.preview || "");
+    this.yKit.set("remote", kit.remote || "");
+    this.yKit.set("homepage", kit.homepage || "");
+    this.yKit.set("license", kit.license || "");
+    this.yKit.set("types", new Y.Map<YType>());
+    this.yKit.set("designs", new Y.Map<YDesign>());
+    this.yKit.set("attributes", new Y.Array<YAttribute>());
+    this.yKit.set("created", new Date().toISOString());
+    this.yKit.set("updated", new Date().toISOString());
+
+    kit.types?.forEach((type) => this.createType(type));
+    kit.designs?.forEach((design) => this.createDesign(design));
+
+    Object.entries(kitCommands).forEach(([commandId, command]) => {
+      this.registerCommand(commandId, command);
+    });
+  }
+
+  private createType(type: Type): void {
+    const typeId = typeIdLikeToTypeId(type);
+    const typeIdStr = typeIdToString(typeId);
+    if (this.typeIds.has(typeIdStr)) {
+      throw new Error(`Type (${typeId.name}, ${typeId.variant || ""}) already exists.`);
+    }
+    const uuid = uuidv4();
+    const yTypeStore = new YTypeStore(this, type);
+    (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
+    this.typeIds.set(typeIdStr, uuid);
+    this.types.set(typeIdStr, yTypeStore);
+  }
+
+  private createDesign(design: Design): void {
+    const designId = designIdLikeToDesignId(design);
+    const designIdStr = designIdToString(designId);
+    if (this.designIds.has(designIdStr)) {
+      throw new Error(`Design (${designId.name}, ${designId.variant || ""}) already exists.`);
+    }
+    const uuid = uuidv4();
+    const yDesignStore = new YDesignStore(this, design);
+    (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
+    this.designIds.set(designIdStr, uuid);
+    this.designs.set(designIdStr, yDesignStore);
+  }
+
+  snapshot = (): Kit => {
+    const yAttributes = this.yKit.get("attributes") as YAttributes;
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
+    }
+
+    const currentData = {
+      name: this.yKit.get("name") as string,
+      version: this.yKit.get("version") as string | undefined,
+      description: this.yKit.get("description") as string | undefined,
+      icon: this.yKit.get("icon") as string | undefined,
+      image: this.yKit.get("image") as string | undefined,
+      preview: this.yKit.get("preview") as string | undefined,
+      remote: this.yKit.get("remote") as string | undefined,
+      homepage: this.yKit.get("homepage") as string | undefined,
+      license: this.yKit.get("license") as string | undefined,
+      created: this.yKit.get("created") ? new Date(this.yKit.get("created") as string) : undefined,
+      updated: this.yKit.get("updated") ? new Date(this.yKit.get("updated") as string) : undefined,
+      types: Array.from(this.types.values()).map((store) => store.snapshot()),
+      designs: Array.from(this.designs.values()).map((store) => store.snapshot()),
+      attributes: attributes,
+    };
+    const currentHash = JSON.stringify(currentData);
+
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+
+    return this.cachedSnapshot;
+  };
+
+  change = (diff: KitDiff) => {
+    if (diff.name) this.yKit.set("name", diff.name);
+    if (diff.description) this.yKit.set("description", diff.description);
+    if (diff.version) this.yKit.set("version", diff.version);
+    if (diff.icon) this.yKit.set("icon", diff.icon);
+    if (diff.image) this.yKit.set("image", diff.image);
+    if (diff.preview) this.yKit.set("preview", diff.preview);
+    if (diff.remote) this.yKit.set("remote", diff.remote);
+    if (diff.homepage) this.yKit.set("homepage", diff.homepage);
+    if (diff.license) this.yKit.set("license", diff.license);
+
+    if (diff.types) {
+      if (diff.types.added) {
+        diff.types.added.forEach((type) => {
+          const typeId = typeIdLikeToTypeId(type);
+          const typeIdStr = typeIdToString(typeId);
+          if (!this.typeIds.get(typeIdStr)) {
+            const uuid = uuidv4();
+            const yTypeStore = new YTypeStore(this, type);
+            (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
+            this.typeIds.set(typeIdStr, uuid);
+            this.types.set(typeIdStr, yTypeStore);
+          }
+        });
+      }
+      if (diff.types.removed) {
+        diff.types.removed.forEach((typeId) => {
+          const id = typeIdLikeToTypeId(typeId);
+          const idStr = typeIdToString(id);
+          const uuid = this.typeIds.get(idStr);
+          if (uuid) {
+            (this.yKit.get("types") as YTypeMap).delete(uuid);
+            this.typeIds.delete(idStr);
+            this.types.delete(idStr);
+          }
+        });
+      }
+      if (diff.types.updated) {
+        diff.types.updated.forEach((updatedItem) => {
+          const matchingType = Array.from(this.types.entries()).find(([_, store]) => {
+            const type = store.snapshot();
+            return (!updatedItem.diff.name || type.name === updatedItem.id.name) && (!updatedItem.diff.variant || type.variant === updatedItem.id.variant);
+          });
+          if (matchingType) {
+            matchingType[1].change(updatedItem.diff);
+          }
+        });
+      }
+    }
+
+    if (diff.designs) {
+      if (diff.designs.added) {
+        diff.designs.added.forEach((design) => {
+          const designId = designIdLikeToDesignId(design);
+          const designIdStr = designIdToString(designId);
+          if (!this.designIds.get(designIdStr)) {
+            const uuid = uuidv4();
+            const yDesignStore = new YDesignStore(this, design);
+            (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
+            this.designIds.set(designIdStr, uuid);
+            this.designs.set(designIdStr, yDesignStore);
+          }
+        });
+      }
+      if (diff.designs.removed) {
+        diff.designs.removed.forEach((designId) => {
+          const id = designIdLikeToDesignId(designId);
+          const idStr = designIdToString(id);
+          const uuid = this.designIds.get(idStr);
+          if (uuid) {
+            (this.yKit.get("designs") as YDesignMap).delete(uuid);
+            this.designIds.delete(idStr);
+            this.designs.delete(idStr);
+          }
+        });
+      }
+      if (diff.designs.updated) {
+        diff.designs.updated.forEach((updatedItem) => {
+          const matchingDesign = Array.from(this.designs.entries()).find(([_, store]) => {
+            const design = store.snapshot();
+            return (!updatedItem.diff.name || design.name === updatedItem.id.name) && (!updatedItem.diff.variant || design.variant === updatedItem.id.variant) && (!updatedItem.diff.view || design.view === updatedItem.id.view);
+          });
+          if (matchingDesign) {
+            matchingDesign[1].change(updatedItem.diff);
+          }
+        });
+      }
+    }
+
+    if (diff.files) {
+      if (diff.files.added) {
+        diff.files.added.forEach((file) => {
+          const fileId = fileIdLikeToFileId(file);
+          const yFileStore = new YFileStore(this, file);
+          this.files.set(fileId.path, yFileStore);
+        });
+      }
+      if (diff.files.removed) {
+        diff.files.removed.forEach((fileId) => {
+          const normalizedFileId = fileIdLikeToFileId(fileId);
+          this.files.delete(normalizedFileId.path);
+          this.regularFiles.delete(normalizedFileId.path);
+        });
+      }
+      if (diff.files.updated) {
+        diff.files.updated.forEach((update) => {
+          const fileId = fileIdLikeToFileId(update.id);
+          const yFileStore = this.files.get(fileId.path);
+          if (yFileStore) {
+            yFileStore.change(update.diff);
+          }
+        });
+      }
+    }
+
+    this.yKit.set("updated", new Date().toISOString());
+  };
+
+  fileUrls = (): Map<Url, Url> => {
+    return this.regularFiles;
+  };
+
+  changed = (subscribe: Subscribe, deep?: boolean) => {
+    const observer = () => subscribe();
+    deep ? (this.yKit as unknown as Y.Map<any>).observeDeep(observer) : (this.yKit as unknown as Y.Map<any>).observe(observer);
+    return () => (deep ? (this.yKit as unknown as Y.Map<any>).unobserveDeep(observer) : (this.yKit as unknown as Y.Map<any>).unobserve(observer));
+  };
+
+  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    const callback = this.commandRegistry.get(command);
+    if (!callback) throw new Error(`Command "${command}" not found in kit store`);
+    const context: KitCommandContext = {
+      kit: this.snapshot(),
+      fileUrls: this.fileUrls(),
+    };
+    const result = callback(context, ...rest);
+    if (result.diff) {
+      this.change(result.diff);
+    }
+    if (result.files) {
+      result.files.forEach((file) => {
+        const objectUrl = URL.createObjectURL(file);
+        this.regularFiles.set(file.name, objectUrl);
+      });
+    }
+    return result as T;
+  }
+
+  registerCommand(command: string, callback: (context: KitCommandContext, ...rest: any[]) => KitCommandResult): Disposable {
+    this.commandRegistry.set(command, callback);
+    return () => {
+      this.commandRegistry.delete(command);
+    };
+  }
+
+  execute<T>(command: string, ...rest: any[]): Promise<T> {
+    return this.executeCommand(command, ...rest);
+  }
+
+  register(command: string, callback: (context: KitCommandContext, ...rest: any[]) => KitCommandResult): Disposable {
+    return this.registerCommand(command, callback);
+  }
+
+  get commands() {
+    return {
+      execute: this.executeCommand.bind(this),
+      register: this.registerCommand.bind(this),
+    };
+  }
+}
+
+class YDesignEditorStore implements DesignEditorStoreFull {
+  public readonly yDesignEditorStore: YDesignEditorStoreValMap = new Y.Map<YDesignEditorStoreVal>();
+  private readonly commandRegistry: Map<string, (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult> = new Map();
+  private readonly parent: SketchpadStore;
+  private cachedSnapshot?: DesignEditorStateFull;
+  private lastSnapshotHash?: string;
+
+  constructor(parent: SketchpadStore, state: DesignEditorStateFull) {
+    this.parent = parent;
+    this.yDesignEditorStore.set("fullscreenPanel", state.fullscreenPanel);
+    this.yDesignEditorStore.set("selectedPieceIds", new Y.Array<string>());
+    this.yDesignEditorStore.set("selectedConnections", new Y.Array<string>());
+    this.yDesignEditorStore.set("isTransactionActive", state.isTransactionActive);
+    this.yDesignEditorStore.set("presenceCursorX", state.presence.cursor?.x || 0);
+    this.yDesignEditorStore.set("presenceCursorY", state.presence.cursor?.y || 0);
+    this.yDesignEditorStore.set("currentTransactionStack", new Y.Array<any>());
+    this.yDesignEditorStore.set("pastTransactionsStack", new Y.Array<any>());
+
+    Object.entries(designEditorCommands).forEach(([commandId, command]) => {
+      this.registerCommand(commandId, command);
+    });
+  }
+
+  get fullscreenPanel(): DesignEditorFullscreenPanel {
+    return (this.yDesignEditorStore.get("fullscreenPanel") as DesignEditorFullscreenPanel) || DesignEditorFullscreenPanel.None;
+  }
+  get selection(): DesignEditorSelection {
+    const selectedPieceIds = this.yDesignEditorStore.get("selectedPieceIds") as Y.Array<string>;
+    const selectedConnections = this.yDesignEditorStore.get("selectedConnections") as Y.Array<string>;
+    return {
+      pieceIds: selectedPieceIds ? selectedPieceIds.toArray().map((id) => ({ id_: id })) : [],
+      connectionIds: selectedConnections
+        ? selectedConnections.toArray().map((id) => ({
+            connected: { piece: { id_: id.split("->")[0] || "" } },
+            connecting: { piece: { id_: id.split("->")[1] || "" } },
+          }))
+        : [],
+    };
+  }
+  get designDiff(): DesignDiff {
+    return {};
+  }
+  get isTransactionActive(): boolean {
+    return (this.yDesignEditorStore.get("isTransactionActive") as boolean) || false;
+  }
+  get presence(): DesignEditorPresence {
+    return {
+      cursor: {
+        x: (this.yDesignEditorStore.get("presenceCursorX") as number) || 0,
+        y: (this.yDesignEditorStore.get("presenceCursorY") as number) || 0,
+      },
+    };
+  }
+  get others(): DesignEditorPresenceOther[] {
+    return [];
+  }
+  get diff(): KitDiff {
+    return {};
+  }
+  get currentTransactionStack(): DesignEditorEdit[] {
+    const yStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
+    return yStack ? yStack.toArray() : [];
+  }
+  get pastTransactionsStack(): DesignEditorEdit[] {
+    const yStack = this.yDesignEditorStore.get("pastTransactionsStack") as Y.Array<any>;
+    return yStack ? yStack.toArray() : [];
+  }
+
+  snapshot = (): DesignEditorStateFull => {
+    const currentHash = JSON.stringify({
+      fullscreenPanel: this.fullscreenPanel,
+      selection: this.selection,
+      isTransactionActive: this.isTransactionActive,
+      presence: this.presence,
+      others: this.others,
+      diff: this.diff,
+      currentTransactionStack: this.currentTransactionStack,
+      pastTransactionsStack: this.pastTransactionsStack,
+    });
+
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = {
+        fullscreenPanel: this.fullscreenPanel,
+        selection: this.selection,
+        isTransactionActive: this.isTransactionActive,
+        presence: this.presence,
+        others: this.others,
+        diff: this.diff,
+        currentTransactionStack: this.currentTransactionStack,
+        pastTransactionsStack: this.pastTransactionsStack,
+      };
+      this.lastSnapshotHash = currentHash;
+    }
+
+    return this.cachedSnapshot;
+  };
+
+  change = (diff: DesignEditorStateDiff) => {
+    if (diff.fullscreenPanel) this.yDesignEditorStore.set("fullscreenPanel", diff.fullscreenPanel);
+    if (diff.selection) {
+      if (diff.selection.pieceIds) {
+        const yPieceIds = this.yDesignEditorStore.get("selectedPieceIds") as Y.Array<string>;
+        yPieceIds.delete(0, yPieceIds.length);
+        const pieceIdStrings = diff.selection.pieceIds.map((piece) => piece.id_);
+        yPieceIds.insert(0, pieceIdStrings);
+      }
+      if (diff.selection.connectionIds) {
+        const yConnectionIds = this.yDesignEditorStore.get("selectedConnections") as Y.Array<string>;
+        yConnectionIds.delete(0, yConnectionIds.length);
+        const connectionIdStrings = diff.selection.connectionIds.map((conn) => `${conn.connected.piece.id_}->${conn.connecting.piece.id_}`);
+        yConnectionIds.insert(0, connectionIdStrings);
+      }
+    }
+    if (diff.presence) {
+      if (diff.presence.cursor) {
+        this.yDesignEditorStore.set("presenceCursorX", diff.presence.cursor.x);
+        this.yDesignEditorStore.set("presenceCursorY", diff.presence.cursor.y);
+      }
+    }
+    if (diff.others) {
+      // Others are typically managed by collaboration providers, not stored in Yjs directly
+    }
+  };
+
+  changed = (subscribe: Subscribe, deep?: boolean) => {
+    const observer = () => subscribe();
+    deep ? (this.yDesignEditorStore as unknown as Y.Map<any>).observeDeep(observer) : (this.yDesignEditorStore as unknown as Y.Map<any>).observe(observer);
+    return () => (deep ? (this.yDesignEditorStore as unknown as Y.Map<any>).unobserveDeep(observer) : (this.yDesignEditorStore as unknown as Y.Map<any>).unobserve(observer));
+  };
+
+  transaction = {
+    start: () => {
+      this.yDesignEditorStore.set("isTransactionActive", true);
+    },
+    started: (subscribe: Subscribe) => {
+      const observer = () => subscribe();
+      this.yDesignEditorStore.observe(observer);
+      return () => this.yDesignEditorStore.unobserve(observer);
+    },
+    abort: () => {
+      if (this.isTransactionActive) {
+        const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
+        if (currentStack) {
+          currentStack.delete(0, currentStack.length);
+        }
+        this.yDesignEditorStore.set("isTransactionActive", false);
+      }
+    },
+    aborted: (subscribe: Subscribe) => {
+      const observer = () => subscribe();
+      this.yDesignEditorStore.observe(observer);
+      return () => this.yDesignEditorStore.unobserve(observer);
+    },
+    finalize: () => {
+      if (this.isTransactionActive) {
+        const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
+        const pastStack = this.yDesignEditorStore.get("pastTransactionsStack") as Y.Array<any>;
+        if (currentStack && currentStack.length > 0) {
+          pastStack.push(currentStack.toArray());
+          currentStack.delete(0, currentStack.length);
+        }
+        this.yDesignEditorStore.set("isTransactionActive", false);
+      }
+    },
+    finalized: (subscribe: Subscribe) => {
+      const observer = () => subscribe();
+      this.yDesignEditorStore.observe(observer);
+      return () => this.yDesignEditorStore.unobserve(observer);
+    },
+  };
+
+  undo = () => {
+    if (this.isTransactionActive) {
+      const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
+      if (currentStack && currentStack.length > 0) {
+        const edit = currentStack.get(currentStack.length - 1);
+        currentStack.delete(currentStack.length - 1, 1);
+        if (edit && edit.undo) {
+          edit.undo.diff && this.change(edit.undo.diff);
+        }
+      }
+    } else {
+      const pastStack = this.yDesignEditorStore.get("pastTransactionsStack") as Y.Array<any>;
+      if (pastStack && pastStack.length > 0) {
+        const edit = pastStack.get(pastStack.length - 1);
+        pastStack.delete(pastStack.length - 1, 1);
+        if (edit && edit.undo) {
+          edit.undo.diff && this.change(edit.undo.diff);
+        }
+      }
+    }
+  };
+  undone = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    this.yDesignEditorStore.observe(observer);
+    return () => this.yDesignEditorStore.unobserve(observer);
+  };
+  redo = () => {
+    if (this.isTransactionActive) {
+      const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
+      if (currentStack && currentStack.length > 0) {
+        const edit = currentStack.get(0);
+        currentStack.delete(0, 1);
+        if (edit && edit.do) {
+          edit.do.diff && this.change(edit.do.diff);
+        }
+      }
+    } else {
+      const pastStack = this.yDesignEditorStore.get("pastTransactionsStack") as Y.Array<any>;
+      if (pastStack && pastStack.length > 0) {
+        const edit = pastStack.get(0);
+        pastStack.delete(0, 1);
+        if (edit && edit.do) {
+          edit.do.diff && this.change(edit.do.diff);
+        }
+      }
+    }
+  };
+  redone = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    this.yDesignEditorStore.observe(observer);
+    return () => this.yDesignEditorStore.unobserve(observer);
+  };
+
+  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    if (command === "semio.designEditor.startTransaction") {
+      this.transaction.start();
+      return {} as T;
+    }
+    if (command === "semio.designEditor.finalizeTransaction") {
+      this.transaction.finalize();
+      return {} as T;
+    }
+    if (command === "semio.designEditor.abortTransaction") {
+      this.transaction.abort();
+      return {} as T;
+    }
+
+    const callback = this.commandRegistry.get(command);
+    if (!callback) throw new Error(`Command "${command}" not found in design editor store`);
+    const parent = this.parent as YSketchpadStore;
+    const kitStore = parent.kits.get(kitIdToString(parent.activeDesignEditor!.kitId))!;
+
+    const beforeState = this.snapshot();
+
+    const context: DesignEditorCommandContext = {
+      designEditor: this.snapshot(),
+      kit: kitStore.snapshot(),
+      designId: parent.activeDesignEditor!.designId,
+      fileUrls: kitStore.fileUrls(),
+    };
+    const result = callback(context, ...rest);
+
+    if (result.diff) {
+      this.change(result.diff);
+    }
+    if (result.kitDiff) {
+      kitStore.change(result.kitDiff);
+    }
+
+    if (this.isTransactionActive && (result.diff || result.kitDiff)) {
+      const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
+      const edit: DesignEditorEdit = {
+        do: {
+          diff: result.kitDiff,
+          selection: this.snapshot().selection,
+        },
+        undo: {
+          diff: undefined,
+          selection: beforeState.selection,
+        },
+      };
+      currentStack.push([edit]);
+    }
+
+    return result as T;
+  }
+
+  execute<T>(command: string, ...rest: any[]): Promise<T> {
+    return this.executeCommand(command, ...rest);
+  }
+
+  registerCommand(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable {
+    this.commandRegistry.set(command, callback);
+    return () => {
+      this.commandRegistry.delete(command);
+    };
+  }
+
+  register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable {
+    return this.registerCommand(command, callback);
+  }
+
+  get on(): DesignEditorSubscriptions {
+    return {
+      undone: this.undone,
+      redone: this.redone,
+      changed: this.changed,
+      transaction: {
+        started: this.transaction.started,
+        aborted: this.transaction.aborted,
+        finalized: this.transaction.finalized,
+      },
+    };
+  }
+
+  get commands() {
+    return {
+      execute: this.executeCommand.bind(this),
+      register: this.registerCommand.bind(this),
+    };
+  }
+}
+
+class YSketchpadStore implements SketchpadStoreFull {
+  public readonly ySketchpadDoc: Y.Doc;
+  public readonly sketchpadIndexeddbProvider?: IndexeddbPersistence;
+  public readonly yKitDocs: Map<string, Y.Doc> = new Map();
+  public readonly kitIndexeddbProviders: Map<string, IndexeddbPersistence> = new Map();
+  public readonly kits: Map<string, YKitStore> = new Map();
+  public readonly designEditors: Map<string, Map<string, DesignEditorStoreFull>> = new Map();
+  private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult> = new Map();
+  private cachedSnapshot?: SketchpadStateFull;
+  private lastSnapshotValues?: { mode: Mode; theme: Theme; layout: Layout; activeDesignEditor?: DesignEditorId };
+
+  private getYSketchpad(): YSketchpad {
+    return this.ySketchpadDoc.getMap("sketchpad");
+  }
+
+  constructor(state: SketchpadStateFull) {
+    this.ySketchpadDoc = new Y.Doc();
+    if (state.persistantId && state.persistantId !== "") {
+      this.sketchpadIndexeddbProvider = new IndexeddbPersistence(`semio-sketchpad-${state.persistantId}`, this.ySketchpadDoc);
+    }
+    const ySketchpad = this.getYSketchpad();
+    ySketchpad.set("mode", state.mode);
+    ySketchpad.set("theme", state.theme);
+    ySketchpad.set("layout", state.layout);
+    if (state.activeDesignEditor) {
+      ySketchpad.set("activeDesignEditor", JSON.stringify(state.activeDesignEditor));
+    }
+  }
+
+  get mode(): Mode {
+    return (this.getYSketchpad().get("mode") as Mode) || Mode.GUEST;
+  }
+  get theme(): Theme {
+    return (this.getYSketchpad().get("theme") as Theme) || Theme.SYSTEM;
+  }
+  get layout(): Layout {
+    return (this.getYSketchpad().get("layout") as Layout) || Layout.NORMAL;
+  }
+  get activeDesignEditor(): DesignEditorId | undefined {
+    const designEditorIdStr = this.getYSketchpad().get("activeDesignEditor");
+    if (!designEditorIdStr || typeof designEditorIdStr !== "string") return undefined;
+    return JSON.parse(designEditorIdStr) as DesignEditorId;
+  }
+
+  snapshot = (): SketchpadStateFull => {
+    const currentValues = {
+      mode: this.mode,
+      theme: this.theme,
+      layout: this.layout,
+      activeDesignEditor: this.activeDesignEditor,
+    };
+
+    if (
+      !this.lastSnapshotValues ||
+      this.lastSnapshotValues.mode !== currentValues.mode ||
+      this.lastSnapshotValues.theme !== currentValues.theme ||
+      this.lastSnapshotValues.layout !== currentValues.layout ||
+      this.lastSnapshotValues.activeDesignEditor !== currentValues.activeDesignEditor
+    ) {
+      this.cachedSnapshot = currentValues;
+      this.lastSnapshotValues = currentValues;
+    }
+
+    return this.cachedSnapshot!;
+  };
+
+  create = {
+    kit: (kit: Kit) => {
+      throw new Error("Use semio.sketchpad.createKit command instead of directly calling create.kit");
+    },
+    designEditor: (id: DesignEditorId) => {
+      const initialState: DesignEditorStateFull = {
+        fullscreenPanel: DesignEditorFullscreenPanel.None,
+        selection: {},
+        isTransactionActive: false,
+        presence: {},
+        others: [],
+        diff: {},
+        currentTransactionStack: [],
+        pastTransactionsStack: [],
+      };
+      const editorStore = new YDesignEditorStore(this, initialState);
+
+      // Ensure the kitId map exists
+      const kitIdStr = kitIdToString(id.kitId);
+      const designIdStr = designIdToString(id.designId);
+      if (!this.designEditors.has(kitIdStr)) {
+        this.designEditors.set(kitIdStr, new Map());
+      }
+
+      const kitEditors = this.designEditors.get(kitIdStr)!;
+      kitEditors.set(designIdStr, editorStore);
+    },
+  };
+
+  change(diff: SketchpadStateDiff) {
+    if (diff.mode) this.getYSketchpad().set("mode", diff.mode);
+    if (diff.theme) this.getYSketchpad().set("theme", diff.theme);
+    if (diff.layout) this.getYSketchpad().set("layout", diff.layout);
+    if (diff.activeDesignEditor) this.getYSketchpad().set("activeDesignEditor", JSON.stringify(diff.activeDesignEditor));
+  }
+
+  delete = {
+    kit: (id: KitIdLike) => {
+      const kitId = kitIdLikeToKitId(id);
+      const kitIdStr = kitIdToString(kitId);
+      if (this.kits.has(kitIdStr)) {
+        this.kits.delete(kitIdStr);
+      }
+      if (this.designEditors.has(kitIdStr)) {
+        this.designEditors.delete(kitIdStr);
+      }
+    },
+    designEditor: (id: DesignEditorId) => {
+      const kitIdStr = kitIdToString(id.kitId);
+      const designIdStr = designIdToString(id.designId);
+      const kitEditors = this.designEditors.get(kitIdStr);
+      if (kitEditors) {
+        kitEditors.delete(designIdStr);
+        if (kitEditors.size === 0) {
+          this.designEditors.delete(kitIdStr);
+        }
+      }
+    },
+  };
+
+  // Subscriptions using Yjs observers
+  created = {
+    kit: (subscribe: Subscribe): Unsubscribe => {
+      // For kit creation, we can observe all kit documents being added
+      // This is a simplified approach - would need more sophisticated tracking in full implementation
+      const observer = () => subscribe();
+      // Note: Would need to observe kit document creation across all kit docs
+      return () => {}; // Placeholder unsubscribe
+    },
+    designEditor: (subscribe: Subscribe): Unsubscribe => {
+      // Observe design editor stores map changes
+      const yDesignEditorStores = this.ySketchpadDoc.getMap("designEditorStores") as YDesignEditorStoreMap;
+      const observer = () => subscribe();
+      yDesignEditorStores.observe(observer);
+      return () => yDesignEditorStores.unobserve(observer);
+    },
+  };
+
+  deleted = {
+    kit: (subscribe: Subscribe): Unsubscribe => {
+      // Would need to observe kit document removal
+      return () => {}; // Placeholder
+    },
+    designEditor: (subscribe: Subscribe): Unsubscribe => {
+      // Would need to observe design editor removal
+      return () => {}; // Placeholder
+    },
+  };
+
+  changed = (subscribe: Subscribe): Unsubscribe => {
+    const observer = () => subscribe();
+    this.getYSketchpad().observe(observer);
+    return () => this.getYSketchpad().unobserve(observer);
+  };
+
+  get on(): SketchpadSubscriptions {
+    return {
+      created: this.created,
+      changed: this.changed,
+      deleted: this.deleted,
+    };
+  }
+
+  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    if (command === "semio.sketchpad.createKit") {
+      const kit = rest[0] as Kit;
+      const callback = this.commandRegistry.get(command);
+      if (!callback) throw new Error(`Command "${command}" not found in sketchpad store`);
+      const context: SketchpadCommandContext = {
+        sketchpad: this.snapshot(),
+        store: this,
+      };
+      const result = callback(context, kit);
+      if (result.diff) {
+        this.change(result.diff);
+      }
+      return result as T;
+    }
+    if (command === "semio.sketchpad.createDesignEditor") {
+      const id = rest[0] as DesignEditorId;
+      this.create.designEditor(id);
+      return {} as T;
+    }
+    if (command === "semio.sketchpad.importKit") {
+      const kitId = rest[0] as KitId;
+      const url = rest[1] as string;
+      const kitStore = this.kits.get(kitIdToString(kitId));
+      if (kitStore) {
+        await kitStore.execute("semio.kit.import", url);
+      }
+      return {} as T;
+    }
+
+    const callback = this.commandRegistry.get(command);
+    if (!callback) throw new Error(`Command "${command}" not found in sketchpad store`);
+    const context: SketchpadCommandContext = {
+      sketchpad: this.snapshot(),
+      store: this,
+    };
+    const result = callback(context, ...rest);
+    // Apply diff changes
+    if (result.diff) {
+      this.change(result.diff);
+    }
+    return result as T;
+  }
+
+  execute<T>(command: string, ...rest: any[]): Promise<T> {
+    return this.executeCommand(command, ...rest);
+  }
+
+  registerCommand(command: string, callback: (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult): Disposable {
+    this.commandRegistry.set(command, callback);
+    return () => {
+      this.commandRegistry.delete(command);
+    };
+  }
+
+  get commands() {
+    return {
+      execute: this.executeCommand.bind(this),
+      register: this.registerCommand.bind(this),
+    };
+  }
+}
+
+const stores: Map<string, YSketchpadStore> = new Map();
+
+// Factory function to create or get a store
+export function getOrCreateSketchpadStore(id: string, persisted: boolean = true): SketchpadStore {
+  if (!stores.has(id)) {
+    const initialState: SketchpadStateFull = {
+      mode: Mode.GUEST,
+      theme: Theme.SYSTEM,
+      layout: Layout.NORMAL,
+      persistantId: persisted ? id : undefined,
+    };
+    const store = new YSketchpadStore(initialState);
+
+    Object.entries(sketchpadCommands).forEach(([commandId, command]) => {
+      store.registerCommand(commandId, command);
+    });
+
+    stores.set(id, store);
+  }
+  return stores.get(id)!;
+}
+
+// #endregion Stores
+
+// #region Commands
+
+const sketchpadCommands = {
+  "semio.sketchpad.setTheme": (context: SketchpadCommandContext, theme: Theme): SketchpadCommandResult => {
+    return {
+      diff: { theme },
+    };
+  },
+  "semio.sketchpad.setMode": (context: SketchpadCommandContext, mode: Mode): SketchpadCommandResult => {
+    return {
+      diff: { mode },
+    };
+  },
+  "semio.sketchpad.setLayout": (context: SketchpadCommandContext, layout: Layout): SketchpadCommandResult => {
+    return {
+      diff: { layout },
+    };
+  },
+  "semio.sketchpad.createKit": (context: SketchpadCommandContext, kit: Kit): SketchpadCommandResult => {
+    if (!kit.name) throw new Error("Kit name is required to create a kit.");
+
+    const kitId = kitIdLikeToKitId(kit);
+    const kitIdStr = kitIdToString(kitId);
+    if (context.store.kits.has(kitIdStr)) {
+      throw new Error(`Kit (${kitId.name}, ${kitId.version || ""}) already exists.`);
+    }
+
+    const yKitStore = new YKitStore(context.store, kit);
+    const yKitDoc = new Y.Doc();
+    yKitDoc.getMap("kit").set("data", yKitStore.yKit);
+    context.store.yKitDocs.set(kitIdStr, yKitDoc);
+    context.store.kits.set(kitIdStr, yKitStore);
+
+    return {};
+  },
+  "semio.sketchpad.createDesignEditor": (context: SketchpadCommandContext, id: DesignEditorId): SketchpadCommandResult => {
+    return {
+      diff: {},
+    };
+  },
+  "semio.sketchpad.setActiveDesignEditor": (context: SketchpadCommandContext, id: DesignEditorId): SketchpadCommandResult => {
+    return {
+      diff: { activeDesignEditor: id },
+    };
+  },
+  "semio.sketchpad.importKit": (context: SketchpadCommandContext, kitId: KitId, url: string): SketchpadCommandResult => {
+    return {
+      diff: {},
+    };
+  },
 };
 
-export const StudioStoreProvider: FC<{ userId: string, children: React.ReactNode }> = ({ userId, children }) => {
-    const studioStore = useMemo(() => new StudioStore(userId), [userId]);
-    return (
-        <StudioStoreContext.Provider value={studioStore}>
-            {children}
-        </StudioStoreContext.Provider>
-    );
-};
-
-const KitContext = createContext<Kit | null>(null);
-
-export const KitProvider: FC<{ kitName: string, kitVersion: string, children: React.ReactNode }> = ({ kitName, kitVersion, children }) => {
-    const studioStore = useStudioStore();
-    const kit = useSyncExternalStore(
-        studioStore.subscribe,
-        () => {
+const kitCommands = {
+  "semio.kit.addType": (context: KitCommandContext, type: Type): KitCommandResult => {
+    return {
+      diff: { types: { added: [type] } },
+    };
+  },
+  "semio.kit.removeType": (context: KitCommandContext, typeId: TypeId): KitCommandResult => {
+    return {
+      diff: { types: { removed: [typeId] } },
+    };
+  },
+  "semio.kit.updateType": (context: KitCommandContext, typeId: TypeId, typeDiff: TypeDiff): KitCommandResult => {
+    return {
+      diff: { types: { updated: [{ id: typeId, diff: typeDiff }] } },
+    };
+  },
+  "semio.kit.addDesign": (context: KitCommandContext, design: Design): KitCommandResult => {
+    return {
+      diff: { designs: { added: [design] } },
+    };
+  },
+  "semio.kit.removeDesign": (context: KitCommandContext, designId: DesignId): KitCommandResult => {
+    return {
+      diff: { designs: { removed: [designId] } },
+    };
+  },
+  "semio.kit.updateDesign": (context: KitCommandContext, designId: DesignId, designDiff: DesignDiff): KitCommandResult => {
+    return {
+      diff: { designs: { updated: [{ id: designId, diff: designDiff }] } },
+    };
+  },
+  "semio.kit.addFile": (context: KitCommandContext, file: SemioFile, blob?: Blob): KitCommandResult => {
+    const files: File[] = blob ? [new File([blob], file.path.split("/").pop() || file.path)] : [];
+    return {
+      diff: { files: { added: [file] } },
+      files,
+    };
+  },
+  "semio.kit.removeFile": (context: KitCommandContext, url: Url): KitCommandResult => {
+    return {
+      diff: { files: { removed: [{ path: url }] } },
+    };
+  },
+  "semio.kit.updateFile": (context: KitCommandContext, url: Url, fileDiff: FileDiff, blob?: Blob): KitCommandResult => {
+    const files: File[] = blob ? [new File([blob], url.split("/").pop() || url)] : [];
+    return {
+      diff: { files: { updated: [{ id: { path: url }, diff: fileDiff }] } },
+      files,
+    };
+  },
+  "semio.kit.import": (context: KitCommandContext, url: string): KitCommandResult => {
+    (async () => {
+      try {
+        if (url.endsWith(".json")) {
+          const response = await fetch(url);
+          const kit: Kit = await response.json();
+          const filesToFetch: { path: string; url: string }[] = [];
+          const extractFileUrls = (obj: any) => {
+            if (typeof obj === "object" && obj !== null) {
+              if (Array.isArray(obj)) {
+                obj.forEach((item) => extractFileUrls(item));
+              } else {
+                Object.entries(obj).forEach(([key, value]) => {
+                  if (key === "url" && typeof value === "string" && !value.startsWith("http")) {
+                    filesToFetch.push({ path: value, url: new URL(value, url).href });
+                  }
+                  extractFileUrls(value);
+                });
+              }
+            }
+          };
+          extractFileUrls(kit);
+          const files: KitCommandResult["files"] = [];
+          for (const file of filesToFetch) {
             try {
-                return studioStore.getKit(kitName, kitVersion);
-            } catch (e) {
-                return null;
+              const fileResponse = await fetch(file.url);
+              const fileBlob = await fileResponse.blob();
+              files.push(new File([fileBlob], file.path));
+            } catch (error) {
+              console.warn(`Failed to fetch file ${file.path}:`, error);
             }
+          }
+          return {
+            diff: {
+              name: kit.name,
+              description: kit.description,
+              version: kit.version,
+              types: kit.types ? { added: kit.types } : undefined,
+              designs: kit.designs ? { added: kit.designs } : undefined,
+              files: kit.files ? { added: kit.files } : undefined,
+            },
+            files,
+          };
+        } else {
+          let SQL: SqlJsStatic;
+          let db: Database;
+          try {
+            SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
+          } catch (err) {
+            throw new Error("SQL.js failed to initialize for import.");
+          }
+          const response = await fetch(url);
+          const zipData = await response.arrayBuffer();
+          const zip = await JSZip.loadAsync(zipData);
+          let kit: Kit | null = null;
+          const files: KitCommandResult["files"] = [];
+
+          const kitDbFile = zip.file("kit.db");
+          if (kitDbFile) {
+            const dbData = await kitDbFile.async("uint8array");
+            db = new SQL.Database(dbData);
+            const kitResult = db.exec("SELECT * FROM kit LIMIT 1");
+            if (kitResult.length > 0) {
+              const kitRow = kitResult[0];
+              const kitData = Object.fromEntries(kitRow.columns.map((col, i) => [col, kitRow.values[0][i]]));
+              kit = {
+                name: kitData.name as string,
+                description: kitData.description as string,
+                version: kitData.version as string,
+                icon: kitData.icon as string,
+                image: kitData.image as string,
+                preview: kitData.preview as string,
+                remote: kitData.remote as string,
+                homepage: kitData.homepage as string,
+                license: kitData.license as string,
+                types: [],
+                designs: [],
+                files: [],
+              };
+            }
+            db.close();
+          } else {
+            const kitJsonFile = zip.file("kit.json");
+            if (kitJsonFile) {
+              const kitData = await kitJsonFile.async("text");
+              kit = JSON.parse(kitData);
+            }
+          }
+
+          for (const [filename, file] of Object.entries(zip.files)) {
+            if (!(file as any).dir && filename !== "kit.db" && filename !== "kit.json") {
+              const fileData = await (file as any).async("uint8array");
+              files.push(new File([new Uint8Array(fileData)], filename));
+            }
+          }
+
+          if (!kit) {
+            throw new Error("No kit.json or kit.db found in ZIP file");
+          }
+
+          return {
+            diff: {
+              name: kit.name,
+              description: kit.description,
+              version: kit.version,
+              types: kit.types ? { added: kit.types } : undefined,
+              designs: kit.designs ? { added: kit.designs } : undefined,
+              files: kit.files ? { added: kit.files } : undefined,
+            },
+            files,
+          };
         }
-    );
-    return (
-        <KitContext.Provider value={kit}>
-            {children}
-        </KitContext.Provider>
-    );
+      } catch (error) {
+        console.error("Error importing kit:", error);
+        throw error;
+      }
+    })();
+    return { diff: {} };
+  },
+  "semio.kit.export": (context: KitCommandContext): KitCommandResult => {
+    (async () => {
+      let SQL: SqlJsStatic;
+      let db: Database;
+      try {
+        SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
+      } catch (err) {
+        throw new Error("SQL.js failed to initialize for export.");
+      }
+
+      db = new SQL.Database();
+      const zip = new JSZip();
+      const kit = context.kit;
+
+      const schema = `
+        CREATE TABLE kit ( uri VARCHAR(2048) NOT NULL UNIQUE, name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, preview VARCHAR(1024) NOT NULL, version VARCHAR(64) NOT NULL, remote VARCHAR(1024) NOT NULL, homepage VARCHAR(1024) NOT NULL, license VARCHAR(1024) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY );
+        CREATE TABLE type ( name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, variant VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, CONSTRAINT "Unique name and variant" UNIQUE (name, variant, kit_id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
+        CREATE TABLE design ( name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, variant VARCHAR(64) NOT NULL, "view" VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, UNIQUE (name, variant, "view", kit_id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
+        CREATE TABLE representation ( url VARCHAR(1024) NOT NULL, description VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, type_id INTEGER, FOREIGN KEY(type_id) REFERENCES type (id) );
+        CREATE TABLE tag ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, representation_id INTEGER, FOREIGN KEY(representation_id) REFERENCES representation (id) );
+        CREATE TABLE concept ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, type_id INTEGER, design_id INTEGER, FOREIGN KEY(kit_id) REFERENCES kit (id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(design_id) REFERENCES design (id) );
+        CREATE TABLE port ( description VARCHAR(512) NOT NULL, family VARCHAR(64) NOT NULL, t FLOAT NOT NULL, id INTEGER NOT NULL PRIMARY KEY, local_id VARCHAR(128), point_x FLOAT, point_y FLOAT, point_z FLOAT, direction_x FLOAT, direction_y FLOAT, direction_z FLOAT, type_id INTEGER, CONSTRAINT "Unique local_id" UNIQUE (local_id, type_id), FOREIGN KEY(type_id) REFERENCES type (id) );
+        CREATE TABLE compatible_family ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, port_id INTEGER, FOREIGN KEY(port_id) REFERENCES port (id) );
+        CREATE TABLE plane ( id INTEGER NOT NULL PRIMARY KEY, origin_x FLOAT, origin_y FLOAT, origin_z FLOAT, x_axis_x FLOAT, x_axis_y FLOAT, x_axis_z FLOAT, y_axis_x FLOAT, y_axis_y FLOAT, y_axis_z FLOAT );
+        CREATE TABLE piece ( description VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, local_id VARCHAR(128), type_id INTEGER, plane_id INTEGER, center_x FLOAT, center_y FLOAT, design_id INTEGER, UNIQUE (local_id, design_id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(plane_id) REFERENCES plane (id), FOREIGN KEY(design_id) REFERENCES design (id) );
+        CREATE TABLE connection ( description VARCHAR(512) NOT NULL, gap FLOAT NOT NULL, shift FLOAT NOT NULL, rise FLOAT NOT NULL, rotation FLOAT NOT NULL, turn FLOAT NOT NULL, tilt FLOAT NOT NULL, x FLOAT NOT NULL, y FLOAT NOT NULL, id INTEGER NOT NULL PRIMARY KEY, connected_piece_id INTEGER, connected_port_id INTEGER, connecting_piece_id INTEGER, connecting_port_id INTEGER, design_id INTEGER, CONSTRAINT "no reflexive connection" CHECK (connecting_piece_id != connected_piece_id), FOREIGN KEY(connected_piece_id) REFERENCES piece (id), FOREIGN KEY(connected_port_id) REFERENCES port (id), FOREIGN KEY(connecting_piece_id) REFERENCES piece (id), FOREIGN KEY(connecting_port_id) REFERENCES port (id), FOREIGN KEY(design_id) REFERENCES design (id) );
+        CREATE TABLE quality ( name VARCHAR(64) NOT NULL, value VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, definition VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, representation_id INTEGER, port_id INTEGER, type_id INTEGER, piece_id INTEGER, connection_id INTEGER, design_id INTEGER, kit_id INTEGER, FOREIGN KEY(representation_id) REFERENCES representation (id), FOREIGN KEY(port_id) REFERENCES port (id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(piece_id) REFERENCES piece (id), FOREIGN KEY(connection_id) REFERENCES connection (id), FOREIGN KEY(design_id) REFERENCES design (id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
+        CREATE TABLE author ( name VARCHAR(64) NOT NULL, email VARCHAR(128) NOT NULL, rank INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, type_id INTEGER, design_id INTEGER, FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(design_id) REFERENCES design (id) );
+      `;
+
+      try {
+        db.run(schema);
+        const insertQualities = (qualities: Attribute[] | undefined, fkColumn: string, fkValue: number) => {
+          if (!qualities) return;
+          const stmt = db.prepare(`INSERT INTO quality (name, value, unit, definition, ${fkColumn}) VALUES (?, ?, ?, ?, ?)`);
+          qualities.forEach((q) => stmt.run([q.key, q.value ?? "", "", q.definition ?? "", fkValue]));
+          stmt.free();
+        };
+        const insertAuthors = (authors: Author[] | undefined, fkColumn: string, fkValue: number) => {
+          if (!authors) return;
+          const stmt = db.prepare(`INSERT INTO author (name, email, rank, ${fkColumn}) VALUES (?, ?, ?, ?)`);
+          let rank = 0;
+          authors.forEach((a) => stmt.run([a.name, a.email ?? "", rank++, fkValue]));
+          stmt.free();
+        };
+
+        const kitStmt = db.prepare("INSERT INTO kit (uri, name, description, icon, image, preview, version, remote, homepage, license, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        const nowIso = new Date().toISOString();
+        kitStmt.run([`urn:kit:${kit.name}:${kit.version || ""}`, kit.name, kit.description || "", kit.icon || "", kit.image || "", kit.preview || "", kit.version || "", kit.remote || "", kit.homepage || "", kit.license || "", nowIso, nowIso]);
+        kitStmt.free();
+        const kitId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
+        insertQualities(kit.attributes, "kit_id", kitId);
+        
+        if (kit.concepts) {
+          const conceptStmt = db.prepare('INSERT INTO concept (name, "order", kit_id) VALUES (?, ?, ?)');
+          kit.concepts.forEach((concept, index) => conceptStmt.run([concept, index, kitId]));
+          conceptStmt.free();
+        }
+
+        if (kit.types) {
+          const typeStmt = db.prepare("INSERT INTO type (name, description, icon, image, variant, unit, created, updated, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+          const repStmt = db.prepare("INSERT INTO representation (url, description, type_id) VALUES (?, ?, ?)");
+          const tagStmt = db.prepare('INSERT INTO tag (name, "order", representation_id) VALUES (?, ?, ?)');
+          const portStmt = db.prepare("INSERT INTO port (local_id, description, family, t, point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+          for (const type of kit.types) {
+            typeStmt.run([type.name, type.description || "", type.icon || "", type.image || "", type.variant || "", type.unit, nowIso, nowIso, kitId]);
+            const typeDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
+            insertQualities(type.attributes, "type_id", typeDbId);
+            insertAuthors(type.authors, "type_id", typeDbId);
+
+            if (type.representations) {
+              for (const rep of type.representations) {
+                repStmt.run([rep.url, rep.description ?? "", typeDbId]);
+                const repDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
+                insertQualities(rep.attributes, "representation_id", repDbId);
+                if (rep.tags) {
+                  rep.tags.forEach((tag, index) => tagStmt.run([tag, index, repDbId]));
+                }
+                const fileUrl = context.fileUrls.get(rep.url);
+                if (fileUrl) {
+                  try {
+                    const response = await fetch(fileUrl);
+                    const fileBlob = await response.blob();
+                    const fileData = await fileBlob.arrayBuffer();
+                    zip.file(rep.url, fileData);
+                  } catch (error) {
+                    console.warn(`Failed to fetch file ${rep.url}:`, error);
+                  }
+                }
+              }
+            }
+
+            if (type.ports) {
+              for (const port of type.ports) {
+                portStmt.run([
+                  port.id_ || "",
+                  port.description || "",
+                  port.family || "default",
+                  port.t || 0,
+                  port.point?.x || 0,
+                  port.point?.y || 0,
+                  port.point?.z || 0,
+                  port.direction?.x || 0,
+                  port.direction?.y || 0,
+                  port.direction?.z || 1,
+                  typeDbId,
+                ]);
+                const portDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
+                insertQualities(port.attributes, "port_id", portDbId);
+              }
+            }
+          }
+          typeStmt.free();
+          repStmt.free();
+          tagStmt.free();
+          portStmt.free();
+        }
+
+        const dbBuffer = db.export();
+        zip.file("kit.db", dbBuffer);
+        zip.file("kit.json", JSON.stringify(kit, null, 2));
+
+        const blob = await zip.generateAsync({ type: "blob" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${kit.name}-${kit.version || "latest"}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error("Error exporting kit:", error);
+        throw error;
+      } finally {
+        if (db) {
+          db.close();
+        }
+      }
+    })();
+    return { diff: {} };
+  },
 };
 
-export const useKit = () => {
-    const kit = useContext(KitContext);
-    if (!kit) {
-        throw new Error('useKit must be used within a KitProvider');
-    }
-    return kit;
+const designEditorCommands = {
+  "semio.designEditor.setMode": (context: DesignEditorCommandContext, mode: Mode): DesignEditorCommandResult => {
+    return { diff: {} };
+  },
+  "semio.designEditor.setTheme": (context: DesignEditorCommandContext, theme: Theme): DesignEditorCommandResult => {
+    return { diff: {} };
+  },
+  "semio.designEditor.setLayout": (context: DesignEditorCommandContext, layout: Layout): DesignEditorCommandResult => {
+    return { diff: {} };
+  },
+  "semio.designEditor.startTransaction": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    return { diff: {} };
+  },
+  "semio.designEditor.finalizeTransaction": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    return { diff: {} };
+  },
+  "semio.designEditor.abortTransaction": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    return { diff: {} };
+  },
+  "semio.designEditor.setDesign": (context: DesignEditorCommandContext, design: Design): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [{ id: context.designId, diff: { name: design.name, description: design.description } }],
+        },
+      },
+    };
+  },
+  "semio.designEditor.setPiece": (context: DesignEditorCommandContext, piece: Piece): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { pieces: { updated: [{ id: { id_: piece.id_ }, diff: piece }] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.setPieces": (context: DesignEditorCommandContext, pieces: Piece[]): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { pieces: { updated: pieces.map((p) => ({ id: { id_: p.id_ }, diff: p })) } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.setConnection": (context: DesignEditorCommandContext, connection: Connection): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { connections: { updated: [{ id: { connected: { piece: connection.connected.piece }, connecting: { piece: connection.connecting.piece } }, diff: connection }] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.setConnections": (context: DesignEditorCommandContext, connections: Connection[]): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { connections: { updated: connections.map((c) => ({ id: { connected: { piece: c.connected.piece }, connecting: { piece: c.connecting.piece } }, diff: c })) } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.addPiece": (context: DesignEditorCommandContext, piece: Piece): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { pieces: { added: [piece] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.addPieces": (context: DesignEditorCommandContext, pieces: Piece[]): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { pieces: { added: pieces } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.removePiece": (context: DesignEditorCommandContext, pieceId: PieceId): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { pieces: { removed: [pieceId] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.removePieces": (context: DesignEditorCommandContext, pieceIds: PieceId[]): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { pieces: { removed: pieceIds } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.addConnection": (context: DesignEditorCommandContext, connection: Connection): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { connections: { added: [connection] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.addConnections": (context: DesignEditorCommandContext, connections: Connection[]): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { connections: { added: connections } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.removeConnection": (context: DesignEditorCommandContext, connectionId: ConnectionId): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { connections: { removed: [connectionId] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.removeConnections": (context: DesignEditorCommandContext, connectionIds: ConnectionId[]): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { connections: { removed: connectionIds } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.selectAll": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    const design = findDesignInKit(context.kit, context.designId)!;
+    return {
+      diff: {
+        selection: { pieceIds: design.pieces ?? [], connectionIds: design.connections ?? [] },
+      },
+    };
+  },
+  "semio.designEditor.deselectAll": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    return {
+      diff: {
+        selection: { pieceIds: [], connectionIds: [] },
+      },
+    };
+  },
+  "semio.designEditor.selectPiece": (context: DesignEditorCommandContext, pieceId: PieceId): DesignEditorCommandResult => {
+    return {
+      diff: {
+        selection: { pieceIds: [pieceId], connectionIds: [] },
+      },
+    };
+  },
+  "semio.designEditor.selectPieces": (context: DesignEditorCommandContext, pieceIds: PieceId[]): DesignEditorCommandResult => {
+    return {
+      diff: {
+        selection: { pieceIds, connectionIds: [] },
+      },
+    };
+  },
+  "semio.designEditor.addPieceToSelection": (context: DesignEditorCommandContext, pieceId: PieceId): DesignEditorCommandResult => {
+    const currentSelection = context.designEditor.selection;
+    const newPieceIds = [...(currentSelection.pieceIds ?? []), pieceId];
+    return {
+      diff: {
+        selection: { pieceIds: newPieceIds, connectionIds: currentSelection.connectionIds ?? [] },
+      },
+    };
+  },
+  "semio.designEditor.removePieceFromSelection": (context: DesignEditorCommandContext, pieceId: PieceId): DesignEditorCommandResult => {
+    const currentSelection = context.designEditor.selection;
+    const newPieceIds = (currentSelection.pieceIds ?? []).filter((id) => id.id_ !== pieceId.id_);
+    return {
+      diff: {
+        selection: { pieceIds: newPieceIds, connectionIds: currentSelection.connectionIds ?? [] },
+      },
+    };
+  },
+  "semio.designEditor.selectPiecePort": (context: DesignEditorCommandContext, pieceId: PieceId, portId: PortId): DesignEditorCommandResult => {
+    return {
+      diff: {
+        selection: { portId: { pieceId, portId } },
+      },
+    };
+  },
+  "semio.designEditor.deselectPiecePort": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    return {
+      diff: {
+        selection: { portId: undefined },
+      },
+    };
+  },
+  "semio.designEditor.deleteSelected": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    const selection = context.designEditor.selection;
+    return {
+      diff: {
+        selection: { pieceIds: [], connectionIds: [] },
+      },
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { pieces: { removed: selection.pieceIds }, connections: { removed: selection.connectionIds } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.toggleDiagramFullscreen": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    const currentPanel = context.designEditor.fullscreenPanel;
+    const newPanel = currentPanel === DesignEditorFullscreenPanel.Diagram ? DesignEditorFullscreenPanel.None : DesignEditorFullscreenPanel.Diagram;
+    return {
+      diff: {
+        fullscreenPanel: newPanel,
+      },
+    };
+  },
+  "semio.designEditor.toggleModelFullscreen": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    const currentPanel = context.designEditor.fullscreenPanel;
+    const newPanel = currentPanel === DesignEditorFullscreenPanel.Model ? DesignEditorFullscreenPanel.None : DesignEditorFullscreenPanel.Model;
+    return {
+      diff: {
+        fullscreenPanel: newPanel,
+      },
+    };
+  },
 };
 
-export interface DesignEditorStoreState {
-    selection: DesignEditorSelection;
+// #endregion Commands
+
+// #region Hooks
+
+// #region Scoping
+
+type SketchpadScope = { id: string; persisted: boolean };
+type KitScope = { id: KitId };
+type DesignScope = { id: DesignId };
+type TypeScope = { id: TypeId };
+type PieceScope = { id: PieceId };
+type ConnectionScope = { id: ConnectionId };
+type RepresentationScope = { id: RepresentationId };
+type PortypeScope = { id: PortId };
+type DesignEditorScope = { id: string };
+
+const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
+const KitScopeContext = createContext<KitScope | null>(null);
+const DesignScopeContext = createContext<DesignScope | null>(null);
+const TypeScopeContext = createContext<TypeScope | null>(null);
+const PieceScopeContext = createContext<PieceScope | null>(null);
+const ConnectionScopeContext = createContext<ConnectionScope | null>(null);
+const RepresentationScopeContext = createContext<RepresentationScope | null>(null);
+const PortypeScopeContext = createContext<PortypeScope | null>(null);
+const DesignEditorScopeContext = createContext<DesignEditorScope | null>(null);
+
+export const SketchpadScopeProvider = (props: { id: string; persisted: boolean; children: React.ReactNode }) => {
+  const value = useMemo(() => {
+    const scope = { id: props.id, persisted: props.persisted };
+    // Ensure store is created/initialized
+    getOrCreateSketchpadStore(props.id, props.persisted);
+    return scope;
+  }, [props.id, props.persisted]);
+  return React.createElement(SketchpadScopeContext.Provider, { value }, props.children as any);
+};
+
+export const KitScopeProvider = (props: { id: KitId; children: React.ReactNode }) => {
+  const value = useMemo(() => ({ id: props.id }), [props.id]);
+  return React.createElement(KitScopeContext.Provider, { value }, props.children as any);
+};
+
+export const DesignScopeProvider = (props: { id: DesignId; children: React.ReactNode }) => {
+  const value = useMemo(() => ({ id: props.id }), [props.id]);
+  return React.createElement(DesignScopeContext.Provider, { value }, props.children as any);
+};
+
+export const TypeScopeProvider = (props: { id: TypeId; children: React.ReactNode }) => {
+  const value = useMemo(() => ({ id: props.id }), [props.id]);
+  return React.createElement(TypeScopeContext.Provider, { value }, props.children as any);
+};
+
+export const PieceScopeProvider = (props: { id: PieceId; children: React.ReactNode }) => {
+  const value = useMemo(() => ({ id: props.id }), [props.id]);
+  return React.createElement(PieceScopeContext.Provider, { value }, props.children as any);
+};
+
+export const ConnectionScopeProvider = (props: { id: ConnectionId; children: React.ReactNode }) => {
+  const value = useMemo(() => ({ id: props.id }), [props.id]);
+  return React.createElement(ConnectionScopeContext.Provider, { value }, props.children as any);
+};
+
+export const RepresentationScopeProvider = (props: { id: RepresentationId; children: React.ReactNode }) => {
+  const value = useMemo(() => ({ id: props.id }), [props.id]);
+  return React.createElement(RepresentationScopeContext.Provider, { value }, props.children as any);
+};
+
+export const PortypeScopeProvider = (props: { id: PortId; children: React.ReactNode }) => {
+  const value = useMemo(() => ({ id: props.id }), [props.id]);
+  return React.createElement(PortypeScopeContext.Provider, { value }, props.children as any);
+};
+
+export const DesignEditorScopeProvider = (props: { id: string; children: React.ReactNode }) => {
+  const value = useMemo(() => ({ id: props.id }), [props.id]);
+  return React.createElement(DesignEditorScopeContext.Provider, { value }, props.children as any);
+};
+
+const useSketchpadScope = () => useContext(SketchpadScopeContext);
+const useKitStoreScope = () => useContext(KitScopeContext);
+const useDesignScope = () => useContext(DesignScopeContext);
+const useTypeScope = () => useContext(TypeScopeContext);
+const usePieceScope = () => useContext(PieceScopeContext);
+const useConnectionScope = () => useContext(ConnectionScopeContext);
+const useRepresentationScope = () => useContext(RepresentationScopeContext);
+const usePortScope = () => useContext(PortypeScopeContext);
+const useDesignEditorScope = () => useContext(DesignEditorScopeContext);
+
+// #endregion Scoping
+
+function useSketchpadStore(id?: string): SketchpadStore {
+  const scope = useSketchpadScope();
+  const storeId = scope?.id ?? id;
+  if (!storeId) throw new Error("useSketchpad must be called within a SketchpadScopeProvider or be directly provided with an id");
+  if (!stores.has(storeId)) throw new Error(`Sketchpad store was not found for id ${storeId}`);
+  const store = useMemo(() => stores.get(storeId)!, [storeId]);
+  const getSnapshot = useMemo(() => () => store.snapshot(), [store]);
+  const state = useSyncExternalStore(store.changed, getSnapshot, getSnapshot);
+  return store;
 }
 
-class DesignEditorStore {
-    private studioStore: StudioStore;
-    private id: string;
-    private yDoc: Y.Doc;
-    private yKit: Y.Map<any>;
-    private yDesign: Y.Map<any>;
-    private undoManager: UndoManager;
-    private state: DesignEditorStoreState;
-    private listeners: Set<() => void> = new Set();
-
-    constructor(studioStore: StudioStore, id: string, yDoc: Y.Doc, yKit: Y.Map<any>, yDesign: Y.Map<any>) {
-        this.studioStore = studioStore;
-        this.id = id;
-        this.yDoc = yDoc;
-        this.yKit = yKit;
-        this.yDesign = yDesign;
-        this.undoManager = new UndoManager(yDesign, { captureTimeout: 0, trackedOrigins: new Set([id]) });
-        // this.undoManager = new UndoManager(yDesign, { captureTimeout: 0 });
-        this.state = {
-            selection: {
-                selectedPieceIds: [],
-                selectedConnections: []
-            }
-        };
+export function useSketchpad(): SketchpadStore;
+export function useSketchpad<T>(selector: (store: SketchpadStore) => T, id?: string): T;
+export function useSketchpad<T>(selector?: (store: SketchpadStore) => T, id?: string): T | SketchpadStore {
+  const scope = useSketchpadScope();
+  const storeId = scope?.id ?? id;
+  if (!storeId) throw new Error("useSketchpad must be called within a SketchpadScopeProvider or be directly provided with an id");
+  if (!stores.has(storeId)) throw new Error(`Sketchpad store was not found for id ${storeId}`);
+  const store = useMemo(() => stores.get(storeId)!, [storeId]);
+  const lastSnapshot = useRef<any>();
+  const getSnapshot = useCallback(() => {
+    const currentSnapshot = store.snapshot();
+    if (!lastSnapshot.current || JSON.stringify(lastSnapshot.current) !== JSON.stringify(currentSnapshot)) {
+      lastSnapshot.current = currentSnapshot;
     }
+    return lastSnapshot.current;
+  }, [store]);
 
-    getState(): DesignEditorStoreState {
-        return this.state;
-    }
+  const state = useSyncExternalStore(store.changed, getSnapshot, getSnapshot);
 
-    setState(state: DesignEditorStoreState): void {
-        this.state = state;
-        this.listeners.forEach(listener => listener());
-    }
-
-    getDesignId(): DesignId {
-        return { name: this.yDesign.get('name'), variant: this.yDesign.get('variant'), view: this.yDesign.get('view') };
-    }
-
-    getKitId(): KitId {
-        return { name: this.yKit.get('name'), version: this.yKit.get('version') };
-    }
-
-    updateDesignEditorSelection = (selection: DesignEditorSelection): void => {
-        this.setState({ ...this.getState(), selection });
-    }
-
-    deleteSelectedPiecesAndConnections(): void {
-        const { selection } = this.state;
-        const kitId = this.getKitId();
-        const designId = this.getDesignId();
-        const kit = this.studioStore.getKit(kitId.name, kitId.version);
-        const flatDesign = flattenDesign(kit, designId);
-        const types = this.studioStore.getTypes(kitId.name, kitId.version);
-
-        // First delete all selected connections
-        if (selection.selectedConnections.length > 0) {
-            const connections = this.yDesign.get('connections') as Y.Map<any>;
-            selection.selectedConnections.forEach(conn => {
-                const connectionId = `${conn.connectedPieceId}--${conn.connectingPieceId}`;
-                const reverseConnectionId = `${conn.connectingPieceId}--${conn.connectedPieceId}`;
-
-                // Check for both possible orientations of the connection
-                if (connections.has(connectionId)) {
-                    connections.delete(connectionId);
-                } else if (connections.has(reverseConnectionId)) {
-                    connections.delete(reverseConnectionId);
-                }
-            });
-        }
-
-        // Then delete all selected pieces
-        if (selection.selectedPieceIds.length > 0) {
-            const pieces = this.yDesign.get('pieces') as Y.Map<any>;
-            const connections = this.yDesign.get('connections') as Y.Map<any>;
-
-            // First identify and delete any connections involving the selected pieces
-            const connectionsToDelete: string[] = [];
-            connections.forEach((_, connectionId) => {
-                const [connectedPieceId, connectingPieceId] = connectionId.split('--');
-                if (selection.selectedPieceIds.includes(connectedPieceId) ||
-                    selection.selectedPieceIds.includes(connectingPieceId)) {
-                    connectionsToDelete.push(connectionId);
-                }
-            });
-
-            // Delete identified connections
-            connectionsToDelete.forEach(connectionId => {
-                connections.delete(connectionId);
-            });
-
-            // Finally delete the pieces
-            selection.selectedPieceIds.forEach(pieceId => {
-                pieces.delete(pieceId);
-            });
-        }
-
-        // Clear the selection
-        this.updateDesignEditorSelection({
-            selectedPieceIds: [],
-            selectedConnections: []
-        });
-    }
-
-    undo(): void {
-        this.undoManager.undo();
-        this.listeners.forEach(listener => listener());
-    }
-
-    redo(): void {
-        this.undoManager.redo();
-        this.listeners.forEach(listener => listener());
-    }
-
-    transact(operations: () => void): void {
-        this.yDoc.transact(operations, this.id);
-        this.listeners.forEach(listener => listener());
-    }
-
-    subscribe(callback: () => void): () => void {
-        this.listeners.add(callback);
-        return () => {
-            this.listeners.delete(callback);
-        };
-    }
+  return selector ? selector(store) : store;
 }
 
-const DesignEditorStoreContext = createContext<DesignEditorStore | null>(null);
+export function useDesignEditor(): DesignEditorStore;
+export function useDesignEditor<T>(selector: (store: DesignEditorStore) => T): T;
+export function useDesignEditor<T>(selector: (store: DesignEditorStore) => T, kitId: KitId, designId: DesignId): T;
+export function useDesignEditor<T>(selector?: (store: DesignEditorStore) => T, kitId?: KitId, designId?: DesignId): T | DesignEditorStore {
+  const sketchpadScope = useSketchpadScope();
+  if (!sketchpadScope) throw new Error("useDesignEditor must be called within a SketchpadScopeProvider");
+  const store = stores.get(sketchpadScope.id)!;
 
-export const useDesignEditorStore = () => {
-    const designEditorStore = useContext(DesignEditorStoreContext);
-    if (!designEditorStore) {
-        throw new Error('useDesignEditorStore must be used within a DesignEditorStoreProvider');
-    }
-    return designEditorStore;
-};
+  const kitScope = useKitStoreScope();
+  const resolvedKitId = kitScope?.id ?? kitId;
+  const designScope = useDesignScope();
+  const resolvedDesignId = designScope?.id ?? designId;
 
-export const DesignEditorStoreProvider: FC<{ designEditorId: string, children: React.ReactNode }> = ({ designEditorId, children }) => {
-    const studioStore = useStudioStore();
-    const designEditorStore = useMemo(() => studioStore.getDesignEditorStore(designEditorId), [studioStore, designEditorId]);
-    return (
-        <DesignEditorStoreContext.Provider value={designEditorStore}>
-            {children}
-        </DesignEditorStoreContext.Provider>
-    );
-};
+  if (!resolvedKitId) throw new Error("useDesignEditor must be called within a KitScopeProvider or be directly provided with a kitId");
+  if (!resolvedDesignId) throw new Error("useDesignEditor must be called within a DesignScopeProvider or be directly provided with a designId");
+
+  const resolvedKitIdStr = kitIdToString(resolvedKitId);
+  const resolvedDesignIdStr = designIdToString(resolvedDesignId);
+  if (!store.designEditors.has(resolvedKitIdStr)) throw new Error(`Design editor store not found for kit ${resolvedKitId.name}`);
+  const kitEditors = store.designEditors.get(resolvedKitIdStr)!;
+  if (!kitEditors.has(resolvedDesignIdStr)) throw new Error(`Design editor store not found for design ${resolvedDesignId.name}`);
+  const designEditor = useMemo(() => kitEditors.get(resolvedDesignIdStr)!, [kitEditors, resolvedDesignIdStr]);
+  const getSnapshot = useMemo(() => () => designEditor.snapshot(), [designEditor]);
+
+  const state = useSyncExternalStore(designEditor.changed, getSnapshot, getSnapshot);
+  return selector ? selector(designEditor) : designEditor;
+}
+
+export function useKitStore(): KitStore;
+export function useKitStore<T>(selector: (store: KitStore) => T): T;
+export function useKitStore<T>(selector: (store: KitStore) => T, id: KitId): T;
+export function useKitStore<T>(selector?: (store: KitStore) => T, id?: KitId): T | KitStore {
+  const sketchpadScope = useSketchpadScope();
+  if (!sketchpadScope) throw new Error("useKitStore must be called within a SketchpadScopeProvider");
+  const store = stores.get(sketchpadScope.id)!;
+  const kitScope = useKitStoreScope();
+  const kitId = kitScope?.id ?? id;
+  if (!kitId) throw new Error("useKitStore must be called within a KitScopeProvider or be directly provided with an id");
+  const kitIdStr = kitIdToString(kitId);
+  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kitStore = store.kits.get(kitIdStr)!;
+  return selector ? selector(kitStore) : kitStore;
+}
+
+export function useKit(): Kit;
+export function useKit<T>(selector: (kit: Kit) => T): T;
+export function useKit<T>(selector: (kit: Kit) => T, id: KitId): T;
+export function useKit<T>(selector?: (kit: Kit) => T, id?: KitId): T | Kit {
+  const kitStore = useKitStore();
+  const getSnapshot = useMemo(() => () => kitStore.snapshot(), [kitStore]);
+  const kit = useSyncExternalStore(kitStore.changed, getSnapshot, getSnapshot);
+  return selector ? selector(kit as Kit) : (kit as Kit);
+}
+
+export function useDesign(): Design;
+export function useDesign<T>(selector: (design: Design) => T): T;
+export function useDesign<T>(selector: (design: Design) => T, id: DesignId): T;
+export function useDesign<T>(selector?: (design: Design) => T, id?: DesignId): T | Design {
+  const sketchpadScope = useSketchpadScope();
+  if (!sketchpadScope) throw new Error("useDesign must be called within a SketchpadScopeProvider");
+  const store = stores.get(sketchpadScope.id)!;
+  const kitScope = useKitStoreScope();
+  if (!kitScope) throw new Error("useDesign must be called within a KitScopeProvider");
+  const kitId = kitScope.id;
+  const kitIdStr = kitIdToString(kitId);
+  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kitStore = store.kits.get(kitIdStr)!;
+  const designScope = useDesignScope();
+  const designId = designScope?.id ?? id;
+  if (!designId) throw new Error("useDesign must be called within a DesignScopeProvider or be directly provided with an id");
+  const designIdStr = designIdToString(designId);
+  if (!kitStore.designs.has(designIdStr)) throw new Error(`Design store not found for design ${designId}`);
+  const designStore = useMemo(() => kitStore.designs.get(designIdStr)!, [kitStore, designIdStr]);
+  const getSnapshot = useMemo(() => () => designStore.snapshot(), [designStore]);
+  const state = useSyncExternalStore(designStore.changed, getSnapshot, getSnapshot);
+  return selector ? selector(state) : state;
+}
+
+export function useType(): Type;
+export function useType<T>(selector: (type: Type) => T): T;
+export function useType<T>(selector: (type: Type) => T, id: TypeId): T;
+export function useType<T>(selector?: (type: Type) => T, id?: TypeId): T | Type {
+  const sketchpadScope = useSketchpadScope();
+  if (!sketchpadScope) throw new Error("useType must be called within a SketchpadScopeProvider");
+  const store = stores.get(sketchpadScope.id)!;
+  const kitScope = useKitStoreScope();
+  if (!kitScope) throw new Error("useType must be called within a KitScopeProvider");
+  const kitId = kitScope.id;
+  const kitIdStr = kitIdToString(kitId);
+  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kit = store.kits.get(kitIdStr)!;
+  const typeScope = useTypeScope();
+  const typeId = typeScope?.id ?? id;
+  if (!typeId) throw new Error("useType must be called within a TypeScopeProvider or be directly provided with an id");
+  const typeIdStr = typeIdToString(typeId);
+  if (!kit.types.has(typeIdStr)) throw new Error(`Type store not found for type ${typeId}`);
+  const typeStore = useMemo(() => kit.types.get(typeIdStr)!, [kit, typeIdStr]);
+  const getSnapshot = useMemo(() => () => typeStore.snapshot(), [typeStore]);
+  const state = useSyncExternalStore(typeStore.changed, getSnapshot, getSnapshot);
+  return selector ? selector(state) : state;
+}
+
+export function usePiece(): Piece;
+export function usePiece<T>(selector: (piece: Piece) => T): T;
+export function usePiece<T>(selector: (piece: Piece) => T, id: PieceId): T;
+export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId): T | Piece {
+  const sketchpadScope = useSketchpadScope();
+  if (!sketchpadScope) throw new Error("usePiece must be called within a SketchpadScopeProvider");
+  const store = stores.get(sketchpadScope.id)!;
+  const kitScope = useKitStoreScope();
+  if (!kitScope) throw new Error("usePiece must be called within a KitScopeProvider");
+  const kitId = kitScope.id;
+  const kitIdStr = kitIdToString(kitId);
+  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kit = store.kits.get(kitIdStr)!;
+  const designScope = useDesignScope();
+  if (!designScope) throw new Error("usePiece must be called within a DesignScopeProvider");
+  const designId = designScope.id;
+  const designIdStr = designIdToString(designId);
+  if (!kit.designs.has(designIdStr)) throw new Error(`Design store not found for design ${designId}`);
+  const design = kit.designs.get(designIdStr)!;
+  const pieceScope = usePieceScope();
+  const pieceId = pieceScope?.id ?? id;
+  if (!pieceId) throw new Error("usePiece must be called within a PieceScopeProvider or be directly provided with an id");
+  const pieceIdStr = pieceIdToString(pieceId);
+  if (!design.pieces.has(pieceIdStr)) throw new Error(`Piece store not found for piece ${pieceId}`);
+  const pieceStore = useMemo(() => design.pieces.get(pieceIdStr)!, [design, pieceIdStr]);
+  const getSnapshot = useMemo(() => () => pieceStore.snapshot(), [pieceStore]);
+  const state = useSyncExternalStore(pieceStore.changed, getSnapshot, getSnapshot);
+  return selector ? selector(state) : state;
+}
+
+export function useConnection(): Connection;
+export function useConnection<T>(selector: (connection: Connection) => T): T;
+export function useConnection<T>(selector: (connection: Connection) => T, id: ConnectionId): T;
+export function useConnection<T>(selector?: (connection: Connection) => T, id?: ConnectionId): T | Connection {
+  const sketchpadScope = useSketchpadScope();
+  if (!sketchpadScope) throw new Error("useConnection must be called within a SketchpadScopeProvider");
+  const store = stores.get(sketchpadScope.id)!;
+  const kitScope = useKitStoreScope();
+  if (!kitScope) throw new Error("useConnection must be called within a KitScopeProvider");
+  const kitId = kitScope.id;
+  const kitIdStr = kitIdToString(kitId);
+  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kit = store.kits.get(kitIdStr)!;
+  const designScope = useDesignScope();
+  if (!designScope) throw new Error("useConnection must be called within a DesignScopeProvider");
+  const designId = designScope.id;
+  const designIdStr = designIdToString(designId);
+  if (!kit.designs.has(designIdStr)) throw new Error(`Design store not found for design ${designId}`);
+  const design = kit.designs.get(designIdStr)!;
+  const connectionScope = useConnectionScope();
+  const connectionId = connectionScope?.id ?? id;
+  if (!connectionId) throw new Error("useConnection must be called within a ConnectionScopeProvider or be directly provided with an id");
+  const connectionIdStr = connectionIdToString(connectionId);
+  if (!design.connections.has(connectionIdStr)) throw new Error(`Connection store not found for connection ${connectionId}`);
+  const connectionStore = useMemo(() => design.connections.get(connectionIdStr)!, [design, connectionIdStr]);
+  const getSnapshot = useMemo(() => () => connectionStore.snapshot(), [connectionStore]);
+  const state = useSyncExternalStore(connectionStore.changed, getSnapshot, getSnapshot);
+  return selector ? selector(state) : state;
+}
+
+export function usePort(): Port;
+export function usePort<T>(selector: (port: Port) => T): T;
+export function usePort<T>(selector: (port: Port) => T, id: PortId): T;
+export function usePort<T>(selector?: (port: Port) => T, id?: PortId): T | Port {
+  const sketchpadScope = useSketchpadScope();
+  if (!sketchpadScope) throw new Error("usePort must be called within a SketchpadScopeProvider");
+  const store = stores.get(sketchpadScope.id)!;
+  const kitScope = useKitStoreScope();
+  if (!kitScope) throw new Error("usePort must be called within a KitScopeProvider");
+  const kitId = kitScope.id;
+  const kitIdStr = kitIdToString(kitId);
+  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kit = store.kits.get(kitIdStr)!;
+  const typeScope = useTypeScope();
+  if (!typeScope) throw new Error("usePort must be called within a TypeScopeProvider");
+  const typeId = typeScope.id;
+  const typeIdStr = typeIdToString(typeId);
+  if (!kit.types.has(typeIdStr)) throw new Error(`Type store not found for type ${typeId}`);
+  const type = kit.types.get(typeIdStr)!;
+  const portScope = usePortScope();
+  const portId = portScope?.id ?? id;
+  if (!portId) throw new Error("usePort must be called within a PortScopeProvider or be directly provided with an id");
+  const portIdStr = portIdToString(portId);
+  if (!type.ports.has(portIdStr)) throw new Error(`Port store not found for port ${portId}`);
+  const portStore = useMemo(() => type.ports.get(portIdStr)!, [type, portIdStr]);
+  const getSnapshot = useMemo(() => () => portStore.snapshot(), [portStore]);
+  const state = useSyncExternalStore(portStore.changed, getSnapshot, getSnapshot);
+  return selector ? selector(state) : state;
+}
+
+export function useRepresentation(): Representation;
+export function useRepresentation<T>(selector: (representation: Representation) => T): T;
+export function useRepresentation<T>(selector: (representation: Representation) => T, id: RepresentationId): T;
+export function useRepresentation<T>(selector?: (representation: Representation) => T, id?: RepresentationId): T | Representation {
+  const sketchpadScope = useSketchpadScope();
+  if (!sketchpadScope) throw new Error("useRepresentation must be called within a SketchpadScopeProvider");
+  const store = stores.get(sketchpadScope.id)!;
+  const kitScope = useKitStoreScope();
+  if (!kitScope) throw new Error("useRepresentation must be called within a KitScopeProvider");
+  const kitId = kitScope.id;
+  const kitIdStr = kitIdToString(kitId);
+  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kit = store.kits.get(kitIdStr)!;
+  const typeScope = useTypeScope();
+  if (!typeScope) throw new Error("useRepresentation must be called within a TypeScopeProvider");
+  const typeId = typeScope.id;
+  const typeIdStr = typeIdToString(typeId);
+  if (!kit.types.has(typeIdStr)) throw new Error(`Type store not found for type ${typeId}`);
+  const typeStore = kit.types.get(typeIdStr)!;
+  const representationScope = useRepresentationScope();
+  const representationId = representationScope?.id ?? id;
+  if (!representationId) throw new Error("useRepresentation must be called within a RepresentationScopeProvider or be directly provided with an id");
+  const representationIdStr = representationIdToString(representationId);
+  if (!typeStore.representations.has(representationIdStr)) throw new Error(`Representation store not found for representation ${representationId}`);
+  const representationStore = useMemo(() => typeStore.representations.get(representationIdStr)!, [typeStore, representationIdStr]);
+  const getSnapshot = useMemo(() => () => representationStore.snapshot(), [representationStore]);
+  const state = useSyncExternalStore(representationStore.changed, getSnapshot, getSnapshot);
+  return selector ? selector(state) : state;
+}
+
+// Additional utility hooks for the new store architecture
+export function useMode(): Mode {
+  return useSketchpad((store) => store.snapshot().mode);
+}
+
+export function useTheme(): Theme {
+  return useSketchpad((store) => store.snapshot().theme);
+}
+
+export function useLayout(): Layout {
+  return useSketchpad((store) => store.snapshot().layout);
+}
+
+export function useDesignId(): DesignId {
+  const designScope = useDesignScope();
+  if (!designScope) throw new Error("useDesignId must be called within a DesignScopeProvider");
+  return designScope.id;
+}
+
+export function useDesigns(): DesignId[] {
+  const kit = useKit();
+  return kit.designs
+    ? kit.designs.map((design) => ({
+        name: design.name,
+        variant: design.variant,
+        view: design.view,
+      }))
+    : [];
+}
+
+export function useSketchpadCommands() {
+  const designEditor = useDesignEditor();
+  return {
+    setMode: (mode: Mode) => designEditor.execute("semio.designEditor.setMode", mode),
+    setTheme: (theme: Theme) => designEditor.execute("semio.designEditor.setTheme", theme),
+    setLayout: (layout: Layout) => designEditor.execute("semio.designEditor.setLayout", layout),
+  };
+}
+
+export function useKitCommands() {
+  const kitStore = useKitStore();
+  return {
+    importKit: (url: string) => kitStore.execute("semio.kit.import", url),
+    exportKit: () => kitStore.execute("semio.kit.export"),
+  };
+}
+
+export function useDesignEditorCommands() {
+  const designEditor = useDesignEditor();
+  return {
+    // Transaction commands
+    startTransaction: () => designEditor.execute("semio.designEditor.startTransaction"),
+    finalizeTransaction: () => designEditor.execute("semio.designEditor.finalizeTransaction"),
+    abortTransaction: () => designEditor.execute("semio.designEditor.abortTransaction"),
+
+    // History commands
+    undo: () => designEditor.execute("semio.designEditor.undo"),
+    redo: () => designEditor.execute("semio.designEditor.redo"),
+
+    // Design editing commands
+    setDesign: (design: Design) => designEditor.execute("semio.designEditor.setDesign", design),
+    setPiece: (piece: Piece) => designEditor.execute("semio.designEditor.setPiece", piece),
+    setPieces: (pieces: Piece[]) => designEditor.execute("semio.designEditor.setPieces", pieces),
+    setConnection: (connection: Connection) => designEditor.execute("semio.designEditor.setConnection", connection),
+    setConnections: (connections: Connection[]) => designEditor.execute("semio.designEditor.setConnections", connections),
+    addPiece: (piece: Piece) => designEditor.execute("semio.designEditor.addPiece", piece),
+    addPieces: (pieces: Piece[]) => designEditor.execute("semio.designEditor.addPieces", pieces),
+    removePiece: (pieceId: PieceId) => designEditor.execute("semio.designEditor.removePiece", pieceId),
+    removePieces: (pieceIds: PieceId[]) => designEditor.execute("semio.designEditor.removePieces", pieceIds),
+    removeConnection: (connectionId: ConnectionId) => designEditor.execute("semio.designEditor.removeConnection", connectionId),
+    removeConnections: (connectionIds: ConnectionId[]) => designEditor.execute("semio.designEditor.removeConnections", connectionIds),
+
+    // Selection commands
+    selectAll: () => designEditor.execute("semio.designEditor.selectAll"),
+    deselectAll: () => designEditor.execute("semio.designEditor.deselectAll"),
+    selectPiece: (pieceId: PieceId) => designEditor.execute("semio.designEditor.selectPiece", pieceId),
+    selectPieces: (pieceIds: PieceId[]) => designEditor.execute("semio.designEditor.selectPieces", pieceIds),
+    addPieceToSelection: (pieceId: PieceId) => designEditor.execute("semio.designEditor.addPieceToSelection", pieceId),
+    removePieceFromSelection: (pieceId: PieceId) => designEditor.execute("semio.designEditor.removePieceFromSelection", pieceId),
+    selectPiecePort: (pieceId: PieceId, portId: PortId) => designEditor.execute("semio.designEditor.selectPiecePort", pieceId, portId),
+    deselectPiecePort: () => designEditor.execute("semio.designEditor.deselectPiecePort"),
+
+    // Connection commands
+    addConnection: (connection: Connection) => designEditor.execute("semio.designEditor.addConnection", connection),
+    deleteSelected: () => designEditor.execute("semio.designEditor.deleteSelected"),
+
+    // UI state commands
+    toggleDiagramFullscreen: () => designEditor.execute("semio.designEditor.toggleDiagramFullscreen"),
+    toggleModelFullscreen: () => designEditor.execute("semio.designEditor.toggleModelFullscreen"),
+
+    // Complex operations
+    executeCommand: (command: string, ...args: any[]) => designEditor.execute(command, ...args),
+  };
+}
+// Design editor state hooks
+export function useSelection(): DesignEditorSelection {
+  return useDesignEditor((store) => store.snapshot().selection);
+}
+
+export function useFullscreen(): DesignEditorFullscreenPanel {
+  return useDesignEditor((store) => store.snapshot().fullscreenPanel);
+}
+
+export function useDiff(): KitDiff {
+  return useDesignEditor((store) => store.snapshot().diff);
+}
+
+export function useFileUrls(): Map<Url, Url> {
+  const kitStore = useKitStore();
+  return kitStore.fileUrls();
+}
+
+export function useOthers(): DesignEditorPresenceOther[] {
+  return useDesignEditor((store) => store.snapshot().others);
+}
+
+// #endregion Hooks

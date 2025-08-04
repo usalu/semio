@@ -18,9 +18,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-import type { Preview } from '@storybook/react-vite';
+import type { Preview } from "@storybook/react-vite";
 
-import '../globals.css';
+import "../globals.css";
 
 const preview: Preview = {
   parameters: {
@@ -31,13 +31,13 @@ const preview: Preview = {
       },
     },
     darkMode: {
-      current: 'auto',
-      dark: { appBg: '-var(--color-dark)' },
-      light: { appBg: '-var(--color-dark)' }
-    }
+      current: "auto",
+      dark: { appBg: "-var(--color-dark)" },
+      light: { appBg: "-var(--color-dark)" },
+    },
   },
 
-  tags: ['autodocs']
+  tags: ["autodocs"],
 };
 
 export default preview;

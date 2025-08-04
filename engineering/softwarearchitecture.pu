@@ -1,6 +1,12 @@
 @startuml "software architecture"
 skinparam linetype ortho
 
+class Semio {
+  release: str
+  engine: str
+  sketchpad: str
+  created: datetime
+}
 
 class Kit {
   uri: str
@@ -17,7 +23,23 @@ class Kit {
   updated: datetime
   types: list[Type]
   designs: list[Design]
-  qualities: list[Quality]
+  authors: list[Author]
+  attributes: list[Attribute]
+  concepts: list[str]
+  --
+  context Kit inv optionalFieldsCanBeEmpty:
+    description->notEmpty() or description->isEmpty() and
+    icon->notEmpty() or icon->isEmpty() and
+    image->notEmpty() or image->isEmpty() and
+    preview->notEmpty() or preview->isEmpty() and
+    version->notEmpty() or version->isEmpty() and
+    remote->notEmpty() or remote->isEmpty() and
+    homepage->notEmpty() or homepage->isEmpty() and
+    license->notEmpty() or license->isEmpty()
+  context Kit inv emptyVersionMeansLatest:
+    version->isEmpty() implies version = 'latest'
+  context Kit inv validUri:
+    uri->matches('^https?://.*') or uri->matches('^file://.*')
 }
 
 class Type {
@@ -35,7 +57,20 @@ class Type {
   representations: list[Representation]
   ports: list[Port]
   authors: list[Author]
-  qualities: list[Quality]
+  attributes: list[Attribute]
+  concepts: list[str]
+  --
+  context Type inv optionalFieldsCanBeEmpty:
+    description->notEmpty() or description->isEmpty() and
+    icon->notEmpty() or icon->isEmpty() and
+    image->notEmpty() or image->isEmpty() and
+    variant->notEmpty() or variant->isEmpty()
+  context Type inv emptyVariantMeansDefault:
+    variant->isEmpty() implies variant = 'default'
+  context Type inv stockPositive:
+    stock >= 0
+  context Type inv virtualTypesHaveNoPorts:
+    virtual = true implies ports->isEmpty()
 }
 
 class Design {
@@ -50,29 +85,78 @@ class Design {
   updated: datetime
   pieces: list[Piece]
   connections: list[Connection]
-  authors: list[Author]
-  qualities: list[Quality]
+  layers: list[Layer]
+  groups: list[Group]
+  attributes: list[Attribute]
+  concepts: list[str]
+  --
+  context Design inv optionalFieldsCanBeEmpty:
+    description->notEmpty() or description->isEmpty() and
+    icon->notEmpty() or icon->isEmpty() and
+    image->notEmpty() or image->isEmpty() and
+    variant->notEmpty() or variant->isEmpty() and
+    view->notEmpty() or view->isEmpty()
+  context Design inv emptyVariantMeansDefault:
+    variant->isEmpty() implies variant = 'default'
+  context Design inv emptyViewMeansDefault:
+    view->isEmpty() implies view = 'default'
+  context Design inv connectionsReferenceDesignPieces:
+    connections->forAll(c | pieces->includes(c.connecting.piece) and pieces->includes(c.connected.piece))
 }
 
 class Representation {
   url: str
   description: str
   tags: list[str]
-  qualities: list[Quality]
+  attributes: list[Attribute]
+  --
+  context Representation inv descriptionCanBeEmpty:
+    description->notEmpty() or description->isEmpty()
 }
 
 class Port {
   id: str
   description: str
   mandatory: bool
+  family: str
+  compatibleFamilies: list[str]
+  point: Point
+  direction: Vector
   t: float
-  qualities: list[Quality]
+  attributes: list[Attribute]
+  --
+  context Port inv optionalFieldsCanBeEmpty:
+    description->notEmpty() or description->isEmpty() and
+    family->notEmpty() or family->isEmpty()
+  context Port inv tInValidRange:
+    t >= 0 and t < 1
+  context Port inv directionIsUnitVector:
+    direction.x * direction.x + direction.y * direction.y + direction.z * direction.z = 1
+  context Port inv compatibleFamiliesIncludesOwnFamily:
+    family->notEmpty() implies compatibleFamilies->includes(family)
 }
 
-class PortFamily {
+class Layer {
   name: str
-  
-  ports: list[Port]
+  description: str
+  color: str
+}
+
+class Group {
+  name: str
+  description: str
+  color: str
+  pieces: list[Piece]
+  attributes: list[Attribute]
+  --
+  context Group inv nameCanBeEmpty:
+    name->notEmpty() or name->isEmpty()
+  context Group inv descriptionCanBeEmpty:
+    description->notEmpty() or description->isEmpty()
+}
+
+class Family {
+  name: str
 }
 
 class Piece {
@@ -80,16 +164,39 @@ class Piece {
   description: str
   plane: Plane
   center: DiagramPoint
+  scale: float
+  mirrorPlane: Plane
+  hidden: bool
+  locked: bool
+  color: str
   type: Type
   design: Design
   piece: Piece
-  qualities: list[Quality]
+  attributes: list[Attribute]
+  --
+  context Piece inv descriptionCanBeEmpty:
+    description->notEmpty() or description->isEmpty()
+  context Piece inv validPieceReference:
+    (type->notEmpty() and design->isEmpty() and piece->isEmpty()) or
+    (type->isEmpty() and design->notEmpty() and piece->notEmpty())
+  context Piece inv colorValidation:
+    color->isEmpty() or color.matches('^#[0-9A-Fa-f]{6}$')
+  context Piece inv scalePositive:
+    scale > 0
+  context Piece inv noSelfReference:
+    piece <> self
 }
 
 class Plane {
   origin: Point
   xAxis: Vector
   yAxis: Vector
+  --
+  context Plane inv axesAreOrthogonal:
+    xAxis.x * yAxis.x + xAxis.y * yAxis.y + xAxis.z * yAxis.z = 0
+  context Plane inv axesAreUnitVectors:
+    xAxis.x * xAxis.x + xAxis.y * xAxis.y + xAxis.z * xAxis.z = 1 and
+    yAxis.x * yAxis.x + yAxis.y * yAxis.y + yAxis.z * yAxis.z = 1
 }
 
 class Connection {
@@ -98,13 +205,27 @@ class Connection {
   description: str
   gap: float
   shift: float
-  raise: float
+  rise: float
   rotation: float
   turn: float
   tilt: float
   x: float
   y: float
-  qualities: list[Quality]
+  attributes: list[Attribute]
+  --
+  context Connection inv descriptionCanBeEmpty:
+    description->notEmpty() or description->isEmpty()
+  context Connection inv portsAreCompatible:
+    connecting.port.compatibleFamilies->includes(connected.port.family) or
+    connected.port.compatibleFamilies->includes(connecting.port.family)
+  context Connection inv noDuplicateConnections:
+    connecting <> connected
+  context Connection inv rotationInValidRange:
+    rotation >= -180 and rotation <= 180
+  context Connection inv turnInValidRange:
+    turn >= -180 and turn <= 180
+  context Connection inv tiltInValidRange:
+    tilt >= -180 and tilt <= 180
 }
 
 class Side {
@@ -112,11 +233,20 @@ class Side {
   port: Port
 }
 
-class Quality {
+class Attribute {
   name: str
   value: str
   unit: str
   definition: str
+  --
+  context Attribute inv valueCanBeEmpty:
+    value->notEmpty() or value->isEmpty()
+  context Attribute inv definitionCanBeEmpty:
+    definition->notEmpty() or definition->isEmpty()
+  context Attribute inv emptyValueMeansTrue:
+    value->isEmpty() implies value = 'true'
+  context Attribute inv unitCanBeEmpty:
+    unit->notEmpty() or unit->isEmpty()
 }
 
 class Author {
@@ -134,6 +264,9 @@ class Vector {
   x: float
   y: float
   z: float
+  --
+  context Vector inv notZeroVector:
+    x <> 0 or y <> 0 or z <> 0
 }
 
 class DiagramPoint {
@@ -141,48 +274,137 @@ class DiagramPoint {
   y: float
 }
 
-class Location {
-  longitude: float
-  latitude: float
+class Quality {
+  key: str
+  name: str
+  description: str
+  uri: str
+  scalable: bool
+  kind: QualityKind
+  si: str
+  imperial: str
+  min: float
+  minExcluded: bool
+  max: float
+  maxExcluded: bool
+  default: float
+  formula: str
+  benchmarks: list[Benchmark]
+  attributes: list[Attribute]
+  --
+  context Quality inv optionalFieldsCanBeEmpty:
+    description->notEmpty() or description->isEmpty() and
+    uri->notEmpty() or uri->isEmpty() and
+    si->notEmpty() or si->isEmpty() and
+    imperial->notEmpty() or imperial->isEmpty() and
+    formula->notEmpty() or formula->isEmpty()
+  context Quality inv defaultValueInRange:
+    (min->notEmpty() implies default >= min) and
+    (max->notEmpty() implies default <= max)
+  context Quality inv minLessThanMax:
+    min->notEmpty() and max->notEmpty() implies min < max
+}
+
+class QualityKind {
+  <<enumeration>>
+  General
+  Design
+  Type
+  Piece
+  Connection
+  Port
+}
+
+class Benchmark {
+  name: str
+  icon: str
+  min: float
+  minExcluded: bool
+  max: float
+  maxExcluded: bool
+  --
+  context Benchmark inv iconCanBeEmpty:
+    icon->notEmpty() or icon->isEmpty()
+  context Benchmark inv minLessThanMax:
+    min < max
+}
+
+class Prop {
+  key: str
+  value: str
+  unit: str
+  attributes: list[Attribute]
+  --
+  context Prop inv unitCanBeEmpty:
+    unit->notEmpty() or unit->isEmpty()
+}
+
+class Stat {
+  key: str
+  unit: str
+  min: float
+  minExcluded: bool
+  max: float
+  maxExcluded: bool
+  --
+  context Stat inv unitCanBeEmpty:
+    unit->notEmpty() or unit->isEmpty()
+  context Stat inv minLessThanMax:
+    min < max
 }
 
 Kit *-- "0..*" Type : contains >
 Kit *-- "0..*" Design : contains >
-Kit *-- "0..*" Quality : has >
+Kit *-- "0..*" Author : has >
+Kit *-- "0..*" Attribute : has >
+Kit *-- "0..*" Quality : defines >
 
 Design *-- "0..*" Piece : contains >
 Design *-- "0..*" Connection : contains >
-Design *-- "0..*" Author : authored by >
-Design *-- "0..*" Quality : has >
+Design *-- "0..*" Layer : has >
+Design *-- "0..*" Group : has >
+Design *-- "0..*" Attribute : has >
+Design *-- "0..*" Stat : measures >
 
-Type *-- "0..1" Location : has >
 Type *-- "0..*" Representation : has >
 Type *-- "0..*" Port : has >
-Type *-- "0..*" Author : authored by >
-Type *-- "0..*" Quality : has >
+Type *-- "0..*" Attribute : has >
 
 Piece *-- "1" Type : instance of >
 Piece o-- "0..1" Plane : located by >
-Piece *-- "0..*" Quality : has >
+Piece o-- "0..1" Plane : mirrored by >
+Piece *-- "0..*" Attribute : has >
 Piece o-- "0..1" DiagramPoint : has center >
 
-Connection *-- "0..*" Quality : has >
+Group *-- "0..*" Piece : contains >
+
+Connection *-- "0..*" Attribute : has >
 Connection o-- "1" Side : connected >
 Connection o-- "1" Side : connecting >
 
 Side o-- "1" Piece : refers to >
 Side o-- "1" Port : refers to >
 
-Representation *-- "0..*" Tag : tagged with >
-Representation *-- "0..*" Quality : has >
+Representation *-- "0..*" Attribute : has >
 
-Port *-- "0..*" Port : compatible with >
-Port *-- "0..*" Quality : has >
+Port *-- "0..*" Attribute : has >
 Port *-- "1" Point : at >
 Port *-- "1" Vector : oriented by >
+Port *-- "1" Family : has >
+Port *-- "0..*" Family : compatible with >
+Port *-- "0..*" Prop : has >
 
 Plane *-- "1" Point : origin >
 Plane *-- "1" Vector : xAxis >
 Plane *-- "1" Vector : yAxis >
+
+Quality *-- "0..*" Benchmark : has >
+Quality *-- "0..*" Attribute : has >
+Quality *-- "1" QualityKind : classified by >
+
+Prop o-- "1" Quality : references >
+Prop *-- "0..*" Attribute : has >
+
+Stat o-- "1" Quality : references >
 
 @enduml

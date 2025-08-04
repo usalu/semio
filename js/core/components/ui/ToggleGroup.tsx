@@ -18,45 +18,25 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group"
-import { type VariantProps } from "class-variance-authority"
-import * as React from "react"
+import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
+import { type VariantProps } from "class-variance-authority";
+import * as React from "react";
 
-import { toggleVariants } from "@semio/js/components/ui/Toggle"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@semio/js/components/ui/Tooltip"
-import { cn } from "@semio/js/lib/utils"
+import { toggleVariants } from "@semio/js/components/ui/Toggle";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@semio/js/components/ui/Tooltip";
+import { cn } from "@semio/js/lib/utils";
 
-const ToggleGroupContext = React.createContext<
-  VariantProps<typeof toggleVariants>
->({
+const ToggleGroupContext = React.createContext<VariantProps<typeof toggleVariants>>({
   size: "default",
   variant: "default",
-})
+});
 
-function ToggleGroup({
-  className,
-  variant,
-  size,
-  children,
-  ...props
-}: React.ComponentProps<typeof ToggleGroupPrimitive.Root> &
-  VariantProps<typeof toggleVariants>) {
+function ToggleGroup({ className, variant, size, children, ...props }: React.ComponentProps<typeof ToggleGroupPrimitive.Root> & VariantProps<typeof toggleVariants>) {
   return (
-    <ToggleGroupPrimitive.Root
-      data-slot="toggle-group"
-      data-variant={variant}
-      data-size={size}
-      className={cn(
-        "group/toggle-group flex w-fit items-center border overflow-hidden",
-        className
-      )}
-      {...props}
-    >
-      <ToggleGroupContext.Provider value={{ variant, size }}>
-        {children}
-      </ToggleGroupContext.Provider>
+    <ToggleGroupPrimitive.Root data-slot="toggle-group" data-variant={variant} data-size={size} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden", className)} {...props}>
+      <ToggleGroupContext.Provider value={{ variant, size }}>{children}</ToggleGroupContext.Provider>
     </ToggleGroupPrimitive.Root>
-  )
+  );
 }
 
 function ToggleGroupItem({
@@ -72,7 +52,7 @@ function ToggleGroupItem({
     tooltip?: string;
     hotkey?: string;
   }) {
-  const context = React.useContext(ToggleGroupContext)
+  const context = React.useContext(ToggleGroupContext);
 
   const toggleGroupItemElement = (
     <ToggleGroupPrimitive.Item
@@ -85,7 +65,7 @@ function ToggleGroupItem({
           size: context.size || size,
         }),
         "min-w-0 flex-1 shrink-0 focus:z-10 focus-visible:z-10 data-[state=on]:bg-primary data-[variant=outline]:border-l-0 data-[variant=outline]:first:border-l",
-        className
+        className,
       )}
       {...props}
     >
@@ -98,9 +78,7 @@ function ToggleGroupItem({
       <Tooltip>
         <TooltipTrigger asChild>
           {/* Wrapping in span to avoid styling issue with data-[state=on]: https://github.com/radix-ui/primitives/discussions/560 */}
-          <span>
-            {toggleGroupItemElement}
-          </span>
+          <span>{toggleGroupItemElement}</span>
         </TooltipTrigger>
         <TooltipContent>
           {tooltip}
@@ -113,4 +91,4 @@ function ToggleGroupItem({
   return toggleGroupItemElement;
 }
 
-export { ToggleGroup, ToggleGroupItem }
+export { ToggleGroup, ToggleGroupItem };

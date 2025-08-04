@@ -18,137 +18,197 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-import { Layout, Mode, Theme } from '@semio/js';
-import { Avatar, AvatarFallback, AvatarImage } from "@semio/js/components/ui/Avatar";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@semio/js/components/ui/Breadcrumb';
-import { Toggle } from '@semio/js/components/ui/Toggle';
-import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle";
-import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGroup";
-import { AppWindow, Fingerprint, Home, Minus, Moon, Share2, Square, Sun, X } from 'lucide-react';
-import { FC, ReactNode } from 'react';
 
+import { DesignId, Layout, Theme, useSketchpadCommands, useDesignId, useDesigns, useLayout, useTheme } from "@semio/js";
+import { AppWindow, Fingerprint, Home, Minus, Moon, Share2, Square, Sun, X } from "lucide-react";
+import { FC, ReactNode } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "./Avatar";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "./Breadcrumb";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./Select";
+import { Toggle } from "./Toggle";
+import { ToggleCycle } from "./ToggleCycle";
+import { ToggleGroup, ToggleGroupItem } from "./ToggleGroup";
 
 interface NavbarProps {
-    mode?: Mode;
-    toolbarContent?: ReactNode;
-    layout?: Layout
-    theme?: Theme;
-    setLayout?: (layout: Layout) => void;
-    setTheme?: (theme: Theme) => void;
-    onWindowEvents?: {
-        minimize: () => void;
-        maximize: () => void;
-        close: () => void;
-    }
+  toolbarContent?: ReactNode;
+  onWindowEvents?: {
+    minimize: () => void;
+    maximize: () => void;
+    close: () => void;
+  };
 }
 
-const Navbar: FC<NavbarProps> = ({ mode, toolbarContent, layout, theme, setLayout, setTheme, onWindowEvents }) => {
+const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
+  const { setTheme, setLayout } = useSketchpadCommands();
+  const layout = useLayout();
+  const theme = useTheme();
+  const designId = useDesignId();
+  const availableDesigns = useDesigns();
+  // Create a unique key for each design
+  const getDesignKey = (design: DesignId): string => {
+    const parts = [design.name];
+    if (design.variant && design.variant !== "default") parts.push(design.variant);
+    if (design.view && design.view !== "default") parts.push(design.view);
+    return parts.join("|"); // Use | as separator to avoid conflicts
+  };
 
-    return (
-        <div className={`w-full h-12 bg-background border-b flex items-center justify-between px-4`}>
-            <div className="flex items-center">
-                <Breadcrumb>
-                    <BreadcrumbList>
-                        <BreadcrumbItem>
-                            <BreadcrumbLink href="/"><Home size={16} /></BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator items={[
-                            { label: "Starter", href: "/metabolism/starter" },
-                            { label: "Geometry", href: "/metabolism/geometry" }
-                        ]} onNavigate={(href) => console.log('Navigate to:', href)} />
-                        <BreadcrumbItem>
-                            <BreadcrumbLink href="/metabolism">Metabolism</BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator items={[
-                            { label: "Types", href: "/designs/types" },
-                            { label: "Representations", href: "/designs/representations" }
-                        ]} onNavigate={(href) => console.log('Navigate to:', href)} />
-                        <BreadcrumbItem>
-                            <BreadcrumbLink href="/designs">Designs</BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator items={[
-                            { label: "Capsule Dream", href: "/designs/nakagin/capsule-dream" }
-                        ]} onNavigate={(href) => console.log('Navigate to:', href)} />
-                        <BreadcrumbItem>
-                            <BreadcrumbLink href="/designs/nakagin">Nakagin Capsule Tower</BreadcrumbLink>
-                        </BreadcrumbItem>
-                    </BreadcrumbList>
-                </Breadcrumb>
-            </div>
-            <div className="flex items-center gap-4">
-                {toolbarContent}
-                <ToggleCycle
-                    value={theme}
-                    onValueChange={setTheme}
-                    items={[
-                        {
-                            value: Theme.LIGHT,
-                            tooltip: "Turn theme dark",
-                            label: <Moon />
-                        },
-                        {
-                            value: Theme.DARK,
-                            tooltip: "Turn theme light",
-                            label: <Sun />
-                        }
-                    ]}
-                />
-                <ToggleCycle
-                    value={layout}
-                    onValueChange={setLayout}
-                    items={[
-                        {
-                            value: Layout.NORMAL,
-                            tooltip: "Turn touch layout on",
-                            label: <Fingerprint />
-                        },
-                        {
-                            value: Layout.TOUCH,
-                            tooltip: "Return to normal layout",
-                            label: <AppWindow />
-                        }
-                    ]}
-                />
+  // Create display text for each design
+  const getDesignDisplayText = (design: DesignId): string => {
+    if (!availableDesigns) return design.name;
 
-                <Avatar className="h-8 w-8">
-                    <AvatarImage src="https://github.com/usalu.png" />
-                    <AvatarFallback>US</AvatarFallback>
-                </Avatar>
+    // Check if there are multiple designs with the same name
+    const sameNameDesigns = availableDesigns.filter((d) => d.name === design.name);
 
-                <Toggle
-                    variant="outline"
-                    tooltip="Share"
-                >
-                    <Share2 />
-                </Toggle>
+    if (sameNameDesigns.length === 1) {
+      // Only one design with this name, show just the name
+      return design.name;
+    } else {
+      // Multiple designs with same name, include variant/view for disambiguation
+      const parts = [design.name];
+      if (design.variant && design.variant !== "default") {
+        parts.push(design.variant);
+      }
+      if (design.view && design.view !== "default") {
+        parts.push(design.view);
+      }
+      return parts.join(" - ");
+    }
+  };
 
-                {onWindowEvents && (
-                    <div className="flex items-center gap-2 ml-4">
-                        <ToggleGroup type="single">
-                            <ToggleGroupItem
-                                value="minimize"
-                                onClick={onWindowEvents.minimize}
-                            >
-                                <Minus size={16} />
-                            </ToggleGroupItem>
-                            <ToggleGroupItem
-                                value="maximize"
-                                onClick={onWindowEvents.maximize}
-                            >
-                                <Square size={16} />
-                            </ToggleGroupItem>
-                            <ToggleGroupItem
-                                value="close"
-                                onClick={onWindowEvents.close}
-                                className="hover:bg-danger"
-                            >
-                                <X size={16} />
-                            </ToggleGroupItem>
-                        </ToggleGroup>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
+  // Handle design selection using the compound key
+  const handleDesignChange = (designKey: string) => {
+    // if (!availableDesigns || !onDesignIdChange) return;
+    // const selectedDesign = availableDesigns.find((design) => getDesignKey(design) === designKey);
+    // if (selectedDesign) {
+    //   onDesignIdChange(selectedDesign);
+    // }
+  };
+
+  // Get current design key for the selected value
+  const currentDesignKey = getDesignKey(designId);
+
+  return (
+    <div className={`w-full h-12 bg-background border-b flex items-center justify-between px-4`}>
+      <div className="flex items-center gap-2">
+        {/* Back button */}
+        {/* <Toggle variant="outline" tooltip="Previous design" disabled={sketchpadState.designHistory.length === 0} onClick={previousDesign} className="h-8 w-8 p-0">
+          <ArrowLeft size={16} />
+        </Toggle> */}
+
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/">
+                <Home size={16} />
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator
+              items={[
+                { label: "Starter", href: "/metabolism/starter" },
+                { label: "Geometry", href: "/metabolism/geometry" },
+              ]}
+              onNavigate={(href) => console.log("Navigate to:", href)}
+            />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/metabolism">Metabolism</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator
+              items={[
+                { label: "Types", href: "/designs/types" },
+                { label: "Representations", href: "/designs/representations" },
+              ]}
+              onNavigate={(href) => console.log("Navigate to:", href)}
+            />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/designs">Designs</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator
+              items={[
+                {
+                  label: "Capsule Dream",
+                  href: "/designs/nakagin/capsule-dream",
+                },
+              ]}
+              onNavigate={(href) => console.log("Navigate to:", href)}
+            />
+            <BreadcrumbItem>
+              <Select value={currentDesignKey} onValueChange={handleDesignChange}>
+                <SelectTrigger className="border-none bg-transparent hover:bg-accent/50 px-2 py-1 text-sm font-medium">
+                  <SelectValue>{getDesignDisplayText(designId)}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {availableDesigns?.map((design, index) => (
+                    <SelectItem key={`${getDesignKey(design)}-${index}`} value={getDesignKey(design)}>
+                      {getDesignDisplayText(design)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+      <div className="flex items-center gap-4">
+        {toolbarContent}
+        <ToggleCycle
+          value={theme}
+          onValueChange={setTheme}
+          items={[
+            {
+              value: Theme.LIGHT,
+              tooltip: "Turn theme dark",
+              label: <Moon />,
+            },
+            {
+              value: Theme.DARK,
+              tooltip: "Turn theme light",
+              label: <Sun />,
+            },
+          ]}
+        />
+        <ToggleCycle
+          value={layout}
+          onValueChange={setLayout}
+          items={[
+            {
+              value: Layout.NORMAL,
+              tooltip: "Turn touch layout on",
+              label: <Fingerprint />,
+            },
+            {
+              value: Layout.TOUCH,
+              tooltip: "Return to normal layout",
+              label: <AppWindow />,
+            },
+          ]}
+        />
+
+        <Avatar className="h-8 w-8">
+          <AvatarImage src="https://github.com/usalu.png" />
+          <AvatarFallback>US</AvatarFallback>
+        </Avatar>
+
+        <Toggle variant="outline" tooltip="Share">
+          <Share2 />
+        </Toggle>
+
+        {onWindowEvents && (
+          <div className="flex items-center gap-2 ml-4">
+            <ToggleGroup type="single">
+              <ToggleGroupItem value="minimize" onClick={onWindowEvents.minimize}>
+                <Minus size={16} />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="maximize" onClick={onWindowEvents.maximize}>
+                <Square size={16} />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="close" onClick={onWindowEvents.close} className="hover:bg-danger">
+                <X size={16} />
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 export default Navbar;

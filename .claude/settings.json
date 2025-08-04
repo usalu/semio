@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(net/Semio.Grasshopper/Semio.Grasshopper.cs)",
+      "Edit(net/Semio.Grasshopper/Semio.Grasshopper.cs)",
+      "Read(net\\Semio.Grasshopper\\Semio.Grasshopper.cs)",
+      "Edit(net\\Semio.Grasshopper\\Semio.Grasshopper.cs)",
+      "Read(net/Semio/Semio.cs)",
+      "Edit(net/Semio/Semio.cs)",
+      "Read(net\\Semio\\Semio.cs)",
+      "Edit(net\\Semio\\Semio.cs)",
+      "Read(py/engine.py)",
+      "Edit(py/engine.py)",
+      "Read(py\\engine.py)",
+      "Edit(py\\engine.py)",
+      "Read(js/core/semio.ts)",
+      "Edit(js/core/semio.ts)",
+      "Read(js\\core\\semio.ts)",
+      "Edit(js\\core\\semio.ts)",
+      "Read(js/core/components/**)",
+      "Edit(js/core/components/**)",
+      "Read(js\\core\\components/**)",
+      "Edit(js\\core\\components/**)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)"
+    ],
+    "ask": []
+  }
+}

@@ -9,9 +9,11 @@ kit : !Kit{
     remote : ?String // url for remote fetching
     homepage : ?String // url
     license : ?String // spdx id | url
-    created : !String // date
-    updated : !String // date
-    types : +Type[
+    authors : *Author[
+        name : !String
+        email : !String
+    ]
+    types : *Type[
         name : !String
         description : ?String
         icon : ?String // emoji | logogram | url
@@ -19,18 +21,18 @@ kit : !Kit{
         variant : ?String // empty is default
         stock : !Float // default is +infinity
         virtual : ?Boolean // default false
+        scalable : ?Boolean // default true
+        mirrorable : ?Boolean // default true
         unit : !String // e.g., mm, cm, m
-        created : !String // date
-        updated : !String // date
         location : ?Location{
-            longitude : !Float
-            latitude : !Float
+            longitude : ?Float
+            latitude : ?Float
         }
         representations : +Representation[
             url : !String
             description : ?String
             tags : *String[] // default is empty list (meaning default LOD)
-            qualities : *Quality[]
+            attributes : *Attribute[]
         ]
         ports : +Port[
             id : !String // empty is default
@@ -49,16 +51,47 @@ kit : !Kit{
                 z : !Float
             }
             t : !Float // [0,1[ for diagram ring position
-            qualities : *Quality[]
+            props : *Prop[
+                key : !String // quality key
+                value : !String // number | text
+                unit : ?String
+                attributes : *Attribute[]
+            ]
+            attributes : *Attribute[]
         ]
-        authors : *Author[
-            name : !String
+        authors: *AuthorId[
             email : !String
-            rank : !Integer // for ordering
         ]
-        qualities : *Quality[]
+        attributes : *Attribute[]
+        created : !String // date
+        updated : !String // date
     ]
-    designs : +Design[
+    qualities : *Quality[
+        key : !String
+        name : !String
+        description : ?String
+        uri : ?String
+        scalable : ?Boolean // default false
+        kind : !QualityKind // enum: General, Design, Type, Piece, Connection, Port
+        si : ?String
+        imperial : ?String
+        min : ?Float
+        minExcluded : ?Boolean // default true
+        max : ?Float
+        maxExcluded : ?Boolean // default true
+        default : ?Float
+        formula : ?String
+        benchmarks : *Benchmark[
+            name : !String
+            icon : ?String
+            min : ?Float
+            minExcluded : ?Boolean // default false
+            max : ?Float
+            maxExcluded : ?Boolean // default false
+        ]
+        attributes : *Attribute[]
+    ]
+    designs : *Design[
         name : !String
         description : ?String
         icon : ?String // emoji | logogram | url
@@ -66,8 +99,10 @@ kit : !Kit{
         variant : ?String // empty is default
         view : ?String // empty is default
         unit : !String // e.g., mm, cm, m
-        created : !String // date
-        updated : !String // date
+        location : ?Location{
+            longitude : ?Float
+            latitude : ?Float
+        }
         pieces : +Piece[
             id : !String
             description : ?String
@@ -101,7 +136,28 @@ kit : !Kit{
                 x : !Float
                 y : !Float
             }
-            qualities : *Quality[]
+            scale : ?Float // default 1.0
+            mirrorPlane : ?Plane{
+                origin : !Point{
+                    x : !Float
+                    y : !Float
+                    z : !Float
+                }
+                xAxis : !Vector{
+                    x : !Float
+                    y : !Float
+                    z : !Float
+                }
+                yAxis : !Vector{
+                    x : !Float
+                    y : !Float
+                    z : !Float
+                }
+            }
+            hidden : ?Boolean // default false
+            locked : ?Boolean // default false
+            color : ?String // hex color
+            attributes : *Attribute[]
         ]
         connections : +Connection[
             connected : !Side{
@@ -115,25 +171,48 @@ kit : !Kit{
             description : ?String
             gap : ?Float
             shift : ?Float
-            raise : ?Float
+            rise : ?Float
             rotation : ?Float // degrees
             turn : ?Float // degrees
             tilt : ?Float // degrees
             x : ?Float // diagram offset x
             y : ?Float // diagram offset y
-            qualities : *Quality[]
+            attributes : *Attribute[]
         ]
-        authors : *Author[
+        layers : *Layer[
             name : !String
-            email : !String
-            rank : !Integer
+            description : ?String
+            color : ?String // hex color
         ]
-        qualities : *Quality[]
+        groups : *Group[
+            name : ?String
+            description : ?String
+            color : ?String // hex color
+            pieces : *PieceId[
+                id : !String
+            ]
+        ]
+        authors: *AuthorId[
+            email : !String
+        ]
+        stats : *Stat[
+            key : !String // quality key
+            unit : ?String
+            min : ?Float
+            minExcluded : ?Boolean // default false
+            max : ?Float
+            maxExcluded : ?Boolean // default false
+        ]
+        attributes : *Attribute[]
+        created : !String // date
+        updated : !String // date
     ]
-    qualities : *Quality[
+    attributes : *Attribute[
         name : !String
         value : ?String // No value means true
         unit : ?String
         definition : ?String // text | uri
     ]
+    created : !String // date
+    updated : !String // date
 }

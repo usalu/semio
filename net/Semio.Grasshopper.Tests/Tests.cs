@@ -141,13 +141,13 @@ public class DesignTests
     [InlineData("../../../../../tests/kit_complex.json", "../../../../../tests/design_complex.json", "../../../../../tests/design_complex_flat.json")]
     public void Flatten_ComplexDesign(string kitPath, string designPath, string flattenedDesignPath)
     {
-        var kitJson = File.ReadAllText(kitPath);
+        var kitJson = System.IO.File.ReadAllText(kitPath);
         var kit = JsonConvert.DeserializeObject<Kit>(kitJson);
 
-        var designJson = File.ReadAllText(designPath);
+        var designJson = System.IO.File.ReadAllText(designPath);
         var design = JsonConvert.DeserializeObject<Design>(designJson);
 
-        var expectedFlattenedDesignJson = File.ReadAllText(flattenedDesignPath);
+        var expectedFlattenedDesignJson = System.IO.File.ReadAllText(flattenedDesignPath);
         var expectedFlattenedDesign = JsonConvert.DeserializeObject<Design>(expectedFlattenedDesignJson);
 
         var flattenedDesign = design.Flatten(kit.Types.ToArray(), Utility.ComputeChildPlane);

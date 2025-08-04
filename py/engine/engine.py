@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-## Header ##
+# region Header
 
 # engine.py
 
@@ -19,16 +19,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-## endregion ##
-
-
 """
 engine.py
 """
 
+from __future__ import annotations
 
-# TODOs #
-
+# endregion Header
+# region TODOs
 # TODO: Make loguru work on extra uvicorn engine process.
 # TODO: Replace prototype healing with one that makes more for every single property.
 # TODO: Try closest embedding instead of smallest Levenshtein distance.
@@ -40,102 +38,11 @@ engine.py
 # TODO: Proper mechanism of nullable fields.
 # TODO: Generalize to non-zip kits.
 # TODO: Think of using memory sqlite for caching.
-
-# Copilot #
-
-
-## Dictionary ##
-
-
-# Symbol,Code,Abbreviation,Name,Description
-# 👥,Bs,Bas,Base,The shared base props for {{NAME}} models.
-# 🧲,Cd,Cnd,Connected,The connected side of the piece of the connection.
-# 🧲,Cg,Cng,Connecting,The connecting side of the piece of the connection.
-# 🖇️,Co,Con,Connection,A connection between two pieces in a design.
-# 🖇️,Co*,Cons,Connections,The optional connections of a design.
-# ⌚,CA,CAt,Created At,The time when the {{NAME}} was created.
-# 💬,Dc?,Dsc,Description,The optional human-readable description of the {{NAME}}.
-# 📖,Df,Def,Definition,The optional definition [ text | uri ] of the quality.
-# ✏️,Dg,Dgm,Diagram,The diagram of the design.
-# 📁,Di?,Dir,Directory,The optional directory where to find the kit.
-# 🏅,Dl,Dfl,Default,Whether it is the default representation of the type. There can be only one default representation per type.
-# ➡️,Dr,Drn,Direction,The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.
-# 🏙️,Dn,Dsn,Design,A design is a collection of pieces that are connected.
-# 🏙️,Dn*,Dsns,Designs,The optional designs of the kit.
-# 🚌,Dt,DTO,Data Transfer Object, The Data Transfer Object (DTO) base of the {{NAME}}.
-# 🪣,Em,Emp,Empty,Empty all props and children of the {{NAME}}.
-# ▢,En,Ent,Entity,An entity is a collection of properties and children.
-# 🔑,FK,FKy,Foreign Key, The foreign primary key of the parent {{PARENT_NAME}} of the {{NAME}} in the database.
-# ↕️,Gp?,Gap,Gap,The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.
-# 🆔,GI,GID,Globally Unique Identifier,A Globally Unique Identifier (GUID) of the entity.
-# 👪,Gr,Grp,Group,The group of the locator.
-# 🏠,Hp?,Hmp,Homepage,The optional url of the homepage of the kit.
-# 🪙,Ic?,Ico,Icon,The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. {{NAME}}.
-# 🆔,Id,Id,Identifier,The local identifier of the {{NAME}} within the {{PARENT_NAME}}.
-# 🆔,Id?,Id,Identifier,The optional local identifier of the {{NAME}} within the {{PARENT_NAME}}. No id means the default {{NAME}}.
-# 🪪,Id,Id,Identifier,The props to identify the {{NAME}} within the parent {{PARENT_NAME}}.
-# ↘️,In,Inp,Input,The input for a {{NAME}}.
-# 🗃️,Kt,Kit,Kit,A kit is a collection of designs that use types.
-# 🔍,Ld?,Lod,Level of Detail,The optional Level of Detail/Development/Design (LoD) of the representation. No lod means the default lod.
-# 📛,Na,Nam,Name,The name of the {{NAME}}.
-# ✉️,Mm,Mim,Mime,The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.
-# ⌱,Og,Org,Origin,The origin of the plane.
-# ↗️,Ou,Out,Output,The output for a {{NAME}}.
-# 👪,Pa,Par,Parent,The parent of {{NAME}}.
-# ⚒️,Pr,Prs,Parse,Parse the {{NAME}} from an input.
-# 🔢,Pl,Plu,Plural,The plural of the singular of the entity name.
-# ⭕,Pc,Pce,Piece,A piece is a 3d-instance of a type in a design.
-# ⭕,Pc?,Pces,Pieces,The optional pieces of the design.
-# 🔑,PK,PKy,Primary Key, The {{PROP_NAME}} is the primary key of the {{NAME}} in the database.
-# 🔌,Po,Por,Port,A port is a connection point (with a direction) of a type.
-# 🔌,Po+,Pors,Ports,The ports of the type.
-# 🎫,Pp,Prp,Props,The props are all values of an entity without its children.
-# ◳,Pn,Pln,Plane,A plane is an origin (point) and an orientation (x-axis and y-axis).
-# ◳,Pn?,Pln,Plane,The optional plane of the piece. When pieces are connected only one piece can have a plane.
-# ✖️,Pt,Pnt,Point,A 3d-point (xyz) of floating point numbers.
-# ✖️,Pt,Pnt,Point,The connection point of the port that is attracted to another connection point.
-# 📏,Ql,Qal,Quality,A quality is meta-data for decision making.
-# 📏,Ql*,Qals,Qualities,The optional qualities of the {{NAME}}.
-# 🍾,Rl,Rel,Release,The release of the engine that created this database.
-# ☁️,Rm?,Rmt,Remote,The optional Unique Resource Locator (URL) where to fetch the kit remotely.
-# 💾,Rp,Rep,Representation,A representation is a link to a resource that describes a type for a certain level of detail and tags.
-# 🔄,Rt?,Rot,Rotation,The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.
-# 🧱,Sd,Sde,Side,A side of a piece in a connection.
-# ↔️,Sf,Sft,Shift,The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.
-# 📌,SG?,SGr,Subgroup,The optional sub-group of the locator. No sub-group means true.
-# 📺,SP,SPt,Diagram Point,A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.
-# ✅,Su,Suc,Success,{{NAME}} was successful.
-# 🏷️,Tg*,Tags,Tags,The optional tags to group representations. No tags means default.
-# ↗️,Tl?,Tlt,Tilt,The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.
-# ▦,Tf,Trf,Transform,A 4x4 translation and rotation transformation matrix (no scaling or shearing).
-# 🧩,Ty,Typ,Type,A type is a reusable element that can be connected with other types over ports.
-# 🧩,Ty,Typ,Type,The type-related information of the side.
-# 🧩,Ty*,Typs,Types,The optional types of the kit.
-# 🔗,Ur,Url,Unique Resource Locator,The Unique Resource Locator (URL) to the resource of the representation.
-# Ⓜ️,Ut,Unt,Unit,The length unit for all distance-related information of the {{PARENT_NAME}}.
-# Ⓜ️,Ut,Unt,Unit,The optional unit of the value of the quality.
-# 🔄,Up,Upd,Update,Update the props of the {{NAME}}. Optionally empty the {{NAME}} before.
-# ➡️,Vc,Vec,Vector,A 3d-vector (xyz) of floating point numbers.
-# 🛂,Vd,Vld,Validate,Check if the {{NAME}} is valid.
-# 🏷️,Vl,Val,Value,The value of the tag.
-# 🔢,Vl?,Val,Value,The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
-# 🔀,Vn?,Vnt,Variant,The optional variant of the {{NAME}}. No variant means the default variant.
-# 🏁,X,X,X,The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
-# 🎚️,X,X,X,The x-coordinate of the point.
-# ➡️,XA,XAx,XAxis,The x-axis of the plane.
-# 🏁,Y,Y,Y,The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
-# 🎚️,Y,Y,Y,The y-coordinate of the point.
-# ➡️,YA,YAx,YAxis,The y-axis of the plane.
-# 🏁,Z,Z,Z,The z-coordinate of the screen point.
-# 🎚️,Z,Z,Z,The z-coordinate of the point.
-# ➡️,ZA,ZAx,ZAxis,The z-axis of the plane.
-
-# Imports #
-
-
+# TODO: Get rid of id_ because of bug https://github.com/graphql-python/graphene-sqlalchemy/issues/412
+# endregion TODOs
+# region Imports
 import abc
 import argparse
-import base64
 import datetime
 import difflib
 import enum
@@ -150,9 +57,7 @@ import pathlib
 import shutil
 import signal
 import sqlite3
-import stat
 import sys
-import time
 import typing
 import urllib
 import zipfile
@@ -174,19 +79,24 @@ import PySide6.QtWidgets
 import requests
 import sqlalchemy
 import sqlalchemy.exc
+import sqlalchemy.orm
 import sqlmodel
 import starlette
 import starlette_graphene3
 import uvicorn
 
-# Type Hints #
+# endregion Imports
+
+# region Type Hints
 
 
 RecursiveAnyList = typing.Any | list["RecursiveAnyList"]
 """🔁 A recursive any list is either any or a list where the items are recursive any list."""
 
 
-# Constants #
+# endregion Type Hints
+
+# region Constants
 
 NAME = "semio"
 EMAIL = "mail@semio-tech.com"
@@ -199,7 +109,10 @@ NAME_LENGTH_LIMIT = 64
 ID_LENGTH_LIMIT = 128
 URL_LENGTH_LIMIT = 1024
 URI_LENGTH_LIMIT = 2048
-QUALITIES_MAX = 64
+EXPRESSION_LENGTH_LIMIT = 4096
+VALUE_LENGTH_LIMIT = 512
+ATTRIBUTES_MAX = 64
+QUALITIES_MAX = 1024
 TAGS_MAX = 8
 REPRESENTATIONS_MAX = 32
 TYPES_MAX = 256
@@ -211,9 +124,7 @@ ENCODING_ALPHABET_REGEX = r"[a-zA-Z0-9\-._~%]"
 ENCODING_REGEX = ENCODING_ALPHABET_REGEX + "+"
 KIT_LOCAL_FOLDERNAME = ".semio"
 KIT_LOCAL_FILENAME = "kit.db"
-KIT_LOCAL_SUFFIX = str(
-    pathlib.Path(KIT_LOCAL_FOLDERNAME) / pathlib.Path(KIT_LOCAL_FILENAME)
-)
+KIT_LOCAL_SUFFIX = str(pathlib.Path(KIT_LOCAL_FOLDERNAME) / pathlib.Path(KIT_LOCAL_FILENAME))
 USER_FOLDER = str(pathlib.Path.home() / ".semio")
 CACHE_FOLDER = str(pathlib.Path(USER_FOLDER) / "cache")
 LOG_FOLDER = str(pathlib.Path(USER_FOLDER) / "logs")
@@ -237,27 +148,16 @@ MIMES = {
     ".txt": "text/plain",
 }
 ENCODED_PATH = typing.Annotated[str, fastapi.Path(pattern=ENCODING_REGEX)]
-ENCODED_NAME_AND_VARIANT_PATH = typing.Annotated[
-    str, fastapi.Path(pattern=ENCODING_REGEX + "," + ENCODING_ALPHABET_REGEX + "*")
-]
-ENCODED_NAME_AND_VARIANT_AND_VIEW_PATH = typing.Annotated[
-    str,
-    fastapi.Path(
-        pattern=ENCODING_REGEX
-        + ","
-        + ENCODING_ALPHABET_REGEX
-        + "*"
-        + ","
-        + ENCODING_ALPHABET_REGEX
-        + "*"
-    ),
-]
+ENCODED_NAME_AND_VARIANT_PATH = typing.Annotated[str, fastapi.Path(pattern=ENCODING_REGEX + "," + ENCODING_ALPHABET_REGEX + "*")]
+ENCODED_NAME_AND_VARIANT_AND_VIEW_PATH = typing.Annotated[str, fastapi.Path(pattern=ENCODING_REGEX + "," + ENCODING_ALPHABET_REGEX + "*" + "," + ENCODING_ALPHABET_REGEX + "*")]
 MAX_REQUEST_BODY_SIZE = 50 * 1024 * 1024  # 50MB
 dotenv.load_dotenv()
 ENVS = {key: value for key, value in os.environ.items() if key.startswith("SEMIO_")}
 
 
-# Utility #
+# endregion Constants
+
+# region Utility
 
 
 def encode(value: str) -> str:
@@ -270,8 +170,8 @@ def decode(value: str) -> str:
     return urllib.parse.unquote(value)
 
 
-def encodeList(list: list[str]) -> str:
-    return ",".join([encode(t) for t in list])
+def encodeList(items: list[str]) -> str:
+    return ",".join([encode(t) for t in items])
 
 
 def decodeList(encodedList: str) -> list[str]:
@@ -286,7 +186,7 @@ def encodeRecursiveAnyList(recursiveAnyList: RecursiveAnyList) -> str:
 
 
 # I would just have to prove Applicative <=>. I miss you Haskell (。﹏。)
-def id(recursiveAnyList: RecursiveAnyList) -> str:
+def create_id(recursiveAnyList: RecursiveAnyList) -> str:
     """🆔 Turn any into `encoded(str(any))` or a recursive list into a flat comma [,] separated encoded list."""
     if not isinstance(recursiveAnyList, list):
         return encode(str(recursiveAnyList))
@@ -300,7 +200,7 @@ def pretty(number: float) -> str:
     return f"{number:.5f}".rstrip("0").rstrip(".")
 
 
-def changeValues(c: dict | list, key: str, func: callable) -> None:
+def changeValues(c: dict | list, key: str, func: typing.Callable[[typing.Any], typing.Any]) -> None:
     if isinstance(c, dict):
         if key in c:
             c[key] = func(c[key])
@@ -313,7 +213,7 @@ def changeValues(c: dict | list, key: str, func: callable) -> None:
                 changeValues(v, key, func)
 
 
-def changeKeys(c: dict | list, func: callable) -> None:
+def changeKeys(c: dict | list, func: typing.Callable[[typing.Any], typing.Any]) -> None:
     if isinstance(c, dict):
         for k in list(c.keys()):
             newKey = func(k)
@@ -332,13 +232,17 @@ def normalizeAngle(angle: float) -> float:
     return (angle % 360 + 360) % 360
 
 
-# Logging #
+# endregion Utility
+
+# region Logging
 
 
 logger = loguru.logger
 
 
-# Exceptions #
+# endregion Logging
+
+# region Exceptions
 
 
 # All exceptions define __str__ as a message for the user.
@@ -360,24 +264,21 @@ class ClientError(Error, abc.ABC):
 
 
 class CodeUnreachable(ServerError):
-
     def __str__(self):
         return "🤷 This code should be unreachable."
 
 
 class FeatureNotYetSupported(ServerError):
-
     def __str__(self):
         return "🔜 This feature is not yet supported."
 
 
 class RemoteKitsNotYetSupported(FeatureNotYetSupported):
-
     def __init__(self, uri: str) -> None:
         self.uri = uri
 
     def __str__(self):
-        return f"🔜 Remote kits are not yet supported."
+        return "🔜 Remote kits are not yet supported."
 
 
 class NotFound(ClientError, abc.ABC):
@@ -385,7 +286,6 @@ class NotFound(ClientError, abc.ABC):
 
 
 class PortNotFound(NotFound):
-
     def __init__(self, parent: "Type", id: "PortId") -> None:
         self.parent = parent
         self.id = id
@@ -396,7 +296,6 @@ class PortNotFound(NotFound):
 
 
 class TypeNotFound(NotFound):
-
     def __init__(self, id: "TypeId") -> None:
         self.id = id
 
@@ -417,7 +316,6 @@ class TypeNotFound(NotFound):
 
 
 class KitNotFound(NotFound):
-
     def __init__(self, uri: str) -> None:
         self.uri = uri
 
@@ -426,7 +324,6 @@ class KitNotFound(NotFound):
 
 
 class NoKitToDelete(KitNotFound):
-
     def __init__(self, uri: str) -> None:
         self.uri = uri
 
@@ -435,7 +332,6 @@ class NoKitToDelete(KitNotFound):
 
 
 class KitZipDoesNotContainSemioFolder(KitNotFound):
-
     def __init__(self, uri: str) -> None:
         self.uri = uri
 
@@ -444,7 +340,6 @@ class KitZipDoesNotContainSemioFolder(KitNotFound):
 
 
 class OnlyRemoteKitsCanBeCached(ClientError):
-
     def __init__(self, nonRemoteUri: str) -> None:
         self.nonRemoteUri = nonRemoteUri
 
@@ -461,7 +356,6 @@ class LocalKitUriNotValid(KitUriNotValid, abc.ABC):
 
 
 class LocalKitUriIsNotAbsolute(LocalKitUriNotValid):
-
     def __init__(self, uri: str) -> None:
         self.uri = uri
 
@@ -470,7 +364,6 @@ class LocalKitUriIsNotAbsolute(LocalKitUriNotValid):
 
 
 class LocalKitUriIsNotDirectory(LocalKitUriNotValid):
-
     def __init__(self, uri: str) -> None:
         self.uri = uri
 
@@ -487,42 +380,31 @@ class NoParentAssigned(SpecificationError, abc.ABC):
 
 
 class NoRepresentationAssigned(NoParentAssigned):
-
     def __str__(self):
         return "👪 The entity has no parent representation assigned."
 
 
 class NoTypeAssigned(NoParentAssigned):
-
     def __str__(self):
         return "👪 The entity has no parent type assigned."
 
 
 class NoDesignAssigned(NoParentAssigned):
-
     def __str__(self):
         return "👪 The entity has no parent design assigned."
 
 
 class NoTypeOrDesignAssigned(NoTypeAssigned, NoDesignAssigned):
-
     def __str__(self):
         return "👪 The entity has no parent type or design assigned."
 
 
 class NoKitAssigned(NoParentAssigned):
-
     def __str__(self):
         return "👪 The entity has no parent kit assigned."
 
 
-class NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned(
-    NoRepresentationAssigned,
-    NoTypeAssigned,
-    NoDesignAssigned,
-    NoKitAssigned,
-):
-
+class NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned(NoRepresentationAssigned, NoTypeAssigned, NoDesignAssigned, NoKitAssigned):
     def __str__(self):
         return "👪 The entity has no parent representation, port, type, piece, connection, design or kit assigned."
 
@@ -532,7 +414,6 @@ class AlreadyExists(SpecificationError, abc.ABC):
 
 
 class KitAlreadyExists(AlreadyExists, abc.ABC):
-
     def __init__(self, uri: str) -> None:
         self.uri = uri
 
@@ -541,7 +422,6 @@ class KitAlreadyExists(AlreadyExists, abc.ABC):
 
 
 class TypeHasNotAllUsedPorts(SpecificationError):
-
     def __init__(self, missingPorts: set[str]) -> None:
         self.missingPorts = missingPorts
 
@@ -554,25 +434,19 @@ class Semio(sqlmodel.SQLModel, table=True):
 
     __tablename__ = "semio"
 
-    release: str = sqlmodel.Field(
-        default=RELEASE,
-        primary_key=True,
-        description="🍾 The current release of semio.",
-    )
+    release: str = sqlmodel.Field(default=RELEASE, primary_key=True)
     """🍾 The current release of semio."""
-    engine: str = sqlmodel.Field(
-        default=VERSION,
-        description="⚙️ The version of the engine that created this database.",
-    )
+    engine: str = sqlmodel.Field(default=VERSION)
     """⚙️ The version of the engine that created this database."""
-    created: datetime.datetime = sqlmodel.Field(
-        default_factory=datetime.datetime.now,
-        description="⌚ The time when the database was created.",
-    )
+    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
     """⌚ The time when the database was created."""
 
 
-# Models #
+# endregion Exceptions
+
+# region Modeling
+
+# region Primitives
 
 
 class Model(sqlmodel.SQLModel, abc.ABC):
@@ -592,9 +466,6 @@ class Model(sqlmodel.SQLModel, abc.ABC):
         return self.model_dump()
 
 
-## Fields ##
-
-
 # Composition over inheritance. Literally.
 
 
@@ -608,9 +479,6 @@ class RealField(Field, abc.ABC):
 
 class MaskedField(Field, abc.ABC):
     """🎭 The base for a mask of a field of a model. WYSIWYG but don't expect it to be there."""
-
-
-## Bases ##
 
 
 class Base(Model, abc.ABC):
@@ -641,9 +509,6 @@ class Prediction(Base, abc.ABC):
     """🔮 The base for predictions. All fields that are required to predict the entity by a llm."""
 
 
-## Entities ##
-
-
 class Entity(Model, abc.ABC):
     """▢ The base for entities. All fields and behavior of the entity."""
 
@@ -661,7 +526,7 @@ class Entity(Model, abc.ABC):
 
     def id(self) -> str:
         """🆔 The id of the entity within its parent."""
-        return id(self.idMembers())
+        return create_id(self.idMembers())
 
     def guid(self) -> str:
         """🆔 A Globally Unique Identifier (GUID) of the entity."""
@@ -678,11 +543,14 @@ class Entity(Model, abc.ABC):
     # @abc.abstractmethod
     def empty(self) -> "Entity":
         """🪣 Empty all props and children of the entity."""
+        return self.__class__()
 
     # TODO: Automatic updating based on props.
     # @abc.abstractmethod
     def update(self, other: "Entity") -> "Entity":
         """🔄 Update the props of the entity."""
+        return self
+        return self
 
 
 class Table(Model, abc.ABC):
@@ -696,230 +564,110 @@ class TableEntity(Entity, Table, abc.ABC):
     """📛 The lowercase name of the table in the database."""
 
 
-### Qualities ###
+# endregion Primitives
+
+# region Domain
+
+# region Attribute
+# https://github.com/usalu/semio-attribute-
 
 
-class QualityNameField(RealField, abc.ABC):
-    """📏 The name of the quality."""
-
-    name: str = sqlmodel.Field(
-        max_length=NAME_LENGTH_LIMIT,
-        description="📏 The name of the quality.",
-    )
-    """📏 The name of the quality."""
+class AttributeKeyField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 
-class QualityValueField(RealField, abc.ABC):
-    """📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name."""
-
-    value: str = sqlmodel.Field(
-        default="",
-        max_length=NAME_LENGTH_LIMIT,
-        description="📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
-    )
-    """📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name."""
+class AttributeValueField(RealField, abc.ABC):
+    value: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
-class QualityUnitField(RealField, abc.ABC):
-    """📏 The optional unit of the value of the quality."""
-
-    unit: str = sqlmodel.Field(
-        default="",
-        max_length=NAME_LENGTH_LIMIT,
-        description="📏 The optional unit of the value of the quality.",
-    )
-    """📏 The optional unit of the value of the quality."""
+class AttributeDefinitionField(RealField, abc.ABC):
+    definition: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
-class QualityDefinitionField(RealField, abc.ABC):
-    """📏 The optional definition [ text | uri ] of the quality."""
-
-    definition: str = sqlmodel.Field(
-        default="",
-        max_length=DESCRIPTION_LENGTH_LIMIT,
-        description="📏 The optional definition [ text | uri ] of the quality.",
-    )
-    """📏 The optional definition [ text | uri ] of the quality."""
+class AttributeId(AttributeKeyField, Id):
+    pass
 
 
-class QualityId(QualityNameField, Id):
-    """🪪 The props to identify the quality within the parent type."""
+class AttributeProps(AttributeDefinitionField, AttributeValueField, AttributeKeyField, Props):
+    pass
 
 
-class QualityProps(
-    QualityDefinitionField,
-    QualityUnitField,
-    QualityValueField,
-    QualityNameField,
-    Props,
-):
-    """📏 A quality is a named value with a unit and a definition."""
+class AttributeInput(AttributeDefinitionField, AttributeValueField, AttributeKeyField, Input):
+    pass
 
 
-class QualityInput(
-    QualityDefinitionField, QualityUnitField, QualityValueField, QualityNameField, Input
-):
-    """📏 A quality is a named value with a unit and a definition."""
+class AttributeContext(AttributeValueField, AttributeKeyField, Context):
+    pass
 
 
-class QualityContext(QualityUnitField, QualityValueField, QualityNameField, Context):
-    """📏 A quality is a named value with a unit and a definition."""
+class AttributeOutput(AttributeDefinitionField, AttributeValueField, AttributeKeyField, Output):
+    pass
 
 
-class QualityOutput(
-    QualityDefinitionField,
-    QualityUnitField,
-    QualityValueField,
-    QualityNameField,
-    Output,
-):
-    """📏 A quality is a named value with a unit and a definition."""
+class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField, TableEntity, table=True):
+    PLURAL = "attributes"
+    __tablename__ = "attributes"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    representationPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("representation_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("representations.id")), default=None, exclude=True)
+    representation: typing.Optional["Representation"] = sqlmodel.Relationship(back_populates="attributes")
+    portPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
+    port: typing.Optional["Port"] = sqlmodel.Relationship(back_populates="attributes")
+    typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
+    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="attributes")
+    piecePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("pieces.id")), default=None, exclude=True)
+    piece: typing.Optional["Piece"] = sqlmodel.Relationship(back_populates="attributes")
+    connectionPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("connection_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connections.id")), default=None, exclude=True)
+    connection: typing.Optional["Connection"] = sqlmodel.Relationship(back_populates="attributes")
+    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="attributes")
+    kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
+    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="attributes")
+    qualityPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("quality_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("qualities.id")), default=None, exclude=True)
+    quality: typing.Optional["Quality"] = sqlmodel.Relationship(back_populates="attributes")
+    propPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("prop_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("props.id")), default=None, exclude=True)
+    prop: typing.Optional["Prop"] = sqlmodel.Relationship(back_populates="attributes")
+    authorPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("author_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("authors.id")), default=None, exclude=True)
+    author: typing.Optional["Author"] = sqlmodel.Relationship(back_populates="attributes")
+    locationPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("location_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("locations.id")), default=None, exclude=True)
+    location: typing.Optional["Location"] = sqlmodel.Relationship(back_populates="attributes")
+    benchmarkPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("benchmark_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("benchmarks.id")), default=None, exclude=True)
+    benchmark: typing.Optional["Benchmark"] = sqlmodel.Relationship(back_populates="attributes")
 
-
-class Quality(
-    QualityDefinitionField,
-    QualityUnitField,
-    QualityValueField,
-    QualityNameField,
-    TableEntity,
-    table=True,
-):
-    """📏 A quality is a named value with a unit and a definition."""
-
-    PLURAL = "qualities"
-    __tablename__ = "quality"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The primary key of the quality in the database."""
-    representationPk: typing.Optional[int] = sqlmodel.Field(
-        # alias="representationId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        sa_column=sqlmodel.Column(
-            "representation_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("representation.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The foreign primary key of the parent representation of the quality in the database."""
-    representation: typing.Optional["Representation"] = sqlmodel.Relationship(
-        back_populates="qualities"
-    )
-    """👪 The parent representation of the quality."""
-    portPk: typing.Optional[int] = sqlmodel.Field(
-        # alias="portId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        sa_column=sqlmodel.Column(
-            "port_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("port.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The foreign primary key of the parent port of the quality in the database."""
-    port: typing.Optional["Port"] = sqlmodel.Relationship(back_populates="qualities")
-    """👪 The parent port of the quality."""
-    typePk: typing.Optional[int] = sqlmodel.Field(
-        # alias="typeId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        sa_column=sqlmodel.Column(
-            "type_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("type.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The foreign primary key of the parent type of the quality in the database."""
-    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="qualities")
-    """👪 The parent type of the quality."""
-    piecePk: typing.Optional[int] = sqlmodel.Field(
-        # alias="pieceId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        sa_column=sqlmodel.Column(
-            "piece_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("piece.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The foreign primary key of the parent piece of the quality in the database."""
-    piece: typing.Optional["Piece"] = sqlmodel.Relationship(back_populates="qualities")
-    """👪 The parent piece of the quality."""
-    connectionPk: typing.Optional[int] = sqlmodel.Field(
-        # alias="connectionId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        sa_column=sqlmodel.Column(
-            "connection_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("connection.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The foreign primary key of the parent connection of the quality in the database."""
-    connection: typing.Optional["Connection"] = sqlmodel.Relationship(
-        back_populates="qualities"
-    )
-    """👪 The parent connection of the quality."""
-    designPk: typing.Optional[int] = sqlmodel.Field(
-        # alias="designId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        sa_column=sqlmodel.Column(
-            "design_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("design.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The foreign primary key of the parent design of the quality in the database."""
-    design: typing.Optional["Design"] = sqlmodel.Relationship(
-        back_populates="qualities"
-    )
-    kitPk: typing.Optional[int] = sqlmodel.Field(
-        # alias="kitId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        sa_column=sqlmodel.Column(
-            "kit_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("kit.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The foreign primary key of the parent kit of the quality in the database."""
-    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="qualities")
-    """👪 The parent kit of the quality."""
-    __tableargs__ = (
+    __table_args__ = (
         sqlalchemy.CheckConstraint(
             """
         (
-            (representation_id IS NOT NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+            (representation_id IS NOT NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+            (representation_id IS NULL AND port_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
+        OR
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NOT NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
+        OR
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NOT NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
+        OR
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NOT NULL AND location_id IS NULL AND benchmark_id IS NULL)
+        OR
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NOT NULL AND benchmark_id IS NULL)
+        OR
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NOT NULL)
         )
         """,
-            name="parent set",
+            name="ck_attributes_parent_set",
         ),
-        sqlalchemy.UniqueConstraint("name", "type_id", "design_id"),
+        sqlalchemy.UniqueConstraint("name", "type_id", "design_id", name="uq_attributes_name_type_id_design_id"),
     )
 
-    def parent(
-        self,
-    ) -> typing.Union[
-        "Representation", "Port", "Type", "Piece", "Connection", "Design", "Kit", None
-    ]:
-        """👪 The parent type or design of the quality or otherwise `NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned` is raised."""
+    def parent(self) -> typing.Union["Representation", "Port", "Type", "Piece", "Connection", "Design", "Kit", "Quality", "Prop", "Author", "Location", "Benchmark", None]:
         if self.representation is not None:
             return self.representation
         if self.port is not None:
@@ -934,226 +682,125 @@ class Quality(
             return self.design
         if self.kit is not None:
             return self.kit
+        if self.quality is not None:
+            return self.quality
+        if self.prop is not None:
+            return self.prop
+        if self.author is not None:
+            return self.author
+        if self.location is not None:
+            return self.location
+        if self.benchmark is not None:
+            return self.benchmark
         raise NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned()
 
     def idMembers(self) -> RecursiveAnyList:
-        """🪪 The members that form the id of the quality within its parent type."""
         return self.name
 
 
-### Tags
+# endregion Attribute
+
+# region Tag
+# https://github.com/usalu/semio-tag-
 
 
 class TagNameField(RealField, abc.ABC):
-    """📛 The name of the tag."""
-
-    name: str = sqlmodel.Field(
-        max_length=NAME_LENGTH_LIMIT,
-        description="📛 The name of the tag.",
-    )
-    """📛 The name of the tag."""
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class TagOrderField(RealField, abc.ABC):
-    """🔢 The order of the tag."""
-
-    order: int = sqlmodel.Field(
-        default=0,
-        description="🔢 The order of the tag.",
-    )
-    """🔢 The order of the tag."""
+    order: int = sqlmodel.Field(default=0)
 
 
 class Tag(TagOrderField, TagNameField, Table, table=True):
-    """🏷️ A tag is a label to group representations."""
-
-    __tablename__ = "tag"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The primary key of the tag in the database."""
-    representationPk: typing.Optional[int] = sqlmodel.Field(
-        # alias="representationId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        sa_column=sqlmodel.Column(
-            "representation_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("representation.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The foreign primary key of the parent representation of the tag in the database."""
-    representation: typing.Optional["Representation"] = sqlmodel.Relationship(
-        back_populates="tags_"
-    )
-    """👪 The parent type of the representation."""
+    __tablename__ = "tags"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    representationPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("representation_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("representations.id")), default=None, exclude=True)
+    representation: typing.Optional["Representation"] = sqlmodel.Relationship(back_populates="tags_")
 
 
-### Representations
+# endregion Tag
+
+# region Concept
+
+
+class Concept(TagOrderField, TagNameField, Table, table=True):
+    __tablename__ = "concepts"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
+    typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
+    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
+    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="concepts_")
+    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="concepts_")
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="concepts_")
+
+
+# endregion Concept
+
+# region Representation
+# https://github.com/usalu/semio-representation-
 
 
 class RepresentationUrlField(RealField, abc.ABC):
-    """🔗 The Unique Resource Locator (URL) to the resource of the representation."""
-
-    url: str = sqlmodel.Field(
-        max_length=URL_LENGTH_LIMIT,
-        description="🔗 The Unique Resource Locator (URL) to the resource of the representation.",
-    )
-    """🔗 The Unique Resource Locator (URL) to the resource of the representation."""
+    url: str = sqlmodel.Field(max_length=URL_LENGTH_LIMIT)
 
 
 class RepresentationDescriptionField(RealField, abc.ABC):
-    """💬 The optional human-readable description of the representation."""
-
-    description: str = sqlmodel.Field(
-        default="",
-        max_length=DESCRIPTION_LENGTH_LIMIT,
-        description="💬 The optional human-readable description of the representation.",
-    )
-    """💬 The optional human-readable description of the representation."""
+    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class RepresentationTagsField(MaskedField, abc.ABC):
-    """🏷️ The optional tags to group representations. No tags means default."""
-
-    tags: list[str] = sqlmodel.Field(
-        default_factory=list,
-        description="🏷️ The optional tags to group representations. No tags means default.",
-    )
-    """🏷️ The optional tags to group representations. No tags means default."""
+    tags: list[str] = sqlmodel.Field(default_factory=list)
 
 
 class RepresentationId(RepresentationTagsField, Id):
-    """💾 A representation is a link to a resource that describes a type for a certain level of detail and tags."""
-
     pass
 
 
-class RepresentationProps(
-    RepresentationTagsField,
-    RepresentationDescriptionField,
-    RepresentationUrlField,
-    Props,
-):
-    """🎫 The props of a representation."""
+class RepresentationProps(RepresentationTagsField, RepresentationDescriptionField, RepresentationUrlField, Props):
+    pass
 
 
-class RepresentationInput(
-    RepresentationTagsField,
-    RepresentationDescriptionField,
-    RepresentationUrlField,
-    Input,
-):
-    """💾 A representation is a link to a resource that describes a type for a certain level of detail and tags."""
-
-    qualities: list[QualityInput] = sqlmodel.Field(
-        default_factory=list,
-        description="📏 The qualities of the representation.",
-    )
-    """📏 The qualities of the representation."""
+class RepresentationInput(RepresentationTagsField, RepresentationDescriptionField, RepresentationUrlField, Input):
+    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
 
-class RepresentationContext(
-    RepresentationTagsField,
-    RepresentationDescriptionField,
-    Context,
-):
-    """💾 A representation is a link to a resource that describes a type for a certain level of detail and tags."""
-
-    qualities: list[QualityContext] = sqlmodel.Field(
-        default_factory=list,
-        description="📏 The qualities of the representation.",
-    )
-    """📏 The qualities of the representation."""
+class RepresentationContext(RepresentationTagsField, RepresentationDescriptionField, Context):
+    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
 
-class RepresentationOutput(
-    RepresentationTagsField,
-    RepresentationDescriptionField,
-    RepresentationUrlField,
-    Output,
-):
-    """💾 A representation is a link to a resource that describes a type for a certain level of detail and tags."""
-
-    qualities: list[QualityOutput] = sqlmodel.Field(
-        default_factory=list,
-        description="📏 The qualities of the representation.",
-    )
-    """📏 The qualities of the representation."""
+class RepresentationOutput(RepresentationTagsField, RepresentationDescriptionField, RepresentationUrlField, Output):
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 
-class Representation(
-    RepresentationDescriptionField,
-    RepresentationUrlField,
-    TableEntity,
-    table=True,
-):
-    """💾 A representation is a link to a resource that describes a type for a certain level of detail and tags."""
-
+class Representation(RepresentationDescriptionField, RepresentationUrlField, TableEntity, table=True):
     PLURAL = "representations"
-    __tablename__ = "representation"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The primary key of the representation in the database."""
-    tags_: list[Tag] = sqlmodel.Relationship(
-        back_populates="representation", cascade_delete=True
-    )
-    """🧑 The real tags of the representation in the database."""
-    qualities: list[Quality] = sqlmodel.Relationship(
-        back_populates="representation", cascade_delete=True
-    )
-    """📏 The qualities of the type."""
-    typePk: typing.Optional[int] = sqlmodel.Field(
-        # alias="typeId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        sa_column=sqlmodel.Column(
-            "type_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("type.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The foreign primary key of the parent type of the representation in the database."""
-    type: typing.Optional["Type"] = sqlmodel.Relationship(
-        back_populates="representations"
-    )
-    """👪 The parent type of the representation."""
+    __tablename__ = "representations"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    tags_: list[Tag] = sqlmodel.Relationship(back_populates="representation", cascade_delete=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="representation", cascade_delete=True)
+    typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")), default=None, exclude=True)
+    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="representations")
 
     @property
     def tags(self: "Representation") -> list[str]:
-        """↗️ Get the masked tags of the representation."""
         return [tag.name for tag in sorted(self.tags_, key=lambda x: x.order)]
 
     @tags.setter
     def tags(self: "Representation", tags: list[str]):
-        """↘️ Set the masked tags of the representation."""
         self.tags_ = [Tag(name=tag, order=i) for i, tag in enumerate(tags)]
 
     def parent(self: "Representation") -> "Type":
-        """👪 The parent type of the representation or otherwise `NoTypeAssigned` is raised."""
         if self.type is None:
             raise NoTypeAssigned()
         return self.type
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
-    def parse(
-        cls: "Representation",
-        input: str | dict | RepresentationInput | typing.Any | None,
-    ) -> "Representation":
-        """⚒️ Parse the representation from an input."""
+    def parse(cls, input: str | dict | RepresentationInput | typing.Any | None) -> "Representation":
         if input is None:
-            return cls()
-        obj = (
-            json.loads(input)
-            if isinstance(input, str)
-            else input if isinstance(input, dict) else input.__dict__
-        )
+            return cls(url="")
+        obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
         props = RepresentationProps.model_validate(obj)
         entity = cls(**props.model_dump())
         try:
@@ -1161,7 +808,7 @@ class Representation(
         except KeyError:
             pass
         try:
-            entity.qualities = [Quality.parse(quality) for quality in obj["qualities"]]
+            entity.attributes = [typing.cast(Attribute, Attribute.parse(attribute)) for attribute in obj["attributes"]]
         except KeyError:
             pass
         return entity
@@ -1172,29 +819,23 @@ class Representation(
         # Probably some sqlmodel issue with transient objects that are never written to the database.
         # 'str' object has no attribute 'order'
         # entity["tags"] = self.tags
-        entity["qualities"] = [q.dump() for q in self.qualities]
+        entity["attributes"] = [q.dump() for q in self.attributes]
         return RepresentationOutput(**entity)
 
     # TODO: Automatic derive from Id model.
     def idMembers(self) -> RecursiveAnyList:
-        """🪪 The members that form the id of the representation within its parent type."""
         return [self.tags]
 
 
-### Diagram Points ###
+# endregion Representation
+
+# region DiagramPoint
+# https://github.com/usalu/semio-diagrampoint-
 
 
 class DiagramPoint(Model):
-    """📺 A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon."""
-
-    x: float = sqlmodel.Field(
-        description="🏁 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
-    )
-    """🏁 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."""
-    y: float = sqlmodel.Field(
-        description="🏁 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."
-    )
-    """🏁 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."""
+    x: float = sqlmodel.Field()
+    y: float = sqlmodel.Field()
 
     def __str__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}]"
@@ -1221,33 +862,31 @@ class DiagramPoint(Model):
 
 
 class DiagramPointInput(DiagramPoint, Input):
-    """📺 A 2d-point (xy) of integers in screen coordinate system."""
+    pass
 
 
 class DiagramPointContext(DiagramPoint, Context):
-    """📺 A 2d-point (xy) of integers in screen coordinate system."""
+    pass
 
 
 class DiagramPointOutput(DiagramPoint, Output):
-    """📺 A 2d-point (xy) of integers in screen coordinate system."""
+    pass
 
 
 class DiagramPointPrediction(DiagramPoint, Prediction):
-    """📺 A 2d-point (xy) of integers in screen coordinate system."""
+    pass
 
 
-### Points ###
+# endregion DiagramPoint
+
+# region Point
+# https://github.com/usalu/semio-point-
 
 
 class Point(Model):
-    """✖️ A 3d-point (xyz) of floating point numbers."""
-
-    x: float = sqlmodel.Field(description="🎚️ The x-coordinate of the point.")
-    """🎚️ The x-coordinate of the point."""
-    y: float = sqlmodel.Field(description="🎚️ The y-coordinate of the point.")
-    """🎚️ The y-coordinate of the point."""
-    z: float = sqlmodel.Field(description="🎚️ The z-coordinate of the point.")
-    """🎚️ The z-coordinate of the point."""
+    x: float = sqlmodel.Field()
+    y: float = sqlmodel.Field()
+    z: float = sqlmodel.Field()
 
     # def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0):
     #     super().__init__(x=x, y=y, z=z)
@@ -1289,29 +928,27 @@ class Point(Model):
 
 
 class PointInput(Point, Input):
-    """✖️ A 3d-point (xyz) of floating point numbers."""
+    pass
 
 
 class PointContext(Point, Context):
-    """✖️ A 3d-point (xyz) of floating point numbers."""
+    pass
 
 
 class PointOutput(Point, Output):
-    """✖️ A 3d-point (xyz) of floating point numbers."""
+    pass
 
 
-### Vectors ###
+# endregion Point
+
+# region Vector
+# https://github.com/usalu/semio-vector-
 
 
 class Vector(Model):
-    """➡️ A 3d-vector (xyz) of floating point numbers."""
-
-    x: float = sqlmodel.Field(description="🎚️ The x-coordinate of the vector.")
-    """🎚️ The x-coordinate of the vector."""
-    y: float = sqlmodel.Field(description="🎚️ The y-coordinate of the vector.")
-    """🎚️ The y-coordinate of the vector."""
-    z: float = sqlmodel.Field(description="🎚️ The z-coordinate of the vector.")
-    """🎚️ The z-coordinate of the vector."""
+    x: float = sqlmodel.Field()
+    y: float = sqlmodel.Field()
+    z: float = sqlmodel.Field()
 
     # def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0):
     #     super().__init__(x=x, y=y, z=z)
@@ -1391,150 +1028,64 @@ class Vector(Model):
 
 
 class VectorInput(Vector, Input):
-    """➡️ A 3d-vector (xyz) of floating point numbers."""
+    pass
 
 
 class VectorContext(Vector, Context):
-    """➡️ A 3d-vector (xyz) of floating point numbers."""
+    pass
 
 
 class VectorOutput(Vector, Output):
-    """➡️ A 3d-vector (xyz) of floating point numbers."""
+    pass
 
 
-### Planes ### TODO
+# endregion Vector
+
+# region Plane
+# https://github.com/usalu/semio-plane-
 
 
 class PlaneOriginField(MaskedField, abc.ABC):
-    """⌱ The origin of the plane."""
-
-    origin: Point = sqlmodel.Field(description="⌱ The origin of the plane.")
-    """⌱ The origin of the plane."""
+    origin: Point = sqlmodel.Field()
 
 
 class PlaneXAxisField(MaskedField, abc.ABC):
-    """➡️ The x-axis of the plane."""
-
-    xAxis: Vector = sqlmodel.Field(description="➡️ The x-axis of the plane.")
-    """➡️ The x-axis of the plane."""
+    xAxis: Vector = sqlmodel.Field()
 
 
 class PlaneYAxisField(MaskedField, abc.ABC):
-    """➡️ The y-axis of the plane."""
-
-    yAxis: Vector = sqlmodel.Field(description="➡️ The y-axis of the plane.")
-    """➡️ The y-axis of the plane."""
+    yAxis: Vector = sqlmodel.Field()
 
 
 class PlaneInput(Input):
-    """◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
-
-    origin: PointInput = sqlmodel.Field(description="⌱ The origin of the plane.")
-    """⌱ The origin of the plane."""
-    xAxis: VectorInput = sqlmodel.Field(description="➡️ The x-axis of the plane.")
-    """➡️ The x-axis of the plane."""
-    yAxis: VectorInput = sqlmodel.Field(description="➡️ The y-axis of the plane.")
-    """➡️ The y-axis of the plane."""
+    origin: PointInput = sqlmodel.Field()
+    xAxis: VectorInput = sqlmodel.Field()
+    yAxis: VectorInput = sqlmodel.Field()
 
 
 class PlaneContext(Context):
-    """◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
-
-    origin: PointContext = sqlmodel.Field(description="⌱ The origin of the plane.")
-    """⌱ The origin of the plane."""
-    xAxis: VectorContext = sqlmodel.Field(description="➡️ The x-axis of the plane.")
-    """➡️ The x-axis of the plane."""
-    yAxis: VectorContext = sqlmodel.Field(description="➡️ The y-axis of the plane.")
-    """➡️ The y-axis of the plane."""
+    origin: PointContext = sqlmodel.Field()
+    xAxis: VectorContext = sqlmodel.Field()
+    yAxis: VectorContext = sqlmodel.Field()
 
 
 class PlaneOutput(PlaneYAxisField, PlaneXAxisField, PlaneOriginField, Output):
-    """◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
+    pass
 
 
 class Plane(Table, table=True):
-    """◳ A plane is an origin (point) and an orientation (x-axis and y-axis)."""
-
-    __tablename__ = "plane"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The primary key of the plane in the database."""
-    originX: float = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "origin_x",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-    )
-    """🎚️ The x-coordinate of the origin point of the plane."""
-    originY: float = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "origin_y",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-    )
-    """🎚️ The y-coordinate of the origin point of the plane."""
-    originZ: float = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "origin_z",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-    )
-    """🎚️ The z-coordinate of the origin point of the plane."""
-    xAxisX: float = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "x_axis_x",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-    )
-    """🎚️ The x-coordinate of the x-axis vector of the plane."""
-    xAxisY: float = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "x_axis_y",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-    )
-    """🎚️ The y-coordinate of the x-axis vector of the plane."""
-    xAxisZ: float = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "x_axis_z",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-    )
-    """🎚️ The z-coordinate of the x-axis vector of the plane."""
-    yAxisX: float = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "y_axis_x",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-    )
-    """🎚️ The x-coordinate of the y-axis vector of the plane."""
-    yAxisY: float = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "y_axis_y",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-    )
-    """🎚️ The y-coordinate of the y-axis vector of the plane."""
-    yAxisZ: float = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "y_axis_z",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-    )
+    __tablename__ = "planes"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    originX: float = sqlmodel.Field(sa_column=sqlmodel.Column("origin_x", sqlalchemy.Float()), exclude=True)
+    originY: float = sqlmodel.Field(sa_column=sqlmodel.Column("origin_y", sqlalchemy.Float()), exclude=True)
+    originZ: float = sqlmodel.Field(sa_column=sqlmodel.Column("origin_z", sqlalchemy.Float()), exclude=True)
+    xAxisX: float = sqlmodel.Field(sa_column=sqlmodel.Column("x_axis_x", sqlalchemy.Float()), exclude=True)
+    xAxisY: float = sqlmodel.Field(sa_column=sqlmodel.Column("x_axis_y", sqlalchemy.Float()), exclude=True)
+    xAxisZ: float = sqlmodel.Field(sa_column=sqlmodel.Column("x_axis_z", sqlalchemy.Float()), exclude=True)
+    yAxisX: float = sqlmodel.Field(sa_column=sqlmodel.Column("y_axis_x", sqlalchemy.Float()), exclude=True)
+    yAxisY: float = sqlmodel.Field(sa_column=sqlmodel.Column("y_axis_y", sqlalchemy.Float()), exclude=True)
+    yAxisZ: float = sqlmodel.Field(sa_column=sqlmodel.Column("y_axis_z", sqlalchemy.Float()), exclude=True)
     piece: typing.Optional["Piece"] = sqlmodel.Relationship(back_populates="plane")
-    """👪 The parent piece of the plane."""
 
     # def __init__(
     #     self, origin: Point = None, xAxis: Vector = None, yAxis: Vector = None
@@ -1632,16 +1183,10 @@ class Plane(Table, table=True):
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
-    def parse(
-        cls: "Plane", input: str | dict | PlaneInput | typing.Any | None
-    ) -> "Plane":
+    def parse(cls: "Plane", input: str | dict | PlaneInput | typing.Any | None) -> "Plane":
         if input is None:
             return cls()
-        obj = (
-            json.loads(input)
-            if isinstance(input, str)
-            else input if isinstance(input, dict) else input.__dict__
-        )
+        obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
         origin = Point.model_validate(obj["origin"])
         xAxis = Vector.model_validate(obj["xAxis"])
         yAxis = Vector.model_validate(obj["yAxis"])
@@ -1659,564 +1204,146 @@ class Plane(Table, table=True):
         return PlaneOutput(**entity)
 
 
-# ### Rotations ### TODO
+# endregion Plane
 
-
-# class Rotation(Model):
-#     """🔄 A rotation is an axis and an angle."""
-
-#     axis: Vector
-#     angle: float
-
-#     def __init__(self, axis: Vector, angle: float):
-#         super().__init__(axis=axis, angle=angle)
-
-#     def toTransform(self) -> "Transform":
-#         return Transform.fromRotation(self)
-
-
-# ### Transforms ### TODO
-
-
-# class Transform(numpy.ndarray):
-#     """▦ A 4x4 translation and rotation transformation matrix (no scaling or shearing)."""
-
-#     def __new__(cls, input_array=None):
-#         if input_array is None:
-#             input_array = numpy.eye(4, dtype=float)
-#         else:
-#             input_array = numpy.asarray(input_array).astype(float)
-#         obj = input_array.view(cls)
-#         return obj
-
-#     def __array_finalize__(self, obj):
-#         if obj is None:
-#             return
-
-#     def __str__(self) -> str:
-#         rounded_self = self.round()
-#         return f"Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})"
-
-#     def __repr__(self) -> str:
-#         rounded_self = self.round()
-#         return f"Transform(Rotation={rounded_self.rotation}, Translation={rounded_self.translation})"
-
-#     @property
-#     def rotation(self) -> Rotation | None:
-#         """🔄 The rotation part of the transform."""
-#         rotationMatrix = self[:3, :3]
-#         axisAngle = axis_angle_from_matrix(rotationMatrix)
-#         if axisAngle[3] == 0:
-#             return None
-#         return Rotation(
-#             axis=Vector(float(axisAngle[0]), float(axisAngle[1]), float(axisAngle[2])),
-#             angle=float(numpy.degrees(axisAngle[3])),
-#         )
-
-#     @property
-#     def translation(self) -> Vector:
-#         """➡️ The translation part of the transform."""
-#         return Vector(*self[:3, 3])
-
-#     # for pydantic
-#     def dict(self) -> typing.Dict[str, typing.Union[Rotation, Vector]]:
-#         return {
-#             "rotation": self.rotation,
-#             "translation": self.translation,
-#         }
-
-#     def after(self, before: "Transform") -> "Transform":
-#         """✖️ Apply this transform after another transform.
-
-#         Args:
-#             before (Transform): Transform to apply before this transform.
-
-#         Returns:
-#             Transform: New transform.
-#         """
-#         return Transform(concat(before, self))
-
-#     def invert(self) -> "Transform":
-#         return Transform(invert_transform(self))
-
-#     def transformPoint(self, point: Point) -> Point:
-#         transformedPoint = transform(self, vector_to_point(point))
-#         return Point(*transformedPoint[:3])
-
-#     def transformVector(self, vector: Vector) -> Vector:
-#         transformedVector = transform(self, vector_to_direction(vector))
-#         return Vector(*transformedVector[:3])
-
-#     def transformPlane(self, plane: Plane) -> Plane:
-#         planeTransform = Transform.fromPlane(plane)
-#         planeTransformed = planeTransform.after(self)
-#         return Transform.toPlane(planeTransformed)
-
-#     def transform(
-#         self, geometry: typing.Union[Point, Vector, Plane]
-#     ) -> typing.Union[Point, Vector, Plane]:
-#         if isinstance(geometry, Point):
-#             return self.transformPoint(geometry)
-#         elif isinstance(geometry, Vector):
-#             return self.transformVector(geometry)
-#         elif isinstance(geometry, Plane):
-#             return self.transformPlane(geometry)
-#         else:
-#             raise FeatureNotYetSupported()
-
-#     def round(self, decimals: int = SIGNIFICANT_DIGITS) -> "Transform":
-#         return Transform(super().round(decimals=decimals))
-
-#     @staticmethod
-#     def fromTranslation(vector: Vector) -> "Transform":
-#         return Transform(
-#             transform_from(
-#                 [
-#                     [1, 0, 0],
-#                     [0, 1, 0],
-#                     [0, 0, 1],
-#                 ],
-#                 vector,
-#             )
-#         )
-
-#     @staticmethod
-#     def fromRotation(rotation: Rotation) -> "Transform":
-#         return Transform(
-#             transform_from(
-#                 matrix_from_axis_angle((*rotation.axis, radians(rotation.angle))),
-#                 Vector(),
-#             )
-#         )
-
-#     @staticmethod
-#     def fromPlane(plane: Plane) -> "Transform":
-#         # Assumes plane is normalized
-#         return Transform(
-#             transform_from(
-#                 [
-#                     [
-#                         plane.xAxis.x,
-#                         plane.yAxis.x,
-#                         plane.zAxis.x,
-#                     ],
-#                     [
-#                         plane.xAxis.y,
-#                         plane.yAxis.y,
-#                         plane.zAxis.y,
-#                     ],
-#                     [
-#                         plane.xAxis.z,
-#                         plane.yAxis.z,
-#                         plane.zAxis.z,
-#                     ],
-#                 ],
-#                 plane.origin,
-#             )
-#         )
-
-#     @staticmethod
-#     def fromAngle(axis: Vector, angle: float) -> "Transform":
-#         return Transform(
-#             transform_from(matrix_from_axis_angle((*axis, radians(angle))), Vector())
-#         )
-
-#     @staticmethod
-#     def fromDirections(startDirection: Vector, endDirection: Vector) -> "Transform":
-#         if startDirection.isCloseTo(endDirection):
-#             return Transform()
-#         axisAngle = axis_angle_from_two_directions(startDirection, endDirection)
-#         return Transform(transform_from(matrix_from_axis_angle(axisAngle), Vector()))
-
-#     def toPlane(self) -> Plane:
-#         return Plane(
-#             origin=Point(*self[:3, 3]),
-#             xAxis=Vector(
-#                 self[0, 0],
-#                 self[1, 0],
-#                 self[2, 0],
-#             ),
-#             yAxis=Vector(
-#                 self[0, 1],
-#                 self[1, 1],
-#                 self[2, 1],
-#             ),
-#         )
-
-
-### CompatibleFamily
+# region CompatibleFamily
+# https://github.com/usalu/semio-compatiblefamily-
 
 
 class CompatibleFamilyNameField(RealField, abc.ABC):
-    """📛 The name of the compatible port family."""
-
-    name: str = sqlmodel.Field(
-        max_length=NAME_LENGTH_LIMIT,
-        description="📛 The name of the compatible port family.",
-    )
-    """📛 The name of the compatible port family."""
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class CompatibleFamilyOrderField(RealField, abc.ABC):
-    """🔢 The order of the compatible port family."""
-
-    order: int = sqlmodel.Field(
-        description="🔢 The order of the compatible port family.",
-    )
-    """🔢 The order of the compatible port family."""
+    order: int = sqlmodel.Field()
 
 
-class CompatibleFamily(
-    CompatibleFamilyOrderField, CompatibleFamilyNameField, Table, table=True
-):
-    """✅ A compatible family is a label to group representations."""
-
-    __tablename__ = "compatible_family"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The primary key of the compatible port family in the database."""
-    portPk: typing.Optional[int] = sqlmodel.Field(
-        # alias="portId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        sa_column=sqlmodel.Column(
-            "port_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("port.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The foreign primary key of the parent port of the compatible port family in the database."""
-    port: typing.Optional["Port"] = sqlmodel.Relationship(
-        back_populates="compatibleFamilies_"
-    )
-    """👪 The parent type of the compatible port family."""
+class CompatibleFamily(CompatibleFamilyOrderField, CompatibleFamilyNameField, Table, table=True):
+    __tablename__ = "compatible_families"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    portPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
+    port: typing.Optional["Port"] = sqlmodel.Relationship(back_populates="compatibleFamilies_")
 
 
-### Ports ###
+# endregion CompatibleFamily
+
+# region Port
+# https://github.com/usalu/semio-port-
 
 
 class PortIdField(MaskedField, abc.ABC):
-    """🆔 The id of the port."""
-
-    id_: str = sqlmodel.Field(
-        default="",
-        # alias="id", # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        max_length=ID_LENGTH_LIMIT,
-        description="🆔 The id of the port.",
-    )
-    """🆔 The id of the port."""
+    id_: str = sqlmodel.Field(default="", max_length=ID_LENGTH_LIMIT)
 
 
 class PortDescriptionField(RealField, abc.ABC):
-    """💬 The optional human-readable description of the port."""
-
-    description: str = sqlmodel.Field(
-        default="",
-        max_length=DESCRIPTION_LENGTH_LIMIT,
-        description="💬 The optional human-readable description of the port.",
-    )
-    """💬 The optional human-readable description of the port."""
+    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class PortMandatoryField(RealField, abc.ABC):
-    """💯 Whether the port is mandatory. A mandatory port must be connected in a design."""
-
-    mandatory: bool = sqlmodel.Field(
-        default=False,
-        description="💯 Whether the port is mandatory. A mandatory port must be connected in a design.",
-    )
-    """💯 Whether the port is mandatory. A mandatory port must be connected in a design."""
+    is_mandatory: bool = sqlmodel.Field(default=False)
 
 
 class PortFamilyField(RealField, abc.ABC):
-    """👨‍👩‍👧‍👦 The optional family of the port. This allows to define explicit compatibility with other ports."""
-
-    family: str = sqlmodel.Field(
-        default="",
-        max_length=NAME_LENGTH_LIMIT,
-        description="👨‍👩‍👧‍👦 The optional family of the port. This allows to define explicit compatibility with other ports.",
-    )
-    """👨‍👩‍👧‍👦 The optional family of the port. This allows to define explicit compatibility with other ports."""
+    family: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class PortCompatibleFamiliesField(MaskedField, abc.ABC):
-    """✅ The optional other compatible families of the port. An empty list means this port is compatible with all other ports."""
-
-    compatibleFamilies: list[str] = sqlmodel.Field(
-        default_factory=list,
-        description="✅ The optional other compatible families of the port. An empty list means this port is compatible with all other ports.",
-    )
-    """✅ The optional other compatible families of the port. An empty list means this port is compatible with all other ports."""
+    compatibleFamilies: list[str] = sqlmodel.Field(default_factory=list)
 
 
 class PortPointField(MaskedField, abc.ABC):
-    """✖️ The connection point of the port that is attracted to another connection point."""
-
-    point: Point = sqlmodel.Field(
-        description="✖️ The connection point of the port that is attracted to another connection point."
-    )
-    """✖️ The connection point of the port that is attracted to another connection point."""
+    point: Point = sqlmodel.Field()
 
 
 class PortDirectionField(MaskedField, abc.ABC):
-    """➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."""
-
-    direction: Vector = sqlmodel.Field(
-        description="➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
-    )
-    """➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."""
+    direction: Vector = sqlmodel.Field()
 
 
 class PortTField(RealField, abc.ABC):
-    """💍 The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise."""
-
-    t: float = sqlmodel.Field(
-        default=0.0,
-        description="💍 The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
-    )
-    """💍 The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise."""
+    t: float = sqlmodel.Field(default=0.0)
 
 
 class PortId(PortIdField, Id):
-    """🪪 The props to identify the port within the parent type."""
+    pass
 
 
-class PortProps(
-    PortTField,
-    PortCompatibleFamiliesField,
-    PortFamilyField,
-    PortMandatoryField,
-    PortDescriptionField,
-    PortIdField,
-    Props,
-):
-    """🎫 The props of a port."""
+class PortProps(PortTField, PortCompatibleFamiliesField, PortFamilyField, PortMandatoryField, PortDescriptionField, PortIdField, Props):
+    pass
 
 
-class PortInput(
-    PortTField,
-    PortCompatibleFamiliesField,
-    PortFamilyField,
-    PortMandatoryField,
-    PortDescriptionField,
-    PortIdField,
-    Input,
-):
-    """🔌 A port is a connection point (with a direction) of a type."""
-
-    point: PointInput = sqlmodel.Field(
-        description="✖️ The connection point of the port that is attracted to another connection point."
-    )
-    """✖️ The connection point of the port that is attracted to another connection point."""
-    direction: VectorInput = sqlmodel.Field(
-        description="➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
-    )
-    """➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."""
-    qualities: list[QualityInput] = sqlmodel.Field(
-        default_factory=list,
-        description="📏 The qualities of the port.",
-    )
-    """📏 The qualities of the port."""
+class PortInput(PortTField, PortCompatibleFamiliesField, PortFamilyField, PortMandatoryField, PortDescriptionField, PortIdField, Input):
+    point: PointInput = sqlmodel.Field()
+    direction: VectorInput = sqlmodel.Field()
+    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
 
-class PortContext(
-    PortTField,
-    PortDirectionField,
-    PortPointField,
-    PortCompatibleFamiliesField,
-    PortFamilyField,
-    PortMandatoryField,
-    PortDescriptionField,
-    PortIdField,
-    Context,
-):
-    """🔌 A port is a connection point (with a direction) of a type."""
-
-    qualities: list[QualityContext] = sqlmodel.Field(
-        default_factory=list,
-        description="📏 The qualities of the port.",
-    )
-    """📏 The qualities of the port."""
+class PortContext(PortTField, PortDirectionField, PortPointField, PortCompatibleFamiliesField, PortFamilyField, PortMandatoryField, PortDescriptionField, PortIdField, Context):
+    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
 
-class PortOutput(
-    PortTField,
-    PortDirectionField,
-    PortPointField,
-    PortCompatibleFamiliesField,
-    PortFamilyField,
-    PortMandatoryField,
-    PortDescriptionField,
-    PortIdField,
-    Output,
-):
-    """🔌 A port is a connection point (with a direction) of a type."""
-
-    qualities: list[QualityOutput] = sqlmodel.Field(
-        default_factory=list,
-        description="📏 The qualities of the port.",
-    )
-    """📏 The qualities of the port."""
+class PortOutput(PortTField, PortDirectionField, PortPointField, PortCompatibleFamiliesField, PortFamilyField, PortMandatoryField, PortDescriptionField, PortIdField, Output):
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 
-class Port(
-    PortTField,
-    PortFamilyField,
-    PortMandatoryField,
-    PortDescriptionField,
-    TableEntity,
-    table=True,
-):
-    """🔌 A port is a connection point (with a direction) of a type."""
-
+class Port(PortTField, PortFamilyField, PortMandatoryField, PortDescriptionField, TableEntity, table=True):
     PLURAL = "ports"
-    __tablename__ = "port"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The primary key of the port in the database."""
-    # Can't use the name 'id' because of bug
-    # https://github.com/graphql-python/graphene-sqlalchemy/issues/412
+    __tablename__ = "ports"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+
     id_: str = sqlmodel.Field(
         # alias="id",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        sa_column=sqlmodel.Column(
-            "local_id",
-            sqlalchemy.String(ID_LENGTH_LIMIT),
-        ),
+        sa_column=sqlmodel.Column("local_id", sqlalchemy.String(ID_LENGTH_LIMIT)),
         default="",
     )
-    """🆔 The id of the port within the type."""
-    compatibleFamilies_: list[CompatibleFamily] = sqlmodel.Relationship(
-        back_populates="port", cascade_delete=True
-    )
-    """✅ The compatible families of the port."""
-    pointX: float = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "point_x",
-            sqlalchemy.String(ID_LENGTH_LIMIT),
-        ),
-        exclude=True,
-    )
-    """🎚️ The x-coordinate of the connection point of the port."""
-    pointY: float = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "point_y",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-    )
-    """🎚️ The y-coordinate of the connection point of the port."""
-    pointZ: float = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "point_z",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-    )
-    """🎚️ The z-coordinate of the connection point of the port."""
-    directionX: float = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "direction_x",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-    )
-    """🎚️ The x-coordinate of the direction of the port."""
-    directionY: float = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "direction_y",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-    )
-    """🎚️ The y-coordinate of the direction of the port."""
-    directionZ: float = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "direction_z",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-    )
-    """🎚️ The z-coordinate of the direction of the port."""
-    qualities: list["Quality"] = sqlmodel.Relationship(
-        back_populates="port", cascade_delete=True
-    )
-    """📏 The qualities of the port."""
-    typePk: typing.Optional[int] = sqlmodel.Field(
-        # alias="typeId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        sa_column=sqlmodel.Column(
-            "type_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("type.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The foreign primary key of the parent type of the port in the database."""
+    compatibleFamilies_: list[CompatibleFamily] = sqlmodel.Relationship(back_populates="port", cascade_delete=True)
+    pointX: float = sqlmodel.Field(sa_column=sqlmodel.Column("point_x", sqlalchemy.String(ID_LENGTH_LIMIT)), exclude=True)
+    pointY: float = sqlmodel.Field(sa_column=sqlmodel.Column("point_y", sqlalchemy.Float()), exclude=True)
+    pointZ: float = sqlmodel.Field(sa_column=sqlmodel.Column("point_z", sqlalchemy.Float()), exclude=True)
+    directionX: float = sqlmodel.Field(sa_column=sqlmodel.Column("direction_x", sqlalchemy.Float()), exclude=True)
+    directionY: float = sqlmodel.Field(sa_column=sqlmodel.Column("direction_y", sqlalchemy.Float()), exclude=True)
+    directionZ: float = sqlmodel.Field(sa_column=sqlmodel.Column("direction_z", sqlalchemy.Float()), exclude=True)
+    attributes: list["Attribute"] = sqlmodel.Relationship(back_populates="port", cascade_delete=True)
+    props: list["Prop"] = sqlmodel.Relationship(back_populates="port", cascade_delete=True)
+    typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
     type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="ports")
-    """👪 The parent type of the port."""
-    connecteds: list["Connection"] = sqlmodel.Relationship(
-        back_populates="connectedPort",
-        sa_relationship_kwargs={"foreign_keys": "Connection.connectedPortPk"},
-    )
-    connectings: list["Connection"] = sqlmodel.Relationship(
-        back_populates="connectingPort",
-        sa_relationship_kwargs={"foreign_keys": "Connection.connectingPortPk"},
-    )
+    connecteds: list["Connection"] = sqlmodel.Relationship(back_populates="connectedPort", sa_relationship_kwargs={"foreign_keys": "Connection.connectedPortPk"})
+    connectings: list["Connection"] = sqlmodel.Relationship(back_populates="connectingPort", sa_relationship_kwargs={"foreign_keys": "Connection.connectingPortPk"})
 
-    __table_args__ = (
-        sqlalchemy.UniqueConstraint("local_id", "type_id", name="Unique local_id"),
-    )
+    __table_args__ = (sqlalchemy.UniqueConstraint("local_id", "type_id", name="uq_ports_local_id_type_id"),)
 
     @property
     def compatibleFamilies(self) -> list[str]:
-        return sorted(
-            [cf.name for cf in self.compatibleFamilies_], key=lambda cf: cf.order
-        )
+        return sorted([cf.name for cf in self.compatibleFamilies_], key=lambda cf: cf.order)
 
     @compatibleFamilies.setter
     def compatibleFamilies(self, compatibleFamilies: list[str]):
-        self.compatibleFamilies_ = [
-            CompatibleFamily(name=cf, order=i)
-            for i, cf in enumerate(compatibleFamilies)
-        ]
+        self.compatibleFamilies_ = [CompatibleFamily(name=cf, order=i) for i, cf in enumerate(compatibleFamilies)]
 
     @property
     def point(self) -> Point:
-        """↗️ Get the masked point of the port."""
         return Point(x=self.pointX, y=self.pointY, z=self.pointZ)
 
     @point.setter
     def point(self, point: Point):
-        """↘️ Set the masked point of the port."""
         self.pointX = point.x
         self.pointY = point.y
         self.pointZ = point.z
 
     @property
     def direction(self) -> Vector:
-        """↗️ Get the masked direction of the port."""
         return Vector(x=self.directionX, y=self.directionY, z=self.directionZ)
 
     @direction.setter
     def direction(self, direction: Vector):
-        """↘️ Set the masked direction of the port."""
         self.directionX = direction.x
         self.directionY = direction.y
         self.directionZ = direction.z
 
     @property
     def connections(self) -> list["Connection"]:
-        """🔗 Get the connections of the port."""
         return self.connecteds + self.connectings
 
     def parent(self) -> "Type":
-        """👪 The parent type of the port or otherwise `NoTypeAssigned` is raised."""
         if self.type is None:
             raise NoTypeAssigned()
         return self.type
@@ -2224,14 +1351,9 @@ class Port(
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
     def parse(cls: "Port", input: str | dict | PortInput | typing.Any | None) -> "Port":
-        """🧪 Parse the input to a port."""
         if input is None:
             return cls()
-        obj = (
-            json.loads(input)
-            if isinstance(input, str)
-            else input if isinstance(input, dict) else input.__dict__
-        )
+        obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
         props = PortProps.model_validate(obj)
         entity = cls(**props.model_dump())
         point = Point.parse(obj["point"])
@@ -2243,7 +1365,7 @@ class Port(
         except KeyError:
             pass
         try:
-            entity.qualities = [Quality.parse(q) for q in obj["qualities"]]
+            entity.attributes = [Attribute.parse(q) for q in obj["attributes"]]
         except KeyError:
             pass
         return entity
@@ -2253,435 +1375,242 @@ class Port(
         entity["point"] = self.point.dump()
         entity["direction"] = self.direction.dump()
         entity["compatibleFamilies"] = self.compatibleFamilies
-        entity["qualities"] = [q.dump() for q in self.qualities]
+        entity["attributes"] = [q.dump() for q in self.attributes]
         return PortOutput(**entity)
 
     # TODO: Automatic derive from Id model.
     def idMembers(self) -> RecursiveAnyList:
-        """🪪 The members that form the id of the port within its parent type."""
         return self.id_
 
 
-### Authors ###
+# endregion Port
+
+# region Author
+# https://github.com/usalu/semio-author-
 
 
 class AuthorNameField(RealField, abc.ABC):
-    """📛 The name of the author."""
-
-    name: str = sqlmodel.Field(
-        max_length=NAME_LENGTH_LIMIT,
-        description="📛 The name of the author.",
-    )
-    """📛 The name of the author."""
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class AuthorEmailField(RealField, abc.ABC):
-    """📧 The email of the author."""
-
-    email: str = sqlmodel.Field(
-        max_length=ID_LENGTH_LIMIT,
-        description="📧 The email of the author.",
-    )
-    """📧 The email of the author."""
+    email: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
 
 
 class AuthorRankField(RealField, abc.ABC):
-    """🔢 The rank of the author."""
-
-    rank: int = sqlmodel.Field(
-        default=0,
-        description="🔢 The rank of the author.",
-    )
-    """🔢 The rank of the author."""
+    rank: int = sqlmodel.Field(default=0)
 
 
 class AuthorId(AuthorEmailField, Id):
-    """🪪 The props to identify the author."""
+    pass
 
 
 class AuthorProps(AuthorEmailField, AuthorNameField, Props):
-    """🎫 The props of an author."""
+    pass
 
 
 class AuthorInput(AuthorEmailField, AuthorNameField, Input):
-    """👤 The input for an author."""
+    pass
 
 
 class AuthorOutput(AuthorEmailField, AuthorNameField, Output):
-    """📑 The output of an author."""
+    pass
 
 
-class Author(
-    AuthorRankField, AuthorEmailField, AuthorNameField, TableEntity, table=True
-):
-    """👤 The information about the author."""
-
+class Author(AuthorRankField, AuthorEmailField, AuthorNameField, TableEntity, table=True):
     PLURAL = "authors"
-    __tablename__ = "author"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The primary key of the author in the database."""
-    typePk: typing.Optional[int] = sqlmodel.Field(
-        # alias="typeId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        sa_column=sqlmodel.Column(
-            "type_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("type.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The optional foreign primary key of the parent type of the author in the database."""
+    __tablename__ = "authors"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
     type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="authors_")
-    """👪 The optional parent type of the author."""
-    designPk: typing.Optional[int] = sqlmodel.Field(
-        # alias="designId",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        sa_column=sqlmodel.Column(
-            "design_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("design.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The optional foreign primary key of the parent design of the author in the database."""
+    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
     design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="authors_")
-    """👪 The optional parent design of the author."""
+    kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
+    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="authors_")
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="author", cascade_delete=True)
 
-    __tableargs__ = (
+    __table_args__ = (
         sqlalchemy.CheckConstraint(
-            "typeId IS NOT NULL AND designId IS NULL OR typeId IS NULL AND designId IS NOT NULL",
-            name="typeOrDesignSet",
+            "(type_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL) OR (type_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL) OR (type_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL)", name="ck_authors_parent_set"
         ),
-        sqlalchemy.UniqueConstraint("email", "typeId", "designId"),
+        sqlalchemy.UniqueConstraint("email", "type_id", "design_id", "kit_id", name="uq_authors_email_type_id_design_id_kit_id"),
     )
 
-    def parent(self) -> "Type":
-        """👪 The parent type or design of the author or otherwise `NoTypeOrDesignAssigned` is raised."""
+    def parent(self) -> typing.Union["Type", "Design", "Kit", None]:
         if self.type is not None:
             return self.type
         if self.design is not None:
             return self.design
+        if self.kit is not None:
+            return self.kit
         raise NoTypeOrDesignAssigned()
 
     def idMembers(self) -> RecursiveAnyList:
-        """🪪 The members that form the id of the author within its parent type."""
         return self.email
 
 
-### Locations ###
+# endregion Author
+
+# region Location
+# https://github.com/usalu/semio-location-
 
 
-class Location(Model):
-    """📍 A location on the earth surface (longitude, latitude)."""
+class LocationLongitudeField(RealField, abc.ABC):
+    longitude: float = sqlmodel.Field()
 
-    longitude: float = sqlmodel.Field(
-        description="↔️ The longitude of the location in degrees.",
-    )
-    """↔️ The longitude of the location in degrees."""
-    latitude: float = sqlmodel.Field(
-        description="↕️ The latitude of the location in degrees."
-    )
-    """↕️ The latitude of the location in degrees."""
+
+class LocationLatitudeField(RealField, abc.ABC):
+    latitude: float = sqlmodel.Field()
+
+
+class Location(LocationLatitudeField, LocationLongitudeField, TableEntity, table=True):
+    PLURAL = "locations"
+    __tablename__ = "locations"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="location", cascade_delete=True)
 
 
 class LocationInput(Location, Input):
-    """📍 The input for a location."""
+    pass
 
 
 class LocationOutput(Location, Output):
-    """📍 The output of a location."""
+    pass
 
 
 class LocationContext(Location, Context):
-    """📍 The context of a location."""
+    pass
 
 
 class LocationPrediction(Location, Prediction):
-    """📍 The prediction of a location."""
+    pass
 
 
-### Types ###
+# endregion Location
+
+# region Type
+# https://github.com/usalu/semio-type-
 
 
 class TypeNameField(RealField, abc.ABC):
-    """📛 The name of the type."""
-
-    name: str = sqlmodel.Field(
-        max_length=NAME_LENGTH_LIMIT,
-        description="📛 The name of the type.",
-    )
-    """📛 The name of the type."""
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class TypeDescriptionField(RealField, abc.ABC):
-    """💬 The optional human-readable description of the type."""
-
-    description: str = sqlmodel.Field(
-        default="",
-        max_length=DESCRIPTION_LENGTH_LIMIT,
-        description="💬 The optional human-readable description of the type.",
-    )
-    """💬 The optional human-readable description of the type."""
+    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class TypeIconField(RealField, abc.ABC):
-    """🪙 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB."""
-
-    icon: str = sqlmodel.Field(
-        default="",
-        max_length=URL_LENGTH_LIMIT,
-        description="🪙 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.",
-    )
-    """🪙 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB."""
+    icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class TypeImageField(RealField, abc.ABC):
-    """🖼️ The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB."""
-
-    image: str = sqlmodel.Field(
-        default="",
-        max_length=URL_LENGTH_LIMIT,
-        description="🖼️ The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
-    )
-    """🖼️ The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB."""
+    image: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class TypeVariantField(RealField, abc.ABC):
-    """🔀 The optional variant of the type. No variant means the default variant."""
-
-    variant: str = sqlmodel.Field(
-        default="",
-        max_length=NAME_LENGTH_LIMIT,
-        description="🔀 The optional variant of the type. No variant means the default variant.",
-    )
-    """🔀 The optional variant of the type. No variant means the default variant."""
+    variant: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class TypeStockField(RealField, abc.ABC):
-    """📦 The number of items in stock. 2147483647 (=2^31-1) means infinite stock."""
-
-    stock: int = sqlmodel.Field(
-        default=2147483647,
-        description="📦 The number of items in stock. 2147483647 (=2^31-1) means infinite stock.",
-    )
-    """📦 The number of items in stock. 2147483647 (=2^31-1) means infinite stock."""
+    stock: int = sqlmodel.Field(default=2147483647)
 
 
 class TypeVirtualField(RealField, abc.ABC):
-    """👻 Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type."""
+    is_virtual: bool = sqlmodel.Field(default=False)
 
-    virtual: bool = sqlmodel.Field(
-        default=False,
-        description="👻 Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.",
-    )
-    """👻 Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type."""
+
+class TypeScalableField(RealField, abc.ABC):
+    can_scale: bool = sqlmodel.Field(default=True)
+
+
+class TypeMirrborableField(RealField, abc.ABC):
+    can_mirror: bool = sqlmodel.Field(default=True)
 
 
 class TypeUnitField(RealField, abc.ABC):
-    """Ⓜ️ The length unit of the point and the direction of the ports of the type."""
-
-    unit: str = sqlmodel.Field(
-        default="",
-        max_length=NAME_LENGTH_LIMIT,
-        description="Ⓜ️ The length unit of the point and the direction of the ports of the type.",
-    )
-    """Ⓜ️ The length unit of the point and the direction of the ports of the type."""
+    unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class TypeLocationField(MaskedField, abc.ABC):
-    """📍 The optional location of the type."""
-
-    location: typing.Optional[Location] = sqlmodel.Field(
-        default=None,
-        description="📍 The optional location of the type.",
-    )
-    """📍 The optional location of the type."""
+    location: typing.Optional[Location] = sqlmodel.Field(default=None)
 
 
 class TypeCreatedField(RealField, abc.ABC):
-    """🕒 The creation date of the type."""
-
-    created: datetime.datetime = sqlmodel.Field(
-        default_factory=datetime.datetime.now,
-        description="🕒 The creation date of the type.",
-    )
-    """🕒 The creation date of the type."""
+    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 
 class TypeUpdatedField(RealField, abc.ABC):
-    """🕒 The last update date of the type."""
-
-    updated: datetime.datetime = sqlmodel.Field(
-        default_factory=datetime.datetime.now,
-        description="🕒 The last update date of the type.",
-    )
-    """🕒 The last update date of the type."""
+    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 
 class TypeId(TypeVariantField, TypeNameField, Id):
-    """🪪 The props to identify the type."""
+    pass
 
 
-class TypeProps(
-    TypeUnitField,
-    TypeLocationField,
-    TypeVirtualField,
-    TypeStockField,
-    TypeVariantField,
-    TypeImageField,
-    TypeIconField,
-    TypeDescriptionField,
-    TypeNameField,
-    Props,
-):
-    """🎫 The props of a type."""
+class TypeProps(TypeUnitField, TypeLocationField, TypeVirtualField, TypeStockField, TypeVariantField, TypeImageField, TypeIconField, TypeDescriptionField, TypeNameField, Props):
+    pass
 
 
-class TypeInput(
-    TypeUnitField,
-    TypeVirtualField,
-    TypeStockField,
-    TypeVariantField,
-    TypeImageField,
-    TypeIconField,
-    TypeDescriptionField,
-    TypeNameField,
-    Input,
-):
-    """🧩 A type is a reusable element that can be connected with other types over ports."""
-
+class TypeInput(TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantField, TypeImageField, TypeIconField, TypeDescriptionField, TypeNameField, Input):
     location: typing.Optional[LocationInput] = sqlmodel.Field(default=None)
     representations: list[RepresentationInput] = sqlmodel.Field(default_factory=list)
     ports: list[PortInput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorInput] = sqlmodel.Field(default_factory=list)
-    qualities: list[QualityInput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
+    concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 
-class TypeOutput(
-    TypeUpdatedField,
-    TypeCreatedField,
-    TypeUnitField,
-    TypeVirtualField,
-    TypeStockField,
-    TypeVariantField,
-    TypeImageField,
-    TypeIconField,
-    TypeDescriptionField,
-    TypeNameField,
-    Output,
-):
-    """🧩 A type is a reusable element that can be connected with other types over ports."""
-
+class TypeOutput(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantField, TypeImageField, TypeIconField, TypeDescriptionField, TypeNameField, Output):
     location: typing.Optional[LocationOutput] = sqlmodel.Field(default=None)
     representations: list[RepresentationOutput] = sqlmodel.Field(default_factory=list)
     ports: list[PortOutput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorOutput] = sqlmodel.Field(default_factory=list)
-    qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+    concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 
-class TypeContext(
-    TypeUnitField,
-    TypeVirtualField,
-    TypeStockField,
-    TypeVariantField,
-    TypeDescriptionField,
-    TypeNameField,
-    Context,
-):
-    """🧩 A type is a reusable element that can be connected with other types over ports."""
-
+class TypeContext(TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantField, TypeDescriptionField, TypeNameField, Context):
     location: typing.Optional[LocationContext] = sqlmodel.Field(default=None)
     ports: list[PortContext] = sqlmodel.Field(default_factory=list)
-    qualities: list[QualityContext] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
+    concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 
-class Type(
-    TypeUpdatedField,
-    TypeCreatedField,
-    TypeUnitField,
-    TypeVirtualField,
-    TypeStockField,
-    TypeVariantField,
-    TypeImageField,
-    TypeIconField,
-    TypeDescriptionField,
-    TypeNameField,
-    TableEntity,
-    table=True,
-):
-    """🧩 A type is a reusable element that can be connected with other types over ports."""
-
+class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeMirrborableField, TypeScalableField, TypeVirtualField, TypeStockField, TypeVariantField, TypeImageField, TypeIconField, TypeDescriptionField, TypeNameField, TableEntity, table=True):
     PLURAL = "types"
-    __tablename__ = "type"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The primary key of the type in the database."""
-    locationLongitude: typing.Optional[float] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "location_longitude",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-        default=None,
-    )
-    """↔️ The longitude of the location in degrees."""
-    locationLatitude: typing.Optional[float] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "location_latitude",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-        default=None,
-    )
-    """↕️ The latitude of the location in degrees."""
-    representations: list[Representation] = sqlmodel.Relationship(
-        back_populates="type",
-        cascade_delete=True,
-    )
-    """💾 The representations of the type."""
-    ports: list[Port] = sqlmodel.Relationship(
-        back_populates="type", cascade_delete=True
-    )
-    """🔌 The ports of the type."""
-    authors_: list[Author] = sqlmodel.Relationship(
-        back_populates="type", cascade_delete=True
-    )
-    """👤 The authors of the type."""
-    qualities: list[Quality] = sqlmodel.Relationship(
-        back_populates="type", cascade_delete=True
-    )
-    """📏 The qualities of the type."""
+    __tablename__ = "types"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+
+    locationLongitude: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("location_longitude", sqlalchemy.Float()), exclude=True, default=None)
+
+    locationLatitude: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("location_latitude", sqlalchemy.Float()), exclude=True, default=None)
+
+    representations: list[Representation] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
+
+    ports: list[Port] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
+
+    authors_: list[Author] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
+
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
+
     kitPk: typing.Optional[int] = sqlmodel.Field(
         # alias="kitId", # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-        sa_column=sqlmodel.Column(
-            "kit_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("kit.id"),
-        ),
+        sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")),
         default=None,
         exclude=True,
     )
-    """🔑 The foreign primary key of the parent kit of the type in the database."""
+
     kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="types")
-    """👪 The parent kit of the type."""
+
     pieces: list["Piece"] = sqlmodel.Relationship(back_populates="type")
 
-    __table_args__ = (
-        sqlalchemy.UniqueConstraint(
-            "name", "variant", "kit_id", name="Unique name and variant"
-        ),
-    )
+    concepts_: list[Concept] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
+
+    __table_args__ = (sqlalchemy.UniqueConstraint("name", "variant", "kit_id", name="uq_types_name_variant_kit_id"),)
 
     @property
     def location(self) -> typing.Optional[Location]:
-        """📍 The location of the type."""
         if self.locationLongitude is None and self.locationLatitude is None:
             return None
         if self.locationLongitude is None:
@@ -2695,7 +1624,6 @@ class Type(
 
     @location.setter
     def location(self, location: typing.Optional[Location]):
-        """📍 Set the location of the type."""
         if location is None:
             self.locationLongitude = None
             self.locationLatitude = None
@@ -2705,18 +1633,23 @@ class Type(
 
     @property
     def authors(self) -> list[Author]:
-        """👤 Get the authors of the type."""
         return sorted(self.authors_, key=lambda a: a.rank)
 
     @authors.setter
     def authors(self, authors: list[Author]):
-        """👤 Set the authors of the type."""
         self.authors_ = authors
         for i, author in enumerate(self.authors_):
             author.rank = i
 
+    @property
+    def concepts(self: "Type") -> list[str]:
+        return [concept.name for concept in sorted(self.concepts_, key=lambda x: x.order)]
+
+    @concepts.setter
+    def concepts(self: "Type", concepts: list[str]):
+        self.concepts_ = [Concept(name=concept, order=i) for i, concept in enumerate(concepts)]
+
     def parent(self) -> "Kit":
-        """👪 The parent kit of the type or otherwise `NoKitAssigned` is raised."""
         if self.kit is None:
             raise NoKitAssigned()
         return self.kit
@@ -2724,14 +1657,9 @@ class Type(
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
     def parse(cls: "Type", input: str | dict | TypeInput | typing.Any | None) -> "Type":
-        """🧪 Parse the input to a type."""
         if input is None:
             return cls()
-        obj = (
-            json.loads(input)
-            if isinstance(input, str)
-            else input if isinstance(input, dict) else input.__dict__
-        )
+        obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
         props = TypeProps.model_validate(obj)
         entity = cls(**props.model_dump())
         try:
@@ -2749,7 +1677,7 @@ class Type(
         except KeyError:
             pass
         try:
-            entity.qualities = [Quality.parse(q) for q in obj["qualities"]]
+            entity.attributes = [Attribute.parse(q) for q in obj["attributes"]]
         except KeyError:
             pass
         try:
@@ -2759,6 +1687,11 @@ class Type(
             entity.authors = authors
         except KeyError:
             pass
+        try:
+            concepts = obj["concepts"]
+            entity.concepts = concepts
+        except KeyError:
+            pass
 
         return entity
 
@@ -2766,13 +1699,13 @@ class Type(
         entity = {**TypeProps.model_validate(self).model_dump()}
         entity["representations"] = [r.dump() for r in self.representations]
         entity["ports"] = [p.dump() for p in self.ports]
-        entity["qualities"] = [q.dump() for q in self.qualities]
+        entity["attributes"] = [q.dump() for q in self.attributes]
         entity["authors"] = [a.dump() for a in self.authors]
+        entity["concepts"] = self.concepts
         return TypeOutput(**entity)
 
     # TODO: Automatic emptying.
     def empty(self) -> "Kit":
-        """🪣 Empty the type."""
         props = TypeProps()
         for key, value in props.model_dump().items():
             setattr(self, key, value)
@@ -2781,7 +1714,6 @@ class Type(
 
     # TODO: Automatic updating based on props.
     def update(self, other: "Type", empty: bool = False) -> "Type":
-        """🔄 Update the props of the type. Optionally empty the type before."""
         if empty:
             self.empty()
         props = TypeProps.model_validate(other)
@@ -2791,248 +1723,127 @@ class Type(
 
     # TODO: Automatic derive from Id model.
     def idMembers(self) -> RecursiveAnyList:
-        """🪪 The members that form the id of the type within the parent kit."""
         return [self.name, self.variant]
 
 
-### Pieces ###
+# endregion Type
+
+# region Piece
+# https://github.com/usalu/semio-piece-
 
 
 class PieceIdField(MaskedField, abc.ABC):
-    """🆔 The id of the piece."""
-
     id_: str = sqlmodel.Field(
         default="",
         # alias="id", # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         max_length=ID_LENGTH_LIMIT,
-        description="🆔 The id of the piece.",
     )
-    """🆔 The id of the piece."""
 
 
 class PieceDescriptionField(RealField, abc.ABC):
-    """💬 The optional human-readable description of the piece."""
-
-    description: str = sqlmodel.Field(
-        default="",
-        max_length=DESCRIPTION_LENGTH_LIMIT,
-        description="💬 The optional human-readable description of the piece.",
-    )
-    """💬 The optional human-readable description of the piece."""
+    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class PieceTypeField(MaskedField, abc.ABC):
-    """🧩 The type of the piece."""
+    type: typing.Optional[TypeId] = sqlmodel.Field(default=None)
 
-    type: TypeId = sqlmodel.Field(
-        description="🧩 The type of the piece.",
-    )
-    """🧩 The type of the piece."""
+
+class PieceDesignField(MaskedField, abc.ABC):
+    designPiece: typing.Optional["DesignId"] = sqlmodel.Field(default=None)
 
 
 class PiecePlaneField(MaskedField, abc.ABC):
-    """◳ The optional plane of the piece. When pieces are connected only one piece can have a plane."""
-
-    plane: typing.Optional[Plane] = sqlmodel.Field(
-        default=None,
-        description="◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.",
-    )
-    """◳ The optional plane of the piece. When pieces are connected only one piece can have a plane."""
+    plane: typing.Optional[Plane] = sqlmodel.Field(default=None)
 
 
 class PieceCenterField(MaskedField, abc.ABC):
-    """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
+    center: typing.Optional[DiagramPoint] = sqlmodel.Field(default=None)
 
-    center: typing.Optional[DiagramPoint] = sqlmodel.Field(
-        default=None,
-        description="📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
-    )
-    """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
+
+class PieceScaleField(RealField, abc.ABC):
+    scale: float = sqlmodel.Field(default=1.0)
+
+
+class PieceMirrorPlaneField(MaskedField, abc.ABC):
+    mirrorPlane: typing.Optional[Plane] = sqlmodel.Field(default=None)
+
+
+class PieceHiddenField(RealField, abc.ABC):
+    is_hidden: bool = sqlmodel.Field(default=False)
+
+
+class PieceLockedField(RealField, abc.ABC):
+    is_locked: bool = sqlmodel.Field(default=False)
+
+
+class PieceColorField(RealField, abc.ABC):
+    color: str = sqlmodel.Field(default="", max_length=7)
 
 
 class PieceId(PieceIdField, Id):
-    """🪪 The props to identify the piece within the parent design."""
+    pass
 
 
-class PieceProps(
-    PieceCenterField,
-    PiecePlaneField,
-    PieceTypeField,
-    PieceDescriptionField,
-    PieceIdField,
-    Props,
-):
-    """🎫 The props of a piece."""
+class PieceProps(PieceCenterField, PiecePlaneField, PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Props):
+    pass
 
 
-class PieceInput(PieceTypeField, PieceDescriptionField, PieceIdField, Input):
-    """⭕ A piece is a 3d-instance of a type in a design."""
-
-    plane: typing.Optional[PlaneInput] = sqlmodel.Field(
-        default=None,
-        description="◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.",
-    )
-    """◳ The optional plane of the piece. When pieces are connected only one piece can have a plane."""
-    center: typing.Optional[DiagramPointInput] = sqlmodel.Field(
-        default=None,
-        description="📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
-    )
-    """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
-    qualities: list[QualityInput] = sqlmodel.Field(
-        default_factory=list,
-        description="📏 The qualities of the piece.",
-    )
-    """📏 The qualities of the piece."""
+class PieceInput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Input):
+    plane: typing.Optional[PlaneInput] = sqlmodel.Field(default=None)
+    center: typing.Optional[DiagramPointInput] = sqlmodel.Field(default=None)
+    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
 
-class PieceContext(PieceTypeField, PieceDescriptionField, PieceIdField, Context):
-    """⭕ A piece is a 3d-instance of a type in a design."""
-
-    plane: typing.Optional[PlaneContext] = sqlmodel.Field(
-        default=None,
-        description="◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.",
-    )
-    """◳ The optional plane of the piece. When pieces are connected only one piece can have a plane."""
-    center: typing.Optional[DiagramPointContext] = sqlmodel.Field(
-        default=None,
-        description="📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
-    )
-    """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
-    qualities: list[QualityContext] = sqlmodel.Field(
-        default_factory=list,
-        description="📏 The qualities of the piece.",
-    )
-    """📏 The qualities of the piece."""
+class PieceContext(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Context):
+    plane: typing.Optional[PlaneContext] = sqlmodel.Field(default=None)
+    center: typing.Optional[DiagramPointContext] = sqlmodel.Field(default=None)
+    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
 
-class PieceOutput(PieceTypeField, PieceDescriptionField, PieceIdField, Output):
-    """⭕ A piece is a 3d-instance of a type in a design."""
-
-    plane: typing.Optional[PlaneOutput] = sqlmodel.Field(
-        default=None,
-        description="◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.",
-    )
-    """◳ The optional plane of the piece. When pieces are connected only one piece can have a plane."""
-    center: typing.Optional[DiagramPointOutput] = sqlmodel.Field(
-        default=None,
-        description="📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
-    )
-    """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
-    qualities: list[QualityOutput] = sqlmodel.Field(
-        default_factory=list,
-        description="📏 The qualities of the piece.",
-    )
-    """📏 The qualities of the piece."""
+class PieceOutput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Output):
+    plane: typing.Optional[PlaneOutput] = sqlmodel.Field(default=None)
+    center: typing.Optional[DiagramPointOutput] = sqlmodel.Field(default=None)
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 
-class PiecePrediction(PieceTypeField, PieceDescriptionField, PieceIdField, Prediction):
-    """⭕ A piece is a 3d-instance of a type in a design."""
-
+class PiecePrediction(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Prediction):
+    pass
     # center: typing.Optional[DiagramPointPrediction] = sqlmodel.Field(
     #     default=None,
-    #     description="📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
+    #     ,
     # )
     # """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
 
 
-class Piece(PieceDescriptionField, TableEntity, table=True):
-    """⭕ A piece is a 3d-instance of a type in a design."""
-
+class Piece(PieceIdField, PieceTypeField, PieceDesignField, PiecePlaneField, PieceCenterField, PieceHiddenField, PieceLockedField, PieceColorField, PieceScaleField, PieceMirrorPlaneField, TableEntity, table=True):
     PLURAL = "pieces"
-    __tablename__ = "piece"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The primary key of the piece in the database."""
-    id_: str = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "local_id",
-            sqlalchemy.String(ID_LENGTH_LIMIT),
-        ),
-        default="",
-    )
-    typePk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "type_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("type.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The foreign key of the type of the piece in the database."""
-    type: Type = sqlmodel.Relationship(back_populates="pieces")
-    """🆔 The id of the piece within the design."""
-    planePk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "plane_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("plane.id"),
-            nullable=True,
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The optional foreign primary key of the plane of the piece in the database."""
-    plane: typing.Optional[Plane] = sqlmodel.Relationship(back_populates="piece")
-    """◳ The optional plane of the piece. When pieces are connected only one piece can have a plane."""
-    centerX: typing.Optional[float] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "center_x",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-    )
-    """🎚️ The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."""
-    centerY: typing.Optional[float] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "center_y",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-    )
-    """🎚️ The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon."""
-    qualities: list[Quality] = sqlmodel.Relationship(
-        back_populates="piece", cascade_delete=True
-    )
-    """📏 The qualities of the type."""
-    designPk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "design_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("design.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The foreign primary key of the parent design of the piece in the database."""
+    __tablename__ = "pieces"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    id_: str = sqlmodel.Field(sa_column=sqlmodel.Column("local_id", sqlalchemy.String(ID_LENGTH_LIMIT)), default="")
+    typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id"), nullable=True), default=None, exclude=True)
+    type: typing.Optional[Type] = sqlmodel.Relationship(back_populates="pieces")
+    designPiecePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id"), nullable=True), default=None, exclude=True)
+    designPiece: typing.Optional["Design"] = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Design", foreign_keys="[Piece.designPiecePk]"))
+    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
     design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="pieces")
-    """👪 The parent design of the piece."""
-    connecteds: list["Connection"] = sqlmodel.Relationship(
-        back_populates="connectedPiece",
-        sa_relationship_kwargs={"foreign_keys": "Connection.connectedPiecePk"},
-    )
-    """🖇️ The connections where the piece is the connected to another piece."""
-    connectings: list["Connection"] = sqlmodel.Relationship(
-        back_populates="connectingPiece",
-        sa_relationship_kwargs={"foreign_keys": "Connection.connectingPiecePk"},
-    )
-    """🖇️ The connections where the piece is the connecting from another piece."""
+    planePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("plane_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("planes.id"), nullable=True), default=None, exclude=True)
+    plane: typing.Optional[Plane] = sqlmodel.Relationship(back_populates="piece")
+    centerX: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("center_x", sqlalchemy.Float()), exclude=True)
+    centerY: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("center_y", sqlalchemy.Float()), exclude=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="piece", cascade_delete=True)
+    connecteds: list["Connection"] = sqlmodel.Relationship(back_populates="connectedPiece", sa_relationship_kwargs={"foreign_keys": "Connection.connectedPiecePk"})
+    connectings: list["Connection"] = sqlmodel.Relationship(back_populates="connectingPiece", sa_relationship_kwargs={"foreign_keys": "Connection.connectingPiecePk"})
 
-    __table_args__ = (sqlalchemy.UniqueConstraint("local_id", "design_id"),)
+    __table_args__ = (sqlalchemy.UniqueConstraint("local_id", "design_id", name="uq_pieces_local_id_design_id"),)
 
     @property
     def center(self) -> typing.Optional[DiagramPoint]:
-        """↗️ Get the masked screen point of the piece."""
         if self.centerX is None or self.centerY is None:
             return None
         return DiagramPoint(x=self.centerX, y=self.centerY)
 
     @center.setter
     def center(self, center: typing.Optional[DiagramPoint]):
-        """↘️ Set the masked screen point of the piece."""
         if center is None:
             self.centerX = None
             self.centerY = None
@@ -3042,35 +1853,38 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
 
     @property
     def connections(self) -> list["Connection"]:
-        """🔗 Get the connections of the piece."""
         return self.connecteds + self.connectings
 
     def parent(self) -> "Design":
-        """👪 The parent design of the piece or otherwise `NoParentAssigned` is raised."""
         if self.design is None:
             raise NoParentAssigned()
         return self.design
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
-    def parse(
-        cls: "Piece",
-        input: str | dict | PieceInput | typing.Any | None,
-        types: dict[str, dict[str, Type]],
-    ) -> "Piece":
+    def parse(cls: "Piece", input: str | dict | PieceInput | typing.Any | None, types: dict[str, dict[str, Type]], designs: typing.Optional[dict[str, dict[str, dict[str, "Design"]]]] = None) -> "Piece":
         if input is None:
             return cls()
-        obj = (
-            json.loads(input)
-            if isinstance(input, str)
-            else input if isinstance(input, dict) else input.__dict__
-        )
+        obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
         entity = cls(id_=obj["id_"])
-        type = TypeId.parse(obj["type"])
-        try:
-            entity.type = types[type.name][type.variant]
-        except KeyError:
-            raise TypeNotFound(type)
+        typeObj = obj.get("type", None)
+        designObj = obj.get("designPiece", None)
+        if (typeObj is None and designObj is None) or (typeObj is not None and designObj is not None):
+            raise ValueError("Exactly one of 'type' or 'designPiece' must be provided for a Piece.")
+        if typeObj is not None:
+            typeId = TypeId.parse(typeObj)
+            try:
+                entity.type = types[typeId.name][typeId.variant]
+            except KeyError:
+                raise TypeNotFound(typeId)
+        else:
+            if designs is None:
+                raise FeatureNotYetSupported()
+            designId = DesignId.parse(designObj)
+            try:
+                entity.designPiece = designs[designId.name][designId.variant][designId.view]
+            except KeyError:
+                raise FeatureNotYetSupported()
         try:
             if obj["plane"] is not None:
                 plane = Plane.parse(obj["plane"])
@@ -3091,7 +1905,7 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
         entity = {**PieceProps.model_validate(self).model_dump()}
         entity["plane"] = self.plane.dump() if self.plane is not None else None
         entity["center"] = self.center.dump() if self.center is not None else None
-        entity["qualities"] = [q.dump() for q in self.qualities]
+        entity["attributes"] = [q.dump() for q in self.attributes]
         return PieceOutput(**entity)
 
     # TODO: Automatic emptying.
@@ -3112,148 +1926,92 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
 
     # TODO: Automatic derive from Id model.
     def idMembers(self) -> RecursiveAnyList:
-        """🪪 The members that form the id of the piece within the parent design."""
         return self.id_
 
 
-### Sides ###
+# endregion Piece
+
+# region Side
+# https://github.com/usalu/semio-side-
 
 
 class Side(Model):
-    """🧱 A side of a piece in a connection."""
-
     piece: PieceId = sqlmodel.Field()
+    designPiece: typing.Optional[PieceId] = sqlmodel.Field(default=None)
     port: PortId = sqlmodel.Field()
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
     def parse(cls: "Side", input: str | dict | typing.Any | None) -> "Side":
-        """🧪 Parse the input to a side."""
         if input is None:
             return cls()
-        obj = (
-            json.loads(input)
-            if isinstance(input, str)
-            else input if isinstance(input, dict) else input.__dict__
-        )
+        obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
         piece = PieceId.parse(obj["piece"])
         port = PortId.parse(obj["port"])
-        return cls(piece=piece, port=port)
+        try:
+            designPieceObj = obj["designPiece"]
+            designPiece = PieceId.parse(designPieceObj) if designPieceObj is not None else None
+        except KeyError:
+            designPiece = None
+        return cls(piece=piece, designPiece=designPiece, port=port)
 
 
 class SideInput(Side, Input):
-    """🧱 A side of a piece in a connection."""
+    pass
 
 
 class SideContext(Side, Context):
-    """🧱 A side of a piece in a connection."""
+    pass
 
 
 class SideOutput(Side, Output):
-    """🧱 A side of a piece in a connection."""
+    pass
 
 
 class SidePrediction(Side, Prediction):
-    """🧱 A side of a piece in a connection."""
+    pass
 
 
-### Connections ###
+# endregion Side
+
+# region Connection
+# https://github.com/usalu/semio-connection-
 
 
 class ConnectionConnectedField(MaskedField, abc.ABC):
-    """🧲 The connected side of the connection."""
-
-    connected: Side = sqlmodel.Field(
-        description="🧲 The connected side of the connection."
-    )
-    """🧲 The connected side of the connection."""
+    connected: Side = sqlmodel.Field()
 
 
 class ConnectionConnectingField(MaskedField, abc.ABC):
-    """🧲 The connecting side of the connection."""
-
-    connecting: Side = sqlmodel.Field(
-        description="🧲 The connecting side of the connection."
-    )
-    """🧲 The connecting side of the connection."""
+    connecting: Side = sqlmodel.Field()
 
 
 class ConnectionDescriptionField(RealField, abc.ABC):
-    """💬 The optional human-readable description of the connection."""
-
-    description: str = sqlmodel.Field(
-        default="",
-        max_length=DESCRIPTION_LENGTH_LIMIT,
-        description="💬 The optional human-readable description of the connection.",
-    )
-    """💬 The optional human-readable description of the connection."""
+    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class ConnectionGapField(RealField, abc.ABC):
-    """↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece."""
-
-    gap: float = sqlmodel.Field(
-        default=0,
-        description="↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. ",
-    )
-    """↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. """
+    gap: float = sqlmodel.Field(default=0)
 
 
 class ConnectionShiftField(RealField, abc.ABC):
-    """↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.."""
-
-    shift: float = sqlmodel.Field(
-        default=0,
-        description="↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
-    )
-    """↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.."""
+    shift: float = sqlmodel.Field(default=0)
 
 
 class ConnectionRiseField(MaskedField, abc.ABC):
-    """🪜 The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."""
-
-    rise: float = sqlmodel.Field(
-        alias="raise",
-        default=0,
-        description="🪜 The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
-    )
-    """🪜 The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."""
+    rise: float = sqlmodel.Field(default=0)
 
 
 class ConnectionRotationField(RealField, abc.ABC):
-    """🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."""
-
-    rotation: float = sqlmodel.Field(
-        ge=0,
-        lt=360,
-        default=0,
-        description="🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
-    )
-    """🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees."""
+    rotation: float = sqlmodel.Field(ge=0, lt=360, default=0)
 
 
 class ConnectionTurnField(RealField, abc.ABC):
-    """🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."""
-
-    turn: float = sqlmodel.Field(
-        ge=0,
-        lt=360,
-        default=0,
-        description="🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
-    )
-    """🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."""
+    turn: float = sqlmodel.Field(ge=0, lt=360, default=0)
 
 
 class ConnectionTiltField(RealField, abc.ABC):
-    """↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."""
-
-    tilt: float = sqlmodel.Field(
-        ge=0,
-        lt=360,
-        default=0,
-        description="↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
-    )
-    """↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees."""
+    tilt: float = sqlmodel.Field(ge=0, lt=360, default=0)
 
 
 # class ConnectionOrientationFirstField(RealField, abc.ABC):
@@ -3261,264 +2019,91 @@ class ConnectionTiltField(RealField, abc.ABC):
 
 #     orientationFirst: bool = sqlmodel.Field(
 #         default=False,
-#         description="🥇 Wheather the orientation (rotation, turn, tilt) is applied before the translation (gap, shift, raise). By default the translation happens before the orientation.",
+#         ,
 #     )
 #     """🥇 Wheather the orientation (rotation, turn, tilt) is applied before the translation (gap, shift, raise). By default the translation happens before the orientation."""
 
 
 class ConnectionXField(RealField, abc.ABC):
-    """➡️ The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon."""
-
-    x: float = sqlmodel.Field(
-        default=0,
-        description="➡️ The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
-    )
-    """➡️ The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon."""
+    x: float = sqlmodel.Field(default=0)
 
 
 class ConnectionYField(RealField, abc.ABC):
-    """⬆️ The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon."""
-
-    y: float = sqlmodel.Field(
-        default=0,
-        description="⬆️ The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
-    )
-    """⬆️ The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon."""
+    y: float = sqlmodel.Field(default=0)
 
 
 class ConnectionId(ConnectionConnectedField, ConnectionConnectingField, Id):
-    """🪪 The props to identify the connection."""
+    pass
 
 
-class ConnectionProps(
-    ConnectionYField,
-    ConnectionXField,
-    ConnectionTiltField,
-    ConnectionTurnField,
-    ConnectionRotationField,
-    ConnectionRiseField,
-    ConnectionShiftField,
-    ConnectionGapField,
-    ConnectionDescriptionField,
-    Props,
-):
-    """🎫 The props of a connection."""
+class ConnectionProps(ConnectionYField, ConnectionXField, ConnectionTiltField, ConnectionTurnField, ConnectionRotationField, ConnectionRiseField, ConnectionShiftField, ConnectionGapField, ConnectionDescriptionField, Props):
+    pass
 
 
-class ConnectionInput(
-    ConnectionYField,
-    ConnectionXField,
-    ConnectionTiltField,
-    ConnectionTurnField,
-    ConnectionRotationField,
-    ConnectionRiseField,
-    ConnectionShiftField,
-    ConnectionGapField,
-    ConnectionDescriptionField,
-    Input,
-):
-    """🖇️ A bidirectional connection between two pieces of a design."""
+class ConnectionInput(ConnectionYField, ConnectionXField, ConnectionTiltField, ConnectionTurnField, ConnectionRotationField, ConnectionRiseField, ConnectionShiftField, ConnectionGapField, ConnectionDescriptionField, Input):
+    pass
 
-    connected: SideInput = sqlmodel.Field(
-        description="🧲 The connected side of the connection."
-    )
-    """🧲 The connected side of the connection."""
-    connecting: SideInput = sqlmodel.Field(
-        description="🧲 The connecting side of the connection."
-    )
-    """🧲 The connecting side of the connection."""
+    connected: SideInput = sqlmodel.Field()
+    connecting: SideInput = sqlmodel.Field()
 
 
-class ConnectionContext(
-    ConnectionYField,
-    ConnectionXField,
-    ConnectionTiltField,
-    ConnectionTurnField,
-    ConnectionRotationField,
-    ConnectionRiseField,
-    ConnectionShiftField,
-    ConnectionGapField,
-    ConnectionDescriptionField,
-    Context,
-):
-    """🖇️ A bidirectional connection between two pieces of a design."""
+class ConnectionContext(ConnectionYField, ConnectionXField, ConnectionTiltField, ConnectionTurnField, ConnectionRotationField, ConnectionRiseField, ConnectionShiftField, ConnectionGapField, ConnectionDescriptionField, Context):
+    pass
 
-    connected: SideContext = sqlmodel.Field(
-        description="🧲 The connected side of the connection."
-    )
-    """🧲 The connected side of the connection."""
-    connecting: SideContext = sqlmodel.Field(
-        description="🧲 The connecting side of the connection."
-    )
-    """🧲 The connecting side of the connection."""
+    connected: SideContext = sqlmodel.Field()
+    connecting: SideContext = sqlmodel.Field()
 
 
-class ConnectionOutput(
-    ConnectionYField,
-    ConnectionXField,
-    ConnectionTiltField,
-    ConnectionTurnField,
-    ConnectionRotationField,
-    ConnectionRiseField,
-    ConnectionShiftField,
-    ConnectionGapField,
-    ConnectionDescriptionField,
-    Output,
-):
-    """🖇️ A bidirectional connection between two pieces of a design."""
+class ConnectionOutput(ConnectionYField, ConnectionXField, ConnectionTiltField, ConnectionTurnField, ConnectionRotationField, ConnectionRiseField, ConnectionShiftField, ConnectionGapField, ConnectionDescriptionField, Output):
+    pass
 
-    connected: SideOutput = sqlmodel.Field(
-        description="🧲 The connected side of the connection."
-    )
-    """🧲 The connected side of the connection."""
-    connecting: SideOutput = sqlmodel.Field(
-        description="🧲 The connecting side of the connection."
-    )
-    """🧲 The connecting side of the connection."""
+    connected: SideOutput = sqlmodel.Field()
+    connecting: SideOutput = sqlmodel.Field()
 
 
-class ConnectionPrediction(
-    ConnectionYField,
-    ConnectionXField,
-    ConnectionTiltField,
-    ConnectionTurnField,
-    ConnectionRotationField,
-    ConnectionRiseField,
-    ConnectionShiftField,
-    ConnectionGapField,
-    ConnectionDescriptionField,
-    Prediction,
-):
-    """🖇️ A bidirectional connection between two pieces of a design."""
+class ConnectionPrediction(ConnectionYField, ConnectionXField, ConnectionTiltField, ConnectionTurnField, ConnectionRotationField, ConnectionRiseField, ConnectionShiftField, ConnectionGapField, ConnectionDescriptionField, Prediction):
+    pass
 
-    connected: SidePrediction = sqlmodel.Field(
-        description="🧲 The connected side of the connection."
-    )
-    """🧲 The connected side of the connection."""
-    connecting: SidePrediction = sqlmodel.Field(
-        description="🧲 The connecting side of the connection."
-    )
-    """🧲 The connecting side of the connection."""
+    connected: SidePrediction = sqlmodel.Field()
+    connecting: SidePrediction = sqlmodel.Field()
 
 
-class Connection(
-    ConnectionYField,
-    ConnectionXField,
-    ConnectionTiltField,
-    ConnectionTurnField,
-    ConnectionRotationField,
-    ConnectionRiseField,
-    ConnectionShiftField,
-    ConnectionGapField,
-    ConnectionDescriptionField,
-    TableEntity,
-    table=True,
-):
-    """🖇️ A bidirectional connection between two pieces of a design."""
-
+class Connection(ConnectionYField, ConnectionXField, ConnectionTiltField, ConnectionTurnField, ConnectionRotationField, ConnectionRiseField, ConnectionShiftField, ConnectionGapField, ConnectionDescriptionField, TableEntity, table=True):
     PLURAL = "connections"
-    __tablename__ = "connection"
+    __tablename__ = "connections"
 
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    connectedPiecePk: typing.Optional[int] = sqlmodel.Field(alias="connectedPieceId", sa_column=sqlmodel.Column("connected_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("pieces.id")), default=None, exclude=True)
+    connectedPiece: Piece = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Piece", back_populates="connecteds", foreign_keys="[Connection.connectedPiecePk]"))
+    connectedPortPk: typing.Optional[int] = sqlmodel.Field(alias="connectedPortId", sa_column=sqlmodel.Column("connected_port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
+    connectedPort: Port = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Port", back_populates="connecteds", foreign_keys="[Connection.connectedPortPk]"))
+    connectedDesignPiecePk: typing.Optional[int] = sqlmodel.Field(
+        alias="connectedDesignPieceId", sa_column=sqlmodel.Column("connected_design_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("pieces.id"), nullable=True), default=None, exclude=True
     )
-    """🔑 The primary key of the connection in the database."""
-    connectedPiecePk: typing.Optional[int] = sqlmodel.Field(
-        alias="connectedPieceId",
-        sa_column=sqlmodel.Column(
-            "connected_piece_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("piece.id"),
-        ),
-        default=None,
-        exclude=True,
+    connectedDesignPiece: typing.Optional[Piece] = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Piece", foreign_keys="[Connection.connectedDesignPiecePk]"))
+    connectingPiecePk: typing.Optional[int] = sqlmodel.Field(alias="connectingPieceId", sa_column=sqlmodel.Column("connecting_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("pieces.id")), exclude=True, default=None)
+    connectingPiece: Piece = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Piece", back_populates="connectings", foreign_keys="[Connection.connectingPiecePk]"))
+    connectingPortPk: typing.Optional[int] = sqlmodel.Field(alias="connectingPortId", sa_column=sqlmodel.Column("connecting_port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
+    connectingPort: Port = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Port", back_populates="connectings", foreign_keys="[Connection.connectingPortPk]"))
+    connectingDesignPiecePk: typing.Optional[int] = sqlmodel.Field(
+        alias="connectingDesignPieceId", sa_column=sqlmodel.Column("connecting_design_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("pieces.id"), nullable=True), default=None, exclude=True
     )
-    connectedPiece: Piece = sqlmodel.Relationship(
-        sa_relationship=sqlalchemy.orm.relationship(
-            "Piece",
-            back_populates="connecteds",
-            foreign_keys="[Connection.connectedPiecePk]",
-        )
-    )
-    connectedPortPk: typing.Optional[int] = sqlmodel.Field(
-        alias="connectedPortId",
-        sa_column=sqlmodel.Column(
-            "connected_port_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("port.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    connectedPort: Port = sqlmodel.Relationship(
-        sa_relationship=sqlalchemy.orm.relationship(
-            "Port",
-            back_populates="connecteds",
-            foreign_keys="[Connection.connectedPortPk]",
-        )
-    )
-    connectingPiecePk: typing.Optional[int] = sqlmodel.Field(
-        alias="connectingPieceId",
-        sa_column=sqlmodel.Column(
-            "connecting_piece_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("piece.id"),
-        ),
-        exclude=True,
-        default=None,
-    )
-    connectingPiece: Piece = sqlmodel.Relationship(
-        sa_relationship=sqlalchemy.orm.relationship(
-            "Piece",
-            back_populates="connectings",
-            foreign_keys="[Connection.connectingPiecePk]",
-        )
-    )
-    connectingPortPk: typing.Optional[int] = sqlmodel.Field(
-        alias="connectingPortId",
-        sa_column=sqlmodel.Column(
-            "connecting_port_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("port.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
-    connectingPort: Port = sqlmodel.Relationship(
-        sa_relationship=sqlalchemy.orm.relationship(
-            "Port",
-            back_populates="connectings",
-            foreign_keys="[Connection.connectingPortPk]",
-        )
-    )
-    qualities: list[Quality] = sqlmodel.Relationship(
-        back_populates="connection", cascade_delete=True
-    )
-    """📏 The qualities of the type."""
-    designPk: typing.Optional[int] = sqlmodel.Field(
-        alias="designId",
-        sa_column=sqlmodel.Column(
-            "design_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("design.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
+    connectingDesignPiece: typing.Optional[Piece] = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Piece", foreign_keys="[Connection.connectingDesignPiecePk]"))
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="connection", cascade_delete=True)
+    designPk: typing.Optional[int] = sqlmodel.Field(alias="designId", sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
     design: "Design" = sqlmodel.Relationship(back_populates="connections")
     __table_args__ = (
-        sqlalchemy.CheckConstraint(
-            "connecting_piece_id != connected_piece_id",
-            name="no reflexive connection",
+        sqlalchemy.UniqueConstraint(
+            "connected_piece_id", "connected_design_piece_id", "connecting_piece_id", "connecting_design_piece_id", name="uq_connections_connected_piece_id_connected_design_piece_id_connecting_piece_id_connecting_design_piece_id"
         ),
+        sqlalchemy.CheckConstraint("connected_piece_id != connecting_piece_id", name="ck_connections_not_reflexive"),
     )
 
     @property
     def connected(self) -> Side:
         return Side(
             piece=self.connectedPiece,
+            designPiece=(PieceId(id_=self.connectedDesignPiece.id_) if self.connectedDesignPiece is not None else None),
             port=self.connectedPort,
         )
 
@@ -3526,34 +2111,28 @@ class Connection(
     def connecting(self) -> Side:
         return Side(
             piece=self.connectingPiece,
+            designPiece=(PieceId(id_=self.connectingDesignPiece.id_) if self.connectingDesignPiece is not None else None),
             port=self.connectingPort,
         )
 
     def parent(self) -> "Design":
-        """👪 The parent design of the connection or otherwise `NoDesignAssigned` is raised."""
         if self.design is None:
             raise NoDesignAssigned()
         return self.design
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
-    def parse(
-        cls: "Connection",
-        input: str | dict | ConnectionInput | typing.Any | None,
-        pieces: list[Piece],
-    ) -> "Connection":
+    def parse(cls: "Connection", input: str | dict | ConnectionInput | typing.Any | None, pieces: list[Piece], designsById: typing.Optional[dict[str, dict[str, dict[str, Design]]]] = None) -> "Connection":
         if input is None:
             return cls()
-        obj = (
-            json.loads(input)
-            if isinstance(input, str)
-            else input if isinstance(input, dict) else input.__dict__
-        )
+        obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
         piecesDict = {p.id_: p for p in pieces}
         connected = Side.parse(obj["connected"])
         connecting = Side.parse(obj["connecting"])
         connectedPiece = piecesDict[connected.piece.id_]
         connectedType = connectedPiece.type
+        if connectedType is None:
+            raise FeatureNotYetSupported()
         connectedPort = [p for p in connectedType.ports if p.id_ == connected.port.id_]
         if len(connectedPort) == 0:
             raise PortNotFound(connectedType, connected.port)
@@ -3561,9 +2140,9 @@ class Connection(
             connectedPort = connectedPort[0]
         connectingPiece = piecesDict[connecting.piece.id_]
         connectingType = connectingPiece.type
-        connectingPort = [
-            p for p in connectingType.ports if p.id_ == connecting.port.id_
-        ]
+        if connectingType is None:
+            raise FeatureNotYetSupported()
+        connectingPort = [p for p in connectingType.ports if p.id_ == connecting.port.id_]
         if len(connectingPort) == 0:
             raise PortNotFound(connectingType, connecting.port)
         else:
@@ -3574,6 +2153,31 @@ class Connection(
             connectingPiece=connectingPiece,
             connectingPort=connectingPort,
         )
+        if connected.designPiece is not None:
+            if connectedPiece.refDesign is None and designsById is None:
+                raise FeatureNotYetSupported()
+            refDesign = connectedPiece.refDesign if connectedPiece.refDesign is not None else None
+            if refDesign is None and designsById is not None:
+                # best-effort lookup by connected piece's type/design is not possible; require refDesign
+                raise FeatureNotYetSupported()
+            if refDesign is not None:
+                try:
+                    designPiece = next(p for p in refDesign.pieces if p.id_ == connected.designPiece.id_)
+                except StopIteration:
+                    raise ValueError("Design piece not found in referenced design")
+                entity.connectedDesignPiece = designPiece
+        if connecting.designPiece is not None:
+            if connectingPiece.refDesign is None and designsById is None:
+                raise FeatureNotYetSupported()
+            refDesign = connectingPiece.refDesign if connectingPiece.refDesign is not None else None
+            if refDesign is None and designsById is not None:
+                raise FeatureNotYetSupported()
+            if refDesign is not None:
+                try:
+                    designPiece = next(p for p in refDesign.pieces if p.id_ == connecting.designPiece.id_)
+                except StopIteration:
+                    raise ValueError("Design piece not found in referenced design")
+                entity.connectingDesignPiece = designPiece
         try:
             entity.description = obj["description"]
         except KeyError:
@@ -3616,7 +2220,7 @@ class Connection(
         entity = {**ConnectionProps.model_validate(self).model_dump()}
         entity["connected"] = self.connected.dump()
         entity["connecting"] = self.connecting.dump()
-        entity["qualities"] = [q.dump() for q in self.qualities]
+        entity["attributes"] = [q.dump() for q in self.attributes]
         return ConnectionOutput(**entity)
 
     # TODO: Automatic emptying.
@@ -3636,7 +2240,6 @@ class Connection(
 
     # TODO: Automatic derive from Id model.
     def idMembers(self) -> RecursiveAnyList:
-        """🪪 The members that form the id of the connection within the parent design."""
         return [
             self.connected.piece.id_,
             self.connected.port.id_,
@@ -3645,268 +2248,130 @@ class Connection(
         ]
 
 
-### Designs ###
+# endregion Connection
+
+# region Design
+# https://github.com/usalu/semio-design-
 
 
 class DesignNameField(RealField, abc.ABC):
-    """📛 The name of the design."""
-
-    name: str = sqlmodel.Field(
-        max_length=NAME_LENGTH_LIMIT,
-        description="📛 The name of the design.",
-    )
-    """📛 The name of the design."""
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class DesignDescriptionField(RealField, abc.ABC):
-    """💬 The optional human-readable description of the design."""
-
-    description: str = sqlmodel.Field(
-        default="",
-        max_length=DESCRIPTION_LENGTH_LIMIT,
-        description="💬 The optional human-readable description of the design.",
-    )
-    """💬 The optional human-readable description of the design."""
+    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class DesignIconField(RealField, abc.ABC):
-    """🪙 The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. The image must be at least 256x256 pixels and smaller than 1 MB."""
-
-    icon: str = sqlmodel.Field(
-        default="",
-        max_length=URL_LENGTH_LIMIT,
-        description="🪙 The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. The image must be at least 256x256 pixels and smaller than 1 MB.",
-    )
-    """🪙 The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. The image must be at least 256x256 pixels and smaller than 1 MB."""
+    icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class DesignImageField(RealField, abc.ABC):
-    """🖼️ The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB."""
-
-    image: str = sqlmodel.Field(
-        default="",
-        max_length=URL_LENGTH_LIMIT,
-        description="🖼️ The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
-    )
-    """🖼️ The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB."""
+    image: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class DesignVariantField(RealField, abc.ABC):
-    """🔀 The optional variant of the design. No variant means the default variant."""
-
-    variant: str = sqlmodel.Field(
-        default="",
-        max_length=NAME_LENGTH_LIMIT,
-        description="🔀 The optional variant of the design. No variant means the default variant.",
-    )
-    """🔀 The optional variant of the design. No variant means the default variant."""
+    variant: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class DesignViewField(RealField, abc.ABC):
-    """🥽 The optional view of the design. No view means the default view."""
-
-    view: str = sqlmodel.Field(
-        default="",
-        max_length=NAME_LENGTH_LIMIT,
-        description="🥽 The optional view of the design. No view means the default view.",
-    )
-    """🥽 The optional view of the design. No view means the default view."""
+    view: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class DesignLocationField(MaskedField, abc.ABC):
-    """📍 The optional location of the design."""
-
-    location: typing.Optional[Location] = sqlmodel.Field(
-        default=None,
-        description="📍 The optional location of the design.",
-    )
-    """📍 The optional location of the design."""
+    location: typing.Optional[Location] = sqlmodel.Field(default=None)
 
 
 class DesignUnitField(RealField, abc.ABC):
-    """📏 The unit of the design."""
+    unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
-    unit: str = sqlmodel.Field(
-        default="",
-        max_length=NAME_LENGTH_LIMIT,
-        description="📏 The unit of the design.",
-    )
-    """📏 The unit of the design."""
+
+class DesignScalableField(RealField, abc.ABC):
+    can_scale: bool = sqlmodel.Field(default=True)
+
+
+class DesignMirrorableField(RealField, abc.ABC):
+    can_mirror: bool = sqlmodel.Field(default=True)
 
 
 class DesignCreatedField(RealField, abc.ABC):
-    """🕒 The creation date of the design."""
-
-    created: datetime.datetime = sqlmodel.Field(
-        default_factory=datetime.datetime.now,
-        description="🕒 The creation date of the design.",
-    )
-    """🕒 The creation date of the design."""
+    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 
 class DesignUpdatedField(RealField, abc.ABC):
-    """🕒 The last update date of the design."""
-
-    updated: datetime.datetime = sqlmodel.Field(
-        default_factory=datetime.datetime.now,
-        description="🕒 The last update date of the design.",
-    )
-    """🕒 The last update date of the design."""
+    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 
 class DesignId(DesignNameField, DesignVariantField, Id):
-    """🪪 The props to identify the design."""
+    pass
 
 
-class DesignProps(
-    DesignUnitField,
-    DesignViewField,
-    DesignLocationField,
-    DesignVariantField,
-    DesignImageField,
-    DesignIconField,
-    DesignDescriptionField,
-    DesignNameField,
-    Props,
-):
-    """🎫 The props of a design."""
+class DesignProps(DesignUnitField, DesignViewField, DesignLocationField, DesignVariantField, DesignImageField, DesignIconField, DesignDescriptionField, DesignNameField, Props):
+    pass
 
 
-class DesignInput(
-    DesignUnitField,
-    DesignViewField,
-    DesignVariantField,
-    DesignImageField,
-    DesignIconField,
-    DesignDescriptionField,
-    DesignNameField,
-    Input,
-):
-    """🏙️ A design is a collection of pieces that are connected."""
+class DesignInput(DesignUnitField, DesignViewField, DesignVariantField, DesignImageField, DesignIconField, DesignDescriptionField, DesignNameField, Input):
+    pass
 
     location: typing.Optional[LocationInput] = sqlmodel.Field(default=None)
     pieces: list[PieceInput] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionInput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorInput] = sqlmodel.Field(default_factory=list)
-    qualities: list[QualityInput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
+    concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 
-class DesignContext(
-    DesignUnitField,
-    DesignViewField,
-    DesignVariantField,
-    DesignDescriptionField,
-    DesignNameField,
-    Context,
-):
-    """🏙️ A design is a collection of pieces that are connected."""
+class DesignContext(DesignUnitField, DesignViewField, DesignVariantField, DesignDescriptionField, DesignNameField, Context):
+    pass
 
     location: typing.Optional[LocationContext] = sqlmodel.Field(default=None)
     pieces: list[PieceContext] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionContext] = sqlmodel.Field(default_factory=list)
-    qualities: list[QualityContext] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
+    concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 
-class DesignOutput(
-    DesignUpdatedField,
-    DesignCreatedField,
-    DesignUnitField,
-    DesignViewField,
-    DesignVariantField,
-    DesignImageField,
-    DesignIconField,
-    DesignDescriptionField,
-    DesignNameField,
-    Output,
-):
-    """🏙️ A design is a collection of pieces that are connected."""
+class DesignOutput(DesignUpdatedField, DesignCreatedField, DesignUnitField, DesignViewField, DesignVariantField, DesignImageField, DesignIconField, DesignDescriptionField, DesignNameField, Output):
+    pass
 
     location: typing.Optional[LocationOutput] = sqlmodel.Field(default=None)
     pieces: list[PieceOutput] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionOutput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorOutput] = sqlmodel.Field(default_factory=list)
-    qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+    concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 
-class DesignPrediction(
-    DesignDescriptionField,
-    Prediction,
-):
-    """🏙️ A design is a collection of pieces that are connected."""
+class DesignPrediction(DesignDescriptionField, Prediction):
+    pass
 
     pieces: list[PiecePrediction] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionPrediction] = sqlmodel.Field(default_factory=list)
 
 
 class Design(
-    DesignUpdatedField,
-    DesignCreatedField,
-    DesignUnitField,
-    DesignViewField,
-    DesignVariantField,
-    DesignImageField,
-    DesignIconField,
-    DesignDescriptionField,
-    DesignNameField,
-    TableEntity,
-    table=True,
+    DesignNameField, DesignVariantField, DesignViewField, DesignDescriptionField, DesignIconField, DesignImageField, DesignUnitField, DesignScalableField, DesignMirrorableField, DesignUpdatedField, DesignCreatedField, TableEntity, table=True
 ):
-    """🏙️ A design is a collection of pieces that are connected."""
-
     PLURAL = "designs"
-    __tablename__ = "design"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    locationLongitude: typing.Optional[float] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "location_longitude",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-        default=None,
-    )
-    """↔️ The longitude of the location in degrees."""
-    locationLatitude: typing.Optional[float] = sqlmodel.Field(
-        sa_column=sqlmodel.Column(
-            "location_latitude",
-            sqlalchemy.Float(),
-        ),
-        exclude=True,
-        default=None,
-    )
-    """↕️ The latitude of the location in degrees."""
-    pieces: list[Piece] = sqlmodel.Relationship(
-        back_populates="design", cascade_delete=True
-    )
-    connections: list[Connection] = sqlmodel.Relationship(
-        back_populates="design", cascade_delete=True
-    )
-    authors_: list[Author] = sqlmodel.Relationship(
-        back_populates="design", cascade_delete=True
-    )
-    qualities: list[Quality] = sqlmodel.Relationship(
-        back_populates="design", cascade_delete=True
-    )
-    kitPk: typing.Optional[int] = sqlmodel.Field(
-        alias="kitId",
-        sa_column=sqlmodel.Column(
-            "kit_id",
-            sqlalchemy.Integer(),
-            sqlalchemy.ForeignKey("kit.id"),
-        ),
-        default=None,
-        exclude=True,
-    )
+    __tablename__ = "designs"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    concepts_: list[Concept] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    authors_: list[Author] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    locationLongitude: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("location_longitude", sqlalchemy.Float()), exclude=True, default=None)
+    locationLatitude: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("location_latitude", sqlalchemy.Float()), exclude=True, default=None)
+    layers: list[Layer] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    pieces: list[Piece] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    groups: list[Group] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    connections: list[Connection] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    stats: list[Stat] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    kitPk: typing.Optional[int] = sqlmodel.Field(alias="kitId", sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
     kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="designs")
 
-    __table_args__ = (sqlalchemy.UniqueConstraint("name", "variant", "view", "kit_id"),)
+    __table_args__ = (sqlalchemy.UniqueConstraint("name", "variant", "view", "kit_id", name="uq_designs_name_variant_view_kit_id"),)
 
     @property
     def location(self) -> typing.Optional[Location]:
-        """📍 The location of the design."""
         if self.locationLongitude is None or self.locationLatitude is None:
             return None
         return Location(
@@ -3916,7 +2381,6 @@ class Design(
 
     @location.setter
     def location(self, location: typing.Optional[Location]):
-        """📍 Set the location of the design."""
         if location is None:
             self.locationLongitude = None
             self.locationLatitude = None
@@ -3926,7 +2390,6 @@ class Design(
 
     @property
     def authors(self) -> list[Author]:
-        """👤 Get the authors of the design."""
         return sorted(self.authors_, key=lambda a: a.rank)
 
     @authors.setter
@@ -3935,27 +2398,25 @@ class Design(
         for i, author in enumerate(authors):
             author.rank = i
 
+    @property
+    def concepts(self: "Design") -> list[str]:
+        return [concept.name for concept in sorted(self.concepts_, key=lambda x: x.order)]
+
+    @concepts.setter
+    def concepts(self: "Design", concepts: list[str]):
+        self.concepts_ = [Concept(name=concept, order=i) for i, concept in enumerate(concepts)]
+
     def parent(self) -> "Kit":
-        """👪 The parent kit of the design or otherwise `NoKitAssigned` is raised."""
         if self.kit is None:
             raise NoKitAssigned()
         return self.kit
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
-    def parse(
-        cls: "Design",
-        input: str | dict | DesignInput | typing.Any | None,
-        types: list[Type],
-    ) -> "Design":
-        """🧪 Parse the input to a design."""
+    def parse(cls: "Design", input: str | dict | DesignInput | typing.Any | None, types: list[Type], designsById: typing.Optional[dict[str, dict[str, dict[str, "Design"]]]] = None) -> "Design":
         if input is None:
             return cls()
-        obj = (
-            json.loads(input)
-            if isinstance(input, str)
-            else input if isinstance(input, dict) else input.__dict__
-        )
+        obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
         props = DesignProps.model_validate(obj)
         entity = cls(**props.model_dump())
         try:
@@ -3970,23 +2431,28 @@ class Design(
                 typesDict[type.name][type.variant] = {}
             typesDict[type.name][type.variant] = type
         try:
-            pieces = [Piece.parse(p, typesDict) for p in obj["pieces"]]
+            pieces = [Piece.parse(p, typesDict, designsById) for p in obj["pieces"]]
             entity.pieces = pieces
         except KeyError:
             pass
         try:
-            connections = [Connection.parse(c, pieces) for c in obj["connections"]]
+            connections = [Connection.parse(c, pieces, designsById) for c in obj["connections"]]
             entity.connections = connections
         except KeyError:
             pass
         try:
-            qualities = [Quality.parse(q) for q in obj["qualities"]]
-            entity.qualities = qualities
+            attributes = [Attribute.parse(q) for q in obj["attributes"]]
+            entity.attributes = attributes
         except KeyError:
             pass
         try:
             authors = [Author.parse(a) for a in obj["authors"]]
             entity.authors = authors
+        except KeyError:
+            pass
+        try:
+            concepts = obj["concepts"]
+            entity.concepts = concepts
         except KeyError:
             pass
         return entity
@@ -3995,13 +2461,13 @@ class Design(
         entity = {**DesignProps.model_validate(self).model_dump()}
         entity["pieces"] = [p.dump() for p in self.pieces]
         entity["connections"] = [c.dump() for c in self.connections]
-        entity["qualities"] = [q.dump() for q in self.qualities]
+        entity["attributes"] = [q.dump() for q in self.attributes]
         entity["authors"] = [a.dump() for a in self.authors]
+        entity["concepts"] = self.concepts
         return DesignOutput(**entity)
 
     # TODO: Automatic emptying.
     def empty(self) -> "Kit":
-        """🪣 Empty the design."""
         props = DesignProps()
         for key, value in props.model_dump().items():
             setattr(self, key, value)
@@ -4010,7 +2476,6 @@ class Design(
 
     # TODO: Automatic updating based on props.
     def update(self, other: "Design", empty: bool = False) -> "Design":
-        """🔄 Update the props of the design. Optionally empty the design before."""
         if empty:
             self.empty()
         props = DesignProps.model_validate(other)
@@ -4023,288 +2488,545 @@ class Design(
         return [self.name, self.variant]
 
 
-### Kits ###
+# endregion Design
+
+# region Quality
 
 
-class KitUriField(RealField, abc.ABC):
-    """🆔 The uri of the kit."""
-
-    uri: str = sqlmodel.Field(
-        max_length=URI_LENGTH_LIMIT,
-        description="🆔 The uri of the kit.",
-    )
-    """🆔 The uri of the kit."""
+class QualityKeyField(RealField, abc.ABC):
+    key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT, primary_key=True)
 
 
-class KitNameField(RealField, abc.ABC):
-    """📛 The name of the kit."""
-
-    name: str = sqlmodel.Field(
-        max_length=NAME_LENGTH_LIMIT,
-        description="📛 The name of the kit.",
-    )
-    """📛 The name of the kit."""
+class QualityNameField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 
-class KitDescriptionField(RealField, abc.ABC):
-    """💬 The optional human-readable description of the kit."""
-
-    description: str = sqlmodel.Field(
-        default="",
-        max_length=DESCRIPTION_LENGTH_LIMIT,
-        description="💬 The optional human-readable description of the kit.",
-    )
-    """💬 The optional human-readable description of the kit."""
+class QualityDescriptionField(RealField, abc.ABC):
+    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
-class KitIconField(RealField, abc.ABC):
-    """🪙 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. kit."""
-
-    icon: str = sqlmodel.Field(
-        default="",
-        max_length=URL_LENGTH_LIMIT,
-        description="🪙 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. kit.",
-    )
-    """🪙 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. kit."""
+class QualityUriField(RealField, abc.ABC):
+    uri: str = sqlmodel.Field(default="", max_length=URI_LENGTH_LIMIT)
 
 
-class KitImageField(RealField, abc.ABC):
-    """🖼️ The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB."""
-
-    image: str = sqlmodel.Field(
-        default="",
-        max_length=URL_LENGTH_LIMIT,
-        description="🖼️ The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
-    )
-    """🖼️ The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB."""
+class QualityScalableField(RealField, abc.ABC):
+    scalable: bool = sqlmodel.Field(default=False)
 
 
-class KitPreviewField(RealField, abc.ABC):
-    """🔮 The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB."""
-
-    preview: str = sqlmodel.Field(
-        default="",
-        max_length=URL_LENGTH_LIMIT,
-        description="🔮 The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.",
-    )
-    """🔮 The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB."""
+class QualityKindField(RealField, abc.ABC):
+    kind: int = sqlmodel.Field(default=0)
 
 
-class KitVersionField(RealField, abc.ABC):
-    """🔀 The optional version of the kit. No version means the latest version."""
-
-    version: str = sqlmodel.Field(
-        default="",
-        max_length=NAME_LENGTH_LIMIT,
-        description="🔀 The optional version of the kit. No version means the latest version.",
-    )
-    """🔀 The optional version of the kit. No version means the latest version."""
+class QualitySiField(RealField, abc.ABC):
+    si: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
-class KitRemoteField(RealField, abc.ABC):
-    """☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely."""
-
-    remote: str = sqlmodel.Field(
-        default="",
-        max_length=URL_LENGTH_LIMIT,
-        description="☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely.",
-    )
-    """☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely."""
+class QualityImperialField(RealField, abc.ABC):
+    imperial: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
-class KitHomepage(RealField, abc.ABC):
-    """🏠 The optional url of the homepage of the kit."""
-
-    homepage: str = sqlmodel.Field(
-        default="",
-        max_length=URL_LENGTH_LIMIT,
-        description="🏠 The optional url of the homepage of the kit.",
-    )
-    """🏠 The optional url of the homepage of the kit."""
+class QualityMinField(RealField, abc.ABC):
+    min: typing.Optional[float] = sqlmodel.Field(default=None)
 
 
-class KitLicenseField(RealField, abc.ABC):
-    """⚖️ The optional license [ spdx id | url ] of the kit."""
-
-    license: str = sqlmodel.Field(
-        default="",
-        max_length=URL_LENGTH_LIMIT,
-        description="⚖️ The optional license [ spdx id | url ] of the kit.",
-    )
-    """⚖️ The optional license [ spdx id | url ] of the kit."""
+class QualityMinExcludedField(RealField, abc.ABC):
+    min_excluded: bool = sqlmodel.Field(default=True)
 
 
-class KitCreatedField(RealField, abc.ABC):
-    """🕒 The creation date of the kit."""
-
-    created: datetime.datetime = sqlmodel.Field(
-        default_factory=datetime.datetime.now,
-        description="🕒 The creation date of the kit.",
-    )
-    """🕒 The creation date of the kit."""
+class QualityMaxField(RealField, abc.ABC):
+    max: typing.Optional[float] = sqlmodel.Field(default=None)
 
 
-class KitUpdatedField(RealField, abc.ABC):
-    """🕒 The last update date of the kit."""
-
-    updated: datetime.datetime = sqlmodel.Field(
-        default_factory=datetime.datetime.now,
-        description="🕒 The last update date of the kit.",
-    )
-    """🕒 The last update date of the kit."""
+class QualityMaxExcludedField(RealField, abc.ABC):
+    max_excluded: bool = sqlmodel.Field(default=True)
 
 
-class KitId(KitUriField, Id):
-    """🪪 The props to identify the kit."""
+class QualityDefaultField(RealField, abc.ABC):
+    default: typing.Optional[float] = sqlmodel.Field(default=None)
 
 
-class KitProps(
-    KitLicenseField,
-    KitHomepage,
-    KitRemoteField,
-    KitVersionField,
-    KitPreviewField,
-    KitImageField,
-    KitIconField,
-    KitDescriptionField,
-    KitNameField,
-    KitUriField,
+class QualityFormulaField(RealField, abc.ABC):
+    formula: str = sqlmodel.Field(default="", max_length=EXPRESSION_LENGTH_LIMIT)
+
+
+class QualityCreatedField(RealField, abc.ABC):
+    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class QualityUpdatedField(RealField, abc.ABC):
+    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class QualityId(QualityKeyField, Id):
+    pass
+
+
+class QualityProps(
+    QualityFormulaField,
+    QualityDefaultField,
+    QualityMaxExcludedField,
+    QualityMaxField,
+    QualityMinExcludedField,
+    QualityMinField,
+    QualityImperialField,
+    QualitySiField,
+    QualityKindField,
+    QualityScalableField,
+    QualityUriField,
+    QualityDescriptionField,
+    QualityNameField,
+    QualityKeyField,
     Props,
 ):
-    """🎫 The props of a kit."""
+    pass
 
 
-class KitInput(
-    KitLicenseField,
-    KitHomepage,
-    KitRemoteField,
-    KitVersionField,
-    KitPreviewField,
-    KitImageField,
-    KitIconField,
-    KitDescriptionField,
-    KitNameField,
+class QualityInput(
+    QualityFormulaField,
+    QualityDefaultField,
+    QualityMaxExcludedField,
+    QualityMaxField,
+    QualityMinExcludedField,
+    QualityMinField,
+    QualityImperialField,
+    QualitySiField,
+    QualityKindField,
+    QualityScalableField,
+    QualityUriField,
+    QualityDescriptionField,
+    QualityNameField,
+    QualityKeyField,
     Input,
 ):
-    """↘️ The input for a kit."""
-
-    types: list[TypeInput] = sqlmodel.Field(
-        default_factory=list, description="🧩 The types of the kit."
-    )
-    """🧩 The types of the kit."""
-    designs: list[DesignInput] = sqlmodel.Field(
-        default_factory=list, description="🏙️ The designs of the kit."
-    )
-    """🏙️ The designs of the kit."""
-    qualities: list[QualityInput] = sqlmodel.Field(
-        default_factory=list, description="📏 The qualities of the kit."
-    )
-    """📏 The qualities of the kit."""
+    pass
 
 
-class KitContext(
-    KitDescriptionField,
-    KitNameField,
-    Context,
-):
-    """🗃️ A kit is a collection of types and designs."""
-
-    types: list[TypeContext] = sqlmodel.Field(
-        default_factory=list, description="🧩 The types of the kit."
-    )
-    """🧩 The types of the kit."""
-    designs: list[DesignContext] = sqlmodel.Field(
-        default_factory=list, description="🏙️ The designs of the kit."
-    )
-    """🏙️ The designs of the kit."""
-    qualities: list[QualityContext] = sqlmodel.Field(
-        default_factory=list, description="📏 The qualities of the kit."
-    )
-    """📏 The qualities of the kit."""
+class QualityContext(QualityDescriptionField, QualityNameField, QualityKeyField, Context):
+    pass
 
 
-class KitOutput(
-    KitUpdatedField,
-    KitCreatedField,
-    KitLicenseField,
-    KitHomepage,
-    KitRemoteField,
-    KitVersionField,
-    KitPreviewField,
-    KitImageField,
-    KitIconField,
-    KitDescriptionField,
-    KitNameField,
-    KitUriField,
+class QualityOutput(
+    QualityUpdatedField,
+    QualityCreatedField,
+    QualityFormulaField,
+    QualityDefaultField,
+    QualityMaxExcludedField,
+    QualityMaxField,
+    QualityMinExcludedField,
+    QualityMinField,
+    QualityImperialField,
+    QualitySiField,
+    QualityKindField,
+    QualityScalableField,
+    QualityUriField,
+    QualityDescriptionField,
+    QualityNameField,
+    QualityKeyField,
     Output,
 ):
-    """🗃️ A kit is a collection of types and designs."""
-
-    types: list[TypeOutput] = sqlmodel.Field(
-        default_factory=list, description="🧩 The types of the kit."
-    )
-    """🧩 The types of the kit."""
-    designs: list[DesignOutput] = sqlmodel.Field(
-        default_factory=list, description="🏙️ The designs of the kit."
-    )
-    """🏙️ The designs of the kit."""
-    qualities: list[QualityOutput] = sqlmodel.Field(
-        default_factory=list, description="📏 The qualities of the kit."
-    )
-    """📏 The qualities of the kit."""
+    benchmarks: list["BenchmarkOutput"] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 
-class Kit(
-    KitUpdatedField,
-    KitCreatedField,
-    KitLicenseField,
-    KitHomepage,
-    KitRemoteField,
-    KitVersionField,
-    KitPreviewField,
-    KitImageField,
-    KitIconField,
-    KitDescriptionField,
-    KitNameField,
-    KitUriField,
+class Quality(
+    QualityUpdatedField,
+    QualityCreatedField,
+    QualityFormulaField,
+    QualityDefaultField,
+    QualityMaxExcludedField,
+    QualityMaxField,
+    QualityMinExcludedField,
+    QualityMinField,
+    QualityImperialField,
+    QualitySiField,
+    QualityKindField,
+    QualityScalableField,
+    QualityUriField,
+    QualityDescriptionField,
+    QualityNameField,
+    QualityKeyField,
     TableEntity,
     table=True,
 ):
-    """🗃️ A kit is a collection of types and designs."""
+    PLURAL = "qualities"
+    __tablename__ = "qualities"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
+    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="qualities")
 
+    benchmarks: list["Benchmark"] = sqlmodel.Relationship(back_populates="quality", cascade_delete=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="quality", cascade_delete=True)
+
+    __table_args__ = (
+        sqlalchemy.CheckConstraint("kind >= 0 AND kind <= 63", name="ck_qualities_kind_range"),
+        sqlalchemy.UniqueConstraint("key", "kit_id", name="uq_qualities_key_kit_id"),
+    )
+
+
+# endregion Quality
+
+# region Benchmark
+
+
+class BenchmarkNameField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class BenchmarkIconField(RealField, abc.ABC):
+    icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+
+
+class BenchmarkMinField(RealField, abc.ABC):
+    min: typing.Optional[float] = sqlmodel.Field(default=None)
+
+
+class BenchmarkMinExcludedField(RealField, abc.ABC):
+    min_excluded: bool = sqlmodel.Field(default=False)
+
+
+class BenchmarkMaxField(RealField, abc.ABC):
+    max: typing.Optional[float] = sqlmodel.Field(default=None)
+
+
+class BenchmarkMaxExcludedField(RealField, abc.ABC):
+    max_excluded: bool = sqlmodel.Field(default=False)
+
+
+class BenchmarkId(BenchmarkNameField, Id):
+    pass
+
+
+class BenchmarkProps(BenchmarkMaxExcludedField, BenchmarkMaxField, BenchmarkMinExcludedField, BenchmarkMinField, BenchmarkIconField, BenchmarkNameField, Props):
+    pass
+
+
+class BenchmarkInput(BenchmarkMaxExcludedField, BenchmarkMaxField, BenchmarkMinExcludedField, BenchmarkMinField, BenchmarkIconField, BenchmarkNameField, Input):
+    pass
+
+
+class BenchmarkOutput(BenchmarkMaxExcludedField, BenchmarkMaxField, BenchmarkMinExcludedField, BenchmarkMinField, BenchmarkIconField, BenchmarkNameField, Output):
+    pass
+
+
+class Benchmark(BenchmarkMaxExcludedField, BenchmarkMaxField, BenchmarkMinExcludedField, BenchmarkMinField, BenchmarkIconField, BenchmarkNameField, TableEntity, table=True):
+    PLURAL = "benchmarks"
+    __tablename__ = "benchmarks"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    qualityPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("quality_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("qualities.id")), default=None, exclude=True)
+    quality: typing.Optional[Quality] = sqlmodel.Relationship(back_populates="benchmarks")
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="benchmark", cascade_delete=True)
+
+
+# endregion Benchmark
+
+# region Prop
+
+
+class PropKeyField(RealField, abc.ABC):
+    key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class PropValueField(RealField, abc.ABC):
+    value: str = sqlmodel.Field(max_length=VALUE_LENGTH_LIMIT)
+
+
+class PropUnitField(RealField, abc.ABC):
+    unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+
+
+class PropCreatedField(RealField, abc.ABC):
+    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class PropUpdatedField(RealField, abc.ABC):
+    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class PropId(PropKeyField, Id):
+    pass
+
+
+class PropProps(PropUpdatedField, PropCreatedField, PropUnitField, PropValueField, PropKeyField, Props):
+    pass
+
+
+class PropInput(PropUnitField, PropValueField, PropKeyField, Input):
+    pass
+
+
+class PropOutput(PropUpdatedField, PropCreatedField, PropUnitField, PropValueField, PropKeyField, Output):
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+
+
+class Prop(PropUpdatedField, PropCreatedField, PropUnitField, PropValueField, PropKeyField, TableEntity, table=True):
+    PLURAL = "props"
+    __tablename__ = "props"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    portPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
+    port: typing.Optional["Port"] = sqlmodel.Relationship(back_populates="props")
+
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="prop", cascade_delete=True)
+
+
+# endregion Prop
+
+# region Stat
+
+
+class StatKeyField(RealField, abc.ABC):
+    key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class StatUnitField(RealField, abc.ABC):
+    unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+
+
+class StatMinField(RealField, abc.ABC):
+    min: typing.Optional[float] = sqlmodel.Field(default=None)
+
+
+class StatMinExcludedField(RealField, abc.ABC):
+    min_excluded: bool = sqlmodel.Field(default=False)
+
+
+class StatMaxField(RealField, abc.ABC):
+    max: typing.Optional[float] = sqlmodel.Field(default=None)
+
+
+class StatMaxExcludedField(RealField, abc.ABC):
+    max_excluded: bool = sqlmodel.Field(default=False)
+
+
+class StatCreatedField(RealField, abc.ABC):
+    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class StatUpdatedField(RealField, abc.ABC):
+    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class StatId(StatKeyField, Id):
+    pass
+
+
+class StatProps(StatUpdatedField, StatCreatedField, StatMaxExcludedField, StatMaxField, StatMinExcludedField, StatMinField, StatUnitField, StatKeyField, Props):
+    pass
+
+
+class StatInput(StatMaxExcludedField, StatMaxField, StatMinExcludedField, StatMinField, StatUnitField, StatKeyField, Input):
+    pass
+
+
+class StatOutput(StatUpdatedField, StatCreatedField, StatMaxExcludedField, StatMaxField, StatMinExcludedField, StatMinField, StatUnitField, StatKeyField, Output):
+    pass
+
+
+class Stat(StatUpdatedField, StatCreatedField, StatMaxExcludedField, StatMaxField, StatMinExcludedField, StatMinField, StatUnitField, StatKeyField, TableEntity, table=True):
+    PLURAL = "stats"
+    __tablename__ = "stats"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="stats")
+
+
+# endregion Stat
+
+# region Layer
+
+
+class LayerNameField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class LayerDescriptionField(RealField, abc.ABC):
+    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+
+
+class LayerColorField(RealField, abc.ABC):
+    color: str = sqlmodel.Field(default="", max_length=7)
+
+
+class LayerId(LayerNameField, Id):
+    pass
+
+
+class LayerProps(LayerColorField, LayerDescriptionField, LayerNameField, Props):
+    pass
+
+
+class LayerInput(LayerColorField, LayerDescriptionField, LayerNameField, Input):
+    pass
+
+
+class LayerOutput(LayerColorField, LayerDescriptionField, LayerNameField, Output):
+    pass
+
+
+class Layer(LayerColorField, LayerDescriptionField, LayerNameField, TableEntity, table=True):
+    PLURAL = "layers"
+    __tablename__ = "layers"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="layers")
+
+
+# endregion Layer
+
+# region Group
+
+
+class GroupNameField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class GroupDescriptionField(RealField, abc.ABC):
+    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+
+
+class GroupColorField(RealField, abc.ABC):
+    color: str = sqlmodel.Field(default="", max_length=7)
+
+
+class GroupId(GroupNameField, Id):
+    pass
+
+
+class GroupProps(GroupColorField, GroupDescriptionField, GroupNameField, Props):
+    pass
+
+
+class GroupInput(GroupColorField, GroupDescriptionField, GroupNameField, Input):
+    pass
+
+
+class GroupOutput(GroupColorField, GroupDescriptionField, GroupNameField, Output):
+    pieces: list["PieceOutput"] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+
+
+class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity, table=True):
+    PLURAL = "groups"
+    __tablename__ = "groups"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="groups")
+
+
+# endregion Group
+
+# region Kit
+# https://github.com/usalu/semio-kit-
+
+
+class KitUriField(RealField, abc.ABC):
+    uri: str = sqlmodel.Field(max_length=URI_LENGTH_LIMIT)
+
+
+class KitNameField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class KitDescriptionField(RealField, abc.ABC):
+    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+
+
+class KitIconField(RealField, abc.ABC):
+    icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+
+
+class KitImageField(RealField, abc.ABC):
+    image: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+
+
+class KitPreviewField(RealField, abc.ABC):
+    preview: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+
+
+class KitVersionField(RealField, abc.ABC):
+    version: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+
+
+class KitRemoteField(RealField, abc.ABC):
+    remote: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+
+
+class KitHomepage(RealField, abc.ABC):
+    homepage: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+
+
+class KitLicenseField(RealField, abc.ABC):
+    license: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+
+
+class KitCreatedField(RealField, abc.ABC):
+    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class KitUpdatedField(RealField, abc.ABC):
+    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class KitId(KitUriField, Id):
+    pass
+
+
+class KitProps(KitLicenseField, KitHomepage, KitRemoteField, KitVersionField, KitPreviewField, KitImageField, KitIconField, KitDescriptionField, KitNameField, KitUriField, Props):
+    pass
+
+
+class KitInput(KitLicenseField, KitHomepage, KitRemoteField, KitVersionField, KitPreviewField, KitImageField, KitIconField, KitDescriptionField, KitNameField, Input):
+    pass
+
+    types: list[TypeInput] = sqlmodel.Field(default_factory=list)
+    designs: list[DesignInput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
+    concepts: list[str] = sqlmodel.Field(default_factory=list)
+
+
+class KitContext(KitDescriptionField, KitNameField, Context):
+    pass
+
+    types: list[TypeContext] = sqlmodel.Field(default_factory=list)
+    designs: list[DesignContext] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
+
+
+class KitOutput(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, KitRemoteField, KitVersionField, KitPreviewField, KitImageField, KitIconField, KitDescriptionField, KitNameField, KitUriField, Output):
+    pass
+
+    types: list[TypeOutput] = sqlmodel.Field(default_factory=list)
+    designs: list[DesignOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+    concepts: list[str] = sqlmodel.Field(default_factory=list)
+
+
+class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitImageField, KitRemoteField, KitHomepage, KitLicenseField, KitPreviewField, KitUriField, KitUpdatedField, KitCreatedField, TableEntity, table=True):
     PLURAL = "kits"
-    __tablename__ = "kit"
-    pk: typing.Optional[int] = sqlmodel.Field(
-        sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True),
-        default=None,
-        exclude=True,
-    )
-    """🔑 The primary key of the kit in the database."""
-
+    __tablename__ = "kits"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    concepts_: list[Concept] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+    authors_: list[Author] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
     types: list[Type] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
-    """🧩 The types of the kit."""
-    designs: list[Design] = sqlmodel.Relationship(
-        back_populates="kit", cascade_delete=True
-    )
-    """🏙️ The designs of the kit."""
-    qualities: list[Quality] = sqlmodel.Relationship(
-        back_populates="kit", cascade_delete=True
-    )
-    """📏 The qualities of the kit."""
+    designs: list[Design] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+    qualities: list[Quality] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
 
-    __table_args__ = (sqlalchemy.UniqueConstraint("uri"),)
+    @property
+    def concepts(self: "Kit") -> list[str]:
+        return [concept.name for concept in sorted(self.concepts_, key=lambda x: x.order)]
+
+    @concepts.setter
+    def concepts(self: "Kit", concepts: list[str]):
+        self.concepts_ = [Concept(name=concept, order=i) for i, concept in enumerate(concepts)]
+
+    __table_args__ = (sqlalchemy.UniqueConstraint("uri", name="uq_kits_uri"),)
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
     def parse(cls: "Kit", input: str | dict | KitInput | typing.Any | None) -> "Kit":
-        """🧪 Parse the input to a kit."""
         if input is None:
             return cls()
-        obj = (
-            json.loads(input)
-            if isinstance(input, str)
-            else input if isinstance(input, dict) else input.__dict__
-        )
+        obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
         props = KitProps.model_validate(obj)
         entity = cls(**props.model_dump())
         try:
@@ -4317,18 +3039,23 @@ class Kit(
             entity.designs = designs
         except KeyError:
             pass
+        try:
+            concepts = obj["concepts"]
+            entity.concepts = concepts
+        except KeyError:
+            pass
         return entity
 
     def dump(self) -> "KitOutput":
         entity = {**KitProps.model_validate(self).model_dump()}
         entity["types"] = [t.dump() for t in self.types]
         entity["designs"] = [d.dump() for d in self.designs]
-        entity["qualities"] = [q.dump() for q in self.qualities]
+        entity["attributes"] = [q.dump() for q in self.attributes]
+        entity["concepts"] = self.concepts
         return KitOutput(**entity)
 
     # TODO: Automatic emptying.
     def empty(self) -> "Kit":
-        """🪣 Empty the kit."""
         props = KitProps.model_construct()
         for key, value in props.model_dump().items():
             setattr(self, key, value)
@@ -4337,7 +3064,6 @@ class Kit(
 
     # TODO: Automatic updating based on props.
     def update(self, other: "Kit", empty: bool = False) -> "Kit":
-        """🔄 Update the props of the kit. Optionally empty the kit before."""
         if empty:
             self.empty()
         props = KitProps.model_validate(other)
@@ -4347,15 +3073,19 @@ class Kit(
 
     # TODO: Automatic derive from Id model.
     def idMembers(self) -> RecursiveAnyList:
-        """🪪 The members that form the id of the kit."""
         return self.uri
 
     def guid(self) -> str:
-        """🔗 The guid of the kit."""
         return self.id()
 
 
-# Store #
+# endregion Models
+
+# endregion Domain
+
+# endregion Modeling
+
+# region Store
 
 
 codeGrammar = (
@@ -4465,9 +3195,7 @@ class Store(abc.ABC):
     def __init__(self, uri: str) -> None:
         self.uri = uri
 
-    def execute(
-        self, command: CommandKind = CommandKind.QUERY, code: str = "", input: str = ""
-    ) -> typing.Any:
+    def execute(self, command: CommandKind = CommandKind.QUERY, code: str = "", input: str = "") -> typing.Any:
         """❕ Execute a command on the store."""
         codeTree = codeParser.parse(code)
         operation = OperationBuilder().transform(codeTree)
@@ -4555,11 +3283,7 @@ class DatabaseStore(Store, abc.ABC):
             case _:
                 raise FeatureNotYetSupported()
 
-    def put(
-        self: "DatabaseStore",
-        operation: dict,
-        input: KitInput | DesignInput | TypeInput,
-    ) -> typing.Any:
+    def put(self: "DatabaseStore", operation: dict, input: KitInput | DesignInput | TypeInput) -> typing.Any:
         # General:
         # - Wrap iteration over relationships in list() to avoid iterator bugs
         # - When deleting relationships, set property = [] after deleting all items and then add the new ones
@@ -4572,9 +3296,7 @@ class DatabaseStore(Store, abc.ABC):
             dump = input.model_dump()
             dump["uri"] = kitUri
             kit = Kit.parse(dump)
-            existingKit = (
-                self.session.query(Kit).filter(Kit.uri == kitUri).one_or_none()
-            )
+            existingKit = self.session.query(Kit).filter(Kit.uri == kitUri).one_or_none()
             if existingKit is not None:
                 raise KitAlreadyExists(kitUri)
             try:
@@ -4590,12 +3312,15 @@ class DatabaseStore(Store, abc.ABC):
         kit = self.session.query(Kit).filter(Kit.uri == kitUri).one_or_none()
         match kind:
             case "design":
-                types = [
-                    u.Type
-                    for u in self.session.query(Type, Kit)
-                    .filter(Kit.uri == kitUri)
-                    .all()
-                ]
+                types = [u.Type for u in self.session.query(Type, Kit).filter(Kit.uri == kitUri).all()]
+                existingDesigns = [d for d, _ in self.session.query(Design, Kit).filter(Kit.uri == kitUri).all()]
+                designsById: dict[str, dict[str, dict[str, Design]]] = {}
+                for d in existingDesigns:
+                    if d.name not in designsById:
+                        designsById[d.name] = {}
+                    if d.variant not in designsById[d.name]:
+                        designsById[d.name][d.variant] = {}
+                    designsById[d.name][d.variant][d.view] = d
                 existingDesignUnion = (
                     self.session.query(Design, Kit)
                     .filter(
@@ -4610,12 +3335,12 @@ class DatabaseStore(Store, abc.ABC):
                     if existingDesignUnion is not None:
                         existingDesign = existingDesignUnion.Design
                         self.session.delete(existingDesign)
-                        design = Design.parse(input, types)
+                        design = Design.parse(input, types, designsById)
                         design.kit = kit
                         self.session.add(design)
                         self.session.commit()
                     else:
-                        design = Design.parse(input, types)
+                        design = Design.parse(input, types, designsById)
                         design.kit = kit
                         self.session.add(design)
                         self.session.commit()
@@ -4636,7 +3361,6 @@ class DatabaseStore(Store, abc.ABC):
                 )
                 try:
                     if existingTypeUnion is not None:
-
                         # gather
                         existingType = existingTypeUnion.Type
                         existingPorts = {p.id_: p for p in existingType.ports}
@@ -4644,13 +3368,9 @@ class DatabaseStore(Store, abc.ABC):
                         for port in list(existingType.ports):
                             for connection in port.connections:
                                 if connection.connectedPiece.type == existingType:
-                                    usedPorts[connection.connectedPort.id_] = (
-                                        connection.connectedPort
-                                    )
+                                    usedPorts[connection.connectedPort.id_] = connection.connectedPort
                                 if connection.connectingPiece.type == existingType:
-                                    usedPorts[connection.connectingPort.id_] = (
-                                        connection.connectingPort
-                                    )
+                                    usedPorts[connection.connectingPort.id_] = connection.connectingPort
                         newPorts = {p.id_: p for p in type.ports}
                         missingPorts = set(usedPorts.keys()) - set(newPorts.keys())
                         if missingPorts:
@@ -4667,24 +3387,22 @@ class DatabaseStore(Store, abc.ABC):
                             usedPort.point = newPorts[usedPortId].point
                             usedPort.direction = newPorts[usedPortId].direction
 
-                            for quality in list(usedPort.qualities):
-                                self.session.delete(quality)
-                            usedPort.qualities = []
+                            for attribute in list(usedPort.attributes):
+                                self.session.delete(attribute)
+                            usedPort.attributes = []
                             self.session.flush()
 
-                            newQualities = []
-                            for newQuality in list(newPorts[usedPortId].qualities):
-                                newQuality.port = usedPort
-                                self.session.add(newQuality)
-                                newQualities.append(newQuality)
-                            usedPort.qualities = newQualities
+                            newAttributes = []
+                            for newAttribute in list(newPorts[usedPortId].attributes):
+                                newAttribute.port = usedPort
+                                self.session.add(newAttribute)
+                                newAttributes.append(newAttribute)
+                            usedPort.attributes = newAttributes
                             self.session.flush()
 
                         for unusedPort in list(unusedPorts):
                             self.session.delete(existingPorts[unusedPort])
-                        existingType.ports = [
-                            p for p in existingType.ports if p.id_ not in unusedPorts
-                        ]
+                        existingType.ports = [p for p in existingType.ports if p.id_ not in unusedPorts]
                         self.session.flush()
 
                         for newPortId, newPort in newPorts.items():
@@ -4699,10 +3417,10 @@ class DatabaseStore(Store, abc.ABC):
                             self.session.add(representation)
                         self.session.flush()
 
-                        existingType.qualities = []
-                        for quality in list(type.qualities):
-                            quality.type = existingType
-                            self.session.add(quality)
+                        existingType.attributes = []
+                        for attribute in list(type.attributes):
+                            attribute.type = existingType
+                            self.session.add(attribute)
                         self.session.flush()
 
                         existingType.authors = []
@@ -4801,15 +3519,15 @@ def cache(remoteUri: str) -> str:
 
     try:
         response = requests.get(remoteUri)
-        response.risefor_status()
-    except requests.exceptions.HTTPError as e:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError:
         # TODO: Better error message.
         raise KitNotFound(remoteUri)
 
     with zipfile.ZipFile(io.BytesIO(response.content)) as zip:
         zip.extractall(path)
         paths = os.listdir(path)
-        while not ".semio" in paths:
+        while ".semio" not in paths:
             if len(paths) != 1:
                 raise KitZipDoesNotContainSemioFolder()
             nestedPath = os.path.join(path, paths[0])
@@ -4830,9 +3548,7 @@ def cache(remoteUri: str) -> str:
 class SqliteStore(DatabaseStore):
     path: pathlib.Path
 
-    def __init__(
-        self, uri: str, engine: sqlalchemy.engine.Engine, path: pathlib.Path
-    ) -> None:
+    def __init__(self, uri: str, engine: sqlalchemy.engine.Engine, path: pathlib.Path) -> None:
         super().__init__(uri, engine)
         self.path = path
 
@@ -4840,20 +3556,17 @@ class SqliteStore(DatabaseStore):
     def fromUri(cls, uri: str, path: str = "") -> "SqliteStore":
         if path == "":
             path = uri
-        sqlitePath = (
-            pathlib.Path(path)
-            / pathlib.Path(KIT_LOCAL_FOLDERNAME)
-            / pathlib.Path(KIT_LOCAL_FILENAME)
-        )
+        sqlitePath = pathlib.Path(path) / pathlib.Path(KIT_LOCAL_FOLDERNAME) / pathlib.Path(KIT_LOCAL_FILENAME)
         connectionString = f"sqlite:///{sqlitePath}"
         engine = sqlalchemy.create_engine(connectionString, echo=True)
-        session = sqlalchemy.orm.sessionmaker(bind=engine)()
+        SessionMaker = sqlalchemy.orm.sessionmaker(bind=engine)
         try:  # change uri if local kit is already created
-            kit = session.query(Kit).first()
-            kit.uri = uri
-            session.commit()
-            session.close()
-        except sqlalchemy.exc.OperationalError as e:
+            with SessionMaker() as session:
+                kit = session.query(Kit).first()
+                if kit:
+                    kit.uri = uri
+                    session.commit()
+        except sqlalchemy.exc.OperationalError:
             pass
         return SqliteStore(uri, engine, sqlitePath)
 
@@ -4863,12 +3576,12 @@ class SqliteStore(DatabaseStore):
             exist_ok=True,
         )
         sqlmodel.SQLModel.metadata.create_all(self.engine)
-        session = sqlalchemy.orm.sessionmaker(bind=self.engine)()
-        existingSemio = session.query(Semio).one_or_none()
-        if not existingSemio:
-            session.add(Semio())
-            session.commit()
-        session.close()
+        SessionMaker = sqlalchemy.orm.sessionmaker(bind=self.engine)
+        with SessionMaker() as session:
+            existingSemio = session.query(Semio).one_or_none()
+            if not existingSemio:
+                session.add(Semio())
+                session.commit()
 
     def postDeleteKit(self: "SqliteStore") -> None:
         # sqlachemy can't maintain the connection to the database after the file is deleted.
@@ -4877,7 +3590,6 @@ class SqliteStore(DatabaseStore):
 
 
 class PostgresStore(DatabaseStore):
-
     @classmethod
     def fromUri(cls, uri: str):
         # TODO: Get connection string from environment variable.
@@ -4926,7 +3638,7 @@ def StoreFactory(uri: str) -> Store:
             if not os.path.exists(path):
                 cache(uri)
             return SqliteStore.fromUri(uri, path)
-        raise RemoteKitsNotYetSupported()
+        raise RemoteKitsNotYetSupported(uri)
     raise LocalKitUriIsNotAbsolute(uri)
 
 
@@ -4955,7 +3667,9 @@ def delete(code: str) -> typing.Any:
     return store.delete(operation)
 
 
-# Assistant #
+# endregion Store
+
+# region Assistant
 
 
 def encodeForPrompt(context: str):
@@ -4971,15 +3685,11 @@ def replaceDefault(context: str, default: str):
 def encodeType(type: TypeContext):
     typeClone = type.model_copy(deep=True)
     typeClone.variant = replaceDefault(typeClone.variant, "DEFAULT")
-    typeClone.description = (
-        encodeForPrompt(typeClone.description)
-        if typeClone.description != ""
-        else "NO_DESCRIPTION"
-    )
+    typeClone.description = encodeForPrompt(typeClone.description) if typeClone.description != "" else "NO_DESCRIPTION"
     for port in typeClone.ports:
         port.id_ = replaceDefault(port.id_, "DEFAULT")
-        # for quality in port.qualities:
-        #     quality.value = replaceDefault(quality.value, "TRUE")
+        # for attribute in port.attributes:
+        #     attribute.value = replaceDefault(attribute.value, "TRUE")
     return typeClone
 
 
@@ -4990,9 +3700,7 @@ def decodeDesign(design: dict):
                 "id_": p["id"] if p["id"] != "DEFAULT" else "",
                 "type": {
                     "name": p["typeName"],
-                    "variant": (
-                        p["typeVariant"] if p["typeVariant"] != "DEFAULT" else ""
-                    ),
+                    "variant": (p["typeVariant"] if p["typeVariant"] != "DEFAULT" else ""),
                 },
             }
             for p in design["pieces"]
@@ -5001,39 +3709,23 @@ def decodeDesign(design: dict):
             {
                 "connected": {
                     "piece": {
-                        "id_": (
-                            c["connectedPieceId"]
-                            if c["connectedPieceId"] != "DEFAULT"
-                            else ""
-                        ),
+                        "id_": (c["connectedPieceId"] if c["connectedPieceId"] != "DEFAULT" else ""),
                     },
                     "port": {
-                        "id_": (
-                            c["connectedPieceTypePortId"]
-                            if c["connectedPieceTypePortId"] != "DEFAULT"
-                            else ""
-                        ),
+                        "id_": (c["connectedPieceTypePortId"] if c["connectedPieceTypePortId"] != "DEFAULT" else ""),
                     },
                 },
                 "connecting": {
                     "piece": {
-                        "id_": (
-                            c["connectingPieceId"]
-                            if c["connectingPieceId"] != "DEFAULT"
-                            else ""
-                        ),
+                        "id_": (c["connectingPieceId"] if c["connectingPieceId"] != "DEFAULT" else ""),
                     },
                     "port": {
-                        "id_": (
-                            c["connectingPieceTypePortId"]
-                            if c["connectingPieceTypePortId"] != "DEFAULT"
-                            else ""
-                        ),
+                        "id_": (c["connectingPieceTypePortId"] if c["connectingPieceTypePortId"] != "DEFAULT" else ""),
                     },
                 },
                 "gap": c["gap"],
                 "shift": c["shift"],
-                "raise": c["raise"],
+                "rise": c["rise"],
                 "rotation": normalizeAngle(c["rotation"]),
                 "turn": normalizeAngle(c["turn"]),
                 "tilt": normalizeAngle(c["tilt"]),
@@ -5065,58 +3757,40 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
     # TODO: Try closest embedding instead of smallest Levenshtein distance.
     for piece in designClone.pieces:
         pieceD[piece.id_] = piece
-        if piece.type.name not in typeD:
+        if piece.type and piece.type.name not in typeD:
             # TODO: Remove piece if type name is not found instead of taking the first.
             try:
-                piece.type.name = difflib.get_close_matches(
-                    piece.type.name, typeD.keys(), n=1
-                )[0]
-            except Error as e:  # TODO: Make more specific
-                piece.type.name = typeD.keys()[0]
-        if not (piece.type.variant in typeD[piece.type.name]):
+                piece.type.name = difflib.get_close_matches(piece.type.name, typeD.keys(), n=1)[0]
+            except Error:  # TODO: Make more specific
+                piece.type.name = list(typeD.keys())[0]
+        if piece.type and piece.type.name and piece.type.variant not in typeD[piece.type.name]:
             try:
-                piece.type.variant = difflib.get_close_matches(
-                    piece.type.variant, typeD[piece.type.name].keys(), n=1
-                )[0]
-            except Error as e:  # TODO: Make more specific
-                piece.type.variant = typeD[piece.type.name].keys()[0]
+                piece.type.variant = difflib.get_close_matches(piece.type.variant, typeD[piece.type.name].keys(), n=1)[0]
+            except Error:  # TODO: Make more specific
+                piece.type.variant = list(typeD[piece.type.name].keys())[0]
 
     validConnections = []
     for connection in designClone.connections:
         if connection.connected.piece.id_ not in pieceD:
             try:
-                connection.connected.piece.id_ = difflib.get_close_matches(
-                    connection.connected.piece.id_, pieceD.keys(), n=1
-                )[0]
-            except Error as e:
+                connection.connected.piece.id_ = difflib.get_close_matches(connection.connected.piece.id_, pieceD.keys(), n=1)[0]
+            except Error:
                 continue
         if connection.connecting.piece.id_ not in pieceD:
             try:
-                connection.connecting.piece.id_ = difflib.get_close_matches(
-                    connection.connecting.piece.id_, pieceD.keys(), n=1
-                )[0]
-            except Error as e:
+                connection.connecting.piece.id_ = difflib.get_close_matches(connection.connecting.piece.id_, pieceD.keys(), n=1)[0]
+            except Error:
                 continue
-        connectedType = typeD[pieceD[connection.connected.piece.id_].type.name][
-            pieceD[connection.connected.piece.id_].type.variant
-        ]
-        connectingType = typeD[pieceD[connection.connecting.piece.id_].type.name][
-            pieceD[connection.connecting.piece.id_].type.variant
-        ]
+        connectedType = typeD[pieceD[connection.connected.piece.id_].type.name][pieceD[connection.connected.piece.id_].type.variant]
+        connectingType = typeD[pieceD[connection.connecting.piece.id_].type.name][pieceD[connection.connecting.piece.id_].type.variant]
 
-        if (
-            connection.connected.port.id_
-            not in portD[connectedType.name][connectedType.variant]
-        ):
+        if connection.connected.port.id_ not in portD[connectedType.name][connectedType.variant]:
             connection.connected.port.id_ = difflib.get_close_matches(
                 connection.connected.port.id_,
                 portD[connectedType.name][connectedType.variant].keys(),
                 n=1,
             )[0]
-        if (
-            connection.connecting.port.id_
-            not in portD[connectingType.name][connectingType.variant]
-        ):
+        if connection.connecting.port.id_ not in portD[connectingType.name][connectingType.variant]:
             connection.connecting.port.id_ = difflib.get_close_matches(
                 connection.connecting.port.id_,
                 portD[connectingType.name][connectingType.variant].keys(),
@@ -5125,26 +3799,16 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
         validConnections.append(connection)
     designClone.connections = validConnections
     # remove invalid connections
-    designClone.connections = [
-        c for c in designClone.connections if c.connected.piece.id_ != c.connecting
-    ]
+    designClone.connections = [c for c in designClone.connections if c.connected.piece.id_ != c.connecting]
     # remove pieces with no connections
-    designClone.pieces = [
-        p
-        for p in designClone.pieces
-        if any(
-            c
-            for c in designClone.connections
-            if c.connected.piece.id_ == p.id_ or c.connecting.piece.id_ == p.id_
-        )
-    ]
+    designClone.pieces = [p for p in designClone.pieces if any(c for c in designClone.connections if c.connected.piece.id_ == p.id_ or c.connecting.piece.id_ == p.id_)]
     return designClone
 
 
 try:
     openaiClient = openai.Client()
-except openai.OpenAIError as e:
-    pass
+except openai.OpenAIError:
+    openaiClient = None
 
 systemPrompt = """You are a kit-of-parts design assistant.
 Rules:
@@ -5250,7 +3914,7 @@ designResponseFormat = json.loads(
                             "type": "number",
                             "description": "The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.."
                         },
-                        "raise": {
+                        "rise": {
                             "type": "number",
                             "description": "The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
                         },
@@ -5282,7 +3946,7 @@ designResponseFormat = json.loads(
                         "connectingPieceTypePortId",
                         "gap",
                         "shift",
-                        "raise",
+                        "rise",
                         "rotation",
                         "turn",
                         "tilt",
@@ -5305,13 +3969,12 @@ designResponseFormat = json.loads(
 #     designResponseFormat = json.load(f)
 
 
-def predictDesign(
-    description: str, types: list[TypeContext], design: DesignInput | None = None
-) -> DesignPrediction:
+def predictDesign(description: str, types: list[TypeContext], design: DesignInput | None = None) -> DesignPrediction:
     """🔮 Predict a design based on a description, the types that should be used and an optional base design."""
-    prompt = designGenerationPromptTemplate.render(
-        description=description, types=[encodeType(t) for t in types]
-    )
+    if openaiClient is None:
+        raise FeatureNotYetSupported("OpenAI client not available")
+
+    prompt = designGenerationPromptTemplate.render(description=description, types=[encodeType(t) for t in types])
     logger.debug("Generated prompt: {}", prompt)
     try:
         response = openaiClient.chat.completions.create(
@@ -5348,60 +4011,64 @@ def predictDesign(
             # frequency_penalty=0,
             # presence_penalty=0,
         )
-        responseDump = {
-            "id": response.id,
-            "created": response.created,
-            "model": response.model,
-            "object": response.object,
-            "system_fingerprint": response.system_fingerprint,
-            "usage": {
-                "completion_tokens": response.usage.completion_tokens,
-                "prompt_tokens": response.usage.prompt_tokens,
-                "total_tokens": response.usage.total_tokens,
-            },
-            "_request_id": response._request_id,
-            "choices": [
-                {
-                    "finish_reason": c.finish_reason,
-                    "message": {
-                        "content": c.message.content,
-                        "refusal": c.message.refusal,
-                        "role": c.message.role,
-                    },
-                }
-                for c in response.choices
-            ],
-        }
-        logger.debug("Received response: {}", responseDump)
-    except Error as e:
-        logger.error("Error occurred: {}", e)
-        pass
+        if response.usage:
+            responseDump = {
+                "id": response.id,
+                "created": response.created,
+                "model": response.model,
+                "object": response.object,
+                "system_fingerprint": response.system_fingerprint,
+                "usage": {
+                    "completion_tokens": response.usage.completion_tokens,
+                    "prompt_tokens": response.usage.prompt_tokens,
+                    "total_tokens": response.usage.total_tokens,
+                },
+                "_request_id": response._request_id,
+                "choices": [
+                    {
+                        "finish_reason": c.finish_reason,
+                        "message": {
+                            "content": c.message.content,
+                            "refusal": c.message.refusal,
+                            "role": c.message.role,
+                        },
+                    }
+                    for c in response.choices
+                ],
+            }
+            logger.debug("Received response: {}", responseDump)
+    except Error:
+        logger.error("Error occurred during OpenAI request")
+        raise FeatureNotYetSupported("OpenAI request failed")
 
     logger.debug("Schema: {}", json.dumps(designResponseFormat, indent=4))
     logger.debug("Prompt: {}", prompt)
     logger.debug("System Prompt: {}", systemPrompt)
-    logger.debug(
-        "Predicted Design Raw: {}",
-        json.dumps(json.loads(response.choices[0].message.content), indent=4),
-    )
 
-    result = response.choices[0]
-    if result.finish_reason == "stop" and result.message.refusal is None:
+    result = response.choices[0] if response.choices else None
+    if result and result.message.content:
+        logger.debug("Predicted Design Raw: {}", json.dumps(json.loads(result.message.content), indent=4))
+
+    if result and result.finish_reason == "stop" and result.message.refusal is None and result.message.content:
         design = decodeDesign(json.loads(result.message.content))
 
-        logger.debug("Predicted Design: {}", json.dumps(design.model_dump(), indent=4))
+        if hasattr(design, "model_dump"):
+            logger.debug("Predicted Design: {}", json.dumps(design.model_dump(), indent=4))
 
         # piece healing of variants that do not exist
-        healedDesign = healDesign(design, types)
+        healedDesign = healDesign(typing.cast(DesignPrediction, design), types)
         logger.debug(
             "Predicted Design Healed: {}",
             json.dumps(healedDesign.model_dump(), indent=4),
         )
-
         return healedDesign
 
+    raise FeatureNotYetSupported("OpenAI response was invalid or incomplete")
 
-# Graphql #
+
+# endregion Assistant
+
+# region Graphql
 
 
 GRAPHQLTYPES = {
@@ -5410,19 +4077,11 @@ GRAPHQLTYPES = {
     "float": graphene.NonNull(graphene.Float),
     "bool": graphene.NonNull(graphene.Boolean),
     "list[str]": graphene.NonNull(graphene.List(graphene.NonNull(graphene.String))),
-    "Quality": graphene.NonNull(lambda: QualityNode),
-    "list[Quality]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: QualityNode))
-    ),
-    "list[__main__.Quality]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: QualityNode))
-    ),
-    "list[__mp_main__.Quality]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: QualityNode))
-    ),
-    "list[engine.Quality]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: QualityNode))
-    ),
+    "Attribute": graphene.NonNull(lambda: AttributeNode),
+    "list[Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AttributeNode))),
+    "list[__main__.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AttributeNode))),
+    "list[__mp_main__.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AttributeNode))),
+    "list[engine.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AttributeNode))),
     "DiagramPoint": graphene.NonNull(lambda: DiagramPointNode),
     "typing.Optional[__main__.DiagramPoint]": lambda: DiagramPointNode,
     "typing.Optional[__mp_main__.DiagramPoint]": lambda: DiagramPointNode,
@@ -5437,69 +4096,40 @@ GRAPHQLTYPES = {
     "Port": graphene.NonNull(lambda: PortNode),
     "PortId": graphene.NonNull(lambda: PortNode),
     "list[Port]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: PortNode))),
-    "list[__main__.Port]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: PortNode))
-    ),
-    "list[__mp_main__.Port]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: PortNode))
-    ),
-    "list[engine.Port]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: PortNode))
-    ),
+    "list[__main__.Port]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: PortNode))),
+    "list[__mp_main__.Port]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: PortNode))),
+    "list[engine.Port]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: PortNode))),
     "Representation": graphene.NonNull(lambda: RepresentationNode),
-    "list[Representation]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: RepresentationNode))
-    ),
-    "list[__main__.Representation]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: RepresentationNode))
-    ),
-    "list[__mp_main__.Representation]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: RepresentationNode))
-    ),
-    "list[engine.Representation]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: RepresentationNode))
-    ),
+    "list[Representation]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: RepresentationNode))),
+    "list[__main__.Representation]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: RepresentationNode))),
+    "list[__mp_main__.Representation]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: RepresentationNode))),
+    "list[engine.Representation]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: RepresentationNode))),
     "Author": graphene.NonNull(lambda: AuthorNode),
-    "list[Author]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: AuthorNode))
-    ),
-    "list[__main__.Author]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: AuthorNode))
-    ),
-    "list[__mp_main__.Author]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: AuthorNode))
-    ),
-    "list[engine.Author]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: AuthorNode))
-    ),
+    "list[Author]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AuthorNode))),
+    "list[__main__.Author]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AuthorNode))),
+    "list[__mp_main__.Author]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AuthorNode))),
+    "list[engine.Author]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AuthorNode))),
     "Type": graphene.NonNull(lambda: TypeNode),
     "TypeId": graphene.NonNull(lambda: TypeNode),
+    "DesignId": graphene.NonNull(lambda: DesignNode),
     "list[Type]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
-    "list[__main__.Type]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: TypeNode))
-    ),
-    "list[__mp_main__.Type]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: TypeNode))
-    ),
-    "list[engine.Type]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: TypeNode))
-    ),
+    "list[__main__.Type]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
+    "list[__mp_main__.Type]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
+    "list[engine.Type]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
     "Piece": graphene.NonNull(lambda: PieceNode),
     "PieceId": graphene.NonNull(lambda: PieceNode),
+    "typing.Optional[__main__.PieceId]": lambda: PieceNode,
+    "typing.Optional[__mp_main__.PieceId]": lambda: PieceNode,
+    "typing.Optional[engine.PieceId]": lambda: PieceNode,
+    "typing.Optional[__main__.DesignId]": lambda: DesignNode,
+    "typing.Optional[__mp_main__.DesignId]": lambda: DesignNode,
+    "typing.Optional[engine.DesignId]": lambda: DesignNode,
     "Side": graphene.NonNull(lambda: SideNode),
     "Connection": graphene.NonNull(lambda: ConnectionNode),
-    "list['Connection']": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: ConnectionNode))
-    ),
-    "list[__main__.Connection]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: ConnectionNode))
-    ),
-    "list[__mp_main__.Connection]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: ConnectionNode))
-    ),
-    "list[engine.Connection]": graphene.NonNull(
-        graphene.List(graphene.NonNull(lambda: ConnectionNode))
-    ),
+    "list['Connection']": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectionNode))),
+    "list[__main__.Connection]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectionNode))),
+    "list[__mp_main__.Connection]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectionNode))),
+    "list[engine.Connection]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectionNode))),
     "Design": graphene.NonNull(lambda: DesignNode),
     "Kit": graphene.NonNull(lambda: KitNode),
 }
@@ -5527,7 +4157,6 @@ class InputNode(graphene_pydantic.PydanticInputObjectType):
 
 
 class RelayNode(graphene.relay.Node):
-
     class Meta:
         name = "Node"
 
@@ -5560,11 +4189,7 @@ class TableNode(graphene_sqlalchemy.SQLAlchemyObjectType):
         if "name" not in options:
             options["name"] = model.__name__
 
-        own_properties = [
-            name
-            for name, value in model.__dict__.items()
-            if isinstance(value, property)
-        ]
+        own_properties = [name for name, value in model.__dict__.items() if isinstance(value, property)]
 
         def make_resolve(name):
             def resolve(self, info):
@@ -5602,7 +4227,6 @@ class TableEntityNode(TableNode):
 
     @classmethod
     def __init_subclass_with_meta__(cls, model=None, **options):
-
         if "interfaces" not in options:
             options["interfaces"] = (RelayNode,)
 
@@ -5614,14 +4238,14 @@ class TableEntityNode(TableNode):
         super().__init_subclass_with_meta__(model=model, **options)
 
 
-class QualityNode(TableEntityNode):
+class AttributeNode(TableEntityNode):
     class Meta:
-        model = Quality
+        model = Attribute
 
 
-class QualityInputNode(InputNode):
+class AttributeInputNode(InputNode):
     class Meta:
-        model = QualityInput
+        model = AttributeInput
 
 
 class LocationNode(Node):
@@ -5639,10 +4263,10 @@ class RepresentationNode(TableEntityNode):
         model = Representation
         excludedFields = ("tags_",)
 
-    # qualities = graphene.List(graphene.NonNull(lambda: QualityNode))
+    # attributes = graphene.List(graphene.NonNull(lambda: AttributeNode))
 
-    # def resolve_qualities(self, info):
-    #     return self.qualities
+    # def resolve_attributes(self, info):
+    #     return self.attributes
 
 
 class RepresentationInputNode(InputNode):
@@ -5695,10 +4319,16 @@ class PortNode(TableEntityNode):
         model = Port
         exclude_fields = ("connecteds", "connectings")
 
-    # qualities = graphene.List(graphene.NonNull(lambda: QualityNode))
+    # Add localId field to follow GraphQL naming conventions instead of id_
+    localId = graphene.String()
 
-    # def resolve_qualities(self, info):
-    #     return self.qualities
+    def resolve_localId(self, info):
+        return getattr(self, "id_", "")
+
+    # attributes = graphene.List(graphene.NonNull(lambda: AttributeNode))
+
+    # def resolve_attributes(self, info):
+    #     return self.attributes
 
 
 class PortInputNode(InputNode):
@@ -5741,13 +4371,19 @@ class PieceNode(TableEntityNode):
         model = Piece
         exclude_fields = ("connecteds", "connectings")
 
+    # Add localId field to follow GraphQL naming conventions instead of id_
+    localId = graphene.String()
+
+    def resolve_localId(self, info):
+        return getattr(self, "id_", "")
+
 
 class PieceInputNode(InputNode):
     class Meta:
         model = PieceInput
-        exclude_fields = "type"
 
-    type = graphene.NonNull(TypeIdInputNode)
+    type = TypeIdInputNode()
+    designPiece = graphene.Field(lambda: DesignIdInputNode)
 
 
 class PieceIdInputNode(InputNode):
@@ -5758,13 +4394,18 @@ class PieceIdInputNode(InputNode):
 class SideNode(Node):
     class Meta:
         model = Side
-        exclude_fields = ("piece", "port")
+
+    exclude_fields = ("piece", "port")
 
     piece = graphene.NonNull(PieceNode)
+    designPiece = graphene.Field(PieceNode)
     port = graphene.NonNull(PortNode)
 
     def resolve_piece(self, info):
         return self.piece
+
+    def resolve_designPiece(self, info):
+        return self.designPiece
 
     def resolve_port(self, info):
         return self.port
@@ -5773,9 +4414,11 @@ class SideNode(Node):
 class SideInputNode(InputNode):
     class Meta:
         model = SideInput
-        exclude_fields = ("piece", "port")
+
+    exclude_fields = ("piece", "port")
 
     piece = graphene.NonNull(PieceIdInputNode)
+    designPiece = PieceIdInputNode()
     port = graphene.NonNull(PortIdInputNode)
 
 
@@ -5814,6 +4457,11 @@ class DesignNode(TableEntityNode):
         model = Design
 
 
+class DesignIdInputNode(InputNode):
+    class Meta:
+        model = DesignId
+
+
 class KitInputNode(InputNode):
     class Meta:
         model = KitInput
@@ -5849,7 +4497,9 @@ graphqlSchema = graphene.Schema(
     mutation=Mutation,
 )
 
-# Rest #
+# endregion Graphql
+
+# region Rest
 
 rest = fastapi.FastAPI(max_request_body_size=MAX_REQUEST_BODY_SIZE)
 
@@ -5998,9 +4648,7 @@ async def predict_design(
 
 
 @rest.post("/prepare/kit")
-async def prepare_kit(
-    request: fastapi.Request, kit: KitInput = fastapi.Body(...)
-) -> KitContext:
+async def prepare_kit(request: fastapi.Request, kit: KitInput = fastapi.Body(...)) -> KitContext:
     try:
         return kit
     except ClientError as e:
@@ -6042,12 +4690,7 @@ class PredictionGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
 def custom_openapi():
     if rest.openapi_schema:
         return rest.openapi_schema
-    openapi_schema = fastapi.openapi.utils.get_openapi(
-        title="semio REST API",
-        version=VERSION,
-        summary="This is the local rest API of the semio engine.",
-        routes=rest.routes,
-    )
+    openapi_schema = fastapi.openapi.utils.get_openapi(title="semio REST API", version=VERSION, summary="This is the local rest API of the semio engine.", routes=rest.routes)
     # Prepend `/api` to all paths in the OpenAPI schema
     updated_paths = {}
     for path, path_item in openapi_schema["paths"].items():
@@ -6063,15 +4706,15 @@ def custom_openapi():
 
 rest.openapi = custom_openapi
 
-# Engine #
+# endregion Rest
+
+# region Engine
 
 engine = starlette.applications.Starlette()
 engine.mount("/api", rest)
 engine.mount(
     "/graphql",
-    starlette_graphene3.GraphQLApp(
-        graphqlSchema, on_get=starlette_graphene3.make_graphiql_handler()
-    ),
+    starlette_graphene3.GraphQLApp(graphqlSchema, on_get=starlette_graphene3.make_graphiql_handler()),
 )
 
 
@@ -6111,9 +4754,7 @@ def generateSchemas():
 
     with open("../../jsonschema/design-prediction.json", "w", encoding="utf-8") as f:
         json.dump(
-            DesignPrediction.model_json_schema(
-                schema_generator=PredictionGenerateJsonSchema
-            ),
+            DesignPrediction.model_json_schema(schema_generator=PredictionGenerateJsonSchema),
             f,
             indent=4,
         )
@@ -6153,14 +4794,7 @@ def generateSchemas():
 def start_engine():
     # TODO: Make loguru work on extra uvicorn engine process.
     logging.basicConfig(level=logging.INFO)  # for uvicorn in pyinstaller
-    uvicorn.run(
-        engine,
-        host=HOST,
-        port=PORT,
-        log_level="info",
-        access_log=False,
-        log_config=None,
-    )
+    uvicorn.run(engine, host=HOST, port=PORT, log_level="info", access_log=False, log_config=None)
 
 
 def restart_engine():
@@ -6176,13 +4810,8 @@ def run():
     logger.debug("Starting engine")
     multiprocessing.freeze_support()  # needed for pyinstaller on Windows
 
-    parser = argparse.ArgumentParser(description="semio engine")
-    parser.add_argument(
-        "-d",
-        "--debug",
-        help="debug mode",
-        action="store_true",
-    )
+    parser = argparse.ArgumentParser(description="semio ⋅ engine")
+    parser.add_argument("-d", "--debug", help="debug mode", action="store_true")
 
     args = parser.parse_args()
     if args.debug:
@@ -6199,9 +4828,7 @@ def run():
         basedir = "../../assets"
 
     icon = PySide6.QtGui.QIcon()
-    icon.addFile(
-        os.path.join(basedir, "icons/semio_512x512.png"), PySide6.QtCore.QSize(512, 512)
-    )
+    icon.addFile(os.path.join(basedir, "icons/semio_512x512.png"), PySide6.QtCore.QSize(512, 512))
 
     tray = PySide6.QtWidgets.QSystemTrayIcon()
     tray.setIcon(icon)
@@ -6248,3 +4875,5 @@ def dev():
 
 if __name__ == "__main__":
     run()
+
+# endregion Engine

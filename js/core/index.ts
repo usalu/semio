@@ -18,34 +18,101 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-export { default as Console, commandRegistry as inkCommandRegistry } from '@semio/js/components/ui/Console'
-export { default as DesignEditor, FullscreenPanel, useDesignEditor } from '@semio/js/components/ui/DesignEditor'
-export { default as Diagram } from '@semio/js/components/ui/Diagram'
-export { default as File } from '@semio/js/components/ui/File'
-export { default as GrasshopperCatalogue } from '@semio/js/components/ui/GrasshopperCatalogue'
-export { default as Model } from '@semio/js/components/ui/Model'
-export { Layout, Mode, default as Sketchpad, Theme } from '@semio/js/components/ui/Sketchpad'
-export { default as eslintConfig } from '@semio/js/eslint.config'
-export { extractFilesAndCreateUrls } from '@semio/js/lib/utils'
-export { default as postcssConfig } from '@semio/js/postcss.config'
+
+// #region Components
+export { default as GrasshopperCatalogue } from "../docs/src/components/GrasshopperCatalogue";
+export { default as File } from "./components/ui/File";
+export { default as Console, commandRegistry as inkCommandRegistry } from "./components/ui/sketchpad/Console";
+export { default as DesignEditor } from "./components/ui/sketchpad/DesignEditor";
+export { default as Diagram } from "./components/ui/sketchpad/Diagram";
+export { default as Model } from "./components/ui/sketchpad/Model";
+export { default as Sketchpad } from "./components/ui/sketchpad/Sketchpad";
+// #endregion
+
+// #region Utils
+
+// #endregion
+
+// #region Domain Logic (from semio.ts)
 export {
-  addConnectionsToDesign, addConnectionsToDesignDiff, addConnectionToDesign, addConnectionToDesignDiff, addDesignToKit, addPiecesToDesign, addPiecesToDesignDiff, addPieceToDesign, addPieceToDesignDiff, addTypeToKit, applyDesignDiff, arePortsCompatible,
-  CameraSchema, colorPortsForTypes, connectionIdLikeToConnectionId, ConnectionSchema, deserialize, designIdLikeToDesignId, DesignSchema, DiffStatus, findConnectionInDesign, findDesignInKit, findPieceConnectionsInDesign, findPieceInDesign, findPieceTypeInDesign, findPortInType, findQualityValue, findReplacableTypesForPieceInDesign,
-  findReplacableTypesForPiecesInDesign, findStaleConnectionsInDesign, findTypeInKit, fixPieceInDesign, fixPiecesInDesign, flattenDesign, getPieceRepresentationUrls, ICON_WIDTH, isConnectionInDesign, isPortInUse, isSameConnection, isSameDesign, isSamePiece, isSamePort, isSameRepresentation, isSameType, kitIdLikeToKitId, KitSchema, mergeDesigns,
-  pieceIdLikeToPieceId, PieceSchema, piecesMetadata, PlaneSchema, planeToMatrix, PointSchema, portIdLikeToPortId, PortSchema, qualityIdLikeToQualityId, QualitySchema,
-  removeConnectionFromDesign, removeConnectionFromDesignDiff, removeConnectionsFromDesign, removeConnectionsFromDesignDiff, removeDesignFromKit, removePieceFromDesign, removePieceFromDesignDiff, removePiecesAndConnectionsFromDesign, removePiecesFromDesign, removePiecesFromDesignDiff, removeTypeFromKit,
-  representationIdLikeToRepresentationId, RepresentationSchema, safeParse, schemas, serialize,
-  setConnectionInDesign, setConnectionInDesignDiff, setConnectionsInDesign, setConnectionsInDesignDiff, setDesignInKit, setPieceInDesign, setPieceInDesignDiff, setPiecesInDesign, setPiecesInDesignDiff, setQualities, setQuality, setTypeInKit,
-  TOLERANCE, toSemioQuaternion, toSemioRotation, toThreeQuaternion, toThreeRotation, typeIdLikeToTypeId, TypeSchema, unifyPortFamiliesAndCompatibleFamiliesForTypes, updateDesignInKit, validate, VectorSchema
-} from '@semio/js/semio'
+  // Domain Logic Functions
+  addConnectionsToDesign,
+  addConnectionsToDesignDiff, addConnectionToDesign,
+  addConnectionToDesignDiff, addDesignToKit, addPiecesToDesign,
+  addPiecesToDesignDiff, addPieceToDesign,
+  addPieceToDesignDiff, addTypeToKit,
+  applyDesignDiff,
+  arePortsCompatible, AttributeIdLikeSchema, attributeIdLikeToAttributeId, AttributeIdSchema,
+  // Schemas
+  AttributeSchema, AuthorSchema, CameraSchema, colorPortsForTypes, ConnectionIdLikeSchema, connectionIdLikeToConnectionId, ConnectionIdSchema, ConnectionSchema, createClusteredDesign, deserialize, DesignIdLikeSchema, designIdLikeToDesignId, DesignIdSchema, DesignSchema, DiagramPointSchema,
+  DiagramVectorSchema, DiffStatus, expandDesignPieces, findAttributeValue, findConnectionInDesign,
+  findDesignInKit,
+  findPieceConnectionsInDesign,
+  findPieceInDesign,
+  findPieceTypeInDesign,
+  findPortInType,
+  // Helper Functions
+  findReplacableDesignsForDesignPiece, findReplacableTypesForPieceInDesign,
+  findReplacableTypesForPiecesInDesign,
+  findStaleConnectionsInDesign,
+  findTypeInKit,
+  fixPieceInDesign,
+  fixPiecesInDesign,
+  flattenDesign,
+  getClusterableGroups,
+  getIncludedDesigns,
+  getPieceRepresentationUrls,
+  // Constants
+  ICON_WIDTH, isConnectionInDesign,
+  isPortInUse,
+  isSameConnection,
+  isSameDesign,
+  isSamePiece,
+  isSamePort,
+  isSameRepresentation,
+  isSameType, KitIdLikeSchema, kitIdLikeToKitId, KitIdSchema, KitSchema, LocationSchema, mergeDesigns, parseDesignIdFromVariant, PieceIdLikeSchema, pieceIdLikeToPieceId, PieceIdSchema, PieceSchema, piecesMetadata, PlaneSchema, planeToMatrix, PointSchema, PortIdLikeSchema, portIdLikeToPortId, PortIdSchema, PortSchema, removeConnectionFromDesign,
+  removeConnectionFromDesignDiff,
+  removeConnectionsFromDesign,
+  removeConnectionsFromDesignDiff,
+  removeDesignFromKit,
+  removePieceFromDesign,
+  removePieceFromDesignDiff,
+  removePiecesAndConnectionsFromDesign,
+  removePiecesFromDesign,
+  removePiecesFromDesignDiff,
+  removeTypeFromKit,
+  replaceClusterWithDesign, RepresentationIdLikeSchema, representationIdLikeToRepresentationId, RepresentationIdSchema, RepresentationSchema, safeParse,
+  // Utilities
+  schemas, serialize, setAttribute, setAttributes, setConnectionInDesign,
+  setConnectionInDesignDiff,
+  setConnectionsInDesign,
+  setConnectionsInDesignDiff,
+  setDesignInKit,
+  setPieceInDesign,
+  setPieceInDesignDiff,
+  setPiecesInDesign,
+  setPiecesInDesignDiff, setTypeInKit, SideIdLikeSchema, SideIdSchema, SideSchema, TOLERANCE, toSemioQuaternion,
+  toSemioRotation,
+  toThreeQuaternion,
+  toThreeRotation, TypeIdLikeSchema, typeIdLikeToTypeId, TypeIdSchema, TypeSchema, unifyPortFamiliesAndCompatibleFamiliesForTypes,
+  updateDesignInKit, VectorSchema
+} from "./semio";
+// #endregion
+
+// #region Types (from semio.ts)
 export type {
-  Author,
+  Attribute, AttributeId, Author,
   Camera,
-  Connection, ConnectionDiff, ConnectionId,
-  ConnectionsDiff, Design,
+  Connection,
+  ConnectionDiff,
+  ConnectionId,
+  ConnectionsDiff,
+  Design,
   DesignDiff,
   DesignId,
   DiagramPoint,
+  DiagramVector,
+  IncludedDesignInfo,
   Kit,
   KitId,
   Piece,
@@ -55,17 +122,49 @@ export type {
   Plane,
   Point,
   Port,
-  PortId,
-  Quality,
-  Representation,
-  Side, SideDiff,
+  PortId, Representation,
+  RepresentationId,
+  Side,
+  SideDiff,
   SideId,
   Type,
   TypeId,
   Vector
-} from '@semio/js/semio'
-export type { DesignEditorStoreState } from '@semio/js/store'
-export { default as tailwindConfig } from '@semio/js/tailwind.config'
+} from "./semio";
+// #endregion
+
+// #region State Management (from store.tsx)
+export {
+  DesignEditorFullscreenPanel, Layout, Mode,
+  Theme
+} from "./store";
+
+export type {
+  DesignEditorPresence, DesignEditorPresenceOther, DesignEditorSelection, DesignEditorState
+} from "./store";
+// #endregion
+
+// #region Hooks (from store.tsx)
+export {
+  ConnectionScopeProvider, DesignEditorScopeProvider, DesignScopeProvider, KitScopeProvider, PieceScopeProvider, PortypeScopeProvider, RepresentationScopeProvider,
+  // Context providers
+  SketchpadScopeProvider, TypeScopeProvider, useConnection, useDesign, useDesignEditor, useDesignEditorCommands, useDesignId, useDesigns,
+  // Design Editor hooks
+  useDiff, useFileUrls, useFullscreen, useKit, useKitCommands, useLayout,
+  // Concise hooks
+  useMode, useOthers, usePiece, usePort, useRepresentation, useSelection,
+  // Scope hooks
+  useSketchpad, useSketchpadCommands,
+  // Core hooks
+  useTheme, useType
+} from "./store";
+// #endregion
+
+// #region Configs
+export { default as eslintConfig } from "./eslint.config";
+export { default as postcssConfig } from "./postcss.config";
+export { default as tailwindConfig } from "./tailwind.config";
 // Exporting vite configs blows up storybook and nextjs
-// export { default as viteConfig } from '@semio/js/vite.config';
-// export { default as vitestConfig } from '@semio/js/vitest.workspace';
+// export { default as viteConfig } from './vite.config';
+// export { default as vitestConfig } from './vitest.workspace';
+// #endregion

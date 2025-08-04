@@ -1,26 +1,6 @@
 ---
 description: Help senior developer working.
-tools:  [
-    'changes',
-    'codebase',
-    'editFiles',
-    'fetch',
-    'findTestFiles',
-    'problems',
-    'readCellOutput',
-    'runCommands',
-    'runNotebooks',
-    'runTasks',
-    'runTests',
-    'search',
-    'searchResults',
-    'terminalLastCommand',
-    'terminalSelection',
-    'testFailure',
-    'usages',
-    'vscodeAPI',
-    'markitdown'
-  ]
+tools: ["changes", "codebase", "editFiles", "fetch", "findTestFiles", "problems", "runCommands", "runNotebooks", "runTasks", "runTests", "search", "searchResults", "terminalLastCommand", "terminalSelection", "testFailure", "usages", "vscodeAPI"]
 model: Claude Sonnet 4
 ---
 
@@ -34,16 +14,27 @@ An ecosystem for designing kit-of-parts architecture together.
 - Almost everything is in a single file if possible.
 - Folders are avoided if possible.
 - No need to ask in between. Be opionionated and just go for it. Try to do as much as you can.
-- Don't ask to execute commands in the cli. Assume all the tools are properly setup.
 - No need to delete files, you can tell me when once you are 100% done with everything and I will do it manually.
 - You are allowed to change everything (names, apis, creating/modifying/deleting fields, props, …) and don't have to worry about breaking compatiblity. Choose the most elegant approach even if it requires changing more than necessary.
 - Don't create additional example files and implement it directly in the dependent parts.
 - Don't remove code that is commented out.
 - README.md files are for developers which are GFM.
-- Assume all dev servers and debugging processes are running. No need to ask to start them. Don't ask to run commands for building, testing, linting, etc.
+- Assume all dev servers, debugging and testing processes are running. No need to ask to start them. Don't ask to run commands for building, testing, linting, etc if you are not inspecting the output yourself.
 - Don't add comments to the code.
+- Don't create tests unless you are explicitly asked to.
 - Always use inline syntax if possible.
 - If a variable is only used once, use it inline unless the line of code exceeds the screen.
+- Don't add extra new lines inside of code.
+
+# Styling
+
+- No rounded corners unless a circle.
+- Never use shadows.
+- All colors are explicitly defined as variables and should never be hardcoded.
+
+## sketchpad
+
+- The ui consists of a navbar and edgeless content. Everything else is displayed as HUD with floating panels that show different colors.
 
 # Glossary
 
@@ -56,7 +47,7 @@ An ecosystem for designing kit-of-parts architecture together.
 - Port: A conceptual connection point with an outwards direction.
 - Connection: A 3D-Link between two pieces with translation parameters (gap, shift, rise) and rotation parameters (rotation, turn, tilt).
 - Representation: A tagged url to a resource with an optional description.
-- Quality: Metadata with a name, an optional value, an optional unit and an optional definition (url or text).
+- Attribute: Metadata with a name, an optional value, an optional unit and an optional definition (url or text).
 - Tag: A kebab-cased name.
 - Plane: A location (origin) and orientation (x-axis, y-axis and derived z-axis) in 3D space.
 - Url: Either relative (to the root of the .zip file) or remote (http, https, ftp, …) string.

@@ -14,3 +14,6 @@ Nx monorepo with shared core (@semio/js) that uses storybook and exports a handf
 - No rounded borders (unless full rounded). 
 - No shadows.
 
+# Styling
+
+- The ui consists of a navbar and edgeless content. Everything else is displayed as HUD with floating panels that show different colors.

@@ -1,35 +1,35 @@
 {
-    "slogan": "🧩 Design-Information-Modeling for Kit-of-Parts 🏘️",
-    "general": {
-        "name": {
-            "max": 64,
-            "regex": "^[a-zA-Z]+[a-zA-Z0-9 -]*$"
-        },
-        "id": {
-            "max": 128,
-            "regex": "^[a-zA-Z0-9]+[a-zA-Z0-9_-]*$"
-        },
-        "variant": {
-            "cardinality": "?",
-            "max": 64,
-            "regex": "^[^\\n]$"
-        },
-        "description": {
-            "cardinality": "?",
-            "max": 1024,
-            "regex": "^[^\\n]+$"
-        }
+  "slogan": "🧩 Design-Information-Modeling for Kit-of-Parts 🏘️",
+  "general": {
+    "name": {
+      "max": 64,
+      "regex": "^[a-zA-Z]+[a-zA-Z0-9 -]*$"
     },
-    "account": {
-        "kit": {
-            "max": 64,
-            "design": {
-                "cardinality": "*",
-                "max": 128,
-                "pieces": {
-                    "max": 64,
-                }
-            }
-        }
+    "id": {
+      "max": 128,
+      "regex": "^[a-zA-Z0-9]+[a-zA-Z0-9_-]*$"
+    },
+    "variant": {
+      "cardinality": "?",
+      "max": 64,
+      "regex": "^[^\\n]$"
+    },
+    "description": {
+      "cardinality": "?",
+      "max": 1024,
+      "regex": "^[^\\n]+$"
     }
+  },
+  "account": {
+    "kit": {
+      "max": 64,
+      "design": {
+        "cardinality": "*",
+        "max": 128,
+        "pieces": {
+          "max": 64
+        }
+      }
+    }
+  }
 }

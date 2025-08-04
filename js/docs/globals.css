@@ -2,40 +2,83 @@
 @plugin "@tailwindcss/typography"; */
 
 /* Custom import with disabled preflight css reset */
-@layer theme, base, components, utilities;
-@import "tailwindcss/theme.css" layer(theme);
+/* @layer theme, base, components, utilities; */
+/* @import "tailwindcss/theme.css" layer(theme); */
 /* @import "tailwindcss/preflight.css" layer(base); */
-@import "tailwindcss/utilities.css" layer(utilities);
+/* @import "tailwindcss/utilities.css" layer(utilities); */
+/* @import "@semio/js/theme.css"; */
 
-@import "@semio/js/theme.css";
+@import "tailwindcss" source("../core");
+@import "@semio/js/globals.css";
+@import "@xyflow/react/dist/style.css";
 
-/* Dark mode colors. */
 :root {
-    --sl-color-accent-low: #001117;
-    --sl-color-accent: #34d1bf;
-    --sl-color-accent-high: #ff344f;
-    --sl-color-white: #f7f3e3;
-    --sl-color-gray-1: #e7e1d5;
-    --sl-color-gray-2: #cecbbd;
-    --sl-color-gray-3: #808b84;
-    --sl-color-gray-4: #69706a;
-    --sl-color-gray-5: #29383c;
-    --sl-color-gray-6: #142024;
-    --sl-color-black: #001117;
+  --sl-font: var(--font-sans);
+  --sl-font-mono: var(--font-mono);
+}
+
+:root[data-theme="dark"] {
+  --sl-color-accent-low: var(--color-dark);
+  --sl-color-accent: var(--color-secondary);
+  --sl-color-accent-high: var(--color-primary);
+  --sl-color-white: var(--color-light);
+  --sl-color-gray-1: var(--color-gray-800);
+  --sl-color-gray-2: var(--color-gray-700);
+  --sl-color-gray-3: var(--color-gray);
+  --sl-color-gray-4: var(--color-gray-400);
+  --sl-color-gray-5: var(--color-gray-200);
+  --sl-color-gray-6: var(--color-gray-100);
+  --sl-color-black: var(--color-dark);
 }
 
 /* Light mode colors. */
-:root[data-theme='light'] {
-    --sl-color-accent-low: #c7d6ff;
-    --sl-color-accent: #ff344f;
-    --sl-color-accent-high: #182775;
-    --sl-color-white: #001117;
-    --sl-color-gray-1: #142024;
-    --sl-color-gray-2: #29383c;
-    --sl-color-gray-3: #69706a;
-    --sl-color-gray-4: #808b84;
-    --sl-color-gray-5: #cecbbd;
-    --sl-color-gray-6: #e7e1d5;
-    --sl-color-gray-7: #f7f3e3;
-    --sl-color-black: #f7f3e3;
+:root[data-theme="light"] {
+  --sl-color-accent-low: var(--color-info);
+  --sl-color-accent: var(--color-primary);
+  --sl-color-accent-high: var(--color-dark-6-7);
+  --sl-color-white: var(--color-dark);
+  --sl-color-gray-1: var(--color-gray-100);
+  --sl-color-gray-2: var(--color-gray-200);
+  --sl-color-gray-3: var(--color-gray-400);
+  --sl-color-gray-4: var(--color-gray);
+  --sl-color-gray-5: var(--color-gray-700);
+  --sl-color-gray-6: var(--color-gray-800);
+  --sl-color-gray-7: var(--color-light);
+  --sl-color-black: var(--color-light);
+}
+
+.header {
+  padding-inline: calc(var(--spacing) * 4);
+  padding-top: 0%;
+  padding-bottom: 0%;
+  height: calc(var(--spacing) * 12);
+  border-bottom-style: var(--tw-border-style);
+  border-bottom-width: 1px;
+}
+
+.header.title-wrapper.span {
+  font-size: var(--text-sm);
+}
+
+/* Custom styles for sidebar and page sidebar */
+.starlight {
+  --sl-sidebar-width: 20rem;
+}
+
+/* Ensure proper contrast for dark mode SVG icons */
+:root[data-theme="dark"] svg path {
+  stroke: currentColor;
+}
+
+:root[data-theme="light"] svg path {
+  stroke: currentColor;
+}
+
+/* Override any Starlight specific styles that might interfere */
+.sidebar-content,
+.sidebar-header,
+.page-sidebar,
+.header-nav {
+  all: unset;
+  display: contents;
 }

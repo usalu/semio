@@ -1,11 +1,9 @@
-> 👀 Are you curious how we develop semio? Then you might want to check out our [Discord server](https://discord.gg/m6nnf6pQRc) 👥
-
 <p align="center">
     <a href="https://docs.semio-tech.com">
       <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="assets/logo/semio_horizontal_dark.svg">
-          <source media="(prefers-color-scheme: light)" srcset="assets/logo/semio_horizontal.svg">
-          <img alt="semio" href="https://github.com/usalu/semio/" src="assets/logo/semio_horizontal.svg">
+          <source media="(prefers-color-scheme: dark)" srcset="assets/logo/logo_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="assets/logo/logo.svg">
+          <img alt="semio" href="https://github.com/usalu/semio/" src="assets/logo/logo.svg">
       </picture>
     </a>
     <br/>
@@ -65,7 +63,7 @@ Let me walk you through 🚶
    - [⭕ Piece](#-piece-)
    - [⚓ Port](#-port-)
    - [💾 Representation](#-representation-)
-   - [📏 Quality](#-quality-)
+   - [🏷️ Attribute](#-attribute-)
    - [🏷️ Tag](#%EF%B8%8F-tag-)
    - [◳ Plane](#-plane-)
    - [🔗 Url](#-url-)
@@ -88,7 +86,7 @@ Let me walk you through 🚶
    - [🟨 @semio/js](#-semiojs-)
    - [✏️ @semio/sketchpad](#️-semiosketchpad-)
    - [📚 @semio/docs](#-semiodocs-)
-   - [🎛️ @semio/playground](#%EF%B8%8F-semioplayground-)
+   - [🎛️ @semio/play](#%EF%B8%8F-semioplay-)
    - [🤖 @semio/assistant](#-semioassistant-)
    - [⚙️ @semio/engine](#️-semioengine-)
    - [🟪 @semio/net](#-semionet-)
@@ -97,7 +95,7 @@ Let me walk you through 🚶
    - [🛍️ @semio/assets](#%EF%B8%8F-semioassets-)
      - [🏷️ Badges](#%EF%B8%8F-badges-)
      - [📄 Fonts](#-fonts-)
-     - [👁️ Icons](#-icons-)
+     - [👁️ Icons](#%EF%B8%8F-icons-)
 1. [🏘️ Examples](#%EF%B8%8F-examples-)
    - [🚀 Starter](#-starter-)
    - [👋 Hello semio](#-hello-semio-)
@@ -185,9 +183,9 @@ A [`design`](#%EF%B8%8F-design-) is an undirected graph of [`pieces`](#-piece-) 
 
 A _flat_ [`design`](#%EF%B8%8F-design-) has no [`connections`](#-connection-) and all [`pieces`](#-piece-) are _fixed_ ◳
 
-The [`pieces`](#-piece-) are _placed_ _hierarchically_ ([breadth-first](https://en.wikipedia.org/wiki/Breadth-first_search)) for every _cluster_ 🌿
+The [`pieces`](#-piece-) are _placed_ _hierarchically_ ([breadth-first](https://en.wikipedia.org/wiki/Breadth-first_search)) for every _component_ 🌿
 
-Additional [`connections`](#-connection-) which where not used in the _placement_ can be used to validate the computed [`planes`](#◳-plane-) 🛂
+Additional [`connections`](#-connection-) which where not used in the _placement_ can be used to validate the computed [`planes`](#-plane-) 🛂
 
 ## 🏠 Type [↑](#-specs-)
 
@@ -207,9 +205,9 @@ The _direction_ of a [`connection`](#-connection-) goes from the lower _hierarch
 
 A [`piece`](#-piece-) is an instance of either a [`type`](#-type-) or a [`design`](#%EF%B8%8F-design-) 📐
 
-A [`piece`](#-piece-) is either _fixed_ (with a [`plane`](#◳-plane-)) or _linked_ (with a [`connection`](#-connection-)) 📐
+A [`piece`](#-piece-) is either _fixed_ (with a [`plane`](#-plane-)) or _linked_ (with a [`connection`](#-connection-)) 📐
 
-A group of _connected_ [`pieces`](#-piece-) is called a _cluster_ 🌿
+A group of _connected_ [`pieces`](#-piece-) is called a _component_ 🌿
 
 The _hierachy_ of a [`piece`](#-piece-) is the length of the shortest path to the next _fixed_ [`piece`](#-piece-) 👣
 
@@ -233,13 +231,13 @@ No **[`tags`](#%EF%B8%8F-tag-)** means the _default_ representation 🔑
 
 The similarity of [`representations`](#-representation-) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#%EF%B8%8F-tag-)** 🔄
 
-## 📏 Quality [↑](#-specs-)
+## 🏷️ Attribute [↑](#-specs-)
 
-A [`quality`](#-quality-) is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
+A [`attribute`](#-attribute-) is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
 
 The **name** is[kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) and with `.`-separated string similar to [toml keys](https://toml.io/en/v1.0.0#keys) 🔑
 
-No **value** is equivalent to the boolean _true_ where the **name** is the category of the quality 🔑
+No **value** is equivalent to the boolean _true_ where the **name** is the category of the attribute 🔑
 
 The **unit** is a [unit identifier](https://en.wikipedia.org/wiki/Unit_of_measurement) 🔢
 
@@ -256,7 +254,7 @@ The **unit** is a [unit identifier](https://en.wikipedia.org/wiki/Unit_of_measur
 - `Pa` for pascal, `kPa` for kilopascal, `MPa` for megapascal
 - …
 
-A list of [qualities](#-quality-) is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value** ↔️
+A list of [attributes](#-attribute-) is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value** ↔️
 
 ## 🏷️ Tag [↑](#-specs-)
 
@@ -264,7 +262,7 @@ A [`tag`](#%EF%B8%8F-tag-) is a [kebab-cased](https://en.wikipedia.org/wiki/Keba
 
 ## ◳ Plane [↑](#-specs-)
 
-A [`plane`](#◳-plane-) is a location (**origin**) and orientation (**x-axis**, **y-axis** and derived z-axis) in 3D space ✈️
+A [`plane`](#-plane-) is a location (**origin**) and orientation (**x-axis**, **y-axis** and derived z-axis) in 3D space ✈️
 
 The coordinate system is left-handed where the thumb points up into the direction of the z-axis, the index-finger forwards into the direction of the y-axis and the middle-finger points to the right into the direction of the x-axis 👈
 
@@ -338,7 +336,9 @@ It hides the actual complexity and makes it harder to navigate the code 🔍
 <details>
 <summary><strong>📺 Inline everything that bearly fits onto the screen ✅</strong></summary>
 
-The smaller the code, the easier it is to browse and show diffs 🔍
+Smaller code, less tokens and easier diffs 🔍
+
+Your [ai](#-ai-) bill will be lower and the completions will resolve faster 🚀
 
 If you are not sure what the code does, you can ask [ai](#-ai-) 💬
 
@@ -347,7 +347,9 @@ If you are not sure what the code does, you can ask [ai](#-ai-) 💬
 <details>
 <summary><strong>🗣️ Don't use comments or if you must, only tag code at the end of the line ❌</strong></summary>
 
-The smaller the code, the easier it is to browse and show diffs 🔍
+Smaller code, less tokens and easier diffs 🔍
+
+Your [ai](#-ai-) bill will be lower and the completions will resolve faster 🚀
 
 If you are not sure what the code does, you can ask [ai](#-ai-) 💬
 
@@ -429,7 +431,7 @@ If you change your architecture, just design proper interfaces for something con
 
 We are past the time where we copy code for no reason 📃
 
-Actually repeated code can improve the quality of your copilots suggestion 🤯
+Actually repeated code can improve the attribute of your copilots suggestion 🤯
 
 The main question is how can your application grow?
 
@@ -585,7 +587,20 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
 
 Most of our [codebase](#-principles-) is heavily optimized for AI agents 🤖
 
-### 🖱️ [Cursor](/.cursor) [↑](#-ai-)
+### ✈️ [Copilot](.github/chatmodes) [↑](#-ai-)
+
+<details>
+<summary><strong>📚 Resources:</strong></summary>
+
+- [Chat modes](https://code.visualstudio.com/docs/copilot/chat/chat-modes)
+
+</details>
+
+Copilot is the only request-based billing provider left and is hence much cheaper than the others 💳
+
+We prepare good tickets for the agent, currently with [GPT-5](https://openai.com/gpt-5) and [Claude Sonnet 4](https://www.anthropic.com/claude/sonnet) 🚀
+
+### 🖱️ [Cursor](.cursor) [↑](#-ai-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -596,20 +611,15 @@ Most of our [codebase](#-principles-) is heavily optimized for AI agents 🤖
 
 We use [Cursor](https://www.cursor.com) as general editor for typing code mostly with [Tab](https://docs.cursor.com/tab/overview) ➡️
 
-For brain-heavy tasks we prepare good tickets and use [Gemini 2.5 Pro](https://gemini.google.com/gemini-2.5-pro) ⚡
+For tasks that require updated docs we use the agent 💬
 
-We parallely work on two tasks that are unrelated to each other in order to switch between them during waiting times ⌛
+### ⌨️ [Claude Code](CLAUDE.md) [↑](#-ai-)
 
-### ✈️ Copilot [↑](#-ai-)
+For tasks that require a lot of codebase context or tool usage we use [Claude Code]() 💬
 
-<details>
-<summary><strong>📚 Resources:</strong></summary>
+### 🌐 Browser [↑](#-ai-)
 
-- [Chat modes](https://code.visualstudio.com/docs/copilot/chat/chat-modes)
-
-</details>
-
-For monkey-tasks we use the free [Copilot](https://github.com/features/copilot) with [GPT-4.1](https://docs.github.com/en/copilot/using-github-copilot/ai-models/using-openai-gpt-41-in-github-copilot) 🚀
+For simple tasks that only affect one file (sorting, formatting, explaining, …) we use the free [ChatGPT](https://chatgpt.com), [Gemini](https://gemini.google.com) or [Groq](https://console.groq.com), … in the browser to not waste precious tokens 🐒
 
 ## 🔄 CI/CD [↑](#-development-)
 
@@ -843,7 +853,7 @@ Mostly a [Large Language Model](https://en.wikipedia.org/wiki/Large_language_mod
 
 </details>
 
-## 🎛️ [@semio/playground](https://playground.semio-tech.com) [↑](#-components-)
+## 🎛️ [@semio/play](https://play.semio-tech.com) [↑](#-components-)
 
 A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
 
@@ -1107,7 +1117,25 @@ Each badge is created with [shields.io](https://shields.io) with style `flat-squ
 
 ![Palette](/assets/lists/palette.png)
 
+| Name      | Hex     | RGB           | HSL              | HSV (or HSB)     | CMYK           | Color            |
+| --------- | ------- | ------------- | ---------------- | ---------------- | -------------- | ---------------- |
+| Primary   | #FF344F | 255, 52, 79   | 352, 100, 60.2   | 352, 79.6, 100   | 0, 80, 69, 0   | Folly            |
+| Secondary | #00A69D | 0, 166, 157   | 176.7, 100, 32.5 | 176.7, 100, 65.1 | 100, 0, 5, 35  | Persian green    |
+| Tertiary  | #FA9500 | 250, 149, 0   | 34.8, 100, 49    | 35.76, 1, 0.49   | 0, 40, 100, 2  | Princeton orange |
+| Dark      | #000117 | 0, 1, 23      | 237.4, 100, 4.5  | 237.4, 100, 9    | 100, 96, 0, 91 | Rich black       |
+| Light     | #F7F3E3 | 247, 243, 227 | 48, 55.6, 92.9   | 48, 8.1, 96.9    | 0, 2, 8, 3     | Cosmic latte     |
+| Gray      | #7B827D | 123, 130, 125 | 137.1, 2.8, 49.6 | 137.1, 5.4, 51   | 5, 0, 4, 49    | Battleshiip gray |
+
+<!-- TODO: Add gray with shades -->
+
 ### 🥇 Primary [↑](#-colors-)
+
+Use the primary color for the most important elements of your design 🏆
+
+We use it e.g. for:
+
+- Highlighting interactive elements 🖱️
+- Background for important elements 🟥
 
 ### 🥈 Secondary [↑](#-colors-)
 
@@ -1117,7 +1145,7 @@ Each badge is created with [shields.io](https://shields.io) with style `flat-squ
 
 ### ⚪ Light [↑](#-colors-)
 
-### 🩶 Grey [↑](#-colors-)
+### 🩶 Gray [↑](#-colors-)
 
 Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can come together for an invertible theme in a semantically meaningfull way? Well, here is how you achieve it with 33 colors 🤯
 
@@ -1193,7 +1221,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-semiosketchpad-" title="✏️@semio/sketchpad"><sub>✏️<sub></a>
         <a href="#-semioengine-" title="⚙️@semio/engine"><sub>⚙️<sub></a>
         <a href="#-semioassistant-" title="🤖@semio/assistant"><sub>🤖<sub></a>
-        <a href="#%EF%B8%8F-semioplayground-" title="🎛️@semio/playground"><sub>🎛️<sub></a>
+        <a href="#%EF%B8%8F-semioplay-" title="🎛️@semio/play"><sub>🎛️<sub></a>
         <br />
         <a href="#-semiodocs-" title="📚@semio/docs"><sub>📚<sub></a>
         <a href="#-semioassets-" title="🛍️@semio/assets"><sub>🛍️<sub></a>

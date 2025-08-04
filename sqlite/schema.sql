@@ -163,7 +163,15 @@ CREATE TABLE connection (
 	FOREIGN KEY(connecting_port_id) REFERENCES port (id), 
 	FOREIGN KEY(design_id) REFERENCES design (id)
 );
-CREATE TABLE quality (
+CREATE TABLE concept (
+	name VARCHAR(64) NOT NULL, 
+	"order" INTEGER NOT NULL, 
+	id INTEGER NOT NULL, 
+	kit_id INTEGER, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(kit_id) REFERENCES kit (id)
+);
+CREATE TABLE attribute (
 	name VARCHAR(64) NOT NULL, 
 	value VARCHAR(64) NOT NULL, 
 	unit VARCHAR(64) NOT NULL, 
