@@ -1,781 +1,781 @@
 {
-    "$defs": {
-        "Author": {
-            "description": "📑 The output of an author.",
-            "properties": {
-                "name": {
-                    "description": "📛 The name of the author.",
-                    "maxLength": 64,
-                    "title": "Name",
-                    "type": "string"
-                },
-                "email": {
-                    "description": "📧 The email of the author.",
-                    "maxLength": 128,
-                    "title": "Email",
-                    "type": "string"
-                }
-            },
-            "required": [
-                "name",
-                "email"
-            ],
-            "title": "Author",
-            "type": "object"
-        },
-        "Connection": {
-            "description": "🖇️ A bidirectional connection between two pieces of a design.",
-            "properties": {
-                "description": {
-                    "default": "",
-                    "description": "💬 The optional human-readable description of the connection.",
-                    "maxLength": 2560,
-                    "title": "Description",
-                    "type": "string"
-                },
-                "gap": {
-                    "default": 0,
-                    "description": "↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. ",
-                    "title": "Gap",
-                    "type": "number"
-                },
-                "shift": {
-                    "default": 0,
-                    "description": "↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
-                    "title": "Shift",
-                    "type": "number"
-                },
-                "rise": {
-                    "default": 0,
-                    "description": "🪜 The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
-                    "title": "Rise",
-                    "type": "number"
-                },
-                "rotation": {
-                    "default": 0,
-                    "description": "🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
-                    "exclusiveMaximum": 360.0,
-                    "minimum": 0.0,
-                    "title": "Rotation",
-                    "type": "number"
-                },
-                "turn": {
-                    "default": 0,
-                    "description": "🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
-                    "exclusiveMaximum": 360.0,
-                    "minimum": 0.0,
-                    "title": "Turn",
-                    "type": "number"
-                },
-                "tilt": {
-                    "default": 0,
-                    "description": "↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
-                    "exclusiveMaximum": 360.0,
-                    "minimum": 0.0,
-                    "title": "Tilt",
-                    "type": "number"
-                },
-                "x": {
-                    "default": 0,
-                    "description": "➡️ The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
-                    "title": "X",
-                    "type": "number"
-                },
-                "y": {
-                    "default": 0,
-                    "description": "⬆️ The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
-                    "title": "Y",
-                    "type": "number"
-                },
-                "connected": {
-                    "$ref": "#/$defs/Side",
-                    "description": "🧲 The connected side of the connection."
-                },
-                "connecting": {
-                    "$ref": "#/$defs/Side",
-                    "description": "🧲 The connecting side of the connection."
-                }
-            },
-            "required": [
-                "connected",
-                "connecting"
-            ],
-            "title": "Connection",
-            "type": "object"
-        },
-        "Design": {
-            "description": "🏙️ A design is a collection of pieces that are connected.",
-            "properties": {
-                "name": {
-                    "description": "📛 The name of the design.",
-                    "maxLength": 64,
-                    "title": "Name",
-                    "type": "string"
-                },
-                "description": {
-                    "default": "",
-                    "description": "💬 The optional human-readable description of the design.",
-                    "maxLength": 2560,
-                    "title": "Description",
-                    "type": "string"
-                },
-                "icon": {
-                    "default": "",
-                    "description": "🪙 The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. The image must be at least 256x256 pixels and smaller than 1 MB.",
-                    "maxLength": 1024,
-                    "title": "Icon",
-                    "type": "string"
-                },
-                "image": {
-                    "default": "",
-                    "description": "🖼️ The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
-                    "maxLength": 1024,
-                    "title": "Image",
-                    "type": "string"
-                },
-                "variant": {
-                    "default": "",
-                    "description": "🔀 The optional variant of the design. No variant means the default variant.",
-                    "maxLength": 64,
-                    "title": "Variant",
-                    "type": "string"
-                },
-                "view": {
-                    "default": "",
-                    "description": "🥽 The optional view of the design. No view means the default view.",
-                    "maxLength": 64,
-                    "title": "View",
-                    "type": "string"
-                },
-                "unit": {
-                    "default": "",
-                    "description": "📏 The unit of the design.",
-                    "maxLength": 64,
-                    "title": "Unit",
-                    "type": "string"
-                },
-                "created": {
-                    "description": "🕒 The creation date of the design.",
-                    "format": "date-time",
-                    "title": "Created",
-                    "type": "string"
-                },
-                "updated": {
-                    "description": "🕒 The last update date of the design.",
-                    "format": "date-time",
-                    "title": "Updated",
-                    "type": "string"
-                },
-                "pieces": {
-                    "items": {
-                        "$ref": "#/$defs/Piece"
-                    },
-                    "title": "Pieces",
-                    "type": "array"
-                },
-                "connections": {
-                    "items": {
-                        "$ref": "#/$defs/Connection"
-                    },
-                    "title": "Connections",
-                    "type": "array"
-                },
-                "authors": {
-                    "items": {
-                        "$ref": "#/$defs/Author"
-                    },
-                    "title": "Authors",
-                    "type": "array"
-                },
-                "qualities": {
-                    "items": {
-                        "$ref": "#/$defs/Quality"
-                    },
-                    "title": "Qualities",
-                    "type": "array"
-                }
-            },
-            "required": [
-                "name"
-            ],
-            "title": "Design",
-            "type": "object"
-        },
-        "DiagramPoint": {
-            "description": "📺 A 2d-point (xy) of integers in screen coordinate system.",
-            "properties": {
-                "x": {
-                    "description": "🏁 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
-                    "title": "X",
-                    "type": "number"
-                },
-                "y": {
-                    "description": "🏁 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
-                    "title": "Y",
-                    "type": "number"
-                }
-            },
-            "required": [
-                "x",
-                "y"
-            ],
-            "title": "DiagramPoint",
-            "type": "object"
-        },
-        "PieceId": {
-            "description": "🪪 The props to identify the piece within the parent design.",
-            "properties": {
-                "id_": {
-                    "default": "",
-                    "description": "🆔 The id of the piece.",
-                    "maxLength": 128,
-                    "title": "Id",
-                    "type": "string"
-                }
-            },
-            "title": "PieceId",
-            "type": "object"
-        },
-        "Piece": {
-            "description": "⭕ A piece is a 3d-instance of a type in a design.",
-            "properties": {
-                "id_": {
-                    "default": "",
-                    "description": "🆔 The id of the piece.",
-                    "maxLength": 128,
-                    "title": "Id",
-                    "type": "string"
-                },
-                "description": {
-                    "default": "",
-                    "description": "💬 The optional human-readable description of the piece.",
-                    "maxLength": 2560,
-                    "title": "Description",
-                    "type": "string"
-                },
-                "type": {
-                    "$ref": "#/$defs/TypeId",
-                    "description": "🧩 The type of the piece."
-                },
-                "plane": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/Plane"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
-                    "description": "◳ The optional plane of the piece. When pieces are connected only one piece can have a plane."
-                },
-                "center": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/DiagramPoint"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
-                    "description": "📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
-                },
-                "qualities": {
-                    "description": "📏 The qualities of the piece.",
-                    "items": {
-                        "$ref": "#/$defs/Quality"
-                    },
-                    "title": "Qualities",
-                    "type": "array"
-                }
-            },
-            "required": [
-                "type"
-            ],
-            "title": "Piece",
-            "type": "object"
-        },
-        "Plane": {
-            "description": "◳ A plane is an origin (point) and an orientation (x-axis and y-axis).",
-            "properties": {
-                "origin": {
-                    "$ref": "#/$defs/Point",
-                    "description": "⌱ The origin of the plane."
-                },
-                "xAxis": {
-                    "$ref": "#/$defs/Vector",
-                    "description": "➡️ The x-axis of the plane."
-                },
-                "yAxis": {
-                    "$ref": "#/$defs/Vector",
-                    "description": "➡️ The y-axis of the plane."
-                }
-            },
-            "required": [
-                "origin",
-                "xAxis",
-                "yAxis"
-            ],
-            "title": "Plane",
-            "type": "object"
-        },
-        "Point": {
-            "description": "✖️ A 3d-point (xyz) of floating point numbers.",
-            "properties": {
-                "x": {
-                    "description": "🎚️ The x-coordinate of the point.",
-                    "title": "X",
-                    "type": "number"
-                },
-                "y": {
-                    "description": "🎚️ The y-coordinate of the point.",
-                    "title": "Y",
-                    "type": "number"
-                },
-                "z": {
-                    "description": "🎚️ The z-coordinate of the point.",
-                    "title": "Z",
-                    "type": "number"
-                }
-            },
-            "required": [
-                "x",
-                "y",
-                "z"
-            ],
-            "title": "Point",
-            "type": "object"
-        },
-        "PortId": {
-            "description": "🪪 The props to identify the port within the parent type.",
-            "properties": {
-                "id_": {
-                    "default": "",
-                    "description": "🆔 The id of the port.",
-                    "maxLength": 128,
-                    "title": "Id",
-                    "type": "string"
-                }
-            },
-            "title": "PortId",
-            "type": "object"
-        },
-        "Port": {
-            "description": "🔌 A port is a connection point (with a direction) of a type.",
-            "properties": {
-                "id_": {
-                    "default": "",
-                    "description": "🆔 The id of the port.",
-                    "maxLength": 128,
-                    "title": "Id",
-                    "type": "string"
-                },
-                "description": {
-                    "default": "",
-                    "description": "💬 The optional human-readable description of the port.",
-                    "maxLength": 2560,
-                    "title": "Description",
-                    "type": "string"
-                },
-                "family": {
-                    "default": "",
-                    "description": "👨‍👩‍👧‍👦 The optional family of the port. This allows to define explicit compatibility with other ports.",
-                    "maxLength": 64,
-                    "title": "Family",
-                    "type": "string"
-                },
-                "compatibleFamilies": {
-                    "description": "✅ The optional other compatible families of the port. An empty list means this port is compatible with all other ports.",
-                    "items": {
-                        "type": "string"
-                    },
-                    "title": "Compatiblefamilies",
-                    "type": "array"
-                },
-                "point": {
-                    "$ref": "#/$defs/Point",
-                    "description": "✖️ The connection point of the port that is attracted to another connection point."
-                },
-                "direction": {
-                    "$ref": "#/$defs/Vector",
-                    "description": "➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
-                },
-                "t": {
-                    "default": 0.0,
-                    "description": "💍 The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
-                    "title": "T",
-                    "type": "number"
-                },
-                "qualities": {
-                    "description": "📏 The qualities of the port.",
-                    "items": {
-                        "$ref": "#/$defs/Quality"
-                    },
-                    "title": "Qualities",
-                    "type": "array"
-                }
-            },
-            "required": [
-                "point",
-                "direction"
-            ],
-            "title": "Port",
-            "type": "object"
-        },
-        "Quality": {
-            "description": "📏 A quality is a named value with a unit and a definition.",
-            "properties": {
-                "name": {
-                    "description": "📏 The name of the quality.",
-                    "maxLength": 64,
-                    "title": "Name",
-                    "type": "string"
-                },
-                "value": {
-                    "default": "",
-                    "description": "📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
-                    "maxLength": 64,
-                    "title": "Value",
-                    "type": "string"
-                },
-                "unit": {
-                    "default": "",
-                    "description": "📏 The optional unit of the value of the quality.",
-                    "maxLength": 64,
-                    "title": "Unit",
-                    "type": "string"
-                },
-                "definition": {
-                    "default": "",
-                    "description": "📏 The optional definition [ text | uri ] of the quality.",
-                    "maxLength": 2560,
-                    "title": "Definition",
-                    "type": "string"
-                }
-            },
-            "required": [
-                "name"
-            ],
-            "title": "Quality",
-            "type": "object"
-        },
-        "Representation": {
-            "description": "💾 A representation is a link to a resource that describes a type for a certain level of detail and tags.",
-            "properties": {
-                "url": {
-                    "description": "🔗 The Unique Resource Locator (URL) to the resource of the representation.",
-                    "maxLength": 1024,
-                    "title": "Url",
-                    "type": "string"
-                },
-                "description": {
-                    "default": "",
-                    "description": "💬 The optional human-readable description of the representation.",
-                    "maxLength": 2560,
-                    "title": "Description",
-                    "type": "string"
-                },
-                "mime": {
-                    "description": "✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.",
-                    "maxLength": 64,
-                    "title": "Mime",
-                    "type": "string"
-                },
-                "tags": {
-                    "description": "🏷️ The optional tags to group representations. No tags means default.",
-                    "items": {
-                        "type": "string"
-                    },
-                    "title": "Tags",
-                    "type": "array"
-                },
-                "qualities": {
-                    "description": "📏 The qualities of the representation.",
-                    "items": {
-                        "$ref": "#/$defs/Quality"
-                    },
-                    "title": "Qualities",
-                    "type": "array"
-                }
-            },
-            "required": [
-                "url",
-                "mime"
-            ],
-            "title": "Representation",
-            "type": "object"
-        },
-        "Side": {
-            "description": "🧱 A side of a piece in a connection.",
-            "properties": {
-                "piece": {
-                    "$ref": "#/$defs/PieceId"
-                },
-                "port": {
-                    "$ref": "#/$defs/PortId"
-                }
-            },
-            "required": [
-                "piece",
-                "port"
-            ],
-            "title": "Side",
-            "type": "object"
-        },
-        "TypeId": {
-            "description": "🪪 The props to identify the type.",
-            "properties": {
-                "name": {
-                    "description": "📛 The name of the type.",
-                    "maxLength": 64,
-                    "title": "Name",
-                    "type": "string"
-                },
-                "variant": {
-                    "default": "",
-                    "description": "🔀 The optional variant of the type. No variant means the default variant.",
-                    "maxLength": 64,
-                    "title": "Variant",
-                    "type": "string"
-                }
-            },
-            "required": [
-                "name"
-            ],
-            "title": "TypeId",
-            "type": "object"
-        },
-        "Type": {
-            "description": "🧩 A type is a reusable element that can be connected with other types over ports.",
-            "properties": {
-                "name": {
-                    "description": "📛 The name of the type.",
-                    "maxLength": 64,
-                    "title": "Name",
-                    "type": "string"
-                },
-                "description": {
-                    "default": "",
-                    "description": "💬 The optional human-readable description of the type.",
-                    "maxLength": 2560,
-                    "title": "Description",
-                    "type": "string"
-                },
-                "icon": {
-                    "default": "",
-                    "description": "🪙 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.",
-                    "maxLength": 1024,
-                    "title": "Icon",
-                    "type": "string"
-                },
-                "image": {
-                    "default": "",
-                    "description": "🖼️ The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
-                    "maxLength": 1024,
-                    "title": "Image",
-                    "type": "string"
-                },
-                "variant": {
-                    "default": "",
-                    "description": "🔀 The optional variant of the type. No variant means the default variant.",
-                    "maxLength": 64,
-                    "title": "Variant",
-                    "type": "string"
-                },
-                "unit": {
-                    "default": "",
-                    "description": "Ⓜ️ The length unit of the point and the direction of the ports of the type.",
-                    "maxLength": 64,
-                    "title": "Unit",
-                    "type": "string"
-                },
-                "created": {
-                    "description": "🕒 The creation date of the type.",
-                    "format": "date-time",
-                    "title": "Created",
-                    "type": "string"
-                },
-                "updated": {
-                    "description": "🕒 The last update date of the type.",
-                    "format": "date-time",
-                    "title": "Updated",
-                    "type": "string"
-                },
-                "representations": {
-                    "items": {
-                        "$ref": "#/$defs/Representation"
-                    },
-                    "title": "Representations",
-                    "type": "array"
-                },
-                "ports": {
-                    "items": {
-                        "$ref": "#/$defs/Port"
-                    },
-                    "title": "Ports",
-                    "type": "array"
-                },
-                "authors": {
-                    "items": {
-                        "$ref": "#/$defs/Author"
-                    },
-                    "title": "Authors",
-                    "type": "array"
-                },
-                "qualities": {
-                    "items": {
-                        "$ref": "#/$defs/Quality"
-                    },
-                    "title": "Qualities",
-                    "type": "array"
-                }
-            },
-            "required": [
-                "name"
-            ],
-            "title": "Type",
-            "type": "object"
-        },
-        "Vector": {
-            "description": "➡️ A 3d-vector (xyz) of floating point numbers.",
-            "properties": {
-                "x": {
-                    "description": "🎚️ The x-coordinate of the vector.",
-                    "title": "X",
-                    "type": "number"
-                },
-                "y": {
-                    "description": "🎚️ The y-coordinate of the vector.",
-                    "title": "Y",
-                    "type": "number"
-                },
-                "z": {
-                    "description": "🎚️ The z-coordinate of the vector.",
-                    "title": "Z",
-                    "type": "number"
-                }
-            },
-            "required": [
-                "x",
-                "y",
-                "z"
-            ],
-            "title": "Vector",
-            "type": "object"
-        }
-    },
-    "description": "🗃️ A kit is a collection of types and designs.",
-    "properties": {
-        "uri": {
-            "description": "🆔 The uri of the kit.",
-            "maxLength": 2048,
-            "title": "Uri",
-            "type": "string"
-        },
+  "$defs": {
+    "Author": {
+      "description": "📑 The output of an author.",
+      "properties": {
         "name": {
-            "description": "📛 The name of the kit.",
-            "maxLength": 64,
-            "title": "Name",
-            "type": "string"
+          "description": "📛 The name of the author.",
+          "maxLength": 64,
+          "title": "Name",
+          "type": "string"
+        },
+        "email": {
+          "description": "📧 The email of the author.",
+          "maxLength": 128,
+          "title": "Email",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "email"
+      ],
+      "title": "Author",
+      "type": "object"
+    },
+    "Connection": {
+      "description": "🖇️ A bidirectional connection between two pieces of a design.",
+      "properties": {
+        "description": {
+          "default": "",
+          "description": "💬 The optional human-readable description of the connection.",
+          "maxLength": 2560,
+          "title": "Description",
+          "type": "string"
+        },
+        "gap": {
+          "default": 0,
+          "description": "↕️ The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece. ",
+          "title": "Gap",
+          "type": "number"
+        },
+        "shift": {
+          "default": 0,
+          "description": "↔️ The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece..",
+          "title": "Shift",
+          "type": "number"
+        },
+        "rise": {
+          "default": 0,
+          "description": "🪜 The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+          "title": "Rise",
+          "type": "number"
+        },
+        "rotation": {
+          "default": 0,
+          "description": "🔄 The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
+          "exclusiveMaximum": 360.0,
+          "minimum": 0.0,
+          "title": "Rotation",
+          "type": "number"
+        },
+        "turn": {
+          "default": 0,
+          "description": "🛞 The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
+          "exclusiveMaximum": 360.0,
+          "minimum": 0.0,
+          "title": "Turn",
+          "type": "number"
+        },
+        "tilt": {
+          "default": 0,
+          "description": "↗️ The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
+          "exclusiveMaximum": 360.0,
+          "minimum": 0.0,
+          "title": "Tilt",
+          "type": "number"
+        },
+        "x": {
+          "default": 0,
+          "description": "➡️ The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "default": 0,
+          "description": "⬆️ The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
+          "title": "Y",
+          "type": "number"
+        },
+        "connected": {
+          "$ref": "#/$defs/Side",
+          "description": "🧲 The connected side of the connection."
+        },
+        "connecting": {
+          "$ref": "#/$defs/Side",
+          "description": "🧲 The connecting side of the connection."
+        }
+      },
+      "required": [
+        "connected",
+        "connecting"
+      ],
+      "title": "Connection",
+      "type": "object"
+    },
+    "Design": {
+      "description": "🏙️ A design is a collection of pieces that are connected.",
+      "properties": {
+        "name": {
+          "description": "📛 The name of the design.",
+          "maxLength": 64,
+          "title": "Name",
+          "type": "string"
         },
         "description": {
-            "default": "",
-            "description": "💬 The optional human-readable description of the kit.",
-            "maxLength": 2560,
-            "title": "Description",
-            "type": "string"
+          "default": "",
+          "description": "💬 The optional human-readable description of the design.",
+          "maxLength": 2560,
+          "title": "Description",
+          "type": "string"
         },
         "icon": {
-            "default": "",
-            "description": "🪙 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. kit.",
-            "maxLength": 1024,
-            "title": "Icon",
-            "type": "string"
+          "default": "",
+          "description": "🪙 The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. The image must be at least 256x256 pixels and smaller than 1 MB.",
+          "maxLength": 1024,
+          "title": "Icon",
+          "type": "string"
         },
         "image": {
-            "default": "",
-            "description": "🖼️ The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
-            "maxLength": 1024,
-            "title": "Image",
-            "type": "string"
+          "default": "",
+          "description": "🖼️ The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
+          "maxLength": 1024,
+          "title": "Image",
+          "type": "string"
         },
-        "preview": {
-            "default": "",
-            "description": "🔮 The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.",
-            "maxLength": 1024,
-            "title": "Preview",
-            "type": "string"
+        "variant": {
+          "default": "",
+          "description": "🔀 The optional variant of the design. No variant means the default variant.",
+          "maxLength": 64,
+          "title": "Variant",
+          "type": "string"
         },
-        "version": {
-            "default": "",
-            "description": "🔀 The optional version of the kit. No version means the latest version.",
-            "maxLength": 64,
-            "title": "Version",
-            "type": "string"
+        "view": {
+          "default": "",
+          "description": "🥽 The optional view of the design. No view means the default view.",
+          "maxLength": 64,
+          "title": "View",
+          "type": "string"
         },
-        "remote": {
-            "default": "",
-            "description": "☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely.",
-            "maxLength": 1024,
-            "title": "Remote",
-            "type": "string"
-        },
-        "homepage": {
-            "default": "",
-            "description": "🏠 The optional url of the homepage of the kit.",
-            "maxLength": 1024,
-            "title": "Homepage",
-            "type": "string"
-        },
-        "license": {
-            "default": "",
-            "description": "⚖️ The optional license [ spdx id | url ] of the kit.",
-            "maxLength": 1024,
-            "title": "License",
-            "type": "string"
+        "unit": {
+          "default": "",
+          "description": "📏 The unit of the design.",
+          "maxLength": 64,
+          "title": "Unit",
+          "type": "string"
         },
         "created": {
-            "description": "🕒 The creation date of the kit.",
-            "format": "date-time",
-            "title": "Created",
-            "type": "string"
+          "description": "🕒 The creation date of the design.",
+          "format": "date-time",
+          "title": "Created",
+          "type": "string"
         },
         "updated": {
-            "description": "🕒 The last update date of the kit.",
-            "format": "date-time",
-            "title": "Updated",
-            "type": "string"
+          "description": "🕒 The last update date of the design.",
+          "format": "date-time",
+          "title": "Updated",
+          "type": "string"
         },
-        "types": {
-            "description": "🧩 The types of the kit.",
-            "items": {
-                "$ref": "#/$defs/Type"
-            },
-            "title": "Types",
-            "type": "array"
+        "pieces": {
+          "items": {
+            "$ref": "#/$defs/Piece"
+          },
+          "title": "Pieces",
+          "type": "array"
         },
-        "designs": {
-            "description": "🏙️ The designs of the kit.",
-            "items": {
-                "$ref": "#/$defs/Design"
-            },
-            "title": "Designs",
-            "type": "array"
+        "connections": {
+          "items": {
+            "$ref": "#/$defs/Connection"
+          },
+          "title": "Connections",
+          "type": "array"
         },
-        "qualities": {
-            "description": "📏 The qualities of the kit.",
-            "items": {
-                "$ref": "#/$defs/Quality"
-            },
-            "title": "Qualities",
-            "type": "array"
+        "authors": {
+          "items": {
+            "$ref": "#/$defs/Author"
+          },
+          "title": "Authors",
+          "type": "array"
+        },
+        "attributes": {
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          },
+          "title": "Attributes",
+          "type": "array"
         }
-    },
-    "required": [
-        "uri",
+      },
+      "required": [
         "name"
-    ],
-    "title": "Kit",
-    "type": "object"
+      ],
+      "title": "Design",
+      "type": "object"
+    },
+    "Coord": {
+      "description": "📺 A 2d-point (xy) of integers in screen coordinate system.",
+      "properties": {
+        "x": {
+          "description": "🏁 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "description": "🏁 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.",
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "title": "Coord",
+      "type": "object"
+    },
+    "PieceId": {
+      "description": "🪪 The props to identify the piece within the parent design.",
+      "properties": {
+        "id_": {
+          "default": "",
+          "description": "🆔 The id of the piece.",
+          "maxLength": 128,
+          "title": "Id",
+          "type": "string"
+        }
+      },
+      "title": "PieceId",
+      "type": "object"
+    },
+    "Piece": {
+      "description": "⭕ A piece is a 3d-instance of a type in a design.",
+      "properties": {
+        "id_": {
+          "default": "",
+          "description": "🆔 The id of the piece.",
+          "maxLength": 128,
+          "title": "Id",
+          "type": "string"
+        },
+        "description": {
+          "default": "",
+          "description": "💬 The optional human-readable description of the piece.",
+          "maxLength": 2560,
+          "title": "Description",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/TypeId",
+          "description": "🧩 The type of the piece."
+        },
+        "plane": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Plane"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "◳ The optional plane of the piece. When pieces are connected only one piece can have a plane."
+        },
+        "center": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Coord"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
+        },
+        "attributes": {
+          "description": "🏷️ The attributes of the piece.",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          },
+          "title": "Attributes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "Piece",
+      "type": "object"
+    },
+    "Plane": {
+      "description": "◳ A plane is an origin (point) and an orientation (x-axis and y-axis).",
+      "properties": {
+        "origin": {
+          "$ref": "#/$defs/Point",
+          "description": "⌱ The origin of the plane."
+        },
+        "xAxis": {
+          "$ref": "#/$defs/Vector",
+          "description": "➡️ The x-axis of the plane."
+        },
+        "yAxis": {
+          "$ref": "#/$defs/Vector",
+          "description": "➡️ The y-axis of the plane."
+        }
+      },
+      "required": [
+        "origin",
+        "xAxis",
+        "yAxis"
+      ],
+      "title": "Plane",
+      "type": "object"
+    },
+    "Point": {
+      "description": "✖️ A 3d-point (xyz) of floating point numbers.",
+      "properties": {
+        "x": {
+          "description": "🎚️ The x-coordinate of the point.",
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "description": "🎚️ The y-coordinate of the point.",
+          "title": "Y",
+          "type": "number"
+        },
+        "z": {
+          "description": "🎚️ The z-coordinate of the point.",
+          "title": "Z",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "title": "Point",
+      "type": "object"
+    },
+    "PortId": {
+      "description": "🪪 The props to identify the port within the parent type.",
+      "properties": {
+        "id_": {
+          "default": "",
+          "description": "🆔 The id of the port.",
+          "maxLength": 128,
+          "title": "Id",
+          "type": "string"
+        }
+      },
+      "title": "PortId",
+      "type": "object"
+    },
+    "Port": {
+      "description": "🔌 A port is a connection point (with a direction) of a type.",
+      "properties": {
+        "id_": {
+          "default": "",
+          "description": "🆔 The id of the port.",
+          "maxLength": 128,
+          "title": "Id",
+          "type": "string"
+        },
+        "description": {
+          "default": "",
+          "description": "💬 The optional human-readable description of the port.",
+          "maxLength": 2560,
+          "title": "Description",
+          "type": "string"
+        },
+        "family": {
+          "default": "",
+          "description": "👨‍👩‍👧‍👦 The optional family of the port. This allows to define explicit compatibility with other ports.",
+          "maxLength": 64,
+          "title": "Family",
+          "type": "string"
+        },
+        "compatibleFamilies": {
+          "description": "✅ The optional other compatible families of the port. An empty list means this port is compatible with all other ports.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Compatiblefamilies",
+          "type": "array"
+        },
+        "point": {
+          "$ref": "#/$defs/Point",
+          "description": "✖️ The connection point of the port that is attracted to another connection point."
+        },
+        "direction": {
+          "$ref": "#/$defs/Vector",
+          "description": "➡️ The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
+        },
+        "t": {
+          "default": 0.0,
+          "description": "💍 The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
+          "title": "T",
+          "type": "number"
+        },
+        "attributes": {
+          "description": "🏷️ The attributes of the port.",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          },
+          "title": "Attributes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "point",
+        "direction"
+      ],
+      "title": "Port",
+      "type": "object"
+    },
+    "Attribute": {
+      "description": "🏷️ A attribute is a key value pair with an an optional definition.",
+      "properties": {
+        "name": {
+          "description": "🏷️ The name of the attribute.",
+          "maxLength": 64,
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "default": "",
+          "description": "🏷️ The optional value [ text | url ] of the attribute. No value is equivalent to true.",
+          "maxLength": 64,
+          "title": "Value",
+          "type": "string"
+        },
+        "unit": {
+          "default": "",
+          "description": "🏷️ The optional unit of the value of the attribute.",
+          "maxLength": 64,
+          "title": "Unit",
+          "type": "string"
+        },
+        "definition": {
+          "default": "",
+          "description": "🏷️ The optional definition [ text | uri ] of the attribute.",
+          "maxLength": 2560,
+          "title": "Definition",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "Attribute",
+      "type": "object"
+    },
+    "Representation": {
+      "description": "💾 A representation is a link to a resource that describes a type for a certain level of detail and tags.",
+      "properties": {
+        "url": {
+          "description": "🔗 The Unique Resource Locator (URL) to the resource of the representation.",
+          "maxLength": 1024,
+          "title": "Url",
+          "type": "string"
+        },
+        "description": {
+          "default": "",
+          "description": "💬 The optional human-readable description of the representation.",
+          "maxLength": 2560,
+          "title": "Description",
+          "type": "string"
+        },
+        "mime": {
+          "description": "✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the representation.",
+          "maxLength": 64,
+          "title": "Mime",
+          "type": "string"
+        },
+        "tags": {
+          "description": "🏷️ The optional tags to group representations. No tags means default.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "attributes": {
+          "description": "🏷️ The attributes of the representation.",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          },
+          "title": "Attributes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "url",
+        "mime"
+      ],
+      "title": "Representation",
+      "type": "object"
+    },
+    "Side": {
+      "description": "🧱 A side of a piece in a connection.",
+      "properties": {
+        "piece": {
+          "$ref": "#/$defs/PieceId"
+        },
+        "port": {
+          "$ref": "#/$defs/PortId"
+        }
+      },
+      "required": [
+        "piece",
+        "port"
+      ],
+      "title": "Side",
+      "type": "object"
+    },
+    "TypeId": {
+      "description": "🪪 The props to identify the type.",
+      "properties": {
+        "name": {
+          "description": "📛 The name of the type.",
+          "maxLength": 64,
+          "title": "Name",
+          "type": "string"
+        },
+        "variant": {
+          "default": "",
+          "description": "🔀 The optional variant of the type. No variant means the default variant.",
+          "maxLength": 64,
+          "title": "Variant",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "TypeId",
+      "type": "object"
+    },
+    "Type": {
+      "description": "🧩 A type is a reusable element that can be connected with other types over ports.",
+      "properties": {
+        "name": {
+          "description": "📛 The name of the type.",
+          "maxLength": 64,
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "default": "",
+          "description": "💬 The optional human-readable description of the type.",
+          "maxLength": 2560,
+          "title": "Description",
+          "type": "string"
+        },
+        "icon": {
+          "default": "",
+          "description": "🪙 The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.",
+          "maxLength": 1024,
+          "title": "Icon",
+          "type": "string"
+        },
+        "image": {
+          "default": "",
+          "description": "🖼️ The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
+          "maxLength": 1024,
+          "title": "Image",
+          "type": "string"
+        },
+        "variant": {
+          "default": "",
+          "description": "🔀 The optional variant of the type. No variant means the default variant.",
+          "maxLength": 64,
+          "title": "Variant",
+          "type": "string"
+        },
+        "unit": {
+          "default": "",
+          "description": "Ⓜ️ The length unit of the point and the direction of the ports of the type.",
+          "maxLength": 64,
+          "title": "Unit",
+          "type": "string"
+        },
+        "created": {
+          "description": "🕒 The creation date of the type.",
+          "format": "date-time",
+          "title": "Created",
+          "type": "string"
+        },
+        "updated": {
+          "description": "🕒 The last update date of the type.",
+          "format": "date-time",
+          "title": "Updated",
+          "type": "string"
+        },
+        "representations": {
+          "items": {
+            "$ref": "#/$defs/Representation"
+          },
+          "title": "Representations",
+          "type": "array"
+        },
+        "ports": {
+          "items": {
+            "$ref": "#/$defs/Port"
+          },
+          "title": "Ports",
+          "type": "array"
+        },
+        "authors": {
+          "items": {
+            "$ref": "#/$defs/Author"
+          },
+          "title": "Authors",
+          "type": "array"
+        },
+        "attributes": {
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          },
+          "title": "Attributes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "Type",
+      "type": "object"
+    },
+    "Vector": {
+      "description": "➡️ A 3d-vector (xyz) of floating point numbers.",
+      "properties": {
+        "x": {
+          "description": "🎚️ The x-coordinate of the vector.",
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "description": "🎚️ The y-coordinate of the vector.",
+          "title": "Y",
+          "type": "number"
+        },
+        "z": {
+          "description": "🎚️ The z-coordinate of the vector.",
+          "title": "Z",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "title": "Vector",
+      "type": "object"
+    }
+  },
+  "description": "🗃️ A kit is a collection of types and designs.",
+  "properties": {
+    "uri": {
+      "description": "🆔 The uri of the kit.",
+      "maxLength": 2048,
+      "title": "Uri",
+      "type": "string"
+    },
+    "name": {
+      "description": "📛 The name of the kit.",
+      "maxLength": 64,
+      "title": "Name",
+      "type": "string"
+    },
+    "description": {
+      "default": "",
+      "description": "💬 The optional human-readable description of the kit.",
+      "maxLength": 2560,
+      "title": "Description",
+      "type": "string"
+    },
+    "icon": {
+      "default": "",
+      "description": "🪙 The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB. kit.",
+      "maxLength": 1024,
+      "title": "Icon",
+      "type": "string"
+    },
+    "image": {
+      "default": "",
+      "description": "🖼️ The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.",
+      "maxLength": 1024,
+      "title": "Image",
+      "type": "string"
+    },
+    "preview": {
+      "default": "",
+      "description": "🔮 The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.",
+      "maxLength": 1024,
+      "title": "Preview",
+      "type": "string"
+    },
+    "version": {
+      "default": "",
+      "description": "🔀 The optional version of the kit. No version means the latest version.",
+      "maxLength": 64,
+      "title": "Version",
+      "type": "string"
+    },
+    "remote": {
+      "default": "",
+      "description": "☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely.",
+      "maxLength": 1024,
+      "title": "Remote",
+      "type": "string"
+    },
+    "homepage": {
+      "default": "",
+      "description": "🏠 The optional url of the homepage of the kit.",
+      "maxLength": 1024,
+      "title": "Homepage",
+      "type": "string"
+    },
+    "license": {
+      "default": "",
+      "description": "⚖️ The optional license [ spdx id | url ] of the kit.",
+      "maxLength": 1024,
+      "title": "License",
+      "type": "string"
+    },
+    "created": {
+      "description": "🕒 The creation date of the kit.",
+      "format": "date-time",
+      "title": "Created",
+      "type": "string"
+    },
+    "updated": {
+      "description": "🕒 The last update date of the kit.",
+      "format": "date-time",
+      "title": "Updated",
+      "type": "string"
+    },
+    "types": {
+      "description": "🧩 The types of the kit.",
+      "items": {
+        "$ref": "#/$defs/Type"
+      },
+      "title": "Types",
+      "type": "array"
+    },
+    "designs": {
+      "description": "🏙️ The designs of the kit.",
+      "items": {
+        "$ref": "#/$defs/Design"
+      },
+      "title": "Designs",
+      "type": "array"
+    },
+    "attributes": {
+      "description": "🏷️ The attributes of the kit.",
+      "items": {
+        "$ref": "#/$defs/Attribute"
+      },
+      "title": "Attributes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "uri",
+    "name"
+  ],
+  "title": "Kit",
+  "type": "object"
 }

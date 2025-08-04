@@ -1,43 +1,17 @@
 kit : !Kit{
-    uri : !String
     name : !String
-    description : ?String
-    icon : ?String // emoji | logogram | url
-    image : ?String // url
-    preview : ?String // url
     version : ?String // empty is latest
-    remote : ?String // url for remote fetching
-    homepage : ?String // url
-    license : ?String // spdx id | url
-    created : !String // date
-    updated : !String // date
-    types : +Type[
+    types : *Type[
         name : !String
-        description : ?String
-        icon : ?String // emoji | logogram | url
-        image : ?String // url
         variant : ?String // empty is default
-        stock : !Float // default is +infinity
-        virtual : ?Boolean // default false
-        unit : !String // e.g., mm, cm, m
-        created : !String // date
-        updated : !String // date
-        location : ?Location{
-            longitude : !Float
-            latitude : !Float
-        }
         representations : +Representation[
+            tags : *String[] // default is empty list (meaning default LOD)
             url : !String
             description : ?String
-            tags : *String[] // default is empty list (meaning default LOD)
-            qualities : *Quality[]
+            attributes : *Attribute[]
         ]
         ports : +Port[
             id : !String // empty is default
-            description : ?String
-            mandatory : ?Boolean // default false
-            family : ?String // For explicit compatibility
-            compatibleFamilies : *String[] // Empty list means compatible with all
             point : !Point{
                 x : !Float
                 y : !Float
@@ -49,28 +23,45 @@ kit : !Kit{
                 z : !Float
             }
             t : !Float // [0,1[ for diagram ring position
-            qualities : *Quality[]
+            mandatory : ?Boolean // default false
+            family : ?String // For explicit compatibility
+            compatibleFamilies : *String[] // Empty list means compatible with all
+            description : ?String
+            attributes : *Attribute[]
         ]
-        authors : *Author[
-            name : !String
+        props : *Prop[
+            key : !String // quality key
+            value : !String // number | text
+            unit : ?String
+            attributes : *Attribute[]
+        ]
+        isVirtual : ?Boolean // default false
+        canScale : ?Boolean // default true
+        canMirror : ?Boolean // default true
+        unit : !String // e.g., mm, cm, m
+        availableCount : !Float // default is +infinity
+        location : ?Location{
+            longitude : ?Float
+            latitude : ?Float
+            altitude : ?Float
+        }
+        authors: *AuthorId[
             email : !String
-            rank : !Integer // for ordering
         ]
-        qualities : *Quality[]
-    ]
-    designs : +Design[
-        name : !String
-        description : ?String
+        concepts : *String[]
         icon : ?String // emoji | logogram | url
         image : ?String // url
-        variant : ?String // empty is default
-        view : ?String // empty is default
-        unit : !String // e.g., mm, cm, m
+        description : ?String
+        attributes : *Attribute[]
         created : !String // date
         updated : !String // date
+    ]
+    designs : *Design[
+        name : !String
+        variant : ?String // empty is default
+        view : ?String // empty is default
         pieces : +Piece[
             id : !String
-            description : ?String
             type : !TypeId{
                 name : !String
                 variant : ?String
@@ -97,43 +88,164 @@ kit : !Kit{
                     z : !Float
                 }
             }
-            center : ?DiagramPoint{
+            center : ?Coord{
                 x : !Float
                 y : !Float
             }
-            qualities : *Quality[]
+            scale : ?Float // default 1.0
+            mirrorPlane : ?Plane{
+                origin : !Point{
+                    x : !Float
+                    y : !Float
+                    z : !Float
+                }
+                xAxis : !Vector{
+                    x : !Float
+                    y : !Float
+                    z : !Float
+                }
+                yAxis : !Vector{
+                    x : !Float
+                    y : !Float
+                    z : !Float
+                }
+            }
+            props : *Prop[
+                key : !String // quality key
+                value : !String // number | text
+                unit : ?String
+                attributes : *Attribute[]
+            ]
+            hidden : ?Boolean // default false
+            locked : ?Boolean // default false
+            color : ?String // hex color
+            description : ?String
+            attributes : *Attribute[]
         ]
         connections : +Connection[
             connected : !Side{
                 piece : !PieceId{ id : !String }
+                designPiece : ?PieceId{ id : !String }
                 port : !PortId{ id : !String }
             }
             connecting : !Side{
                 piece : !PieceId{ id : !String }
+                designPiece : ?PieceId{ id : !String }
                 port : !PortId{ id : !String }
             }
-            description : ?String
             gap : ?Float
             shift : ?Float
-            raise : ?Float
+            rise : ?Float
             rotation : ?Float // degrees
             turn : ?Float // degrees
             tilt : ?Float // degrees
             x : ?Float // diagram offset x
             y : ?Float // diagram offset y
-            qualities : *Quality[]
+            description : ?String
+            attributes : *Attribute[]
         ]
-        authors : *Author[
-            name : !String
+        stats : *Stat[
+            key : !String // quality key
+            unit : ?String
+            min : ?Float
+            minExcluded : ?Boolean // default false
+            max : ?Float
+            maxExcluded : ?Boolean // default false
+        ]
+        props : *Prop[
+            key : !String // quality key
+            value : !String // number | text
+            unit : ?String
+            attributes : *Attribute[]
+        ]
+        layers : *Layer[
+            path : !String
+            isHidden : ?Boolean // default false
+            isLocked : ?Boolean // default false
+            color : ?String // hex color
+            description : ?String
+            attributes : *Attribute[]
+        ]
+        activeLayer : ?Layer{
+            path : !String
+        }
+        groups : *Group[
+            pieces : *PieceId[
+                id : !String
+            ]
+            color : ?String // hex color
+            name : ?String
+            description : ?String
+            attributes : *Attribute[]
+        ]
+        canScale : ?Boolean // default true
+        canMirror : ?Boolean // default true
+        unit : !String // e.g., mm, cm, m
+        location : ?Location{
+            longitude : ?Float
+            latitude : ?Float
+            altitude : ?Float
+        }
+        authors: *AuthorId[
             email : !String
-            rank : !Integer
         ]
-        qualities : *Quality[]
+        concepts : *String[]
+        icon : ?String // emoji | logogram | url
+        image : ?String // url
+        description : ?String
+        attributes : *Attribute[]
+        created : !String // date
+        updated : !String // date
     ]
     qualities : *Quality[
+        key : !String
         name : !String
+        kind : !QualityKind // enum: General, Design, Type, Piece, Connection, Port
+        default : ?Float
+        formula : ?String
+        defaultSiUnit : ?String
+        defaultImperialUnit : ?String
+        min : ?Float
+        minExcluded : ?Boolean // default true
+        max : ?Float
+        maxExcluded : ?Boolean // default true
+        canScale : ?Boolean // default false
+        benchmarks : *Benchmark[
+            name : !String
+            icon : ?String
+            min : ?Float
+            minExcluded : ?Boolean // default false
+            max : ?Float
+            maxExcluded : ?Boolean // default false
+            definition : ?String // text | uri
+            attributes : *Attribute[]
+        ]
+        definition : ?String // text | uri
+        attributes : *Attribute[]
+    ]
+    files : *File[
+        path : !String
+        remoteUrl : ?String
+        description : ?String
+        attributes : *Attribute[]
+    ]
+    authors : *Author[
+        name : !String
+        email : !String
+        attributes : *Attribute[]
+    ]
+    remoteUrl : ?String // url for remote fetching
+    homepageUrl : ?String // url
+    license : ?String // spdx id | url
+    concepts : *String[]
+    icon : ?String // emoji | logogram | url
+    image : ?String // url
+    description : ?String
+    attributes : *Attribute[
+        key : !String
         value : ?String // No value means true
-        unit : ?String
         definition : ?String // text | uri
     ]
+    created : !String // date
+    updated : !String // date
 }

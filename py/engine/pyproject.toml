@@ -7,27 +7,27 @@ requires-python = ">=3.13,<3.14"
 license = "AGPL-3.0-or-later"
 maintainers = [{ name = "Ueli Saluz", email = "ueli@semio-tech.com" }]
 dependencies = [
-    "fastapi[standard]>=0.115.12,<0.116",
-    "graphene>=3.4.3,<4",
-    "graphene-pydantic>=0.6.1,<0.7",
-    "graphene-sqlalchemy>=3.0.0rc2,<4",
-    "jinja2>=3.1.6,<4",
-    "lark>=1.2.2,<2",
-    "networkx~=3.5",
-    "numpy>=2.2.6,<3",
-    "openai>=1.83.0,<2",
-    "pint>=0.24.4,<0.25",
-    "pydantic>=2.11.5,<3",
-    "pyside6>=6.9.1,<7",
-    "python-dotenv>=1.1.0,<2",
-    "pytransform3d>=3.14.1,<4",
-    "requests>=2.32.3,<3",
-    "sqlalchemy>=2.0.41,<3",
-    "sqlmodel>=0.0.24,<0.0.25",
-    "starlette>=0.46.2,<0.47",
-    "starlette-graphene3>=0.6.0,<0.7",
-    "uvicorn[standard]>=0.34.3,<0.35",
-    "loguru>=0.7.3,<0.8",
+    "fastapi[standard]>=0.115.12",
+    "graphene>=3.4.3",
+    "graphene-pydantic>=0.6.1",
+    "graphene-sqlalchemy>=3.0.0rc2",
+    "jinja2>=3.1.6",
+    "lark>=1.2.2",
+    "loguru>=0.7.3",
+    "networkx>=3.5",
+    "numpy>=2.2.6",
+    "openai>=1.83.0",
+    "pint>=0.24.4",
+    "pydantic>=2.11.5",
+    "pyside6>=6.9.1",
+    "python-dotenv>=1.1.0",
+    "pytransform3d>=3.14.1",
+    "requests>=2.32.3",
+    "sqlalchemy>=2.0.41",
+    "sqlmodel>=0.0.24",
+    "starlette>=0.46.2",
+    "starlette-graphene3>=0.6.0",
+    "uvicorn[standard]>=0.34.3",
 ]
 
 [project.urls]
@@ -48,6 +48,7 @@ dev = [
     "debugpy>=1.8.14,<2",
     "pre-commit>=4.2.0,<5",
     "black>=25.1.0,<26",
+    "ruff>=0.12.8",
 ]
 build = ["pyinstaller>=6.13.0,<7"]
 
@@ -106,3 +107,9 @@ legacy_tox_ini = """
 
 [tool.pylint.'MESSAGES CONTROL']
 extension-pkg-whitelist = "pydantic"
+
+[tool.ruff]
+line-length = 250
+
+[tool.pyright]
+disable = ["reportMissingImports"]

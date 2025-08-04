@@ -18,54 +18,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-export { default as Console, commandRegistry as inkCommandRegistry } from '@semio/js/components/ui/Console'
-export { default as DesignEditor, FullscreenPanel, useDesignEditor } from '@semio/js/components/ui/DesignEditor'
-export { default as Diagram } from '@semio/js/components/ui/Diagram'
-export { default as File } from '@semio/js/components/ui/File'
-export { default as GrasshopperCatalogue } from '@semio/js/components/ui/GrasshopperCatalogue'
-export { default as Model } from '@semio/js/components/ui/Model'
-export { Layout, Mode, default as Sketchpad, Theme } from '@semio/js/components/ui/Sketchpad'
-export { default as eslintConfig } from '@semio/js/eslint.config'
-export { extractFilesAndCreateUrls } from '@semio/js/lib/utils'
-export { default as postcssConfig } from '@semio/js/postcss.config'
-export {
-  addConnectionsToDesign, addConnectionsToDesignDiff, addConnectionToDesign, addConnectionToDesignDiff, addDesignToKit, addPiecesToDesign, addPiecesToDesignDiff, addPieceToDesign, addPieceToDesignDiff, addTypeToKit, applyDesignDiff, arePortsCompatible,
-  CameraSchema, colorPortsForTypes, connectionIdLikeToConnectionId, ConnectionSchema, deserialize, designIdLikeToDesignId, DesignSchema, DiffStatus, findConnectionInDesign, findDesignInKit, findPieceConnectionsInDesign, findPieceInDesign, findPieceTypeInDesign, findPortInType, findQualityValue, findReplacableTypesForPieceInDesign,
-  findReplacableTypesForPiecesInDesign, findStaleConnectionsInDesign, findTypeInKit, fixPieceInDesign, fixPiecesInDesign, flattenDesign, getPieceRepresentationUrls, ICON_WIDTH, isConnectionInDesign, isPortInUse, isSameConnection, isSameDesign, isSamePiece, isSamePort, isSameRepresentation, isSameType, kitIdLikeToKitId, KitSchema, mergeDesigns,
-  pieceIdLikeToPieceId, PieceSchema, piecesMetadata, PlaneSchema, planeToMatrix, PointSchema, portIdLikeToPortId, PortSchema, qualityIdLikeToQualityId, QualitySchema,
-  removeConnectionFromDesign, removeConnectionFromDesignDiff, removeConnectionsFromDesign, removeConnectionsFromDesignDiff, removeDesignFromKit, removePieceFromDesign, removePieceFromDesignDiff, removePiecesAndConnectionsFromDesign, removePiecesFromDesign, removePiecesFromDesignDiff, removeTypeFromKit,
-  representationIdLikeToRepresentationId, RepresentationSchema, safeParse, schemas, serialize,
-  setConnectionInDesign, setConnectionInDesignDiff, setConnectionsInDesign, setConnectionsInDesignDiff, setDesignInKit, setPieceInDesign, setPieceInDesignDiff, setPiecesInDesign, setPiecesInDesignDiff, setQualities, setQuality, setTypeInKit,
-  TOLERANCE, toSemioQuaternion, toSemioRotation, toThreeQuaternion, toThreeRotation, typeIdLikeToTypeId, TypeSchema, unifyPortFamiliesAndCompatibleFamiliesForTypes, updateDesignInKit, validate, VectorSchema
-} from '@semio/js/semio'
-export type {
-  Author,
-  Camera,
-  Connection, ConnectionDiff, ConnectionId,
-  ConnectionsDiff, Design,
-  DesignDiff,
-  DesignId,
-  DiagramPoint,
-  Kit,
-  KitId,
-  Piece,
-  PieceDiff,
-  PieceId,
-  PiecesDiff,
-  Plane,
-  Point,
-  Port,
-  PortId,
-  Quality,
-  Representation,
-  Side, SideDiff,
-  SideId,
-  Type,
-  TypeId,
-  Vector
-} from '@semio/js/semio'
-export type { DesignEditorStoreState } from '@semio/js/store'
-export { default as tailwindConfig } from '@semio/js/tailwind.config'
+
+export { default as Sketchpad } from "./components/ui/sketchpad/Sketchpad";
+
+export { default as eslintConfig } from "./eslint.config";
+export { default as postcssConfig } from "./postcss.config";
+export { default as tailwindConfig } from "./tailwind.config";
 // Exporting vite configs blows up storybook and nextjs
-// export { default as viteConfig } from '@semio/js/vite.config';
-// export { default as vitestConfig } from '@semio/js/vitest.workspace';
+// export { default as viteConfig } from './vite.config';
+// export { default as vitestConfig } from './vitest.workspace';

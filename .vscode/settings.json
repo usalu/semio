@@ -3,22 +3,17 @@
   "editor.codeActionsOnSave": {
     "source.organizeImports": "always"
   },
-  "editor.folding.markers": {
-    "start": "^\\s*##.*##\\b",
-    "end": "^\\s*##.*##\\b"
-  },
-  "python.defaultInterpreterPath": "${workspaceFolder}\\python\\engine\\.venv\\Scripts\\python.exe",
-  "pylint.args": [
-    "--variable-naming-style=camelCase",
-    "--function-naming-style=camelCase",
-    "--method-naming-style=camelCase",
-    "--attribute-naming-style=camelCase",
-    "--class-naming-style=PascalCase"
-  ],
+  "python.defaultInterpreterPath": "${workspaceFolder}\\py\\engine\\.venv\\Scripts\\python.exe",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
   "prettier.configPath": ".prettierrc.json",
   "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter"
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "[csharp]": {
+    "editor.defaultFormatter": "ms-dotnettools.csharp"
   },
   "python.analysis.typeCheckingMode": "off",
   "python.testing.pytestEnabled": true,
@@ -26,6 +21,7 @@
   "python.testing.pytestArgs": [
     "."
   ],
+  "python.analysis.languageServerMode": "full",
   // "python.testing.pytestArgs": [
   //     "--cov",
   //     "--cov-config=pyproject.toml",
@@ -47,5 +43,10 @@
       "previewLimit": 50
     }
   ],
-  "dotnet.defaultSolution": "net/Semio.sln"
+  "dotnet.defaultSolution": "net/Semio.sln",
+  "chat.agent.maxRequests": 200,
+  "editor.minimap.enabled": true,
+  "[svg]": {
+    "editor.defaultFormatter": "jock.svg"
+  }
 }

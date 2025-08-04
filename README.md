@@ -1,11 +1,9 @@
-> 👀 Are you curious how we develop semio? Then you might want to check out our [Discord server](https://discord.gg/m6nnf6pQRc) 👥
-
 <p align="center">
     <a href="https://docs.semio-tech.com">
       <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="assets/logo/semio_horizontal_dark.svg">
-          <source media="(prefers-color-scheme: light)" srcset="assets/logo/semio_horizontal.svg">
-          <img alt="semio" href="https://github.com/usalu/semio/" src="assets/logo/semio_horizontal.svg">
+          <source media="(prefers-color-scheme: dark)" srcset="assets/logo/logo_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="assets/logo/logo.svg">
+          <img alt="semio" href="https://github.com/usalu/semio/" src="assets/logo/logo.svg">
       </picture>
     </a>
     <br/>
@@ -52,8 +50,10 @@ Let me walk you through 🚶
 1. [🛍️ Products](#%EF%B8%8F-products-)
    - [✏️ sketchpad](#%EF%B8%8F-sketchpad-)
    - [👥 studio](#-studio-)
+   - [☁️ cloud](#%EF%B8%8F-cloud-)
    - [🤖 assistant](#-assistant-)
    - [🦗 semio.gh](#-semiogh-)
+   - [🦏 semio.3dm](#-semio3dm-)
    - [🐝 semio.wasp](#-semiowasp-)
    - [🦌 semio.monoceros](#-semiomonoceros-)
    - [🐞 semio.ladybug](#-semioladybug-)
@@ -65,21 +65,54 @@ Let me walk you through 🚶
    - [⭕ Piece](#-piece-)
    - [⚓ Port](#-port-)
    - [💾 Representation](#-representation-)
-   - [📏 Quality](#-quality-)
+   - [🏷️ Attribute](#%EF%B8%8F-attribute-)
    - [🏷️ Tag](#%EF%B8%8F-tag-)
    - [◳ Plane](#-plane-)
    - [🔗 Url](#-url-)
+   - [🔢 Quality](#-quality-)
+   - [📊 Benchmark](#-benchmark-)
+   - [🏷️ Concept](#%EF%B8%8F-concept-)
+   - [👤 Author](#-author-)
+   - [📋 Layer](#-layer-)
+   - [👥 Group](#-group-)
+   - [⚙️ Prop](#️-prop-)
+   - [📈 Stat](#-stat-)
 1. [🦑 Repo](#-repo-)
    - [⚖️ Principles](#️-principles-)
    - [🔀 Git](#-git-)
+     - [🦑 GitKraken](#-gitkraken-)
+     - [💬 Discord](#-discord-)
      - [📢 Release](#-release-)
-     - [🏷️ Tag](#%EF%B8%8F-tag--1)
+     - [🏷️ Tag](#%EF%B8%8F-tag-)
      - [🌿 Branch](#-branch-)
-     - [🗃️ Commit](#️%EF%B8%8F-commit-)
+     - [🗃️ Commit](#%EF%B8%8F-commit-)
 1. [🧑‍💻 Development](#-development-)
    - [🪄 AI](#-ai-)
-     - [🖱️ Cursor](#%EF%B8%8F-cursor-)
-     - [✈️ Copilot](#%EF%B8%8F-copilot-)
+     - [🛠️ Uses-Cases](#-uses-cases-)
+       - [⚖️ Decision Making](#-decision-making-)
+       - [🔁 Refactoring](#-refactoring-)
+       - [🐛 Bug Fixes](#-bug-fixes-)
+     - [⌨️ Tools](#-tools-)
+       - [🌐 Web-Chat](#-web-chat-)
+         - [❄️ ChatGPT](#-chatgpt-)
+         - [🌟 Gemini](#-gemini-)
+         - [AI studio](#-ai-studio-)
+       - [💻 Editor](#-editor-)
+         - [✈️ Copilot](#-copilot-)
+         - [🖱️ Cursor](#-cursor-)
+       - [⌨️ CLI](#-cli-)
+         - [⌨️ Claude Code](#-claude-code-)
+       - [☁️ Cloud](#-cloud-)
+         - [🦑 Jules](#-jules-)
+       - [🔍 Agents](#-agents-)
+         - [↕️ Reorderer](#-reorderer-)
+         - [🔁 Formatter](#-formatter-)
+       - [🤖 Models](#-models-)
+         - [Claude Sonnet 4](#-claude-sonnet-4-)
+         - [GPT-5](#-gpt-5-)
+         - [Gemini 2.5 Pro](#-gemini-25-pro-)
+         - [Groq](#-groq-)
+     - [🔄 CI/CD](#-cicd-)
 1. [♻️ Ecosystems](#%EF%B8%8F-ecosystems-)
    - [🟨 JavaScript](#-javascript-)
    - [🟪 .NET](#-net-)
@@ -88,7 +121,7 @@ Let me walk you through 🚶
    - [🟨 @semio/js](#-semiojs-)
    - [✏️ @semio/sketchpad](#️-semiosketchpad-)
    - [📚 @semio/docs](#-semiodocs-)
-   - [🎛️ @semio/playground](#%EF%B8%8F-semioplayground-)
+   - [🎛️ @semio/play](#%EF%B8%8F-semioplay-)
    - [🤖 @semio/assistant](#-semioassistant-)
    - [⚙️ @semio/engine](#️-semioengine-)
    - [🟪 @semio/net](#-semionet-)
@@ -97,19 +130,30 @@ Let me walk you through 🚶
    - [🛍️ @semio/assets](#%EF%B8%8F-semioassets-)
      - [🏷️ Badges](#%EF%B8%8F-badges-)
      - [📄 Fonts](#-fonts-)
-     - [👁️ Icons](#-icons-)
+     - [👁️ Icons](#%EF%B8%8F-icons-)
 1. [🏘️ Examples](#%EF%B8%8F-examples-)
    - [🚀 Starter](#-starter-)
    - [👋 Hello semio](#-hello-semio-)
+   - [🌈 Geometry](#-geometry-)
    - [🫀 Metabolism](#-metabolism-)
 1. [💯 Brand](#-brand-)
    - [✍️ Concept](#%EF%B8%8F-concept-)
+     - [✅ Do](#-do-)
+     - [❌ Dont](#-dont-)
    - [🌈 Colors](#-colors-)
+     - [🥇 Primary](#-primary-)
+     - [🥈 Secondary](#-secondary-)
+     - [🥉 Tertiary](#-tertiary-)
+     - [⚫ Dark](#-dark-)
+     - [⚪ Light](#-light-)
+     - [🩶 Gray](#-gray-)
    - [📄 Typography](#-typography-)
+     - [🔡 Typesetting](#-typesetting-)
    - [👀 Visual elements](#-visual-elements-)
 1. [⚖️ License](#-license-)
 1. [🔒Security](#-security-)
 1. [✨ Contributors](#-contributors-)
+1. [📊 Stats](#-stats-)
 
 # 🛍️ Products [↑](#-overview)
 
@@ -169,7 +213,7 @@ A Grasshopper-based integration of [Ladybug](https://www.ladybug.tools) and semi
 
 ## 📦 Kit [↑](#-specs-)
 
-A [`kit`](#-kit-) is a collection of [`types`](#-type-) and [`designs`](#%EF%B8%8F-design-) 📦
+A [`kit`](#-kit-) is a collection of [`types`](#-type-), [`designs`](#%EF%B8%8F-design-), [`authors`](#-author-), [`qualities`](#-quality-), [`attributes`](#%EF%B8%8F-attribute-), and [`concepts`](#%EF%B8%8F-concept-) 📦
 
 A [`kit`](#-kit-) is either _static_ (a special `.zip` file) or _dynamic_ (bound to a runtime) 📦
 
@@ -181,17 +225,19 @@ For Inter-Process-Communication (IPC) the JSON-schema in [`./jsonschema/kit.json
 
 ## 🏘️ Design [↑](#-specs-)
 
-A [`design`](#%EF%B8%8F-design-) is an undirected graph of [`pieces`](#-piece-) (nodes) and [`connections`](#-connection-) (edges) 📐
+A [`design`](#%EF%B8%8F-design-) is an undirected graph of [`pieces`](#-piece-) (nodes) and [`connections`](#-connection-) (edges) with organizational [`layers`](#-layer-), [`groups`](#-group-), [`stats`](#-stat-), [`attributes`](#%EF%B8%8F-attribute-), and [`concepts`](#%EF%B8%8F-concept-) 📐
 
 A _flat_ [`design`](#%EF%B8%8F-design-) has no [`connections`](#-connection-) and all [`pieces`](#-piece-) are _fixed_ ◳
 
-The [`pieces`](#-piece-) are _placed_ _hierarchically_ ([breadth-first](https://en.wikipedia.org/wiki/Breadth-first_search)) for every _cluster_ 🌿
+The [`pieces`](#-piece-) are _placed_ _hierarchically_ ([breadth-first](https://en.wikipedia.org/wiki/Breadth-first_search)) for every _component_ 🌿
 
-Additional [`connections`](#-connection-) which where not used in the _placement_ can be used to validate the computed [`planes`](#◳-plane-) 🛂
+Additional [`connections`](#-connection-) which where not used in the _placement_ can be used to validate the computed [`planes`](#-plane-) 🛂
 
 ## 🏠 Type [↑](#-specs-)
 
-A [`type`](#-type-) is a resuable component with different [**`representations`**](#-representation-) and[**`ports`**](#-port-) 🧱
+A [`type`](#-type-) is a reusable component with different [`representations`](#-representation-), [`ports`](#-port-), [`attributes`](#%EF%B8%8F-attribute-), [`concepts`](#%EF%B8%8F-concept-), and [`authors`](#-author-) 🧱
+
+A [`type`](#-type-) can be **virtual** (intermediate type requiring other virtual types to form a physical type), **scalable**, and **mirrorable** with **stock** quantity, **unit**, and optional **location** 📍
 
 ## 🔗 Connection [↑](#-specs-)
 
@@ -203,27 +249,31 @@ The two [`pieces`](#-piece-) are called **_connected_** and **_connecting_** but
 
 The _direction_ of a [`connection`](#-connection-) goes from the lower _hierarchy_ to the higher _hierarchy_ of the [`pieces`](#-piece-) ➡️
 
+A [`connection`](#-connection-) can have [`attributes`](#%EF%B8%8F-attribute-) and diagram positioning with **x** and **y** offsets 📍
+
 ## ⭕ Piece [↑](#-specs-)
 
-A [`piece`](#-piece-) is an instance of either a [`type`](#-type-) or a [`design`](#%EF%B8%8F-design-) 📐
+A [`piece`](#-piece-) is an instance of either a [`type`](#-type-) or a [`design`](#%EF%B8%8F-design-) with **id**, optional **description**, optional **plane**, **center** position, **scale**, optional **mirror plane**, **hidden** and **locked** states, **color**, and [`attributes`](#%EF%B8%8F-attribute-) 📐
 
-A [`piece`](#-piece-) is either _fixed_ (with a [`plane`](#◳-plane-)) or _linked_ (with a [`connection`](#-connection-)) 📐
+A [`piece`](#-piece-) is either _fixed_ (with a [`plane`](#-plane-)) or _linked_ (with a [`connection`](#-connection-)) 📐
 
-A group of _connected_ [`pieces`](#-piece-) is called a _cluster_ 🌿
+A group of _connected_ [`pieces`](#-piece-) is called a _component_ 🌿
 
-The _hierachy_ of a [`piece`](#-piece-) is the length of the shortest path to the next _fixed_ [`piece`](#-piece-) 👣
+The _hierarchy_ of a [`piece`](#-piece-) is the length of the shortest path to the next _fixed_ [`piece`](#-piece-) 👣
 
 ## ⚓ Port [↑](#-specs-)
 
-A [`port`](#-port-) is a conceptual connection **point** with an outwards **direction** 🤝
+A [`port`](#-port-) is a conceptual connection **point** with an outwards **direction**, **id**, optional **description**, and **t** value for diagram ring positioning 🤝
 
 A [`port`](#-port-) can be marked as **mandatory** in which case it is required to be connected to a [`piece`](#-piece-) 💯
 
-A [`port`](#-port-) can have a port **family** and a list of **compatible families** 👨‍👩‍👧‍👦
+A [`port`](#-port-) can have a port **family** and a list of **compatible families** for explicit compatibility control 👨‍👩‍👧‍👦
 
 No **family** means the _default_ family and no **compatible families** means the port is compatible with all other ports 🔑
 
 It is enough for one [`port`](#-port-) to be compatible with another [`port`](#-port-) to be compatible with each other ↔️
+
+A [`port`](#-port-) can have [`props`](#️-prop-) that define measurable characteristics and [`attributes`](#%EF%B8%8F-attribute-) for additional metadata 📏
 
 ## 💾 Representation [↑](#-specs-)
 
@@ -233,13 +283,13 @@ No **[`tags`](#%EF%B8%8F-tag-)** means the _default_ representation 🔑
 
 The similarity of [`representations`](#-representation-) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#%EF%B8%8F-tag-)** 🔄
 
-## 📏 Quality [↑](#-specs-)
+## 🏷️ Attribute [↑](#-specs-)
 
-A [`quality`](#-quality-) is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
+A [`attribute`](#%EF%B8%8F-attribute-) is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
 
 The **name** is[kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) and with `.`-separated string similar to [toml keys](https://toml.io/en/v1.0.0#keys) 🔑
 
-No **value** is equivalent to the boolean _true_ where the **name** is the category of the quality 🔑
+No **value** is equivalent to the boolean _true_ where the **name** is the category of the attribute 🔑
 
 The **unit** is a [unit identifier](https://en.wikipedia.org/wiki/Unit_of_measurement) 🔢
 
@@ -256,7 +306,7 @@ The **unit** is a [unit identifier](https://en.wikipedia.org/wiki/Unit_of_measur
 - `Pa` for pascal, `kPa` for kilopascal, `MPa` for megapascal
 - …
 
-A list of [qualities](#-quality-) is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value** ↔️
+A list of [attributes](#%EF%B8%8F-attribute-) is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value** ↔️
 
 ## 🏷️ Tag [↑](#-specs-)
 
@@ -264,7 +314,7 @@ A [`tag`](#%EF%B8%8F-tag-) is a [kebab-cased](https://en.wikipedia.org/wiki/Keba
 
 ## ◳ Plane [↑](#-specs-)
 
-A [`plane`](#◳-plane-) is a location (**origin**) and orientation (**x-axis**, **y-axis** and derived z-axis) in 3D space ✈️
+A [`plane`](#-plane-) is a location (**origin**) and orientation (**x-axis**, **y-axis** and derived z-axis) in 3D space ✈️
 
 The coordinate system is left-handed where the thumb points up into the direction of the z-axis, the index-finger forwards into the direction of the y-axis and the middle-finger points to the right into the direction of the x-axis 👈
 
@@ -273,6 +323,56 @@ The coordinate system is left-handed where the thumb points up into the directio
 A [`url`](#-url-) is either _relative_ (to the root of the `.zip` file) or _remote_ (http, https, ftp, …) string🌐
 
 A _relative_ [`url`](#-url-) is a `/`-normalized path to a file in the `.zip` file and is not prefixed with with `.`, `./`, `/`, …
+
+## 🔢 Quality [↑](#-specs-)
+
+A [`quality`](#-quality-) is a measurement definition with a **key**, **name**, **description**, **kind** (General, Design, Type, Piece, Connection, Port), **unit information** (SI and Imperial), **range constraints** (min/max with exclusion flags), **default value**, and optional **formula** 📏
+
+A [`quality`](#-quality-) can be **scalable** (adjusts with piece scaling) and have multiple **benchmarks** for performance evaluation 🎯
+
+The **kind** determines which entities the quality can be applied to using a bitwise enum system 🔢
+
+## 📊 Benchmark [↑](#-specs-)
+
+A [`benchmark`](#-benchmark-) is a performance standard within a [`quality`](#-quality-) with a **name**, optional **icon**, and **range** (min/max with exclusion flags) 🏆
+
+Benchmarks provide reference points for evaluating quality measurements against industry or design standards 📈
+
+## 🏷️ Concept [↑](#-specs-)
+
+A [`concept`](#%EF%B8%8F-concept-) is a **name** and **order** pair that provides semantic grouping for [`kits`](#-kit-), [`types`](#-type-), or [`designs`](#%EF%B8%8F-design-) 🧠
+
+Concepts enable hierarchical organization and categorization of design elements beyond simple naming 📂
+
+## 👤 Author [↑](#-specs-)
+
+An [`author`](#-author-) has a **name** and **email** and can be associated with [`kits`](#-kit-), [`types`](#-type-), or [`designs`](#%EF%B8%8F-design-) with a **rank** indicating contribution level 👨‍💻
+
+Authors provide attribution and contact information for design ownership and collaboration 🤝
+
+## 📋 Layer [↑](#-specs-)
+
+A [`layer`](#-layer-) is an organizational grouping within a [`design`](#%EF%B8%8F-design-) with a **name**, optional **description**, and **color** for visual organization 🎨
+
+Layers provide a way to group and manage pieces logically within complex designs 📑
+
+## 👥 Group [↑](#-specs-)
+
+A [`group`](#-group-) is a collection of [`pieces`](#-piece-) within a [`design`](#%EF%B8%8F-design-) with optional **name**, **description**, **color**, and **attributes** 👥
+
+Groups enable semantic clustering of pieces that belong together functionally or conceptually 🔗
+
+## ⚙️ Prop [↑](#-specs-)
+
+A [`prop`](#️-prop-) is a **key-value** pair on a [`port`](#-port-) that references a [`quality`](#-quality-) with a specific **value** and optional **unit** 🔧
+
+Props define measurable characteristics of ports using the quality system for standardized measurement 📐
+
+## 📈 Stat [↑](#-specs-)
+
+A [`stat`](#-stat-) is a statistical measurement on a [`design`](#%EF%B8%8F-design-) that references a [`quality`](#-quality-) with **range** (min/max) and optional **unit** 📊
+
+Stats provide computed or measured performance data for entire designs using the quality framework 📈
 
 # 🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)
 
@@ -295,8 +395,8 @@ A single file is easier for humans and computers to understand 💡
 
 You will be surprised
 
-- by the awesome fill-in-the-middle suggestions of your copilot 🤖
-- by the hassle-free context selection for your ai agent 🖱️
+- by the awesome [fill-in-the-middle suggestions](#-cursor-) of your copilot 🤖
+- by the hassle-free [context selection](#-browser-) for your ai agent 🖱️
 - by the smooth refactor experience by just going top-to-bottom ⬇️
 - by the beautiful diff for your next code review 🔍
 - by the clean git-history when you try to find a certain change 🔁
@@ -338,7 +438,9 @@ It hides the actual complexity and makes it harder to navigate the code 🔍
 <details>
 <summary><strong>📺 Inline everything that bearly fits onto the screen ✅</strong></summary>
 
-The smaller the code, the easier it is to browse and show diffs 🔍
+Smaller code, less tokens and easier diffs 🔍
+
+Your [ai](#-ai-) bill will be lower and the completions will resolve faster 🚀
 
 If you are not sure what the code does, you can ask [ai](#-ai-) 💬
 
@@ -347,7 +449,9 @@ If you are not sure what the code does, you can ask [ai](#-ai-) 💬
 <details>
 <summary><strong>🗣️ Don't use comments or if you must, only tag code at the end of the line ❌</strong></summary>
 
-The smaller the code, the easier it is to browse and show diffs 🔍
+Smaller code, less tokens and easier diffs 🔍
+
+Your [ai](#-ai-) bill will be lower and the completions will resolve faster 🚀
 
 If you are not sure what the code does, you can ask [ai](#-ai-) 💬
 
@@ -429,7 +533,7 @@ If you change your architecture, just design proper interfaces for something con
 
 We are past the time where we copy code for no reason 📃
 
-Actually repeated code can improve the quality of your copilots suggestion 🤯
+Actually repeated code can improve the attribute of your copilots suggestion 🤯
 
 The main question is how can your application grow?
 
@@ -581,26 +685,71 @@ If you don't care just run:
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
 ```
 
-### 🪄 AI [↑](#-development-)
+# 🪄 [AI](AGENTS.md) [↑](#-development-)
 
 Most of our [codebase](#-principles-) is heavily optimized for AI agents 🤖
 
-### 🖱️ [Cursor](/.cursor) [↑](#-ai-)
+Usually we work on two unrelated tickets at the same time and while one agent works on one task we prepare a new ticket for the other agent 🔀
 
-<details>
-<summary><strong>📚 Resources:</strong></summary>
+We usually always start with the free quotas, then move to the hourly quotas, then to the request-based quotas, then to the token-based quotas 🔢
 
-- [Rules](https://docs.cursor.com/context/rules)
+When
 
-</details>
+## 🛠️ Uses-Cases [↑](#-ai-)
 
-We use [Cursor](https://www.cursor.com) as general editor for typing code mostly with [Tab](https://docs.cursor.com/tab/overview) ➡️
+Here some strategic advice for different uses-cases 🗺️
 
-For brain-heavy tasks we prepare good tickets and use [Gemini 2.5 Pro](https://gemini.google.com/gemini-2.5-pro) ⚡
+### ⚖️ Decision Making [↑](#-uses-cases-)
 
-We parallely work on two tasks that are unrelated to each other in order to switch between them during waiting times ⌛
+[Model](#-models-) will always tell you that your ideas, guesses, analysis, … are great 💯
 
-### ✈️ Copilot [↑](#-ai-)
+This makes it really hard to use them for decision making because they tend to just reinforce your own bias 📢
+
+Try to formulate everything as neutral, general and unbiased as possible 🕊️
+
+### 🔁 Refactoring [↑](#-uses-cases-)
+
+Most refactors are too big to be done in one go and [models](#-models-) are usually steered that if they think the problem is too big then they try to automate it with scripting 🤖
+
+This is usually not possible and then they fail ❌
+
+After all from a provider perspective those tasks are dangerous and hard to scale and we understand why they want the model to avoid doing it 🔥
+
+The next problem is that when they take the wrong approach then, due to large context, they hardely remember how the original state was 🤔
+
+For this reason, we usually create a new file which we name with the suffix`*.old` and this way in the prompt we can refer to the original state 📄
+
+### 🐛 Bug Fixes [↑](#-uses-cases-)
+
+Try to describe only how to the bug appears and **not** what you think caused it 😶
+
+Experience what can be causes for bugs is increadibly valuable skill as a developer but the problem is that [models](#-models-) are really biased the way you ask questions 🏋️
+
+Especially when your guess is wrong then the [model](#-models-) might have found the mistake but because of your bias it tries to take a different approach to fix it 🔀
+
+Secondly, if the model can't find the bug then it will often try to remove functionality, add try catch blocks, add logging and other things that fastly turn your codebase into a mess 💣
+
+Therefore, it is often a good idea that after you found the bug, reset your branch and create a new ticket where you define exactly how to fix the bug 🪛
+
+## ⌨️ Tools [↑](#-ai-)
+
+### 🌐 Web-Chat [↑](#-tools-)
+
+For research, prompt preparation or [single file-related](#-principles-) operations (sorting, formatting, explaining, …) we use the free , [Gemini](https://gemini.google.com) or [Groq](https://console.groq.com), … in the browser to not waste precious tokens 🆓
+
+#### [❄️ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)
+
+The free quota is very quickly reached but resets regularly and hence we just use it for questioning or prompt preparation 💬
+
+#### [🌟 Gemini](https://gemini.google.com) [↑](#-web-chat-)
+
+#### [AI studio](https://ai.google.com/studio) [↑](#-web-chat-)
+
+Good for larger experiments due to more generous free quota 🧪
+
+### 💻 Editor [↑](#-tools-)
+
+#### ✈️ [Copilot](.github/chatmodes) [↑](#-ai-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -609,7 +758,86 @@ We parallely work on two tasks that are unrelated to each other in order to swit
 
 </details>
 
-For monkey-tasks we use the free [Copilot](https://github.com/features/copilot) with [GPT-4.1](https://docs.github.com/en/copilot/using-github-copilot/ai-models/using-openai-gpt-41-in-github-copilot) 🚀
+Copilot is the only request-based billing provider left and is hence much cheaper than the others 💳
+
+We use it over multiple open windows as soon we hit the 5h limit of [Claude Code](#-claude-code-), [Codex](#-codex-) or [Gemini CLI](#-gemini-cli-) 🕒
+
+#### 🖱️ [Cursor](.cursor) [↑](#-ai-)
+
+<details>
+<summary><strong>📚 Resources:</strong></summary>
+
+- [Rules](https://docs.cursor.com/context/rules)
+
+</details>
+
+We have the [Pro](https://www.anthropic.com/claude/pricing) plan 💳
+
+We use [Cursor](https://www.cursor.com) as general editor for typing code mostly with [Tab](https://docs.cursor.com/tab/overview) ➡️
+
+For tasks that require updated large docs that are too large to paste into the prompt, we use the agent 📚
+
+But in general, we don't use the chat because it is way too expensive 💰
+
+### ⌨️ CLI [↑](#-tools-)
+
+#### ⌨️ [Claude Code](CLAUDE.md) [↑](#-ai-)
+
+We have the [Pro](https://www.anthropic.com/claude/pricing) plan 💳
+
+The goto tool for coding in the IDE until we hit the 5h limit 🕒
+
+We don't recommend using it for two tasks at the same time because then both tasks abrubtly end and you hit the
+
+Nice for tasks that require a lot of codebase context 👍
+
+The MCP integration doesn't work as good as the
+
+### ☁️ Cloud [↑](#-tools-)
+
+#### 🦑 Jules [↑](#-tools-)
+
+[!NOTE] Free plan includes 15 tasks per day, 3 concurrent tasks and powered by Gemini 2.5 Pro 🚀
+
+Used on the phone when no IDE is available 📱
+
+### 🔍 Agents [↑](#-ai-)
+
+#### ↕️ Reorderer [↑](#-agents-)
+
+Used to ensure consistent order of source code, docs, …
+
+- [Claude Code Agent](.claude/agents/reorderer.md)
+- [GitHub Copilot Chatmode](.github/chatmodes/Reorder.chatmode.md)
+
+#### 🔁 Formatter [↑](#-agents-)
+
+Used to ensure consistent formatting of source code, docs, …
+
+- [Claude Code Agent](.claude/agents/formatter.md)
+- [GitHub Copilot Chatmode](.github/chatmodes/Formatter.chatmode.md)
+
+### 🤖 Models [↑](#-ai-)
+
+In our experience, all [models](#-models-) achieve most tasks and if a task is too hard then all of them fail ⚖️
+
+Never the less, here are our preferences:
+
+1. [Claude Sonnet 4](#-claude-sonnet-4-)
+2. [GPT-5](#-gpt-5-)
+3. [Gemini 2.5 Pro](#-gemini-2.5-pro-)
+
+#### [Claude Sonnet 4](https://www.anthropic.com/claude/sonnet) [↑](#-models-)
+
+First model that works with micro-edits but [GPT-5](#-gpt-5-) also uses this approach now 🤏
+
+This generally reduces the amount of accidental waste that is included in large edits such as by [Gemini 2.5 Pro](#-gemini-2.5-pro-) 🗑️
+
+#### [GPT-5](https://openai.com/gpt-5) [↑](#-models-)
+
+#### [Gemini 2.5 Pro](https://gemini.google.com) [↑](#-models-)
+
+#### [Groq](https://console.groq.com) [↑](#-models-)
 
 ## 🔄 CI/CD [↑](#-development-)
 
@@ -646,14 +874,14 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [JavaScript](https://developer.mozilla.org/docs/Web/JavaScript)
-- [Node](https://nodejs.org/en/learn/getting-started/introduction-to-nodejs)
-- [TypeScript](https://www.npmjs.com/package/typescript)
-  - [Docs](https://www.typescriptlang.org/docs)
-  - [Issues](https://github.com/microsoft/TypeScript/issues)
-- [Wasm](https://developer.mozilla.org/docs/WebAssembly)
-  - [C/C++](https://developer.mozilla.org/docs/WebAssembly/Guides/C_to_Wasm)
-  - [Rust](https://developer.mozilla.org/docs/WebAssembly/Rust_to_Wasm)
+- [JavaScript](https://developer.mozilla.org/docs/Web/JavaScript) - `mdn`
+- [Node](https://nodejs.org/en/learn/getting-started/introduction-to-nodejs) - `intro`
+- [TypeScript](https://www.npmjs.com/package/typescript) - `npm`
+  - [Docs](https://www.typescriptlang.org/docs) - `official`
+  - [Issues](https://github.com/microsoft/TypeScript/issues) - `github`
+- [Wasm](https://developer.mozilla.org/docs/WebAssembly) - `mdn`
+  - [C/C++](https://developer.mozilla.org/docs/WebAssembly/Guides/C_to_Wasm) - `guide`
+  - [Rust](https://developer.mozilla.org/docs/WebAssembly/Rust_to_Wasm) - `guide`
 
 </details>
 
@@ -674,9 +902,9 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [.NET](https://dotnet.microsoft.com)
-- [C#](https://learn.microsoft.com/dotnet/csharp)
-- [NuGet](https://www.nuget.org)
+- [.NET](https://dotnet.microsoft.com) - `official`
+- [C#](https://learn.microsoft.com/dotnet/csharp) - `official`
+- [NuGet](https://www.nuget.org) - `official`
 
 </details>
 
@@ -698,8 +926,8 @@ A .NET core for semio 🥜
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [Python](https://www.python.org)
-- [Poetry](https://python-poetry.org)
+- [Python](https://www.python.org) - `official`
+- [Poetry](https://python-poetry.org) - `official`
 
 </details>
 
@@ -726,61 +954,61 @@ A component is a piece of software which is packaged independently 🏝️
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [React](https://www.npmjs.com/package/react)
-  - [Docs](https://react.dev)
-  - [Issues](https://github.com/facebook/react/issues)
-- [Vite](https://www.npmjs.com/package/vite)
-  - [Docs](https://vitejs.dev/guide)
-  - [Config](https://vitejs.dev/config)
-  - [Issues](https://github.com/vitejs/vite/issues)
-- [Tailwind CSS](https://tailwindcss.com)
-  - [Docs](https://tailwindcss.com/docs)
-  - [Issues](https://github.com/tailwindlabs/tailwindcss/issues)
-- [Shadcn](https://ui.shadcn.com)
-  - [Docs](https://ui.shadcn.com/docs)
-  - [Issues](https://github.com/shadcn-ui/ui/issues)
-- [Radix UI](https://www.radix-ui.com/)
-  - [Docs](https://www.radix-ui.com/primitives/docs/overview/introduction)
-  - [Issues](https://github.com/radix-ui/primitives/issues)
-- [Lucide](https://www.npmjs.com/package/lucide-react)
-  - [Docs](https://lucide.dev/docs/lucide-react)
-  - [Icons](https://lucide.dev/icons/)
-- [Storybook](https://www.npmjs.com/package/@storybook/react)
-  - [Docs](https://storybook.js.org/docs)
-  - [Issues](https://github.com/storybookjs/storybook/issues)
-- [Three.js](https://www.npmjs.com/package/three)
-  - [Docs](https://threejs.org/docs/)
-  - [Examples](https://threejs.org/examples/)
-- [React Three Fiber](https://www.npmjs.com/package/@react-three/fiber)
-  - [Docs](https://docs.pmnd.rs/react-three-fiber)
-  - [Issues](https://github.com/pmndrs/react-three-fiber/issues)
-- [React Three Drei](https://www.npmjs.com/package/@react-three/drei)
-  - [Docs](https://github.com/pmndrs/drei)
-  - [Examples](https://drei.pmnd.rs/)
-- [React Flow](https://www.npmjs.com/package/@xyflow/react)
-  - [Docs](https://reactflow.dev/docs)
-  - [Examples](https://reactflow.dev/examples)
-- [Yjs](https://www.npmjs.com/package/yjs)
-  - [Docs](https://docs.yjs.dev)
-  - [API](https://github.com/yjs/yjs)
-  - [Issues](https://github.com/yjs/yjs/issues)
-- [sql.js](https://www.npmjs.com/package/sql.js)
-  - [Docs](https://sql.js.org)
-  - [API](https://sql.js.org/documentation)
-  - [Issues](https://github.com/sql-js/sql.js/issues)
-  - [Playground](https://sql.js.org/examples/GUI)
-- [dnd kit](https://www.npmjs.com/package/@dnd-kit/core)
-  - [Docs](https://docs.dndkit.com/)
-  - [Examples](https://master--5fc05e08a4a65d0021ae0bf2.chromatic.com/)
-- [Cytoscape](https://www.npmjs.com/package/cytoscape)
-  - [Docs](https://js.cytoscape.org/)
-  - [API](https://js.cytoscape.org/#core)
-- [Markdoc](https://www.npmjs.com/package/@markdoc/markdoc)
-  - [Docs](https://markdoc.dev/docs/getting-started)
-  - [Issues](https://github.com/markdoc/markdoc/issues)
-- [Motion](https://www.npmjs.com/package/motion)
-  - [Docs](https://motion.dev/docs)
-  - [Examples](https://motion.dev/examples)
+- [React](https://www.npmjs.com/package/react) - `npm`
+  - [Docs](https://react.dev) - `official`
+  - [Issues](https://github.com/facebook/react/issues) - `github`
+- [Vite](https://www.npmjs.com/package/vite) - `npm`
+  - [Docs](https://vitejs.dev/guide) - `official`
+  - [Config](https://vitejs.dev/config) - `config`
+  - [Issues](https://github.com/vitejs/vite/issues) - `github`
+- [Tailwind CSS](https://tailwindcss.com) - `official`
+  - [Docs](https://tailwindcss.com/docs) - `docs`
+  - [Issues](https://github.com/tailwindlabs/tailwindcss/issues) - `github`
+- [Shadcn](https://ui.shadcn.com) - `official`
+  - [Docs](https://ui.shadcn.com/docs) - `docs`
+  - [Issues](https://github.com/shadcn-ui/ui/issues) - `github`
+- [Radix UI](https://www.radix-ui.com/) - `official`
+  - [Docs](https://www.radix-ui.com/primitives/docs/overview/introduction) - `docs`
+  - [Issues](https://github.com/radix-ui/primitives/issues) - `github`
+- [Lucide](https://www.npmjs.com/package/lucide-react) - `npm`
+  - [Docs](https://lucide.dev/docs/lucide-react) - `docs`
+  - [Icons](https://lucide.dev/icons/) - `gallery`
+- [Storybook](https://www.npmjs.com/package/@storybook/react) - `npm`
+  - [Docs](https://storybook.js.org/docs) - `official`
+  - [Issues](https://github.com/storybookjs/storybook/issues) - `github`
+- [Three.js](https://www.npmjs.com/package/three) - `npm`
+  - [Docs](https://threejs.org/docs/) - `official`
+  - [Examples](https://threejs.org/examples/) - `gallery`
+- [React Three Fiber](https://www.npmjs.com/package/@react-three/fiber) - `npm`
+  - [Docs](https://docs.pmnd.rs/react-three-fiber) - `official`
+  - [Issues](https://github.com/pmndrs/react-three-fiber/issues) - `github`
+- [React Three Drei](https://www.npmjs.com/package/@react-three/drei) - `npm`
+  - [Docs](https://github.com/pmndrs/drei) - `github`
+  - [Examples](https://drei.pmnd.rs/) - `storybook`
+- [React Flow](https://www.npmjs.com/package/@xyflow/react) - `npm`
+  - [Docs](https://reactflow.dev/docs) - `official`
+  - [Examples](https://reactflow.dev/examples) - `gallery`
+- [Yjs](https://www.npmjs.com/package/yjs) - `npm`
+  - [Docs](https://docs.yjs.dev) - `official`
+  - [API](https://github.com/yjs/yjs) - `github`
+  - [Issues](https://github.com/yjs/yjs/issues) - `github`
+- [sql.js](https://www.npmjs.com/package/sql.js) - `npm`
+  - [Docs](https://sql.js.org) - `official`
+  - [API](https://sql.js.org/documentation) - `docs`
+  - [Issues](https://github.com/sql-js/sql.js/issues) - `github`
+  - [Playground](https://sql.js.org/examples/GUI) - `demo`
+- [dnd kit](https://www.npmjs.com/package/@dnd-kit/core) - `npm`
+  - [Docs](https://docs.dndkit.com/) - `official`
+  - [Examples](https://master--5fc05e08a4a65d0021ae0bf2.chromatic.com/) - `storybook`
+- [Cytoscape](https://www.npmjs.com/package/cytoscape) - `npm`
+  - [Docs](https://js.cytoscape.org/) - `official`
+  - [API](https://js.cytoscape.org/#core) - `reference`
+- [Markdoc](https://www.npmjs.com/package/@markdoc/markdoc) - `npm`
+  - [Docs](https://markdoc.dev/docs/getting-started) - `official`
+  - [Issues](https://github.com/markdoc/markdoc/issues) - `github`
+- [Motion](https://www.npmjs.com/package/motion) - `npm`
+  - [Docs](https://motion.dev/docs) - `official`
+  - [Examples](https://motion.dev/examples) - `gallery`
 
 </details>
 
@@ -798,13 +1026,13 @@ The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [Electron](https://www.npmjs.com/package/electron)
-  - [Docs](https://www.electronjs.org/docs)
-  - [API](https://www.electronjs.org/docs/latest/api/app)
-  - [Issues](https://github.com/electron/electron/issues)
-- [Electron Forge](https://www.npmjs.com/package/electron-forge)
-  - [Docs](https://www.electronforge.io/docs)
-  - [Issues](https://github.com/jclab/electron-forge/issues)
+- [Electron](https://www.npmjs.com/package/electron) - `npm`
+  - [Docs](https://www.electronjs.org/docs) - `official`
+  - [API](https://www.electronjs.org/docs/latest/api/app) - `reference`
+  - [Issues](https://github.com/electron/electron/issues) - `github`
+- [Electron Forge](https://www.npmjs.com/package/electron-forge) - `npm`
+  - [Docs](https://www.electronforge.io/docs) - `official`
+  - [Issues](https://github.com/jclab/electron-forge/issues) - `github`
 
 </details>
 An electron-based desktop app primarly working for with local kits 💾
@@ -814,11 +1042,11 @@ An electron-based desktop app primarly working for with local kits 💾
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [Model Context Protocol](https://modelcontextprotocol.io)
-- [OpenAI](https://platform.openai.com/docs)
-- [Claude](https://docs.anthropic.com)
-- [Gemini](https://ai.google.dev)
-- [Groq](https://console.groq.com/docs)
+- [Model Context Protocol](https://modelcontextprotocol.io) - `official`
+- [OpenAI](https://platform.openai.com/docs) - `official`
+- [Claude](https://docs.anthropic.com) - `official`
+- [Gemini](https://ai.google.dev) - `official`
+- [Groq](https://console.groq.com/docs) - `official`
 
 </details>
 
@@ -829,10 +1057,10 @@ Mostly a [Large Language Model](https://en.wikipedia.org/wiki/Large_language_mod
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [Markdown](https://www.markdownguide.org)
-- [MDX](https://mdxjs.com/docs)
-- [Astro](https://astro.build/docs)
-- [Starlight](https://starlight.astro.build)
+- [Markdown](https://www.markdownguide.org) - `guide`
+- [MDX](https://mdxjs.com/docs) - `official`
+- [Astro](https://astro.build/docs) - `official`
+- [Starlight](https://starlight.astro.build) - `official`
 
 </details>
 
@@ -843,7 +1071,7 @@ Mostly a [Large Language Model](https://en.wikipedia.org/wiki/Large_language_mod
 
 </details>
 
-## 🎛️ [@semio/playground](https://playground.semio-tech.com) [↑](#-components-)
+## 🎛️ [@semio/play](https://play.semio-tech.com) [↑](#-components-)
 
 A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
 
@@ -852,32 +1080,32 @@ A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [Fluent Validation](https://www.nuget.org/packages/FluentValidation)
-  - [Docs](https://docs.fluentvalidation.net)
-  - [Issues](https://github.com/FluentValidation/FluentValidation/issues)
-- [Refit](https://www.nuget.org/packages/Refit)
-  - [Docs](https://github.com/reactiveui/refit)
-  - [Issues](https://github.com/reactiveui/refit/issues)
-- [QuickGraph](https://www.nuget.org/packages/QuickGraph)
-  - [Docs](https://github.com/YaccConstructor/QuickGraph)
-  - [Issues](https://github.com/YaccConstructor/QuickGraph/issues)
-- [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json)
-  - [Docs](https://www.newtonsoft.com/json/help)
-  - [Issues](https://github.com/JamesNK/Newtonsoft.Json/issues)
-- [UnitsNet](https://www.nuget.org/packages/UnitsNet)
-  - [Docs](https://github.com/angularsen/UnitsNet)
-  - [Issues](https://github.com/angularsen/UnitsNet/issues)
-- [Humanizer](https://www.nuget.org/packages/Humanizer)
-  - [Docs](https://github.com/Humanizr/Humanizer)
-  - [Issues](https://github.com/Humanizr/Humanizer/issues)
-- [SVG](https://www.nuget.org/packages/Svg)
-  - [Docs](https://svg-net.github.io/SVG)
-  - [API](https://svg-net.github.io/SVG/api)
-  - [Issues](https://github.com/svg-net/svg/issues)
-- [GrGen.NET](https://grgen.de)
-  - [Docs](https://grgen.de/GrGenNET-Manual.pdf)
-  - [API](https://grgen.de/doc/API_7.1)
-  - [Issues](https://github.com/grgen-net/grgen-net/issues)
+- [Fluent Validation](https://www.nuget.org/packages/FluentValidation) - `nuget`
+  - [Docs](https://docs.fluentvalidation.net) - `official`
+  - [Issues](https://github.com/FluentValidation/FluentValidation/issues) - `github`
+- [Refit](https://www.nuget.org/packages/Refit) - `nuget`
+  - [Docs](https://github.com/reactiveui/refit) - `github`
+  - [Issues](https://github.com/reactiveui/refit/issues) - `github`
+- [QuickGraph](https://www.nuget.org/packages/QuickGraph) - `nuget`
+  - [Docs](https://github.com/YaccConstructor/QuickGraph) - `github`
+  - [Issues](https://github.com/YaccConstructor/QuickGraph/issues) - `github`
+- [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json) - `nuget`
+  - [Docs](https://www.newtonsoft.com/json/help) - `official`
+  - [Issues](https://github.com/JamesNK/Newtonsoft.Json/issues) - `github`
+- [UnitsNet](https://www.nuget.org/packages/UnitsNet) - `nuget`
+  - [Docs](https://github.com/angularsen/UnitsNet) - `github`
+  - [Issues](https://github.com/angularsen/UnitsNet/issues) - `github`
+- [Humanizer](https://www.nuget.org/packages/Humanizer) - `nuget`
+  - [Docs](https://github.com/Humanizr/Humanizer) - `github`
+  - [Issues](https://github.com/Humanizr/Humanizer/issues) - `github`
+- [SVG](https://www.nuget.org/packages/Svg) - `nuget`
+  - [Docs](https://svg-net.github.io/SVG) - `official`
+  - [API](https://svg-net.github.io/SVG/api) - `reference`
+  - [Issues](https://github.com/svg-net/svg/issues) - `github`
+- [GrGen.NET](https://grgen.de) - `official`
+  - [Docs](https://grgen.de/GrGenNET-Manual.pdf) - `manual`
+  - [API](https://grgen.de/doc/API_7.1) - `reference`
+  - [Issues](https://github.com/grgen-net/grgen-net/issues) - `github`
 
 </details>
 
@@ -888,13 +1116,13 @@ The core which is shared in the [semio .NET ecosystem](#-net-) 🥜
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [Rhino](https://www.rhino3d.com)
-  - [Rhino Developer](https://developer.rhino3d.com)
-    - [Rhino Developer API](https://developer.rhino3d.com/api)
-    - [RhinoCommon API](https://developer.rhino3d.com/api/rhinocommon)
-  - [Grasshopper](https://www.grasshopper3d.com)
-    - [Grasshopper SDK](https://mcneel.github.io/grasshopper-api-docs/api/grasshopper)
-  - [Forum](https://discourse.mcneel.com)
+- [Rhino](https://www.rhino3d.com) - `official`
+  - [Rhino Developer](https://developer.rhino3d.com) - `dev`
+    - [Rhino Developer API](https://developer.rhino3d.com/api) - `reference`
+    - [RhinoCommon API](https://developer.rhino3d.com/api/rhinocommon) - `reference`
+  - [Grasshopper](https://www.grasshopper3d.com) - `official`
+    - [Grasshopper SDK](https://mcneel.github.io/grasshopper-api-docs/api/grasshopper) - `reference`
+  - [Forum](https://discourse.mcneel.com) - `forum`
   </details>
 
   <details>
@@ -972,54 +1200,54 @@ Grasshopper is an amazing tool if you know the system that you want to create bu
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [Pydantic](https://pypi.org/project/pydantic)
-  - [Docs](https://docs.pydantic.dev)
-  - [Issues](https://github.com/pydantic/pydantic/issues)
-- [SQLAlchemy](https://pypi.org/project/sqlalchemy)
-  - [Docs](https://docs.sqlalchemy.org)
-  - [Issues](https://github.com/sqlalchemy/sqlalchemy/issues)
-- [SQLModel](https://pypi.org/project/sqlmodel)
-  - [Docs](https://sqlmodel.tiangolo.com)
-  - [Issues](https://github.com/tiangolo/sqlmodel/issues)
-- [Uvicorn](https://pypi.org/project/uvicorn)
-  - [Docs](https://www.uvicorn.org)
-  - [Issues](https://github.com/encode/uvicorn/issues)
-- [Starlette](https://pypi.org/project/starlette)
-  - [Docs](https://www.starlette.io)
-  - [Issues](https://github.com/encode/starlette/issues)
-- [FastAPI](https://pypi.org/project/fastapi)
-  - [Docs](https://fastapi.tiangolo.com)
-  - [Issues](https://github.com/tiangolo/fastapi/issues)
-- [Graphene](https://pypi.org/project/graphene)
-  - [Docs](https://docs.graphene-python.org)
-  - [Issues](https://github.com/graphql-python/graphene/issues)
-- [starlette-graphene3](https://pypi.org/project/starlette-graphene3)
-  - [Docs](https://github.com/ciscorn/starlette-graphene3)
-  - [Issues](https://github.com/ciscorn/starlette-graphene3/issues)
-- [Graphene Pydantic](https://pypi.org/project/graphene-pydantic)
-  - [Docs](https://docs.graphene-python.org/projects/pydantic)
-  - [Issues](https://github.com/graphql-python/graphene-pydantic/issues)
-- [Graphene SQLAlchemy](https://pypi.org/project/graphene-sqlalchemy)
-  - [Docs](https://docs.graphene-python.org/projects/sqlalchemy)
-  - [Issues](https://github.com/graphql-python/graphene-sqlalchemy/issues)
-- [NetworkX](https://pypi.org/project/networkx)
-  - [Docs](https://networkx.org)
-  - [Issues](https://github.com/networkx/networkx/issues)
-- [Lark](https://pypi.org/project/lark-parser)
-  - [Docs](https://lark-parser.readthedocs.io)
-  - [Issues](https://github.com/lark-parser/lark/issues)
-- [Numpy](https://pypi.org/project/numpy)
-  - [Docs](https://numpy.org)
-  - [Issues](https://github.com/numpy/numpy/issues)
-- [Pint](https://pypi.org/project/Pint)
-  - [Docs](https://pint.readthedocs.io)
-  - [Issues](https://github.com/hgrecco/pint/issues)
-- [pytransform3d](https://pypi.org/project/pytransform3d)
-  - [Docs](https://dfki-ric.github.io/pytransform3d)
-  - [Issues](https://github.com/dfki-ric/pytransform3d/issues)
-- [Loguru](https://pypi.org/project/loguru)
-  - [Docs](https://loguru.readthedocs.io)
-  - [Issues](https://github.com/Delgan/loguru/issues)
+- [Pydantic](https://pypi.org/project/pydantic) - `pypi`
+  - [Docs](https://docs.pydantic.dev) - `official`
+  - [Issues](https://github.com/pydantic/pydantic/issues) - `github`
+- [SQLAlchemy](https://pypi.org/project/sqlalchemy) - `pypi`
+  - [Docs](https://docs.sqlalchemy.org) - `official`
+  - [Issues](https://github.com/sqlalchemy/sqlalchemy/issues) - `github`
+- [SQLModel](https://pypi.org/project/sqlmodel) - `pypi`
+  - [Docs](https://sqlmodel.tiangolo.com) - `official`
+  - [Issues](https://github.com/tiangolo/sqlmodel/issues) - `github`
+- [Uvicorn](https://pypi.org/project/uvicorn) - `pypi`
+  - [Docs](https://www.uvicorn.org) - `official`
+  - [Issues](https://github.com/encode/uvicorn/issues) - `github`
+- [Starlette](https://pypi.org/project/starlette) - `pypi`
+  - [Docs](https://www.starlette.io) - `official`
+  - [Issues](https://github.com/encode/starlette/issues) - `github`
+- [FastAPI](https://pypi.org/project/fastapi) - `pypi`
+  - [Docs](https://fastapi.tiangolo.com) - `official`
+  - [Issues](https://github.com/tiangolo/fastapi/issues) - `github`
+- [Graphene](https://pypi.org/project/graphene) - `pypi`
+  - [Docs](https://docs.graphene-python.org) - `official`
+  - [Issues](https://github.com/graphql-python/graphene/issues) - `github`
+- [starlette-graphene3](https://pypi.org/project/starlette-graphene3) - `pypi`
+  - [Docs](https://github.com/ciscorn/starlette-graphene3) - `github`
+  - [Issues](https://github.com/ciscorn/starlette-graphene3/issues) - `github`
+- [Graphene Pydantic](https://pypi.org/project/graphene-pydantic) - `pypi`
+  - [Docs](https://docs.graphene-python.org/projects/pydantic) - `official`
+  - [Issues](https://github.com/graphql-python/graphene-pydantic/issues) - `github`
+- [Graphene SQLAlchemy](https://pypi.org/project/graphene-sqlalchemy) - `pypi`
+  - [Docs](https://docs.graphene-python.org/projects/sqlalchemy) - `official`
+  - [Issues](https://github.com/graphql-python/graphene-sqlalchemy/issues) - `github`
+- [NetworkX](https://pypi.org/project/networkx) - `pypi`
+  - [Docs](https://networkx.org) - `official`
+  - [Issues](https://github.com/networkx/networkx/issues) - `github`
+- [Lark](https://pypi.org/project/lark-parser) - `pypi`
+  - [Docs](https://lark-parser.readthedocs.io) - `official`
+  - [Issues](https://github.com/lark-parser/lark/issues) - `github`
+- [Numpy](https://pypi.org/project/numpy) - `pypi`
+  - [Docs](https://numpy.org) - `official`
+  - [Issues](https://github.com/numpy/numpy/issues) - `github`
+- [Pint](https://pypi.org/project/Pint) - `pypi`
+  - [Docs](https://pint.readthedocs.io) - `official`
+  - [Issues](https://github.com/hgrecco/pint/issues) - `github`
+- [pytransform3d](https://pypi.org/project/pytransform3d) - `pypi`
+  - [Docs](https://dfki-ric.github.io/pytransform3d) - `official`
+  - [Issues](https://github.com/dfki-ric/pytransform3d/issues) - `github`
+- [Loguru](https://pypi.org/project/loguru) - `pypi`
+  - [Docs](https://loguru.readthedocs.io) - `official`
+  - [Issues](https://github.com/Delgan/loguru/issues) - `github`
 
 </details>
 
@@ -1107,7 +1335,25 @@ Each badge is created with [shields.io](https://shields.io) with style `flat-squ
 
 ![Palette](/assets/lists/palette.png)
 
+| Name      | Hex     | RGB           | HSL              | HSV (or HSB)     | CMYK           | Color            |
+| --------- | ------- | ------------- | ---------------- | ---------------- | -------------- | ---------------- |
+| Primary   | #FF344F | 255, 52, 79   | 352, 100, 60.2   | 352, 79.6, 100   | 0, 80, 69, 0   | Folly            |
+| Secondary | #00A69D | 0, 166, 157   | 176.7, 100, 32.5 | 176.7, 100, 65.1 | 100, 0, 5, 35  | Persian green    |
+| Tertiary  | #FA9500 | 250, 149, 0   | 34.8, 100, 49    | 35.76, 1, 0.49   | 0, 40, 100, 2  | Princeton orange |
+| Dark      | #000117 | 0, 1, 23      | 237.4, 100, 4.5  | 237.4, 100, 9    | 100, 96, 0, 91 | Rich black       |
+| Light     | #F7F3E3 | 247, 243, 227 | 48, 55.6, 92.9   | 48, 8.1, 96.9    | 0, 2, 8, 3     | Cosmic latte     |
+| Gray      | #7B827D | 123, 130, 125 | 137.1, 2.8, 49.6 | 137.1, 5.4, 51   | 5, 0, 4, 49    | Battleshiip gray |
+
+<!-- TODO: Add gray with shades -->
+
 ### 🥇 Primary [↑](#-colors-)
+
+Use the primary color for the most important elements of your design 🏆
+
+We use it e.g. for:
+
+- Highlighting interactive elements 🖱️
+- Background for important elements 🟥
 
 ### 🥈 Secondary [↑](#-colors-)
 
@@ -1117,7 +1363,7 @@ Each badge is created with [shields.io](https://shields.io) with style `flat-squ
 
 ### ⚪ Light [↑](#-colors-)
 
-### 🩶 Grey [↑](#-colors-)
+### 🩶 Gray [↑](#-colors-)
 
 Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can come together for an invertible theme in a semantically meaningfull way? Well, here is how you achieve it with 33 colors 🤯
 
@@ -1193,7 +1439,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-semiosketchpad-" title="✏️@semio/sketchpad"><sub>✏️<sub></a>
         <a href="#-semioengine-" title="⚙️@semio/engine"><sub>⚙️<sub></a>
         <a href="#-semioassistant-" title="🤖@semio/assistant"><sub>🤖<sub></a>
-        <a href="#%EF%B8%8F-semioplayground-" title="🎛️@semio/playground"><sub>🎛️<sub></a>
+        <a href="#%EF%B8%8F-semioplay-" title="🎛️@semio/play"><sub>🎛️<sub></a>
         <br />
         <a href="#-semiodocs-" title="📚@semio/docs"><sub>📚<sub></a>
         <a href="#-semioassets-" title="🛍️@semio/assets"><sub>🛍️<sub></a>

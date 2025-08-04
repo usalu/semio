@@ -4,7 +4,17 @@
   "sourceRoot": "logo",
   "projectType": "library",
   "scripts": {
-    "build": "powershell -ExecutionPolicy Bypass -File ./build.ps1"
+    "build": "powershell -ExecutionPolicy Bypass -File ./build.ps1",
+    "animate": "tsx logo.ts",
+    "dev": "tsx watch logo.ts"
+  },
+  "dependencies": {
+    "jsdom": "^24.1.0"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^21.1.6",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0"
   },
   "author": {
     "name": "Ueli Saluz",

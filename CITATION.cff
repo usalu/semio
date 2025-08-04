@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+title: "semio"
+message: "You can cite semio like this:"
+type: software
+authors:
+  - family-names: "Saluz"
+    given-names: "Ueli"
+    email: "ueli@semio-tech.com"
+    affiliation: "Leibniz University Hannover"
+    orcid: "https://orcid.org/0009-0007-1089-9792"
+  - family-names: "Sarakbi"
+    given-names: "Kinan"
+  - family-names: "Hödtke"
+    given-names: "Christian"
+  - family-names: "Kaatz"
+    given-names: "Jonathan"
+version: "r25.07-1"
+doi: 10.5281/zenodo.8419156
+identifiers:
+  - description: This references semio (all versions) in general.
+    type: doi
+    value: 10.5281/zenodo.8419156
+  - description: This references semio (version r25.07-1) in particular.
+    type: doi
+    value: 10.5281/zenodo.15800140
+  - description: This references semio (version r24.12-1) in particular.
+    type: doi
+    value: 10.5281/zenodo.8419156
+date-released: 2025-08-10
+url: "https://github.com/usalu/semio"

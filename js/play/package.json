@@ -1,0 +1,22 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "name": "@semio/play",
+  "version": "0.1.0",
+  "description": "semio ⋅ playground",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "publish": "vite build && npm publish"
+  },
+  "dependencies": {
+    "@semio/js": "^0.1.0",
+    "react-router": "^7.7.1"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "license": "AGPL-3.0-or-later"
+}

@@ -1,188 +1,884 @@
 @startuml "software architecture"
 skinparam linetype ortho
 
-
-class Kit {
-  uri: str
-  name: str
-  description: str
-  icon: str
-  image: str
-  preview: str
-  version: str
-  remote: str
-  homepage: str
-  license: str
-  created: datetime
-  updated: datetime
-  types: list[Type]
-  designs: list[Design]
-  qualities: list[Quality]
+' #region Interfaces
+interface Id {
 }
 
-class Type {
-  name: str
-  description: str
-  icon: str
-  image: str
-  variant: str
-  stock: float
-  virtual: bool
-  unit: str
-  created: datetime
-  updated: datetime
-  location: Location
-  representations: list[Representation]
-  ports: list[Port]
-  authors: list[Author]
-  qualities: list[Quality]
+interface Model {
+  ApplyDiff(Diff diff): Model
+  InversedDiff(Diff diff): Diff
 }
 
-class Design {
-  name: str
-  description: str
-  icon: str
-  image: str
-  variant: str
-  view: str
-  unit: str
-  created: datetime
-  updated: datetime
-  pieces: list[Piece]
-  connections: list[Connection]
-  authors: list[Author]
-  qualities: list[Quality]
+interface Shallow {
 }
 
-class Representation {
-  url: str
-  description: str
-  tags: list[str]
-  qualities: list[Quality]
+interface Diff {
+  Merge(Diff other): Diff
 }
 
-class Port {
-  id: str
-  description: str
-  mandatory: bool
-  t: float
-  qualities: list[Quality]
+interface Diffs {
 }
 
-class PortFamily {
-  name: str
-  
-  ports: list[Port]
+interface Input {
+  Serialize(model: Model): str
 }
 
-class Piece {
-  id: str
-  description: str
-  plane: Plane
-  center: DiagramPoint
-  type: Type
-  design: Design
-  piece: Piece
-  qualities: list[Quality]
+interface Output {
+  Deserialize(str): Model
 }
 
-class Plane {
-  origin: Point
-  xAxis: Vector
-  yAxis: Vector
+interface Context {
 }
 
-class Connection {
-  connecting: Side
-  connected: Side
-  description: str
-  gap: float
-  shift: float
-  raise: float
-  rotation: float
-  turn: float
-  tilt: float
+interface Prediction {
+}
+' #endregion Interfaces
+
+' #region Classes
+
+' #region Attribute
+class Attribute {
+  key: str
+  value: str
+  definition: str
+  --
+  context Attribute inv valueCanBeEmpty:
+    value->notEmpty() or value->isEmpty()
+  context Attribute inv definitionCanBeEmpty:
+    definition->notEmpty() or definition->isEmpty()
+  context Attribute inv emptyValueMeansTrue:
+    value->isEmpty() implies value = 'true'
+  context Attribute inv unitCanBeEmpty:
+    unit->notEmpty() or unit->isEmpty()
+}
+
+class AttributeId {
+  key: str
+}
+
+class AttributeDiff {
+  key?: str
+  value?: str
+  definition?: str
+}
+
+class AttributesDiff {
+  removed?: list[AttributeId]
+  updated?: list[AttributeDiff]
+  added?: list[Attribute]
+}
+' #endregion Attribute
+
+' #region Coord
+class Coord {
   x: float
   y: float
-  qualities: list[Quality]
 }
+' #endregion Coord
 
-class Side {
-  piece: Piece
-  port: Port
+' #region Vec
+class Vec {
+  x: float
+  y: float
 }
+' #endregion Vec
 
-class Quality {
-  name: str
-  value: str
-  unit: str
-  definition: str
-}
-
-class Author {
-  name: str
-  email: str
-}
-
+' #region Point
 class Point {
   x: float
   y: float
   z: float
 }
+' #endregion Point
 
+' #region Vector
 class Vector {
   x: float
   y: float
   z: float
+  --
+  context Vector inv notZeroVector:
+    x <> 0 or y <> 0 or z <> 0
 }
+' #endregion Vector
 
-class DiagramPoint {
-  x: float
-  y: float
+' #region Plane
+class Plane {
+  origin: Point
+  xAxis: Vector
+  yAxis: Vector
+  --
+  context Plane inv axesAreOrthogonal:
+    xAxis.x * yAxis.x + xAxis.y * yAxis.y + xAxis.z * yAxis.z = 0
+  context Plane inv axesAreUnitVectors:
+    xAxis.x * xAxis.x + xAxis.y * xAxis.y + xAxis.z * xAxis.z = 1 and
+    yAxis.x * yAxis.x + yAxis.y * yAxis.y + yAxis.z * yAxis.z = 1
 }
+' #endregion Plane
 
+' #region Camera
+class Camera {
+  position: Point
+  forward: Vector
+  up: Vector
+}
+' #endregion Camera
+
+' #region Location
 class Location {
   longitude: float
   latitude: float
+  altitude: float
+  attributes: list[Attribute]
 }
 
-Kit *-- "0..*" Type : contains >
-Kit *-- "0..*" Design : contains >
-Kit *-- "0..*" Quality : has >
+class LocationDiff {
+  longitude?: float
+  latitude?: float
+  altitude?: float
+  attributes?: AttributesDiff
+}
+' #endregion Location
 
-Design *-- "0..*" Piece : contains >
-Design *-- "0..*" Connection : contains >
-Design *-- "0..*" Author : authored by >
-Design *-- "0..*" Quality : has >
+' #region Author
+class Author {
+  name: str
+  email: str
+  attributes: list[Attribute]
+}
 
-Type *-- "0..1" Location : has >
+class AuthorId {
+  name: str
+  email: str
+}
+
+class AuthorDiff {
+  name?: str
+  email?: str
+  attributes?: AttributesDiff
+}
+
+class AuthorsDiff {
+  removed?: list[AuthorId]
+  updated?: list[AuthorDiff]
+  added?: list[Author]
+}
+' #endregion Author
+
+' #region File
+class File {
+  path: str
+  remoteUrl: str
+  description: str
+  attributes: list[Attribute]
+}
+
+class FileId {
+  path: str
+}
+
+class FileDiff {
+  path?: str
+  remoteUrl?: str
+  description?: str
+  attributes?: AttributesDiff
+}
+
+class FilesDiff {
+  removed?: list[FileId]
+  updated?: list[FileDiff]
+  added?: list[File]
+}
+' #endregion File
+
+' #region Benchmark
+class Benchmark {
+  name: str
+  icon: str
+  min: float
+  minExcluded: bool
+  max: float
+  maxExcluded: bool
+  definition: str
+  attributes: list[Attribute]
+  --
+  context Benchmark inv iconCanBeEmpty:
+    icon->notEmpty() or icon->isEmpty()
+  context Benchmark inv minLessThanMax:
+    min < max
+}
+
+class BenchmarkId {
+  name: str
+}
+
+class BenchmarkDiff {
+  name?: str
+  icon?: str
+  min?: float
+  minExcluded?: bool
+  max?: float
+  maxExcluded?: bool
+  definition?: str
+  attributes?: AttributesDiff
+}
+
+class BenchmarksDiff {
+  removed?: list[BenchmarkId]
+  updated?: list[BenchmarkDiff]
+  added?: list[Benchmark]
+}
+' #endregion Benchmark
+
+' #region QualityKind
+class QualityKind {
+  <<enumeration>>
+  General
+  Design
+  Type
+  Piece
+  Connection
+  Port
+}
+' #endregion QualityKind
+
+' #region Quality
+class Quality {
+  key: str
+  name: str
+  kind: QualityKind
+  default: float
+  formula: str
+  defaultSiUnit: str
+  defaultImperialUnit: str
+  min: float
+  minExcluded: bool
+  max: float
+  maxExcluded: bool
+  canScale: bool
+  benchmarks: list[Benchmark]
+  definition: str
+  attributes: list[Attribute]
+  --
+  context Quality inv optionalFieldsCanBeEmpty:
+    description->notEmpty() or description->isEmpty() and
+    uri->notEmpty() or uri->isEmpty() and
+    si->notEmpty() or si->isEmpty() and
+    imperial->notEmpty() or imperial->isEmpty() and
+    formula->notEmpty() or formula->isEmpty()
+  context Quality inv defaultValueInRange:
+    (min->notEmpty() implies default >= min) and
+    (max->notEmpty() implies default <= max)
+  context Quality inv minLessThanMax:
+    min->notEmpty() and max->notEmpty() implies min < max
+}
+
+class QualityId {
+  key: str
+}
+
+class QualityDiff {
+  key?: str
+  name?: str
+  kind?: QualityKind
+  default?: float
+  formula?: str
+  defaultSiUnit?: str
+  defaultImperialUnit?: str
+  min?: float
+  minExcluded?: bool
+  max?: float
+  maxExcluded?: bool
+  canScale?: bool
+  benchmarks?: BenchmarksDiff
+  definition?: str
+  attributes?: AttributesDiff
+}
+' #endregion Quality
+
+' #region Prop
+class Prop {
+  key: str
+  value: str
+  unit: str
+  attributes: list[Attribute]
+  --
+  context Prop inv unitCanBeEmpty:
+    unit->notEmpty() or unit->isEmpty()
+}
+
+class PropId {
+  key: str
+}
+
+class PropDiff {
+  key?: str
+  value?: str
+  unit?: str
+  attributes?: AttributesDiff
+}
+
+class PropsDiff {
+  removed?: list[PropId]
+  updated?: list[PropDiff]
+  added?: list[Prop]
+}
+' #endregion Prop
+
+' #region Representation
+class Representation {
+  tags: list[str]
+  url: str
+  description: str
+  attributes: list[Attribute]
+  --
+  context Representation inv descriptionCanBeEmpty:
+    description->notEmpty() or description->isEmpty()
+}
+
+class RepresentationId {
+  url: str
+  tags: list[str]
+}
+
+class RepresentationDiff {
+  tags?: list[str]
+  url?: str
+  description?: str
+  attributes?: AttributesDiff
+}
+
+class RepresentationsDiff {
+  removed?: list[RepresentationId]
+  updated?: list[RepresentationDiff]
+  added?: list[Representation]
+}
+' #endregion Representation
+
+' #region Port
+class Port {
+  id: str
+  point: Point
+  direction: Vector
+  t: float
+  mandatory: bool
+  family: str
+  compatibleFamilies: list[str]
+  description: str
+  attributes: list[Attribute]
+  --
+  context Port inv optionalFieldsCanBeEmpty:
+    description->notEmpty() or description->isEmpty() and
+    family->notEmpty() or family->isEmpty()
+  context Port inv tInValidRange:
+    t >= 0 and t < 1
+  context Port inv directionIsUnitVector:
+    direction.x * direction.x + direction.y * direction.y + direction.z * direction.z = 1
+  context Port inv compatibleFamiliesIncludesOwnFamily:
+    family->notEmpty() implies compatibleFamilies->includes(family)
+}
+
+class PortId {
+  id: str
+}
+
+class PortDiff {
+  id?: str
+  point?: Point
+  direction?: Vector
+  t?: float
+  mandatory?: bool
+  family?: str
+  compatibleFamilies?: list[str]
+  description?: str
+  attributes?: AttributesDiff
+}
+
+class PortsDiff {
+  removed?: list[PortId]
+  updated?: list[PortDiff]
+  added?: list[Port]
+}
+' #endregion Port
+
+' #region Type
+class Type {
+  name: str
+  variant: str
+  representations: list[Representation]
+  ports: list[Port]
+  props: list[Prop]
+  isVirtual: bool
+  canScale: bool
+  canMirror: bool
+  unit: str
+  availableCount: float
+  location: Location
+  authors: list[Author]
+  concepts: list[str]
+  icon: str
+  image: str
+  description: str
+  attributes: list[Attribute]
+  created: datetime
+  updated: datetime
+}
+
+class TypeId {
+  name: str
+  variant: str
+}
+
+class TypeDiff {
+  name?: str
+  variant?: str
+  representations?: RepresentationsDiff
+  ports?: PortsDiff
+  props?: PropsDiff
+  isVirtual?: bool
+  canScale?: bool
+  canMirror?: bool
+  unit?: str
+  availableCount?: float
+  location?: LocationDiff
+  authors?: AuthorsDiff
+  concepts?: list[str]
+  icon?: str
+  image?: str
+  description?: str
+  attributes?: AttributesDiff
+  created?: datetime
+  updated?: datetime
+}
+
+class TypesDiff {
+  removed?: list[TypeId]
+  updated?: list[TypeDiff]
+  added?: list[Type]
+}
+' #endregion Type
+
+' #region Layer
+class Layer {
+  name: str
+  path: str
+  isHidden: bool
+  isLocked: bool
+  color: str
+  description: str
+  attributes: list[Attribute]
+}
+
+class LayerId {
+  name: str
+}
+
+class LayerDiff {
+  path?: str
+  isHidden?: bool
+  isLocked?: bool
+  color?: str
+  description?: str
+  attributes?: AttributesDiff
+}
+
+class LayersDiff {
+  removed?: list[LayerId]
+  updated?: list[LayerDiff]
+  added?: list[Layer]
+}
+' #endregion Layer
+
+' #region Piece
+class Piece {
+  id: str
+  type: Type
+  design: Design
+  plane: Plane
+  center: Coord
+  scale: float
+  mirrorPlane: Plane
+  props: list[Prop]
+  isHidden: bool
+  isLocked: bool
+  color: str
+  description: str
+  attributes: list[Attribute]
+  --
+  context Piece inv descriptionCanBeEmpty:
+    description->notEmpty() or description->isEmpty()
+  context Piece inv validPieceReference:
+    (type->notEmpty() and design->isEmpty() and piece->isEmpty()) or
+    (type->isEmpty() and design->notEmpty() and piece->notEmpty())
+  context Piece inv colorValidation:
+    color->isEmpty() or color.matches('^#[0-9A-Fa-f]{6}$')
+  context Piece inv scalePositive:
+    scale > 0
+  context Piece inv noSelfReference:
+    piece <> self
+}
+
+class PieceId {
+  id: str
+}
+
+class PieceDiff {
+  id?: str
+  type?: TypeId
+  design?: DesignId
+  plane?: Plane
+  center?: Coord
+  scale?: float
+  mirrorPlane?: Plane
+  props?: PropsDiff
+  isHidden?: bool
+  isLocked?: bool
+  color?: str
+  description?: str
+  attributes?: AttributesDiff
+}
+
+class PiecesDiff {
+  removed?: list[PieceId]
+  updated?: list[PieceDiff]
+  added?: list[Piece]
+}
+' #endregion Piece
+
+' #region Group
+class Group {
+  name: str
+  pieces: list[Piece]
+  color: str
+  description: str
+  attributes: list[Attribute]
+  --
+  context Group inv nameCanBeEmpty:
+    name->notEmpty() or name->isEmpty()
+  context Group inv descriptionCanBeEmpty:
+    description->notEmpty() or description->isEmpty()
+}
+
+class GroupId {
+  name: str
+}
+
+class GroupDiff {
+  pieces?: PiecesDiff
+  color?: str
+  name?: str
+  description?: str
+  attributes?: AttributesDiff
+}
+
+class GroupsDiff {
+  removed?: list[GroupId]
+  updated?: list[GroupDiff]
+  added?: list[Group]
+}
+' #endregion Group
+
+' #region Side
+class Side {
+  piece: Piece
+  port: Port
+}
+
+class SideId {
+  piece: PieceId
+  port: PortId
+}
+
+class SideDiff {
+  piece?: PieceId
+  port?: PortId
+}
+
+class SidesDiff {
+  removed?: list[SideId]
+  updated?: list[SideDiff]
+  added?: list[Side]
+}
+' #endregion Side
+
+' #region Connection
+class Connection {
+  connecting: Side
+  connected: Side
+  gap: float
+  shift: float
+  rise: float
+  rotation: float
+  turn: float
+  tilt: float
+  x: float
+  y: float
+  description: str
+  attributes: list[Attribute]
+  --
+  context Connection inv descriptionCanBeEmpty:
+    description->notEmpty() or description->isEmpty()
+  context Connection inv portsAreCompatible:
+    connecting.port.compatibleFamilies->includes(connected.port.family) or
+    connected.port.compatibleFamilies->includes(connecting.port.family)
+  context Connection inv noDuplicateConnections:
+    connecting <> connected
+  context Connection inv rotationInValidRange:
+    rotation >= -180 and rotation <= 180
+  context Connection inv turnInValidRange:
+    turn >= -180 and turn <= 180
+  context Connection inv tiltInValidRange:
+    tilt >= -180 and tilt <= 180
+}
+
+class ConnectionId {
+  connecting: SideId
+  connected: SideId
+}
+
+class ConnectionDiff {
+  connected?: SideId
+  connecting?: SideId
+  gap?: float
+  shift?: float
+  rise?: float
+  rotation?: float
+  turn?: float
+  tilt?: float
+  x?: float
+  y?: float
+  description?: str
+  attributes?: AttributesDiff
+}
+
+class ConnectionsDiff {
+  removed?: list[ConnectionId]
+  updated?: list[ConnectionDiff]
+  added?: list[Connection]
+}
+' #endregion Connection
+
+' #region Stat
+class Stat {
+  key: str
+  unit: str
+  min: float
+  minExcluded: bool
+  max: float
+  maxExcluded: bool
+  --
+  context Stat inv unitCanBeEmpty:
+    unit->notEmpty() or unit->isEmpty()
+  context Stat inv minLessThanMax:
+    min < max
+}
+
+class StatId {
+  key: str
+}
+
+class StatDiff {
+  key?: str
+  unit?: str
+  min?: float
+  minExcluded?: bool
+  max?: float
+  maxExcluded?: bool
+}
+
+class StatsDiff {
+  removed?: list[StatId]
+  updated?: list[StatDiff]
+  added?: list[Stat]
+}
+' #endregion Stat
+
+' #region Design
+class Design {
+  name: str
+  variant: str
+  view: str
+  pieces: list[Piece]
+  connections: list[Connection]
+  stats: list[Stat]
+  props: list[Prop]
+  layers: list[Layer]
+  activeLayer: Layer
+  groups: list[Group]
+  canScale: bool
+  canMirror: bool
+  unit: str
+  location: Location
+  authors: list[Author]
+  concepts: list[str]
+  icon: str
+  image: str
+  description: str
+  attributes: list[Attribute]
+  created: datetime
+  updated: datetime
+}
+
+class DesignId {
+  name: str
+  variant: str
+  view: str
+}
+
+class DesignDiff {
+  name?: str
+  variant?: str
+  view?: str
+  pieces?: PiecesDiff
+  connections?: ConnectionsDiff
+  stats?: StatsDiff
+  props?: PropsDiff
+  layers?: LayersDiff
+  activeLayer?: LayerId
+  groups?: GroupsDiff
+  canScale?: bool
+  canMirror?: bool
+  unit?: str
+  location?: LocationDiff
+  authors?: AuthorsDiff
+  concepts?: list[str]
+  icon?: str
+  image?: str
+  description?: str
+  attributes?: AttributesDiff
+  created?: datetime
+  updated?: datetime
+}
+
+class DesignsDiff {
+  removed?: list[DesignId]
+  updated?: list[DesignDiff]
+  added?: list[Design]
+}
+' #endregion Design
+
+' #region Kit
+class Kit {
+  name: str
+  version: str
+  types: list[Type]
+  designs: list[Design]
+  qualities: list[Quality]
+  files: list[File]
+  authors: list[Author]
+  remoteUrl: str
+  homepageUrl: str
+  license: str
+  concepts: list[str]
+  icon: str
+  image: str
+  description: str
+  attributes: list[Attribute]
+  created: datetime
+  updated: datetime
+}
+
+class KitId {
+  name: str
+  version: str
+}
+
+class KitDiff {
+  name?: str
+  description?: str
+  icon?: str
+  image?: str
+  preview?: str
+  version?: str
+  remote?: str
+  homepage?: str
+  license?: str
+  concepts?: list[str]
+  types?: TypesDiff
+  designs?: DesignsDiff
+  authors?: AuthorsDiff
+  attributes?: AttributesDiff
+}
+
+class KitsDiff {
+  removed?: list[KitId]
+  updated?: list[KitDiff]
+  added?: list[Kit]
+}
+' #endregion Kit
+
+' #endregion Classes
+
+' #region Relationships
+Plane *-- "1" Point : origin >
+Plane *-- "1" Vector : xAxis >
+Plane *-- "1" Vector : yAxis >
+
+Location *-- "0..*" Attribute : has >
+Author *-- "0..*" Attribute : has >
+File *-- "0..*" Attribute : has >
+
+Quality *-- "1" QualityKind : classified by >
+Quality *-- "0..*" Benchmark : has >
+Quality *-- "0..*" Attribute : has >
+Benchmark *-- "0..*" Attribute : has >
+Prop o-- "1" Quality : references >
+Prop *-- "0..*" Attribute : has >
+Stat o-- "1" Quality : references >
+
 Type *-- "0..*" Representation : has >
 Type *-- "0..*" Port : has >
-Type *-- "0..*" Author : authored by >
-Type *-- "0..*" Quality : has >
+Type *-- "0..*" Attribute : has >
+Type *-- "0..*" Prop : has >
+Type *-- "1" Location : located at >
+Type *-- "0..*" Author : created by >
+
+Representation *-- "0..*" Attribute : has >
+
+Port *-- "0..*" Attribute : has >
+Port *-- "1" Point : at >
+Port *-- "1" Vector : oriented by >
+Port *-- "1" Family : has >
+Port *-- "0..*" Family : compatible with >
+
+Layer *-- "0..*" Attribute : has >
 
 Piece *-- "1" Type : instance of >
 Piece o-- "0..1" Plane : located by >
-Piece *-- "0..*" Quality : has >
-Piece o-- "0..1" DiagramPoint : has center >
+Piece o-- "0..1" Plane : mirrored by >
+Piece *-- "0..*" Attribute : has >
+Piece o-- "0..1" Coord : has center >
+Piece *-- "0..*" Prop : has >
 
-Connection *-- "0..*" Quality : has >
-Connection o-- "1" Side : connected >
-Connection o-- "1" Side : connecting >
+Group *-- "0..*" Piece : contains >
+Group *-- "0..*" Attribute : has >
 
 Side o-- "1" Piece : refers to >
 Side o-- "1" Port : refers to >
 
-Representation *-- "0..*" Tag : tagged with >
-Representation *-- "0..*" Quality : has >
+Connection *-- "0..*" Attribute : has >
+Connection o-- "1" Side : connected >
+Connection o-- "1" Side : connecting >
 
-Port *-- "0..*" Port : compatible with >
-Port *-- "0..*" Quality : has >
-Port *-- "1" Point : at >
-Port *-- "1" Vector : oriented by >
+Design *-- "0..*" Piece : contains >
+Design *-- "0..*" Connection : contains >
+Design *-- "0..*" Layer : has >
+Design *-- "0..*" Group : has >
+Design *-- "0..*" Attribute : has >
+Design *-- "0..*" Stat : measures >
+Design *-- "0..*" Prop : has >
+Design *-- "1" Location : located at >
+Design *-- "0..*" Author : created by >
+Design o-- "1" Layer : active layer >
 
-Plane *-- "1" Point : origin >
-Plane *-- "1" Vector : xAxis >
-Plane *-- "1" Vector : yAxis >
+Kit -|> Model
+Kit *-- "0..*" Design : contains >
+Kit *-- "0..*" Type : contains >
+Kit *-- "0..*" Quality : defines >
+Kit *-- "0..*" Author : has >
+Kit *-- "0..*" Attribute : has >
+Kit *-- "0..*" File : includes >
+' #endregion Relationships
 
 @enduml

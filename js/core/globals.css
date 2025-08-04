@@ -1,8 +1,11 @@
-@import 'tailwindcss';
-@import '@semio/js/theme.css';
+@import "tailwindcss";
+@import "@semio/js/theme.css";
 
 /* https://tailwindcss.com/docs/theme */
 /* https://ui.shadcn.com/docs/theming */
+
+.body {
+}
 
 /* Set base all components */
 @layer base {
@@ -94,50 +97,571 @@
     /* --sidebar-border: oklch(0.922 0 0); */
     /* --sidebar-ring: oklch(0.708 0 0); */
     /* --xy-background-color-default: var(--color-light) !important; */
-  }
 
-  .dark {
-    --background: var(--color-dark);
-    --background-level-2: var(--color-dark-gray); /* Custom */
-    --background-level-3: var(--color-gray); /* Custom */
-    --foreground: var(--color-light);
-    --muted: var(--color-dark-gray);
-    --muted-foreground: var(--color-gray);
-    --accent: var(--color-gray);
-    --accent-foreground: var(--color-light);
-  }
+    * {
+      cursor:
+        url("../../assets/cursors/cursor.svg") 0 0,
+        default !important;
+    }
 
-  .touch {
-    --spacing: var(--spacing-touch);
-    --text-xs: 0.75rem;
-    --text-xs--line-height: calc(1 / 0.75);
-    --text-sm: 0.875rem;
-    --text-sm--line-height: calc(1.25 / 0.875);
-    --text-base: 1rem;
-    --text-base--line-height: calc(1.5 / 1);
-    --text-lg: 1.125rem;
-    --text-lg--line-height: calc(1.75 / 1.125);
-    --text-xl: 1.25rem;
-    --text-xl--line-height: calc(1.75 / 1.25);
-    --text-2xl: 1.5rem;
-    --text-2xl--line-height: calc(2 / 1.5);
-    --text-3xl: 1.875rem;
-    --text-3xl--line-height: calc(2.25 / 1.875);
-    --text-4xl: 2.25rem;
-    --text-4xl--line-height: calc(2.5 / 2.25);
-    --text-5xl: 3rem;
-    --text-5xl--line-height: 1;
-    --text-6xl: 3.75rem;
-    --text-6xl--line-height: 1;
-    --text-7xl: 4.5rem;
-    --text-7xl--line-height: 1;
-    --text-8xl: 6rem;
-    --text-8xl--line-height: 1;
-    --text-9xl: 8rem;
-    --text-9xl--line-height: 1;
+    .cursor-pointer {
+      cursor:
+        url("../../assets/cursors/cursor_pointer.svg") 0 0,
+        pointer !important;
+    }
+    [style*="cursor: pointer"],
+    [style*="cursor:pointer"] {
+      cursor:
+        url("../../assets/cursors/cursor_pointer.svg") 0 0,
+        pointer !important;
+    }
+    .cursor-pointer,
+    [class*="cursor-pointer"] {
+      cursor:
+        url("../../assets/cursors/cursor_pointer.svg") 0 0,
+        pointer !important;
+    }
+    [class*="before:cursor-pointer"]::before,
+    [class*="after:cursor-pointer"]::after {
+      cursor:
+        url("../../assets/cursors/cursor_pointer.svg") 0 0,
+        pointer !important;
+    }
+
+    .cursor-grab {
+      cursor:
+        url("../../assets/cursors/cursor_grab.svg") 0 0,
+        grab !important;
+    }
+    .cursor-grab {
+      cursor:
+        url("../../assets/cursors/cursor_grab.svg") 0 0,
+        grab !important;
+    }
+    [style*="cursor: grab"],
+    [style*="cursor:grab"] {
+      cursor:
+        url("../../assets/cursors/cursor_grab.svg") 0 0,
+        grab !important;
+    }
+    .cursor-grab,
+    [class*="cursor-grab"] {
+      cursor:
+        url("../../assets/cursors/cursor_grab.svg") 0 0,
+        grab !important;
+    }
+    [class*="before:cursor-grab"]::before,
+    [class*="after:cursor-grab"]::after {
+      cursor:
+        url("../../assets/cursors/cursor_grab.svg") 0 0,
+        grab !important;
+    }
+
+    .cursor-grabbing {
+      cursor:
+        url("../../assets/cursors/cursor_grabbing.svg") 0 0,
+        grabbing !important;
+    }
+    [style*="cursor: grabbing"],
+    [style*="cursor:grabbing"] {
+      cursor:
+        url("../../assets/cursors/cursor_grabbing.svg") 0 0,
+        grabbing !important;
+    }
+    .cursor-grabbing,
+    [class*="cursor-grabbing"] {
+      cursor:
+        url("../../assets/cursors/cursor_grabbing.svg") 0 0,
+        grabbing !important;
+    }
+    [class*="before:cursor-grabbing"]::before,
+    [class*="after:cursor-grabbing"]::after {
+      cursor:
+        url("../../assets/cursors/cursor_grabbing.svg") 0 0,
+        grabbing !important;
+    }
+
+    .cursor-ew-resize {
+      cursor:
+        url("../../assets/cursors/cursor_ew-resize.svg") 0 0,
+        ew-resize !important;
+    }
+    [style*="cursor: ew-resize"],
+    [style*="cursor:ew-resize"] {
+      cursor:
+        url("../../assets/cursors/cursor_ew-resize.svg") 16 2,
+        ew-resize !important;
+    }
+    .cursor-ew-resize,
+    [class*="cursor-ew-resize"] {
+      cursor:
+        url("../../assets/cursors/cursor_ew-resize.svg") 16 2,
+        ew-resize !important;
+    }
+    [class*="before:cursor-ew-resize"]::before,
+    [class*="after:cursor-ew-resize"]::after {
+      cursor:
+        url("../../assets/cursors/cursor_ew-resize.svg") 16 2,
+        ew-resize !important;
+    }
+
+    .cursor-crosshair {
+      cursor:
+        url("../../assets/cursors/cursor_crosshair.svg") 0 0,
+        crosshair !important;
+    }
+    [style*="cursor: crosshair"],
+    [style*="cursor:crosshair"] {
+      cursor:
+        url("../../assets/cursors/cursor_crosshair.svg") 0 0,
+        crosshair !important;
+    }
+    .cursor-crosshair,
+    [class*="cursor-crosshair"] {
+      cursor:
+        url("../../assets/cursors/cursor_crosshair.svg") 0 0,
+        crosshair !important;
+    }
+    [class*="before:cursor-crosshair"]::before,
+    [class*="after:cursor-crosshair"]::after {
+      cursor:
+        url("../../assets/cursors/cursor_crosshair.svg") 0 0,
+        crosshair !important;
+    }
+
+    .react-flow__node {
+      cursor:
+        url("../../assets/cursors/cursor_pointer.svg") 0 0,
+        pointer !important;
+    }
+
+    .react-flow__edge {
+      cursor:
+        url("../../assets/cursors/cursor_pointer.svg") 16 2,
+        pointer !important;
+    }
+
+    .react-flow__handle {
+    }
+
+    .react-flow__pane.draggable {
+      cursor:
+        url("../../assets/cursors/cursor_grab.svg") 0 0,
+        grab !important;
+    }
+    .react-flow__pane.dragging {
+      cursor:
+        url("../../assets/cursors/cursor_grabbing.svg") 0 0,
+        grabbing !important;
+    }
+    .react-flow__handle.connectionindicator {
+      cursor:
+        url("../../assets/cursors/cursor_crosshair.svg") 16 16,
+        crosshair !important;
+    }
+
+    .temp .react-flow__edge-path {
+      stroke: #e98787;
+      stroke-dasharray: 5 5;
+    }
+
+    .react-flow__handle.connectionindicator,
+    .react-flow__handle.connectionindicator:hover {
+      cursor:
+        url("../../assets/cursors/cursor_crosshair.svg") 16 16,
+        crosshair !important;
+    }
+
+    /* * {
+      cursor:
+        url("../../assets/cursors/cursor_dark.svg") 0 0,
+        default !important;
+    }
+
+    .cursor-pointer {
+      cursor:
+        url("../../assets/cursors/cursor_pointer_dark.svg") 0 0,
+        pointer !important;
+    }
+    [style*="cursor: pointer"],
+    [style*="cursor:pointer"] {
+      cursor:
+        url("../../assets/cursors/cursor_pointer_dark.svg") 0 0,
+        pointer !important;
+    }
+    .cursor-pointer,
+    [class*="cursor-pointer"] {
+      cursor:
+        url("../../assets/cursors/cursor_pointer_dark.svg") 0 0,
+        pointer !important;
+    }
+    [class*="before:cursor-pointer"]::before,
+    [class*="after:cursor-pointer"]::after {
+      cursor:
+        url("../../assets/cursors/cursor_pointer_dark.svg") 0 0,
+        pointer !important;
+    }
+
+    .cursor-grab {
+      cursor:
+        url("../../assets/cursors/cursor_grab_dark.svg") 0 0,
+        grab !important;
+    }
+    .cursor-grab {
+      cursor:
+        url("../../assets/cursors/cursor_grab_dark.svg") 0 0,
+        grab !important;
+    }
+    [style*="cursor: grab"],
+    [style*="cursor:grab"] {
+      cursor:
+        url("../../assets/cursors/cursor_grab_dark.svg") 0 0,
+        grab !important;
+    }
+    .cursor-grab,
+    [class*="cursor-grab"] {
+      cursor:
+        url("../../assets/cursors/cursor_grab_dark.svg") 0 0,
+        grab !important;
+    }
+    [class*="before:cursor-grab"]::before,
+    [class*="after:cursor-grab"]::after {
+      cursor:
+        url("../../assets/cursors/cursor_grab_dark.svg") 0 0,
+        grab !important;
+    }
+
+    .cursor-grabbing {
+      cursor:
+        url("../../assets/cursors/cursor_grabbing_dark.svg") 0 0,
+        grabbing !important;
+    }
+    [style*="cursor: grabbing"],
+    [style*="cursor:grabbing"] {
+      cursor:
+        url("../../assets/cursors/cursor_grabbing_dark.svg") 0 0,
+        grabbing !important;
+    }
+    .cursor-grabbing,
+    [class*="cursor-grabbing"] {
+      cursor:
+        url("../../assets/cursors/cursor_grabbing_dark.svg") 0 0,
+        grabbing !important;
+    }
+    [class*="before:cursor-grabbing"]::before,
+    [class*="after:cursor-grabbing"]::after {
+      cursor:
+        url("../../assets/cursors/cursor_grabbing_dark.svg") 0 0,
+        grabbing !important;
+    }
+
+    .cursor-ew-resize {
+      cursor:
+        url("../../assets/cursors/cursor_ew-resize_dark.svg") 0 0,
+        ew-resize !important;
+    }
+    [style*="cursor: ew-resize"],
+    [style*="cursor:ew-resize"] {
+      cursor:
+        url("../../assets/cursors/cursor_ew-resize_dark.svg") 16 2,
+        ew-resize !important;
+    }
+    .cursor-ew-resize,
+    [class*="cursor-ew-resize"] {
+      cursor:
+        url("../../assets/cursors/cursor_ew-resize_dark.svg") 16 2,
+        ew-resize !important;
+    }
+    [class*="before:cursor-ew-resize"]::before,
+    [class*="after:cursor-ew-resize"]::after {
+      cursor:
+        url("../../assets/cursors/cursor_ew-resize_dark.svg") 16 2,
+        ew-resize !important;
+    }
+
+    .cursor-crosshair {
+      cursor:
+        url("../../assets/cursors/cursor_crosshair_dark.svg") 0 0,
+        crosshair !important;
+    }
+    [style*="cursor: crosshair"],
+    [style*="cursor:crosshair"] {
+      cursor:
+        url("../../assets/cursors/cursor_crosshair_dark.svg") 0 0,
+        crosshair !important;
+    }
+    .cursor-crosshair,
+    [class*="cursor-crosshair"] {
+      cursor:
+        url("../../assets/cursors/cursor_crosshair_dark.svg") 0 0,
+        crosshair !important;
+    }
+    [class*="before:cursor-crosshair"]::before,
+    [class*="after:cursor-crosshair"]::after {
+      cursor:
+        url("../../assets/cursors/cursor_crosshair_dark.svg") 0 0,
+        crosshair !important;
+    }
+
+    .react-flow__node {
+      cursor:
+        url("../../assets/cursors/cursor_pointer_dark.svg") 0 0,
+        pointer !important;
+    }
+
+    .react-flow__edge {
+      cursor:
+        url("../../assets/cursors/cursor_pointer_dark.svg") 16 2,
+        pointer !important;
+    }
+
+    .react-flow__handle {
+    }
+
+    .react-flow__pane.draggable {
+      cursor:
+        url("../../assets/cursors/cursor_grab_dark.svg") 0 0,
+        grab !important;
+    }
+    .react-flow__pane.dragging {
+      cursor:
+        url("../../assets/cursors/cursor_grabbing_dark.svg") 0 0,
+        grabbing !important;
+    }
+    .react-flow__handle.connectionindicator {
+      cursor:
+        url("../../assets/cursors/cursor_crosshair_dark.svg") 16 16,
+        crosshair !important;
+    }
+
+    .temp .react-flow__edge-path {
+      stroke: #e98787;
+      stroke-dasharray: 5 5;
+    }
+
+    .react-flow__handle.connectionindicator,
+    .react-flow__handle.connectionindicator:hover {
+      cursor:
+        url("../../assets/cursors/cursor_crosshair_dark.svg") 16 16,
+        crosshair !important;
+    } */
   }
 }
 
+.dark {
+  --background: var(--color-dark);
+  --background-level-2: var(--color-dark-gray); /* Custom */
+  --background-level-3: var(--color-gray); /* Custom */
+  --foreground: var(--color-light);
+  --muted: var(--color-dark-gray);
+  --muted-foreground: var(--color-gray);
+  --accent: var(--color-gray);
+  --accent-foreground: var(--color-light);
+
+  /* * {
+    cursor:
+      url("../../assets/cursors/cursor_dark.svg") 0 0,
+      default !important;
+  }
+
+  .cursor-pointer {
+    cursor:
+      url("../../assets/cursors/cursor_pointer_dark.svg") 0 0,
+      pointer !important;
+  }
+  [style*="cursor: pointer"],
+  [style*="cursor:pointer"] {
+    cursor:
+      url("../../assets/cursors/cursor_pointer_dark.svg") 0 0,
+      pointer !important;
+  }
+  .cursor-pointer,
+  [class*="cursor-pointer"] {
+    cursor:
+      url("../../assets/cursors/cursor_pointer_dark.svg") 0 0,
+      pointer !important;
+  }
+  [class*="before:cursor-pointer"]::before,
+  [class*="after:cursor-pointer"]::after {
+    cursor:
+      url("../../assets/cursors/cursor_pointer_dark.svg") 0 0,
+      pointer !important;
+  }
+
+  .cursor-grab {
+    cursor:
+      url("../../assets/cursors/cursor_grab_dark.svg") 0 0,
+      grab !important;
+  }
+  .cursor-grab {
+    cursor:
+      url("../../assets/cursors/cursor_grab_dark.svg") 0 0,
+      grab !important;
+  }
+  [style*="cursor: grab"],
+  [style*="cursor:grab"] {
+    cursor:
+      url("../../assets/cursors/cursor_grab_dark.svg") 0 0,
+      grab !important;
+  }
+  .cursor-grab,
+  [class*="cursor-grab"] {
+    cursor:
+      url("../../assets/cursors/cursor_grab_dark.svg") 0 0,
+      grab !important;
+  }
+  [class*="before:cursor-grab"]::before,
+  [class*="after:cursor-grab"]::after {
+    cursor:
+      url("../../assets/cursors/cursor_grab_dark.svg") 0 0,
+      grab !important;
+  }
+
+  .cursor-grabbing {
+    cursor:
+      url("../../assets/cursors/cursor_grabbing_dark.svg") 0 0,
+      grabbing !important;
+  }
+  [style*="cursor: grabbing"],
+  [style*="cursor:grabbing"] {
+    cursor:
+      url("../../assets/cursors/cursor_grabbing_dark.svg") 0 0,
+      grabbing !important;
+  }
+  .cursor-grabbing,
+  [class*="cursor-grabbing"] {
+    cursor:
+      url("../../assets/cursors/cursor_grabbing_dark.svg") 0 0,
+      grabbing !important;
+  }
+  [class*="before:cursor-grabbing"]::before,
+  [class*="after:cursor-grabbing"]::after {
+    cursor:
+      url("../../assets/cursors/cursor_grabbing_dark.svg") 0 0,
+      grabbing !important;
+  }
+
+  .cursor-ew-resize {
+    cursor:
+      url("../../assets/cursors/cursor_ew-resize_dark.svg") 0 0,
+      ew-resize !important;
+  }
+  [style*="cursor: ew-resize"],
+  [style*="cursor:ew-resize"] {
+    cursor:
+      url("../../assets/cursors/cursor_ew-resize_dark.svg") 16 2,
+      ew-resize !important;
+  }
+  .cursor-ew-resize,
+  [class*="cursor-ew-resize"] {
+    cursor:
+      url("../../assets/cursors/cursor_ew-resize_dark.svg") 16 2,
+      ew-resize !important;
+  }
+  [class*="before:cursor-ew-resize"]::before,
+  [class*="after:cursor-ew-resize"]::after {
+    cursor:
+      url("../../assets/cursors/cursor_ew-resize_dark.svg") 16 2,
+      ew-resize !important;
+  }
+
+  .cursor-crosshair {
+    cursor:
+      url("../../assets/cursors/cursor_crosshair_dark.svg") 0 0,
+      crosshair !important;
+  }
+  [style*="cursor: crosshair"],
+  [style*="cursor:crosshair"] {
+    cursor:
+      url("../../assets/cursors/cursor_crosshair_dark.svg") 0 0,
+      crosshair !important;
+  }
+  .cursor-crosshair,
+  [class*="cursor-crosshair"] {
+    cursor:
+      url("../../assets/cursors/cursor_crosshair_dark.svg") 0 0,
+      crosshair !important;
+  }
+  [class*="before:cursor-crosshair"]::before,
+  [class*="after:cursor-crosshair"]::after {
+    cursor:
+      url("../../assets/cursors/cursor_crosshair_dark.svg") 0 0,
+      crosshair !important;
+  }
+
+  .react-flow__node {
+    cursor:
+      url("../../assets/cursors/cursor_pointer_dark.svg") 0 0,
+      pointer !important;
+  }
+
+  .react-flow__edge {
+    cursor:
+      url("../../assets/cursors/cursor_pointer_dark.svg") 16 2,
+      pointer !important;
+  }
+
+  .react-flow__handle {
+  }
+
+  .react-flow__pane.draggable {
+    cursor:
+      url("../../assets/cursors/cursor_grab_dark.svg") 0 0,
+      grab !important;
+  }
+  .react-flow__pane.dragging {
+    cursor:
+      url("../../assets/cursors/cursor_grabbing_dark.svg") 0 0,
+      grabbing !important;
+  }
+  .react-flow__handle.connectionindicator {
+    cursor:
+      url("../../assets/cursors/cursor_crosshair_dark.svg") 16 16,
+      crosshair !important;
+  }
+
+  .temp .react-flow__edge-path {
+    stroke: #e98787;
+    stroke-dasharray: 5 5;
+  }
+
+  .react-flow__handle.connectionindicator,
+  .react-flow__handle.connectionindicator:hover {
+    cursor:
+      url("../../assets/cursors/cursor_crosshair_dark.svg") 16 16,
+      crosshair !important;
+  } */
+}
+
+.touch {
+  --spacing: var(--spacing-touch);
+  --text-xs: 0.75rem;
+  --text-xs--line-height: calc(1 / 0.75);
+  --text-sm: 0.875rem;
+  --text-sm--line-height: calc(1.25 / 0.875);
+  --text-base: 1rem;
+  --text-base--line-height: calc(1.5 / 1);
+  --text-lg: 1.125rem;
+  --text-lg--line-height: calc(1.75 / 1.125);
+  --text-xl: 1.25rem;
+  --text-xl--line-height: calc(1.75 / 1.25);
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: calc(2 / 1.5);
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: calc(2.25 / 1.875);
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: calc(2.5 / 2.25);
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 1;
+  --text-6xl: 3.75rem;
+  --text-6xl--line-height: 1;
+  --text-7xl: 4.5rem;
+  --text-7xl--line-height: 1;
+  --text-8xl: 6rem;
+  --text-8xl--line-height: 1;
+  --text-9xl: 8rem;
+  --text-9xl--line-height: 1;
+}
 /* https://reactflow.dev/learn/customization/theming */
 
 /* .react-flow { */
@@ -147,15 +671,6 @@
 /* .react-flow.dark { */
 /* --xy-background-color-default: var(--color-dark) !important; */
 /* } */
-
-.react-flow__handle {
-  /* border: 0 !important; */
-}
-
-.temp .react-flow__edge-path {
-  stroke: #e98787;
-  stroke-dasharray: 5 5;
-}
 
 @theme inline {
   --color-background: var(--background);
