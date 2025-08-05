@@ -535,6 +535,7 @@ const Diagram: FC = () => {
     fullscreenPanel,
     others,
     setDesign,
+    addDesign,
     deselectAll,
     selectPiece,
     addPieceToSelection,
@@ -613,16 +614,10 @@ const Diagram: FC = () => {
 
   const onCluster = useCallback(() => {
     if (!design) return;
-
-    // Get selected pieces
     const selectedPieces = (design.pieces || []).filter((piece) => selection.selectedPieceIds.includes(piece.id_));
-
-    // Get selected connections
     const selectedConnections = (design.connections || []).filter((connection) =>
       selection.selectedConnections.some((selectedConn) => selectedConn.connectingPieceId === connection.connecting.piece.id_ && selectedConn.connectedPieceId === connection.connected.piece.id_),
     );
-
-    // Create new design from selected elements
     const newDesign = {
       name: `Cluster-${Date.now()}`,
       unit: design.unit || "m",
@@ -632,9 +627,7 @@ const Diagram: FC = () => {
       created: new Date(),
       updated: new Date(),
     };
-
-    // Log the new design for now (later this could be saved to the kit or opened in a new editor)
-    console.log("Created new design from cluster:", newDesign);
+    addDesign(newDesign);
   }, [design, selection.selectedPieceIds, selection.selectedConnections]);
 
   //#region Selection
