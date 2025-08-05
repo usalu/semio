@@ -23,8 +23,67 @@ import { createContext, FC, ReactNode, useContext, useEffect, useReducer, useSta
 import DesignEditor, { createInitialDesignEditorState, DesignEditorDispatcher, designEditorReducer, DesignEditorState } from "./DesignEditor";
 
 import { default as Metabolism } from "@semio/assets/semio/kit_metabolism.json";
-import { Kit } from "@semio/js";
+import { DesignId, Kit } from "@semio/js";
 import { extractFilesAndCreateUrls } from "../../lib/utils";
+
+// Higher-level Sketchpad state management
+interface SketchpadState {
+  designEditorStates: DesignEditorState[];
+  activeDesign: number; // index of the active design
+}
+
+enum SketchpadAction {
+  ChangeActiveDesign = "CHANGE_ACTIVE_DESIGN",
+  UpdateActiveDesignEditorState = "UPDATE_ACTIVE_DESIGN_EDITOR_STATE",
+}
+
+type SketchpadActionType =
+  | {
+      type: SketchpadAction.ChangeActiveDesign;
+      payload: DesignId;
+    }
+  | {
+      type: SketchpadAction.UpdateActiveDesignEditorState;
+      payload: DesignEditorState;
+    };
+
+const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): SketchpadState => {
+  switch (action.type) {
+    case SketchpadAction.ChangeActiveDesign:
+      // Find the index of the design with the matching designId
+      const designIndex = state.designEditorStates.findIndex((designState) => designState.designId.name === action.payload.name && designState.designId.variant === action.payload.variant && designState.designId.view === action.payload.view);
+
+      if (designIndex !== -1) {
+        return {
+          ...state,
+          activeDesign: designIndex,
+        };
+      }
+      return state;
+    case SketchpadAction.UpdateActiveDesignEditorState:
+      const updatedStates = [...state.designEditorStates];
+      updatedStates[state.activeDesign] = action.payload;
+      return {
+        ...state,
+        designEditorStates: updatedStates,
+      };
+    default:
+      return state;
+  }
+};
+
+const createInitialSketchpadState = (): SketchpadState => {
+  const initialDesignEditorState = createInitialDesignEditorState({
+    initialKit: Metabolism as unknown as Kit,
+    designId: { name: "Nakagin Capsule Tower" },
+    fileUrls: new Map(),
+  });
+
+  return {
+    designEditorStates: [initialDesignEditorState],
+    activeDesign: 0,
+  };
+};
 
 export enum Mode {
   USER = "user",
@@ -49,6 +108,8 @@ interface SketchpadContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
   setNavbarToolbar: (toolbar: ReactNode) => void;
+  sketchpadState: SketchpadState;
+  sketchpadDispatch: (action: SketchpadActionType) => void;
   designEditorState: DesignEditorState | null;
   designEditorDispatch: DesignEditorDispatcher | null;
 }
@@ -104,14 +165,20 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
     return Theme.LIGHT;
   });
 
-  // Initialize DesignEditor state
-  const [designEditorState, designEditorDispatch] = useReducer(designEditorReducer, null, () =>
-    createInitialDesignEditorState({
-      initialKit: Metabolism as unknown as Kit,
-      designId: { name: "Nakagin Capsule Tower" },
-      fileUrls: new Map(),
-    }),
-  );
+  const [sketchpadState, sketchpadDispatch] = useReducer(sketchpadReducer, createInitialSketchpadState());
+
+  // Get the active design editor state
+  const activeDesignEditorState = sketchpadState.designEditorStates[sketchpadState.activeDesign];
+
+  // Create a dispatch function that operates on the active design editor state
+  // and updates the sketchpad state
+  const designEditorDispatch: DesignEditorDispatcher = (action) => {
+    const newState = designEditorReducer(activeDesignEditorState, action);
+    sketchpadDispatch({
+      type: SketchpadAction.UpdateActiveDesignEditorState,
+      payload: newState,
+    });
+  };
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -139,7 +206,9 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
           theme: currentTheme,
           setTheme: setCurrentTheme,
           setNavbarToolbar: setNavbarToolbar,
-          designEditorState: designEditorState,
+          sketchpadState: sketchpadState,
+          sketchpadDispatch: sketchpadDispatch,
+          designEditorState: activeDesignEditorState,
           designEditorDispatch: designEditorDispatch,
         }}
       >
@@ -153,3 +222,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
 };
 
 export default Sketchpad;
+
+// Export Sketchpad state management types for external use
+export { SketchpadAction };
+export type { SketchpadActionType, SketchpadState };
