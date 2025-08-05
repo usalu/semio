@@ -83,98 +83,133 @@ type ClusterMenuProps = {
   nodes: DiagramNode[];
   edges: DiagramEdge[];
   selection: DesignEditorSelection;
-  onCluster: () => void;
+  onCluster: (clusterPieceIds: string[]) => void;
 };
 
 const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, selection, onCluster }) => {
   const reactFlowInstance = useReactFlow();
 
-  // Calculate bounding box of selected elements
-  const getBoundingBox = useCallback(() => {
-    const selectedNodes = nodes.filter((node) => selection.selectedPieceIds.includes(node.data.piece.id_));
+  // Find connected groups of selected nodes
+  const getConnectedGroups = useCallback(() => {
+    const selectedPieceIds = selection.selectedPieceIds;
+    if (selectedPieceIds.length === 0) return [];
 
-    const selectedEdges = edges.filter((edge) => edge.data && selection.selectedConnections.some((conn) => conn.connectingPieceId === edge.data!.connection.connecting.piece.id_ && conn.connectedPieceId === edge.data!.connection.connected.piece.id_));
-
-    if (selectedNodes.length === 0 && selectedEdges.length === 0) return null;
-
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-
-    // Include selected nodes in bounding box
-    selectedNodes.forEach((node) => {
-      const x = node.position.x;
-      const y = node.position.y;
-      const width = ICON_WIDTH;
-      const height = ICON_WIDTH;
-
-      minX = Math.min(minX, x);
-      minY = Math.min(minY, y);
-      maxX = Math.max(maxX, x + width);
-      maxY = Math.max(maxY, y + height);
-    });
-
-    // Include connected nodes of selected edges in bounding box
-    selectedEdges.forEach((edge) => {
+    // Build adjacency map from all edges (not just selected ones)
+    const adjacencyMap = new Map<string, Set<string>>();
+    edges.forEach((edge) => {
       if (!edge.data) return;
+      const sourceId = edge.data.connection.connecting.piece.id_;
+      const targetId = edge.data.connection.connected.piece.id_;
 
-      const sourceNode = nodes.find((n) => n.data.piece.id_ === edge.data!.connection.connecting.piece.id_);
-      const targetNode = nodes.find((n) => n.data.piece.id_ === edge.data!.connection.connected.piece.id_);
+      if (!adjacencyMap.has(sourceId)) adjacencyMap.set(sourceId, new Set());
+      if (!adjacencyMap.has(targetId)) adjacencyMap.set(targetId, new Set());
 
-      if (sourceNode) {
-        minX = Math.min(minX, sourceNode.position.x);
-        minY = Math.min(minY, sourceNode.position.y);
-        maxX = Math.max(maxX, sourceNode.position.x + ICON_WIDTH);
-        maxY = Math.max(maxY, sourceNode.position.y + ICON_WIDTH);
-      }
-
-      if (targetNode) {
-        minX = Math.min(minX, targetNode.position.x);
-        minY = Math.min(minY, targetNode.position.y);
-        maxX = Math.max(maxX, targetNode.position.x + ICON_WIDTH);
-        maxY = Math.max(maxY, targetNode.position.y + ICON_WIDTH);
-      }
+      adjacencyMap.get(sourceId)!.add(targetId);
+      adjacencyMap.get(targetId)!.add(sourceId);
     });
 
-    // Add padding around the selection
-    const padding = 20;
-    return {
-      x: minX - padding,
-      y: minY - padding,
-      width: maxX - minX + padding * 2,
-      height: maxY - minY + padding * 2,
+    // Find connected components using DFS
+    const visited = new Set<string>();
+    const groups: string[][] = [];
+
+    const dfs = (pieceId: string, currentGroup: string[]) => {
+      if (visited.has(pieceId)) return;
+      visited.add(pieceId);
+      currentGroup.push(pieceId);
+
+      const neighbors = adjacencyMap.get(pieceId) || new Set();
+      for (const neighbor of neighbors) {
+        if (selectedPieceIds.includes(neighbor) && !visited.has(neighbor)) {
+          dfs(neighbor, currentGroup);
+        }
+      }
     };
-  }, [nodes, edges, selection.selectedPieceIds, selection.selectedConnections]);
 
-  const boundingBox = getBoundingBox();
+    for (const pieceId of selectedPieceIds) {
+      if (!visited.has(pieceId)) {
+        const group: string[] = [];
+        dfs(pieceId, group);
+        if (group.length > 1) {
+          // Only show cluster menu for groups with more than 1 node
+          groups.push(group);
+        }
+      }
+    }
 
-  // Don't show menu if no elements are selected
-  if (!boundingBox || (selection.selectedPieceIds.length === 0 && selection.selectedConnections.length === 0)) {
+    return groups;
+  }, [edges, selection.selectedPieceIds]);
+
+  // Calculate bounding box for a group of piece IDs
+  const getBoundingBoxForGroup = useCallback(
+    (groupPieceIds: string[]) => {
+      const groupNodes = nodes.filter((node) => groupPieceIds.includes(node.data.piece.id_));
+
+      if (groupNodes.length === 0) return null;
+
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+
+      groupNodes.forEach((node) => {
+        const x = node.position.x;
+        const y = node.position.y;
+        const width = ICON_WIDTH;
+        const height = ICON_WIDTH;
+
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x + width);
+        maxY = Math.max(maxY, y + height);
+      });
+
+      // Add padding around the selection
+      const padding = 20;
+      return {
+        x: minX - padding,
+        y: minY - padding,
+        width: maxX - minX + padding * 2,
+        height: maxY - minY + padding * 2,
+      };
+    },
+    [nodes],
+  );
+
+  const connectedGroups = getConnectedGroups();
+
+  if (connectedGroups.length === 0) {
     return null;
   }
 
   return (
     <ViewportPortal>
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          left: boundingBox.x,
-          top: boundingBox.y,
-          width: boundingBox.width,
-          height: boundingBox.height,
-        }}
-      >
-        {/* Bounding rectangle */}
-        <div className="absolute inset-0 border-2 border-dashed border-primary/50 rounded-md" style={{ pointerEvents: "none" }} />
+      {connectedGroups.map((groupPieceIds, groupIndex) => {
+        const boundingBox = getBoundingBoxForGroup(groupPieceIds);
+        if (!boundingBox) return null;
 
-        {/* Cluster button positioned at top-right of bounding box */}
-        <div className="absolute -top-10 -right-2 pointer-events-auto">
-          <button onClick={onCluster} className="bg-primary text-primary-foreground px-3 py-1 rounded-md text-sm font-medium shadow-md hover:bg-primary/90 transition-colors">
-            Cluster
-          </button>
-        </div>
-      </div>
+        return (
+          <div
+            key={`cluster-group-${groupIndex}`}
+            className="absolute pointer-events-none"
+            style={{
+              left: boundingBox.x,
+              top: boundingBox.y,
+              width: boundingBox.width,
+              height: boundingBox.height,
+            }}
+          >
+            {/* Bounding rectangle */}
+            <div className="absolute inset-0 border-2 border-dashed border-primary/50 rounded-md" style={{ pointerEvents: "none" }} />
+
+            {/* Cluster button positioned at top-right of bounding box */}
+            <div className="absolute -top-10 -right-2 pointer-events-auto">
+              <button onClick={() => onCluster(groupPieceIds)} className="bg-primary text-primary-foreground px-3 py-1 rounded-md text-sm font-medium shadow-md hover:bg-primary/90 transition-colors">
+                Cluster
+              </button>
+            </div>
+          </div>
+        );
+      })}
     </ViewportPortal>
   );
 };
@@ -612,23 +647,34 @@ const Diagram: FC = () => {
     toggleDiagramFullscreen();
   };
 
-  const onCluster = useCallback(() => {
-    if (!design) return;
-    const selectedPieces = (design.pieces || []).filter((piece) => selection.selectedPieceIds.includes(piece.id_));
-    const selectedConnections = (design.connections || []).filter((connection) =>
-      selection.selectedConnections.some((selectedConn) => selectedConn.connectingPieceId === connection.connecting.piece.id_ && selectedConn.connectedPieceId === connection.connected.piece.id_),
-    );
-    const newDesign = {
-      name: `Cluster-${Date.now()}`,
-      unit: design.unit || "m",
-      description: `Clustered design created from ${selectedPieces.length} piece(s) and ${selectedConnections.length} connection(s)`,
-      pieces: selectedPieces,
-      connections: selectedConnections,
-      created: new Date(),
-      updated: new Date(),
-    };
-    addDesign(newDesign);
-  }, [design, selection.selectedPieceIds, selection.selectedConnections]);
+  const onCluster = useCallback(
+    (clusterPieceIds: string[]) => {
+      if (!design) return;
+      const selectedPieces = (design.pieces || []).filter((piece) => clusterPieceIds.includes(piece.id_));
+      const selectedConnections = (design.connections || []).filter(
+        (connection) =>
+          selection.selectedConnections.some((selectedConn) => selectedConn.connectingPieceId === connection.connecting.piece.id_ && selectedConn.connectedPieceId === connection.connected.piece.id_) &&
+          clusterPieceIds.includes(connection.connecting.piece.id_) &&
+          clusterPieceIds.includes(connection.connected.piece.id_),
+      );
+      const unselectedInternalConnections = (design.connections || []).filter(
+        (connection) => !selectedConnections.includes(connection) && clusterPieceIds.includes(connection.connecting.piece.id_) && clusterPieceIds.includes(connection.connected.piece.id_),
+      );
+      const finalConnections = [...selectedConnections, ...unselectedInternalConnections];
+
+      const newDesign = {
+        name: `Cluster-${Date.now()}`,
+        unit: design.unit || "m",
+        description: `Clustered design created from ${selectedPieces.length} piece(s) and ${finalConnections.length} connection(s)${unselectedInternalConnections.length > 0 ? ` (including ${unselectedInternalConnections.length} internal connection(s))` : ""}`,
+        pieces: selectedPieces,
+        connections: finalConnections,
+        created: new Date(),
+        updated: new Date(),
+      };
+      addDesign(newDesign);
+    },
+    [design, selection.selectedConnections],
+  );
 
   //#region Selection
   const onNodeDragStart = useCallback(
