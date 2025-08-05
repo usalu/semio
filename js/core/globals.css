@@ -1,12 +1,18 @@
-@import 'tailwindcss';
-@import '@semio/js/theme.css';
+@import "tailwindcss";
+@import "@semio/js/theme.css";
 
 /* https://tailwindcss.com/docs/theme */
 /* https://ui.shadcn.com/docs/theming */
 
+.body {
+}
+
 /* Set base all components */
 @layer base {
   :root {
+    cursor:
+      url("../../assets/cursors/cursor.svg") 2 2,
+      auto;
     --radius: 0rem;
     --radius-xs: 0rem;
     --radius-sm: 0rem;

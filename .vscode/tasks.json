@@ -95,6 +95,37 @@
       }
     },
     {
+      "label": "dev play",
+      "type": "shell",
+      "isBackground": true,
+      "command": "npx nx dev @semio/play",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "close": true
+      },
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE", // When vite starts
+          "endsPattern": "http://localhost:5173/" // When vite is ready
+        }
+      },
+      "group": "none",
+      "options": {
+        "killOnPort": 5173
+      }
+    },
+    {
       "label": "dev docs",
       "type": "shell",
       "isBackground": true,
@@ -139,7 +170,9 @@
         "options": {
           "shell": {
             "executable": "powershell.exe",
-            "args": ["-Command"]
+            "args": [
+              "-Command"
+            ]
           }
         }
       },
