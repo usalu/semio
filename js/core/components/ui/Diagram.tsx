@@ -637,6 +637,26 @@ const Diagram: FC = () => {
     console.log("Created new design from cluster:", newDesign);
   }, [design, selection.selectedPieceIds, selection.selectedConnections]);
 
+  //#region Selection
+  const onNodeDragStart = useCallback(
+    (event: any, node: Node) => {
+      const currentSelectedIds = selection?.selectedPieceIds ?? [];
+      const pieceId = getPieceIdFromNode(node as DiagramNode);
+      const isNodeSelected = currentSelectedIds.includes(pieceId);
+      const ctrlKey = event.ctrlKey || event.metaKey;
+      const shiftKey = event.shiftKey;
+
+      if (ctrlKey) isNodeSelected ? removePieceFromSelection({ id_: pieceId }) : addPieceToSelection({ id_: pieceId });
+      else if (shiftKey) !isNodeSelected ? addPieceToSelection({ id_: pieceId }) : selectPiece({ id_: pieceId });
+      else if (!isNodeSelected) selectPiece({ id_: pieceId });
+
+      startTransaction();
+      setDragState({ lastPostition: { x: node.position.x, y: node.position.y } });
+      setHelperLines([]);
+    },
+    [selectPiece, removePieceFromSelection, addPieceToSelection, startTransaction],
+  );
+
   const onNodeDrag = useCallback(
     (event: any, node: DiagramNode) => {
       if (node.type !== "piece") return;
