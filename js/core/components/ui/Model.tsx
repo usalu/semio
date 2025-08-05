@@ -234,10 +234,10 @@ const ModelDesign: FC = () => {
 
   const onChange = useCallback(
     (selected: THREE.Object3D[]) => {
-      const newSelectedPieceIds = selected.map((item) => item.parent?.userData.pieceId).filter(Boolean);
-      if (newSelectedPieceIds.length !== selection.selectedPieceIds.length || newSelectedPieceIds.some((id, index) => id !== selection.selectedPieceIds[index])) {
-        selectPieces(newSelectedPieceIds.map((id) => ({ id_: id })));
-      }
+      // const newSelectedPieceIds = selected.map((item) => item.parent?.userData.pieceId).filter(Boolean);
+      // if (newSelectedPieceIds.length !== selection.selectedPieceIds.length || newSelectedPieceIds.some((id, index) => id !== selection.selectedPieceIds[index])) {
+      //   selectPieces(newSelectedPieceIds.map((id) => ({ id_: id })));
+      // }
     },
     [selection, selectPieces],
   );
