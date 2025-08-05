@@ -1266,7 +1266,7 @@ function useControllableReducer(props: DesignEditorProps) {
       }
 
       const newState = designEditorReducer(state, action);
-      // console.log('NEWSTATE:', newState)
+      console.log("NEWSTATE:", newState);
 
       if (!isKitControlled || !isSelectionControlled) dispatch(action);
       if (isKitControlled && newState.kit !== state.kit) onDesignChange?.(findDesignInKit(newState.kit, designId));

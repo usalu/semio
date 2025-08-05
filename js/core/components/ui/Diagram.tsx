@@ -650,24 +650,18 @@ const Diagram: FC = () => {
   const onCluster = useCallback(
     (clusterPieceIds: string[]) => {
       if (!design) return;
-      const selectedPieces = (design.pieces || []).filter((piece) => clusterPieceIds.includes(piece.id_));
-      const selectedConnections = (design.connections || []).filter(
-        (connection) =>
-          selection.selectedConnections.some((selectedConn) => selectedConn.connectingPieceId === connection.connecting.piece.id_ && selectedConn.connectedPieceId === connection.connected.piece.id_) &&
-          clusterPieceIds.includes(connection.connecting.piece.id_) &&
-          clusterPieceIds.includes(connection.connected.piece.id_),
-      );
-      const unselectedInternalConnections = (design.connections || []).filter(
-        (connection) => !selectedConnections.includes(connection) && clusterPieceIds.includes(connection.connecting.piece.id_) && clusterPieceIds.includes(connection.connected.piece.id_),
-      );
-      const finalConnections = [...selectedConnections, ...unselectedInternalConnections];
+
+      const selectedPieces = design.pieces!.filter((piece) => clusterPieceIds.includes(piece.id_));
+      if (selectedPieces.length === 0) return;
+      const selectedPieceIds = selectedPieces.map((piece) => piece.id_);
+      const includedConnections = design.connections!.filter((connection) => selectedPieceIds.includes(connection.connecting.piece.id_) && selectedPieceIds.includes(connection.connected.piece.id_));
 
       const newDesign = {
         name: `Cluster-${Date.now()}`,
         unit: design.unit || "m",
-        description: `Clustered design created from ${selectedPieces.length} piece(s) and ${finalConnections.length} connection(s)${unselectedInternalConnections.length > 0 ? ` (including ${unselectedInternalConnections.length} internal connection(s))` : ""}`,
+        description: `Cluster of ${selectedPieceIds.length} pieces`,
         pieces: selectedPieces,
-        connections: finalConnections,
+        connections: includedConnections,
         created: new Date(),
         updated: new Date(),
       };
