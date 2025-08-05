@@ -385,7 +385,7 @@ const ConnectionConnectionLine: React.FC<ConnectionLineComponentProps> = (props:
   const { fromX, fromY, toX, toY } = props;
   const HANDLE_HEIGHT = 5;
   const path = `M ${fromX} ${fromY + HANDLE_HEIGHT / 2} L ${toX} ${toY + HANDLE_HEIGHT / 2}`;
-  return <BaseEdge path={path} style={{ stroke: "grey" }} className="opacity-70" />;
+  return <BaseEdge path={path} style={{ stroke: "gray" }} className="opacity-70" />;
 };
 
 export const MiniMapNode: React.FC<MiniMapNodeProps> = ({ x, y, selected }: MiniMapNodeProps) => {
