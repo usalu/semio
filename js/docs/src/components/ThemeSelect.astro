@@ -1,0 +1,60 @@
+---
+// ThemeSelect.astro - Theme toggle using React ToggleCycle component
+---
+
+<div id="theme-select-root"></div>
+
+<script>
+  import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle";
+  import { Moon, Sun } from "lucide-react";
+  import React, { createElement, useState } from "react";
+  import { createRoot } from "react-dom/client";
+
+  // Wait for DOM to be ready
+  document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('theme-select-root');
+    if (!container) return;
+
+    // Get initial theme
+    const getCurrentTheme = () => {
+      return document.documentElement.getAttribute('data-theme') || 'light';
+    };
+
+    // Set theme and update localStorage
+    const setTheme = (theme: string) => {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('starlight-theme', theme);
+    };
+
+    const root = createRoot(container);
+    
+    const ThemeToggle = () => {
+      const [theme, setThemeState] = useState(getCurrentTheme());
+
+      const handleThemeChange = (newTheme: string) => {
+        setTheme(newTheme);
+        setThemeState(newTheme);
+      };
+
+      return createElement(ToggleCycle, {
+        value: theme,
+        onValueChange: handleThemeChange,
+        variant: "outline",
+        items: [
+          {
+            value: "light",
+            tooltip: "Turn theme dark",
+            label: createElement(Moon),
+          },
+          {
+            value: "dark", 
+            tooltip: "Turn theme light",
+            label: createElement(Sun),
+          },
+        ],
+      });
+    };
+
+    root.render(createElement(ThemeToggle));
+  });
+</script>

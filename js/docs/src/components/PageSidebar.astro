@@ -1,0 +1,44 @@
+---
+// PageSidebar.astro - Page table of contents sidebar like Details panel
+---
+
+<div id="page-sidebar-root" class="fixed top-16 right-4 bottom-4 z-20 w-64 bg-blue-500 p-4 text-white border">
+  Loading Custom PageSidebar...
+</div>
+
+<script>
+  import React from "react";
+  import { createRoot } from "react-dom/client";
+
+  // Initialize immediately when script runs
+  const initPageSidebar = () => {
+    const container = document.getElementById('page-sidebar-root');
+    if (!container) {
+      console.error('PageSidebar container not found');
+      return;
+    }
+
+    console.log('Initializing PageSidebar component');
+
+    // Simple test component
+    const TestPageSidebar = () => {
+      return React.createElement("div", {
+        className: "h-full w-full bg-blue-500 p-4 text-white flex items-center justify-center"
+      }, "Custom PageSidebar Loaded with React!");
+    };
+
+    const root = createRoot(container);
+    root.render(React.createElement(TestPageSidebar));
+  };
+
+  // Try multiple initialization strategies
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPageSidebar);
+  } else {
+    // DOM is already ready
+    initPageSidebar();
+  }
+
+  // Also try after a short delay as fallback
+  setTimeout(initPageSidebar, 100);
+</script>

@@ -1,0 +1,76 @@
+---
+// LanguageSelect.astro - Language selector using React Combobox component
+---
+
+<div id="language-select-root"></div>
+
+<script>
+  import Combobox from "@semio/js/components/ui/Combobox";
+  import React, { createElement, useState } from "react";
+  import { createRoot } from "react-dom/client";
+
+  // Wait for DOM to be ready
+  document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('language-select-root');
+    if (!container) return;
+
+    const languageOptions = [
+      { value: 'en', label: 'English' },
+      { value: 'de', label: 'Deutsch' }
+    ];
+
+    // Get current language from URL
+    const getCurrentLanguage = () => {
+      const path = window.location.pathname;
+      if (path.startsWith('/de/')) return 'de';
+      return 'en';
+    };
+
+    // Navigate to new language
+    const handleLanguageChange = (value: string) => {
+      const currentPath = window.location.pathname;
+      let newPath = currentPath;
+      
+      // Remove existing language prefix
+      if (currentPath.startsWith('/de/')) {
+        newPath = currentPath.substring(3);
+      } else if (currentPath.startsWith('/en/')) {
+        newPath = currentPath.substring(3);
+      }
+      
+      // Add new language prefix (except for English which is root)
+      if (value === 'de') {
+        newPath = '/de' + newPath;
+      } else if (newPath === '') {
+        newPath = '/';
+      }
+      
+      if (newPath !== currentPath) {
+        window.location.href = newPath;
+      }
+    };
+
+    const root = createRoot(container);
+    
+    const LanguageSelector = () => {
+      const [language, setLanguage] = useState(getCurrentLanguage());
+
+      const handleChange = (newLanguage: string) => {
+        setLanguage(newLanguage);
+        handleLanguageChange(newLanguage);
+      };
+
+      return createElement(Combobox, {
+        options: languageOptions,
+        value: language,
+        placeholder: "Select language...",
+        emptyMessage: "No languages found.",
+        onValueChange: handleChange,
+        allowClear: false,
+        label: undefined
+      });
+    };
+
+    root.render(createElement(LanguageSelector));
+  });
+</script>

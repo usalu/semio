@@ -1,0 +1,45 @@
+---
+// Sidebar.astro - Main navigation sidebar using React Tree components
+---
+
+<div id="sidebar-root" class="h-full w-full bg-green-500 p-4 text-white">
+  Loading Custom Sidebar...
+</div>
+
+<script>
+  import React from "react";
+  import { createRoot } from "react-dom/client";
+
+  // Initialize immediately when script runs
+  const initSidebar = () => {
+    const container = document.getElementById('sidebar-root');
+    if (!container) {
+      console.error('Sidebar container not found');
+      return;
+    }
+
+    console.log('Initializing Sidebar component');
+
+    // Simple test component
+    const TestSidebar = () => {
+      return React.createElement("div", {
+        className: "h-full w-full bg-green-500 p-4 text-white flex items-center justify-center"
+      }, "Custom Sidebar Loaded with React!");
+    };
+
+    const root = createRoot(container);
+    root.render(React.createElement(TestSidebar));
+  };
+
+  // Try multiple initialization strategies
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSidebar);
+  } else {
+    // DOM is already ready
+    initSidebar();
+  }
+
+  // Also try after a short delay as fallback
+  setTimeout(initSidebar, 100);
+</script>
+</script>

@@ -2,40 +2,188 @@
 @plugin "@tailwindcss/typography"; */
 
 /* Custom import with disabled preflight css reset */
-@layer theme, base, components, utilities;
-@import "tailwindcss/theme.css" layer(theme);
+/* @layer theme, base, components, utilities; */
+/* @import "tailwindcss/theme.css" layer(theme); */
 /* @import "tailwindcss/preflight.css" layer(base); */
-@import "tailwindcss/utilities.css" layer(utilities);
+/* @import "tailwindcss/utilities.css" layer(utilities); */
+/* @import "@semio/js/theme.css"; */
 
-@import "@semio/js/theme.css";
+@import "tailwindcss" source("../core");
+@import "@semio/js/globals.css";
+@import "@xyflow/react/dist/style.css";
 
-/* Dark mode colors. */
 :root {
-    --sl-color-accent-low: #001117;
-    --sl-color-accent: #34d1bf;
-    --sl-color-accent-high: #ff344f;
-    --sl-color-white: #f7f3e3;
-    --sl-color-gray-1: #e7e1d5;
-    --sl-color-gray-2: #cecbbd;
-    --sl-color-gray-3: #808b84;
-    --sl-color-gray-4: #69706a;
-    --sl-color-gray-5: #29383c;
-    --sl-color-gray-6: #142024;
-    --sl-color-black: #001117;
+  --sl-font: var(--font-sans);
+  --sl-font-mono: var(--font-mono);
+}
+
+:root[data-theme="dark"] {
+  --sl-color-accent-low: var(--color-dark);
+  --sl-color-accent: var(--color-secondary);
+  --sl-color-accent-high: var(--color-primary);
+  --sl-color-white: var(--color-light);
+  --sl-color-gray-1: var(--color-gray-800);
+  --sl-color-gray-2: var(--color-gray-700);
+  --sl-color-gray-3: var(--color-gray);
+  --sl-color-gray-4: var(--color-gray-400);
+  --sl-color-gray-5: var(--color-gray-200);
+  --sl-color-gray-6: var(--color-gray-100);
+  --sl-color-black: var(--color-dark);
 }
 
 /* Light mode colors. */
-:root[data-theme='light'] {
-    --sl-color-accent-low: #c7d6ff;
-    --sl-color-accent: #ff344f;
-    --sl-color-accent-high: #182775;
-    --sl-color-white: #001117;
-    --sl-color-gray-1: #142024;
-    --sl-color-gray-2: #29383c;
-    --sl-color-gray-3: #69706a;
-    --sl-color-gray-4: #808b84;
-    --sl-color-gray-5: #cecbbd;
-    --sl-color-gray-6: #e7e1d5;
-    --sl-color-gray-7: #f7f3e3;
-    --sl-color-black: #f7f3e3;
+:root[data-theme="light"] {
+  --sl-color-accent-low: var(--color-info);
+  --sl-color-accent: var(--color-primary);
+  --sl-color-accent-high: var(--color-dark-6-7);
+  --sl-color-white: var(--color-dark);
+  --sl-color-gray-1: var(--color-gray-100);
+  --sl-color-gray-2: var(--color-gray-200);
+  --sl-color-gray-3: var(--color-gray-400);
+  --sl-color-gray-4: var(--color-gray);
+  --sl-color-gray-5: var(--color-gray-700);
+  --sl-color-gray-6: var(--color-gray-800);
+  --sl-color-gray-7: var(--color-light);
+  --sl-color-black: var(--color-light);
+}
+
+/* Fix header padding and title font size */
+.header {
+  padding-inline: calc(var(--spacing) * 2) !important; /* Single padding instead of double */
+  padding-top: 0% !important;
+  padding-bottom: 0% !important;
+  height: calc(var(--spacing) * 12) !important;
+  border-bottom-style: var(--tw-border-style) !important;
+  border-bottom-width: 1px !important;
+}
+
+/* Fix title font size */
+.header .title-wrapper span,
+.header .site-title {
+  font-size: var(--text-sm) !important;
+}
+
+/* Style search bar like toggles */
+.search input[type="search"],
+.search-input,
+[data-pagefind-ui] input[type="search"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: hsl(var(--foreground)) !important;
+  background: transparent !important;
+  border: 1px solid hsl(var(--accent)) !important;
+  height: 2.25rem !important;
+  padding: 0 0.5rem !important;
+  min-width: 8rem !important;
+  transition: color 0.2s, box-shadow 0.2s !important;
+  border-radius: 0 !important;
+}
+
+.search input[type="search"]:hover,
+.search-input:hover,
+[data-pagefind-ui] input[type="search"]:hover {
+  background: hsl(var(--accent)) !important;
+  color: hsl(var(--accent-foreground)) !important;
+}
+
+.search input[type="search"]:focus,
+.search-input:focus,
+[data-pagefind-ui] input[type="search"]:focus {
+  outline: none !important;
+  border-color: hsl(var(--ring)) !important;
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.5) !important;
+}
+
+/* Style social icons like toggles */
+.social-icons a,
+.social-links a {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: hsl(var(--foreground)) !important;
+  background: transparent !important;
+  border: 1px solid hsl(var(--accent)) !important;
+  height: 2.25rem !important;
+  padding: 0 0.5rem !important;
+  min-width: 2.25rem !important;
+  text-decoration: none !important;
+  transition: color 0.2s, box-shadow 0.2s !important;
+  border-radius: 0 !important;
+}
+
+.social-icons a:hover,
+.social-links a:hover {
+  background: hsl(var(--accent)) !important;
+  color: hsl(var(--accent-foreground)) !important;
+}
+
+.social-icons a:focus-visible,
+.social-links a:focus-visible {
+  outline: none !important;
+  border-color: hsl(var(--ring)) !important;
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.5) !important;
+}
+
+/* Style social icon SVGs */
+.social-icons svg,
+.social-links svg {
+  width: 1rem !important;
+  height: 1rem !important;
+  flex-shrink: 0 !important;
+}
+
+/* Ensure React components in header are styled properly */
+#theme-select-root,
+#language-select-root,
+#search-root,
+#social-icons-root {
+  display: contents;
+}
+
+/* Remove border-bottom from Combobox in language selector */
+#language-select-root .combobox-container {
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+}
+
+/* Ensure proper spacing in header for React components */
+.header #theme-select-root,
+.header #language-select-root,
+.header #search-root,
+.header #social-icons-root {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Style custom sidebar and page sidebar components */
+#sidebar-root,
+#page-sidebar-root {
+  height: 100%;
+  width: 100%;
+}
+
+/* Hide default starlight components only when custom ones are present */
+body:has(#sidebar-root) .sidebar-content,
+body:has(#sidebar-root) [data-has-sidebar] .sidebar {
+  display: none !important;
+}
+
+body:has(#search-root) .search-widget,
+body:has(#search-root) [data-pagefind-ui] {
+  display: none !important;
+}
+
+body:has(#social-icons-root) .social-icons-list,
+body:has(#social-icons-root) .social-links {
+  display: none !important;
+}
+
+body:has(#page-sidebar-root) .right-sidebar,
+body:has(#page-sidebar-root) [data-has-toc] .toc {
+  display: none !important;
 }
