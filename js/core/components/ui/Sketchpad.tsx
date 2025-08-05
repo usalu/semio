@@ -19,10 +19,11 @@
 
 // #endregion
 import { TooltipProvider } from "@semio/js/components/ui/Tooltip";
-import { createContext, FC, ReactNode, useContext, useEffect, useState } from "react";
-import DesignEditor from "./DesignEditor";
+import { createContext, FC, ReactNode, useContext, useEffect, useReducer, useState } from "react";
+import DesignEditor, { createInitialDesignEditorState, DesignEditorDispatcher, designEditorReducer, DesignEditorState } from "./DesignEditor";
 
 import { default as Metabolism } from "@semio/assets/semio/kit_metabolism.json";
+import { Kit } from "@semio/js";
 import { extractFilesAndCreateUrls } from "../../lib/utils";
 
 export enum Mode {
@@ -48,6 +49,8 @@ interface SketchpadContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
   setNavbarToolbar: (toolbar: ReactNode) => void;
+  designEditorState: DesignEditorState | null;
+  designEditorDispatch: DesignEditorDispatcher | null;
 }
 
 const SketchpadContext = createContext<SketchpadContextType | null>(null);
@@ -63,12 +66,18 @@ export const useSketchpad = () => {
 interface ViewProps {}
 
 const View = () => {
+  const { designEditorState, designEditorDispatch } = useSketchpad();
   const [fileUrls, setFileUrls] = useState<Map<string, string>>(new Map());
-  extractFilesAndCreateUrls("metabolism.zip").then((urls) => {
-    setFileUrls(urls);
-  });
-  if (fileUrls.size === 0) return <div>Loading...</div>;
-  return <DesignEditor initialKit={Metabolism} designId={{ name: "Nakagin Capsule Tower" }} fileUrls={fileUrls} />;
+
+  useEffect(() => {
+    extractFilesAndCreateUrls("metabolism.zip").then((urls) => {
+      setFileUrls(urls);
+    });
+  }, []);
+
+  if (fileUrls.size === 0 || !designEditorState || !designEditorDispatch) return <div>Loading...</div>;
+
+  return <DesignEditor designId={{ name: "Nakagin Capsule Tower" }} fileUrls={fileUrls} state={designEditorState} dispatch={designEditorDispatch} onToolbarChange={() => {}} />;
 };
 
 interface SketchpadProps {
@@ -94,6 +103,15 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
     }
     return Theme.LIGHT;
   });
+
+  // Initialize DesignEditor state
+  const [designEditorState, designEditorDispatch] = useReducer(designEditorReducer, null, () =>
+    createInitialDesignEditorState({
+      initialKit: Metabolism as unknown as Kit,
+      designId: { name: "Nakagin Capsule Tower" },
+      fileUrls: new Map(),
+    }),
+  );
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -121,6 +139,8 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
           theme: currentTheme,
           setTheme: setCurrentTheme,
           setNavbarToolbar: setNavbarToolbar,
+          designEditorState: designEditorState,
+          designEditorDispatch: designEditorDispatch,
         }}
       >
         <div key={`layout-${currentLayout}`} className="h-full w-full flex flex-col bg-background text-foreground">
