@@ -1333,8 +1333,8 @@ interface DesignEditorProps extends ControlledDesignEditorProps, UncontrolledDes
     maximize: () => void;
     close: () => void;
   };
-  state?: DesignEditorState;
-  dispatch?: (action: { type: DesignEditorAction; payload: any }) => void;
+  state: DesignEditorState | null;
+  dispatch: DesignEditorDispatcher | null;
 }
 
 const DesignEditorCore: FC<DesignEditorProps> = (props) => {

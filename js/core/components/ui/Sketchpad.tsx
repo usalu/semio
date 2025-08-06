@@ -28,16 +28,23 @@ import { extractFilesAndCreateUrls } from "../../lib/utils";
 
 // Higher-level Sketchpad state management
 interface SketchpadState {
+  isLoading: boolean;
+  fileUrls: Map<string, string>;
   designEditorStates: DesignEditorState[];
   activeDesign: number; // index of the active design
 }
 
 enum SketchpadAction {
+  UrlsLoaded = "URLS_LOADED",
   ChangeActiveDesign = "CHANGE_ACTIVE_DESIGN",
   UpdateActiveDesignEditorState = "UPDATE_ACTIVE_DESIGN_EDITOR_STATE",
 }
 
 type SketchpadActionType =
+  | {
+      type: SketchpadAction.UrlsLoaded;
+      payload: { fileUrls: Map<string, string> };
+    }
   | {
       type: SketchpadAction.ChangeActiveDesign;
       payload: DesignId;
@@ -49,6 +56,27 @@ type SketchpadActionType =
 
 const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): SketchpadState => {
   switch (action.type) {
+    case SketchpadAction.UrlsLoaded:
+      const kit = Metabolism as unknown as Kit;
+      const designEditorStates =
+        kit.designs?.map((design) =>
+          createInitialDesignEditorState({
+            initialKit: kit,
+            designId: {
+              name: design.name,
+              variant: design.variant || undefined,
+              view: design.view || undefined,
+            },
+            fileUrls: action.payload.fileUrls,
+          }),
+        ) || [];
+
+      return {
+        ...state,
+        isLoading: false,
+        fileUrls: action.payload.fileUrls,
+        designEditorStates,
+      };
     case SketchpadAction.ChangeActiveDesign:
       // Find the index of the design with the matching designId
       const designIndex = state.designEditorStates.findIndex((designState) => designState.designId.name === action.payload.name && designState.designId.variant === action.payload.variant && designState.designId.view === action.payload.view);
@@ -73,23 +101,10 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
 };
 
 const createInitialSketchpadState = (): SketchpadState => {
-  const kit = Metabolism as unknown as Kit;
-
-  const designEditorStates =
-    kit.designs?.map((design) =>
-      createInitialDesignEditorState({
-        initialKit: kit,
-        designId: {
-          name: design.name,
-          variant: design.variant || undefined,
-          view: design.view || undefined,
-        },
-        fileUrls: new Map(),
-      }),
-    ) || [];
-
   return {
-    designEditorStates,
+    isLoading: true,
+    fileUrls: new Map(),
+    designEditorStates: [],
     activeDesign: 0,
   };
 };
@@ -137,17 +152,7 @@ interface ViewProps {}
 
 const View = () => {
   const { designEditorState, designEditorDispatch, sketchpadDispatch, sketchpadState } = useSketchpad();
-  const [fileUrls, setFileUrls] = useState<Map<string, string>>(new Map());
 
-  useEffect(() => {
-    extractFilesAndCreateUrls("metabolism.zip").then((urls) => {
-      setFileUrls(urls);
-    });
-  }, []);
-
-  if (fileUrls.size === 0 || !designEditorState || !designEditorDispatch) return <div>Loading...</div>;
-
-  // Create callback to change active design using sketchpad dispatcher
   const onDesignIdChange = (newDesignId: DesignId) => {
     sketchpadDispatch({
       type: SketchpadAction.ChangeActiveDesign,
@@ -155,10 +160,19 @@ const View = () => {
     });
   };
 
-  // Extract available design IDs from sketchpad state
   const availableDesigns = sketchpadState.designEditorStates.map((state) => state.designId);
 
-  return <DesignEditor designId={designEditorState.designId} fileUrls={fileUrls} state={designEditorState} dispatch={designEditorDispatch} onDesignIdChange={onDesignIdChange} availableDesigns={availableDesigns} onToolbarChange={() => {}} />;
+  return (
+    <DesignEditor
+      designId={designEditorState!.designId}
+      fileUrls={designEditorState!.fileUrls}
+      state={designEditorState}
+      dispatch={designEditorDispatch}
+      onDesignIdChange={onDesignIdChange}
+      availableDesigns={availableDesigns}
+      onToolbarChange={() => {}}
+    />
+  );
 };
 
 interface SketchpadProps {
@@ -187,11 +201,16 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
 
   const [sketchpadState, sketchpadDispatch] = useReducer(sketchpadReducer, createInitialSketchpadState());
 
-  // Get the active design editor state
+  useEffect(() => {
+    extractFilesAndCreateUrls("metabolism.zip").then((urls) => {
+      sketchpadDispatch({
+        type: SketchpadAction.UrlsLoaded,
+        payload: { fileUrls: urls },
+      });
+    });
+  }, []);
   const activeDesignEditorState = sketchpadState.designEditorStates[sketchpadState.activeDesign];
 
-  // Create a dispatch function that operates on the active design editor state
-  // and updates the sketchpad state
   const designEditorDispatch: DesignEditorDispatcher = (action) => {
     const newState = designEditorReducer(activeDesignEditorState, action);
     sketchpadDispatch({
@@ -214,6 +233,10 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
       root.classList.add(Layout.TOUCH);
     }
   }, [currentLayout]);
+
+  if (sketchpadState.isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <TooltipProvider>
