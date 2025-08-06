@@ -166,8 +166,8 @@ const View = () => {
     <DesignEditor
       designId={designEditorState!.designId}
       fileUrls={designEditorState!.fileUrls}
-      state={designEditorState}
-      dispatch={designEditorDispatch}
+      externalState={designEditorState}
+      externalDispatch={designEditorDispatch}
       onDesignIdChange={onDesignIdChange}
       availableDesigns={availableDesigns}
       onToolbarChange={() => {}}
