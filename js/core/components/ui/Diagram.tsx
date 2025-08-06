@@ -76,6 +76,7 @@ import {
 import "@semio/js/globals.css";
 import "@xyflow/react/dist/style.css";
 import { DesignEditorSelection, Presence, useDesignEditor } from "./DesignEditor";
+import { useSketchpad } from "./Sketchpad";
 
 //#region ClusterMenu
 
@@ -570,7 +571,6 @@ const Diagram: FC = () => {
     fullscreenPanel,
     others,
     setDesign,
-    addDesign,
     deselectAll,
     selectPiece,
     addPieceToSelection,
@@ -586,6 +586,9 @@ const Diagram: FC = () => {
     setConnections,
     setPieces,
   } = useDesignEditor();
+
+  const { addDesign } = useSketchpad();
+
   if (!originalKit) return null;
   const design = applyDesignDiff(findDesignInKit(originalKit, designId), designDiff, true);
 

@@ -23,7 +23,7 @@ import { createContext, FC, ReactNode, useContext, useEffect, useReducer, useSta
 import DesignEditor, { createInitialDesignEditorState, DesignEditorDispatcher, designEditorReducer, DesignEditorState } from "./DesignEditor";
 
 import { default as Metabolism } from "@semio/assets/semio/kit_metabolism.json";
-import { DesignId, Kit } from "@semio/js";
+import { addDesignToKit, Design, DesignId, Kit } from "@semio/js";
 import { extractFilesAndCreateUrls } from "../../lib/utils";
 
 // Higher-level Sketchpad state management
@@ -39,6 +39,7 @@ enum SketchpadAction {
   UrlsLoaded = "URLS_LOADED",
   ChangeActiveDesign = "CHANGE_ACTIVE_DESIGN",
   UpdateActiveDesignEditorState = "UPDATE_ACTIVE_DESIGN_EDITOR_STATE",
+  AddDesign = "ADD_DESIGN",
 }
 
 type SketchpadActionType =
@@ -53,6 +54,10 @@ type SketchpadActionType =
   | {
       type: SketchpadAction.UpdateActiveDesignEditorState;
       payload: DesignEditorState;
+    }
+  | {
+      type: SketchpadAction.AddDesign;
+      payload: Design;
     };
 
 const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): SketchpadState => {
@@ -108,6 +113,39 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
       };
       break;
 
+    case SketchpadAction.AddDesign:
+      if (!state.kit) {
+        console.error("Cannot add design: kit is null");
+        newState = state;
+        break;
+      }
+      const newDesign = action.payload;
+      const updatedKit = addDesignToKit(state.kit, newDesign);
+
+      // Update all existing DesignEditorStates to use the new kit
+      const syncedDesignEditorStates = state.designEditorStates.map((designState) => ({
+        ...designState,
+        kit: updatedKit,
+      }));
+
+      // Create a new DesignEditorState for the newly added design
+      const newDesignEditorState = createInitialDesignEditorState({
+        initialKit: updatedKit,
+        designId: {
+          name: newDesign.name,
+          variant: newDesign.variant || undefined,
+          view: newDesign.view || undefined,
+        },
+        fileUrls: state.fileUrls,
+      });
+
+      newState = {
+        ...state,
+        kit: updatedKit,
+        designEditorStates: [...syncedDesignEditorStates, newDesignEditorState],
+      };
+      break;
+
     default:
       newState = state;
       break;
@@ -155,6 +193,7 @@ interface SketchpadContextType {
   kit: Kit | null;
   designEditorState: DesignEditorState | null;
   designEditorDispatch: DesignEditorDispatcher | null;
+  addDesign: (design: Design) => void;
 }
 
 const SketchpadContext = createContext<SketchpadContextType | null>(null);
@@ -241,6 +280,13 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
     });
   };
 
+  const addDesign = (design: Design) => {
+    sketchpadDispatch({
+      type: SketchpadAction.AddDesign,
+      payload: design,
+    });
+  };
+
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove(Theme.DARK);
@@ -276,6 +322,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
           kit: sketchpadState.kit,
           designEditorState: activeDesignEditorState,
           designEditorDispatch: designEditorDispatch,
+          addDesign: addDesign,
         }}
       >
         <div key={`layout-${currentLayout}`} className="h-full w-full flex flex-col bg-background text-foreground">

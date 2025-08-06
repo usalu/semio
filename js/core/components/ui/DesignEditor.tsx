@@ -49,7 +49,6 @@ import {
   addConnectionToDesignDiff,
   addConnectionsToDesign,
   addConnectionsToDesignDiff,
-  addDesignToKit,
   addPieceToDesignDiff,
   addPiecesToDesign,
   addPiecesToDesignDiff,
@@ -552,7 +551,6 @@ export const useDesignEditor = () => {
   const { state, kit, dispatch } = context;
 
   const setDesign = useCallback((d: Design) => dispatch({ type: DesignEditorAction.SetDesign, payload: d }), [dispatch]);
-  const addDesign = useCallback((d: Design) => dispatch({ type: DesignEditorAction.AddDesign, payload: d }), [dispatch]);
   const addPiece = useCallback((p: Piece) => dispatch({ type: DesignEditorAction.AddPiece, payload: p }), [dispatch]);
   const setPiece = useCallback((p: Piece) => dispatch({ type: DesignEditorAction.SetPiece, payload: p }), [dispatch]);
   const removePiece = useCallback((p: Piece) => dispatch({ type: DesignEditorAction.RemovePiece, payload: p }), [dispatch]);
@@ -736,7 +734,6 @@ export const useDesignEditor = () => {
     canUndo: canUndo(state),
     canRedo: canRedo(state),
     setDesign,
-    addDesign,
     addPiece,
     setPiece,
     removePiece,
@@ -875,9 +872,6 @@ const designEditorReducer = (state: DesignEditorState, action: { type: DesignEdi
         return updateDesignInDesignEditorState(action.payload);
       }
       return updateDesignInDesignEditorStateWithOperationStack(action.payload);
-    case DesignEditorAction.AddDesign:
-      const updatedKit = addDesignToKit(state.kit, action.payload);
-      return { ...state, kit: updatedKit };
     case DesignEditorAction.AddPiece:
       if (state.isTransactionActive) {
         const updatedDesignDiff = addPieceToDesignDiff(state.designDiff, action.payload);
