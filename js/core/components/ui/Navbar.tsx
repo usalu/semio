@@ -21,6 +21,7 @@
 import { DesignId, Layout, Mode, Theme } from "@semio/js";
 import { Avatar, AvatarFallback, AvatarImage } from "@semio/js/components/ui/Avatar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@semio/js/components/ui/Breadcrumb";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@semio/js/components/ui/Select";
 import { Toggle } from "@semio/js/components/ui/Toggle";
 import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle";
 import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGroup";
@@ -36,7 +37,7 @@ interface NavbarProps {
   setTheme?: (theme: Theme) => void;
   designId: DesignId;
   onDesignIdChange?: (designId: DesignId) => void;
-  availableDesigns: DesignId[];
+  availableDesigns?: DesignId[];
   onWindowEvents?: {
     minimize: () => void;
     maximize: () => void;
@@ -45,6 +46,14 @@ interface NavbarProps {
 }
 
 const Navbar: FC<NavbarProps> = ({ mode, toolbarContent, layout, theme, setLayout, setTheme, onWindowEvents, designId, onDesignIdChange, availableDesigns }) => {
+  // Handle design selection
+  const handleDesignChange = (designName: string) => {
+    const selectedDesign = availableDesigns?.find((design) => design.name === designName);
+    if (selectedDesign && onDesignIdChange) {
+      onDesignIdChange(selectedDesign);
+    }
+  };
+
   return (
     <div className={`w-full h-12 bg-background border-b flex items-center justify-between px-4`}>
       <div className="flex items-center">
@@ -85,7 +94,18 @@ const Navbar: FC<NavbarProps> = ({ mode, toolbarContent, layout, theme, setLayou
               onNavigate={(href) => console.log("Navigate to:", href)}
             />
             <BreadcrumbItem>
-              <BreadcrumbLink href="/designs/nakagin">{designId.name}</BreadcrumbLink>
+              <Select value={designId.name} onValueChange={handleDesignChange}>
+                <SelectTrigger className="border-none bg-transparent hover:bg-accent/50 px-2 py-1 text-sm font-medium">
+                  <SelectValue>{designId.name}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {availableDesigns?.map((design) => (
+                    <SelectItem key={design.name} value={design.name}>
+                      {design.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
