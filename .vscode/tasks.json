@@ -6,11 +6,6 @@
       "type": "shell",
       "command": "npx nx run-many -t dev",
       "isBackground": true,
-      "presentation": {
-        "reveal": "silent",
-        "panel": "dedicated",
-        "close": true
-      },
       "problemMatcher": {
         "owner": "custom",
         "pattern": [
@@ -37,11 +32,6 @@
       "type": "shell",
       "command": "npx nx dev @semio/engine",
       "isBackground": true,
-      "presentation": {
-        "reveal": "silent",
-        "panel": "dedicated",
-        "close": true
-      },
       "problemMatcher": {
         "owner": "custom",
         "pattern": [
@@ -68,11 +58,6 @@
       "type": "shell",
       "isBackground": true,
       "command": "npx nx dev @semio/js",
-      "presentation": {
-        "reveal": "silent",
-        "panel": "dedicated",
-        "close": true
-      },
       "problemMatcher": {
         "owner": "custom",
         "pattern": [
@@ -99,11 +84,6 @@
       "type": "shell",
       "isBackground": true,
       "command": "npx nx dev @semio/play",
-      "presentation": {
-        "reveal": "silent",
-        "panel": "dedicated",
-        "close": true
-      },
       "problemMatcher": {
         "owner": "custom",
         "pattern": [
@@ -130,11 +110,6 @@
       "type": "shell",
       "isBackground": true,
       "command": "npx nx dev @semio/docs",
-      "presentation": {
-        "reveal": "silent",
-        "panel": "dedicated",
-        "close": true
-      },
       "problemMatcher": {
         "owner": "custom",
         "pattern": [
@@ -177,7 +152,6 @@
         }
       },
       "presentation": {
-        "reveal": "silent",
         "panel": "new",
         "close": true
       },
