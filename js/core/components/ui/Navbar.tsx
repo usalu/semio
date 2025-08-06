@@ -36,6 +36,7 @@ interface NavbarProps {
   setTheme?: (theme: Theme) => void;
   designId: DesignId;
   onDesignIdChange?: (designId: DesignId) => void;
+  availableDesigns: DesignId[];
   onWindowEvents?: {
     minimize: () => void;
     maximize: () => void;
@@ -43,7 +44,7 @@ interface NavbarProps {
   };
 }
 
-const Navbar: FC<NavbarProps> = ({ mode, toolbarContent, layout, theme, setLayout, setTheme, onWindowEvents, designId, onDesignIdChange }) => {
+const Navbar: FC<NavbarProps> = ({ mode, toolbarContent, layout, theme, setLayout, setTheme, onWindowEvents, designId, onDesignIdChange, availableDesigns }) => {
   return (
     <div className={`w-full h-12 bg-background border-b flex items-center justify-between px-4`}>
       <div className="flex items-center">

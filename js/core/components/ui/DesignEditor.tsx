@@ -1322,6 +1322,7 @@ interface DesignEditorProps extends ControlledDesignEditorProps, UncontrolledDes
   fileUrls: Map<string, string>;
   onToolbarChange: (toolbar: ReactNode) => void;
   onDesignIdChange?: (designId: DesignId) => void;
+  availableDesigns: DesignId[];
   mode?: Mode;
   layout?: Layout;
   theme?: Theme;
@@ -1337,7 +1338,7 @@ interface DesignEditorProps extends ControlledDesignEditorProps, UncontrolledDes
 }
 
 const DesignEditorCore: FC<DesignEditorProps> = (props) => {
-  const { onToolbarChange, designId, onUndo: controlledOnUndo, onRedo: controlledOnRedo, state: externalState, dispatch: externalDispatch } = props;
+  const { onToolbarChange, designId, onDesignIdChange, availableDesigns, onUndo: controlledOnUndo, onRedo: controlledOnRedo, state: externalState, dispatch: externalDispatch } = props;
 
   const [internalState, internalDispatch] = useControllableReducer(props);
 
@@ -1770,6 +1771,8 @@ const DesignEditor: FC<DesignEditorProps> = ({
   setTheme,
   onWindowEvents,
   designId,
+  onDesignIdChange,
+  availableDesigns,
   kit,
   selection,
   initialKit,
@@ -1780,7 +1783,6 @@ const DesignEditor: FC<DesignEditorProps> = ({
   onUndo,
   onRedo,
   onToolbarChange,
-  onDesignIdChange,
   state,
   dispatch,
 }) => {
@@ -1792,11 +1794,24 @@ const DesignEditor: FC<DesignEditorProps> = ({
 
   return (
     <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
-      <Navbar designId={designId} onDesignIdChange={onDesignIdChange} mode={mode} toolbarContent={toolbarContent} layout={layout} theme={theme} setLayout={setLayout} setTheme={setTheme} onWindowEvents={onWindowEvents} />
+      <Navbar
+        designId={designId}
+        onDesignIdChange={onDesignIdChange}
+        availableDesigns={availableDesigns}
+        mode={mode}
+        toolbarContent={toolbarContent}
+        layout={layout}
+        theme={theme}
+        setLayout={setLayout}
+        setTheme={setTheme}
+        onWindowEvents={onWindowEvents}
+      />
       <ReactFlowProvider>
         <DesignEditorCore
           kit={kit}
           designId={designId}
+          onDesignIdChange={onDesignIdChange}
+          availableDesigns={availableDesigns}
           fileUrls={fileUrls}
           selection={selection}
           initialKit={initialKit}

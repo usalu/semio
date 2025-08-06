@@ -136,7 +136,7 @@ export const useSketchpad = () => {
 interface ViewProps {}
 
 const View = () => {
-  const { designEditorState, designEditorDispatch, sketchpadDispatch } = useSketchpad();
+  const { designEditorState, designEditorDispatch, sketchpadDispatch, sketchpadState } = useSketchpad();
   const [fileUrls, setFileUrls] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
@@ -155,7 +155,10 @@ const View = () => {
     });
   };
 
-  return <DesignEditor designId={designEditorState.designId} fileUrls={fileUrls} state={designEditorState} dispatch={designEditorDispatch} onDesignIdChange={onDesignIdChange} onToolbarChange={() => {}} />;
+  // Extract available design IDs from sketchpad state
+  const availableDesigns = sketchpadState.designEditorStates.map((state) => state.designId);
+
+  return <DesignEditor designId={designEditorState.designId} fileUrls={fileUrls} state={designEditorState} dispatch={designEditorDispatch} onDesignIdChange={onDesignIdChange} availableDesigns={availableDesigns} onToolbarChange={() => {}} />;
 };
 
 interface SketchpadProps {
