@@ -10,9 +10,6 @@
 /* Set base all components */
 @layer base {
   :root {
-    cursor:
-      url("../../assets/cursors/cursor.svg") 2 2,
-      auto;
     --radius: 0rem;
     --radius-xs: 0rem;
     --radius-sm: 0rem;
@@ -100,6 +97,60 @@
     /* --sidebar-border: oklch(0.922 0 0); */
     /* --sidebar-ring: oklch(0.708 0 0); */
     /* --xy-background-color-default: var(--color-light) !important; */
+  }
+
+  * {
+    cursor:
+      url("../../assets/cursors/cursor.svg") 2 2,
+      default !important;
+  }
+
+  .cursor-pointer {
+    cursor:
+      url("../../assets/cursors/cursor_pointer.svg") 2 2,
+      pointer !important;
+  }
+  [style*="cursor: pointer"],
+  [style*="cursor:pointer"] {
+    cursor:
+      url("../../assets/cursors/cursor_pointer.svg") 2 2,
+      pointer !important;
+  }
+  .cursor-pointer,
+  [class*="cursor-pointer"] {
+    cursor:
+      url("../../assets/cursors/cursor_pointer.svg") 2 2,
+      pointer !important;
+  }
+  [class*="before:cursor-pointer"]::before,
+  [class*="after:cursor-pointer"]::after {
+    cursor:
+      url("../../assets/cursors/cursor_pointer.svg") 2 2,
+      pointer !important;
+  }
+
+  .cursor-ew-resize {
+    cursor:
+      url("../../assets/cursors/cursor_ew-resize.svg") 2 2,
+      ew-resize !important;
+  }
+  [style*="cursor: ew-resize"],
+  [style*="cursor:ew-resize"] {
+    cursor:
+      url("../../assets/cursors/cursor_ew-resize.svg") 16 2,
+      ew-resize !important;
+  }
+  .cursor-ew-resize,
+  [class*="cursor-ew-resize"] {
+    cursor:
+      url("../../assets/cursors/cursor_ew-resize.svg") 16 2,
+      ew-resize !important;
+  }
+  [class*="before:cursor-ew-resize"]::before,
+  [class*="after:cursor-ew-resize"]::after {
+    cursor:
+      url("../../assets/cursors/cursor_ew-resize.svg") 16 2,
+      ew-resize !important;
   }
 
   .dark {
