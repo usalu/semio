@@ -542,14 +542,14 @@ const resetDesignDiff = (): DesignDiff => ({
 
 //#endregion DesignDiff Helpers
 
-export const DesignEditorContext = createContext<{ state: DesignEditorState; dispatch: DesignEditorDispatcher } | undefined>(undefined);
+export const DesignEditorContext = createContext<{ state: DesignEditorState; kit: Kit; dispatch: DesignEditorDispatcher } | undefined>(undefined);
 
 export const useDesignEditor = () => {
   const context = useContext(DesignEditorContext);
   if (!context) {
     throw new Error("useDesignEditor must be used within a DesignEditorProvider");
   }
-  const { state, dispatch } = context;
+  const { state, kit, dispatch } = context;
 
   const setDesign = useCallback((d: Design) => dispatch({ type: DesignEditorAction.SetDesign, payload: d }), [dispatch]);
   const addDesign = useCallback((d: Design) => dispatch({ type: DesignEditorAction.AddDesign, payload: d }), [dispatch]);
@@ -783,7 +783,7 @@ export const useDesignEditor = () => {
     executeCommand: useCallback(
       async (commandId: string, payload: Record<string, any> = {}) => {
         const context: CommandContext = {
-          kit: state.kit,
+          kit: kit,
           designId: state.designId,
           selection: state.selection,
         };
@@ -832,7 +832,7 @@ export const useDesignEditor = () => {
           throw error;
         }
       },
-      [state.kit, state.designId, state.selection, state.isTransactionActive, startTransaction, setDesign, setSelection, setFullscreen, finalizeTransaction, abortTransaction],
+      [kit, state.designId, state.selection, state.isTransactionActive, startTransaction, setDesign, setSelection, setFullscreen, finalizeTransaction, abortTransaction],
     ),
 
     getAvailableCommands: useCallback(() => commandRegistry.getAll(), []),
@@ -1330,12 +1330,14 @@ interface DesignEditorProps extends ControlledDesignEditorProps, UncontrolledDes
 }
 
 const DesignEditorCore: FC<DesignEditorProps> = (props) => {
-  const { onToolbarChange, designId, onDesignIdChange, availableDesigns, onUndo: controlledOnUndo, onRedo: controlledOnRedo, externalState: externalState, externalDispatch: externalDispatch } = props;
+  const { kit: kitProp, onToolbarChange, designId, onDesignIdChange, availableDesigns, onUndo: controlledOnUndo, onRedo: controlledOnRedo, externalState: externalState, externalDispatch: externalDispatch } = props;
 
   const [state, dispatch] = useControllableReducer(props);
 
-  if (!state.kit) return null;
-  const design = findDesignInKit(state.kit, designId);
+  // Use kit prop if provided, otherwise fall back to state.kit
+  const kit = kitProp || state.kit;
+  if (!kit) return null;
+  const design = findDesignInKit(kit, designId);
   if (!design) return null;
 
   const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
@@ -1522,7 +1524,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
         return;
       }
 
-      const context = { kit: state.kit, designId, selection: state.selection };
+      const context = { kit: kit, designId, selection: state.selection };
 
       // Editor-only commands can always execute, even during transactions
       if (command.editorOnly) {
@@ -1581,7 +1583,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
 
     document.addEventListener("semio-command", handleCommand);
     return () => document.removeEventListener("semio-command", handleCommand);
-  }, [state.kit, designId, state.selection, state.isTransactionActive, dispatch]);
+  }, [kit, designId, state.selection, state.isTransactionActive, dispatch]);
 
   // Register hotkeys for all commands automatically from the command registry
   const allCommands = commandRegistry.getAll();
@@ -1637,7 +1639,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
     if (id.startsWith("type-")) {
       const [_, name, variant] = id.split("-");
       const normalizeVariant = (v: string | undefined | null) => v ?? "";
-      const type = state.kit?.types?.find((t: Type) => t.name === name && normalizeVariant(t.variant) === normalizeVariant(variant));
+      const type = kit?.types?.find((t: Type) => t.name === name && normalizeVariant(t.variant) === normalizeVariant(variant));
       setActiveDraggedType(type || null);
     } else if (id.startsWith("design-")) {
       const [_, name, variant, view] = id.split("-");
@@ -1646,7 +1648,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
         variant: variant || undefined,
         view: view || undefined,
       };
-      const draggedDesign = findDesignInKit(state.kit, draggedDesignId);
+      const draggedDesign = findDesignInKit(kit, draggedDesignId);
       setActiveDraggedDesign(draggedDesign || null);
     }
   };
@@ -1712,7 +1714,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   const rightPanelVisible = visiblePanels.details || visiblePanels.chat;
 
   return (
-    <DesignEditorContext.Provider value={{ state, dispatch }}>
+    <DesignEditorContext.Provider value={{ state, kit, dispatch }}>
       <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
         <div className="canvas flex-1 relative">
           <div id="sketchpad-edgeless" className="h-full">

@@ -30,6 +30,7 @@ import { extractFilesAndCreateUrls } from "../../lib/utils";
 interface SketchpadState {
   isLoading: boolean;
   fileUrls: Map<string, string>;
+  kit: Kit | null;
   designEditorStates: DesignEditorState[];
   activeDesign: number; // index of the active design
 }
@@ -79,6 +80,7 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
         ...state,
         isLoading: false,
         fileUrls: action.payload.fileUrls,
+        kit,
         designEditorStates,
       };
       break;
@@ -119,6 +121,7 @@ const createInitialSketchpadState = (): SketchpadState => {
   return {
     isLoading: true,
     fileUrls: new Map(),
+    kit: null,
     designEditorStates: [],
     activeDesign: 0,
   };
@@ -149,6 +152,7 @@ interface SketchpadContextType {
   setNavbarToolbar: (toolbar: ReactNode) => void;
   sketchpadState: SketchpadState;
   sketchpadDispatch: (action: SketchpadActionType) => void;
+  kit: Kit | null;
   designEditorState: DesignEditorState | null;
   designEditorDispatch: DesignEditorDispatcher | null;
 }
@@ -166,7 +170,7 @@ export const useSketchpad = () => {
 interface ViewProps {}
 
 const View = () => {
-  const { designEditorState, designEditorDispatch, sketchpadDispatch, sketchpadState } = useSketchpad();
+  const { kit, designEditorState, designEditorDispatch, sketchpadDispatch, sketchpadState } = useSketchpad();
 
   const onDesignIdChange = (newDesignId: DesignId) => {
     sketchpadDispatch({
@@ -177,10 +181,13 @@ const View = () => {
 
   const availableDesigns = sketchpadState.designEditorStates.map((state) => state.designId);
 
+  if (!kit || !designEditorState) return null;
+
   return (
     <DesignEditor
-      designId={designEditorState!.designId}
-      fileUrls={designEditorState!.fileUrls}
+      kit={kit}
+      designId={designEditorState.designId}
+      fileUrls={designEditorState.fileUrls}
       externalState={designEditorState}
       externalDispatch={designEditorDispatch}
       onDesignIdChange={onDesignIdChange}
@@ -266,6 +273,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
           setNavbarToolbar: setNavbarToolbar,
           sketchpadState: sketchpadState,
           sketchpadDispatch: sketchpadDispatch,
+          kit: sketchpadState.kit,
           designEditorState: activeDesignEditorState,
           designEditorDispatch: designEditorDispatch,
         }}
