@@ -46,13 +46,49 @@ interface NavbarProps {
 }
 
 const Navbar: FC<NavbarProps> = ({ mode, toolbarContent, layout, theme, setLayout, setTheme, onWindowEvents, designId, onDesignIdChange, availableDesigns }) => {
-  // Handle design selection
-  const handleDesignChange = (designName: string) => {
-    const selectedDesign = availableDesigns?.find((design) => design.name === designName);
-    if (selectedDesign && onDesignIdChange) {
+  // Create a unique key for each design
+  const getDesignKey = (design: DesignId): string => {
+    const parts = [design.name];
+    if (design.variant && design.variant !== "default") parts.push(design.variant);
+    if (design.view && design.view !== "default") parts.push(design.view);
+    return parts.join("|"); // Use | as separator to avoid conflicts
+  };
+
+  // Create display text for each design
+  const getDesignDisplayText = (design: DesignId): string => {
+    if (!availableDesigns) return design.name;
+
+    // Check if there are multiple designs with the same name
+    const sameNameDesigns = availableDesigns.filter((d) => d.name === design.name);
+
+    if (sameNameDesigns.length === 1) {
+      // Only one design with this name, show just the name
+      return design.name;
+    } else {
+      // Multiple designs with same name, include variant/view for disambiguation
+      const parts = [design.name];
+      if (design.variant && design.variant !== "default") {
+        parts.push(design.variant);
+      }
+      if (design.view && design.view !== "default") {
+        parts.push(design.view);
+      }
+      return parts.join(" - ");
+    }
+  };
+
+  // Handle design selection using the compound key
+  const handleDesignChange = (designKey: string) => {
+    if (!availableDesigns || !onDesignIdChange) return;
+
+    const selectedDesign = availableDesigns.find((design) => getDesignKey(design) === designKey);
+    if (selectedDesign) {
       onDesignIdChange(selectedDesign);
     }
   };
+
+  // Get current design key for the selected value
+  const currentDesignKey = getDesignKey(designId);
 
   return (
     <div className={`w-full h-12 bg-background border-b flex items-center justify-between px-4`}>
@@ -94,14 +130,14 @@ const Navbar: FC<NavbarProps> = ({ mode, toolbarContent, layout, theme, setLayou
               onNavigate={(href) => console.log("Navigate to:", href)}
             />
             <BreadcrumbItem>
-              <Select value={designId.name} onValueChange={handleDesignChange}>
+              <Select value={currentDesignKey} onValueChange={handleDesignChange}>
                 <SelectTrigger className="border-none bg-transparent hover:bg-accent/50 px-2 py-1 text-sm font-medium">
-                  <SelectValue>{designId.name}</SelectValue>
+                  <SelectValue>{getDesignDisplayText(designId)}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {availableDesigns?.map((design) => (
-                    <SelectItem key={design.name} value={design.name}>
-                      {design.name}
+                  {availableDesigns?.map((design, index) => (
+                    <SelectItem key={`${getDesignKey(design)}-${index}`} value={getDesignKey(design)}>
+                      {getDesignDisplayText(design)}
                     </SelectItem>
                   ))}
                 </SelectContent>

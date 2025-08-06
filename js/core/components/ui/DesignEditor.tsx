@@ -1235,7 +1235,7 @@ export function createInitialDesignEditorState(props: { initialKit: Kit; designI
 function useControllableReducer(props: DesignEditorProps) {
   const { kit: controlledKit, selection: controlledSelection, externalState, externalDispatch, initialKit, initialSelection, onDesignChange, onSelectionChange, onUndo, onRedo, designId, fileUrls } = props;
 
-  if (externalState) {
+  if (externalState && externalDispatch) {
     return [externalState, externalDispatch] as const;
   }
 

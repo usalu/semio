@@ -55,6 +55,10 @@ type SketchpadActionType =
     };
 
 const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): SketchpadState => {
+  console.log("SKETCHPAD ACTION:", action.type, action.payload);
+
+  let newState: SketchpadState;
+
   switch (action.type) {
     case SketchpadAction.UrlsLoaded:
       const kit = Metabolism as unknown as Kit;
@@ -71,33 +75,44 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
           }),
         ) || [];
 
-      return {
+      newState = {
         ...state,
         isLoading: false,
         fileUrls: action.payload.fileUrls,
         designEditorStates,
       };
+      break;
+
     case SketchpadAction.ChangeActiveDesign:
       // Find the index of the design with the matching designId
       const designIndex = state.designEditorStates.findIndex((designState) => designState.designId.name === action.payload.name && designState.designId.variant === action.payload.variant && designState.designId.view === action.payload.view);
 
       if (designIndex !== -1) {
-        return {
+        newState = {
           ...state,
           activeDesign: designIndex,
         };
+      } else {
+        newState = state;
       }
-      return state;
+      break;
+
     case SketchpadAction.UpdateActiveDesignEditorState:
       const updatedStates = [...state.designEditorStates];
       updatedStates[state.activeDesign] = action.payload;
-      return {
+      newState = {
         ...state,
         designEditorStates: updatedStates,
       };
+      break;
+
     default:
-      return state;
+      newState = state;
+      break;
   }
+
+  console.log("SKETCHPAD NEW STATE:", newState);
+  return newState;
 };
 
 const createInitialSketchpadState = (): SketchpadState => {
