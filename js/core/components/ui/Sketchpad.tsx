@@ -73,14 +73,23 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
 };
 
 const createInitialSketchpadState = (): SketchpadState => {
-  const initialDesignEditorState = createInitialDesignEditorState({
-    initialKit: Metabolism as unknown as Kit,
-    designId: { name: "Nakagin Capsule Tower" },
-    fileUrls: new Map(),
-  });
+  const kit = Metabolism as unknown as Kit;
+
+  const designEditorStates =
+    kit.designs?.map((design) =>
+      createInitialDesignEditorState({
+        initialKit: kit,
+        designId: {
+          name: design.name,
+          variant: design.variant || undefined,
+          view: design.view || undefined,
+        },
+        fileUrls: new Map(),
+      }),
+    ) || [];
 
   return {
-    designEditorStates: [initialDesignEditorState],
+    designEditorStates,
     activeDesign: 0,
   };
 };
@@ -127,7 +136,7 @@ export const useSketchpad = () => {
 interface ViewProps {}
 
 const View = () => {
-  const { designEditorState, designEditorDispatch } = useSketchpad();
+  const { designEditorState, designEditorDispatch, sketchpadDispatch } = useSketchpad();
   const [fileUrls, setFileUrls] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
@@ -138,7 +147,7 @@ const View = () => {
 
   if (fileUrls.size === 0 || !designEditorState || !designEditorDispatch) return <div>Loading...</div>;
 
-  return <DesignEditor designId={{ name: "Nakagin Capsule Tower" }} fileUrls={fileUrls} state={designEditorState} dispatch={designEditorDispatch} onToolbarChange={() => {}} />;
+  return <DesignEditor designId={designEditorState.designId} fileUrls={fileUrls} state={designEditorState} dispatch={designEditorDispatch} onToolbarChange={() => {}} />;
 };
 
 interface SketchpadProps {
