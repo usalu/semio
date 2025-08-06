@@ -1321,6 +1321,7 @@ interface DesignEditorProps extends ControlledDesignEditorProps, UncontrolledDes
   designId: DesignId;
   fileUrls: Map<string, string>;
   onToolbarChange: (toolbar: ReactNode) => void;
+  onDesignIdChange?: (designId: DesignId) => void;
   mode?: Mode;
   layout?: Layout;
   theme?: Theme;
@@ -1779,6 +1780,7 @@ const DesignEditor: FC<DesignEditorProps> = ({
   onUndo,
   onRedo,
   onToolbarChange,
+  onDesignIdChange,
   state,
   dispatch,
 }) => {
@@ -1790,7 +1792,7 @@ const DesignEditor: FC<DesignEditorProps> = ({
 
   return (
     <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
-      <Navbar mode={mode} toolbarContent={toolbarContent} layout={layout} theme={theme} setLayout={setLayout} setTheme={setTheme} onWindowEvents={onWindowEvents} />
+      <Navbar designId={designId} onDesignIdChange={onDesignIdChange} mode={mode} toolbarContent={toolbarContent} layout={layout} theme={theme} setLayout={setLayout} setTheme={setTheme} onWindowEvents={onWindowEvents} />
       <ReactFlowProvider>
         <DesignEditorCore
           kit={kit}

@@ -18,7 +18,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-import { Layout, Mode, Theme } from "@semio/js";
+import { DesignId, Layout, Mode, Theme } from "@semio/js";
 import { Avatar, AvatarFallback, AvatarImage } from "@semio/js/components/ui/Avatar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@semio/js/components/ui/Breadcrumb";
 import { Toggle } from "@semio/js/components/ui/Toggle";
@@ -34,6 +34,8 @@ interface NavbarProps {
   theme?: Theme;
   setLayout?: (layout: Layout) => void;
   setTheme?: (theme: Theme) => void;
+  designId: DesignId;
+  onDesignIdChange?: (designId: DesignId) => void;
   onWindowEvents?: {
     minimize: () => void;
     maximize: () => void;
@@ -41,7 +43,7 @@ interface NavbarProps {
   };
 }
 
-const Navbar: FC<NavbarProps> = ({ mode, toolbarContent, layout, theme, setLayout, setTheme, onWindowEvents }) => {
+const Navbar: FC<NavbarProps> = ({ mode, toolbarContent, layout, theme, setLayout, setTheme, onWindowEvents, designId, onDesignIdChange }) => {
   return (
     <div className={`w-full h-12 bg-background border-b flex items-center justify-between px-4`}>
       <div className="flex items-center">
@@ -82,7 +84,7 @@ const Navbar: FC<NavbarProps> = ({ mode, toolbarContent, layout, theme, setLayou
               onNavigate={(href) => console.log("Navigate to:", href)}
             />
             <BreadcrumbItem>
-              <BreadcrumbLink href="/designs/nakagin">Nakagin Capsule Tower</BreadcrumbLink>
+              <BreadcrumbLink href="/designs/nakagin">{designId.name}</BreadcrumbLink>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>

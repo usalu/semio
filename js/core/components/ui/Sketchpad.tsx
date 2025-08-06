@@ -147,7 +147,15 @@ const View = () => {
 
   if (fileUrls.size === 0 || !designEditorState || !designEditorDispatch) return <div>Loading...</div>;
 
-  return <DesignEditor designId={designEditorState.designId} fileUrls={fileUrls} state={designEditorState} dispatch={designEditorDispatch} onToolbarChange={() => {}} />;
+  // Create callback to change active design using sketchpad dispatcher
+  const onDesignIdChange = (newDesignId: DesignId) => {
+    sketchpadDispatch({
+      type: SketchpadAction.ChangeActiveDesign,
+      payload: newDesignId,
+    });
+  };
+
+  return <DesignEditor designId={designEditorState.designId} fileUrls={fileUrls} state={designEditorState} dispatch={designEditorDispatch} onDesignIdChange={onDesignIdChange} onToolbarChange={() => {}} />;
 };
 
 interface SketchpadProps {
