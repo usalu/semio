@@ -1,44 +1,91 @@
 ---
-// PageSidebar.astro - Page table of contents sidebar like Details panel
+// PageSidebar.astro - Table of contents sidebar that uses Starlight components
+// import MobileTableOfContents from 'virtual:starlight/components/MobileTableOfContents';
+// import TableOfContents from 'virtual:starlight/components/TableOfContents';
+
+const { toc } = Astro.locals.starlightRoute || {};
 ---
 
-<div id="page-sidebar-root" class="fixed top-16 right-4 bottom-4 z-20 w-64 bg-blue-500 p-4 text-white border">
-  Loading Custom PageSidebar...
-</div>
+{
+	Astro.locals.starlightRoute.toc && (
+		<>
+			<div class="lg:sl-hidden">
+				<!-- <MobileTableOfContents /> -->
+			</div>
+			<div class="right-sidebar-panel sl-hidden lg:sl-block">
+				<div class="sl-container">
+					<!-- <TableOfContents /> -->
+					<h2>On this page</h2>
+					<nav class="sl-toc">
+						<ul class="sl-toc-list">
+							{toc.items.map((item) => (
+								<li class="sl-toc-item">
+									<a href={`#${item.slug}`} class="sl-toc-link">
+										{item.text}
+									</a>
+									{item.children && item.children.length > 0 && (
+										<ul class="sl-toc-sublist">
+											{item.children.map((child) => (
+												<li class="sl-toc-item">
+													<a href={`#${child.slug}`} class="sl-toc-link">
+														{child.text}
+													</a>
+												</li>
+											))}
+										</ul>
+									)}
+								</li>
+							))}
+						</ul>
+					</nav>
+				</div>
+			</div>
+		</>
+	)
+}
 
-<script>
-  import React from "react";
-  import { createRoot } from "react-dom/client";
+<style>
+	@layer starlight.core {
+		.right-sidebar-panel {
+			padding: 1rem var(--sl-sidebar-pad-x);
+		}
+		.sl-container {
+			width: calc(var(--sl-sidebar-width) - 2 * var(--sl-sidebar-pad-x));
+		}
+		.right-sidebar-panel :global(h2) {
+			color: var(--sl-color-white);
+			font-size: var(--sl-text-h5);
+			font-weight: 600;
+			line-height: var(--sl-line-height-headings);
+			margin-bottom: 0.5rem;
+		}
+		.right-sidebar-panel :global(:where(a)) {
+			display: block;
+			font-size: var(--sl-text-xs);
+			text-decoration: none;
+			color: var(--sl-color-gray-3);
+			overflow-wrap: anywhere;
+			padding: 0.25rem 0;
+		}
+		.right-sidebar-panel :global(:where(a):hover) {
+			color: var(--sl-color-white);
+		}
+		.sl-toc-sublist {
+			margin-left: 1rem;
+			margin-top: 0.25rem;
+		}
+		@media (min-width: 72rem) {
+			.sl-container {
+				max-width: calc(
+					(
+						(
+								100vw - var(--sl-sidebar-width) - 2 * var(--sl-content-pad-x) - 2 *
+									var(--sl-sidebar-pad-x)
+							) * 0.25 /* MAGIC NUMBER 🥲 */
+					)
+				);
+			}
+		}
+	}
+</style>
 
-  // Initialize immediately when script runs
-  const initPageSidebar = () => {
-    const container = document.getElementById('page-sidebar-root');
-    if (!container) {
-      console.error('PageSidebar container not found');
-      return;
-    }
-
-    console.log('Initializing PageSidebar component');
-
-    // Simple test component
-    const TestPageSidebar = () => {
-      return React.createElement("div", {
-        className: "h-full w-full bg-blue-500 p-4 text-white flex items-center justify-center"
-      }, "Custom PageSidebar Loaded with React!");
-    };
-
-    const root = createRoot(container);
-    root.render(React.createElement(TestPageSidebar));
-  };
-
-  // Try multiple initialization strategies
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initPageSidebar);
-  } else {
-    // DOM is already ready
-    initPageSidebar();
-  }
-
-  // Also try after a short delay as fallback
-  setTimeout(initPageSidebar, 100);
-</script>

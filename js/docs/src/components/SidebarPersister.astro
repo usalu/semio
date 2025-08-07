@@ -1,0 +1,39 @@
+---
+// SidebarPersister.astro - Handles sidebar state persistence
+---
+
+<div class="sl-sidebar-persister">
+	<slot />
+</div>
+
+<script>
+	// Handle sidebar state persistence if needed
+	document.addEventListener('DOMContentLoaded', () => {
+		// Restore any persisted sidebar state
+		const sidebarState = localStorage.getItem('starlight-sidebar-state');
+		if (sidebarState) {
+			try {
+				const state = JSON.parse(sidebarState);
+				// Apply any persisted state
+			} catch (e) {
+				// Ignore invalid stored state
+			}
+		}
+		
+		// Save sidebar state on changes
+		document.addEventListener('change', (e) => {
+			if (e.target instanceof HTMLDetailsElement && e.target.closest('.sl-sidebar-persister')) {
+				// Save sidebar state
+				const details = document.querySelectorAll('.sl-sidebar-persister details');
+				const state = Array.from(details).map(detail => (detail as HTMLDetailsElement).open);
+				localStorage.setItem('starlight-sidebar-state', JSON.stringify(state));
+			}
+		});
+	});
+</script>
+
+<style>
+	.sl-sidebar-persister {
+		/* Container for sidebar content */
+	}
+</style>

@@ -5,8 +5,8 @@
 <div id="search-root"></div>
 
 <script>
-  import React, { createElement, useState, useRef, useEffect } from "react";
-  import { createRoot } from "react-dom/client";
+  import React, { createElement, useEffect, useRef, useState } from "react";
+import { createRoot } from "react-dom/client";
 
   // Wait for DOM to be ready
   document.addEventListener('DOMContentLoaded', () => {
@@ -47,77 +47,82 @@
       }, []);
 
       return createElement("div", {
-        className: "relative"
-      }, [
+        className: "flex justify-center w-full"
+      }, 
         createElement("div", {
-          key: "input-container",
-          className: "relative"
-        }, [
-          createElement("input", {
-            key: "search-input",
-            ref: inputRef,
-            type: "search",
-            placeholder: "Search documentation...",
-            value: searchTerm,
-            onChange: handleInputChange,
-            onFocus: handleInputFocus,
-            onBlur: handleInputBlur,
-            onKeyDown: handleKeyDown,
-            className: `
-              inline-flex items-center justify-center
-              font-medium text-sm
-              color-[hsl(var(--foreground))]
-              bg-transparent
-              border border-[hsl(var(--accent))]
-              h-9 px-2 min-w-[12rem]
-              transition-[color,box-shadow] duration-200
-              hover:bg-[hsl(var(--accent))] hover:color-[hsl(var(--accent-foreground))]
-              focus:outline-none focus:border-[hsl(var(--ring))] focus:shadow-[0_0_0_3px_hsl(var(--ring)/0.5)]
-              placeholder:color-[hsl(var(--muted-foreground))]
-            `.replace(/\s+/g, ' ').trim()
-          }),
-          createElement("svg", {
-            key: "search-icon",
-            className: "absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 pointer-events-none opacity-50",
-            xmlns: "http://www.w3.org/2000/svg",
-            width: 16,
-            height: 16,
-            viewBox: "0 0 24 24",
-            fill: "none",
-            stroke: "currentColor",
-            strokeWidth: 2,
-            strokeLinecap: "round",
-            strokeLinejoin: "round"
-          }, [
-            createElement("circle", { 
-              key: "circle",
-              cx: "11",
-              cy: "11", 
-              r: "8"
-            }),
-            createElement("path", { 
-              key: "path",
-              d: "m21 21-4.35-4.35"
-            })
-          ])
-        ]),
-        isOpen && searchTerm.length > 0 && createElement("div", {
-          key: "results",
-          className: `
-            absolute top-full left-0 right-0 mt-1 z-50
-            bg-[hsl(var(--background-level-3))]
-            border border-[hsl(var(--accent))]
-            rounded-md shadow-lg
-            max-h-96 overflow-y-auto
-          `.replace(/\s+/g, ' ').trim(),
-          id: "search-results"
+          className: "relative w-full max-w-md"
         }, [
           createElement("div", {
-            key: "searching",
-            className: "p-4 text-sm text-[hsl(var(--muted-foreground))]"
-          }, "Searching...")
+            key: "input-container",
+            className: "relative"
+          }, [
+            createElement("input", {
+              key: "search-input",
+              ref: inputRef,
+              type: "search",
+              placeholder: "Search documentation...",
+              value: searchTerm,
+              onChange: handleInputChange,
+              onFocus: handleInputFocus,
+              onBlur: handleInputBlur,
+              onKeyDown: handleKeyDown,
+              className: `
+                inline-flex items-center justify-center
+                font-medium text-sm w-full
+                color-[hsl(var(--foreground))]
+                bg-transparent
+                border border-[hsl(var(--accent))]
+                h-9 px-2 pr-8
+                transition-[color,box-shadow] duration-200
+                hover:bg-[hsl(var(--accent))] hover:color-[hsl(var(--accent-foreground))]
+                focus:outline-none focus:border-[hsl(var(--ring))] focus:shadow-[0_0_0_3px_hsl(var(--ring)/0.5)]
+                placeholder:color-[hsl(var(--muted-foreground))]
+                rounded-md
+              `.replace(/\s+/g, ' ').trim()
+            }),
+            createElement("svg", {
+              key: "search-icon",
+              className: "absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 pointer-events-none opacity-50",
+              xmlns: "http://www.w3.org/2000/svg",
+              width: 16,
+              height: 16,
+              viewBox: "0 0 24 24",
+              fill: "none",
+              stroke: "currentColor",
+              strokeWidth: 2,
+              strokeLinecap: "round",
+              strokeLinejoin: "round"
+            }, [
+              createElement("circle", { 
+                key: "circle",
+                cx: "11",
+                cy: "11", 
+                r: "8"
+              }),
+              createElement("path", { 
+                key: "path",
+                d: "m21 21-4.35-4.35"
+              })
+            ])
+          ]),
+          isOpen && searchTerm.length > 0 && createElement("div", {
+            key: "results",
+            className: `
+              absolute top-full left-0 right-0 mt-1 z-50
+              bg-[hsl(var(--background-level-3))]
+              border border-[hsl(var(--accent))]
+              rounded-md shadow-lg
+              max-h-96 overflow-y-auto
+            `.replace(/\s+/g, ' ').trim(),
+            id: "search-results"
+          }, [
+            createElement("div", {
+              key: "searching",
+              className: "p-4 text-sm text-[hsl(var(--muted-foreground))]"
+            }, "Searching...")
+          ])
         ])
-      ]);
+      );
     };
 
     root.render(createElement(SearchComponent));

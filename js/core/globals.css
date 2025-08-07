@@ -98,7 +98,7 @@
     /* --sidebar-ring: oklch(0.708 0 0); */
     /* --xy-background-color-default: var(--color-light) !important; */
 
-    /* * {
+    * {
       cursor:
         url("../../assets/cursors/cursor.svg") 0 0,
         default !important;
@@ -270,9 +270,9 @@
       cursor:
         url("../../assets/cursors/cursor_crosshair.svg") 16 16,
         crosshair !important;
-    } */
+    }
 
-    * {
+    /* * {
       cursor:
         url("../../assets/cursors/cursor_dark.svg") 0 0,
         default !important;
@@ -444,7 +444,7 @@
       cursor:
         url("../../assets/cursors/cursor_crosshair_dark.svg") 16 16,
         crosshair !important;
-    }
+    } */
   }
 }
 

@@ -47,143 +47,38 @@
   --sl-color-black: var(--color-light);
 }
 
-/* Fix header padding and title font size */
 .header {
-  padding-inline: calc(var(--spacing) * 2) !important; /* Single padding instead of double */
-  padding-top: 0% !important;
-  padding-bottom: 0% !important;
-  height: calc(var(--spacing) * 12) !important;
-  border-bottom-style: var(--tw-border-style) !important;
-  border-bottom-width: 1px !important;
+  padding-inline: calc(var(--spacing) * 4);
+  padding-top: 0%;
+  padding-bottom: 0%;
+  height: calc(var(--spacing) * 12);
+  border-bottom-style: var(--tw-border-style);
+  border-bottom-width: 1px;
 }
 
-/* Fix title font size */
-.header .title-wrapper span,
-.header .site-title {
-  font-size: var(--text-sm) !important;
+.header.title-wrapper.span {
+  font-size: var(--text-sm);
 }
 
-/* Style search bar like toggles */
-.search input[type="search"],
-.search-input,
-[data-pagefind-ui] input[type="search"] {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 0.875rem !important;
-  font-weight: 500 !important;
-  color: hsl(var(--foreground)) !important;
-  background: transparent !important;
-  border: 1px solid hsl(var(--accent)) !important;
-  height: 2.25rem !important;
-  padding: 0 0.5rem !important;
-  min-width: 8rem !important;
-  transition: color 0.2s, box-shadow 0.2s !important;
-  border-radius: 0 !important;
+/* Custom styles for sidebar and page sidebar */
+.starlight {
+  --sl-sidebar-width: 20rem;
 }
 
-.search input[type="search"]:hover,
-.search-input:hover,
-[data-pagefind-ui] input[type="search"]:hover {
-  background: hsl(var(--accent)) !important;
-  color: hsl(var(--accent-foreground)) !important;
+/* Ensure proper contrast for dark mode SVG icons */
+:root[data-theme="dark"] svg path {
+  stroke: currentColor;
 }
 
-.search input[type="search"]:focus,
-.search-input:focus,
-[data-pagefind-ui] input[type="search"]:focus {
-  outline: none !important;
-  border-color: hsl(var(--ring)) !important;
-  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.5) !important;
+:root[data-theme="light"] svg path {
+  stroke: currentColor;
 }
 
-/* Style social icons like toggles */
-.social-icons a,
-.social-links a {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 0.875rem !important;
-  font-weight: 500 !important;
-  color: hsl(var(--foreground)) !important;
-  background: transparent !important;
-  border: 1px solid hsl(var(--accent)) !important;
-  height: 2.25rem !important;
-  padding: 0 0.5rem !important;
-  min-width: 2.25rem !important;
-  text-decoration: none !important;
-  transition: color 0.2s, box-shadow 0.2s !important;
-  border-radius: 0 !important;
-}
-
-.social-icons a:hover,
-.social-links a:hover {
-  background: hsl(var(--accent)) !important;
-  color: hsl(var(--accent-foreground)) !important;
-}
-
-.social-icons a:focus-visible,
-.social-links a:focus-visible {
-  outline: none !important;
-  border-color: hsl(var(--ring)) !important;
-  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.5) !important;
-}
-
-/* Style social icon SVGs */
-.social-icons svg,
-.social-links svg {
-  width: 1rem !important;
-  height: 1rem !important;
-  flex-shrink: 0 !important;
-}
-
-/* Ensure React components in header are styled properly */
-#theme-select-root,
-#language-select-root,
-#search-root,
-#social-icons-root {
+/* Override any Starlight specific styles that might interfere */
+.sidebar-content,
+.sidebar-header,
+.page-sidebar,
+.header-nav {
+  all: unset;
   display: contents;
-}
-
-/* Remove border-bottom from Combobox in language selector */
-#language-select-root .combobox-container {
-  border-bottom: none !important;
-  padding-bottom: 0 !important;
-}
-
-/* Ensure proper spacing in header for React components */
-.header #theme-select-root,
-.header #language-select-root,
-.header #search-root,
-.header #social-icons-root {
-  display: inline-flex;
-  align-items: center;
-}
-
-/* Style custom sidebar and page sidebar components */
-#sidebar-root,
-#page-sidebar-root {
-  height: 100%;
-  width: 100%;
-}
-
-/* Hide default starlight components only when custom ones are present */
-body:has(#sidebar-root) .sidebar-content,
-body:has(#sidebar-root) [data-has-sidebar] .sidebar {
-  display: none !important;
-}
-
-body:has(#search-root) .search-widget,
-body:has(#search-root) [data-pagefind-ui] {
-  display: none !important;
-}
-
-body:has(#social-icons-root) .social-icons-list,
-body:has(#social-icons-root) .social-links {
-  display: none !important;
-}
-
-body:has(#page-sidebar-root) .right-sidebar,
-body:has(#page-sidebar-root) [data-has-toc] .toc {
-  display: none !important;
 }

@@ -1,0 +1,93 @@
+---
+interface Props {
+	sublist: Array<{
+		type: 'link' | 'group';
+		label: string;
+		href?: string;
+		isCurrent?: boolean;
+		badge?: string;
+		entries?: Props['sublist'];
+	}>;
+}
+
+const { sublist } = Astro.props;
+---
+
+{sublist && (
+	<ul>
+		{sublist.map((entry) => (
+			<li>
+				{entry.type === 'link' ? (
+					<a 
+						href={entry.href} 
+						aria-current={entry.isCurrent ? 'page' : false}
+						class:list={['sl-sidebar-link', { current: entry.isCurrent }]}
+					>
+						<span>{entry.label}</span>
+						{entry.badge && <span class="sl-badge">{entry.badge}</span>}
+					</a>
+				) : (
+					<details open>
+						<summary class="sl-sidebar-group">
+							<span>{entry.label}</span>
+							{entry.badge && <span class="sl-badge">{entry.badge}</span>}
+						</summary>
+						{entry.entries && <Astro.self sublist={entry.entries} />}
+					</details>
+				)}
+			</li>
+		))}
+	</ul>
+)}
+
+<style>
+	ul {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+	
+	li {
+		margin: 0;
+	}
+	
+	.sl-sidebar-link {
+		display: block;
+		padding: 0.5rem 0;
+		color: var(--sl-color-gray-3);
+		text-decoration: none;
+		font-size: var(--sl-text-sm);
+		transition: color 0.2s;
+	}
+	
+	.sl-sidebar-link:hover {
+		color: var(--sl-color-white);
+	}
+	
+	.sl-sidebar-link.current {
+		color: var(--sl-color-white);
+		font-weight: 600;
+	}
+	
+	.sl-sidebar-group {
+		padding: 0.5rem 0;
+		color: var(--sl-color-white);
+		font-weight: 600;
+		font-size: var(--sl-text-sm);
+		cursor: pointer;
+	}
+	
+	details > ul {
+		margin-left: 1rem;
+		margin-top: 0.5rem;
+	}
+	
+	.sl-badge {
+		background: var(--sl-color-accent);
+		color: var(--sl-color-white);
+		font-size: var(--sl-text-xs);
+		padding: 0.125rem 0.375rem;
+		border-radius: 0.25rem;
+		margin-left: 0.5rem;
+	}
+</style>
