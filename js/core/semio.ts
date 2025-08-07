@@ -157,6 +157,7 @@ export const PieceIdLikeSchema = z.union([PieceSchema, PieceIdSchema, z.string()
 export const SideSchema = z.object({
   piece: PieceIdSchema,
   port: PortIdSchema,
+  designId: z.string().optional(), // Optional reference to nested design for design pieces
 });
 export const SideIdSchema = z.object({ piece: PieceIdSchema });
 
@@ -184,7 +185,7 @@ export const ConnectionIdSchema = z.object({
 export const ConnectionIdLikeSchema = z.union([ConnectionSchema, ConnectionIdSchema, z.tuple([z.string(), z.string()]), z.string()]);
 
 // https://github.com/usalu/semio#-design-
-export const DesignSchema = z.object({
+export const DesignSchema: z.ZodType<any> = z.object({
   name: z.string(),
   description: z.string().optional(),
   icon: z.string().optional(),
@@ -205,6 +206,7 @@ export const DesignSchema = z.object({
     .optional(),
   pieces: z.array(PieceSchema).optional(),
   connections: z.array(ConnectionSchema).optional(),
+  includedDesigns: z.array(z.lazy(() => DesignSchema)).optional(), // Nested designs for design pieces
   authors: z.array(AuthorSchema).optional(),
   qualities: z.array(QualitySchema).optional(),
 });
@@ -353,6 +355,7 @@ export const PiecesDiffSchema = z.object({
 export const SideDiffSchema = z.object({
   piece: PieceIdSchema,
   port: PortIdSchema.optional(),
+  designId: z.string().optional(),
 });
 export const ConnectionDiffSchema = z.object({
   connected: SideDiffSchema,
@@ -1432,7 +1435,11 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
     throw new Error(`Design ${normalizedDesignId.name} not found in kit ${kit.name}`);
   }
   const types = kit.types ?? [];
-  if (!design.pieces || design.pieces.length === 0) return design;
+
+  // First, flatten all included designs and expand design pieces
+  let expandedDesign = expandDesignPieces(design, kit);
+
+  if (!expandedDesign.pieces || expandedDesign.pieces.length === 0) return expandedDesign;
 
   const typesDict: { [key: string]: { [key: string]: Type } } = {};
   types.forEach((t) => {
@@ -1447,7 +1454,7 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
     return portId?.id_ ? type.ports.find((p) => p.id_ === portId.id_) : type.ports[0];
   };
 
-  const flatDesign: Design = JSON.parse(JSON.stringify(design));
+  const flatDesign: Design = JSON.parse(JSON.stringify(expandedDesign));
   if (!flatDesign.pieces) flatDesign.pieces = [];
 
   const piecePlanes: { [pieceId: string]: Plane } = {};
@@ -1588,6 +1595,238 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
 };
 
 //#endregion Design
+
+//#region Design Pieces
+
+/**
+ * Creates a design piece from a cluster of pieces and connections
+ * @param originalDesign - The original design containing the pieces to cluster
+ * @param clusterPieceIds - The IDs of pieces to include in the design piece
+ * @param designName - Name for the new design
+ * @returns Object containing the new design piece and the clustered design
+ */
+export const createDesignPieceFromCluster = (originalDesign: Design, clusterPieceIds: string[], designName: string): { designPiece: Piece; clusteredDesign: Design; externalConnections: Connection[] } => {
+  // Validate inputs
+  if (!originalDesign.pieces || originalDesign.pieces.length === 0) {
+    throw new Error("Original design has no pieces to cluster");
+  }
+  if (!clusterPieceIds || clusterPieceIds.length === 0) {
+    throw new Error("No piece IDs provided for clustering");
+  }
+
+  // Extract clustered pieces and their connections
+  const clusteredPieces = (originalDesign.pieces || []).filter((piece) => clusterPieceIds.includes(piece.id_));
+
+  if (clusteredPieces.length === 0) {
+    throw new Error("No pieces found matching the provided IDs");
+  }
+
+  // Find internal connections (both pieces in cluster)
+  const internalConnections = (originalDesign.connections || []).filter((connection) => clusterPieceIds.includes(connection.connected.piece.id_) && clusterPieceIds.includes(connection.connecting.piece.id_));
+
+  // Find external connections (one piece in cluster, one outside)
+  const externalConnections = (originalDesign.connections || []).filter((connection) => {
+    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.id_);
+    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.id_);
+    return connectedInCluster !== connectingInCluster; // XOR - exactly one is in cluster
+  });
+
+  // Create the clustered design
+  const clusteredDesign: Design = {
+    name: designName,
+    unit: originalDesign.unit,
+    description: `Clustered design with ${clusteredPieces.length} pieces`,
+    pieces: clusteredPieces,
+    connections: internalConnections,
+    created: new Date(),
+    updated: new Date(),
+  };
+
+  // Calculate center position for the design piece (average of clustered pieces)
+  const centers = clusteredPieces.map((piece) => piece.center).filter((center): center is DiagramPoint => center !== undefined && center !== null && typeof center.x === "number" && typeof center.y === "number");
+
+  // Calculate average center, or use a reasonable default
+  const averageCenter: DiagramPoint =
+    centers.length > 0
+      ? {
+          x: Math.round(centers.reduce((sum, center) => sum + center.x, 0) / centers.length),
+          y: Math.round(centers.reduce((sum, center) => sum + center.y, 0) / centers.length),
+        }
+      : { x: 0, y: 0 };
+
+  // Create the design piece (piece that represents the clustered design)
+  const designPiece: Piece = {
+    id_: `design-piece-${designName}-${Date.now()}`,
+    type: { name: "design", variant: designName }, // Special type for design pieces
+    center: averageCenter,
+    description: `Design piece containing ${clusteredPieces.length} pieces`,
+  };
+
+  return { designPiece, clusteredDesign, externalConnections };
+};
+
+/**
+ * Replaces clustered pieces with a design piece in the original design
+ * @param originalDesign - The original design
+ * @param clusterPieceIds - IDs of pieces to replace
+ * @param designPiece - The design piece to add
+ * @param clusteredDesign - The clustered design to include
+ * @param externalConnections - External connections to update
+ * @returns Updated design with design piece
+ */
+export const replaceClusterWithDesignPiece = (originalDesign: Design, clusterPieceIds: string[], designPiece: Piece, clusteredDesign: Design, externalConnections: Connection[]): Design => {
+  // Remove clustered pieces
+  const remainingPieces = (originalDesign.pieces || []).filter((piece) => !clusterPieceIds.includes(piece.id_));
+
+  // Remove all connections involving clustered pieces
+  const remainingConnections = (originalDesign.connections || []).filter((connection) => {
+    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.id_);
+    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.id_);
+    return !connectedInCluster && !connectingInCluster;
+  });
+
+  // Update external connections to point to the design piece
+  const updatedExternalConnections = externalConnections.map((connection) => {
+    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.id_);
+    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.id_);
+
+    if (connectedInCluster) {
+      // Update connected side to reference design piece with designId
+      return {
+        ...connection,
+        connected: {
+          piece: { id_: designPiece.id_ },
+          port: connection.connected.port,
+          designId: clusteredDesign.name, // Reference to nested design
+        },
+      };
+    } else if (connectingInCluster) {
+      // Update connecting side to reference design piece with designId
+      return {
+        ...connection,
+        connecting: {
+          piece: { id_: designPiece.id_ },
+          port: connection.connecting.port,
+          designId: clusteredDesign.name, // Reference to nested design
+        },
+      };
+    }
+
+    return connection;
+  });
+
+  return {
+    ...originalDesign,
+    pieces: [...remainingPieces, designPiece],
+    connections: [...remainingConnections, ...updatedExternalConnections],
+    includedDesigns: [...(originalDesign.includedDesigns || []), clusteredDesign],
+    updated: new Date(),
+  };
+};
+
+/**
+ * Expands design pieces by replacing them with their constituent pieces and connections
+ * @param design - The design to expand
+ * @param kit - The kit containing type information
+ * @returns Design with design pieces expanded
+ */
+export const expandDesignPieces = (design: Design, kit: Kit): Design => {
+  if (!design.includedDesigns || design.includedDesigns.length === 0) {
+    return design; // No design pieces to expand
+  }
+
+  let expandedDesign = { ...design };
+  const designPieces = (expandedDesign.pieces || []).filter((piece) => piece.type.name === "design");
+
+  if (designPieces.length === 0) {
+    return expandedDesign; // No design pieces found
+  }
+
+  // For each design piece, expand it with its included design
+  for (const designPiece of designPieces) {
+    const designName = designPiece.type.variant;
+    if (!designName) continue;
+
+    // Find the corresponding included design
+    const includedDesign = design.includedDesigns.find((d) => d.name === designName);
+    if (!includedDesign) continue;
+
+    // Recursively expand the included design first
+    const expandedIncludedDesign = expandDesignPieces(includedDesign, kit);
+
+    // Calculate offset based on design piece center
+    const designPieceCenter = designPiece.center || { x: 0, y: 0 };
+
+    // Transform pieces from included design
+    const transformedPieces = (expandedIncludedDesign.pieces || []).map((piece) => ({
+      ...piece,
+      id_: `${designPiece.id_}:${piece.id_}`, // Namespace the piece ID
+      center: piece.center
+        ? {
+            x: piece.center.x + designPieceCenter.x,
+            y: piece.center.y + designPieceCenter.y,
+          }
+        : designPieceCenter,
+    }));
+
+    // Transform connections from included design
+    const transformedConnections = (expandedIncludedDesign.connections || []).map((connection) => ({
+      ...connection,
+      connected: {
+        ...connection.connected,
+        piece: { id_: `${designPiece.id_}:${connection.connected.piece.id_}` },
+      },
+      connecting: {
+        ...connection.connecting,
+        piece: { id_: `${designPiece.id_}:${connection.connecting.piece.id_}` },
+      },
+    }));
+
+    // Update external connections that reference this design piece
+    const updatedExternalConnections = (expandedDesign.connections || []).map((connection) => {
+      if (connection.connected.piece.id_ === designPiece.id_ && connection.connected.designId === designName) {
+        // Find the corresponding piece in the expanded design
+        const targetPieceId = connection.connected.port.id_ ? `${designPiece.id_}:${connection.connected.port.id_}` : transformedPieces[0]?.id_;
+
+        return {
+          ...connection,
+          connected: {
+            ...connection.connected,
+            piece: { id_: targetPieceId || connection.connected.piece.id_ },
+            designId: undefined, // Remove designId since we've expanded
+          },
+        };
+      }
+
+      if (connection.connecting.piece.id_ === designPiece.id_ && connection.connecting.designId === designName) {
+        // Find the corresponding piece in the expanded design
+        const targetPieceId = connection.connecting.port.id_ ? `${designPiece.id_}:${connection.connecting.port.id_}` : transformedPieces[0]?.id_;
+
+        return {
+          ...connection,
+          connecting: {
+            ...connection.connecting,
+            piece: { id_: targetPieceId || connection.connecting.piece.id_ },
+            designId: undefined, // Remove designId since we've expanded
+          },
+        };
+      }
+
+      return connection;
+    });
+
+    // Remove the design piece and add expanded pieces
+    expandedDesign = {
+      ...expandedDesign,
+      pieces: [...(expandedDesign.pieces || []).filter((p) => p.id_ !== designPiece.id_), ...transformedPieces],
+      connections: [...updatedExternalConnections, ...transformedConnections],
+    };
+  }
+
+  return expandedDesign;
+};
+
+//#endregion Design Pieces
 
 //#region Type
 

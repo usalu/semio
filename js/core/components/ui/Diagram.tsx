@@ -71,6 +71,7 @@ import {
   Type,
   updateDesignInKit,
 } from "@semio/js";
+import { createDesignPieceFromCluster, replaceClusterWithDesignPiece } from "../../semio";
 
 // import '@xyflow/react/dist/base.css';
 import "@semio/js/globals.css";
@@ -654,23 +655,21 @@ const Diagram: FC = () => {
     (clusterPieceIds: string[]) => {
       if (!design) return;
 
-      const selectedPieces = design.pieces!.filter((piece) => clusterPieceIds.includes(piece.id_));
-      if (selectedPieces.length === 0) return;
-      const selectedPieceIds = selectedPieces.map((piece) => piece.id_);
-      const includedConnections = design.connections!.filter((connection) => selectedPieceIds.includes(connection.connecting.piece.id_) && selectedPieceIds.includes(connection.connected.piece.id_));
+      const designName = `Cluster-${Date.now()}`;
 
-      const newDesign = {
-        name: `Cluster-${Date.now()}`,
-        unit: design.unit || "m",
-        description: `Cluster of ${selectedPieceIds.length} pieces`,
-        pieces: selectedPieces,
-        connections: includedConnections,
-        created: new Date(),
-        updated: new Date(),
-      };
-      addDesign(newDesign);
+      // Create design piece from cluster
+      const { designPiece, clusteredDesign, externalConnections } = createDesignPieceFromCluster(design, clusterPieceIds, designName);
+
+      // Replace clustered pieces with design piece in current design
+      const updatedDesign = replaceClusterWithDesignPiece(design, clusterPieceIds, designPiece, clusteredDesign, externalConnections);
+
+      // Update the current design
+      setDesign(updatedDesign);
+
+      // Also add the clustered design as a separate design to the kit
+      addDesign(clusteredDesign);
     },
-    [design, selection.selectedConnections],
+    [design, setDesign, addDesign],
   );
 
   //#region Selection
