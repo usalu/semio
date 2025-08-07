@@ -121,8 +121,7 @@ export interface Presence {
   camera?: Camera;
 }
 
-export interface DesignEditorState {
-  kit: Kit;
+export interface DesignEditorCoreState {
   designId: DesignId;
   fileUrls: Map<string, string>;
   fullscreenPanel: FullscreenPanel;
@@ -134,6 +133,10 @@ export interface DesignEditorState {
   cursor?: DiagramPoint;
   camera?: Camera;
   others: Presence[];
+}
+
+export interface DesignEditorState extends DesignEditorCoreState {
+  kit: Kit;
 }
 
 export enum FullscreenPanel {
@@ -1194,7 +1197,7 @@ const designEditorReducer = (state: DesignEditorState, action: { type: DesignEdi
   }
 };
 
-export function createInitialDesignEditorState(props: { initialKit: Kit; designId: DesignId; fileUrls: Map<string, string>; initialSelection?: DesignEditorSelection }): DesignEditorState {
+export function createInitialDesignEditorCoreState(props: { initialKit: Kit; designId: DesignId; fileUrls: Map<string, string>; initialSelection?: DesignEditorSelection }): DesignEditorCoreState {
   const { initialKit, designId, fileUrls, initialSelection } = props;
 
   const initialDesign = findDesignInKit(initialKit, designId);
@@ -1205,7 +1208,6 @@ export function createInitialDesignEditorState(props: { initialKit: Kit; designI
   };
 
   return {
-    kit: initialKit,
     designId: designId,
     fileUrls: fileUrls,
     fullscreenPanel: FullscreenPanel.None,
@@ -1223,6 +1225,14 @@ export function createInitialDesignEditorState(props: { initialKit: Kit; designI
     operationIndex: 0,
     isTransactionActive: false,
     others: [],
+  };
+}
+
+export function createInitialDesignEditorState(props: { initialKit: Kit; designId: DesignId; fileUrls: Map<string, string>; initialSelection?: DesignEditorSelection }): DesignEditorState {
+  const coreState = createInitialDesignEditorCoreState(props);
+  return {
+    ...coreState,
+    kit: props.initialKit,
   };
 }
 

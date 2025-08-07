@@ -663,7 +663,7 @@ const Diagram: FC = () => {
       // Replace clustered pieces with design piece in current design
       const updatedDesign = replaceClusterWithDesignPiece(design, clusterPieceIds, designPiece, clusteredDesign, externalConnections);
 
-      // Update the current design
+      // Update the current design - this will automatically propagate to all DesignEditorStates and Sketchpad kit
       setDesign(updatedDesign);
 
       // Also add the clustered design as a separate design to the kit

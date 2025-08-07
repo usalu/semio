@@ -20,10 +20,10 @@
 // #endregion
 import { TooltipProvider } from "@semio/js/components/ui/Tooltip";
 import { createContext, FC, ReactNode, useContext, useEffect, useReducer, useState } from "react";
-import DesignEditor, { createInitialDesignEditorState, DesignEditorDispatcher, designEditorReducer, DesignEditorState } from "./DesignEditor";
+import DesignEditor, { createInitialDesignEditorCoreState, DesignEditorAction, DesignEditorCoreState, DesignEditorDispatcher, designEditorReducer, DesignEditorState } from "./DesignEditor";
 
 import { default as Metabolism } from "@semio/assets/semio/kit_metabolism.json";
-import { addDesignToKit, Design, DesignId, Kit } from "@semio/js";
+import { addDesignToKit, Connection, Design, DesignId, Kit, Piece, updateDesignInKit } from "@semio/js";
 import { extractFilesAndCreateUrls } from "../../lib/utils";
 
 // Function to ensure design has at least one fixed piece using breadth-first search
@@ -33,21 +33,21 @@ const ensureDesignHasFixedPiece = (design: Design): Design => {
   }
 
   // Check if any piece is already fixed
-  const hasFixedPiece = design.pieces.some((piece) => piece.plane && piece.center);
+  const hasFixedPiece = design.pieces.some((piece: Piece) => piece.plane && piece.center);
   if (hasFixedPiece) {
     return design;
   }
 
   // Build adjacency list for BFS
   const adjacencyList = new Map<string, string[]>();
-  design.pieces.forEach((piece) => {
+  design.pieces.forEach((piece: Piece) => {
     if (piece.id_) {
       adjacencyList.set(piece.id_, []);
     }
   });
 
   // Add connections to adjacency list
-  design.connections?.forEach((connection) => {
+  design.connections?.forEach((connection: Connection) => {
     const connectedId = connection.connected.piece.id_;
     const connectingId = connection.connecting.piece.id_;
 
@@ -99,7 +99,7 @@ const ensureDesignHasFixedPiece = (design: Design): Design => {
   }
 
   // Fix the parent piece with center and plane
-  const updatedPieces = design.pieces.map((piece) => {
+  const updatedPieces = design.pieces.map((piece: Piece) => {
     if (piece.id_ === parentPieceId) {
       return {
         ...piece,
@@ -125,7 +125,7 @@ interface SketchpadState {
   isLoading: boolean;
   fileUrls: Map<string, string>;
   kit: Kit | null;
-  designEditorStates: DesignEditorState[];
+  designEditorCoreStates: DesignEditorCoreState[];
   activeDesign: number; // index of the active design
 }
 
@@ -134,6 +134,7 @@ enum SketchpadAction {
   ChangeActiveDesign = "CHANGE_ACTIVE_DESIGN",
   UpdateActiveDesignEditorState = "UPDATE_ACTIVE_DESIGN_EDITOR_STATE",
   AddDesign = "ADD_DESIGN",
+  UpdateDesign = "UPDATE_DESIGN",
 }
 
 type SketchpadActionType =
@@ -147,10 +148,14 @@ type SketchpadActionType =
     }
   | {
       type: SketchpadAction.UpdateActiveDesignEditorState;
-      payload: DesignEditorState;
+      payload: DesignEditorCoreState;
     }
   | {
       type: SketchpadAction.AddDesign;
+      payload: Design;
+    }
+  | {
+      type: SketchpadAction.UpdateDesign;
       payload: Design;
     };
 
@@ -162,9 +167,9 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
   switch (action.type) {
     case SketchpadAction.UrlsLoaded:
       const kit = Metabolism as unknown as Kit;
-      const designEditorStates =
+      const designEditorCoreStates =
         kit.designs?.map((design) =>
-          createInitialDesignEditorState({
+          createInitialDesignEditorCoreState({
             initialKit: kit,
             designId: {
               name: design.name,
@@ -180,13 +185,13 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
         isLoading: false,
         fileUrls: action.payload.fileUrls,
         kit,
-        designEditorStates,
+        designEditorCoreStates,
       };
       break;
 
     case SketchpadAction.ChangeActiveDesign:
       // Find the index of the design with the matching designId
-      const designIndex = state.designEditorStates.findIndex((designState) => designState.designId.name === action.payload.name && designState.designId.variant === action.payload.variant && designState.designId.view === action.payload.view);
+      const designIndex = state.designEditorCoreStates.findIndex((designState) => designState.designId.name === action.payload.name && designState.designId.variant === action.payload.variant && designState.designId.view === action.payload.view);
 
       if (designIndex !== -1) {
         newState = {
@@ -199,11 +204,11 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
       break;
 
     case SketchpadAction.UpdateActiveDesignEditorState:
-      const updatedStates = [...state.designEditorStates];
+      const updatedStates = [...state.designEditorCoreStates];
       updatedStates[state.activeDesign] = action.payload;
       newState = {
         ...state,
-        designEditorStates: updatedStates,
+        designEditorCoreStates: updatedStates,
       };
       break;
 
@@ -220,14 +225,8 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
 
       const updatedKit = addDesignToKit(state.kit, processedDesign);
 
-      // Update all existing DesignEditorStates to use the new kit
-      const syncedDesignEditorStates = state.designEditorStates.map((designState) => ({
-        ...designState,
-        kit: updatedKit,
-      }));
-
-      // Create a new DesignEditorState for the newly added design
-      const newDesignEditorState = createInitialDesignEditorState({
+      // Create a new DesignEditorCoreState for the newly added design
+      const newDesignEditorCoreState = createInitialDesignEditorCoreState({
         initialKit: updatedKit,
         designId: {
           name: processedDesign.name,
@@ -240,7 +239,22 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
       newState = {
         ...state,
         kit: updatedKit,
-        designEditorStates: [...syncedDesignEditorStates, newDesignEditorState],
+        designEditorCoreStates: [...state.designEditorCoreStates, newDesignEditorCoreState],
+      };
+      break;
+
+    case SketchpadAction.UpdateDesign:
+      if (!state.kit) {
+        console.error("Cannot update design: kit is null");
+        newState = state;
+        break;
+      }
+      const designToUpdate = action.payload;
+      const updatedKitWithDesign = updateDesignInKit(state.kit, designToUpdate);
+
+      newState = {
+        ...state,
+        kit: updatedKitWithDesign,
       };
       break;
 
@@ -258,7 +272,7 @@ const createInitialSketchpadState = (): SketchpadState => {
     isLoading: true,
     fileUrls: new Map(),
     kit: null,
-    designEditorStates: [],
+    designEditorCoreStates: [],
     activeDesign: 0,
   };
 };
@@ -292,6 +306,7 @@ interface SketchpadContextType {
   designEditorState: DesignEditorState | null;
   designEditorDispatch: DesignEditorDispatcher | null;
   addDesign: (design: Design) => void;
+  updateDesign: (design: Design) => void;
 }
 
 const SketchpadContext = createContext<SketchpadContextType | null>(null);
@@ -316,7 +331,7 @@ const View = () => {
     });
   };
 
-  const availableDesigns = sketchpadState.designEditorStates.map((state) => state.designId);
+  const availableDesigns = sketchpadState.designEditorCoreStates.map((state) => state.designId);
 
   if (!kit || !designEditorState) return null;
 
@@ -368,19 +383,46 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
       });
     });
   }, []);
-  const activeDesignEditorState = sketchpadState.designEditorStates[sketchpadState.activeDesign];
+  const activeDesignEditorCoreState = sketchpadState.designEditorCoreStates[sketchpadState.activeDesign];
+  const activeDesignEditorState = activeDesignEditorCoreState
+    ? {
+        ...activeDesignEditorCoreState,
+        kit: sketchpadState.kit!,
+      }
+    : null;
 
   const designEditorDispatch: DesignEditorDispatcher = (action) => {
+    if (!activeDesignEditorState) return;
+
     const newState = designEditorReducer(activeDesignEditorState, action);
+
+    // If this is a SetDesign action, also update the design in the Sketchpad kit
+    if (action.type === DesignEditorAction.SetDesign) {
+      const updatedDesign = action.payload;
+      sketchpadDispatch({
+        type: SketchpadAction.UpdateDesign,
+        payload: updatedDesign,
+      });
+    }
+
+    // Extract core state (without kit) to store in Sketchpad
+    const { kit, ...coreState } = newState;
     sketchpadDispatch({
       type: SketchpadAction.UpdateActiveDesignEditorState,
-      payload: newState,
+      payload: coreState,
     });
   };
 
   const addDesign = (design: Design) => {
     sketchpadDispatch({
       type: SketchpadAction.AddDesign,
+      payload: design,
+    });
+  };
+
+  const updateDesign = (design: Design) => {
+    sketchpadDispatch({
+      type: SketchpadAction.UpdateDesign,
       payload: design,
     });
   };
@@ -421,6 +463,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
           designEditorState: activeDesignEditorState,
           designEditorDispatch: designEditorDispatch,
           addDesign: addDesign,
+          updateDesign: updateDesign,
         }}
       >
         <div key={`layout-${currentLayout}`} className="h-full w-full flex flex-col bg-background text-foreground">

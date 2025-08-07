@@ -157,7 +157,7 @@ export const PieceIdLikeSchema = z.union([PieceSchema, PieceIdSchema, z.string()
 export const SideSchema = z.object({
   piece: PieceIdSchema,
   port: PortIdSchema,
-  designId: z.string().optional(), // Optional reference to nested design for design pieces
+  designId: z.string().optional(),
 });
 export const SideIdSchema = z.object({ piece: PieceIdSchema });
 
