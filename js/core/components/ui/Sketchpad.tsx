@@ -26,6 +26,100 @@ import { default as Metabolism } from "@semio/assets/semio/kit_metabolism.json";
 import { addDesignToKit, Design, DesignId, Kit } from "@semio/js";
 import { extractFilesAndCreateUrls } from "../../lib/utils";
 
+// Function to ensure design has at least one fixed piece using breadth-first search
+const ensureDesignHasFixedPiece = (design: Design): Design => {
+  if (!design.pieces || design.pieces.length === 0) {
+    return design;
+  }
+
+  // Check if any piece is already fixed
+  const hasFixedPiece = design.pieces.some((piece) => piece.plane && piece.center);
+  if (hasFixedPiece) {
+    return design;
+  }
+
+  // Build adjacency list for BFS
+  const adjacencyList = new Map<string, string[]>();
+  design.pieces.forEach((piece) => {
+    if (piece.id_) {
+      adjacencyList.set(piece.id_, []);
+    }
+  });
+
+  // Add connections to adjacency list
+  design.connections?.forEach((connection) => {
+    const connectedId = connection.connected.piece.id_;
+    const connectingId = connection.connecting.piece.id_;
+
+    if (connectedId && connectingId) {
+      adjacencyList.get(connectedId)?.push(connectingId);
+      adjacencyList.get(connectingId)?.push(connectedId);
+    }
+  });
+
+  // Find the piece with the most connections using BFS
+  let maxConnections = -1;
+  let parentPieceId: string | null = null;
+
+  for (const piece of design.pieces) {
+    if (!piece.id_) continue;
+
+    const visited = new Set<string>();
+    const queue = [piece.id_];
+    visited.add(piece.id_);
+    let connectionCount = 0;
+
+    while (queue.length > 0) {
+      const currentId = queue.shift()!;
+      const neighbors = adjacencyList.get(currentId) || [];
+
+      connectionCount += neighbors.length;
+
+      for (const neighborId of neighbors) {
+        if (!visited.has(neighborId)) {
+          visited.add(neighborId);
+          queue.push(neighborId);
+        }
+      }
+    }
+
+    if (connectionCount > maxConnections) {
+      maxConnections = connectionCount;
+      parentPieceId = piece.id_;
+    }
+  }
+
+  // If no connections exist, just pick the first piece
+  if (!parentPieceId && design.pieces.length > 0) {
+    parentPieceId = design.pieces[0].id_ || null;
+  }
+
+  if (!parentPieceId) {
+    return design;
+  }
+
+  // Fix the parent piece with center and plane
+  const updatedPieces = design.pieces.map((piece) => {
+    if (piece.id_ === parentPieceId) {
+      return {
+        ...piece,
+        center: piece.center || { x: 0, y: 0 },
+        plane: piece.plane || {
+          origin: { x: 0, y: 0, z: 0 },
+          xAxis: { x: 1, y: 0, z: 0 },
+          yAxis: { x: 0, y: 1, z: 0 },
+        },
+      };
+    }
+    return piece;
+  });
+
+  return {
+    ...design,
+    pieces: updatedPieces,
+  };
+};
+
 // Higher-level Sketchpad state management
 interface SketchpadState {
   isLoading: boolean;
@@ -120,7 +214,11 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
         break;
       }
       const newDesign = action.payload;
-      const updatedKit = addDesignToKit(state.kit, newDesign);
+
+      // Ensure at least one piece is fixed using breadth-first search
+      const processedDesign = ensureDesignHasFixedPiece(newDesign);
+
+      const updatedKit = addDesignToKit(state.kit, processedDesign);
 
       // Update all existing DesignEditorStates to use the new kit
       const syncedDesignEditorStates = state.designEditorStates.map((designState) => ({
@@ -132,9 +230,9 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
       const newDesignEditorState = createInitialDesignEditorState({
         initialKit: updatedKit,
         designId: {
-          name: newDesign.name,
-          variant: newDesign.variant || undefined,
-          view: newDesign.view || undefined,
+          name: processedDesign.name,
+          variant: processedDesign.variant || undefined,
+          view: processedDesign.view || undefined,
         },
         fileUrls: state.fileUrls,
       });
