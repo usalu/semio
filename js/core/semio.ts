@@ -157,7 +157,7 @@ export const PieceIdLikeSchema = z.union([PieceSchema, PieceIdSchema, z.string()
 export const SideSchema = z.object({
   piece: PieceIdSchema,
   port: PortIdSchema,
-  designId: z.string().optional(),
+  designId: z.string().optional(), // Reference to design name in includedDesigns
 });
 export const SideIdSchema = z.object({ piece: PieceIdSchema });
 
@@ -206,7 +206,6 @@ export const DesignSchema: z.ZodType<any> = z.object({
     .optional(),
   pieces: z.array(PieceSchema).optional(),
   connections: z.array(ConnectionSchema).optional(),
-  includedDesigns: z.array(z.lazy(() => DesignSchema)).optional(), // Nested designs for design pieces
   authors: z.array(AuthorSchema).optional(),
   qualities: z.array(QualitySchema).optional(),
 });
@@ -1598,13 +1597,13 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
 //#region Design Pieces
 
 /**
- * Creates a design piece from a cluster of pieces and connections
+ * Creates a clustered design from a cluster of pieces and connections
  * @param originalDesign - The original design containing the pieces to cluster
- * @param clusterPieceIds - The IDs of pieces to include in the design piece
+ * @param clusterPieceIds - The IDs of pieces to include in the clustered design
  * @param designName - Name for the new design
- * @returns Object containing the new design piece and the clustered design
+ * @returns Object containing the clustered design and external connections
  */
-export const createDesignPieceFromCluster = (originalDesign: Design, clusterPieceIds: string[], designName: string): { designPiece: Piece; clusteredDesign: Design; externalConnections: Connection[] } => {
+export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: string[], designName: string): { clusteredDesign: Design; externalConnections: Connection[] } => {
   // Validate inputs
   if (!originalDesign.pieces || originalDesign.pieces.length === 0) {
     throw new Error("Original design has no pieces to cluster");
@@ -1641,39 +1640,18 @@ export const createDesignPieceFromCluster = (originalDesign: Design, clusterPiec
     updated: new Date(),
   };
 
-  // Calculate center position for the design piece (average of clustered pieces)
-  const centers = clusteredPieces.map((piece) => piece.center).filter((center): center is DiagramPoint => center !== undefined && center !== null && typeof center.x === "number" && typeof center.y === "number");
-
-  // Calculate average center, or use a reasonable default
-  const averageCenter: DiagramPoint =
-    centers.length > 0
-      ? {
-          x: Math.round(centers.reduce((sum, center) => sum + center.x, 0) / centers.length),
-          y: Math.round(centers.reduce((sum, center) => sum + center.y, 0) / centers.length),
-        }
-      : { x: 0, y: 0 };
-
-  // Create the design piece (piece that represents the clustered design)
-  const designPiece: Piece = {
-    id_: `design-piece-${designName}-${Date.now()}`,
-    type: { name: "design", variant: designName }, // Special type for design pieces
-    center: averageCenter,
-    description: `Design piece containing ${clusteredPieces.length} pieces`,
-  };
-
-  return { designPiece, clusteredDesign, externalConnections };
+  return { clusteredDesign, externalConnections };
 };
 
 /**
- * Replaces clustered pieces with a design piece in the original design
+ * Replaces clustered pieces with direct design references in connections
  * @param originalDesign - The original design
- * @param clusterPieceIds - IDs of pieces to replace
- * @param designPiece - The design piece to add
+ * @param clusterPieceIds - IDs of pieces to remove and cluster
  * @param clusteredDesign - The clustered design to include
  * @param externalConnections - External connections to update
- * @returns Updated design with design piece
+ * @returns Updated design with clustered pieces removed and direct design references
  */
-export const replaceClusterWithDesignPiece = (originalDesign: Design, clusterPieceIds: string[], designPiece: Piece, clusteredDesign: Design, externalConnections: Connection[]): Design => {
+export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds: string[], clusteredDesign: Design, externalConnections: Connection[]): Design => {
   // Remove clustered pieces
   const remainingPieces = (originalDesign.pieces || []).filter((piece) => !clusterPieceIds.includes(piece.id_));
 
@@ -1684,7 +1662,7 @@ export const replaceClusterWithDesignPiece = (originalDesign: Design, clusterPie
     return !connectedInCluster && !connectingInCluster;
   });
 
-  // Update external connections to preserve original piece IDs but reference the nested design
+  // Update external connections to use direct design references
   const updatedExternalConnections = externalConnections.map((connection) => {
     const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.id_);
     const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.id_);
@@ -1716,9 +1694,8 @@ export const replaceClusterWithDesignPiece = (originalDesign: Design, clusterPie
 
   return {
     ...originalDesign,
-    pieces: [...remainingPieces, designPiece],
+    pieces: remainingPieces, // No design piece added
     connections: [...remainingConnections, ...updatedExternalConnections],
-    includedDesigns: [...(originalDesign.includedDesigns || []), clusteredDesign],
     updated: new Date(),
   };
 };
@@ -1730,54 +1707,52 @@ export const replaceClusterWithDesignPiece = (originalDesign: Design, clusterPie
  * @returns Design with design pieces expanded
  */
 export const expandDesignPieces = (design: Design, kit: Kit): Design => {
-  if (!design.includedDesigns || design.includedDesigns.length === 0) {
-    return design; // No design pieces to expand
+  // Check if there are any connections with designId (indicating clustered pieces)
+  const hasDesignConnections = design.connections?.some((conn) => conn.connected.designId || conn.connecting.designId);
+  if (!hasDesignConnections) {
+    return design; // No design connections to expand
   }
 
   let expandedDesign = { ...design };
-  const designPieces = (expandedDesign.pieces || []).filter((piece) => piece.type.name === "design");
 
-  if (designPieces.length === 0) {
-    return expandedDesign; // No design pieces found
+  // Find all unique designIds referenced in connections
+  const designIds = new Set<string>();
+  design.connections?.forEach((conn) => {
+    if (conn.connected.designId) designIds.add(conn.connected.designId);
+    if (conn.connecting.designId) designIds.add(conn.connecting.designId);
+  });
+
+  if (designIds.size === 0) {
+    return expandedDesign; // No design references found
   }
 
-  // For each design piece, expand it with its included design
-  for (const designPiece of designPieces) {
-    const designName = designPiece.type.variant;
-    if (!designName) continue;
+  // For each referenced design, expand it
+  for (const designName of designIds) {
+    // Find the design in the kit
+    const referencedDesign = findDesignInKit(kit, { name: designName });
+    if (!referencedDesign) continue;
 
-    // Find the corresponding included design
-    const includedDesign = design.includedDesigns.find((d) => d.name === designName);
-    if (!includedDesign) continue;
+    // Recursively expand the referenced design first
+    const expandedReferencedDesign = expandDesignPieces(referencedDesign, kit);
 
-    // Recursively expand the included design first
-    const expandedIncludedDesign = expandDesignPieces(includedDesign, kit);
-
-    // Calculate offset based on design piece center
-    const designPieceCenter = designPiece.center || { x: 0, y: 0 };
-
-    // Transform pieces from included design
-    const transformedPieces = (expandedIncludedDesign.pieces || []).map((piece) => ({
+    // For design connections, we don't need to create design pieces, just expand the referenced pieces
+    // Transform pieces from referenced design with namespaced IDs
+    const transformedPieces = (expandedReferencedDesign.pieces || []).map((piece) => ({
       ...piece,
-      id_: `${designPiece.id_}:${piece.id_}`, // Namespace the piece ID
-      center: piece.center
-        ? {
-            x: piece.center.x + designPieceCenter.x,
-            y: piece.center.y + designPieceCenter.y,
-          }
-        : designPieceCenter,
+      id_: `${designName}:${piece.id_}`, // Namespace the piece ID with designName
+      center: piece.center || { x: 0, y: 0 },
     }));
 
-    // Transform connections from included design
-    const transformedConnections = (expandedIncludedDesign.connections || []).map((connection) => ({
+    // Transform connections from referenced design
+    const transformedConnections = (expandedReferencedDesign.connections || []).map((connection) => ({
       ...connection,
       connected: {
         ...connection.connected,
-        piece: { id_: `${designPiece.id_}:${connection.connected.piece.id_}` },
+        piece: { id_: `${designName}:${connection.connected.piece.id_}` },
       },
       connecting: {
         ...connection.connecting,
-        piece: { id_: `${designPiece.id_}:${connection.connecting.piece.id_}` },
+        piece: { id_: `${designName}:${connection.connecting.piece.id_}` },
       },
     }));
 
@@ -1786,7 +1761,7 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
       if (connection.connected.designId === designName) {
         // Find the corresponding transformed piece for this original piece ID
         const originalPieceId = connection.connected.piece.id_;
-        const transformedPiece = transformedPieces.find((p) => p.id_ === `${designPiece.id_}:${originalPieceId}`);
+        const transformedPiece = transformedPieces.find((p) => p.id_ === `${designName}:${originalPieceId}`);
         const targetPieceId = transformedPiece ? transformedPiece.id_ : connection.connected.piece.id_;
 
         return {
@@ -1802,7 +1777,7 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
       if (connection.connecting.designId === designName) {
         // Find the corresponding transformed piece for this original piece ID
         const originalPieceId = connection.connecting.piece.id_;
-        const transformedPiece = transformedPieces.find((p) => p.id_ === `${designPiece.id_}:${originalPieceId}`);
+        const transformedPiece = transformedPieces.find((p) => p.id_ === `${designName}:${originalPieceId}`);
         const targetPieceId = transformedPiece ? transformedPiece.id_ : connection.connecting.piece.id_;
 
         return {
@@ -1818,10 +1793,10 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
       return connection;
     });
 
-    // Remove the design piece and add expanded pieces
+    // Add expanded pieces and update connections
     expandedDesign = {
       ...expandedDesign,
-      pieces: [...(expandedDesign.pieces || []).filter((p) => p.id_ !== designPiece.id_), ...transformedPieces],
+      pieces: [...(expandedDesign.pieces || []), ...transformedPieces],
       connections: [...updatedExternalConnections, ...transformedConnections],
     };
   }

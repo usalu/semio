@@ -71,7 +71,7 @@ import {
   Type,
   updateDesignInKit,
 } from "@semio/js";
-import { createDesignPieceFromCluster, replaceClusterWithDesignPiece } from "../../semio";
+import { createClusteredDesign, replaceClusterWithDesign } from "../../semio";
 
 // import '@xyflow/react/dist/base.css';
 import "@semio/js/globals.css";
@@ -635,60 +635,55 @@ const getPieceIdFromNode = (node: DiagramNode): string => {
 };
 
 const connectionToEdge = (connection: Connection, selected: boolean, isParentConnection: boolean = false, pieceIndexMap: Map<string, number>, connectionIndex: number = 0, designPieces?: Piece[], allConnections?: Connection[]): ConnectionEdge => {
-  // Handle connections with designId - these reference pieces inside design pieces
+  // Handle connections with design references - these reference pieces inside clustered designs
   let sourcePieceId = connection.connecting.piece.id_;
   let targetPieceId = connection.connected.piece.id_;
   let sourcePortId = connection.connecting.port.id_ ?? "undefined";
   let targetPortId = connection.connected.port.id_ ?? "undefined";
 
-  // If connecting side has designId, find the design piece and the correct port
-  if (connection.connecting.designId && designPieces && allConnections) {
-    const designPiece = designPieces.find((p) => p.type.name === "design" && p.type.variant === connection.connecting.designId);
-    if (designPiece) {
-      sourcePieceId = designPiece.id_;
+  // Handle connections with designId - these reference pieces inside clustered designs
+  if (connection.connecting.designId && allConnections) {
+    const designPieceId = `design-${connection.connecting.designId}`;
+    sourcePieceId = designPieceId;
 
-      // Find all external connections for this design piece (same logic as designPieceToNode)
-      const externalConnections = allConnections.filter((conn) => {
-        const directConnection = conn.connected.piece.id_ === designPiece.id_ || conn.connecting.piece.id_ === designPiece.id_;
-        const designIdConnection = conn.connected.designId === designPiece.type.variant || conn.connecting.designId === designPiece.type.variant;
-        return directConnection || designIdConnection;
-      });
+    // Find all external connections for this design
+    const externalConnections = allConnections.filter((conn) => {
+      const connectedToDesign = conn.connected.designId === connection.connecting.designId;
+      const connectingToDesign = conn.connecting.designId === connection.connecting.designId;
+      return connectedToDesign || connectingToDesign;
+    });
 
-      // Find the index of this specific connection in the external connections list
-      const portIndex = externalConnections.findIndex(
-        (conn) =>
-          conn.connected.piece.id_ === connection.connected.piece.id_ &&
-          conn.connecting.piece.id_ === connection.connecting.piece.id_ &&
-          conn.connected.port.id_ === connection.connected.port.id_ &&
-          conn.connecting.port.id_ === connection.connecting.port.id_,
-      );
-      sourcePortId = portIndex >= 0 ? `port-${portIndex}` : "port-0";
-    }
+    // Find the index of this specific connection in the external connections list
+    const portIndex = externalConnections.findIndex(
+      (conn) =>
+        conn.connected.piece.id_ === connection.connected.piece.id_ &&
+        conn.connecting.piece.id_ === connection.connecting.piece.id_ &&
+        conn.connected.port.id_ === connection.connected.port.id_ &&
+        conn.connecting.port.id_ === connection.connecting.port.id_,
+    );
+    sourcePortId = portIndex >= 0 ? `port-${portIndex}` : "port-0";
   }
 
-  // If connected side has designId, find the design piece and the correct port
-  if (connection.connected.designId && designPieces && allConnections) {
-    const designPiece = designPieces.find((p) => p.type.name === "design" && p.type.variant === connection.connected.designId);
-    if (designPiece) {
-      targetPieceId = designPiece.id_;
+  if (connection.connected.designId && allConnections) {
+    const designPieceId = `design-${connection.connected.designId}`;
+    targetPieceId = designPieceId;
 
-      // Find all external connections for this design piece (same logic as designPieceToNode)
-      const externalConnections = allConnections.filter((conn) => {
-        const directConnection = conn.connected.piece.id_ === designPiece.id_ || conn.connecting.piece.id_ === designPiece.id_;
-        const designIdConnection = conn.connected.designId === designPiece.type.variant || conn.connecting.designId === designPiece.type.variant;
-        return directConnection || designIdConnection;
-      });
+    // Find all external connections for this design
+    const externalConnections = allConnections.filter((conn) => {
+      const connectedToDesign = conn.connected.designId === connection.connected.designId;
+      const connectingToDesign = conn.connecting.designId === connection.connected.designId;
+      return connectedToDesign || connectingToDesign;
+    });
 
-      // Find the index of this specific connection in the external connections list
-      const portIndex = externalConnections.findIndex(
-        (conn) =>
-          conn.connected.piece.id_ === connection.connected.piece.id_ &&
-          conn.connecting.piece.id_ === connection.connecting.piece.id_ &&
-          conn.connected.port.id_ === connection.connected.port.id_ &&
-          conn.connecting.port.id_ === connection.connecting.port.id_,
-      );
-      targetPortId = portIndex >= 0 ? `port-${portIndex}` : "port-0";
-    }
+    // Find the index of this specific connection in the external connections list
+    const portIndex = externalConnections.findIndex(
+      (conn) =>
+        conn.connected.piece.id_ === connection.connected.piece.id_ &&
+        conn.connecting.piece.id_ === connection.connecting.piece.id_ &&
+        conn.connected.port.id_ === connection.connected.port.id_ &&
+        conn.connecting.port.id_ === connection.connecting.port.id_,
+    );
+    targetPortId = portIndex >= 0 ? `port-${portIndex}` : "port-0";
   }
 
   const sourceIndex = pieceIndexMap.get(sourcePieceId) ?? 0;
@@ -714,46 +709,96 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
   const centers = flattenDesign(kit, designId).pieces?.map((p) => p.center);
   const metadata = piecesMetadata(kit, designId);
 
+  // Create nodes for regular pieces
   const pieceNodes =
     design.pieces?.map((piece, i) => {
       const isSelected = selection?.selectedPieceIds.includes(piece.id_) ?? false;
       const center = centers![i]!;
 
-      // Check if this is a design piece
-      if (piece.type.name === "design") {
-        // Find external connections for this design piece
-        // This includes both direct connections to the design piece and connections with designId
-        const externalConnections =
-          design.connections?.filter((connection) => {
-            // Direct connections to the design piece
-            const directConnection = connection.connected.piece.id_ === piece.id_ || connection.connecting.piece.id_ === piece.id_;
-
-            // Connections with designId referencing this design piece's variant (clustered design name)
-            const designIdConnection = connection.connected.designId === piece.type.variant || connection.connecting.designId === piece.type.variant;
-
-            return directConnection || designIdConnection;
-          }) ?? [];
-
-        return designToNode(piece, externalConnections, center, isSelected, i);
-      } else {
-        // Regular piece with type from kit
-        const type = findTypeInKit(kit, piece.type);
-        if (!type) {
-          console.warn(`Type not found for piece ${piece.id_}: ${piece.type.name}/${piece.type.variant}`);
-          // Create a minimal fallback type
-          const fallbackType: Type = {
-            name: piece.type.name,
-            variant: piece.type.variant,
-            unit: "m", // Default unit
-            description: `Missing type: ${piece.type.name}`,
-            ports: [],
-            representations: [],
-          };
-          return pieceToNode(piece, fallbackType, center, isSelected, i);
-        }
-        return pieceToNode(piece, type, center, isSelected, i);
+      // All pieces are now regular pieces (no design pieces)
+      const type = findTypeInKit(kit, piece.type);
+      if (!type) {
+        console.warn(`Type not found for piece ${piece.id_}: ${piece.type.name}/${piece.type.variant}`);
+        // Create a minimal fallback type
+        const fallbackType: Type = {
+          name: piece.type.name,
+          variant: piece.type.variant,
+          unit: "m", // Default unit
+          description: `Missing type: ${piece.type.name}`,
+          ports: [],
+          representations: [],
+        };
+        return pieceToNode(piece, fallbackType, center, isSelected, i);
       }
+      return pieceToNode(piece, type, center, isSelected, i);
     }) ?? [];
+
+  // Create nodes for designs referenced by designId in connections
+  const designIds = new Set<string>();
+  design.connections?.forEach((conn) => {
+    if (conn.connected.designId) designIds.add(conn.connected.designId);
+    if (conn.connecting.designId) designIds.add(conn.connecting.designId);
+  });
+
+  const designNodes = Array.from(designIds).map((designId, i) => {
+    const isSelected = false; // TODO: Add design selection support
+
+    // Find external connections for this design
+    const externalConnections =
+      design.connections?.filter((connection) => {
+        // Connections with designId referencing this design
+        const connectedToDesign = connection.connected.designId === designId;
+        const connectingToDesign = connection.connecting.designId === designId;
+        return connectedToDesign || connectingToDesign;
+      }) ?? [];
+
+    // Calculate center position based on the average position of external connected pieces in the current diagram
+    let calculatedCenter = { x: 0, y: 0 };
+    if (externalConnections.length > 0) {
+      // Get the pieces that are connected to this design (the external pieces)
+      const connectedPieceIds = new Set<string>();
+      externalConnections.forEach((conn) => {
+        if (conn.connected.designId === designId) {
+          // The connecting side is external
+          connectedPieceIds.add(conn.connecting.piece.id_);
+        } else if (conn.connecting.designId === designId) {
+          // The connected side is external
+          connectedPieceIds.add(conn.connected.piece.id_);
+        }
+      });
+
+      // Find the actual positions of these connected pieces in the current diagram
+      const connectedPieceCenters: DiagramPoint[] = [];
+      Array.from(connectedPieceIds).forEach((pieceId) => {
+        const pieceIndex = design.pieces?.findIndex((p) => p.id_ === pieceId);
+        if (pieceIndex !== undefined && pieceIndex >= 0 && centers && centers[pieceIndex]) {
+          connectedPieceCenters.push(centers[pieceIndex]);
+        }
+      });
+
+      if (connectedPieceCenters.length > 0) {
+        // Calculate average center of connected pieces
+        const avgX = connectedPieceCenters.reduce((sum, center) => sum + center.x, 0) / connectedPieceCenters.length;
+        const avgY = connectedPieceCenters.reduce((sum, center) => sum + center.y, 0) / connectedPieceCenters.length;
+
+        // Position the design node near the connected pieces
+        calculatedCenter = {
+          x: Math.round(avgX),
+          y: Math.round(avgY),
+        };
+      }
+    }
+
+    // Create a synthetic piece to represent the design
+    const designPiece: Piece = {
+      id_: `design-${designId}`,
+      type: { name: "design", variant: designId },
+      center: calculatedCenter,
+      description: `Clustered design: ${designId}`,
+    };
+
+    return designToNode(designPiece, externalConnections, calculatedCenter, isSelected, design.pieces!.length + i);
+  });
 
   // Create a map of piece IDs to their array indices for unique node IDs
   // Handle duplicate piece IDs by mapping to the first occurrence index
@@ -764,10 +809,23 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
     }
   });
 
+  // Add design pieces to the index map
+  Array.from(designIds).forEach((designId, index) => {
+    const designPieceId = `design-${designId}`;
+    if (!pieceIndexMap.has(designPieceId)) {
+      pieceIndexMap.set(designPieceId, design.pieces!.length + index);
+    }
+  });
+
   // Also create a map from the full node ID to the piece index for connections
   const nodeIdToPieceIndexMap = new Map<string, number>();
   design.pieces?.forEach((piece, index) => {
     nodeIdToPieceIndexMap.set(`piece-${index}-${piece.id_}`, index);
+  });
+  Array.from(designIds).forEach((designId, index) => {
+    const designPieceId = `design-${designId}`;
+    const nodeIndex = design.pieces!.length + index;
+    nodeIdToPieceIndexMap.set(`piece-${nodeIndex}-${designPieceId}`, nodeIndex);
   });
 
   const parentConnectionId =
@@ -791,7 +849,7 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
 
       return connectionToEdge(connection, isSelected, isParentConnection, pieceIndexMap, connectionIndex, design.pieces, design.connections);
     }) ?? [];
-  return { nodes: pieceNodes, edges: connectionEdges };
+  return { nodes: [...pieceNodes, ...designNodes], edges: connectionEdges };
 };
 
 //#endregion
@@ -890,22 +948,21 @@ const Diagram: FC = () => {
 
       const designName = `Cluster-${Date.now()}`;
 
-      // Create design piece from cluster
-      const { designPiece, clusteredDesign, externalConnections } = createDesignPieceFromCluster(design, clusterPieceIds, designName);
+      // Create clustered design
+      const { clusteredDesign, externalConnections } = createClusteredDesign(design, clusterPieceIds, designName);
 
-      // Replace clustered pieces with design piece in current design
-      const updatedDesign = replaceClusterWithDesignPiece(design, clusterPieceIds, designPiece, clusteredDesign, externalConnections);
+      // Replace clustered pieces with direct design references in current design
+      const updatedDesign = replaceClusterWithDesign(design, clusterPieceIds, clusteredDesign, externalConnections);
 
       // Update the current design - this will automatically propagate to all DesignEditorStates and Sketchpad kit
       setDesign(updatedDesign);
 
-      // log the only the new connections to the new design piece
-      const newConnections = updatedDesign.connections?.filter((connection) => connection.connected.piece.id_ === designPiece.id_ || connection.connecting.piece.id_ === designPiece.id_);
+      // log the new connections that reference the clustered design
+      const newConnections = updatedDesign.connections?.filter((connection) => connection.connected.designId === designName || connection.connecting.designId === designName);
       console.log("newConnections", newConnections);
 
-      // log the only the new pieces to the new design piece
-      const newPieces = updatedDesign.pieces?.filter((piece) => piece.id_ === designPiece.id_);
-      console.log("newPieces", newPieces);
+      // log the new included design
+      console.log("clusteredDesign", clusteredDesign);
 
       // Also add the clustered design as a separate design to the kit
       addDesign(clusteredDesign);
