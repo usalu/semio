@@ -488,12 +488,58 @@ const pieceToNode = (piece: Piece, type: Type, center: DiagramPoint, selected: b
 const designPieceToNode = (piece: Piece, externalConnections: Connection[], center: DiagramPoint, selected: boolean, index: number): PieceNode => {
   // Create ports dynamically based on external connections
   const ports: Port[] = externalConnections.map((connection, portIndex) => {
+    // Determine which side of the connection is related to the design piece
+    const connectedIsDesignPiece = connection.connected.piece.id_ === piece.id_ || connection.connected.designId === piece.type.variant;
+    const connectingIsDesignPiece = connection.connecting.piece.id_ === piece.id_ || connection.connecting.designId === piece.type.variant;
+
+    // Get the side that represents the design piece
+    const designSide = connectedIsDesignPiece ? connection.connected : connection.connecting;
+    const originalSide = connectedIsDesignPiece ? connection.connecting : connection.connected;
+
+    // Calculate port position using the same system as normal pieces
+    const totalPorts = externalConnections.length;
+    const t = portIndex / totalPorts; // Normalize to [0,1) like normal pieces
+
+    // Use the same positioning approach as getPortPositionStyle but for 3D point
+    const angle = t * 2 * Math.PI; // Same as normal pieces
+    const radius = 0.5; // Use consistent radius for design pieces
+
+    // Calculate 3D point position (for connections/flattening)
+    const portX = radius * Math.sin(angle); // Same X formula as normal pieces
+    const portY = radius * Math.cos(angle); // Same pattern but for 3D space
+    const portZ = 0;
+
+    // Direction points outward from the piece (same as angle direction)
+    const directionX = Math.sin(angle);
+    const directionY = Math.cos(angle);
+    const directionZ = 0;
+
     return {
       id_: `port-${portIndex}`,
+      description: `Port for connection to ${originalSide.piece.id_}:${originalSide.port.id_}`,
       family: "default", // Use default family for design piece ports
-      t: portIndex, // Port parameter value
-      point: { x: 0, y: 0, z: 0 }, // Default point on the piece
-      direction: { x: 1, y: 0, z: 0 }, // Default direction
+      mandatory: false,
+      t: t, // Normalized parameter value like normal pieces
+      point: { x: portX, y: portY, z: portZ }, // 3D position for connections
+      direction: { x: directionX, y: directionY, z: directionZ }, // Points outward
+      qualities: [
+        {
+          name: "semio.originalPieceId",
+          value: designSide.piece.id_ || "",
+        },
+        {
+          name: "semio.originalPortId",
+          value: designSide.port.id_ || "",
+        },
+        {
+          name: "semio.externalPieceId",
+          value: originalSide.piece.id_ || "",
+        },
+        {
+          name: "semio.externalPortId",
+          value: originalSide.port.id_ || "",
+        },
+      ],
     };
   });
 
@@ -563,7 +609,17 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
       // Check if this is a design piece
       if (piece.type.name === "design") {
         // Find external connections for this design piece
-        const externalConnections = design.connections?.filter((connection) => connection.connected.piece.id_ === piece.id_ || connection.connecting.piece.id_ === piece.id_) ?? [];
+        // This includes both direct connections to the design piece and connections with designId
+        const externalConnections =
+          design.connections?.filter((connection) => {
+            // Direct connections to the design piece
+            const directConnection = connection.connected.piece.id_ === piece.id_ || connection.connecting.piece.id_ === piece.id_;
+
+            // Connections with designId referencing this design piece's variant (clustered design name)
+            const designIdConnection = connection.connected.designId === piece.type.variant || connection.connecting.designId === piece.type.variant;
+
+            return directConnection || designIdConnection;
+          }) ?? [];
 
         return designPieceToNode(piece, externalConnections, center, isSelected, i);
       } else {
@@ -729,6 +785,14 @@ const Diagram: FC = () => {
 
       // Update the current design - this will automatically propagate to all DesignEditorStates and Sketchpad kit
       setDesign(updatedDesign);
+
+      // log the only the new connections to the new design piece
+      const newConnections = updatedDesign.connections?.filter((connection) => connection.connected.piece.id_ === designPiece.id_ || connection.connecting.piece.id_ === designPiece.id_);
+      console.log("newConnections", newConnections);
+
+      // log the only the new pieces to the new design piece
+      const newPieces = updatedDesign.pieces?.filter((piece) => piece.id_ === designPiece.id_);
+      console.log("newPieces", newPieces);
 
       // Also add the clustered design as a separate design to the kit
       addDesign(clusteredDesign);

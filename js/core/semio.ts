@@ -1684,27 +1684,27 @@ export const replaceClusterWithDesignPiece = (originalDesign: Design, clusterPie
     return !connectedInCluster && !connectingInCluster;
   });
 
-  // Update external connections to point to the design piece
+  // Update external connections to preserve original piece IDs but reference the nested design
   const updatedExternalConnections = externalConnections.map((connection) => {
     const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.id_);
     const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.id_);
 
     if (connectedInCluster) {
-      // Update connected side to reference design piece with designId
+      // Keep original piece ID but add designId to reference the nested design
       return {
         ...connection,
         connected: {
-          piece: { id_: designPiece.id_ },
+          piece: { id_: connection.connected.piece.id_ }, // Keep original piece ID
           port: connection.connected.port,
           designId: clusteredDesign.name, // Reference to nested design
         },
       };
     } else if (connectingInCluster) {
-      // Update connecting side to reference design piece with designId
+      // Keep original piece ID but add designId to reference the nested design
       return {
         ...connection,
         connecting: {
-          piece: { id_: designPiece.id_ },
+          piece: { id_: connection.connecting.piece.id_ }, // Keep original piece ID
           port: connection.connecting.port,
           designId: clusteredDesign.name, // Reference to nested design
         },
@@ -1783,10 +1783,11 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
 
     // Update external connections that reference this design piece
     const updatedExternalConnections = (expandedDesign.connections || []).map((connection) => {
-      if (connection.connected.piece.id_ === designPiece.id_ && connection.connected.designId === designName) {
-        // For design pieces, external connections should connect to the first piece in the cluster
-        // since the original clustering created a single entry point
-        const targetPieceId = transformedPieces.length > 0 ? transformedPieces[0].id_ : connection.connected.piece.id_;
+      if (connection.connected.designId === designName) {
+        // Find the corresponding transformed piece for this original piece ID
+        const originalPieceId = connection.connected.piece.id_;
+        const transformedPiece = transformedPieces.find((p) => p.id_ === `${designPiece.id_}:${originalPieceId}`);
+        const targetPieceId = transformedPiece ? transformedPiece.id_ : connection.connected.piece.id_;
 
         return {
           ...connection,
@@ -1798,10 +1799,11 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
         };
       }
 
-      if (connection.connecting.piece.id_ === designPiece.id_ && connection.connecting.designId === designName) {
-        // For design pieces, external connections should connect to the first piece in the cluster
-        // since the original clustering created a single entry point
-        const targetPieceId = transformedPieces.length > 0 ? transformedPieces[0].id_ : connection.connecting.piece.id_;
+      if (connection.connecting.designId === designName) {
+        // Find the corresponding transformed piece for this original piece ID
+        const originalPieceId = connection.connecting.piece.id_;
+        const transformedPiece = transformedPieces.find((p) => p.id_ === `${designPiece.id_}:${originalPieceId}`);
+        const targetPieceId = transformedPiece ? transformedPiece.id_ : connection.connecting.piece.id_;
 
         return {
           ...connection,
