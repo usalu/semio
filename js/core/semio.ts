@@ -1468,19 +1468,18 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
       nodes: flatDesign.pieces!.map((piece) => ({
         data: { id: piece.id_, label: piece.id_ },
       })),
-      edges:
-        flatDesign.connections?.map((connection, index) => {
-          const sourceId = connection.connected.piece.id_;
-          const targetId = connection.connecting.piece.id_;
-          return {
-            data: {
-              id: `${sourceId}--${targetId}`,
-              source: sourceId,
-              target: targetId,
-              connectionData: connection,
-            },
-          };
-        }) ?? [],
+      edges: flatDesign.connections?.map((connection, index) => {
+        const sourceId = connection.connected.piece.id_;
+        const targetId = connection.connecting.piece.id_;
+        return {
+          data: {
+            id: `${sourceId}--${targetId}`,
+            source: sourceId,
+            target: targetId,
+            connectionData: connection,
+          },
+        };
+      }),
     },
     headless: true,
   });
@@ -1785,28 +1784,30 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
     // Update external connections that reference this design piece
     const updatedExternalConnections = (expandedDesign.connections || []).map((connection) => {
       if (connection.connected.piece.id_ === designPiece.id_ && connection.connected.designId === designName) {
-        // Find the corresponding piece in the expanded design
-        const targetPieceId = connection.connected.port.id_ ? `${designPiece.id_}:${connection.connected.port.id_}` : transformedPieces[0]?.id_;
+        // For design pieces, external connections should connect to the first piece in the cluster
+        // since the original clustering created a single entry point
+        const targetPieceId = transformedPieces.length > 0 ? transformedPieces[0].id_ : connection.connected.piece.id_;
 
         return {
           ...connection,
           connected: {
             ...connection.connected,
-            piece: { id_: targetPieceId || connection.connected.piece.id_ },
+            piece: { id_: targetPieceId },
             designId: undefined, // Remove designId since we've expanded
           },
         };
       }
 
       if (connection.connecting.piece.id_ === designPiece.id_ && connection.connecting.designId === designName) {
-        // Find the corresponding piece in the expanded design
-        const targetPieceId = connection.connecting.port.id_ ? `${designPiece.id_}:${connection.connecting.port.id_}` : transformedPieces[0]?.id_;
+        // For design pieces, external connections should connect to the first piece in the cluster
+        // since the original clustering created a single entry point
+        const targetPieceId = transformedPieces.length > 0 ? transformedPieces[0].id_ : connection.connecting.piece.id_;
 
         return {
           ...connection,
           connecting: {
             ...connection.connecting,
-            piece: { id_: targetPieceId || connection.connecting.piece.id_ },
+            piece: { id_: targetPieceId },
             designId: undefined, // Remove designId since we've expanded
           },
         };

@@ -77,7 +77,6 @@ import {
   updateDesignInKit,
 } from "@semio/js";
 import Diagram from "@semio/js/components/ui/Diagram";
-import Model from "@semio/js/components/ui/Model";
 import { default as Navbar } from "@semio/js/components/ui/Navbar";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@semio/js/components/ui/Resizable";
 import { Layout, Mode, Theme } from "@semio/js/components/ui/Sketchpad";
@@ -1728,7 +1727,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
               </ResizablePanel>
               <ResizableHandle className={`border-r ${state.fullscreenPanel !== FullscreenPanel.None ? "hidden" : "block"}`} />
               <ResizablePanel defaultSize={state.fullscreenPanel === FullscreenPanel.Model ? 100 : 50} className={`${state.fullscreenPanel === FullscreenPanel.Diagram ? "hidden" : "block"}`} onDoubleClick={onDoubleClickModel}>
-                <Model />
+                {/* <Model /> */}
               </ResizablePanel>
             </ResizablePanelGroup>
           </div>

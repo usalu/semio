@@ -485,6 +485,41 @@ const pieceToNode = (piece: Piece, type: Type, center: DiagramPoint, selected: b
   className: selected ? "selected" : "",
 });
 
+const designPieceToNode = (piece: Piece, externalConnections: Connection[], center: DiagramPoint, selected: boolean, index: number): PieceNode => {
+  // Create ports dynamically based on external connections
+  const ports: Port[] = externalConnections.map((connection, portIndex) => {
+    return {
+      id_: `port-${portIndex}`,
+      family: "default", // Use default family for design piece ports
+      t: portIndex, // Port parameter value
+      point: { x: 0, y: 0, z: 0 }, // Default point on the piece
+      direction: { x: 1, y: 0, z: 0 }, // Default direction
+    };
+  });
+
+  // Create a synthetic type for the design piece
+  const designType: Type = {
+    name: "design",
+    variant: piece.type.variant,
+    unit: "m", // Default unit
+    description: `Design piece: ${piece.type.variant}`,
+    ports: ports,
+    representations: [],
+  };
+
+  return {
+    type: "piece",
+    id: `piece-${index}-${piece.id_}`,
+    position: {
+      x: center.x * ICON_WIDTH || 0,
+      y: -center.y * ICON_WIDTH || 0,
+    },
+    selected,
+    data: { piece, type: designType },
+    className: selected ? "selected" : "",
+  };
+};
+
 // Utility function to extract piece ID from node ID (format: piece-{index}-{pieceId})
 const extractPieceIdFromNodeId = (nodeId: string): string => {
   return nodeId.split("-").slice(2).join("-");
@@ -520,7 +555,36 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
   const centers = flattenDesign(kit, designId).pieces?.map((p) => p.center);
   const metadata = piecesMetadata(kit, designId);
 
-  const pieceNodes = design.pieces?.map((piece, i) => pieceToNode(piece, findTypeInKit(kit, piece.type)!, centers![i]!, selection?.selectedPieceIds.includes(piece.id_) ?? false, i)) ?? [];
+  const pieceNodes =
+    design.pieces?.map((piece, i) => {
+      const isSelected = selection?.selectedPieceIds.includes(piece.id_) ?? false;
+      const center = centers![i]!;
+
+      // Check if this is a design piece
+      if (piece.type.name === "design") {
+        // Find external connections for this design piece
+        const externalConnections = design.connections?.filter((connection) => connection.connected.piece.id_ === piece.id_ || connection.connecting.piece.id_ === piece.id_) ?? [];
+
+        return designPieceToNode(piece, externalConnections, center, isSelected, i);
+      } else {
+        // Regular piece with type from kit
+        const type = findTypeInKit(kit, piece.type);
+        if (!type) {
+          console.warn(`Type not found for piece ${piece.id_}: ${piece.type.name}/${piece.type.variant}`);
+          // Create a minimal fallback type
+          const fallbackType: Type = {
+            name: piece.type.name,
+            variant: piece.type.variant,
+            unit: "m", // Default unit
+            description: `Missing type: ${piece.type.name}`,
+            ports: [],
+            representations: [],
+          };
+          return pieceToNode(piece, fallbackType, center, isSelected, i);
+        }
+        return pieceToNode(piece, type, center, isSelected, i);
+      }
+    }) ?? [];
 
   // Create a map of piece IDs to their array indices for unique node IDs
   // Handle duplicate piece IDs by mapping to the first occurrence index
