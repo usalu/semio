@@ -71,7 +71,6 @@ import {
   Type,
   updateDesignInKit,
 } from "@semio/js";
-import { createClusteredDesign, replaceClusterWithDesign } from "../../semio";
 
 // import '@xyflow/react/dist/base.css';
 import "@semio/js/globals.css";
@@ -91,10 +90,10 @@ type ClusterMenuProps = {
 const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, selection, onCluster }) => {
   const reactFlowInstance = useReactFlow();
 
-  // Find connected groups of selected nodes
-  const getConnectedGroups = useCallback(() => {
+  // Find groups of selected nodes (connected or manually selected together)
+  const getClusterableGroups = useCallback(() => {
     const selectedPieceIds = selection.selectedPieceIds;
-    if (selectedPieceIds.length === 0) return [];
+    if (selectedPieceIds.length < 2) return []; // Need at least 2 items to cluster
 
     // Build adjacency map from all edges (not just selected ones)
     const adjacencyMap = new Map<string, Set<string>>();
@@ -112,7 +111,7 @@ const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, selection, onCluster 
 
     // Find connected components using DFS
     const visited = new Set<string>();
-    const groups: string[][] = [];
+    const connectedGroups: string[][] = [];
 
     const dfs = (pieceId: string, currentGroup: string[]) => {
       if (visited.has(pieceId)) return;
@@ -127,18 +126,27 @@ const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, selection, onCluster 
       }
     };
 
+    // First, find all connected components
     for (const pieceId of selectedPieceIds) {
       if (!visited.has(pieceId)) {
         const group: string[] = [];
         dfs(pieceId, group);
-        if (group.length > 1) {
-          // Only show cluster menu for groups with more than 1 node
-          groups.push(group);
-        }
+        connectedGroups.push(group);
       }
     }
 
-    return groups;
+    // If we have multiple connected components OR design nodes in selection,
+    // allow clustering the entire selection as one group
+    const hasDesignNodes = selectedPieceIds.some((id) => id.startsWith("design-"));
+    const hasMultipleComponents = connectedGroups.length > 1;
+    const hasLargeConnectedGroup = connectedGroups.some((group) => group.length > 1);
+
+    if (hasDesignNodes || hasMultipleComponents || hasLargeConnectedGroup) {
+      // Return all selected pieces as one clusterable group
+      return [selectedPieceIds];
+    }
+
+    return [];
   }, [edges, selection.selectedPieceIds]);
 
   // Calculate bounding box for a group of piece IDs
@@ -177,15 +185,15 @@ const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, selection, onCluster 
     [nodes],
   );
 
-  const connectedGroups = getConnectedGroups();
+  const clusterableGroups = getClusterableGroups();
 
-  if (connectedGroups.length === 0) {
+  if (clusterableGroups.length === 0) {
     return null;
   }
 
   return (
     <ViewportPortal>
-      {connectedGroups.map((groupPieceIds, groupIndex) => {
+      {clusterableGroups.map((groupPieceIds, groupIndex) => {
         const boundingBox = getBoundingBoxForGroup(groupPieceIds);
         if (!boundingBox) return null;
 
@@ -600,6 +608,10 @@ const HelperLines: React.FC<{
   );
 };
 
+//#endregion
+
+//#region Semio to React Flow mapping
+
 const pieceToNode = (piece: Piece, type: Type, center: DiagramPoint, selected: boolean, index: number): PieceNode => ({
   type: "piece",
   id: `piece-${index}-${piece.id_}`,
@@ -706,14 +718,23 @@ const connectionToEdge = (connection: Connection, selected: boolean, isParentCon
 const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEditorSelection) => {
   const design = findDesignInKit(kit, designId);
   if (!design) return null;
-  const centers = flattenDesign(kit, designId).pieces?.map((p) => p.center);
+
+  // Create a map of piece IDs to their flattened centers
+  const flattenedDesign = flattenDesign(kit, designId);
+  const centerMap = new Map<string, DiagramPoint>();
+  flattenedDesign.pieces?.forEach((piece) => {
+    if (piece.id_ && piece.center) {
+      centerMap.set(piece.id_, piece.center);
+    }
+  });
+
   const metadata = piecesMetadata(kit, designId);
 
   // Create nodes for regular pieces
   const pieceNodes =
     design.pieces?.map((piece, i) => {
       const isSelected = selection?.selectedPieceIds.includes(piece.id_) ?? false;
-      const center = centers![i]!;
+      const center = centerMap.get(piece.id_) || piece.center || { x: 0, y: 0 };
 
       // All pieces are now regular pieces (no design pieces)
       const type = findTypeInKit(kit, piece.type);
@@ -741,7 +762,8 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
   });
 
   const designNodes = Array.from(designIds).map((designId, i) => {
-    const isSelected = false; // TODO: Add design selection support
+    const designPieceId = `design-${designId}`;
+    const isSelected = selection?.selectedPieceIds.includes(designPieceId) ?? false;
 
     // Find external connections for this design
     const externalConnections =
@@ -770,9 +792,9 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
       // Find the actual positions of these connected pieces in the current diagram
       const connectedPieceCenters: DiagramPoint[] = [];
       Array.from(connectedPieceIds).forEach((pieceId) => {
-        const pieceIndex = design.pieces?.findIndex((p) => p.id_ === pieceId);
-        if (pieceIndex !== undefined && pieceIndex >= 0 && centers && centers[pieceIndex]) {
-          connectedPieceCenters.push(centers[pieceIndex]);
+        const center = centerMap.get(pieceId);
+        if (center) {
+          connectedPieceCenters.push(center);
         }
       });
 
@@ -948,11 +970,133 @@ const Diagram: FC = () => {
 
       const designName = `Cluster-${Date.now()}`;
 
-      // Create clustered design
-      const { clusteredDesign, externalConnections } = createClusteredDesign(design, clusterPieceIds, designName);
+      // Separate regular pieces from design nodes
+      const regularPieceIds = clusterPieceIds.filter((id) => !id.startsWith("design-"));
+      const designNodeIds = clusterPieceIds.filter((id) => id.startsWith("design-"));
 
-      // Replace clustered pieces with direct design references in current design
-      const updatedDesign = replaceClusterWithDesign(design, clusterPieceIds, clusteredDesign, externalConnections);
+      // Collect all pieces to include in the cluster
+      let allPiecesToCluster: Piece[] = [];
+      let allConnectionsToCluster: Connection[] = [];
+      let allExternalConnections: Connection[] = [];
+
+      // Add regular pieces
+      if (regularPieceIds.length > 0) {
+        const regularPieces = (design.pieces || []).filter((piece) => regularPieceIds.includes(piece.id_));
+        allPiecesToCluster.push(...regularPieces);
+
+        // Find connections involving regular pieces
+        const regularConnections = (design.connections || []).filter((connection) => regularPieceIds.includes(connection.connected.piece.id_) || regularPieceIds.includes(connection.connecting.piece.id_));
+
+        // Separate internal and external connections for regular pieces
+        const internalRegularConnections = regularConnections.filter((connection) => regularPieceIds.includes(connection.connected.piece.id_) && regularPieceIds.includes(connection.connecting.piece.id_));
+
+        const externalRegularConnections = regularConnections.filter((connection) => {
+          const connectedInCluster = regularPieceIds.includes(connection.connected.piece.id_);
+          const connectingInCluster = regularPieceIds.includes(connection.connecting.piece.id_);
+          return connectedInCluster !== connectingInCluster; // XOR - exactly one is in cluster
+        });
+
+        allConnectionsToCluster.push(...internalRegularConnections);
+        allExternalConnections.push(...externalRegularConnections);
+      }
+
+      // Add pieces from design nodes
+      for (const designNodeId of designNodeIds) {
+        // Extract design name from design node ID (format: "design-DesignName")
+        const referencedDesignName = designNodeId.replace("design-", "");
+        const referencedDesign = findDesignInKit(kit, { name: referencedDesignName });
+
+        if (referencedDesign && referencedDesign.pieces) {
+          // Simply use the original pieces and connections (no namespacing to clean)
+          allPiecesToCluster.push(...referencedDesign.pieces);
+
+          // Use the original connections as-is
+          if (referencedDesign.connections) {
+            allConnectionsToCluster.push(...referencedDesign.connections);
+          }
+
+          // Find external connections that connect to this design node
+          const designExternalConnections = (design.connections || []).filter((connection) => connection.connected.designId === referencedDesignName || connection.connecting.designId === referencedDesignName);
+
+          allExternalConnections.push(...designExternalConnections);
+        }
+      }
+
+      // Create the clustered design with all collected pieces and connections
+      const clusteredDesign: Design = {
+        name: designName,
+        unit: design.unit,
+        description: `Hierarchical cluster with ${allPiecesToCluster.length} pieces`,
+        pieces: allPiecesToCluster,
+        connections: allConnectionsToCluster,
+        created: new Date(),
+        updated: new Date(),
+      };
+
+      // Remove all clustered items from the current design
+      const remainingPieces = (design.pieces || []).filter((piece) => !regularPieceIds.includes(piece.id_));
+
+      // Remove connections involving clustered regular pieces or design nodes
+      const remainingConnections = (design.connections || []).filter((connection) => {
+        const connectedInRegularCluster = regularPieceIds.includes(connection.connected.piece.id_);
+        const connectingInRegularCluster = regularPieceIds.includes(connection.connecting.piece.id_);
+        const connectedInDesignCluster = designNodeIds.some((designId) => {
+          const designName = designId.replace("design-", "");
+          return connection.connected.designId === designName;
+        });
+        const connectingInDesignCluster = designNodeIds.some((designId) => {
+          const designName = designId.replace("design-", "");
+          return connection.connecting.designId === designName;
+        });
+
+        return !connectedInRegularCluster && !connectingInRegularCluster && !connectedInDesignCluster && !connectingInDesignCluster;
+      });
+
+      // Update external connections to reference the new clustered design
+      const updatedExternalConnections = allExternalConnections.map((connection) => {
+        const connectedInCluster =
+          regularPieceIds.includes(connection.connected.piece.id_) ||
+          designNodeIds.some((designId) => {
+            const designName = designId.replace("design-", "");
+            return connection.connected.designId === designName;
+          });
+
+        const connectingInCluster =
+          regularPieceIds.includes(connection.connecting.piece.id_) ||
+          designNodeIds.some((designId) => {
+            const designName = designId.replace("design-", "");
+            return connection.connecting.designId === designName;
+          });
+
+        if (connectedInCluster) {
+          return {
+            ...connection,
+            connected: {
+              piece: { id_: connection.connected.piece.id_ },
+              port: connection.connected.port,
+              designId: clusteredDesign.name,
+            },
+          };
+        } else if (connectingInCluster) {
+          return {
+            ...connection,
+            connecting: {
+              piece: { id_: connection.connecting.piece.id_ },
+              port: connection.connecting.port,
+              designId: clusteredDesign.name,
+            },
+          };
+        }
+
+        return connection;
+      });
+
+      const updatedDesign = {
+        ...design,
+        pieces: remainingPieces,
+        connections: [...remainingConnections, ...updatedExternalConnections],
+        updated: new Date(),
+      };
 
       // Update the current design - this will automatically propagate to all DesignEditorStates and Sketchpad kit
       setDesign(updatedDesign);
@@ -967,7 +1111,7 @@ const Diagram: FC = () => {
       // Also add the clustered design as a separate design to the kit
       addDesign(clusteredDesign);
     },
-    [design, setDesign, addDesign],
+    [design, setDesign, addDesign, kit],
   );
 
   //#region Selection

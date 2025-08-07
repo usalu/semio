@@ -157,7 +157,7 @@ export const PieceIdLikeSchema = z.union([PieceSchema, PieceIdSchema, z.string()
 export const SideSchema = z.object({
   piece: PieceIdSchema,
   port: PortIdSchema,
-  designId: z.string().optional(), // Reference to design name in includedDesigns
+  designId: z.string().optional(),
 });
 export const SideIdSchema = z.object({ piece: PieceIdSchema });
 
@@ -1735,56 +1735,34 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
     // Recursively expand the referenced design first
     const expandedReferencedDesign = expandDesignPieces(referencedDesign, kit);
 
-    // For design connections, we don't need to create design pieces, just expand the referenced pieces
-    // Transform pieces from referenced design with namespaced IDs
+    // For design connections, use the original pieces and connections without namespacing
     const transformedPieces = (expandedReferencedDesign.pieces || []).map((piece) => ({
       ...piece,
-      id_: `${designName}:${piece.id_}`, // Namespace the piece ID with designName
       center: piece.center || { x: 0, y: 0 },
     }));
 
-    // Transform connections from referenced design
-    const transformedConnections = (expandedReferencedDesign.connections || []).map((connection) => ({
-      ...connection,
-      connected: {
-        ...connection.connected,
-        piece: { id_: `${designName}:${connection.connected.piece.id_}` },
-      },
-      connecting: {
-        ...connection.connecting,
-        piece: { id_: `${designName}:${connection.connecting.piece.id_}` },
-      },
-    }));
+    // Use original connections without namespacing
+    const transformedConnections = expandedReferencedDesign.connections || [];
 
     // Update external connections that reference this design piece
     const updatedExternalConnections = (expandedDesign.connections || []).map((connection) => {
       if (connection.connected.designId === designName) {
-        // Find the corresponding transformed piece for this original piece ID
-        const originalPieceId = connection.connected.piece.id_;
-        const transformedPiece = transformedPieces.find((p) => p.id_ === `${designName}:${originalPieceId}`);
-        const targetPieceId = transformedPiece ? transformedPiece.id_ : connection.connected.piece.id_;
-
+        // Use the original piece ID directly (no namespacing)
         return {
           ...connection,
           connected: {
             ...connection.connected,
-            piece: { id_: targetPieceId },
             designId: undefined, // Remove designId since we've expanded
           },
         };
       }
 
       if (connection.connecting.designId === designName) {
-        // Find the corresponding transformed piece for this original piece ID
-        const originalPieceId = connection.connecting.piece.id_;
-        const transformedPiece = transformedPieces.find((p) => p.id_ === `${designName}:${originalPieceId}`);
-        const targetPieceId = transformedPiece ? transformedPiece.id_ : connection.connecting.piece.id_;
-
+        // Use the original piece ID directly (no namespacing)
         return {
           ...connection,
           connecting: {
             ...connection.connecting,
-            piece: { id_: targetPieceId },
             designId: undefined, // Remove designId since we've expanded
           },
         };
