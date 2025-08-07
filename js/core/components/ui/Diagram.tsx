@@ -259,8 +259,14 @@ type PieceNodeProps = {
   type: Type;
 };
 
+type DesignNodeProps = {
+  piece: Piece;
+  externalConnections: Connection[];
+};
+
 type PieceNode = Node<PieceNodeProps, "piece">;
-type DiagramNode = PieceNode;
+type DesignNode = Node<DesignNodeProps, "design">;
+type DiagramNode = PieceNode | DesignNode;
 
 type ConnectionEdge = Edge<{ connection: Connection; isParentConnection?: boolean }, "connection">;
 type DiagramEdge = ConnectionEdge;
@@ -360,6 +366,127 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
     fillClass = "fill-primary";
   } else {
     fillClass = "fill-transparent";
+  }
+
+  return (
+    <div style={{ opacity }}>
+      <svg width={ICON_WIDTH} height={ICON_WIDTH} className="cursor-pointer">
+        <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
+        <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className="text-xs font-bold fill-dark">
+          {id_}
+        </text>
+      </svg>
+      {ports?.map((port: Port, portIndex: number) => (
+        <PortHandle key={`${id}-port-${portIndex}-${port.id_}`} port={port} pieceId={id_} selected={selection.selectedPiecePortId?.pieceId === id_ && selection.selectedPiecePortId?.portId === port.id_} onPortClick={onPortClick} />
+      ))}
+    </div>
+  );
+});
+
+const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, data, selected }) => {
+  const {
+    piece,
+    piece: { id_, qualities },
+    externalConnections,
+  } = data as DesignNodeProps & { diffStatus: DiffStatus };
+
+  const { selection, selectPiecePort, deselectPiecePort, addConnection } = useDesignEditor();
+
+  // Create ports dynamically based on external connections (same logic as designPieceToNode)
+  const ports: Port[] = externalConnections.map((connection, portIndex) => {
+    // Determine which side of the connection is related to the design piece
+    const connectedIsDesignPiece = connection.connected.piece.id_ === piece.id_ || connection.connected.designId === piece.type.variant;
+    const connectingIsDesignPiece = connection.connecting.piece.id_ === piece.id_ || connection.connecting.designId === piece.type.variant;
+
+    // Get the side that represents the design piece
+    const designSide = connectedIsDesignPiece ? connection.connected : connection.connecting;
+    const originalSide = connectedIsDesignPiece ? connection.connecting : connection.connected;
+
+    // Calculate port position using the same system as normal pieces
+    const totalPorts = externalConnections.length;
+    const t = portIndex / totalPorts; // Normalize to [0,1) like normal pieces
+
+    // Use the same positioning approach as getPortPositionStyle but for 3D point
+    const angle = t * 2 * Math.PI; // Same as normal pieces
+    const radius = 0.5; // Use consistent radius for design pieces
+
+    // Calculate 3D point position (for connections/flattening)
+    const portX = radius * Math.sin(angle); // Same X formula as normal pieces
+    const portY = radius * Math.cos(angle); // Same pattern but for 3D space
+    const portZ = 0;
+
+    // Direction points outward from the piece (same as angle direction)
+    const directionX = Math.sin(angle);
+    const directionY = Math.cos(angle);
+    const directionZ = 0;
+
+    return {
+      id_: `port-${portIndex}`,
+      description: `Port for connection to ${originalSide.piece.id_}:${originalSide.port.id_}`,
+      family: "default", // Use default family for design piece ports
+      mandatory: false,
+      t: t, // Normalized parameter value like normal pieces
+      point: { x: portX, y: portY, z: portZ }, // 3D position for connections
+      direction: { x: directionX, y: directionY, z: directionZ }, // Points outward
+      qualities: [
+        {
+          name: "semio.originalPieceId",
+          value: designSide.piece.id_ || "",
+        },
+        {
+          name: "semio.originalPortId",
+          value: designSide.port.id_ || "",
+        },
+        {
+          name: "semio.externalPieceId",
+          value: originalSide.piece.id_ || "",
+        },
+        {
+          name: "semio.externalPortId",
+          value: originalSide.port.id_ || "",
+        },
+      ],
+    };
+  });
+
+  const onPortClick = (port: Port) => {
+    const currentSelectedPort = selection.selectedPiecePortId;
+
+    if (currentSelectedPort && (currentSelectedPort.pieceId !== piece.id_ || currentSelectedPort.portId !== port.id_)) {
+      // Create connection between the two selected ports
+      const connection: Connection = {
+        connecting: {
+          piece: { id_: currentSelectedPort.pieceId },
+          port: { id_: port.id_ },
+        },
+        connected: { piece: { id_: piece.id_ }, port: { id_: port.id_ } },
+      };
+      addConnection(connection);
+      deselectPiecePort();
+    } else if (currentSelectedPort && currentSelectedPort.pieceId === piece.id_ && currentSelectedPort.portId === port.id_) {
+      // Deselect if clicking the same port
+      deselectPiecePort();
+    } else if (port.id_) selectPiecePort(piece.id_, port.id_);
+  };
+
+  let fillClass = "";
+  let strokeClass = "stroke-dark stroke-2";
+  let opacity = 1;
+
+  const diff = (qualities?.find((q) => q.name === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
+
+  if (diff === DiffStatus.Added) {
+    fillClass = selected ? "fill-[color-mix(in_srgb,theme(colors.success)_50%,theme(colors.primary)_50%)]" : "fill-success";
+  } else if (diff === DiffStatus.Removed) {
+    fillClass = selected ? "fill-[color-mix(in_srgb,theme(colors.danger)_50%,theme(colors.primary)_50%)]" : "fill-danger";
+    strokeClass = "stroke-danger stroke-2";
+    opacity = 0.2;
+  } else if (diff === DiffStatus.Modified) {
+    fillClass = selected ? "fill-[color-mix(in_srgb,theme(colors.warning)_50%,theme(colors.primary)_50%)]" : "fill-warning";
+  } else if (selected) {
+    fillClass = "fill-primary";
+  } else {
+    fillClass = "fill-background";
   }
 
   return (
@@ -485,86 +612,17 @@ const pieceToNode = (piece: Piece, type: Type, center: DiagramPoint, selected: b
   className: selected ? "selected" : "",
 });
 
-const designPieceToNode = (piece: Piece, externalConnections: Connection[], center: DiagramPoint, selected: boolean, index: number): PieceNode => {
-  // Create ports dynamically based on external connections
-  const ports: Port[] = externalConnections.map((connection, portIndex) => {
-    // Determine which side of the connection is related to the design piece
-    const connectedIsDesignPiece = connection.connected.piece.id_ === piece.id_ || connection.connected.designId === piece.type.variant;
-    const connectingIsDesignPiece = connection.connecting.piece.id_ === piece.id_ || connection.connecting.designId === piece.type.variant;
-
-    // Get the side that represents the design piece
-    const designSide = connectedIsDesignPiece ? connection.connected : connection.connecting;
-    const originalSide = connectedIsDesignPiece ? connection.connecting : connection.connected;
-
-    // Calculate port position using the same system as normal pieces
-    const totalPorts = externalConnections.length;
-    const t = portIndex / totalPorts; // Normalize to [0,1) like normal pieces
-
-    // Use the same positioning approach as getPortPositionStyle but for 3D point
-    const angle = t * 2 * Math.PI; // Same as normal pieces
-    const radius = 0.5; // Use consistent radius for design pieces
-
-    // Calculate 3D point position (for connections/flattening)
-    const portX = radius * Math.sin(angle); // Same X formula as normal pieces
-    const portY = radius * Math.cos(angle); // Same pattern but for 3D space
-    const portZ = 0;
-
-    // Direction points outward from the piece (same as angle direction)
-    const directionX = Math.sin(angle);
-    const directionY = Math.cos(angle);
-    const directionZ = 0;
-
-    return {
-      id_: `port-${portIndex}`,
-      description: `Port for connection to ${originalSide.piece.id_}:${originalSide.port.id_}`,
-      family: "default", // Use default family for design piece ports
-      mandatory: false,
-      t: t, // Normalized parameter value like normal pieces
-      point: { x: portX, y: portY, z: portZ }, // 3D position for connections
-      direction: { x: directionX, y: directionY, z: directionZ }, // Points outward
-      qualities: [
-        {
-          name: "semio.originalPieceId",
-          value: designSide.piece.id_ || "",
-        },
-        {
-          name: "semio.originalPortId",
-          value: designSide.port.id_ || "",
-        },
-        {
-          name: "semio.externalPieceId",
-          value: originalSide.piece.id_ || "",
-        },
-        {
-          name: "semio.externalPortId",
-          value: originalSide.port.id_ || "",
-        },
-      ],
-    };
-  });
-
-  // Create a synthetic type for the design piece
-  const designType: Type = {
-    name: "design",
-    variant: piece.type.variant,
-    unit: "m", // Default unit
-    description: `Design piece: ${piece.type.variant}`,
-    ports: ports,
-    representations: [],
-  };
-
-  return {
-    type: "piece",
-    id: `piece-${index}-${piece.id_}`,
-    position: {
-      x: center.x * ICON_WIDTH || 0,
-      y: -center.y * ICON_WIDTH || 0,
-    },
-    selected,
-    data: { piece, type: designType },
-    className: selected ? "selected" : "",
-  };
-};
+const designToNode = (piece: Piece, externalConnections: Connection[], center: DiagramPoint, selected: boolean, index: number): DesignNode => ({
+  type: "design",
+  id: `piece-${index}-${piece.id_}`,
+  position: {
+    x: center.x * ICON_WIDTH || 0,
+    y: -center.y * ICON_WIDTH || 0,
+  },
+  selected,
+  data: { piece, externalConnections },
+  className: selected ? "selected" : "",
+});
 
 // Utility function to extract piece ID from node ID (format: piece-{index}-{pieceId})
 const extractPieceIdFromNodeId = (nodeId: string): string => {
@@ -676,7 +734,7 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
             return directConnection || designIdConnection;
           }) ?? [];
 
-        return designPieceToNode(piece, externalConnections, center, isSelected, i);
+        return designToNode(piece, externalConnections, center, isSelected, i);
       } else {
         // Regular piece with type from kit
         const type = findTypeInKit(kit, piece.type);
@@ -1492,7 +1550,7 @@ const Diagram: FC = () => {
   );
   //#endregion Actions
 
-  const nodeTypes = useMemo(() => ({ piece: PieceNodeComponent }), []);
+  const nodeTypes = useMemo(() => ({ piece: PieceNodeComponent, design: DesignNodeComponent }), []);
   const edgeTypes = useMemo(() => ({ connection: ConnectionEdgeComponent }), []);
 
   return (
