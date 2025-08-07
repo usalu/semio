@@ -1,0 +1,126 @@
+---
+// Important that this is the first import so it can override cascade layers order.
+import 'virtual:starlight/user-css';
+
+// Starlight nested cascade layers definitions which specify the default order of internal layers.
+import '@astrojs/starlight/style/layers.css';
+
+// Built-in CSS styles.
+import '@astrojs/starlight/style/asides.css';
+import '@astrojs/starlight/style/props.css';
+import '@astrojs/starlight/style/reset.css';
+import '@astrojs/starlight/style/util.css';
+import 'virtual:starlight/optional-css';
+
+import Banner from './Banner.astro';
+import ContentPanel from './ContentPanel.astro';
+import DraftContentNotice from './DraftContentNotice.astro';
+import FallbackContentNotice from './FallbackContentNotice.astro';
+import Footer from './Footer.astro';
+import Head from './Head.astro';
+import Header from './Header.astro';
+import Hero from './Hero.astro';
+import MarkdownContent from './MarkdownContent.astro';
+import PageFrame from './PageFrame.astro';
+import PageSidebar from './PageSidebar.astro';
+import PageTitle from './PageTitle.astro';
+import Sidebar from './Sidebar.astro';
+import SkipLink from './SkipLink.astro';
+import ThemeProvider from './ThemeProvider.astro';
+import TwoColumnContent from './TwoColumnContent.astro';
+
+import printHref from '../style/print.css?url&no-inline'; // TODO: fix this
+
+const { starlightRoute } = Astro.locals;
+
+const pagefindEnabled =
+	starlightRoute.entry.slug !== '404' &&
+	!starlightRoute.entry.slug.endsWith('/404') &&
+	starlightRoute.entry.data.pagefind !== false;
+
+const htmlDataAttributes: DOMStringMap = { 'data-theme': 'dark' };
+if (Boolean(starlightRoute.toc)) htmlDataAttributes['data-has-toc'] = '';
+if (starlightRoute.hasSidebar) htmlDataAttributes['data-has-sidebar'] = '';
+if (Boolean(starlightRoute.entry.data.hero)) htmlDataAttributes['data-has-hero'] = '';
+
+const mainDataAttributes: DOMStringMap = {};
+if (pagefindEnabled) mainDataAttributes['data-pagefind-body'] = '';
+---
+
+<html lang={starlightRoute.lang} dir={starlightRoute.dir} {...htmlDataAttributes}>
+	<head>
+		<Head />
+		<style>
+			html:not([data-has-toc]) {
+				--sl-mobile-toc-height: 0rem;
+			}
+			html:not([data-has-sidebar]) {
+				--sl-content-width: 67.5rem;
+			}
+			/* Add scroll padding to ensure anchor headings aren't obscured by nav */
+			html {
+				/* Additional padding is needed to account for the mobile TOC */
+				scroll-padding-top: calc(1.5rem + var(--sl-nav-height) + var(--sl-mobile-toc-height));
+			}
+			main {
+				padding: var(--sl-main-pad);
+			}
+			@media (min-width: 50em) {
+				[data-has-sidebar] {
+					--sl-content-inline-start: var(--sl-sidebar-width);
+				}
+			}
+			@media (min-width: 72em) {
+				html {
+					scroll-padding-top: calc(1.5rem + var(--sl-nav-height));
+				}
+			}
+		</style>
+		<ThemeProvider />
+		<link rel="stylesheet" href={printHref} media="print" />
+	</head>
+	<body>
+		<SkipLink />
+		<PageFrame>
+			<Header slot="header" />
+			{starlightRoute.hasSidebar && <Sidebar slot="sidebar" />}
+			<script src="./SidebarPersistState"></script>
+			<TwoColumnContent>
+				<PageSidebar slot="right-sidebar" />
+				<main
+					{...mainDataAttributes}
+					lang={starlightRoute.entryMeta.lang}
+					dir={starlightRoute.entryMeta.dir}
+				>
+					{/* TODO: Revisit how this logic flows. */}
+					<Banner />
+					{
+						starlightRoute.entry.data.hero ? (
+							<ContentPanel>
+								<Hero />
+								<MarkdownContent>
+									<slot />
+								</MarkdownContent>
+								<Footer />
+							</ContentPanel>
+						) : (
+							<>
+								<ContentPanel>
+									<PageTitle />
+									{starlightRoute.entry.data.draft && <DraftContentNotice />}
+									{starlightRoute.isFallback && <FallbackContentNotice />}
+								</ContentPanel>
+								<ContentPanel>
+									<MarkdownContent>
+										<slot />
+									</MarkdownContent>
+									<Footer />
+								</ContentPanel>
+							</>
+						)
+					}
+				</main>
+			</TwoColumnContent>
+		</PageFrame>
+	</body>
+</html>

@@ -1,60 +1,74 @@
 ---
-// ThemeSelect.astro - Theme toggle using React ToggleCycle component
+import Select from './Select.astro';
 ---
 
-<div id="theme-select-root"></div>
+<starlight-theme-select>
+	{/* TODO: Can we give this select a width that works well for each language’s strings? */}
+	<Select
+		icon="laptop"
+		label={Astro.locals.t('themeSelect.accessibleLabel')}
+		value="auto"
+		options={[
+			{ label: Astro.locals.t('themeSelect.dark'), selected: false, value: 'dark' },
+			{ label: Astro.locals.t('themeSelect.light'), selected: false, value: 'light' },
+			{ label: Astro.locals.t('themeSelect.auto'), selected: true, value: 'auto' },
+		]}
+		width="6.25em"
+	/>
+</starlight-theme-select>
+
+{/* Inlined to avoid FOUC. Uses global scope from `ThemeProvider.astro` */}
+<script is:inline>
+	StarlightThemeProvider.updatePickers();
+</script>
 
 <script>
-  import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle";
-  import { Moon, Sun } from "lucide-react";
-  import React, { createElement, useState } from "react";
-  import { createRoot } from "react-dom/client";
+	type Theme = 'auto' | 'dark' | 'light';
 
-  // Wait for DOM to be ready
-  document.addEventListener('DOMContentLoaded', () => {
-    const container = document.getElementById('theme-select-root');
-    if (!container) return;
+	/** Key in `localStorage` to store color theme preference at. */
+	const storageKey = 'starlight-theme';
 
-    // Get initial theme
-    const getCurrentTheme = () => {
-      return document.documentElement.getAttribute('data-theme') || 'light';
-    };
+	/** Get a typesafe theme string from any JS value (unknown values are coerced to `'auto'`). */
+	const parseTheme = (theme: unknown): Theme =>
+		theme === 'auto' || theme === 'dark' || theme === 'light' ? theme : 'auto';
 
-    // Set theme and update localStorage
-    const setTheme = (theme: string) => {
-      document.documentElement.setAttribute('data-theme', theme);
-      localStorage.setItem('starlight-theme', theme);
-    };
+	/** Load the user’s preference from `localStorage`. */
+	const loadTheme = (): Theme =>
+		parseTheme(typeof localStorage !== 'undefined' && localStorage.getItem(storageKey));
 
-    const root = createRoot(container);
-    
-    const ThemeToggle = () => {
-      const [theme, setThemeState] = useState(getCurrentTheme());
+	/** Store the user’s preference in `localStorage`. */
+	function storeTheme(theme: Theme): void {
+		if (typeof localStorage !== 'undefined') {
+			localStorage.setItem(storageKey, theme === 'light' || theme === 'dark' ? theme : '');
+		}
+	}
 
-      const handleThemeChange = (newTheme: string) => {
-        setTheme(newTheme);
-        setThemeState(newTheme);
-      };
+	/** Get the preferred system color scheme. */
+	const getPreferredColorScheme = (): Theme =>
+		matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 
-      return createElement(ToggleCycle, {
-        value: theme,
-        onValueChange: handleThemeChange,
-        variant: "outline",
-        items: [
-          {
-            value: "light",
-            tooltip: "Turn theme dark",
-            label: createElement(Moon),
-          },
-          {
-            value: "dark", 
-            tooltip: "Turn theme light",
-            label: createElement(Sun),
-          },
-        ],
-      });
-    };
+	/** Update select menu UI, document theme, and local storage state. */
+	function onThemeChange(theme: Theme): void {
+		StarlightThemeProvider.updatePickers(theme);
+		document.documentElement.dataset.theme = theme === 'auto' ? getPreferredColorScheme() : theme;
+		storeTheme(theme);
+	}
 
-    root.render(createElement(ThemeToggle));
-  });
+	// React to changes in system color scheme.
+	matchMedia(`(prefers-color-scheme: light)`).addEventListener('change', () => {
+		if (loadTheme() === 'auto') onThemeChange('auto');
+	});
+
+	class StarlightThemeSelect extends HTMLElement {
+		constructor() {
+			super();
+			onThemeChange(loadTheme());
+			this.querySelector('select')?.addEventListener('change', (e) => {
+				if (e.currentTarget instanceof HTMLSelectElement) {
+					onThemeChange(parseTheme(e.currentTarget.value));
+				}
+			});
+		}
+	}
+	customElements.define('starlight-theme-select', StarlightThemeSelect);
 </script>

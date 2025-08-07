@@ -1,5 +1,5 @@
 ---
-import Default from '@astrojs/starlight/components/FallbackContentNotice.astro';
+import ContentNotice from './ContentNotice.astro';
 ---
 
-<Default><slot /></Default>
+<ContentNotice icon="warning" label={Astro.locals.t('i18n.untranslatedContent')} />

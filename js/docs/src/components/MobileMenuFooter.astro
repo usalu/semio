@@ -1,94 +1,35 @@
 ---
-// MobileMenuFooter.astro - Mobile navigation footer
-const { sidebar } = Astro.locals.starlightRoute;
+import LanguageSelect from './LanguageSelect.astro';
+import SocialIcons from './SocialIcons.astro';
+import ThemeSelect from './ThemeSelect.astro';
 ---
 
-<div class="mobile-menu-footer">
-	<div class="mobile-nav-section">
-		<h3>Navigation</h3>
-		{sidebar && sidebar.length > 0 && (
-			<nav class="mobile-sidebar">
-				<ul>
-					{sidebar.map((item) => (
-						<li>
-							{item.link ? (
-								<a href={item.link}>{item.label}</a>
-							) : (
-								<span class="section-title">{item.label}</span>
-							)}
-							{item.items && item.items.length > 0 && (
-								<ul class="mobile-sublist">
-									{item.items.map((subItem) => (
-										<li>
-											{subItem.link ? (
-												<a href={subItem.link}>{subItem.label}</a>
-											) : (
-												<span>{subItem.label}</span>
-											)}
-										</li>
-									))}
-								</ul>
-							)}
-						</li>
-					))}
-				</ul>
-			</nav>
-		)}
+<div class="mobile-preferences sl-flex">
+	<div class="social-icons">
+		<SocialIcons />
 	</div>
+	<ThemeSelect />
+	<LanguageSelect />
 </div>
 
 <style>
 	@layer starlight.core {
-		.mobile-menu-footer {
-			display: block;
-			padding: 1rem;
-			background: var(--sl-color-bg-nav);
-			border-top: 1px solid var(--sl-color-hairline);
+		.social-icons {
+			display: flex;
+			margin-inline-end: auto;
+			gap: 1rem;
+			align-items: center;
+			padding-block: 1rem;
 		}
-
-		.mobile-nav-section h3 {
-			color: var(--sl-color-white);
-			font-size: var(--sl-text-h5);
-			font-weight: 600;
-			margin-bottom: 0.5rem;
+		.social-icons:empty {
+			display: none;
 		}
-
-		.mobile-sidebar ul {
-			list-style: none;
-			padding: 0;
-			margin: 0;
-		}
-
-		.mobile-sidebar a {
-			display: block;
-			color: var(--sl-color-gray-3);
-			text-decoration: none;
-			padding: 0.25rem 0;
-			font-size: var(--sl-text-sm);
-		}
-
-		.mobile-sidebar a:hover {
-			color: var(--sl-color-white);
-		}
-
-		.mobile-sidebar .section-title {
-			color: var(--sl-color-white);
-			font-weight: 600;
-			font-size: var(--sl-text-sm);
-			display: block;
-			padding: 0.25rem 0;
-		}
-
-		.mobile-sublist {
-			margin-left: 1rem;
-			margin-top: 0.25rem;
-		}
-
-		/* Only show on mobile */
-		@media (min-width: 769px) {
-			.mobile-menu-footer {
-				display: none;
-			}
+		.mobile-preferences {
+			justify-content: space-between;
+			flex-wrap: wrap;
+			border-top: 1px solid var(--sl-color-gray-6);
+			column-gap: 1rem;
+			padding: 0.5rem 0;
 		}
 	}
 </style>

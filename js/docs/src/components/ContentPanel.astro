@@ -1,35 +1,6 @@
----
-// ContentPanel.astro - Original structure with floating panels added
-import Sidebar from './Sidebar.astro';
-import PageSidebar from './PageSidebar.astro';
----
-
-<!-- Original ContentPanel structure -->
 <div class="content-panel">
 	<div class="sl-container"><slot /></div>
 </div>
-
-<!-- Add floating panels as overlays -->
-<Fragment>
-	<Sidebar />
-	<PageSidebar />
-</Fragment>
-
-<script>
-	document.addEventListener('DOMContentLoaded', () => {
-		// Hide original Starlight sidebars that might be created elsewhere
-		const hideOriginalSidebars = () => {
-			const originalSidebars = document.querySelectorAll('.sidebar:not(#sidebar-root), .right-sidebar:not(#page-sidebar-root)');
-			originalSidebars.forEach(sidebar => {
-				(sidebar as HTMLElement).style.display = 'none';
-			});
-		};
-
-		// Run immediately and after a delay to catch dynamically created elements
-		hideOriginalSidebars();
-		setTimeout(hideOriginalSidebars, 100);
-	});
-</script>
 
 <style>
 	@layer starlight.core {

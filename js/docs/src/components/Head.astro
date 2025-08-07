@@ -1,5 +1,5 @@
 ---
-import Default from '@astrojs/starlight/components/Head.astro';
+const { head } = Astro.locals.starlightRoute;
 ---
 
-<Default><slot /></Default>
+{head.map(({ tag: Tag, attrs, content }) => <Tag {...attrs} set:html={content} />)}

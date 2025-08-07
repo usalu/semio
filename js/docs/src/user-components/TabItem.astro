@@ -1,0 +1,19 @@
+---
+import type { StarlightIcon } from '@astrojs/starlight/components/Icons';
+import { TabItemTagname } from '@astrojs/starlight/user-components/rehype-tabs';
+
+interface Props {
+	icon?: StarlightIcon;
+	label: string;
+}
+
+const { icon, label } = Astro.props;
+
+if (!label) {
+	throw new Error('Missing prop `label` on `<TabItem>` component.');
+}
+---
+
+<TabItemTagname data-label={label} data-icon={icon}>
+	<slot />
+</TabItemTagname>

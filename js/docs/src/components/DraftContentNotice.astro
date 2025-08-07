@@ -1,5 +1,5 @@
 ---
-import Default from '@astrojs/starlight/components/DraftContentNotice.astro';
+import ContentNotice from './ContentNotice.astro';
 ---
 
-<Default><slot /></Default>
+<ContentNotice icon="warning" label={Astro.locals.t('page.draft')} />
