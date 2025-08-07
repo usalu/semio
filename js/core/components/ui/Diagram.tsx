@@ -576,20 +576,75 @@ const getPieceIdFromNode = (node: DiagramNode): string => {
   return node.data.piece.id_;
 };
 
-const connectionToEdge = (connection: Connection, selected: boolean, isParentConnection: boolean = false, pieceIndexMap: Map<string, number>, connectionIndex: number = 0): ConnectionEdge => {
-  const sourceIndex = pieceIndexMap.get(connection.connecting.piece.id_) ?? 0;
-  const targetIndex = pieceIndexMap.get(connection.connected.piece.id_) ?? 0;
-  const connectingPortId = connection.connecting.port.id_ ?? "undefined";
-  const connectedPortId = connection.connected.port.id_ ?? "undefined";
-  const sourceNodeId = `piece-${sourceIndex}-${connection.connecting.piece.id_}`;
-  const targetNodeId = `piece-${targetIndex}-${connection.connected.piece.id_}`;
+const connectionToEdge = (connection: Connection, selected: boolean, isParentConnection: boolean = false, pieceIndexMap: Map<string, number>, connectionIndex: number = 0, designPieces?: Piece[], allConnections?: Connection[]): ConnectionEdge => {
+  // Handle connections with designId - these reference pieces inside design pieces
+  let sourcePieceId = connection.connecting.piece.id_;
+  let targetPieceId = connection.connected.piece.id_;
+  let sourcePortId = connection.connecting.port.id_ ?? "undefined";
+  let targetPortId = connection.connected.port.id_ ?? "undefined";
+
+  // If connecting side has designId, find the design piece and the correct port
+  if (connection.connecting.designId && designPieces && allConnections) {
+    const designPiece = designPieces.find((p) => p.type.name === "design" && p.type.variant === connection.connecting.designId);
+    if (designPiece) {
+      sourcePieceId = designPiece.id_;
+
+      // Find all external connections for this design piece (same logic as designPieceToNode)
+      const externalConnections = allConnections.filter((conn) => {
+        const directConnection = conn.connected.piece.id_ === designPiece.id_ || conn.connecting.piece.id_ === designPiece.id_;
+        const designIdConnection = conn.connected.designId === designPiece.type.variant || conn.connecting.designId === designPiece.type.variant;
+        return directConnection || designIdConnection;
+      });
+
+      // Find the index of this specific connection in the external connections list
+      const portIndex = externalConnections.findIndex(
+        (conn) =>
+          conn.connected.piece.id_ === connection.connected.piece.id_ &&
+          conn.connecting.piece.id_ === connection.connecting.piece.id_ &&
+          conn.connected.port.id_ === connection.connected.port.id_ &&
+          conn.connecting.port.id_ === connection.connecting.port.id_,
+      );
+      sourcePortId = portIndex >= 0 ? `port-${portIndex}` : "port-0";
+    }
+  }
+
+  // If connected side has designId, find the design piece and the correct port
+  if (connection.connected.designId && designPieces && allConnections) {
+    const designPiece = designPieces.find((p) => p.type.name === "design" && p.type.variant === connection.connected.designId);
+    if (designPiece) {
+      targetPieceId = designPiece.id_;
+
+      // Find all external connections for this design piece (same logic as designPieceToNode)
+      const externalConnections = allConnections.filter((conn) => {
+        const directConnection = conn.connected.piece.id_ === designPiece.id_ || conn.connecting.piece.id_ === designPiece.id_;
+        const designIdConnection = conn.connected.designId === designPiece.type.variant || conn.connecting.designId === designPiece.type.variant;
+        return directConnection || designIdConnection;
+      });
+
+      // Find the index of this specific connection in the external connections list
+      const portIndex = externalConnections.findIndex(
+        (conn) =>
+          conn.connected.piece.id_ === connection.connected.piece.id_ &&
+          conn.connecting.piece.id_ === connection.connecting.piece.id_ &&
+          conn.connected.port.id_ === connection.connected.port.id_ &&
+          conn.connecting.port.id_ === connection.connecting.port.id_,
+      );
+      targetPortId = portIndex >= 0 ? `port-${portIndex}` : "port-0";
+    }
+  }
+
+  const sourceIndex = pieceIndexMap.get(sourcePieceId) ?? 0;
+  const targetIndex = pieceIndexMap.get(targetPieceId) ?? 0;
+  const sourceNodeId = `piece-${sourceIndex}-${sourcePieceId}`;
+  const targetNodeId = `piece-${targetIndex}-${targetPieceId}`;
+
   return {
     type: "connection",
-    id: `${sourceNodeId}:${connectingPortId} -- ${targetNodeId}:${connectedPortId}:${connectionIndex}`,
+    id: `${sourceNodeId}:${sourcePortId} -- ${targetNodeId}:${targetPortId}:${connectionIndex}`,
     source: sourceNodeId,
-    sourceHandle: connection.connecting.port.id_,
+    sourceHandle: sourcePortId,
     target: targetNodeId,
-    targetHandle: connection.connected.port.id_,
+    targetHandle: targetPortId,
     data: { connection, isParentConnection },
     selected,
   };
@@ -676,7 +731,7 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
       const connectionId = `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`;
       const isParentConnection = parentConnectionId === connectionId || parentConnectionId === `${connection.connected.piece.id_} -- ${connection.connecting.piece.id_}`;
 
-      return connectionToEdge(connection, isSelected, isParentConnection, pieceIndexMap, connectionIndex);
+      return connectionToEdge(connection, isSelected, isParentConnection, pieceIndexMap, connectionIndex, design.pieces, design.connections);
     }) ?? [];
   return { nodes: pieceNodes, edges: connectionEdges };
 };
