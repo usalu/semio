@@ -1,30 +1,3 @@
----
-description: Help senior developer working.
-tools:
-  [
-    "changes",
-    "codebase",
-    "editFiles",
-    "fetch",
-    "findTestFiles",
-    "problems",
-    "readCellOutput",
-    "runCommands",
-    "runNotebooks",
-    "runTasks",
-    "runTests",
-    "search",
-    "searchResults",
-    "terminalLastCommand",
-    "terminalSelection",
-    "testFailure",
-    "usages",
-    "vscodeAPI",
-    "markitdown",
-  ]
-model: Claude Sonnet 4
----
-
 # Project
 
 An ecosystem for designing kit-of-parts architecture together.

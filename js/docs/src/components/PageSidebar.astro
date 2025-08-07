@@ -1,7 +1,6 @@
 ---
-// PageSidebar.astro - Table of contents sidebar that uses Starlight components
-// import MobileTableOfContents from 'virtual:starlight/components/MobileTableOfContents';
-// import TableOfContents from 'virtual:starlight/components/TableOfContents';
+import MobileTableOfContents from './MobileTableOfContents.astro';
+import TableOfContents from './TableOfContents.astro';
 
 const { toc } = Astro.locals.starlightRoute || {};
 ---
@@ -9,81 +8,137 @@ const { toc } = Astro.locals.starlightRoute || {};
 {
 	Astro.locals.starlightRoute.toc && (
 		<>
+			<!-- Original Starlight mobile TOC -->
 			<div class="lg:sl-hidden">
-				<!-- <MobileTableOfContents /> -->
+				<MobileTableOfContents />
 			</div>
+			<!-- Original Starlight desktop TOC (hidden but preserved) -->
 			<div class="right-sidebar-panel sl-hidden lg:sl-block">
 				<div class="sl-container">
-					<!-- <TableOfContents /> -->
-					<h2>On this page</h2>
-					<nav class="sl-toc">
-						<ul class="sl-toc-list">
-							{toc.items.map((item) => (
-								<li class="sl-toc-item">
-									<a href={`#${item.slug}`} class="sl-toc-link">
-										{item.text}
-									</a>
-									{item.children && item.children.length > 0 && (
-										<ul class="sl-toc-sublist">
-											{item.children.map((child) => (
-												<li class="sl-toc-item">
-													<a href={`#${child.slug}`} class="sl-toc-link">
-														{child.text}
-													</a>
-												</li>
-											))}
-										</ul>
-									)}
-								</li>
-							))}
-						</ul>
-					</nav>
+					<TableOfContents />
 				</div>
 			</div>
 		</>
 	)
 }
 
+<!-- Floating page sidebar panel (separate from original structure) -->
+{
+	Astro.locals.starlightRoute.toc && (
+		<div id="page-sidebar-root" class="floating-page-sidebar-panel">
+			<div class="page-sidebar-content">
+				<nav class="tree-nav">
+					<div class="tree-section">
+						<div class="tree-section-header">
+							<span class="tree-section-label">On this page</span>
+						</div>
+						<div class="tree-section-content">
+							{toc.items.map((item) => (
+								<div class="tree-item">
+									<a href={`#${item.slug}`} class="tree-item-link">
+										{item.text}
+									</a>
+									{item.children && item.children.length > 0 && (
+										<div class="tree-sublist">
+											{item.children.map((child) => (
+												<div class="tree-item tree-subitem">
+													<a href={`#${child.slug}`} class="tree-item-link">
+														{child.text}
+													</a>
+												</div>
+											))}
+										</div>
+									)}
+								</div>
+							))}
+						</div>
+					</div>
+				</nav>
+			</div>
+		</div>
+	)
+}
+
 <style>
 	@layer starlight.core {
+		/* Keep original structure visible but adjust positioning */
 		.right-sidebar-panel {
-			padding: 1rem var(--sl-sidebar-pad-x);
+			display: none !important;
 		}
-		.sl-container {
-			width: calc(var(--sl-sidebar-width) - 2 * var(--sl-sidebar-pad-x));
+
+		#page-sidebar-root {
+			position: fixed;
+			top: 4rem;
+			right: 1rem;
+			bottom: 1rem;
+			width: 280px;
+			background: var(--sl-color-bg-sidebar);
+			border: 1px solid var(--sl-color-gray-5);
+			z-index: 20;
+			overflow: auto;
 		}
-		.right-sidebar-panel :global(h2) {
-			color: var(--sl-color-white);
-			font-size: var(--sl-text-h5);
+
+		.page-sidebar-content {
+			padding: 0.25rem;
+		}
+
+		.tree-section-header {
+			padding: 0.25rem 0.5rem;
+		}
+
+		.tree-section-label {
+			font-size: var(--sl-text-xs);
+			color: var(--sl-color-gray-2);
+			text-transform: uppercase;
 			font-weight: 600;
-			line-height: var(--sl-line-height-headings);
-			margin-bottom: 0.5rem;
+			letter-spacing: 0.05em;
 		}
-		.right-sidebar-panel :global(:where(a)) {
+
+		.tree-section-content {
+			padding-left: 0.5rem;
+			min-width: 0;
+			overflow: hidden;
+			padding-bottom: 0.125rem;
+		}
+
+		.tree-item {
+			min-width: 0;
+			overflow: hidden;
+		}
+
+		.tree-item-link {
 			display: block;
+			padding: 0.125rem 0.25rem;
 			font-size: var(--sl-text-xs);
 			text-decoration: none;
 			color: var(--sl-color-gray-3);
 			overflow-wrap: anywhere;
-			padding: 0.25rem 0;
+			transition: color 0.2s;
+			cursor: pointer;
+			user-select: none;
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
 		}
-		.right-sidebar-panel :global(:where(a):hover) {
+
+		.tree-item-link:hover {
+			background: var(--sl-color-gray-6);
 			color: var(--sl-color-white);
 		}
-		.sl-toc-sublist {
-			margin-left: 1rem;
-			margin-top: 0.25rem;
+
+		.tree-sublist {
+			padding-left: 1rem;
+			margin-top: 0.125rem;
 		}
-		@media (min-width: 72rem) {
-			.sl-container {
-				max-width: calc(
-					(
-						(
-								100vw - var(--sl-sidebar-width) - 2 * var(--sl-content-pad-x) - 2 *
-									var(--sl-sidebar-pad-x)
-							) * 0.25 /* MAGIC NUMBER 🥲 */
-					)
-				);
+
+		.tree-subitem {
+			margin-top: 0.0625rem;
+		}
+
+		/* Hide floating panel on mobile */
+		@media (max-width: 768px) {
+			#page-sidebar-root {
+				display: none !important;
 			}
 		}
 	}
