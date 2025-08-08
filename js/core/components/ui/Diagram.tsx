@@ -901,7 +901,7 @@ const Diagram: FC = () => {
     setPieces,
   } = useDesignEditor();
 
-  const { addDesign } = useSketchpad();
+  const { clusterDesign } = useSketchpad();
 
   if (!originalKit) return null;
   const design = applyDesignDiff(findDesignInKit(originalKit, designId), designDiff, true);
@@ -979,152 +979,9 @@ const Diagram: FC = () => {
 
   const onCluster = useCallback(
     (clusterPieceIds: string[]) => {
-      if (!design) return;
-
-      const designName = `Cluster-${Date.now()}`;
-
-      // Separate regular pieces from design nodes
-      const regularPieceIds = clusterPieceIds.filter((id) => !id.startsWith("design-"));
-      const designNodeIds = clusterPieceIds.filter((id) => id.startsWith("design-"));
-
-      // Collect all pieces to include in the cluster
-      let allPiecesToCluster: Piece[] = [];
-      let allConnectionsToCluster: Connection[] = [];
-      let allExternalConnections: Connection[] = [];
-
-      // Add regular pieces
-      if (regularPieceIds.length > 0) {
-        const regularPieces = (design.pieces || []).filter((piece) => regularPieceIds.includes(piece.id_));
-        allPiecesToCluster.push(...regularPieces);
-
-        // Find connections involving regular pieces
-        const regularConnections = (design.connections || []).filter((connection) => regularPieceIds.includes(connection.connected.piece.id_) || regularPieceIds.includes(connection.connecting.piece.id_));
-
-        // Separate internal and external connections for regular pieces
-        const internalRegularConnections = regularConnections.filter((connection) => regularPieceIds.includes(connection.connected.piece.id_) && regularPieceIds.includes(connection.connecting.piece.id_));
-
-        const externalRegularConnections = regularConnections.filter((connection) => {
-          const connectedInCluster = regularPieceIds.includes(connection.connected.piece.id_);
-          const connectingInCluster = regularPieceIds.includes(connection.connecting.piece.id_);
-          return connectedInCluster !== connectingInCluster; // XOR - exactly one is in cluster
-        });
-
-        allConnectionsToCluster.push(...internalRegularConnections);
-        allExternalConnections.push(...externalRegularConnections);
-      }
-
-      // Add pieces from design nodes
-      for (const designNodeId of designNodeIds) {
-        // Extract design name from design node ID (format: "design-DesignName")
-        const referencedDesignName = designNodeId.replace("design-", "");
-        const referencedDesign = findDesignInKit(kit, { name: referencedDesignName });
-
-        if (referencedDesign && referencedDesign.pieces) {
-          // Simply use the original pieces and connections (no namespacing to clean)
-          allPiecesToCluster.push(...referencedDesign.pieces);
-
-          // Use the original connections as-is
-          if (referencedDesign.connections) {
-            allConnectionsToCluster.push(...referencedDesign.connections);
-          }
-
-          // Find external connections that connect to this design node
-          const designExternalConnections = (design.connections || []).filter((connection) => connection.connected.designId === referencedDesignName || connection.connecting.designId === referencedDesignName);
-
-          allExternalConnections.push(...designExternalConnections);
-        }
-      }
-
-      // Create the clustered design with all collected pieces and connections
-      const clusteredDesign: Design = {
-        name: designName,
-        unit: design.unit,
-        description: `Hierarchical cluster with ${allPiecesToCluster.length} pieces`,
-        pieces: allPiecesToCluster,
-        connections: allConnectionsToCluster,
-        created: new Date(),
-        updated: new Date(),
-      };
-
-      // Remove all clustered items from the current design
-      const remainingPieces = (design.pieces || []).filter((piece) => !regularPieceIds.includes(piece.id_));
-
-      // Remove connections involving clustered regular pieces or design nodes
-      const remainingConnections = (design.connections || []).filter((connection) => {
-        const connectedInRegularCluster = regularPieceIds.includes(connection.connected.piece.id_);
-        const connectingInRegularCluster = regularPieceIds.includes(connection.connecting.piece.id_);
-        const connectedInDesignCluster = designNodeIds.some((designId) => {
-          const designName = designId.replace("design-", "");
-          return connection.connected.designId === designName;
-        });
-        const connectingInDesignCluster = designNodeIds.some((designId) => {
-          const designName = designId.replace("design-", "");
-          return connection.connecting.designId === designName;
-        });
-
-        return !connectedInRegularCluster && !connectingInRegularCluster && !connectedInDesignCluster && !connectingInDesignCluster;
-      });
-
-      // Update external connections to reference the new clustered design
-      const updatedExternalConnections = allExternalConnections.map((connection) => {
-        const connectedInCluster =
-          regularPieceIds.includes(connection.connected.piece.id_) ||
-          designNodeIds.some((designId) => {
-            const designName = designId.replace("design-", "");
-            return connection.connected.designId === designName;
-          });
-
-        const connectingInCluster =
-          regularPieceIds.includes(connection.connecting.piece.id_) ||
-          designNodeIds.some((designId) => {
-            const designName = designId.replace("design-", "");
-            return connection.connecting.designId === designName;
-          });
-
-        if (connectedInCluster) {
-          return {
-            ...connection,
-            connected: {
-              piece: { id_: connection.connected.piece.id_ },
-              port: connection.connected.port,
-              designId: clusteredDesign.name,
-            },
-          };
-        } else if (connectingInCluster) {
-          return {
-            ...connection,
-            connecting: {
-              piece: { id_: connection.connecting.piece.id_ },
-              port: connection.connecting.port,
-              designId: clusteredDesign.name,
-            },
-          };
-        }
-
-        return connection;
-      });
-
-      const updatedDesign = {
-        ...design,
-        pieces: remainingPieces,
-        connections: [...remainingConnections, ...updatedExternalConnections],
-        updated: new Date(),
-      };
-
-      // Update the current design - this will automatically propagate to all DesignEditorStates and Sketchpad kit
-      setDesign(updatedDesign);
-
-      // log the new connections that reference the clustered design
-      const newConnections = updatedDesign.connections?.filter((connection) => connection.connected.designId === designName || connection.connecting.designId === designName);
-      console.log("newConnections", newConnections);
-
-      // log the new included design
-      console.log("clusteredDesign", clusteredDesign);
-
-      // Also add the clustered design as a separate design to the kit
-      addDesign(clusteredDesign);
+      clusterDesign(clusterPieceIds);
     },
-    [design, setDesign, addDesign, kit],
+    [clusterDesign],
   );
 
   //#region Selection
