@@ -58,6 +58,7 @@ import {
   findTypeInKit,
   flattenDesign,
   FullscreenPanel,
+  getClusterableGroups,
   ICON_WIDTH,
   isPortInUse,
   isSameConnection,
@@ -89,65 +90,23 @@ type ClusterMenuProps = {
 
 const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, selection, onCluster }) => {
   const reactFlowInstance = useReactFlow();
+  const { kit, designId } = useDesignEditor();
+
+  // Get the design from the state
+  const design = useMemo(() => {
+    if (!kit) return null;
+    try {
+      return findDesignInKit(kit, designId);
+    } catch (error) {
+      return null;
+    }
+  }, [kit, designId]);
 
   // Find groups of selected nodes (connected or manually selected together)
-  const getClusterableGroups = useCallback(() => {
-    const selectedPieceIds = selection.selectedPieceIds;
-    if (selectedPieceIds.length < 2) return []; // Need at least 2 items to cluster
-
-    // Build adjacency map from all edges (not just selected ones)
-    const adjacencyMap = new Map<string, Set<string>>();
-    edges.forEach((edge) => {
-      if (!edge.data) return;
-      const sourceId = edge.data.connection.connecting.piece.id_;
-      const targetId = edge.data.connection.connected.piece.id_;
-
-      if (!adjacencyMap.has(sourceId)) adjacencyMap.set(sourceId, new Set());
-      if (!adjacencyMap.has(targetId)) adjacencyMap.set(targetId, new Set());
-
-      adjacencyMap.get(sourceId)!.add(targetId);
-      adjacencyMap.get(targetId)!.add(sourceId);
-    });
-
-    // Find connected components using DFS
-    const visited = new Set<string>();
-    const connectedGroups: string[][] = [];
-
-    const dfs = (pieceId: string, currentGroup: string[]) => {
-      if (visited.has(pieceId)) return;
-      visited.add(pieceId);
-      currentGroup.push(pieceId);
-
-      const neighbors = adjacencyMap.get(pieceId) || new Set();
-      for (const neighbor of neighbors) {
-        if (selectedPieceIds.includes(neighbor) && !visited.has(neighbor)) {
-          dfs(neighbor, currentGroup);
-        }
-      }
-    };
-
-    // First, find all connected components
-    for (const pieceId of selectedPieceIds) {
-      if (!visited.has(pieceId)) {
-        const group: string[] = [];
-        dfs(pieceId, group);
-        connectedGroups.push(group);
-      }
-    }
-
-    // If we have multiple connected components OR design nodes in selection,
-    // allow clustering the entire selection as one group
-    const hasDesignNodes = selectedPieceIds.some((id) => id.startsWith("design-"));
-    const hasMultipleComponents = connectedGroups.length > 1;
-    const hasLargeConnectedGroup = connectedGroups.some((group) => group.length > 1);
-
-    if (hasDesignNodes || hasMultipleComponents || hasLargeConnectedGroup) {
-      // Return all selected pieces as one clusterable group
-      return [selectedPieceIds];
-    }
-
-    return [];
-  }, [edges, selection.selectedPieceIds]);
+  const clusterableGroups = useMemo(() => {
+    if (!design) return [];
+    return getClusterableGroups(design, selection.selectedPieceIds);
+  }, [design, selection.selectedPieceIds]);
 
   // Calculate bounding box for a group of piece IDs
   const getBoundingBoxForGroup = useCallback(
@@ -184,8 +143,6 @@ const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, selection, onCluster 
     },
     [nodes],
   );
-
-  const clusterableGroups = getClusterableGroups();
 
   if (clusterableGroups.length === 0) {
     return null;
@@ -979,7 +936,7 @@ const Diagram: FC = () => {
 
   const onCluster = useCallback(
     (clusterPieceIds: string[]) => {
-      clusterDesign(clusterPieceIds);
+      clusterDesign();
     },
     [clusterDesign],
   );

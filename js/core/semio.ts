@@ -1706,6 +1706,62 @@ export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds
  * @param kit - The kit containing type information
  * @returns Design with design pieces expanded
  */
+export const getClusterableGroups = (design: Design, selectedPieceIds: string[]): string[][] => {
+  if (selectedPieceIds.length < 2) return []; // Need at least 2 items to cluster
+
+  // Build adjacency map from all connections
+  const adjacencyMap = new Map<string, Set<string>>();
+  (design.connections || []).forEach((connection) => {
+    const sourceId = connection.connecting.piece.id_;
+    const targetId = connection.connected.piece.id_;
+
+    if (!adjacencyMap.has(sourceId)) adjacencyMap.set(sourceId, new Set());
+    if (!adjacencyMap.has(targetId)) adjacencyMap.set(targetId, new Set());
+
+    adjacencyMap.get(sourceId)!.add(targetId);
+    adjacencyMap.get(targetId)!.add(sourceId);
+  });
+
+  // Find connected components using DFS
+  const visited = new Set<string>();
+  const connectedGroups: string[][] = [];
+
+  const dfs = (pieceId: string, currentGroup: string[]) => {
+    if (visited.has(pieceId)) return;
+    visited.add(pieceId);
+    currentGroup.push(pieceId);
+
+    const neighbors = adjacencyMap.get(pieceId) || new Set();
+    for (const neighbor of neighbors) {
+      if (selectedPieceIds.includes(neighbor) && !visited.has(neighbor)) {
+        dfs(neighbor, currentGroup);
+      }
+    }
+  };
+
+  // First, find all connected components
+  for (const pieceId of selectedPieceIds) {
+    if (!visited.has(pieceId)) {
+      const group: string[] = [];
+      dfs(pieceId, group);
+      connectedGroups.push(group);
+    }
+  }
+
+  // If we have multiple connected components OR design nodes in selection,
+  // allow clustering the entire selection as one group
+  const hasDesignNodes = selectedPieceIds.some((id) => id.startsWith("design-"));
+  const hasMultipleComponents = connectedGroups.length > 1;
+  const hasLargeConnectedGroup = connectedGroups.some((group) => group.length > 1);
+
+  if (hasDesignNodes || hasMultipleComponents || hasLargeConnectedGroup) {
+    // Return all selected pieces as one clusterable group
+    return [selectedPieceIds];
+  }
+
+  return [];
+};
+
 export const expandDesignPieces = (design: Design, kit: Kit): Design => {
   // Check if there are any connections with designId (indicating clustered pieces)
   const hasDesignConnections = design.connections?.some((conn) => conn.connected.designId || conn.connecting.designId);

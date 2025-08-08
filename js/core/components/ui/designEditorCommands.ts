@@ -6,6 +6,7 @@ import {
   Design,
   findDesignInKit,
   flattenDesign,
+  getClusterableGroups,
   orientDesign,
   removeDesignFromKit,
   removePieceFromDesign,
@@ -1546,6 +1547,43 @@ ${typesList}`,
         design: newDesign,
         content: `✅ Mirrored ${selectedPieces.length} pieces vertically`,
       };
+    },
+  },
+
+  // === CLUSTER COMMAND ===
+  {
+    id: "cluster-design",
+    name: "Cluster Design",
+    icon: "🧩",
+    description: "Create a new clustered design from selected pieces and/or design nodes",
+    parameters: [],
+    execute: async (context, payload) => {
+      const { kit, designId, selection, clusterDesign } = context;
+
+      // Determine which pieces to cluster
+      const clusterPieceIds: string[] = selection.selectedPieceIds;
+
+      if (clusterPieceIds.length === 0) {
+        return { content: `⚠️ No pieces selected to cluster` };
+      }
+
+      // Validate clustering is possible
+      const design = findDesignInKit(kit, designId);
+      const clusterableGroups = getClusterableGroups(design, clusterPieceIds);
+
+      if (clusterableGroups.length === 0) {
+        return { content: `⚠️ Selected pieces cannot be clustered (need at least 2 connected or compatible pieces)` };
+      }
+
+      // Call the Sketchpad clusterDesign action directly
+      if (clusterDesign) {
+        clusterDesign();
+        return {
+          content: `✅ Clustering ${clusterPieceIds.length} pieces into new design`,
+        };
+      } else {
+        return { content: `❌ Cluster design action not available` };
+      }
     },
   },
 

@@ -23,7 +23,7 @@ import { createContext, FC, ReactNode, useContext, useEffect, useReducer, useSta
 import DesignEditor, { createInitialDesignEditorCoreState, DesignEditorAction, DesignEditorCoreState, DesignEditorDispatcher, designEditorReducer, DesignEditorState } from "./DesignEditor";
 
 import { default as Metabolism } from "@semio/assets/semio/kit_metabolism.json";
-import { addDesignToKit, Connection, Design, DesignId, findDesignInKit, Kit, Piece, updateDesignInKit } from "@semio/js";
+import { addDesignToKit, Connection, Design, DesignId, findDesignInKit, getClusterableGroups, Kit, Piece, updateDesignInKit } from "@semio/js";
 import { extractFilesAndCreateUrls } from "../../lib/utils";
 
 // Function to ensure design has at least one fixed piece using breadth-first search
@@ -161,9 +161,7 @@ type SketchpadActionType =
     }
   | {
       type: SketchpadAction.ClusterDesign;
-      payload: {
-        clusterPieceIds: string[];
-      };
+      payload: null;
     };
 
 const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): SketchpadState => {
@@ -272,8 +270,6 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
         break;
       }
 
-      const { clusterPieceIds } = action.payload;
-
       // Get the current active design and its state
       const activeDesignEditorState = state.designEditorCoreStates[state.activeDesign];
       if (!activeDesignEditorState) {
@@ -294,11 +290,25 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
         break;
       }
 
+      // Use selection from the design editor state
+      const pieceIdsToCluster = currentSelection.selectedPieceIds || [];
+
+      // Validate clustering is possible
+      const clusterableGroups = getClusterableGroups(design, pieceIdsToCluster);
+      if (clusterableGroups.length === 0) {
+        console.warn("No clusterable groups found with current selection");
+        newState = state;
+        break;
+      }
+
+      // Use the first (and typically only) clusterable group
+      const finalClusterPieceIds = clusterableGroups[0];
+
       const designName = `Cluster-${Date.now()}`;
 
       // Separate regular pieces from design nodes
-      const regularPieceIds = clusterPieceIds.filter((id) => !id.startsWith("design-"));
-      const designNodeIds = clusterPieceIds.filter((id) => id.startsWith("design-"));
+      const regularPieceIds = finalClusterPieceIds.filter((id) => !id.startsWith("design-"));
+      const designNodeIds = finalClusterPieceIds.filter((id) => id.startsWith("design-"));
 
       // Collect all pieces to include in the cluster
       let allPiecesToCluster: Piece[] = [];
@@ -527,7 +537,7 @@ interface SketchpadContextType {
   designEditorDispatch: DesignEditorDispatcher | null;
   addDesign: (design: Design) => void;
   updateDesign: (design: Design) => void;
-  clusterDesign: (clusterPieceIds: string[]) => void;
+  clusterDesign: () => void;
 }
 
 const SketchpadContext = createContext<SketchpadContextType | null>(null);
@@ -648,12 +658,10 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
     });
   };
 
-  const clusterDesign = (clusterPieceIds: string[]) => {
+  const clusterDesign = () => {
     sketchpadDispatch({
       type: SketchpadAction.ClusterDesign,
-      payload: {
-        clusterPieceIds,
-      },
+      payload: null,
     });
   };
 

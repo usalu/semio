@@ -85,9 +85,10 @@ import { Generator } from "@semio/js/lib/utils";
 import { Camera, orientDesign } from "../../semio";
 import Chat from "./Chat";
 import { CommandContext, ConsolePanel, commandRegistry } from "./Console";
-import Details from "./Details";
-import Workbench, { DesignAvatar, TypeAvatar } from "./Workbench";
 import { designEditorCommands } from "./designEditorCommands";
+import Details from "./Details";
+import { useSketchpad } from "./Sketchpad";
+import Workbench, { DesignAvatar, TypeAvatar } from "./Workbench";
 
 // Register all design editor commands
 designEditorCommands.forEach((command) => commandRegistry.register(command));
@@ -551,6 +552,7 @@ export const useDesignEditor = () => {
     throw new Error("useDesignEditor must be used within a DesignEditorProvider");
   }
   const { state, kit, dispatch } = context;
+  const { clusterDesign } = useSketchpad();
 
   const setDesign = useCallback((d: Design) => dispatch({ type: DesignEditorAction.SetDesign, payload: d }), [dispatch]);
   const addPiece = useCallback((p: Piece) => dispatch({ type: DesignEditorAction.AddPiece, payload: p }), [dispatch]);
@@ -785,6 +787,7 @@ export const useDesignEditor = () => {
           kit: kit,
           designId: state.designId,
           selection: state.selection,
+          clusterDesign: clusterDesign,
         };
 
         const command = commandRegistry.get(commandId);
@@ -831,7 +834,7 @@ export const useDesignEditor = () => {
           throw error;
         }
       },
-      [kit, state.designId, state.selection, state.isTransactionActive, startTransaction, setDesign, setSelection, setFullscreen, finalizeTransaction, abortTransaction],
+      [kit, state.designId, state.selection, state.isTransactionActive, startTransaction, setDesign, setSelection, setFullscreen, finalizeTransaction, abortTransaction, clusterDesign],
     ),
 
     getAvailableCommands: useCallback(() => commandRegistry.getAll(), []),

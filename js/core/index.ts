@@ -65,6 +65,7 @@ export {
   fixPieceInDesign,
   fixPiecesInDesign,
   flattenDesign,
+  getClusterableGroups,
   getPieceRepresentationUrls,
   ICON_WIDTH,
   isConnectionInDesign,
