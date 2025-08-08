@@ -1,280 +1,261 @@
----
-title: 🧱 Create Brick Molds
-description: All steps to break down, mold, and make variants of your model bricks.
-sidebar:
+- title: 🧱 Create Brick Molds
+  description: All steps to break down, mold, and make variants of your model bricks.
+  sidebar:
   order: 2
----
+-
 
-import { Steps, Tabs, TabItem } from "@astrojs/starlight/components";
+import { Steps, TabItem, Tabs } from "@astrojs/starlight/components";
 
-
-
-As mentioned earlier in **[Thinking in Semio](/think-in-semio/)**,  
-A **Type** is your brick mold 🧱 The Blueprint behind each Brick  
+As mentioned earlier in _[Thinking in semio](/think-in-semio/)_,
+A _Type_ is your brick mold 🧱 The Blueprint behind each Brick
 It defines not just the shape, but also the design meaning and connection logic 🔧
 
+-
 
----
+# 🧩 What Are the "Molds" in This Example?
 
-##### 🧩 What Are the "Molds" in This Example?
+Take a look at your sketch 👀
+You'll see five elements that follow the _same basic shape_, just stretched to different lengths 📏
 
-Take a look at your sketch 👀  
-You'll see five elements that follow the **same basic shape**, just stretched to different lengths 📏
+Even though the final Design includes five Pieces, they're made from only _three distinct shapes_
+with two of them used twice — giving us _three Variants of one Type_ 🔢
 
-Even though the final Design includes five Pieces, they're made from only **three distinct shapes**  
-with two of them used twice — giving us **three Variants of one Type** 🔢
-
-🧱 Think of it like a LEGO brick that comes in 2-stud, 4-stud, and 5-stud versions —  
+🧱 Think of it like a LEGO brick that comes in 2-stud, 4-stud, and 5-stud versions —
 same shape logic, just scaled 📐
 
-If the shape were completely different — like a triangle, window, or roof ⛰️🪟🏠  
-That would count as a **new Type** altogether
+If the shape were completely different — like a triangle, window, or roof ⛰️🪟🏠
+That would count as a _new Type_ altogether
 
----
+-
 
-##### 🧠 Modeling with Meaning
+# 🧠 Modeling with Meaning
 
+When you think of a mold, the first thing that comes to mind is usually its _shape_ — the geometry 🧱✏️
+But in semio, the _mold_ is what combines _shape_ with _meaningful design information_ 💡
 
-When you think of a mold, the first thing that comes to mind is usually its **shape** — the geometry 🧱✏️  
-But in Semio, the **mold** is what combines **shape** with **meaningful design information** 💡
-
-In traditional Grasshopper workflows, you’re modeling with **raw data** — points, curves, and surfaces without embedding **design intent** 🧬  
+In traditional Grasshopper workflows, you’re modeling with _raw data_ — points, curves, and surfaces without embedding _design intent_ 🧬
 You build logic around it, but that logic stays detached — abstract, custom, and often fragile.
 
-> In **Semio**, the mold connects geometry with design intent directly 🧠  
-> You're not referencing arbitrary geometry — you're referencing **relationships**, **roles**, and **rules** 🧩
+> In _semio_, the mold connects geometry with design intent directly 🧠
+> You're not referencing arbitrary geometry — you're referencing _relationships_, _roles_, and _rules_ 🧩
 
-For example:  
-👉 Instead of saying "connect point (x, y, z) to Brep edge 23"  
-👉 You say "connect the **door** to the **living room**" 🛋️🚪  
-👉 Or in LEGO terms: "🪟 **snap the window brick onto the top of the wall**" 🧱
+For example:
+👉 Instead of saying "connect point (x, y, z) to Brep edge 23"
+👉 You say "connect the _door_ to the _living room_" 🛋️🚪
+👉 Or in LEGO terms: "🪟 _snap the window brick onto the top of the wall_" 🧱
 
-This is what gives Semio its strength — you’re not just building shapes,  
-you’re building a **semantic system** that adapts, scales, and speaks your design language 🎯🗣️
+This is what gives semio its strength — you’re not just building shapes,
+you’re building a _semantic system_ that adapts, scales, and speaks your design language 🎯🗣️
 
----
+-
 
-## 🧰 Create a Brick Mold ([Type](/think-in-semio/#type) – Ty)
+# 🧰 Create a Brick Mold ([Type](/think-in-semio/#type) – Ty)
 
-Let’s begin by modeling the mold shown in the sketch  
-This will serve as the base for generating its **Variants** 🧩
+Let’s begin by modeling the mold shown in the sketch
+This will serve as the base for generating its _Variants_ 🧩
 
 ![📤 sketch drawing](/sketch-drawing-mold.png)
 
-Before we start building, let’s go over the essential elements that define a **Type** 🧱:
+Before we start building, let’s go over the essential elements that define a _Type_ 🧱:
 
-- 🏷️ **Name** → A unique name to identify your Type and reuse it in different designs  
-- 🧱 **Geometry (Representation)** → The 3D shape attached to the Type — it gives the piece its visual form ✨  
-- 🧲 **Connection Points (Ports)** → The snap points where the piece connects to others in the system 🔗
+- ️ _Name_ → A unique name to identify your Type and reuse it in different designs 🏷
+- _Geometry (Representation)_ → The 3D shape attached to the Type — it gives the piece its visual form ✨ 🧱
+- _Connection Points (Ports)_ → The snap points where the piece connects to others in the system 🔗 🧲
 
-Now let’s take a closer look at how these elements come together — and start modeling our first **brick mold** 🛠️
-
-
+Now let’s take a closer look at how these elements come together — and start modeling our first _brick mold_ 🛠️
 
 <Steps>
 <ol>
 
 <li>
 
-### 🏷️ Name Your Mold ([Type](/think-in-semio/#type) Name - Na)
+# 🏷️ Name Your Mold ([Type](/think-in-semio/#type) Name - Na)
 
-Clear, consistent names in Semio make everything easier down the line ✅  
-Especially when your project grows and you're working with many **Types**, **Variants**, and **Pieces** 🔄
+Clear, consistent names in semio make everything easier down the line ✅
+Especially when your project grows and you're working with many _Types_, _Variants_, and _Pieces_ 🔄
 
 Good names help you:
 
-- 🧭 **Navigate** your system  
-- 🔍 **Understand** relationships  
-- 🔗 **Make connections** that are easy to track
+- _Navigate_ your system 🧭
+- _Understand_ relationships 🔍
+- _Make connections_ that are easy to track 🔗
 
-:::note
-Use names you'd use in a real project — specific, descriptive, and purposeful 📝 
-:::
+:note
+Use names you'd use in a real project — specific, descriptive, and purposeful 📝
+:
 
-👉 In our example, we’ll name our Type **"Profile"**  
-because the shape we're modeling is based on a **standard manufactured wood profile** 🪵
+👉 In our example, we’ll name our Type _"Profile"_
+because the shape we're modeling is based on a _standard manufactured wood profile_ 🪵
 
-
----
+-
 
 </li>
 
 <li>
 
-### 🧊 Attach Geometry (Representation – Rp)
+# 🧊 Attach Geometry (Representation – Rp)
 
-In Semio, the process of adding geometry to a Type is called **modeling its Representation** 🛠️
-A **Representation** is anything that visually or symbolically **represents a Type** 🧱
-It helps you **see or recognize** the Type — without defining its logic or behavior 🧠
+In semio, the process of adding geometry to a Type is called _modeling its Representation_ 🛠️
+A _Representation_ is anything that visually or symbolically _represents a Type_ 🧱
+It helps you _see or recognize_ the Type — without defining its logic or behavior 🧠
 
-In most cases, this will be a **3D geometry**, like in our example
+In most cases, this will be a _3D geometry_, like in our example
 But it can also be:
 
-- A 2D drawing or diagram ✏️  
-- A symbolic icon or block 🔳  
+- A 2D drawing or diagram ✏️
+- A symbolic icon or block 🔳
 - A label, file, or reference 🔖
 
 💡 Because Representations are separate from the logic of the system, they’re fully flexible:
 
-- You can start modeling your system without one 🚧  
-- You can add or update it later 🛠️  
+- You can start modeling your system without one 🚧
+- You can add or update it later 🛠️
 - You can switch between levels of detail depending on the design phase 🔍
 
-In this example, we’ll use a **simple 3D shape** to represent our brick molds we need to create 🧩
+In this example, we’ll use a _simple 3D shape_ to represent our brick molds we need to create 🧩
 
+-
 
----
+# 🔧 Modeling Representation
 
-##### 🔧 Modeling Representation
+There are two simple steps to create a _Representation_:
 
-There are two simple steps to create a **Representation**:
-
-- 🛠️ **Build the Geometry**  
+- ️ _Build the Geometry_ 🛠
   Model the physical form of your brick — the shape that will appear in your design
 
-- 📎 **Link it to the Type**  
-  Connect the geometry to a specific Type, so Semio knows how to display and use it in your design space
+- _Link it to the Type_ 📎
+  Connect the geometry to a specific Type, so semio knows how to display and use it in your design space
 
+Let’s take a closer look at the _brick mold_ in our example 👀
+It always follows the _same basic shape_ 🧱
+A _rectangle that’s cut at an angle_ ✂️ — just repeated in different lengths 📏
 
-Let’s take a closer look at the **brick mold** in our example 👀  
-It always follows the **same basic shape** 🧱  
-A **rectangle that’s cut at an angle** ✂️ — just repeated in different lengths 📏  
+As we saw in the sketch, its size is described using _two parameters_:
 
-As we saw in the sketch, its size is described using **two parameters**:
-
-- `W` → the width of one brick unit  
+- `W` → the width of one brick unit
 - `n` → the number of units in length
 
----
+-
 
-In **Semio**, you can attach geometry to a Type in different ways 🔄  
-You can pick the method that best fits your **workflow or tool**.  
+In _semio_, you can attach geometry to a Type in different ways 🔄
+You can pick the method that best fits your _workflow or tool_.
 
-Let’s take a look at how that works in practice 👇 
-
-
+Let’s take a look at how that works in practice 👇
 
 <Tabs>
 
 <TabItem label="File-Based Reference (🔁 Recommended)">
 
+In _semio_, Representations are typically referenced through _external geometry files_ 🗂️
+— even when those files are generated inside _Grasshopper_
 
+This approach keeps your workflow _clean_, _modular_, and _easy to update_ 🧼
+It also makes your design system more _reusable_ and _scalable_ 🔁
 
-In **Semio**, Representations are typically referenced through **external geometry files** 🗂️  
-— even when those files are generated inside **Grasshopper**
+While the modeling process itself isn’t the focus of this tutorial,
+here’s the key takeaway:
+You’ll need to follow _three simple steps_ to attach your geometry as a _Representation_ 🧱
 
-This approach keeps your workflow **clean**, **modular**, and **easy to update** 🧼  
-It also makes your design system more **reusable** and **scalable** 🔁
+-
 
-While the modeling process itself isn’t the focus of this tutorial,  
-here’s the key takeaway:  
-You’ll need to follow **three simple steps** to attach your geometry as a **Representation** 🧱
+# 🛠️ Geometry Modeling
 
----
+Since our shape follows a clear logic 🧠
+we use a _parametric Grasshopper definition_ to generate the geometry of the brick mold 🧱
 
-#### 🛠️ Geometry Modeling
-
-Since our shape follows a clear logic 🧠  
-we use a **parametric Grasshopper definition** to generate the geometry of the brick mold 🧱  
-
-This is useful because it lets us generate **all the different Variants** of this brick seen in the sketch  
-using a single logic controlled by the parameters `n` and `W`  
+This is useful because it lets us generate _all the different Variants_ of this brick seen in the sketch
+using a single logic controlled by the parameters `n` and `W`
 which define the brick’s length and width 📏
 
 ![📁 Geometry Generation](/attach-geometry-crop.gif)
 
----
+-
 
-#### 💾 Geometry Export
+# 💾 Geometry Export
 
-After generating the geometry,  
-we need to **export it as a `.glb` file** so it can be attached as a **Representation** 💾
+After generating the geometry,
+we need to _export it as a `.glb` file_ so it can be attached as a _Representation_ 💾
 
-We’ll use a **simple workflow** that automates this export 🦾  
-You can place it **directly after** your geometry generation step in Grasshopper 🦗
+We’ll use a _simple workflow_ that automates this export 🦾
+You can place it _directly after_ your geometry generation step in Grasshopper 🦗
 
----
+-
 
 🔁 The Export Workflow Looks Like This:
 
 ![📤 Export Geometry](/export-geometry.png)
 
----
+-
 
-##### 🗂️ Set the Export Location  
-Use the `Dir` and `Path` components to define the directory path  
+# 🗂️ Set the Export Location
+
+Use the `Dir` and `Path` components to define the directory path
 This determines where the exported file will be saved
 
-##### 📝 Build the File Name  
-Use `Concat` to generate the file name dynamically  
+# 📝 Build the File Name
+
+Use `Concat` to generate the file name dynamically
 Combine the Type name and Variant (e.g. `profile` + `2`) → `profile_2.glb`
 
-##### 🧩 Assemble the Full File Path  
-Another `Concat` merges directory + file name:  
+# 🧩 Assemble the Full File Path
+
+Another `Concat` merges directory + file name:
 `C:\Users\Users\Downloads\profile_2.glb`
 
-##### 📐 Prepare the Geometry
+# 📐 Prepare the Geometry
 
-> 🛠️ You've already modeled the geometry earlier in your Grasshopper definition.  
-> Now it's time to **export** it — so Semio can use it as a **referenced Representation** 💾
+> 🛠️ You've already modeled the geometry earlier in your Grasshopper definition.
+> Now it's time to _export_ it — so semio can use it as a _referenced Representation_ 💾
 
-- ✅ Convert the geometry into the required format (e.g. **Mesh** for `.glb`)
-- 📤 Pass it into the `iGeo` component to export it as a `.glb` file  
-
+- Convert the geometry into the required format (e.g. _Mesh_ for `.glb`) ✅
+- Pass it into the `iGeo` component to export it as a `.glb` file 📤
 
 Your file directory should now look like this:
 
 ![📤 Exported file](/file-export-Profile-2-.png)
 
----
+-
 
-:::note
-⚙️ This method combines the **parametric power of Grasshopper** with the **modular logic of Semio**  
-📤 Every time a parameter changes, the file can be **re-exported automatically** —  
-ready to be referenced in the next step  
-:::
+:note
+⚙️ This method combines the _parametric power of Grasshopper_ with the _modular logic of semio_
+📤 Every time a parameter changes, the file can be _re-exported automatically_ —
+ready to be referenced in the next step
+:
 
+-
 
----
+# 🔗 Referencing the Exported File
 
-#### 🔗 Referencing the Exported File
+The exported file (e.g. `profile_2.glb`) is linked to the _`Ur` input_ of the _Model Representation_ component (`~Rep`)
+This tells semio _where to find the geometry_ that represents your Type.
 
-The exported file (e.g. `profile_2.glb`) is linked to the **`Ur` input** of the **Model Representation** component (`~Rep`)  
-This tells Semio **where to find the geometry** that represents your Type.
-
-- 🧩 The **`~Rep` (Model Representation)** component takes the `Ur` file path and creates a Representation:  
+- The _`~Rep` (Model Representation)_ component takes the `Ur` file path and creates a Representation: 🧩
   → `Rep(model/gltf-binary)`
 
-- 🔗 This Representation is later connected to the **`Typ` (Model Type)** component —  
+- This Representation is later connected to the _`Typ` (Model Type)_ component — 🔗
   so that your Type is linked to its visual form
 
 ![📁 Reference Geometry](/reference-geometry.png)
 
----
+-
 
-### 🔁 Why Use File-Based Referencing?
+# 🔁 Why Use File-Based Referencing?
 
-Even inside Grasshopper, Semio requires a **file-based snapshot** of your geometry —  
+Even inside Grasshopper, semio requires a _file-based snapshot_ of your geometry —
 a static file that captures what your brick mold looks like at a specific moment.
 
 Here’s why that matters:
 
-- ⚙️ If your geometry is dynamic or parametric, it still needs to be **exported to a file**  
-- 🔗 Semio connects to that file — not the live Grasshopper preview
+- ️ If your geometry is dynamic or parametric, it still needs to be _exported to a file_ ⚙
+- semio connects to that file — not the live Grasshopper preview 🔗
 
-> 💡 This keeps geometry **modular**, **portable**, and easy to reuse  
-> 🧱 It also supports **chunking** — breaking down large designs into smaller, manageable parts  
-> 🌐 And it allows smooth transition between **Grasshopper** and **Semio Sketchpad**
-
-
-
-
+> 💡 This keeps geometry _modular_, _portable_, and easy to reuse
+> 🧱 It also supports _chunking_ — breaking down large designs into smaller, manageable parts
+> 🌐 And it allows smooth transition between _Grasshopper_ and _semio Sketchpad_
 
 </TabItem>
 
 <TabItem label="Direct Reference">
-
-
 
 You don’t always need to embed geometry directly into a Type 🧱
 In some cases, you can skip integration and reference the geometry directly in Grasshopper instead 🎛️
@@ -289,340 +270,313 @@ This lets you visualize your Design using custom shapes without embedding them i
 
 </Tabs>
 
+-
 
----
+# 🧪 Switching the Representation
 
-#### 🧪 Switching the Representation 
-
-As introduced earlier, when you give a **Type** its shape in Semio, you're attaching a **Representation** —  
+As introduced earlier, when you give a _Type_ its shape in semio, you're attaching a _Representation_ —
 a piece of geometry that shows what the brick looks like visually 👁️
 
-But this geometry isn’t fixed — it acts more like a **placeholder** 🧠  
-That means you can **change or swap** the Representation at any time **without breaking your design logic** 🔁
+But this geometry isn’t fixed — it acts more like a _placeholder_ 🧠
+That means you can _change or swap_ the Representation at any time _without breaking your design logic_ 🔁
 
-You can think of it like a **costume** for your Type 🎭  
+You can think of it like a _costume_ for your Type 🎭
 The name, role, and connections stay the same — you're just changing how it looks on stage 🎬
 
-This flexibility is especially useful when working across **different levels of detail** in a project 🧩
+This flexibility is especially useful when working across _different levels of detail_ in a project 🧩
 
-Just like architects might use **blocky volumes** for urban massing 🏙️  
-and **detailed profiles** for close-ups or fabrication 🪟  
-Semio lets you swap the **look** without changing the **logic** 🔄  
+Just like architects might use _blocky volumes_ for urban massing 🏙️
+and _detailed profiles_ for close-ups or fabrication 🪟
+semio lets you swap the _look_ without changing the _logic_ 🔄
 Same brick — different shell 💡
 
-##### 🎬 One Brick, various Representations
+# 🎬 One Brick, various Representations
 
-To illustrate this concept, we created **two geometry files** for the **same brick mold Type**:
+To illustrate this concept, we created _two geometry files_ for the _same brick mold Type_:
 
----
+-
 
 <Tabs>
 
 <TabItem label="🔍 Detailed Version">
 
-This version uses the **fully detailed geometry** of the piece 🪵  
-A rectangle cut at an angle and extruded into a realistic wooden profile ✏️  
-It includes every visible detail in 3D: full depth, edges, and joinery-ready shapes 🔍  
+This version uses the _fully detailed geometry_ of the piece 🪵
+A rectangle cut at an angle and extruded into a realistic wooden profile ✏️
+It includes every visible detail in 3D: full depth, edges, and joinery-ready shapes 🔍
 
-![📁 Switch Representation](/Switch-Representation.png)  
+![📁 Switch Representation](/Switch-Representation.png)
 ![📁 Filename](/Profile-2-detailed.png)
 
 Best for:
-- 🪚 Joinery and production planning  
-- 📐 Material-specific outputs  
-- 🖼️ Detailed documentation and renders  
+
+- Joinery and production planning 🪚
+- Material-specific outputs 📐
+- ️ Detailed documentation and renders 🖼
 
 </TabItem>
 
 <TabItem label="📄 Sheet Version">
 
-This version is a **flat sheet simplification** 📄  
-A single-surface geometry that represents the general size of the piece 📐  
-It captures only **one dimension** and skips all 3D detail 🚫
+This version is a _flat sheet simplification_ 📄
+A single-surface geometry that represents the general size of the piece 📐
+It captures only _one dimension_ and skips all 3D detail 🚫
 
-![📁 Switch Representation](/switch-representation-sheet.png)  
+![📁 Switch Representation](/switch-representation-sheet.png)
 ![📁 Filename](/Profile-2-simplified.png)
 
 Use this when:
-- 📐 Only the 2D footprint is known  
-- ✏️ The full shape is not finalized yet  
-- ⚡ You need fast previews or early-stage coordination  
+
+- Only the 2D footprint is known 📐
+- ️ The full shape is not finalized yet ✏
+- You need fast previews or early-stage coordination ⚡
 
 </TabItem>
 
 <TabItem label="📦 Block Version">
 
-This version is a **bounding box simplification** 📦  
-A simple block that approximates the piece’s volume ➕  
-It includes **two dimensions** but omits exact geometry 🧊 
+This version is a _bounding box simplification_ 📦
+A simple block that approximates the piece’s volume ➕
+It includes _two dimensions_ but omits exact geometry 🧊
 
-![📁 Switch Representation](/switch-representation-Block.png)  
+![📁 Switch Representation](/switch-representation-Block.png)
 ![📁 Filename](/Profile-2-simplified.png)
 
 Best for:
-- 🧪 Early-stage layouts and feasibility checks  
-- ⚙️ Quick iterations and high-speed previews  
-- 🧊 Placeholder geometry before final detailing  
+
+- Early-stage layouts and feasibility checks 🧪
+- ️ Quick iterations and high-speed previews ⚙
+- Placeholder geometry before final detailing 🧊
 
 </TabItem>
 
 </Tabs>
 
+-
 
+Even though these two Representations _look very different_
+They both belong to the _same Type_ ✅
 
+The _Name_, _Variant_, _Ports_, and _logic_ stay exactly the same
+Only the appearance changes 🎭
 
----
+This means you can _design and assemble_ everything using lightweight placeholders 🧩
+Then _swap in the detailed version_ when you're ready for presentation, communication, or fabrication 🧰
 
-Even though these two Representations **look very different**  
-They both belong to the **same Type** ✅  
-
-The **Name**, **Variant**, **Ports**, and **logic** stay exactly the same  
-Only the appearance changes 🎭  
-
-This means you can **design and assemble** everything using lightweight placeholders 🧩  
-Then **swap in the detailed version** when you're ready for presentation, communication, or fabrication 🧰  
-
-This separation of **logic and form** is what makes Semio workflows flexible, scalable, and robust 🔄  
+This separation of _logic and form_ is what makes semio workflows flexible, scalable, and robust 🔄
 From early concept to detailed design to collaborative development 🤝
- 
-
 
 </li>
 
 <li>
 
-### ⚓ Add Snapping Points ([Ports](/think-in-semio/#port) - Po)
+# ⚓ Add Snapping Points ([Ports](/think-in-semio/#port) - Po)
 
-Once your brick mold has a visual shape — its **Representation** —  
-the next step is to define **how it connects to other bricks**  
+Once your brick mold has a visual shape — its _Representation_ —
+the next step is to define _how it connects to other bricks_
 
-That’s what **Ports** are for 🧲  
-They act as snap points that tell Semio where and how a brick can attach to others  
+That’s what _Ports_ are for 🧲
+They act as snap points that tell semio where and how a brick can attach to others
 
+-
 
----
+# 🧩 What Do You Need to Define a Port?
 
-##### 🧩 What Do You Need to Define a Port?
+In the semio Grasshopper plugin, each Port is defined with three main inputs:
 
-In the Semio Grasshopper plugin, each Port is defined with three main inputs:
+- ️ _Port ID_ ( `Id` ) 🏷
+  A unique name for the Port — like a tag or label used to connect it later
+  Examples: `"n"`, `"bottom"`, `"hingePoint"`
 
-- 🏷️ **Port ID** ( `Id` )  
-  A unique name for the Port — like a tag or label used to connect it later  
-  Examples: `"n"`, `"bottom"`, `"hingePoint"`  
+- _Point_ ( `Pt` ) 📍
+  The exact spot where the connection happens — like placing a stud on a LEGO brick 🧱
+  You place this carefully on your geometry, right where the snapping should occur
 
-- 📍 **Point** ( `Pt` )  
-  The exact spot where the connection happens — like placing a stud on a LEGO brick 🧱  
-  You place this carefully on your geometry, right where the snapping should occur  
-
-- ➡️ **Vector** ( `Dr` )  
-  The direction the Port faces — telling Semio which way the brick will connect 🔁  
-  It’s what lets Semio rotate and align the bricks correctly when snapping them together  
-
+- ️ _Vector_ ( `Dr` ) ➡
+  The direction the Port faces — telling semio which way the brick will connect 🔁
+  It’s what lets semio rotate and align the bricks correctly when snapping them together
 
 ![📁 Ports](/model-port-alpha.png)
 
----
+-
 
+# 📍 Port Location (`Pt`)
 
+When modeling Ports, it’s not just about _where_ pieces touch —
+it’s about building a _clear and reusable logic_ that works across all Variants 🧠🔁
 
-#### 📍 Port Location (`Pt`)
-
-When modeling Ports, it’s not just about **where** pieces touch —  
-it’s about building a **clear and reusable logic** that works across all Variants 🧠🔁
-
----
+-
 
 Here’s how to define your Ports effectively:
 
-- 🧱 **Choose stable, meaningful locations**  
-  Choose positions that are geometrically logical — like the **center of a face**, an **edge midpoint**, or a **corner** 🧩  
+- _Choose stable, meaningful locations_ 🧱
+  Choose positions that are geometrically logical — like the _center of a face_, an _edge midpoint_, or a _corner_ 🧩
   Avoid placing them randomly — symmetry and regular patterns help your logic stay clean ♻️
 
-- 📐 **Keep positions consistent across Variants**  
-  Even if your bricks differ in size or shape, place Ports in the **same relative location** 🔄  
+- _Keep positions consistent across Variants_ 📐
+  Even if your bricks differ in size or shape, place Ports in the _same relative location_ 🔄
   This way, your connection rules stay valid across all versions of a Type 🧰
 
-- 🎯 **Don’t worry about perfect alignment**  
-  Ports don’t need to be *exactly* placed.  
-  Semio lets you adjust each Piece’s **position and rotation** *after* snapping 🛠️  
+- _Don’t worry about perfect alignment_ 🎯
+  Ports don’t need to be _exactly_ placed.
+  semio lets you adjust each Piece’s _position and rotation_ _after_ snapping 🛠️
   So prioritize clear logic over micrometer precision 😌
 
-
----
+-
 
 There’s no strict rule for how many Ports to add — it depends on how much flexibility your system requires:
 
-- 🔒 **Fewer Ports** → simpler, more controlled snapping  
-- 🔓 **More Ports** → more layout options and greater orientation flexibility 
-- 🧠 **Plan ahead** → add Ports you might need later, even if they’re not used right away
+- _Fewer Ports_ → simpler, more controlled snapping 🔒
+- _More Ports_ → more layout options and greater orientation flexibility 🔓
+- _Plan ahead_ → add Ports you might need later, even if they’re not used right away 🧠
 
+👉 _In our example, we place four Ports — one at the center of each edge of a four-sided profile_ 🧱
 
-👉 *In our example, we place four Ports — one at the center of each edge of a four-sided profile* 🧱
+-
 
+# 💡 Port Direction (Dr)
 
----
-
-#### 💡 Port Direction (Dr)
-
-Every Port needs a **direction** — a vector that tells Semio which way the connection should face 🧭  
-This is how Semio knows how to align and snap your Pieces together correctly 🧲
+Every Port needs a _direction_ — a vector that tells semio which way the connection should face 🧭
+This is how semio knows how to align and snap your Pieces together correctly 🧲
 
 Here’s how to define Port directions clearly:
 
-
-- 📏 **Use clean, simple vectors**  
-  Stick to basic axes like **X, Y, or Z**  relative to the face the Port sits on. It makes snapping easier and logic more readable 🧠  
+- _Use clean, simple vectors_ 📏
+  Stick to basic axes like _X, Y, or Z_ relative to the face the Port sits on. It makes snapping easier and logic more readable 🧠
   Avoid random or diagonal directions unless needed
 
-- ♻️ **Be consistent across Variants**  
-  Ports don’t need to be perfectly precise — but they **must stay consistent**  
+- ️ _Be consistent across Variants_ ♻
+  Ports don’t need to be perfectly precise — but they _must stay consistent_
   This ensures all your bricks connect correctly no matter the shape or version 🔧
 
-👉 *In our example, each Port faces straight out — perpendicular to the edge it’s placed on* 🚀
+👉 _In our example, each Port faces straight out — perpendicular to the edge it’s placed on_ 🚀
 
+-
 
----
-#### 🏷️ Port ID (Id)
+# 🏷️ Port ID (Id)
 
-A **Port ID** is the name you give to each Port 🏷️  
-This name is how Semio knows **which Port to connect** when snapping Pieces together
+A _Port ID_ is the name you give to each Port 🏷️
+This name is how semio knows _which Port to connect_ when snapping Pieces together
 
-For example, you might say:  
+For example, you might say:
+
 > "Connect the `top` Port of Piece A to the `bottom` Port of Piece B"
 
-You can use **any naming system** — as long as it’s clear and consistent:
+You can use _any naming system_ — as long as it’s clear and consistent:
 
-- Common examples: `n`, `s`, `e`, `w` — for north, south, east, and west 🧭  
+- Common examples: `n`, `s`, `e`, `w` — for north, south, east, and west 🧭
 - Custom names: `top`, `bottom`, `hinge`, `plug`, `windowDock`, etc. 🧲
 
-💡 **Tip:** Pick a naming system that’s easy to understand and stick to it  
+💡 _Tip:_ Pick a naming system that’s easy to understand and stick to it
 It helps you stay organized and makes teamwork or AI assistance much easier 🤝
 
----
+-
 
-Together with the **Pt** (position) and **Dr** (direction), the **Id** completes each Port definition:  
-Each row in the three lists defines one Port — so all lists must be the **same length** to stay in sync 🧩
+Together with the _Pt_ (position) and _Dr_ (direction), the _Id_ completes each Port definition:
+Each row in the three lists defines one Port — so all lists must be the _same length_ to stay in sync 🧩
 
-
-
----
+-
 
 Now you can see how the three inputs — Id, Pt, and Dr — work together to create Ports.
 Each Port is defined by one entry from each list, so the lists must be the same length.
 This ensures that every snapping point has a matching ID, position, and direction
 
-
-
-  
-
-
 </li>
 
 <li>
 
-### 🧱 Assemble the Mold (Model [Type](/think-in-semio/#type))
+# 🧱 Assemble the Mold (Model [Type](/think-in-semio/#type)
 
-Once you’ve defined all parts of your brick mold   
-the **Name**, **Variant**, **Ports**, and **Representation**   
+Once you’ve defined all parts of your brick mold
+the _Name_, _Variant_, _Ports_, and _Representation_
 you can assemble them using the `Model Type` component (`Typ`) 🧰
 
 Here's what you plug in:
 
-- 🏷️ **Name** — the shared identity of the mold (e.g. `"Profile"`)
-- 🔢 **Variant** — the specific version number (e.g. `"2"`)
-- 🧲 **Ports** — the snapping points and directions (e.g. `n`, `s`, `e`, `w`)
-- 🧊 **Representation** — the geometry that defines the brick's shape
+- ️ _Name_ — the shared identity of the mold (e.g. `"Profile"`) 🏷
+- _Variant_ — the specific version number (e.g. `"2"`) 🔢
+- _Ports_ — the snapping points and directions (e.g. `n`, `s`, `e`, `w`) 🧲
+- _Representation_ — the geometry that defines the brick's shape 🧊
 
-  
-![📁 Model Type](/model-type.png)  
+![📁 Model Type](/model-type.png)
 ![📁 Model Type](/model-type-geo.png)
 
----
+-
 
-🎯 The result is a complete **Type**   
+🎯 The result is a complete _Type_
 A reusable brick mold that carries both shape and connection logic
 
-For example, `Typ("Profile", 2)`  
-creates Variant `2` of the `"Profile"` mold   
+For example, `Typ("Profile", 2)`
+creates Variant `2` of the `"Profile"` mold
 a 2-unit-long brick ready to be placed in your Design 🧱
 
-
-
-
----
+-
 
 </li>
 
 </ol>
 </Steps>
 
-
-## 🧬 Create Mold Versions (Variants of [Type](/think-in-semio/#type))
+# 🧬 Create Mold Versions (Variants of [Type](/think-in-semio/#type)
 
 ![📤 sketch drawing](/sketch-drawing-variant.png)
 
-Now that you've created your base **Type**, it's time to generate **Variants** — based on the **unit count `n`** shown in the sketch 🔢
+Now that you've created your base _Type_, it's time to generate _Variants_ — based on the _unit count `n`_ shown in the sketch 🔢
 
-Each Variant is built from the **same mold**, just stretched or scaled to a different length 📏  
-Think of it like longer or shorter LEGO bricks of the same kind 🧱  
-Since they follow the same logic and structure, we treat them as **Variants** of one **Type** — not separate Types ♻️
+Each Variant is built from the _same mold_, just stretched or scaled to a different length 📏
+Think of it like longer or shorter LEGO bricks of the same kind 🧱
+Since they follow the same logic and structure, we treat them as _Variants_ of one _Type_ — not separate Types ♻️
 
 Examples from our sketch:
 
-- `Variant 2` → 2 units long 🟩🟩  
-- `Variant 4` → 4 units long 🟩🟩🟩🟩  
-- `Variant 5` → 5 units long 🟩🟩🟩🟩🟩  
+- `Variant 2` → 2 units long 🟩 🟩
+- `Variant 4` → 4 units long 🟩 🟩 🟩 🟩
+- `Variant 5` → 5 units long 🟩 🟩 🟩 🟩 🟩
 
+-
 
----
+# 🔁 Modeling a Variant
 
-#### 🔁 Modeling a Variant
+-
 
+# ✅ What Stays the Same
 
----
+- ️ _Type name_ — you’re still using the same underlying mold 🏷
 
-##### ✅ What Stays the Same
+# 🔄 What Changes?
 
-- 🏷️ **Type name** — you’re still using the same underlying mold
+- _Variant name_ — a unique label like `2`, `4`, or `5` to distinguish the version 🔢
+- _Representation_ — new geometry that reflects the Variant’s shape or size 🧊
+- _Ports_ — same logic, but positioned relative to the new shape 🧲
 
-##### 🔄 What Changes?
+-
 
-- 🔢 **Variant name** — a unique label like `2`, `4`, or `5` to distinguish the version  
-- 🧊 **Representation** — new geometry that reflects the Variant’s shape or size  
-- 🧲 **Ports** — same logic, but positioned relative to the new shape  
+# 🛠️ Modeling Steps
 
----
-
-
-##### 🛠️ Modeling Steps
-
-1. 🏷️ Set the **Type name** (same as the original mold)  
-2. 🔢 Assign a new **Variant name**  
-3. 🧊 Attach the **Representation** — the geometry for this Variant  
-4. 🧲 Add the **Ports** — positioned consistently  
+1. 🏷️ Set the _Type name_ (same as the original mold)
+2. 🔢 Assign a new _Variant name_
+3. 🧊 Attach the _Representation_ — the geometry for this Variant
+4. 🧲 Add the _Ports_ — positioned consistently
 5. 🧱 Use the `Model Type` component to combine everything into a complete Variant
 
----
+-
 
-:::note
+:note
 Keep Port positions consistent across all Variants — it ensures easier snapping and logic reuse
-:::
+:
 
 ✅ That’s it — same mold, new shape, fully ready for modular design
 
----
+-
 
+# 💡 Advanced Tip: Use Clusters to Generate Variants
 
-
-##### 💡 Advanced Tip: Use Clusters to Generate Variants
-
-In Grasshopper, a great way to handle multiple Variants is with a **Cluster**  
+In Grasshopper, a great way to handle multiple Variants is with a _Cluster_
 
 Since most Variants share the same logic and differ by only one or two parameters, a Cluster helps you:
 
-- 🔁 Model the logic **once**
-- ⚡ Generate all Variants **efficiently**
-- 🧼 Keep your script **clean and modular**
+- Model the logic _once_ 🔁
+- Generate all Variants _efficiently_ ⚡
+- Keep your script _clean and modular_ 🧼
 
 ![📁 Variant GIF](/Type-1-to-5-crop.gif)
 
@@ -630,55 +584,55 @@ Since most Variants share the same logic and differ by only one or two parameter
 
 <TabItem label="📂 File-Based Geometry Reference">
 
-**Inside the Cluster:**  
+_Inside the Cluster:_
 
 You define the full logic:
 
-- 🧊 Generate and export geometry  
-- 📎 Link the exported file via `Model Representation`  
-- 🧲 Place Ports using `Model Port`  
-- 🧱 Create the Variant using `Model Type`
+- Generate and export geometry 🧊
+- Link the exported file via `Model Representation` 📎
+- Place Ports using `Model Port` 🧲
+- Create the Variant using `Model Type` 🧱
 
 ![📁 Cluster](/cluster-type-inside-ALpha.png)
 
-**Outside the Cluster:**  
+_Outside the Cluster:_
 
 You only feed in the changing inputs:
 
-- 📏 `n` → the unit count (e.g. 2, 4, 5)  
-- 🏷️ Variant name → often also `n`  
-- 📁 Directory of the GH file  
-- 🔘 Export toggle
+- `n` → the unit count (e.g. 2, 4, 5) 📏
+- ️ Variant name → often also `n` 🏷
+- Directory of the GH file 📁
+- Export toggle 🔘
 
-![📁 Cluster](/type-cluster-file-reference-Alpha.png)  
+![📁 Cluster](/type-cluster-file-reference-Alpha.png)
 ![📁 Cluster](/file-export.png)
 
 </TabItem>
 
 <TabItem label="🧱 Direct Geometry Reference">
 
-**Inside the Cluster:**  
+_Inside the Cluster:_
 
 You define the full modeling logic directly, without saving external files:
 
-- 🧊 Generate geometry  
-- 🧲 Place Ports using `Model Port`  
-- 🧱 Create the Variant using `Model Type`
+- Generate geometry 🧊
+- Place Ports using `Model Port` 🧲
+- Create the Variant using `Model Type` 🧱
 
 ![📁 Cluster](/cluster-type-inside-direct.rfrc.png)
 
-**Outside the Cluster:**  
+_Outside the Cluster:_
 
 Only the changing parameters are connected:
 
-- 📏 `n` → the unit count (e.g. 2, 4, 5)  
-- 🏷️ Variant name → often also `n`
+- `n` → the unit count (e.g. 2, 4, 5) 📏
+- ️ Variant name → often also `n` 🏷
 
 ![📁 Cluster](/type-cluster-direct-reference-Alpha.png)
 
 </TabItem>
 </Tabs>
 
----
+-
 
-✅ **Bonus:** This workflow keeps your file organized, scalable, and easy to expand — perfect for growing your Kit later on 🧩
+✅ _Bonus:_ This workflow keeps your file organized, scalable, and easy to expand — perfect for growing your Kit later on 🧩

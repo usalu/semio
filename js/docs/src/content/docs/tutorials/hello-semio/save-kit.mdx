@@ -1,63 +1,63 @@
----
+-
 title: 📦 Save As a Kit
 description: Export and reuse your modular setup as a Kit.
 sidebar:
-  order: 5
----
+ order: 5
+-
 
-Once you’ve created your custom bricks (Types), built your structure (Design), and everything fits together nicely — it’s time to pack it all up into a **Kit**! 🎁  
+Once you’ve created your custom bricks (Types), built your structure (Design), and everything fits together nicely — it’s time to pack it all up into a *Kit*! 🎁 
 Think of this as boxing up your LEGO set so you (or others) can build it again later.
 
----
+-
 
-## 🎯 Why Save a Kit?
+# 🎯 Why Save a Kit?
 
 Saving a Kit allows you to:
 
-- 🧰 **Reuse** it across different projects  
-- 🤝 **Share** it with your team or students  
-- 🧪 **Test** and version it as your system evolves  
-- 🌐 **Import** it into Semio Studio or back into Grasshopper anytime
+- *Reuse* it across different projects 🧰
+- *Share* it with your team or students 🤝
+- *Test* and version it as your system evolves 🧪
+- *Import* it into semio Studio or back into Grasshopper anytime 🌐
 
-This makes your modular logic **portable**, **editable**, and **collaborative**.
+This makes your modular logic *portable*, *editable*, and *collaborative*.
 
----
+-
 
-## 🧩 What’s Inside the Kit?
+# 🧩 What’s Inside the Kit?
 
-A Kit in Semio is a complete bundle — not just geometry, but structure, meaning, and logic.  
+A Kit in semio is a complete bundle — not just geometry, but structure, meaning, and logic. 
 Here’s what’s inside:
 
-- 🧱 **Types** – the molds for your bricks  
-  Each Type includes:  
-  - 🧊 **Representation** (geometry)  
-  - 🧲 **Ports** (snap points)  
-  - 🏷️ **Metadata** (semantic info)
+- *Types* – the molds for your bricks 🧱
+ Each Type includes: 
+ - *Representation* (geometry) 🧊
+ - *Ports* (snap points) 🧲
+ - ️ *Metadata* (semantic info) 🏷
 
-- 🧩 **Pieces** – the actual bricks used in your Design  
-  These are the placed instances of your Types, each with its own ID (e.g., `Red-T`, `Blu-B`, `Yel`).
+- *Pieces* – the actual bricks used in your Design 🧩
+ These are the placed instances of your Types, each with its own ID (e.g., `Red-T`, `Blu-B`, `Yel`).
 
-- 🔗 **Connections** – all the snapping instructions  
-  This includes every single connection between all Pieces:  
-  - Which Port connects to which  
-  - Any transformations (shift, rotate, tilt, etc.)
+- *Connections* – all the snapping instructions 🔗
+ This includes every single connection between all Pieces: 
+ - Which Port connects to which 
+ - Any transformations (shift, rotate, tilt, etc.)
 
 Together, these elements define a fully functional modular system — ready to assemble, remix, or expand in any future design. 🧱🛠️
 
----
+-
 
-## 🛠️ Build Your Kit in Grasshopper
+# 🛠️ Build Your Kit in Grasshopper
 
 To assemble your Kit in Grasshopper, plug your modular setup into the `~Kit` component.
 
-### You'll need to connect:
+# You'll need to connect:
 
-- 🏷️ **Name** – the name of your Kit (e.g. `"hello semio"`)  
-- 📝 **Description** – a short summary (e.g. `"The most simple semio kit."`)  
-- 🧱 **Types** – all your defined `Typ(...)` bricks  
-- 🧩 **Designs** – any `Dsn(...)` layouts you want to include
+- ️ *Name* – the name of your Kit (e.g. `"hello semio"`) 🏷
+- *Description* – a short summary (e.g. `"The most simple semio kit."`) 📝
+- *Types* – all your defined `Typ(.)` bricks 🧱
+- *Designs* – any `Dsn(.)` layouts you want to include 🧩
 
-When connected correctly, you’ll see an output like:  
+When connected correctly, you’ll see an output like: 
 `Kit(hello semio)` — your boxed-up building system, ready to go! 🧩📦
 
 
@@ -65,6 +65,6 @@ When connected correctly, you’ll see an output like:
 ![Save Kit](/model-kit.png)
 
 
-📁 A Kit is simply a folder that holds all your Semio data — Types, geometry, and design logic — bundled into one reusable package.
+📁 A Kit is simply a folder that holds all your semio data — Types, geometry, and design logic — bundled into one reusable package.
 
 ![Save Kit](/kit-folder.png)
