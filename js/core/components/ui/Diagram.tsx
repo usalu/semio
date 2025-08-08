@@ -76,7 +76,7 @@ import {
 import "@semio/js/globals.css";
 import "@xyflow/react/dist/style.css";
 import { DesignEditorSelection, Presence, useDesignEditor } from "./DesignEditor";
-import { useSketchpad } from "./Sketchpad";
+import { SketchpadAction, useSketchpad } from "./Sketchpad";
 
 //#region ClusterMenu
 
@@ -959,6 +959,19 @@ const Diagram: FC = () => {
     if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) deselectAll();
   };
 
+  const { sketchpadState, sketchpadDispatch } = useSketchpad();
+
+  const onNodeDoubleClick = (e: React.MouseEvent, node: DiagramNode) => {
+    if (node.type === "design") {
+      e.stopPropagation();
+      const designName = (node.data.piece as Piece).type.variant;
+      if (!designName) return;
+      const target = (kit.designs || []).find((d) => d.name === designName) || ({ name: designName } as DesignId);
+      sketchpadDispatch({ type: SketchpadAction.ChangeActiveDesign, payload: target });
+      return;
+    }
+  };
+
   const onDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     toggleDiagramFullscreen();
@@ -1771,6 +1784,7 @@ const Diagram: FC = () => {
         panOnDrag={[0]}
         proOptions={{ hideAttribution: true }}
         onNodeClick={onNodeClick}
+        onNodeDoubleClick={onNodeDoubleClick}
         onEdgeClick={onEdgeClick}
         onNodeDragStart={onNodeDragStart}
         onNodeDrag={onNodeDrag}

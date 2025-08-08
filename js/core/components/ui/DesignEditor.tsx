@@ -1371,10 +1371,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   const onDoubleClickDiagram = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      dispatch({
-        type: DesignEditorAction.ToggleDiagramFullscreen,
-        payload: null,
-      });
+      dispatch({ type: DesignEditorAction.ToggleDiagramFullscreen, payload: null });
     },
     [dispatch],
   );
