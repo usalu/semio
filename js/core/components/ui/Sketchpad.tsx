@@ -127,11 +127,13 @@ interface SketchpadState {
   kit: Kit | null;
   designEditorCoreStates: DesignEditorCoreState[];
   activeDesign: number; // index of the active design
+  designHistory: DesignId[]; // history of previously opened designs
 }
 
 enum SketchpadAction {
   UrlsLoaded = "URLS_LOADED",
   ChangeActiveDesign = "CHANGE_ACTIVE_DESIGN",
+  PreviousDesign = "PREVIOUS_DESIGN",
   UpdateActiveDesignEditorState = "UPDATE_ACTIVE_DESIGN_EDITOR_STATE",
   AddDesign = "ADD_DESIGN",
   UpdateDesign = "UPDATE_DESIGN",
@@ -147,6 +149,10 @@ type SketchpadActionType =
   | {
       type: SketchpadAction.ChangeActiveDesign;
       payload: DesignId;
+    }
+  | {
+      type: SketchpadAction.PreviousDesign;
+      payload: null;
     }
   | {
       type: SketchpadAction.UpdateActiveDesignEditorState;
@@ -196,6 +202,7 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
         fileUrls: action.payload.fileUrls,
         kit,
         designEditorCoreStates,
+        designHistory: [],
       };
       break;
 
@@ -204,12 +211,57 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
       const designIndex = state.designEditorCoreStates.findIndex((designState) => designState.designId.name === action.payload.name && designState.designId.variant === action.payload.variant && designState.designId.view === action.payload.view);
 
       if (designIndex !== -1) {
+        // Get the current active design to add to history
+        const currentActiveDesignState = state.designEditorCoreStates[state.activeDesign];
+        const currentDesignId = currentActiveDesignState?.designId;
+
+        // Only add to history if we're changing to a different design
+        let updatedHistory = [...state.designHistory];
+        if (currentDesignId && (currentDesignId.name !== action.payload.name || currentDesignId.variant !== action.payload.variant || currentDesignId.view !== action.payload.view)) {
+          updatedHistory.push(currentDesignId);
+        }
+
         newState = {
           ...state,
           activeDesign: designIndex,
+          designHistory: updatedHistory,
         };
       } else {
         newState = state;
+      }
+      break;
+
+    case SketchpadAction.PreviousDesign:
+      if (state.designHistory.length === 0) {
+        console.warn("No previous design in history");
+        newState = state;
+        break;
+      }
+
+      // Get the last design from history
+      const previousDesignId = state.designHistory[state.designHistory.length - 1];
+
+      // Find the index of the previous design
+      const previousDesignIndex = state.designEditorCoreStates.findIndex(
+        (designState) => designState.designId.name === previousDesignId.name && designState.designId.variant === previousDesignId.variant && designState.designId.view === previousDesignId.view,
+      );
+
+      if (previousDesignIndex !== -1) {
+        // Remove the last item from history (we're going back to it)
+        const updatedHistoryAfterBack = state.designHistory.slice(0, -1);
+
+        newState = {
+          ...state,
+          activeDesign: previousDesignIndex,
+          designHistory: updatedHistoryAfterBack,
+        };
+      } else {
+        // Remove the invalid design from history and try again if there are more
+        const cleanedHistory = state.designHistory.slice(0, -1);
+        newState = {
+          ...state,
+          designHistory: cleanedHistory,
+        };
       }
       break;
 
@@ -641,6 +693,7 @@ const createInitialSketchpadState = (): SketchpadState => {
     kit: null,
     designEditorCoreStates: [],
     activeDesign: 0,
+    designHistory: [],
   };
 };
 
@@ -676,6 +729,7 @@ interface SketchpadContextType {
   updateDesign: (design: Design) => void;
   clusterDesign: () => void;
   expandDesign: (designId: DesignId) => void;
+  previousDesign: () => void;
 }
 
 const SketchpadContext = createContext<SketchpadContextType | null>(null);
@@ -810,6 +864,13 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
     });
   };
 
+  const previousDesign = () => {
+    sketchpadDispatch({
+      type: SketchpadAction.PreviousDesign,
+      payload: null,
+    });
+  };
+
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove(Theme.DARK);
@@ -849,6 +910,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
           updateDesign: updateDesign,
           clusterDesign: clusterDesign,
           expandDesign: expandDesign,
+          previousDesign: previousDesign,
         }}
       >
         <div key={`layout-${currentLayout}`} className="h-full w-full flex flex-col bg-background text-foreground">

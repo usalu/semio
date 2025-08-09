@@ -25,8 +25,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Toggle } from "@semio/js/components/ui/Toggle";
 import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle";
 import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGroup";
-import { AppWindow, Fingerprint, Home, Minus, Moon, Share2, Square, Sun, X } from "lucide-react";
+import { AppWindow, ArrowLeft, Fingerprint, Home, Minus, Moon, Share2, Square, Sun, X } from "lucide-react";
 import { FC, ReactNode } from "react";
+import { useSketchpad } from "./Sketchpad";
 
 interface NavbarProps {
   mode?: Mode;
@@ -46,6 +47,7 @@ interface NavbarProps {
 }
 
 const Navbar: FC<NavbarProps> = ({ mode, toolbarContent, layout, theme, setLayout, setTheme, onWindowEvents, designId, onDesignIdChange, availableDesigns }) => {
+  const { previousDesign, sketchpadState } = useSketchpad();
   // Create a unique key for each design
   const getDesignKey = (design: DesignId): string => {
     const parts = [design.name];
@@ -92,7 +94,12 @@ const Navbar: FC<NavbarProps> = ({ mode, toolbarContent, layout, theme, setLayou
 
   return (
     <div className={`w-full h-12 bg-background border-b flex items-center justify-between px-4`}>
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
+        {/* Back button */}
+        <Toggle variant="outline" tooltip="Previous design" disabled={sketchpadState.designHistory.length === 0} onClick={previousDesign} className="h-8 w-8 p-0">
+          <ArrowLeft size={16} />
+        </Toggle>
+
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
