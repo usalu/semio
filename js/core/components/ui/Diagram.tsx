@@ -183,6 +183,95 @@ const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, selection, onCluster 
 
 //#endregion
 
+//#region ExpandMenu
+
+type ExpandMenuProps = {
+  nodes: DiagramNode[];
+  edges: DiagramEdge[];
+  selection: DesignEditorSelection;
+  onExpand: (designId: DesignId) => void;
+};
+
+const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, selection, onExpand }) => {
+  const { kit, designId } = useDesignEditor();
+
+  // Find selected design nodes that can be expanded
+  const expandableDesignNodes = useMemo(() => {
+    return nodes.filter((node) => {
+      // Must be a design node
+      if (node.type !== "design") return false;
+
+      // Must be selected
+      const pieceId = getPieceIdFromNode(node);
+      if (!selection.selectedPieceIds.includes(pieceId)) return false;
+
+      // Must represent a clustered design (has variant which is the design name)
+      const designName = (node.data.piece as Piece).type.variant;
+      if (!designName) return false;
+
+      // Check if this design exists in the kit (it should for clustered designs)
+      if (!kit?.designs?.find((d) => d.name === designName)) return false;
+
+      return true;
+    });
+  }, [nodes, selection.selectedPieceIds, kit]);
+
+  // Calculate bounding box for a design node
+  const getBoundingBoxForNode = useCallback((node: DiagramNode) => {
+    const x = node.position.x;
+    const y = node.position.y;
+    const width = ICON_WIDTH;
+    const height = ICON_WIDTH;
+
+    // Add padding around the node
+    const padding = 20;
+    return {
+      x: x - padding,
+      y: y - padding,
+      width: width + padding * 2,
+      height: height + padding * 2,
+    };
+  }, []);
+
+  if (expandableDesignNodes.length === 0) {
+    return null;
+  }
+
+  return (
+    <ViewportPortal>
+      {expandableDesignNodes.map((node) => {
+        const boundingBox = getBoundingBoxForNode(node);
+        const designName = (node.data.piece as Piece).type.variant!;
+
+        return (
+          <div
+            key={`expand-design-${designName}`}
+            className="absolute pointer-events-none"
+            style={{
+              left: boundingBox.x,
+              top: boundingBox.y,
+              width: boundingBox.width,
+              height: boundingBox.height,
+            }}
+          >
+            {/* Bounding rectangle */}
+            <div className="absolute inset-0 border-2 border-dashed border-secondary/50 rounded-md" style={{ pointerEvents: "none" }} />
+
+            {/* Expand button positioned at top-right of bounding box */}
+            <div className="absolute -top-10 -right-2 pointer-events-auto">
+              <button onClick={() => onExpand({ name: designName })} className="bg-secondary text-secondary-foreground px-3 py-1 rounded-md text-sm font-medium shadow-md hover:bg-secondary/90 transition-colors">
+                Expand
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </ViewportPortal>
+  );
+};
+
+//#endregion
+
 //#region React Flow
 
 const PresenceDiagram: FC<Presence> = ({ name, cursor, camera }) => {
@@ -858,7 +947,7 @@ const Diagram: FC = () => {
     setPieces,
   } = useDesignEditor();
 
-  const { clusterDesign } = useSketchpad();
+  const { clusterDesign, expandDesign } = useSketchpad();
 
   if (!originalKit) return null;
   const design = applyDesignDiff(findDesignInKit(originalKit, designId), designDiff, true);
@@ -939,6 +1028,13 @@ const Diagram: FC = () => {
       clusterDesign();
     },
     [clusterDesign],
+  );
+
+  const onExpand = useCallback(
+    (designIdToExpand: DesignId) => {
+      expandDesign(designIdToExpand);
+    },
+    [expandDesign],
   );
 
   //#region Selection
@@ -1618,6 +1714,7 @@ const Diagram: FC = () => {
       </ReactFlow>
       <HelperLines lines={helperLines} nodes={nodes} />
       <ClusterMenu nodes={nodes} edges={edges} selection={selection} onCluster={onCluster} />
+      <ExpandMenu nodes={nodes} edges={edges} selection={selection} onExpand={onExpand} />
     </div>
   );
 };

@@ -40,6 +40,7 @@ export interface CommandContext {
   designId: DesignId;
   selection: any;
   clusterDesign?: () => void;
+  expandDesign?: (designId: DesignId) => void;
 }
 
 export interface CommandResult {

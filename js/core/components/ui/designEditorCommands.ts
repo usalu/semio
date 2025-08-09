@@ -1587,6 +1587,49 @@ ${typesList}`,
     },
   },
 
+  // === EXPAND COMMAND ===
+  {
+    id: "expand-design",
+    name: "Expand Design",
+    icon: "📤",
+    description: "Expand a selected clustered design back into its constituent pieces",
+    parameters: [],
+    execute: async (context, payload) => {
+      const { kit, designId, selection, expandDesign } = context;
+
+      // Find selected design nodes
+      const selectedDesignPieceIds = selection.selectedPieceIds.filter((id) => id.startsWith("design-"));
+
+      if (selectedDesignPieceIds.length === 0) {
+        return { content: `⚠️ No clustered design selected to expand` };
+      }
+
+      if (selectedDesignPieceIds.length > 1) {
+        return { content: `⚠️ Please select only one clustered design to expand` };
+      }
+
+      // Extract design name from the selected design piece ID
+      const designPieceId = selectedDesignPieceIds[0];
+      const designNameToExpand = designPieceId.replace("design-", "");
+
+      // Check if the design exists in the kit
+      const designToExpand = kit.designs?.find((d) => d.name === designNameToExpand);
+      if (!designToExpand) {
+        return { content: `⚠️ Design "${designNameToExpand}" not found in kit` };
+      }
+
+      // Call the Sketchpad expandDesign action
+      if (expandDesign) {
+        expandDesign({ name: designNameToExpand });
+        return {
+          content: `✅ Expanding design "${designNameToExpand}" back into constituent pieces`,
+        };
+      } else {
+        return { content: `❌ Expand design action not available` };
+      }
+    },
+  },
+
   // === EXPORT/IMPORT COMMANDS ===
   {
     id: "export-selected-to-clipboard",

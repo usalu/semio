@@ -552,7 +552,7 @@ export const useDesignEditor = () => {
     throw new Error("useDesignEditor must be used within a DesignEditorProvider");
   }
   const { state, kit, dispatch } = context;
-  const { clusterDesign } = useSketchpad();
+  const { clusterDesign, expandDesign } = useSketchpad();
 
   const setDesign = useCallback((d: Design) => dispatch({ type: DesignEditorAction.SetDesign, payload: d }), [dispatch]);
   const addPiece = useCallback((p: Piece) => dispatch({ type: DesignEditorAction.AddPiece, payload: p }), [dispatch]);
@@ -788,6 +788,7 @@ export const useDesignEditor = () => {
           designId: state.designId,
           selection: state.selection,
           clusterDesign: clusterDesign,
+          expandDesign: expandDesign,
         };
 
         const command = commandRegistry.get(commandId);
@@ -834,7 +835,7 @@ export const useDesignEditor = () => {
           throw error;
         }
       },
-      [kit, state.designId, state.selection, state.isTransactionActive, startTransaction, setDesign, setSelection, setFullscreen, finalizeTransaction, abortTransaction, clusterDesign],
+      [kit, state.designId, state.selection, state.isTransactionActive, startTransaction, setDesign, setSelection, setFullscreen, finalizeTransaction, abortTransaction, clusterDesign, expandDesign],
     ),
 
     getAvailableCommands: useCallback(() => commandRegistry.getAll(), []),
