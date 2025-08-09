@@ -206,6 +206,15 @@ export const DesignSchema: z.ZodType<any> = z.object({
     .optional(),
   pieces: z.array(PieceSchema).optional(),
   connections: z.array(ConnectionSchema).optional(),
+  includedDesigns: z
+    .array(
+      z.object({
+        designId: z.lazy(() => DesignIdSchema),
+        plane: PlaneSchema.optional(),
+        center: DiagramPointSchema.optional(),
+      }),
+    )
+    .optional(),
   authors: z.array(AuthorSchema).optional(),
   qualities: z.array(QualitySchema).optional(),
 });
@@ -215,6 +224,12 @@ export const DesignIdSchema = z.object({
   view: z.string().optional(),
 });
 export const DesignIdLikeSchema = z.union([DesignSchema, DesignIdSchema, z.tuple([z.string(), z.string().optional(), z.string().optional()]), z.tuple([z.string(), z.string().optional()]), z.string()]);
+
+export const DesignPieceSchema = z.object({
+  designId: DesignIdSchema,
+  plane: PlaneSchema.optional(),
+  center: DiagramPointSchema.optional(),
+});
 
 // https://github.com/usalu/semio#-kit-
 export const KitSchema = z.object({
@@ -432,6 +447,7 @@ export type TypeIdLike = z.infer<typeof TypeIdLikeSchema>;
 export type Piece = z.infer<typeof PieceSchema>;
 export type PieceId = z.infer<typeof PieceIdSchema>;
 export type PieceIdLike = z.infer<typeof PieceIdLikeSchema>;
+export type DesignPiece = { designId: DesignId; plane?: Plane; center?: DiagramPoint };
 export type Side = z.infer<typeof SideSchema>;
 export type SideId = z.infer<typeof SideIdSchema>;
 export type SideIdLike = z.infer<typeof SideIdLikeSchema>;
