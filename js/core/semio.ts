@@ -1901,6 +1901,57 @@ export const updateDesignInKit = (kit: Kit, design: Design): Kit => {
   };
 };
 
+export type IncludedDesignInfo = {
+  id: string;
+  designId: DesignId;
+  type: "connected" | "fixed";
+  center?: DiagramPoint;
+  plane?: Plane;
+  externalConnections?: Connection[];
+};
+
+export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
+  const includedDesigns: IncludedDesignInfo[] = [];
+
+  // Get designs from external connections (clustered designs)
+  const designIds = new Set<string>();
+  design.connections?.forEach((conn: Connection) => {
+    if (conn.connected.designId) designIds.add(conn.connected.designId);
+    if (conn.connecting.designId) designIds.add(conn.connecting.designId);
+  });
+
+  // Add connected designs
+  Array.from(designIds).forEach((designIdString) => {
+    const externalConnections =
+      design.connections?.filter((connection: Connection) => {
+        const connectedToDesign = connection.connected.designId === designIdString;
+        const connectingToDesign = connection.connecting.designId === designIdString;
+        return connectedToDesign || connectingToDesign;
+      }) ?? [];
+
+    includedDesigns.push({
+      id: `design-${designIdString}`,
+      designId: { name: designIdString },
+      type: "connected",
+      externalConnections,
+    });
+  });
+
+  // Add fixed designs
+  (design.fixedDesigns || []).forEach((fixedDesign: any) => {
+    const { designId: fixedDesignId, center, plane } = fixedDesign;
+    includedDesigns.push({
+      id: `fixed-design-${fixedDesignId.name}-${fixedDesignId.variant || ""}-${fixedDesignId.view || ""}`,
+      designId: fixedDesignId,
+      type: "fixed",
+      center,
+      plane,
+    });
+  });
+
+  return includedDesigns;
+};
+
 //#endregion Design
 
 //#region Kit

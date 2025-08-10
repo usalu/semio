@@ -59,6 +59,7 @@ import {
   flattenDesign,
   FullscreenPanel,
   getClusterableGroups,
+  getIncludedDesigns,
   ICON_WIDTH,
   isPortInUse,
   isSameConnection,
@@ -800,38 +801,23 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
       return pieceToNode(piece, type, center, isSelected, i);
     }) ?? [];
 
-  // Create nodes for designs referenced by designId in connections
-  const designIds = new Set<string>();
-  design.connections?.forEach((conn) => {
-    if (conn.connected.designId) designIds.add(conn.connected.designId);
-    if (conn.connecting.designId) designIds.add(conn.connecting.designId);
-  });
+  // Get all included designs (both connected and fixed)
+  const includedDesigns = getIncludedDesigns(design);
 
-  const designNodes = [
-    // Connected design nodes (from external connections)
-    ...Array.from(designIds).map((designId, i) => {
-      const designPieceId = `design-${designId}`;
-      const isSelected = selection?.selectedPieceIds.includes(designPieceId) ?? false;
+  const designNodes = includedDesigns.map((includedDesign, i) => {
+    const isSelected = selection?.selectedPieceIds.includes(includedDesign.id) ?? false;
 
-      // Find external connections for this design
-      const externalConnections =
-        design.connections?.filter((connection) => {
-          // Connections with designId referencing this design
-          const connectedToDesign = connection.connected.designId === designId;
-          const connectingToDesign = connection.connecting.designId === designId;
-          return connectedToDesign || connectingToDesign;
-        }) ?? [];
-
+    if (includedDesign.type === "connected") {
       // Calculate center position based on the average position of external connected pieces in the current diagram
       let calculatedCenter = { x: 0, y: 0 };
-      if (externalConnections.length > 0) {
+      if (includedDesign.externalConnections && includedDesign.externalConnections.length > 0) {
         // Get the pieces that are connected to this design (the external pieces)
         const connectedPieceIds = new Set<string>();
-        externalConnections.forEach((conn) => {
-          if (conn.connected.designId === designId) {
+        includedDesign.externalConnections.forEach((conn) => {
+          if (conn.connected.designId === includedDesign.designId.name) {
             // The connecting side is external
             connectedPieceIds.add(conn.connecting.piece.id_);
-          } else if (conn.connecting.designId === designId) {
+          } else if (conn.connecting.designId === includedDesign.designId.name) {
             // The connected side is external
             connectedPieceIds.add(conn.connected.piece.id_);
           }
@@ -859,37 +845,32 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
         }
       }
 
-      // Create a synthetic piece to represent the design
+      // Create a synthetic piece to represent the connected design
       const designPiece: Piece = {
-        id_: `design-${designId}`,
-        type: { name: "design", variant: designId },
+        id_: includedDesign.id,
+        type: { name: "design", variant: includedDesign.designId.name },
         center: calculatedCenter,
-        description: `Clustered design: ${designId}`,
+        description: `Clustered design: ${includedDesign.designId.name}`,
       };
 
-      return designToNode(designPiece, externalConnections, calculatedCenter, isSelected, design.pieces!.length + i);
-    }),
-
-    // Fixed design nodes (from fixedDesigns - drag-dropped designs)
-    ...(design.fixedDesigns || []).map((fixedDesign, i) => {
-      const { designId: fixedDesignId, center, plane } = fixedDesign;
-      const displayCenter = center || { x: 0, y: 0 };
+      return designToNode(designPiece, includedDesign.externalConnections || [], calculatedCenter, isSelected, design.pieces!.length + i);
+    } else {
+      // Fixed design
+      const displayCenter = includedDesign.center || { x: 0, y: 0 };
 
       // Create a synthetic piece for the fixed design
       const designPiece: Piece = {
-        id_: `fixed-design-${fixedDesignId.name}-${fixedDesignId.variant || ""}-${fixedDesignId.view || ""}`,
-        type: { name: "design", variant: `${fixedDesignId.name}${fixedDesignId.variant ? `-${fixedDesignId.variant}` : ""}${fixedDesignId.view ? `-${fixedDesignId.view}` : ""}` },
+        id_: includedDesign.id,
+        type: { name: "design", variant: `${includedDesign.designId.name}${includedDesign.designId.variant ? `-${includedDesign.designId.variant}` : ""}${includedDesign.designId.view ? `-${includedDesign.designId.view}` : ""}` },
         center: displayCenter,
-        plane: plane,
-        description: `Fixed design: ${fixedDesignId.name}`,
+        plane: includedDesign.plane,
+        description: `Fixed design: ${includedDesign.designId.name}`,
       };
 
-      const isSelected = selection?.selectedPieceIds.includes(designPiece.id_) ?? false;
-
       // No external connections for fixed designs since they're standalone
-      return designToNode(designPiece, [], displayCenter, isSelected, design.pieces!.length + designIds.size + i);
-    }),
-  ];
+      return designToNode(designPiece, [], displayCenter, isSelected, design.pieces!.length + i);
+    }
+  });
 
   // Create a map of piece IDs to their array indices for unique node IDs
   // Handle duplicate piece IDs by mapping to the first occurrence index
@@ -901,10 +882,9 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
   });
 
   // Add design pieces to the index map
-  Array.from(designIds).forEach((designId, index) => {
-    const designPieceId = `design-${designId}`;
-    if (!pieceIndexMap.has(designPieceId)) {
-      pieceIndexMap.set(designPieceId, design.pieces!.length + index);
+  includedDesigns.forEach((includedDesign, index) => {
+    if (!pieceIndexMap.has(includedDesign.id)) {
+      pieceIndexMap.set(includedDesign.id, design.pieces!.length + index);
     }
   });
 
@@ -913,10 +893,9 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
   design.pieces?.forEach((piece, index) => {
     nodeIdToPieceIndexMap.set(`piece-${index}-${piece.id_}`, index);
   });
-  Array.from(designIds).forEach((designId, index) => {
-    const designPieceId = `design-${designId}`;
+  includedDesigns.forEach((includedDesign, index) => {
     const nodeIndex = design.pieces!.length + index;
-    nodeIdToPieceIndexMap.set(`piece-${nodeIndex}-${designPieceId}`, nodeIndex);
+    nodeIdToPieceIndexMap.set(`piece-${nodeIndex}-${includedDesign.id}`, nodeIndex);
   });
 
   const parentConnectionId =
