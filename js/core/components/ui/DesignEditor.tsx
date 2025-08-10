@@ -1276,7 +1276,7 @@ function useControllableReducer(props: DesignEditorProps) {
       onDesignChange?.(findDesignInKit(newState.kit, designId));
       onSelectionChange?.(newState.selection);
     },
-    [designId, onDesignChange, onSelectionChange, onUndo, onRedo],
+    [internalState, designId, onDesignChange, onSelectionChange, onUndo, onRedo],
   );
 
   return [internalState, dispatchWrapper] as const;

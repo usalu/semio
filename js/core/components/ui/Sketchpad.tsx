@@ -20,7 +20,7 @@
 // #endregion
 import { TooltipProvider } from "@semio/js/components/ui/Tooltip";
 import { createContext, FC, ReactNode, useContext, useEffect, useReducer, useState } from "react";
-import DesignEditor, { createInitialDesignEditorCoreState, DesignEditorAction, DesignEditorCoreState, DesignEditorDispatcher, designEditorReducer, DesignEditorState } from "./DesignEditor";
+import DesignEditor, { createInitialDesignEditorCoreState, DesignEditorCoreState, DesignEditorDispatcher, designEditorReducer, DesignEditorState } from "./DesignEditor";
 
 import { default as Metabolism } from "@semio/assets/semio/kit_metabolism.json";
 import { addDesignToKit, Connection, Design, DesignId, findDesignInKit, getClusterableGroups, Kit, Piece, updateDesignInKit } from "@semio/js";
@@ -156,7 +156,7 @@ type SketchpadActionType =
     }
   | {
       type: SketchpadAction.UpdateActiveDesignEditorState;
-      payload: DesignEditorCoreState;
+      payload: DesignEditorState;
     }
   | {
       type: SketchpadAction.AddDesign;
@@ -270,6 +270,7 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
       updatedStates[state.activeDesign] = action.payload;
       newState = {
         ...state,
+        kit: action.payload.kit,
         designEditorCoreStates: updatedStates,
       };
       break;
@@ -819,20 +820,9 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
 
     const newState = designEditorReducer(activeDesignEditorState, action);
 
-    // If this is a SetDesign action, also update the design in the Sketchpad kit
-    if (action.type === DesignEditorAction.SetDesign) {
-      const updatedDesign = action.payload;
-      sketchpadDispatch({
-        type: SketchpadAction.UpdateDesign,
-        payload: updatedDesign,
-      });
-    }
-
-    // Extract core state (without kit) to store in Sketchpad
-    const { kit, ...coreState } = newState;
     sketchpadDispatch({
       type: SketchpadAction.UpdateActiveDesignEditorState,
-      payload: coreState,
+      payload: newState,
     });
   };
 
