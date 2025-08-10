@@ -33,11 +33,10 @@
     "ms-dotnettools.dotnet-interactive-vscode",
     // python
     "njpwerner.autodocstring",
-    "ms-python.black-formatter",
-    "ms-python.isort",
-    "ms-toolsai.jupyter",
-    "ms-python.pylint",
-    "ms-python.python"
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "charliermarsh.ruff",
+    "ms-toolsai.jupyter"
   ],
   "unwantedRecommendations": []
 }

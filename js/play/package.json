@@ -3,7 +3,7 @@
   "projectType": "application",
   "name": "@semio/play",
   "version": "0.1.0",
-  "description": "🎛️ A playground to test semio 🏘️",
+  "description": "semio ⋅ playground",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

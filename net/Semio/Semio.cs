@@ -830,6 +830,9 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
 
 #region Models
 
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-quality-"/>
+/// </summary>
 [Model("📏", "Ql", "Qal", "A quality is a named value with a unit and a definition.")]
 public class Quality : Model<Quality>
 {
@@ -853,6 +856,9 @@ public class Quality : Model<Quality>
     public override string ToString() => $"Qal({ToHumanIdString()})";
 }
 
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-representation-"/>
+/// </summary>
 [Model("💾", "Rp", "Rep",
     "A representation is a link to a resource that describes a type for a certain level of detail and tags.")]
 public class Representation : Model<Representation>
@@ -910,7 +916,7 @@ public class Representation : Model<Representation>
 }
 
 /// <summary>
-///     📺 A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.
+/// <see href="https://github.com/usalu/semio#-diagram-point-"/>
 /// </summary>
 [Model("📺", "DP", "DPt", "A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.")]
 public class DiagramPoint : Model<DiagramPoint>
@@ -932,6 +938,9 @@ public class DiagramPoint : Model<DiagramPoint>
     }
 }
 
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-point-"/>
+/// </summary>
 [Model("✖️", "Pt", "Pnt", "A 3-point (xyz) of floating point numbers.")]
 public class Point : Model<Point>
 {
@@ -943,6 +952,9 @@ public class Point : Model<Point>
     public float Z { get; set; } = 0;
 }
 
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-vector-"/>
+/// </summary>
 [Model("➡️", "Vc", "Vec", "A 3d-vector (xyz) of floating point numbers.")]
 public class Vector : Model<Vector>
 {
@@ -983,6 +995,9 @@ public class Vector : Model<Vector>
     }
 }
 
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-plane-"/>
+/// </summary>
 [Model("◳", "Pn", "Pln", "A plane is an origin (point) and an orientation (x-axis and y-axis).")]
 public class Plane : Model<Plane>
 {
@@ -1018,6 +1033,9 @@ public class Plane : Model<Plane>
     }
 }
 
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-port-"/>
+/// </summary>
 [Model("🔌", "Po", "Por", "A port is a connection point (with a direction) of a type.")]
 public class Port : Model<Port>
 {
@@ -1134,6 +1152,9 @@ public class Location : Model<Location>
     public float Latitude { get; set; }
 }
 
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-type-"/>
+/// </summary>
 [Model("🧩", "Ty", "Typ", "A type is a reusable element that can be connected with other types over ports.")]
 public class Type : Model<Type>
 {
@@ -1238,6 +1259,9 @@ public class TypeId : Model<TypeId>
     public static implicit operator TypeId(Type type) => new() { Name = type.Name, Variant = type.Variant };
 }
 
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-piece-"/>
+/// </summary>
 [Model("⭕", "Pc", "Pce", "A piece is a 3d-instance of a type in a design.")]
 public class Piece : Model<Piece>
 {
@@ -1324,6 +1348,9 @@ public class Side : Model<Side>
     public override string ToString() => $"Sde({Piece.Id}" + (Port.Id != "" ? ":" + Port.Id : "") + ")";
 }
 
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-connection-"/>
+/// </summary>
 [Model("🔗", "Co", "Con", "A bidirectional connection between two pieces of a design.")]
 public class Connection : Model<Connection>
 {
@@ -1408,6 +1435,9 @@ public class Connection : Model<Connection>
     }
 }
 
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-design-"/>
+/// </summary>
 [Model("🏙️", "Dn", "Dsn", "A design is a collection of pieces that are connected.")]
 public class Design : Model<Design>
 {
@@ -1937,6 +1967,9 @@ public class DesignId : Model<DesignId>
     public static implicit operator DesignId(Design design) => new() { Name = design.Name, Variant = design.Variant, View = design.View };
 }
 
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-kit-"/>
+/// </summary>
 [Model("🗃️", "Kt", "Kit", "A kit is a collection of types and designs.")]
 public class Kit : Model<Kit>
 {

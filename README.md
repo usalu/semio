@@ -338,7 +338,9 @@ It hides the actual complexity and makes it harder to navigate the code 🔍
 <details>
 <summary><strong>📺 Inline everything that bearly fits onto the screen ✅</strong></summary>
 
-The smaller the code, the easier it is to browse and show diffs 🔍
+Smaller code, less tokens and easier diffs 🔍
+
+Your [ai](#-ai-) bill will be lower and the completions will resolve faster 🚀
 
 If you are not sure what the code does, you can ask [ai](#-ai-) 💬
 
@@ -347,7 +349,9 @@ If you are not sure what the code does, you can ask [ai](#-ai-) 💬
 <details>
 <summary><strong>🗣️ Don't use comments or if you must, only tag code at the end of the line ❌</strong></summary>
 
-The smaller the code, the easier it is to browse and show diffs 🔍
+Smaller code, less tokens and easier diffs 🔍
+
+Your [ai](#-ai-) bill will be lower and the completions will resolve faster 🚀
 
 If you are not sure what the code does, you can ask [ai](#-ai-) 💬
 
