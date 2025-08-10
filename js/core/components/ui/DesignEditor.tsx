@@ -1276,7 +1276,7 @@ function useControllableReducer(props: DesignEditorProps) {
       onDesignChange?.(findDesignInKit(newState.kit, designId));
       onSelectionChange?.(newState.selection);
     },
-    [internalState, designId, onDesignChange, onSelectionChange, onUndo, onRedo],
+    [designId, onDesignChange, onSelectionChange, onUndo, onRedo],
   );
 
   return [internalState, dispatchWrapper] as const;
@@ -1686,7 +1686,29 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
           payload: piece,
         });
       } else if (activeDraggedDesign) {
-        throw new Error("Not implemented");
+        const { x, y } = screenToFlowPosition({
+          x: event.activatorEvent.clientX + event.delta.x,
+          y: event.activatorEvent.clientY + event.delta.y,
+        });
+        const current = findDesignInKit(kit, designId);
+        const newEntry = {
+          designId: {
+            name: activeDraggedDesign.name,
+            variant: activeDraggedDesign.variant,
+            view: activeDraggedDesign.view,
+          },
+          plane: {
+            origin: { x: 0, y: 0, z: 0 },
+            xAxis: { x: 1, y: 0, z: 0 },
+            yAxis: { x: 0, y: 1, z: 0 },
+          },
+          center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
+        };
+        const updated = {
+          ...current,
+          fixedDesigns: [...(current.fixedDesigns || []), newEntry],
+        };
+        dispatch({ type: DesignEditorAction.SetDesign, payload: updated });
       }
     }
     setActiveDraggedType(null);

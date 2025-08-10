@@ -7,6 +7,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/compone
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
 import { Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
 import { ResizablePanelProps } from "./DesignEditor";
+import { useSketchpad } from "./Sketchpad";
 
 interface TypeAvatarProps {
   type: Type;
@@ -52,11 +53,13 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ type, showHoverCard = false })
 interface DesignAvatarProps {
   design: Design;
   showHoverCard?: boolean;
+  isActive?: boolean;
 }
 
-export const DesignAvatar: FC<DesignAvatarProps> = ({ design, showHoverCard = false }) => {
+export const DesignAvatar: FC<DesignAvatarProps> = ({ design, showHoverCard = false, isActive = false }) => {
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: `design-${design.name}-${design.variant || ""}-${design.view || ""}`,
+    disabled: isActive,
   });
 
   // Determine if this is the default variant and view
@@ -64,7 +67,7 @@ export const DesignAvatar: FC<DesignAvatarProps> = ({ design, showHoverCard = fa
 
   const displayVariant = design.variant || design.name;
   const avatar = (
-    <Avatar ref={setNodeRef} {...listeners} {...attributes} className="cursor-grab">
+    <Avatar ref={setNodeRef} {...listeners} {...attributes} className={`${isActive ? "cursor-default opacity-50" : "cursor-grab"}`}>
       {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
       <AvatarFallback>{displayVariant.substring(0, 2).toUpperCase()}</AvatarFallback>
     </Avatar>
@@ -97,8 +100,17 @@ interface WorkbenchProps extends ResizablePanelProps {}
 const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
   if (!visible) return null;
   const { kit } = useDesignEditor();
+  const { sketchpadState } = useSketchpad();
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+
+  const isDesignActive = (design: Design): boolean => {
+    const activeDesignState = sketchpadState.designEditorCoreStates[sketchpadState.activeDesign];
+    if (!activeDesignState) return false;
+
+    const activeDesignId = activeDesignState.designId;
+    return design.name === activeDesignId.name && (design.variant || undefined) === activeDesignId.variant && (design.view || undefined) === activeDesignId.view;
+  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -170,7 +182,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
                 <TreeItem key={name} label={name} defaultOpen={false}>
                   <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
                     {designs.map((design) => (
-                      <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} showHoverCard={true} />
+                      <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} showHoverCard={true} isActive={isDesignActive(design)} />
                     ))}
                   </div>
                 </TreeItem>

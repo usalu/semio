@@ -807,66 +807,89 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
     if (conn.connecting.designId) designIds.add(conn.connecting.designId);
   });
 
-  const designNodes = Array.from(designIds).map((designId, i) => {
-    const designPieceId = `design-${designId}`;
-    const isSelected = selection?.selectedPieceIds.includes(designPieceId) ?? false;
+  const designNodes = [
+    // Connected design nodes (from external connections)
+    ...Array.from(designIds).map((designId, i) => {
+      const designPieceId = `design-${designId}`;
+      const isSelected = selection?.selectedPieceIds.includes(designPieceId) ?? false;
 
-    // Find external connections for this design
-    const externalConnections =
-      design.connections?.filter((connection) => {
-        // Connections with designId referencing this design
-        const connectedToDesign = connection.connected.designId === designId;
-        const connectingToDesign = connection.connecting.designId === designId;
-        return connectedToDesign || connectingToDesign;
-      }) ?? [];
+      // Find external connections for this design
+      const externalConnections =
+        design.connections?.filter((connection) => {
+          // Connections with designId referencing this design
+          const connectedToDesign = connection.connected.designId === designId;
+          const connectingToDesign = connection.connecting.designId === designId;
+          return connectedToDesign || connectingToDesign;
+        }) ?? [];
 
-    // Calculate center position based on the average position of external connected pieces in the current diagram
-    let calculatedCenter = { x: 0, y: 0 };
-    if (externalConnections.length > 0) {
-      // Get the pieces that are connected to this design (the external pieces)
-      const connectedPieceIds = new Set<string>();
-      externalConnections.forEach((conn) => {
-        if (conn.connected.designId === designId) {
-          // The connecting side is external
-          connectedPieceIds.add(conn.connecting.piece.id_);
-        } else if (conn.connecting.designId === designId) {
-          // The connected side is external
-          connectedPieceIds.add(conn.connected.piece.id_);
+      // Calculate center position based on the average position of external connected pieces in the current diagram
+      let calculatedCenter = { x: 0, y: 0 };
+      if (externalConnections.length > 0) {
+        // Get the pieces that are connected to this design (the external pieces)
+        const connectedPieceIds = new Set<string>();
+        externalConnections.forEach((conn) => {
+          if (conn.connected.designId === designId) {
+            // The connecting side is external
+            connectedPieceIds.add(conn.connecting.piece.id_);
+          } else if (conn.connecting.designId === designId) {
+            // The connected side is external
+            connectedPieceIds.add(conn.connected.piece.id_);
+          }
+        });
+
+        // Find the actual positions of these connected pieces in the current diagram
+        const connectedPieceCenters: DiagramPoint[] = [];
+        Array.from(connectedPieceIds).forEach((pieceId) => {
+          const center = centerMap.get(pieceId);
+          if (center) {
+            connectedPieceCenters.push(center);
+          }
+        });
+
+        if (connectedPieceCenters.length > 0) {
+          // Calculate average center of connected pieces
+          const avgX = connectedPieceCenters.reduce((sum, center) => sum + center.x, 0) / connectedPieceCenters.length;
+          const avgY = connectedPieceCenters.reduce((sum, center) => sum + center.y, 0) / connectedPieceCenters.length;
+
+          // Position the design node near the connected pieces
+          calculatedCenter = {
+            x: Math.round(avgX),
+            y: Math.round(avgY),
+          };
         }
-      });
-
-      // Find the actual positions of these connected pieces in the current diagram
-      const connectedPieceCenters: DiagramPoint[] = [];
-      Array.from(connectedPieceIds).forEach((pieceId) => {
-        const center = centerMap.get(pieceId);
-        if (center) {
-          connectedPieceCenters.push(center);
-        }
-      });
-
-      if (connectedPieceCenters.length > 0) {
-        // Calculate average center of connected pieces
-        const avgX = connectedPieceCenters.reduce((sum, center) => sum + center.x, 0) / connectedPieceCenters.length;
-        const avgY = connectedPieceCenters.reduce((sum, center) => sum + center.y, 0) / connectedPieceCenters.length;
-
-        // Position the design node near the connected pieces
-        calculatedCenter = {
-          x: Math.round(avgX),
-          y: Math.round(avgY),
-        };
       }
-    }
 
-    // Create a synthetic piece to represent the design
-    const designPiece: Piece = {
-      id_: `design-${designId}`,
-      type: { name: "design", variant: designId },
-      center: calculatedCenter,
-      description: `Clustered design: ${designId}`,
-    };
+      // Create a synthetic piece to represent the design
+      const designPiece: Piece = {
+        id_: `design-${designId}`,
+        type: { name: "design", variant: designId },
+        center: calculatedCenter,
+        description: `Clustered design: ${designId}`,
+      };
 
-    return designToNode(designPiece, externalConnections, calculatedCenter, isSelected, design.pieces!.length + i);
-  });
+      return designToNode(designPiece, externalConnections, calculatedCenter, isSelected, design.pieces!.length + i);
+    }),
+
+    // Fixed design nodes (from fixedDesigns - drag-dropped designs)
+    ...(design.fixedDesigns || []).map((fixedDesign, i) => {
+      const { designId: fixedDesignId, center, plane } = fixedDesign;
+      const displayCenter = center || { x: 0, y: 0 };
+
+      // Create a synthetic piece for the fixed design
+      const designPiece: Piece = {
+        id_: `fixed-design-${fixedDesignId.name}-${fixedDesignId.variant || ""}-${fixedDesignId.view || ""}`,
+        type: { name: "design", variant: `${fixedDesignId.name}${fixedDesignId.variant ? `-${fixedDesignId.variant}` : ""}${fixedDesignId.view ? `-${fixedDesignId.view}` : ""}` },
+        center: displayCenter,
+        plane: plane,
+        description: `Fixed design: ${fixedDesignId.name}`,
+      };
+
+      const isSelected = selection?.selectedPieceIds.includes(designPiece.id_) ?? false;
+
+      // No external connections for fixed designs since they're standalone
+      return designToNode(designPiece, [], displayCenter, isSelected, design.pieces!.length + designIds.size + i);
+    }),
+  ];
 
   // Create a map of piece IDs to their array indices for unique node IDs
   // Handle duplicate piece IDs by mapping to the first occurrence index

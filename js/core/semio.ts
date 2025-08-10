@@ -206,7 +206,7 @@ export const DesignSchema: z.ZodType<any> = z.object({
     .optional(),
   pieces: z.array(PieceSchema).optional(),
   connections: z.array(ConnectionSchema).optional(),
-  includedDesigns: z
+  fixedDesigns: z
     .array(
       z.object({
         designId: z.lazy(() => DesignIdSchema),
