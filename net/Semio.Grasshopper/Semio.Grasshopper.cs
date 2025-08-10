@@ -97,11 +97,7 @@ public class SemioCategoryIcon : GH_AssemblyPriority
 
 public static class Utility
 {
-    public static bool IsValidLengthUnitSystem(string unit)
-    {
-        return new[] { "nm", "mm", "cm", "dm", "m", "km", "µin", "in", "ft", "yd" }.Contains(unit);
-    }
-
+    public static bool IsValidLengthUnitSystem(string unit) => new[] { "nm", "mm", "cm", "dm", "m", "km", "µin", "in", "ft", "yd" }.Contains(unit);
     public static string LengthUnitSystemToAbbreviation(UnitSystem unitSystem)
     {
         var unit = unitSystem switch
@@ -236,89 +232,24 @@ public static class Utility
 
 public static class RhinoConverter
 {
-    public static object Convert(this object value)
+    public static object Convert(this object value) => value;
+    public static string Convert(this string value) => value;
+    public static int Convert(this int value) => value;
+    public static float Convert(this double value) => (float)value;
+    public static Point3d Convert(this Point point) => new Point3d(point.X, point.Y, point.Z);
+    public static Point Convert(this Point3d point) => new Point { X = (float)point.X, Y = (float)point.Y, Z = (float)point.Z };
+    public static Vector3d Convert(this Vector vector) => new Vector3d(vector.X, vector.Y, vector.Z);
+    public static Vector Convert(this Vector3d vector) => new Vector { X = (float)vector.X, Y = (float)vector.Y, Z = (float)vector.Z };
+    public static Rhino.Geometry.Plane Convert(this Plane plane) => new(
+        new Point3d(plane.Origin.X, plane.Origin.Y, plane.Origin.Z),
+        new Vector3d(plane.XAxis.X, plane.XAxis.Y, plane.XAxis.Z),
+        new Vector3d(plane.YAxis.X, plane.YAxis.Y, plane.YAxis.Z));
+    public static Plane Convert(this Rhino.Geometry.Plane plane) => new()
     {
-        return value;
-    }
-
-    public static string Convert(this string value)
-    {
-        return value;
-    }
-
-    public static int Convert(this int value)
-    {
-        return value;
-    }
-
-    public static float Convert(this double value)
-    {
-        return (float)value;
-    }
-
-    public static Point3d Convert(this Point point)
-    {
-        return new Point3d(point.X, point.Y, point.Z);
-    }
-
-    public static Point Convert(this Point3d point)
-    {
-        return new Point
-        {
-            X = (float)point.X,
-            Y = (float)point.Y,
-            Z = (float)point.Z
-        };
-    }
-
-    public static Vector3d Convert(this Vector vector)
-    {
-        return new Vector3d(vector.X, vector.Y, vector.Z);
-    }
-
-    public static Vector Convert(this Vector3d vector)
-    {
-        return new Vector
-        {
-            X = (float)vector.X,
-            Y = (float)vector.Y,
-            Z = (float)vector.Z
-        };
-    }
-
-    public static Rhino.Geometry.Plane Convert(this Plane plane)
-    {
-        return new Rhino.Geometry.Plane(
-            new Point3d(plane.Origin.X, plane.Origin.Y, plane.Origin.Z),
-            new Vector3d(plane.XAxis.X, plane.XAxis.Y, plane.XAxis.Z),
-            new Vector3d(plane.YAxis.X, plane.YAxis.Y, plane.YAxis.Z)
-        );
-    }
-
-    public static Plane Convert(this Rhino.Geometry.Plane plane)
-    {
-        return new Plane
-        {
-            Origin = new Point
-            {
-                X = (float)plane.OriginX,
-                Y = (float)plane.OriginY,
-                Z = (float)plane.OriginZ
-            },
-            XAxis = new Vector
-            {
-                X = (float)plane.XAxis.X,
-                Y = (float)plane.XAxis.Y,
-                Z = (float)plane.XAxis.Z
-            },
-            YAxis = new Vector
-            {
-                X = (float)plane.YAxis.X,
-                Y = (float)plane.YAxis.Y,
-                Z = (float)plane.YAxis.Z
-            }
-        };
-    }
+        Origin = new Point { X = (float)plane.OriginX, Y = (float)plane.OriginY, Z = (float)plane.OriginZ },
+        XAxis = new Vector { X = (float)plane.XAxis.X, Y = (float)plane.XAxis.Y, Z = (float)plane.XAxis.Z },
+        YAxis = new Vector { X = (float)plane.YAxis.X, Y = (float)plane.YAxis.Y, Z = (float)plane.YAxis.Z }
+    };
 }
 
 #endregion
@@ -327,59 +258,30 @@ public static class RhinoConverter
 
 public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
 {
-    public ModelGoo()
-    {
-        Value = new T();
-    }
-
-    public ModelGoo(T value)
-    {
-        Value = value;
-    }
-
-    public override bool IsValid => Value != null;
-
+    public ModelGoo() { Value = new T(); }
+    public ModelGoo(T value) { Value = value; }
+    public override bool IsValid => true;
     public override string TypeName => typeof(T).Name;
-
-    public override string TypeDescription =>
-        ((ModelAttribute)Attribute.GetCustomAttribute(typeof(T), typeof(ModelAttribute))).Description;
-
+    public override string TypeDescription => ((ModelAttribute)Attribute.GetCustomAttribute(typeof(T), typeof(ModelAttribute))).Description;
     public override IGH_Goo Duplicate()
     {
         var duplicate = (ModelGoo<T>)Activator.CreateInstance(GetType());
         duplicate.Value = Value.DeepClone();
         return duplicate;
     }
-
-    public override string ToString()
-    {
-        if (Value == null)
-            return null;
-        return Value.ToString();
-    }
-
+    public override string ToString() => Value.ToString();
     public override bool Write(GH_IWriter writer)
     {
         writer.SetString(typeof(T).Name, Value.Serialize());
         return base.Write(writer);
     }
-
     public override bool Read(GH_IReader reader)
     {
         Value = reader.GetString(typeof(T).Name).Deserialize<T>();
         return base.Read(reader);
     }
-
-    internal virtual bool CustomCastTo<Q>(ref Q target)
-    {
-        return false;
-    }
-
-    internal virtual bool CustomCastFrom(object source)
-    {
-        return false;
-    }
-
+    internal virtual bool CustomCastTo<Q>(ref Q target) => false;
+    internal virtual bool CustomCastFrom(object source) => false;
     public override bool CastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(T)))
@@ -387,249 +289,168 @@ public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
             target = (Q)(object)this;
             return true;
         }
-
         return CustomCastTo(ref target);
     }
 
     public override bool CastFrom(object source)
     {
         if (source == null) return false;
-
         if (source is T model)
         {
             Value = model;
             return true;
         }
-
         return CustomCastFrom(source);
     }
 }
 
 public class RepresentationGoo : ModelGoo<Representation>
 {
-    public RepresentationGoo()
-    {
-    }
-
-    public RepresentationGoo(Representation value) : base(value)
-    {
-    }
-
+    public RepresentationGoo() { }
+    public RepresentationGoo(Representation value) : base(value) { }
     internal override bool CustomCastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            object ptr = new GH_String(Value.Url);
-            target = (Q)ptr;
+            target = (Q)(object)new GH_String(Value.Url);
             return true;
         }
-
         return false;
     }
-
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
-
-        string str = null;
-        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new Representation
-            {
-                Url = str
-            };
+            Value = new Representation { Url = str };
             return true;
         }
-
         return false;
     }
 }
 
 public class PortGoo : ModelGoo<Port>
 {
-    public PortGoo()
-    {
-    }
-
-    public PortGoo(Port value) : base(value)
-    {
-    }
+    public PortGoo() { }
+    public PortGoo(Port value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_Plane)))
         {
-            object ptr = new GH_Plane(Utility.GetPlaneFromYAxis(Value.Direction.Convert(), 0, Value.Point.Convert()));
-            target = (Q)ptr;
+            if (Value.Direction is null || Value.Point is null) return false;
+            target = (Q)(object)new GH_Plane(Utility.GetPlaneFromYAxis(Value.Direction.Convert(), 0, Value.Point.Convert()));
             return true;
         }
-
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            object ptr = new GH_String(Value.Serialize());
-            target = (Q)ptr;
+            target = (Q)(object)new GH_String(Value.Serialize());
             return true;
         }
-
         return false;
     }
 
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
-
         var plane = new Rhino.Geometry.Plane();
         if (GH_Convert.ToPlane(source, ref plane, GH_Conversion.Both))
         {
             Value.Point = plane.Origin.Convert();
             Value.Direction = plane.YAxis.Convert();
-
             return true;
         }
-
-        string str = null;
-        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             Value = str.Deserialize<Port>();
             return true;
         }
-
         return false;
     }
 }
 
 public class QualityGoo : ModelGoo<Quality>
 {
-    public QualityGoo()
-    {
-    }
-
-    public QualityGoo(Quality value) : base(value)
-    {
-    }
+    public QualityGoo() { }
+    public QualityGoo(Quality value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            object ptr = new GH_String(Value.Name);
-            target = (Q)ptr;
+            target = (Q)(object)new GH_String(Value.Name);
             return true;
         }
-
         return false;
     }
 
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
-
-        string str;
-        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new Quality
-            {
-                Name = str
-            };
+            Value = new Quality { Name = str };
             return true;
         }
-
         return false;
     }
 }
 
 public class AuthorGoo : ModelGoo<Author>
 {
-    public AuthorGoo()
-    {
-    }
-
-    public AuthorGoo(Author value) : base(value)
-    {
-    }
-
+    public AuthorGoo() { }
+    public AuthorGoo(Author value) : base(value) { }
     internal override bool CustomCastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            object ptr = new GH_String(Value.Email);
-            target = (Q)ptr;
+            target = (Q)(object)new GH_String(Value.Email);
             return true;
         }
-
         return false;
     }
-
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
-        string str;
-        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new Author
-            {
-                Email = str
-            };
+            Value = new Author { Email = str };
             return true;
         }
-
         return false;
     }
 }
 
 public class LocationGoo : ModelGoo<Location>
 {
-    public LocationGoo()
-    {
-    }
-
-    public LocationGoo(Location value) : base(value)
-    {
-    }
-
+    public LocationGoo() { }
+    public LocationGoo(Location value) : base(value) { }
     internal override bool CustomCastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_Point)))
         {
-            if (Value == null)
-                return false;
-            object ptr = new GH_Point(new Point3d(Value.Longitude, Value.Latitude, 0));
-            target = (Q)ptr;
+            target = (Q)(object)new GH_Point(new Point3d(Value.Longitude, Value.Latitude, 0));
             return true;
         }
-
         return false;
     }
-
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
-
         var point = new Point3d();
         if (GH_Convert.ToPoint3d(source, ref point, GH_Conversion.Both))
         {
-            Value = new Location
-            {
-                Longitude = (float)point.X,
-                Latitude = (float)point.Y
-            };
+            Value = new Location { Longitude = (float)point.X, Latitude = (float)point.Y };
             return true;
         }
-
         return false;
     }
-
 }
 
 public class TypeGoo : ModelGoo<Type>
 {
-    public TypeGoo()
-    {
-    }
-
-    public TypeGoo(Type value) : base(value)
-    {
-    }
+    public TypeGoo() { }
+    public TypeGoo(Type value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
@@ -638,191 +459,122 @@ public class TypeGoo : ModelGoo<Type>
             piece.Value = new Piece
             {
                 Id = Semio.Utility.GenerateRandomId(new Random().Next()),
-                Type = new TypeId
-                {
-                    Name = Value.Name,
-                    Variant = Value.Variant
-                }
+                Type = new TypeId { Name = Value.Name, Variant = Value.Variant }
             };
             return true;
         }
-
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            object ptr = new GH_String(Value.Name);
-            target = (Q)ptr;
+            target = (Q)(object)new GH_String(Value.Name);
             return true;
         }
-
         return false;
     }
 
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
-
         if (source is PieceGoo piece)
         {
-            Value = new Type
-            {
-                Name = piece.Value.Type.Name,
-                Variant = piece.Value.Type.Variant
-            };
+            if (piece.Value.Type is null) return false;
+            Value = new Type { Name = piece.Value.Type.Name, Variant = piece.Value.Type.Variant };
             return true;
         }
-
-        string str = null;
-        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new Type
-            {
-                Name = str
-            };
+            Value = new Type { Name = str };
             return true;
         }
-
         return false;
     }
 }
 
 public class DiagramPointGoo : ModelGoo<DiagramPoint>
 {
-    public DiagramPointGoo()
-    {
-    }
-
-    public DiagramPointGoo(DiagramPoint value) : base(value)
-    {
-    }
+    public DiagramPointGoo() { }
+    public DiagramPointGoo(DiagramPoint value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_Point)))
         {
-            if (Value == null)
-                return false;
-            object ptr = new GH_Point(new Point3d(Value.X, Value.Y, 0));
-            target = (Q)ptr;
+            target = (Q)(object)new GH_Point(new Point3d(Value.X, Value.Y, 0));
             return true;
         }
-
         return false;
     }
 
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
-
         var point = new Point3d();
         if (GH_Convert.ToPoint3d(source, ref point, GH_Conversion.Both))
         {
-            Value = new DiagramPoint
-            {
-                X = (float)point.X,
-                Y = (float)point.Y
-            };
+            Value = new DiagramPoint { X = (float)point.X, Y = (float)point.Y };
             return true;
         }
-
         return false;
     }
 }
 
 public class PieceGoo : ModelGoo<Piece>
 {
-    public PieceGoo()
-    {
-    }
-
-    public PieceGoo(Piece value) : base(value)
-    {
-    }
+    public PieceGoo() { }
+    public PieceGoo(Piece value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
         if (target is TypeGoo type)
         {
-            type.Value = new Type
-            {
-                Name = Value.Type.Name,
-                Variant = Value.Type.Variant
-            };
+            if (Value.Type is null) return false;
+            type.Value = new Type { Name = Value.Type.Name, Variant = Value.Type.Variant };
             return true;
         }
-
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            object ptr = new GH_String(Value.Id);
-            target = (Q)ptr;
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
-
         return false;
     }
 
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
-
         if (source is TypeGoo type)
         {
             Value = new Piece
             {
                 Id = Semio.Utility.GenerateRandomId(new Random().Next()),
-                Type = new TypeId
-                {
-                    Name = type.Value.Name,
-                    Variant = type.Value.Variant
-                }
+                Type = new TypeId { Name = type.Value.Name, Variant = type.Value.Variant }
             };
             return true;
         }
-
-        string str = null;
-        if (GH_Convert.ToString(source, out str, GH_Conversion.Both))
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new Piece
-            {
-                Id = str
-            };
+            Value = new Piece { Id = str };
             return true;
         }
-
         return false;
     }
 }
 
 public class ConnectionGoo : ModelGoo<Connection>
 {
-    public ConnectionGoo()
-    {
-    }
-
-    public ConnectionGoo(Connection value) : base(value)
-    {
-    }
+    public ConnectionGoo() { }
+    public ConnectionGoo(Connection value) : base(value) { }
 }
 
 public class DesignGoo : ModelGoo<Design>
 {
-    public DesignGoo()
-    {
-    }
-
-    public DesignGoo(Design value) : base(value)
-    {
-    }
+    public DesignGoo() { }
+    public DesignGoo(Design value) : base(value) { }
 }
 
 public class KitGoo : ModelGoo<Kit>
 {
-    public KitGoo()
-    {
-    }
-
-    public KitGoo(Kit value) : base(value)
-    {
-    }
+    public KitGoo() { }
+    public KitGoo(Kit value) : base(value) { }
 }
 
 #endregion
@@ -838,18 +590,9 @@ public abstract class ModelParam<T, U> : GH_PersistentParam<T> where T : ModelGo
         "Params")
     {
     }
-
     protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(U).Name.ToLower()}_24x24");
-
-    protected override GH_GetterResult Prompt_Singular(ref T value)
-    {
-        throw new NotImplementedException();
-    }
-
-    protected override GH_GetterResult Prompt_Plural(ref List<T> values)
-    {
-        throw new NotImplementedException();
-    }
+    protected override GH_GetterResult Prompt_Singular(ref T value) => throw new NotImplementedException();
+    protected override GH_GetterResult Prompt_Plural(ref List<T> values) => throw new NotImplementedException();
 }
 
 public class RepresentationParam : ModelParam<RepresentationGoo, Representation>
@@ -915,8 +658,7 @@ public abstract class Component : GH_Component
 {
     public Component(string name, string nickname, string description, string subcategory) : base(
         name, nickname, description, Constants.Category, subcategory)
-    {
-    }
+    { }
 }
 
 #region Modeling
@@ -962,8 +704,7 @@ public abstract class ModelComponent<T, U, V> : Component
 
     protected ModelComponent() : base($"Model {NameM}", $"~{ModelM.Abbreviation}",
         $"Construct, deconstruct or modify {Semio.Utility.Grammar.GetArticle(NameM)} {NameM.ToLower()}", "Modeling")
-    {
-    }
+    { }
 
     protected override Bitmap Icon =>
         (Bitmap)Resources.ResourceManager.GetObject($"{typeof(V).Name.ToLower()}_modify_24x24");
@@ -1059,10 +800,7 @@ public abstract class ModelComponent<T, U, V> : Component
                     value = list;
                     property.SetValue(modelGoo.Value, value);
                 }
-                else
-                {
-                    property.SetValue(modelGoo.Value, RhinoConverter.Convert(value.Value));
-                }
+                else property.SetValue(modelGoo.Value, RhinoConverter.Convert(value.Value));
             }
         }
     }
@@ -1076,10 +814,7 @@ public abstract class ModelComponent<T, U, V> : Component
             var isPropertyModel = IsPropertyModel[i];
             var isPropertyMapped = IsPropertyMapped[i];
             var value = property.GetValue(modelGoo.Value);
-
-            if (value == null)
-                continue;
-
+            if (value == null) continue;
             if (isList)
             {
                 if (isPropertyModel)
@@ -1090,7 +825,6 @@ public abstract class ModelComponent<T, U, V> : Component
                         var itemGoo = Activator.CreateInstance(PropertyItemGoo[i], item.DeepClone());
                         list.Add(itemGoo);
                     }
-
                     value = list;
                 }
             }
@@ -1098,27 +832,16 @@ public abstract class ModelComponent<T, U, V> : Component
             {
                 if (isPropertyMapped)
                 {
-                    var convertMethod =
-                        typeof(RhinoConverter).GetMethod("Convert", new System.Type[] { value.GetType() });
+                    var convertMethod = typeof(RhinoConverter).GetMethod("Convert", new System.Type[] { value.GetType() });
                     value = convertMethod.Invoke(null, new[] { value });
                 }
-                else
-                {
-                    value = Activator.CreateInstance(PropertyItemGoo[i], value.DeepClone());
-                }
+                else value = Activator.CreateInstance(PropertyItemGoo[i], value.DeepClone());
             }
-
-            if (isList)
-                DA.SetDataList(i + 2, value);
-            else
-                DA.SetData(i + 2, value);
+            if (isList) DA.SetDataList(i + 2, value);
+            else DA.SetData(i + 2, value);
         }
     }
-
-    protected virtual V ProcessModel(V model)
-    {
-        return model;
-    }
+    protected virtual V ProcessModel(V model) => model;
 }
 
 public class RepresentationComponent : ModelComponent<RepresentationParam, RepresentationGoo, Representation>
@@ -1129,11 +852,9 @@ public class RepresentationComponent : ModelComponent<RepresentationParam, Repre
     {
         var mime = Semio.Utility.ParseMimeFromUrl(model.Url);
         var firstTag = model.Tags.FirstOrDefault();
-        if (firstTag == null || (firstTag != null && mime != "" && !Semio.Utility.IsValidMime(firstTag)))
-            model.Tags.Insert(0, mime);
+        if (firstTag == null || (firstTag != null && mime != "" && !Semio.Utility.IsValidMime(firstTag))) model.Tags.Insert(0, mime);
         model.Url = model.Url.Replace('\\', '/');
-        if (firstTag != null && Semio.Utility.IsValidMime(firstTag))
-            model.Tags[0] = firstTag;
+        if (firstTag != null && Semio.Utility.IsValidMime(firstTag)) model.Tags[0] = firstTag;
         return model;
     }
 }
@@ -1165,15 +886,8 @@ public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
     protected override Type ProcessModel(Type type)
     {
         if (type.Unit == "")
-            try
-            {
-                var documentUnits = RhinoDoc.ActiveDoc.ModelUnitSystem;
-                type.Unit = Utility.LengthUnitSystemToAbbreviation(documentUnits);
-            }
-            catch (Exception e)
-            {
-                type.Unit = "m";
-            }
+            try { type.Unit = Utility.LengthUnitSystemToAbbreviation(RhinoDoc.ActiveDoc.ModelUnitSystem); }
+            catch (Exception) { type.Unit = "m"; }
 
         type.Icon = type.Icon.Replace('\\', '/');
         type.Image = type.Image.Replace('\\', '/');
@@ -1192,27 +906,18 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
 
     protected override void AddModelProps(dynamic pManager)
     {
-        pManager.AddTextParameter("Id", "Id",
-            "Id of the piece.",
-            GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Dc?", "The optional human-readable description of the piece.",
-            GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Id", "Id of the piece.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional human-readable description of the piece.", GH_ParamAccess.item);
         pManager.AddTextParameter("Type Name", "Na", "Name of the type of the piece.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Type Variant", "Vn?",
-            "The optional variant of the type of the piece. No variant means the default variant.",
-            GH_ParamAccess.item);
-        pManager.AddPlaneParameter("Plane", "Pn?",
-            "The optional plane of the piece. When pieces are connected only one piece can have a plane.",
-            GH_ParamAccess.item);
-        pManager.AddParameter(new DiagramPointParam(), "Center", "Ce?",
-            "The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.",
-            GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Hidden", "Hi?",
-            "Whether the piece is hidden. A hidden piece is not visible in the model.", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Locked", "Lk?",
-            "Whether the piece is locked. A locked piece cannot be edited.", GH_ParamAccess.item);
-        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*",
-            "The optional qualities of the piece.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Type Variant", "Vn?", "The optional variant of the type of the piece. No variant means the default variant.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Design Name", "DNa?", "Optional name of the design of the piece.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Design Variant", "DVn?", "Optional variant of the design of the piece.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Design View", "DVi?", "Optional view of the design of the piece.", GH_ParamAccess.item);
+        pManager.AddPlaneParameter("Plane", "Pn?", "The optional plane of the piece. When pieces are connected only one piece can have a plane.", GH_ParamAccess.item);
+        pManager.AddParameter(new DiagramPointParam(), "Center", "Ce?", "The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Hidden", "Hi?", "Whether the piece is hidden. A hidden piece is not visible in the model.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Locked", "Lk?", "Whether the piece is locked. A locked piece cannot be edited.", GH_ParamAccess.item);
+        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "The optional qualities of the piece.", GH_ParamAccess.list);
     }
 
     protected override void GetProps(IGH_DataAccess DA, dynamic pieceGoo)
@@ -1221,47 +926,65 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         var description = "";
         var typeName = "";
         var typeVariant = "";
+        var designName = "";
+        var designVariant = "";
+        var designView = "";
         var plane = new Rhino.Geometry.Plane();
         var centerGoo = new DiagramPointGoo();
         var qualitiesGoos = new List<QualityGoo>();
         var hidden = false;
         var locked = false;
-
-
-        if (DA.GetData(2, ref id))
-            pieceGoo.Value.Id = id;
-        if (DA.GetData(3, ref description))
-            pieceGoo.Value.Description = description;
+        if (DA.GetData(2, ref id)) pieceGoo.Value.Id = id;
+        if (DA.GetData(3, ref description)) pieceGoo.Value.Description = description;
         if (DA.GetData(4, ref typeName))
+        {
+            pieceGoo.Value.Type ??= new TypeId();
             pieceGoo.Value.Type.Name = typeName;
+        }
         if (DA.GetData(5, ref typeVariant))
+        {
+            pieceGoo.Value.Type ??= new TypeId();
             pieceGoo.Value.Type.Variant = typeVariant;
-        if (DA.GetData(6, ref plane))
-            pieceGoo.Value.Plane = plane.Convert();
-        if (DA.GetData(7, ref centerGoo))
-            pieceGoo.Value.Center = centerGoo.Value;
-        if (DA.GetData(8, ref hidden))
-            pieceGoo.Value.Hidden = hidden;
-        if (DA.GetData(9, ref locked))
-            pieceGoo.Value.Locked = locked;
-        if (DA.GetDataList(10, qualitiesGoos))
-            pieceGoo.Value.Qualities = qualitiesGoos.Select(q => q.Value).ToList();
+        }
+        if (DA.GetData(6, ref designName))
+        {
+            pieceGoo.Value.Design ??= new DesignId();
+            pieceGoo.Value.Design.Name = designName;
+        }
+        if (DA.GetData(7, ref designVariant))
+        {
+            pieceGoo.Value.Design ??= new DesignId();
+            pieceGoo.Value.Design.Variant = designVariant;
+        }
+        if (DA.GetData(8, ref designView))
+        {
+            pieceGoo.Value.Design ??= new DesignId();
+            pieceGoo.Value.Design.View = designView;
+        }
+        if (DA.GetData(9, ref plane)) pieceGoo.Value.Plane = plane.Convert();
+        if (DA.GetData(10, ref centerGoo)) pieceGoo.Value.Center = centerGoo.Value;
+        if (DA.GetData(11, ref hidden)) pieceGoo.Value.Hidden = hidden;
+        if (DA.GetData(12, ref locked)) pieceGoo.Value.Locked = locked;
+        if (DA.GetDataList(13, qualitiesGoos)) pieceGoo.Value.Qualities = qualitiesGoos.Select(q => q.Value).ToList();
     }
 
     protected override void SetData(IGH_DataAccess DA, dynamic pieceGoo)
     {
         DA.SetData(2, pieceGoo.Value.Id);
         DA.SetData(3, pieceGoo.Value.Description);
-        DA.SetData(4, pieceGoo.Value.Type.Name);
-        DA.SetData(5, pieceGoo.Value.Type.Variant);
-        DA.SetData(6, (pieceGoo.Value.Plane as Plane)?.Convert());
-        DA.SetData(7, pieceGoo.Value != null ? new DiagramPointGoo(pieceGoo.Value.Center as DiagramPoint) : null);
-        DA.SetData(8, pieceGoo.Value.Hidden);
-        DA.SetData(9, pieceGoo.Value.Locked);
+        DA.SetData(4, pieceGoo.Value.Type != null ? pieceGoo.Value.Type.Name : "");
+        DA.SetData(5, pieceGoo.Value.Type != null ? pieceGoo.Value.Type.Variant : "");
+        DA.SetData(6, pieceGoo.Value.Design != null ? pieceGoo.Value.Design.Name : "");
+        DA.SetData(7, pieceGoo.Value.Design != null ? pieceGoo.Value.Design.Variant : "");
+        DA.SetData(8, pieceGoo.Value.Design != null ? pieceGoo.Value.Design.View : "");
+        DA.SetData(9, (pieceGoo.Value.Plane as Plane)?.Convert());
+        var center = pieceGoo.Value != null ? pieceGoo.Value.Center as DiagramPoint : null;
+        if (center is not null) DA.SetData(10, new DiagramPointGoo(center));
+        DA.SetData(11, pieceGoo.Value.Hidden);
+        DA.SetData(12, pieceGoo.Value.Locked);
         var qualityGoos = new List<QualityGoo>();
-        foreach (Quality quality in pieceGoo.Value.Qualities)
-            qualityGoos.Add(new QualityGoo(quality.DeepClone()));
-        DA.SetDataList(10, qualityGoos);
+        foreach (Quality quality in pieceGoo.Value.Qualities) qualityGoos.Add(new QualityGoo(quality.DeepClone()));
+        DA.SetDataList(13, qualityGoos);
     }
 }
 
@@ -1271,51 +994,31 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
 
     protected override void AddModelProps(dynamic pManager)
     {
-        pManager.AddTextParameter("Connected Piece Id", "CdPc", "Id of the connected piece.",
-            GH_ParamAccess.item);
-        pManager.AddTextParameter("Connected Piece Type Port Id", "CdPo?",
-            "Optional id of the port of type of the piece. Otherwise the default port will be selected.",
-            GH_ParamAccess.item);
-        pManager.AddTextParameter("Connecting Piece Id", "CgPc", "Id of the connected piece.",
-            GH_ParamAccess.item);
-        pManager.AddTextParameter("Connecting Piece Type Port Id", "CgPo?",
-            "Optional id of the port of type of the piece. Otherwise the default port will be selected.",
-            GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Dc?", "The optional human-readable description of the connection.",
-            GH_ParamAccess.item);
-        pManager.AddNumberParameter("Gap", "Gp?",
-            "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.",
-            GH_ParamAccess.item);
-        pManager.AddNumberParameter("Shift", "Sf?",
-            "The optional lateral shift (applied after rotation and tilt in port direction) between the connected and the connecting piece.",
-            GH_ParamAccess.item);
-        pManager.AddNumberParameter("Rise", "Rs?",
-            "The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
-            GH_ParamAccess.item);
-        pManager.AddNumberParameter("Rotation", "Rt?",
-            "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.",
-            GH_ParamAccess.item);
-        pManager.AddNumberParameter("Turn", "Tu?",
-            "The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.",
-            GH_ParamAccess.item);
-        pManager.AddNumberParameter("Tilt", "Tl?",
-            "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.",
-            GH_ParamAccess.item);
-        pManager.AddNumberParameter("X", "X?",
-            "The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
-            GH_ParamAccess.item);
-        pManager.AddNumberParameter("Y", "Y?",
-            "The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.",
-            GH_ParamAccess.item);
-        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "The optional qualities of the connection.",
-            GH_ParamAccess.list);
+        pManager.AddTextParameter("Connected Piece Id", "CdPc", "Id of the connected piece.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Connected Design Piece Id", "CdDP?", "Optional id of the piece inside the referenced design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Connected Piece Type Port Id", "CdPo?", "Optional id of the port of type of the piece. Otherwise the default port will be selected.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Connecting Piece Id", "CgPc", "Id of the connected piece.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Connecting Design Piece Id", "CgDP?", "Optional id of the piece inside the referenced design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Connecting Piece Type Port Id", "CgPo?", "Optional id of the port of type of the piece. Otherwise the default port will be selected.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional human-readable description of the connection.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Gap", "Gp?", "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Shift", "Sf?", "The optional lateral shift (applied after rotation and tilt in port direction) between the connected and the connecting piece.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rise", "Rs?", "The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rotation", "Rt?", "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Turn", "Tu?", "The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Tilt", "Tl?", "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("X", "X?", "The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Y", "Y?", "The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.", GH_ParamAccess.item);
+        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "The optional qualities of the connection.", GH_ParamAccess.list);
     }
 
     protected override void GetProps(IGH_DataAccess DA, dynamic connectionGoo)
     {
         var connectedPieceId = "";
+        var connectedDesignPieceId = "";
         var connectedPortId = "";
         var connectingPieceId = "";
+        var connectingDesignPieceId = "";
         var connectingPortId = "";
         var description = "";
         var gap = 0.0;
@@ -1327,79 +1030,66 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         var x = 0.0;
         var y = 0.0;
         var qualitiesGoos = new List<QualityGoo>();
-
-        if (DA.GetData(2, ref connectedPieceId))
-            connectionGoo.Value.Connected.Piece.Id = connectedPieceId;
-        if (DA.GetData(3, ref connectedPortId))
-            connectionGoo.Value.Connected.Port.Id = connectedPortId;
-        if (DA.GetData(4, ref connectingPieceId))
+        if (DA.GetData(2, ref connectedPieceId)) connectionGoo.Value.Connected.Piece.Id = connectedPieceId;
+        if (DA.GetData(3, ref connectedDesignPieceId))
+        {
+            connectionGoo.Value.Connected.DesignPiece ??= new PieceId();
+            connectionGoo.Value.Connected.DesignPiece.Id = connectedDesignPieceId;
+        }
+        if (DA.GetData(4, ref connectedPortId)) connectionGoo.Value.Connected.Port.Id = connectedPortId;
+        if (DA.GetData(5, ref connectingPieceId))
             connectionGoo.Value.Connecting.Piece.Id = connectingPieceId;
-        if (DA.GetData(5, ref connectingPortId))
-            connectionGoo.Value.Connecting.Port.Id = connectingPortId;
-        if (DA.GetData(6, ref description))
-            connectionGoo.Value.Description = description;
-        if (DA.GetData(7, ref gap))
-            connectionGoo.Value.Gap = (float)gap;
-        if (DA.GetData(8, ref shift))
-            connectionGoo.Value.Shift = (float)shift;
-        if (DA.GetData(9, ref raise))
-            connectionGoo.Value.Rise = (float)raise;
-        if (DA.GetData(10, ref rotation))
-            connectionGoo.Value.Rotation = (float)rotation;
-        if (DA.GetData(11, ref turn))
-            connectionGoo.Value.Turn = (float)turn;
-        if (DA.GetData(12, ref tilt))
-            connectionGoo.Value.Tilt = (float)tilt;
-        if (DA.GetData(13, ref x))
-            connectionGoo.Value.X = (float)x;
-        if (DA.GetData(14, ref y))
-            connectionGoo.Value.Y = (float)y;
-        if (DA.GetDataList(15, qualitiesGoos))
-            connectionGoo.Value.Qualities = qualitiesGoos.Select(q => q.Value).ToList();
+        if (DA.GetData(6, ref connectingDesignPieceId))
+        {
+            connectionGoo.Value.Connecting.DesignPiece ??= new PieceId();
+            connectionGoo.Value.Connecting.DesignPiece.Id = connectingDesignPieceId;
+        }
+        if (DA.GetData(7, ref connectingPortId)) connectionGoo.Value.Connecting.Port.Id = connectingPortId;
+        if (DA.GetData(8, ref description)) connectionGoo.Value.Description = description;
+        if (DA.GetData(9, ref gap)) connectionGoo.Value.Gap = (float)gap;
+        if (DA.GetData(10, ref shift)) connectionGoo.Value.Shift = (float)shift;
+        if (DA.GetData(11, ref raise)) connectionGoo.Value.Rise = (float)raise;
+        if (DA.GetData(12, ref rotation)) connectionGoo.Value.Rotation = (float)rotation;
+        if (DA.GetData(13, ref turn)) connectionGoo.Value.Turn = (float)turn;
+        if (DA.GetData(14, ref tilt)) connectionGoo.Value.Tilt = (float)tilt;
+        if (DA.GetData(15, ref x)) connectionGoo.Value.X = (float)x;
+        if (DA.GetData(16, ref y)) connectionGoo.Value.Y = (float)y;
+        if (DA.GetDataList(17, qualitiesGoos)) connectionGoo.Value.Qualities = qualitiesGoos.Select(q => q.Value).ToList();
     }
 
     protected override void SetData(IGH_DataAccess DA, dynamic connectionGoo)
     {
         DA.SetData(2, connectionGoo.Value.Connected.Piece.Id);
-        DA.SetData(3, connectionGoo.Value.Connected.Port.Id);
-        DA.SetData(4, connectionGoo.Value.Connecting.Piece.Id);
-        DA.SetData(5, connectionGoo.Value.Connecting.Port.Id);
-        DA.SetData(6, connectionGoo.Value.Description);
-        DA.SetData(7, connectionGoo.Value.Gap);
-        DA.SetData(8, connectionGoo.Value.Shift);
-        DA.SetData(9, connectionGoo.Value.Rise);
-        DA.SetData(10, connectionGoo.Value.Rotation);
-        DA.SetData(11, connectionGoo.Value.Turn);
-        DA.SetData(12, connectionGoo.Value.Tilt);
-        DA.SetData(13, connectionGoo.Value.X);
-        DA.SetData(14, connectionGoo.Value.Y);
+        DA.SetData(3, connectionGoo.Value.Connected.DesignPiece != null ? connectionGoo.Value.Connected.DesignPiece.Id : "");
+        DA.SetData(4, connectionGoo.Value.Connected.Port.Id);
+        DA.SetData(5, connectionGoo.Value.Connecting.Piece.Id);
+        DA.SetData(6, connectionGoo.Value.Connecting.DesignPiece != null ? connectionGoo.Value.Connecting.DesignPiece.Id : "");
+        DA.SetData(7, connectionGoo.Value.Connecting.Port.Id);
+        DA.SetData(8, connectionGoo.Value.Description);
+        DA.SetData(9, connectionGoo.Value.Gap);
+        DA.SetData(10, connectionGoo.Value.Shift);
+        DA.SetData(11, connectionGoo.Value.Rise);
+        DA.SetData(12, connectionGoo.Value.Rotation);
+        DA.SetData(13, connectionGoo.Value.Turn);
+        DA.SetData(14, connectionGoo.Value.Tilt);
+        DA.SetData(15, connectionGoo.Value.X);
+        DA.SetData(16, connectionGoo.Value.Y);
         var qualityGoos = new List<QualityGoo>();
-        foreach (Quality quality in connectionGoo.Value.Qualities)
-            qualityGoos.Add(new QualityGoo(quality.DeepClone()));
-        DA.SetDataList(15, qualityGoos);
+        foreach (Quality quality in connectionGoo.Value.Qualities) qualityGoos.Add(new QualityGoo(quality.DeepClone()));
+        DA.SetDataList(17, qualityGoos);
     }
 }
 
 public class DesignComponent : ModelComponent<DesignParam, DesignGoo, Design>
 {
     public override Guid ComponentGuid => new("AAD8D144-2EEE-48F1-A8A9-52977E86CB54");
-
     protected override Design ProcessModel(Design design)
     {
         if (design.Unit == "")
-            try
-            {
-                var documentUnits = RhinoDoc.ActiveDoc.ModelUnitSystem;
-                design.Unit = Utility.LengthUnitSystemToAbbreviation(documentUnits);
-            }
-            catch (Exception e)
-            {
-                design.Unit = "m";
-            }
-
+            try { design.Unit = Utility.LengthUnitSystemToAbbreviation(RhinoDoc.ActiveDoc.ModelUnitSystem); }
+            catch (Exception) { design.Unit = "m"; }
         design.Icon = design.Icon.Replace('\\', '/');
         design.Image = design.Image.Replace('\\', '/');
-
         return design;
     }
 }
@@ -1407,7 +1097,6 @@ public class DesignComponent : ModelComponent<DesignParam, DesignGoo, Design>
 public class KitComponent : ModelComponent<KitParam, KitGoo, Kit>
 {
     public override Guid ComponentGuid => new("987560A8-10D4-43F6-BEBE-D71DC2FD86AF");
-
     protected override Kit ProcessModel(Kit kit)
     {
         kit.Icon = kit.Icon.Replace('\\', '/');
@@ -1425,17 +1114,14 @@ public abstract class ScriptingComponent : Component
 {
     public ScriptingComponent(string name, string nickname, string description)
         : base(name, nickname, description, "Scripting")
-    {
-    }
+    { }
 }
 
 public class EncodeTextComponent : ScriptingComponent
 {
     public EncodeTextComponent()
         : base("Encode Text", ">Txt", "Encode a text.")
-    {
-    }
-
+    { }
     public override Guid ComponentGuid => new("FBDDF723-80BD-4AF9-A1EE-450A27D50ABE");
 
     protected override Bitmap Icon => Resources.encode_24x24;
@@ -1443,14 +1129,11 @@ public class EncodeTextComponent : ScriptingComponent
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Text", "Tx", "Text to encode.", GH_ParamAccess.item);
-        pManager.AddIntegerParameter("Mode", "Mo", "0: url safe encoding ()\n1: base64 encoding\n2: replace only",
-            GH_ParamAccess.item, 0);
+        pManager.AddIntegerParameter("Mode", "Mo", "0: url safe encoding ()\n1: base64 encoding\n2: replace only", GH_ParamAccess.item, 0);
         pManager[1].Optional = true;
-        pManager.AddTextParameter("Forbidden", "Fb", "Forbidden text that will be replaced after encoding.",
-            GH_ParamAccess.list);
+        pManager.AddTextParameter("Forbidden", "Fb", "Forbidden text that will be replaced after encoding.", GH_ParamAccess.list);
         pManager[2].Optional = true;
-        pManager.AddTextParameter("Replace", "Re", "Placeholder text that replaces the forbidden text after encoding.",
-            GH_ParamAccess.list);
+        pManager.AddTextParameter("Replace", "Re", "Placeholder text that replaces the forbidden text after encoding.", GH_ParamAccess.list);
         pManager[3].Optional = true;
     }
 
@@ -1469,37 +1152,24 @@ public class EncodeTextComponent : ScriptingComponent
         DA.GetData(1, ref mode);
         DA.GetDataList(2, forbidden);
         DA.GetDataList(3, replace);
-        DA.SetData(0,
-            Semio.Utility.Encode(text, (EncodeMode)mode, new Tuple<List<string>, List<string>>(forbidden, replace)));
+        DA.SetData(0, Semio.Utility.Encode(text, (EncodeMode)mode, new Tuple<List<string>, List<string>>(forbidden, replace)));
     }
 }
 
 public class DecodeTextComponent : ScriptingComponent
 {
-    public DecodeTextComponent()
-        : base("Decode Text", "<Txt", "Decode a text.")
-    {
-    }
-
+    public DecodeTextComponent() : base("Decode Text", "<Txt", "Decode a text.") { }
     public override Guid ComponentGuid => new("E7158D28-87DE-493F-8D78-923265C3E211");
-
     protected override Bitmap Icon => Resources.decode_24x24;
-
     public override GH_Exposure Exposure => GH_Exposure.primary;
-
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Encoded Text", "En", "Encoded text to decode.", GH_ParamAccess.item);
-        pManager.AddIntegerParameter("Mode", "Mo", "0: url safe encoding ()\n1: base64 encoding\n2: replace only",
-            GH_ParamAccess.item, 0);
+        pManager.AddIntegerParameter("Mode", "Mo", "0: url safe encoding ()\n1: base64 encoding\n2: replace only", GH_ParamAccess.item, 0);
         pManager[1].Optional = true;
-        pManager.AddTextParameter("Replace", "Re",
-            "Placeholder text that was used to encode forbidden text after encoding and is restored before decoding. It will be applied sequentially. Make sure to invert the order of your original list.",
-            GH_ParamAccess.list);
+        pManager.AddTextParameter("Replace", "Re", "Placeholder text that was used to encode forbidden text after encoding and is restored before decoding. It will be applied sequentially. Make sure to invert the order of your original list.", GH_ParamAccess.list);
         pManager[2].Optional = true;
-        pManager.AddTextParameter("Original", "Or",
-            "Original forbidden text to restore from replaced before decoding. It will be applied sequentially. Make sure to invert the order of your original list.",
-            GH_ParamAccess.list);
+        pManager.AddTextParameter("Original", "Or", "Original forbidden text to restore from replaced before decoding. It will be applied sequentially. Make sure to invert the order of your original list.", GH_ParamAccess.list);
         pManager[3].Optional = true;
     }
 
@@ -1518,33 +1188,24 @@ public class DecodeTextComponent : ScriptingComponent
         DA.GetData(1, ref mode);
         DA.GetDataList(2, replace);
         DA.GetDataList(3, original);
-        DA.SetData(0,
-            Semio.Utility.Decode(encoded, (EncodeMode)mode, new Tuple<List<string>, List<string>>(replace, original)));
+        DA.SetData(0, Semio.Utility.Decode(encoded, (EncodeMode)mode, new Tuple<List<string>, List<string>>(replace, original)));
     }
 }
 
 
 public class ObjectsToTextComponent : ScriptingComponent
 {
-    public ObjectsToTextComponent() : base("Objects to Text", "Objs→Txt",
-        "Converts a list of objects to a human-readable text.")
-    {
-    }
-
+    public ObjectsToTextComponent() : base("Objects to Text", "Objs→Txt", "Converts a list of objects to a human-readable text.") { }
     public override Guid ComponentGuid => new("3BE61561-8290-4965-A9A6-38ACB4EC5182");
-
     protected override Bitmap Icon => Resources.objects_convert_text_24x24;
-
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddGenericParameter("Objects", "Ob+", "Objects to humanize.", GH_ParamAccess.list);
     }
-
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddTextParameter("Humanized Text", "Tx", "Human-readable text.", GH_ParamAccess.item);
     }
-
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var objects = new List<object>();
@@ -1556,14 +1217,9 @@ public class ObjectsToTextComponent : ScriptingComponent
 
 public class NormalizeTextComponent : ScriptingComponent
 {
-    public NormalizeTextComponent() : base("Normalize Text", "⇒Txt", "Normalizes a text to different formats.")
-    {
-    }
-
+    public NormalizeTextComponent() : base("Normalize Text", "⇒Txt", "Normalizes a text to different formats.") { }
     public override Guid ComponentGuid => new("1417BD04-7271-4EFD-A32C-99B1D2FC8A9E");
-
     protected override Bitmap Icon => Resources.text_normalize_24x24;
-
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Text", "Tx", "Text to normalize.", GH_ParamAccess.item);
@@ -1571,28 +1227,22 @@ public class NormalizeTextComponent : ScriptingComponent
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Strict", "St", "Strictly alphanumerical text that either strips characters or turn them into underscores.",
-            GH_ParamAccess.item);
+        pManager.AddTextParameter("Strict", "St", "Strictly alphanumerical text that either strips characters or turn them into underscores.", GH_ParamAccess.item);
         pManager.AddTextParameter("Title", "Ti", "Titelized text by capitalizing and unifying casing.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Underscore", "Un", "Underscorized text by lowercasing everything and replacing spaces with underscores.",
-            GH_ParamAccess.item);
-        pManager.AddTextParameter("Kebab", "Kb",
-            "Kebaberized text by lowercasing everything and replacing spaces with dashes.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Pascal", "Pa", "Pascalized text by capitalizing and removing spaces.",
-            GH_ParamAccess.item);
+        pManager.AddTextParameter("Underscore", "Un", "Underscorized text by lowercasing everything and replacing spaces with underscores.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Kebab", "Kb", "Kebaberized text by lowercasing everything and replacing spaces with dashes.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Pascal", "Pa", "Pascalized text by capitalizing and removing spaces.", GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        string text = null;
+        var text = "";
         DA.GetData(0, ref text);
-
         var strict = Regex.Replace(text.Dehumanize().Underscore(), @"[^a-zA-Z0-9_]", "");
         var title = text.Titleize();
         var underscore = text.Underscore();
         var kebab = text.Kebaberize();
         var pascal = text.Pascalize();
-
         DA.SetData(0, strict);
         DA.SetData(1, title);
         DA.SetData(2, underscore);
@@ -1627,37 +1277,27 @@ public class NormalizeTextComponent : ScriptingComponent
 
 public class TruncateTextComponent : ScriptingComponent
 {
-    public TruncateTextComponent() : base("Truncate Text", "…Txt",
-        "Truncates text by length and an optional termination.")
-    {
-    }
-
+    public TruncateTextComponent() : base("Truncate Text", "…Txt", "Truncates text by length and an optional termination.") { }
     public override Guid ComponentGuid => new("C15BFCE9-0EF7-4367-8310-EF47CE0B8013");
-
     protected override Bitmap Icon => Resources.text_truncate_24x24;
-
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddTextParameter("Text", "Tx", "Text to truncate.", GH_ParamAccess.item);
         pManager.AddIntegerParameter("Length", "Le", "Maximum length of the text.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Termination", "Tr", "Optional termination to append to the truncated text.",
-            GH_ParamAccess.item, "…");
+        pManager.AddTextParameter("Termination", "Tr", "Optional termination to append to the truncated text.", GH_ParamAccess.item, "…");
         pManager[2].Optional = true;
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Strict", "St", "Fixed length truncated text including the truncation text length.",
-            GH_ParamAccess.item);
-        pManager.AddTextParameter("Characters", "Crs",
-            "Fixed alphanumeric character length truncated text including the truncation text length",
-            GH_ParamAccess.item);
+        pManager.AddTextParameter("Strict", "St", "Fixed length truncated text including the truncation text length.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Characters", "Crs", "Fixed alphanumeric character length truncated text including the truncation text length", GH_ParamAccess.item);
         pManager.AddTextParameter("Words", "Wds", "Fixed word length truncated text.", GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        string text = null;
+        string text = "";
         var length = 0;
         var termination = "…";
         DA.GetData(0, ref text);
@@ -1680,31 +1320,22 @@ public abstract class SerializeComponent<T, U, V> : ScriptingComponent
 {
     public static readonly string NameM;
     public static readonly ModelAttribute ModelM;
-
     static SerializeComponent()
     {
         // force compiler to run static constructor of the the meta classes first.
         var dummyMetaGrasshopper = Meta.Goo;
-
         NameM = typeof(V).Name;
         ModelM = Semio.Meta.Model[NameM];
     }
 
-    protected SerializeComponent() : base($"Serialize {NameM}", $">{ModelM.Abbreviation}",
-        $"Serialize a {NameM.ToLower()}.")
-    {
-    }
+    protected SerializeComponent() : base($"Serialize {NameM}", $">{ModelM.Abbreviation}", $"Serialize a {NameM.ToLower()}.") { }
 
     protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_serialize_24x24");
     public override GH_Exposure Exposure => GH_Exposure.secondary;
-
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddParameter(new T(), NameM, ModelM.Code,
-            $"The {NameM.ToLower()} to serialize.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Indent", "In?",
-            $"The optional indent unit for the serialized {NameM.ToLower()}. Empty text for no indent or spaces or tabs",
-            GH_ParamAccess.item, "");
+        pManager.AddParameter(new T(), NameM, ModelM.Code, $"The {NameM.ToLower()} to serialize.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Indent", "In?", $"The optional indent unit for the serialized {NameM.ToLower()}. Empty text for no indent or spaces or tabs", GH_ParamAccess.item, "");
         pManager[1].Optional = true;
     }
 
@@ -1724,8 +1355,7 @@ public abstract class SerializeComponent<T, U, V> : ScriptingComponent
     }
 }
 
-public class
-    SerializeRepresentationComponent : SerializeComponent<RepresentationParam, RepresentationGoo, Representation>
+public class SerializeRepresentationComponent : SerializeComponent<RepresentationParam, RepresentationGoo, Representation>
 {
     public override Guid ComponentGuid => new("AC6E381C-23EE-4A81-BE0F-3523AEE32046");
 }
@@ -1832,57 +1462,46 @@ public abstract class DeserializeComponent<T, U, V> : ScriptingComponent
     }
 }
 
-public class
-    DeserializeRepresentationComponent : DeserializeComponent<RepresentationParam, RepresentationGoo, Representation>
+public class DeserializeRepresentationComponent : DeserializeComponent<RepresentationParam, RepresentationGoo, Representation>
 {
     public override Guid ComponentGuid => new("B8ADAF54-3A91-402D-9542-A288D935015F");
 }
-
 public class DeserializePortComponent : DeserializeComponent<PortParam, PortGoo, Port>
 {
     public override Guid ComponentGuid => new("3CEB0315-5A51-4072-97A7-D8B1B63FEF31");
 }
-
 public class DeserializeQualityComponent : DeserializeComponent<QualityParam, QualityGoo, Quality>
 {
     public override Guid ComponentGuid => new("AECB1169-EB65-470F-966E-D491EB46A625");
 }
-
 public class DeserializeAuthorComponent : DeserializeComponent<AuthorParam, AuthorGoo, Author>
 {
     public override Guid ComponentGuid => new("DDC0A2EC-4BAD-4FFE-B3A6-F9644C8B0072");
 }
-
 public class DeserializeLocationComponent : DeserializeComponent<LocationParam, LocationGoo, Location>
 {
     public override Guid ComponentGuid => new("B4107B24-B730-4F5D-B9BB-46AE585FCFE9");
 }
-
 public class DeserializeTypeComponent : DeserializeComponent<TypeParam, TypeGoo, Type>
 {
     public override Guid ComponentGuid => new("F21A80E0-2A62-4BFD-BC2B-A04363732F84");
 }
-
 public class DeserializeDiagramPointComponent : DeserializeComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
 {
     public override Guid ComponentGuid => new("7FBEECE1-ECAC-4AC1-8DAF-C659A9B6238C");
 }
-
 public class DeserializePieceComponent : DeserializeComponent<PieceParam, PieceGoo, Piece>
 {
     public override Guid ComponentGuid => new("1FB7F2FB-DCE2-4666-91B5-54DF6B6D9FA4");
 }
-
 public class DeserializeConnectionComponent : DeserializeComponent<ConnectionParam, ConnectionGoo, Connection>
 {
     public override Guid ComponentGuid => new("41C33A9F-15AC-4CD0-8A9D-4A75CE599282");
 }
-
 public class DeserializeDesignComponent : DeserializeComponent<DesignParam, DesignGoo, Design>
 {
     public override Guid ComponentGuid => new("464D4D72-CFF1-4391-8C31-9E37EB9434C6");
 }
-
 public class DeserializeKitComponent : DeserializeComponent<KitParam, KitGoo, Kit>
 {
     public override Guid ComponentGuid => new("79AF9C1D-2B96-4D03-BDD9-C6514DA63E70");
@@ -1896,53 +1515,29 @@ public class DeserializeKitComponent : DeserializeComponent<KitParam, KitGoo, Ki
 
 public abstract class EngineComponent : Component
 {
-    protected EngineComponent(string name, string nickname, string description, string subcategory = "Persistence")
-        : base(name, nickname, description, subcategory)
-    {
-    }
-
+    protected EngineComponent(string name, string nickname, string description, string subcategory = "Persistence") : base(name, nickname, description, subcategory) { }
     protected virtual string RunDescription => "True to start the operation.";
-
     protected virtual string SuccessDescription => "True if the operation was successful.";
-
-    protected virtual void RegisterEngineInputParams(GH_InputParamManager pManager)
-    {
-    }
-
+    protected virtual void RegisterEngineInputParams(GH_InputParamManager pManager) { }
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         RegisterEngineInputParams(pManager);
         pManager.AddBooleanParameter("Run", "R", RunDescription, GH_ParamAccess.item, false);
     }
-
-    protected virtual void RegisterEngineOutputParams(GH_OutputParamManager pManager)
-    {
-    }
-
+    protected virtual void RegisterEngineOutputParams(GH_OutputParamManager pManager) { }
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddBooleanParameter("Success", "Sc", SuccessDescription, GH_ParamAccess.item);
         RegisterEngineOutputParams(pManager);
     }
-
-    protected virtual dynamic? GetInput(IGH_DataAccess DA)
-    {
-        return null;
-    }
-
+    protected virtual dynamic? GetInput(IGH_DataAccess DA) => null;
     protected abstract dynamic? Run(dynamic? input = null);
-
-    protected virtual void SetOutput(IGH_DataAccess DA, dynamic response)
-    {
-    }
-
+    protected virtual void SetOutput(IGH_DataAccess DA, dynamic response) { }
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var run = false;
-
         DA.GetData(Params.Input.Count - 1, ref run);
         if (!run) return;
-
         var input = GetInput(DA);
         try
         {
@@ -1973,7 +1568,6 @@ public abstract class EngineComponent : Component
             DA.SetData(0, false);
         }
     }
-
     protected override void BeforeSolveInstance()
     {
         base.BeforeSolveInstance();
@@ -2010,15 +1604,8 @@ public abstract class EngineComponent : Component
 
 public abstract class PersistenceComponent : EngineComponent
 {
-    protected PersistenceComponent(string name, string nickname, string description, string subcategory = "Persistence")
-        : base(name, nickname, description, subcategory)
-    {
-    }
-
-    protected virtual void RegisterPersitenceInputParams(GH_InputParamManager pManager)
-    {
-    }
-
+    protected PersistenceComponent(string name, string nickname, string description, string subcategory = "Persistence") : base(name, nickname, description, subcategory) { }
+    protected virtual void RegisterPersitenceInputParams(GH_InputParamManager pManager) { }
     protected override void RegisterEngineInputParams(GH_InputParamManager pManager)
     {
         RegisterPersitenceInputParams(pManager);
@@ -2029,58 +1616,33 @@ public abstract class PersistenceComponent : EngineComponent
             GH_ParamAccess.item);
         pManager[amountCustomParams].Optional = true;
     }
-
-    protected virtual void RegisterPersitenceOutputParams(GH_OutputParamManager pManager)
-    {
-    }
-
+    protected virtual void RegisterPersitenceOutputParams(GH_OutputParamManager pManager) { }
     protected override void RegisterEngineOutputParams(GH_OutputParamManager pManager)
     {
         RegisterPersitenceOutputParams(pManager);
     }
-
-    protected virtual dynamic? GetPersistentInput(IGH_DataAccess DA)
-    {
-        return null;
-    }
-
+    protected virtual dynamic? GetPersistentInput(IGH_DataAccess DA) => null;
     protected override dynamic? GetInput(IGH_DataAccess DA)
     {
         var uri = "";
-
         if (!DA.GetData(Params.Input.Count - 2, ref uri))
             uri = OnPingDocument().IsFilePathDefined
                 ? Path.GetDirectoryName(OnPingDocument().FilePath)
                 : Directory.GetCurrentDirectory();
-        var input = GetPersistentInput(DA);
-
-        return new { Uri = uri, Input = input };
+        return new { Uri = uri, Input = GetPersistentInput(DA) };
     }
-
     protected abstract dynamic? RunOnKit(string url, dynamic? input);
-
-    protected override dynamic? Run(dynamic? input = null)
-    {
-        var output = RunOnKit(input.Uri, input.Input);
-        return output;
-    }
+    protected override dynamic? Run(dynamic? input = null) => input != null ? RunOnKit(input.Uri, input.Input) : null;
 }
 
 public class LoadKitComponent : PersistenceComponent
 {
-    public LoadKitComponent() : base("Load Kit", "/Kit", "Load a kit.")
-    {
-    }
-
+    public LoadKitComponent() : base("Load Kit", "/Kit", "Load a kit.") { }
     protected override string RunDescription => "True to load the kit.";
     protected override string SuccessDescription => "True if the kit was successfully loaded. False otherwise.";
-
     public override Guid ComponentGuid => new("5BE3A651-581E-4595-8DAC-132F10BD87FC");
-
     protected override Bitmap Icon => Resources.kit_load_24x24;
-
     public override GH_Exposure Exposure => GH_Exposure.primary;
-
     protected override void RegisterPersitenceOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddParameter(new KitParam());
@@ -2089,16 +1651,11 @@ public class LoadKitComponent : PersistenceComponent
             GH_ParamAccess.item);
     }
 
-    protected override dynamic? RunOnKit(string uri, dynamic? input)
-    {
-        var kit = Api.GetKit(uri);
-        return kit;
-    }
+    protected override dynamic? RunOnKit(string uri, dynamic? input) => Api.GetKit(uri);
 
     protected override void SetOutput(IGH_DataAccess DA, dynamic response)
     {
         DA.SetData(1, new KitGoo(response));
-
         var uri = "";
         DA.GetData(0, ref uri);
         string directory;
@@ -2114,42 +1671,29 @@ public class LoadKitComponent : PersistenceComponent
             var userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             directory = Path.Combine(userPath, ".semio", "cache", encodedUri);
         }
-        else
-        {
-            directory = uri;
-        }
-
+        else directory = uri;
         DA.SetData(2, directory);
     }
 }
 
 public class CreateKitComponent : PersistenceComponent
 {
-    public CreateKitComponent() : base("Create Kit", "+Kit", "Create a kit.")
-    {
-    }
-
+    public CreateKitComponent() : base("Create Kit", "+Kit", "Create a kit.") { }
     protected override string RunDescription => "True to create the kit.";
     protected override string SuccessDescription => "True if the kit was successfully created. False otherwise.";
-
     public override Guid ComponentGuid => new("1CC1BE06-85B8-4B0E-A59A-35B4D7C6E0FD");
-
     protected override Bitmap Icon => Resources.kit_create_24x24;
-
     public override GH_Exposure Exposure => GH_Exposure.secondary;
-
     protected override void RegisterPersitenceInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitParam());
     }
-
     protected override dynamic GetPersistentInput(IGH_DataAccess DA)
     {
         var kitGoo = new KitGoo();
         DA.GetData(0, ref kitGoo);
         return kitGoo.Value;
     }
-
     protected override dynamic? RunOnKit(string uri, dynamic? input = null)
     {
         Api.CreateKit(uri, input);
@@ -2159,18 +1703,12 @@ public class CreateKitComponent : PersistenceComponent
 
 public class DeleteKitComponent : PersistenceComponent
 {
-    public DeleteKitComponent() : base("Delete Kit", "-Kit", "Delete a kit.")
-    {
-    }
-
+    public DeleteKitComponent() : base("Delete Kit", "-Kit", "Delete a kit.") { }
     protected override string RunDescription => "True to delete the kit.";
     protected override string SuccessDescription => "True if the kit was successfully deleted. False otherwise.";
     public override Guid ComponentGuid => new("38D4283C-510C-4E77-9105-92A5BE3E3BA0");
-
     protected override Bitmap Icon => Resources.kit_delete_24x24;
-
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
-
     protected override dynamic? RunOnKit(string uri, dynamic? input = null)
     {
         Api.DeleteKit(uri);
@@ -2196,25 +1734,15 @@ public abstract class PutComponent<T, U, V> : PersistenceComponent where T : Mod
         NameM = typeof(V).Name;
         ModelM = Semio.Meta.Model[NameM];
     }
-
-    protected PutComponent()
-        : base($"Put {NameM}", $"+{ModelM.Abbreviation}",
-            $"Put a {NameM.ToLower()} to the kit. If the same {NameM.ToLower()} (same name and variant) exists it will be overwritten")
-    {
-    }
-
+    protected PutComponent() : base($"Put {NameM}", $"+{ModelM.Abbreviation}", $"Put a {NameM.ToLower()} to the kit. If the same {NameM.ToLower()} (same name and variant) exists it will be overwritten") { }
     protected override string RunDescription => $"True to put the {NameM.ToLower()} to the kit.";
     protected override string SuccessDescription => $"True if the {NameM.ToLower()} was put to the kit.";
-
     protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_put_24x24");
-
     public override GH_Exposure Exposure => GH_Exposure.secondary;
-
     protected override void RegisterPersitenceInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new T());
     }
-
     protected override dynamic GetPersistentInput(IGH_DataAccess DA)
     {
         var goo = new U();
@@ -2226,7 +1754,6 @@ public abstract class PutComponent<T, U, V> : PersistenceComponent where T : Mod
 public class PutTypeComponent : PutComponent<TypeParam, TypeGoo, Type>
 {
     public override Guid ComponentGuid => new("BC46DC07-C0BE-433F-9E2F-60CCBAA39148");
-
     protected override dynamic? RunOnKit(string uri, dynamic? input = null)
     {
         Api.PutType(uri, input);
@@ -2237,7 +1764,6 @@ public class PutTypeComponent : PutComponent<TypeParam, TypeGoo, Type>
 public class PutDesignComponent : PutComponent<DesignParam, DesignGoo, Design>
 {
     public override Guid ComponentGuid => new("8B7AA946-0CB1-4CA8-A712-610B60425368");
-
     protected override dynamic? RunOnKit(string uri, dynamic? input = null)
     {
         Api.PutDesign(uri, input);
@@ -2255,7 +1781,6 @@ public abstract class RemoveComponent<T, U, V> : PersistenceComponent where T : 
 {
     public static readonly string NameM;
     public static readonly ModelAttribute ModelM;
-
     static RemoveComponent()
     {
         // force compiler to run static constructor of the the meta classes first.
@@ -2265,27 +1790,15 @@ public abstract class RemoveComponent<T, U, V> : PersistenceComponent where T : 
         ModelM = Semio.Meta.Model[NameM];
     }
 
-
-    public RemoveComponent()
-        : base($"Remove {NameM}", $"-{Semio.Meta.Model[NameM].Abbreviation}",
-            $"Remove a {NameM.ToLower()} from a kit.")
-    {
-    }
-
+    public RemoveComponent() : base($"Remove {NameM}", $"-{Semio.Meta.Model[NameM].Abbreviation}", $"Remove a {NameM.ToLower()} from a kit.") { }
     protected override string RunDescription => $"True to remove the {NameM.ToLower()} from the kit.";
     protected override string SuccessDescription => $"True if the {NameM.ToLower()} was removed from the kit.";
-
     protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_remove_24x24");
-
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
-
     protected override void RegisterPersitenceInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter($"{NameM} Name", "Na", $"Name of the {NameM.ToLower()} to remove.",
-            GH_ParamAccess.item);
-        pManager.AddTextParameter($"{NameM} Variant", "Vn?",
-            $"The optional variant of the {NameM.ToLower()} to remove. No variant means the default variant.",
-            GH_ParamAccess.item);
+        pManager.AddTextParameter($"{NameM} Name", "Na", $"Name of the {NameM.ToLower()} to remove.", GH_ParamAccess.item);
+        pManager.AddTextParameter($"{NameM} Variant", "Vn?", $"The optional variant of the {NameM.ToLower()} to remove. No variant means the default variant.", GH_ParamAccess.item);
         pManager[pManager.ParamCount - 1].Optional = true;
     }
 
@@ -2297,22 +1810,13 @@ public abstract class RemoveComponent<T, U, V> : PersistenceComponent where T : 
         DA.GetData(1, ref variant);
         return ConstructId(name, variant);
     }
-
-    protected virtual dynamic ConstructId(string name, string variant)
-    {
-        return new { Name = name, Variant = variant };
-    }
+    protected virtual dynamic ConstructId(string name, string variant) => new { Name = name, Variant = variant };
 }
 
 public class RemoveTypeComponent : RemoveComponent<TypeParam, TypeGoo, Type>
 {
     public override Guid ComponentGuid => new("F38D0E82-5A58-425A-B705-7A62FD9DB957");
-
-    protected override dynamic ConstructId(string name, string variant)
-    {
-        return new TypeId { Name = name, Variant = variant };
-    }
-
+    protected override dynamic ConstructId(string name, string variant) => new TypeId { Name = name, Variant = variant };
     protected override dynamic? RunOnKit(string uri, dynamic? input = null)
     {
         Api.RemoveType(uri, input);
@@ -2323,12 +1827,7 @@ public class RemoveTypeComponent : RemoveComponent<TypeParam, TypeGoo, Type>
 public class RemoveDesignComponent : RemoveComponent<DesignParam, DesignGoo, Design>
 {
     public override Guid ComponentGuid => new("9ECCE095-9D1E-4554-A3EB-1EAEEE2B12D5");
-
-    protected override dynamic ConstructId(string name, string variant)
-    {
-        return new DesignId { Name = name, Variant = variant };
-    }
-
+    protected override dynamic ConstructId(string name, string variant) => new DesignId { Name = name, Variant = variant };
     protected override dynamic? RunOnKit(string uri, dynamic? input = null)
     {
         Api.RemoveDesign(uri, input);
@@ -2340,29 +1839,20 @@ public class RemoveDesignComponent : RemoveComponent<DesignParam, DesignGoo, Des
 
 public class CacheRepresentationComponent : Component
 {
-    public CacheRepresentationComponent() : base("Cache Representation", "↓Rep",
-        "Download and cache a remote representation.", "Persistence")
-    {
-    }
-
+    public CacheRepresentationComponent() : base("Cache Representation", "↓Rep", "Download and cache a remote representation.", "Persistence") { }
     public override Guid ComponentGuid => new("56673DF0-4524-40BC-AB26-37920F71E3E0");
     protected override Bitmap Icon => Resources.representation_cache_24x24;
     public override GH_Exposure Exposure => GH_Exposure.primary;
-
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Url", "Ur", "Unique Resource Locator (URL) of the remote representation.",
-            GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Run", "R", "True to downloaded and cache the remote representation.",
-            GH_ParamAccess.item, false);
+        pManager.AddTextParameter("Url", "Ur", "Unique Resource Locator (URL) of the remote representation.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Run", "R", "True to downloaded and cache the remote representation.", GH_ParamAccess.item, false);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddParameter(new Param_FilePath(), "Path", "Pa", "Path to the cached representation.",
-            GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Success", "Sc",
-            "True if the representation was successfully downloaded and cached.", GH_ParamAccess.item);
+        pManager.AddParameter(new Param_FilePath(), "Path", "Pa", "Path to the cached representation.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Success", "Sc", "True if the representation was successfully downloaded and cached.", GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -2385,7 +1875,6 @@ public class CacheRepresentationComponent : Component
             DA.SetData(1, true);
             return;
         }
-
         var http = new HttpClient();
         var response = http.GetAsync(url).Result;
         if (!response.IsSuccessStatusCode) return;
@@ -2398,28 +1887,19 @@ public class CacheRepresentationComponent : Component
 
 public class ClearCacheComponent : Component
 {
-    public ClearCacheComponent() : base("Clear Cache", "-Cac", "Clear the cache of all the remote kits.", "Persistence")
-    {
-    }
-
+    public ClearCacheComponent() : base("Clear Cache", "-Cac", "Clear the cache of all the remote kits.", "Persistence") { }
     public override Guid ComponentGuid => new("500BB2EA-56DE-4C38-9C5D-61B8EA0A8948");
-
     protected override Bitmap Icon => Resources.cache_clear_24x24;
-
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
-
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Uri|Url", "Ur?",
-            "Optional Unique Resource Identifier (URI) of a kit or Unique Resource Locator (URL) of a representation. If None is provided, it will clear the entire cache.",
-            GH_ParamAccess.item);
+        pManager.AddTextParameter("Uri|Url", "Ur?", "Optional Unique Resource Identifier (URI) of a kit or Unique Resource Locator (URL) of a representation. If None is provided, it will clear the entire cache.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("Run", "R", "True to clear the cache.", GH_ParamAccess.item, false);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddBooleanParameter("Success", "Sc", "True if the cache was successfully cleared.",
-            GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Success", "Sc", "True if the cache was successfully cleared.", GH_ParamAccess.item);
     }
 
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -2430,7 +1910,6 @@ public class ClearCacheComponent : Component
         DA.GetData(1, ref run);
         DA.SetData(0, false);
         if (!run) return;
-
         try
         {
             // find process semio-engine.exe and kill it
@@ -2442,10 +1921,7 @@ public class ClearCacheComponent : Component
                     process.WaitForExit();
                 }
         }
-        catch (Exception e)
-        {
-        }
-
+        catch (Exception) { }
         var userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var cachePath = Path.Combine(userPath, ".semio", "cache");
         if (Directory.Exists(cachePath))
@@ -2463,7 +1939,6 @@ public class ClearCacheComponent : Component
                 Directory.CreateDirectory(cachePath);
             }
         }
-
         DA.SetData(0, true);
     }
 }
@@ -2474,33 +1949,22 @@ public class ClearCacheComponent : Component
 
 public abstract class AssistantComponent : EngineComponent
 {
-    public AssistantComponent(string name, string nickname, string description) : base(name, nickname, description,
-        "Assistant")
-    {
-    }
+    public AssistantComponent(string name, string nickname, string description) : base(name, nickname, description, "Assistant") { }
 }
 
 public class PredictDesignComponent : AssistantComponent
 {
-    public PredictDesignComponent() : base("Predict Design", "%Dsn", "Predict a design.")
-    {
-    }
-
+    public PredictDesignComponent() : base("Predict Design", "%Dsn", "Predict a design.") { }
     protected override string RunDescription => "True to predict the design.";
     protected override string SuccessDescription => "True if the design was successfully predicted. False otherwise.";
-
     public override Guid ComponentGuid => new("1EAD6636-2D8C-47CC-894A-E4FE2465AAA7");
-
     protected override Bitmap Icon => Resources.design_predict_24x24;
-
     protected override void RegisterEngineInputParams(GH_InputParamManager pManager)
     {
         var pCount = pManager.ParamCount;
-        pManager.AddTextParameter("Description", "Dc",
-            "The description of the design or an instruction how to change the base design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc", "The description of the design or an instruction how to change the base design.", GH_ParamAccess.item);
         pManager.AddParameter(new TypeParam(), "Types", "Ty+", "The types to use in the design.", GH_ParamAccess.list);
-        pManager.AddParameter(new DesignParam(), "Design", "Dn?", "The optional design to use a base.",
-            GH_ParamAccess.item);
+        pManager.AddParameter(new DesignParam(), "Design", "Dn?", "The optional design to use a base.", GH_ParamAccess.item);
         pManager[pCount + 2].Optional = true;
     }
 
@@ -2514,24 +1978,14 @@ public class PredictDesignComponent : AssistantComponent
         var description = "";
         var types = new List<TypeGoo>();
         var designGoo = new DesignGoo();
-
         DA.GetData(0, ref description);
         DA.GetDataList(1, types);
         Design? design;
-        if (DA.GetData(2, ref designGoo))
-            design = designGoo.Value;
-        else
-            design = null;
-
+        if (DA.GetData(2, ref designGoo)) design = designGoo.Value;
+        else design = null;
         return new { Description = description, Types = types.Select(t => t.Value).ToArray(), Design = design };
     }
-
-    protected override dynamic? Run(dynamic? input = null)
-    {
-        var design = Api.PredictDesign(input.Description, input.Types, input.Design);
-        return design;
-    }
-
+    protected override dynamic? Run(dynamic? input = null) => input != null ? Api.PredictDesign(input.Description, input.Types, input.Design) : null;
     protected override void SetOutput(IGH_DataAccess DA, dynamic response)
     {
         DA.SetData(1, new DesignGoo(response));
@@ -2546,17 +2000,10 @@ public class PredictDesignComponent : AssistantComponent
 
 public class DrawDiagramComponent : Component
 {
-    public DrawDiagramComponent()
-        : base("Draw Diagram", ":Dgm", "Draw the diagram of the design.", "Display")
-    {
-    }
-
+    public DrawDiagramComponent() : base("Draw Diagram", ":Dgm", "Draw the diagram of the design.", "Display") { }
     public override Guid ComponentGuid => new("C53A0CC8-6DD7-415E-A20A-C5887CBE0DB9");
-
     protected override Bitmap Icon => Resources.diagram_draw_24x24;
-
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
-
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new DesignParam());
@@ -2569,7 +2016,6 @@ public class DrawDiagramComponent : Component
         pManager[2].Optional = true;
         pManager.AddBooleanParameter("Run", "R", "True to create the diagram of the design.", GH_ParamAccess.item);
     }
-
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddTextParameter("Scalable Vector Graphics", "SVG",
@@ -2582,7 +2028,6 @@ public class DrawDiagramComponent : Component
         var typesGoos = new List<TypeGoo>();
         var uri = "";
         var run = false;
-
         DA.GetData(0, ref designGoo);
         DA.GetDataList(1, typesGoos);
         if (!DA.GetData(2, ref uri))
@@ -2590,8 +2035,7 @@ public class DrawDiagramComponent : Component
                 ? Path.GetDirectoryName(OnPingDocument().FilePath)
                 : Directory.GetCurrentDirectory();
         DA.GetData(3, ref run);
-        if (!run)
-            return;
+        if (!run) return;
         var design = designGoo.Value;
         var types = typesGoos.Select(t => t.Value).ToArray();
         var svg = design.Diagram(types, Utility.ComputeChildPlane, uri);
@@ -2606,48 +2050,33 @@ public class DrawDiagramComponent : Component
 
 public abstract class TemplateComponent : Component
 {
-    protected TemplateComponent(string name, string nickname, string description, string subcategory = "Templates")
-        : base(name, nickname, description, subcategory)
-    {
-    }
+    protected TemplateComponent(string name, string nickname, string description, string subcategory = "Templates") : base(name, nickname, description, subcategory) { }
 }
 
 public class RandomIdsComponent : TemplateComponent
 {
-    public RandomIdsComponent()
-        : base("Random Ids", "%Ids", "Generate random ids.")
-    {
-    }
-
+    public RandomIdsComponent() : base("Random Ids", "%Ids", "Generate random ids.") { }
     public override Guid ComponentGuid => new("27E48D59-10BE-4239-8AAC-9031BF6AFBCC");
-
     protected override Bitmap Icon => Resources.id_random_24x24;
-
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddIntegerParameter("Count", "Ct", "Number of ids to generate.", GH_ParamAccess.item, 1);
         pManager.AddIntegerParameter("Seed", "Se", "Seed for the random generator.", GH_ParamAccess.item, 0);
-        pManager.AddBooleanParameter("Unique Component", "UC",
-            "If true, the generated ids will be unique for this component.", GH_ParamAccess.item, true);
+        pManager.AddBooleanParameter("Unique Component", "UC", "If true, the generated ids will be unique for this component.", GH_ParamAccess.item, true);
     }
-
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddTextParameter("Ids", "Id+", "Generated ids.", GH_ParamAccess.list);
     }
-
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var count = 0;
         var seed = 0;
         var unique = true;
-
         DA.GetData(0, ref count);
         DA.GetData(1, ref seed);
         DA.GetData(2, ref unique);
-
         var ids = new List<string>();
-
         for (var i = 0; i < count; i++)
         {
             var hashString = seed + ";" + i;
@@ -2660,7 +2089,6 @@ public class RandomIdsComponent : TemplateComponent
                 ids.Add(id);
             }
         }
-
         DA.SetDataList(0, ids);
     }
 }
@@ -2671,15 +2099,9 @@ public class RandomIdsComponent : TemplateComponent
 
 public class FlattenDesignComponent : Component
 {
-    public FlattenDesignComponent()
-        : base("Flatten Design", "↓Dsn", "Flatten a design.", "Util")
-    {
-    }
-
+    public FlattenDesignComponent() : base("Flatten Design", "↓Dsn", "Flatten a design.", "Util") { }
     public override Guid ComponentGuid => new("434144EA-2AFB-4D39-9F75-BB77A9223595");
-
     protected override Bitmap Icon => Resources.design_flatten_24x24;
-
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new DesignParam(), "Design", "Dn",
@@ -2709,28 +2131,17 @@ public class FlattenDesignComponent : Component
 
 public class SortDesignComponent : Component
 {
-    public SortDesignComponent()
-        : base("Sort Design", "⁐Dsn",
-            "Sort a design by reordering pieces and connections to appear in order that they are discovered by breadth-first-search and some times flipping connected and connecting if the connected is not the parent of the connecting.",
-            "Util")
-    {
-    }
-
+    public SortDesignComponent() : base("Sort Design", "⁐Dsn", "Sort a design by reordering pieces and connections to appear in order that they are discovered by breadth-first-search and some times flipping connected and connecting if the connected is not the parent of the connecting.", "Util") { }
     public override Guid ComponentGuid => new("F5E118B2-66EC-4622-9B8C-E77785AA1183");
     protected override Bitmap Icon => Resources.design_sort_24x24;
-
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddParameter(new DesignParam(), "Design", "Dn",
-            "Design to sort.", GH_ParamAccess.item);
+        pManager.AddParameter(new DesignParam(), "Design", "Dn", "Design to sort.", GH_ParamAccess.item);
     }
-
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddParameter(new DesignParam(), "Design", "Dn",
-            "Sorted Design.", GH_ParamAccess.item);
+        pManager.AddParameter(new DesignParam(), "Design", "Dn", "Sorted Design.", GH_ParamAccess.item);
     }
-
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var designGoo = new DesignGoo();
@@ -2743,17 +2154,10 @@ public class SortDesignComponent : Component
 
 public class ConvertUnitComponent : Component
 {
-    public ConvertUnitComponent()
-        : base("Convert Unit", "↦Unt", "Convert a unit.", "Util")
-    {
-    }
-
+    public ConvertUnitComponent() : base("Convert Unit", "↦Unt", "Convert a unit.", "Util") { }
     public override Guid ComponentGuid => new("4EEB48B6-39A2-4FE1-B83F-6755EE355FF5");
-
     protected override Bitmap Icon => Resources.unit_convert_24x24;
-
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
-
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddNumberParameter("Value", "Vl", "Value to convert.", GH_ParamAccess.item, 1);
@@ -2932,7 +2336,7 @@ public static class Meta
                     propertyGoo[modelKvp.Key].Add(goo[isPropertyList ? propertyTypeName + "List" : propertyTypeName]);
                     propertyItemGoo[modelKvp.Key].Add(goo[propertyTypeName]);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     // ignored
                 }
@@ -2941,7 +2345,7 @@ public static class Meta
                 {
                     propertyParam[modelKvp.Key].Add(param[propertyTypeName]);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     // ignored
                 }

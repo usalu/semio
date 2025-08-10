@@ -589,7 +589,20 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
 
 Most of our [codebase](#-principles-) is heavily optimized for AI agents 🤖
 
-### 🖱️ [Cursor](/.cursor) [↑](#-ai-)
+### ✈️ [Copilot](.github/chatmodes) [↑](#-ai-)
+
+<details>
+<summary><strong>📚 Resources:</strong></summary>
+
+- [Chat modes](https://code.visualstudio.com/docs/copilot/chat/chat-modes)
+
+</details>
+
+Copilot is the only request-based billing provider left and is hence much cheaper than the others 💳
+
+We prepare good tickets for the agent, currently with [GPT-5](https://openai.com/gpt-5) and [Claude Sonnet 4](https://www.anthropic.com/claude/sonnet) 🚀
+
+### 🖱️ [Cursor](.cursor) [↑](#-ai-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -600,20 +613,15 @@ Most of our [codebase](#-principles-) is heavily optimized for AI agents 🤖
 
 We use [Cursor](https://www.cursor.com) as general editor for typing code mostly with [Tab](https://docs.cursor.com/tab/overview) ➡️
 
-For brain-heavy tasks we prepare good tickets and use [Gemini 2.5 Pro](https://gemini.google.com/gemini-2.5-pro) ⚡
+For tasks that require updated docs we use the agent 💬
 
-We parallely work on two tasks that are unrelated to each other in order to switch between them during waiting times ⌛
+### ⌨️ [Claude Code](CLAUDE.md) [↑](#-ai-)
 
-### ✈️ Copilot [↑](#-ai-)
+For tasks that require a lot of codebase context or tool usage we use [Claude Code]() 💬
 
-<details>
-<summary><strong>📚 Resources:</strong></summary>
+### 🌐 Browser [↑](#-ai-)
 
-- [Chat modes](https://code.visualstudio.com/docs/copilot/chat/chat-modes)
-
-</details>
-
-For monkey-tasks we use the free [Copilot](https://github.com/features/copilot) with [GPT-4.1](https://docs.github.com/en/copilot/using-github-copilot/ai-models/using-openai-gpt-41-in-github-copilot) 🚀
+For simple tasks that only affect one file (sorting, formatting, explaining, …) we use the free [ChatGPT](https://chatgpt.com), [Gemini](https://gemini.google.com) or [Groq](https://console.groq.com), … in the browser to not waste precious tokens 🐒
 
 ## 🔄 CI/CD [↑](#-development-)
 

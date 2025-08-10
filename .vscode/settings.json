@@ -3,10 +3,6 @@
   "editor.codeActionsOnSave": {
     "source.organizeImports": "always"
   },
-  "editor.folding.markers": {
-    "start": "^\\s*##.*##\\b",
-    "end": "^\\s*##.*##\\b"
-  },
   "python.defaultInterpreterPath": "${workspaceFolder}\\py\\engine\\.venv\\Scripts\\python.exe",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[typescriptreact]": {
@@ -15,6 +11,9 @@
   "prettier.configPath": ".prettierrc.json",
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "[csharp]": {
+    "editor.defaultFormatter": "ms-dotnettools.csharp"
   },
   "python.analysis.typeCheckingMode": "off",
   "python.testing.pytestEnabled": true,
@@ -44,5 +43,6 @@
       "previewLimit": 50
     }
   ],
-  "dotnet.defaultSolution": "net/Semio.sln"
+  "dotnet.defaultSolution": "net/Semio.sln",
+  "chat.agent.maxRequests": 100
 }

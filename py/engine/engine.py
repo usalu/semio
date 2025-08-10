@@ -23,11 +23,10 @@
 engine.py
 """
 
+from __future__ import annotations
+
 # endregion Header
-
-
 # region TODOs
-
 # TODO: Make loguru work on extra uvicorn engine process.
 # TODO: Replace prototype healing with one that makes more for every single property.
 # TODO: Try closest embedding instead of smallest Levenshtein distance.
@@ -41,9 +40,7 @@ engine.py
 # TODO: Think of using memory sqlite for caching.
 # TODO: Get rid of id_ because of bug https://github.com/graphql-python/graphene-sqlalchemy/issues/412
 # endregion TODOs
-
 # region Imports
-
 import abc
 import argparse
 import datetime
@@ -623,7 +620,7 @@ class Quality(QualityDefinitionField, QualityUnitField, QualityValueField, Quali
     kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")), default=None, exclude=True)
     kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="qualities")
 
-    __tableargs__ = (
+    __table_args__ = (
         sqlalchemy.CheckConstraint(
             """
         (
@@ -642,9 +639,9 @@ class Quality(QualityDefinitionField, QualityUnitField, QualityValueField, Quali
             (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL)
         )
         """,
-            name="parent set",
+            name="parent_set",
         ),
-        sqlalchemy.UniqueConstraint("name", "type_id", "design_id"),
+        sqlalchemy.UniqueConstraint("name", "type_id", "design_id", name="unique"),
     )
 
     def parent(self) -> typing.Union["Representation", "Port", "Type", "Piece", "Connection", "Design", "Kit", None]:
@@ -1262,7 +1259,7 @@ class Port(PortTField, PortFamilyField, PortMandatoryField, PortDescriptionField
     connecteds: list["Connection"] = sqlmodel.Relationship(back_populates="connectedPort", sa_relationship_kwargs={"foreign_keys": "Connection.connectedPortPk"})
     connectings: list["Connection"] = sqlmodel.Relationship(back_populates="connectingPort", sa_relationship_kwargs={"foreign_keys": "Connection.connectingPortPk"})
 
-    __table_args__ = (sqlalchemy.UniqueConstraint("local_id", "type_id", name="Unique local_id"),)
+    __table_args__ = (sqlalchemy.UniqueConstraint("local_id", "type_id", name="unique"),)
 
     @property
     def compatibleFamilies(self) -> list[str]:
@@ -1379,7 +1376,10 @@ class Author(AuthorRankField, AuthorEmailField, AuthorNameField, TableEntity, ta
     designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")), default=None, exclude=True)
     design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="authors_")
 
-    __tableargs__ = (sqlalchemy.CheckConstraint("typeId IS NOT NULL AND designId IS NULL OR typeId IS NULL AND designId IS NOT NULL", name="typeOrDesignSet"), sqlalchemy.UniqueConstraint("email", "typeId", "designId"))
+    __table_args__ = (
+        sqlalchemy.CheckConstraint("type_id IS NOT NULL AND design_id IS NULL OR type_id IS NULL AND design_id IS NOT NULL", name="parent_set"),
+        sqlalchemy.UniqueConstraint("email", "type_id", "design_id", name="unique"),
+    )
 
     def parent(self) -> "Type":
         if self.type is not None:
@@ -1434,19 +1434,11 @@ class TypeDescriptionField(RealField, abc.ABC):
 
 
 class TypeIconField(RealField, abc.ABC):
-    icon: str = sqlmodel.Field(
-        default="",
-        max_length=URL_LENGTH_LIMIT,
-        ,
-    )
+    icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class TypeImageField(RealField, abc.ABC):
-    image: str = sqlmodel.Field(
-        default="",
-        max_length=URL_LENGTH_LIMIT,
-        ,
-    )
+    image: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class TypeVariantField(RealField, abc.ABC):
@@ -1535,7 +1527,7 @@ class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeVirtualField, 
 
     pieces: list["Piece"] = sqlmodel.Relationship(back_populates="type")
 
-    __table_args__ = (sqlalchemy.UniqueConstraint("name", "variant", "kit_id", name="Unique name and variant"),)
+    __table_args__ = (sqlalchemy.UniqueConstraint("name", "variant", "kit_id", name="unique"),)
 
     @property
     def location(self) -> typing.Optional[Location]:
@@ -1651,7 +1643,6 @@ class PieceIdField(MaskedField, abc.ABC):
         default="",
         # alias="id", # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         max_length=ID_LENGTH_LIMIT,
-        ,
     )
 
 
@@ -1660,7 +1651,11 @@ class PieceDescriptionField(RealField, abc.ABC):
 
 
 class PieceTypeField(MaskedField, abc.ABC):
-    type: TypeId = sqlmodel.Field()
+    type: typing.Optional[TypeId] = sqlmodel.Field(default=None)
+
+
+class PieceDesignField(MaskedField, abc.ABC):
+    designPiece: typing.Optional["DesignId"] = sqlmodel.Field(default=None)
 
 
 class PiecePlaneField(MaskedField, abc.ABC):
@@ -1675,29 +1670,29 @@ class PieceId(PieceIdField, Id):
     pass
 
 
-class PieceProps(PieceCenterField, PiecePlaneField, PieceTypeField, PieceDescriptionField, PieceIdField, Props):
+class PieceProps(PieceCenterField, PiecePlaneField, PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Props):
     pass
 
 
-class PieceInput(PieceTypeField, PieceDescriptionField, PieceIdField, Input):
+class PieceInput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Input):
     plane: typing.Optional[PlaneInput] = sqlmodel.Field(default=None)
     center: typing.Optional[DiagramPointInput] = sqlmodel.Field(default=None)
     qualities: list[QualityInput] = sqlmodel.Field(default_factory=list)
 
 
-class PieceContext(PieceTypeField, PieceDescriptionField, PieceIdField, Context):
+class PieceContext(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Context):
     plane: typing.Optional[PlaneContext] = sqlmodel.Field(default=None)
     center: typing.Optional[DiagramPointContext] = sqlmodel.Field(default=None)
     qualities: list[QualityContext] = sqlmodel.Field(default_factory=list)
 
 
-class PieceOutput(PieceTypeField, PieceDescriptionField, PieceIdField, Output):
+class PieceOutput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Output):
     plane: typing.Optional[PlaneOutput] = sqlmodel.Field(default=None)
     center: typing.Optional[DiagramPointOutput] = sqlmodel.Field(default=None)
     qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
 
 
-class PiecePrediction(PieceTypeField, PieceDescriptionField, PieceIdField, Prediction):
+class PiecePrediction(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Prediction):
     pass
     # center: typing.Optional[DiagramPointPrediction] = sqlmodel.Field(
     #     default=None,
@@ -1711,8 +1706,10 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
     __tablename__ = "piece"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     id_: str = sqlmodel.Field(sa_column=sqlmodel.Column("local_id", sqlalchemy.String(ID_LENGTH_LIMIT)), default="")
-    typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")), default=None, exclude=True)
-    type: Type = sqlmodel.Relationship(back_populates="pieces")
+    typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id"), nullable=True), default=None, exclude=True)
+    type: typing.Optional[Type] = sqlmodel.Relationship(back_populates="pieces")
+    designPiecePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id"), nullable=True), default=None, exclude=True)
+    designPiece: typing.Optional["Design"] = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Design", foreign_keys="[Piece.designPiecePk]"))
     planePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("plane_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("plane.id"), nullable=True), default=None, exclude=True)
     plane: typing.Optional[Plane] = sqlmodel.Relationship(back_populates="piece")
     centerX: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("center_x", sqlalchemy.Float()), exclude=True)
@@ -1723,7 +1720,7 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
     connecteds: list["Connection"] = sqlmodel.Relationship(back_populates="connectedPiece", sa_relationship_kwargs={"foreign_keys": "Connection.connectedPiecePk"})
     connectings: list["Connection"] = sqlmodel.Relationship(back_populates="connectingPiece", sa_relationship_kwargs={"foreign_keys": "Connection.connectingPiecePk"})
 
-    __table_args__ = (sqlalchemy.UniqueConstraint("local_id", "design_id"),)
+    __table_args__ = (sqlalchemy.UniqueConstraint("local_id", "design_id", name="unique"),)
 
     @property
     def center(self) -> typing.Optional[DiagramPoint]:
@@ -1751,16 +1748,29 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
-    def parse(cls: "Piece", input: str | dict | PieceInput | typing.Any | None, types: dict[str, dict[str, Type]]) -> "Piece":
+    def parse(cls: "Piece", input: str | dict | PieceInput | typing.Any | None, types: dict[str, dict[str, Type]], designs: typing.Optional[dict[str, dict[str, dict[str, "Design"]]]] = None) -> "Piece":
         if input is None:
             return cls()
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
         entity = cls(id_=obj["id_"])
-        type = TypeId.parse(obj["type"])
-        try:
-            entity.type = types[type.name][type.variant]
-        except KeyError:
-            raise TypeNotFound(type)
+        typeObj = obj.get("type", None)
+        designObj = obj.get("designPiece", None)
+        if (typeObj is None and designObj is None) or (typeObj is not None and designObj is not None):
+            raise ValueError("Exactly one of 'type' or 'designPiece' must be provided for a Piece.")
+        if typeObj is not None:
+            typeId = TypeId.parse(typeObj)
+            try:
+                entity.type = types[typeId.name][typeId.variant]
+            except KeyError:
+                raise TypeNotFound(typeId)
+        else:
+            if designs is None:
+                raise FeatureNotYetSupported()
+            designId = DesignId.parse(designObj)
+            try:
+                entity.designPiece = designs[designId.name][designId.variant][designId.view]
+            except KeyError:
+                raise FeatureNotYetSupported()
         try:
             if obj["plane"] is not None:
                 plane = Plane.parse(obj["plane"])
@@ -1813,6 +1823,7 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
 
 class Side(Model):
     piece: PieceId = sqlmodel.Field()
+    designPiece: typing.Optional[PieceId] = sqlmodel.Field(default=None)
     port: PortId = sqlmodel.Field()
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
@@ -1823,7 +1834,12 @@ class Side(Model):
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
         piece = PieceId.parse(obj["piece"])
         port = PortId.parse(obj["port"])
-        return cls(piece=piece, port=port)
+        try:
+            designPieceObj = obj["designPiece"]
+            designPiece = PieceId.parse(designPieceObj) if designPieceObj is not None else None
+        except KeyError:
+            designPiece = None
+        return cls(piece=piece, designPiece=designPiece, port=port)
 
 
 class SideInput(Side, Input):
@@ -1869,11 +1885,7 @@ class ConnectionShiftField(RealField, abc.ABC):
 
 
 class ConnectionRiseField(MaskedField, abc.ABC):
-    rise: float = sqlmodel.Field(
-        alias="raise",
-        default=0,
-        ,
-    )
+    rise: float = sqlmodel.Field(alias="raise", default=0)
 
 
 class ConnectionRotationField(RealField, abc.ABC):
@@ -1881,12 +1893,7 @@ class ConnectionRotationField(RealField, abc.ABC):
 
 
 class ConnectionTurnField(RealField, abc.ABC):
-    turn: float = sqlmodel.Field(
-        ge=0,
-        lt=360,
-        default=0,
-        ,
-    )
+    turn: float = sqlmodel.Field(ge=0, lt=360, default=0)
 
 
 class ConnectionTiltField(RealField, abc.ABC):
@@ -1953,46 +1960,34 @@ class Connection(ConnectionYField, ConnectionXField, ConnectionTiltField, Connec
 
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     connectedPiecePk: typing.Optional[int] = sqlmodel.Field(alias="connectedPieceId", sa_column=sqlmodel.Column("connected_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("piece.id")), default=None, exclude=True)
-    connectedPiece: Piece = sqlmodel.Relationship(
-        sa_relationship=sqlalchemy.orm.relationship(
-            "Piece",
-            back_populates="connecteds",
-            foreign_keys="[Connection.connectedPiecePk]",
-        )
-    )
+    connectedPiece: Piece = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Piece", back_populates="connecteds", foreign_keys="[Connection.connectedPiecePk]"))
     connectedPortPk: typing.Optional[int] = sqlmodel.Field(alias="connectedPortId", sa_column=sqlmodel.Column("connected_port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("port.id")), default=None, exclude=True)
-    connectedPort: Port = sqlmodel.Relationship(
-        sa_relationship=sqlalchemy.orm.relationship(
-            "Port",
-            back_populates="connecteds",
-            foreign_keys="[Connection.connectedPortPk]",
-        )
+    connectedPort: Port = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Port", back_populates="connecteds", foreign_keys="[Connection.connectedPortPk]"))
+    connectedDesignPiecePk: typing.Optional[int] = sqlmodel.Field(
+        alias="connectedDesignPieceId", sa_column=sqlmodel.Column("connected_design_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("piece.id"), nullable=True), default=None, exclude=True
     )
+    connectedDesignPiece: typing.Optional[Piece] = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Piece", foreign_keys="[Connection.connectedDesignPiecePk]"))
     connectingPiecePk: typing.Optional[int] = sqlmodel.Field(alias="connectingPieceId", sa_column=sqlmodel.Column("connecting_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("piece.id")), exclude=True, default=None)
-    connectingPiece: Piece = sqlmodel.Relationship(
-        sa_relationship=sqlalchemy.orm.relationship(
-            "Piece",
-            back_populates="connectings",
-            foreign_keys="[Connection.connectingPiecePk]",
-        )
-    )
+    connectingPiece: Piece = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Piece", back_populates="connectings", foreign_keys="[Connection.connectingPiecePk]"))
     connectingPortPk: typing.Optional[int] = sqlmodel.Field(alias="connectingPortId", sa_column=sqlmodel.Column("connecting_port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("port.id")), default=None, exclude=True)
-    connectingPort: Port = sqlmodel.Relationship(
-        sa_relationship=sqlalchemy.orm.relationship(
-            "Port",
-            back_populates="connectings",
-            foreign_keys="[Connection.connectingPortPk]",
-        )
+    connectingPort: Port = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Port", back_populates="connectings", foreign_keys="[Connection.connectingPortPk]"))
+    connectingDesignPiecePk: typing.Optional[int] = sqlmodel.Field(
+        alias="connectingDesignPieceId", sa_column=sqlmodel.Column("connecting_design_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("piece.id"), nullable=True), default=None, exclude=True
     )
+    connectingDesignPiece: typing.Optional[Piece] = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Piece", foreign_keys="[Connection.connectingDesignPiecePk]"))
     qualities: list[Quality] = sqlmodel.Relationship(back_populates="connection", cascade_delete=True)
     designPk: typing.Optional[int] = sqlmodel.Field(alias="designId", sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")), default=None, exclude=True)
     design: "Design" = sqlmodel.Relationship(back_populates="connections")
-    __table_args__ = sqlalchemy.CheckConstraint("connecting_piece_id != connected_piece_id", name="no reflexive connection")
+    __table_args__ = (
+        sqlalchemy.UniqueConstraint("connected_piece_id", "connected_design_piece_id", "connecting_piece_id", "connecting_design_piece_id", name="unique"),
+        sqlalchemy.CheckConstraint("connected_piece_id != connecting_piece_id", name="not_reflexive"),
+    )
 
     @property
     def connected(self) -> Side:
         return Side(
             piece=self.connectedPiece,
+            designPiece=(PieceId(id_=self.connectedDesignPiece.id_) if self.connectedDesignPiece is not None else None),
             port=self.connectedPort,
         )
 
@@ -2000,6 +1995,7 @@ class Connection(ConnectionYField, ConnectionXField, ConnectionTiltField, Connec
     def connecting(self) -> Side:
         return Side(
             piece=self.connectingPiece,
+            designPiece=(PieceId(id_=self.connectingDesignPiece.id_) if self.connectingDesignPiece is not None else None),
             port=self.connectingPort,
         )
 
@@ -2010,7 +2006,7 @@ class Connection(ConnectionYField, ConnectionXField, ConnectionTiltField, Connec
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
-    def parse(cls: "Connection", input: str | dict | ConnectionInput | typing.Any | None, pieces: list[Piece]) -> "Connection":
+    def parse(cls: "Connection", input: str | dict | ConnectionInput | typing.Any | None, pieces: list[Piece], designsById: typing.Optional[dict[str, dict[str, dict[str, Design]]]] = None) -> "Connection":
         if input is None:
             return cls()
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
@@ -2019,6 +2015,8 @@ class Connection(ConnectionYField, ConnectionXField, ConnectionTiltField, Connec
         connecting = Side.parse(obj["connecting"])
         connectedPiece = piecesDict[connected.piece.id_]
         connectedType = connectedPiece.type
+        if connectedType is None:
+            raise FeatureNotYetSupported()
         connectedPort = [p for p in connectedType.ports if p.id_ == connected.port.id_]
         if len(connectedPort) == 0:
             raise PortNotFound(connectedType, connected.port)
@@ -2026,6 +2024,8 @@ class Connection(ConnectionYField, ConnectionXField, ConnectionTiltField, Connec
             connectedPort = connectedPort[0]
         connectingPiece = piecesDict[connecting.piece.id_]
         connectingType = connectingPiece.type
+        if connectingType is None:
+            raise FeatureNotYetSupported()
         connectingPort = [p for p in connectingType.ports if p.id_ == connecting.port.id_]
         if len(connectingPort) == 0:
             raise PortNotFound(connectingType, connecting.port)
@@ -2037,6 +2037,31 @@ class Connection(ConnectionYField, ConnectionXField, ConnectionTiltField, Connec
             connectingPiece=connectingPiece,
             connectingPort=connectingPort,
         )
+        if connected.designPiece is not None:
+            if connectedPiece.refDesign is None and designsById is None:
+                raise FeatureNotYetSupported()
+            refDesign = connectedPiece.refDesign if connectedPiece.refDesign is not None else None
+            if refDesign is None and designsById is not None:
+                # best-effort lookup by connected piece's type/design is not possible; require refDesign
+                raise FeatureNotYetSupported()
+            if refDesign is not None:
+                try:
+                    designPiece = next(p for p in refDesign.pieces if p.id_ == connected.designPiece.id_)
+                except StopIteration:
+                    raise ValueError("Design piece not found in referenced design")
+                entity.connectedDesignPiece = designPiece
+        if connecting.designPiece is not None:
+            if connectingPiece.refDesign is None and designsById is None:
+                raise FeatureNotYetSupported()
+            refDesign = connectingPiece.refDesign if connectingPiece.refDesign is not None else None
+            if refDesign is None and designsById is not None:
+                raise FeatureNotYetSupported()
+            if refDesign is not None:
+                try:
+                    designPiece = next(p for p in refDesign.pieces if p.id_ == connecting.designPiece.id_)
+                except StopIteration:
+                    raise ValueError("Design piece not found in referenced design")
+                entity.connectingDesignPiece = designPiece
         try:
             entity.description = obj["description"]
         except KeyError:
@@ -2122,19 +2147,11 @@ class DesignDescriptionField(RealField, abc.ABC):
 
 
 class DesignIconField(RealField, abc.ABC):
-    icon: str = sqlmodel.Field(
-        default="",
-        max_length=URL_LENGTH_LIMIT,
-        ,
-    )
+    icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class DesignImageField(RealField, abc.ABC):
-    image: str = sqlmodel.Field(
-        default="",
-        max_length=URL_LENGTH_LIMIT,
-        ,
-    )
+    image: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class DesignVariantField(RealField, abc.ABC):
@@ -2220,7 +2237,7 @@ class Design(DesignUpdatedField, DesignCreatedField, DesignUnitField, DesignView
     kitPk: typing.Optional[int] = sqlmodel.Field(alias="kitId", sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")), default=None, exclude=True)
     kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="designs")
 
-    __table_args__ = (sqlalchemy.UniqueConstraint("name", "variant", "view", "kit_id"),)
+    __table_args__ = (sqlalchemy.UniqueConstraint("name", "variant", "view", "kit_id", name="unique"),)
 
     @property
     def location(self) -> typing.Optional[Location]:
@@ -2257,7 +2274,7 @@ class Design(DesignUpdatedField, DesignCreatedField, DesignUnitField, DesignView
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
-    def parse(cls: "Design", input: str | dict | DesignInput | typing.Any | None, types: list[Type]) -> "Design":
+    def parse(cls: "Design", input: str | dict | DesignInput | typing.Any | None, types: list[Type], designsById: typing.Optional[dict[str, dict[str, dict[str, "Design"]]]] = None) -> "Design":
         if input is None:
             return cls()
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
@@ -2275,12 +2292,12 @@ class Design(DesignUpdatedField, DesignCreatedField, DesignUnitField, DesignView
                 typesDict[type.name][type.variant] = {}
             typesDict[type.name][type.variant] = type
         try:
-            pieces = [Piece.parse(p, typesDict) for p in obj["pieces"]]
+            pieces = [Piece.parse(p, typesDict, designsById) for p in obj["pieces"]]
             entity.pieces = pieces
         except KeyError:
             pass
         try:
-            connections = [Connection.parse(c, pieces) for c in obj["connections"]]
+            connections = [Connection.parse(c, pieces, designsById) for c in obj["connections"]]
             entity.connections = connections
         except KeyError:
             pass
@@ -2345,27 +2362,15 @@ class KitDescriptionField(RealField, abc.ABC):
 
 
 class KitIconField(RealField, abc.ABC):
-    icon: str = sqlmodel.Field(
-        default="",
-        max_length=URL_LENGTH_LIMIT,
-        ,
-    )
+    icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class KitImageField(RealField, abc.ABC):
-    image: str = sqlmodel.Field(
-        default="",
-        max_length=URL_LENGTH_LIMIT,
-        ,
-    )
+    image: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class KitPreviewField(RealField, abc.ABC):
-    preview: str = sqlmodel.Field(
-        default="",
-        max_length=URL_LENGTH_LIMIT,
-        ,
-    )
+    preview: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class KitVersionField(RealField, abc.ABC):
@@ -2435,7 +2440,7 @@ class Kit(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, KitRem
 
     qualities: list[Quality] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
 
-    __table_args__ = (sqlalchemy.UniqueConstraint("uri"),)
+    __table_args__ = (sqlalchemy.UniqueConstraint("uri", name="unique"),)
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
@@ -2723,6 +2728,14 @@ class DatabaseStore(Store, abc.ABC):
         match kind:
             case "design":
                 types = [u.Type for u in self.session.query(Type, Kit).filter(Kit.uri == kitUri).all()]
+                existingDesigns = [d for d, _ in self.session.query(Design, Kit).filter(Kit.uri == kitUri).all()]
+                designsById: dict[str, dict[str, dict[str, Design]]] = {}
+                for d in existingDesigns:
+                    if d.name not in designsById:
+                        designsById[d.name] = {}
+                    if d.variant not in designsById[d.name]:
+                        designsById[d.name][d.variant] = {}
+                    designsById[d.name][d.variant][d.view] = d
                 existingDesignUnion = (
                     self.session.query(Design, Kit)
                     .filter(
@@ -2737,12 +2750,12 @@ class DatabaseStore(Store, abc.ABC):
                     if existingDesignUnion is not None:
                         existingDesign = existingDesignUnion.Design
                         self.session.delete(existingDesign)
-                        design = Design.parse(input, types)
+                        design = Design.parse(input, types, designsById)
                         design.kit = kit
                         self.session.add(design)
                         self.session.commit()
                     else:
-                        design = Design.parse(input, types)
+                        design = Design.parse(input, types, designsById)
                         design.kit = kit
                         self.session.add(design)
                         self.session.commit()
@@ -3504,12 +3517,19 @@ GRAPHQLTYPES = {
     "list[engine.Author]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AuthorNode))),
     "Type": graphene.NonNull(lambda: TypeNode),
     "TypeId": graphene.NonNull(lambda: TypeNode),
+    "DesignId": graphene.NonNull(lambda: DesignNode),
     "list[Type]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
     "list[__main__.Type]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
     "list[__mp_main__.Type]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
     "list[engine.Type]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: TypeNode))),
     "Piece": graphene.NonNull(lambda: PieceNode),
     "PieceId": graphene.NonNull(lambda: PieceNode),
+    "typing.Optional[__main__.PieceId]": lambda: PieceNode,
+    "typing.Optional[__mp_main__.PieceId]": lambda: PieceNode,
+    "typing.Optional[engine.PieceId]": lambda: PieceNode,
+    "typing.Optional[__main__.DesignId]": lambda: DesignNode,
+    "typing.Optional[__mp_main__.DesignId]": lambda: DesignNode,
+    "typing.Optional[engine.DesignId]": lambda: DesignNode,
     "Side": graphene.NonNull(lambda: SideNode),
     "Connection": graphene.NonNull(lambda: ConnectionNode),
     "list['Connection']": graphene.NonNull(graphene.List(graphene.NonNull(lambda: ConnectionNode))),
@@ -3755,9 +3775,9 @@ class PieceNode(TableEntityNode):
 class PieceInputNode(InputNode):
     class Meta:
         model = PieceInput
-        exclude_fields = "type"
 
-    type = graphene.NonNull(TypeIdInputNode)
+    type = TypeIdInputNode()
+    designPiece = graphene.Field(lambda: DesignIdInputNode)
 
 
 class PieceIdInputNode(InputNode):
@@ -3768,13 +3788,18 @@ class PieceIdInputNode(InputNode):
 class SideNode(Node):
     class Meta:
         model = Side
-        exclude_fields = ("piece", "port")
+
+    exclude_fields = ("piece", "port")
 
     piece = graphene.NonNull(PieceNode)
+    designPiece = graphene.Field(PieceNode)
     port = graphene.NonNull(PortNode)
 
     def resolve_piece(self, info):
         return self.piece
+
+    def resolve_designPiece(self, info):
+        return self.designPiece
 
     def resolve_port(self, info):
         return self.port
@@ -3783,9 +3808,11 @@ class SideNode(Node):
 class SideInputNode(InputNode):
     class Meta:
         model = SideInput
-        exclude_fields = ("piece", "port")
+
+    exclude_fields = ("piece", "port")
 
     piece = graphene.NonNull(PieceIdInputNode)
+    designPiece = PieceIdInputNode()
     port = graphene.NonNull(PortIdInputNode)
 
 
@@ -3822,6 +3849,11 @@ class DesignInputNode(InputNode):
 class DesignNode(TableEntityNode):
     class Meta:
         model = Design
+
+
+class DesignIdInputNode(InputNode):
+    class Meta:
+        model = DesignId
 
 
 class KitInputNode(InputNode):
