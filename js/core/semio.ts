@@ -1812,18 +1812,15 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
       center: piece.center || { x: 0, y: 0 },
     }));
 
-    // Use original connections without namespacing
     const transformedConnections = expandedReferencedDesign.connections || [];
 
-    // Update external connections that reference this design piece
     const updatedExternalConnections = (expandedDesign.connections || []).map((connection) => {
       if (connection.connected.designId === designName) {
-        // Use the original piece ID directly (no namespacing)
         return {
           ...connection,
           connected: {
             ...connection.connected,
-            designId: undefined, // Remove designId since we've expanded
+            designId: undefined,
           },
         };
       }

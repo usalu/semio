@@ -202,9 +202,9 @@ const ModelDesign: FC = () => {
   const types = kit?.types ?? [];
 
   const flatDesign = useMemo(() => flattenDesign(kit, designId), [kit, designId]);
-  const piecePlanes = useMemo(() => flatDesign.pieces?.map((p) => p.plane!) || [], [flatDesign]);
+  const piecePlanes = useMemo(() => flatDesign.pieces?.map((p: Piece) => p.plane!) || [], [flatDesign]);
 
-  const pieceRepresentationUrls = useMemo(() => getPieceRepresentationUrls(design, types), [design, types]);
+  const pieceRepresentationUrls = useMemo(() => getPieceRepresentationUrls(flatDesign, types), [flatDesign, types]);
 
   useEffect(() => {
     fileUrls.forEach((url, id) => {
@@ -212,7 +212,7 @@ const ModelDesign: FC = () => {
     });
   }, [fileUrls]);
 
-  design.pieces?.forEach((p) => {
+  flatDesign.pieces?.forEach((p: Piece) => {
     const type = types.find((t) => t.name === p.type.name && (t.variant || "") === (p.type.variant || ""));
     if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`);
   });
@@ -225,12 +225,12 @@ const ModelDesign: FC = () => {
 
   const pieceDiffStatuses = useMemo(() => {
     return (
-      design.pieces?.map((piece) => {
-        const diffQuality = piece.qualities?.find((q) => q.name === "semio.diffStatus");
+      flatDesign.pieces?.map((piece: Piece) => {
+        const diffQuality = piece.qualities?.find((q: any) => q.name === "semio.diffStatus");
         return (diffQuality?.value as DiffStatus) || DiffStatus.Unchanged;
       }) || []
     );
-  }, [design]);
+  }, [flatDesign]);
 
   const onChange = useCallback(
     (selected: THREE.Object3D[]) => {
@@ -259,7 +259,7 @@ const ModelDesign: FC = () => {
   return (
     <Select box multiple onChange={onChange} filter={(items) => items}>
       <group quaternion={new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)}>
-        {design.pieces?.map((piece, index) => (
+        {flatDesign.pieces?.map((piece: Piece, index: number) => (
           <ModelPiece
             key={`piece-${piece.id_}`}
             piece={piece}
