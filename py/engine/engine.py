@@ -1885,7 +1885,7 @@ class ConnectionShiftField(RealField, abc.ABC):
 
 
 class ConnectionRiseField(MaskedField, abc.ABC):
-    rise: float = sqlmodel.Field(alias="raise", default=0)
+    rise: float = sqlmodel.Field(default=0)
 
 
 class ConnectionRotationField(RealField, abc.ABC):
@@ -3139,7 +3139,7 @@ def decodeDesign(design: dict):
                 },
                 "gap": c["gap"],
                 "shift": c["shift"],
-                "raise": c["raise"],
+                "rise": c["rise"],
                 "rotation": normalizeAngle(c["rotation"]),
                 "turn": normalizeAngle(c["turn"]),
                 "tilt": normalizeAngle(c["tilt"]),
@@ -3328,7 +3328,7 @@ designResponseFormat = json.loads(
                             "type": "number",
                             "description": "The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.."
                         },
-                        "raise": {
+                        "rise": {
                             "type": "number",
                             "description": "The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result."
                         },
@@ -3360,7 +3360,7 @@ designResponseFormat = json.loads(
                         "connectingPieceTypePortId",
                         "gap",
                         "shift",
-                        "raise",
+                        "rise",
                         "rotation",
                         "turn",
                         "tilt",

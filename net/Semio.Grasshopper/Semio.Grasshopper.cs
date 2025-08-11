@@ -586,10 +586,8 @@ public abstract class ModelParam<T, U> : GH_PersistentParam<T> where T : ModelGo
     internal ModelParam() : base(typeof(U).Name,
         ((ModelAttribute)Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Code,
         ((ModelAttribute)Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Description,
-        Constants.Category,
-        "Params")
-    {
-    }
+        Constants.Category, "Params")
+    { }
     protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(U).Name.ToLower()}_24x24");
     protected override GH_GetterResult Prompt_Singular(ref T value) => throw new NotImplementedException();
     protected override GH_GetterResult Prompt_Plural(ref List<T> values) => throw new NotImplementedException();
@@ -908,9 +906,9 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
     {
         pManager.AddTextParameter("Id", "Id", "Id of the piece.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional human-readable description of the piece.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Type Name", "Na", "Name of the type of the piece.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Type Variant", "Vn?", "The optional variant of the type of the piece. No variant means the default variant.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Design Name", "DNa?", "Optional name of the design of the piece.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Type Name", "TNa?", "The optional name of the type of the piece. Either the type or the design must be set.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Type Variant", "TVn?", "The optional variant of the type of the piece. No variant means the default variant.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Design Name", "DNa?", "The optional name of the design of the piece. Either the type or the design must be set.", GH_ParamAccess.item);
         pManager.AddTextParameter("Design Variant", "DVn?", "Optional variant of the design of the piece.", GH_ParamAccess.item);
         pManager.AddTextParameter("Design View", "DVi?", "Optional view of the design of the piece.", GH_ParamAccess.item);
         pManager.AddPlaneParameter("Plane", "Pn?", "The optional plane of the piece. When pieces are connected only one piece can have a plane.", GH_ParamAccess.item);
