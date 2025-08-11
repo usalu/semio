@@ -41,6 +41,7 @@ import {
   DiagramPoint,
   ICON_WIDTH,
   Kit,
+  Model,
   Piece,
   PieceId,
   Plane,
@@ -1750,7 +1751,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
               </ResizablePanel>
               <ResizableHandle className={`border-r ${state.fullscreenPanel !== FullscreenPanel.None ? "hidden" : "block"}`} />
               <ResizablePanel defaultSize={state.fullscreenPanel === FullscreenPanel.Model ? 100 : 50} className={`${state.fullscreenPanel === FullscreenPanel.Diagram ? "hidden" : "block"}`} onDoubleClick={onDoubleClickModel}>
-                {/* <Model /> */}
+                <Model />
               </ResizablePanel>
             </ResizablePanelGroup>
           </div>

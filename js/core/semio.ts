@@ -1451,7 +1451,6 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
   }
   const types = kit.types ?? [];
 
-  // First, flatten all included designs and expand design pieces
   let expandedDesign = expandDesignPieces(design, kit);
 
   if (!expandedDesign.pieces || expandedDesign.pieces.length === 0) return expandedDesign;

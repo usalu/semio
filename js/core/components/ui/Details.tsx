@@ -189,7 +189,7 @@ const DesignSection: FC = () => {
           ]}
         >
           <SortableTreeItems
-            items={design.authors.map((author, index) => ({
+            items={design.authors.map((author: any, index: number) => ({
               ...author,
               id: `author-${index}`,
               index,
@@ -243,7 +243,7 @@ const DesignSection: FC = () => {
                       startTransaction();
                       handleChange({
                         ...design,
-                        authors: design.authors?.filter((_, i) => i !== index),
+                        authors: design.authors?.filter((_: any, i: number) => i !== index),
                       });
                       finalizeTransaction();
                     }}
@@ -295,7 +295,7 @@ const DesignSection: FC = () => {
           ]}
         >
           <SortableTreeItems
-            items={design.qualities.map((quality, index) => ({
+            items={design.qualities.map((quality: any, index: number) => ({
               ...quality,
               id: `quality-${index}`,
               index,
@@ -384,7 +384,7 @@ const DesignSection: FC = () => {
                       startTransaction();
                       handleChange({
                         ...design,
-                        qualities: design.qualities?.filter((_, i) => i !== index),
+                        qualities: design.qualities?.filter((_: any, i: number) => i !== index),
                       });
                       finalizeTransaction();
                     }}
@@ -450,6 +450,36 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
   // Handle both regular pieces and synthetic design pieces (fixed and connected)
   const includedDesigns = getIncludedDesigns(design);
   const includedDesignMap = new Map(includedDesigns.map((d) => [d.id, d]));
+
+  // Helper function to find parent connection for a design piece
+  const findParentConnectionForDesignPiece = (pieceId: string): Connection | null => {
+    const includedDesign = includedDesignMap.get(pieceId);
+    if (!includedDesign || includedDesign.type !== "connected") {
+      return null; // Fixed designs don't have parent connections
+    }
+
+    // For connected designs, find the actual parent connection using BFS metadata
+    const metadata = piecesMetadata(kit, designId);
+    const pieceMetadata = metadata.get(pieceId);
+
+    if (!pieceMetadata?.parentPieceId) {
+      return null; // No parent found
+    }
+
+    // Find the connection between the parent piece and this design piece
+    const parentPieceId = pieceMetadata.parentPieceId;
+
+    // Look for a connection that connects the parent piece to this design piece
+    // The connection should have the designId parameter set
+    const parentConn = design.connections?.find((connection: Connection) => {
+      const isParentConnecting = connection.connecting.piece.id_ === parentPieceId && connection.connected.designId === includedDesign.designId.name;
+      const isParentConnected = connection.connected.piece.id_ === parentPieceId && connection.connecting.designId === includedDesign.designId.name;
+
+      return isParentConnecting || isParentConnected;
+    });
+
+    return parentConn || null;
+  };
 
   const pieces = pieceIds.map((id) => {
     try {
@@ -848,6 +878,14 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
         });
       } catch {}
     }
+
+    // For design pieces, also check for external connections
+    if (isDesignPiece && piece.type.name === "design") {
+      const parentConn = findParentConnectionForDesignPiece(piece.id_);
+      if (parentConn) {
+        parentConnection = parentConn;
+      }
+    }
   } else if (!isSingle) {
     // For multiple pieces, find all their parent connections
     parentConnections = pieces
@@ -863,12 +901,19 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
             return null;
           }
         }
+
+        // For design pieces, also check for external connections
+        if (piece.type.name === "design") {
+          const parentConn = findParentConnectionForDesignPiece(piece.id_);
+          if (parentConn) {
+            return parentConn;
+          }
+        }
+
         return null;
       })
       .filter((conn): conn is Connection => conn !== null);
   }
-
-  const isFixed = isSingle ? piece!.plane && piece!.center : false;
 
   return (
     <>
@@ -1014,11 +1059,15 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
                     {
                       connectingPieceId: parentConnection.connecting.piece.id_,
                       connectedPieceId: parentConnection.connected.piece.id_,
+                      ...(parentConnection.connecting.designId && { designId: parentConnection.connecting.designId }),
+                      ...(parentConnection.connected.designId && { designId: parentConnection.connected.designId }),
                     },
                   ]
                 : parentConnections.map((conn) => ({
                     connectingPieceId: conn.connecting.piece.id_,
                     connectedPieceId: conn.connected.piece.id_,
+                    ...(conn.connecting.designId && { designId: conn.connecting.designId }),
+                    ...(conn.connected.designId && { designId: conn.connected.designId }),
                   }))
             }
             sectionLabel={isSingle ? "Parent Connection" : `Parent Connections (${parentConnections.length})`}
@@ -1030,16 +1079,25 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
 };
 
 const ConnectionsSection: FC<{
-  connections: { connectingPieceId: string; connectedPieceId: string }[];
+  connections: { connectingPieceId: string; connectedPieceId: string; designId?: string }[];
   sectionLabel?: string;
 }> = ({ connections, sectionLabel }) => {
   const { kit, designId, setConnection, setConnections, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditor();
   const design = findDesignInKit(kit, designId);
   const connectionObjects = connections.map((conn) => {
+    // Handle connections that may have a designId parameter
     const connectionId = {
-      connecting: { piece: { id_: conn.connectingPieceId } },
-      connected: { piece: { id_: conn.connectedPieceId } },
+      connecting: {
+        piece: { id_: conn.connectingPieceId },
+        ...(conn.designId && { designId: conn.designId }),
+      },
+      connected: {
+        piece: { id_: conn.connectedPieceId },
+        ...(conn.designId && { designId: conn.designId }),
+      },
     };
+
+    // Try to find the connection in the design
     return findConnectionInDesign(design, connectionId);
   });
 
@@ -1212,7 +1270,7 @@ const ConnectionsSection: FC<{
 const PortSection: FC<{ pieceId: string; portId: string }> = ({ pieceId, portId }) => {
   const { kit, designId } = useDesignEditor();
   const design = findDesignInKit(kit, designId);
-  const piece = design?.pieces?.find((p) => p.id_ === pieceId);
+  const piece = design?.pieces?.find((p: any) => p.id_ === pieceId);
   const type = piece ? findTypeInKit(kit, piece.type) : null;
   const port = type?.ports?.find((p: any) => p.id_ === portId);
 
