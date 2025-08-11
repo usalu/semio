@@ -581,41 +581,50 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
         break;
       }
 
-      // For simplicity, expand into the first affected design (typically the original design that was clustered)
-      const targetDesign = affectedDesigns[0];
+      // Update all affected designs to remove designId references to the expanded design
+      const updatedAffectedDesigns: Design[] = affectedDesigns.map((affectedDesign) => {
+        // Get all connections that reference the design to expand
+        const externalConnections = (affectedDesign.connections || []).filter((connection: Connection) => connection.connected.designId === designToExpand.name || connection.connecting.designId === designToExpand.name);
 
-      // Get all external connections that reference the design to expand
-      const externalConnections = (targetDesign.connections || []).filter((connection: Connection) => connection.connected.designId === designToExpand.name || connection.connecting.designId === designToExpand.name);
+        // Get all internal connections (not referencing the design to expand)
+        const internalConnections = (affectedDesign.connections || []).filter((connection: Connection) => connection.connected.designId !== designToExpand.name && connection.connecting.designId !== designToExpand.name);
 
-      // Get all internal connections (not referencing the design to expand)
-      const internalConnections = (targetDesign.connections || []).filter((connection: Connection) => connection.connected.designId !== designToExpand.name && connection.connecting.designId !== designToExpand.name);
+        // Remove designId from external connections to restore them as regular connections
+        const restoredConnections = externalConnections.map((connection: Connection) => {
+          const updatedConnection = { ...connection };
 
-      // Remove designId from external connections to restore them as regular connections
-      const restoredConnections = externalConnections.map((connection: Connection) => {
-        const updatedConnection = { ...connection };
+          if (connection.connected.designId === designToExpand.name) {
+            updatedConnection.connected = {
+              ...connection.connected,
+              designId: undefined,
+            };
+          }
 
-        if (connection.connected.designId === designToExpand.name) {
-          updatedConnection.connected = {
-            ...connection.connected,
-            designId: undefined,
-          };
-        }
+          if (connection.connecting.designId === designToExpand.name) {
+            updatedConnection.connecting = {
+              ...connection.connecting,
+              designId: undefined,
+            };
+          }
 
-        if (connection.connecting.designId === designToExpand.name) {
-          updatedConnection.connecting = {
-            ...connection.connecting,
-            designId: undefined,
-          };
-        }
+          return updatedConnection;
+        });
 
-        return updatedConnection;
+        return {
+          ...affectedDesign,
+          connections: [...internalConnections, ...restoredConnections],
+          updated: new Date(),
+        };
       });
+
+      // For simplicity, expand into the first affected design (typically the original design that was clustered)
+      const targetDesign = updatedAffectedDesigns[0];
 
       // Combine all pieces from the target design and the design to expand
       const combinedPieces = [...(targetDesign.pieces || []), ...(designToExpand.pieces || [])];
 
-      // Combine all connections: internal connections, restored external connections, and connections from the expanded design
-      const combinedConnections = [...internalConnections, ...restoredConnections, ...(designToExpand.connections || [])];
+      // Combine all connections: target design connections and connections from the expanded design
+      const combinedConnections = [...(targetDesign.connections || []), ...(designToExpand.connections || [])];
 
       // Create the updated target design with expanded content
       const expandedTargetDesign: Design = {
@@ -626,13 +635,22 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
       };
 
       // Remove the design to expand from the kit
-      const kitWithoutExpandedDesign = {
-        ...state.kit,
-        designs: (state.kit.designs || []).filter((design) => design.name !== designToExpand.name),
+      const kitWithoutExpandedDesign: Kit = {
+        ...state.kit!,
+        designs: (state.kit!.designs || []).filter((design) => design.name !== designToExpand.name),
       };
 
-      // Update the target design in the kit
-      const finalKitAfterExpansion = updateDesignInKit(kitWithoutExpandedDesign, expandedTargetDesign);
+      // Update all affected designs in the kit
+      let finalKitAfterExpansion = kitWithoutExpandedDesign;
+
+      // Update the target design with expanded content
+      finalKitAfterExpansion = updateDesignInKit(finalKitAfterExpansion, expandedTargetDesign);
+
+      // Update other affected designs (excluding the target design which was already updated)
+      for (let i = 1; i < updatedAffectedDesigns.length; i++) {
+        const affectedDesign = updatedAffectedDesigns[i];
+        finalKitAfterExpansion = updateDesignInKit(finalKitAfterExpansion, affectedDesign);
+      }
 
       // Remove the DesignEditorCoreState for the expanded design
       const expandedDesignStateIndex = state.designEditorCoreStates.findIndex(

@@ -505,8 +505,16 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
         };
       }
 
-      // If still not found, throw the original error
-      throw new Error(`Piece ${id} not found in pieces or includedDesigns`);
+      // If still not found, create a fallback synthetic piece instead of throwing an error
+      console.warn(`Piece ${id} not found in pieces or includedDesigns. Creating fallback piece.`);
+      return {
+        id_: id,
+        type: {
+          name: "unknown",
+          variant: "",
+        },
+        description: `Unknown piece: ${id}`,
+      };
     }
   });
 
@@ -516,9 +524,20 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
   const piece = isSingle ? pieces[0] : null;
 
   // Check if we're dealing with design pieces
-  const isDesignPiece = isSingle ? piece!.type.name === "design" : pieces.every((p) => p.type.name === "design");
+  const isDesignPiece = isSingle ? piece?.type.name === "design" : pieces.every((p) => p.type.name === "design");
   const hasDesignPieces = pieces.some((p) => p.type.name === "design");
   const hasMixedTypes = hasDesignPieces && pieces.some((p) => p.type.name !== "design");
+
+  // Safety check - if no valid pieces found, show a message
+  if (pieces.length === 0 || pieces.every((p) => p.type.name === "unknown")) {
+    return (
+      <TreeSection label="Pieces" defaultOpen={true}>
+        <TreeItem>
+          <p className="text-sm text-muted-foreground">No valid pieces found in selection.</p>
+        </TreeItem>
+      </TreeSection>
+    );
+  }
 
   const getCommonValue = <T,>(getter: (piece: Piece) => T | undefined): T | undefined => {
     const values = pieces.map(getter).filter((v) => v !== undefined);
@@ -528,6 +547,8 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
   };
 
   const handleTypeNameChange = (value: string) => {
+    if (!piece || piece.type.name === "unknown") return;
+
     startTransaction();
     if (isSingle) {
       setPiece({ ...piece!, type: { ...piece!.type, name: value } });
@@ -542,6 +563,8 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
   };
 
   const handleTypeVariantChange = (value: string) => {
+    if (!piece || piece.type.name === "unknown") return;
+
     startTransaction();
     if (isSingle) {
       setPiece({ ...piece!, type: { ...piece!.type, variant: value } });
@@ -557,7 +580,7 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
 
   // Design-specific handlers
   const handleDesignNameChange = (value: string) => {
-    if (!isDesignPiece) return;
+    if (!isDesignPiece || !piece || piece.type.name === "unknown") return;
 
     startTransaction();
     if (isSingle) {
@@ -604,7 +627,7 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
   };
 
   const handleDesignVariantChange = (value: string) => {
-    if (!isDesignPiece) return;
+    if (!isDesignPiece || !piece || piece.type.name === "unknown") return;
 
     startTransaction();
     if (isSingle) {
@@ -649,7 +672,7 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
   };
 
   const handleDesignViewChange = (value: string) => {
-    if (!isDesignPiece) return;
+    if (!isDesignPiece || !piece || piece.type.name === "unknown") return;
 
     startTransaction();
     if (isSingle) {
@@ -703,6 +726,7 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
 
   const handleCenterXChange = (value: number) => {
     if (isSingle) {
+      if (!piece || piece.type.name === "unknown") return;
       setPiece(piece!.center ? { ...piece!, center: { ...piece!.center, x: value } } : piece!);
     } else {
       const updatedPieces = pieces.map((piece) => (piece.center ? { ...piece, center: { ...piece.center, x: value } } : piece));
@@ -712,6 +736,7 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
 
   const handleCenterYChange = (value: number) => {
     if (isSingle) {
+      if (!piece || piece.type.name === "unknown") return;
       setPiece(piece!.center ? { ...piece!, center: { ...piece!.center, y: value } } : piece!);
     } else {
       const updatedPieces = pieces.map((piece) => (piece.center ? { ...piece, center: { ...piece.center, y: value } } : piece));
@@ -721,6 +746,7 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
 
   const handlePlaneOriginXChange = (value: number) => {
     if (isSingle) {
+      if (!piece || piece.type.name === "unknown") return;
       setPiece(
         piece!.plane
           ? {
@@ -750,6 +776,7 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
 
   const handlePlaneOriginYChange = (value: number) => {
     if (isSingle) {
+      if (!piece || piece.type.name === "unknown") return;
       setPiece(
         piece!.plane
           ? {
@@ -779,6 +806,7 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
 
   const handlePlaneOriginZChange = (value: number) => {
     if (isSingle) {
+      if (!piece || piece.type.name === "unknown") return;
       setPiece(
         piece!.plane
           ? {
@@ -939,9 +967,9 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
               : undefined
           }
         >
-          {isSingle && (
+          {isSingle && piece && (
             <TreeItem>
-              <Input label="ID" value={piece!.id_} disabled />
+              <Input label="ID" value={piece.id_} disabled />
             </TreeItem>
           )}
 
@@ -1001,7 +1029,7 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
                     value: name,
                     label: name,
                   }))}
-                  value={isSingle ? piece!.type.name : commonTypeName || ""}
+                  value={isSingle && piece ? piece.type.name : commonTypeName || ""}
                   placeholder={!isSingle && commonTypeName === undefined ? "Mixed values" : "Select type"}
                   onValueChange={handleTypeNameChange}
                 />
@@ -1014,7 +1042,7 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
                       value: variant,
                       label: variant,
                     }))}
-                    value={isSingle ? piece!.type.variant || "" : commonTypeVariant || ""}
+                    value={isSingle && piece ? piece.type.variant || "" : commonTypeVariant || ""}
                     placeholder={!isSingle && commonTypeVariant === undefined ? "Mixed values" : "Select variant"}
                     onValueChange={handleTypeVariantChange}
                     allowClear={true}
@@ -1028,10 +1056,10 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
       {hasCenter && (
         <TreeSection label="Center">
           <TreeItem>
-            <Stepper label="X" value={isSingle ? piece!.center?.x : commonCenterX} onChange={handleCenterXChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+            <Stepper label="X" value={isSingle && piece ? piece.center?.x : commonCenterX} onChange={handleCenterXChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
           </TreeItem>
           <TreeItem>
-            <Stepper label="Y" value={isSingle ? piece!.center?.y : commonCenterY} onChange={handleCenterYChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+            <Stepper label="Y" value={isSingle && piece ? piece.center?.y : commonCenterY} onChange={handleCenterYChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
           </TreeItem>
         </TreeSection>
       )}
@@ -1039,13 +1067,37 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
         <TreeSection label="Plane">
           <TreeSection label="Origin" defaultOpen={true}>
             <TreeItem>
-              <Stepper label="X" value={isSingle ? piece!.plane?.origin.x : commonPlaneOriginX} onChange={handlePlaneOriginXChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+              <Stepper
+                label="X"
+                value={isSingle && piece ? piece.plane?.origin.x : commonPlaneOriginX}
+                onChange={handlePlaneOriginXChange}
+                onPointerDown={startTransaction}
+                onPointerUp={finalizeTransaction}
+                onPointerCancel={abortTransaction}
+                step={0.1}
+              />
             </TreeItem>
             <TreeItem>
-              <Stepper label="Y" value={isSingle ? piece!.plane?.origin.y : commonPlaneOriginY} onChange={handlePlaneOriginYChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+              <Stepper
+                label="Y"
+                value={isSingle && piece ? piece.plane?.origin.y : commonPlaneOriginY}
+                onChange={handlePlaneOriginYChange}
+                onPointerDown={startTransaction}
+                onPointerUp={finalizeTransaction}
+                onPointerCancel={abortTransaction}
+                step={0.1}
+              />
             </TreeItem>
             <TreeItem>
-              <Stepper label="Z" value={isSingle ? piece!.plane?.origin.z : commonPlaneOriginZ} onChange={handlePlaneOriginZChange} onPointerDown={startTransaction} onPointerUp={finalizeTransaction} onPointerCancel={abortTransaction} step={0.1} />
+              <Stepper
+                label="Z"
+                value={isSingle && piece ? piece.plane?.origin.z : commonPlaneOriginZ}
+                onChange={handlePlaneOriginZChange}
+                onPointerDown={startTransaction}
+                onPointerUp={finalizeTransaction}
+                onPointerCancel={abortTransaction}
+                step={0.1}
+              />
             </TreeItem>
           </TreeSection>
         </TreeSection>
@@ -1185,6 +1237,11 @@ const ConnectionsSection: FC<{
             <TreeItem>
               <Input label="Port ID" value={connection!.connecting.port.id_} disabled />
             </TreeItem>
+            {connection!.connecting.designId && (
+              <TreeItem>
+                <Input label="Design ID" value={connection!.connecting.designId} disabled />
+              </TreeItem>
+            )}
           </TreeItem>
           <TreeItem label="Connected">
             <TreeItem>
@@ -1193,6 +1250,11 @@ const ConnectionsSection: FC<{
             <TreeItem>
               <Input label="Port ID" value={connection!.connected.port.id_} disabled />
             </TreeItem>
+            {connection!.connected.designId && (
+              <TreeItem>
+                <Input label="Design ID" value={connection!.connected.designId} disabled />
+              </TreeItem>
+            )}
           </TreeItem>
         </>
       )}
