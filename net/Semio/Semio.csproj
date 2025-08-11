@@ -38,7 +38,7 @@
     <PackageReference Include="Svg" Version="3.4.7" />
     <PackageReference Include="System.Collections.Immutable" Version="7.0.0" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
-    <PackageReference Include="UnitsNet" Version="5.74.0" />
+    <PackageReference Include="UnitsNet" Version="5.75.0" />
   </ItemGroup>
 
   <ItemGroup>
