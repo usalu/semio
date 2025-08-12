@@ -22,9 +22,10 @@
 
 import { GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, OrthographicCamera, Select, TransformControls, useGLTF } from "@react-three/drei";
 import { Canvas, ThreeEvent } from "@react-three/fiber";
-import { applyDesignDiff, DiffStatus, findDesignInKit, flattenDesign, FullscreenPanel, getPieceRepresentationUrls, Piece, Plane, planeToMatrix, toSemioRotation, updateDesignInKit, useDesignEditor } from "@semio/js";
+import { applyDesignDiff, DiffStatus, flattenDesign, FullscreenPanel, getPieceRepresentationUrls, Piece, Plane, planeToMatrix, toSemioRotation, updateDesignInKit, useDesignEditor } from "@semio/js";
 import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import { PieceScopeProvider, useDesign, useKit } from "../../store";
 import { Presence } from "./DesignEditor";
 
 const getComputedColor = (variable: string): string => {
@@ -184,21 +185,26 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, upda
     </group>
   );
 
-  return transformControl ? (
-    <TransformControls ref={transformControlRef} enabled={selected && fixed} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}>
-      {group}
-    </TransformControls>
-  ) : (
-    group
+  return (
+    <PieceScopeProvider id_={piece.id_}>
+      {transformControl ? (
+        <TransformControls ref={transformControlRef} enabled={selected && fixed} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}>
+          {group}
+        </TransformControls>
+      ) : (
+        group
+      )}
+    </PieceScopeProvider>
   );
 };
 
 const ModelDesign: FC = () => {
-  const { kit: originalKit, designId, selection, designDiff, fileUrls, others, removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = useDesignEditor();
-
-  if (!originalKit) return null;
-  const design = applyDesignDiff(findDesignInKit(originalKit, designId), designDiff, true);
-  const kit = useMemo(() => updateDesignInKit(originalKit, design), [originalKit, design]);
+  const { designId, selection, designDiff, fileUrls, others, removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = useDesignEditor();
+  const storeKit = useKit();
+  const baseDesign = useDesign();
+  if (!storeKit || !baseDesign) return null;
+  const design = applyDesignDiff(baseDesign, designDiff, true);
+  const kit = useMemo(() => updateDesignInKit(storeKit, design), [storeKit, design]);
   const types = kit?.types ?? [];
 
   const flatDesign = useMemo(() => flattenDesign(kit, designId), [kit, designId]);

@@ -28,7 +28,7 @@ const COMMAND_STACK_MAX = 50;
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
 import { ReactFlowProvider, useReactFlow } from "@xyflow/react";
 import { Info, MessageCircle, Terminal, Wrench } from "lucide-react";
-import { FC, ReactNode, createContext, useCallback, useContext, useEffect, useState } from "react";
+import { FC, createContext, useCallback, useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useHotkeys } from "react-hotkeys-hook";
 
@@ -50,6 +50,7 @@ import {
   addConnectionToDesignDiff,
   addConnectionsToDesign,
   addConnectionsToDesignDiff,
+  addPieceToDesign,
   addPieceToDesignDiff,
   addPiecesToDesign,
   addPiecesToDesignDiff,
@@ -80,10 +81,10 @@ import {
 import Diagram from "@semio/js/components/ui/Diagram";
 import { default as Navbar } from "@semio/js/components/ui/Navbar";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@semio/js/components/ui/Resizable";
-import { Layout, Mode, Theme } from "@semio/js/components/ui/Sketchpad";
 import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGroup";
 import { Generator } from "@semio/js/lib/utils";
 import { Camera, orientDesign } from "../../semio";
+import { DesignEditorSelection, DesignScopeProvider, KitScopeProvider } from "../../store";
 import Chat from "./Chat";
 import { CommandContext, ConsolePanel, commandRegistry } from "./Console";
 import { designEditorCommands } from "./designEditorCommands";
@@ -91,62 +92,13 @@ import Details from "./Details";
 import { useSketchpad } from "./Sketchpad";
 import Workbench, { DesignAvatar, TypeAvatar } from "./Workbench";
 
-// Register all design editor commands
 designEditorCommands.forEach((command) => commandRegistry.register(command));
-
-// Helper functions for commands
-const addPieceToDesign = (design: Design, piece: Piece): Design => ({
-  ...design,
-  pieces: [...(design.pieces || []), piece],
-});
 
 //#region State
 
-export interface DesignEditorSelection {
-  selectedPieceIds: string[];
-  selectedConnections: {
-    connectingPieceId: string;
-    connectedPieceId: string;
-  }[];
-  selectedPiecePortId?: { pieceId: string; portId: string };
-}
-
-export interface OperationStackEntry {
-  design: Design;
-  selection: DesignEditorSelection;
-}
-
-export interface Presence {
-  name: string;
-  cursor?: DiagramPoint;
-  camera?: Camera;
-}
-
-export interface DesignEditorCoreState {
-  designId: DesignId;
-  fileUrls: Map<string, string>;
-  fullscreenPanel: FullscreenPanel;
-  selection: DesignEditorSelection;
-  designDiff: DesignDiff;
-  operationStack: OperationStackEntry[];
-  operationIndex: number;
-  isTransactionActive: boolean;
-  cursor?: DiagramPoint;
-  camera?: Camera;
-  others: Presence[];
-}
-
-export interface DesignEditorState extends DesignEditorCoreState {
-  kit: Kit;
-}
-
-export enum FullscreenPanel {
-  None = "none",
-  Diagram = "diagram",
-  Model = "model",
-}
-
 export enum DesignEditorAction {
+  Undo = "UNDO",
+  Redo = "REDO",
   SetDesign = "SET_DESIGN",
   AddDesign = "ADD_DESIGN",
   AddPiece = "ADD_PIECE",
@@ -191,8 +143,6 @@ export enum DesignEditorAction {
   PasteFromClipboard = "PASTE_FROM_CliPBOARD",
   DeleteSelected = "DELETE_SELECTED",
   SetFullscreen = "SET_FULLSCREEN",
-  Undo = "UNDO",
-  Redo = "REDO",
   ToggleDiagramFullscreen = "TOGGLE_DIAGRAM_FULLSCREEN",
   ToggleModelFullscreen = "TOGGLE_MODEL_FULLSCREEN",
   StartTransaction = "START_TRANSACTION",
@@ -458,80 +408,6 @@ const deleteSelected = (kit: Kit, designId: DesignId, selection: DesignEditorSel
 
 //#endregion Selection
 
-//#region Operation Stack
-
-const pushToOperationStack = (state: DesignEditorState): DesignEditorState => {
-  const currentDesign = findDesignInKit(state.kit, state.designId);
-  const newEntry: OperationStackEntry = {
-    design: JSON.parse(JSON.stringify(currentDesign)),
-    selection: JSON.parse(JSON.stringify(state.selection)),
-  };
-
-  let newOperationStack: OperationStackEntry[];
-  let newOperationIndex: number;
-
-  if (state.operationIndex < state.operationStack.length - 1) {
-    newOperationStack = state.operationStack.slice(0, state.operationIndex + 1);
-  } else {
-    newOperationStack = [...state.operationStack];
-  }
-
-  newOperationStack.push(newEntry);
-
-  if (newOperationStack.length > COMMAND_STACK_MAX) {
-    newOperationStack.shift();
-    newOperationIndex = newOperationStack.length - 1;
-  } else {
-    newOperationIndex = newOperationStack.length - 1;
-  }
-
-  return {
-    ...state,
-    operationStack: newOperationStack,
-    operationIndex: newOperationIndex,
-  };
-};
-
-const canUndo = (state: DesignEditorState): boolean => {
-  if (state.operationStack.length === 0) return false;
-  return state.operationIndex > 0 && state.operationStack.length > 1;
-};
-
-const canRedo = (state: DesignEditorState): boolean => {
-  if (state.operationStack.length === 0) return false;
-  return state.operationIndex < state.operationStack.length - 1;
-};
-
-const undo = (state: DesignEditorState): DesignEditorState => {
-  if (!canUndo(state)) return state;
-
-  const previousEntry = state.operationStack[state.operationIndex - 1];
-  const currentDesign = findDesignInKit(state.kit, state.designId);
-  const updatedDesigns = (state.kit.designs || []).map((d: Design) => (isSameDesign(d, currentDesign) ? previousEntry.design : d));
-  return {
-    ...state,
-    kit: { ...state.kit, designs: updatedDesigns },
-    selection: previousEntry.selection,
-    operationIndex: state.operationIndex - 1,
-  };
-};
-
-const redo = (state: DesignEditorState): DesignEditorState => {
-  if (!canRedo(state)) return state;
-
-  const nextEntry = state.operationStack[state.operationIndex + 1];
-  const currentDesign = findDesignInKit(state.kit, state.designId);
-  const updatedDesigns = (state.kit.designs || []).map((d: Design) => (isSameDesign(d, currentDesign) ? nextEntry.design : d));
-  return {
-    ...state,
-    kit: { ...state.kit, designs: updatedDesigns },
-    selection: nextEntry.selection,
-    operationIndex: state.operationIndex + 1,
-  };
-};
-
-//#endregion Operation Stack
-
 //#region DesignDiff Helpers
 
 const updateDesignDiffInState = (state: DesignEditorState, updatedDesignDiff: DesignDiff): DesignEditorState => {
@@ -734,10 +610,68 @@ export const useDesignEditor = () => {
   const stepOut = useCallback((presence: Presence) => dispatch({ type: DesignEditorAction.StepOut, payload: presence }), [dispatch]);
   const updatePresence = useCallback((presence: Partial<Presence> & { name: string }) => dispatch({ type: DesignEditorAction.UpdatePresence, payload: presence }), [dispatch]);
 
+  const executeCommand = useCallback(
+    async (commandId: string, payload: Record<string, any> = {}) => {
+      const context: CommandContext = {
+        kit: kit,
+        designId: state.designId,
+        selection: state.selection,
+        clusterDesign: clusterDesign,
+        expandDesign: expandDesign,
+      };
+
+      const command = commandRegistry.get(commandId);
+      if (!command) {
+        throw new Error(`Command not found: ${commandId}`);
+      }
+
+      // Editor-only commands can always execute, even during transactions
+      if (command.editorOnly) {
+        const result = await commandRegistry.execute(commandId, context, payload);
+        if (result.selection) {
+          setSelection(result.selection);
+        }
+        if (result.fullscreenPanel !== undefined) {
+          setFullscreen(result.fullscreenPanel);
+        }
+        return result;
+      }
+
+      // Design-modifying commands only execute when no transaction is active
+      if (state.isTransactionActive) {
+        console.warn(`Cannot execute design-modifying command "${commandId}" during active transaction`);
+        return;
+      }
+
+      // Run design commands in transactions
+      startTransaction();
+      try {
+        const result = await commandRegistry.execute(commandId, context, payload);
+        if (result.design) {
+          setDesign(result.design);
+        }
+        if (result.selection) {
+          setSelection(result.selection);
+        }
+        if (result.fullscreenPanel !== undefined) {
+          setFullscreen(result.fullscreenPanel);
+        }
+        finalizeTransaction();
+        return result;
+      } catch (error) {
+        abortTransaction();
+        console.error("Command execution failed:", error);
+        throw error;
+      }
+    },
+    [kit, state.designId, state.selection, state.isTransactionActive, startTransaction, setDesign, setSelection, setFullscreen, finalizeTransaction, abortTransaction, clusterDesign, expandDesign],
+  );
+  const getAvailableCommands = useCallback(() => commandRegistry.getAll(), []);
+  const getCommand = useCallback((commandId: string) => commandRegistry.get(commandId), []);
+
   return {
-    ...state,
-    canUndo: canUndo(state),
-    canRedo: canRedo(state),
+    undo,
+    redo,
     setDesign,
     addPiece,
     setPiece,
@@ -779,76 +713,14 @@ export const useDesignEditor = () => {
     setFullscreen,
     toggleDiagramFullscreen,
     toggleModelFullscreen,
-    undo,
-    redo,
-    // Command system
-    executeCommand: useCallback(
-      async (commandId: string, payload: Record<string, any> = {}) => {
-        const context: CommandContext = {
-          kit: kit,
-          designId: state.designId,
-          selection: state.selection,
-          clusterDesign: clusterDesign,
-          expandDesign: expandDesign,
-        };
-
-        const command = commandRegistry.get(commandId);
-        if (!command) {
-          throw new Error(`Command not found: ${commandId}`);
-        }
-
-        // Editor-only commands can always execute, even during transactions
-        if (command.editorOnly) {
-          const result = await commandRegistry.execute(commandId, context, payload);
-          if (result.selection) {
-            setSelection(result.selection);
-          }
-          if (result.fullscreenPanel !== undefined) {
-            setFullscreen(result.fullscreenPanel);
-          }
-          return result;
-        }
-
-        // Design-modifying commands only execute when no transaction is active
-        if (state.isTransactionActive) {
-          console.warn(`Cannot execute design-modifying command "${commandId}" during active transaction`);
-          return;
-        }
-
-        // Run design commands in transactions
-        startTransaction();
-        try {
-          const result = await commandRegistry.execute(commandId, context, payload);
-          if (result.design) {
-            setDesign(result.design);
-          }
-          if (result.selection) {
-            setSelection(result.selection);
-          }
-          if (result.fullscreenPanel !== undefined) {
-            setFullscreen(result.fullscreenPanel);
-          }
-          finalizeTransaction();
-          return result;
-        } catch (error) {
-          abortTransaction();
-          console.error("Command execution failed:", error);
-          throw error;
-        }
-      },
-      [kit, state.designId, state.selection, state.isTransactionActive, startTransaction, setDesign, setSelection, setFullscreen, finalizeTransaction, abortTransaction, clusterDesign, expandDesign],
-    ),
-
-    getAvailableCommands: useCallback(() => commandRegistry.getAll(), []),
-    getCommand: useCallback((commandId: string) => commandRegistry.get(commandId), []),
-    // Transaction functions
+    getAvailableCommands,
+    getCommand,
+    executeCommand,
     startTransaction,
     finalizeTransaction,
     abortTransaction,
-    // Cursor and camera functions
     setCursor,
     setCamera,
-    // Presence functions
     stepIn,
     stepOut,
     updatePresence,
@@ -1316,49 +1188,14 @@ export interface ResizablePanelProps extends PanelProps {
   width: number;
 }
 
-interface ControlledDesignEditorProps {
-  kit?: Kit;
-  selection?: DesignEditorSelection;
-  onDesignChange?: (design: Design) => void;
-  onSelectionChange?: (selection: DesignEditorSelection) => void;
-  onUndo?: () => void;
-  onRedo?: () => void;
-}
+interface DesignEditorProps {}
 
-interface UncontrolledDesignEditorProps {
-  initialKit?: Kit;
-  initialSelection?: DesignEditorSelection;
-}
-
-interface DesignEditorProps extends ControlledDesignEditorProps, UncontrolledDesignEditorProps {
-  designId: DesignId;
-  fileUrls: Map<string, string>;
-  onToolbarChange: (toolbar: ReactNode) => void;
-  onDesignIdChange?: (designId: DesignId) => void;
-  availableDesigns: DesignId[];
-  mode?: Mode;
-  layout?: Layout;
-  theme?: Theme;
-  setLayout?: (layout: Layout) => void;
-  setTheme?: (theme: Theme) => void;
-  onWindowEvents?: {
-    minimize: () => void;
-    maximize: () => void;
-    close: () => void;
-  };
-  externalState: DesignEditorState | null;
-  externalDispatch: DesignEditorDispatcher | null;
-}
-
-const DesignEditorCore: FC<DesignEditorProps> = (props) => {
-  const { kit: kitProp, onToolbarChange, designId, onDesignIdChange, availableDesigns, onUndo: controlledOnUndo, onRedo: controlledOnRedo, externalState: externalState, externalDispatch: externalDispatch } = props;
-
-  const state = externalState!;
-  const dispatch = externalDispatch!;
-
-  const kit = kitProp || state.kit;
+const DesignEditorCore: FC<DesignEditorProps> = () => {
+  const { mode, layout, theme, setLayout, setTheme, availableDesigns, activeDesignId, setActiveDesignId, setNavbarToolbar, navbarToolbar, designEditorDispatch, designEditorState, kit } = useSketchpad();
+  const dispatch = designEditorDispatch!;
+  const state = designEditorState!;
   if (!kit) return null;
-  const design = findDesignInKit(kit, designId);
+  const design = findDesignInKit(kit, state.designId);
   if (!design) return null;
 
   const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
@@ -1410,8 +1247,8 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   const toggleDetails = useCallback(() => togglePanel("details"), []);
   const toggleChat = useCallback(() => togglePanel("chat"), []);
 
-  const onUndo = controlledOnUndo || (() => dispatch({ type: DesignEditorAction.Undo, payload: null }));
-  const onRedo = controlledOnRedo || (() => dispatch({ type: DesignEditorAction.Redo, payload: null }));
+  const onUndo = () => dispatch({ type: DesignEditorAction.Undo, payload: null });
+  const onRedo = () => dispatch({ type: DesignEditorAction.Redo, payload: null });
 
   // Presence functions using dispatch directly
   const stepIn = useCallback((presence: Presence) => dispatch({ type: DesignEditorAction.StepIn, payload: presence }), [dispatch]);
@@ -1514,9 +1351,9 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   );
 
   useEffect(() => {
-    onToolbarChange(designEditorToolbar);
-    return () => onToolbarChange(null);
-  }, [visiblePanels]);
+    setNavbarToolbar(designEditorToolbar);
+    return () => setNavbarToolbar(null);
+  }, [visiblePanels, setNavbarToolbar]);
 
   const { screenToFlowPosition } = useReactFlow();
   const [activeDraggedType, setActiveDraggedType] = useState<Type | null>(null);
@@ -1542,7 +1379,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
         return;
       }
 
-      const context = { kit: kit, designId, selection: state.selection };
+      const context = { kit: kit, designId: state.designId, selection: state.selection };
 
       // Editor-only commands can always execute, even during transactions
       if (command.editorOnly) {
@@ -1601,7 +1438,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
 
     document.addEventListener("semio-command", handleCommand);
     return () => document.removeEventListener("semio-command", handleCommand);
-  }, [kit, designId, state.selection, state.isTransactionActive, dispatch]);
+  }, [kit, state.designId, state.selection, state.isTransactionActive, dispatch]);
 
   // Register hotkeys for all commands automatically from the command registry
   const allCommands = commandRegistry.getAll();
@@ -1704,7 +1541,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
           x: event.activatorEvent.clientX + event.delta.x,
           y: event.activatorEvent.clientY + event.delta.y,
         });
-        const current = findDesignInKit(kit, designId);
+        const current = findDesignInKit(kit, state.designId);
         const newEntry = {
           designId: {
             name: activeDraggedDesign.name,
@@ -1758,15 +1595,19 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
       <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
         <div className="canvas flex-1 relative">
           <div id="sketchpad-edgeless" className="h-full">
-            <ResizablePanelGroup direction="horizontal">
-              <ResizablePanel defaultSize={state.fullscreenPanel === FullscreenPanel.Diagram ? 100 : 50} className={`${state.fullscreenPanel === FullscreenPanel.Model ? "hidden" : "block"}`} onDoubleClick={onDoubleClickDiagram}>
-                <Diagram />
-              </ResizablePanel>
-              <ResizableHandle className={`border-r ${state.fullscreenPanel !== FullscreenPanel.None ? "hidden" : "block"}`} />
-              <ResizablePanel defaultSize={state.fullscreenPanel === FullscreenPanel.Model ? 100 : 50} className={`${state.fullscreenPanel === FullscreenPanel.Diagram ? "hidden" : "block"}`} onDoubleClick={onDoubleClickModel}>
-                <Model />
-              </ResizablePanel>
-            </ResizablePanelGroup>
+            <KitScopeProvider name={kit.name} version={kit.version || ""}>
+              <DesignScopeProvider kitName={kit.name} kitVersion={kit.version || ""} name={state.designId.name} variant={state.designId.variant || ""} view={state.designId.view || ""}>
+                <ResizablePanelGroup direction="horizontal">
+                  <ResizablePanel defaultSize={state.fullscreenPanel === FullscreenPanel.Diagram ? 100 : 50} className={`${state.fullscreenPanel === FullscreenPanel.Model ? "hidden" : "block"}`} onDoubleClick={onDoubleClickDiagram}>
+                    <Diagram />
+                  </ResizablePanel>
+                  <ResizableHandle className={`border-r ${state.fullscreenPanel !== FullscreenPanel.None ? "hidden" : "block"}`} />
+                  <ResizablePanel defaultSize={state.fullscreenPanel === FullscreenPanel.Model ? 100 : 50} className={`${state.fullscreenPanel === FullscreenPanel.Diagram ? "hidden" : "block"}`} onDoubleClick={onDoubleClickModel}>
+                    <Model />
+                  </ResizablePanel>
+                </ResizablePanelGroup>
+              </DesignScopeProvider>
+            </KitScopeProvider>
           </div>
           <Workbench visible={visiblePanels.workbench} onWidthChange={setWorkbenchWidth} width={workbenchWidth} />
           <Details visible={visiblePanels.details} onWidthChange={setDetailsWidth} width={detailsWidth} />
@@ -1793,73 +1634,14 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   );
 };
 
-const DesignEditor: FC<DesignEditorProps> = ({
-  mode,
-  layout,
-  theme,
-  setLayout,
-  setTheme,
-  onWindowEvents,
-  designId,
-  onDesignIdChange,
-  availableDesigns,
-  kit,
-  selection,
-  initialKit,
-  initialSelection,
-  fileUrls,
-  onDesignChange,
-  onSelectionChange,
-  onUndo,
-  onRedo,
-  onToolbarChange,
-  externalState: state,
-  externalDispatch: dispatch,
-}) => {
-  const [toolbarContent, setToolbarContent] = useState<ReactNode>(null);
-
-  useEffect(() => {
-    onToolbarChange?.(toolbarContent);
-  }, [toolbarContent, onToolbarChange]);
-
+const DesignEditor: FC<DesignEditorProps> = () => {
+  const { mode, layout, theme, setLayout, setTheme, availableDesigns, activeDesignId, setActiveDesignId, navbarToolbar } = useSketchpad();
+  const onDesignIdChange = useCallback((d: DesignId) => setActiveDesignId(d), [setActiveDesignId]);
   return (
     <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
-      <Navbar
-        designId={designId}
-        onDesignIdChange={onDesignIdChange}
-        availableDesigns={availableDesigns}
-        mode={mode}
-        toolbarContent={toolbarContent}
-        layout={layout}
-        theme={theme}
-        setLayout={setLayout}
-        setTheme={setTheme}
-        onWindowEvents={onWindowEvents}
-      />
+      <Navbar designId={activeDesignId!} onDesignIdChange={onDesignIdChange} availableDesigns={availableDesigns} mode={mode} toolbarContent={navbarToolbar} layout={layout} theme={theme} setLayout={setLayout} setTheme={setTheme} />
       <ReactFlowProvider>
-        <DesignEditorCore
-          kit={kit}
-          designId={designId}
-          onDesignIdChange={onDesignIdChange}
-          availableDesigns={availableDesigns}
-          fileUrls={fileUrls}
-          selection={selection}
-          initialKit={initialKit}
-          initialSelection={initialSelection}
-          onDesignChange={onDesignChange}
-          onSelectionChange={onSelectionChange}
-          onUndo={onUndo}
-          onRedo={onRedo}
-          onToolbarChange={setToolbarContent}
-          mode={mode}
-          layout={layout}
-          theme={theme}
-          setLayout={setLayout}
-          setTheme={setTheme}
-          onWindowEvents={onWindowEvents}
-          externalState={state}
-          externalDispatch={dispatch}
-        />
+        <DesignEditorCore />
       </ReactFlowProvider>
     </div>
   );

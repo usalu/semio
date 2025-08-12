@@ -23,7 +23,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Mode, Sketchpad } from "@semio/js";
 
 const meta = {
-  title: "Studio/Sketchpad",
+  title: "Sketchpad",
   component: Sketchpad,
   parameters: {
     layout: "fullscreen",

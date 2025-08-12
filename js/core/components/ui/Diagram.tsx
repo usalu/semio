@@ -77,8 +77,8 @@ import {
 // import '@xyflow/react/dist/base.css';
 import "@semio/js/globals.css";
 import "@xyflow/react/dist/style.css";
+import { PieceScopeProvider, useDesign, useKit, useTypes } from "../../store";
 import { DesignEditorSelection, Presence, useDesignEditor } from "./DesignEditor";
-import { SketchpadAction, useSketchpad } from "./Sketchpad";
 
 //#region ClusterMenu
 
@@ -424,17 +424,19 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
   }
 
   return (
-    <div style={{ opacity }}>
-      <svg width={ICON_WIDTH} height={ICON_WIDTH} className="cursor-pointer">
-        <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
-        <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className="text-xs font-bold fill-dark">
-          {id_}
-        </text>
-      </svg>
-      {ports?.map((port: Port, portIndex: number) => (
-        <PortHandle key={`${id}-port-${portIndex}-${port.id_}`} port={port} pieceId={id_} selected={selection.selectedPiecePortId?.pieceId === id_ && selection.selectedPiecePortId?.portId === port.id_} onPortClick={onPortClick} />
-      ))}
-    </div>
+    <PieceScopeProvider id_={id_}>
+      <div style={{ opacity }}>
+        <svg width={ICON_WIDTH} height={ICON_WIDTH} className="cursor-pointer">
+          <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
+          <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className="text-xs font-bold fill-dark">
+            {id_}
+          </text>
+        </svg>
+        {ports?.map((port: Port, portIndex: number) => (
+          <PortHandle key={`${id}-port-${portIndex}-${port.id_}`} port={port} pieceId={id_} selected={selection.selectedPiecePortId?.pieceId === id_ && selection.selectedPiecePortId?.portId === port.id_} onPortClick={onPortClick} />
+        ))}
+      </div>
+    </PieceScopeProvider>
   );
 });
 
@@ -926,7 +928,6 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
 
 const Diagram: FC = () => {
   const {
-    kit: originalKit,
     designId,
     selection,
     designDiff,
@@ -947,22 +948,21 @@ const Diagram: FC = () => {
     addConnections,
     setConnections,
     setPieces,
+    executeCommand,
   } = useDesignEditor();
 
-  const { clusterDesign, expandDesign } = useSketchpad();
+  const kit = useKit();
+  const baseDesign = useDesign();
+  if (!kit || !baseDesign) return null;
+  const design = applyDesignDiff(baseDesign, designDiff, true);
 
-  if (!originalKit) return null;
-  const design = applyDesignDiff(findDesignInKit(originalKit, designId), designDiff, true);
-
-  // Apply port family unification to ensure compatible ports have the same color
-  const typesWithColoredPorts = useMemo(() => colorPortsForTypes(originalKit.types || []), [originalKit.types]);
-  const unifiedKit = useMemo(() => ({ ...originalKit, types: typesWithColoredPorts }), [originalKit, typesWithColoredPorts]);
-  const kit = useMemo(() => {
-    return updateDesignInKit(unifiedKit, design);
-  }, [unifiedKit, design]);
+  const types = useTypes();
+  const typesWithColoredPorts = useMemo(() => colorPortsForTypes(types || []), [types]);
+  const kitWithTypes = useMemo(() => ({ ...kit, types: typesWithColoredPorts }), [kit, typesWithColoredPorts]);
+  const unified = useMemo(() => updateDesignInKit(kitWithTypes, design), [kitWithTypes, design]);
 
   if (!design) return null;
-  const { nodes, edges } = designToNodesAndEdges(kit, designId, selection) ?? {
+  const { nodes, edges } = designToNodesAndEdges(unified, designId, selection) ?? {
     nodes: [],
     edges: [],
   };
@@ -1007,18 +1007,17 @@ const Diagram: FC = () => {
     if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) deselectAll();
   };
 
-  const { sketchpadState, sketchpadDispatch } = useSketchpad();
-
-  const onNodeDoubleClick = (e: React.MouseEvent, node: DiagramNode) => {
-    if (node.type === "design") {
-      e.stopPropagation();
-      const designName = (node.data.piece as Piece).type.variant;
-      if (!designName) return;
-      const target = (kit.designs || []).find((d) => d.name === designName) || ({ name: designName } as DesignId);
-      sketchpadDispatch({ type: SketchpadAction.ChangeActiveDesign, payload: target });
-      return;
-    }
-  };
+  // const { sketchpadState, sketchpadDispatch } = useSketchpad();
+  // const onNodeDoubleClick = (e: React.MouseEvent, node: DiagramNode) => {
+  //   if (node.type === "design") {
+  //     e.stopPropagation();
+  //     const designName = (node.data.piece as Piece).type.variant;
+  //     if (!designName) return;
+  //     const target = (kit.designs || []).find((d) => d.name === designName) || ({ name: designName } as DesignId);
+  //     sketchpadDispatch({ type: SketchpadAction.ChangeActiveDesign, payload: target });
+  //     return;
+  //   }
+  // };
 
   const onDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -1027,16 +1026,17 @@ const Diagram: FC = () => {
 
   const onCluster = useCallback(
     (clusterPieceIds: string[]) => {
-      clusterDesign();
+      // Optional: execute command if registered
+      executeCommand?.("cluster", { pieceIds: clusterPieceIds }).catch(() => {});
     },
-    [clusterDesign],
+    [executeCommand],
   );
 
   const onExpand = useCallback(
-    (designIdToExpand: DesignId) => {
-      expandDesign(designIdToExpand);
+    (target: DesignId) => {
+      executeCommand?.("expand", { designId: target }).catch(() => {});
     },
-    [expandDesign],
+    [executeCommand],
   );
 
   //#region Selection
@@ -1083,8 +1083,9 @@ const Diagram: FC = () => {
       let updatedConnections: ConnectionDiff[] = [];
 
       for (const selectedNode of nodes.filter((n) => selection?.selectedPieceIds.includes(getPieceIdFromNode(n)))) {
-        const piece = selectedNode.data.piece;
-        const type = selectedNode.data.type;
+        if (selectedNode.type !== "piece") continue;
+        const piece = (selectedNode as PieceNode).data.piece;
+        const type = (selectedNode as PieceNode).data.type;
         const fixedPieceId = metadata.get(piece.id_)!.fixedPieceId;
         let closestConnection: Connection | null = null;
         let closestDistance = Number.MAX_VALUE;
@@ -1525,6 +1526,7 @@ const Diagram: FC = () => {
         // Only check for automatic connections if Alt key is not pressed
         if (!altPressed) {
           for (const otherNode of nodes.filter((n) => !(selection.selectedPieceIds ?? []).includes(getPieceIdFromNode(n)))) {
+            if (otherNode.type !== "piece") continue;
             const existingConnection = design.connections?.find((c) =>
               isSameConnection(c, {
                 connected: { piece: { id_: selectedNode.data.piece.id_ } },
@@ -1536,7 +1538,7 @@ const Diagram: FC = () => {
             for (const handle of selectedInternalNode.internals.handleBounds?.source ?? []) {
               const port = findPortInType(type, { id_: handle.id! });
               for (const otherHandle of otherInternalNode.internals.handleBounds?.source ?? []) {
-                const otherPort = findPortInType(otherNode.data.type, {
+                const otherPort = findPortInType((otherNode as PieceNode).data.type, {
                   id_: otherHandle.id!,
                 });
                 const haveSameFixedPiece = fixedPieceId === metadata.get(otherNode.data.piece.id_)!.fixedPieceId;
@@ -1696,7 +1698,6 @@ const Diagram: FC = () => {
         panOnDrag={[0]}
         proOptions={{ hideAttribution: true }}
         onNodeClick={onNodeClick}
-        onNodeDoubleClick={onNodeDoubleClick}
         onEdgeClick={onEdgeClick}
         onNodeDragStart={onNodeDragStart}
         onNodeDrag={onNodeDrag}
