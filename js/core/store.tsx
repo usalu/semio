@@ -23,6 +23,7 @@ import { v4 as uuidv4 } from "uuid";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 import { UndoManager } from "yjs";
+import React, { createContext, useContext, useRef, useSyncExternalStore } from "react";
 // Import initSqlJs
 import type { Database, SqlJsStatic, SqlValue } from "sql.js";
 import initSqlJs from "sql.js";
@@ -218,7 +219,7 @@ export class SketchpadStore {
   private undoManager: UndoManager;
   private designEditors: Map<string, { yKit: YKit; yDesign: YDesign; undoManager: UndoManager; state: DesignEditorState; listeners: Set<() => void> }>
     = new Map();
-  private indexeddbProvider: IndexeddbPersistence;
+  private indexeddbProvider?: IndexeddbPersistence;
   private listeners: Set<() => void> = new Set();
   private fileUrls: Map<string, string> = new Map();
 
@@ -228,10 +229,10 @@ export class SketchpadStore {
     design: (name: string, variant?: string, view?: string) => `${name}::${variant || ""}::${view || ""}`,
   };
 
-  constructor(userId?: string) {
+  constructor(userId?: string, persistId?: string) {
     this.userId = userId || uuidv4();
     this.yDoc = new Y.Doc();
-    this.indexeddbProvider = new IndexeddbPersistence("semio-sketchpad", this.yDoc);
+    if (persistId) this.indexeddbProvider = new IndexeddbPersistence(`semio-sketchpad:${persistId}`, this.yDoc);
     this.yDoc.getMap<YKit>("kits");
     this.yDoc.getMap<string>("kitIds");
     this.yDoc.getMap<Uint8Array>("files");
@@ -257,6 +258,10 @@ export class SketchpadStore {
     const yKit = kits.get(kitUuid) as YKit | undefined;
     if (!yKit) throw new Error(`Kit (${kitUuid}) not found`);
     return yKit;
+  }
+
+  private getYTypes(kitName: string, kitVersion: string): YTypeMap {
+    return gKit(this.getYKit(kitName, kitVersion), "types");
   }
 
   private getTypeUuid(kitName: string, kitVersion: string, typeName: string, typeVariant: string): string | undefined {
@@ -287,6 +292,123 @@ export class SketchpadStore {
     const yDesign = uuid ? (designs.get(uuid) as YDesign | undefined) : undefined;
     if (!yDesign) throw new Error(`Design (${designName}, ${designVariant || ""}, ${designView || ""}) not found in kit (${kitName}, ${kitVersion})`);
     return yDesign;
+  }
+
+  private getYDesigns(kitName: string, kitVersion: string): YDesignMap {
+    return gKit(this.getYKit(kitName, kitVersion), "designs");
+  }
+
+  private getYPiece(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, pieceId: string): YPiece {
+    const yDesign = this.getYDesign(kitName, kitVersion, designName, designVariant, designView);
+    const yPieces = gDesign(yDesign, "pieces");
+    const yPiece = yPieces.get(pieceId);
+    if (!yPiece) throw new Error(`Piece (${pieceId}) not found`);
+    return yPiece;
+  }
+
+  private getYConnection(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, connectedPieceId: string, connectingPieceId: string): YConnection {
+    const yDesign = this.getYDesign(kitName, kitVersion, designName, designVariant, designView);
+    const yConnections = gDesign(yDesign, "connections");
+    const yConn = yConnections.get(`${connectedPieceId}--${connectingPieceId}`);
+    if (!yConn) throw new Error("Connection not found");
+    return yConn;
+  }
+
+  private getYPorts(kitName: string, kitVersion: string, typeName: string, typeVariant: string): YPortMap {
+    return gType(this.getYType(kitName, kitVersion, typeName, typeVariant), "ports");
+  }
+
+  private getYPort(kitName: string, kitVersion: string, typeName: string, typeVariant: string, portId: string): YPort {
+    const yPort = this.getYPorts(kitName, kitVersion, typeName, typeVariant).get(portId);
+    if (!yPort) throw new Error("Port not found");
+    return yPort;
+  }
+
+  private getYRepresentations(kitName: string, kitVersion: string, typeName: string, typeVariant: string): YRepresentationMap {
+    return gType(this.getYType(kitName, kitVersion, typeName, typeVariant), "representations");
+  }
+
+  private getYRepresentation(kitName: string, kitVersion: string, typeName: string, typeVariant: string, tags: string[]): YRepresentation {
+    const rep = this.getYRepresentations(kitName, kitVersion, typeName, typeVariant).get(`${tags?.join(",") || ""}`);
+    if (!rep) throw new Error("Representation not found");
+    return rep;
+  }
+
+  private observeAny(y: Y.AbstractType<any>, callback: () => void): () => void {
+    const obs = () => callback();
+    (y as any).observeDeep(obs);
+    return () => (y as any).unobserveDeep(obs);
+  }
+
+  observeKitIds(callback: () => void): () => void {
+    const a = this.observeAny(this.yDoc.getMap<string>("kitIds") as unknown as Y.AbstractType<any>, callback);
+    const b = this.observeAny(this.yDoc.getMap<YKit>("kits") as unknown as Y.AbstractType<any>, callback);
+    return () => { a(); b(); };
+  }
+
+  observeKit(kitName: string, kitVersion: string, callback: () => void): () => void {
+    const yKit = this.getYKit(kitName, kitVersion);
+    return this.observeAny(yKit as unknown as Y.AbstractType<any>, callback);
+  }
+
+  observeTypes(kitName: string, kitVersion: string, callback: () => void): () => void {
+    const yTypes = this.getYTypes(kitName, kitVersion);
+    return this.observeAny(yTypes as unknown as Y.AbstractType<any>, callback);
+  }
+
+  observeType(kitName: string, kitVersion: string, typeName: string, typeVariant: string, callback: () => void): () => void {
+    const yType = this.getYType(kitName, kitVersion, typeName, typeVariant);
+    return this.observeAny(yType as unknown as Y.AbstractType<any>, callback);
+  }
+
+  observeDesigns(kitName: string, kitVersion: string, callback: () => void): () => void {
+    const yDesigns = this.getYDesigns(kitName, kitVersion);
+    return this.observeAny(yDesigns as unknown as Y.AbstractType<any>, callback);
+  }
+
+  observeDesign(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, callback: () => void): () => void {
+    const yDesign = this.getYDesign(kitName, kitVersion, designName, designVariant, designView);
+    return this.observeAny(yDesign as unknown as Y.AbstractType<any>, callback);
+  }
+
+  observePieces(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, callback: () => void): () => void {
+    const yDesign = this.getYDesign(kitName, kitVersion, designName, designVariant, designView);
+    return this.observeAny(gDesign(yDesign, "pieces") as unknown as Y.AbstractType<any>, callback);
+  }
+
+  observePiece(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, pieceId: string, callback: () => void): () => void {
+    const yPiece = this.getYPiece(kitName, kitVersion, designName, designVariant, designView, pieceId);
+    return this.observeAny(yPiece as unknown as Y.AbstractType<any>, callback);
+  }
+
+  observeConnections(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, callback: () => void): () => void {
+    const yDesign = this.getYDesign(kitName, kitVersion, designName, designVariant, designView);
+    return this.observeAny(gDesign(yDesign, "connections") as unknown as Y.AbstractType<any>, callback);
+  }
+
+  observeConnection(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, connectedPieceId: string, connectingPieceId: string, callback: () => void): () => void {
+    const yConn = this.getYConnection(kitName, kitVersion, designName, designVariant, designView, connectedPieceId, connectingPieceId);
+    return this.observeAny(yConn as unknown as Y.AbstractType<any>, callback);
+  }
+
+  observePorts(kitName: string, kitVersion: string, typeName: string, typeVariant: string, callback: () => void): () => void {
+    const yPorts = this.getYPorts(kitName, kitVersion, typeName, typeVariant);
+    return this.observeAny(yPorts as unknown as Y.AbstractType<any>, callback);
+  }
+
+  observePort(kitName: string, kitVersion: string, typeName: string, typeVariant: string, portId: string, callback: () => void): () => void {
+    const yPort = this.getYPort(kitName, kitVersion, typeName, typeVariant, portId);
+    return this.observeAny(yPort as unknown as Y.AbstractType<any>, callback);
+  }
+
+  observeRepresentations(kitName: string, kitVersion: string, typeName: string, typeVariant: string, callback: () => void): () => void {
+    const yReps = this.getYRepresentations(kitName, kitVersion, typeName, typeVariant);
+    return this.observeAny(yReps as unknown as Y.AbstractType<any>, callback);
+  }
+
+  observeRepresentation(kitName: string, kitVersion: string, typeName: string, typeVariant: string, tags: string[], callback: () => void): () => void {
+    const yRep = this.getYRepresentation(kitName, kitVersion, typeName, typeVariant, tags);
+    return this.observeAny(yRep as unknown as Y.AbstractType<any>, callback);
   }
 
   private createAuthor(author: Author): YAuthor {
@@ -1819,4 +1941,133 @@ export class SketchpadStore {
     }
   }
 
+}
+
+const __defaultStore = new SketchpadStore();
+const __storeRegistry = new Map<string, SketchpadStore>();
+const SketchpadContext = createContext<SketchpadStore>(__defaultStore);
+
+export function SketchpadProvider(props: { id?: string; children: React.ReactNode }) {
+  const ref = useRef<SketchpadStore | null>(null);
+  if (!ref.current) ref.current = props.id ? (__storeRegistry.get(props.id) || new SketchpadStore(undefined, props.id)) : new SketchpadStore();
+  if (props.id && !__storeRegistry.has(props.id)) __storeRegistry.set(props.id, ref.current);
+  return React.createElement(SketchpadContext.Provider, { value: ref.current! }, props.children as any);
+}
+
+export function useSketchpadStore(id?: string) {
+  const ctx = useContext(SketchpadContext);
+  const ref = useRef<SketchpadStore | null>(null);
+  if (!id) return ctx || __defaultStore;
+  if (!ref.current) ref.current = __storeRegistry.get(id) || new SketchpadStore(undefined, id);
+  if (!__storeRegistry.has(id)) __storeRegistry.set(id, ref.current);
+  return ref.current;
+}
+
+export function useKits(id?: string) {
+  const store = useSketchpadStore(id);
+  return useSyncExternalStore(
+    (l) => store.observeKitIds(l),
+    () => store.getKits(),
+  );
+}
+
+export function useKit(name: string, version: string = "", id?: string) {
+  const store = useSketchpadStore(id);
+  return useSyncExternalStore(
+    (l) => {
+      let unsubs: Array<() => void> = [];
+      try { unsubs.push(store.observeKit(name, version, l)); } catch {}
+      unsubs.push(store.observeKitIds(l));
+      return () => unsubs.forEach((u) => u());
+    },
+    () => { try { return store.getKit(name, version); } catch { return null as any; } },
+  );
+}
+
+export function useTypes(kitName: string, version: string = "", id?: string) {
+  const store = useSketchpadStore(id);
+  return useSyncExternalStore(
+    (l) => store.observeTypes(kitName, version, l),
+    () => { try { return store.getTypes(kitName, version); } catch { return [] as any; } },
+  );
+}
+
+export function useType(kitName: string, version: string = "", typeName: string, typeVariant: string = "", id?: string) {
+  const store = useSketchpadStore(id);
+  return useSyncExternalStore(
+    (l) => store.observeType(kitName, version, typeName, typeVariant, l),
+    () => { try { return store.getType(kitName, version, typeName, typeVariant); } catch { return null as any; } },
+  );
+}
+
+export function useDesigns(kitName: string, version: string = "", id?: string) {
+  const store = useSketchpadStore(id);
+  return useSyncExternalStore(
+    (l) => store.observeDesigns(kitName, version, l),
+    () => { try { return store.getDesigns(kitName, version); } catch { return [] as any; } },
+  );
+}
+
+export function useDesign(kitName: string, version: string = "", designName: string, designVariant: string = "", view: string = "", id?: string) {
+  const store = useSketchpadStore(id);
+  return useSyncExternalStore(
+    (l) => store.observeDesign(kitName, version, designName, designVariant, view, l),
+    () => { try { return store.getDesign(kitName, version, designName, designVariant, view); } catch { return null as any; } },
+  );
+}
+
+export function usePieces(kitName: string, version: string = "", designName: string, designVariant: string = "", view: string = "", id?: string) {
+  const store = useSketchpadStore(id);
+  return useSyncExternalStore(
+    (l) => store.observePieces(kitName, version, designName, designVariant, view, l),
+    () => { try { return store.getPieces(kitName, version, designName, designVariant, view); } catch { return [] as any; } },
+  );
+}
+
+export function usePiece(kitName: string, version: string = "", designName: string, designVariant: string = "", view: string = "", pieceId: string, id?: string) {
+  const store = useSketchpadStore(id);
+  return useSyncExternalStore(
+    (l) => store.observePiece(kitName, version, designName, designVariant, view, pieceId, l),
+    () => { try { return store.getPiece(kitName, version, designName, designVariant, view, pieceId); } catch { return null as any; } },
+  );
+}
+
+export function useConnections(kitName: string, version: string = "", designName: string, designVariant: string = "", view: string = "", id?: string) {
+  const store = useSketchpadStore(id);
+  return useSyncExternalStore(
+    (l) => store.observeConnections(kitName, version, designName, designVariant, view, l),
+    () => { try { return store.getConnections(kitName, version, designName, designVariant, view); } catch { return [] as any; } },
+  );
+}
+
+export function usePorts(kitName: string, version: string = "", typeName: string, typeVariant: string = "", id?: string) {
+  const store = useSketchpadStore(id);
+  return useSyncExternalStore(
+    (l) => store.observePorts(kitName, version, typeName, typeVariant, l),
+    () => { try { return store.getPorts(kitName, version, typeName, typeVariant); } catch { return [] as any; } },
+  );
+}
+
+export function usePort(kitName: string, version: string = "", typeName: string, typeVariant: string = "", portId: string, id?: string) {
+  const store = useSketchpadStore(id);
+  return useSyncExternalStore(
+    (l) => store.observePort(kitName, version, typeName, typeVariant, portId, l),
+    () => { try { return store.getPort(kitName, version, typeName, typeVariant, portId); } catch { return null as any; } },
+  );
+}
+
+export function useRepresentations(kitName: string, version: string = "", typeName: string, typeVariant: string = "", id?: string) {
+  const store = useSketchpadStore(id);
+  return useSyncExternalStore(
+    (l) => store.observeRepresentations(kitName, version, typeName, typeVariant, l),
+    () => { try { return store.getRepresentations(kitName, version, typeName, typeVariant); } catch { return [] as any; } },
+  );
+}
+
+export function useRepresentation(kitName: string, version: string = "", typeName: string, typeVariant: string = "", tags: string[], id?: string) {
+  const store = useSketchpadStore(id);
+  return useSyncExternalStore(
+    (l) => store.observeRepresentation(kitName, version, typeName, typeVariant, tags, l),
+    () => { try { return store.getRepresentation(kitName, version, typeName, typeVariant, tags); } catch { return null as any; } },
+  );
 }
