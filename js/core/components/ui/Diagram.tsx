@@ -184,20 +184,20 @@ const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, selection, onCluster 
 
 //#endregion
 
-//#region ExpandMenu
+//#region ExplodeMenu
 
-type ExpandMenuProps = {
+type ExplodeMenuProps = {
   nodes: DiagramNode[];
   edges: DiagramEdge[];
   selection: DesignEditorSelection;
-  onExpand: (designId: DesignId) => void;
+  onExplode: (designId: DesignId) => void;
 };
 
-const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, selection, onExpand }) => {
+const ExplodeMenu: FC<ExplodeMenuProps> = ({ nodes, edges, selection, onExplode }) => {
   const { kit, designId } = useDesignEditor();
 
-  // Find selected design nodes that can be expanded
-  const expandableDesignNodes = useMemo(() => {
+  // Find selected design nodes that can be explodeed
+  const explodeableDesignNodes = useMemo(() => {
     return nodes.filter((node) => {
       // Must be a design node
       if (node.type !== "design") return false;
@@ -234,19 +234,19 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, selection, onExpand }) 
     };
   }, []);
 
-  if (expandableDesignNodes.length === 0) {
+  if (explodeableDesignNodes.length === 0) {
     return null;
   }
 
   return (
     <ViewportPortal>
-      {expandableDesignNodes.map((node) => {
+      {explodeableDesignNodes.map((node) => {
         const boundingBox = getBoundingBoxForNode(node);
         const designName = (node.data.piece as Piece).type.variant!;
 
         return (
           <div
-            key={`expand-design-${designName}`}
+            key={`explode-design-${designName}`}
             className="absolute pointer-events-none"
             style={{
               left: boundingBox.x,
@@ -258,10 +258,10 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, selection, onExpand }) 
             {/* Bounding rectangle */}
             <div className="absolute inset-0 border-2 border-dashed border-secondary/50 rounded-md" style={{ pointerEvents: "none" }} />
 
-            {/* Expand button positioned at top-right of bounding box */}
+            {/* Explode button positioned at top-right of bounding box */}
             <div className="absolute -top-10 -right-2 pointer-events-auto">
-              <button onClick={() => onExpand({ name: designName })} className="bg-secondary text-secondary-foreground px-3 py-1 rounded-md text-sm font-medium shadow-md hover:bg-secondary/90 transition-colors">
-                Expand
+              <button onClick={() => onExplode({ name: designName })} className="bg-secondary text-secondary-foreground px-3 py-1 rounded-md text-sm font-medium shadow-md hover:bg-secondary/90 transition-colors">
+                Explode
               </button>
             </div>
           </div>
@@ -949,7 +949,7 @@ const Diagram: FC = () => {
     setPieces,
   } = useDesignEditor();
 
-  const { clusterDesign, expandDesign } = useSketchpad();
+  const { clusterDesign, explodeDesign } = useSketchpad();
 
   if (!originalKit) return null;
   const design = applyDesignDiff(findDesignInKit(originalKit, designId), designDiff, true);
@@ -1032,11 +1032,11 @@ const Diagram: FC = () => {
     [clusterDesign],
   );
 
-  const onExpand = useCallback(
-    (designIdToExpand: DesignId) => {
-      expandDesign(designIdToExpand);
+  const onExplode = useCallback(
+    (designIdToExplode: DesignId) => {
+      explodeDesign(designIdToExplode);
     },
-    [expandDesign],
+    [explodeDesign],
   );
 
   //#region Selection
@@ -1716,7 +1716,7 @@ const Diagram: FC = () => {
       </ReactFlow>
       <HelperLines lines={helperLines} nodes={nodes} />
       <ClusterMenu nodes={nodes} edges={edges} selection={selection} onCluster={onCluster} />
-      <ExpandMenu nodes={nodes} edges={edges} selection={selection} onExpand={onExpand} />
+      <ExplodeMenu nodes={nodes} edges={edges} selection={selection} onExplode={onExplode} />
     </div>
   );
 };

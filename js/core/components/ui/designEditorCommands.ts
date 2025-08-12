@@ -1589,43 +1589,43 @@ ${typesList}`,
 
   // === EXPAND COMMAND ===
   {
-    id: "expand-design",
-    name: "Expand Design",
+    id: "explode-design",
+    name: "Explode Design",
     icon: "📤",
-    description: "Expand a selected clustered design back into its constituent pieces",
+    description: "Explode a selected clustered design back into its constituent pieces",
     parameters: [],
     execute: async (context, payload) => {
-      const { kit, designId, selection, expandDesign } = context;
+      const { kit, designId, selection, explodeDesign } = context;
 
       // Find selected design nodes
       const selectedDesignPieceIds = selection.selectedPieceIds.filter((id) => id.startsWith("design-"));
 
       if (selectedDesignPieceIds.length === 0) {
-        return { content: `⚠️ No clustered design selected to expand` };
+        return { content: `⚠️ No clustered design selected to explode` };
       }
 
       if (selectedDesignPieceIds.length > 1) {
-        return { content: `⚠️ Please select only one clustered design to expand` };
+        return { content: `⚠️ Please select only one clustered design to explode` };
       }
 
       // Extract design name from the selected design piece ID
       const designPieceId = selectedDesignPieceIds[0];
-      const designNameToExpand = designPieceId.replace("design-", "");
+      const designNameToExplode = designPieceId.replace("design-", "");
 
       // Check if the design exists in the kit
-      const designToExpand = kit.designs?.find((d) => d.name === designNameToExpand);
-      if (!designToExpand) {
-        return { content: `⚠️ Design "${designNameToExpand}" not found in kit` };
+      const designToExplode = kit.designs?.find((d) => d.name === designNameToExplode);
+      if (!designToExplode) {
+        return { content: `⚠️ Design "${designNameToExplode}" not found in kit` };
       }
 
-      // Call the Sketchpad expandDesign action
-      if (expandDesign) {
-        expandDesign({ name: designNameToExpand });
+      // Call the Sketchpad explodeDesign action
+      if (explodeDesign) {
+        explodeDesign({ name: designNameToExplode });
         return {
-          content: `✅ Expanding design "${designNameToExpand}" back into constituent pieces`,
+          content: `✅ Explodeing design "${designNameToExplode}" back into constituent pieces`,
         };
       } else {
-        return { content: `❌ Expand design action not available` };
+        return { content: `❌ Explode design action not available` };
       }
     },
   },

@@ -138,7 +138,7 @@ enum SketchpadAction {
   AddDesign = "ADD_DESIGN",
   UpdateDesign = "UPDATE_DESIGN",
   ClusterDesign = "CLUSTER_DESIGN",
-  ExpandDesign = "EXPAND_DESIGN",
+  explodeDesign = "EXPAND_DESIGN",
 }
 
 type SketchpadActionType =
@@ -171,7 +171,7 @@ type SketchpadActionType =
       payload: null;
     }
   | {
-      type: SketchpadAction.ExpandDesign;
+      type: SketchpadAction.explodeDesign;
       payload: DesignId;
     };
 
@@ -546,29 +546,29 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
       console.log("Clustered design created:", processedClusteredDesign.name);
       break;
 
-    case SketchpadAction.ExpandDesign:
+    case SketchpadAction.explodeDesign:
       if (!state.kit) {
-        console.error("Cannot expand design: kit is null");
+        console.error("Cannot explode design: kit is null");
         newState = state;
         break;
       }
 
-      const designToExpandId = action.payload;
-      let designToExpand: Design;
+      const designToExplodeId = action.payload;
+      let designToExplode: Design;
       try {
-        designToExpand = findDesignInKit(state.kit, designToExpandId);
+        designToExplode = findDesignInKit(state.kit, designToExplodeId);
       } catch (error) {
-        console.error("Design to expand not found in kit:", error);
+        console.error("Design to explode not found in kit:", error);
         newState = state;
         break;
       }
 
-      // Find all designs that have connections referencing the design to expand
+      // Find all designs that have connections referencing the design to explode
       const affectedDesigns: Design[] = [];
       for (const design of state.kit.designs || []) {
-        if (design.name === designToExpand.name) continue; // Skip the design itself
+        if (design.name === designToExplode.name) continue; // Skip the design itself
 
-        const hasExternalConnections = (design.connections || []).some((connection: Connection) => connection.connected.designId === designToExpand.name || connection.connecting.designId === designToExpand.name);
+        const hasExternalConnections = (design.connections || []).some((connection: Connection) => connection.connected.designId === designToExplode.name || connection.connecting.designId === designToExplode.name);
 
         if (hasExternalConnections) {
           affectedDesigns.push(design);
@@ -581,26 +581,26 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
         break;
       }
 
-      // Update all affected designs to remove designId references to the expanded design
+      // Update all affected designs to remove designId references to the explodeed design
       const updatedAffectedDesigns: Design[] = affectedDesigns.map((affectedDesign) => {
-        // Get all connections that reference the design to expand
-        const externalConnections = (affectedDesign.connections || []).filter((connection: Connection) => connection.connected.designId === designToExpand.name || connection.connecting.designId === designToExpand.name);
+        // Get all connections that reference the design to explode
+        const externalConnections = (affectedDesign.connections || []).filter((connection: Connection) => connection.connected.designId === designToExplode.name || connection.connecting.designId === designToExplode.name);
 
-        // Get all internal connections (not referencing the design to expand)
-        const internalConnections = (affectedDesign.connections || []).filter((connection: Connection) => connection.connected.designId !== designToExpand.name && connection.connecting.designId !== designToExpand.name);
+        // Get all internal connections (not referencing the design to explode)
+        const internalConnections = (affectedDesign.connections || []).filter((connection: Connection) => connection.connected.designId !== designToExplode.name && connection.connecting.designId !== designToExplode.name);
 
         // Remove designId from external connections to restore them as regular connections
         const restoredConnections = externalConnections.map((connection: Connection) => {
           const updatedConnection = { ...connection };
 
-          if (connection.connected.designId === designToExpand.name) {
+          if (connection.connected.designId === designToExplode.name) {
             updatedConnection.connected = {
               ...connection.connected,
               designId: undefined,
             };
           }
 
-          if (connection.connecting.designId === designToExpand.name) {
+          if (connection.connecting.designId === designToExplode.name) {
             updatedConnection.connecting = {
               ...connection.connecting,
               designId: undefined,
@@ -617,34 +617,34 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
         };
       });
 
-      // For simplicity, expand into the first affected design (typically the original design that was clustered)
+      // For simplicity, explode into the first affected design (typically the original design that was clustered)
       const targetDesign = updatedAffectedDesigns[0];
 
-      // Combine all pieces from the target design and the design to expand
-      const combinedPieces = [...(targetDesign.pieces || []), ...(designToExpand.pieces || [])];
+      // Combine all pieces from the target design and the design to explode
+      const combinedPieces = [...(targetDesign.pieces || []), ...(designToExplode.pieces || [])];
 
-      // Combine all connections: target design connections and connections from the expanded design
-      const combinedConnections = [...(targetDesign.connections || []), ...(designToExpand.connections || [])];
+      // Combine all connections: target design connections and connections from the explodeed design
+      const combinedConnections = [...(targetDesign.connections || []), ...(designToExplode.connections || [])];
 
-      // Create the updated target design with expanded content
-      const expandedTargetDesign: Design = {
+      // Create the updated target design with explodeed content
+      const explodeedTargetDesign: Design = {
         ...targetDesign,
         pieces: combinedPieces,
         connections: combinedConnections,
         updated: new Date(),
       };
 
-      // Remove the design to expand from the kit
-      const kitWithoutExpandedDesign: Kit = {
+      // Remove the design to explode from the kit
+      const kitWithoutexplodedDesign: Kit = {
         ...state.kit!,
-        designs: (state.kit!.designs || []).filter((design) => design.name !== designToExpand.name),
+        designs: (state.kit!.designs || []).filter((design) => design.name !== designToExplode.name),
       };
 
       // Update all affected designs in the kit
-      let finalKitAfterExpansion = kitWithoutExpandedDesign;
+      let finalKitAfterExpansion = kitWithoutexplodedDesign;
 
-      // Update the target design with expanded content
-      finalKitAfterExpansion = updateDesignInKit(finalKitAfterExpansion, expandedTargetDesign);
+      // Update the target design with explodeed content
+      finalKitAfterExpansion = updateDesignInKit(finalKitAfterExpansion, explodeedTargetDesign);
 
       // Update other affected designs (excluding the target design which was already updated)
       for (let i = 1; i < updatedAffectedDesigns.length; i++) {
@@ -652,14 +652,14 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
         finalKitAfterExpansion = updateDesignInKit(finalKitAfterExpansion, affectedDesign);
       }
 
-      // Remove the DesignEditorCoreState for the expanded design
-      const expandedDesignStateIndex = state.designEditorCoreStates.findIndex(
-        (designState) => designState.designId.name === designToExpand.name && designState.designId.variant === designToExpand.variant && designState.designId.view === designToExpand.view,
+      // Remove the DesignEditorCoreState for the explodeed design
+      const explodedDesignStateIndex = state.designEditorCoreStates.findIndex(
+        (designState) => designState.designId.name === designToExplode.name && designState.designId.variant === designToExplode.variant && designState.designId.view === designToExplode.view,
       );
 
       let updatedDesignStatesAfterExpansion = [...state.designEditorCoreStates];
-      if (expandedDesignStateIndex !== -1) {
-        updatedDesignStatesAfterExpansion.splice(expandedDesignStateIndex, 1);
+      if (explodedDesignStateIndex !== -1) {
+        updatedDesignStatesAfterExpansion.splice(explodedDesignStateIndex, 1);
       }
 
       // Update the target design's editor state
@@ -682,7 +682,7 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
 
       // Adjust activeDesign index if necessary
       let newActiveDesign = state.activeDesign;
-      if (expandedDesignStateIndex !== -1 && expandedDesignStateIndex <= state.activeDesign) {
+      if (explodedDesignStateIndex !== -1 && explodedDesignStateIndex <= state.activeDesign) {
         newActiveDesign = Math.max(0, state.activeDesign - 1);
       }
 
@@ -693,7 +693,7 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
         activeDesign: newActiveDesign,
       };
 
-      console.log("Design expanded:", designToExpand.name, "into", targetDesign.name);
+      console.log("Design explodeed:", designToExplode.name, "into", targetDesign.name);
       break;
 
     default:
@@ -747,7 +747,7 @@ interface SketchpadContextType {
   addDesign: (design: Design) => void;
   updateDesign: (design: Design) => void;
   clusterDesign: () => void;
-  expandDesign: (designId: DesignId) => void;
+  explodeDesign: (designId: DesignId) => void;
   previousDesign: () => void;
 }
 
@@ -865,9 +865,9 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
     });
   };
 
-  const expandDesign = (designId: DesignId) => {
+  const explodeDesign = (designId: DesignId) => {
     sketchpadDispatch({
-      type: SketchpadAction.ExpandDesign,
+      type: SketchpadAction.explodeDesign,
       payload: designId,
     });
   };
@@ -917,7 +917,7 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
           addDesign: addDesign,
           updateDesign: updateDesign,
           clusterDesign: clusterDesign,
-          expandDesign: expandDesign,
+          explodeDesign: explodeDesign,
           previousDesign: previousDesign,
         }}
       >

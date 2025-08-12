@@ -681,7 +681,11 @@ export const toSemioRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0
 export const toThreeQuaternion = (): THREE.Quaternion => new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476);
 export const toSemioQuaternion = (): THREE.Quaternion => new THREE.Quaternion(0.7071067811865476, 0, 0, -0.7071067811865476);
 
-export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
+export const planeToMatrix = (plane: Plane | null | undefined): THREE.Matrix4 => {
+  if (!plane) {
+    console.warn("planeToMatrix called with null/undefined plane, returning identity matrix");
+    return new THREE.Matrix4().identity();
+  }
   const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
   const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z);
   const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z);
@@ -1451,9 +1455,9 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
   }
   const types = kit.types ?? [];
 
-  let expandedDesign = expandDesignPieces(design, kit);
+  let explodedDesign = explodeDesignPieces(design, kit);
 
-  if (!expandedDesign.pieces || expandedDesign.pieces.length === 0) return expandedDesign;
+  if (!explodedDesign.pieces || explodedDesign.pieces.length === 0) return explodedDesign;
 
   const typesDict: { [key: string]: { [key: string]: Type } } = {};
   types.forEach((t) => {
@@ -1468,7 +1472,7 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
     return portId?.id_ ? type.ports.find((p) => p.id_ === portId.id_) : type.ports[0];
   };
 
-  const flatDesign: Design = JSON.parse(JSON.stringify(expandedDesign));
+  const flatDesign: Design = JSON.parse(JSON.stringify(explodedDesign));
   if (!flatDesign.pieces) flatDesign.pieces = [];
 
   const piecePlanes: { [pieceId: string]: Plane } = {};
@@ -1529,10 +1533,20 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
     }
 
     piecePlanes[rootPiece.id_] = rootPlane;
-    const rootPieceIndex = flatDesign.pieces!.findIndex((p) => p.id_ === rootPiece.id_);
+    const rootPieceIndex = flatDesign.pieces!.findIndex((p: Piece) => p.id_ === rootPiece.id_);
     if (rootPieceIndex !== -1) {
       flatDesign.pieces![rootPieceIndex].plane = rootPlane;
+      // Ensure root piece has center coordinates
+      if (!flatDesign.pieces![rootPieceIndex].center) {
+        flatDesign.pieces![rootPieceIndex].center = { x: 0, y: 0 };
+      }
     }
+
+    // Update pieceMap with center coordinates for the root piece
+    pieceMap[rootNode.id()] = {
+      ...pieceMap[rootNode.id()],
+      center: pieceMap[rootNode.id()].center || { x: 0, y: 0 },
+    };
 
     const bfs = cy.elements().bfs({
       roots: `#${rootNode.id()}`,
@@ -1572,8 +1586,8 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
           z: 0,
         }).normalize();
         const childCenter = {
-          x: round(parentPiece.center!.x + (connection.x ?? 0) + direction.x),
-          y: round(parentPiece.center!.y + (connection.y ?? 0) + direction.y),
+          x: round((parentPiece.center?.x ?? 0) + (connection.x ?? 0) + direction.x),
+          y: round((parentPiece.center?.y ?? 0) + (connection.y ?? 0) + direction.y),
         };
 
         const flatChildPiece: Piece = setQualities(
@@ -1602,7 +1616,20 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
       directed: false,
     });
   });
-  flatDesign.pieces = flatDesign.pieces?.map((p) => pieceMap[p.id_ ?? ""]);
+  flatDesign.pieces = flatDesign.pieces?.map((p: Piece) => {
+    const updatedPiece = pieceMap[p.id_ ?? ""];
+    // Ensure all pieces have a plane - if not, give them an identity plane
+    if (!updatedPiece?.plane) {
+      const identityMatrix = new THREE.Matrix4().identity();
+      const identityPlane = matrixToPlane(identityMatrix);
+      return {
+        ...updatedPiece,
+        plane: identityPlane,
+        center: updatedPiece?.center || { x: 0, y: 0 },
+      };
+    }
+    return updatedPiece;
+  });
   flatDesign.connections = [];
   return flatDesign;
 };
@@ -1618,7 +1645,7 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
  * @param designName - Name for the new design
  * @returns Object containing the clustered design and external connections
  */
-export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: string[], designName: string): { clusteredDesign: Design; externalConnections: Connection[] } => {
+export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: string[], designName: string, kit?: Kit): { clusteredDesign: Design; externalConnections: Connection[] } => {
   // Validate inputs
   if (!originalDesign.pieces || originalDesign.pieces.length === 0) {
     throw new Error("Original design has no pieces to cluster");
@@ -1627,18 +1654,38 @@ export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: s
     throw new Error("No piece IDs provided for clustering");
   }
 
-  // Extract clustered pieces and their connections
-  const clusteredPieces = (originalDesign.pieces || []).filter((piece) => clusterPieceIds.includes(piece.id_));
+  // If kit is provided, first flatten the original design to ensure all pieces have proper coordinates
+  let sourceDesign = originalDesign;
+  if (kit) {
+    try {
+      sourceDesign = flattenDesign(kit, originalDesign);
+    } catch (error) {
+      console.warn("Could not flatten design for clustering, using original design:", error);
+    }
+  }
+
+  // Extract clustered pieces and their connections, ensuring they have center and plane coordinates
+  const clusteredPieces = (sourceDesign.pieces || [])
+    .filter((piece: Piece) => clusterPieceIds.includes(piece.id_))
+    .map((piece: Piece) => {
+      const identityMatrix = new THREE.Matrix4().identity();
+      const identityPlane = matrixToPlane(identityMatrix);
+      return {
+        ...piece,
+        center: piece.center || { x: 0, y: 0 },
+        plane: piece.plane || identityPlane,
+      };
+    });
 
   if (clusteredPieces.length === 0) {
     throw new Error("No pieces found matching the provided IDs");
   }
 
   // Find internal connections (both pieces in cluster)
-  const internalConnections = (originalDesign.connections || []).filter((connection) => clusterPieceIds.includes(connection.connected.piece.id_) && clusterPieceIds.includes(connection.connecting.piece.id_));
+  const internalConnections = (sourceDesign.connections || []).filter((connection: Connection) => clusterPieceIds.includes(connection.connected.piece.id_) && clusterPieceIds.includes(connection.connecting.piece.id_));
 
   // Find external connections (one piece in cluster, one outside)
-  const externalConnections = (originalDesign.connections || []).filter((connection) => {
+  const externalConnections = (sourceDesign.connections || []).filter((connection: Connection) => {
     const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.id_);
     const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.id_);
     return connectedInCluster !== connectingInCluster; // XOR - exactly one is in cluster
@@ -1716,10 +1763,10 @@ export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds
 };
 
 /**
- * Expands design pieces by replacing them with their constituent pieces and connections
- * @param design - The design to expand
+ * Explodes design pieces by replacing them with their constituent pieces and connections
+ * @param design - The design to explode
  * @param kit - The kit containing type information
- * @returns Design with design pieces expanded
+ * @returns Design with design pieces explodeed
  */
 export const getClusterableGroups = (design: Design, selectedPieceIds: string[]): string[][] => {
   if (selectedPieceIds.length < 2) return []; // Need at least 2 items to cluster
@@ -1777,77 +1824,201 @@ export const getClusterableGroups = (design: Design, selectedPieceIds: string[])
   return [];
 };
 
-export const expandDesignPieces = (design: Design, kit: Kit): Design => {
-  // Check if there are any connections with designId (indicating clustered pieces)
-  const hasDesignConnections = design.connections?.some((conn) => conn.connected.designId || conn.connecting.designId);
-  if (!hasDesignConnections) {
-    return design; // No design connections to expand
+export const explodeDesignPieces = (design: Design, kit: Kit): Design => {
+  // Check if there are any design pieces to explode (in connections or fixedDesigns)
+  const hasDesignConnections = design.connections?.some((conn: Connection) => conn.connected.designId || conn.connecting.designId);
+  const hasFixedDesigns = design.fixedDesigns && design.fixedDesigns.length > 0;
+
+  if (!hasDesignConnections && !hasFixedDesigns) {
+    return design; // No design pieces to explode
   }
 
-  let expandedDesign = { ...design };
+  let explodedDesign = { ...design };
 
-  // Find all unique designIds referenced in connections
+  // Find all unique designIds referenced in connections and fixedDesigns
   const designIds = new Set<string>();
-  design.connections?.forEach((conn) => {
+
+  // Collect from connections
+  design.connections?.forEach((conn: Connection) => {
     if (conn.connected.designId) designIds.add(conn.connected.designId);
     if (conn.connecting.designId) designIds.add(conn.connecting.designId);
   });
 
+  // Collect from fixedDesigns
+  design.fixedDesigns?.forEach((fixedDesign: any) => {
+    designIds.add(fixedDesign.designId.name);
+  });
+
   if (designIds.size === 0) {
-    return expandedDesign; // No design references found
+    return explodedDesign; // No design references found
   }
 
-  // For each referenced design, expand it
+  // Build hierarchy map to determine expansion order (depth-first, bottom-up)
+  const designHierarchy = new Map<string, Set<string>>(); // design -> designs it references
+  const visited = new Set<string>();
+
+  const buildHierarchy = (currentDesignName: string): void => {
+    if (visited.has(currentDesignName)) return;
+    visited.add(currentDesignName);
+
+    try {
+      const currentDesign = findDesignInKit(kit, { name: currentDesignName });
+      if (!currentDesign) return;
+
+      const referencedDesigns = new Set<string>();
+
+      // Check connections for design references
+      currentDesign.connections?.forEach((conn: Connection) => {
+        if (conn.connected.designId) referencedDesigns.add(conn.connected.designId);
+        if (conn.connecting.designId) referencedDesigns.add(conn.connecting.designId);
+      });
+
+      // Check fixedDesigns for design references
+      currentDesign.fixedDesigns?.forEach((fixedDesign: any) => {
+        referencedDesigns.add(fixedDesign.designId.name);
+      });
+
+      designHierarchy.set(currentDesignName, referencedDesigns);
+
+      // Recursively build hierarchy for referenced designs
+      for (const referencedDesignName of referencedDesigns) {
+        buildHierarchy(referencedDesignName);
+      }
+    } catch (error) {
+      // Design not found, skip
+    }
+  };
+
+  // Build hierarchy starting from all referenced designs
   for (const designName of designIds) {
-    // Find the design in the kit
-    const referencedDesign = findDesignInKit(kit, { name: designName });
-    if (!referencedDesign) continue;
+    buildHierarchy(designName);
+  }
 
-    // Recursively expand the referenced design first
-    const expandedReferencedDesign = expandDesignPieces(referencedDesign, kit);
+  // Determine expansion order using topological sort (dependencies first)
+  const expansionOrder: string[] = [];
+  const tempVisited = new Set<string>();
+  const permanentVisited = new Set<string>();
 
-    // For design connections, use the original pieces and connections without namespacing
-    const transformedPieces = (expandedReferencedDesign.pieces || []).map((piece) => ({
-      ...piece,
-      center: piece.center || { x: 0, y: 0 },
-    }));
+  const topologicalSort = (designName: string): void => {
+    if (permanentVisited.has(designName)) return;
+    if (tempVisited.has(designName)) {
+      // Cycle detected - just add to order and continue
+      return;
+    }
 
-    const transformedConnections = expandedReferencedDesign.connections || [];
+    tempVisited.add(designName);
 
-    const updatedExternalConnections = (expandedDesign.connections || []).map((connection) => {
-      if (connection.connected.designId === designName) {
-        return {
-          ...connection,
-          connected: {
-            ...connection.connected,
-            designId: undefined,
-          },
-        };
+    const dependencies = designHierarchy.get(designName) || new Set();
+    for (const dependency of dependencies) {
+      topologicalSort(dependency);
+    }
+
+    tempVisited.delete(designName);
+    permanentVisited.add(designName);
+    expansionOrder.push(designName);
+  };
+
+  // Sort all referenced designs
+  for (const designName of designIds) {
+    topologicalSort(designName);
+  }
+
+  // Explode designs in dependency order (deepest first)
+  for (const designName of expansionOrder) {
+    if (!designIds.has(designName)) continue; // Only explode designs that are actually referenced
+
+    try {
+      const referencedDesign = findDesignInKit(kit, { name: designName });
+      if (!referencedDesign) continue;
+
+      // Recursively explode the referenced design first (this should be fully expanded by now)
+      const explodedReferencedDesign = explodeDesignPieces(referencedDesign, kit);
+
+      // Transform pieces with default center if not present
+      const transformedPieces = (explodedReferencedDesign.pieces || []).map((piece: Piece) => ({
+        ...piece,
+        center: piece.center || { x: 0, y: 0 },
+      }));
+
+      const transformedConnections = explodedReferencedDesign.connections || [];
+
+      // Update connections that reference this design
+      const updatedExternalConnections = (explodedDesign.connections || []).map((connection: Connection) => {
+        if (connection.connected.designId === designName) {
+          return {
+            ...connection,
+            connected: {
+              ...connection.connected,
+              designId: undefined,
+            },
+          };
+        }
+
+        if (connection.connecting.designId === designName) {
+          return {
+            ...connection,
+            connecting: {
+              ...connection.connecting,
+              designId: undefined,
+            },
+          };
+        }
+
+        return connection;
+      });
+
+      // Add exploded pieces and update connections
+      explodedDesign = {
+        ...explodedDesign,
+        pieces: [...(explodedDesign.pieces || []), ...transformedPieces],
+        connections: [...updatedExternalConnections, ...transformedConnections],
+      };
+    } catch (error) {
+      // Design not found or other error, skip
+      continue;
+    }
+  }
+
+  // Handle fixedDesigns by converting them to regular pieces with plane/center
+  if (design.fixedDesigns && design.fixedDesigns.length > 0) {
+    const fixedDesignPieces: Piece[] = [];
+
+    for (const fixedDesign of design.fixedDesigns) {
+      try {
+        const referencedDesign = findDesignInKit(kit, fixedDesign.designId);
+        if (!referencedDesign) continue;
+
+        // Recursively explode the fixed design
+        const explodedFixedDesign = explodeDesignPieces(referencedDesign, kit);
+
+        // Transform pieces from the fixed design with the specified plane/center
+        const transformedFixedPieces = (explodedFixedDesign.pieces || []).map((piece: Piece) => ({
+          ...piece,
+          plane: fixedDesign.plane || piece.plane,
+          center: fixedDesign.center || piece.center || { x: 0, y: 0 },
+        }));
+
+        fixedDesignPieces.push(...transformedFixedPieces);
+
+        // Add connections from the fixed design
+        if (explodedFixedDesign.connections) {
+          explodedDesign.connections = [...(explodedDesign.connections || []), ...explodedFixedDesign.connections];
+        }
+      } catch (error) {
+        // Design not found, skip
+        continue;
       }
+    }
 
-      if (connection.connecting.designId === designName) {
-        // Use the original piece ID directly (no namespacing)
-        return {
-          ...connection,
-          connecting: {
-            ...connection.connecting,
-            designId: undefined, // Remove designId since we've expanded
-          },
-        };
-      }
-
-      return connection;
-    });
-
-    // Add expanded pieces and update connections
-    expandedDesign = {
-      ...expandedDesign,
-      pieces: [...(expandedDesign.pieces || []), ...transformedPieces],
-      connections: [...updatedExternalConnections, ...transformedConnections],
+    // Add fixed design pieces and remove fixedDesigns array
+    explodedDesign = {
+      ...explodedDesign,
+      pieces: [...(explodedDesign.pieces || []), ...fixedDesignPieces],
+      fixedDesigns: undefined, // Remove since we've exploded them
     };
   }
 
-  return expandedDesign;
+  return explodedDesign;
 };
 
 //#endregion Design Pieces
