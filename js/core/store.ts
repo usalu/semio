@@ -19,7 +19,6 @@
 
 // #endregion
 import JSZip from "jszip";
-import React, { FC, createContext, useContext, useMemo, useSyncExternalStore } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
@@ -28,9 +27,10 @@ import { UndoManager } from "yjs";
 import initSqlJs from "sql.js";
 import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 
-import { Author, Connection, Design, DesignEditorSelection, DesignId, DiagramPoint, Kit, Piece, Plane, Point, Port, Quality, Representation, Side, Type, Vector, flattenDesign } from "@semio/js";
+import { Author, Connection, Design, DesignId, DiagramPoint, Kit, Piece, Plane, Point, Port, Quality, Representation, Side, Type, Vector, flattenDesign } from "@semio/js";
 import { Generator } from "@semio/js/lib/utils";
-import { KitId } from "./semio";
+import { DesignEditorSelection } from "./components/ui/DesignEditor";
+import { Camera, DesignDiff, KitId } from "./semio";
 
 // import { default as metabolism } from '@semio/assets/semio/kit_metabolism.json';
 
@@ -231,15 +231,15 @@ class StudioStore {
     const yTypesMap = yKit.get("types") as Y.Map<Y.Map<any>>; // name -> variant -> YType
     const types = yTypesMap
       ? Array.from(yTypesMap.values())
-          .flatMap((variantMap) => Array.from(variantMap.values()).map((yType: Y.Map<any>) => this.getType(name, version, yType.get("name"), yType.get("variant"))))
-          .filter((t): t is Type => t !== null)
+        .flatMap((variantMap) => Array.from(variantMap.values()).map((yType: Y.Map<any>) => this.getType(name, version, yType.get("name"), yType.get("variant"))))
+        .filter((t): t is Type => t !== null)
       : [];
 
     const yDesignsMap = yKit.get("designs") as Y.Map<Y.Map<Y.Map<any>>>; // name -> variant -> view -> YDesign
     const designs = yDesignsMap
       ? Array.from(yDesignsMap.values())
-          .flatMap((variantMap) => Array.from(variantMap.values()).flatMap((viewMap) => Array.from(viewMap.values()).map((yDesign: Y.Map<any>) => this.getDesign(name, version, yDesign.get("name"), yDesign.get("variant"), yDesign.get("view")))))
-          .filter((d): d is Design => d !== null)
+        .flatMap((variantMap) => Array.from(variantMap.values()).flatMap((viewMap) => Array.from(viewMap.values()).map((yDesign: Y.Map<any>) => this.getDesign(name, version, yDesign.get("name"), yDesign.get("variant"), yDesign.get("view")))))
+        .filter((d): d is Design => d !== null)
       : [];
 
     return {
@@ -342,14 +342,14 @@ class StudioStore {
     const yRepresentationsMap = yType.get("representations") as Y.Map<Y.Map<any>>;
     const representations = yRepresentationsMap
       ? Array.from(yRepresentationsMap.values())
-          .map((rMap) => this.getRepresentation(kitName, kitVersion, name, variant, rMap.get("tags")?.toArray() || []))
-          .filter((r): r is Representation => r !== null)
+        .map((rMap) => this.getRepresentation(kitName, kitVersion, name, variant, rMap.get("tags")?.toArray() || []))
+        .filter((r): r is Representation => r !== null)
       : [];
     const yPortsMap = yType.get("ports") as Y.Map<Y.Map<any>>;
     const ports = yPortsMap
       ? Array.from(yPortsMap.values())
-          .map((pMap) => this.getPort(kitName, kitVersion, name, variant, pMap.get("id_")))
-          .filter((p): p is Port => p !== null)
+        .map((pMap) => this.getPort(kitName, kitVersion, name, variant, pMap.get("id_")))
+        .filter((p): p is Port => p !== null)
       : [];
     return {
       name: yType.get("name"),
@@ -461,14 +461,14 @@ class StudioStore {
     const yPieces = yDesign.get("pieces") as Y.Map<any>;
     const pieces = yPieces
       ? Array.from(yPieces.values())
-          .map((pMap) => this.getPiece(kitName, kitVersion, name, variant, view, pMap.get("id_")))
-          .filter((p): p is Piece => p !== null)
+        .map((pMap) => this.getPiece(kitName, kitVersion, name, variant, view, pMap.get("id_")))
+        .filter((p): p is Piece => p !== null)
       : [];
     const yConnections = yDesign.get("connections") as Y.Map<any>;
     const connections = yConnections
       ? Array.from(yConnections.values())
-          .map((cMap) => this.getConnection(kitName, kitVersion, name, variant, view, cMap.get("connected").get("piece").get("id_"), cMap.get("connecting").get("piece").get("id_")))
-          .filter((c): c is Connection => c !== null)
+        .map((cMap) => this.getConnection(kitName, kitVersion, name, variant, view, cMap.get("connected").get("piece").get("id_"), cMap.get("connecting").get("piece").get("id_")))
+        .filter((c): c is Connection => c !== null)
       : [];
     return {
       name: yDesign.get("name"),
@@ -604,40 +604,40 @@ class StudioStore {
     const yYAxis = yPlane?.get("yAxis");
     const origin: Point | null = yOrigin
       ? {
-          x: yOrigin.get("x"),
-          y: yOrigin.get("y"),
-          z: yOrigin.get("z"),
-        }
+        x: yOrigin.get("x"),
+        y: yOrigin.get("y"),
+        z: yOrigin.get("z"),
+      }
       : null;
     const xAxis: Vector | null = yXAxis
       ? {
-          x: yXAxis.get("x"),
-          y: yXAxis.get("y"),
-          z: yXAxis.get("z"),
-        }
+        x: yXAxis.get("x"),
+        y: yXAxis.get("y"),
+        z: yXAxis.get("z"),
+      }
       : null;
     const yAxis: Vector | null = yYAxis
       ? {
-          x: yYAxis.get("x"),
-          y: yYAxis.get("y"),
-          z: yYAxis.get("z"),
-        }
+        x: yYAxis.get("x"),
+        y: yYAxis.get("y"),
+        z: yYAxis.get("z"),
+      }
       : null;
     const plane: Plane | null =
       origin && xAxis && yAxis
         ? {
-            origin,
-            xAxis,
-            yAxis,
-          }
+          origin,
+          xAxis,
+          yAxis,
+        }
         : null;
 
     const yCenter = yPiece.get("center") as Y.Map<any> | undefined;
     const center: DiagramPoint | null = yCenter
       ? {
-          x: yCenter.get("x"),
-          y: yCenter.get("y"),
-        }
+        x: yCenter.get("x"),
+        y: yCenter.get("y"),
+      }
       : null;
 
     return {
@@ -1284,22 +1284,22 @@ class StudioStore {
                 plane:
                   pieceRow[5] !== null
                     ? {
-                        origin: {
-                          x: pieceRow[5],
-                          y: pieceRow[6],
-                          z: pieceRow[7],
-                        },
-                        xAxis: {
-                          x: pieceRow[8],
-                          y: pieceRow[9],
-                          z: pieceRow[10],
-                        },
-                        yAxis: {
-                          x: pieceRow[11],
-                          y: pieceRow[12],
-                          z: pieceRow[13],
-                        },
-                      }
+                      origin: {
+                        x: pieceRow[5],
+                        y: pieceRow[6],
+                        z: pieceRow[7],
+                      },
+                      xAxis: {
+                        x: pieceRow[8],
+                        y: pieceRow[9],
+                        z: pieceRow[10],
+                      },
+                      yAxis: {
+                        x: pieceRow[11],
+                        y: pieceRow[12],
+                        z: pieceRow[13],
+                      },
+                    }
                     : undefined,
                 center: pieceRow[14] !== null ? { x: pieceRow[14], y: pieceRow[15] } : undefined,
                 qualities: [],
@@ -1735,53 +1735,36 @@ class StudioStore {
   }
 }
 
-const StudioStoreContext = createContext<StudioStore | null>(null);
+export enum DesignEditorFullscreenPanel {
+  None = "none",
+  Diagram = "diagram",
+  Model = "model",
+}
 
-export const useStudioStore = () => {
-  const studioStore = useContext(StudioStoreContext);
-  if (!studioStore) {
-    throw new Error("useStudioStore must be used within a StudioStoreProvider");
-  }
-  return studioStore;
-};
 
-export const StudioStoreProvider: FC<{
-  userId: string;
-  children: React.ReactNode;
-}> = ({ userId, children }) => {
-  const studioStore = useMemo(() => new StudioStore(userId), [userId]);
-  return <StudioStoreContext.Provider value={studioStore}>{children}</StudioStoreContext.Provider>;
-};
+export interface Presence {
+  name: string;
+  cursor?: DiagramPoint;
+  camera?: Camera;
+}
 
-const KitContext = createContext<Kit | null>(null);
 
-export const KitProvider: FC<{
-  kitName: string;
-  kitVersion: string;
-  children: React.ReactNode;
-}> = ({ kitName, kitVersion, children }) => {
-  const studioStore = useStudioStore();
-  const kit = useSyncExternalStore(studioStore.subscribe, () => {
-    try {
-      return studioStore.getKit(kitName, kitVersion);
-    } catch (e) {
-      return null;
-    }
-  });
-  return <KitContext.Provider value={kit}>{children}</KitContext.Provider>;
-};
-
-export const useKit = () => {
-  const kit = useContext(KitContext);
-  if (!kit) {
-    throw new Error("useKit must be used within a KitProvider");
-  }
-  return kit;
-};
-
-export interface DesignEditorStoreState {
+export interface OperationStackEntry {
+  diff: DesignDiff;
   selection: DesignEditorSelection;
 }
+
+export interface DesignEditorState {
+  designId: DesignId;
+  fullscreenPanel: DesignEditorFullscreenPanel;
+  selection: DesignEditorSelection;
+  designDiff: DesignDiff;
+  isTransactionActive: boolean;
+  cursor?: DiagramPoint;
+  camera?: Camera;
+  others?: Presence[];
+}
+
 
 class DesignEditorStore {
   private studioStore: StudioStore;
@@ -1790,7 +1773,7 @@ class DesignEditorStore {
   private yKit: Y.Map<any>;
   private yDesign: Y.Map<any>;
   private undoManager: UndoManager;
-  private state: DesignEditorStoreState;
+  private state: DesignEditorState;
   private listeners: Set<() => void> = new Set();
 
   constructor(studioStore: StudioStore, id: string, yDoc: Y.Doc, yKit: Y.Map<any>, yDesign: Y.Map<any>) {
@@ -1812,11 +1795,11 @@ class DesignEditorStore {
     };
   }
 
-  getState(): DesignEditorStoreState {
+  getState(): DesignEditorState {
     return this.state;
   }
 
-  setState(state: DesignEditorStoreState): void {
+  setState(state: DesignEditorState): void {
     this.state = state;
     this.listeners.forEach((listener) => listener());
   }
@@ -1915,22 +1898,3 @@ class DesignEditorStore {
     };
   }
 }
-
-const DesignEditorStoreContext = createContext<DesignEditorStore | null>(null);
-
-export const useDesignEditorStore = () => {
-  const designEditorStore = useContext(DesignEditorStoreContext);
-  if (!designEditorStore) {
-    throw new Error("useDesignEditorStore must be used within a DesignEditorStoreProvider");
-  }
-  return designEditorStore;
-};
-
-export const DesignEditorStoreProvider: FC<{
-  designEditorId: string;
-  children: React.ReactNode;
-}> = ({ designEditorId, children }) => {
-  const studioStore = useStudioStore();
-  const designEditorStore = useMemo(() => studioStore.getDesignEditorStore(designEditorId), [studioStore, designEditorId]);
-  return <DesignEditorStoreContext.Provider value={designEditorStore}>{children}</DesignEditorStoreContext.Provider>;
-};
