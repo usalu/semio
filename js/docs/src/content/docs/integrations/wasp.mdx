@@ -16,3 +16,38 @@ sidebar:
 ## Connections ↔️ Graph Grammars
 
 ## Designs ↔️ AGGRs
+
+Drafts:
+
+## 🗣️ Terminology
+
+🔌 Ports ↔️ CONNs
+In semio, a Port is the little connector spot on a Piece that says where and how you can attach something
+In Wasp, this is called a CONN with the same idea but frozen in place without any parametric rules
+
+📦 Types ↔️ PARTs
+A semio Type (your reusable mold for making Pieces) becomes a Wasp PART which is the base building block in Wasp’s world
+
+🧩 Pieces ↔️ Transformed PARTs
+A semio Piece (a placed copy of a Type) becomes a transformed PART in Wasp which is the same PART but now with its position and rotation fixed
+
+🔗 Connections ↔️ Graph Grammars
+A semio Connection can be parametric and rule-driven
+In Wasp, this is a Graph Grammar rule with all connection logic written down explicitly
+
+🏗️ Designs ↔️ AGGRs
+A semio Design (all Pieces + all Connections) matches a Wasp AGGR which is the full assembled structure in Wasp
+
+## 🔄 Integration
+
+When semio talks to Wasp, it turns dynamic into static
+
+🔌 Ports → CONNs Flexible placement rules are baked into fixed attachment points
+
+📦 Types → PARTs Geometry + connection data are exported as reusable PARTs
+
+🧩 Pieces → Transformed PARTs Same PART but placed exactly where it belongs in space
+
+🔗 Connections → Graph Grammar Parametric connection rules are converted into Wasp’s fixed grammar format
+
+🏗️ Designs → AGGRs The complete semio design is packaged as a ready-to-use Wasp AGGR
