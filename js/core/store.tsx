@@ -19,18 +19,45 @@
 
 // #endregion
 import JSZip from "jszip";
+import React, { createContext, useContext, useRef, useSyncExternalStore } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 import { UndoManager } from "yjs";
-import React, { createContext, useContext, useRef, useSyncExternalStore } from "react";
 // Import initSqlJs
 import type { Database, SqlJsStatic, SqlValue } from "sql.js";
 import initSqlJs from "sql.js";
 import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 
 import { DesignEditorSelection } from "./components/ui/DesignEditor";
-import { Author, Camera, Connection, ConnectionSchema, Design, DesignDiff, DesignId, DesignSchema, DiagramPoint, flattenDesign, Kit, KitId, KitSchema, Piece, PieceSchema, Plane, Point, Port, PortSchema, Quality, Representation, RepresentationSchema, Side, Type, TypeSchema, Vector } from "./semio";
+import {
+  Author,
+  Camera,
+  Connection,
+  ConnectionSchema,
+  Design,
+  DesignDiff,
+  DesignId,
+  DesignSchema,
+  DiagramPoint,
+  flattenDesign,
+  Kit,
+  KitId,
+  KitSchema,
+  Piece,
+  PieceSchema,
+  Plane,
+  Point,
+  Port,
+  PortSchema,
+  Quality,
+  Representation,
+  RepresentationSchema,
+  Side,
+  Type,
+  TypeSchema,
+  Vector,
+} from "./semio";
 
 // import { default as metabolism } from '@semio/assets/semio/kit_metabolism.json';
 
@@ -40,13 +67,11 @@ export enum DesignEditorFullscreenPanel {
   Model = "model",
 }
 
-
 export interface Presence {
   name: string;
   cursor?: DiagramPoint;
   camera?: Camera;
 }
-
 
 export interface OperationStackEntry {
   diff: DesignDiff;
@@ -214,11 +239,10 @@ type YConnectionKeysMap = {
 const gConn = <K extends keyof YConnectionKeysMap>(m: YConnection, k: K): YConnectionKeysMap[K] => m.get(k as string) as YConnectionKeysMap[K];
 
 export class SketchpadStore {
-  private userId: string;
+  private id?: string;
   private yDoc: Y.Doc;
   private undoManager: UndoManager;
-  private designEditors: Map<string, { yKit: YKit; yDesign: YDesign; undoManager: UndoManager; state: DesignEditorState; listeners: Set<() => void> }>
-    = new Map();
+  private designEditors: Map<string, { yKit: YKit; yDesign: YDesign; undoManager: UndoManager; state: DesignEditorState; listeners: Set<() => void> }> = new Map();
   private indexeddbProvider?: IndexeddbPersistence;
   private listeners: Set<() => void> = new Set();
   private fileUrls: Map<string, string> = new Map();
@@ -229,10 +253,10 @@ export class SketchpadStore {
     design: (name: string, variant?: string, view?: string) => `${name}::${variant || ""}::${view || ""}`,
   };
 
-  constructor(userId?: string, persistId?: string) {
-    this.userId = userId || uuidv4();
+  constructor(id?: string) {
+    this.id = id;
     this.yDoc = new Y.Doc();
-    if (persistId) this.indexeddbProvider = new IndexeddbPersistence(`semio-sketchpad:${persistId}`, this.yDoc);
+    if (id) this.indexeddbProvider = new IndexeddbPersistence(`semio-sketchpad:${id}`, this.yDoc);
     this.yDoc.getMap<YKit>("kits");
     this.yDoc.getMap<string>("kitIds");
     this.yDoc.getMap<Uint8Array>("files");
@@ -334,81 +358,120 @@ export class SketchpadStore {
     return rep;
   }
 
-  private observeAny(y: Y.AbstractType<any>, callback: () => void): () => void {
-    const obs = () => callback();
-    (y as any).observeDeep(obs);
-    return () => (y as any).unobserveDeep(obs);
+  onKitIdsChange(callback: () => void) {
+    const kits = this.yDoc.getMap<YKit>("kits") as unknown as Y.Map<any>;
+    const kitIds = this.yDoc.getMap<string>("kitIds") as unknown as Y.Map<any>;
+    const o1 = () => callback();
+    const o2 = () => callback();
+    kits.observe(o1);
+    kitIds.observe(o2);
+    return () => {
+      kits.unobserve(o1);
+      kitIds.unobserve(o2);
+    };
   }
 
-  observeKitIds(callback: () => void): () => void {
-    const a = this.observeAny(this.yDoc.getMap<string>("kitIds") as unknown as Y.AbstractType<any>, callback);
-    const b = this.observeAny(this.yDoc.getMap<YKit>("kits") as unknown as Y.AbstractType<any>, callback);
-    return () => { a(); b(); };
-  }
-
-  observeKit(kitName: string, kitVersion: string, callback: () => void): () => void {
+  onKitChange(kitName: string, kitVersion: string, callback: () => void) {
     const yKit = this.getYKit(kitName, kitVersion);
-    return this.observeAny(yKit as unknown as Y.AbstractType<any>, callback);
+    const o = () => callback();
+    (yKit as unknown as Y.Map<any>).observe(o);
+    return () => (yKit as unknown as Y.Map<any>).unobserve(o);
   }
 
-  observeTypes(kitName: string, kitVersion: string, callback: () => void): () => void {
-    const yTypes = this.getYTypes(kitName, kitVersion);
-    return this.observeAny(yTypes as unknown as Y.AbstractType<any>, callback);
+  onTypesChange(kitName: string, kitVersion: string, callback: () => void) {
+    const yKit = this.getYKit(kitName, kitVersion);
+    const yTypes = yKit.get("types") as Y.Map<any>;
+    const observer = () => callback();
+    yTypes.observe(observer);
+    return () => yTypes.unobserve(observer);
   }
 
-  observeType(kitName: string, kitVersion: string, typeName: string, typeVariant: string, callback: () => void): () => void {
-    const yType = this.getYType(kitName, kitVersion, typeName, typeVariant);
-    return this.observeAny(yType as unknown as Y.AbstractType<any>, callback);
+  onTypeChange(kitName: string, kitVersion: string, typeName: string, typeVariant: string, callback: () => void) {
+    const yType = this.getYType(kitName, kitVersion, typeName, typeVariant) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yType.observe(o);
+    return () => yType.unobserve(o);
   }
 
-  observeDesigns(kitName: string, kitVersion: string, callback: () => void): () => void {
-    const yDesigns = this.getYDesigns(kitName, kitVersion);
-    return this.observeAny(yDesigns as unknown as Y.AbstractType<any>, callback);
+  onDesignsChange(kitName: string, kitVersion: string, callback: () => void) {
+    const yKit = this.getYKit(kitName, kitVersion);
+    const yDesigns = yKit.get("designs") as Y.Map<any>;
+    const observer = () => callback();
+    yDesigns.observe(observer);
+    return () => yDesigns.unobserve(observer);
   }
 
-  observeDesign(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, callback: () => void): () => void {
+  onDesignChange(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, callback: () => void) {
+    const yDesign = this.getYDesign(kitName, kitVersion, designName, designVariant, designView) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yDesign.observe(o);
+    return () => yDesign.unobserve(o);
+  }
+
+  onPiecesChange(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, callback: () => void) {
     const yDesign = this.getYDesign(kitName, kitVersion, designName, designVariant, designView);
-    return this.observeAny(yDesign as unknown as Y.AbstractType<any>, callback);
+    const yPieces = gDesign(yDesign, "pieces") as unknown as Y.Map<any>;
+    const o = () => callback();
+    yPieces.observe(o);
+    return () => yPieces.unobserve(o);
   }
 
-  observePieces(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, callback: () => void): () => void {
+  onPieceChange(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, pieceId: string, callback: () => void) {
+    const yPiece = this.getYPiece(kitName, kitVersion, designName, designVariant, designView, pieceId) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yPiece.observe(o);
+    return () => yPiece.unobserve(o);
+  }
+
+  onConnectionsChange(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, callback: () => void) {
     const yDesign = this.getYDesign(kitName, kitVersion, designName, designVariant, designView);
-    return this.observeAny(gDesign(yDesign, "pieces") as unknown as Y.AbstractType<any>, callback);
+    const yConnections = gDesign(yDesign, "connections") as unknown as Y.Map<any>;
+    const o = () => callback();
+    yConnections.observe(o);
+    return () => yConnections.unobserve(o);
   }
 
-  observePiece(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, pieceId: string, callback: () => void): () => void {
-    const yPiece = this.getYPiece(kitName, kitVersion, designName, designVariant, designView, pieceId);
-    return this.observeAny(yPiece as unknown as Y.AbstractType<any>, callback);
+  onConnectionChange(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, connectedPieceId: string, connectingPieceId: string, callback: () => void) {
+    const yConn = this.getYConnection(kitName, kitVersion, designName, designVariant, designView, connectedPieceId, connectingPieceId) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yConn.observe(o);
+    return () => yConn.unobserve(o);
   }
 
-  observeConnections(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, callback: () => void): () => void {
-    const yDesign = this.getYDesign(kitName, kitVersion, designName, designVariant, designView);
-    return this.observeAny(gDesign(yDesign, "connections") as unknown as Y.AbstractType<any>, callback);
+  onPortsChange(kitName: string, kitVersion: string, typeName: string, typeVariant: string, callback: () => void) {
+    const yPorts = this.getYPorts(kitName, kitVersion, typeName, typeVariant) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yPorts.observe(o);
+    return () => yPorts.unobserve(o);
   }
 
-  observeConnection(kitName: string, kitVersion: string, designName: string, designVariant: string, designView: string, connectedPieceId: string, connectingPieceId: string, callback: () => void): () => void {
-    const yConn = this.getYConnection(kitName, kitVersion, designName, designVariant, designView, connectedPieceId, connectingPieceId);
-    return this.observeAny(yConn as unknown as Y.AbstractType<any>, callback);
+  onPortChange(kitName: string, kitVersion: string, typeName: string, typeVariant: string, portId: string, callback: () => void) {
+    const yPort = this.getYPort(kitName, kitVersion, typeName, typeVariant, portId) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yPort.observe(o);
+    return () => yPort.unobserve(o);
   }
 
-  observePorts(kitName: string, kitVersion: string, typeName: string, typeVariant: string, callback: () => void): () => void {
-    const yPorts = this.getYPorts(kitName, kitVersion, typeName, typeVariant);
-    return this.observeAny(yPorts as unknown as Y.AbstractType<any>, callback);
+  onRepresentationsChange(kitName: string, kitVersion: string, typeName: string, typeVariant: string, callback: () => void) {
+    const yReps = this.getYRepresentations(kitName, kitVersion, typeName, typeVariant) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yReps.observe(o);
+    return () => yReps.unobserve(o);
   }
 
-  observePort(kitName: string, kitVersion: string, typeName: string, typeVariant: string, portId: string, callback: () => void): () => void {
-    const yPort = this.getYPort(kitName, kitVersion, typeName, typeVariant, portId);
-    return this.observeAny(yPort as unknown as Y.AbstractType<any>, callback);
+  onRepresentationChange(kitName: string, kitVersion: string, typeName: string, typeVariant: string, tags: string[], callback: () => void) {
+    const yRep = this.getYRepresentation(kitName, kitVersion, typeName, typeVariant, tags) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yRep.observe(o);
+    return () => yRep.unobserve(o);
   }
 
-  observeRepresentations(kitName: string, kitVersion: string, typeName: string, typeVariant: string, callback: () => void): () => void {
-    const yReps = this.getYRepresentations(kitName, kitVersion, typeName, typeVariant);
-    return this.observeAny(yReps as unknown as Y.AbstractType<any>, callback);
-  }
-
-  observeRepresentation(kitName: string, kitVersion: string, typeName: string, typeVariant: string, tags: string[], callback: () => void): () => void {
-    const yRep = this.getYRepresentation(kitName, kitVersion, typeName, typeVariant, tags);
-    return this.observeAny(yRep as unknown as Y.AbstractType<any>, callback);
+  onQualitiesChange(kitName: string, kitVersion: string, callback: () => void) {
+    const yKit = this.getYKit(kitName, kitVersion);
+    const yQualities = yKit.get("qualities") as Y.Array<any>;
+    const observer = () => callback();
+    yQualities.observe(observer);
+    return () => yQualities.unobserve(observer);
   }
 
   private createAuthor(author: Author): YAuthor {
@@ -595,17 +658,17 @@ export class SketchpadStore {
     const typeIds = gKit(yKit, "typeIds");
     const types = yTypesMap
       ? Array.from(typeIds.keys()).map((compound) => {
-        const [typeName, typeVariant] = compound.split("::");
-        return this.getType(name, version, typeName, typeVariant || "");
-      })
+          const [typeName, typeVariant] = compound.split("::");
+          return this.getType(name, version, typeName, typeVariant || "");
+        })
       : [];
     const yDesignsMap = gKit(yKit, "designs");
     const designIds = gKit(yKit, "designIds");
     const designs = yDesignsMap
       ? Array.from(designIds.keys()).map((compound) => {
-        const [dName, dVariant, dView] = compound.split("::");
-        return this.getDesign(name, version, dName, dVariant || "", dView || "");
-      })
+          const [dName, dVariant, dView] = compound.split("::");
+          return this.getDesign(name, version, dName, dVariant || "", dView || "");
+        })
       : [];
     return {
       name: gKit(yKit, "name"),
@@ -695,14 +758,14 @@ export class SketchpadStore {
     const yRepresentationsMap = gType(yType, "representations");
     const representations = yRepresentationsMap
       ? Array.from(yRepresentationsMap.values())
-        .map((rMap) => this.getRepresentation(kitName, kitVersion, name, variant, gRep(rMap, "tags")?.toArray() || []))
-        .filter((r): r is Representation => r !== null)
+          .map((rMap) => this.getRepresentation(kitName, kitVersion, name, variant, gRep(rMap, "tags")?.toArray() || []))
+          .filter((r): r is Representation => r !== null)
       : [];
     const yPortsMap = gType(yType, "ports");
     const ports = yPortsMap
       ? Array.from(yPortsMap.values())
-        .map((pMap) => this.getPort(kitName, kitVersion, name, variant, gPort(pMap, "id_")))
-        .filter((p): p is Port => p !== null)
+          .map((pMap) => this.getPort(kitName, kitVersion, name, variant, gPort(pMap, "id_")))
+          .filter((p): p is Port => p !== null)
       : [];
     return {
       name: gType(yType, "name"),
@@ -801,7 +864,9 @@ export class SketchpadStore {
     const yPieces = gDesign(yDesign, "pieces");
     if (yPieces) {
       yPieces.forEach((_, pieceId) => {
-        try { pieces.push(this.getPiece(kitName, kitVersion, designName, designVariant, view, pieceId as unknown as string)); } catch { }
+        try {
+          pieces.push(this.getPiece(kitName, kitVersion, designName, designVariant, view, pieceId as unknown as string));
+        } catch {}
       });
     }
     return pieces;
@@ -815,7 +880,9 @@ export class SketchpadStore {
       yConnections.forEach((_, id) => {
         const [connectedPieceId, connectingPieceId] = (id as string).split("--");
         if (connectedPieceId && connectingPieceId) {
-          try { list.push(this.getConnection(kitName, kitVersion, designName, designVariant, view, connectedPieceId, connectingPieceId)); } catch { }
+          try {
+            list.push(this.getConnection(kitName, kitVersion, designName, designVariant, view, connectedPieceId, connectingPieceId));
+          } catch {}
         }
       });
     }
@@ -829,7 +896,9 @@ export class SketchpadStore {
     if (yRepresentations) {
       yRepresentations.forEach((yRep) => {
         const tags = gRep(yRep, "tags")?.toArray() || [];
-        try { result.push(this.getRepresentation(kitName, kitVersion, typeName, typeVariant, tags)); } catch { }
+        try {
+          result.push(this.getRepresentation(kitName, kitVersion, typeName, typeVariant, tags));
+        } catch {}
       });
     }
     return result;
@@ -841,7 +910,9 @@ export class SketchpadStore {
     const yPorts = gType(yType, "ports");
     if (yPorts) {
       yPorts.forEach((_, portId) => {
-        try { ports.push(this.getPort(kitName, kitVersion, typeName, typeVariant, portId as unknown as string)); } catch { }
+        try {
+          ports.push(this.getPort(kitName, kitVersion, typeName, typeVariant, portId as unknown as string));
+        } catch {}
       });
     }
     return ports;
@@ -881,14 +952,14 @@ export class SketchpadStore {
     const yPieces = gDesign(yDesign, "pieces");
     const pieces = yPieces
       ? Array.from(yPieces.values())
-        .map((pMap) => this.getPiece(kitName, kitVersion, name, variant, view, gPiece(pMap, "id_")))
-        .filter((p): p is Piece => p !== null)
+          .map((pMap) => this.getPiece(kitName, kitVersion, name, variant, view, gPiece(pMap, "id_")))
+          .filter((p): p is Piece => p !== null)
       : [];
     const yConnections = gDesign(yDesign, "connections");
     const connections = yConnections
       ? Array.from(yConnections.values())
-        .map((cMap) => this.getConnection(kitName, kitVersion, name, variant, view, gSide(gConn(cMap, "connected"), "piece").get("id_") as string, gSide(gConn(cMap, "connecting"), "piece").get("id_") as string))
-        .filter((c): c is Connection => c !== null)
+          .map((cMap) => this.getConnection(kitName, kitVersion, name, variant, view, gSide(gConn(cMap, "connected"), "piece").get("id_") as string, gSide(gConn(cMap, "connecting"), "piece").get("id_") as string))
+          .filter((c): c is Connection => c !== null)
       : [];
     return {
       name: gDesign(yDesign, "name"),
@@ -969,40 +1040,40 @@ export class SketchpadStore {
     const yYAxis = yPlane?.get("yAxis") as YVec3 | undefined;
     const origin: Point | null = yOrigin
       ? {
-        x: yOrigin.get("x") as number,
-        y: yOrigin.get("y") as number,
-        z: yOrigin.get("z") as number,
-      }
+          x: yOrigin.get("x") as number,
+          y: yOrigin.get("y") as number,
+          z: yOrigin.get("z") as number,
+        }
       : null;
     const xAxis: Vector | null = yXAxis
       ? {
-        x: yXAxis.get("x") as number,
-        y: yXAxis.get("y") as number,
-        z: yXAxis.get("z") as number,
-      }
+          x: yXAxis.get("x") as number,
+          y: yXAxis.get("y") as number,
+          z: yXAxis.get("z") as number,
+        }
       : null;
     const yAxis: Vector | null = yYAxis
       ? {
-        x: yYAxis.get("x") as number,
-        y: yYAxis.get("y") as number,
-        z: yYAxis.get("z") as number,
-      }
+          x: yYAxis.get("x") as number,
+          y: yYAxis.get("y") as number,
+          z: yYAxis.get("z") as number,
+        }
       : null;
     const plane: Plane | null =
       origin && xAxis && yAxis
         ? {
-          origin,
-          xAxis,
-          yAxis,
-        }
+            origin,
+            xAxis,
+            yAxis,
+          }
         : null;
 
     const yCenter = gPiece(yPiece, "center") as YLeafMapNumber | undefined;
     const center: DiagramPoint | null = yCenter
       ? {
-        x: yCenter.get("x") as number,
-        y: yCenter.get("y") as number,
-      }
+          x: yCenter.get("x") as number,
+          y: yCenter.get("y") as number,
+        }
       : null;
 
     return {
@@ -1451,7 +1522,7 @@ export class SketchpadStore {
   }
 
   transact(commands: () => void): void {
-    this.yDoc.transact(commands, new Set([this.userId]));
+    this.yDoc.transact(commands, this.id || "local");
   }
 
   async importKit(url: string, complete = false): Promise<void> {
@@ -1525,13 +1596,13 @@ export class SketchpadStore {
         const query = `SELECT name, email FROM author WHERE ${fkColumn} = ? ORDER BY rank`;
         const rows = queryAll(query, [fkValue]);
         if (!rows || rows.length === 0) return [];
-        return rows.map((row) => ({ name: String(row[0] || ""), email: (row[1] as string) || undefined } as Author));
+        return rows.map((row) => ({ name: String(row[0] || ""), email: (row[1] as string) || undefined }) as Author);
       };
       kit.qualities = getQualities("kit_id", kitId);
       const typeRows = queryAll("SELECT id, name, description, icon, image, variant, stock, virtual, unit, created, updated, location_longitude, location_latitude FROM type WHERE kit_id = ?", [kitId]);
       if (typeRows && typeRows.length > 0) {
         for (const typeRow of typeRows) {
-          const typeId = (typeRow[0] as number) as number;
+          const typeId = typeRow[0] as number as number;
           const type: Type = {
             name: String(typeRow[1] || ""),
             description: (typeRow[2] as string) || undefined,
@@ -1561,7 +1632,7 @@ export class SketchpadStore {
                 tags: [],
                 qualities: [],
               };
-              const repId = (repRow[0] as number) as number;
+              const repId = repRow[0] as number as number;
               const tagRows = queryAll('SELECT name FROM tag WHERE representation_id = ? ORDER BY "order"', [repId]);
               if (tagRows && tagRows.length > 0) representation.tags = tagRows.map((row) => (row as unknown[])[0] as string);
               representation.qualities = getQualities("representation_id", repId);
@@ -1599,7 +1670,7 @@ export class SketchpadStore {
                 },
                 qualities: [],
               };
-              const portId = (portRow[0] as number) as number;
+              const portId = portRow[0] as number as number;
               const compFamRows = queryAll('SELECT name FROM compatible_family WHERE port_id = ? ORDER BY "order"', [portId]);
               if (compFamRows && compFamRows.length > 0) port.compatibleFamilies = compFamRows.map((row) => (row as unknown[])[0] as string);
               port.qualities = getQualities("port_id", portId);
@@ -1629,7 +1700,7 @@ export class SketchpadStore {
             qualities: [],
             authors: [],
           };
-          const designId = (designRow[0] as number) as number;
+          const designId = designRow[0] as number as number;
           const pieceRows = queryAll(
             "SELECT p.id, p.local_id, p.description, t.name, t.variant, pl.origin_x, pl.origin_y, pl.origin_z, pl.x_axis_x, pl.x_axis_y, pl.x_axis_z, pl.y_axis_x, pl.y_axis_y, pl.y_axis_z, p.center_x, p.center_y FROM piece p JOIN type t ON p.type_id = t.id LEFT JOIN plane pl ON p.plane_id = pl.id WHERE p.design_id = ?",
             [designId],
@@ -1645,27 +1716,27 @@ export class SketchpadStore {
                 plane:
                   pieceRow[5] !== null
                     ? {
-                      origin: {
-                        x: (pieceRow[5] as number) ?? 0,
-                        y: (pieceRow[6] as number) ?? 0,
-                        z: (pieceRow[7] as number) ?? 0,
-                      },
-                      xAxis: {
-                        x: (pieceRow[8] as number) ?? 0,
-                        y: (pieceRow[9] as number) ?? 0,
-                        z: (pieceRow[10] as number) ?? 0,
-                      },
-                      yAxis: {
-                        x: (pieceRow[11] as number) ?? 0,
-                        y: (pieceRow[12] as number) ?? 0,
-                        z: (pieceRow[13] as number) ?? 0,
-                      },
-                    }
+                        origin: {
+                          x: (pieceRow[5] as number) ?? 0,
+                          y: (pieceRow[6] as number) ?? 0,
+                          z: (pieceRow[7] as number) ?? 0,
+                        },
+                        xAxis: {
+                          x: (pieceRow[8] as number) ?? 0,
+                          y: (pieceRow[9] as number) ?? 0,
+                          z: (pieceRow[10] as number) ?? 0,
+                        },
+                        yAxis: {
+                          x: (pieceRow[11] as number) ?? 0,
+                          y: (pieceRow[12] as number) ?? 0,
+                          z: (pieceRow[13] as number) ?? 0,
+                        },
+                      }
                     : undefined,
                 center: pieceRow[14] !== null ? { x: (pieceRow[14] as number) ?? 0, y: (pieceRow[15] as number) ?? 0 } : undefined,
                 qualities: [],
               };
-              const pieceId = (pieceRow[0] as number) as number;
+              const pieceId = pieceRow[0] as number as number;
               piece.qualities = getQualities("piece_id", pieceId);
               design.pieces!.push(piece);
               pieceMap[piece.id_ as string] = piece;
@@ -1704,7 +1775,7 @@ export class SketchpadStore {
                 },
                 qualities: [],
               };
-              const connId = (connRow[0] as number) as number;
+              const connId = connRow[0] as number as number;
               connection.qualities = getQualities("connection_id", connId);
               design.connections!.push(connection);
             }
@@ -1774,7 +1845,20 @@ export class SketchpadStore {
 
       const kitStmt = db.prepare("INSERT INTO kit (uri, name, description, icon, image, preview, version, remote, homepage, license, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
       const nowIso = new Date().toISOString();
-      kitStmt.run([`urn:kit:${kit.name}:${kit.version || ""}`, kit.name, kit.description || "", kit.icon || "", kit.image || "", kit.preview || "", kit.version || "", kit.remote || "", kit.homepage || "", kit.license || "", (kit.created || new Date(nowIso)).toISOString(), (kit.updated || new Date(nowIso)).toISOString()]);
+      kitStmt.run([
+        `urn:kit:${kit.name}:${kit.version || ""}`,
+        kit.name,
+        kit.description || "",
+        kit.icon || "",
+        kit.image || "",
+        kit.preview || "",
+        kit.version || "",
+        kit.remote || "",
+        kit.homepage || "",
+        kit.license || "",
+        (kit.created || new Date(nowIso)).toISOString(),
+        (kit.updated || new Date(nowIso)).toISOString(),
+      ]);
       kitStmt.free();
       const kitId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
       insertQualities(kit.qualities, "kit_id", kitId);
@@ -1827,7 +1911,19 @@ export class SketchpadStore {
                 console.warn(`Skipping port without local_id in type ${type.name}:${type.variant}`);
                 continue;
               }
-              portStmt.run([port.id_, port.description ?? "", port.family ?? "", Number(port.t ?? 0), Number(port.point.x ?? 0), Number(port.point.y ?? 0), Number(port.point.z ?? 0), Number(port.direction.x ?? 0), Number(port.direction.y ?? 0), Number(port.direction.z ?? 0), typeDbId]);
+              portStmt.run([
+                port.id_,
+                port.description ?? "",
+                port.family ?? "",
+                Number(port.t ?? 0),
+                Number(port.point.x ?? 0),
+                Number(port.point.y ?? 0),
+                Number(port.point.z ?? 0),
+                Number(port.direction.x ?? 0),
+                Number(port.direction.y ?? 0),
+                Number(port.direction.z ?? 0),
+                typeDbId,
+              ]);
               const portDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
               portIdMap[typeDbId][port.id_] = portDbId;
               insertQualities(port.qualities, "port_id", portDbId);
@@ -1858,7 +1954,18 @@ export class SketchpadStore {
         );
         for (const design of kit.designs) {
           const designKey = `${design.name}:${design.variant || ""}:${design.view || ""}`;
-          designStmt.run([design.name, design.description || "", design.icon || "", design.image || "", design.variant || "", design.view || "", design.unit, (design.created || new Date(nowIso)).toISOString(), (design.updated || new Date(nowIso)).toISOString(), kitId]);
+          designStmt.run([
+            design.name,
+            design.description || "",
+            design.icon || "",
+            design.image || "",
+            design.variant || "",
+            design.view || "",
+            design.unit,
+            (design.created || new Date(nowIso)).toISOString(),
+            (design.updated || new Date(nowIso)).toISOString(),
+            kitId,
+          ]);
           const designDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
           designIdMap[designKey] = designDbId;
           pieceIdMap[designDbId] = {};
@@ -1914,7 +2021,22 @@ export class SketchpadStore {
                 console.warn(`Could not find port DB IDs for connection between ${conn.connected.piece.id_}:${conn.connected.port.id_} and ${conn.connecting.piece.id_}:${conn.connecting.port.id_}`);
                 continue;
               }
-              connStmt.run([conn.description || "", Number(conn.gap ?? 0), Number(conn.shift ?? 0), Number(conn.rise ?? 0), Number(conn.rotation ?? 0), Number(conn.turn ?? 0), Number(conn.tilt ?? 0), Number(conn.x ?? 0), Number(conn.y ?? 0), connectedPieceDbId, connectedPortDbId, connectingPieceDbId, connectingPortDbId, designDbId]);
+              connStmt.run([
+                conn.description || "",
+                Number(conn.gap ?? 0),
+                Number(conn.shift ?? 0),
+                Number(conn.rise ?? 0),
+                Number(conn.rotation ?? 0),
+                Number(conn.turn ?? 0),
+                Number(conn.tilt ?? 0),
+                Number(conn.x ?? 0),
+                Number(conn.y ?? 0),
+                connectedPieceDbId,
+                connectedPortDbId,
+                connectingPieceDbId,
+                connectingPortDbId,
+                designDbId,
+              ]);
               const connDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
               insertQualities(conn.qualities, "connection_id", connDbId);
             }
@@ -1940,7 +2062,6 @@ export class SketchpadStore {
       }
     }
   }
-
 }
 
 const __defaultStore = new SketchpadStore();
@@ -1949,7 +2070,7 @@ const SketchpadContext = createContext<SketchpadStore>(__defaultStore);
 
 export function SketchpadProvider(props: { id?: string; children: React.ReactNode }) {
   const ref = useRef<SketchpadStore | null>(null);
-  if (!ref.current) ref.current = props.id ? (__storeRegistry.get(props.id) || new SketchpadStore(undefined, props.id)) : new SketchpadStore();
+  if (!ref.current) ref.current = props.id ? __storeRegistry.get(props.id) || new SketchpadStore(props.id) : new SketchpadStore();
   if (props.id && !__storeRegistry.has(props.id)) __storeRegistry.set(props.id, ref.current);
   return React.createElement(SketchpadContext.Provider, { value: ref.current! }, props.children as any);
 }
@@ -1958,7 +2079,7 @@ export function useSketchpadStore(id?: string) {
   const ctx = useContext(SketchpadContext);
   const ref = useRef<SketchpadStore | null>(null);
   if (!id) return ctx || __defaultStore;
-  if (!ref.current) ref.current = __storeRegistry.get(id) || new SketchpadStore(undefined, id);
+  if (!ref.current) ref.current = __storeRegistry.get(id) || new SketchpadStore(id);
   if (!__storeRegistry.has(id)) __storeRegistry.set(id, ref.current);
   return ref.current;
 }
@@ -1966,7 +2087,7 @@ export function useSketchpadStore(id?: string) {
 export function useKits(id?: string) {
   const store = useSketchpadStore(id);
   return useSyncExternalStore(
-    (l) => store.observeKitIds(l),
+    (l) => store.onKitIdsChange(l),
     () => store.getKits(),
   );
 }
@@ -1976,98 +2097,172 @@ export function useKit(name: string, version: string = "", id?: string) {
   return useSyncExternalStore(
     (l) => {
       let unsubs: Array<() => void> = [];
-      try { unsubs.push(store.observeKit(name, version, l)); } catch {}
-      unsubs.push(store.observeKitIds(l));
+      try {
+        unsubs.push(store.onKitChange(name, version, l));
+      } catch {}
+      unsubs.push(store.onKitIdsChange(l));
       return () => unsubs.forEach((u) => u());
     },
-    () => { try { return store.getKit(name, version); } catch { return null as any; } },
+    () => {
+      try {
+        return store.getKit(name, version);
+      } catch {
+        return null as any;
+      }
+    },
   );
 }
 
 export function useTypes(kitName: string, version: string = "", id?: string) {
   const store = useSketchpadStore(id);
   return useSyncExternalStore(
-    (l) => store.observeTypes(kitName, version, l),
-    () => { try { return store.getTypes(kitName, version); } catch { return [] as any; } },
+    (l) => store.onTypesChange(kitName, version, l),
+    () => {
+      try {
+        return store.getTypes(kitName, version);
+      } catch {
+        return [] as any;
+      }
+    },
   );
 }
 
 export function useType(kitName: string, version: string = "", typeName: string, typeVariant: string = "", id?: string) {
   const store = useSketchpadStore(id);
   return useSyncExternalStore(
-    (l) => store.observeType(kitName, version, typeName, typeVariant, l),
-    () => { try { return store.getType(kitName, version, typeName, typeVariant); } catch { return null as any; } },
+    (l) => store.onTypeChange(kitName, version, typeName, typeVariant, l),
+    () => {
+      try {
+        return store.getType(kitName, version, typeName, typeVariant);
+      } catch {
+        return null as any;
+      }
+    },
   );
 }
 
 export function useDesigns(kitName: string, version: string = "", id?: string) {
   const store = useSketchpadStore(id);
   return useSyncExternalStore(
-    (l) => store.observeDesigns(kitName, version, l),
-    () => { try { return store.getDesigns(kitName, version); } catch { return [] as any; } },
+    (l) => store.onDesignsChange(kitName, version, l),
+    () => {
+      try {
+        return store.getDesigns(kitName, version);
+      } catch {
+        return [] as any;
+      }
+    },
   );
 }
 
 export function useDesign(kitName: string, version: string = "", designName: string, designVariant: string = "", view: string = "", id?: string) {
   const store = useSketchpadStore(id);
   return useSyncExternalStore(
-    (l) => store.observeDesign(kitName, version, designName, designVariant, view, l),
-    () => { try { return store.getDesign(kitName, version, designName, designVariant, view); } catch { return null as any; } },
+    (l) => store.onDesignChange(kitName, version, designName, designVariant, view, l),
+    () => {
+      try {
+        return store.getDesign(kitName, version, designName, designVariant, view);
+      } catch {
+        return null as any;
+      }
+    },
   );
 }
 
 export function usePieces(kitName: string, version: string = "", designName: string, designVariant: string = "", view: string = "", id?: string) {
   const store = useSketchpadStore(id);
   return useSyncExternalStore(
-    (l) => store.observePieces(kitName, version, designName, designVariant, view, l),
-    () => { try { return store.getPieces(kitName, version, designName, designVariant, view); } catch { return [] as any; } },
+    (l) => store.onPiecesChange(kitName, version, designName, designVariant, view, l),
+    () => {
+      try {
+        return store.getPieces(kitName, version, designName, designVariant, view);
+      } catch {
+        return [] as any;
+      }
+    },
   );
 }
 
 export function usePiece(kitName: string, version: string = "", designName: string, designVariant: string = "", view: string = "", pieceId: string, id?: string) {
   const store = useSketchpadStore(id);
   return useSyncExternalStore(
-    (l) => store.observePiece(kitName, version, designName, designVariant, view, pieceId, l),
-    () => { try { return store.getPiece(kitName, version, designName, designVariant, view, pieceId); } catch { return null as any; } },
+    (l) => store.onPieceChange(kitName, version, designName, designVariant, view, pieceId, l),
+    () => {
+      try {
+        return store.getPiece(kitName, version, designName, designVariant, view, pieceId);
+      } catch {
+        return null as any;
+      }
+    },
   );
 }
 
 export function useConnections(kitName: string, version: string = "", designName: string, designVariant: string = "", view: string = "", id?: string) {
   const store = useSketchpadStore(id);
   return useSyncExternalStore(
-    (l) => store.observeConnections(kitName, version, designName, designVariant, view, l),
-    () => { try { return store.getConnections(kitName, version, designName, designVariant, view); } catch { return [] as any; } },
+    (l) => store.onConnectionsChange(kitName, version, designName, designVariant, view, l),
+    () => {
+      try {
+        return store.getConnections(kitName, version, designName, designVariant, view);
+      } catch {
+        return [] as any;
+      }
+    },
   );
 }
 
 export function usePorts(kitName: string, version: string = "", typeName: string, typeVariant: string = "", id?: string) {
   const store = useSketchpadStore(id);
   return useSyncExternalStore(
-    (l) => store.observePorts(kitName, version, typeName, typeVariant, l),
-    () => { try { return store.getPorts(kitName, version, typeName, typeVariant); } catch { return [] as any; } },
+    (l) => store.onPortsChange(kitName, version, typeName, typeVariant, l),
+    () => {
+      try {
+        return store.getPorts(kitName, version, typeName, typeVariant);
+      } catch {
+        return [] as any;
+      }
+    },
   );
 }
 
 export function usePort(kitName: string, version: string = "", typeName: string, typeVariant: string = "", portId: string, id?: string) {
   const store = useSketchpadStore(id);
   return useSyncExternalStore(
-    (l) => store.observePort(kitName, version, typeName, typeVariant, portId, l),
-    () => { try { return store.getPort(kitName, version, typeName, typeVariant, portId); } catch { return null as any; } },
+    (l) => store.onPortChange(kitName, version, typeName, typeVariant, portId, l),
+    () => {
+      try {
+        return store.getPort(kitName, version, typeName, typeVariant, portId);
+      } catch {
+        return null as any;
+      }
+    },
   );
 }
 
 export function useRepresentations(kitName: string, version: string = "", typeName: string, typeVariant: string = "", id?: string) {
   const store = useSketchpadStore(id);
   return useSyncExternalStore(
-    (l) => store.observeRepresentations(kitName, version, typeName, typeVariant, l),
-    () => { try { return store.getRepresentations(kitName, version, typeName, typeVariant); } catch { return [] as any; } },
+    (l) => store.onRepresentationsChange(kitName, version, typeName, typeVariant, l),
+    () => {
+      try {
+        return store.getRepresentations(kitName, version, typeName, typeVariant);
+      } catch {
+        return [] as any;
+      }
+    },
   );
 }
 
 export function useRepresentation(kitName: string, version: string = "", typeName: string, typeVariant: string = "", tags: string[], id?: string) {
   const store = useSketchpadStore(id);
   return useSyncExternalStore(
-    (l) => store.observeRepresentation(kitName, version, typeName, typeVariant, tags, l),
-    () => { try { return store.getRepresentation(kitName, version, typeName, typeVariant, tags); } catch { return null as any; } },
+    (l) => store.onRepresentationChange(kitName, version, typeName, typeVariant, tags, l),
+    () => {
+      try {
+        return store.getRepresentation(kitName, version, typeName, typeVariant, tags);
+      } catch {
+        return null as any;
+      }
+    },
   );
 }
