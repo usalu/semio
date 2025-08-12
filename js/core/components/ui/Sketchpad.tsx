@@ -19,702 +19,14 @@
 
 // #endregion
 import { TooltipProvider } from "@semio/js/components/ui/Tooltip";
-import { createContext, FC, ReactNode, useContext, useEffect, useReducer, useState } from "react";
-import DesignEditor, { createInitialDesignEditorCoreState, DesignEditorCoreState, DesignEditorDispatcher, designEditorReducer, DesignEditorState } from "./DesignEditor";
+import { createContext, FC, ReactNode, useContext, useEffect, useMemo, useRef, useState } from "react";
+import DesignEditor, { DesignEditorDispatcher, DesignEditorState as UIDesignEditorState, DesignEditorAction, reduceSelection } from "./DesignEditor";
 
-import { default as Metabolism } from "@semio/assets/semio/kit_metabolism.json";
-import { addDesignToKit, Connection, Design, DesignId, findDesignInKit, getClusterableGroups, Kit, Piece, updateDesignInKit } from "@semio/js";
-import { extractFilesAndCreateUrls } from "../../lib/utils";
+import { Connection, Design, DesignId, Kit, Piece } from "@semio/js";
+import { SketchpadProvider as StoreProvider, useDesigns, useKit, useSketchpadStore, DesignEditorState as StoreDesignEditorState, DesignEditorFullscreenPanel } from "../../store";
 
-// Function to ensure design has at least one fixed piece using breadth-first search
-const ensureDesignHasFixedPiece = (design: Design): Design => {
-  if (!design.pieces || design.pieces.length === 0) {
-    return design;
-  }
-
-  // Check if any piece is already fixed
-  const hasFixedPiece = design.pieces.some((piece: Piece) => piece.plane && piece.center);
-  if (hasFixedPiece) {
-    return design;
-  }
-
-  // Build adjacency list for BFS
-  const adjacencyList = new Map<string, string[]>();
-  design.pieces.forEach((piece: Piece) => {
-    if (piece.id_) {
-      adjacencyList.set(piece.id_, []);
-    }
-  });
-
-  // Add connections to adjacency list
-  design.connections?.forEach((connection: Connection) => {
-    const connectedId = connection.connected.piece.id_;
-    const connectingId = connection.connecting.piece.id_;
-
-    if (connectedId && connectingId) {
-      adjacencyList.get(connectedId)?.push(connectingId);
-      adjacencyList.get(connectingId)?.push(connectedId);
-    }
-  });
-
-  // Find the piece with the most connections using BFS
-  let maxConnections = -1;
-  let parentPieceId: string | null = null;
-
-  for (const piece of design.pieces) {
-    if (!piece.id_) continue;
-
-    const visited = new Set<string>();
-    const queue = [piece.id_];
-    visited.add(piece.id_);
-    let connectionCount = 0;
-
-    while (queue.length > 0) {
-      const currentId = queue.shift()!;
-      const neighbors = adjacencyList.get(currentId) || [];
-
-      connectionCount += neighbors.length;
-
-      for (const neighborId of neighbors) {
-        if (!visited.has(neighborId)) {
-          visited.add(neighborId);
-          queue.push(neighborId);
-        }
-      }
-    }
-
-    if (connectionCount > maxConnections) {
-      maxConnections = connectionCount;
-      parentPieceId = piece.id_;
-    }
-  }
-
-  // If no connections exist, just pick the first piece
-  if (!parentPieceId && design.pieces.length > 0) {
-    parentPieceId = design.pieces[0].id_ || null;
-  }
-
-  if (!parentPieceId) {
-    return design;
-  }
-
-  // Fix the parent piece with center and plane
-  const updatedPieces = design.pieces.map((piece: Piece) => {
-    if (piece.id_ === parentPieceId) {
-      return {
-        ...piece,
-        center: piece.center || { x: 0, y: 0 },
-        plane: piece.plane || {
-          origin: { x: 0, y: 0, z: 0 },
-          xAxis: { x: 1, y: 0, z: 0 },
-          yAxis: { x: 0, y: 1, z: 0 },
-        },
-      };
-    }
-    return piece;
-  });
-
-  return {
-    ...design,
-    pieces: updatedPieces,
-  };
-};
-
-// Higher-level Sketchpad state management
-interface SketchpadState {
-  isLoading: boolean;
-  fileUrls: Map<string, string>;
-  kit: Kit | null;
-  designEditorCoreStates: DesignEditorCoreState[];
-  activeDesign: number; // index of the active design
-  designHistory: DesignId[]; // history of previously opened designs
-}
-
-enum SketchpadAction {
-  UrlsLoaded = "URLS_LOADED",
-  ChangeActiveDesign = "CHANGE_ACTIVE_DESIGN",
-  PreviousDesign = "PREVIOUS_DESIGN",
-  UpdateActiveDesignEditorState = "UPDATE_ACTIVE_DESIGN_EDITOR_STATE",
-  AddDesign = "ADD_DESIGN",
-  UpdateDesign = "UPDATE_DESIGN",
-  ClusterDesign = "CLUSTER_DESIGN",
-  ExpandDesign = "EXPAND_DESIGN",
-}
-
-type SketchpadActionType =
-  | {
-      type: SketchpadAction.UrlsLoaded;
-      payload: { fileUrls: Map<string, string> };
-    }
-  | {
-      type: SketchpadAction.ChangeActiveDesign;
-      payload: DesignId;
-    }
-  | {
-      type: SketchpadAction.PreviousDesign;
-      payload: null;
-    }
-  | {
-      type: SketchpadAction.UpdateActiveDesignEditorState;
-      payload: DesignEditorState;
-    }
-  | {
-      type: SketchpadAction.AddDesign;
-      payload: Design;
-    }
-  | {
-      type: SketchpadAction.UpdateDesign;
-      payload: Design;
-    }
-  | {
-      type: SketchpadAction.ClusterDesign;
-      payload: null;
-    }
-  | {
-      type: SketchpadAction.ExpandDesign;
-      payload: DesignId;
-    };
-
-const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): SketchpadState => {
-  console.log("SKETCHPAD ACTION:", action.type, action.payload);
-
-  let newState: SketchpadState;
-
-  switch (action.type) {
-    case SketchpadAction.UrlsLoaded:
-      const kit = Metabolism as unknown as Kit;
-      const designEditorCoreStates =
-        kit.designs?.map((design) =>
-          createInitialDesignEditorCoreState({
-            initialKit: kit,
-            designId: {
-              name: design.name,
-              variant: design.variant || undefined,
-              view: design.view || undefined,
-            },
-            fileUrls: action.payload.fileUrls,
-          }),
-        ) || [];
-
-      newState = {
-        ...state,
-        isLoading: false,
-        fileUrls: action.payload.fileUrls,
-        kit,
-        designEditorCoreStates,
-        designHistory: [],
-      };
-      break;
-
-    case SketchpadAction.ChangeActiveDesign:
-      // Find the index of the design with the matching designId
-      const designIndex = state.designEditorCoreStates.findIndex((designState) => designState.designId.name === action.payload.name && designState.designId.variant === action.payload.variant && designState.designId.view === action.payload.view);
-
-      if (designIndex !== -1) {
-        // Get the current active design to add to history
-        const currentActiveDesignState = state.designEditorCoreStates[state.activeDesign];
-        const currentDesignId = currentActiveDesignState?.designId;
-
-        // Only add to history if we're changing to a different design
-        let updatedHistory = [...state.designHistory];
-        if (currentDesignId && (currentDesignId.name !== action.payload.name || currentDesignId.variant !== action.payload.variant || currentDesignId.view !== action.payload.view)) {
-          updatedHistory.push(currentDesignId);
-        }
-
-        newState = {
-          ...state,
-          activeDesign: designIndex,
-          designHistory: updatedHistory,
-        };
-      } else {
-        newState = state;
-      }
-      break;
-
-    case SketchpadAction.PreviousDesign:
-      if (state.designHistory.length === 0) {
-        console.warn("No previous design in history");
-        newState = state;
-        break;
-      }
-
-      // Get the last design from history
-      const previousDesignId = state.designHistory[state.designHistory.length - 1];
-
-      // Find the index of the previous design
-      const previousDesignIndex = state.designEditorCoreStates.findIndex(
-        (designState) => designState.designId.name === previousDesignId.name && designState.designId.variant === previousDesignId.variant && designState.designId.view === previousDesignId.view,
-      );
-
-      if (previousDesignIndex !== -1) {
-        // Remove the last item from history (we're going back to it)
-        const updatedHistoryAfterBack = state.designHistory.slice(0, -1);
-
-        newState = {
-          ...state,
-          activeDesign: previousDesignIndex,
-          designHistory: updatedHistoryAfterBack,
-        };
-      } else {
-        // Remove the invalid design from history and try again if there are more
-        const cleanedHistory = state.designHistory.slice(0, -1);
-        newState = {
-          ...state,
-          designHistory: cleanedHistory,
-        };
-      }
-      break;
-
-    case SketchpadAction.UpdateActiveDesignEditorState:
-      const updatedStates = [...state.designEditorCoreStates];
-      updatedStates[state.activeDesign] = action.payload;
-      newState = {
-        ...state,
-        kit: action.payload.kit,
-        designEditorCoreStates: updatedStates,
-      };
-      break;
-
-    case SketchpadAction.AddDesign:
-      if (!state.kit) {
-        console.error("Cannot add design: kit is null");
-        newState = state;
-        break;
-      }
-      const newDesign = action.payload;
-
-      // Ensure at least one piece is fixed using breadth-first search
-      const processedDesign = ensureDesignHasFixedPiece(newDesign);
-
-      const updatedKit = addDesignToKit(state.kit, processedDesign);
-
-      // Create a new DesignEditorCoreState for the newly added design
-      const newDesignEditorCoreState = createInitialDesignEditorCoreState({
-        initialKit: updatedKit,
-        designId: {
-          name: processedDesign.name,
-          variant: processedDesign.variant || undefined,
-          view: processedDesign.view || undefined,
-        },
-        fileUrls: state.fileUrls,
-      });
-
-      newState = {
-        ...state,
-        kit: updatedKit,
-        designEditorCoreStates: [...state.designEditorCoreStates, newDesignEditorCoreState],
-      };
-      break;
-
-    case SketchpadAction.UpdateDesign:
-      if (!state.kit) {
-        console.error("Cannot update design: kit is null");
-        newState = state;
-        break;
-      }
-      const designToUpdate = action.payload;
-      const updatedKitWithDesign = updateDesignInKit(state.kit, designToUpdate);
-
-      newState = {
-        ...state,
-        kit: updatedKitWithDesign,
-      };
-      break;
-
-    case SketchpadAction.ClusterDesign:
-      if (!state.kit) {
-        console.error("Cannot cluster design: kit is null");
-        newState = state;
-        break;
-      }
-
-      // Get the current active design and its state
-      const activeDesignEditorState = state.designEditorCoreStates[state.activeDesign];
-      if (!activeDesignEditorState) {
-        console.error("No active design found for clustering");
-        newState = state;
-        break;
-      }
-
-      const currentDesignId = activeDesignEditorState.designId;
-      const currentSelection = activeDesignEditorState.selection;
-
-      let design: Design;
-      try {
-        design = findDesignInKit(state.kit, currentDesignId);
-      } catch (error) {
-        console.error("Current design not found in kit:", error);
-        newState = state;
-        break;
-      }
-
-      // Use selection from the design editor state
-      const pieceIdsToCluster = currentSelection.selectedPieceIds || [];
-
-      // Validate clustering is possible
-      const clusterableGroups = getClusterableGroups(design, pieceIdsToCluster);
-      if (clusterableGroups.length === 0) {
-        console.warn("No clusterable groups found with current selection");
-        newState = state;
-        break;
-      }
-
-      // Use the first (and typically only) clusterable group
-      const finalClusterPieceIds = clusterableGroups[0];
-
-      const designName = `Cluster-${Date.now()}`;
-
-      // Separate regular pieces from design nodes
-      const regularPieceIds = finalClusterPieceIds.filter((id) => !id.startsWith("design-"));
-      const designNodeIds = finalClusterPieceIds.filter((id) => id.startsWith("design-"));
-
-      // Collect all pieces to include in the cluster
-      let allPiecesToCluster: Piece[] = [];
-      let allConnectionsToCluster: Connection[] = [];
-      let allExternalConnections: Connection[] = [];
-
-      // Add regular pieces
-      if (regularPieceIds.length > 0) {
-        const regularPieces = (design.pieces || []).filter((piece: Piece) => regularPieceIds.includes(piece.id_));
-        allPiecesToCluster.push(...regularPieces);
-
-        // Find connections involving regular pieces
-        const regularConnections = (design.connections || []).filter((connection: Connection) => regularPieceIds.includes(connection.connected.piece.id_) || regularPieceIds.includes(connection.connecting.piece.id_));
-
-        // Separate internal and external connections for regular pieces
-        const internalRegularConnections = regularConnections.filter((connection: Connection) => regularPieceIds.includes(connection.connected.piece.id_) && regularPieceIds.includes(connection.connecting.piece.id_));
-
-        const externalRegularConnections = regularConnections.filter((connection: Connection) => {
-          const connectedInCluster = regularPieceIds.includes(connection.connected.piece.id_);
-          const connectingInCluster = regularPieceIds.includes(connection.connecting.piece.id_);
-          return connectedInCluster !== connectingInCluster; // XOR - exactly one is in cluster
-        });
-
-        allConnectionsToCluster.push(...internalRegularConnections);
-        allExternalConnections.push(...externalRegularConnections);
-      }
-
-      // Add pieces from design nodes
-      for (const designNodeId of designNodeIds) {
-        // Extract design name from design node ID (format: "design-DesignName")
-        const referencedDesignName = designNodeId.replace("design-", "");
-
-        let referencedDesign: Design | null = null;
-        try {
-          referencedDesign = findDesignInKit(state.kit, { name: referencedDesignName });
-        } catch (error) {
-          console.warn(`Referenced design ${referencedDesignName} not found in kit:`, error);
-          continue;
-        }
-
-        if (referencedDesign && referencedDesign.pieces) {
-          // Simply use the original pieces and connections
-          allPiecesToCluster.push(...referencedDesign.pieces);
-
-          // Use the original connections as-is
-          if (referencedDesign.connections) {
-            allConnectionsToCluster.push(...referencedDesign.connections);
-          }
-
-          // Find external connections that connect to this design node
-          const designExternalConnections = (design.connections || []).filter((connection: Connection) => connection.connected.designId === referencedDesignName || connection.connecting.designId === referencedDesignName);
-
-          allExternalConnections.push(...designExternalConnections);
-        }
-      }
-
-      // Create the clustered design with all collected pieces and connections
-      const clusteredDesign: Design = {
-        name: designName,
-        unit: design.unit,
-        description: `Hierarchical cluster with ${allPiecesToCluster.length} pieces`,
-        pieces: allPiecesToCluster,
-        connections: allConnectionsToCluster,
-        created: new Date(),
-        updated: new Date(),
-      };
-
-      // Ensure at least one piece is fixed
-      const processedClusteredDesign = ensureDesignHasFixedPiece(clusteredDesign);
-
-      // Remove all clustered items from the current design
-      const remainingPieces = (design.pieces || []).filter((piece: Piece) => !regularPieceIds.includes(piece.id_));
-
-      // Remove connections involving clustered regular pieces or design nodes
-      const remainingConnections = (design.connections || []).filter((connection: Connection) => {
-        const connectedInRegularCluster = regularPieceIds.includes(connection.connected.piece.id_);
-        const connectingInRegularCluster = regularPieceIds.includes(connection.connecting.piece.id_);
-        const connectedInDesignCluster = designNodeIds.some((designId) => {
-          const designName = designId.replace("design-", "");
-          return connection.connected.designId === designName;
-        });
-        const connectingInDesignCluster = designNodeIds.some((designId) => {
-          const designName = designId.replace("design-", "");
-          return connection.connecting.designId === designName;
-        });
-
-        return !connectedInRegularCluster && !connectingInRegularCluster && !connectedInDesignCluster && !connectingInDesignCluster;
-      });
-
-      // Update external connections to reference the new clustered design
-      const updatedExternalConnections = allExternalConnections.map((connection: Connection) => {
-        const connectedInCluster =
-          regularPieceIds.includes(connection.connected.piece.id_) ||
-          designNodeIds.some((designId) => {
-            const designName = designId.replace("design-", "");
-            return connection.connected.designId === designName;
-          });
-
-        const connectingInCluster =
-          regularPieceIds.includes(connection.connecting.piece.id_) ||
-          designNodeIds.some((designId) => {
-            const designName = designId.replace("design-", "");
-            return connection.connecting.designId === designName;
-          });
-
-        if (connectedInCluster) {
-          return {
-            ...connection,
-            connected: {
-              piece: { id_: connection.connected.piece.id_ },
-              port: connection.connected.port,
-              designId: processedClusteredDesign.name,
-            },
-          };
-        } else if (connectingInCluster) {
-          return {
-            ...connection,
-            connecting: {
-              piece: { id_: connection.connecting.piece.id_ },
-              port: connection.connecting.port,
-              designId: processedClusteredDesign.name,
-            },
-          };
-        }
-
-        return connection;
-      });
-
-      const updatedCurrentDesign: Design = {
-        ...design,
-        pieces: remainingPieces,
-        connections: [...remainingConnections, ...updatedExternalConnections],
-        updated: new Date(),
-      };
-
-      // Add the clustered design to the kit
-      const kitWithClusteredDesign = addDesignToKit(state.kit, processedClusteredDesign);
-
-      // Update the current design in the kit
-      const finalKit = updateDesignInKit(kitWithClusteredDesign, updatedCurrentDesign);
-
-      // Create a new DesignEditorCoreState for the clustered design
-      const clusteredDesignEditorCoreState = createInitialDesignEditorCoreState({
-        initialKit: finalKit,
-        designId: {
-          name: processedClusteredDesign.name,
-          variant: processedClusteredDesign.variant || undefined,
-          view: processedClusteredDesign.view || undefined,
-        },
-        fileUrls: state.fileUrls,
-      });
-
-      // Update the current design's editor state to reflect changes and clear selection
-      const updatedCurrentDesignEditorCoreState = createInitialDesignEditorCoreState({
-        initialKit: finalKit,
-        designId: currentDesignId,
-        fileUrls: state.fileUrls,
-        // Clear selection after clustering
-        initialSelection: {
-          selectedPieceIds: [],
-          selectedConnections: [],
-          selectedPiecePortId: undefined,
-        },
-      });
-
-      // Update the designEditorCoreStates array
-      const updatedDesignEditorCoreStates = [...state.designEditorCoreStates];
-      updatedDesignEditorCoreStates[state.activeDesign] = updatedCurrentDesignEditorCoreState;
-      updatedDesignEditorCoreStates.push(clusteredDesignEditorCoreState);
-
-      newState = {
-        ...state,
-        kit: finalKit,
-        designEditorCoreStates: updatedDesignEditorCoreStates,
-      };
-
-      console.log("Clustered design created:", processedClusteredDesign.name);
-      break;
-
-    case SketchpadAction.ExpandDesign:
-      if (!state.kit) {
-        console.error("Cannot expand design: kit is null");
-        newState = state;
-        break;
-      }
-
-      const designToExpandId = action.payload;
-      let designToExpand: Design;
-      try {
-        designToExpand = findDesignInKit(state.kit, designToExpandId);
-      } catch (error) {
-        console.error("Design to expand not found in kit:", error);
-        newState = state;
-        break;
-      }
-
-      // Find all designs that have connections referencing the design to expand
-      const affectedDesigns: Design[] = [];
-      for (const design of state.kit.designs || []) {
-        if (design.name === designToExpand.name) continue; // Skip the design itself
-
-        const hasExternalConnections = (design.connections || []).some((connection: Connection) => connection.connected.designId === designToExpand.name || connection.connecting.designId === designToExpand.name);
-
-        if (hasExternalConnections) {
-          affectedDesigns.push(design);
-        }
-      }
-
-      if (affectedDesigns.length === 0) {
-        console.warn("No affected designs found for expansion");
-        newState = state;
-        break;
-      }
-
-      // Update all affected designs to remove designId references to the expanded design
-      const updatedAffectedDesigns: Design[] = affectedDesigns.map((affectedDesign) => {
-        // Get all connections that reference the design to expand
-        const externalConnections = (affectedDesign.connections || []).filter((connection: Connection) => connection.connected.designId === designToExpand.name || connection.connecting.designId === designToExpand.name);
-
-        // Get all internal connections (not referencing the design to expand)
-        const internalConnections = (affectedDesign.connections || []).filter((connection: Connection) => connection.connected.designId !== designToExpand.name && connection.connecting.designId !== designToExpand.name);
-
-        // Remove designId from external connections to restore them as regular connections
-        const restoredConnections = externalConnections.map((connection: Connection) => {
-          const updatedConnection = { ...connection };
-
-          if (connection.connected.designId === designToExpand.name) {
-            updatedConnection.connected = {
-              ...connection.connected,
-              designId: undefined,
-            };
-          }
-
-          if (connection.connecting.designId === designToExpand.name) {
-            updatedConnection.connecting = {
-              ...connection.connecting,
-              designId: undefined,
-            };
-          }
-
-          return updatedConnection;
-        });
-
-        return {
-          ...affectedDesign,
-          connections: [...internalConnections, ...restoredConnections],
-          updated: new Date(),
-        };
-      });
-
-      // For simplicity, expand into the first affected design (typically the original design that was clustered)
-      const targetDesign = updatedAffectedDesigns[0];
-
-      // Combine all pieces from the target design and the design to expand
-      const combinedPieces = [...(targetDesign.pieces || []), ...(designToExpand.pieces || [])];
-
-      // Combine all connections: target design connections and connections from the expanded design
-      const combinedConnections = [...(targetDesign.connections || []), ...(designToExpand.connections || [])];
-
-      // Create the updated target design with expanded content
-      const expandedTargetDesign: Design = {
-        ...targetDesign,
-        pieces: combinedPieces,
-        connections: combinedConnections,
-        updated: new Date(),
-      };
-
-      // Remove the design to expand from the kit
-      const kitWithoutExpandedDesign: Kit = {
-        ...state.kit!,
-        designs: (state.kit!.designs || []).filter((design) => design.name !== designToExpand.name),
-      };
-
-      // Update all affected designs in the kit
-      let finalKitAfterExpansion = kitWithoutExpandedDesign;
-
-      // Update the target design with expanded content
-      finalKitAfterExpansion = updateDesignInKit(finalKitAfterExpansion, expandedTargetDesign);
-
-      // Update other affected designs (excluding the target design which was already updated)
-      for (let i = 1; i < updatedAffectedDesigns.length; i++) {
-        const affectedDesign = updatedAffectedDesigns[i];
-        finalKitAfterExpansion = updateDesignInKit(finalKitAfterExpansion, affectedDesign);
-      }
-
-      // Remove the DesignEditorCoreState for the expanded design
-      const expandedDesignStateIndex = state.designEditorCoreStates.findIndex(
-        (designState) => designState.designId.name === designToExpand.name && designState.designId.variant === designToExpand.variant && designState.designId.view === designToExpand.view,
-      );
-
-      let updatedDesignStatesAfterExpansion = [...state.designEditorCoreStates];
-      if (expandedDesignStateIndex !== -1) {
-        updatedDesignStatesAfterExpansion.splice(expandedDesignStateIndex, 1);
-      }
-
-      // Update the target design's editor state
-      const targetDesignStateIndex = updatedDesignStatesAfterExpansion.findIndex(
-        (designState) => designState.designId.name === targetDesign.name && designState.designId.variant === targetDesign.variant && designState.designId.view === targetDesign.view,
-      );
-
-      if (targetDesignStateIndex !== -1) {
-        const updatedTargetDesignEditorCoreState = createInitialDesignEditorCoreState({
-          initialKit: finalKitAfterExpansion,
-          designId: {
-            name: targetDesign.name,
-            variant: targetDesign.variant || undefined,
-            view: targetDesign.view || undefined,
-          },
-          fileUrls: state.fileUrls,
-        });
-        updatedDesignStatesAfterExpansion[targetDesignStateIndex] = updatedTargetDesignEditorCoreState;
-      }
-
-      // Adjust activeDesign index if necessary
-      let newActiveDesign = state.activeDesign;
-      if (expandedDesignStateIndex !== -1 && expandedDesignStateIndex <= state.activeDesign) {
-        newActiveDesign = Math.max(0, state.activeDesign - 1);
-      }
-
-      newState = {
-        ...state,
-        kit: finalKitAfterExpansion,
-        designEditorCoreStates: updatedDesignStatesAfterExpansion,
-        activeDesign: newActiveDesign,
-      };
-
-      console.log("Design expanded:", designToExpand.name, "into", targetDesign.name);
-      break;
-
-    default:
-      newState = state;
-      break;
-  }
-
-  console.log("SKETCHPAD NEW STATE:", newState);
-  return newState;
-};
-
-const createInitialSketchpadState = (): SketchpadState => {
-  return {
-    isLoading: true,
-    fileUrls: new Map(),
-    kit: null,
-    designEditorCoreStates: [],
-    activeDesign: 0,
-    designHistory: [],
-  };
-};
+// Helper
+const keyOf = (d: DesignId) => `${d.name}::${d.variant || ""}::${d.view || ""}`;
 
 export enum Mode {
   USER = "user",
@@ -739,16 +51,14 @@ interface SketchpadContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
   setNavbarToolbar: (toolbar: ReactNode) => void;
-  sketchpadState: SketchpadState;
-  sketchpadDispatch: (action: SketchpadActionType) => void;
   kit: Kit | null;
-  designEditorState: DesignEditorState | null;
+  designEditorState: UIDesignEditorState | null;
   designEditorDispatch: DesignEditorDispatcher | null;
-  addDesign: (design: Design) => void;
-  updateDesign: (design: Design) => void;
+  availableDesigns: DesignId[];
+  activeDesignId: DesignId | null;
+  setActiveDesignId: (id: DesignId) => void;
   clusterDesign: () => void;
-  expandDesign: (designId: DesignId) => void;
-  previousDesign: () => void;
+  expandDesign: (id: DesignId) => void;
 }
 
 const SketchpadContext = createContext<SketchpadContextType | null>(null);
@@ -764,26 +74,20 @@ export const useSketchpad = () => {
 interface ViewProps {}
 
 const View = () => {
-  const { kit, designEditorState, designEditorDispatch, sketchpadDispatch, sketchpadState } = useSketchpad();
+  const { kit, designEditorState, designEditorDispatch, availableDesigns } = useSketchpad();
 
   const onDesignIdChange = (newDesignId: DesignId) => {
-    sketchpadDispatch({
-      type: SketchpadAction.ChangeActiveDesign,
-      payload: newDesignId,
-    });
+    // handled by context provider via setActiveDesignId
   };
-
-  const availableDesigns = sketchpadState.designEditorCoreStates.map((state) => state.designId);
 
   if (!kit || !designEditorState) return null;
 
   return (
     <DesignEditor
-      kit={kit}
       designId={designEditorState.designId}
-      fileUrls={designEditorState.fileUrls}
-      externalState={designEditorState}
-      externalDispatch={designEditorDispatch}
+  fileUrls={designEditorState.fileUrls}
+  externalState={designEditorState}
+  externalDispatch={designEditorDispatch}
       onDesignIdChange={onDesignIdChange}
       availableDesigns={availableDesigns}
       onToolbarChange={() => {}}
@@ -804,7 +108,8 @@ interface SketchpadProps {
   userId: string;
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layout.NORMAL, onWindowEvents, userId }) => {
+const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layout.NORMAL, onWindowEvents, userId }) => {
+  const store = useSketchpadStore();
   const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
   const [currentLayout, setCurrentLayout] = useState<Layout>(layout);
   const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
@@ -814,69 +119,227 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
     }
     return Theme.LIGHT;
   });
+  const [activeDesignId, setActiveDesignId] = useState<DesignId | null>(null);
+  const editorStoreIds = useRef<Map<string, string>>(new Map());
+  const [designEditorState, setDesignEditorState] = useState<StoreDesignEditorState | null>(null);
+  const [isImporting, setIsImporting] = useState<boolean>(true);
 
-  const [sketchpadState, sketchpadDispatch] = useReducer(sketchpadReducer, createInitialSketchpadState());
-
+  // Import default kit and files into store once
   useEffect(() => {
-    extractFilesAndCreateUrls("metabolism.zip").then((urls) => {
-      sketchpadDispatch({
-        type: SketchpadAction.UrlsLoaded,
-        payload: { fileUrls: urls },
-      });
-    });
-  }, []);
-  const activeDesignEditorCoreState = sketchpadState.designEditorCoreStates[sketchpadState.activeDesign];
-  const activeDesignEditorState = activeDesignEditorCoreState
-    ? {
-        ...activeDesignEditorCoreState,
-        kit: sketchpadState.kit!,
+    let mounted = true;
+    (async () => {
+      try {
+        await store.importKit("metabolism.zip", true);
+      } catch (e) {
+      } finally {
+        if (mounted) setIsImporting(false);
       }
-    : null;
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
+  // Read kit and designs from store
+  const defaultKit = useKit("Metabolism", "");
+  const designs = useDesigns("Metabolism", "");
+
+  // Set active design when designs are available
+  useEffect(() => {
+    if (!activeDesignId && designs && designs.length > 0) setActiveDesignId({ name: designs[0].name, variant: designs[0].variant, view: designs[0].view });
+  }, [designs]);
+
+  // Ensure a design editor store exists and subscribe to its state
+  useEffect(() => {
+    if (!activeDesignId) return;
+    const key = keyOf(activeDesignId);
+    let id = editorStoreIds.current.get(key);
+    if (!id) {
+      const kitName = defaultKit?.name || "Metabolism";
+      const kitVersion = defaultKit?.version || "";
+      id = store.createDesignEditorStore(kitName, kitVersion, activeDesignId.name, activeDesignId.variant || "", activeDesignId.view || "");
+      editorStoreIds.current.set(key, id);
+    }
+    const editor = store.getDesignEditorStore(id);
+    if (!editor) return;
+  const unsubscribe = editor.subscribe(() => setDesignEditorState(editor.getState()));
+  setDesignEditorState(editor.getState());
+    return () => unsubscribe();
+  }, [activeDesignId, defaultKit]);
+
+  // Bridge dispatch to store operations
+  const transactionQueue = useRef<(() => void)[] | null>(null);
   const designEditorDispatch: DesignEditorDispatcher = (action) => {
-    if (!activeDesignEditorState) return;
-
-    const newState = designEditorReducer(activeDesignEditorState, action);
-
-    sketchpadDispatch({
-      type: SketchpadAction.UpdateActiveDesignEditorState,
-      payload: newState,
-    });
-  };
-
-  const addDesign = (design: Design) => {
-    sketchpadDispatch({
-      type: SketchpadAction.AddDesign,
-      payload: design,
-    });
-  };
-
-  const updateDesign = (design: Design) => {
-    sketchpadDispatch({
-      type: SketchpadAction.UpdateDesign,
-      payload: design,
-    });
-  };
-
-  const clusterDesign = () => {
-    sketchpadDispatch({
-      type: SketchpadAction.ClusterDesign,
-      payload: null,
-    });
-  };
-
-  const expandDesign = (designId: DesignId) => {
-    sketchpadDispatch({
-      type: SketchpadAction.ExpandDesign,
-      payload: designId,
-    });
-  };
-
-  const previousDesign = () => {
-    sketchpadDispatch({
-      type: SketchpadAction.PreviousDesign,
-      payload: null,
-    });
+    if (!activeDesignId) return;
+    const id = editorStoreIds.current.get(keyOf(activeDesignId));
+    if (!id) return;
+    const editor = store.getDesignEditorStore(id);
+    if (!editor) return;
+    const kitId = editor.getKitId();
+    const designId = editor.getDesignId();
+    const commit = (fn: () => void) => {
+      if (transactionQueue.current) transactionQueue.current.push(fn);
+      else store.transact(fn);
+    };
+  const setEphemeral = (updater: (s: StoreDesignEditorState) => StoreDesignEditorState) => editor.setState(updater(editor.getState()));
+    switch (action.type) {
+      // Selection-only
+      case DesignEditorAction.SetSelection:
+      case DesignEditorAction.SelectAll:
+      case DesignEditorAction.DeselectAll:
+      case DesignEditorAction.InvertSelection:
+      case DesignEditorAction.InvertPiecesSelection:
+      case DesignEditorAction.InvertConnectionsSelection:
+      case DesignEditorAction.AddAllPiecesToSelection:
+      case DesignEditorAction.RemoveAllPiecesFromSelection:
+      case DesignEditorAction.AddAllConnectionsToSelection:
+      case DesignEditorAction.RemoveAllConnectionsFromSelection:
+      case DesignEditorAction.SelectPiece:
+      case DesignEditorAction.AddPieceToSelection:
+      case DesignEditorAction.RemovePieceFromSelection:
+      case DesignEditorAction.SelectPieces:
+      case DesignEditorAction.AddPiecesToSelection:
+      case DesignEditorAction.RemovePiecesFromSelection:
+      case DesignEditorAction.SelectConnection:
+      case DesignEditorAction.AddConnectionToSelection:
+      case DesignEditorAction.RemoveConnectionFromSelection:
+      case DesignEditorAction.SelectConnections:
+      case DesignEditorAction.AddConnectionsToSelection:
+      case DesignEditorAction.RemoveConnectionsFromSelection:
+      case DesignEditorAction.SelectPiecePort:
+      case DesignEditorAction.DeselectPiecePort: {
+        const kit = store.getKit(kitId.name, kitId.version || "");
+        const design = (kit.designs || []).find((d) => d.name === designId.name && (d.variant || "") === (designId.variant || "") && (d.view || "") === (designId.view || ""))!;
+        const nextSel = reduceSelection(editor.getState().selection, design, action);
+        editor.updateDesignEditorSelection(nextSel);
+        break;
+      }
+      // Ephemeral UI
+      case DesignEditorAction.SetFullscreen:
+      case DesignEditorAction.ToggleDiagramFullscreen:
+      case DesignEditorAction.ToggleModelFullscreen:
+      case DesignEditorAction.SetCursor:
+      case DesignEditorAction.SetCamera:
+      case DesignEditorAction.StepIn:
+      case DesignEditorAction.StepOut:
+      case DesignEditorAction.UpdatePresence: {
+        setEphemeral((s) => {
+          if (action.type === DesignEditorAction.SetFullscreen) return { ...s, fullscreenPanel: action.payload as DesignEditorFullscreenPanel } as StoreDesignEditorState;
+          if (action.type === DesignEditorAction.ToggleDiagramFullscreen)
+            return { ...s, fullscreenPanel: s.fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? DesignEditorFullscreenPanel.None : DesignEditorFullscreenPanel.Diagram } as StoreDesignEditorState;
+          if (action.type === DesignEditorAction.ToggleModelFullscreen)
+            return { ...s, fullscreenPanel: s.fullscreenPanel === DesignEditorFullscreenPanel.Model ? DesignEditorFullscreenPanel.None : DesignEditorFullscreenPanel.Model } as StoreDesignEditorState;
+          if (action.type === DesignEditorAction.SetCursor) return { ...s, cursor: action.payload } as any;
+          if (action.type === DesignEditorAction.SetCamera) return { ...s, camera: action.payload } as any;
+          if (action.type === DesignEditorAction.StepIn) return { ...s, others: [...(s.others || []), action.payload] } as any;
+          if (action.type === DesignEditorAction.StepOut) return { ...s, others: (s.others || []).filter((p) => p.name !== action.payload.name) } as any;
+          if (action.type === DesignEditorAction.UpdatePresence) return { ...s, others: (s.others || []).map((p) => (p.name === action.payload.name ? { ...p, ...action.payload } : p)) } as any;
+          return s;
+        });
+        break;
+      }
+      // Undo/Redo
+      case DesignEditorAction.Undo:
+        editor.undo();
+        break;
+      case DesignEditorAction.Redo:
+        editor.redo();
+        break;
+      // Transactions
+      case DesignEditorAction.StartTransaction:
+        transactionQueue.current = [];
+        setEphemeral((s) => ({ ...s, isTransactionActive: true } as any));
+        break;
+      case DesignEditorAction.FinalizeTransaction: {
+        const ops = transactionQueue.current || [];
+        transactionQueue.current = null;
+        store.transact(() => ops.forEach((fn) => fn()));
+        setEphemeral((s) => ({ ...s, isTransactionActive: false } as any));
+        break;
+      }
+      case DesignEditorAction.AbortTransaction:
+        transactionQueue.current = null;
+        setEphemeral((s) => ({ ...s, isTransactionActive: false } as any));
+        break;
+      // Design changes
+      case DesignEditorAction.SetDesign: {
+        const d = action.payload as Design;
+        commit(() => store.updateDesign(kitId.name, kitId.version || "", d));
+        break;
+      }
+      case DesignEditorAction.AddPiece: {
+        const p = action.payload as Piece;
+        commit(() => store.createPiece(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", p));
+        break;
+      }
+      case DesignEditorAction.SetPiece: {
+        const p = action.payload as Piece;
+        commit(() => store.updatePiece(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", p));
+        break;
+      }
+      case DesignEditorAction.RemovePiece: {
+        const p = action.payload as Piece | string;
+        const pid = typeof p === "string" ? p : p.id_;
+        commit(() => store.deletePiece(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", pid));
+        break;
+      }
+      case DesignEditorAction.AddPieces:
+        (action.payload as Piece[]).forEach((p: Piece) => commit(() => store.createPiece(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", p)));
+        break;
+      case DesignEditorAction.SetPieces:
+        (action.payload as Piece[]).forEach((p: Piece) => commit(() => store.updatePiece(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", p)));
+        break;
+      case DesignEditorAction.RemovePieces:
+        (action.payload as (Piece | string)[]).forEach((p: any) => {
+          const pid = typeof p === "string" ? p : p.id_;
+          commit(() => store.deletePiece(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", pid));
+        });
+        break;
+      case DesignEditorAction.AddConnection:
+        commit(() => store.createConnection(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", action.payload as Connection));
+        break;
+      case DesignEditorAction.SetConnection:
+        commit(() => store.updateConnection(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", action.payload as Connection));
+        break;
+      case DesignEditorAction.RemoveConnection: {
+        const c = action.payload as any;
+        const connectedId = c.connected?.piece?.id_ || c.connectedPieceId || c;
+        const connectingId = c.connecting?.piece?.id_ || c.connectingPieceId || c;
+        commit(() => store.deleteConnection(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", connectedId, connectingId));
+        break;
+      }
+      case DesignEditorAction.AddConnections:
+        (action.payload as Connection[]).forEach((c) => commit(() => store.createConnection(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", c)));
+        break;
+      case DesignEditorAction.SetConnections:
+        (action.payload as Connection[]).forEach((c) => commit(() => store.updateConnection(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", c)));
+        break;
+      case DesignEditorAction.RemoveConnections:
+        (action.payload as any[]).forEach((c) => {
+          const connectedId = c.connected?.piece?.id_ || c.connectedPieceId || c;
+          const connectingId = c.connecting?.piece?.id_ || c.connectingPieceId || c;
+          commit(() => store.deleteConnection(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", connectedId, connectingId));
+        });
+        break;
+      case DesignEditorAction.RemovePiecesAndConnections: {
+        const { pieceIds, connectionIds } = action.payload as { pieceIds: (Piece | string)[]; connectionIds: any[] };
+        pieceIds.forEach((p) => {
+          const pid = typeof p === "string" ? p : p.id_;
+          commit(() => store.deletePiece(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", pid));
+        });
+        connectionIds.forEach((c) => {
+          const connectedId = c.connected?.piece?.id_ || c.connectedPieceId || c;
+          const connectingId = c.connecting?.piece?.id_ || c.connectingPieceId || c;
+          commit(() => store.deleteConnection(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", connectedId, connectingId));
+        });
+        break;
+      }
+      case DesignEditorAction.DeleteSelected:
+        editor.deleteSelectedPiecesAndConnections();
+        break;
+      default:
+        break;
+    }
   };
 
   useEffect(() => {
@@ -894,13 +357,15 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
     }
   }, [currentLayout]);
 
-  if (sketchpadState.isLoading) {
-    return <div>Loading...</div>;
-  }
+  const kit = defaultKit || null;
+  const availableDesigns: DesignId[] = useMemo(() => (designs || []).map((d: Design) => ({ name: d.name, variant: d.variant, view: d.view })), [designs]);
+  const fileUrls = store.getFileUrls();
+  const externalState: UIDesignEditorState | null = designEditorState
+    ? { ...(designEditorState as any), kit: kit as Kit, fileUrls, operationStack: [], operationIndex: 0 }
+    : null;
 
   return (
     <TooltipProvider>
-      {/* <StudioStoreProvider userId={userId}> */}
       <SketchpadContext.Provider
         value={{
           mode: mode,
@@ -909,29 +374,31 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
           theme: currentTheme,
           setTheme: setCurrentTheme,
           setNavbarToolbar: setNavbarToolbar,
-          sketchpadState: sketchpadState,
-          sketchpadDispatch: sketchpadDispatch,
-          kit: sketchpadState.kit,
-          designEditorState: activeDesignEditorState,
+          kit: kit,
+          designEditorState: externalState,
           designEditorDispatch: designEditorDispatch,
-          addDesign: addDesign,
-          updateDesign: updateDesign,
-          clusterDesign: clusterDesign,
-          expandDesign: expandDesign,
-          previousDesign: previousDesign,
+          availableDesigns,
+          activeDesignId,
+          setActiveDesignId,
+          clusterDesign: () => {},
+          expandDesign: () => {},
         }}
       >
         <div key={`layout-${currentLayout}`} className="h-full w-full flex flex-col bg-background text-foreground">
           <View />
         </div>
       </SketchpadContext.Provider>
-      {/* </StudioStoreProvider> */}
     </TooltipProvider>
   );
 };
 
+const Sketchpad: FC<SketchpadProps> = (props) => (
+  <StoreProvider>
+    <SketchpadInner {...props} />
+  </StoreProvider>
+);
+
 export default Sketchpad;
 
 // Export Sketchpad state management types for external use
-export { SketchpadAction };
-export type { SketchpadActionType, SketchpadState };
+export {};
