@@ -157,6 +157,7 @@ export const PieceIdLikeSchema = z.union([PieceSchema, PieceIdSchema, z.string()
 export const SideSchema = z.object({
   piece: PieceIdSchema,
   port: PortIdSchema,
+  designId: z.string().optional(),
 });
 export const SideIdSchema = z.object({ piece: PieceIdSchema });
 
@@ -184,7 +185,7 @@ export const ConnectionIdSchema = z.object({
 export const ConnectionIdLikeSchema = z.union([ConnectionSchema, ConnectionIdSchema, z.tuple([z.string(), z.string()]), z.string()]);
 
 // https://github.com/usalu/semio#-design-
-export const DesignSchema = z.object({
+export const DesignSchema: z.ZodType<any> = z.object({
   name: z.string(),
   description: z.string().optional(),
   icon: z.string().optional(),
@@ -205,6 +206,15 @@ export const DesignSchema = z.object({
     .optional(),
   pieces: z.array(PieceSchema).optional(),
   connections: z.array(ConnectionSchema).optional(),
+  fixedDesigns: z
+    .array(
+      z.object({
+        designId: z.lazy(() => DesignIdSchema),
+        plane: PlaneSchema.optional(),
+        center: DiagramPointSchema.optional(),
+      }),
+    )
+    .optional(),
   authors: z.array(AuthorSchema).optional(),
   qualities: z.array(QualitySchema).optional(),
 });
@@ -214,6 +224,12 @@ export const DesignIdSchema = z.object({
   view: z.string().optional(),
 });
 export const DesignIdLikeSchema = z.union([DesignSchema, DesignIdSchema, z.tuple([z.string(), z.string().optional(), z.string().optional()]), z.tuple([z.string(), z.string().optional()]), z.string()]);
+
+export const DesignPieceSchema = z.object({
+  designId: DesignIdSchema,
+  plane: PlaneSchema.optional(),
+  center: DiagramPointSchema.optional(),
+});
 
 // https://github.com/usalu/semio#-kit-
 export const KitSchema = z.object({
@@ -353,6 +369,7 @@ export const PiecesDiffSchema = z.object({
 export const SideDiffSchema = z.object({
   piece: PieceIdSchema,
   port: PortIdSchema.optional(),
+  designId: z.string().optional(),
 });
 export const ConnectionDiffSchema = z.object({
   connected: SideDiffSchema,
@@ -430,6 +447,7 @@ export type TypeIdLike = z.infer<typeof TypeIdLikeSchema>;
 export type Piece = z.infer<typeof PieceSchema>;
 export type PieceId = z.infer<typeof PieceIdSchema>;
 export type PieceIdLike = z.infer<typeof PieceIdLikeSchema>;
+export type DesignPiece = { designId: DesignId; plane?: Plane; center?: DiagramPoint };
 export type Side = z.infer<typeof SideSchema>;
 export type SideId = z.infer<typeof SideIdSchema>;
 export type SideIdLike = z.infer<typeof SideIdLikeSchema>;
@@ -1432,7 +1450,10 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
     throw new Error(`Design ${normalizedDesignId.name} not found in kit ${kit.name}`);
   }
   const types = kit.types ?? [];
-  if (!design.pieces || design.pieces.length === 0) return design;
+
+  let expandedDesign = expandDesignPieces(design, kit);
+
+  if (!expandedDesign.pieces || expandedDesign.pieces.length === 0) return expandedDesign;
 
   const typesDict: { [key: string]: { [key: string]: Type } } = {};
   types.forEach((t) => {
@@ -1447,7 +1468,7 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
     return portId?.id_ ? type.ports.find((p) => p.id_ === portId.id_) : type.ports[0];
   };
 
-  const flatDesign: Design = JSON.parse(JSON.stringify(design));
+  const flatDesign: Design = JSON.parse(JSON.stringify(expandedDesign));
   if (!flatDesign.pieces) flatDesign.pieces = [];
 
   const piecePlanes: { [pieceId: string]: Plane } = {};
@@ -1461,19 +1482,18 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
       nodes: flatDesign.pieces!.map((piece) => ({
         data: { id: piece.id_, label: piece.id_ },
       })),
-      edges:
-        flatDesign.connections?.map((connection, index) => {
-          const sourceId = connection.connected.piece.id_;
-          const targetId = connection.connecting.piece.id_;
-          return {
-            data: {
-              id: `${sourceId}--${targetId}`,
-              source: sourceId,
-              target: targetId,
-              connectionData: connection,
-            },
-          };
-        }) ?? [],
+      edges: flatDesign.connections?.map((connection, index) => {
+        const sourceId = connection.connected.piece.id_;
+        const targetId = connection.connecting.piece.id_;
+        return {
+          data: {
+            id: `${sourceId}--${targetId}`,
+            source: sourceId,
+            target: targetId,
+            connectionData: connection,
+          },
+        };
+      }),
     },
     headless: true,
   });
@@ -1589,6 +1609,249 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
 
 //#endregion Design
 
+//#region Design Pieces
+
+/**
+ * Creates a clustered design from a cluster of pieces and connections
+ * @param originalDesign - The original design containing the pieces to cluster
+ * @param clusterPieceIds - The IDs of pieces to include in the clustered design
+ * @param designName - Name for the new design
+ * @returns Object containing the clustered design and external connections
+ */
+export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: string[], designName: string): { clusteredDesign: Design; externalConnections: Connection[] } => {
+  // Validate inputs
+  if (!originalDesign.pieces || originalDesign.pieces.length === 0) {
+    throw new Error("Original design has no pieces to cluster");
+  }
+  if (!clusterPieceIds || clusterPieceIds.length === 0) {
+    throw new Error("No piece IDs provided for clustering");
+  }
+
+  // Extract clustered pieces and their connections
+  const clusteredPieces = (originalDesign.pieces || []).filter((piece) => clusterPieceIds.includes(piece.id_));
+
+  if (clusteredPieces.length === 0) {
+    throw new Error("No pieces found matching the provided IDs");
+  }
+
+  // Find internal connections (both pieces in cluster)
+  const internalConnections = (originalDesign.connections || []).filter((connection) => clusterPieceIds.includes(connection.connected.piece.id_) && clusterPieceIds.includes(connection.connecting.piece.id_));
+
+  // Find external connections (one piece in cluster, one outside)
+  const externalConnections = (originalDesign.connections || []).filter((connection) => {
+    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.id_);
+    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.id_);
+    return connectedInCluster !== connectingInCluster; // XOR - exactly one is in cluster
+  });
+
+  // Create the clustered design
+  const clusteredDesign: Design = {
+    name: designName,
+    unit: originalDesign.unit,
+    description: `Clustered design with ${clusteredPieces.length} pieces`,
+    pieces: clusteredPieces,
+    connections: internalConnections,
+    created: new Date(),
+    updated: new Date(),
+  };
+
+  return { clusteredDesign, externalConnections };
+};
+
+/**
+ * Replaces clustered pieces with direct design references in connections
+ * @param originalDesign - The original design
+ * @param clusterPieceIds - IDs of pieces to remove and cluster
+ * @param clusteredDesign - The clustered design to include
+ * @param externalConnections - External connections to update
+ * @returns Updated design with clustered pieces removed and direct design references
+ */
+export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds: string[], clusteredDesign: Design, externalConnections: Connection[]): Design => {
+  // Remove clustered pieces
+  const remainingPieces = (originalDesign.pieces || []).filter((piece) => !clusterPieceIds.includes(piece.id_));
+
+  // Remove all connections involving clustered pieces
+  const remainingConnections = (originalDesign.connections || []).filter((connection) => {
+    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.id_);
+    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.id_);
+    return !connectedInCluster && !connectingInCluster;
+  });
+
+  // Update external connections to use direct design references
+  const updatedExternalConnections = externalConnections.map((connection) => {
+    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.id_);
+    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.id_);
+
+    if (connectedInCluster) {
+      // Keep original piece ID but add designId to reference the nested design
+      return {
+        ...connection,
+        connected: {
+          piece: { id_: connection.connected.piece.id_ }, // Keep original piece ID
+          port: connection.connected.port,
+          designId: clusteredDesign.name, // Reference to nested design
+        },
+      };
+    } else if (connectingInCluster) {
+      // Keep original piece ID but add designId to reference the nested design
+      return {
+        ...connection,
+        connecting: {
+          piece: { id_: connection.connecting.piece.id_ }, // Keep original piece ID
+          port: connection.connecting.port,
+          designId: clusteredDesign.name, // Reference to nested design
+        },
+      };
+    }
+
+    return connection;
+  });
+
+  return {
+    ...originalDesign,
+    pieces: remainingPieces, // No design piece added
+    connections: [...remainingConnections, ...updatedExternalConnections],
+    updated: new Date(),
+  };
+};
+
+/**
+ * Expands design pieces by replacing them with their constituent pieces and connections
+ * @param design - The design to expand
+ * @param kit - The kit containing type information
+ * @returns Design with design pieces expanded
+ */
+export const getClusterableGroups = (design: Design, selectedPieceIds: string[]): string[][] => {
+  if (selectedPieceIds.length < 2) return []; // Need at least 2 items to cluster
+
+  // Build adjacency map from all connections
+  const adjacencyMap = new Map<string, Set<string>>();
+  (design.connections || []).forEach((connection) => {
+    const sourceId = connection.connecting.piece.id_;
+    const targetId = connection.connected.piece.id_;
+
+    if (!adjacencyMap.has(sourceId)) adjacencyMap.set(sourceId, new Set());
+    if (!adjacencyMap.has(targetId)) adjacencyMap.set(targetId, new Set());
+
+    adjacencyMap.get(sourceId)!.add(targetId);
+    adjacencyMap.get(targetId)!.add(sourceId);
+  });
+
+  // Find connected components using DFS
+  const visited = new Set<string>();
+  const connectedGroups: string[][] = [];
+
+  const dfs = (pieceId: string, currentGroup: string[]) => {
+    if (visited.has(pieceId)) return;
+    visited.add(pieceId);
+    currentGroup.push(pieceId);
+
+    const neighbors = adjacencyMap.get(pieceId) || new Set();
+    for (const neighbor of neighbors) {
+      if (selectedPieceIds.includes(neighbor) && !visited.has(neighbor)) {
+        dfs(neighbor, currentGroup);
+      }
+    }
+  };
+
+  // First, find all connected components
+  for (const pieceId of selectedPieceIds) {
+    if (!visited.has(pieceId)) {
+      const group: string[] = [];
+      dfs(pieceId, group);
+      connectedGroups.push(group);
+    }
+  }
+
+  // If we have multiple connected components OR design nodes in selection,
+  // allow clustering the entire selection as one group
+  const hasDesignNodes = selectedPieceIds.some((id) => id.startsWith("design-"));
+  const hasMultipleComponents = connectedGroups.length > 1;
+  const hasLargeConnectedGroup = connectedGroups.some((group) => group.length > 1);
+
+  if (hasDesignNodes || hasMultipleComponents || hasLargeConnectedGroup) {
+    // Return all selected pieces as one clusterable group
+    return [selectedPieceIds];
+  }
+
+  return [];
+};
+
+export const expandDesignPieces = (design: Design, kit: Kit): Design => {
+  // Check if there are any connections with designId (indicating clustered pieces)
+  const hasDesignConnections = design.connections?.some((conn) => conn.connected.designId || conn.connecting.designId);
+  if (!hasDesignConnections) {
+    return design; // No design connections to expand
+  }
+
+  let expandedDesign = { ...design };
+
+  // Find all unique designIds referenced in connections
+  const designIds = new Set<string>();
+  design.connections?.forEach((conn) => {
+    if (conn.connected.designId) designIds.add(conn.connected.designId);
+    if (conn.connecting.designId) designIds.add(conn.connecting.designId);
+  });
+
+  if (designIds.size === 0) {
+    return expandedDesign; // No design references found
+  }
+
+  // For each referenced design, expand it
+  for (const designName of designIds) {
+    // Find the design in the kit
+    const referencedDesign = findDesignInKit(kit, { name: designName });
+    if (!referencedDesign) continue;
+
+    // Recursively expand the referenced design first
+    const expandedReferencedDesign = expandDesignPieces(referencedDesign, kit);
+
+    // For design connections, use the original pieces and connections without namespacing
+    const transformedPieces = (expandedReferencedDesign.pieces || []).map((piece) => ({
+      ...piece,
+      center: piece.center || { x: 0, y: 0 },
+    }));
+
+    const transformedConnections = expandedReferencedDesign.connections || [];
+
+    const updatedExternalConnections = (expandedDesign.connections || []).map((connection) => {
+      if (connection.connected.designId === designName) {
+        return {
+          ...connection,
+          connected: {
+            ...connection.connected,
+            designId: undefined,
+          },
+        };
+      }
+
+      if (connection.connecting.designId === designName) {
+        // Use the original piece ID directly (no namespacing)
+        return {
+          ...connection,
+          connecting: {
+            ...connection.connecting,
+            designId: undefined, // Remove designId since we've expanded
+          },
+        };
+      }
+
+      return connection;
+    });
+
+    // Add expanded pieces and update connections
+    expandedDesign = {
+      ...expandedDesign,
+      pieces: [...(expandedDesign.pieces || []), ...transformedPieces],
+      connections: [...updatedExternalConnections, ...transformedConnections],
+    };
+  }
+
+  return expandedDesign;
+};
+
+//#endregion Design Pieces
+
 //#region Type
 
 export const addTypeToKit = (kit: Kit, type: Type): Kit => ({
@@ -1632,6 +1895,57 @@ export const updateDesignInKit = (kit: Kit, design: Design): Kit => {
     ...kit,
     designs: (kit.designs || []).map((d) => (isSameDesign(d, design) ? design : d)),
   };
+};
+
+export type IncludedDesignInfo = {
+  id: string;
+  designId: DesignId;
+  type: "connected" | "fixed";
+  center?: DiagramPoint;
+  plane?: Plane;
+  externalConnections?: Connection[];
+};
+
+export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
+  const includedDesigns: IncludedDesignInfo[] = [];
+
+  // Get designs from external connections (clustered designs)
+  const designIds = new Set<string>();
+  design.connections?.forEach((conn: Connection) => {
+    if (conn.connected.designId) designIds.add(conn.connected.designId);
+    if (conn.connecting.designId) designIds.add(conn.connecting.designId);
+  });
+
+  // Add connected designs
+  Array.from(designIds).forEach((designIdString) => {
+    const externalConnections =
+      design.connections?.filter((connection: Connection) => {
+        const connectedToDesign = connection.connected.designId === designIdString;
+        const connectingToDesign = connection.connecting.designId === designIdString;
+        return connectedToDesign || connectingToDesign;
+      }) ?? [];
+
+    includedDesigns.push({
+      id: `design-${designIdString}`,
+      designId: { name: designIdString },
+      type: "connected",
+      externalConnections,
+    });
+  });
+
+  // Add fixed designs
+  (design.fixedDesigns || []).forEach((fixedDesign: any) => {
+    const { designId: fixedDesignId, center, plane } = fixedDesign;
+    includedDesigns.push({
+      id: `fixed-design-${fixedDesignId.name}-${fixedDesignId.variant || ""}-${fixedDesignId.view || ""}`,
+      designId: fixedDesignId,
+      type: "fixed",
+      center,
+      plane,
+    });
+  });
+
+  return includedDesigns;
 };
 
 //#endregion Design

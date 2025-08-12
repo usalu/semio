@@ -39,6 +39,8 @@ export interface CommandContext {
   kit: Kit;
   designId: DesignId;
   selection: any;
+  clusterDesign?: () => void;
+  expandDesign?: (designId: DesignId) => void;
 }
 
 export interface CommandResult {

@@ -58,6 +58,8 @@ import {
   findTypeInKit,
   flattenDesign,
   FullscreenPanel,
+  getClusterableGroups,
+  getIncludedDesigns,
   ICON_WIDTH,
   isPortInUse,
   isSameConnection,
@@ -76,6 +78,7 @@ import {
 import "@semio/js/globals.css";
 import "@xyflow/react/dist/style.css";
 import { DesignEditorSelection, Presence, useDesignEditor } from "./DesignEditor";
+import { SketchpadAction, useSketchpad } from "./Sketchpad";
 
 //#region ClusterMenu
 
@@ -83,98 +86,187 @@ type ClusterMenuProps = {
   nodes: DiagramNode[];
   edges: DiagramEdge[];
   selection: DesignEditorSelection;
-  onCluster: () => void;
+  onCluster: (clusterPieceIds: string[]) => void;
 };
 
 const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, selection, onCluster }) => {
   const reactFlowInstance = useReactFlow();
+  const { kit, designId } = useDesignEditor();
 
-  // Calculate bounding box of selected elements
-  const getBoundingBox = useCallback(() => {
-    const selectedNodes = nodes.filter((node) => selection.selectedPieceIds.includes(node.data.piece.id_));
+  // Get the design from the state
+  const design = useMemo(() => {
+    if (!kit) return null;
+    try {
+      return findDesignInKit(kit, designId);
+    } catch (error) {
+      return null;
+    }
+  }, [kit, designId]);
 
-    const selectedEdges = edges.filter((edge) => edge.data && selection.selectedConnections.some((conn) => conn.connectingPieceId === edge.data!.connection.connecting.piece.id_ && conn.connectedPieceId === edge.data!.connection.connected.piece.id_));
+  // Find groups of selected nodes (connected or manually selected together)
+  const clusterableGroups = useMemo(() => {
+    if (!design) return [];
+    return getClusterableGroups(design, selection.selectedPieceIds);
+  }, [design, selection.selectedPieceIds]);
 
-    if (selectedNodes.length === 0 && selectedEdges.length === 0) return null;
+  // Calculate bounding box for a group of piece IDs
+  const getBoundingBoxForGroup = useCallback(
+    (groupPieceIds: string[]) => {
+      const groupNodes = nodes.filter((node) => groupPieceIds.includes(node.data.piece.id_));
 
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
+      if (groupNodes.length === 0) return null;
 
-    // Include selected nodes in bounding box
-    selectedNodes.forEach((node) => {
-      const x = node.position.x;
-      const y = node.position.y;
-      const width = ICON_WIDTH;
-      const height = ICON_WIDTH;
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
 
-      minX = Math.min(minX, x);
-      minY = Math.min(minY, y);
-      maxX = Math.max(maxX, x + width);
-      maxY = Math.max(maxY, y + height);
-    });
+      groupNodes.forEach((node) => {
+        const x = node.position.x;
+        const y = node.position.y;
+        const width = ICON_WIDTH;
+        const height = ICON_WIDTH;
 
-    // Include connected nodes of selected edges in bounding box
-    selectedEdges.forEach((edge) => {
-      if (!edge.data) return;
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x + width);
+        maxY = Math.max(maxY, y + height);
+      });
 
-      const sourceNode = nodes.find((n) => n.data.piece.id_ === edge.data!.connection.connecting.piece.id_);
-      const targetNode = nodes.find((n) => n.data.piece.id_ === edge.data!.connection.connected.piece.id_);
+      // Add padding around the selection
+      const padding = 20;
+      return {
+        x: minX - padding,
+        y: minY - padding,
+        width: maxX - minX + padding * 2,
+        height: maxY - minY + padding * 2,
+      };
+    },
+    [nodes],
+  );
 
-      if (sourceNode) {
-        minX = Math.min(minX, sourceNode.position.x);
-        minY = Math.min(minY, sourceNode.position.y);
-        maxX = Math.max(maxX, sourceNode.position.x + ICON_WIDTH);
-        maxY = Math.max(maxY, sourceNode.position.y + ICON_WIDTH);
-      }
-
-      if (targetNode) {
-        minX = Math.min(minX, targetNode.position.x);
-        minY = Math.min(minY, targetNode.position.y);
-        maxX = Math.max(maxX, targetNode.position.x + ICON_WIDTH);
-        maxY = Math.max(maxY, targetNode.position.y + ICON_WIDTH);
-      }
-    });
-
-    // Add padding around the selection
-    const padding = 20;
-    return {
-      x: minX - padding,
-      y: minY - padding,
-      width: maxX - minX + padding * 2,
-      height: maxY - minY + padding * 2,
-    };
-  }, [nodes, edges, selection.selectedPieceIds, selection.selectedConnections]);
-
-  const boundingBox = getBoundingBox();
-
-  // Don't show menu if no elements are selected
-  if (!boundingBox || (selection.selectedPieceIds.length === 0 && selection.selectedConnections.length === 0)) {
+  if (clusterableGroups.length === 0) {
     return null;
   }
 
   return (
     <ViewportPortal>
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          left: boundingBox.x,
-          top: boundingBox.y,
-          width: boundingBox.width,
-          height: boundingBox.height,
-        }}
-      >
-        {/* Bounding rectangle */}
-        <div className="absolute inset-0 border-2 border-dashed border-primary/50 rounded-md" style={{ pointerEvents: "none" }} />
+      {clusterableGroups.map((groupPieceIds, groupIndex) => {
+        const boundingBox = getBoundingBoxForGroup(groupPieceIds);
+        if (!boundingBox) return null;
 
-        {/* Cluster button positioned at top-right of bounding box */}
-        <div className="absolute -top-10 -right-2 pointer-events-auto">
-          <button onClick={onCluster} className="bg-primary text-primary-foreground px-3 py-1 rounded-md text-sm font-medium shadow-md hover:bg-primary/90 transition-colors">
-            Cluster
-          </button>
-        </div>
-      </div>
+        return (
+          <div
+            key={`cluster-group-${groupIndex}`}
+            className="absolute pointer-events-none"
+            style={{
+              left: boundingBox.x,
+              top: boundingBox.y,
+              width: boundingBox.width,
+              height: boundingBox.height,
+            }}
+          >
+            {/* Bounding rectangle */}
+            <div className="absolute inset-0 border-2 border-dashed border-primary/50 rounded-md" style={{ pointerEvents: "none" }} />
+
+            {/* Cluster button positioned at top-right of bounding box */}
+            <div className="absolute -top-10 -right-2 pointer-events-auto">
+              <button onClick={() => onCluster(groupPieceIds)} className="bg-primary text-primary-foreground px-3 py-1 rounded-md text-sm font-medium shadow-md hover:bg-primary/90 transition-colors">
+                Cluster
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </ViewportPortal>
+  );
+};
+
+//#endregion
+
+//#region ExpandMenu
+
+type ExpandMenuProps = {
+  nodes: DiagramNode[];
+  edges: DiagramEdge[];
+  selection: DesignEditorSelection;
+  onExpand: (designId: DesignId) => void;
+};
+
+const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, selection, onExpand }) => {
+  const { kit, designId } = useDesignEditor();
+
+  // Find selected design nodes that can be expanded
+  const expandableDesignNodes = useMemo(() => {
+    return nodes.filter((node) => {
+      // Must be a design node
+      if (node.type !== "design") return false;
+
+      // Must be selected
+      const pieceId = getPieceIdFromNode(node);
+      if (!selection.selectedPieceIds.includes(pieceId)) return false;
+
+      // Must represent a clustered design (has variant which is the design name)
+      const designName = (node.data.piece as Piece).type.variant;
+      if (!designName) return false;
+
+      // Check if this design exists in the kit (it should for clustered designs)
+      if (!kit?.designs?.find((d) => d.name === designName)) return false;
+
+      return true;
+    });
+  }, [nodes, selection.selectedPieceIds, kit]);
+
+  // Calculate bounding box for a design node
+  const getBoundingBoxForNode = useCallback((node: DiagramNode) => {
+    const x = node.position.x;
+    const y = node.position.y;
+    const width = ICON_WIDTH;
+    const height = ICON_WIDTH;
+
+    // Add padding around the node
+    const padding = 20;
+    return {
+      x: x - padding,
+      y: y - padding,
+      width: width + padding * 2,
+      height: height + padding * 2,
+    };
+  }, []);
+
+  if (expandableDesignNodes.length === 0) {
+    return null;
+  }
+
+  return (
+    <ViewportPortal>
+      {expandableDesignNodes.map((node) => {
+        const boundingBox = getBoundingBoxForNode(node);
+        const designName = (node.data.piece as Piece).type.variant!;
+
+        return (
+          <div
+            key={`expand-design-${designName}`}
+            className="absolute pointer-events-none"
+            style={{
+              left: boundingBox.x,
+              top: boundingBox.y,
+              width: boundingBox.width,
+              height: boundingBox.height,
+            }}
+          >
+            {/* Bounding rectangle */}
+            <div className="absolute inset-0 border-2 border-dashed border-secondary/50 rounded-md" style={{ pointerEvents: "none" }} />
+
+            {/* Expand button positioned at top-right of bounding box */}
+            <div className="absolute -top-10 -right-2 pointer-events-auto">
+              <button onClick={() => onExpand({ name: designName })} className="bg-secondary text-secondary-foreground px-3 py-1 rounded-md text-sm font-medium shadow-md hover:bg-secondary/90 transition-colors">
+                Expand
+              </button>
+            </div>
+          </div>
+        );
+      })}
     </ViewportPortal>
   );
 };
@@ -222,8 +314,14 @@ type PieceNodeProps = {
   type: Type;
 };
 
+type DesignNodeProps = {
+  piece: Piece;
+  externalConnections: Connection[];
+};
+
 type PieceNode = Node<PieceNodeProps, "piece">;
-type DiagramNode = PieceNode;
+type DesignNode = Node<DesignNodeProps, "design">;
+type DiagramNode = PieceNode | DesignNode;
 
 type ConnectionEdge = Edge<{ connection: Connection; isParentConnection?: boolean }, "connection">;
 type DiagramEdge = ConnectionEdge;
@@ -340,6 +438,127 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
   );
 });
 
+const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, data, selected }) => {
+  const {
+    piece,
+    piece: { id_, qualities },
+    externalConnections,
+  } = data as DesignNodeProps & { diffStatus: DiffStatus };
+
+  const { selection, selectPiecePort, deselectPiecePort, addConnection } = useDesignEditor();
+
+  // Create ports dynamically based on external connections (same logic as designPieceToNode)
+  const ports: Port[] = externalConnections.map((connection, portIndex) => {
+    // Determine which side of the connection is related to the design piece
+    const connectedIsDesignPiece = connection.connected.piece.id_ === piece.id_ || connection.connected.designId === piece.type.variant;
+    const connectingIsDesignPiece = connection.connecting.piece.id_ === piece.id_ || connection.connecting.designId === piece.type.variant;
+
+    // Get the side that represents the design piece
+    const designSide = connectedIsDesignPiece ? connection.connected : connection.connecting;
+    const originalSide = connectedIsDesignPiece ? connection.connecting : connection.connected;
+
+    // Calculate port position using the same system as normal pieces
+    const totalPorts = externalConnections.length;
+    const t = portIndex / totalPorts; // Normalize to [0,1) like normal pieces
+
+    // Use the same positioning approach as getPortPositionStyle but for 3D point
+    const angle = t * 2 * Math.PI; // Same as normal pieces
+    const radius = 0.5; // Use consistent radius for design pieces
+
+    // Calculate 3D point position (for connections/flattening)
+    const portX = radius * Math.sin(angle); // Same X formula as normal pieces
+    const portY = radius * Math.cos(angle); // Same pattern but for 3D space
+    const portZ = 0;
+
+    // Direction points outward from the piece (same as angle direction)
+    const directionX = Math.sin(angle);
+    const directionY = Math.cos(angle);
+    const directionZ = 0;
+
+    return {
+      id_: `port-${portIndex}`,
+      description: `Port for connection to ${originalSide.piece.id_}:${originalSide.port.id_}`,
+      family: "default", // Use default family for design piece ports
+      mandatory: false,
+      t: t, // Normalized parameter value like normal pieces
+      point: { x: portX, y: portY, z: portZ }, // 3D position for connections
+      direction: { x: directionX, y: directionY, z: directionZ }, // Points outward
+      qualities: [
+        {
+          name: "semio.originalPieceId",
+          value: designSide.piece.id_ || "",
+        },
+        {
+          name: "semio.originalPortId",
+          value: designSide.port.id_ || "",
+        },
+        {
+          name: "semio.externalPieceId",
+          value: originalSide.piece.id_ || "",
+        },
+        {
+          name: "semio.externalPortId",
+          value: originalSide.port.id_ || "",
+        },
+      ],
+    };
+  });
+
+  const onPortClick = (port: Port) => {
+    const currentSelectedPort = selection.selectedPiecePortId;
+
+    if (currentSelectedPort && (currentSelectedPort.pieceId !== piece.id_ || currentSelectedPort.portId !== port.id_)) {
+      // Create connection between the two selected ports
+      const connection: Connection = {
+        connecting: {
+          piece: { id_: currentSelectedPort.pieceId },
+          port: { id_: port.id_ },
+        },
+        connected: { piece: { id_: piece.id_ }, port: { id_: port.id_ } },
+      };
+      addConnection(connection);
+      deselectPiecePort();
+    } else if (currentSelectedPort && currentSelectedPort.pieceId === piece.id_ && currentSelectedPort.portId === port.id_) {
+      // Deselect if clicking the same port
+      deselectPiecePort();
+    } else if (port.id_) selectPiecePort(piece.id_, port.id_);
+  };
+
+  let fillClass = "";
+  let strokeClass = "stroke-dark stroke-2";
+  let opacity = 1;
+
+  const diff = (qualities?.find((q) => q.name === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
+
+  if (diff === DiffStatus.Added) {
+    fillClass = selected ? "fill-[color-mix(in_srgb,theme(colors.success)_50%,theme(colors.primary)_50%)]" : "fill-success";
+  } else if (diff === DiffStatus.Removed) {
+    fillClass = selected ? "fill-[color-mix(in_srgb,theme(colors.danger)_50%,theme(colors.primary)_50%)]" : "fill-danger";
+    strokeClass = "stroke-danger stroke-2";
+    opacity = 0.2;
+  } else if (diff === DiffStatus.Modified) {
+    fillClass = selected ? "fill-[color-mix(in_srgb,theme(colors.warning)_50%,theme(colors.primary)_50%)]" : "fill-warning";
+  } else if (selected) {
+    fillClass = "fill-primary";
+  } else {
+    fillClass = "fill-background";
+  }
+
+  return (
+    <div style={{ opacity }}>
+      <svg width={ICON_WIDTH} height={ICON_WIDTH} className="cursor-pointer">
+        <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
+        <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className="text-xs font-bold fill-dark">
+          {id_}
+        </text>
+      </svg>
+      {ports?.map((port: Port, portIndex: number) => (
+        <PortHandle key={`${id}-port-${portIndex}-${port.id_}`} port={port} pieceId={id_} selected={selection.selectedPiecePortId?.pieceId === id_ && selection.selectedPiecePortId?.portId === port.id_} onPortClick={onPortClick} />
+      ))}
+    </div>
+  );
+});
+
 const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({ id, source, target, sourceX, sourceY, targetX, targetY, sourceHandleId, targetHandleId, data, selected }) => {
   const HANDLE_HEIGHT = 5;
   const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`;
@@ -436,6 +655,10 @@ const HelperLines: React.FC<{
   );
 };
 
+//#endregion
+
+//#region Semio to React Flow mapping
+
 const pieceToNode = (piece: Piece, type: Type, center: DiagramPoint, selected: boolean, index: number): PieceNode => ({
   type: "piece",
   id: `piece-${index}-${piece.id_}`,
@@ -445,6 +668,18 @@ const pieceToNode = (piece: Piece, type: Type, center: DiagramPoint, selected: b
   },
   selected,
   data: { piece, type },
+  className: selected ? "selected" : "",
+});
+
+const designToNode = (piece: Piece, externalConnections: Connection[], center: DiagramPoint, selected: boolean, index: number): DesignNode => ({
+  type: "design",
+  id: `piece-${index}-${piece.id_}`,
+  position: {
+    x: center.x * ICON_WIDTH || 0,
+    y: -center.y * ICON_WIDTH || 0,
+  },
+  selected,
+  data: { piece, externalConnections },
   className: selected ? "selected" : "",
 });
 
@@ -458,20 +693,70 @@ const getPieceIdFromNode = (node: DiagramNode): string => {
   return node.data.piece.id_;
 };
 
-const connectionToEdge = (connection: Connection, selected: boolean, isParentConnection: boolean = false, pieceIndexMap: Map<string, number>, connectionIndex: number = 0): ConnectionEdge => {
-  const sourceIndex = pieceIndexMap.get(connection.connecting.piece.id_) ?? 0;
-  const targetIndex = pieceIndexMap.get(connection.connected.piece.id_) ?? 0;
-  const connectingPortId = connection.connecting.port.id_ ?? "undefined";
-  const connectedPortId = connection.connected.port.id_ ?? "undefined";
-  const sourceNodeId = `piece-${sourceIndex}-${connection.connecting.piece.id_}`;
-  const targetNodeId = `piece-${targetIndex}-${connection.connected.piece.id_}`;
+const connectionToEdge = (connection: Connection, selected: boolean, isParentConnection: boolean = false, pieceIndexMap: Map<string, number>, connectionIndex: number = 0, designPieces?: Piece[], allConnections?: Connection[]): ConnectionEdge => {
+  // Handle connections with design references - these reference pieces inside clustered designs
+  let sourcePieceId = connection.connecting.piece.id_;
+  let targetPieceId = connection.connected.piece.id_;
+  let sourcePortId = connection.connecting.port.id_ ?? "undefined";
+  let targetPortId = connection.connected.port.id_ ?? "undefined";
+
+  // Handle connections with designId - these reference pieces inside clustered designs
+  if (connection.connecting.designId && allConnections) {
+    const designPieceId = `design-${connection.connecting.designId}`;
+    sourcePieceId = designPieceId;
+
+    // Find all external connections for this design
+    const externalConnections = allConnections.filter((conn) => {
+      const connectedToDesign = conn.connected.designId === connection.connecting.designId;
+      const connectingToDesign = conn.connecting.designId === connection.connecting.designId;
+      return connectedToDesign || connectingToDesign;
+    });
+
+    // Find the index of this specific connection in the external connections list
+    const portIndex = externalConnections.findIndex(
+      (conn) =>
+        conn.connected.piece.id_ === connection.connected.piece.id_ &&
+        conn.connecting.piece.id_ === connection.connecting.piece.id_ &&
+        conn.connected.port.id_ === connection.connected.port.id_ &&
+        conn.connecting.port.id_ === connection.connecting.port.id_,
+    );
+    sourcePortId = portIndex >= 0 ? `port-${portIndex}` : "port-0";
+  }
+
+  if (connection.connected.designId && allConnections) {
+    const designPieceId = `design-${connection.connected.designId}`;
+    targetPieceId = designPieceId;
+
+    // Find all external connections for this design
+    const externalConnections = allConnections.filter((conn) => {
+      const connectedToDesign = conn.connected.designId === connection.connected.designId;
+      const connectingToDesign = conn.connecting.designId === connection.connected.designId;
+      return connectedToDesign || connectingToDesign;
+    });
+
+    // Find the index of this specific connection in the external connections list
+    const portIndex = externalConnections.findIndex(
+      (conn) =>
+        conn.connected.piece.id_ === connection.connected.piece.id_ &&
+        conn.connecting.piece.id_ === connection.connecting.piece.id_ &&
+        conn.connected.port.id_ === connection.connected.port.id_ &&
+        conn.connecting.port.id_ === connection.connecting.port.id_,
+    );
+    targetPortId = portIndex >= 0 ? `port-${portIndex}` : "port-0";
+  }
+
+  const sourceIndex = pieceIndexMap.get(sourcePieceId) ?? 0;
+  const targetIndex = pieceIndexMap.get(targetPieceId) ?? 0;
+  const sourceNodeId = `piece-${sourceIndex}-${sourcePieceId}`;
+  const targetNodeId = `piece-${targetIndex}-${targetPieceId}`;
+
   return {
     type: "connection",
-    id: `${sourceNodeId}:${connectingPortId} -- ${targetNodeId}:${connectedPortId}:${connectionIndex}`,
+    id: `${sourceNodeId}:${sourcePortId} -- ${targetNodeId}:${targetPortId}:${connectionIndex}`,
     source: sourceNodeId,
-    sourceHandle: connection.connecting.port.id_,
+    sourceHandle: sourcePortId,
     target: targetNodeId,
-    targetHandle: connection.connected.port.id_,
+    targetHandle: targetPortId,
     data: { connection, isParentConnection },
     selected,
   };
@@ -480,10 +765,112 @@ const connectionToEdge = (connection: Connection, selected: boolean, isParentCon
 const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEditorSelection) => {
   const design = findDesignInKit(kit, designId);
   if (!design) return null;
-  const centers = flattenDesign(kit, designId).pieces?.map((p) => p.center);
+
+  // Create a map of piece IDs to their flattened centers
+  const flattenedDesign = flattenDesign(kit, designId);
+  const centerMap = new Map<string, DiagramPoint>();
+  flattenedDesign.pieces?.forEach((piece) => {
+    if (piece.id_ && piece.center) {
+      centerMap.set(piece.id_, piece.center);
+    }
+  });
+
   const metadata = piecesMetadata(kit, designId);
 
-  const pieceNodes = design.pieces?.map((piece, i) => pieceToNode(piece, findTypeInKit(kit, piece.type)!, centers![i]!, selection?.selectedPieceIds.includes(piece.id_) ?? false, i)) ?? [];
+  // Create nodes for regular pieces
+  const pieceNodes =
+    design.pieces?.map((piece, i) => {
+      const isSelected = selection?.selectedPieceIds.includes(piece.id_) ?? false;
+      const center = centerMap.get(piece.id_) || piece.center || { x: 0, y: 0 };
+
+      // All pieces are now regular pieces (no design pieces)
+      const type = findTypeInKit(kit, piece.type);
+      if (!type) {
+        console.warn(`Type not found for piece ${piece.id_}: ${piece.type.name}/${piece.type.variant}`);
+        // Create a minimal fallback type
+        const fallbackType: Type = {
+          name: piece.type.name,
+          variant: piece.type.variant,
+          unit: "m", // Default unit
+          description: `Missing type: ${piece.type.name}`,
+          ports: [],
+          representations: [],
+        };
+        return pieceToNode(piece, fallbackType, center, isSelected, i);
+      }
+      return pieceToNode(piece, type, center, isSelected, i);
+    }) ?? [];
+
+  // Get all included designs (both connected and fixed)
+  const includedDesigns = getIncludedDesigns(design);
+
+  const designNodes = includedDesigns.map((includedDesign, i) => {
+    const isSelected = selection?.selectedPieceIds.includes(includedDesign.id) ?? false;
+
+    if (includedDesign.type === "connected") {
+      // Calculate center position based on the average position of external connected pieces in the current diagram
+      let calculatedCenter = { x: 0, y: 0 };
+      if (includedDesign.externalConnections && includedDesign.externalConnections.length > 0) {
+        // Get the pieces that are connected to this design (the external pieces)
+        const connectedPieceIds = new Set<string>();
+        includedDesign.externalConnections.forEach((conn) => {
+          if (conn.connected.designId === includedDesign.designId.name) {
+            // The connecting side is external
+            connectedPieceIds.add(conn.connecting.piece.id_);
+          } else if (conn.connecting.designId === includedDesign.designId.name) {
+            // The connected side is external
+            connectedPieceIds.add(conn.connected.piece.id_);
+          }
+        });
+
+        // Find the actual positions of these connected pieces in the current diagram
+        const connectedPieceCenters: DiagramPoint[] = [];
+        Array.from(connectedPieceIds).forEach((pieceId) => {
+          const center = centerMap.get(pieceId);
+          if (center) {
+            connectedPieceCenters.push(center);
+          }
+        });
+
+        if (connectedPieceCenters.length > 0) {
+          // Calculate average center of connected pieces
+          const avgX = connectedPieceCenters.reduce((sum, center) => sum + center.x, 0) / connectedPieceCenters.length;
+          const avgY = connectedPieceCenters.reduce((sum, center) => sum + center.y, 0) / connectedPieceCenters.length;
+
+          // Position the design node near the connected pieces
+          calculatedCenter = {
+            x: Math.round(avgX),
+            y: Math.round(avgY),
+          };
+        }
+      }
+
+      // Create a synthetic piece to represent the connected design
+      const designPiece: Piece = {
+        id_: includedDesign.id,
+        type: { name: "design", variant: includedDesign.designId.name },
+        center: calculatedCenter,
+        description: `Clustered design: ${includedDesign.designId.name}`,
+      };
+
+      return designToNode(designPiece, includedDesign.externalConnections || [], calculatedCenter, isSelected, design.pieces!.length + i);
+    } else {
+      // Fixed design
+      const displayCenter = includedDesign.center || { x: 0, y: 0 };
+
+      // Create a synthetic piece for the fixed design
+      const designPiece: Piece = {
+        id_: includedDesign.id,
+        type: { name: "design", variant: `${includedDesign.designId.name}${includedDesign.designId.variant ? `-${includedDesign.designId.variant}` : ""}${includedDesign.designId.view ? `-${includedDesign.designId.view}` : ""}` },
+        center: displayCenter,
+        plane: includedDesign.plane,
+        description: `Fixed design: ${includedDesign.designId.name}`,
+      };
+
+      // No external connections for fixed designs since they're standalone
+      return designToNode(designPiece, [], displayCenter, isSelected, design.pieces!.length + i);
+    }
+  });
 
   // Create a map of piece IDs to their array indices for unique node IDs
   // Handle duplicate piece IDs by mapping to the first occurrence index
@@ -494,10 +881,21 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
     }
   });
 
+  // Add design pieces to the index map
+  includedDesigns.forEach((includedDesign, index) => {
+    if (!pieceIndexMap.has(includedDesign.id)) {
+      pieceIndexMap.set(includedDesign.id, design.pieces!.length + index);
+    }
+  });
+
   // Also create a map from the full node ID to the piece index for connections
   const nodeIdToPieceIndexMap = new Map<string, number>();
   design.pieces?.forEach((piece, index) => {
     nodeIdToPieceIndexMap.set(`piece-${index}-${piece.id_}`, index);
+  });
+  includedDesigns.forEach((includedDesign, index) => {
+    const nodeIndex = design.pieces!.length + index;
+    nodeIdToPieceIndexMap.set(`piece-${nodeIndex}-${includedDesign.id}`, nodeIndex);
   });
 
   const parentConnectionId =
@@ -519,9 +917,9 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
       const connectionId = `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`;
       const isParentConnection = parentConnectionId === connectionId || parentConnectionId === `${connection.connected.piece.id_} -- ${connection.connecting.piece.id_}`;
 
-      return connectionToEdge(connection, isSelected, isParentConnection, pieceIndexMap, connectionIndex);
+      return connectionToEdge(connection, isSelected, isParentConnection, pieceIndexMap, connectionIndex, design.pieces, design.connections);
     }) ?? [];
-  return { nodes: pieceNodes, edges: connectionEdges };
+  return { nodes: [...pieceNodes, ...designNodes], edges: connectionEdges };
 };
 
 //#endregion
@@ -550,6 +948,9 @@ const Diagram: FC = () => {
     setConnections,
     setPieces,
   } = useDesignEditor();
+
+  const { clusterDesign, expandDesign } = useSketchpad();
+
   if (!originalKit) return null;
   const design = applyDesignDiff(findDesignInKit(originalKit, designId), designDiff, true);
 
@@ -606,36 +1007,37 @@ const Diagram: FC = () => {
     if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) deselectAll();
   };
 
+  const { sketchpadState, sketchpadDispatch } = useSketchpad();
+
+  const onNodeDoubleClick = (e: React.MouseEvent, node: DiagramNode) => {
+    if (node.type === "design") {
+      e.stopPropagation();
+      const designName = (node.data.piece as Piece).type.variant;
+      if (!designName) return;
+      const target = (kit.designs || []).find((d) => d.name === designName) || ({ name: designName } as DesignId);
+      sketchpadDispatch({ type: SketchpadAction.ChangeActiveDesign, payload: target });
+      return;
+    }
+  };
+
   const onDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     toggleDiagramFullscreen();
   };
 
-  const onCluster = useCallback(() => {
-    if (!design) return;
+  const onCluster = useCallback(
+    (clusterPieceIds: string[]) => {
+      clusterDesign();
+    },
+    [clusterDesign],
+  );
 
-    // Get selected pieces
-    const selectedPieces = (design.pieces || []).filter((piece) => selection.selectedPieceIds.includes(piece.id_));
-
-    // Get selected connections
-    const selectedConnections = (design.connections || []).filter((connection) =>
-      selection.selectedConnections.some((selectedConn) => selectedConn.connectingPieceId === connection.connecting.piece.id_ && selectedConn.connectedPieceId === connection.connected.piece.id_),
-    );
-
-    // Create new design from selected elements
-    const newDesign = {
-      name: `Cluster-${Date.now()}`,
-      unit: design.unit || "m",
-      description: `Clustered design created from ${selectedPieces.length} piece(s) and ${selectedConnections.length} connection(s)`,
-      pieces: selectedPieces,
-      connections: selectedConnections,
-      created: new Date(),
-      updated: new Date(),
-    };
-
-    // Log the new design for now (later this could be saved to the kit or opened in a new editor)
-    console.log("Created new design from cluster:", newDesign);
-  }, [design, selection.selectedPieceIds, selection.selectedConnections]);
+  const onExpand = useCallback(
+    (designIdToExpand: DesignId) => {
+      expandDesign(designIdToExpand);
+    },
+    [expandDesign],
+  );
 
   //#region Selection
   const onNodeDragStart = useCallback(
@@ -1274,7 +1676,7 @@ const Diagram: FC = () => {
   );
   //#endregion Actions
 
-  const nodeTypes = useMemo(() => ({ piece: PieceNodeComponent }), []);
+  const nodeTypes = useMemo(() => ({ piece: PieceNodeComponent, design: DesignNodeComponent }), []);
   const edgeTypes = useMemo(() => ({ connection: ConnectionEdgeComponent }), []);
 
   return (
@@ -1294,6 +1696,7 @@ const Diagram: FC = () => {
         panOnDrag={[0]}
         proOptions={{ hideAttribution: true }}
         onNodeClick={onNodeClick}
+        onNodeDoubleClick={onNodeDoubleClick}
         onEdgeClick={onEdgeClick}
         onNodeDragStart={onNodeDragStart}
         onNodeDrag={onNodeDrag}
@@ -1313,6 +1716,7 @@ const Diagram: FC = () => {
       </ReactFlow>
       <HelperLines lines={helperLines} nodes={nodes} />
       <ClusterMenu nodes={nodes} edges={edges} selection={selection} onCluster={onCluster} />
+      <ExpandMenu nodes={nodes} edges={edges} selection={selection} onExpand={onExpand} />
     </div>
   );
 };

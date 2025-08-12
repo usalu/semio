@@ -41,6 +41,7 @@ import {
   DiagramPoint,
   ICON_WIDTH,
   Kit,
+  Model,
   Piece,
   PieceId,
   Plane,
@@ -77,7 +78,6 @@ import {
   updateDesignInKit,
 } from "@semio/js";
 import Diagram from "@semio/js/components/ui/Diagram";
-import Model from "@semio/js/components/ui/Model";
 import { default as Navbar } from "@semio/js/components/ui/Navbar";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@semio/js/components/ui/Resizable";
 import { Layout, Mode, Theme } from "@semio/js/components/ui/Sketchpad";
@@ -86,9 +86,10 @@ import { Generator } from "@semio/js/lib/utils";
 import { Camera, orientDesign } from "../../semio";
 import Chat from "./Chat";
 import { CommandContext, ConsolePanel, commandRegistry } from "./Console";
-import Details from "./Details";
-import Workbench, { DesignAvatar, TypeAvatar } from "./Workbench";
 import { designEditorCommands } from "./designEditorCommands";
+import Details from "./Details";
+import { useSketchpad } from "./Sketchpad";
+import Workbench, { DesignAvatar, TypeAvatar } from "./Workbench";
 
 // Register all design editor commands
 designEditorCommands.forEach((command) => commandRegistry.register(command));
@@ -121,8 +122,7 @@ export interface Presence {
   camera?: Camera;
 }
 
-export interface DesignEditorState {
-  kit: Kit;
+export interface DesignEditorCoreState {
   designId: DesignId;
   fileUrls: Map<string, string>;
   fullscreenPanel: FullscreenPanel;
@@ -136,6 +136,10 @@ export interface DesignEditorState {
   others: Presence[];
 }
 
+export interface DesignEditorState extends DesignEditorCoreState {
+  kit: Kit;
+}
+
 export enum FullscreenPanel {
   None = "none",
   Diagram = "diagram",
@@ -144,6 +148,7 @@ export enum FullscreenPanel {
 
 export enum DesignEditorAction {
   SetDesign = "SET_DESIGN",
+  AddDesign = "ADD_DESIGN",
   AddPiece = "ADD_PIECE",
   SetPiece = "SET_PIECE",
   RemovePiece = "REMOVE_PIECE",
@@ -540,14 +545,15 @@ const resetDesignDiff = (): DesignDiff => ({
 
 //#endregion DesignDiff Helpers
 
-export const DesignEditorContext = createContext<{ state: DesignEditorState; dispatch: DesignEditorDispatcher } | undefined>(undefined);
+export const DesignEditorContext = createContext<{ state: DesignEditorState; kit: Kit; dispatch: DesignEditorDispatcher } | undefined>(undefined);
 
 export const useDesignEditor = () => {
   const context = useContext(DesignEditorContext);
   if (!context) {
     throw new Error("useDesignEditor must be used within a DesignEditorProvider");
   }
-  const { state, dispatch } = context;
+  const { state, kit, dispatch } = context;
+  const { clusterDesign, expandDesign } = useSketchpad();
 
   const setDesign = useCallback((d: Design) => dispatch({ type: DesignEditorAction.SetDesign, payload: d }), [dispatch]);
   const addPiece = useCallback((p: Piece) => dispatch({ type: DesignEditorAction.AddPiece, payload: p }), [dispatch]);
@@ -779,9 +785,11 @@ export const useDesignEditor = () => {
     executeCommand: useCallback(
       async (commandId: string, payload: Record<string, any> = {}) => {
         const context: CommandContext = {
-          kit: state.kit,
+          kit: kit,
           designId: state.designId,
           selection: state.selection,
+          clusterDesign: clusterDesign,
+          expandDesign: expandDesign,
         };
 
         const command = commandRegistry.get(commandId);
@@ -828,7 +836,7 @@ export const useDesignEditor = () => {
           throw error;
         }
       },
-      [state.kit, state.designId, state.selection, state.isTransactionActive, startTransaction, setDesign, setSelection, setFullscreen, finalizeTransaction, abortTransaction],
+      [kit, state.designId, state.selection, state.isTransactionActive, startTransaction, setDesign, setSelection, setFullscreen, finalizeTransaction, abortTransaction, clusterDesign, expandDesign],
     ),
 
     getAvailableCommands: useCallback(() => commandRegistry.getAll(), []),
@@ -1193,23 +1201,21 @@ const designEditorReducer = (state: DesignEditorState, action: { type: DesignEdi
   }
 };
 
-function useControllableReducer(props: DesignEditorProps) {
-  const { kit: controlledKit, selection: controlledSelection, initialKit, initialSelection, onDesignChange, onSelectionChange, onUndo, onRedo, designId, fileUrls } = props;
+export function createInitialDesignEditorCoreState(props: { initialKit: Kit; designId: DesignId; fileUrls: Map<string, string>; initialSelection?: DesignEditorSelection }): DesignEditorCoreState {
+  const { initialKit, designId, fileUrls, initialSelection } = props;
 
-  const isKitControlled = controlledKit !== undefined;
-  const isSelectionControlled = controlledSelection !== undefined;
+  const initialDesign = findDesignInKit(initialKit, designId);
+  const defaultSelection = {
+    selectedPieceIds: [],
+    selectedConnections: [],
+    selectedPiecePortId: undefined,
+  };
 
-  const initialDesign = findDesignInKit(initialKit!, designId);
-  const initialState: DesignEditorState = {
-    kit: initialKit!,
+  return {
     designId: designId,
     fileUrls: fileUrls,
     fullscreenPanel: FullscreenPanel.None,
-    selection: initialSelection || {
-      selectedPieceIds: [],
-      selectedConnections: [],
-      selectedPiecePortId: undefined,
-    },
+    selection: initialSelection || defaultSelection,
     designDiff: {
       pieces: { added: [], removed: [], updated: [] },
       connections: { added: [], removed: [], updated: [] },
@@ -1217,32 +1223,38 @@ function useControllableReducer(props: DesignEditorProps) {
     operationStack: [
       {
         design: JSON.parse(JSON.stringify(initialDesign)),
-        selection: JSON.parse(
-          JSON.stringify(
-            initialSelection || {
-              selectedPieceIds: [],
-              selectedConnections: [],
-              selectedPiecePortId: undefined,
-            },
-          ),
-        ),
+        selection: JSON.parse(JSON.stringify(initialSelection || defaultSelection)),
       },
     ],
     operationIndex: 0,
     isTransactionActive: false,
     others: [],
   };
+}
+
+export function createInitialDesignEditorState(props: { initialKit: Kit; designId: DesignId; fileUrls: Map<string, string>; initialSelection?: DesignEditorSelection }): DesignEditorState {
+  const coreState = createInitialDesignEditorCoreState(props);
+  return {
+    ...coreState,
+    kit: props.initialKit,
+  };
+}
+
+function useControllableReducer(props: DesignEditorProps) {
+  const { kit: controlledKit, selection: controlledSelection, externalState, externalDispatch, initialKit, initialSelection, onDesignChange, onSelectionChange, onUndo, onRedo, designId, fileUrls } = props;
+
+  if (externalState && externalDispatch) {
+    return [externalState, externalDispatch] as const;
+  }
+
+  const initialState = createInitialDesignEditorState({
+    initialKit: initialKit!,
+    designId,
+    fileUrls,
+    initialSelection,
+  });
 
   const [internalState, dispatch] = useReducer(designEditorReducer, initialState);
-
-  const state: DesignEditorState = {
-    ...internalState,
-    kit: isKitControlled ? controlledKit : internalState.kit,
-    selection: isSelectionControlled ? controlledSelection : internalState.selection,
-    operationStack: isKitControlled || isSelectionControlled ? [] : internalState.operationStack,
-    operationIndex: isKitControlled || isSelectionControlled ? -1 : internalState.operationIndex,
-    isTransactionActive: internalState.isTransactionActive,
-  };
 
   const dispatchWrapper = useCallback(
     (action: { type: DesignEditorAction; payload: any }) => {
@@ -1258,17 +1270,17 @@ function useControllableReducer(props: DesignEditorProps) {
         return;
       }
 
-      const newState = designEditorReducer(state, action);
-      // console.log('NEWSTATE:', newState)
+      const newState = designEditorReducer(internalState, action);
+      console.log("NEWSTATE:", newState);
 
-      if (!isKitControlled || !isSelectionControlled) dispatch(action);
-      if (isKitControlled && newState.kit !== state.kit) onDesignChange?.(findDesignInKit(newState.kit, designId));
-      if (isSelectionControlled && newState.selection !== state.selection) onSelectionChange?.(newState.selection);
+      dispatch(action);
+      onDesignChange?.(findDesignInKit(newState.kit, designId));
+      onSelectionChange?.(newState.selection);
     },
-    [state, isKitControlled, isSelectionControlled, designId, onDesignChange, onSelectionChange, onUndo, onRedo],
+    [designId, onDesignChange, onSelectionChange, onUndo, onRedo],
   );
 
-  return [state, dispatchWrapper] as const;
+  return [internalState, dispatchWrapper] as const;
 }
 
 //#endregion State
@@ -1309,6 +1321,8 @@ interface DesignEditorProps extends ControlledDesignEditorProps, UncontrolledDes
   designId: DesignId;
   fileUrls: Map<string, string>;
   onToolbarChange: (toolbar: ReactNode) => void;
+  onDesignIdChange?: (designId: DesignId) => void;
+  availableDesigns: DesignId[];
   mode?: Mode;
   layout?: Layout;
   theme?: Theme;
@@ -1319,14 +1333,19 @@ interface DesignEditorProps extends ControlledDesignEditorProps, UncontrolledDes
     maximize: () => void;
     close: () => void;
   };
+  externalState: DesignEditorState | null;
+  externalDispatch: DesignEditorDispatcher | null;
 }
 
 const DesignEditorCore: FC<DesignEditorProps> = (props) => {
-  const { onToolbarChange, designId, onUndo: controlledOnUndo, onRedo: controlledOnRedo } = props;
+  const { kit: kitProp, onToolbarChange, designId, onDesignIdChange, availableDesigns, onUndo: controlledOnUndo, onRedo: controlledOnRedo, externalState: externalState, externalDispatch: externalDispatch } = props;
 
   const [state, dispatch] = useControllableReducer(props);
-  if (!state.kit) return null;
-  const design = findDesignInKit(state.kit, designId);
+
+  // Use kit prop if provided, otherwise fall back to state.kit
+  const kit = kitProp || state.kit;
+  if (!kit) return null;
+  const design = findDesignInKit(kit, designId);
   if (!design) return null;
 
   const [visiblePanels, setVisiblePanels] = useState<PanelToggles>({
@@ -1357,10 +1376,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   const onDoubleClickDiagram = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      dispatch({
-        type: DesignEditorAction.ToggleDiagramFullscreen,
-        payload: null,
-      });
+      dispatch({ type: DesignEditorAction.ToggleDiagramFullscreen, payload: null });
     },
     [dispatch],
   );
@@ -1513,7 +1529,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
         return;
       }
 
-      const context = { kit: state.kit, designId, selection: state.selection };
+      const context = { kit: kit, designId, selection: state.selection };
 
       // Editor-only commands can always execute, even during transactions
       if (command.editorOnly) {
@@ -1572,7 +1588,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
 
     document.addEventListener("semio-command", handleCommand);
     return () => document.removeEventListener("semio-command", handleCommand);
-  }, [state.kit, designId, state.selection, state.isTransactionActive, dispatch]);
+  }, [kit, designId, state.selection, state.isTransactionActive, dispatch]);
 
   // Register hotkeys for all commands automatically from the command registry
   const allCommands = commandRegistry.getAll();
@@ -1628,7 +1644,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
     if (id.startsWith("type-")) {
       const [_, name, variant] = id.split("-");
       const normalizeVariant = (v: string | undefined | null) => v ?? "";
-      const type = state.kit?.types?.find((t: Type) => t.name === name && normalizeVariant(t.variant) === normalizeVariant(variant));
+      const type = kit?.types?.find((t: Type) => t.name === name && normalizeVariant(t.variant) === normalizeVariant(variant));
       setActiveDraggedType(type || null);
     } else if (id.startsWith("design-")) {
       const [_, name, variant, view] = id.split("-");
@@ -1637,7 +1653,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
         variant: variant || undefined,
         view: view || undefined,
       };
-      const draggedDesign = findDesignInKit(state.kit, draggedDesignId);
+      const draggedDesign = findDesignInKit(kit, draggedDesignId);
       setActiveDraggedDesign(draggedDesign || null);
     }
   };
@@ -1671,7 +1687,29 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
           payload: piece,
         });
       } else if (activeDraggedDesign) {
-        throw new Error("Not implemented");
+        const { x, y } = screenToFlowPosition({
+          x: event.activatorEvent.clientX + event.delta.x,
+          y: event.activatorEvent.clientY + event.delta.y,
+        });
+        const current = findDesignInKit(kit, designId);
+        const newEntry = {
+          designId: {
+            name: activeDraggedDesign.name,
+            variant: activeDraggedDesign.variant,
+            view: activeDraggedDesign.view,
+          },
+          plane: {
+            origin: { x: 0, y: 0, z: 0 },
+            xAxis: { x: 1, y: 0, z: 0 },
+            yAxis: { x: 0, y: 1, z: 0 },
+          },
+          center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
+        };
+        const updated = {
+          ...current,
+          fixedDesigns: [...(current.fixedDesigns || []), newEntry],
+        };
+        dispatch({ type: DesignEditorAction.SetDesign, payload: updated });
       }
     }
     setActiveDraggedType(null);
@@ -1703,7 +1741,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   const rightPanelVisible = visiblePanels.details || visiblePanels.chat;
 
   return (
-    <DesignEditorContext.Provider value={{ state, dispatch }}>
+    <DesignEditorContext.Provider value={{ state, kit, dispatch }}>
       <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
         <div className="canvas flex-1 relative">
           <div id="sketchpad-edgeless" className="h-full">
@@ -1742,7 +1780,29 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
   );
 };
 
-const DesignEditor: FC<DesignEditorProps> = ({ mode, layout, theme, setLayout, setTheme, onWindowEvents, designId, kit, selection, initialKit, initialSelection, fileUrls, onDesignChange, onSelectionChange, onUndo, onRedo, onToolbarChange }) => {
+const DesignEditor: FC<DesignEditorProps> = ({
+  mode,
+  layout,
+  theme,
+  setLayout,
+  setTheme,
+  onWindowEvents,
+  designId,
+  onDesignIdChange,
+  availableDesigns,
+  kit,
+  selection,
+  initialKit,
+  initialSelection,
+  fileUrls,
+  onDesignChange,
+  onSelectionChange,
+  onUndo,
+  onRedo,
+  onToolbarChange,
+  externalState: state,
+  externalDispatch: dispatch,
+}) => {
   const [toolbarContent, setToolbarContent] = useState<ReactNode>(null);
 
   useEffect(() => {
@@ -1751,11 +1811,24 @@ const DesignEditor: FC<DesignEditorProps> = ({ mode, layout, theme, setLayout, s
 
   return (
     <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
-      <Navbar mode={mode} toolbarContent={toolbarContent} layout={layout} theme={theme} setLayout={setLayout} setTheme={setTheme} onWindowEvents={onWindowEvents} />
+      <Navbar
+        designId={designId}
+        onDesignIdChange={onDesignIdChange}
+        availableDesigns={availableDesigns}
+        mode={mode}
+        toolbarContent={toolbarContent}
+        layout={layout}
+        theme={theme}
+        setLayout={setLayout}
+        setTheme={setTheme}
+        onWindowEvents={onWindowEvents}
+      />
       <ReactFlowProvider>
         <DesignEditorCore
           kit={kit}
           designId={designId}
+          onDesignIdChange={onDesignIdChange}
+          availableDesigns={availableDesigns}
           fileUrls={fileUrls}
           selection={selection}
           initialKit={initialKit}
@@ -1771,6 +1844,8 @@ const DesignEditor: FC<DesignEditorProps> = ({ mode, layout, theme, setLayout, s
           setLayout={setLayout}
           setTheme={setTheme}
           onWindowEvents={onWindowEvents}
+          externalState={state}
+          externalDispatch={dispatch}
         />
       </ReactFlowProvider>
     </div>
@@ -1778,5 +1853,8 @@ const DesignEditor: FC<DesignEditorProps> = ({ mode, layout, theme, setLayout, s
 };
 
 export default DesignEditor;
+
+// Export the reducer for state management
+export { designEditorReducer };
 
 //#endregion Components
