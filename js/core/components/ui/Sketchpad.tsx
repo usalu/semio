@@ -65,8 +65,8 @@ const Sketchpad: FC<SketchpadProps> = ({ onWindowEvents }) => {
     let mounted = true;
     (async () => {
       try {
-        await store.importFiles("metabolism.zip", true);
         await store.importKit("metabolism.json", true, true);
+        await store.importFiles("metabolism.zip", defaultKitId, true);
       } catch (e) {
         console.error("Failed to import default kit:", e);
       } finally {

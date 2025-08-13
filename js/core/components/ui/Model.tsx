@@ -63,11 +63,11 @@ interface PlaneThreeProps {
 
 const PlaneThree: FC<PlaneThreeProps> = ({ plane }) => {
   const matrix = useMemo(() => planeToMatrix(plane), [plane]);
-  
+
   const xAxisPoints = useMemo(() => [new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)], []);
   const yAxisPoints = useMemo(() => [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0)], []);
   const primaryColor = useMemo(() => new THREE.Color(getComputedColor("--color-primary")), []);
-  
+
   return (
     <group matrix={matrix} matrixAutoUpdate={false}>
       <Line points={xAxisPoints} color={primaryColor} />
@@ -189,20 +189,18 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(({ piece, plane, fileUrl, sel
   if (transformControl) {
     console.log("transformControl", transformControl);
   }
-  
+
   const userData = useMemo(() => ({ pieceId: piece.id_ }), [piece.id_]);
   const pieceIdScope = useMemo(() => ({ id_: piece.id_ }), [piece.id_]);
-  
-  const group = useMemo(() => (
-    <group
-      matrix={matrix}
-      matrixAutoUpdate={false}
-      userData={userData}
-      onClick={onClick}
-    >
-      <primitive object={styledScene} />
-    </group>
-  ), [matrix, userData, onClick, styledScene]);
+
+  const group = useMemo(
+    () => (
+      <group matrix={matrix} matrixAutoUpdate={false} userData={userData} onClick={onClick}>
+        <primitive object={styledScene} />
+      </group>
+    ),
+    [matrix, userData, onClick, styledScene],
+  );
 
   return (
     <PieceScopeProvider id={pieceIdScope}>
@@ -242,7 +240,7 @@ const ModelDesign: FC = () => {
     });
   }, [fileUrls]);
 
-  useMemo(() => {
+  useEffect(() => {
     flatDesign.pieces?.forEach((p: Piece) => {
       const type = types.find((t) => t.name === p.type.name && (t.variant || "") === (p.type.variant || ""));
       if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`);
@@ -288,16 +286,13 @@ const ModelDesign: FC = () => {
   );
 
   const onPieceUpdate = useCallback((piece: Piece) => setPiece(piece), [setPiece]);
-  
+
   const groupQuaternion = useMemo(() => new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476), []);
-  
-  const renderedOthers = useMemo(() => 
-    others.map((presence, id) => (
-      <PresenceThree key={id} name={presence.name} cursor={presence.cursor} camera={presence.camera} />
-    )), [others]);
-  
+
+  const renderedOthers = useMemo(() => others.map((presence, id) => <PresenceThree key={id} name={presence.name} cursor={presence.cursor} camera={presence.camera} />), [others]);
+
   const renderedPieces = useMemo(() => {
-    const selectedPieceIdSet = new Set(selection.selectedPieceIds.map(id => id.id_));
+    const selectedPieceIdSet = new Set(selection.selectedPieceIds.map((id) => id.id_));
     return flatDesign.pieces?.map((piece: Piece, index: number) => (
       <ModelPiece
         key={`piece-${piece.id_}`}
@@ -311,18 +306,21 @@ const ModelDesign: FC = () => {
       />
     ));
   }, [flatDesign.pieces, piecePlanes, fileUrls, pieceRepresentationUrls, selection.selectedPieceIds, pieceDiffStatuses, onSelect, onPieceUpdate]);
-  
+
   const filterFunction = useCallback((items: any) => items, []);
-  
-  const selectComponent = useMemo(() => (
-    <Select box multiple onChange={onChange} filter={filterFunction}>
-      <group quaternion={groupQuaternion}>
-        {renderedPieces}
-        {renderedOthers}
-      </group>
-    </Select>
-  ), [onChange, filterFunction, groupQuaternion, renderedPieces, renderedOthers]);
-  
+
+  const selectComponent = useMemo(
+    () => (
+      <Select box multiple onChange={onChange} filter={filterFunction}>
+        <group quaternion={groupQuaternion}>
+          {renderedPieces}
+          {renderedOthers}
+        </group>
+      </Select>
+    ),
+    [onChange, filterFunction, groupQuaternion, renderedPieces, renderedOthers],
+  );
+
   return selectComponent;
 };
 
@@ -340,12 +338,15 @@ const Gizmo: FC = () => {
 
 const ModelCore: FC = () => {
   const fullscreen = useDesignEditorStoreFullscreenPanel() === DesignEditorStoreFullscreenPanel.Model;
-  
-  const initialGridColors = useMemo(() => ({
-    sectionColor: getComputedColor("--foreground"),
-    cellColor: getComputedColor("--accent-foreground"),
-  }), []);
-  
+
+  const initialGridColors = useMemo(
+    () => ({
+      sectionColor: getComputedColor("--foreground"),
+      cellColor: getComputedColor("--accent-foreground"),
+    }),
+    [],
+  );
+
   const [gridColors, setGridColors] = useState(initialGridColors);
 
   useEffect(() => {
@@ -365,20 +366,20 @@ const ModelCore: FC = () => {
     return () => observer.disconnect();
   }, []);
   const camera = useRef<THREE.OrthographicCamera>(null);
-  
-  const mouseButtons = useMemo(() => ({
-    LEFT: THREE.MOUSE.ROTATE,
-    MIDDLE: undefined,
-    RIGHT: undefined,
-  }), []);
-  
+
+  const mouseButtons = useMemo(
+    () => ({
+      LEFT: THREE.MOUSE.ROTATE,
+      MIDDLE: undefined,
+      RIGHT: undefined,
+    }),
+    [],
+  );
+
   return (
     <>
       <OrthographicCamera ref={camera} />
-      <OrbitControls
-        makeDefault
-        mouseButtons={mouseButtons}
-      />
+      <OrbitControls makeDefault mouseButtons={mouseButtons} />
       <ambientLight intensity={1} />
       {/* <Stage center={{ disable: true }} environment={null}> */}
       <ModelDesign />

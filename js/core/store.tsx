@@ -19,7 +19,7 @@
 
 // #endregion
 import JSZip from "jszip";
-import React, { createContext, useContext, useRef, useSyncExternalStore } from "react";
+import React, { createContext, useContext, useMemo, useRef, useSyncExternalStore } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
@@ -28,9 +28,11 @@ import type { Database, SqlJsStatic, SqlValue } from "sql.js";
 import initSqlJs from "sql.js";
 import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 import {
+  applyDiff,
   Author,
   Camera,
   Connection,
+  ConnectionDiff,
   ConnectionId,
   ConnectionIdLike,
   connectionIdLikeToConnectionId,
@@ -40,27 +42,34 @@ import {
   DesignIdLike,
   designIdLikeToDesignId,
   DiagramPoint,
+  getDiff,
   Kit,
+  KitDiff,
   KitId,
   KitIdLike,
   kitIdLikeToKitId,
   Piece,
+  PieceDiff,
   PieceId,
   PieceIdLike,
   pieceIdLikeToPieceId,
   Plane,
   Point,
   Port,
+  PortDiff,
   PortId,
   PortIdLike,
   portIdLikeToPortId,
   Quality,
+  QualityDiff,
   Representation,
+  RepresentationDiff,
   RepresentationId,
   RepresentationIdLike,
   representationIdLikeToRepresentationId,
   Side,
   Type,
+  TypeDiff,
   TypeId,
   TypeIdLike,
   typeIdLikeToTypeId,
@@ -318,7 +327,7 @@ type YSketchpadKeysMap = {
 };
 const gSketchpad = <K extends keyof YSketchpadKeysMap>(m: YSketchpad, k: K): YSketchpadKeysMap[K] => m.get(k as string) as YSketchpadKeysMap[K];
 
-export class SketchpadStore {
+class SketchpadStore {
   private id?: string;
   private sketchpadDoc: Y.Doc;
   private kitDocs: Map<string, Y.Doc> = new Map();
@@ -327,6 +336,8 @@ export class SketchpadStore {
   private listeners: Set<() => void> = new Set();
   private fileUrls: Map<string, string> = new Map();
 
+  // Stable references for getSnapshot functions
+  private stableObjects = new Map<string, any>();
   private key = {
     kit: (id: KitIdLike) => {
       const kitId = kitIdLikeToKitId(id);
@@ -786,9 +797,39 @@ export class SketchpadStore {
   // TODO: Make all observers specific to the property they are observing
   onDesignEditorStoreChange(id: string, callback: () => void) {
     const yDesignEditorStore = this.getYDesignEditorStore(id);
-    const observer = () => callback();
+    const observer = () => {
+      // Clear stable objects when store changes
+      this.stableObjects.delete(`selection-${id}`);
+      this.stableObjects.delete(`designDiff-${id}`);
+      this.stableObjects.delete(`state-${id}`);
+      callback();
+    };
     yDesignEditorStore.observe(observer);
     return () => yDesignEditorStore.unobserve(observer);
+  }
+
+  // Helper to get stable object references for useSyncExternalStore
+  private getStableObject<T>(key: string, factory: () => T): T {
+    if (!this.stableObjects.has(key)) {
+      this.stableObjects.set(key, factory());
+    }
+    return this.stableObjects.get(key)!;
+  }
+
+  // Get stable selection object for useSyncExternalStore
+  getStableSelection(id: string): DesignEditorStoreSelection {
+    return this.getStableObject(`selection-${id}`, () => {
+      const designEditorStore = this.getDesignEditorStoreStore(id);
+      return designEditorStore?.getState().selection ?? { selectedPieceIds: [], selectedConnections: [] };
+    });
+  }
+
+  // Get stable designDiff object for useSyncExternalStore
+  getStableDesignDiff(id: string): DesignDiff {
+    return this.getStableObject(`designDiff-${id}`, () => {
+      const designEditorStore = this.getDesignEditorStoreStore(id);
+      return designEditorStore?.getState().designDiff ?? { pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } };
+    });
   }
 
   onDesignEditorStoreDesignIdChange(id: string, callback: () => void) {
@@ -1061,6 +1102,76 @@ export class SketchpadStore {
     return this.getKit(kit);
   }
 
+  updateKitDiff(before: Kit, after: Kit): Kit {
+    const diff = getDiff.kit(before, after);
+    return this.applyKitDiff(before, diff);
+  }
+
+  applyKitDiff(base: Kit, diff: KitDiff): Kit {
+    const yKit = this.getYKit(base);
+
+    if (diff.description !== undefined) yKit.set("description", diff.description);
+    if (diff.icon !== undefined) yKit.set("icon", diff.icon);
+    if (diff.image !== undefined) yKit.set("image", diff.image);
+    if (diff.preview !== undefined) yKit.set("preview", diff.preview);
+    if (diff.remote !== undefined) yKit.set("remote", diff.remote);
+    if (diff.homepage !== undefined) yKit.set("homepage", diff.homepage);
+    if (diff.license !== undefined) yKit.set("license", diff.license);
+
+    if (diff.qualities !== undefined) {
+      yKit.set("qualities", this.createQualities(base.qualities || []));
+    }
+
+    if (diff.types) {
+      const baseTypes = base.types || [];
+      if (diff.types.removed) {
+        diff.types.removed.forEach((typeId) => {
+          this.deleteType(base, typeId);
+        });
+      }
+      if (diff.types.added) {
+        diff.types.added.forEach((type) => {
+          this.createType(base, type);
+        });
+      }
+      if (diff.types.updated) {
+        diff.types.updated.forEach((typeDiff) => {
+          const baseType = baseTypes.find((t) => t.name === typeDiff.name && t.variant === typeDiff.variant);
+          if (baseType) {
+            const updatedType = applyDiff.type(baseType, typeDiff);
+            this.updateType(base, updatedType);
+          }
+        });
+      }
+    }
+
+    if (diff.designs) {
+      const baseDesigns = base.designs || [];
+      if (diff.designs.removed) {
+        diff.designs.removed.forEach((designId) => {
+          this.deleteDesign(base, designId);
+        });
+      }
+      if (diff.designs.added) {
+        diff.designs.added.forEach((design) => {
+          this.createDesign(base, design);
+        });
+      }
+      if (diff.designs.updated) {
+        diff.designs.updated.forEach((designDiff) => {
+          const baseDesign = baseDesigns.find((d) => d.name === designDiff.name && d.variant === designDiff.variant && d.view === designDiff.view);
+          if (baseDesign) {
+            const updatedDesign = applyDiff.design(baseDesign, designDiff);
+            this.updateDesign(base, updatedDesign);
+          }
+        });
+      }
+    }
+
+    yKit.set("updated", new Date().toISOString());
+    return this.getKit(base);
+  }
+
   deleteKit(id: KitId): void {
     const doc = this.getKitDoc(id);
     const key = this.key.kit(id);
@@ -1197,6 +1308,60 @@ export class SketchpadStore {
 
     yType.set("updated", new Date().toISOString());
     return this.getType(kitId, type.name !== undefined || type.variant !== undefined ? { name: type.name ?? originalType.name, variant: type.variant ?? originalType.variant } : type);
+  }
+
+  updateTypeDiff(kitId: KitId, before: Type, after: Type): Type {
+    const diff = getDiff.type(before, after);
+    return this.applyTypeDiff(kitId, before, diff);
+  }
+
+  applyTypeDiff(kitId: KitId, base: Type, diff: TypeDiff): Type {
+    const yType = this.getYType(kitId, base);
+
+    // Check if name or variant changed (affecting the compound key)
+    const nameChanged = diff.name !== undefined && diff.name !== base.name;
+    const variantChanged = diff.variant !== undefined && diff.variant !== base.variant;
+
+    if (nameChanged || variantChanged) {
+      // Update the ID mapping before updating the yType
+      const oldId = { name: base.name, variant: base.variant };
+      const newId = {
+        name: diff.name ?? base.name,
+        variant: diff.variant ?? base.variant,
+      };
+      this.updateTypeIdMapping(kitId, oldId, newId);
+    }
+
+    if (diff.name !== undefined) yType.set("name", diff.name);
+    if (diff.description !== undefined) yType.set("description", diff.description);
+    if (diff.icon !== undefined) yType.set("icon", diff.icon);
+    if (diff.image !== undefined) yType.set("image", diff.image);
+    if (diff.variant !== undefined) yType.set("variant", diff.variant);
+    if (diff.stock !== undefined) yType.set("stock", diff.stock);
+    if (diff.virtual !== undefined) yType.set("virtual", diff.virtual);
+    if (diff.unit !== undefined) yType.set("unit", diff.unit);
+
+    if (diff.ports !== undefined) {
+      const validPorts = diff.ports.filter((p) => p.id_ !== undefined);
+      const portsMap = new Y.Map<YPort>();
+      validPorts.forEach((p) => portsMap.set(p.id_!, this.buildYPort(p)));
+      yType.set("ports", portsMap);
+    }
+    if (diff.qualities !== undefined) {
+      yType.set("qualities", this.createQualities(base.qualities || []));
+    }
+    if (diff.representations !== undefined) {
+      const reps = new Y.Map<YRepresentation>();
+      diff.representations.forEach((r) => reps.set(`${r.tags?.join(",") || ""}`, this.buildYRepresentation(r)));
+      yType.set("representations", reps);
+    }
+    if (diff.authors !== undefined) {
+      yType.set("authors", this.createAuthors(diff.authors));
+    }
+
+    yType.set("updated", new Date().toISOString());
+    const resultId = diff.name !== undefined || diff.variant !== undefined ? { name: diff.name ?? base.name, variant: diff.variant ?? base.variant } : base;
+    return this.getType(kitId, resultId);
   }
 
   deleteType(kitId: KitId, id: TypeId): void {
@@ -1433,6 +1598,130 @@ export class SketchpadStore {
           }
         : design,
     );
+  }
+
+  updateDesignDiff(kitId: KitIdLike, before: Design, after: Design): Design {
+    const diff = getDiff.design(before, after);
+    return this.applyDesignDiff(kitId, before, diff);
+  }
+
+  applyDesignDiff(kitId: KitIdLike, base: Design, diff: DesignDiff): Design {
+    const normalizedKitId: KitId = kitIdLikeToKitId(kitId);
+    const yDesign = this.getYDesign(kitId, base);
+
+    // Check if name, variant, or view changed (affecting the compound key)
+    const nameChanged = diff.name !== undefined && diff.name !== base.name;
+    const variantChanged = diff.variant !== undefined && diff.variant !== base.variant;
+    const viewChanged = diff.view !== undefined && diff.view !== base.view;
+
+    if (nameChanged || variantChanged || viewChanged) {
+      // Update the ID mapping before updating the yDesign
+      const oldId = {
+        name: base.name,
+        variant: base.variant,
+        view: base.view,
+      };
+      const newId = {
+        name: diff.name ?? base.name,
+        variant: diff.variant ?? base.variant,
+        view: diff.view ?? base.view,
+      };
+      this.updateDesignIdMapping(kitId, oldId, newId);
+    }
+
+    if (diff.name !== undefined) yDesign.set("name", diff.name);
+    if (diff.description !== undefined) yDesign.set("description", diff.description);
+    if (diff.icon !== undefined) yDesign.set("icon", diff.icon);
+    if (diff.image !== undefined) yDesign.set("image", diff.image);
+    if (diff.variant !== undefined) yDesign.set("variant", diff.variant);
+    if (diff.view !== undefined) yDesign.set("view", diff.view);
+    if (diff.unit !== undefined) yDesign.set("unit", diff.unit);
+
+    if (diff.pieces) {
+      const basePieces = base.pieces || [];
+      const designId: DesignId = designIdLikeToDesignId(base);
+      if (diff.pieces.removed) {
+        diff.pieces.removed.forEach((pieceId) => {
+          this.deletePiece(normalizedKitId, designId, pieceId);
+        });
+      }
+      if (diff.pieces.added) {
+        diff.pieces.added.forEach((piece) => {
+          this.createPiece(normalizedKitId, designId, piece);
+        });
+      }
+      if (diff.pieces.updated) {
+        diff.pieces.updated.forEach((pieceDiff) => {
+          const basePiece = basePieces.find((p) => p.id_ === pieceDiff.id_);
+          if (basePiece) {
+            const updatedPiece = applyDiff.piece(basePiece, pieceDiff);
+            this.updatePiece(normalizedKitId, designId, updatedPiece);
+          }
+        });
+      }
+    }
+
+    if (diff.connections) {
+      const baseConnections = base.connections || [];
+      const designId: DesignId = designIdLikeToDesignId(base);
+      if (diff.connections.removed) {
+        diff.connections.removed.forEach((connectionId) => {
+          this.deleteConnection(normalizedKitId, designId, connectionId);
+        });
+      }
+      if (diff.connections.added) {
+        diff.connections.added.forEach((connection) => {
+          this.createConnection(normalizedKitId, designId, connection);
+        });
+      }
+      if (diff.connections.updated) {
+        diff.connections.updated.forEach((connectionDiff) => {
+          const baseConnection = baseConnections.find((c) => c.connected.piece.id_ === connectionDiff.connected.piece.id_ && c.connecting.piece.id_ === connectionDiff.connecting.piece.id_);
+          if (baseConnection) {
+            const updatedConnection = applyDiff.connection(baseConnection, connectionDiff);
+            this.updateConnection(normalizedKitId, designId, updatedConnection);
+          }
+        });
+      }
+    }
+
+    yDesign.set("updated", new Date().toISOString());
+    return this.getDesign(
+      kitId,
+      nameChanged || variantChanged || viewChanged
+        ? {
+            name: diff.name ?? base.name,
+            variant: diff.variant ?? base.variant,
+            view: diff.view ?? base.view,
+          }
+        : base,
+    );
+  }
+
+  updatePieceDiff(kitId: KitIdLike, designId: DesignIdLike, before: Piece, after: Piece): Piece {
+    const diff = getDiff.piece(before, after);
+    return this.applyPieceDiff(kitId, designId, before, diff);
+  }
+
+  applyPieceDiff(kitId: KitIdLike, designId: DesignIdLike, base: Piece, diff: PieceDiff): Piece {
+    const normalizedKitId: KitId = kitIdLikeToKitId(kitId);
+    const normalizedDesignId: DesignId = designIdLikeToDesignId(designId);
+    const updated = applyDiff.piece(base, diff);
+    this.updatePiece(normalizedKitId, normalizedDesignId, updated);
+    return updated;
+  }
+
+  updateConnectionDiff(kitId: KitIdLike, designId: DesignIdLike, before: Connection, after: Connection): Connection {
+    const diff = getDiff.connection(before, after);
+    return this.applyConnectionDiff(kitId, designId, before, diff);
+  }
+
+  applyConnectionDiff(kitId: KitIdLike, designId: DesignIdLike, base: Connection, diff: ConnectionDiff): Connection {
+    const normalizedKitId: KitId = kitIdLikeToKitId(kitId);
+    const normalizedDesignId: DesignId = designIdLikeToDesignId(designId);
+    const updated = applyDiff.connection(base, diff);
+    this.updateConnection(normalizedKitId, normalizedDesignId, updated);
+    return updated;
   }
 
   deleteDesign(kitId: KitId, id: DesignId): void {
@@ -1903,6 +2192,41 @@ export class SketchpadStore {
     }
   }
 
+  updateRepresentationDiff(kitId: KitIdLike, typeId: TypeIdLike, before: Representation, after: Representation): Representation {
+    const diff = getDiff.representation(before, after);
+    return this.applyRepresentationDiff(kitId, typeId, before, diff);
+  }
+
+  applyRepresentationDiff(kitId: KitIdLike, typeId: TypeIdLike, base: Representation, diff: RepresentationDiff): Representation {
+    const normalizedKitId: KitId = kitIdLikeToKitId(kitId);
+    const normalizedTypeId: TypeId = typeIdLikeToTypeId(typeId);
+    const updated = applyDiff.representation(base, diff);
+    this.updateRepresentation(normalizedKitId, normalizedTypeId, updated);
+    return updated;
+  }
+
+  updatePortDiff(kitId: KitIdLike, typeId: TypeIdLike, portId: string, before: Port, after: Port): Port {
+    const diff = getDiff.port(before, after);
+    return this.applyPortDiff(kitId, typeId, portId, before, diff);
+  }
+
+  applyPortDiff(kitId: KitIdLike, typeId: TypeIdLike, portId: string, base: Port, diff: PortDiff): Port {
+    const normalizedKitId: KitId = kitIdLikeToKitId(kitId);
+    const normalizedTypeId: TypeId = typeIdLikeToTypeId(typeId);
+    const updated = applyDiff.port(base, diff);
+    this.updatePort(normalizedKitId, normalizedTypeId, portId, updated);
+    return updated;
+  }
+
+  updateQualityDiff(before: Quality, after: Quality): Quality {
+    const diff = getDiff.quality(before, after);
+    return this.applyQualityDiff(before, diff);
+  }
+
+  applyQualityDiff(base: Quality, diff: QualityDiff): Quality {
+    return applyDiff.quality(base, diff);
+  }
+
   deletePort(kitId: KitId, typeId: TypeId, portId: string): void {
     const yType = this.getYType(kitId, typeId);
     const ports = gType(yType, "ports");
@@ -1920,12 +2244,7 @@ export class SketchpadStore {
     }
   }
 
-  createFile(kitId: KitIdLike | undefined, url: string, data: Uint8Array): void {
-    if (!kitId) {
-      // For backward compatibility, use a default kit or skip
-      console.warn("Creating file without kit ID - files will be stored globally");
-      return;
-    }
+  createFile(kitId: KitIdLike, url: string, data: Uint8Array): void {
     const doc = this.getKitDoc(kitId);
     doc.getMap<Uint8Array>("files").set(url, data);
     const ab = new ArrayBuffer(data.byteLength);
@@ -2233,7 +2552,7 @@ export class SketchpadStore {
     this.sketchpadDoc.transact(commands, this.id);
   }
 
-  async importFiles(url: string, force = false): Promise<void> {
+  async importFiles(url: string, kitId: KitIdLike, force = false): Promise<void> {
     try {
       const zipData = await fetch(url).then((res) => res.arrayBuffer());
       const zip = await JSZip.loadAsync(zipData);
@@ -2245,7 +2564,7 @@ export class SketchpadStore {
           if (!force && this.fileUrls.has(fileEntry.name)) {
             throw new Error(`File ${fileEntry.name} already exists. Use force=true to overwrite.`);
           }
-          this.createFile(undefined, fileEntry.name, fileData);
+          this.createFile(kitId, fileEntry.name, fileData);
         }
       }
 
@@ -2357,12 +2676,7 @@ export class SketchpadStore {
     }
     const zipData = await fetch(url).then((res) => res.arrayBuffer());
     const zip = await JSZip.loadAsync(zipData);
-    if (complete) {
-      for (const fileEntry of Object.values(zip.files)) {
-        const fileData = await fileEntry.async("uint8array");
-        this.createFile(undefined, fileEntry.name, fileData);
-      }
-    }
+
     const kitDbFileEntry = zip.file(".semio/kit.db");
     if (!kitDbFileEntry) {
       throw new Error("kit.db not found in the zip file at path ./semio/kit.db");
@@ -2406,6 +2720,7 @@ export class SketchpadStore {
       };
       const kitIdRow = queryOne("SELECT id FROM kit WHERE name = ? AND version = ?", [kit.name, kit.version || ""]);
       const kitId = Number(kitIdRow ? (kitIdRow[0] as number) : 0);
+      const kitIdActual = { name: kit.name, version: kit.version || "" };
       const getQualities = (fkColumn: string, fkValue: number | string): Quality[] => {
         const query = `SELECT name, value, unit, definition FROM quality WHERE ${fkColumn} = ?`;
         const rows = queryAll(query, [fkValue]);
@@ -2460,7 +2775,7 @@ export class SketchpadStore {
                 const fileEntry = zip.file(representation.url);
                 if (fileEntry) {
                   const fileData = await fileEntry.async("uint8array");
-                  this.createFile(undefined, representation.url, fileData);
+                  this.createFile(kitIdActual, representation.url, fileData);
                 } else if (complete && !representation.url.startsWith("http")) {
                   console.warn(`Representation file not found in zip: ${representation.url}`);
                 }
@@ -2607,6 +2922,12 @@ export class SketchpadStore {
       }
       if (!kit) throw new Error("No kit loaded");
       this.importKitData(kit, force);
+      if (complete) {
+        for (const fileEntry of Object.values(zip.files)) {
+          const fileData = await fileEntry.async("uint8array");
+          this.createFile(kitIdActual, fileEntry.name, fileData);
+        }
+      }
       console.log(`Kit "${kit.name}" imported successfully from ${url}`);
     } catch (error) {
       console.error("Error importing kit:", error);
@@ -2909,16 +3230,50 @@ const RepresentationScopeContext = createContext<RepresentationScope | null>(nul
 const PortypeScopeContext = createContext<PortypeScope | null>(null);
 const DesignEditorStoreScopeContext = createContext<DesignEditorStoreScope | null>(null);
 
-export const SketchpadScopeProvider = (props: { id?: string; children: React.ReactNode }) => React.createElement(SketchpadScopeContext.Provider, { value: { id: props.id || "" } }, props.children as any);
-export const KitScopeProvider = (props: { id?: KitId; children: React.ReactNode }) => React.createElement(KitScopeContext.Provider, { value: { id: props.id || { name: "", version: "" } } }, props.children as any);
-export const DesignScopeProvider = (props: { id?: DesignId; children: React.ReactNode }) => React.createElement(DesignScopeContext.Provider, { value: { id: props.id || { name: "", variant: "", view: "" } } }, props.children as any);
-export const TypeScopeProvider = (props: { id?: TypeId; children: React.ReactNode }) => React.createElement(TypeScopeContext.Provider, { value: { id: props.id || { name: "", variant: "" } } }, props.children as any);
-export const PieceScopeProvider = (props: { id?: PieceId; children: React.ReactNode }) => React.createElement(PieceScopeContext.Provider, { value: { id: props.id || { id_: "" } } }, props.children as any);
-export const ConnectionScopeProvider = (props: { id?: ConnectionId; children: React.ReactNode }) =>
-  React.createElement(ConnectionScopeContext.Provider, { value: { id: props.id || { connected: { piece: { id_: "" } }, connecting: { piece: { id_: "" } } } } }, props.children as any);
-export const RepresentationScopeProvider = (props: { id?: RepresentationId; children: React.ReactNode }) => React.createElement(RepresentationScopeContext.Provider, { value: { id: props.id || { tags: [] } } }, props.children as any);
-export const PortypeScopeProvider = (props: { id?: PortId; children: React.ReactNode }) => React.createElement(PortypeScopeContext.Provider, { value: { id: props.id || { id_: "" } } }, props.children as any);
-export const DesignEditorStoreScopeProvider = (props: { id?: string; children: React.ReactNode }) => React.createElement(DesignEditorStoreScopeContext.Provider, { value: { id: props.id || "" } }, props.children as any);
+export const SketchpadScopeProvider = (props: { id?: string; children: React.ReactNode }) => {
+  const value = useMemo(() => ({ id: props.id || "" }), [props.id]);
+  return React.createElement(SketchpadScopeContext.Provider, { value }, props.children as any);
+};
+
+export const KitScopeProvider = (props: { id?: KitId; children: React.ReactNode }) => {
+  const value = useMemo(() => ({ id: props.id || { name: "", version: "" } }), [props.id]);
+  return React.createElement(KitScopeContext.Provider, { value }, props.children as any);
+};
+
+export const DesignScopeProvider = (props: { id?: DesignId; children: React.ReactNode }) => {
+  const value = useMemo(() => ({ id: props.id || { name: "", variant: "", view: "" } }), [props.id]);
+  return React.createElement(DesignScopeContext.Provider, { value }, props.children as any);
+};
+
+export const TypeScopeProvider = (props: { id?: TypeId; children: React.ReactNode }) => {
+  const value = useMemo(() => ({ id: props.id || { name: "", variant: "" } }), [props.id]);
+  return React.createElement(TypeScopeContext.Provider, { value }, props.children as any);
+};
+
+export const PieceScopeProvider = (props: { id?: PieceId; children: React.ReactNode }) => {
+  const value = useMemo(() => ({ id: props.id || { id_: "" } }), [props.id]);
+  return React.createElement(PieceScopeContext.Provider, { value }, props.children as any);
+};
+
+export const ConnectionScopeProvider = (props: { id?: ConnectionId; children: React.ReactNode }) => {
+  const value = useMemo(() => ({ id: props.id || { connected: { piece: { id_: "" } }, connecting: { piece: { id_: "" } } } }), [props.id]);
+  return React.createElement(ConnectionScopeContext.Provider, { value }, props.children as any);
+};
+
+export const RepresentationScopeProvider = (props: { id?: RepresentationId; children: React.ReactNode }) => {
+  const value = useMemo(() => ({ id: props.id || { tags: [] } }), [props.id]);
+  return React.createElement(RepresentationScopeContext.Provider, { value }, props.children as any);
+};
+
+export const PortypeScopeProvider = (props: { id?: PortId; children: React.ReactNode }) => {
+  const value = useMemo(() => ({ id: props.id || { id_: "" } }), [props.id]);
+  return React.createElement(PortypeScopeContext.Provider, { value }, props.children as any);
+};
+
+export const DesignEditorStoreScopeProvider = (props: { id?: string; children: React.ReactNode }) => {
+  const value = useMemo(() => ({ id: props.id || "" }), [props.id]);
+  return React.createElement(DesignEditorStoreScopeContext.Provider, { value }, props.children as any);
+};
 
 export const useSketchpadScope = () => useContext(SketchpadScopeContext);
 export const useKitScope = () => useContext(KitScopeContext);
@@ -3149,11 +3504,11 @@ export function useRepresentations(id?: RepresentationId) {
   );
 }
 
-export function useDesignEditorStoreStore(id?: string) {
+export function useDesignEditorStore(id?: string) {
   const store = useSketchpadStore();
   const designEditorScope = useDesignEditorScope();
   const designEditorId = id ?? designEditorScope?.id;
-  if (!designEditorId) throw new Error("useDesignEditorStoreStore requires an id or must be used within a DesignEditorStoreScope");
+  if (!designEditorId) throw new Error("useDesignEditorStore requires an id or must be used within a DesignEditorStoreScope");
 
   const designEditorStore = store.getDesignEditorStoreStore(designEditorId);
   if (!designEditorStore) throw new Error(`Design editor store with id ${designEditorId} not found`);
@@ -3187,10 +3542,7 @@ export function useDesignEditorStoreSelection(id?: string) {
 
   return useSyncExternalStore(
     (l) => store.onDesignEditorStoreSelectionChange(designEditorId, l),
-    () => {
-      const designEditorStore = store.getDesignEditorStoreStore(designEditorId);
-      return designEditorStore?.getState().selection ?? { selectedPieceIds: [], selectedConnections: [] };
-    },
+    () => store.getStableSelection(designEditorId),
   );
 }
 
@@ -3202,10 +3554,7 @@ export function useDesignEditorStoreDesignDiff(id?: string) {
 
   return useSyncExternalStore(
     (l) => store.onDesignEditorStoreDesignDiffChange(designEditorId, l),
-    () => {
-      const designEditorStore = store.getDesignEditorStoreStore(designEditorId);
-      return designEditorStore?.getState().designDiff ?? { pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } };
-    },
+    () => store.getStableDesignDiff(designEditorId),
   );
 }
 
