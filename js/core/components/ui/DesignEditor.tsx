@@ -26,7 +26,7 @@
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
 import { ReactFlowProvider, useReactFlow } from "@xyflow/react";
 import { Info, MessageCircle, Terminal, Wrench } from "lucide-react";
-import { FC, createContext, useCallback, useContext, useEffect, useState } from "react";
+import { FC, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useHotkeys } from "react-hotkeys-hook";
 
@@ -74,6 +74,7 @@ import {
   setPiecesInDesignDiff,
 } from "@semio/js";
 import Diagram from "@semio/js/components/ui/Diagram";
+import ModelComponent from "@semio/js/components/ui/Model";
 import { default as Navbar } from "@semio/js/components/ui/Navbar";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@semio/js/components/ui/Resizable";
 import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGroup";
@@ -82,9 +83,10 @@ import { Camera, TypeId, orientDesign } from "../../semio";
 import {
   DesignEditorStoreFullscreenPanel,
   DesignEditorStorePresence,
+  DesignEditorStoreScopeProvider,
   DesignEditorStoreSelection,
   DesignEditorStoreState,
-  DesignScopeProvider,
+  useCurrentDesignEditorId,
   useDesign,
   useDesignEditorScope,
   useDesignEditorStoreFullscreenPanel,
@@ -97,7 +99,7 @@ import {
   useTypes,
 } from "../../store";
 import Chat from "./Chat";
-import { CommandContext, ConsolePanel, commandRegistry } from "./Console";
+import { ConsolePanel, commandRegistry } from "./Console";
 import { designEditorCommands } from "./designEditorCommands";
 import Details from "./Details";
 import { useSketchpad } from "./Sketchpad";
@@ -473,9 +475,14 @@ export const DesignEditorCommandsProvider = (props: { children: React.ReactNode 
     throw new Error("DesignEditorCommandsProvider must be used within a DesignEditorScopeProvider");
   }
 
-  const designEditorStore = store.getDesignEditorStore(designEditorScope.id);
+  const designEditorStore = store.getDesignEditorStoreStore(designEditorScope.id);
   if (!designEditorStore) {
     throw new Error(`Design editor store not found for id: ${designEditorScope.id}`);
+  }
+
+  // Don't render children until all required dependencies are available
+  if (!store || !kit || !designId) {
+    return null;
   }
 
   const dispatch = useCallback(
@@ -503,7 +510,7 @@ export const DesignEditorCommandsProvider = (props: { children: React.ReactNode 
               connected: { piece: { id_: c.connected.piece.id_ } },
               connecting: { piece: { id_: c.connecting.piece.id_ } },
             })) || [];
-          designEditorStore.updateDesignEditorSelection({
+          designEditorStore.updateDesignEditorStoreSelection({
             selectedPieceIds: allPieces,
             selectedConnections: allConnections,
             selectedPiecePortId: undefined,
@@ -511,7 +518,7 @@ export const DesignEditorCommandsProvider = (props: { children: React.ReactNode 
           break;
 
         case DesignEditorAction.DeselectAll:
-          designEditorStore.updateDesignEditorSelection({
+          designEditorStore.updateDesignEditorStoreSelection({
             selectedPieceIds: [],
             selectedConnections: [],
             selectedPiecePortId: undefined,
@@ -519,14 +526,14 @@ export const DesignEditorCommandsProvider = (props: { children: React.ReactNode 
           break;
 
         case DesignEditorAction.SetSelection:
-          designEditorStore.updateDesignEditorSelection(action.payload);
+          designEditorStore.updateDesignEditorStoreSelection(action.payload);
           break;
 
         default:
           console.warn(`Unhandled action type: ${action.type}`);
       }
     },
-    [store, designEditorScope?.id, kit, designId, designEditorStore],
+    [kit, designId, designEditorStore],
   );
 
   return <DesignEditorCommandsContext.Provider value={{ dispatch }}>{props.children}</DesignEditorCommandsContext.Provider>;
@@ -537,11 +544,13 @@ export const useDesignEditorCommands = () => {
   if (!context) {
     throw new Error("useDesignEditorCommands must be used within a DesignEditorCommandsProvider");
   }
-  const { dispatch } = context;
+
+  // Provide a safe default dispatch function to avoid React hook issues
+  const { dispatch = () => console.warn("dispatch not available") } = context;
 
   // TODO: These functions need to be implemented properly
-  const clusterDesign = () => console.warn("clusterDesign not implemented");
-  const expandDesign = () => console.warn("expandDesign not implemented");
+  const clusterDesign = useCallback(() => console.warn("clusterDesign not implemented"), []);
+  const expandDesign = useCallback(() => console.warn("expandDesign not implemented"), []);
 
   const setDesign = useCallback((d: Design) => dispatch({ type: DesignEditorAction.SetDesign, payload: d }), [dispatch]);
   const addPiece = useCallback((p: Piece) => dispatch({ type: DesignEditorAction.AddPiece, payload: p }), [dispatch]);
@@ -598,59 +607,11 @@ export const useDesignEditorCommands = () => {
   const updatePresence = useCallback((presence: Partial<DesignEditorStorePresence> & { name: string }) => dispatch({ type: DesignEditorAction.UpdatePresence, payload: presence }), [dispatch]);
   const executeCommand = useCallback(
     async (commandId: string, payload: Record<string, any> = {}) => {
-      const context: CommandContext = {
-        kit: useKit(),
-        designId: useDesign(),
-        selection: useDesignEditorStoreSelection(),
-        clusterDesign: clusterDesign,
-        expandDesign: expandDesign,
-      };
-
-      const command = commandRegistry.get(commandId);
-      if (!command) {
-        throw new Error(`Command not found: ${commandId}`);
-      }
-
-      // Editor-only commands can always execute, even during transactions
-      if (command.editorOnly) {
-        const result = await commandRegistry.execute(commandId, context, payload);
-        if (result.selection) {
-          setSelection(result.selection);
-        }
-        if (result.fullscreenPanel !== undefined) {
-          setFullscreen(result.fullscreenPanel);
-        }
-        return result;
-      }
-
-      // Design-modifying commands only execute when no transaction is active
-      if (useDesignEditorStoreIsTransactionActive()) {
-        console.warn(`Cannot execute design-modifying command "${commandId}" during active transaction`);
-        return;
-      }
-
-      // Run design commands in transactions
-      startTransaction();
-      try {
-        const result = await commandRegistry.execute(commandId, context, payload);
-        if (result.design) {
-          setDesign(result.design);
-        }
-        if (result.selection) {
-          setSelection(result.selection);
-        }
-        if (result.fullscreenPanel !== undefined) {
-          setFullscreen(result.fullscreenPanel);
-        }
-        finalizeTransaction();
-        return result;
-      } catch (error) {
-        abortTransaction();
-        console.error("Command execution failed:", error);
-        throw error;
-      }
+      // Note: This is a placeholder implementation
+      // The context needs to be passed from outside since we can't call hooks here
+      console.warn(`executeCommand not fully implemented: ${commandId}`, payload);
     },
-    [startTransaction, setDesign, setSelection, setFullscreen, finalizeTransaction, abortTransaction, clusterDesign, expandDesign],
+    [dispatch],
   );
   const getAvailableCommands = useCallback(() => commandRegistry.getAll(), []);
   const getCommand = useCallback((commandId: string) => commandRegistry.get(commandId), []);
@@ -1245,43 +1206,46 @@ const DesignEditorCore: FC<DesignEditorProps> = () => {
     // return () => {
     //   clearInterval(updateInterval)
     // }
-  }, []);
+  }, [stepIn]);
 
-  const designEditorToolbar = (
-    <ToggleGroup
-      type="multiple"
-      value={Object.entries(visiblePanels)
-        .filter(([_, isVisible]) => isVisible)
-        .map(([key]) => key)}
-      onValueChange={(values) => {
-        Object.keys(visiblePanels).forEach((key) => {
-          const isCurrentlyVisible = visiblePanels[key as keyof PanelToggles];
-          const shouldBeVisible = values.includes(key);
-          if (isCurrentlyVisible !== shouldBeVisible) {
-            togglePanel(key as keyof PanelToggles);
-          }
-        });
-      }}
-    >
-      <ToggleGroupItem value="workbench" tooltip="Workbench" hotkey="⌘J">
-        <Wrench />
-      </ToggleGroupItem>
-      <ToggleGroupItem value="console" tooltip="Console" hotkey="⌘K">
-        <Terminal />
-      </ToggleGroupItem>
-      <ToggleGroupItem value="details" tooltip="Details" hotkey="⌘L">
-        <Info />
-      </ToggleGroupItem>
-      <ToggleGroupItem value="chat" tooltip="Chat" hotkey="⌘[">
-        <MessageCircle />
-      </ToggleGroupItem>
-    </ToggleGroup>
+  const designEditorToolbar = useMemo(
+    () => (
+      <ToggleGroup
+        type="multiple"
+        value={Object.entries(visiblePanels)
+          .filter(([_, isVisible]) => isVisible)
+          .map(([key]) => key)}
+        onValueChange={(values) => {
+          Object.keys(visiblePanels).forEach((key) => {
+            const isCurrentlyVisible = visiblePanels[key as keyof PanelToggles];
+            const shouldBeVisible = values.includes(key);
+            if (isCurrentlyVisible !== shouldBeVisible) {
+              togglePanel(key as keyof PanelToggles);
+            }
+          });
+        }}
+      >
+        <ToggleGroupItem value="workbench" tooltip="Workbench" hotkey="⌘J">
+          <Wrench />
+        </ToggleGroupItem>
+        <ToggleGroupItem value="console" tooltip="Console" hotkey="⌘K">
+          <Terminal />
+        </ToggleGroupItem>
+        <ToggleGroupItem value="details" tooltip="Details" hotkey="⌘L">
+          <Info />
+        </ToggleGroupItem>
+        <ToggleGroupItem value="chat" tooltip="Chat" hotkey="⌘[">
+          <MessageCircle />
+        </ToggleGroupItem>
+      </ToggleGroup>
+    ),
+    [visiblePanels, togglePanel],
   );
 
   useEffect(() => {
     setNavbarToolbar(designEditorToolbar);
     return () => setNavbarToolbar(null);
-  }, [visiblePanels, setNavbarToolbar]);
+  }, [designEditorToolbar, setNavbarToolbar]);
 
   const { screenToFlowPosition } = useReactFlow();
   const [activeDraggedTypeId, setActiveDraggedTypeId] = useState<TypeId | null>(null);
@@ -1293,7 +1257,13 @@ const DesignEditorCore: FC<DesignEditorProps> = () => {
     const unregisterFunctions = designEditorCommands.map((command) => commandRegistry.register(command));
 
     return () => unregisterFunctions.forEach((fn) => fn());
-  }, [commandRegistry]);
+  }, []);
+
+  // Get hook values at component level
+  const kit = useKit();
+  const designId = useDesignId();
+  const selection = useDesignEditorStoreSelection();
+  const isTransactionActive = useDesignEditorStoreIsTransactionActive();
 
   // Global command event handler
   useEffect(() => {
@@ -1307,7 +1277,7 @@ const DesignEditorCore: FC<DesignEditorProps> = () => {
         return;
       }
 
-      const context = { kit: useKit(), designId: useDesign(), selection: useDesignEditorStoreSelection() };
+      const context = { kit, designId, selection };
 
       // Editor-only commands can always execute, even during transactions
       if (command.editorOnly) {
@@ -1321,7 +1291,7 @@ const DesignEditorCore: FC<DesignEditorProps> = () => {
       }
 
       // Design-modifying commands only execute when no transaction is active
-      if (useDesignEditorStoreIsTransactionActive()) {
+      if (isTransactionActive) {
         console.warn(`Cannot execute design-modifying command "${commandId}" during active transaction`);
         return;
       }
@@ -1341,7 +1311,7 @@ const DesignEditorCore: FC<DesignEditorProps> = () => {
 
     document.addEventListener("semio-command", handleCommand);
     return () => document.removeEventListener("semio-command", handleCommand);
-  }, [useDesignEditorStoreIsTransactionActive()]);
+  }, [kit, designId, selection, isTransactionActive, setSelection, startTransaction, setDesign, finalizeTransaction, abortTransaction]);
 
   // Register hotkeys for all commands automatically from the command registry
   const allCommands = commandRegistry.getAll();
@@ -1493,23 +1463,20 @@ const DesignEditorCore: FC<DesignEditorProps> = () => {
   const rightPanelVisible = visiblePanels.details || visiblePanels.chat;
 
   const fullscreenPanel = useDesignEditorStoreFullscreenPanel();
-  const activeDesignId = useDesignId();
 
   return (
     <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
       <div className="canvas flex-1 relative">
         <div id="sketchpad-edgeless" className="h-full">
-          <DesignScopeProvider id={activeDesignId}>
-            <ResizablePanelGroup direction="horizontal">
-              <ResizablePanel defaultSize={fullscreenPanel === DesignEditorStoreFullscreenPanel.Diagram ? 100 : 50} className={`${fullscreenPanel === DesignEditorStoreFullscreenPanel.Model ? "hidden" : "block"}`} onDoubleClick={onDoubleClickDiagram}>
-                <Diagram />
-              </ResizablePanel>
-              <ResizableHandle className={`border-r ${fullscreenPanel !== DesignEditorStoreFullscreenPanel.None ? "hidden" : "block"}`} />
-              <ResizablePanel defaultSize={fullscreenPanel === DesignEditorStoreFullscreenPanel.Model ? 100 : 50} className={`${fullscreenPanel === DesignEditorStoreFullscreenPanel.Diagram ? "hidden" : "block"}`} onDoubleClick={onDoubleClickModel}>
-                <Model />
-              </ResizablePanel>
-            </ResizablePanelGroup>
-          </DesignScopeProvider>
+          <ResizablePanelGroup direction="horizontal">
+            <ResizablePanel defaultSize={fullscreenPanel === DesignEditorStoreFullscreenPanel.Diagram ? 100 : 50} className={`${fullscreenPanel === DesignEditorStoreFullscreenPanel.Model ? "hidden" : "block"}`} onDoubleClick={onDoubleClickDiagram}>
+              <Diagram />
+            </ResizablePanel>
+            <ResizableHandle className={`border-r ${fullscreenPanel !== DesignEditorStoreFullscreenPanel.None ? "hidden" : "block"}`} />
+            <ResizablePanel defaultSize={fullscreenPanel === DesignEditorStoreFullscreenPanel.Model ? 100 : 50} className={`${fullscreenPanel === DesignEditorStoreFullscreenPanel.Diagram ? "hidden" : "block"}`} onDoubleClick={onDoubleClickModel}>
+              <ModelComponent />
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </div>
         <Workbench visible={visiblePanels.workbench} onWidthChange={setWorkbenchWidth} width={workbenchWidth} />
         <Details visible={visiblePanels.details} onWidthChange={setDetailsWidth} width={detailsWidth} />
@@ -1536,15 +1503,23 @@ const DesignEditorCore: FC<DesignEditorProps> = () => {
 };
 
 const DesignEditor: FC<DesignEditorProps> = () => {
+  const currentDesignEditorId = useCurrentDesignEditorId();
+
+  if (!currentDesignEditorId) {
+    return <div className="h-full w-full flex items-center justify-center">Loading design editor...</div>;
+  }
+
   return (
-    <div className="h-full w-full flex flex-col bg-background text-foreground">
-      <Navbar />
-      <ReactFlowProvider>
-        <DesignEditorCommandsProvider>
-          <DesignEditorCore />
-        </DesignEditorCommandsProvider>
-      </ReactFlowProvider>
-    </div>
+    <DesignEditorStoreScopeProvider id={currentDesignEditorId}>
+      <div className="h-full w-full flex flex-col bg-background text-foreground">
+        <Navbar />
+        <ReactFlowProvider>
+          <DesignEditorCommandsProvider>
+            <DesignEditorCore />
+          </DesignEditorCommandsProvider>
+        </ReactFlowProvider>
+      </div>
+    </DesignEditorStoreScopeProvider>
   );
 };
 

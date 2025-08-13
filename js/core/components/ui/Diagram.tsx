@@ -86,6 +86,7 @@ import {
   useDesignEditorStoreFullscreenPanel,
   useDesignEditorStorePresenceOthers,
   useDesignEditorStoreSelection,
+  useDesignId,
   useKit,
   useTypes,
 } from "../../store";
@@ -964,8 +965,7 @@ const Diagram: FC = () => {
   const design = applyDesignDiff(baseDesign, designDiff, true);
 
   // We need the designId from the design itself since it's not in the hook
-  const designId = { name: design.name, variant: design.variant, view: design.view };
-
+  const designId = useDesignId();
   const types = useTypes();
   const typesWithColoredPorts = useMemo(() => colorPortsForTypes(types || []), [types]);
   const kitWithTypes = useMemo(() => ({ ...kit, types: typesWithColoredPorts }), [kit, typesWithColoredPorts]);
