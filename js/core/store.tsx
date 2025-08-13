@@ -42,6 +42,7 @@ import {
   DesignIdLike,
   designIdLikeToDesignId,
   DiagramPoint,
+  diff,
   getDiff,
   Kit,
   KitDiff,
@@ -335,6 +336,10 @@ class SketchpadStore {
   private kitIndexeddbProviders: Map<string, IndexeddbPersistence> = new Map();
   private listeners: Set<() => void> = new Set();
   private fileUrls: Map<string, string> = new Map();
+
+  // Transaction state
+  private kitTransactionStacks: Map<string, KitDiff[]> = new Map();
+  private designEditorTransactionStacks: Map<string, { kitDiffs: KitDiff[]; editorStates: any[] }> = new Map();
 
   // Stable references for getSnapshot functions
   private stableObjects = new Map<string, any>();
@@ -691,109 +696,6 @@ class SketchpadStore {
     return cleanup;
   }
 
-  onKitChange(id: KitIdLike, callback: () => void) {
-    const yKit = this.getYKit(id);
-    const o = () => callback();
-    (yKit as unknown as Y.Map<any>).observe(o);
-    return () => (yKit as unknown as Y.Map<any>).unobserve(o);
-  }
-
-  onTypesChange(id: KitIdLike, callback: () => void) {
-    const yKit = this.getYKit(id);
-    const yTypes = yKit.get("types") as Y.Map<any>;
-    const observer = () => callback();
-    yTypes.observe(observer);
-    return () => yTypes.unobserve(observer);
-  }
-
-  onTypeChange(kitId: KitIdLike, id: TypeIdLike, callback: () => void) {
-    const yType = this.getYType(kitId, id) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yType.observe(o);
-    return () => yType.unobserve(o);
-  }
-
-  onDesignsChange(kitId: KitIdLike, callback: () => void) {
-    const yKit = this.getYKit(kitId);
-    const yDesigns = yKit.get("designs") as Y.Map<any>;
-    const observer = () => callback();
-    yDesigns.observe(observer);
-    return () => yDesigns.unobserve(observer);
-  }
-
-  onDesignChange(kitId: KitIdLike, id: DesignIdLike, callback: () => void) {
-    const yDesign = this.getYDesign(kitId, id) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yDesign.observe(o);
-    return () => yDesign.unobserve(o);
-  }
-
-  onPiecesChange(kitId: KitIdLike, id: DesignIdLike, callback: () => void) {
-    const yDesign = this.getYDesign(kitId, id);
-    const yPieces = gDesign(yDesign, "pieces") as unknown as Y.Map<any>;
-    const o = () => callback();
-    yPieces.observe(o);
-    return () => yPieces.unobserve(o);
-  }
-
-  onPieceChange(kitId: KitIdLike, id: DesignIdLike, pieceId: PieceIdLike, callback: () => void) {
-    const yPiece = this.getYPiece(kitId, id, pieceId) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yPiece.observe(o);
-    return () => yPiece.unobserve(o);
-  }
-
-  onConnectionsChange(kitId: KitIdLike, id: DesignIdLike, callback: () => void) {
-    const yDesign = this.getYDesign(kitId, id);
-    const yConnections = gDesign(yDesign, "connections") as unknown as Y.Map<any>;
-    const o = () => callback();
-    yConnections.observe(o);
-    return () => yConnections.unobserve(o);
-  }
-
-  onConnectionChange(kitId: KitIdLike, designId: DesignIdLike, id: ConnectionIdLike, callback: () => void) {
-    const yConn = this.getYConnection(kitId, designId, id) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yConn.observe(o);
-    return () => yConn.unobserve(o);
-  }
-
-  onPortsChange(kitId: KitIdLike, typeId: TypeIdLike, callback: () => void) {
-    const yPorts = this.getYPorts(kitId, typeId) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yPorts.observe(o);
-    return () => yPorts.unobserve(o);
-  }
-
-  onPortChange(kitId: KitIdLike, typeId: TypeIdLike, id: PortIdLike, callback: () => void) {
-    const yPort = this.getYPort(kitId, typeId, id) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yPort.observe(o);
-    return () => yPort.unobserve(o);
-  }
-
-  onRepresentationsChange(kitId: KitIdLike, typeId: TypeIdLike, callback: () => void) {
-    const yReps = this.getYRepresentations(kitId, typeId) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yReps.observe(o);
-    return () => yReps.unobserve(o);
-  }
-
-  onRepresentationChange(kitId: KitIdLike, typeId: TypeIdLike, id: RepresentationIdLike, callback: () => void) {
-    const yRep = this.getYRepresentation(kitId, typeId, id) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yRep.observe(o);
-    return () => yRep.unobserve(o);
-  }
-
-  onQualitiesChange(kitId: KitIdLike, callback: () => void) {
-    const yKit = this.getYKit(kitId);
-    const yQualities = yKit.get("qualities") as Y.Array<any>;
-    const observer = () => callback();
-    yQualities.observe(observer);
-    return () => yQualities.unobserve(observer);
-  }
-
   // TODO: Make all observers specific to the property they are observing
   onDesignEditorStoreChange(id: string, callback: () => void) {
     const yDesignEditorStore = this.getYDesignEditorStore(id);
@@ -1081,95 +983,293 @@ class SketchpadStore {
     };
   }
 
-  updateKit(kit: Kit): Kit {
-    const yKit = this.getYKit(kit);
+  private updateKitInternal(kitId: KitIdLike, kitDiff: KitDiff): Kit {
+    // Apply diff directly to the kit
+    const base = this.getKit(kitId);
+    const updated = diff.apply.kit(base, kitDiff);
 
-    if (kit.description !== undefined) yKit.set("description", kit.description);
-    if (kit.icon !== undefined) yKit.set("icon", kit.icon);
-    if (kit.image !== undefined) yKit.set("image", kit.image);
-    if (kit.preview !== undefined) yKit.set("preview", kit.preview);
-    if (kit.remote !== undefined) yKit.set("remote", kit.remote);
-    if (kit.homepage !== undefined) yKit.set("homepage", kit.homepage);
-    if (kit.license !== undefined) yKit.set("license", kit.license); // Assuming direct set works, adjust if Y.Array
+    // Update the Y.js store with the changes
+    const yKit = this.getYKit(kitId);
 
-    // Updating nested structures (types, designs, qualities) is complex here.
-    // Recommend using specific update methods like updateType, updateDesign.
-    if (kit.qualities !== undefined) {
-      yKit.set("qualities", this.createQualities(kit.qualities));
-    }
+    if (kitDiff.description !== undefined) yKit.set("description", kitDiff.description);
+    if (kitDiff.icon !== undefined) yKit.set("icon", kitDiff.icon);
+    if (kitDiff.image !== undefined) yKit.set("image", kitDiff.image);
+    if (kitDiff.preview !== undefined) yKit.set("preview", kitDiff.preview);
+    if (kitDiff.remote !== undefined) yKit.set("remote", kitDiff.remote);
+    if (kitDiff.homepage !== undefined) yKit.set("homepage", kitDiff.homepage);
+    if (kitDiff.license !== undefined) yKit.set("license", kitDiff.license);
 
-    yKit.set("updated", new Date().toISOString());
-    return this.getKit(kit);
-  }
+    if (kitDiff.qualities !== undefined) {
+      const kit = this.getKit(kitId);
+      let updatedQualities = [...(kit.qualities || [])];
 
-  updateKitDiff(before: Kit, after: Kit): Kit {
-    const diff = getDiff.kit(before, after);
-    return this.applyKitDiff(before, diff);
-  }
+      // Apply QualitiesDiff
+      const qualitiesDiff = kitDiff.qualities;
 
-  applyKitDiff(base: Kit, diff: KitDiff): Kit {
-    const yKit = this.getYKit(base);
-
-    if (diff.description !== undefined) yKit.set("description", diff.description);
-    if (diff.icon !== undefined) yKit.set("icon", diff.icon);
-    if (diff.image !== undefined) yKit.set("image", diff.image);
-    if (diff.preview !== undefined) yKit.set("preview", diff.preview);
-    if (diff.remote !== undefined) yKit.set("remote", diff.remote);
-    if (diff.homepage !== undefined) yKit.set("homepage", diff.homepage);
-    if (diff.license !== undefined) yKit.set("license", diff.license);
-
-    if (diff.qualities !== undefined) {
-      yKit.set("qualities", this.createQualities(base.qualities || []));
-    }
-
-    if (diff.types) {
-      const baseTypes = base.types || [];
-      if (diff.types.removed) {
-        diff.types.removed.forEach((typeId) => {
-          this.deleteType(base, typeId);
-        });
+      // Remove qualities
+      if (qualitiesDiff.removed) {
+        updatedQualities = updatedQualities.filter((q) => !qualitiesDiff.removed!.some((removed) => removed.name === q.name));
       }
-      if (diff.types.added) {
-        diff.types.added.forEach((type) => {
-          this.createType(base, type);
-        });
-      }
-      if (diff.types.updated) {
-        diff.types.updated.forEach((typeDiff) => {
-          const baseType = baseTypes.find((t) => t.name === typeDiff.name && t.variant === typeDiff.variant);
-          if (baseType) {
-            const updatedType = applyDiff.type(baseType, typeDiff);
-            this.updateType(base, updatedType);
+
+      // Update qualities
+      if (qualitiesDiff.updated) {
+        qualitiesDiff.updated.forEach((update) => {
+          const index = updatedQualities.findIndex((q) => q.name === update.name);
+          if (index !== -1) {
+            updatedQualities[index] = { ...updatedQualities[index], ...update } as Quality;
           }
         });
       }
+
+      // Add new qualities
+      if (qualitiesDiff.added) {
+        updatedQualities.push(...qualitiesDiff.added);
+      }
+
+      yKit.set("qualities", this.createQualities(updatedQualities));
     }
 
-    if (diff.designs) {
-      const baseDesigns = base.designs || [];
-      if (diff.designs.removed) {
-        diff.designs.removed.forEach((designId) => {
-          this.deleteDesign(base, designId);
+    if (kitDiff.types) {
+      if (kitDiff.types.removed) {
+        kitDiff.types.removed.forEach((typeId) => {
+          // @ts-ignore
+          this.deleteType(kitId, typeId);
         });
       }
-      if (diff.designs.added) {
-        diff.designs.added.forEach((design) => {
-          this.createDesign(base, design);
+      if (kitDiff.types.added) {
+        kitDiff.types.added.forEach((type) => {
+          this.createType(kitId, type);
         });
       }
-      if (diff.designs.updated) {
-        diff.designs.updated.forEach((designDiff) => {
-          const baseDesign = baseDesigns.find((d) => d.name === designDiff.name && d.variant === designDiff.variant && d.view === designDiff.view);
-          if (baseDesign) {
-            const updatedDesign = applyDiff.design(baseDesign, designDiff);
-            this.updateDesign(base, updatedDesign);
-          }
+      if (kitDiff.types.updated) {
+        kitDiff.types.updated.forEach((typeDiff) => {
+          // @ts-ignore
+          this.updateType(kitId, typeDiff);
+        });
+      }
+    }
+
+    if (kitDiff.designs) {
+      if (kitDiff.designs.removed) {
+        kitDiff.designs.removed.forEach((designId) => {
+          // @ts-ignore
+          this.deleteDesign(kitId, designId);
+        });
+      }
+      if (kitDiff.designs.added) {
+        kitDiff.designs.added.forEach((design) => {
+          // @ts-ignore
+          this.createDesign(kitId, design);
+        });
+      }
+      if (kitDiff.designs.updated) {
+        kitDiff.designs.updated.forEach((designDiff) => {
+          this.updateDesign(kitId, designDiff);
         });
       }
     }
 
     yKit.set("updated", new Date().toISOString());
-    return this.getKit(base);
+    return this.getKit(kitId);
+  }
+
+  // Kit Transaction Management
+  onKitTransactionStart(kitId: KitIdLike): void {
+    const key = this.key.kit(kitId);
+    if (this.kitTransactionStacks.has(key)) {
+      throw new Error(`Kit transaction already active for ${key}`);
+    }
+    this.kitTransactionStacks.set(key, []);
+  }
+
+  onKitTransactionAbort(kitId: KitIdLike): void {
+    const key = this.key.kit(kitId);
+    if (!this.kitTransactionStacks.has(key)) {
+      throw new Error(`No active kit transaction for ${key}`);
+    }
+    this.kitTransactionStacks.delete(key);
+  }
+
+  onKitTransactionFinalize(kitId: KitIdLike): void {
+    const key = this.key.kit(kitId);
+    const diffStack = this.kitTransactionStacks.get(key);
+
+    if (!diffStack) {
+      throw new Error(`No active kit transaction for ${key}`);
+    }
+
+    if (diffStack.length > 0) {
+      // Merge all diffs in the stack
+      const mergedDiff = diffStack.reduce((merged, kitDiff) => diff.merge.kit(merged, kitDiff), {} as KitDiff);
+
+      // Apply the merged diff
+      this.updateKitInternal(kitId, mergedDiff);
+    }
+
+    this.kitTransactionStacks.delete(key);
+  }
+
+  // Design Editor Transaction Management
+  onDesignEditorStoreTransactionStart(editorId: string, kitId: KitIdLike): void {
+    const kitKey = this.key.kit(kitId);
+    if (this.kitTransactionStacks.has(kitKey)) {
+      throw new Error(`Cannot start design editor transaction: kit transaction already active for ${kitKey}`);
+    }
+
+    if (this.designEditorTransactionStacks.has(editorId)) {
+      throw new Error(`Design editor transaction already active for ${editorId}`);
+    }
+
+    // Start kit transaction internally
+    this.onKitTransactionStart(kitId);
+
+    // Track design editor transaction
+    this.designEditorTransactionStacks.set(editorId, {
+      kitDiffs: [],
+      editorStates: [],
+    });
+  }
+
+  onDesignEditorStoreTransactionAbort(editorId: string, kitId: KitIdLike): void {
+    if (!this.designEditorTransactionStacks.has(editorId)) {
+      throw new Error(`No active design editor transaction for ${editorId}`);
+    }
+
+    // Abort kit transaction
+    this.onKitTransactionAbort(kitId);
+
+    // Clean up design editor transaction
+    this.designEditorTransactionStacks.delete(editorId);
+  }
+
+  onDesignEditorStoreTransactionFinalize(editorId: string, kitId: KitIdLike): void {
+    const transaction = this.designEditorTransactionStacks.get(editorId);
+
+    if (!transaction) {
+      throw new Error(`No active design editor transaction for ${editorId}`);
+    }
+
+    // Finalize kit transaction
+    this.onKitTransactionFinalize(kitId);
+
+    // Add to command history stack (implementation depends on design editor store structure)
+    // This should store the merged kit diff and the editor state for undo/redo
+
+    this.designEditorTransactionStacks.delete(editorId);
+  }
+
+  // Hook-based update methods that use scoping and transactions
+  onKitChange(kitDiff: KitDiff, scopedKitId?: KitId): void {
+    const kitId = kitDiff.name ? { name: kitDiff.name, version: kitDiff.version } : scopedKitId;
+
+    if (!kitId) {
+      throw new Error("Kit ID is required either in diff or from scope");
+    }
+
+    const key = this.key.kit(kitId);
+    const transactionStack = this.kitTransactionStacks.get(key);
+
+    if (transactionStack) {
+      // Add to transaction stack
+      transactionStack.push(kitDiff);
+    } else {
+      // Apply immediately
+      this.updateKitInternal(kitId, kitDiff);
+    }
+  }
+
+  onDesignChange(designDiff: DesignDiff, scopedKitId?: KitId, scopedDesignId?: DesignId): void {
+    const kitId = scopedKitId;
+    const designId = designDiff.name ? { name: designDiff.name, variant: designDiff.variant || "", view: designDiff.view || "" } : scopedDesignId;
+
+    if (!kitId || !designId) {
+      throw new Error("Kit ID and Design ID are required either in diff or from scope");
+    }
+
+    // Convert design diff to kit diff
+    const kitDiff: KitDiff = {
+      name: kitId.name,
+      version: kitId.version,
+      designs: {
+        updated: [designDiff],
+      },
+    };
+
+    this.onKitChange(kitDiff, kitId);
+  }
+
+  onTypeChange(typeDiff: TypeDiff, scopedKitId?: KitId, scopedTypeId?: TypeId): void {
+    const kitId = scopedKitId;
+    const typeId = typeDiff.name ? { name: typeDiff.name, variant: typeDiff.variant || "" } : scopedTypeId;
+
+    if (!kitId || !typeId) {
+      throw new Error("Kit ID and Type ID are required either in diff or from scope");
+    }
+
+    // Convert type diff to kit diff
+    const kitDiff: KitDiff = {
+      name: kitId.name,
+      version: kitId.version,
+      types: {
+        updated: [typeDiff],
+      },
+    };
+
+    this.onKitChange(kitDiff, kitId);
+  }
+
+  onPieceChange(pieceDiff: PieceDiff, scopedKitId?: KitId, scopedDesignId?: DesignId): void {
+    const kitId = scopedKitId;
+    const designId = scopedDesignId;
+
+    if (!kitId || !designId || !pieceDiff.id_) {
+      throw new Error("Kit ID, Design ID, and Piece ID are required from scope and diff");
+    }
+
+    // Convert piece diff to design diff to kit diff
+    const designDiff: DesignDiff = {
+      name: designId.name,
+      variant: designId.variant,
+      view: designId.view,
+      pieces: {
+        updated: [pieceDiff],
+      },
+    };
+
+    this.onDesignChange(designDiff, kitId, designId);
+  }
+
+  onConnectionChange(connectionDiff: ConnectionDiff, scopedKitId?: KitId, scopedDesignId?: DesignId): void {
+    const kitId = scopedKitId;
+    const designId = scopedDesignId;
+
+    if (!kitId || !designId || !connectionDiff.connected?.piece?.id_ || !connectionDiff.connecting?.piece?.id_) {
+      throw new Error("Kit ID, Design ID, and Connection IDs are required from scope and diff");
+    }
+
+    // Convert connection diff to design diff to kit diff
+    const designDiff: DesignDiff = {
+      name: designId.name,
+      variant: designId.variant,
+      view: designId.view,
+      connections: {
+        updated: [connectionDiff],
+      },
+    };
+
+    this.onDesignChange(designDiff, kitId, designId);
+  }
+
+  // Get merged kit diff for active transaction
+  useSketchpadStoreKitDiff(kitId: KitIdLike): KitDiff | undefined {
+    const key = this.key.kit(kitId);
+    const diffStack = this.kitTransactionStacks.get(key);
+
+    if (!diffStack || diffStack.length === 0) {
+      return undefined;
+    }
+
+    return diffStack.reduce((merged, kitDiff) => diff.merge.kit(merged, kitDiff), {} as KitDiff);
   }
 
   deleteKit(id: KitId): void {
@@ -1261,61 +1361,13 @@ class SketchpadStore {
     };
   }
 
-  updateType(kitId: KitId, type: Type): Type {
-    const originalType = this.getType(kitId, type);
-    const yType = this.getYType(kitId, type);
-
-    // Check if name or variant changed (affecting the compound key)
-    const nameChanged = type.name !== undefined && type.name !== originalType.name;
-    const variantChanged = type.variant !== undefined && type.variant !== originalType.variant;
-
-    if (nameChanged || variantChanged) {
-      // Update the ID mapping before updating the yType
-      const oldId = { name: originalType.name, variant: originalType.variant };
-      const newId = {
-        name: type.name ?? originalType.name,
-        variant: type.variant ?? originalType.variant,
-      };
-      this.updateTypeIdMapping(kitId, oldId, newId);
+  updateType(kitId: KitId, diff: TypeDiff): Type {
+    // Extract identifying information from diff to find the base type
+    if (!diff.name) {
+      throw new Error("Type name is required to identify which type to update");
     }
-
-    if (type.name !== undefined) yType.set("name", type.name);
-    if (type.description !== undefined) yType.set("description", type.description);
-    if (type.icon !== undefined) yType.set("icon", type.icon);
-    if (type.image !== undefined) yType.set("image", type.image);
-    if (type.variant !== undefined) yType.set("variant", type.variant);
-    if (type.stock !== undefined) yType.set("stock", type.stock);
-    if (type.virtual !== undefined) yType.set("virtual", type.virtual);
-    if (type.unit !== undefined) yType.set("unit", type.unit);
-
-    if (type.ports !== undefined) {
-      const validPorts = type.ports.filter((p) => p.id_ !== undefined);
-      const portsMap = new Y.Map<YPort>();
-      validPorts.forEach((p) => portsMap.set(p.id_!, this.buildYPort(p)));
-      yType.set("ports", portsMap);
-    }
-    if (type.qualities !== undefined) {
-      yType.set("qualities", this.createQualities(type.qualities));
-    }
-    if (type.representations !== undefined) {
-      const reps = new Y.Map<YRepresentation>();
-      type.representations.forEach((r) => reps.set(`${r.tags?.join(",") || ""}`, this.buildYRepresentation(r)));
-      yType.set("representations", reps);
-    }
-    if (type.authors !== undefined) {
-      yType.set("authors", this.createAuthors(type.authors));
-    }
-
-    yType.set("updated", new Date().toISOString());
-    return this.getType(kitId, type.name !== undefined || type.variant !== undefined ? { name: type.name ?? originalType.name, variant: type.variant ?? originalType.variant } : type);
-  }
-
-  updateTypeDiff(kitId: KitId, before: Type, after: Type): Type {
-    const diff = getDiff.type(before, after);
-    return this.applyTypeDiff(kitId, before, diff);
-  }
-
-  applyTypeDiff(kitId: KitId, base: Type, diff: TypeDiff): Type {
+    const typeId: TypeId = { name: diff.name, variant: diff.variant };
+    const base = this.getType(kitId, typeId);
     const yType = this.getYType(kitId, base);
 
     // Check if name or variant changed (affecting the compound key)
@@ -1538,74 +1590,13 @@ class SketchpadStore {
     };
   }
 
-  updateDesign(kitId: KitIdLike, design: Design): Design {
-    const originalDesign = this.getDesign(kitId, design);
-    const yDesign = this.getYDesign(kitId, design);
-
-    // Check if name, variant, or view changed (affecting the compound key)
-    const nameChanged = design.name !== undefined && design.name !== originalDesign.name;
-    const variantChanged = design.variant !== undefined && design.variant !== originalDesign.variant;
-    const viewChanged = design.view !== undefined && design.view !== originalDesign.view;
-
-    if (nameChanged || variantChanged || viewChanged) {
-      // Update the ID mapping before updating the yDesign
-      const oldId = {
-        name: originalDesign.name,
-        variant: originalDesign.variant,
-        view: originalDesign.view,
-      };
-      const newId = {
-        name: design.name ?? originalDesign.name,
-        variant: design.variant ?? originalDesign.variant,
-        view: design.view ?? originalDesign.view,
-      };
-      this.updateDesignIdMapping(kitId, oldId, newId);
+  updateDesign(kitId: KitIdLike, diff: DesignDiff): Design {
+    // Extract identifying information from diff to find the base design
+    if (!diff.name) {
+      throw new Error("Design name is required to identify which design to update");
     }
-
-    if (design.name !== undefined) yDesign.set("name", design.name);
-    if (design.description !== undefined) yDesign.set("description", design.description);
-    if (design.icon !== undefined) yDesign.set("icon", design.icon);
-    if (design.image !== undefined) yDesign.set("image", design.image);
-    if (design.variant !== undefined) yDesign.set("variant", design.variant);
-    if (design.view !== undefined) yDesign.set("view", design.view);
-    if (design.unit !== undefined) yDesign.set("unit", design.unit);
-
-    if (design.pieces !== undefined) {
-      const validPieces = design.pieces.filter((p: Piece) => p.id_ !== undefined);
-      const piecesMap = new Y.Map<YPiece>();
-      validPieces.forEach((p: Piece) => piecesMap.set(p.id_!, this.buildYPiece(p)));
-      yDesign.set("pieces", piecesMap);
-    }
-    if (design.connections !== undefined) {
-      const validConnections = design.connections.filter((c: Connection) => c.connected?.piece?.id_ && c.connecting?.piece?.id_ && c.connected?.port?.id_ && c.connecting?.port?.id_);
-      const getConnectionId = (c: Connection) => `${c.connected.piece.id_}--${c.connecting.piece.id_}`;
-      const connectionsMap = new Y.Map<YConnection>();
-      validConnections.forEach((c: Connection) => connectionsMap.set(getConnectionId(c), this.buildYConnection(c)));
-      yDesign.set("connections", connectionsMap);
-    }
-    if (design.qualities !== undefined) {
-      yDesign.set("qualities", this.createQualities(design.qualities));
-    }
-
-    yDesign.set("updated", new Date().toISOString());
-    return this.getDesign(
-      kitId,
-      nameChanged || variantChanged || viewChanged
-        ? {
-            name: design.name ?? originalDesign.name,
-            variant: design.variant ?? originalDesign.variant,
-            view: design.view ?? originalDesign.view,
-          }
-        : design,
-    );
-  }
-
-  updateDesignDiff(kitId: KitIdLike, before: Design, after: Design): Design {
-    const diff = getDiff.design(before, after);
-    return this.applyDesignDiff(kitId, before, diff);
-  }
-
-  applyDesignDiff(kitId: KitIdLike, base: Design, diff: DesignDiff): Design {
+    const designId: DesignId = { name: diff.name, variant: diff.variant, view: diff.view };
+    const base = this.getDesign(kitId, designId);
     const normalizedKitId: KitId = kitIdLikeToKitId(kitId);
     const yDesign = this.getYDesign(kitId, base);
 
@@ -1654,8 +1645,7 @@ class SketchpadStore {
         diff.pieces.updated.forEach((pieceDiff) => {
           const basePiece = basePieces.find((p) => p.id_ === pieceDiff.id_);
           if (basePiece) {
-            const updatedPiece = applyDiff.piece(basePiece, pieceDiff);
-            this.updatePiece(normalizedKitId, designId, updatedPiece);
+            this.updatePiece(normalizedKitId, designId, pieceDiff);
           }
         });
       }
@@ -1676,13 +1666,16 @@ class SketchpadStore {
       }
       if (diff.connections.updated) {
         diff.connections.updated.forEach((connectionDiff) => {
-          const baseConnection = baseConnections.find((c) => c.connected.piece.id_ === connectionDiff.connected.piece.id_ && c.connecting.piece.id_ === connectionDiff.connecting.piece.id_);
+          const baseConnection = baseConnections.find((c) => c.connected.piece.id_ === connectionDiff.connected?.piece?.id_ && c.connecting.piece.id_ === connectionDiff.connecting?.piece?.id_);
           if (baseConnection) {
-            const updatedConnection = applyDiff.connection(baseConnection, connectionDiff);
-            this.updateConnection(normalizedKitId, designId, updatedConnection);
+            this.updateConnection(normalizedKitId, designId, connectionDiff);
           }
         });
       }
+    }
+
+    if (diff.qualities !== undefined) {
+      yDesign.set("qualities", this.createQualities(base.qualities || []));
     }
 
     yDesign.set("updated", new Date().toISOString());
@@ -1696,32 +1689,6 @@ class SketchpadStore {
           }
         : base,
     );
-  }
-
-  updatePieceDiff(kitId: KitIdLike, designId: DesignIdLike, before: Piece, after: Piece): Piece {
-    const diff = getDiff.piece(before, after);
-    return this.applyPieceDiff(kitId, designId, before, diff);
-  }
-
-  applyPieceDiff(kitId: KitIdLike, designId: DesignIdLike, base: Piece, diff: PieceDiff): Piece {
-    const normalizedKitId: KitId = kitIdLikeToKitId(kitId);
-    const normalizedDesignId: DesignId = designIdLikeToDesignId(designId);
-    const updated = applyDiff.piece(base, diff);
-    this.updatePiece(normalizedKitId, normalizedDesignId, updated);
-    return updated;
-  }
-
-  updateConnectionDiff(kitId: KitIdLike, designId: DesignIdLike, before: Connection, after: Connection): Connection {
-    const diff = getDiff.connection(before, after);
-    return this.applyConnectionDiff(kitId, designId, before, diff);
-  }
-
-  applyConnectionDiff(kitId: KitIdLike, designId: DesignIdLike, base: Connection, diff: ConnectionDiff): Connection {
-    const normalizedKitId: KitId = kitIdLikeToKitId(kitId);
-    const normalizedDesignId: DesignId = designIdLikeToDesignId(designId);
-    const updated = applyDiff.connection(base, diff);
-    this.updateConnection(normalizedKitId, normalizedDesignId, updated);
-    return updated;
   }
 
   deleteDesign(kitId: KitId, id: DesignId): void {
@@ -1815,56 +1782,58 @@ class SketchpadStore {
     };
   }
 
-  updatePiece(kitId: KitId, designId: DesignId, piece: Piece): Piece {
-    if (!piece.id_) throw new Error("Piece ID is required for update.");
-    const originalPiece = this.getPiece(kitId, designId, piece);
+  updatePiece(kitId: KitId, designId: DesignId, diff: PieceDiff): Piece {
+    if (!diff.id_) throw new Error("Piece ID is required for update.");
+    const pieceId: PieceId = { id_: diff.id_ };
+    const base = this.getPiece(kitId, designId, pieceId);
     const yDesign = this.getYDesign(kitId, designId);
     const pieces = gDesign(yDesign, "pieces");
-    const uuid = this.getPieceUuid(kitId, designId, piece);
+    const uuid = this.getPieceUuid(kitId, designId, base);
     const yPiece = uuid ? pieces.get(uuid) : undefined;
-    if (!yPiece) throw new Error(`Piece ${piece.id_} not found in design ${designId} in kit ${kitId}`);
+    if (!yPiece) throw new Error(`Piece ${diff.id_} not found in design ${designId} in kit ${kitId}`);
 
     // Check if piece ID changed (affecting the mapping)
-    const idChanged = piece.id_ !== originalPiece.id_;
+    const idChanged = diff.id_ !== base.id_;
     if (idChanged) {
-      this.updatePieceIdMapping(kitId, designId, { id_: originalPiece.id_ }, { id_: piece.id_ });
+      this.updatePieceIdMapping(kitId, designId, { id_: base.id_ }, { id_: diff.id_ });
     }
 
-    yPiece.set("id_", piece.id_);
-    if (piece.description !== undefined) yPiece.set("description", piece.description);
-    if (piece.type !== undefined) {
+    if (diff.id_ !== undefined) yPiece.set("id_", diff.id_);
+    if (diff.description !== undefined) yPiece.set("description", diff.description);
+    if (diff.type !== undefined) {
       const yType = new Y.Map<string>();
-      yType.set("name", piece.type.name);
-      yType.set("variant", piece.type.variant || "");
+      yType.set("name", diff.type.name);
+      yType.set("variant", diff.type.variant || "");
       yPiece.set("type", yType);
     }
-    if (piece.center !== undefined && piece.center !== null) {
+    if (diff.center !== undefined && diff.center !== null) {
       const yCenter = new Y.Map<number>();
-      yCenter.set("x", piece.center.x);
-      yCenter.set("y", piece.center.y);
+      yCenter.set("x", diff.center.x);
+      yCenter.set("y", diff.center.y);
       yPiece.set("center", yCenter);
     }
-    if (piece.plane !== undefined && piece.plane !== null) {
+    if (diff.plane !== undefined && diff.plane !== null) {
       const yPlane = new Y.Map<YVec3>();
       const yOrigin = new Y.Map<number>();
-      yOrigin.set("x", piece.plane.origin.x);
-      yOrigin.set("y", piece.plane.origin.y);
-      yOrigin.set("z", piece.plane.origin.z);
+      yOrigin.set("x", diff.plane.origin.x);
+      yOrigin.set("y", diff.plane.origin.y);
+      yOrigin.set("z", diff.plane.origin.z);
       yPlane.set("origin", yOrigin);
       const yXAxis = new Y.Map<number>();
-      yXAxis.set("x", piece.plane.xAxis.x);
-      yXAxis.set("y", piece.plane.xAxis.y);
-      yXAxis.set("z", piece.plane.xAxis.z);
+      yXAxis.set("x", diff.plane.xAxis.x);
+      yXAxis.set("y", diff.plane.xAxis.y);
+      yXAxis.set("z", diff.plane.xAxis.z);
       yPlane.set("xAxis", yXAxis);
       const yYAxis = new Y.Map<number>();
-      yYAxis.set("x", piece.plane.yAxis.x);
-      yYAxis.set("y", piece.plane.yAxis.y);
-      yYAxis.set("z", piece.plane.yAxis.z);
+      yYAxis.set("x", diff.plane.yAxis.x);
+      yYAxis.set("y", diff.plane.yAxis.y);
+      yYAxis.set("z", diff.plane.yAxis.z);
       yPlane.set("yAxis", yYAxis);
       yPiece.set("plane", yPlane);
     }
 
-    return this.getPiece(kitId, designId, piece.id_);
+    const resultId = diff.id_ !== undefined ? diff.id_ : base.id_;
+    return this.getPiece(kitId, designId, resultId);
   }
 
   deletePiece(kitId: KitId, designId: DesignId, id: PieceId): boolean {
@@ -1947,51 +1916,46 @@ class SketchpadStore {
     };
   }
 
-  updateConnection(kitId: KitIdLike, designId: DesignIdLike, connection: Partial<Connection>): void {
-    if (!connection.connected?.piece?.id_ || !connection.connecting?.piece?.id_) {
+  updateConnection(kitId: KitIdLike, designId: DesignIdLike, diff: ConnectionDiff): void {
+    if (!diff.connected?.piece?.id_ || !diff.connecting?.piece?.id_) {
       throw new Error("Connected and connecting piece IDs are required for update.");
     }
-    const id = `${connection.connected.piece.id_}--${connection.connecting.piece.id_}`;
+    const id = `${diff.connected.piece.id_}--${diff.connecting.piece.id_}`;
     const yDesign = this.getYDesign(kitId, designId);
     if (!yDesign) throw new Error(`Design (${designId}) not found in kit (${kitId})`);
     const connections = gDesign(yDesign, "connections");
     const yConnection = connections.get(id);
     if (!yConnection) throw new Error(`Connection (${id}) not found in design (${designId}) in kit (${kitId})`);
 
-    if (connection.description !== undefined) yConnection.set("description", connection.description);
-    if (connection.connected !== undefined) {
+    if (diff.description !== undefined) yConnection.set("description", diff.description);
+    if (diff.connected !== undefined) {
       const ySide = new Y.Map<YLeafMapString>();
       const yPiece = new Y.Map<string>();
-      yPiece.set("id_", connection.connected?.piece.id_ || "");
+      yPiece.set("id_", diff.connected?.piece.id_ || "");
       const yPort = new Y.Map<string>();
-      yPort.set("id_", connection.connected?.port.id_ || "");
+      yPort.set("id_", diff.connected?.port?.id_ || "");
       ySide.set("piece", yPiece);
       ySide.set("port", yPort);
       yConnection.set("connected", ySide);
     }
-    if (connection.connecting !== undefined) {
+    if (diff.connecting !== undefined) {
       const ySide = new Y.Map<YLeafMapString>();
       const yPiece = new Y.Map<string>();
-      yPiece.set("id_", connection.connecting?.piece.id_ || "");
+      yPiece.set("id_", diff.connecting?.piece.id_ || "");
       const yPort = new Y.Map<string>();
-      yPort.set("id_", connection.connecting?.port.id_ || "");
+      yPort.set("id_", diff.connecting?.port?.id_ || "");
       ySide.set("piece", yPiece);
       ySide.set("port", yPort);
       yConnection.set("connecting", ySide);
     }
-    if (connection.gap !== undefined) yConnection.set("gap", connection.gap);
-    if (connection.rotation !== undefined) yConnection.set("rotation", connection.rotation);
-    if (connection.shift !== undefined) yConnection.set("shift", connection.shift);
-    if (connection.tilt !== undefined) yConnection.set("tilt", connection.tilt);
-    if (connection.x !== undefined) yConnection.set("x", connection.x);
-    if (connection.y !== undefined) yConnection.set("y", connection.y);
-
-    const yQualities = (gConn(yConnection, "qualities") as YQualities | undefined) || new Y.Array<YQuality>();
-    if (connection.qualities) {
-      yQualities.delete(0, yQualities.length);
-      connection.qualities.forEach((q) => yQualities.push([this.createQuality(q)]));
-    }
-    yConnection.set("qualities", yQualities);
+    if (diff.gap !== undefined) yConnection.set("gap", diff.gap);
+    if (diff.rotation !== undefined) yConnection.set("rotation", diff.rotation);
+    if (diff.shift !== undefined) yConnection.set("shift", diff.shift);
+    if (diff.rise !== undefined) yConnection.set("rise", diff.rise);
+    if (diff.turn !== undefined) yConnection.set("turn", diff.turn);
+    if (diff.tilt !== undefined) yConnection.set("tilt", diff.tilt);
+    if (diff.x !== undefined) yConnection.set("x", diff.x);
+    if (diff.y !== undefined) yConnection.set("y", diff.y);
   }
 
   deleteConnection(kitId: KitIdLike, designId: DesignIdLike, id: ConnectionIdLike): void {
@@ -2585,8 +2549,22 @@ class SketchpadStore {
     // Force mode: check if kit exists and update or create accordingly
     try {
       const existingKit = this.getKit(kit);
-      // Kit exists, update it and handle types/designs individually
-      this.updateKit(kit);
+      // Kit exists, create a diff to update it with new data
+      const kitDiff: KitDiff = {
+        name: kit.name,
+        description: kit.description,
+        icon: kit.icon,
+        image: kit.image,
+        preview: kit.preview,
+        version: kit.version,
+        remote: kit.remote,
+        homepage: kit.homepage,
+        license: kit.license,
+        qualities: kit.qualities ? { added: kit.qualities } : undefined,
+        types: kit.types ? { added: kit.types } : undefined,
+        designs: kit.designs ? { added: kit.designs } : undefined,
+      };
+      this.updateKitInternal(kit, kitDiff);
 
       // Handle types with force logic
       kit.types?.forEach((type) => {
@@ -3203,6 +3181,102 @@ class SketchpadStore {
       }
     }
   }
+
+  // Observer methods for React hooks (different from update methods)
+  observeKitChanges(id: KitIdLike, callback: () => void) {
+    const yKit = this.getYKit(id);
+    const o = () => callback();
+    (yKit as unknown as Y.Map<any>).observe(o);
+    return () => (yKit as unknown as Y.Map<any>).unobserve(o);
+  }
+
+  observeDesignsChanges(id: KitIdLike, callback: () => void) {
+    const yKit = this.getYKit(id);
+    const yDesigns = yKit.get("designs") as Y.Map<any>;
+    const observer = () => callback();
+    yDesigns.observe(observer);
+    return () => yDesigns.unobserve(observer);
+  }
+
+  observeDesignChanges(kitId: KitIdLike, id: DesignIdLike, callback: () => void) {
+    const yDesign = this.getYDesign(kitId, id) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yDesign.observe(o);
+    return () => yDesign.unobserve(o);
+  }
+
+  observeTypesChanges(id: KitIdLike, callback: () => void) {
+    const yKit = this.getYKit(id);
+    const yTypes = yKit.get("types") as Y.Map<any>;
+    const observer = () => callback();
+    yTypes.observe(observer);
+    return () => yTypes.unobserve(observer);
+  }
+
+  observeTypeChanges(kitId: KitIdLike, id: TypeIdLike, callback: () => void) {
+    const yType = this.getYType(kitId, id) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yType.observe(o);
+    return () => yType.unobserve(o);
+  }
+
+  observePiecesChanges(kitId: KitIdLike, id: DesignIdLike, callback: () => void) {
+    const yDesign = this.getYDesign(kitId, id);
+    const yPieces = gDesign(yDesign, "pieces") as unknown as Y.Map<any>;
+    const o = () => callback();
+    yPieces.observe(o);
+    return () => yPieces.unobserve(o);
+  }
+
+  observePieceChanges(kitId: KitIdLike, id: DesignIdLike, pieceId: PieceIdLike, callback: () => void) {
+    const yPiece = this.getYPiece(kitId, id, pieceId) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yPiece.observe(o);
+    return () => yPiece.unobserve(o);
+  }
+
+  observeConnectionsChanges(kitId: KitIdLike, id: DesignIdLike, callback: () => void) {
+    const yDesign = this.getYDesign(kitId, id);
+    const yConnections = gDesign(yDesign, "connections") as unknown as Y.Map<any>;
+    const o = () => callback();
+    yConnections.observe(o);
+    return () => yConnections.unobserve(o);
+  }
+
+  observeConnectionChanges(kitId: KitIdLike, designId: DesignIdLike, id: ConnectionIdLike, callback: () => void) {
+    const yConn = this.getYConnection(kitId, designId, id) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yConn.observe(o);
+    return () => yConn.unobserve(o);
+  }
+
+  observePortsChanges(kitId: KitIdLike, typeId: TypeIdLike, callback: () => void) {
+    const yPorts = this.getYPorts(kitId, typeId) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yPorts.observe(o);
+    return () => yPorts.unobserve(o);
+  }
+
+  observePortChanges(kitId: KitIdLike, typeId: TypeIdLike, id: PortIdLike, callback: () => void) {
+    const yPort = this.getYPort(kitId, typeId, id) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yPort.observe(o);
+    return () => yPort.unobserve(o);
+  }
+
+  observeRepresentationsChanges(kitId: KitIdLike, typeId: TypeIdLike, callback: () => void) {
+    const yReps = this.getYRepresentations(kitId, typeId) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yReps.observe(o);
+    return () => yReps.unobserve(o);
+  }
+
+  observeRepresentationChanges(kitId: KitIdLike, typeId: TypeIdLike, id: RepresentationIdLike, callback: () => void) {
+    const yRep = this.getYRepresentation(kitId, typeId, id) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yRep.observe(o);
+    return () => yRep.unobserve(o);
+  }
 }
 
 const __defaultStore = new SketchpadStore();
@@ -3321,7 +3395,7 @@ export function useKit(id?: KitId) {
     const { kitId } = useDesignEditorKitAndDesignIds();
     if (!kitId) throw new Error("Invalid design editor scope");
     return useSyncExternalStore(
-      (l) => store.onKitChange(kitId, l),
+      (l) => store.observeKitChanges(kitId, l),
       () => store.getKit(kitId),
     );
   }
@@ -3329,7 +3403,7 @@ export function useKit(id?: KitId) {
   const kitId = id ?? kitScope?.id;
   if (!kitId) throw new Error("useKit requires a kit id or must be inside a KitScope or DesignEditorScope");
   return useSyncExternalStore(
-    (l) => store.onKitChange(kitId, l),
+    (l) => store.observeKitChanges(kitId, l),
     () => store.getKit(kitId),
   );
 }
@@ -3340,7 +3414,7 @@ export function useDesigns() {
   if (!kitScope) throw new Error("useDesigns must be used within a KitScope");
   const { id } = kitScope;
   return useSyncExternalStore(
-    (l) => store.onDesignsChange(id, l),
+    (l) => store.observeDesignsChanges(id, l),
     () => store.getDesigns(id),
   );
 }
@@ -3356,7 +3430,7 @@ export function useDesign(id?: DesignId) {
     const { kitId, designId } = useDesignEditorKitAndDesignIds();
     if (!kitId || !designId) throw new Error("Invalid design editor scope");
     return useSyncExternalStore(
-      (l) => store.onDesignChange(kitId, designId, l),
+      (l) => store.observeDesignChanges(kitId, designId, l),
       () => store.getDesign(kitId, designId),
     );
   }
@@ -3365,7 +3439,7 @@ export function useDesign(id?: DesignId) {
   const designId = id ?? designScope?.id;
   if (!designId) throw new Error("useDesign requires a design id or must be inside a DesignScope or DesignEditorScope");
   return useSyncExternalStore(
-    (l) => store.onDesignChange(kitScope.id, designId, l),
+    (l) => store.observeDesignChanges(kitScope.id, designId, l),
     () => store.getDesign(kitScope.id, designId),
   );
 }
@@ -3393,7 +3467,7 @@ export function useTypes() {
   if (!kitScope) throw new Error("useTypes must be used within a KitScope");
   const kitId = kitScope.id;
   return useSyncExternalStore(
-    (l) => store.onTypesChange(kitId, l),
+    (l) => store.observeTypesChanges(kitId, l),
     () => store.getTypes(kitId),
   );
 }
@@ -3406,7 +3480,7 @@ export function useType(id?: TypeId) {
   const typeId = id ?? typeScope?.id;
   if (!typeId) throw new Error("useType requires a type id or must be inside a TypeScope");
   return useSyncExternalStore(
-    (l) => store.onTypeChange(kitScope.id, typeId, l),
+    (l) => store.observeTypeChanges(kitScope.id, typeId, l),
     () => store.getType(kitScope.id, typeId),
   );
 }
@@ -3418,7 +3492,7 @@ export function usePieces() {
   const designScope = useDesignScope();
   if (!designScope) throw new Error("usePieces must be used within a DesignScope");
   return useSyncExternalStore(
-    (l) => store.onPiecesChange(kitScope.id, designScope.id, l),
+    (l) => store.observePiecesChanges(kitScope.id, designScope.id, l),
     () => store.getPieces(kitScope.id, designScope.id),
   );
 }
@@ -3433,7 +3507,7 @@ export function usePiece(id?: PieceId) {
   const pieceId = id ?? pieceScope?.id;
   if (!pieceId) throw new Error("usePiece requires a piece id or must be inside a PieceScope");
   return useSyncExternalStore(
-    (l) => store.onPieceChange(kitScope.id, designScope.id, pieceId, l),
+    (l) => store.observePieceChanges(kitScope.id, designScope.id, pieceId, l),
     () => store.getPiece(kitScope.id, designScope.id, pieceId),
   );
 }
@@ -3445,7 +3519,7 @@ export function useConnections() {
   const designScope = useDesignScope();
   if (!designScope) throw new Error("useConnections must be used within a DesignScope");
   return useSyncExternalStore(
-    (l) => store.onConnectionsChange(kitScope.id, designScope.id, l),
+    (l) => store.observeConnectionsChanges(kitScope.id, designScope.id, l),
     () => store.getConnections(kitScope.id, designScope.id),
   );
 }
@@ -3460,7 +3534,7 @@ export function useConnection(id?: ConnectionId) {
   const connectionId = id ?? connectionScope?.id;
   if (!connectionId) throw new Error("useConnection requires a connection id or must be inside a ConnectionScope");
   return useSyncExternalStore(
-    (l) => store.onConnectionChange(kitScope.id, designScope.id, connectionId, l),
+    (l) => store.observeConnectionChanges(kitScope.id, designScope.id, connectionId, l),
     () => store.getConnection(kitScope.id, designScope.id, connectionId),
   );
 }
@@ -3472,7 +3546,7 @@ export function usePorts(id?: PortId) {
   const typeScope = useTypeScope();
   if (!typeScope) throw new Error("usePorts must be used within a TypeScope");
   return useSyncExternalStore(
-    (l) => store.onPortsChange(kitScope.id, typeScope.id, l),
+    (l) => store.observePortsChanges(kitScope.id, typeScope.id, l),
     () => store.getPorts(kitScope.id, typeScope.id),
   );
 }
@@ -3487,7 +3561,7 @@ export function usePort(id?: PortId) {
   const portId = id ?? portScope?.id;
   if (!portId) throw new Error("usePort requires a port id or must be inside a PortypeScope");
   return useSyncExternalStore(
-    (l) => store.onPortChange(kitScope.id, typeScope.id, portId, l),
+    (l) => store.observePortChanges(kitScope.id, typeScope.id, portId, l),
     () => store.getPort(kitScope.id, typeScope.id, portId),
   );
 }
@@ -3499,7 +3573,7 @@ export function useRepresentations(id?: RepresentationId) {
   const typeScope = useTypeScope();
   if (!typeScope) throw new Error("useRepresentations must be used within a TypeScope");
   return useSyncExternalStore(
-    (l) => store.onRepresentationsChange(kitScope.id, typeScope.id, l),
+    (l) => store.observeRepresentationsChanges(kitScope.id, typeScope.id, l),
     () => store.getRepresentations(kitScope.id, typeScope.id),
   );
 }
