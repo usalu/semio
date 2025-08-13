@@ -22,16 +22,28 @@
 
 import { GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, OrthographicCamera, Select, TransformControls, useGLTF } from "@react-three/drei";
 import { Canvas, ThreeEvent } from "@react-three/fiber";
-import { applyDesignDiff, DiffStatus, findDesignInKit, flattenDesign, FullscreenPanel, getPieceRepresentationUrls, Piece, Plane, planeToMatrix, toSemioRotation, updateDesignInKit, useDesignEditor } from "@semio/js";
+import { applyDesignDiff, DiffStatus, flattenDesign, getPieceRepresentationUrls, Piece, Plane, planeToMatrix, toSemioRotation, updateDesignInKit } from "@semio/js";
 import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { Presence } from "./DesignEditor";
+import {
+  DesignEditorFullscreenPanel,
+  DesignEditorPresenceOther,
+  PieceScopeProvider,
+  useDesign,
+  useDesignEditorDesignDiff,
+  useDesignEditorFileUrls,
+  useDesignEditorFullscreenPanel,
+  useDesignEditorPresenceOthers,
+  useDesignEditorSelection,
+  useKit,
+} from "../../store";
+import { useDesignEditorCommands } from "./DesignEditor";
 
 const getComputedColor = (variable: string): string => {
   return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 };
 
-const PresenceThree: FC<Presence> = ({ name, cursor, camera }) => {
+const PresenceThree: FC<DesignEditorPresenceOther> = ({ name, cursor, camera }) => {
   if (!camera) return null;
   const cameraHelper = useMemo(() => {
     const perspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1);
@@ -71,7 +83,7 @@ interface ModelPieceProps {
 }
 
 const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, updating, diffStatus = DiffStatus.Unchanged, onSelect, onPieceUpdate }) => {
-  const { startTransaction, finalizeTransaction, abortTransaction } = useDesignEditor();
+  const { startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
   const fixed = piece.plane !== undefined;
   const matrix = useMemo(() => {
     const planeRotationMatrix = planeToMatrix(plane);
@@ -184,27 +196,37 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, upda
     </group>
   );
 
-  return transformControl ? (
-    <TransformControls ref={transformControlRef} enabled={selected && fixed} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}>
-      {group}
-    </TransformControls>
-  ) : (
-    group
+  return (
+    <PieceScopeProvider id={{ id_: piece.id_ }}>
+      {transformControl ? (
+        <TransformControls ref={transformControlRef} enabled={selected && fixed} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}>
+          {group}
+        </TransformControls>
+      ) : (
+        group
+      )}
+    </PieceScopeProvider>
   );
 };
 
 const ModelDesign: FC = () => {
-  const { kit: originalKit, designId, selection, designDiff, fileUrls, others, removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = useDesignEditor();
-
-  if (!originalKit) return null;
-  const design = applyDesignDiff(findDesignInKit(originalKit, designId), designDiff, true);
-  const kit = useMemo(() => updateDesignInKit(originalKit, design), [originalKit, design]);
+  const designId = useDesign();
+  const { removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = useDesignEditorCommands();
+  const selection = useDesignEditorSelection();
+  const designDiff = useDesignEditorDesignDiff();
+  const fileUrls = useDesignEditorFileUrls();
+  const others = useDesignEditorPresenceOthers();
+  const storeKit = useKit();
+  const baseDesign = useDesign();
+  if (!storeKit || !baseDesign) return null;
+  const design = applyDesignDiff(baseDesign, designDiff, true);
+  const kit = useMemo(() => updateDesignInKit(storeKit, design), [storeKit, design]);
   const types = kit?.types ?? [];
 
   const flatDesign = useMemo(() => flattenDesign(kit, designId), [kit, designId]);
-  const piecePlanes = useMemo(() => flatDesign.pieces?.map((p) => p.plane!) || [], [flatDesign]);
+  const piecePlanes = useMemo(() => flatDesign.pieces?.map((p: Piece) => p.plane!) || [], [flatDesign]);
 
-  const pieceRepresentationUrls = useMemo(() => getPieceRepresentationUrls(design, types), [design, types]);
+  const pieceRepresentationUrls = useMemo(() => getPieceRepresentationUrls(flatDesign, types), [flatDesign, types]);
 
   useEffect(() => {
     fileUrls.forEach((url, id) => {
@@ -212,7 +234,7 @@ const ModelDesign: FC = () => {
     });
   }, [fileUrls]);
 
-  design.pieces?.forEach((p) => {
+  flatDesign.pieces?.forEach((p: Piece) => {
     const type = types.find((t) => t.name === p.type.name && (t.variant || "") === (p.type.variant || ""));
     if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`);
   });
@@ -225,12 +247,12 @@ const ModelDesign: FC = () => {
 
   const pieceDiffStatuses = useMemo(() => {
     return (
-      design.pieces?.map((piece) => {
-        const diffQuality = piece.qualities?.find((q) => q.name === "semio.diffStatus");
+      flatDesign.pieces?.map((piece: Piece) => {
+        const diffQuality = piece.qualities?.find((q: any) => q.name === "semio.diffStatus");
         return (diffQuality?.value as DiffStatus) || DiffStatus.Unchanged;
       }) || []
     );
-  }, [design]);
+  }, [flatDesign]);
 
   const onChange = useCallback(
     (selected: THREE.Object3D[]) => {
@@ -259,13 +281,13 @@ const ModelDesign: FC = () => {
   return (
     <Select box multiple onChange={onChange} filter={(items) => items}>
       <group quaternion={new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)}>
-        {design.pieces?.map((piece, index) => (
+        {flatDesign.pieces?.map((piece: Piece, index: number) => (
           <ModelPiece
             key={`piece-${piece.id_}`}
             piece={piece}
             plane={piecePlanes[index!]}
             fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_)!)!}
-            selected={selection.selectedPieceIds.includes(piece.id_)}
+            selected={selection.selectedPieceIds.some((id) => id.id_ === piece.id_)}
             diffStatus={pieceDiffStatuses[index]}
             onSelect={onSelect}
             onPieceUpdate={onPieceUpdate}
@@ -290,8 +312,7 @@ const Gizmo: FC = () => {
 };
 
 const ModelCore: FC = () => {
-  const { fullscreenPanel } = useDesignEditor();
-  const fullscreen = fullscreenPanel === FullscreenPanel.Model;
+  const fullscreen = useDesignEditorFullscreenPanel() === DesignEditorFullscreenPanel.Model;
   const [gridColors, setGridColors] = useState({
     sectionColor: getComputedColor("--foreground"),
     cellColor: getComputedColor("--accent-foreground"),
@@ -334,7 +355,7 @@ const ModelCore: FC = () => {
 };
 
 const Model: FC = () => {
-  const { deselectAll, toggleModelFullscreen } = useDesignEditor();
+  const { deselectAll, toggleModelFullscreen } = useDesignEditorCommands();
   const onDoubleClickCapture = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();

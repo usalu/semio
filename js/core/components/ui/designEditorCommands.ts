@@ -6,6 +6,7 @@ import {
   Design,
   findDesignInKit,
   flattenDesign,
+  getClusterableGroups,
   orientDesign,
   removeDesignFromKit,
   removePieceFromDesign,
@@ -1546,6 +1547,86 @@ ${typesList}`,
         design: newDesign,
         content: `✅ Mirrored ${selectedPieces.length} pieces vertically`,
       };
+    },
+  },
+
+  // === CLUSTER COMMAND ===
+  {
+    id: "cluster-design",
+    name: "Cluster Design",
+    icon: "🧩",
+    description: "Create a new clustered design from selected pieces and/or design nodes",
+    parameters: [],
+    execute: async (context, payload) => {
+      const { kit, designId, selection, clusterDesign } = context;
+
+      // Determine which pieces to cluster
+      const clusterPieceIds: string[] = selection.selectedPieceIds;
+
+      if (clusterPieceIds.length === 0) {
+        return { content: `⚠️ No pieces selected to cluster` };
+      }
+
+      // Validate clustering is possible
+      const design = findDesignInKit(kit, designId);
+      const clusterableGroups = getClusterableGroups(design, clusterPieceIds);
+
+      if (clusterableGroups.length === 0) {
+        return { content: `⚠️ Selected pieces cannot be clustered (need at least 2 connected or compatible pieces)` };
+      }
+
+      // Call the Sketchpad clusterDesign action directly
+      if (clusterDesign) {
+        clusterDesign();
+        return {
+          content: `✅ Clustering ${clusterPieceIds.length} pieces into new design`,
+        };
+      } else {
+        return { content: `❌ Cluster design action not available` };
+      }
+    },
+  },
+
+  // === EXPAND COMMAND ===
+  {
+    id: "expand-design",
+    name: "Expand Design",
+    icon: "📤",
+    description: "Expand a selected clustered design back into its constituent pieces",
+    parameters: [],
+    execute: async (context, payload) => {
+      const { kit, designId, selection, expandDesign } = context;
+
+      // Find selected design nodes
+      const selectedDesignPieceIds = selection.selectedPieceIds.filter((id) => id.startsWith("design-"));
+
+      if (selectedDesignPieceIds.length === 0) {
+        return { content: `⚠️ No clustered design selected to expand` };
+      }
+
+      if (selectedDesignPieceIds.length > 1) {
+        return { content: `⚠️ Please select only one clustered design to expand` };
+      }
+
+      // Extract design name from the selected design piece ID
+      const designPieceId = selectedDesignPieceIds[0];
+      const designNameToExpand = designPieceId.replace("design-", "");
+
+      // Check if the design exists in the kit
+      const designToExpand = kit.designs?.find((d) => d.name === designNameToExpand);
+      if (!designToExpand) {
+        return { content: `⚠️ Design "${designNameToExpand}" not found in kit` };
+      }
+
+      // Call the Sketchpad expandDesign action
+      if (expandDesign) {
+        expandDesign({ name: designNameToExpand });
+        return {
+          content: `✅ Expanding design "${designNameToExpand}" back into constituent pieces`,
+        };
+      } else {
+        return { content: `❌ Expand design action not available` };
+      }
     },
   },
 

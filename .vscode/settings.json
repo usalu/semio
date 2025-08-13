@@ -44,5 +44,5 @@
     }
   ],
   "dotnet.defaultSolution": "net/Semio.sln",
-  "chat.agent.maxRequests": 100
+  "chat.agent.maxRequests": 200
 }

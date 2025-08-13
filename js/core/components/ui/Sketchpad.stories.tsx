@@ -20,10 +20,10 @@
 // #endregion
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { Mode, Sketchpad } from "@semio/js";
+import { Sketchpad } from "@semio/js";
 
 const meta = {
-  title: "Studio/Sketchpad",
+  title: "Sketchpad",
   component: Sketchpad,
   parameters: {
     layout: "fullscreen",
@@ -40,15 +40,6 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const User: Story = {
-  args: {
-    userId: "user-test",
-  },
-};
-
-export const Guest: Story = {
-  args: {
-    userId: "guest-test",
-    mode: Mode.GUEST,
-  },
+export const Metabolism: Story = {
+  args: {},
 };

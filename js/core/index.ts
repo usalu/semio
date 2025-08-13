@@ -19,36 +19,27 @@
 
 // #endregion
 export { default as Console, commandRegistry as inkCommandRegistry } from "@semio/js/components/ui/Console";
-export { default as DesignEditor, FullscreenPanel, useDesignEditor } from "@semio/js/components/ui/DesignEditor";
+export { default as DesignEditor } from "@semio/js/components/ui/DesignEditor";
 export { default as Diagram } from "@semio/js/components/ui/Diagram";
 export { default as File } from "@semio/js/components/ui/File";
 export { default as GrasshopperCatalogue } from "@semio/js/components/ui/GrasshopperCatalogue";
 export { default as Model } from "@semio/js/components/ui/Model";
-export { Layout, Mode, default as Sketchpad, Theme } from "@semio/js/components/ui/Sketchpad";
+export { default as Sketchpad } from "@semio/js/components/ui/Sketchpad";
 export { default as eslintConfig } from "@semio/js/eslint.config";
 export { extractFilesAndCreateUrls } from "@semio/js/lib/utils";
 export { default as postcssConfig } from "@semio/js/postcss.config";
 export {
   addConnectionsToDesign,
-  addConnectionsToDesignDiff,
-  addConnectionToDesign,
-  addConnectionToDesignDiff,
-  addDesignToKit,
-  addPiecesToDesign,
-  addPiecesToDesignDiff,
-  addPieceToDesign,
-  addPieceToDesignDiff,
-  addTypeToKit,
+  addConnectionsToDesignDiff, addConnectionToDesign,
+  addConnectionToDesignDiff, addDesignToKit, addPiecesToDesign,
+  addPiecesToDesignDiff, addPieceToDesign,
+  addPieceToDesignDiff, addTypeToKit,
   applyDesignDiff,
-  arePortsCompatible,
-  CameraSchema,
-  colorPortsForTypes,
-  connectionIdLikeToConnectionId,
-  ConnectionSchema,
+  arePortsCompatible, CameraSchema, colorPortsForTypes,
+  connectionIdLikeToConnectionId, ConnectionSchema, createClusteredDesign,
   deserialize,
-  designIdLikeToDesignId,
-  DesignSchema,
-  DiffStatus,
+  designIdLikeToDesignId, DesignSchema,
+  DiffStatus, expandDesignPieces,
   findConnectionInDesign,
   findDesignInKit,
   findPieceConnectionsInDesign,
@@ -63,9 +54,9 @@ export {
   fixPieceInDesign,
   fixPiecesInDesign,
   flattenDesign,
-  getPieceRepresentationUrls,
-  ICON_WIDTH,
-  isConnectionInDesign,
+  getClusterableGroups,
+  getIncludedDesigns,
+  getPieceRepresentationUrls, ICON_WIDTH, isConnectionInDesign,
   isPortInUse,
   isSameConnection,
   isSameDesign,
@@ -73,20 +64,8 @@ export {
   isSamePort,
   isSameRepresentation,
   isSameType,
-  kitIdLikeToKitId,
-  KitSchema,
-  mergeDesigns,
-  pieceIdLikeToPieceId,
-  PieceSchema,
-  piecesMetadata,
-  PlaneSchema,
-  planeToMatrix,
-  PointSchema,
-  portIdLikeToPortId,
-  PortSchema,
-  qualityIdLikeToQualityId,
-  QualitySchema,
-  removeConnectionFromDesign,
+  kitIdLikeToKitId, KitSchema, mergeDesigns,
+  pieceIdLikeToPieceId, PieceSchema, piecesMetadata, PlaneSchema, planeToMatrix, PointSchema, portIdLikeToPortId, PortSchema, qualityIdLikeToQualityId, QualitySchema, removeConnectionFromDesign,
   removeConnectionFromDesignDiff,
   removeConnectionsFromDesign,
   removeConnectionsFromDesignDiff,
@@ -97,9 +76,8 @@ export {
   removePiecesFromDesign,
   removePiecesFromDesignDiff,
   removeTypeFromKit,
-  representationIdLikeToRepresentationId,
-  RepresentationSchema,
-  safeParse,
+  replaceClusterWithDesign,
+  representationIdLikeToRepresentationId, RepresentationSchema, safeParse,
   schemas,
   serialize,
   setConnectionInDesign,
@@ -113,18 +91,13 @@ export {
   setPiecesInDesignDiff,
   setQualities,
   setQuality,
-  setTypeInKit,
-  TOLERANCE,
-  toSemioQuaternion,
+  setTypeInKit, TOLERANCE, toSemioQuaternion,
   toSemioRotation,
   toThreeQuaternion,
   toThreeRotation,
-  typeIdLikeToTypeId,
-  TypeSchema,
-  unifyPortFamiliesAndCompatibleFamiliesForTypes,
+  typeIdLikeToTypeId, TypeSchema, unifyPortFamiliesAndCompatibleFamiliesForTypes,
   updateDesignInKit,
-  validate,
-  VectorSchema,
+  validate, VectorSchema
 } from "@semio/js/semio";
 export type {
   Author,
@@ -137,6 +110,7 @@ export type {
   DesignDiff,
   DesignId,
   DiagramPoint,
+  IncludedDesignInfo,
   Kit,
   KitId,
   Piece,
@@ -154,9 +128,16 @@ export type {
   SideId,
   Type,
   TypeId,
-  Vector,
+  Vector
 } from "@semio/js/semio";
-export type { DesignEditorStoreState } from "@semio/js/store";
+export {
+  DesignEditorScopeProvider, useDesignEditorDesignDiff,
+  useDesignEditorFileUrls,
+  useDesignEditorFullscreenPanel,
+  useDesignEditorIsTransactionActive, useDesignEditorPresence, useDesignEditorPresenceOthers,
+  useDesignEditorSelection, useDesignEditorStore as useDesignEditorState
+} from "@semio/js/store";
+export type { DesignEditorState } from "@semio/js/store";
 export { default as tailwindConfig } from "@semio/js/tailwind.config";
 // Exporting vite configs blows up storybook and nextjs
 // export { default as viteConfig } from '@semio/js/vite.config';

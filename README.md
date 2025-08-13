@@ -1,5 +1,3 @@
-> 👀 Are you curious how we develop semio? Then you might want to check out our [Discord server](https://discord.gg/m6nnf6pQRc) 👥
-
 <p align="center">
     <a href="https://docs.semio-tech.com">
       <picture>
