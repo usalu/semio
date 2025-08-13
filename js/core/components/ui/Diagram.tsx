@@ -57,7 +57,6 @@ import {
   findQualityValue,
   findTypeInKit,
   flattenDesign,
-  FullscreenPanel,
   getClusterableGroups,
   getIncludedDesigns,
   ICON_WIDTH,
@@ -77,8 +76,20 @@ import {
 // import '@xyflow/react/dist/base.css';
 import "@semio/js/globals.css";
 import "@xyflow/react/dist/style.css";
-import { PieceScopeProvider, useDesign, useKit, useTypes } from "../../store";
-import { DesignEditorSelection, Presence, useDesignEditor } from "./DesignEditor";
+import {
+  DesignEditorPresenceOther,
+  DesignEditorSelection,
+  DesignEditorFullscreenPanel as FullscreenPanel,
+  PieceScopeProvider,
+  useDesign,
+  useDesignEditorDesignDiff,
+  useDesignEditorFullscreenPanel,
+  useDesignEditorPresenceOthers,
+  useDesignEditorSelection,
+  useKit,
+  useTypes,
+} from "../../store";
+import { useDesignEditor } from "./DesignEditor";
 
 //#region ClusterMenu
 
@@ -91,22 +102,16 @@ type ClusterMenuProps = {
 
 const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, selection, onCluster }) => {
   const reactFlowInstance = useReactFlow();
-  const { kit, designId } = useDesignEditor();
-
-  // Get the design from the state
-  const design = useMemo(() => {
-    if (!kit) return null;
-    try {
-      return findDesignInKit(kit, designId);
-    } catch (error) {
-      return null;
-    }
-  }, [kit, designId]);
+  const kit = useKit();
+  const design = useDesign();
 
   // Find groups of selected nodes (connected or manually selected together)
   const clusterableGroups = useMemo(() => {
     if (!design) return [];
-    return getClusterableGroups(design, selection.selectedPieceIds);
+    return getClusterableGroups(
+      design,
+      selection.selectedPieceIds.map((p) => p.id_),
+    );
   }, [design, selection.selectedPieceIds]);
 
   // Calculate bounding box for a group of piece IDs
@@ -194,7 +199,7 @@ type ExpandMenuProps = {
 };
 
 const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, selection, onExpand }) => {
-  const { kit, designId } = useDesignEditor();
+  const kit = useKit();
 
   // Find selected design nodes that can be expanded
   const expandableDesignNodes = useMemo(() => {
@@ -204,7 +209,7 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, selection, onExpand }) 
 
       // Must be selected
       const pieceId = getPieceIdFromNode(node);
-      if (!selection.selectedPieceIds.includes(pieceId)) return false;
+      if (!selection.selectedPieceIds.some((p) => p.id_ === pieceId)) return false;
 
       // Must represent a clustered design (has variant which is the design name)
       const designName = (node.data.piece as Piece).type.variant;
@@ -275,7 +280,7 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, selection, onExpand }) 
 
 //#region React Flow
 
-const PresenceDiagram: FC<Presence> = ({ name, cursor, camera }) => {
+const PresenceDiagram: FC<DesignEditorPresenceOther> = ({ name, cursor, camera }) => {
   if (!cursor) return null;
   return (
     <ViewportPortal>
@@ -381,23 +386,24 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
     type: { ports },
   } = data as PieceNodeProps & { diffStatus: DiffStatus };
 
-  const { selection, selectPiecePort, deselectPiecePort, addConnection } = useDesignEditor();
+  const { selectPiecePort, deselectPiecePort, addConnection } = useDesignEditor();
+  const selection = useDesignEditorSelection();
 
   const onPortClick = (port: Port) => {
     const currentSelectedPort = selection.selectedPiecePortId;
 
-    if (currentSelectedPort && (currentSelectedPort.pieceId !== piece.id_ || currentSelectedPort.portId !== port.id_)) {
+    if (currentSelectedPort && (currentSelectedPort.pieceId.id_ !== piece.id_ || currentSelectedPort.portId.id_ !== port.id_)) {
       // Create connection between the two selected ports
       const connection: Connection = {
         connecting: {
-          piece: { id_: currentSelectedPort.pieceId },
-          port: { id_: port.id_ },
+          piece: { id_: currentSelectedPort.pieceId.id_ },
+          port: { id_: currentSelectedPort.portId.id_ },
         },
         connected: { piece: { id_: piece.id_ }, port: { id_: port.id_ } },
       };
       addConnection(connection);
       deselectPiecePort();
-    } else if (currentSelectedPort && currentSelectedPort.pieceId === piece.id_ && currentSelectedPort.portId === port.id_) {
+    } else if (currentSelectedPort && currentSelectedPort.pieceId.id_ === piece.id_ && currentSelectedPort.portId.id_ === port.id_) {
       // Deselect if clicking the same port
       deselectPiecePort();
     } else if (port.id_) selectPiecePort(piece.id_, port.id_);
@@ -424,7 +430,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
   }
 
   return (
-    <PieceScopeProvider id_={id_}>
+    <PieceScopeProvider id={{ id_ }}>
       <div style={{ opacity }}>
         <svg width={ICON_WIDTH} height={ICON_WIDTH} className="cursor-pointer">
           <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
@@ -433,7 +439,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
           </text>
         </svg>
         {ports?.map((port: Port, portIndex: number) => (
-          <PortHandle key={`${id}-port-${portIndex}-${port.id_}`} port={port} pieceId={id_} selected={selection.selectedPiecePortId?.pieceId === id_ && selection.selectedPiecePortId?.portId === port.id_} onPortClick={onPortClick} />
+          <PortHandle key={`${id}-port-${portIndex}-${port.id_}`} port={port} pieceId={id_} selected={selection.selectedPiecePortId?.pieceId.id_ === id_ && selection.selectedPiecePortId?.portId.id_ === port.id_} onPortClick={onPortClick} />
         ))}
       </div>
     </PieceScopeProvider>
@@ -447,7 +453,8 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
     externalConnections,
   } = data as DesignNodeProps & { diffStatus: DiffStatus };
 
-  const { selection, selectPiecePort, deselectPiecePort, addConnection } = useDesignEditor();
+  const { selectPiecePort, deselectPiecePort, addConnection } = useDesignEditor();
+  const selection = useDesignEditorSelection();
 
   // Create ports dynamically based on external connections (same logic as designPieceToNode)
   const ports: Port[] = externalConnections.map((connection, portIndex) => {
@@ -509,18 +516,18 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
   const onPortClick = (port: Port) => {
     const currentSelectedPort = selection.selectedPiecePortId;
 
-    if (currentSelectedPort && (currentSelectedPort.pieceId !== piece.id_ || currentSelectedPort.portId !== port.id_)) {
+    if (currentSelectedPort && (currentSelectedPort.pieceId.id_ !== piece.id_ || currentSelectedPort.portId.id_ !== port.id_)) {
       // Create connection between the two selected ports
       const connection: Connection = {
         connecting: {
-          piece: { id_: currentSelectedPort.pieceId },
-          port: { id_: port.id_ },
+          piece: { id_: currentSelectedPort.pieceId.id_ },
+          port: { id_: currentSelectedPort.portId.id_ },
         },
         connected: { piece: { id_: piece.id_ }, port: { id_: port.id_ } },
       };
       addConnection(connection);
       deselectPiecePort();
-    } else if (currentSelectedPort && currentSelectedPort.pieceId === piece.id_ && currentSelectedPort.portId === port.id_) {
+    } else if (currentSelectedPort && currentSelectedPort.pieceId.id_ === piece.id_ && currentSelectedPort.portId.id_ === port.id_) {
       // Deselect if clicking the same port
       deselectPiecePort();
     } else if (port.id_) selectPiecePort(piece.id_, port.id_);
@@ -555,7 +562,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
         </text>
       </svg>
       {ports?.map((port: Port, portIndex: number) => (
-        <PortHandle key={`${id}-port-${portIndex}-${port.id_}`} port={port} pieceId={id_} selected={selection.selectedPiecePortId?.pieceId === id_ && selection.selectedPiecePortId?.portId === port.id_} onPortClick={onPortClick} />
+        <PortHandle key={`${id}-port-${portIndex}-${port.id_}`} port={port} pieceId={id_} selected={selection.selectedPiecePortId?.pieceId.id_ === id_ && selection.selectedPiecePortId?.portId.id_ === port.id_} onPortClick={onPortClick} />
       ))}
     </div>
   );
@@ -782,7 +789,7 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
   // Create nodes for regular pieces
   const pieceNodes =
     design.pieces?.map((piece, i) => {
-      const isSelected = selection?.selectedPieceIds.includes(piece.id_) ?? false;
+      const isSelected = selection?.selectedPieceIds.some((p) => p.id_ === piece.id_) ?? false;
       const center = centerMap.get(piece.id_) || piece.center || { x: 0, y: 0 };
 
       // All pieces are now regular pieces (no design pieces)
@@ -807,7 +814,7 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
   const includedDesigns = getIncludedDesigns(design);
 
   const designNodes = includedDesigns.map((includedDesign, i) => {
-    const isSelected = selection?.selectedPieceIds.includes(includedDesign.id) ?? false;
+    const isSelected = selection?.selectedPieceIds.some((p) => p.id_ === includedDesign.id) ?? false;
 
     if (includedDesign.type === "connected") {
       // Calculate center position based on the average position of external connected pieces in the current diagram
@@ -903,7 +910,7 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
   const parentConnectionId =
     selection?.selectedPieceIds.length === 1 && selection.selectedConnections.length === 0
       ? (() => {
-          const selectedPieceId = selection.selectedPieceIds[0];
+          const selectedPieceId = selection.selectedPieceIds[0].id_;
           const pieceMetadata = metadata.get(selectedPieceId);
           if (pieceMetadata?.parentPieceId) {
             return `${pieceMetadata.parentPieceId} -- ${selectedPieceId}`;
@@ -914,7 +921,7 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
 
   const connectionEdges =
     design.connections?.map((connection, connectionIndex) => {
-      const isSelected = selection?.selectedConnections.some((c: { connectingPieceId: string; connectedPieceId: string }) => c.connectingPieceId === connection.connecting.piece.id_ && c.connectedPieceId === connection.connected.piece.id_) ?? false;
+      const isSelected = selection?.selectedConnections.some((c) => c.connecting.piece.id_ === connection.connecting.piece.id_ && c.connected.piece.id_ === connection.connected.piece.id_) ?? false;
 
       const connectionId = `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`;
       const isParentConnection = parentConnectionId === connectionId || parentConnectionId === `${connection.connected.piece.id_} -- ${connection.connecting.piece.id_}`;
@@ -928,11 +935,6 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
 
 const Diagram: FC = () => {
   const {
-    designId,
-    selection,
-    designDiff,
-    fullscreenPanel,
-    others,
     setDesign,
     deselectAll,
     selectPiece,
@@ -951,10 +953,18 @@ const Diagram: FC = () => {
     executeCommand,
   } = useDesignEditor();
 
+  const selection = useDesignEditorSelection();
+  const designDiff = useDesignEditorDesignDiff();
+  const fullscreenPanel = useDesignEditorFullscreenPanel();
+  const others = useDesignEditorPresenceOthers();
+
   const kit = useKit();
   const baseDesign = useDesign();
   if (!kit || !baseDesign) return null;
   const design = applyDesignDiff(baseDesign, designDiff, true);
+
+  // We need the designId from the design itself since it's not in the hook
+  const designId = { name: design.name, variant: design.variant, view: design.view };
 
   const types = useTypes();
   const typesWithColoredPorts = useMemo(() => colorPortsForTypes(types || []), [types]);
@@ -1044,7 +1054,7 @@ const Diagram: FC = () => {
     (event: any, node: Node) => {
       const currentSelectedIds = selection?.selectedPieceIds ?? [];
       const pieceId = getPieceIdFromNode(node as DiagramNode);
-      const isNodeSelected = currentSelectedIds.includes(pieceId);
+      const isNodeSelected = currentSelectedIds.some((p) => p.id_ === pieceId);
       const ctrlKey = event.ctrlKey || event.metaKey;
       const shiftKey = event.shiftKey;
 
@@ -1074,7 +1084,7 @@ const Diagram: FC = () => {
       const altPressed = event.altKey;
 
       const currentHelperLines: HelperLine[] = [];
-      const nonSelectedNodes = nodes.filter((n) => !(selection?.selectedPieceIds ?? []).includes(getPieceIdFromNode(n)));
+      const nonSelectedNodes = nodes.filter((n) => !(selection?.selectedPieceIds ?? []).some((p) => p.id_ === getPieceIdFromNode(n)));
       const draggedCenterX = node.position.x + ICON_WIDTH / 2;
       const draggedCenterY = node.position.y + ICON_WIDTH / 2;
 
@@ -1082,7 +1092,7 @@ const Diagram: FC = () => {
       let updatedPieces: PieceDiff[] = [];
       let updatedConnections: ConnectionDiff[] = [];
 
-      for (const selectedNode of nodes.filter((n) => selection?.selectedPieceIds.includes(getPieceIdFromNode(n)))) {
+      for (const selectedNode of nodes.filter((n) => selection?.selectedPieceIds.some((p) => p.id_ === getPieceIdFromNode(n)))) {
         if (selectedNode.type !== "piece") continue;
         const piece = (selectedNode as PieceNode).data.piece;
         const type = (selectedNode as PieceNode).data.type;
@@ -1525,7 +1535,7 @@ const Diagram: FC = () => {
 
         // Only check for automatic connections if Alt key is not pressed
         if (!altPressed) {
-          for (const otherNode of nodes.filter((n) => !(selection.selectedPieceIds ?? []).includes(getPieceIdFromNode(n)))) {
+          for (const otherNode of nodes.filter((n) => !(selection.selectedPieceIds ?? []).some((p) => p.id_ === getPieceIdFromNode(n)))) {
             if (otherNode.type !== "piece") continue;
             const existingConnection = design.connections?.find((c) =>
               isSameConnection(c, {

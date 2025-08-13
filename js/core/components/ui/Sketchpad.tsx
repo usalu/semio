@@ -20,7 +20,7 @@
 // #endregion
 import { TooltipProvider } from "@semio/js/components/ui/Tooltip";
 import { FC, ReactNode, createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import DesignEditor, { DesignEditorAction, DesignEditorDispatcher, DesignEditorState as UIDesignEditorState, reduceSelection } from "./DesignEditor";
+import { DesignEditorAction, DesignEditorDispatcher, reduceSelection } from "./DesignEditor";
 
 import {
   Connection,
@@ -29,11 +29,8 @@ import {
   DesignId,
   DiagramPoint,
   Kit,
-  Layout,
-  Mode,
   Piece,
   Plane,
-  Theme,
   addConnectionToDesignDiff,
   addConnectionsToDesignDiff,
   addPieceToDesignDiff,
@@ -48,7 +45,7 @@ import {
   setPiecesInDesignDiff,
 } from "@semio/js";
 import { orientDesign } from "../../semio";
-import { DesignEditorFullscreenPanel, KitScopeProvider, SketchpadScopeProvider, DesignEditorState as StoreDesignEditorState, SketchpadProvider as StoreProvider, useDesigns, useKit, useKits } from "../../store";
+import { DesignEditorFullscreenPanel, KitScopeProvider, Layout, Mode, SketchpadScopeProvider, DesignEditorState as StoreDesignEditorState, SketchpadProvider as StoreProvider, Theme, useDesigns, useKit, useKits, useSketchpadStore } from "../../store";
 
 // Helper
 const keyOf = (d: DesignId) => `${d.name}::${d.variant || ""}::${d.view || ""}`;
@@ -61,8 +58,7 @@ interface SketchpadContextType {
   setTheme: (theme: Theme) => void;
   navbarToolbar: ReactNode | null;
   setNavbarToolbar: (toolbar: ReactNode) => void;
-  kit: Kit | null;
-  designEditorState: UIDesignEditorState | null;
+  designEditorState: StoreDesignEditorState | null;
   designEditorDispatch: DesignEditorDispatcher | null;
   availableDesigns: DesignId[];
   activeDesignId: DesignId | null;
@@ -79,14 +75,6 @@ export const useSketchpad = () => {
     throw new Error("useSketchpad must be used within a SketchpadProvider");
   }
   return context;
-};
-
-interface ViewProps {}
-
-const View = () => {
-  const { kit, designEditorState } = useSketchpad();
-  if (!kit || !designEditorState) return null;
-  return <DesignEditor />;
 };
 
 interface SketchpadProps {
@@ -160,8 +148,13 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
     if (!id) {
       const kitName = defaultKit?.name || "Metabolism";
       const kitVersion = defaultKit?.version || "";
-      id = store.createDesignEditorStore(kitName, kitVersion, activeDesignId.name, activeDesignId.variant || "", activeDesignId.view || "");
-      editorStoreIds.current.set(key, id);
+      const newId = store.createDesignEditorStore(kitName, kitVersion, activeDesignId.name, activeDesignId.variant || "", activeDesignId.view || "");
+      if (newId) {
+        id = newId;
+        editorStoreIds.current.set(key, id);
+      } else {
+        return;
+      }
     }
     const editor = store.getDesignEditorStore(id);
     if (!editor) return;
@@ -213,7 +206,7 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
       case DesignEditorAction.SelectPiecePort:
       case DesignEditorAction.DeselectPiecePort: {
         const kit = store.getKit(kitId);
-        const design = (kit.designs || []).find((d) => d.name === designId.name && (d.variant || "") === (designId.variant || "") && (d.view || "") === (designId.view || ""))!;
+        const design = (kit.designs || []).find((d: Design) => d.name === designId.name && (d.variant || "") === (designId.variant || "") && (d.view || "") === (designId.view || ""))!;
         const nextSel = reduceSelection(editor.getState().selection, design, action);
         editor.updateDesignEditorSelection(nextSel);
         break;
@@ -253,12 +246,12 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
       case DesignEditorAction.CopyToClipboard: {
         const s = editor.getState();
         const kit = store.getKit(kitId);
-        const design = (kit.designs || []).find((d) => d.name === designId.name && (d.variant || "") === (designId.variant || "") && (d.view || "") === (designId.view || ""));
+        const design = (kit.designs || []).find((d: Design) => d.name === designId.name && (d.variant || "") === (designId.variant || "") && (d.view || "") === (designId.view || ""));
         if (!design) break;
         const subDesign: Design = {
           ...design,
-          pieces: (design.pieces || []).filter((p) => s.selection.selectedPieceIds.includes(p.id_)),
-          connections: (design.connections || []).filter((c) => s.selection.selectedConnections.some((sc) => sc.connectedPieceId === c.connected.piece.id_ && sc.connectingPieceId === c.connecting.piece.id_)),
+          pieces: (design.pieces || []).filter((p: Piece) => s.selection.selectedPieceIds.some((pieceId) => pieceId.id_ === p.id_)),
+          connections: (design.connections || []).filter((c: Connection) => s.selection.selectedConnections.some((sc: any) => sc.connectedPieceId === c.connected.piece.id_ && sc.connectingPieceId === c.connecting.piece.id_)),
         } as any;
         const { plane, center } = (action.payload || {}) as { plane?: Plane; center?: DiagramPoint };
         navigator.clipboard?.writeText(JSON.stringify(orientDesign(subDesign, plane, center))).then(() => {});
@@ -276,8 +269,8 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
             const forward = addConnectionsToDesignDiff(addPiecesToDesignDiff(empty, pieces), connections);
             const undo = editor.invertDiff(forward);
             store.transact(() => {
-              pieces.forEach((p) => store.createPiece(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", p));
-              connections.forEach((c) => store.createConnection(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", c));
+              pieces.forEach((p) => store.createPiece(kitId, designId, p));
+              connections.forEach((c) => store.createConnection(kitId, designId, c));
             });
             pushUndoRedo(undo, forward);
           } catch (e) {}
@@ -287,23 +280,23 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
       case DesignEditorAction.CutToClipboard: {
         const s = editor.getState();
         const kit = store.getKit(kitId);
-        const design = (kit.designs || []).find((d) => d.name === designId.name && (d.variant || "") === (designId.variant || "") && (d.view || "") === (designId.view || ""));
+        const design = (kit.designs || []).find((d: Design) => d.name === designId.name && (d.variant || "") === (designId.variant || "") && (d.view || "") === (designId.view || ""));
         if (design) {
           const subDesign: Design = {
             ...design,
-            pieces: (design.pieces || []).filter((p) => s.selection.selectedPieceIds.includes(p.id_)),
-            connections: (design.connections || []).filter((c) => s.selection.selectedConnections.some((sc) => sc.connectedPieceId === c.connected.piece.id_ && sc.connectingPieceId === c.connecting.piece.id_)),
+            pieces: (design.pieces || []).filter((p: Piece) => s.selection.selectedPieceIds.some((pieceId) => pieceId.id_ === p.id_)),
+            connections: (design.connections || []).filter((c: Connection) => s.selection.selectedConnections.some((sc: any) => sc.connectedPieceId === c.connected.piece.id_ && sc.connectingPieceId === c.connecting.piece.id_)),
           } as any;
           const { plane, center } = (action.payload || {}) as { plane?: Plane; center?: DiagramPoint };
           navigator.clipboard?.writeText(JSON.stringify(orientDesign(subDesign, plane, center))).then(() => {});
         }
-        const pieceIds = s.selection.selectedPieceIds.map((id_) => ({ id_ }));
-        const connectionIds = s.selection.selectedConnections.map((c) => ({ connected: { piece: { id_: c.connectedPieceId } }, connecting: { piece: { id_: c.connectingPieceId } } }));
+        const pieceIds = s.selection.selectedPieceIds;
+        const connectionIds = s.selection.selectedConnections.map((c: any) => ({ connected: { piece: { id_: c.connectedPieceId } }, connecting: { piece: { id_: c.connectingPieceId } } }));
         const forward = removeConnectionsFromDesignDiff(removePiecesFromDesignDiff({ pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } } as any, pieceIds), connectionIds);
         const undo = editor.invertDiff(forward);
         store.transact(() => {
-          pieceIds.forEach(({ id_ }) => store.deletePiece(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", id_));
-          connectionIds.forEach((cid: any) => store.deleteConnection(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", cid.connected.piece.id_, cid.connecting.piece.id_));
+          pieceIds.forEach(({ id_ }: { id_: string }) => store.deletePiece(kitId, designId, { id_ }));
+          connectionIds.forEach((cid: any) => store.deleteConnection(kitId, designId, cid));
         });
         pushUndoRedo(undo, forward);
         editor.updateDesignEditorSelection({ selectedPieceIds: [], selectedConnections: [] });
@@ -333,7 +326,7 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
       // Design changes
       case DesignEditorAction.SetDesign: {
         const d = action.payload as Design;
-        commit(() => store.updateDesign(kitId.name, kitId.version || "", d));
+        commit(() => store.updateDesign(kitId, d));
         break;
       }
       case DesignEditorAction.AddPiece: {
@@ -341,9 +334,9 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
         if (!editor.getState().isTransactionActive) {
           const forward = addPieceToDesignDiff({ pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } } as any, p);
           const undo = editor.invertDiff(forward);
-          commit(() => store.createPiece(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", p));
+          commit(() => store.createPiece(kitId, designId, p));
           pushUndoRedo(undo, forward);
-        } else commit(() => store.createPiece(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", p));
+        } else commit(() => store.createPiece(kitId, designId, p));
         break;
       }
       case DesignEditorAction.SetPiece: {
@@ -352,7 +345,7 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
         else {
           const forward = setPieceInDesignDiff({ pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } } as any, p as any);
           const undo = editor.invertDiff(forward);
-          commit(() => store.updatePiece(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", p));
+          commit(() => store.updatePiece(kitId, designId, p));
           pushUndoRedo(undo, forward);
         }
         break;
@@ -363,9 +356,9 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
         if (!editor.getState().isTransactionActive) {
           const forward = removePieceFromDesignDiff({ pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } } as any, { id_: pid } as any);
           const undo = editor.invertDiff(forward);
-          commit(() => store.deletePiece(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", pid));
+          commit(() => store.deletePiece(kitId, designId, { id_: pid }));
           pushUndoRedo(undo, forward);
-        } else commit(() => store.deletePiece(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", pid));
+        } else commit(() => store.deletePiece(kitId, designId, { id_: pid }));
         break;
       }
       case DesignEditorAction.AddPieces:
@@ -373,7 +366,7 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
         else {
           const forward = addPiecesToDesignDiff({ pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } } as any, action.payload as Piece[]);
           const undo = editor.invertDiff(forward);
-          (action.payload as Piece[]).forEach((p: Piece) => commit(() => store.createPiece(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", p)));
+          (action.payload as Piece[]).forEach((p: Piece) => commit(() => store.createPiece(kitId, designId, p)));
           pushUndoRedo(undo, forward);
         }
         break;
@@ -382,14 +375,14 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
         else {
           const forward = setPiecesInDesignDiff({ pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } } as any, action.payload as any);
           const undo = editor.invertDiff(forward);
-          (action.payload as Piece[]).forEach((p: Piece) => commit(() => store.updatePiece(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", p)));
+          (action.payload as Piece[]).forEach((p: Piece) => commit(() => store.updatePiece(kitId, designId, p)));
           pushUndoRedo(undo, forward);
         }
         break;
       case DesignEditorAction.RemovePieces: {
         (action.payload as (Piece | string)[]).forEach((p: any) => {
           const pid = typeof p === "string" ? p : p.id_;
-          commit(() => store.deletePiece(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", pid));
+          commit(() => store.deletePiece(kitId, designId, { id_: pid }));
         });
         if (editor.getState().isTransactionActive)
           editor.setState({
@@ -414,7 +407,7 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
         else {
           const forward = addConnectionToDesignDiff({ pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } } as any, action.payload as Connection);
           const undo = editor.invertDiff(forward);
-          commit(() => store.createConnection(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", action.payload as Connection));
+          commit(() => store.createConnection(kitId, designId, action.payload as Connection));
           pushUndoRedo(undo, forward);
         }
         break;
@@ -424,7 +417,7 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
         else {
           const forward = setConnectionInDesignDiff({ pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } } as any, action.payload as any);
           const undo = editor.invertDiff(forward);
-          commit(() => store.updateConnection(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", action.payload as Connection));
+          commit(() => store.updateConnection(kitId, designId, action.payload as Connection));
           pushUndoRedo(undo, forward);
         }
         break;
@@ -433,7 +426,7 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
         const c = action.payload as any;
         const connectedId = c.connected?.piece?.id_ || c.connectedPieceId || c;
         const connectingId = c.connecting?.piece?.id_ || c.connectingPieceId || c;
-        commit(() => store.deleteConnection(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", connectedId, connectingId));
+        commit(() => store.deleteConnection(kitId, designId, { connected: { piece: { id_: connectedId } }, connecting: { piece: { id_: connectingId } } }));
         if (editor.getState().isTransactionActive)
           editor.setState({
             ...editor.getState(),
@@ -454,7 +447,7 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
         else {
           const forward = addConnectionsToDesignDiff({ pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } } as any, action.payload as Connection[]);
           const undo = editor.invertDiff(forward);
-          (action.payload as Connection[]).forEach((c) => commit(() => store.createConnection(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", c)));
+          (action.payload as Connection[]).forEach((c) => commit(() => store.createConnection(kitId, designId, c)));
           pushUndoRedo(undo, forward);
         }
         break;
@@ -464,7 +457,7 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
         else {
           const forward = setConnectionsInDesignDiff({ pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } } as any, action.payload as any);
           const undo = editor.invertDiff(forward);
-          (action.payload as Connection[]).forEach((c) => commit(() => store.updateConnection(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", c)));
+          (action.payload as Connection[]).forEach((c) => commit(() => store.updateConnection(kitId, designId, c)));
           pushUndoRedo(undo, forward);
         }
         break;
@@ -473,7 +466,7 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
         (action.payload as any[]).forEach((c) => {
           const connectedId = c.connected?.piece?.id_ || c.connectedPieceId || c;
           const connectingId = c.connecting?.piece?.id_ || c.connectingPieceId || c;
-          commit(() => store.deleteConnection(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", connectedId, connectingId));
+          commit(() => store.deleteConnection(kitId, designId, { connected: { piece: { id_: connectedId } }, connecting: { piece: { id_: connectingId } } }));
         });
         if (editor.getState().isTransactionActive)
           editor.setState({
@@ -497,12 +490,12 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
         const { pieceIds, connectionIds } = action.payload as { pieceIds: (Piece | string)[]; connectionIds: any[] };
         pieceIds.forEach((p) => {
           const pid = typeof p === "string" ? p : p.id_;
-          commit(() => store.deletePiece(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", pid));
+          commit(() => store.deletePiece(kitId, designId, { id_: pid }));
         });
         connectionIds.forEach((c) => {
           const connectedId = c.connected?.piece?.id_ || c.connectedPieceId || c;
           const connectingId = c.connecting?.piece?.id_ || c.connectingPieceId || c;
-          commit(() => store.deleteConnection(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", connectedId, connectingId));
+          commit(() => store.deleteConnection(kitId, designId, { connected: { piece: { id_: connectedId } }, connecting: { piece: { id_: connectingId } } }));
         });
         if (editor.getState().isTransactionActive) {
           let d = editor.getState().designDiff as any;
@@ -526,13 +519,13 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
       }
       case DesignEditorAction.DeleteSelected: {
         const s = editor.getState();
-        const pieceIds = s.selection.selectedPieceIds.map((id_) => ({ id_ }));
-        const connectionIds = s.selection.selectedConnections.map((c) => ({ connected: { piece: { id_: c.connectedPieceId } }, connecting: { piece: { id_: c.connectingPieceId } } }));
+        const pieceIds = s.selection.selectedPieceIds;
+        const connectionIds = s.selection.selectedConnections.map((c: any) => ({ connected: { piece: { id_: c.connectedPieceId } }, connecting: { piece: { id_: c.connectingPieceId } } }));
         const forward = removeConnectionsFromDesignDiff(removePiecesFromDesignDiff({ pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } } as any, pieceIds), connectionIds);
         const undo = editor.invertDiff(forward);
         store.transact(() => {
-          pieceIds.forEach(({ id_ }) => store.deletePiece(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", id_));
-          connectionIds.forEach((cid: any) => store.deleteConnection(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "", cid.connected.piece.id_, cid.connecting.piece.id_));
+          pieceIds.forEach(({ id_ }: { id_: string }) => store.deletePiece(kitId, designId, { id_ }));
+          connectionIds.forEach((cid: any) => store.deleteConnection(kitId, designId, cid));
         });
         pushUndoRedo(undo, forward);
         editor.updateDesignEditorSelection({ selectedPieceIds: [], selectedConnections: [] });
@@ -561,7 +554,7 @@ const SketchpadInner: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = 
   const kit = defaultKit || null;
   const availableDesigns: DesignId[] = useMemo(() => (designs || []).map((d: Design) => ({ name: d.name, variant: d.variant, view: d.view })), [designs]);
   const fileUrls = store.getFileUrls();
-  const externalState: UIDesignEditorState | null = designEditorState ? { ...(designEditorState as any), kit: kit as Kit, fileUrls } : null;
+  const externalState: StoreDesignEditorState | null = designEditorState && activeDesignId ? { ...(designEditorState as any), kit: kit as Kit, designId: activeDesignId, fileUrls } : null;
 
   return (
     <TooltipProvider>

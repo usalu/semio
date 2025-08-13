@@ -161,6 +161,10 @@ type YDesignVal = string | YAuthors | YQualities | YPieceMap | YConnectionMap;
 type YDesign = Y.Map<YDesignVal>;
 type YDesignMap = Y.Map<YDesign>;
 
+type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YQualities | YStringArray;
+type YDesignEditor = Y.Map<YDesignEditorVal>;
+type YDesignEditorMap = Y.Map<YDesignEditor>;
+
 type YIdMap = Y.Map<string>;
 type YKitVal = string | YTypeMap | YDesignMap | YIdMap | YQualities;
 type YKit = Y.Map<YKitVal>;
@@ -274,11 +278,35 @@ type YConnectionKeysMap = {
 };
 const gConn = <K extends keyof YConnectionKeysMap>(m: YConnection, k: K): YConnectionKeysMap[K] => m.get(k as string) as YConnectionKeysMap[K];
 
+type YDesignEditorKeysMap = {
+  fullscreenPanel: string;
+  selectedPieceIds: YStringArray;
+  selectedConnections: YStringArray;
+  selectedPiecePortPieceId: string;
+  selectedPiecePortPortId: string;
+  designDiffPiecesAdded: YStringArray;
+  designDiffPiecesRemoved: YStringArray;
+  designDiffPiecesUpdated: YStringArray;
+  designDiffConnectionsAdded: YStringArray;
+  designDiffConnectionsRemoved: YStringArray;
+  designDiffConnectionsUpdated: YStringArray;
+  isTransactionActive: boolean;
+  presenceCursorX: number;
+  presenceCursorY: number;
+  presenceCameraPositionX: number;
+  presenceCameraPositionY: number;
+  presenceCameraPositionZ: number;
+  presenceCameraForwardX: number;
+  presenceCameraForwardY: number;
+  presenceCameraForwardZ: number;
+};
+const gDesignEditor = <K extends keyof YDesignEditorKeysMap>(m: YDesignEditor, k: K): YDesignEditorKeysMap[K] => m.get(k as string) as YDesignEditorKeysMap[K];
+
 export class SketchpadStore {
   private id?: string;
   private yDoc: Y.Doc;
   private undoManager: UndoManager;
-  private designEditors: Map<string, { yKit: YKit; yDesign: YDesign; undoManager: UndoManager; state: DesignEditorState; listeners: Set<() => void> }> = new Map();
+  private designEditors: Map<string, { yKit: YKit; yDesign: YDesign; undoManager: UndoManager }> = new Map();
   private indexeddbProvider?: IndexeddbPersistence;
   private listeners: Set<() => void> = new Set();
   private fileUrls: Map<string, string> = new Map();
@@ -321,6 +349,7 @@ export class SketchpadStore {
     this.yDoc.getMap<YKit>("kits");
     this.yDoc.getMap<string>("kitIds");
     this.yDoc.getMap<Uint8Array>("files");
+    this.yDoc.getMap<YDesignEditor>("designEditors");
     this.undoManager = new UndoManager(this.yDoc.getMap<YKit>("kits"), { captureTimeout: 0 });
   }
 
@@ -417,6 +446,42 @@ export class SketchpadStore {
     const rep = this.getYRepresentations(kitId, typeId).get(this.key.representation(id));
     if (!rep) throw new Error("Representation not found");
     return rep;
+  }
+
+  private getYDesignEditors(): YDesignEditorMap {
+    return this.yDoc.getMap<YDesignEditor>("designEditors");
+  }
+
+  private getYDesignEditor(id: string): YDesignEditor {
+    const designEditors = this.getYDesignEditors();
+    const yDesignEditor = designEditors.get(id);
+    if (!yDesignEditor) throw new Error(`Design editor (${id}) not found`);
+    return yDesignEditor;
+  }
+
+  private createYDesignEditor(): YDesignEditor {
+    const yDesignEditor = new Y.Map<YDesignEditorVal>();
+    yDesignEditor.set("fullscreenPanel", "none");
+    yDesignEditor.set("selectedPieceIds", new Y.Array<string>());
+    yDesignEditor.set("selectedConnections", new Y.Array<string>());
+    yDesignEditor.set("selectedPiecePortPieceId", "");
+    yDesignEditor.set("selectedPiecePortPortId", "");
+    yDesignEditor.set("designDiffPiecesAdded", new Y.Array<string>());
+    yDesignEditor.set("designDiffPiecesRemoved", new Y.Array<string>());
+    yDesignEditor.set("designDiffPiecesUpdated", new Y.Array<string>());
+    yDesignEditor.set("designDiffConnectionsAdded", new Y.Array<string>());
+    yDesignEditor.set("designDiffConnectionsRemoved", new Y.Array<string>());
+    yDesignEditor.set("designDiffConnectionsUpdated", new Y.Array<string>());
+    yDesignEditor.set("isTransactionActive", false);
+    yDesignEditor.set("presenceCursorX", 0);
+    yDesignEditor.set("presenceCursorY", 0);
+    yDesignEditor.set("presenceCameraPositionX", 0);
+    yDesignEditor.set("presenceCameraPositionY", 0);
+    yDesignEditor.set("presenceCameraPositionZ", 0);
+    yDesignEditor.set("presenceCameraForwardX", 0);
+    yDesignEditor.set("presenceCameraForwardY", 0);
+    yDesignEditor.set("presenceCameraForwardZ", 0);
+    return yDesignEditor;
   }
 
   onKitIdsChange(callback: () => void) {
@@ -533,6 +598,42 @@ export class SketchpadStore {
     const observer = () => callback();
     yQualities.observe(observer);
     return () => yQualities.unobserve(observer);
+  }
+
+  // TODO: Make all observers specific to the property they are observing
+  onDesignEditorChange(id: string, callback: () => void) {
+    const yDesignEditor = this.getYDesignEditor(id);
+    const observer = () => callback();
+    yDesignEditor.observe(observer);
+    return () => yDesignEditor.unobserve(observer);
+  }
+
+  onDesignEditorDesignIdChange(id: string, callback: () => void) {
+    return this.onDesignEditorChange(id, callback);
+  }
+
+  onDesignEditorFullscreenPanelChange(id: string, callback: () => void) {
+    return this.onDesignEditorChange(id, callback);
+  }
+
+  onDesignEditorSelectionChange(id: string, callback: () => void) {
+    return this.onDesignEditorChange(id, callback);
+  }
+
+  onDesignEditorDesignDiffChange(id: string, callback: () => void) {
+    return this.onDesignEditorChange(id, callback);
+  }
+
+  onDesignEditorIsTransactionActiveChange(id: string, callback: () => void) {
+    return this.onDesignEditorChange(id, callback);
+  }
+
+  onDesignEditorPresenceChange(id: string, callback: () => void) {
+    return this.onDesignEditorChange(id, callback);
+  }
+
+  onDesignEditorPresenceOthersChange(id: string, callback: () => void) {
+    return this.onDesignEditorChange(id, callback);
   }
 
   private createAuthor(author: Author): YAuthor {
@@ -1503,17 +1604,73 @@ export class SketchpadStore {
     const yDesign = this.getYDesign(kitIdLikeToKitId([kitName, kitVersion]), designIdLikeToDesignId([designName, designVariant, view]));
     const id = uuidv4();
     const undoManager = new UndoManager(yDesign, { captureTimeout: 0, trackedOrigins: new Set([id]) });
-    const state: DesignEditorState = {
-      designId: { name: gDesign(yDesign, "name"), variant: gDesign(yDesign, "variant"), view: gDesign(yDesign, "view") },
-      fullscreenPanel: DesignEditorFullscreenPanel.None,
-      selection: { selectedPieceIds: [], selectedConnections: [] },
-      designDiff: { pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } } as DesignEditorState["designDiff"],
-      isTransactionActive: false,
+
+    // Create the design editor state in Yjs
+    const yDesignEditor = this.createYDesignEditor();
+    const designEditors = this.getYDesignEditors();
+    designEditors.set(id, yDesignEditor);
+
+    this.designEditors.set(id, { yKit, yDesign, undoManager });
+    return id;
+  }
+
+  private getDesignEditorStateFromYjs(id: string): DesignEditorState {
+    const yDesignEditor = this.getYDesignEditor(id);
+
+    const selectedPieceIds = (gDesignEditor(yDesignEditor, "selectedPieceIds") as YStringArray).toArray().map((id) => ({ id_: id }));
+    const selectedConnections = (gDesignEditor(yDesignEditor, "selectedConnections") as YStringArray).toArray().map((connId) => {
+      const [connectedId, connectingId] = connId.split("--");
+      return {
+        connected: {
+          piece: { id_: connectedId },
+          port: { id_: "" },
+        },
+        connecting: {
+          piece: { id_: connectingId },
+          port: { id_: "" },
+        },
+      };
+    });
+
+    const selectedPiecePortPieceId = gDesignEditor(yDesignEditor, "selectedPiecePortPieceId") as string;
+    const selectedPiecePortPortId = gDesignEditor(yDesignEditor, "selectedPiecePortPortId") as string;
+    const selectedPiecePortId = selectedPiecePortPieceId && selectedPiecePortPortId ? { pieceId: { id_: selectedPiecePortPieceId }, portId: { id_: selectedPiecePortPortId } } : undefined;
+
+    return {
+      fullscreenPanel: gDesignEditor(yDesignEditor, "fullscreenPanel") as DesignEditorFullscreenPanel,
+      selection: {
+        selectedPieceIds,
+        selectedConnections,
+        selectedPiecePortId,
+      },
+      designDiff: {
+        pieces: { added: [], removed: [], updated: [] },
+        connections: { added: [], removed: [], updated: [] },
+      },
+      isTransactionActive: gDesignEditor(yDesignEditor, "isTransactionActive") as boolean,
       operationStack: [],
       operationIndex: -1,
-    } as DesignEditorState;
-    this.designEditors.set(id, { yKit, yDesign, undoManager, state, listeners: new Set() });
-    return id;
+      presence: {
+        cursor: {
+          x: gDesignEditor(yDesignEditor, "presenceCursorX") as number,
+          y: gDesignEditor(yDesignEditor, "presenceCursorY") as number,
+        },
+        camera: {
+          position: {
+            x: gDesignEditor(yDesignEditor, "presenceCameraPositionX") as number,
+            y: gDesignEditor(yDesignEditor, "presenceCameraPositionY") as number,
+            z: gDesignEditor(yDesignEditor, "presenceCameraPositionZ") as number,
+          },
+          forward: {
+            x: gDesignEditor(yDesignEditor, "presenceCameraForwardX") as number,
+            y: gDesignEditor(yDesignEditor, "presenceCameraForwardY") as number,
+            z: gDesignEditor(yDesignEditor, "presenceCameraForwardZ") as number,
+          },
+          up: { x: 0, y: 1, z: 0 },
+        },
+      },
+      others: [],
+    };
   }
 
   getDesignEditorStore(id: string): {
@@ -1532,14 +1689,60 @@ export class SketchpadStore {
   } | null {
     const entry = this.designEditors.get(id);
     if (!entry) return null;
-    const getState = () => entry.state;
+
+    const getState = () => this.getDesignEditorStateFromYjs(id);
+
     const setState = (s: DesignEditorState) => {
-      entry.state = s;
-      entry.listeners.forEach((l) => l());
+      const yDesignEditor = this.getYDesignEditor(id);
+      yDesignEditor.set("fullscreenPanel", s.fullscreenPanel);
+      yDesignEditor.set("isTransactionActive", s.isTransactionActive);
+
+      // Update selection
+      const selectedPieceIds = yDesignEditor.get("selectedPieceIds") as YStringArray;
+      selectedPieceIds.delete(0, selectedPieceIds.length);
+      selectedPieceIds.insert(
+        0,
+        s.selection.selectedPieceIds.map((p) => p.id_),
+      );
+
+      const selectedConnections = yDesignEditor.get("selectedConnections") as YStringArray;
+      selectedConnections.delete(0, selectedConnections.length);
+      selectedConnections.insert(
+        0,
+        s.selection.selectedConnections.map((c) => `${c.connected.piece.id_}--${c.connecting.piece.id_}`),
+      );
+
+      if (s.selection.selectedPiecePortId) {
+        yDesignEditor.set("selectedPiecePortPieceId", s.selection.selectedPiecePortId.pieceId.id_);
+        yDesignEditor.set("selectedPiecePortPortId", s.selection.selectedPiecePortId.portId.id_ || "");
+      } else {
+        yDesignEditor.set("selectedPiecePortPieceId", "");
+        yDesignEditor.set("selectedPiecePortPortId", "");
+      }
+
+      // Update presence
+      if (s.presence.cursor) {
+        yDesignEditor.set("presenceCursorX", s.presence.cursor.x);
+        yDesignEditor.set("presenceCursorY", s.presence.cursor.y);
+      }
+      if (s.presence.camera) {
+        yDesignEditor.set("presenceCameraPositionX", s.presence.camera.position.x);
+        yDesignEditor.set("presenceCameraPositionY", s.presence.camera.position.y);
+        yDesignEditor.set("presenceCameraPositionZ", s.presence.camera.position.z);
+        yDesignEditor.set("presenceCameraForwardX", s.presence.camera.forward.x);
+        yDesignEditor.set("presenceCameraForwardY", s.presence.camera.forward.y);
+        yDesignEditor.set("presenceCameraForwardZ", s.presence.camera.forward.z);
+      }
     };
+
     const getDesignId = (): DesignId => ({ name: gDesign(entry.yDesign, "name"), variant: gDesign(entry.yDesign, "variant"), view: gDesign(entry.yDesign, "view") });
     const getKitId = (): KitId => ({ name: gKit(entry.yKit, "name"), version: gKit(entry.yKit, "version") });
-    const updateDesignEditorSelection = (selection: DesignEditorSelection) => setState({ ...getState(), selection });
+
+    const updateDesignEditorSelection = (selection: DesignEditorSelection) => {
+      const state = getState();
+      setState({ ...state, selection });
+    };
+
     const ensureDiff = (d?: DesignDiff): DesignDiff => (d && d.pieces && d.connections ? d : { pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } });
     const getPieceFromY = (pieceId: string): Piece => {
       const kid = getKitId();
@@ -1713,9 +1916,9 @@ export class SketchpadStore {
       const types = this.getTypes(kitId);
       const yConnections = gDesign(entry.yDesign, "connections");
       if (selection.selectedConnections.length > 0) {
-        selection.selectedConnections.forEach((conn: { connectingPieceId: string; connectedPieceId: string }) => {
-          const a = `${conn.connectedPieceId}--${conn.connectingPieceId}`;
-          const b = `${conn.connectingPieceId}--${conn.connectedPieceId}`;
+        selection.selectedConnections.forEach((conn: ConnectionId) => {
+          const a = `${conn.connected.piece.id_}--${conn.connecting.piece.id_}`;
+          const b = `${conn.connecting.piece.id_}--${conn.connected.piece.id_}`;
           if (yConnections.has(a)) yConnections.delete(a);
           else if (yConnections.has(b)) yConnections.delete(b);
         });
@@ -1725,10 +1928,10 @@ export class SketchpadStore {
         const toDelete: string[] = [];
         yConnections.forEach((_, cid) => {
           const [cA, cB] = (cid as string).split("--");
-          if (selection.selectedPieceIds.includes(cA) || selection.selectedPieceIds.includes(cB)) toDelete.push(cid as string);
+          if (selection.selectedPieceIds.some((p) => p.id_ === cA) || selection.selectedPieceIds.some((p) => p.id_ === cB)) toDelete.push(cid as string);
         });
         toDelete.forEach((cid) => yConnections.delete(cid));
-        selection.selectedPieceIds.forEach((pid: string) => yPieces.delete(pid));
+        selection.selectedPieceIds.forEach((pid: PieceId) => yPieces.delete(pid.id_));
       }
       updateDesignEditorSelection({ selectedPieceIds: [], selectedConnections: [] });
     };
@@ -1757,12 +1960,15 @@ export class SketchpadStore {
     };
     const transact = (operations: () => void) => {
       this.yDoc.transact(operations, id);
-      entry.listeners.forEach((l) => l());
     };
+
     const subscribe = (callback: () => void) => {
-      entry.listeners.add(callback);
-      return () => entry.listeners.delete(callback);
+      const yDesignEditor = this.getYDesignEditor(id);
+      const observer = () => callback();
+      yDesignEditor.observe(observer);
+      return () => yDesignEditor.unobserve(observer);
     };
+
     return { getState, setState, getDesignId, getKitId, updateDesignEditorSelection, deleteSelectedPiecesAndConnections, pushOperation, invertDiff, undo, redo, transact, subscribe };
   }
 
@@ -1782,7 +1988,42 @@ export class SketchpadStore {
     this.yDoc.transact(commands, this.id || "local");
   }
 
+  async importFiles(url: string): Promise<void> {
+    try {
+      const zipData = await fetch(url).then((res) => res.arrayBuffer());
+      const zip = await JSZip.loadAsync(zipData);
+
+      // Load all files from the zip and overwrite existing files in memory
+      for (const fileEntry of Object.values(zip.files)) {
+        if (!fileEntry.dir) {
+          const fileData = await fileEntry.async("uint8array");
+          this.createFile(fileEntry.name, fileData);
+        }
+      }
+
+      console.log(`All files imported successfully from ${url}`);
+    } catch (error) {
+      console.error("Error importing files:", error);
+      throw error;
+    }
+  }
+
   async importKit(url: string, complete = false): Promise<void> {
+    // If URL ends with .json, load just the kit without files
+    if (url.endsWith(".json")) {
+      try {
+        const response = await fetch(url);
+        const kit = (await response.json()) as Kit;
+        this.createKit(kit);
+        console.log(`Kit "${kit.name}" imported successfully from ${url}`);
+        return;
+      } catch (error) {
+        console.error("Error importing kit from JSON:", error);
+        throw error;
+      }
+    }
+
+    // Original zip-based import logic
     let SQL: SqlJsStatic;
     let kitDb: Database;
     try {
@@ -2334,6 +2575,7 @@ type PieceScope = { id: PieceId };
 type ConnectionScope = { id: ConnectionId };
 type RepresentationScope = { id: RepresentationId };
 type PortypeScope = { id: PortId };
+type DesignEditorScope = { id: string };
 
 const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
 const KitScopeContext = createContext<KitScope | null>(null);
@@ -2343,6 +2585,7 @@ const PieceScopeContext = createContext<PieceScope | null>(null);
 const ConnectionScopeContext = createContext<ConnectionScope | null>(null);
 const RepresentationScopeContext = createContext<RepresentationScope | null>(null);
 const PortypeScopeContext = createContext<PortypeScope | null>(null);
+const DesignEditorScopeContext = createContext<DesignEditorScope | null>(null);
 
 export const SketchpadScopeProvider = (props: { id?: string; children: React.ReactNode }) => React.createElement(SketchpadScopeContext.Provider, { value: { id: props.id || "" } }, props.children as any);
 export const KitScopeProvider = (props: { id?: KitId; children: React.ReactNode }) => React.createElement(KitScopeContext.Provider, { value: { id: props.id || { name: "", version: "" } } }, props.children as any);
@@ -2353,6 +2596,7 @@ export const ConnectionScopeProvider = (props: { id?: ConnectionId; children: Re
   React.createElement(ConnectionScopeContext.Provider, { value: { id: props.id || { connected: { piece: { id_: "" } }, connecting: { piece: { id_: "" } } } } }, props.children as any);
 export const RepresentationScopeProvider = (props: { id?: RepresentationId; children: React.ReactNode }) => React.createElement(RepresentationScopeContext.Provider, { value: { id: props.id || { tags: [] } } }, props.children as any);
 export const PortypeScopeProvider = (props: { id?: PortId; children: React.ReactNode }) => React.createElement(PortypeScopeContext.Provider, { value: { id: props.id || { id_: "" } } }, props.children as any);
+export const DesignEditorScopeProvider = (props: { id?: string; children: React.ReactNode }) => React.createElement(DesignEditorScopeContext.Provider, { value: { id: props.id || "" } }, props.children as any);
 
 export const useSketchpadScope = () => useContext(SketchpadScopeContext);
 export const useKitScope = () => useContext(KitScopeContext);
@@ -2362,6 +2606,7 @@ export const usePieceScope = () => useContext(PieceScopeContext);
 export const useConnectionScope = () => useContext(ConnectionScopeContext);
 export const useRepresentationScope = () => useContext(RepresentationScopeContext);
 export const usePortScope = () => useContext(PortypeScopeContext);
+export const useDesignEditorScope = () => useContext(DesignEditorScopeContext);
 
 export function SketchpadProvider(props: { id?: string; children: React.ReactNode }) {
   const ref = useRef<SketchpadStore | null>(null);
@@ -2538,5 +2783,133 @@ export function useRepresentations(id?: RepresentationId) {
   return useSyncExternalStore(
     (l) => store.onRepresentationsChange(kitScope.id, typeScope.id, l),
     () => store.getRepresentations(kitScope.id, typeScope.id),
+  );
+}
+
+export function useDesignEditor(id?: string) {
+  const store = useSketchpadStore();
+  const designEditorScope = useDesignEditorScope();
+  const designEditorId = id ?? designEditorScope?.id;
+  if (!designEditorId) throw new Error("useDesignEditor requires an id or must be used within a DesignEditorScope");
+
+  const designEditorStore = store.getDesignEditorStore(designEditorId);
+  if (!designEditorStore) throw new Error(`Design editor store with id ${designEditorId} not found`);
+
+  return useSyncExternalStore(
+    (l) => store.onDesignEditorChange(designEditorId, l),
+    () => designEditorStore.getState(),
+  );
+}
+
+export function useDesignEditorDesignId(id?: string) {
+  const store = useSketchpadStore();
+  const designEditorScope = useDesignEditorScope();
+  const designEditorId = id ?? designEditorScope?.id;
+  if (!designEditorId) throw new Error("useDesignEditorDesignId requires an id or must be used within a DesignEditorScope");
+
+  return useSyncExternalStore(
+    (l) => store.onDesignEditorDesignIdChange(designEditorId, l),
+    () => {
+      const designEditorStore = store.getDesignEditorStore(designEditorId);
+      return designEditorStore?.getState().designId ?? { name: "", variant: "", view: "" };
+    },
+  );
+}
+
+export function useDesignEditorFullscreenPanel(id?: string) {
+  const store = useSketchpadStore();
+  const designEditorScope = useDesignEditorScope();
+  const designEditorId = id ?? designEditorScope?.id;
+  if (!designEditorId) throw new Error("useDesignEditorFullscreenPanel requires an id or must be used within a DesignEditorScope");
+
+  return useSyncExternalStore(
+    (l) => store.onDesignEditorFullscreenPanelChange(designEditorId, l),
+    () => {
+      const designEditorStore = store.getDesignEditorStore(designEditorId);
+      return designEditorStore?.getState().fullscreenPanel ?? DesignEditorFullscreenPanel.None;
+    },
+  );
+}
+
+export function useDesignEditorSelection(id?: string) {
+  const store = useSketchpadStore();
+  const designEditorScope = useDesignEditorScope();
+  const designEditorId = id ?? designEditorScope?.id;
+  if (!designEditorId) throw new Error("useDesignEditorSelection requires an id or must be used within a DesignEditorScope");
+
+  return useSyncExternalStore(
+    (l) => store.onDesignEditorSelectionChange(designEditorId, l),
+    () => {
+      const designEditorStore = store.getDesignEditorStore(designEditorId);
+      return designEditorStore?.getState().selection ?? { selectedPieceIds: [], selectedConnections: [] };
+    },
+  );
+}
+
+export function useDesignEditorDesignDiff(id?: string) {
+  const store = useSketchpadStore();
+  const designEditorScope = useDesignEditorScope();
+  const designEditorId = id ?? designEditorScope?.id;
+  if (!designEditorId) throw new Error("useDesignEditorDesignDiff requires an id or must be used within a DesignEditorScope");
+
+  return useSyncExternalStore(
+    (l) => store.onDesignEditorDesignDiffChange(designEditorId, l),
+    () => {
+      const designEditorStore = store.getDesignEditorStore(designEditorId);
+      return designEditorStore?.getState().designDiff ?? { pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } };
+    },
+  );
+}
+
+export function useDesignEditorIsTransactionActive(id?: string) {
+  const store = useSketchpadStore();
+  const designEditorScope = useDesignEditorScope();
+  const designEditorId = id ?? designEditorScope?.id;
+  if (!designEditorId) throw new Error("useDesignEditorIsTransactionActive requires an id or must be used within a DesignEditorScope");
+
+  return useSyncExternalStore(
+    (l) => store.onDesignEditorIsTransactionActiveChange(designEditorId, l),
+    () => {
+      const designEditorStore = store.getDesignEditorStore(designEditorId);
+      return designEditorStore?.getState().isTransactionActive ?? false;
+    },
+  );
+}
+
+export function useDesignEditorPresence(id?: string) {
+  const store = useSketchpadStore();
+  const designEditorScope = useDesignEditorScope();
+  const designEditorId = id ?? designEditorScope?.id;
+  if (!designEditorId) throw new Error("useDesignEditorPresence requires an id or must be used within a DesignEditorScope");
+
+  return useSyncExternalStore(
+    (l) => store.onDesignEditorPresenceChange(designEditorId, l),
+    () => {
+      const designEditorStore = store.getDesignEditorStore(designEditorId);
+      return designEditorStore?.getState().presence ?? {};
+    },
+  );
+}
+
+export function useDesignEditorPresenceOthers(id?: string) {
+  const store = useSketchpadStore();
+  const designEditorScope = useDesignEditorScope();
+  const designEditorId = id ?? designEditorScope?.id;
+  if (!designEditorId) throw new Error("useDesignEditorPresenceOthers requires an id or must be used within a DesignEditorScope");
+
+  return useSyncExternalStore(
+    (l) => store.onDesignEditorPresenceOthersChange(designEditorId, l),
+    () => {
+      const designEditorStore = store.getDesignEditorStore(designEditorId);
+      return designEditorStore?.getState().others ?? [];
+    },
+  );
+}
+
+export function useDesignEditorFileUrls(id?: string) {
+  const store = useSketchpadStore();
+  return useSyncExternalStore(
+    () => () => {}, // File URLs don't change often, can use a dummy unsubscribe
+    () => store.getFileUrls(),
   );
 }

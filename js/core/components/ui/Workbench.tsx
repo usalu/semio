@@ -1,25 +1,26 @@
 import { useDraggable } from "@dnd-kit/core";
 import { FC, useState } from "react";
 
-import { Design, Type, useDesignEditor } from "@semio/js";
+import { Design, DesignId, Type, TypeId } from "@semio/js";
 import { Avatar, AvatarFallback } from "@semio/js/components/ui/Avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/components/ui/HoverCard";
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
 import { Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
+import { useDesign, useDesignEditorDesignId, useKit, useType } from "../../store";
 import { ResizablePanelProps } from "./DesignEditor";
-import { useSketchpad } from "./Sketchpad";
 
 interface TypeAvatarProps {
-  type: Type;
+  typeId: TypeId;
   showHoverCard?: boolean;
 }
 
-export const TypeAvatar: FC<TypeAvatarProps> = ({ type, showHoverCard = false }) => {
+export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, showHoverCard = false }) => {
+  const type = useType(typeId);
   const { attributes, listeners, setNodeRef } = useDraggable({
-    id: `type-${type.name}-${type.variant || ""}`,
+    id: `type-${typeId.name}-${typeId.variant || ""}`,
   });
 
-  const displayVariant = type.variant || type.name;
+  const displayVariant = typeId.variant || typeId.name;
   const avatar = (
     <Avatar ref={setNodeRef} {...listeners} {...attributes} className="cursor-grab">
       {/* <AvatarImage src="https://github.com/semio-tech.png" /> */}
@@ -51,14 +52,15 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ type, showHoverCard = false })
 };
 
 interface DesignAvatarProps {
-  design: Design;
+  designId: DesignId;
   showHoverCard?: boolean;
   isActive?: boolean;
 }
 
-export const DesignAvatar: FC<DesignAvatarProps> = ({ design, showHoverCard = false, isActive = false }) => {
+export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, showHoverCard = false, isActive = false }) => {
+  const design = useDesign(designId);
   const { attributes, listeners, setNodeRef } = useDraggable({
-    id: `design-${design.name}-${design.variant || ""}-${design.view || ""}`,
+    id: `design-${designId.name}-${designId.variant || ""}-${designId.view || ""}`,
     disabled: isActive,
   });
 
@@ -99,16 +101,12 @@ interface WorkbenchProps extends ResizablePanelProps {}
 
 const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
   if (!visible) return null;
-  const { kit } = useDesignEditor();
-  const { sketchpadState } = useSketchpad();
+  const kit = useKit();
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
 
   const isDesignActive = (design: Design): boolean => {
-    const activeDesignState = sketchpadState.designEditorCoreStates[sketchpadState.activeDesign];
-    if (!activeDesignState) return false;
-
-    const activeDesignId = activeDesignState.designId;
+    const activeDesignId = useDesignEditorDesignId();
     return design.name === activeDesignId.name && (design.variant || undefined) === activeDesignId.variant && (design.view || undefined) === activeDesignId.view;
   };
 
@@ -171,7 +169,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
                 <TreeItem key={name} label={name} defaultOpen={false}>
                   <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
                     {variants.map((type) => (
-                      <TypeAvatar key={`${type.name}-${type.variant}`} type={type} showHoverCard={true} />
+                      <TypeAvatar key={`${type.name}-${type.variant}`} typeId={type} showHoverCard={true} />
                     ))}
                   </div>
                 </TreeItem>
@@ -182,7 +180,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
                 <TreeItem key={name} label={name} defaultOpen={false}>
                   <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
                     {designs.map((design) => (
-                      <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} design={design} showHoverCard={true} isActive={isDesignActive(design)} />
+                      <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} designId={design} showHoverCard={true} isActive={isDesignActive(design)} />
                     ))}
                   </div>
                 </TreeItem>
