@@ -130,14 +130,8 @@ export type {
   TypeId,
   Vector
 } from "@semio/js/semio";
-export {
-  DesignEditorScopeProvider, useDesignEditorDesignDiff,
-  useDesignEditorFileUrls,
-  useDesignEditorFullscreenPanel,
-  useDesignEditorIsTransactionActive, useDesignEditorPresence, useDesignEditorPresenceOthers,
-  useDesignEditorSelection, useDesignEditorStore as useDesignEditorState
-} from "@semio/js/store";
-export type { DesignEditorState } from "@semio/js/store";
+export { } from "@semio/js/store";
+export type { DesignEditorStoreState } from "@semio/js/store";
 export { default as tailwindConfig } from "@semio/js/tailwind.config";
 // Exporting vite configs blows up storybook and nextjs
 // export { default as viteConfig } from '@semio/js/vite.config';

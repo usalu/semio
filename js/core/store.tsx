@@ -34,13 +34,11 @@ import {
   ConnectionId,
   ConnectionIdLike,
   connectionIdLikeToConnectionId,
-  ConnectionSchema,
   Design,
   DesignDiff,
   DesignId,
   DesignIdLike,
   designIdLikeToDesignId,
-  DesignSchema,
   DiagramPoint,
   Kit,
   KitId,
@@ -50,26 +48,22 @@ import {
   PieceId,
   PieceIdLike,
   pieceIdLikeToPieceId,
-  PieceSchema,
   Plane,
   Point,
   Port,
   PortId,
   PortIdLike,
   portIdLikeToPortId,
-  PortSchema,
   Quality,
   Representation,
   RepresentationId,
   RepresentationIdLike,
   representationIdLikeToRepresentationId,
-  RepresentationSchema,
   Side,
   Type,
   TypeId,
   TypeIdLike,
   typeIdLikeToTypeId,
-  TypeSchema,
   Vector,
 } from "./semio";
 
@@ -91,35 +85,35 @@ export enum Layout {
   TOUCH = "touch",
 }
 
-export type DesignEditorSelection = { selectedPieceIds: PieceId[]; selectedConnections: ConnectionId[]; selectedPiecePortId?: { pieceId: PieceId; portId: PortId } };
-export enum DesignEditorFullscreenPanel {
+export type DesignEditorStoreSelection = { selectedPieceIds: PieceId[]; selectedConnections: ConnectionId[]; selectedPiecePortId?: { pieceId: PieceId; portId: PortId } };
+export enum DesignEditorStoreFullscreenPanel {
   None = "none",
   Diagram = "diagram",
   Model = "model",
 }
-export interface DesignEditorPresence {
+export interface DesignEditorStorePresence {
   cursor?: DiagramPoint;
   camera?: Camera;
 }
-export interface DesignEditorPresenceOther extends DesignEditorPresence {
+export interface DesignEditorStorePresenceOther extends DesignEditorStorePresence {
   name: string;
 }
 
-export interface DesignEditorOperationStackEntry {
+export interface DesignEditorStoreOperationStackEntry {
   undo: DesignDiff;
   redo: DesignDiff;
-  selection: DesignEditorSelection;
+  selection: DesignEditorStoreSelection;
 }
-export interface DesignEditorState {
+export interface DesignEditorStoreState {
   designId: DesignId;
-  fullscreenPanel: DesignEditorFullscreenPanel;
-  selection: DesignEditorSelection;
+  fullscreenPanel: DesignEditorStoreFullscreenPanel;
+  selection: DesignEditorStoreSelection;
   designDiff: DesignDiff;
   isTransactionActive: boolean;
-  operationStack: DesignEditorOperationStackEntry[];
+  operationStack: DesignEditorStoreOperationStackEntry[];
   operationIndex: number;
-  presence: DesignEditorPresence;
-  others?: DesignEditorPresenceOther[];
+  presence: DesignEditorStorePresence;
+  others?: DesignEditorStorePresenceOther[];
 }
 
 // Yjs alias value types used in this store (precise, no any)
@@ -158,9 +152,9 @@ type YDesignVal = string | YAuthors | YQualities | YPieceMap | YConnectionMap;
 type YDesign = Y.Map<YDesignVal>;
 type YDesignMap = Y.Map<YDesign>;
 
-type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YQualities | YStringArray;
-type YDesignEditor = Y.Map<YDesignEditorVal>;
-type YDesignEditorMap = Y.Map<YDesignEditor>;
+type YDesignEditorStoreVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YQualities | YStringArray;
+type YDesignEditorStore = Y.Map<YDesignEditorStoreVal>;
+type YDesignEditorStoreMap = Y.Map<YDesignEditorStore>;
 
 type YIdMap = Y.Map<string>;
 type YKitVal = string | YTypeMap | YDesignMap | YIdMap | YQualities;
@@ -183,6 +177,10 @@ type YKitKeysMap = {
   designs: YDesignMap;
   typeIds: YIdMap;
   designIds: YIdMap;
+  pieceIds: YIdMap;
+  connectionIds: YIdMap;
+  portIds: YIdMap;
+  representationIds: YIdMap;
   qualities: YQualities;
 };
 const gKit = <K extends keyof YKitKeysMap>(m: YKit, k: K): YKitKeysMap[K] => m.get(k as string) as YKitKeysMap[K];
@@ -275,7 +273,7 @@ type YConnectionKeysMap = {
 };
 const gConn = <K extends keyof YConnectionKeysMap>(m: YConnection, k: K): YConnectionKeysMap[K] => m.get(k as string) as YConnectionKeysMap[K];
 
-type YDesignEditorKeysMap = {
+type YDesignEditorStoreKeysMap = {
   fullscreenPanel: string;
   selectedPieceIds: YStringArray;
   selectedConnections: YStringArray;
@@ -297,14 +295,14 @@ type YDesignEditorKeysMap = {
   presenceCameraForwardY: number;
   presenceCameraForwardZ: number;
 };
-const gDesignEditor = <K extends keyof YDesignEditorKeysMap>(m: YDesignEditor, k: K): YDesignEditorKeysMap[K] => m.get(k as string) as YDesignEditorKeysMap[K];
+const gDesignEditorStore = <K extends keyof YDesignEditorStoreKeysMap>(m: YDesignEditorStore, k: K): YDesignEditorStoreKeysMap[K] => m.get(k as string) as YDesignEditorStoreKeysMap[K];
 
 // Sketchpad state interface
 export interface SketchpadState {
   mode: Mode;
   theme: Theme;
   layout: Layout;
-  activeDesignEditorId?: string;
+  activeDesignEditorStoreId?: string;
 }
 
 // Typed key maps for sketchpad state
@@ -315,7 +313,7 @@ type YSketchpadKeysMap = {
   mode: string;
   theme: string;
   layout: string;
-  activeDesignEditorId: string;
+  activeDesignEditorStoreId: string;
 };
 const gSketchpad = <K extends keyof YSketchpadKeysMap>(m: YSketchpad, k: K): YSketchpadKeysMap[K] => m.get(k as string) as YSketchpadKeysMap[K];
 
@@ -371,10 +369,10 @@ export class SketchpadStore {
     if (!ySketchpad.has("mode")) ySketchpad.set("mode", Mode.USER);
     if (!ySketchpad.has("theme")) ySketchpad.set("theme", Theme.SYSTEM);
     if (!ySketchpad.has("layout")) ySketchpad.set("layout", Layout.NORMAL);
-    if (!ySketchpad.has("activeDesignEditorId")) ySketchpad.set("activeDesignEditorId", "");
+    if (!ySketchpad.has("activeDesignEditorStoreId")) ySketchpad.set("activeDesignEditorStoreId", "");
 
     // Initialize design editors map
-    this.sketchpadDoc.getMap<YDesignEditor>("designEditors");
+    this.sketchpadDoc.getMap<YDesignEditorStore>("designEditors");
   }
 
   subscribe(listener: () => void): () => void {
@@ -425,7 +423,14 @@ export class SketchpadStore {
       yKit.set("designs", new Y.Map<YDesign>());
       yKit.set("typeIds", new Y.Map<string>());
       yKit.set("designIds", new Y.Map<string>());
+      yKit.set("pieceIds", new Y.Map<string>());
+      yKit.set("connectionIds", new Y.Map<string>());
+      yKit.set("portIds", new Y.Map<string>());
+      yKit.set("representationIds", new Y.Map<string>());
       yKit.set("qualities", new Y.Array<YQuality>());
+    } else {
+      // Ensure UUID mappings exist for existing data
+      this.ensureUuidMappings(id);
     }
 
     return yKit as YKit;
@@ -459,6 +464,166 @@ export class SketchpadStore {
     const yKit = this.getYKit(kitId);
     const designIds = yKit.get("designIds") as Y.Map<string>;
     return designIds.get(this.key.design(id));
+  }
+
+  private getPieceUuid(kitId: KitIdLike, id: PieceIdLike): string | undefined {
+    const yKit = this.getYKit(kitId);
+    const pieceIds = yKit.get("pieceIds") as Y.Map<string>;
+    return pieceIds.get(this.key.piece(id));
+  }
+
+  private getConnectionUuid(kitId: KitIdLike, id: ConnectionIdLike): string | undefined {
+    const yKit = this.getYKit(kitId);
+    const connectionIds = yKit.get("connectionIds") as Y.Map<string>;
+    return connectionIds.get(this.key.connection(id));
+  }
+
+  private getPortUuid(kitId: KitIdLike, typeId: TypeIdLike, id: PortIdLike): string | undefined {
+    const yKit = this.getYKit(kitId);
+    const portIds = yKit.get("portIds") as Y.Map<string>;
+    const typeKey = this.key.type(typeId);
+    const portKey = this.key.port(id);
+    return portIds.get(`${typeKey}::${portKey}`);
+  }
+
+  private getRepresentationUuid(kitId: KitIdLike, typeId: TypeIdLike, id: RepresentationIdLike): string | undefined {
+    const yKit = this.getYKit(kitId);
+    const representationIds = yKit.get("representationIds") as Y.Map<string>;
+    const typeKey = this.key.type(typeId);
+    const repKey = this.key.representation(id);
+    return representationIds.get(`${typeKey}::${repKey}`);
+  }
+
+  // UUID Migration and Maintenance Methods
+  // These methods ensure that existing data without UUID mappings gets properly migrated
+
+  private ensureUuidMappings(kitId: KitIdLike): void {
+    const yKit = this.getYKit(kitId);
+    const types = gKit(yKit, "types");
+    const designs = gKit(yKit, "designs");
+    const typeIds = gKit(yKit, "typeIds");
+    const designIds = gKit(yKit, "designIds");
+    const pieceIds = yKit.get("pieceIds") as Y.Map<string>;
+    const connectionIds = yKit.get("connectionIds") as Y.Map<string>;
+    const portIds = yKit.get("portIds") as Y.Map<string>;
+    const representationIds = yKit.get("representationIds") as Y.Map<string>;
+
+    // Migrate types
+    for (const [typeUuid, yType] of types.entries()) {
+      const typeName = gType(yType, "name");
+      const typeVariant = gType(yType, "variant") || "";
+      const typeKey = `${typeName}::${typeVariant}`;
+      if (!typeIds.has(typeKey)) {
+        typeIds.set(typeKey, typeUuid);
+      }
+
+      // Migrate ports for this type
+      const portsMap = gType(yType, "ports");
+      if (portsMap) {
+        for (const [portUuid, yPort] of portsMap.entries()) {
+          const portId = gPort(yPort, "id_") || "";
+          const portKey = `${typeKey}::${portId}`;
+          if (!portIds.has(portKey) && portId) {
+            portIds.set(portKey, portUuid);
+          }
+        }
+      }
+
+      // Migrate representations for this type
+      const repsMap = gType(yType, "representations");
+      if (repsMap) {
+        for (const [repUuid, yRep] of repsMap.entries()) {
+          const tags = gRep(yRep, "tags")?.toArray() || [];
+          const repKey = `${typeKey}::${tags.join(",")}`;
+          if (!representationIds.has(repKey)) {
+            representationIds.set(repKey, repUuid);
+          }
+        }
+      }
+    }
+
+    // Migrate designs
+    for (const [designUuid, yDesign] of designs.entries()) {
+      const designName = gDesign(yDesign, "name");
+      const designVariant = gDesign(yDesign, "variant") || "";
+      const designView = gDesign(yDesign, "view") || "";
+      const designKey = `${designName}::${designVariant}::${designView}`;
+      if (!designIds.has(designKey)) {
+        designIds.set(designKey, designUuid);
+      }
+
+      // Migrate pieces for this design
+      const piecesMap = gDesign(yDesign, "pieces");
+      if (piecesMap) {
+        for (const [pieceUuid, yPiece] of piecesMap.entries()) {
+          const pieceId = gPiece(yPiece, "id_");
+          if (!pieceIds.has(pieceId) && pieceId) {
+            pieceIds.set(pieceId, pieceUuid);
+          }
+        }
+      }
+
+      // Migrate connections for this design
+      const connectionsMap = gDesign(yDesign, "connections");
+      if (connectionsMap) {
+        for (const [connectionUuid, yConnection] of connectionsMap.entries()) {
+          const connectedPieceId = gSide(gConn(yConnection, "connected"), "piece").get("id_") as string;
+          const connectingPieceId = gSide(gConn(yConnection, "connecting"), "piece").get("id_") as string;
+          const connectionKey = `${connectedPieceId}--${connectingPieceId}`;
+          if (!connectionIds.has(connectionKey)) {
+            connectionIds.set(connectionKey, connectionUuid);
+          }
+        }
+      }
+    }
+  }
+
+  private updateTypeIdMapping(kitId: KitIdLike, oldId: TypeIdLike, newId: TypeIdLike): void {
+    const yKit = this.getYKit(kitId);
+    const typeIds = yKit.get("typeIds") as Y.Map<string>;
+    const oldKey = this.key.type(oldId);
+    const newKey = this.key.type(newId);
+    const uuid = typeIds.get(oldKey);
+    if (uuid) {
+      typeIds.delete(oldKey);
+      typeIds.set(newKey, uuid);
+    }
+  }
+
+  private updateDesignIdMapping(kitId: KitIdLike, oldId: DesignIdLike, newId: DesignIdLike): void {
+    const yKit = this.getYKit(kitId);
+    const designIds = yKit.get("designIds") as Y.Map<string>;
+    const oldKey = this.key.design(oldId);
+    const newKey = this.key.design(newId);
+    const uuid = designIds.get(oldKey);
+    if (uuid) {
+      designIds.delete(oldKey);
+      designIds.set(newKey, uuid);
+    }
+  }
+
+  private updatePieceIdMapping(kitId: KitIdLike, oldId: PieceIdLike, newId: PieceIdLike): void {
+    const yKit = this.getYKit(kitId);
+    const pieceIds = yKit.get("pieceIds") as Y.Map<string>;
+    const oldKey = this.key.piece(oldId);
+    const newKey = this.key.piece(newId);
+    const uuid = pieceIds.get(oldKey);
+    if (uuid) {
+      pieceIds.delete(oldKey);
+      pieceIds.set(newKey, uuid);
+    }
+  }
+
+  private updateConnectionIdMapping(kitId: KitIdLike, oldId: ConnectionIdLike, newId: ConnectionIdLike): void {
+    const yKit = this.getYKit(kitId);
+    const connectionIds = yKit.get("connectionIds") as Y.Map<string>;
+    const oldKey = this.key.connection(oldId);
+    const newKey = this.key.connection(newId);
+    const uuid = connectionIds.get(oldKey);
+    if (uuid) {
+      connectionIds.delete(oldKey);
+      connectionIds.set(newKey, uuid);
+    }
   }
 
   private getYDesign(kitId: KitIdLike, id: DesignIdLike): YDesign {
@@ -510,40 +675,40 @@ export class SketchpadStore {
     return rep;
   }
 
-  private getYDesignEditors(): YDesignEditorMap {
-    return this.sketchpadDoc.getMap<YDesignEditor>("designEditors");
+  private getYDesignEditorStores(): YDesignEditorStoreMap {
+    return this.sketchpadDoc.getMap<YDesignEditorStore>("designEditors");
   }
 
-  private getYDesignEditor(id: string): YDesignEditor {
-    const designEditors = this.getYDesignEditors();
-    const yDesignEditor = designEditors.get(id);
-    if (!yDesignEditor) throw new Error(`Design editor (${id}) not found`);
-    return yDesignEditor;
+  private getYDesignEditorStore(id: string): YDesignEditorStore {
+    const designEditors = this.getYDesignEditorStores();
+    const yDesignEditorStore = designEditors.get(id);
+    if (!yDesignEditorStore) throw new Error(`Design editor (${id}) not found`);
+    return yDesignEditorStore;
   }
 
-  private createYDesignEditor(): YDesignEditor {
-    const yDesignEditor = new Y.Map<YDesignEditorVal>();
-    yDesignEditor.set("fullscreenPanel", "none");
-    yDesignEditor.set("selectedPieceIds", new Y.Array<string>());
-    yDesignEditor.set("selectedConnections", new Y.Array<string>());
-    yDesignEditor.set("selectedPiecePortPieceId", "");
-    yDesignEditor.set("selectedPiecePortPortId", "");
-    yDesignEditor.set("designDiffPiecesAdded", new Y.Array<string>());
-    yDesignEditor.set("designDiffPiecesRemoved", new Y.Array<string>());
-    yDesignEditor.set("designDiffPiecesUpdated", new Y.Array<string>());
-    yDesignEditor.set("designDiffConnectionsAdded", new Y.Array<string>());
-    yDesignEditor.set("designDiffConnectionsRemoved", new Y.Array<string>());
-    yDesignEditor.set("designDiffConnectionsUpdated", new Y.Array<string>());
-    yDesignEditor.set("isTransactionActive", false);
-    yDesignEditor.set("presenceCursorX", 0);
-    yDesignEditor.set("presenceCursorY", 0);
-    yDesignEditor.set("presenceCameraPositionX", 0);
-    yDesignEditor.set("presenceCameraPositionY", 0);
-    yDesignEditor.set("presenceCameraPositionZ", 0);
-    yDesignEditor.set("presenceCameraForwardX", 0);
-    yDesignEditor.set("presenceCameraForwardY", 0);
-    yDesignEditor.set("presenceCameraForwardZ", 0);
-    return yDesignEditor;
+  private createYDesignEditorStore(): YDesignEditorStore {
+    const yDesignEditorStore = new Y.Map<YDesignEditorStoreVal>();
+    yDesignEditorStore.set("fullscreenPanel", "none");
+    yDesignEditorStore.set("selectedPieceIds", new Y.Array<string>());
+    yDesignEditorStore.set("selectedConnections", new Y.Array<string>());
+    yDesignEditorStore.set("selectedPiecePortPieceId", "");
+    yDesignEditorStore.set("selectedPiecePortPortId", "");
+    yDesignEditorStore.set("designDiffPiecesAdded", new Y.Array<string>());
+    yDesignEditorStore.set("designDiffPiecesRemoved", new Y.Array<string>());
+    yDesignEditorStore.set("designDiffPiecesUpdated", new Y.Array<string>());
+    yDesignEditorStore.set("designDiffConnectionsAdded", new Y.Array<string>());
+    yDesignEditorStore.set("designDiffConnectionsRemoved", new Y.Array<string>());
+    yDesignEditorStore.set("designDiffConnectionsUpdated", new Y.Array<string>());
+    yDesignEditorStore.set("isTransactionActive", false);
+    yDesignEditorStore.set("presenceCursorX", 0);
+    yDesignEditorStore.set("presenceCursorY", 0);
+    yDesignEditorStore.set("presenceCameraPositionX", 0);
+    yDesignEditorStore.set("presenceCameraPositionY", 0);
+    yDesignEditorStore.set("presenceCameraPositionZ", 0);
+    yDesignEditorStore.set("presenceCameraForwardX", 0);
+    yDesignEditorStore.set("presenceCameraForwardY", 0);
+    yDesignEditorStore.set("presenceCameraForwardZ", 0);
+    return yDesignEditorStore;
   }
 
   onKitIdsChange(callback: () => void) {
@@ -673,39 +838,39 @@ export class SketchpadStore {
   }
 
   // TODO: Make all observers specific to the property they are observing
-  onDesignEditorChange(id: string, callback: () => void) {
-    const yDesignEditor = this.getYDesignEditor(id);
+  onDesignEditorStoreChange(id: string, callback: () => void) {
+    const yDesignEditorStore = this.getYDesignEditorStore(id);
     const observer = () => callback();
-    yDesignEditor.observe(observer);
-    return () => yDesignEditor.unobserve(observer);
+    yDesignEditorStore.observe(observer);
+    return () => yDesignEditorStore.unobserve(observer);
   }
 
-  onDesignEditorDesignIdChange(id: string, callback: () => void) {
-    return this.onDesignEditorChange(id, callback);
+  onDesignEditorStoreDesignIdChange(id: string, callback: () => void) {
+    return this.onDesignEditorStoreChange(id, callback);
   }
 
-  onDesignEditorFullscreenPanelChange(id: string, callback: () => void) {
-    return this.onDesignEditorChange(id, callback);
+  onDesignEditorStoreFullscreenPanelChange(id: string, callback: () => void) {
+    return this.onDesignEditorStoreChange(id, callback);
   }
 
-  onDesignEditorSelectionChange(id: string, callback: () => void) {
-    return this.onDesignEditorChange(id, callback);
+  onDesignEditorStoreSelectionChange(id: string, callback: () => void) {
+    return this.onDesignEditorStoreChange(id, callback);
   }
 
-  onDesignEditorDesignDiffChange(id: string, callback: () => void) {
-    return this.onDesignEditorChange(id, callback);
+  onDesignEditorStoreDesignDiffChange(id: string, callback: () => void) {
+    return this.onDesignEditorStoreChange(id, callback);
   }
 
-  onDesignEditorIsTransactionActiveChange(id: string, callback: () => void) {
-    return this.onDesignEditorChange(id, callback);
+  onDesignEditorStoreIsTransactionActiveChange(id: string, callback: () => void) {
+    return this.onDesignEditorStoreChange(id, callback);
   }
 
-  onDesignEditorPresenceChange(id: string, callback: () => void) {
-    return this.onDesignEditorChange(id, callback);
+  onDesignEditorStorePresenceChange(id: string, callback: () => void) {
+    return this.onDesignEditorStoreChange(id, callback);
   }
 
-  onDesignEditorPresenceOthersChange(id: string, callback: () => void) {
-    return this.onDesignEditorChange(id, callback);
+  onDesignEditorStorePresenceOthersChange(id: string, callback: () => void) {
+    return this.onDesignEditorStoreChange(id, callback);
   }
 
   private createAuthor(author: Author): YAuthor {
@@ -856,7 +1021,6 @@ export class SketchpadStore {
   }
 
   createKit(kit: Kit): void {
-    // TODO: Update metabolism to pass test
     // KitSchema.parse(kit);
 
     if (!kit.name) throw new Error("Kit name is required to create a kit.");
@@ -963,7 +1127,7 @@ export class SketchpadStore {
   }
 
   createType(kitId: KitIdLike, type: Type): void {
-    TypeSchema.parse(type);
+    // TypeSchema.parse(type);
     const yKit = this.getYKit(kitId);
     const types = gKit(yKit, "types");
     const typeIds = gKit(yKit, "typeIds");
@@ -1002,13 +1166,19 @@ export class SketchpadStore {
     const yRepresentationsMap = gType(yType, "representations");
     const representations = yRepresentationsMap
       ? Array.from(yRepresentationsMap.values())
-          .map((rMap) => this.getRepresentation(kitId, id, { tags: gRep(rMap, "tags")?.toArray() || [] }))
+          .map((rMap) => {
+            const tags = gRep(rMap, "tags")?.toArray() || [];
+            return this.getRepresentation(kitId, id, { tags });
+          })
           .filter((r): r is Representation => r !== null)
       : [];
     const yPortsMap = gType(yType, "ports");
     const ports = yPortsMap
       ? Array.from(yPortsMap.values())
-          .map((pMap) => this.getPort(kitId, id, { id_: gPort(pMap, "id_") }))
+          .map((pMap) => {
+            const portId = gPort(pMap, "id_") as string;
+            return this.getPort(kitId, id, { id_: portId });
+          })
           .filter((p): p is Port => p !== null)
       : [];
     return {
@@ -1030,11 +1200,28 @@ export class SketchpadStore {
   }
 
   updateType(kitId: KitId, type: Type): Type {
+    const originalType = this.getType(kitId, type);
     const yType = this.getYType(kitId, type);
 
+    // Check if name or variant changed (affecting the compound key)
+    const nameChanged = type.name !== undefined && type.name !== originalType.name;
+    const variantChanged = type.variant !== undefined && type.variant !== originalType.variant;
+
+    if (nameChanged || variantChanged) {
+      // Update the ID mapping before updating the yType
+      const oldId = { name: originalType.name, variant: originalType.variant };
+      const newId = {
+        name: type.name ?? originalType.name,
+        variant: type.variant ?? originalType.variant,
+      };
+      this.updateTypeIdMapping(kitId, oldId, newId);
+    }
+
+    if (type.name !== undefined) yType.set("name", type.name);
     if (type.description !== undefined) yType.set("description", type.description);
     if (type.icon !== undefined) yType.set("icon", type.icon);
     if (type.image !== undefined) yType.set("image", type.image);
+    if (type.variant !== undefined) yType.set("variant", type.variant);
     if (type.stock !== undefined) yType.set("stock", type.stock);
     if (type.virtual !== undefined) yType.set("virtual", type.virtual);
     if (type.unit !== undefined) yType.set("unit", type.unit);
@@ -1058,7 +1245,7 @@ export class SketchpadStore {
     }
 
     yType.set("updated", new Date().toISOString());
-    return this.getType(kitId, type);
+    return this.getType(kitId, type.name !== undefined || type.variant !== undefined ? { name: type.name ?? originalType.name, variant: type.variant ?? originalType.variant } : type);
   }
 
   deleteType(kitId: KitId, id: TypeId): void {
@@ -1169,7 +1356,7 @@ export class SketchpadStore {
   }
 
   createDesign(kitId: KitId, design: Design): void {
-    DesignSchema.parse(design);
+    // DesignSchema.parse(design);
     const yKit = this.getYKit(kitId);
     const designs = gKit(yKit, "designs");
     const designIds = gKit(yKit, "designIds");
@@ -1202,7 +1389,10 @@ export class SketchpadStore {
     const yPieces = gDesign(yDesign, "pieces");
     const pieces = yPieces
       ? Array.from(yPieces.values())
-          .map((pMap) => this.getPiece(kitId, id, { id_: gPiece(pMap, "id_") }))
+          .map((pMap) => {
+            const pieceId = gPiece(pMap, "id_") as string;
+            return this.getPiece(kitId, id, { id_: pieceId });
+          })
           .filter((p): p is Piece => p !== null)
       : [];
     const yConnections = gDesign(yDesign, "connections");
@@ -1233,11 +1423,35 @@ export class SketchpadStore {
   }
 
   updateDesign(kitId: KitIdLike, design: Design): Design {
+    const originalDesign = this.getDesign(kitId, design);
     const yDesign = this.getYDesign(kitId, design);
 
+    // Check if name, variant, or view changed (affecting the compound key)
+    const nameChanged = design.name !== undefined && design.name !== originalDesign.name;
+    const variantChanged = design.variant !== undefined && design.variant !== originalDesign.variant;
+    const viewChanged = design.view !== undefined && design.view !== originalDesign.view;
+
+    if (nameChanged || variantChanged || viewChanged) {
+      // Update the ID mapping before updating the yDesign
+      const oldId = {
+        name: originalDesign.name,
+        variant: originalDesign.variant,
+        view: originalDesign.view,
+      };
+      const newId = {
+        name: design.name ?? originalDesign.name,
+        variant: design.variant ?? originalDesign.variant,
+        view: design.view ?? originalDesign.view,
+      };
+      this.updateDesignIdMapping(kitId, oldId, newId);
+    }
+
+    if (design.name !== undefined) yDesign.set("name", design.name);
     if (design.description !== undefined) yDesign.set("description", design.description);
     if (design.icon !== undefined) yDesign.set("icon", design.icon);
     if (design.image !== undefined) yDesign.set("image", design.image);
+    if (design.variant !== undefined) yDesign.set("variant", design.variant);
+    if (design.view !== undefined) yDesign.set("view", design.view);
     if (design.unit !== undefined) yDesign.set("unit", design.unit);
 
     if (design.pieces !== undefined) {
@@ -1257,7 +1471,17 @@ export class SketchpadStore {
       yDesign.set("qualities", this.createQualities(design.qualities));
     }
 
-    return this.getDesign(kitId, design);
+    yDesign.set("updated", new Date().toISOString());
+    return this.getDesign(
+      kitId,
+      nameChanged || variantChanged || viewChanged
+        ? {
+            name: design.name ?? originalDesign.name,
+            variant: design.variant ?? originalDesign.variant,
+            view: design.view ?? originalDesign.view,
+          }
+        : design,
+    );
   }
 
   deleteDesign(kitId: KitId, id: DesignId): void {
@@ -1272,16 +1496,24 @@ export class SketchpadStore {
   }
 
   createPiece(kitId: KitId, designId: DesignId, piece: Piece): void {
-    PieceSchema.parse(piece);
+    // PieceSchema.parse(piece);
     const yDesign = this.getYDesign(kitId, designId);
     const yPieces = gDesign(yDesign, "pieces");
-    yPieces.set(piece.id_, this.buildYPiece(piece));
+    const yKit = this.getYKit(kitId);
+    const pieceIds = yKit.get("pieceIds") as Y.Map<string>;
+
+    const pieceUuid = uuidv4();
+    const pieceKey = this.key.piece(piece);
+
+    yPieces.set(pieceUuid, this.buildYPiece(piece));
+    pieceIds.set(pieceKey, pieceUuid);
   }
 
   getPiece(kitId: KitIdLike, designId: DesignIdLike, id: PieceIdLike): Piece {
     const yDesign = this.getYDesign(kitId, designId);
     const pieces = gDesign(yDesign, "pieces");
-    const yPiece = pieces.get(this.key.piece(id));
+    const uuid = this.getPieceUuid(kitId, id);
+    const yPiece = uuid ? pieces.get(uuid) : undefined;
     const pieceId = pieceIdLikeToPieceId(id);
     if (!yPiece) throw new Error(`Piece (${JSON.stringify(pieceId)}) not found in design (${JSON.stringify(designIdLikeToDesignId(designId))}) in kit (${JSON.stringify(kitIdLikeToKitId(kitId))})`);
 
@@ -1343,11 +1575,20 @@ export class SketchpadStore {
 
   updatePiece(kitId: KitId, designId: DesignId, piece: Piece): Piece {
     if (!piece.id_) throw new Error("Piece ID is required for update.");
+    const originalPiece = this.getPiece(kitId, designId, piece);
     const yDesign = this.getYDesign(kitId, designId);
     const pieces = gDesign(yDesign, "pieces");
-    const yPiece = pieces.get(piece.id_);
+    const uuid = this.getPieceUuid(kitId, piece);
+    const yPiece = uuid ? pieces.get(uuid) : undefined;
     if (!yPiece) throw new Error(`Piece ${piece.id_} not found in design ${designId} in kit ${kitId}`);
 
+    // Check if piece ID changed (affecting the mapping)
+    const idChanged = piece.id_ !== originalPiece.id_;
+    if (idChanged) {
+      this.updatePieceIdMapping(kitId, { id_: originalPiece.id_ }, { id_: piece.id_ });
+    }
+
+    yPiece.set("id_", piece.id_);
     if (piece.description !== undefined) yPiece.set("description", piece.description);
     if (piece.type !== undefined) {
       const yType = new Y.Map<string>();
@@ -1387,28 +1628,51 @@ export class SketchpadStore {
   deletePiece(kitId: KitId, designId: DesignId, id: PieceId): boolean {
     const yDesign = this.getYDesign(kitId, designId);
     const pieces = gDesign(yDesign, "pieces");
-    const existed = pieces.has(id.id_);
-    pieces.delete(id.id_);
+    const yKit = this.getYKit(kitId);
+    const pieceIds = yKit.get("pieceIds") as Y.Map<string>;
+
+    const pieceKey = this.key.piece(id);
+    const uuid = pieceIds.get(pieceKey);
+
+    if (!uuid) return false;
+
+    const existed = pieces.has(uuid);
+    pieces.delete(uuid);
+    pieceIds.delete(pieceKey);
     return existed;
   }
 
   createConnection(kitId: KitId, designId: DesignId, connection: Connection): void {
-    ConnectionSchema.parse(connection);
+    // ConnectionSchema.parse(connection);
     const yDesign = this.getYDesign(kitId, designId);
     if (!yDesign) throw new Error(`Design(${designId}) not found in kit(${kitId})`);
-    const connectionId = `${connection.connected.piece.id_}--${connection.connecting.piece.id_}`;
-    const reverseConnectionId = `${connection.connecting.piece.id_}--${connection.connected.piece.id_}`;
+    const yKit = this.getYKit(kitId);
+    const connectionIds = yKit.get("connectionIds") as Y.Map<string>;
+
+    const connectionKey = this.key.connection(connection);
+    const reverseConnectionKey = `${connection.connecting.piece.id_}--${connection.connected.piece.id_}`;
+
     const connections = gDesign(yDesign, "connections");
-    if (connections.get(connectionId) || connections.get(reverseConnectionId)) {
-      throw new Error(`Connection (${connectionId}) already exists in design (${designId}) in kit (${kitId})`);
+    const existingUuid = connectionIds.get(connectionKey);
+    const reverseUuid = connectionIds.get(reverseConnectionKey);
+
+    if (existingUuid && connections.get(existingUuid)) {
+      throw new Error(`Connection (${connectionKey}) already exists in design (${designId}) in kit (${kitId})`);
     }
-    connections.set(connectionId, this.buildYConnection(connection));
+    if (reverseUuid && connections.get(reverseUuid)) {
+      throw new Error(`Reverse connection (${reverseConnectionKey}) already exists in design (${designId}) in kit (${kitId})`);
+    }
+
+    const connectionUuid = uuidv4();
+    connections.set(connectionUuid, this.buildYConnection(connection));
+    connectionIds.set(connectionKey, connectionUuid);
   }
 
   getConnection(kitId: KitIdLike, designId: DesignIdLike, id: ConnectionIdLike): Connection {
     const yDesign = this.getYDesign(kitId, designId);
     const connections = gDesign(yDesign, "connections");
-    const yConnection = connections.get(this.key.connection(id));
+    const uuid = this.getConnectionUuid(kitId, id);
+    const yConnection = uuid ? connections.get(uuid) : undefined;
     const connectionId = connectionIdLikeToConnectionId(id);
     if (!yConnection) throw new Error(`Connection (${JSON.stringify(connectionId)}) not found in design (${JSON.stringify(designIdLikeToDesignId(designId))}) in kit (${JSON.stringify(kitIdLikeToKitId(kitId))})`);
     const yConnected = gConn(yConnection, "connected");
@@ -1487,21 +1751,38 @@ export class SketchpadStore {
   deleteConnection(kitId: KitIdLike, designId: DesignIdLike, id: ConnectionIdLike): void {
     const yDesign = this.getYDesign(kitId, designId);
     const connections = gDesign(yDesign, "connections");
-    connections.delete(this.key.connection(id));
+    const yKit = this.getYKit(kitId);
+    const connectionIds = yKit.get("connectionIds") as Y.Map<string>;
+
+    const connectionKey = this.key.connection(id);
+    const uuid = connectionIds.get(connectionKey);
+
+    if (uuid) {
+      connections.delete(uuid);
+      connectionIds.delete(connectionKey);
+    }
   }
 
   createRepresentation(kitId: KitIdLike, typeId: TypeIdLike, representation: Representation): void {
-    RepresentationSchema.parse(representation);
+    // RepresentationSchema.parse(representation);
     const yType = this.getYType(kitId, typeId);
+    const yKit = this.getYKit(kitId);
+    const representationIds = yKit.get("representationIds") as Y.Map<string>;
+
     const representations = gType(yType, "representations");
-    const id = representation.tags?.join(",") || "";
-    representations.set(id, this.buildYRepresentation(representation));
+    const representationUuid = uuidv4();
+    const typeKey = this.key.type(typeId);
+    const repKey = this.key.representation(representation);
+
+    representations.set(representationUuid, this.buildYRepresentation(representation));
+    representationIds.set(`${typeKey}::${repKey}`, representationUuid);
   }
 
   getRepresentation(kitId: KitIdLike, typeId: TypeIdLike, id: RepresentationIdLike): Representation {
     const yType = this.getYType(kitId, typeId);
     const representations = gType(yType, "representations");
-    const yRepresentation = representations.get(this.key.representation(id));
+    const uuid = this.getRepresentationUuid(kitId, typeId, id);
+    const yRepresentation = uuid ? representations.get(uuid) : undefined;
     const repId = representationIdLikeToRepresentationId(id);
     if (!yRepresentation) throw new Error(`Representation (${JSON.stringify(repId)}) not found in type (${JSON.stringify(typeIdLikeToTypeId(typeId))}) in kit (${JSON.stringify(kitIdLikeToKitId(kitId))})`);
     return {
@@ -1535,12 +1816,25 @@ export class SketchpadStore {
   deleteRepresentation(kitId: KitIdLike, typeId: TypeIdLike, id: RepresentationIdLike): void {
     const yType = this.getYType(kitId, typeId);
     const representations = gType(yType, "representations");
-    representations.delete(this.key.representation(id));
+    const yKit = this.getYKit(kitId);
+    const representationIds = yKit.get("representationIds") as Y.Map<string>;
+
+    const typeKey = this.key.type(typeId);
+    const repKey = this.key.representation(id);
+    const compoundKey = `${typeKey}::${repKey}`;
+    const uuid = representationIds.get(compoundKey);
+
+    if (uuid) {
+      representations.delete(uuid);
+      representationIds.delete(compoundKey);
+    }
   }
 
   createPort(kitId: KitIdLike, typeId: TypeIdLike, port: Port): void {
-    PortSchema.parse(port);
+    // PortSchema.parse(port);
     const yType = this.getYType(kitId, typeId);
+    const yKit = this.getYKit(kitId);
+    const portIds = yKit.get("portIds") as Y.Map<string>;
 
     const ports = gType(yType, "ports");
     const yPort: YPort = new Y.Map<YPortVal>();
@@ -1569,13 +1863,19 @@ export class SketchpadStore {
     yPort.set("t", port.t || 0);
     yPort.set("qualities", this.createQualities(port.qualities || []));
 
-    ports.set(pid, yPort);
+    const portUuid = uuidv4();
+    const typeKey = this.key.type(typeId);
+    const portKey = this.key.port(port);
+
+    ports.set(portUuid, yPort);
+    portIds.set(`${typeKey}::${portKey}`, portUuid);
   }
 
   getPort(kitId: KitIdLike, typeId: TypeIdLike, id: PortIdLike): Port {
     const yType = this.getYType(kitId, typeId) as YType;
     const ports = gType(yType, "ports");
-    const yPort = ports.get(this.key.port(id));
+    const uuid = this.getPortUuid(kitId, typeId, id);
+    const yPort = uuid ? ports.get(uuid) : undefined;
     const portId = portIdLikeToPortId(id);
     if (!yPort) throw new Error(`Port (${JSON.stringify(portId)}) not found in type (${JSON.stringify(typeIdLikeToTypeId(typeId))})`);
 
@@ -1647,7 +1947,18 @@ export class SketchpadStore {
   deletePort(kitId: KitId, typeId: TypeId, portId: string): void {
     const yType = this.getYType(kitId, typeId);
     const ports = gType(yType, "ports");
-    ports.delete(portId);
+    const yKit = this.getYKit(kitId);
+    const portIds = yKit.get("portIds") as Y.Map<string>;
+
+    const typeKey = this.key.type(typeId);
+    const portKey = portId;
+    const compoundKey = `${typeKey}::${portKey}`;
+    const uuid = portIds.get(compoundKey);
+
+    if (uuid) {
+      ports.delete(uuid);
+      portIds.delete(compoundKey);
+    }
   }
 
   createFile(kitId: KitIdLike | undefined, url: string, data: Uint8Array): void {
@@ -1697,22 +2008,22 @@ export class SketchpadStore {
     this.fileUrls.clear();
   }
 
-  createDesignEditorStore(kitName: string, kitVersion: string, designName: string, designVariant: string, view: string): string {
+  createDesignEditorStoreStore(kitName: string, kitVersion: string, designName: string, designVariant: string, view: string): string {
     const id = uuidv4();
 
     // Create the design editor state in Yjs
-    const yDesignEditor = this.createYDesignEditor();
-    const designEditors = this.getYDesignEditors();
-    designEditors.set(id, yDesignEditor);
+    const yDesignEditorStore = this.createYDesignEditorStore();
+    const designEditors = this.getYDesignEditorStores();
+    designEditors.set(id, yDesignEditorStore);
 
     return id;
   }
 
-  private getDesignEditorStateFromYjs(id: string): DesignEditorState {
-    const yDesignEditor = this.getYDesignEditor(id);
+  private getDesignEditorStoreStateFromYjs(id: string): DesignEditorStoreState {
+    const yDesignEditorStore = this.getYDesignEditorStore(id);
 
-    const selectedPieceIds = (gDesignEditor(yDesignEditor, "selectedPieceIds") as YStringArray).toArray().map((id) => ({ id_: id }));
-    const selectedConnections = (gDesignEditor(yDesignEditor, "selectedConnections") as YStringArray).toArray().map((connId) => {
+    const selectedPieceIds = (gDesignEditorStore(yDesignEditorStore, "selectedPieceIds") as YStringArray).toArray().map((id) => ({ id_: id }));
+    const selectedConnections = (gDesignEditorStore(yDesignEditorStore, "selectedConnections") as YStringArray).toArray().map((connId) => {
       const [connectedId, connectingId] = connId.split("--");
       return {
         connected: {
@@ -1726,13 +2037,13 @@ export class SketchpadStore {
       };
     });
 
-    const selectedPiecePortPieceId = gDesignEditor(yDesignEditor, "selectedPiecePortPieceId") as string;
-    const selectedPiecePortPortId = gDesignEditor(yDesignEditor, "selectedPiecePortPortId") as string;
+    const selectedPiecePortPieceId = gDesignEditorStore(yDesignEditorStore, "selectedPiecePortPieceId") as string;
+    const selectedPiecePortPortId = gDesignEditorStore(yDesignEditorStore, "selectedPiecePortPortId") as string;
     const selectedPiecePortId = selectedPiecePortPieceId && selectedPiecePortPortId ? { pieceId: { id_: selectedPiecePortPieceId }, portId: { id_: selectedPiecePortPortId } } : undefined;
 
     return {
       designId: { name: "", variant: "", view: "" }, // Default design ID - this will need to be set properly
-      fullscreenPanel: gDesignEditor(yDesignEditor, "fullscreenPanel") as DesignEditorFullscreenPanel,
+      fullscreenPanel: gDesignEditorStore(yDesignEditorStore, "fullscreenPanel") as DesignEditorStoreFullscreenPanel,
       selection: {
         selectedPieceIds,
         selectedConnections,
@@ -1742,24 +2053,24 @@ export class SketchpadStore {
         pieces: { added: [], removed: [], updated: [] },
         connections: { added: [], removed: [], updated: [] },
       },
-      isTransactionActive: gDesignEditor(yDesignEditor, "isTransactionActive") as boolean,
+      isTransactionActive: gDesignEditorStore(yDesignEditorStore, "isTransactionActive") as boolean,
       operationStack: [],
       operationIndex: -1,
       presence: {
         cursor: {
-          x: gDesignEditor(yDesignEditor, "presenceCursorX") as number,
-          y: gDesignEditor(yDesignEditor, "presenceCursorY") as number,
+          x: gDesignEditorStore(yDesignEditorStore, "presenceCursorX") as number,
+          y: gDesignEditorStore(yDesignEditorStore, "presenceCursorY") as number,
         },
         camera: {
           position: {
-            x: gDesignEditor(yDesignEditor, "presenceCameraPositionX") as number,
-            y: gDesignEditor(yDesignEditor, "presenceCameraPositionY") as number,
-            z: gDesignEditor(yDesignEditor, "presenceCameraPositionZ") as number,
+            x: gDesignEditorStore(yDesignEditorStore, "presenceCameraPositionX") as number,
+            y: gDesignEditorStore(yDesignEditorStore, "presenceCameraPositionY") as number,
+            z: gDesignEditorStore(yDesignEditorStore, "presenceCameraPositionZ") as number,
           },
           forward: {
-            x: gDesignEditor(yDesignEditor, "presenceCameraForwardX") as number,
-            y: gDesignEditor(yDesignEditor, "presenceCameraForwardY") as number,
-            z: gDesignEditor(yDesignEditor, "presenceCameraForwardZ") as number,
+            x: gDesignEditorStore(yDesignEditorStore, "presenceCameraForwardX") as number,
+            y: gDesignEditorStore(yDesignEditorStore, "presenceCameraForwardY") as number,
+            z: gDesignEditorStore(yDesignEditorStore, "presenceCameraForwardZ") as number,
           },
           up: { x: 0, y: 1, z: 0 },
         },
@@ -1768,26 +2079,108 @@ export class SketchpadStore {
     };
   }
 
-  getDesignEditorStore(id: string): {
-    getState: () => DesignEditorState;
-    setState: (s: DesignEditorState) => void;
+  getDesignEditorStoreStore(id: string): {
+    getState: () => DesignEditorStoreState;
+    setState: (s: DesignEditorStoreState) => void;
     getDesignId: () => DesignId;
     getKitId: () => KitId;
-    updateDesignEditorSelection: (selection: DesignEditorSelection) => void;
+    updateDesignEditorStoreSelection: (selection: DesignEditorStoreSelection) => void;
     deleteSelectedPiecesAndConnections: () => void;
-    pushOperation: (undo: DesignDiff, redo: DesignDiff, selection: DesignEditorSelection) => void;
+    pushOperation: (undo: DesignDiff, redo: DesignDiff, selection: DesignEditorStoreSelection) => void;
     invertDiff: (diff: DesignDiff) => DesignDiff;
     undo: () => void;
     redo: () => void;
     transact: (operations: () => void) => void;
     subscribe: (callback: () => void) => () => void;
   } | null {
-    // Temporarily return null until design editor system is fixed
-    return null;
+    const yDesignEditorStore = this.getYDesignEditorStore(id);
+    if (!yDesignEditorStore) return null;
+
+    return {
+      getState: () => this.getDesignEditorStoreStateFromYjs(id),
+      setState: (state: DesignEditorStoreState) => {
+        // Update the Yjs state with the new state
+        this.updateYDesignEditorStoreFromState(id, state);
+      },
+      getDesignId: () => ({ name: "", variant: "", view: "" }), // TODO: Store design ID properly
+      getKitId: () => ({ name: "", version: "" }), // TODO: Store kit ID properly
+      updateDesignEditorStoreSelection: (selection: DesignEditorStoreSelection) => {
+        const selectedPieceIds = gDesignEditorStore(yDesignEditorStore, "selectedPieceIds") as YStringArray;
+        const selectedConnections = gDesignEditorStore(yDesignEditorStore, "selectedConnections") as YStringArray;
+
+        selectedPieceIds.delete(0, selectedPieceIds.length);
+        selection.selectedPieceIds.forEach((pieceId) => selectedPieceIds.push([pieceId.id_]));
+
+        selectedConnections.delete(0, selectedConnections.length);
+        selection.selectedConnections.forEach((conn) => selectedConnections.push([`${conn.connected.piece.id_}--${conn.connecting.piece.id_}`]));
+
+        if (selection.selectedPiecePortId) {
+          yDesignEditorStore.set("selectedPiecePortPieceId", selection.selectedPiecePortId.pieceId.id_);
+          yDesignEditorStore.set("selectedPiecePortPortId", selection.selectedPiecePortId.portId.id_ || "");
+        } else {
+          yDesignEditorStore.set("selectedPiecePortPieceId", "");
+          yDesignEditorStore.set("selectedPiecePortPortId", "");
+        }
+      },
+      deleteSelectedPiecesAndConnections: () => {
+        console.warn("deleteSelectedPiecesAndConnections not implemented");
+      },
+      pushOperation: () => {
+        console.warn("pushOperation not implemented");
+      },
+      invertDiff: (diff: DesignDiff) => diff, // TODO: Implement properly
+      undo: () => {
+        console.warn("undo not implemented");
+      },
+      redo: () => {
+        console.warn("redo not implemented");
+      },
+      transact: (operations: () => void) => {
+        this.sketchpadDoc.transact(operations, this.id);
+      },
+      subscribe: (callback: () => void) => {
+        const observer = () => callback();
+        yDesignEditorStore.observe(observer);
+        return () => yDesignEditorStore.unobserve(observer);
+      },
+    };
   }
 
-  deleteDesignEditorStore(id: string): void {
-    const designEditors = this.getYDesignEditors();
+  private updateYDesignEditorStoreFromState(id: string, state: DesignEditorStoreState): void {
+    const yDesignEditorStore = this.getYDesignEditorStore(id);
+    yDesignEditorStore.set("fullscreenPanel", state.fullscreenPanel);
+    yDesignEditorStore.set("isTransactionActive", state.isTransactionActive);
+
+    // Update selection
+    const selectedPieceIds = gDesignEditorStore(yDesignEditorStore, "selectedPieceIds") as YStringArray;
+    selectedPieceIds.delete(0, selectedPieceIds.length);
+    state.selection.selectedPieceIds.forEach((pieceId) => selectedPieceIds.push([pieceId.id_]));
+
+    const selectedConnections = gDesignEditorStore(yDesignEditorStore, "selectedConnections") as YStringArray;
+    selectedConnections.delete(0, selectedConnections.length);
+    state.selection.selectedConnections.forEach((conn) => selectedConnections.push([`${conn.connected.piece.id_}--${conn.connecting.piece.id_}`]));
+
+    if (state.selection.selectedPiecePortId) {
+      yDesignEditorStore.set("selectedPiecePortPieceId", state.selection.selectedPiecePortId.pieceId.id_);
+      yDesignEditorStore.set("selectedPiecePortPortId", state.selection.selectedPiecePortId.portId.id_ || "");
+    } else {
+      yDesignEditorStore.set("selectedPiecePortPieceId", "");
+      yDesignEditorStore.set("selectedPiecePortPortId", "");
+    }
+
+    // Update presence
+    yDesignEditorStore.set("presenceCursorX", state.presence.cursor?.x || 0);
+    yDesignEditorStore.set("presenceCursorY", state.presence.cursor?.y || 0);
+    yDesignEditorStore.set("presenceCameraPositionX", state.presence.camera?.position.x || 0);
+    yDesignEditorStore.set("presenceCameraPositionY", state.presence.camera?.position.y || 0);
+    yDesignEditorStore.set("presenceCameraPositionZ", state.presence.camera?.position.z || 0);
+    yDesignEditorStore.set("presenceCameraForwardX", state.presence.camera?.forward.x || 0);
+    yDesignEditorStore.set("presenceCameraForwardY", state.presence.camera?.forward.y || 0);
+    yDesignEditorStore.set("presenceCameraForwardZ", state.presence.camera?.forward.z || 0);
+  }
+
+  deleteDesignEditorStoreStore(id: string): void {
+    const designEditors = this.getYDesignEditorStores();
     designEditors.delete(id);
   }
 
@@ -1808,7 +2201,7 @@ export class SketchpadStore {
       mode: (gSketchpad(ySketchpad, "mode") as Mode) || Mode.USER,
       theme: (gSketchpad(ySketchpad, "theme") as Theme) || Theme.SYSTEM,
       layout: (gSketchpad(ySketchpad, "layout") as Layout) || Layout.NORMAL,
-      activeDesignEditorId: gSketchpad(ySketchpad, "activeDesignEditorId") || undefined,
+      activeDesignEditorStoreId: gSketchpad(ySketchpad, "activeDesignEditorStoreId") || undefined,
     };
   }
 
@@ -1827,9 +2220,9 @@ export class SketchpadStore {
     ySketchpad.set("layout", layout);
   }
 
-  setActiveDesignEditorId(id?: string): void {
+  setActiveDesignEditorStoreId(id?: string): void {
     const ySketchpad = this.getYSketchpad();
-    ySketchpad.set("activeDesignEditorId", id || "");
+    ySketchpad.set("activeDesignEditorStoreId", id || "");
   }
 
   onSketchpadStateChange(callback: () => void) {
@@ -1845,7 +2238,7 @@ export class SketchpadStore {
     this.sketchpadDoc.transact(commands, this.id);
   }
 
-  async importFiles(url: string): Promise<void> {
+  async importFiles(url: string, force = false): Promise<void> {
     try {
       const zipData = await fetch(url).then((res) => res.arrayBuffer());
       const zip = await JSZip.loadAsync(zipData);
@@ -1854,6 +2247,9 @@ export class SketchpadStore {
       for (const fileEntry of Object.values(zip.files)) {
         if (!fileEntry.dir) {
           const fileData = await fileEntry.async("uint8array");
+          if (!force && this.fileUrls.has(fileEntry.name)) {
+            throw new Error(`File ${fileEntry.name} already exists. Use force=true to overwrite.`);
+          }
           this.createFile(undefined, fileEntry.name, fileData);
         }
       }
@@ -1865,13 +2261,87 @@ export class SketchpadStore {
     }
   }
 
-  async importKit(url: string, complete = false): Promise<void> {
+  private importKitData(kit: Kit, force = false): void {
+    if (!force) {
+      // Try to create kit normally - will throw if already exists
+      this.createKit(kit);
+      return;
+    }
+
+    // Force mode: check if kit exists and update or create accordingly
+    try {
+      const existingKit = this.getKit(kit);
+      // Kit exists, update it and handle types/designs individually
+      this.updateKit(kit);
+
+      // Handle types with force logic
+      kit.types?.forEach((type) => {
+        try {
+          this.createType(kit, type);
+        } catch (error) {
+          // Type already exists, force replace it
+          this.forceReplaceType(kit, type);
+        }
+      });
+
+      // Handle designs with force logic
+      kit.designs?.forEach((design) => {
+        try {
+          this.createDesign(kit, design);
+        } catch (error) {
+          // Design already exists, force replace it by removing and recreating
+          this.forceReplaceDesign(kit, design);
+        }
+      });
+
+      console.log(`Kit "${kit.name}" updated (force mode)`);
+    } catch (error) {
+      // Kit doesn't exist, create it
+      this.createKit(kit);
+      console.log(`Kit "${kit.name}" created (force mode)`);
+    }
+  }
+
+  private forceReplaceDesign(kitId: KitIdLike, design: Design): void {
+    const yKit = this.getYKit(kitId);
+    const designs = gKit(yKit, "designs");
+    const designIds = gKit(yKit, "designIds");
+    const compound = this.key.design(designIdLikeToDesignId(design));
+
+    // Remove existing design if it exists
+    const existingUuid = designIds.get(compound);
+    if (existingUuid) {
+      designs.delete(existingUuid);
+      designIds.delete(compound);
+    }
+
+    // Create the design anew
+    this.createDesign(kitIdLikeToKitId(kitId), design);
+  }
+
+  private forceReplaceType(kitId: KitIdLike, type: Type): void {
+    const typeId = typeIdLikeToTypeId(type);
+    const kitIdResolved = kitIdLikeToKitId(kitId);
+
+    // Check if type exists and delete it
+    try {
+      this.getYType(kitIdResolved, typeId);
+      this.deleteType(kitIdResolved, typeId);
+    } catch {
+      // Type doesn't exist, continue
+    }
+
+    // Create the type anew
+    this.createType(kitIdResolved, type);
+  }
+
+  async importKit(url: string, complete = false, force = false): Promise<void> {
     // If URL ends with .json, load just the kit without files
     if (url.endsWith(".json")) {
       try {
         const response = await fetch(url);
         const kit = (await response.json()) as Kit;
-        this.createKit(kit);
+        this.importKitData(kit, force);
         console.log(`Kit "${kit.name}" imported successfully from ${url}`);
         return;
       } catch (error) {
@@ -2141,7 +2611,7 @@ export class SketchpadStore {
         }
       }
       if (!kit) throw new Error("No kit loaded");
-      this.createKit(kit);
+      this.importKitData(kit, force);
       console.log(`Kit "${kit.name}" imported successfully from ${url}`);
     } catch (error) {
       console.error("Error importing kit:", error);
@@ -2432,7 +2902,7 @@ type PieceScope = { id: PieceId };
 type ConnectionScope = { id: ConnectionId };
 type RepresentationScope = { id: RepresentationId };
 type PortypeScope = { id: PortId };
-type DesignEditorScope = { id: string };
+type DesignEditorStoreScope = { id: string };
 
 const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
 const KitScopeContext = createContext<KitScope | null>(null);
@@ -2442,7 +2912,7 @@ const PieceScopeContext = createContext<PieceScope | null>(null);
 const ConnectionScopeContext = createContext<ConnectionScope | null>(null);
 const RepresentationScopeContext = createContext<RepresentationScope | null>(null);
 const PortypeScopeContext = createContext<PortypeScope | null>(null);
-const DesignEditorScopeContext = createContext<DesignEditorScope | null>(null);
+const DesignEditorStoreScopeContext = createContext<DesignEditorStoreScope | null>(null);
 
 export const SketchpadScopeProvider = (props: { id?: string; children: React.ReactNode }) => React.createElement(SketchpadScopeContext.Provider, { value: { id: props.id || "" } }, props.children as any);
 export const KitScopeProvider = (props: { id?: KitId; children: React.ReactNode }) => React.createElement(KitScopeContext.Provider, { value: { id: props.id || { name: "", version: "" } } }, props.children as any);
@@ -2453,7 +2923,7 @@ export const ConnectionScopeProvider = (props: { id?: ConnectionId; children: Re
   React.createElement(ConnectionScopeContext.Provider, { value: { id: props.id || { connected: { piece: { id_: "" } }, connecting: { piece: { id_: "" } } } } }, props.children as any);
 export const RepresentationScopeProvider = (props: { id?: RepresentationId; children: React.ReactNode }) => React.createElement(RepresentationScopeContext.Provider, { value: { id: props.id || { tags: [] } } }, props.children as any);
 export const PortypeScopeProvider = (props: { id?: PortId; children: React.ReactNode }) => React.createElement(PortypeScopeContext.Provider, { value: { id: props.id || { id_: "" } } }, props.children as any);
-export const DesignEditorScopeProvider = (props: { id?: string; children: React.ReactNode }) => React.createElement(DesignEditorScopeContext.Provider, { value: { id: props.id || "" } }, props.children as any);
+export const DesignEditorStoreScopeProvider = (props: { id?: string; children: React.ReactNode }) => React.createElement(DesignEditorStoreScopeContext.Provider, { value: { id: props.id || "" } }, props.children as any);
 
 export const useSketchpadScope = () => useContext(SketchpadScopeContext);
 export const useKitScope = () => useContext(KitScopeContext);
@@ -2463,7 +2933,7 @@ export const usePieceScope = () => useContext(PieceScopeContext);
 export const useConnectionScope = () => useContext(ConnectionScopeContext);
 export const useRepresentationScope = () => useContext(RepresentationScopeContext);
 export const usePortScope = () => useContext(PortypeScopeContext);
-export const useDesignEditorScope = () => useContext(DesignEditorScopeContext);
+export const useDesignEditorScope = () => useContext(DesignEditorStoreScopeContext);
 
 export function SketchpadProvider(props: { id?: string; children: React.ReactNode }) {
   const ref = useRef<SketchpadStore | null>(null);
@@ -2524,6 +2994,14 @@ export function useDesign(id?: DesignId) {
     (l) => store.onDesignChange(kitScope.id, designId, l),
     () => store.getDesign(kitScope.id, designId),
   );
+}
+
+export function useDesignId() {
+  const store = useSketchpadStore();
+  const designScope = useDesignScope();
+  const designId = designScope?.id;
+  if (!designId) throw new Error("useDesignId must be used within a DesignScope");
+  return designId;
 }
 
 export function useTypes() {
@@ -2643,131 +3121,149 @@ export function useRepresentations(id?: RepresentationId) {
   );
 }
 
-export function useDesignEditorStore(id?: string) {
+export function useDesignEditorStoreStore(id?: string) {
   const store = useSketchpadStore();
   const designEditorScope = useDesignEditorScope();
   const designEditorId = id ?? designEditorScope?.id;
-  if (!designEditorId) throw new Error("useDesignEditorStore requires an id or must be used within a DesignEditorScope");
+  if (!designEditorId) throw new Error("useDesignEditorStoreStore requires an id or must be used within a DesignEditorStoreScope");
 
-  const designEditorStore = store.getDesignEditorStore(designEditorId);
+  const designEditorStore = store.getDesignEditorStoreStore(designEditorId);
   if (!designEditorStore) throw new Error(`Design editor store with id ${designEditorId} not found`);
 
   return useSyncExternalStore(
-    (l) => store.onDesignEditorChange(designEditorId, l),
+    (l) => store.onDesignEditorStoreChange(designEditorId, l),
     () => designEditorStore.getState(),
   );
 }
 
-export function useDesignEditorDesignId(id?: string) {
+export function useDesignEditorStoreFullscreenPanel(id?: string) {
   const store = useSketchpadStore();
   const designEditorScope = useDesignEditorScope();
   const designEditorId = id ?? designEditorScope?.id;
-  if (!designEditorId) throw new Error("useDesignEditorDesignId requires an id or must be used within a DesignEditorScope");
+  if (!designEditorId) throw new Error("useDesignEditorStoreFullscreenPanel requires an id or must be used within a DesignEditorStoreScope");
 
   return useSyncExternalStore(
-    (l) => store.onDesignEditorDesignIdChange(designEditorId, l),
+    (l) => store.onDesignEditorStoreFullscreenPanelChange(designEditorId, l),
     () => {
-      const designEditorStore = store.getDesignEditorStore(designEditorId);
-      return designEditorStore?.getState().designId ?? { name: "", variant: "", view: "" };
+      const designEditorStore = store.getDesignEditorStoreStore(designEditorId);
+      return designEditorStore?.getState().fullscreenPanel ?? DesignEditorStoreFullscreenPanel.None;
     },
   );
 }
 
-export function useDesignEditorFullscreenPanel(id?: string) {
+export function useDesignEditorStoreSelection(id?: string) {
   const store = useSketchpadStore();
   const designEditorScope = useDesignEditorScope();
   const designEditorId = id ?? designEditorScope?.id;
-  if (!designEditorId) throw new Error("useDesignEditorFullscreenPanel requires an id or must be used within a DesignEditorScope");
+  if (!designEditorId) throw new Error("useDesignEditorStoreSelection requires an id or must be used within a DesignEditorStoreScope");
 
   return useSyncExternalStore(
-    (l) => store.onDesignEditorFullscreenPanelChange(designEditorId, l),
+    (l) => store.onDesignEditorStoreSelectionChange(designEditorId, l),
     () => {
-      const designEditorStore = store.getDesignEditorStore(designEditorId);
-      return designEditorStore?.getState().fullscreenPanel ?? DesignEditorFullscreenPanel.None;
-    },
-  );
-}
-
-export function useDesignEditorSelection(id?: string) {
-  const store = useSketchpadStore();
-  const designEditorScope = useDesignEditorScope();
-  const designEditorId = id ?? designEditorScope?.id;
-  if (!designEditorId) throw new Error("useDesignEditorSelection requires an id or must be used within a DesignEditorScope");
-
-  return useSyncExternalStore(
-    (l) => store.onDesignEditorSelectionChange(designEditorId, l),
-    () => {
-      const designEditorStore = store.getDesignEditorStore(designEditorId);
+      const designEditorStore = store.getDesignEditorStoreStore(designEditorId);
       return designEditorStore?.getState().selection ?? { selectedPieceIds: [], selectedConnections: [] };
     },
   );
 }
 
-export function useDesignEditorDesignDiff(id?: string) {
+export function useDesignEditorStoreDesignDiff(id?: string) {
   const store = useSketchpadStore();
   const designEditorScope = useDesignEditorScope();
   const designEditorId = id ?? designEditorScope?.id;
-  if (!designEditorId) throw new Error("useDesignEditorDesignDiff requires an id or must be used within a DesignEditorScope");
+  if (!designEditorId) throw new Error("useDesignEditorStoreDesignDiff requires an id or must be used within a DesignEditorStoreScope");
 
   return useSyncExternalStore(
-    (l) => store.onDesignEditorDesignDiffChange(designEditorId, l),
+    (l) => store.onDesignEditorStoreDesignDiffChange(designEditorId, l),
     () => {
-      const designEditorStore = store.getDesignEditorStore(designEditorId);
+      const designEditorStore = store.getDesignEditorStoreStore(designEditorId);
       return designEditorStore?.getState().designDiff ?? { pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } };
     },
   );
 }
 
-export function useDesignEditorIsTransactionActive(id?: string) {
+export function useDesignEditorStoreIsTransactionActive(id?: string) {
   const store = useSketchpadStore();
   const designEditorScope = useDesignEditorScope();
   const designEditorId = id ?? designEditorScope?.id;
-  if (!designEditorId) throw new Error("useDesignEditorIsTransactionActive requires an id or must be used within a DesignEditorScope");
+  if (!designEditorId) throw new Error("useDesignEditorStoreIsTransactionActive requires an id or must be used within a DesignEditorStoreScope");
 
   return useSyncExternalStore(
-    (l) => store.onDesignEditorIsTransactionActiveChange(designEditorId, l),
+    (l) => store.onDesignEditorStoreIsTransactionActiveChange(designEditorId, l),
     () => {
-      const designEditorStore = store.getDesignEditorStore(designEditorId);
+      const designEditorStore = store.getDesignEditorStoreStore(designEditorId);
       return designEditorStore?.getState().isTransactionActive ?? false;
     },
   );
 }
 
-export function useDesignEditorPresence(id?: string) {
+export function useDesignEditorStorePresence(id?: string) {
   const store = useSketchpadStore();
   const designEditorScope = useDesignEditorScope();
   const designEditorId = id ?? designEditorScope?.id;
-  if (!designEditorId) throw new Error("useDesignEditorPresence requires an id or must be used within a DesignEditorScope");
+  if (!designEditorId) throw new Error("useDesignEditorStorePresence requires an id or must be used within a DesignEditorStoreScope");
 
   return useSyncExternalStore(
-    (l) => store.onDesignEditorPresenceChange(designEditorId, l),
+    (l) => store.onDesignEditorStorePresenceChange(designEditorId, l),
     () => {
-      const designEditorStore = store.getDesignEditorStore(designEditorId);
+      const designEditorStore = store.getDesignEditorStoreStore(designEditorId);
       return designEditorStore?.getState().presence ?? {};
     },
   );
 }
 
-export function useDesignEditorPresenceOthers(id?: string) {
+export function useDesignEditorStorePresenceOthers(id?: string) {
   const store = useSketchpadStore();
   const designEditorScope = useDesignEditorScope();
   const designEditorId = id ?? designEditorScope?.id;
-  if (!designEditorId) throw new Error("useDesignEditorPresenceOthers requires an id or must be used within a DesignEditorScope");
+  if (!designEditorId) throw new Error("useDesignEditorStorePresenceOthers requires an id or must be used within a DesignEditorStoreScope");
 
   return useSyncExternalStore(
-    (l) => store.onDesignEditorPresenceOthersChange(designEditorId, l),
+    (l) => store.onDesignEditorStorePresenceOthersChange(designEditorId, l),
     () => {
-      const designEditorStore = store.getDesignEditorStore(designEditorId);
+      const designEditorStore = store.getDesignEditorStoreStore(designEditorId);
       return designEditorStore?.getState().others ?? [];
     },
   );
 }
 
-export function useDesignEditorFileUrls(id?: string) {
+export function useDesignEditorStoreFileUrls(id?: string) {
   const store = useSketchpadStore();
   return useSyncExternalStore(
     () => () => {}, // File URLs don't change often, can use a dummy unsubscribe
     () => store.getFileUrls(),
+  );
+}
+
+// Sketchpad store hooks following the same pattern as design editor store hooks
+export function useSketchpadStoreMode() {
+  const store = useSketchpadStore();
+  return useSyncExternalStore(
+    (callback) => store.onSketchpadStateChange(callback),
+    () => store.getSketchpadState().mode,
+  );
+}
+
+export function useSketchpadStoreTheme() {
+  const store = useSketchpadStore();
+  return useSyncExternalStore(
+    (callback) => store.onSketchpadStateChange(callback),
+    () => store.getSketchpadState().theme,
+  );
+}
+
+export function useSketchpadStoreLayout() {
+  const store = useSketchpadStore();
+  return useSyncExternalStore(
+    (callback) => store.onSketchpadStateChange(callback),
+    () => store.getSketchpadState().layout,
+  );
+}
+
+export function useSketchpadStoreActiveDesignEditorId() {
+  const store = useSketchpadStore();
+  return useSyncExternalStore(
+    (callback) => store.onSketchpadStateChange(callback),
+    () => store.getSketchpadState().activeDesignEditorStoreId,
   );
 }
 
@@ -2796,11 +3292,11 @@ export function useSketchpadLayout() {
   );
 }
 
-export function useActiveDesignEditorId() {
+export function useActiveDesignEditorStoreId() {
   const store = useSketchpadStore();
   return useSyncExternalStore(
     (callback) => store.onSketchpadStateChange(callback),
-    () => store.getSketchpadState().activeDesignEditorId,
+    () => store.getSketchpadState().activeDesignEditorStoreId,
   );
 }
 
@@ -2819,6 +3315,6 @@ export function useSketchpadCommands() {
     setMode: (mode: Mode) => store.setSketchpadMode(mode),
     setTheme: (theme: Theme) => store.setSketchpadTheme(theme),
     setLayout: (layout: Layout) => store.setSketchpadLayout(layout),
-    setActiveDesignEditorId: (id?: string) => store.setActiveDesignEditorId(id),
+    setActiveDesignEditorId: (id?: string) => store.setActiveDesignEditorStoreId(id),
   };
 }

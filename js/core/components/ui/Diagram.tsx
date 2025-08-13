@@ -77,15 +77,15 @@ import {
 import "@semio/js/globals.css";
 import "@xyflow/react/dist/style.css";
 import {
-  DesignEditorPresenceOther,
-  DesignEditorSelection,
-  DesignEditorFullscreenPanel as FullscreenPanel,
+  DesignEditorStoreFullscreenPanel,
+  DesignEditorStorePresenceOther,
+  DesignEditorStoreSelection,
   PieceScopeProvider,
   useDesign,
-  useDesignEditorDesignDiff,
-  useDesignEditorFullscreenPanel,
-  useDesignEditorPresenceOthers,
-  useDesignEditorSelection,
+  useDesignEditorStoreDesignDiff,
+  useDesignEditorStoreFullscreenPanel,
+  useDesignEditorStorePresenceOthers,
+  useDesignEditorStoreSelection,
   useKit,
   useTypes,
 } from "../../store";
@@ -96,7 +96,7 @@ import { useDesignEditorCommands } from "./DesignEditor";
 type ClusterMenuProps = {
   nodes: DiagramNode[];
   edges: DiagramEdge[];
-  selection: DesignEditorSelection;
+  selection: DesignEditorStoreSelection;
   onCluster: (clusterPieceIds: string[]) => void;
 };
 
@@ -194,7 +194,7 @@ const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, selection, onCluster 
 type ExpandMenuProps = {
   nodes: DiagramNode[];
   edges: DiagramEdge[];
-  selection: DesignEditorSelection;
+  selection: DesignEditorStoreSelection;
   onExpand: (designId: DesignId) => void;
 };
 
@@ -280,7 +280,7 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, selection, onExpand }) 
 
 //#region React Flow
 
-const PresenceDiagram: FC<DesignEditorPresenceOther> = ({ name, cursor, camera }) => {
+const PresenceDiagram: FC<DesignEditorStorePresenceOther> = ({ name, cursor, camera }) => {
   if (!cursor) return null;
   return (
     <ViewportPortal>
@@ -387,7 +387,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
   } = data as PieceNodeProps & { diffStatus: DiffStatus };
 
   const { selectPiecePort, deselectPiecePort, addConnection } = useDesignEditorCommands();
-  const selection = useDesignEditorSelection();
+  const selection = useDesignEditorStoreSelection();
 
   const onPortClick = (port: Port) => {
     const currentSelectedPort = selection.selectedPiecePortId;
@@ -454,7 +454,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
   } = data as DesignNodeProps & { diffStatus: DiffStatus };
 
   const { selectPiecePort, deselectPiecePort, addConnection } = useDesignEditorCommands();
-  const selection = useDesignEditorSelection();
+  const selection = useDesignEditorStoreSelection();
 
   // Create ports dynamically based on external connections (same logic as designPieceToNode)
   const ports: Port[] = externalConnections.map((connection, portIndex) => {
@@ -771,7 +771,7 @@ const connectionToEdge = (connection: Connection, selected: boolean, isParentCon
   };
 };
 
-const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEditorSelection) => {
+const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEditorStoreSelection) => {
   const design = findDesignInKit(kit, designId);
   if (!design) return null;
 
@@ -953,10 +953,10 @@ const Diagram: FC = () => {
     executeCommand,
   } = useDesignEditorCommands();
 
-  const selection = useDesignEditorSelection();
-  const designDiff = useDesignEditorDesignDiff();
-  const fullscreenPanel = useDesignEditorFullscreenPanel();
-  const others = useDesignEditorPresenceOthers();
+  const selection = useDesignEditorStoreSelection();
+  const designDiff = useDesignEditorStoreDesignDiff();
+  const fullscreenPanel = useDesignEditorStoreFullscreenPanel();
+  const others = useDesignEditorStorePresenceOthers();
 
   const kit = useKit();
   const baseDesign = useDesign();
@@ -981,7 +981,7 @@ const Diagram: FC = () => {
     lastPostition: XYPosition;
   } | null>(null);
   const [helperLines, setHelperLines] = useState<HelperLine[]>([]);
-  const fullscreen = fullscreenPanel === FullscreenPanel.Diagram;
+  const fullscreen = fullscreenPanel === DesignEditorStoreFullscreenPanel.Diagram;
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {

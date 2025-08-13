@@ -25,7 +25,7 @@ import "@xterm/xterm/css/xterm.css";
 import React, { FC, useEffect, useRef, useState } from "react";
 
 import { Design, DesignId, Kit } from "@semio/js";
-import { DesignEditorSelection, useDesignEditorDesignId, useDesignEditorSelection, useKit } from "../../store";
+import { DesignEditorStoreSelection, useDesignEditorStoreSelection, useDesignId, useKit } from "../../store";
 
 export interface CommandParameter {
   name: string;
@@ -39,14 +39,14 @@ export interface CommandParameter {
 export interface CommandContext {
   kit: Kit;
   designId: DesignId;
-  selection: DesignEditorSelection;
+  selection: DesignEditorStoreSelection;
   clusterDesign?: () => void;
   expandDesign?: (designId: DesignId) => void;
 }
 
 export interface CommandResult {
   design?: Design;
-  selection?: DesignEditorSelection;
+  selection?: DesignEditorStoreSelection;
   fileUrls?: string[];
   fullscreenPanel?: any;
   content?: React.ReactNode;
@@ -1165,8 +1165,8 @@ class TerminalConsole {
     try {
       const context = {
         kit: useKit(),
-        designId: useDesignEditorDesignId() || "",
-        selection: useDesignEditorSelection() || {
+        designId: useDesignId() || "",
+        selection: useDesignEditorStoreSelection() || {
           selectedPieceIds: [],
           selectedConnections: [],
           selectedPiecePortId: undefined,
@@ -1177,8 +1177,8 @@ class TerminalConsole {
         const result = await command.execute(context, payload);
 
         // TODO: implement
-        // if (result.selection && useDesignEditorSelection) {
-        //   useDesignEditorSelection(result.selection);
+        // if (result.selection && useDesignEditorStoreSelection) {
+        //   useDesignEditorStoreSelection(result.selection);
         // }
 
         if (result.content) {

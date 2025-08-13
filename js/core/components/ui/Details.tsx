@@ -25,7 +25,7 @@ import { Slider } from "@semio/js/components/ui/Slider";
 import Stepper from "@semio/js/components/ui/Stepper";
 import { Textarea } from "@semio/js/components/ui/Textarea";
 import { SortableTreeItems, Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
-import { useDesign, useDesignEditorDesignId, useDesignEditorSelection, useKit, usePiece, useType } from "../../store";
+import { useDesign, useDesignEditorStoreSelection, useDesignId, useKit, usePiece, useType } from "../../store";
 import { ResizablePanelProps, useDesignEditorCommands } from "./DesignEditor";
 
 interface DetailsProps extends ResizablePanelProps {}
@@ -462,7 +462,7 @@ const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
 
     // For connected designs, find the actual parent connection using BFS metadata
     const kit = useKit();
-    const designId = useDesignEditorDesignId();
+    const designId = useDesignId();
     const metadata = piecesMetadata(kit, designId);
     const pieceMetadata = metadata.get(pieceId);
 
@@ -523,7 +523,7 @@ const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
   });
 
   const kit = useKit();
-  const designId = useDesignEditorDesignId();
+  const designId = useDesignId();
   const metadata = piecesMetadata(kit, designId);
 
   const isSingle = pieceIds.length === 1;
@@ -1409,7 +1409,7 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
-  const selection = useDesignEditorSelection();
+  const selection = useDesignEditorStoreSelection();
 
   const hasPieces = selection.selectedPieceIds.length > 0;
   const hasConnections = selection.selectedConnections.length > 0;

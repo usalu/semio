@@ -19,33 +19,34 @@
 
 // #endregion
 import { TooltipProvider } from "@semio/js/components/ui/Tooltip";
-import { FC, ReactNode, createContext, useContext, useEffect, useState } from "react";
+import { FC, ReactNode, createContext, useCallback, useContext, useEffect, useState } from "react";
 import DesignEditor from "./DesignEditor";
 
-import { DesignId } from "@semio/js";
+import { DesignId, KitId } from "@semio/js";
 import {
-  DesignEditorScopeProvider,
+  DesignEditorStoreScopeProvider,
   DesignScopeProvider,
   KitScopeProvider,
   Layout,
   Mode,
   SketchpadScopeProvider,
-  SketchpadProvider as StoreProvider,
   Theme,
-  useActiveDesignEditorId,
   useSketchpadCommands,
   useSketchpadLayout,
   useSketchpadMode,
   useSketchpadStore,
+  useSketchpadStoreActiveDesignEditorId,
   useSketchpadTheme,
 } from "../../store";
 
-// Helper
+// Helper to create design editor ID from design
 const keyOf = (d: DesignId) => `${d.name}::${d.variant || ""}::${d.view || ""}`;
 
 interface SketchpadContextType {
   navbarToolbar: ReactNode | null;
   setNavbarToolbar: (toolbar: ReactNode) => void;
+  designEditors: Map<string, string>;
+  getOrCreateDesignEditor: (kitId: { name: string; version?: string }, designId: DesignId) => string;
 }
 
 const SketchpadContext = createContext<SketchpadContextType | null>(null);
@@ -53,7 +54,7 @@ const SketchpadContext = createContext<SketchpadContextType | null>(null);
 export const useSketchpad = () => {
   const context = useContext(SketchpadContext);
   if (!context) {
-    throw new Error("useSketchpadCommands must be used within a SketchpadProvider");
+    throw new Error("useSketchpad must be used within a SketchpadProvider");
   }
   return context;
 };
@@ -66,24 +67,50 @@ interface SketchpadProps {
   };
 }
 
-const SketchpadInner: FC<SketchpadProps> = ({ onWindowEvents }) => {
+const Sketchpad: FC<SketchpadProps> = ({ onWindowEvents }) => {
   const [isImporting, setIsImporting] = useState<boolean>(true);
   const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
+  const [designEditors, setDesignEditors] = useState<Map<string, string>>(new Map());
 
   const store = useSketchpadStore();
   const mode = useSketchpadMode();
   const theme = useSketchpadTheme();
   const layout = useSketchpadLayout();
-  const activeDesignEditorId = useActiveDesignEditorId();
-  const { setMode, setTheme, setLayout } = useSketchpadCommands();
+  const activeDesignEditorId = useSketchpadStoreActiveDesignEditorId();
+  const { setMode, setTheme, setLayout, setActiveDesignEditorId } = useSketchpadCommands();
+
+  const defaultKitId: KitId = { name: "Metabolism", version: "r25.07-1" };
+  const defaultDesignId: DesignId = { name: "Nakagin Capsule Tower", variant: "", view: "" };
+
+  const getOrCreateDesignEditor = useCallback(
+    (kitId: { name: string; version?: string }, designId: DesignId): string => {
+      const designKey = keyOf(designId);
+
+      let editorId = designEditors.get(designKey);
+      if (!editorId) {
+        editorId = store.createDesignEditorStoreStore(kitId.name, kitId.version || "", designId.name, designId.variant || "", designId.view || "");
+        if (editorId) {
+          setDesignEditors((prev) => new Map(prev).set(designKey, editorId!));
+        }
+      }
+
+      return editorId || "";
+    },
+    [designEditors, store],
+  );
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        await store.importFiles("metabolism.zip");
-        await store.importKit("metabolism.json", true);
+        await store.importFiles("metabolism.zip", true);
+        await store.importKit("metabolism.json", true, true);
+
+        // Create design editor for the default design
+        const editorId = getOrCreateDesignEditor(defaultKitId, defaultDesignId);
+        setActiveDesignEditorId(editorId);
       } catch (e) {
+        console.error("Failed to import default kit:", e);
       } finally {
         if (mounted) setIsImporting(false);
       }
@@ -91,7 +118,7 @@ const SketchpadInner: FC<SketchpadProps> = ({ onWindowEvents }) => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [store, getOrCreateDesignEditor, setActiveDesignEditorId]);
 
   useEffect(() => {
     if (mode !== Mode.USER) setMode(mode);
@@ -102,16 +129,6 @@ const SketchpadInner: FC<SketchpadProps> = ({ onWindowEvents }) => {
       setTheme(prefersDark ? Theme.DARK : Theme.LIGHT);
     }
   }, [mode, theme, layout, setMode, setTheme, setLayout]);
-
-  // useEffect(() => {
-  //   if (activeDesignEditorId) {
-  //     // Convert string to DesignId
-  //     const designId = designIdLikeToDesignId(activeDesignEditorId);
-  //     setActiveDesignId(designId);
-  //   } else {
-  //     setActiveDesignId(null);
-  //   }
-  // }, [activeDesignEditorId]);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -134,32 +151,30 @@ const SketchpadInner: FC<SketchpadProps> = ({ onWindowEvents }) => {
   return (
     <TooltipProvider>
       <SketchpadScopeProvider>
-        <KitScopeProvider id={{ name: "Metabolism" }}>
-          <DesignScopeProvider id={{ name: "Nakagin Capsule Tower", variant: "", view: "" }}>
-            <DesignEditorScopeProvider>
-              <SketchpadContext.Provider
-                value={{
-                  navbarToolbar: navbarToolbar,
-                  setNavbarToolbar: setNavbarToolbar,
-                }}
-              >
-                <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
-                  <DesignEditor />
-                </div>
-              </SketchpadContext.Provider>
-            </DesignEditorScopeProvider>
+        <KitScopeProvider id={defaultKitId}>
+          <DesignScopeProvider id={defaultDesignId}>
+            {activeDesignEditorId && (
+              <DesignEditorStoreScopeProvider id={activeDesignEditorId}>
+                <SketchpadContext.Provider
+                  value={{
+                    navbarToolbar: navbarToolbar,
+                    setNavbarToolbar: setNavbarToolbar,
+                    designEditors: designEditors,
+                    getOrCreateDesignEditor: getOrCreateDesignEditor,
+                  }}
+                >
+                  <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
+                    <DesignEditor />
+                  </div>
+                </SketchpadContext.Provider>
+              </DesignEditorStoreScopeProvider>
+            )}
           </DesignScopeProvider>
         </KitScopeProvider>
       </SketchpadScopeProvider>
     </TooltipProvider>
   );
 };
-
-const Sketchpad: FC<SketchpadProps> = (props) => (
-  <StoreProvider>
-    <SketchpadInner {...props} />
-  </StoreProvider>
-);
 
 export default Sketchpad;
 

@@ -27,7 +27,7 @@ import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle";
 import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGroup";
 import { AppWindow, Fingerprint, Home, Minus, Moon, Share2, Square, Sun, X } from "lucide-react";
 import { FC, ReactNode } from "react";
-import { Layout, Theme, useDesignEditorDesignId, useDesigns, useSketchpadCommands, useSketchpadLayout, useSketchpadTheme } from "../../store";
+import { Layout, Theme, useDesignId, useDesigns, useSketchpadCommands, useSketchpadLayout, useSketchpadTheme } from "../../store";
 
 interface NavbarProps {
   toolbarContent?: ReactNode;
@@ -42,7 +42,7 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
   const { setTheme, setLayout } = useSketchpadCommands();
   const layout = useSketchpadLayout();
   const theme = useSketchpadTheme();
-  const designId = useDesignEditorDesignId();
+  const designId = useDesignId();
   const availableDesigns = useDesigns();
   // Create a unique key for each design
   const getDesignKey = (design: DesignId): string => {

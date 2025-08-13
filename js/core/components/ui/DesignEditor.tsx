@@ -80,22 +80,20 @@ import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGrou
 import { Generator } from "@semio/js/lib/utils";
 import { Camera, TypeId, orientDesign } from "../../semio";
 import {
-  DesignEditorSelection,
-  DesignEditorState,
+  DesignEditorStoreFullscreenPanel,
+  DesignEditorStorePresence,
+  DesignEditorStoreSelection,
+  DesignEditorStoreState,
   DesignScopeProvider,
-  DesignEditorFullscreenPanel as FullscreenPanel,
-  DesignEditorPresence as Presence,
   useDesign,
-  useDesignEditorDesignId,
-  useDesignEditorFullscreenPanel,
-  useDesignEditorIsTransactionActive,
-  useDesignEditorSelection,
+  useDesignEditorScope,
+  useDesignEditorStoreFullscreenPanel,
+  useDesignEditorStoreIsTransactionActive,
+  useDesignEditorStoreSelection,
+  useDesignId,
   useDesigns,
   useKit,
-  useSketchpadCommands,
-  useSketchpadLayout,
-  useSketchpadMode,
-  useSketchpadTheme,
+  useSketchpadStore,
   useTypes,
 } from "../../store";
 import Chat from "./Chat";
@@ -181,7 +179,7 @@ const connectionToSelectionConnection = (connection: Connection | ConnectionId):
   connectedPieceId: connection.connected.piece.id_,
 });
 
-const selectAll = (design: Design): DesignEditorSelection => ({
+const selectAll = (design: Design): DesignEditorStoreSelection => ({
   selectedPieceIds: design.pieces?.map((p: Piece) => ({ id_: p.id_ })) || [],
   selectedConnections:
     design.connections?.map((c: Connection) => ({
@@ -190,12 +188,12 @@ const selectAll = (design: Design): DesignEditorSelection => ({
     })) || [],
   selectedPiecePortId: undefined,
 });
-const deselectAll = (selection: DesignEditorSelection): DesignEditorSelection => ({
+const deselectAll = (selection: DesignEditorStoreSelection): DesignEditorStoreSelection => ({
   selectedPieceIds: [],
   selectedConnections: [],
   selectedPiecePortId: undefined,
 });
-const addAllPiecesToSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
+const addAllPiecesToSelection = (selection: DesignEditorStoreSelection, design: Design): DesignEditorStoreSelection => {
   const existingIds = new Set(selection.selectedPieceIds.map((p) => p.id_));
   const allPieceIds = design.pieces?.map((p: Piece) => p.id_) || [];
   const newIds = allPieceIds.filter((id: string) => !existingIds.has(id));
@@ -205,12 +203,12 @@ const addAllPiecesToSelection = (selection: DesignEditorSelection, design: Desig
     selectedPiecePortId: selection.selectedPiecePortId,
   };
 };
-const removeAllPiecesFromSelection = (selection: DesignEditorSelection): DesignEditorSelection => ({
+const removeAllPiecesFromSelection = (selection: DesignEditorStoreSelection): DesignEditorStoreSelection => ({
   selectedPieceIds: [],
   selectedConnections: selection.selectedConnections,
   selectedPiecePortId: selection.selectedPiecePortId,
 });
-const addAllConnectionsToSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
+const addAllConnectionsToSelection = (selection: DesignEditorStoreSelection, design: Design): DesignEditorStoreSelection => {
   const allConnections =
     design.connections?.map((c: Connection) => ({
       connected: { piece: { id_: c.connected.piece.id_ } },
@@ -227,18 +225,18 @@ const addAllConnectionsToSelection = (selection: DesignEditorSelection, design: 
     selectedPiecePortId: selection.selectedPiecePortId,
   };
 };
-const removeAllConnectionsFromSelection = (selection: DesignEditorSelection): DesignEditorSelection => ({
+const removeAllConnectionsFromSelection = (selection: DesignEditorStoreSelection): DesignEditorStoreSelection => ({
   selectedPieceIds: selection.selectedPieceIds,
   selectedConnections: [],
   selectedPiecePortId: selection.selectedPiecePortId,
 });
 
-const selectPiece = (piece: Piece | PieceId): DesignEditorSelection => ({
+const selectPiece = (piece: Piece | PieceId): DesignEditorStoreSelection => ({
   selectedPieceIds: [typeof piece === "string" ? { id_: piece } : piece],
   selectedConnections: [],
   selectedPiecePortId: undefined,
 });
-const addPieceToSelection = (selection: DesignEditorSelection, piece: Piece | PieceId): DesignEditorSelection => {
+const addPieceToSelection = (selection: DesignEditorStoreSelection, piece: Piece | PieceId): DesignEditorStoreSelection => {
   const pieceId = typeof piece === "string" ? piece : piece.id_;
   const existingPieceIds = new Set(selection.selectedPieceIds.map((p) => p.id_));
   const newPieceIds = existingPieceIds.has(pieceId) ? selection.selectedPieceIds.filter((p) => p.id_ !== pieceId) : [...selection.selectedPieceIds, { id_: pieceId }];
@@ -248,7 +246,7 @@ const addPieceToSelection = (selection: DesignEditorSelection, piece: Piece | Pi
     selectedPiecePortId: selection.selectedPiecePortId,
   };
 };
-const removePieceFromSelection = (selection: DesignEditorSelection, piece: Piece | PieceId): DesignEditorSelection => {
+const removePieceFromSelection = (selection: DesignEditorStoreSelection, piece: Piece | PieceId): DesignEditorStoreSelection => {
   const pieceId = typeof piece === "string" ? piece : piece.id_;
   return {
     selectedPieceIds: selection.selectedPieceIds.filter((p) => p.id_ !== pieceId),
@@ -257,12 +255,12 @@ const removePieceFromSelection = (selection: DesignEditorSelection, piece: Piece
   };
 };
 
-const selectPieces = (pieces: (Piece | PieceId)[]): DesignEditorSelection => ({
+const selectPieces = (pieces: (Piece | PieceId)[]): DesignEditorStoreSelection => ({
   selectedPieceIds: pieces.map((p) => (typeof p === "string" ? { id_: p } : p)),
   selectedConnections: [],
   selectedPiecePortId: undefined,
 });
-const addPiecesToSelection = (selection: DesignEditorSelection, pieces: (Piece | PieceId)[]): DesignEditorSelection => {
+const addPiecesToSelection = (selection: DesignEditorStoreSelection, pieces: (Piece | PieceId)[]): DesignEditorStoreSelection => {
   const existingIds = new Set(selection.selectedPieceIds.map((p) => p.id_));
   const newIds = pieces.map((p) => (typeof p === "string" ? p : p.id_)).filter((id) => !existingIds.has(id));
   return {
@@ -270,7 +268,7 @@ const addPiecesToSelection = (selection: DesignEditorSelection, pieces: (Piece |
     selectedPieceIds: [...selection.selectedPieceIds, ...newIds.map((id) => ({ id_: id }))],
   };
 };
-const removePiecesFromSelection = (selection: DesignEditorSelection, pieces: (Piece | PieceId)[]): DesignEditorSelection => {
+const removePiecesFromSelection = (selection: DesignEditorStoreSelection, pieces: (Piece | PieceId)[]): DesignEditorStoreSelection => {
   const idsToRemove = new Set(pieces.map((p) => (typeof p === "string" ? p : p.id_)));
   return {
     ...selection,
@@ -278,7 +276,7 @@ const removePiecesFromSelection = (selection: DesignEditorSelection, pieces: (Pi
   };
 };
 
-const selectConnection = (connection: Connection | ConnectionId): DesignEditorSelection => ({
+const selectConnection = (connection: Connection | ConnectionId): DesignEditorStoreSelection => ({
   selectedConnections: [
     {
       connected: { piece: { id_: connection.connected.piece.id_ } },
@@ -288,7 +286,7 @@ const selectConnection = (connection: Connection | ConnectionId): DesignEditorSe
   selectedPieceIds: [],
   selectedPiecePortId: undefined,
 });
-const addConnectionToSelection = (selection: DesignEditorSelection, connection: Connection | ConnectionId): DesignEditorSelection => {
+const addConnectionToSelection = (selection: DesignEditorStoreSelection, connection: Connection | ConnectionId): DesignEditorStoreSelection => {
   const connectionObj = {
     connected: { piece: { id_: connection.connected.piece.id_ } },
     connecting: { piece: { id_: connection.connecting.piece.id_ } },
@@ -305,7 +303,7 @@ const addConnectionToSelection = (selection: DesignEditorSelection, connection: 
     selectedPiecePortId: selection.selectedPiecePortId,
   };
 };
-const removeConnectionFromSelection = (selection: DesignEditorSelection, connection: Connection | ConnectionId): DesignEditorSelection => {
+const removeConnectionFromSelection = (selection: DesignEditorStoreSelection, connection: Connection | ConnectionId): DesignEditorStoreSelection => {
   return {
     selectedConnections: selection.selectedConnections.filter((c) => {
       return !(c.connected.piece.id_ === connection.connected.piece.id_ && c.connecting.piece.id_ === connection.connecting.piece.id_);
@@ -315,7 +313,7 @@ const removeConnectionFromSelection = (selection: DesignEditorSelection, connect
   };
 };
 
-const selectConnections = (connections: (Connection | ConnectionId)[]): DesignEditorSelection => ({
+const selectConnections = (connections: (Connection | ConnectionId)[]): DesignEditorStoreSelection => ({
   selectedConnections: connections.map((conn) => ({
     connected: { piece: { id_: conn.connected.piece.id_ } },
     connecting: { piece: { id_: conn.connecting.piece.id_ } },
@@ -323,7 +321,7 @@ const selectConnections = (connections: (Connection | ConnectionId)[]): DesignEd
   selectedPieceIds: [],
   selectedPiecePortId: undefined,
 });
-const addConnectionsToSelection = (selection: DesignEditorSelection, connections: (Connection | ConnectionId)[]): DesignEditorSelection => {
+const addConnectionsToSelection = (selection: DesignEditorStoreSelection, connections: (Connection | ConnectionId)[]): DesignEditorStoreSelection => {
   const newConnections = connections
     .map((conn) => ({
       connected: { piece: { id_: conn.connected.piece.id_ } },
@@ -339,7 +337,7 @@ const addConnectionsToSelection = (selection: DesignEditorSelection, connections
     selectedConnections: [...selection.selectedConnections, ...newConnections],
   };
 };
-const removeConnectionsFromSelection = (selection: DesignEditorSelection, connections: (Connection | ConnectionId)[]): DesignEditorSelection => {
+const removeConnectionsFromSelection = (selection: DesignEditorStoreSelection, connections: (Connection | ConnectionId)[]): DesignEditorStoreSelection => {
   return {
     selectedConnections: selection.selectedConnections.filter((c) => {
       return !connections.some((conn) => c.connected.piece.id_ === conn.connected.piece.id_ && c.connecting.piece.id_ === conn.connecting.piece.id_);
@@ -349,14 +347,14 @@ const removeConnectionsFromSelection = (selection: DesignEditorSelection, connec
   };
 };
 
-const selectPiecePort = (pieceId: string, portId: string): DesignEditorSelection => ({
+const selectPiecePort = (pieceId: string, portId: string): DesignEditorStoreSelection => ({
   selectedPieceIds: [],
   selectedConnections: [],
   selectedPiecePortId: { pieceId: { id_: pieceId }, portId: { id_: portId } },
 });
-const deselectPiecePort = (selection: DesignEditorSelection): DesignEditorSelection => ({ ...selection, selectedPiecePortId: undefined });
+const deselectPiecePort = (selection: DesignEditorStoreSelection): DesignEditorStoreSelection => ({ ...selection, selectedPiecePortId: undefined });
 
-const invertSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
+const invertSelection = (selection: DesignEditorStoreSelection, design: Design): DesignEditorStoreSelection => {
   const allPieceIds = design.pieces?.map((p: Piece) => p.id_) || [];
   const allConnections =
     design.connections?.map((c: Connection) => ({
@@ -377,7 +375,7 @@ const invertSelection = (selection: DesignEditorSelection, design: Design): Desi
   };
 };
 
-const invertPiecesSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
+const invertPiecesSelection = (selection: DesignEditorStoreSelection, design: Design): DesignEditorStoreSelection => {
   const allPieceIds = design.pieces?.map((p: Piece) => p.id_) || [];
   const selectedPieceIdSet = new Set(selection.selectedPieceIds.map((p) => p.id_));
   const newSelectedPieceIds = allPieceIds.filter((id: string) => !selectedPieceIdSet.has(id));
@@ -387,7 +385,7 @@ const invertPiecesSelection = (selection: DesignEditorSelection, design: Design)
     selectedPiecePortId: selection.selectedPiecePortId,
   };
 };
-const invertConnectionsSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
+const invertConnectionsSelection = (selection: DesignEditorStoreSelection, design: Design): DesignEditorStoreSelection => {
   const allConnections =
     design.connections?.map((c: Connection) => ({
       connected: { piece: { id_: c.connected.piece.id_ } },
@@ -405,17 +403,17 @@ const invertConnectionsSelection = (selection: DesignEditorSelection, design: De
   };
 };
 
-const subDesignFromSelection = (design: Design, selection: DesignEditorSelection): Design => {
+const subDesignFromSelection = (design: Design, selection: DesignEditorStoreSelection): Design => {
   const selectedPieceIdSet = new Set(selection.selectedPieceIds.map((p) => p.id_));
   const subPieces = design.pieces?.filter((p: Piece) => selectedPieceIdSet.has(p.id_));
   const subConnections = design.connections?.filter((c: Connection) => selection.selectedConnections.some((sc) => sc.connected.piece.id_ === c.connected.piece.id_ && sc.connecting.piece.id_ === c.connecting.piece.id_));
   return { ...design, pieces: subPieces, connections: subConnections };
 };
 
-const copyToClipboard = (design: Design, selection: DesignEditorSelection, plane?: Plane, center?: DiagramPoint): void => {
+const copyToClipboard = (design: Design, selection: DesignEditorStoreSelection, plane?: Plane, center?: DiagramPoint): void => {
   navigator.clipboard.writeText(JSON.stringify(orientDesign(subDesignFromSelection(design, selection), plane, center))).then(() => {});
 };
-const cutToClipboard = (design: Design, selection: DesignEditorSelection, plane?: Plane, center?: DiagramPoint): void => {
+const cutToClipboard = (design: Design, selection: DesignEditorStoreSelection, plane?: Plane, center?: DiagramPoint): void => {
   navigator.clipboard.writeText(JSON.stringify(subDesignFromSelection(orientDesign(design, plane, center), selection))).then(() => {});
 };
 const pasteFromClipboard = async (design: Design, plane?: Plane, center?: DiagramPoint): Promise<Design> => {
@@ -428,7 +426,7 @@ const pasteFromClipboard = async (design: Design, plane?: Plane, center?: Diagra
     return design;
   }
 };
-const deleteSelected = (kit: Kit, designId: DesignId, selection: DesignEditorSelection): Design => {
+const deleteSelected = (kit: Kit, designId: DesignId, selection: DesignEditorStoreSelection): Design => {
   const selectedPieces = selection.selectedPieceIds;
   const selectedConnections = selection.selectedConnections.map((conn) => ({
     connecting: { piece: { id_: conn.connecting.piece.id_ } },
@@ -442,7 +440,7 @@ const deleteSelected = (kit: Kit, designId: DesignId, selection: DesignEditorSel
 
 //#region DesignDiff Helpers
 
-const updateDesignDiffInState = (state: DesignEditorState, updatedDesignDiff: DesignDiff): DesignEditorState => {
+const updateDesignDiffInState = (state: DesignEditorStoreState, updatedDesignDiff: DesignDiff): DesignEditorStoreState => {
   return { ...state, designDiff: updatedDesignDiff };
 };
 
@@ -451,7 +449,7 @@ const resetDesignDiff = (): DesignDiff => ({
   connections: { added: [], removed: [], updated: [] },
 });
 
-const pushToOperationStack = (state: DesignEditorState): DesignEditorState => {
+const pushToOperationStack = (state: DesignEditorStoreState): DesignEditorStoreState => {
   // This is a simplified implementation - in a real scenario, this would capture the current operation
   // and add it to the operation stack for undo/redo functionality
   return {
@@ -463,12 +461,81 @@ const pushToOperationStack = (state: DesignEditorState): DesignEditorState => {
 
 //#endregion DesignDiff Helpers
 
-export const DesignEditorContext = createContext<{ dispatch: DesignEditorDispatcher } | undefined>(undefined);
+export const DesignEditorCommandsContext = createContext<{ dispatch: DesignEditorDispatcher } | undefined>(undefined);
+
+export const DesignEditorCommandsProvider = (props: { children: React.ReactNode }) => {
+  const store = useSketchpadStore();
+  const designEditorScope = useDesignEditorScope();
+  const kit = useKit();
+  const designId = useDesignId();
+
+  if (!designEditorScope?.id) {
+    throw new Error("DesignEditorCommandsProvider must be used within a DesignEditorScopeProvider");
+  }
+
+  const designEditorStore = store.getDesignEditorStore(designEditorScope.id);
+  if (!designEditorStore) {
+    throw new Error(`Design editor store not found for id: ${designEditorScope.id}`);
+  }
+
+  const dispatch = useCallback(
+    (action: { type: DesignEditorAction; payload: any }) => {
+      if (!kit || !designId) {
+        console.warn("Cannot dispatch action: kit or designId not available");
+        return;
+      }
+
+      // For now, we'll use a simplified implementation that directly calls store methods
+      // This will be expanded to handle all the DesignEditorAction types
+      const currentDesign = findDesignInKit(kit, designId);
+      if (!currentDesign) {
+        console.warn("Cannot dispatch action: design not found");
+        return;
+      }
+
+      const selection = designEditorStore.getState().selection;
+
+      switch (action.type) {
+        case DesignEditorAction.SelectAll:
+          const allPieces = currentDesign.pieces?.map((p: Piece) => ({ id_: p.id_ })) || [];
+          const allConnections =
+            currentDesign.connections?.map((c: Connection) => ({
+              connected: { piece: { id_: c.connected.piece.id_ } },
+              connecting: { piece: { id_: c.connecting.piece.id_ } },
+            })) || [];
+          designEditorStore.updateDesignEditorSelection({
+            selectedPieceIds: allPieces,
+            selectedConnections: allConnections,
+            selectedPiecePortId: undefined,
+          });
+          break;
+
+        case DesignEditorAction.DeselectAll:
+          designEditorStore.updateDesignEditorSelection({
+            selectedPieceIds: [],
+            selectedConnections: [],
+            selectedPiecePortId: undefined,
+          });
+          break;
+
+        case DesignEditorAction.SetSelection:
+          designEditorStore.updateDesignEditorSelection(action.payload);
+          break;
+
+        default:
+          console.warn(`Unhandled action type: ${action.type}`);
+      }
+    },
+    [store, designEditorScope?.id, kit, designId, designEditorStore],
+  );
+
+  return <DesignEditorCommandsContext.Provider value={{ dispatch }}>{props.children}</DesignEditorCommandsContext.Provider>;
+};
 
 export const useDesignEditorCommands = () => {
-  const context = useContext(DesignEditorContext);
+  const context = useContext(DesignEditorCommandsContext);
   if (!context) {
-    throw new Error("useDesignEditorCommands must be used within a DesignEditorProvider");
+    throw new Error("useDesignEditorCommands must be used within a DesignEditorCommandsProvider");
   }
   const { dispatch } = context;
 
@@ -489,7 +556,7 @@ export const useDesignEditorCommands = () => {
   const addConnections = useCallback((cs: Connection[]) => dispatch({ type: DesignEditorAction.AddConnections, payload: cs }), [dispatch]);
   const setConnections = useCallback((cs: Connection[]) => dispatch({ type: DesignEditorAction.SetConnections, payload: cs }), [dispatch]);
   const removeConnections = useCallback((cs: Connection[]) => dispatch({ type: DesignEditorAction.RemoveConnections, payload: cs }), [dispatch]);
-  const setSelection = useCallback((s: DesignEditorSelection) => dispatch({ type: DesignEditorAction.SetSelection, payload: s }), [dispatch]);
+  const setSelection = useCallback((s: DesignEditorStoreSelection) => dispatch({ type: DesignEditorAction.SetSelection, payload: s }), [dispatch]);
   const selectAll = useCallback(() => dispatch({ type: DesignEditorAction.SelectAll, payload: null }), [dispatch]);
   const deselectAll = useCallback(() => dispatch({ type: DesignEditorAction.DeselectAll, payload: null }), [dispatch]);
   const invertSelection = useCallback(() => dispatch({ type: DesignEditorAction.InvertSelection, payload: null }), [dispatch]);
@@ -514,7 +581,7 @@ export const useDesignEditorCommands = () => {
   const selectPiecePort = useCallback((pieceId: string, portId: string) => dispatch({ type: DesignEditorAction.SelectPiecePort, payload: { pieceId, portId } }), [dispatch]);
   const deselectPiecePort = useCallback(() => dispatch({ type: DesignEditorAction.DeselectPiecePort, payload: null }), [dispatch]);
   const deleteSelected = useCallback((plane?: Plane, center?: DiagramPoint) => dispatch({ type: DesignEditorAction.DeleteSelected, payload: { plane, center } }), [dispatch]);
-  const setFullscreen = useCallback((fp: FullscreenPanel) => dispatch({ type: DesignEditorAction.SetFullscreen, payload: fp }), [dispatch]);
+  const setFullscreen = useCallback((fp: DesignEditorStoreFullscreenPanel) => dispatch({ type: DesignEditorAction.SetFullscreen, payload: fp }), [dispatch]);
   const toggleDiagramFullscreen = useCallback(() => dispatch({ type: DesignEditorAction.ToggleDiagramFullscreen, payload: null }), [dispatch]);
   const toggleModelFullscreen = useCallback(() => dispatch({ type: DesignEditorAction.ToggleModelFullscreen, payload: null }), [dispatch]);
   const copyToClipboard = useCallback(() => dispatch({ type: DesignEditorAction.CopyToClipboard, payload: null }), [dispatch]);
@@ -526,15 +593,15 @@ export const useDesignEditorCommands = () => {
   const abortTransaction = useCallback(() => dispatch({ type: DesignEditorAction.AbortTransaction, payload: null }), [dispatch]);
   const setCursor = useCallback((cursor: DiagramPoint | undefined) => dispatch({ type: DesignEditorAction.SetCursor, payload: cursor }), [dispatch]);
   const setCamera = useCallback((camera: Camera | undefined) => dispatch({ type: DesignEditorAction.SetCamera, payload: camera }), [dispatch]);
-  const stepIn = useCallback((presence: Presence) => dispatch({ type: DesignEditorAction.StepIn, payload: presence }), [dispatch]);
-  const stepOut = useCallback((presence: Presence) => dispatch({ type: DesignEditorAction.StepOut, payload: presence }), [dispatch]);
-  const updatePresence = useCallback((presence: Partial<Presence> & { name: string }) => dispatch({ type: DesignEditorAction.UpdatePresence, payload: presence }), [dispatch]);
+  const stepIn = useCallback((presence: DesignEditorStorePresence) => dispatch({ type: DesignEditorAction.StepIn, payload: presence }), [dispatch]);
+  const stepOut = useCallback((presence: DesignEditorStorePresence) => dispatch({ type: DesignEditorAction.StepOut, payload: presence }), [dispatch]);
+  const updatePresence = useCallback((presence: Partial<DesignEditorStorePresence> & { name: string }) => dispatch({ type: DesignEditorAction.UpdatePresence, payload: presence }), [dispatch]);
   const executeCommand = useCallback(
     async (commandId: string, payload: Record<string, any> = {}) => {
       const context: CommandContext = {
         kit: useKit(),
         designId: useDesign(),
-        selection: useDesignEditorSelection(),
+        selection: useDesignEditorStoreSelection(),
         clusterDesign: clusterDesign,
         expandDesign: expandDesign,
       };
@@ -557,7 +624,7 @@ export const useDesignEditorCommands = () => {
       }
 
       // Design-modifying commands only execute when no transaction is active
-      if (useDesignEditorIsTransactionActive()) {
+      if (useDesignEditorStoreIsTransactionActive()) {
         console.warn(`Cannot execute design-modifying command "${commandId}" during active transaction`);
         return;
       }
@@ -646,14 +713,14 @@ export const useDesignEditorCommands = () => {
   };
 };
 
-const designEditorReducer = (state: DesignEditorState, action: { type: DesignEditorAction; payload: any }, kit: Kit, designId: DesignId): DesignEditorState => {
+const designEditorReducer = (state: DesignEditorStoreState, action: { type: DesignEditorAction; payload: any }, kit: Kit, designId: DesignId): DesignEditorStoreState => {
   const currentDesign = findDesignInKit(kit, designId);
 
-  const updateDesignInDesignEditorStateWithOperationStack = (updatedDesign: Design): DesignEditorState => {
+  const updateDesignInDesignEditorStateWithOperationStack = (updatedDesign: Design): DesignEditorStoreState => {
     return pushToOperationStack(state);
   };
 
-  const updateDesignInDesignEditorState = (updatedDesign: Design): DesignEditorState => {
+  const updateDesignInDesignEditorState = (updatedDesign: Design): DesignEditorStoreState => {
     return state;
   };
 
@@ -967,12 +1034,12 @@ const designEditorReducer = (state: DesignEditorState, action: { type: DesignEdi
     case DesignEditorAction.ToggleDiagramFullscreen:
       return {
         ...state,
-        fullscreenPanel: state.fullscreenPanel === FullscreenPanel.Diagram ? FullscreenPanel.None : FullscreenPanel.Diagram,
+        fullscreenPanel: state.fullscreenPanel === DesignEditorStoreFullscreenPanel.Diagram ? DesignEditorStoreFullscreenPanel.None : DesignEditorStoreFullscreenPanel.Diagram,
       };
     case DesignEditorAction.ToggleModelFullscreen:
       return {
         ...state,
-        fullscreenPanel: state.fullscreenPanel === FullscreenPanel.Model ? FullscreenPanel.None : FullscreenPanel.Model,
+        fullscreenPanel: state.fullscreenPanel === DesignEditorStoreFullscreenPanel.Model ? DesignEditorStoreFullscreenPanel.None : DesignEditorStoreFullscreenPanel.Model,
       };
     case DesignEditorAction.SetCursor:
       return state; // Cursor state is handled externally
@@ -996,10 +1063,10 @@ const designEditorReducer = (state: DesignEditorState, action: { type: DesignEdi
 };
 
 // Export a pure selection reducer so the store-driven Sketchpad can compute selection updates
-export function reduceSelection(selection: DesignEditorSelection, design: Design, action: { type: DesignEditorAction; payload: any }): DesignEditorSelection {
+export function reduceSelection(selection: DesignEditorStoreSelection, design: Design, action: { type: DesignEditorAction; payload: any }): DesignEditorStoreSelection {
   switch (action.type) {
     case DesignEditorAction.SetSelection:
-      return action.payload as DesignEditorSelection;
+      return action.payload as DesignEditorStoreSelection;
     case DesignEditorAction.SelectAll:
       return selectAll(design);
     case DesignEditorAction.DeselectAll:
@@ -1240,7 +1307,7 @@ const DesignEditorCore: FC<DesignEditorProps> = () => {
         return;
       }
 
-      const context = { kit: useKit(), designId: useDesign(), selection: useDesignEditorSelection() };
+      const context = { kit: useKit(), designId: useDesign(), selection: useDesignEditorStoreSelection() };
 
       // Editor-only commands can always execute, even during transactions
       if (command.editorOnly) {
@@ -1254,7 +1321,7 @@ const DesignEditorCore: FC<DesignEditorProps> = () => {
       }
 
       // Design-modifying commands only execute when no transaction is active
-      if (useDesignEditorIsTransactionActive()) {
+      if (useDesignEditorStoreIsTransactionActive()) {
         console.warn(`Cannot execute design-modifying command "${commandId}" during active transaction`);
         return;
       }
@@ -1274,7 +1341,7 @@ const DesignEditorCore: FC<DesignEditorProps> = () => {
 
     document.addEventListener("semio-command", handleCommand);
     return () => document.removeEventListener("semio-command", handleCommand);
-  }, [useDesignEditorIsTransactionActive()]);
+  }, [useDesignEditorStoreIsTransactionActive()]);
 
   // Register hotkeys for all commands automatically from the command registry
   const allCommands = commandRegistry.getAll();
@@ -1296,7 +1363,7 @@ const DesignEditorCore: FC<DesignEditorProps> = () => {
           }
 
           // Design-modifying commands only execute when no transaction is active
-          if (useDesignEditorIsTransactionActive()) {
+          if (useDesignEditorStoreIsTransactionActive()) {
             console.warn(`Cannot execute design-modifying command "${command.id}" during active transaction (hotkey: ${command.hotkey})`);
             return;
           }
@@ -1375,24 +1442,26 @@ const DesignEditorCore: FC<DesignEditorProps> = () => {
           y: event.activatorEvent.clientY + event.delta.y,
         });
         const current = useDesigns()?.find((d: Design) => d.name === activeDraggedDesignId.name && d.variant === activeDraggedDesignId.variant && d.view === activeDraggedDesignId.view);
-        const newEntry = {
-          designId: {
-            name: activeDraggedDesignId.name,
-            variant: activeDraggedDesignId.variant,
-            view: activeDraggedDesignId.view,
-          },
-          plane: {
-            origin: { x: 0, y: 0, z: 0 },
-            xAxis: { x: 1, y: 0, z: 0 },
-            yAxis: { x: 0, y: 1, z: 0 },
-          },
-          center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
-        };
-        const updated = {
-          ...current,
-          fixedDesigns: [...(current.fixedDesigns || []), newEntry],
-        };
-        setDesign(updated);
+        if (current) {
+          const newEntry = {
+            designId: {
+              name: activeDraggedDesignId.name,
+              variant: activeDraggedDesignId.variant,
+              view: activeDraggedDesignId.view,
+            },
+            plane: {
+              origin: { x: 0, y: 0, z: 0 },
+              xAxis: { x: 1, y: 0, z: 0 },
+              yAxis: { x: 0, y: 1, z: 0 },
+            },
+            center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
+          };
+          const updated: Design = {
+            ...current,
+            fixedDesigns: [...(current.fixedDesigns || []), newEntry],
+          };
+          setDesign(updated);
+        }
       }
     }
     setActiveDraggedTypeId(null);
@@ -1423,8 +1492,8 @@ const DesignEditorCore: FC<DesignEditorProps> = () => {
 
   const rightPanelVisible = visiblePanels.details || visiblePanels.chat;
 
-  const fullscreenPanel = useDesignEditorFullscreenPanel();
-  const activeDesignId = useDesignEditorDesignId();
+  const fullscreenPanel = useDesignEditorStoreFullscreenPanel();
+  const activeDesignId = useDesignId();
 
   return (
     <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
@@ -1432,11 +1501,11 @@ const DesignEditorCore: FC<DesignEditorProps> = () => {
         <div id="sketchpad-edgeless" className="h-full">
           <DesignScopeProvider id={activeDesignId}>
             <ResizablePanelGroup direction="horizontal">
-              <ResizablePanel defaultSize={fullscreenPanel === FullscreenPanel.Diagram ? 100 : 50} className={`${fullscreenPanel === FullscreenPanel.Model ? "hidden" : "block"}`} onDoubleClick={onDoubleClickDiagram}>
+              <ResizablePanel defaultSize={fullscreenPanel === DesignEditorStoreFullscreenPanel.Diagram ? 100 : 50} className={`${fullscreenPanel === DesignEditorStoreFullscreenPanel.Model ? "hidden" : "block"}`} onDoubleClick={onDoubleClickDiagram}>
                 <Diagram />
               </ResizablePanel>
-              <ResizableHandle className={`border-r ${fullscreenPanel !== FullscreenPanel.None ? "hidden" : "block"}`} />
-              <ResizablePanel defaultSize={fullscreenPanel === FullscreenPanel.Model ? 100 : 50} className={`${fullscreenPanel === FullscreenPanel.Diagram ? "hidden" : "block"}`} onDoubleClick={onDoubleClickModel}>
+              <ResizableHandle className={`border-r ${fullscreenPanel !== DesignEditorStoreFullscreenPanel.None ? "hidden" : "block"}`} />
+              <ResizablePanel defaultSize={fullscreenPanel === DesignEditorStoreFullscreenPanel.Model ? 100 : 50} className={`${fullscreenPanel === DesignEditorStoreFullscreenPanel.Diagram ? "hidden" : "block"}`} onDoubleClick={onDoubleClickModel}>
                 <Model />
               </ResizablePanel>
             </ResizablePanelGroup>
@@ -1467,22 +1536,13 @@ const DesignEditorCore: FC<DesignEditorProps> = () => {
 };
 
 const DesignEditor: FC<DesignEditorProps> = () => {
-  const mode = useSketchpadMode();
-  const layout = useSketchpadLayout();
-  const theme = useSketchpadTheme();
-  const { setLayout, setTheme, setActiveDesignEditorId } = useSketchpadCommands();
-  const availableDesigns = useDesigns();
-
-  // TODO: These need proper implementation
-  const activeDesignId = undefined; // This should come from the current design editor
-  const navbarToolbar = undefined; // This should come from state
-
-  const onDesignIdChange = useCallback((d: DesignId) => setActiveDesignEditorId(), [setActiveDesignEditorId]);
   return (
-    <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
-      <Navbar toolbarContent={navbarToolbar} />
+    <div className="h-full w-full flex flex-col bg-background text-foreground">
+      <Navbar />
       <ReactFlowProvider>
-        <DesignEditorCore />
+        <DesignEditorCommandsProvider>
+          <DesignEditorCore />
+        </DesignEditorCommandsProvider>
       </ReactFlowProvider>
     </div>
   );

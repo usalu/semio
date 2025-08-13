@@ -26,15 +26,15 @@ import { applyDesignDiff, DiffStatus, flattenDesign, getPieceRepresentationUrls,
 import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import {
-  DesignEditorFullscreenPanel,
-  DesignEditorPresenceOther,
+  DesignEditorStoreFullscreenPanel,
+  DesignEditorStorePresenceOther,
   PieceScopeProvider,
   useDesign,
-  useDesignEditorDesignDiff,
-  useDesignEditorFileUrls,
-  useDesignEditorFullscreenPanel,
-  useDesignEditorPresenceOthers,
-  useDesignEditorSelection,
+  useDesignEditorStoreDesignDiff,
+  useDesignEditorStoreFileUrls,
+  useDesignEditorStoreFullscreenPanel,
+  useDesignEditorStorePresenceOthers,
+  useDesignEditorStoreSelection,
   useKit,
 } from "../../store";
 import { useDesignEditorCommands } from "./DesignEditor";
@@ -43,7 +43,7 @@ const getComputedColor = (variable: string): string => {
   return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 };
 
-const PresenceThree: FC<DesignEditorPresenceOther> = ({ name, cursor, camera }) => {
+const PresenceThree: FC<DesignEditorStorePresenceOther> = ({ name, cursor, camera }) => {
   if (!camera) return null;
   const cameraHelper = useMemo(() => {
     const perspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1);
@@ -212,10 +212,10 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, upda
 const ModelDesign: FC = () => {
   const designId = useDesign();
   const { removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = useDesignEditorCommands();
-  const selection = useDesignEditorSelection();
-  const designDiff = useDesignEditorDesignDiff();
-  const fileUrls = useDesignEditorFileUrls();
-  const others = useDesignEditorPresenceOthers();
+  const selection = useDesignEditorStoreSelection();
+  const designDiff = useDesignEditorStoreDesignDiff();
+  const fileUrls = useDesignEditorStoreFileUrls();
+  const others = useDesignEditorStorePresenceOthers();
   const storeKit = useKit();
   const baseDesign = useDesign();
   if (!storeKit || !baseDesign) return null;
@@ -312,7 +312,7 @@ const Gizmo: FC = () => {
 };
 
 const ModelCore: FC = () => {
-  const fullscreen = useDesignEditorFullscreenPanel() === DesignEditorFullscreenPanel.Model;
+  const fullscreen = useDesignEditorStoreFullscreenPanel() === DesignEditorStoreFullscreenPanel.Model;
   const [gridColors, setGridColors] = useState({
     sectionColor: getComputedColor("--foreground"),
     cellColor: getComputedColor("--accent-foreground"),
