@@ -89,7 +89,7 @@ import {
   useKit,
   useTypes,
 } from "../../store";
-import { useDesignEditor } from "./DesignEditor";
+import { useDesignEditorCommands } from "./DesignEditor";
 
 //#region ClusterMenu
 
@@ -386,7 +386,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
     type: { ports },
   } = data as PieceNodeProps & { diffStatus: DiffStatus };
 
-  const { selectPiecePort, deselectPiecePort, addConnection } = useDesignEditor();
+  const { selectPiecePort, deselectPiecePort, addConnection } = useDesignEditorCommands();
   const selection = useDesignEditorSelection();
 
   const onPortClick = (port: Port) => {
@@ -453,7 +453,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
     externalConnections,
   } = data as DesignNodeProps & { diffStatus: DiffStatus };
 
-  const { selectPiecePort, deselectPiecePort, addConnection } = useDesignEditor();
+  const { selectPiecePort, deselectPiecePort, addConnection } = useDesignEditorCommands();
   const selection = useDesignEditorSelection();
 
   // Create ports dynamically based on external connections (same logic as designPieceToNode)
@@ -951,7 +951,7 @@ const Diagram: FC = () => {
     setConnections,
     setPieces,
     executeCommand,
-  } = useDesignEditor();
+  } = useDesignEditorCommands();
 
   const selection = useDesignEditorSelection();
   const designDiff = useDesignEditorDesignDiff();
@@ -1017,7 +1017,7 @@ const Diagram: FC = () => {
     if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) deselectAll();
   };
 
-  // const { sketchpadState, sketchpadDispatch } = useSketchpad();
+  // const { sketchpadState, sketchpadDispatch } = useSketchpadCommands();
   // const onNodeDoubleClick = (e: React.MouseEvent, node: DiagramNode) => {
   //   if (node.type === "design") {
   //     e.stopPropagation();

@@ -24,7 +24,8 @@ import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import React, { FC, useEffect, useRef, useState } from "react";
 
-import { Design, DesignId, Kit, useDesignEditor } from "@semio/js";
+import { Design, DesignId, Kit } from "@semio/js";
+import { DesignEditorSelection, useDesignEditorDesignId, useDesignEditorSelection, useKit } from "../../store";
 
 export interface CommandParameter {
   name: string;
@@ -38,14 +39,14 @@ export interface CommandParameter {
 export interface CommandContext {
   kit: Kit;
   designId: DesignId;
-  selection: any;
+  selection: DesignEditorSelection;
   clusterDesign?: () => void;
   expandDesign?: (designId: DesignId) => void;
 }
 
 export interface CommandResult {
   design?: Design;
-  selection?: any;
+  selection?: DesignEditorSelection;
   fileUrls?: string[];
   fullscreenPanel?: any;
   content?: React.ReactNode;
@@ -640,10 +641,10 @@ class TerminalConsole {
   private fitAddon: FitAddon;
   private state: ConsoleState;
   private currentForm: TerminalForm | null = null;
-  private designEditor: any;
+  private designEditor: any = null; // TODO: Type this properly
   private onStateChange: (state: ConsoleState) => void;
 
-  constructor(element: HTMLElement, designEditor: any, initialState: ConsoleState, onStateChange: (state: ConsoleState) => void) {
+  constructor(element: HTMLElement, initialState: ConsoleState, onStateChange: (state: ConsoleState) => void) {
     this.terminal = new Terminal({
       fontSize: 14,
       fontFamily: '"Anta", "Noto Emoji"',
@@ -654,7 +655,7 @@ class TerminalConsole {
         foreground: "#001117",
         cursor: "#001117",
         cursorAccent: "#ff344f",
-        selection: "rgba(255, 52, 79, 0.3)",
+        selectionBackground: "rgba(255, 52, 79, 0.3)",
         black: "#001117",
         red: "#a60009",
         green: "#7eb77f",
@@ -679,7 +680,6 @@ class TerminalConsole {
     this.terminal.open(element);
     this.fitAddon.fit();
 
-    this.designEditor = designEditor;
     this.state = initialState;
     this.onStateChange = onStateChange;
 
@@ -954,10 +954,6 @@ class TerminalConsole {
     this.notifyStateChange();
   }
 
-  public updateDesignEditor(designEditor: any): void {
-    this.designEditor = designEditor;
-  }
-
   private updateSuggestions(): void {
     // This method is now handled in updateState to prevent infinite loops
     // Keep for backward compatibility if needed
@@ -1168,9 +1164,9 @@ class TerminalConsole {
 
     try {
       const context = {
-        kit: this.designEditor.kit || { types: [], designs: [] },
-        designId: this.designEditor.designId || "",
-        selection: this.designEditor.selection || {
+        kit: useKit(),
+        designId: useDesignEditorDesignId() || "",
+        selection: useDesignEditorSelection() || {
           selectedPieceIds: [],
           selectedConnections: [],
           selectedPiecePortId: undefined,
@@ -1180,9 +1176,10 @@ class TerminalConsole {
       if (command.editorOnly) {
         const result = await command.execute(context, payload);
 
-        if (result.selection && this.designEditor.setSelection) {
-          this.designEditor.setSelection(result.selection);
-        }
+        // TODO: implement
+        // if (result.selection && useDesignEditorSelection) {
+        //   useDesignEditorSelection(result.selection);
+        // }
 
         if (result.content) {
           this.renderReactContent(result.content);
@@ -1196,23 +1193,26 @@ class TerminalConsole {
           this.notifyStateChange();
         }
       } else {
-        if (this.designEditor.startTransaction) {
-          this.designEditor.startTransaction();
-        }
+        // TODO: implement
+        // if (this.designEditor.startTransaction) {
+        //   this.designEditor.startTransaction();
+        // }
 
         try {
           const result = await command.execute(context, payload);
 
-          if (result.design && this.designEditor.setDesign) {
-            this.designEditor.setDesign(result.design);
-          }
-          if (result.selection && this.designEditor.setSelection) {
-            this.designEditor.setSelection(result.selection);
-          }
+          // TODO: implement
+          // if (result.design && this.designEditor.setDesign) {
+          //   this.designEditor.setDesign(result.design);
+          // }
+          // if (result.selection && this.designEditor.setSelection) {
+          //   this.designEditor.setSelection(result.selection);
+          // }
 
-          if (this.designEditor.finalizeTransaction) {
-            this.designEditor.finalizeTransaction();
-          }
+          // TODO: implement
+          // if (this.designEditor.finalizeTransaction) {
+          //   this.designEditor.finalizeTransaction();
+          // }
 
           if (result.content) {
             this.renderReactContent(result.content);
@@ -1228,9 +1228,10 @@ class TerminalConsole {
 
           // Don't automatically return to prompt - wait for user input
         } catch (error) {
-          if (this.designEditor.abortTransaction) {
-            this.designEditor.abortTransaction();
-          }
+          // TODO: implement
+          // if (this.designEditor.abortTransaction) {
+          //   this.designEditor.abortTransaction();
+          // }
           throw error;
         }
       }
@@ -1319,10 +1320,14 @@ class TerminalConsole {
     if (this.currentForm) this.currentForm.cleanup();
     this.terminal.dispose();
   }
+
+  public updateDesignEditor(designEditor: any): void {
+    this.designEditor = designEditor;
+  }
 }
 
 const Console: FC = () => {
-  const designEditor = useDesignEditor();
+  const designEditor = null; // TODO: Replace with proper design editor reference
   const terminalRef = useRef<HTMLDivElement>(null);
   const terminalConsoleRef = useRef<TerminalConsole | null>(null);
   const [state, setState] = useState<ConsoleState>(() => {
@@ -1341,7 +1346,7 @@ const Console: FC = () => {
 
   useEffect(() => {
     if (terminalRef.current && !terminalConsoleRef.current) {
-      terminalConsoleRef.current = new TerminalConsole(terminalRef.current, designEditor, state, setState);
+      terminalConsoleRef.current = new TerminalConsole(terminalRef.current, state, setState);
 
       // Ensure focus after initial setup
       setTimeout(() => {
@@ -1361,8 +1366,9 @@ const Console: FC = () => {
 
   // Update design editor reference when it changes
   useEffect(() => {
-    if (terminalConsoleRef.current) {
-      terminalConsoleRef.current.updateDesignEditor(designEditor);
+    if (terminalConsoleRef.current && designEditor) {
+      // TODO: Implement design editor update if needed
+      console.log("Design editor updated", designEditor);
     }
   }, [designEditor]);
 

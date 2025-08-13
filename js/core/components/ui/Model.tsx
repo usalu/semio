@@ -22,7 +22,7 @@
 
 import { GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, OrthographicCamera, Select, TransformControls, useGLTF } from "@react-three/drei";
 import { Canvas, ThreeEvent } from "@react-three/fiber";
-import { applyDesignDiff, DiffStatus, flattenDesign, getPieceRepresentationUrls, Piece, Plane, planeToMatrix, toSemioRotation, updateDesignInKit, useDesignEditor } from "@semio/js";
+import { applyDesignDiff, DiffStatus, flattenDesign, getPieceRepresentationUrls, Piece, Plane, planeToMatrix, toSemioRotation, updateDesignInKit } from "@semio/js";
 import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import {
@@ -37,6 +37,7 @@ import {
   useDesignEditorSelection,
   useKit,
 } from "../../store";
+import { useDesignEditorCommands } from "./DesignEditor";
 
 const getComputedColor = (variable: string): string => {
   return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -82,7 +83,7 @@ interface ModelPieceProps {
 }
 
 const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, updating, diffStatus = DiffStatus.Unchanged, onSelect, onPieceUpdate }) => {
-  const { startTransaction, finalizeTransaction, abortTransaction } = useDesignEditor();
+  const { startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
   const fixed = piece.plane !== undefined;
   const matrix = useMemo(() => {
     const planeRotationMatrix = planeToMatrix(plane);
@@ -210,7 +211,7 @@ const ModelPiece: FC<ModelPieceProps> = ({ piece, plane, fileUrl, selected, upda
 
 const ModelDesign: FC = () => {
   const designId = useDesign();
-  const { removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = useDesignEditor();
+  const { removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = useDesignEditorCommands();
   const selection = useDesignEditorSelection();
   const designDiff = useDesignEditorDesignDiff();
   const fileUrls = useDesignEditorFileUrls();
@@ -354,7 +355,7 @@ const ModelCore: FC = () => {
 };
 
 const Model: FC = () => {
-  const { deselectAll, toggleModelFullscreen } = useDesignEditor();
+  const { deselectAll, toggleModelFullscreen } = useDesignEditorCommands();
   const onDoubleClickCapture = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();

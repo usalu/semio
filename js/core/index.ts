@@ -19,7 +19,7 @@
 
 // #endregion
 export { default as Console, commandRegistry as inkCommandRegistry } from "@semio/js/components/ui/Console";
-export { default as DesignEditor, useDesignEditor } from "@semio/js/components/ui/DesignEditor";
+export { default as DesignEditor } from "@semio/js/components/ui/DesignEditor";
 export { default as Diagram } from "@semio/js/components/ui/Diagram";
 export { default as File } from "@semio/js/components/ui/File";
 export { default as GrasshopperCatalogue } from "@semio/js/components/ui/GrasshopperCatalogue";
@@ -135,7 +135,7 @@ export {
   useDesignEditorFileUrls,
   useDesignEditorFullscreenPanel,
   useDesignEditorIsTransactionActive, useDesignEditorPresence, useDesignEditorPresenceOthers,
-  useDesignEditorSelection, useDesignEditor as useDesignEditorState
+  useDesignEditorSelection, useDesignEditorStore as useDesignEditorState
 } from "@semio/js/store";
 export type { DesignEditorState } from "@semio/js/store";
 export { default as tailwindConfig } from "@semio/js/tailwind.config";

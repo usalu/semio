@@ -18,27 +18,19 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-import { DesignId, Layout, Mode, Theme } from "@semio/js";
+import { DesignId } from "@semio/js";
 import { Avatar, AvatarFallback, AvatarImage } from "@semio/js/components/ui/Avatar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@semio/js/components/ui/Breadcrumb";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@semio/js/components/ui/Select";
 import { Toggle } from "@semio/js/components/ui/Toggle";
 import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle";
 import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGroup";
-import { AppWindow, ArrowLeft, Fingerprint, Home, Minus, Moon, Share2, Square, Sun, X } from "lucide-react";
+import { AppWindow, Fingerprint, Home, Minus, Moon, Share2, Square, Sun, X } from "lucide-react";
 import { FC, ReactNode } from "react";
-import { useSketchpad } from "./Sketchpad";
+import { Layout, Theme, useDesignEditorDesignId, useDesigns, useSketchpadCommands, useSketchpadLayout, useSketchpadTheme } from "../../store";
 
 interface NavbarProps {
-  mode?: Mode;
   toolbarContent?: ReactNode;
-  layout?: Layout;
-  theme?: Theme;
-  setLayout?: (layout: Layout) => void;
-  setTheme?: (theme: Theme) => void;
-  designId: DesignId;
-  onDesignIdChange?: (designId: DesignId) => void;
-  availableDesigns?: DesignId[];
   onWindowEvents?: {
     minimize: () => void;
     maximize: () => void;
@@ -46,8 +38,12 @@ interface NavbarProps {
   };
 }
 
-const Navbar: FC<NavbarProps> = ({ mode, toolbarContent, layout, theme, setLayout, setTheme, onWindowEvents, designId, onDesignIdChange, availableDesigns }) => {
-  const { previousDesign, sketchpadState } = useSketchpad();
+const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
+  const { setTheme, setLayout } = useSketchpadCommands();
+  const layout = useSketchpadLayout();
+  const theme = useSketchpadTheme();
+  const designId = useDesignEditorDesignId();
+  const availableDesigns = useDesigns();
   // Create a unique key for each design
   const getDesignKey = (design: DesignId): string => {
     const parts = [design.name];
@@ -81,12 +77,11 @@ const Navbar: FC<NavbarProps> = ({ mode, toolbarContent, layout, theme, setLayou
 
   // Handle design selection using the compound key
   const handleDesignChange = (designKey: string) => {
-    if (!availableDesigns || !onDesignIdChange) return;
-
-    const selectedDesign = availableDesigns.find((design) => getDesignKey(design) === designKey);
-    if (selectedDesign) {
-      onDesignIdChange(selectedDesign);
-    }
+    // if (!availableDesigns || !onDesignIdChange) return;
+    // const selectedDesign = availableDesigns.find((design) => getDesignKey(design) === designKey);
+    // if (selectedDesign) {
+    //   onDesignIdChange(selectedDesign);
+    // }
   };
 
   // Get current design key for the selected value
@@ -96,9 +91,9 @@ const Navbar: FC<NavbarProps> = ({ mode, toolbarContent, layout, theme, setLayou
     <div className={`w-full h-12 bg-background border-b flex items-center justify-between px-4`}>
       <div className="flex items-center gap-2">
         {/* Back button */}
-        <Toggle variant="outline" tooltip="Previous design" disabled={sketchpadState.designHistory.length === 0} onClick={previousDesign} className="h-8 w-8 p-0">
+        {/* <Toggle variant="outline" tooltip="Previous design" disabled={sketchpadState.designHistory.length === 0} onClick={previousDesign} className="h-8 w-8 p-0">
           <ArrowLeft size={16} />
-        </Toggle>
+        </Toggle> */}
 
         <Breadcrumb>
           <BreadcrumbList>
