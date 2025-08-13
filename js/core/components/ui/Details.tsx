@@ -588,23 +588,23 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
       const includedDesign = includedDesignMap.get(pieceId);
 
       if (includedDesign && includedDesign.type === "fixed") {
-        // Handle fixed design piece - update the fixedDesigns array
+        // Handle fixed design piece - update the designPieces array
         const newDesignId = {
           name: value,
           variant: includedDesign.designId.variant,
           view: includedDesign.designId.view,
         };
 
-        // Find and update the fixed design entry
-        const updatedFixedDesigns = (design.fixedDesigns || []).map((fd: any) => {
-          if (fd.designId.name === includedDesign.designId.name && (fd.designId.variant || undefined) === (includedDesign.designId.variant || undefined) && (fd.designId.view || undefined) === (includedDesign.designId.view || undefined)) {
-            return { ...fd, designId: newDesignId };
+        // Find and update the design piece entry
+        const updatedDesignPieces = (design.designPieces || []).map((dp: any) => {
+          if (dp.designId.name === includedDesign.designId.name && (dp.designId.variant || undefined) === (includedDesign.designId.variant || undefined) && (dp.designId.view || undefined) === (includedDesign.designId.view || undefined)) {
+            return { ...dp, designId: newDesignId };
           }
-          return fd;
+          return dp;
         });
 
-        // Update the design with new fixedDesigns array
-        const updatedDesign = { ...design, fixedDesigns: updatedFixedDesigns };
+        // Update the design with new designPieces array
+        const updatedDesign = { ...design, designPieces: updatedDesignPieces };
         setDesign(updatedDesign);
       } else if (includedDesign && includedDesign.type === "connected") {
         // Connected designs cannot be renamed from here - they are clustered designs

@@ -1686,15 +1686,20 @@ ${typesList}`,
       const selectedPieces = design.pieces?.filter((p) => selection.selectedPieceIds.includes(p.id_)) || [];
       const selectedConnections = design.connections?.filter((conn) => selection.selectedConnections.some((selConn: any) => selConn.connectingPieceId === conn.connecting.piece.id_ && selConn.connectedPieceId === conn.connected.piece.id_)) || [];
 
+      // Find selected fixed design pieces (pieces that reference other designs)
+      const selectedDesignPieces = design.designPieces?.filter((dp) => selection.selectedDesignPieces.includes(dp.designId.name));
+
       const exportData = {
         pieces: selectedPieces,
         connections: selectedConnections,
+        includedDesignPieces: selectedDesignPieces,
       };
 
       try {
         await navigator.clipboard.writeText(JSON.stringify(exportData, null, 2));
+        const designPiecesCount = selectedDesignPieces.length;
         return {
-          content: `✅ Copied ${selectedPieces.length} pieces and ${selectedConnections.length} connections to clipboard`,
+          content: `✅ Copied ${selectedPieces.length} pieces, ${selectedConnections.length} connections${designPiecesCount > 0 ? `, and ${designPiecesCount} design pieces` : ""} to clipboard`,
         };
       } catch (error) {
         return {

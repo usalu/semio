@@ -206,7 +206,7 @@ export const DesignSchema: z.ZodType<any> = z.object({
     .optional(),
   pieces: z.array(PieceSchema).optional(),
   connections: z.array(ConnectionSchema).optional(),
-  fixedDesigns: z
+  designPieces: z
     .array(
       z.object({
         designId: z.lazy(() => DesignIdSchema),
@@ -1979,42 +1979,45 @@ export const explodeDesignPieces = (design: Design, kit: Kit): Design => {
     }
   }
 
-  // Handle fixedDesigns by converting them to regular pieces with plane/center
-  if (design.fixedDesigns && design.fixedDesigns.length > 0) {
+  // Handle designPieces by converting fixed ones to regular pieces with plane/center
+  if (design.designPieces && design.designPieces.length > 0) {
     const fixedDesignPieces: Piece[] = [];
 
-    for (const fixedDesign of design.fixedDesigns) {
-      try {
-        const referencedDesign = findDesignInKit(kit, fixedDesign.designId);
-        if (!referencedDesign) continue;
+    for (const designPiece of design.designPieces) {
+      // Only explode fixed design pieces (those with plane/center)
+      if (designPiece.plane || designPiece.center) {
+        try {
+          const referencedDesign = findDesignInKit(kit, designPiece.designId);
+          if (!referencedDesign) continue;
 
-        // Recursively explode the fixed design
-        const explodedFixedDesign = explodeDesignPieces(referencedDesign, kit);
+          // Recursively explode the fixed design
+          const explodedFixedDesign = explodeDesignPieces(referencedDesign, kit);
 
-        // Transform pieces from the fixed design with the specified plane/center
-        const transformedFixedPieces = (explodedFixedDesign.pieces || []).map((piece: Piece) => ({
-          ...piece,
-          plane: fixedDesign.plane || piece.plane,
-          center: fixedDesign.center || piece.center || { x: 0, y: 0 },
-        }));
+          // Transform pieces from the fixed design with the specified plane/center
+          const transformedFixedPieces = (explodedFixedDesign.pieces || []).map((piece: Piece) => ({
+            ...piece,
+            plane: designPiece.plane || piece.plane,
+            center: designPiece.center || piece.center || { x: 0, y: 0 },
+          }));
 
-        fixedDesignPieces.push(...transformedFixedPieces);
+          fixedDesignPieces.push(...transformedFixedPieces);
 
-        // Add connections from the fixed design
-        if (explodedFixedDesign.connections) {
-          explodedDesign.connections = [...(explodedDesign.connections || []), ...explodedFixedDesign.connections];
+          // Add connections from the fixed design
+          if (explodedFixedDesign.connections) {
+            explodedDesign.connections = [...(explodedDesign.connections || []), ...explodedFixedDesign.connections];
+          }
+        } catch (error) {
+          // Design not found, skip
+          continue;
         }
-      } catch (error) {
-        // Design not found, skip
-        continue;
       }
     }
 
-    // Add fixed design pieces and remove fixedDesigns array
+    // Add fixed design pieces and remove designPieces array
     explodedDesign = {
       ...explodedDesign,
       pieces: [...(explodedDesign.pieces || []), ...fixedDesignPieces],
-      fixedDesigns: undefined, // Remove since we've exploded them
+      designPieces: undefined, // Remove since we've exploded them
     };
   }
 
@@ -2071,7 +2074,7 @@ export const updateDesignInKit = (kit: Kit, design: Design): Kit => {
 export type IncludedDesignInfo = {
   id: string;
   designId: DesignId;
-  type: "connected" | "fixed";
+  type: "connected" | "fixed" | "referenced";
   center?: DiagramPoint;
   plane?: Plane;
   externalConnections?: Connection[];
@@ -2080,14 +2083,26 @@ export type IncludedDesignInfo = {
 export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
   const includedDesigns: IncludedDesignInfo[] = [];
 
-  // Get designs from external connections (clustered designs)
+  // Add design pieces (both fixed and referenced designs)
+  (design.designPieces || []).forEach((designPiece: any) => {
+    const { designId: pieceDesignId, center, plane } = designPiece;
+    const type = plane || center ? "fixed" : "referenced";
+    includedDesigns.push({
+      id: `${type}-design-${pieceDesignId.name}-${pieceDesignId.variant || ""}-${pieceDesignId.view || ""}`,
+      designId: pieceDesignId,
+      type,
+      center,
+      plane,
+    });
+  });
+
+  // Add connected designs from external connections (clustered designs)
   const designIds = new Set<string>();
   design.connections?.forEach((conn: Connection) => {
     if (conn.connected.designId) designIds.add(conn.connected.designId);
     if (conn.connecting.designId) designIds.add(conn.connecting.designId);
   });
 
-  // Add connected designs
   Array.from(designIds).forEach((designIdString) => {
     const externalConnections =
       design.connections?.filter((connection: Connection) => {
@@ -2097,22 +2112,10 @@ export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
       }) ?? [];
 
     includedDesigns.push({
-      id: `design-${designIdString}`,
+      id: `connected-design-${designIdString}`,
       designId: { name: designIdString },
       type: "connected",
       externalConnections,
-    });
-  });
-
-  // Add fixed designs
-  (design.fixedDesigns || []).forEach((fixedDesign: any) => {
-    const { designId: fixedDesignId, center, plane } = fixedDesign;
-    includedDesigns.push({
-      id: `fixed-design-${fixedDesignId.name}-${fixedDesignId.variant || ""}-${fixedDesignId.view || ""}`,
-      designId: fixedDesignId,
-      type: "fixed",
-      center,
-      plane,
     });
   });
 

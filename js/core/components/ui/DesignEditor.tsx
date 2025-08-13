@@ -108,6 +108,7 @@ export interface DesignEditorSelection {
     connectingPieceId: string;
     connectedPieceId: string;
   }[];
+  selectedDesignPieces: string[];
   selectedPiecePortId?: { pieceId: string; portId: string };
 }
 
@@ -225,31 +226,35 @@ const selectAll = (design: Design): DesignEditorSelection => ({
       connectedPieceId: c.connected.piece.id_,
       connectingPieceId: c.connecting.piece.id_,
     })) || [],
+  selectedDesignPieces: design.designPieces?.map((dp: any) => `${dp.designId.name}-${dp.designId.variant || ""}-${dp.designId.view || ""}`) || [],
   selectedPiecePortId: undefined,
 });
 const deselectAll = (selection: DesignEditorSelection): DesignEditorSelection => ({
   selectedPieceIds: [],
   selectedConnections: [],
+  selectedDesignPieces: [],
   selectedPiecePortId: undefined,
 });
 const addAllPiecesToSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
   const existingIds = new Set(selection.selectedPieceIds);
   const allPieceIds = design.pieces?.map((p: Piece) => p.id_) || [];
-  const newIds = allPieceIds.filter((id) => !existingIds.has(id));
+  const newIds = allPieceIds.filter((id: string) => !existingIds.has(id));
   return {
     selectedPieceIds: [...selection.selectedPieceIds, ...newIds],
     selectedConnections: selection.selectedConnections,
+    selectedDesignPieces: selection.selectedDesignPieces,
     selectedPiecePortId: selection.selectedPiecePortId,
   };
 };
 const removeAllPiecesFromSelection = (selection: DesignEditorSelection): DesignEditorSelection => ({
   selectedPieceIds: [],
   selectedConnections: selection.selectedConnections,
+  selectedDesignPieces: selection.selectedDesignPieces,
   selectedPiecePortId: selection.selectedPiecePortId,
 });
 const addAllConnectionsToSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
   const allConnections = design.connections?.map((c: Connection) => connectionToSelectionConnection(c)) || [];
-  const newConnections = allConnections.filter((conn) => {
+  const newConnections = allConnections.filter((conn: any) => {
     const connectionId = selectionConnectionToConnectionId(conn);
     return !selection.selectedConnections.some((c) => {
       const existingConnectionId = selectionConnectionToConnectionId(c);
@@ -259,18 +264,21 @@ const addAllConnectionsToSelection = (selection: DesignEditorSelection, design: 
   return {
     selectedPieceIds: selection.selectedPieceIds,
     selectedConnections: [...selection.selectedConnections, ...newConnections],
+    selectedDesignPieces: selection.selectedDesignPieces,
     selectedPiecePortId: selection.selectedPiecePortId,
   };
 };
 const removeAllConnectionsFromSelection = (selection: DesignEditorSelection): DesignEditorSelection => ({
   selectedPieceIds: selection.selectedPieceIds,
   selectedConnections: [],
+  selectedDesignPieces: selection.selectedDesignPieces,
   selectedPiecePortId: selection.selectedPiecePortId,
 });
 
 const selectPiece = (piece: Piece | PieceId): DesignEditorSelection => ({
   selectedPieceIds: [typeof piece === "string" ? piece : piece.id_],
   selectedConnections: [],
+  selectedDesignPieces: [],
   selectedPiecePortId: undefined,
 });
 const addPieceToSelection = (selection: DesignEditorSelection, piece: Piece | PieceId): DesignEditorSelection => {
@@ -280,6 +288,7 @@ const addPieceToSelection = (selection: DesignEditorSelection, piece: Piece | Pi
   return {
     selectedPieceIds: newPieceIds,
     selectedConnections: selection.selectedConnections,
+    selectedDesignPieces: selection.selectedDesignPieces,
     selectedPiecePortId: selection.selectedPiecePortId,
   };
 };
@@ -287,6 +296,7 @@ const removePieceFromSelection = (selection: DesignEditorSelection, piece: Piece
   return {
     selectedPieceIds: selection.selectedPieceIds.filter((id: string) => id !== (typeof piece === "string" ? piece : piece.id_)),
     selectedConnections: selection.selectedConnections,
+    selectedDesignPieces: selection.selectedDesignPieces,
     selectedPiecePortId: selection.selectedPiecePortId,
   };
 };
@@ -294,6 +304,7 @@ const removePieceFromSelection = (selection: DesignEditorSelection, piece: Piece
 const selectPieces = (pieces: (Piece | PieceId)[]): DesignEditorSelection => ({
   selectedPieceIds: pieces.map((p) => (typeof p === "string" ? p : p.id_)),
   selectedConnections: [],
+  selectedDesignPieces: [],
   selectedPiecePortId: undefined,
 });
 const addPiecesToSelection = (selection: DesignEditorSelection, pieces: (Piece | PieceId)[]): DesignEditorSelection => {
@@ -315,6 +326,7 @@ const removePiecesFromSelection = (selection: DesignEditorSelection, pieces: (Pi
 const selectConnection = (connection: Connection | ConnectionId): DesignEditorSelection => ({
   selectedConnections: [connectionToSelectionConnection(connection)],
   selectedPieceIds: [],
+  selectedDesignPieces: [],
   selectedPiecePortId: undefined,
 });
 const addConnectionToSelection = (selection: DesignEditorSelection, connection: Connection | ConnectionId): DesignEditorSelection => {
@@ -329,6 +341,7 @@ const addConnectionToSelection = (selection: DesignEditorSelection, connection: 
   return {
     selectedConnections: [...selection.selectedConnections, connectionObj],
     selectedPieceIds: selection.selectedPieceIds,
+    selectedDesignPieces: selection.selectedDesignPieces,
     selectedPiecePortId: selection.selectedPiecePortId,
   };
 };
@@ -339,6 +352,7 @@ const removeConnectionFromSelection = (selection: DesignEditorSelection, connect
       return !isSameConnection(existingConnectionId, connection);
     }),
     selectedPieceIds: selection.selectedPieceIds,
+    selectedDesignPieces: selection.selectedDesignPieces,
     selectedPiecePortId: selection.selectedPiecePortId,
   };
 };
@@ -346,6 +360,7 @@ const removeConnectionFromSelection = (selection: DesignEditorSelection, connect
 const selectConnections = (connections: (Connection | ConnectionId)[]): DesignEditorSelection => ({
   selectedConnections: connections.map((conn) => connectionToSelectionConnection(conn)),
   selectedPieceIds: [],
+  selectedDesignPieces: [],
   selectedPiecePortId: undefined,
 });
 const addConnectionsToSelection = (selection: DesignEditorSelection, connections: (Connection | ConnectionId)[]): DesignEditorSelection => {
@@ -370,6 +385,7 @@ const removeConnectionsFromSelection = (selection: DesignEditorSelection, connec
       return !connections.some((conn) => isSameConnection(existingConnectionId, conn));
     }),
     selectedPieceIds: selection.selectedPieceIds,
+    selectedDesignPieces: selection.selectedDesignPieces,
     selectedPiecePortId: selection.selectedPiecePortId,
   };
 };
@@ -377,6 +393,7 @@ const removeConnectionsFromSelection = (selection: DesignEditorSelection, connec
 const selectPiecePort = (pieceId: string, portId: string): DesignEditorSelection => ({
   selectedPieceIds: [],
   selectedConnections: [],
+  selectedDesignPieces: [],
   selectedPiecePortId: { pieceId, portId },
 });
 const deselectPiecePort = (selection: DesignEditorSelection): DesignEditorSelection => ({ ...selection, selectedPiecePortId: undefined });
@@ -384,8 +401,8 @@ const deselectPiecePort = (selection: DesignEditorSelection): DesignEditorSelect
 const invertSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
   const allPieceIds = design.pieces?.map((p: Piece) => p.id_) || [];
   const allConnections = design.connections?.map((c: Connection) => connectionToSelectionConnection(c)) || [];
-  const newSelectedPieceIds = allPieceIds.filter((id) => !selection.selectedPieceIds.includes(id));
-  const newSelectedConnections = allConnections.filter((conn) => {
+  const newSelectedPieceIds = allPieceIds.filter((id: string) => !selection.selectedPieceIds.includes(id));
+  const newSelectedConnections = allConnections.filter((conn: any) => {
     const connectionId = selectionConnectionToConnectionId(conn);
     return !selection.selectedConnections.some((selected) => {
       const selectedConnectionId = selectionConnectionToConnectionId(selected);
@@ -395,22 +412,24 @@ const invertSelection = (selection: DesignEditorSelection, design: Design): Desi
   return {
     selectedPieceIds: newSelectedPieceIds,
     selectedConnections: newSelectedConnections,
+    selectedDesignPieces: [], // Reset design pieces selection during invert
     selectedPiecePortId: undefined,
   };
 };
 
 const invertPiecesSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
   const allPieceIds = design.pieces?.map((p: Piece) => p.id_) || [];
-  const newSelectedPieceIds = allPieceIds.filter((id) => !selection.selectedPieceIds.includes(id));
+  const newSelectedPieceIds = allPieceIds.filter((id: string) => !selection.selectedPieceIds.includes(id));
   return {
     selectedPieceIds: newSelectedPieceIds,
     selectedConnections: selection.selectedConnections,
+    selectedDesignPieces: selection.selectedDesignPieces,
     selectedPiecePortId: selection.selectedPiecePortId,
   };
 };
 const invertConnectionsSelection = (selection: DesignEditorSelection, design: Design): DesignEditorSelection => {
   const allConnections = design.connections?.map((c: Connection) => connectionToSelectionConnection(c)) || [];
-  const newSelectedConnections = allConnections.filter((conn) => {
+  const newSelectedConnections = allConnections.filter((conn: any) => {
     const connectionId = selectionConnectionToConnectionId(conn);
     return !selection.selectedConnections.some((selected) => {
       const selectedConnectionId = selectionConnectionToConnectionId(selected);
@@ -420,13 +439,14 @@ const invertConnectionsSelection = (selection: DesignEditorSelection, design: De
   return {
     selectedPieceIds: selection.selectedPieceIds,
     selectedConnections: newSelectedConnections,
+    selectedDesignPieces: selection.selectedDesignPieces,
     selectedPiecePortId: selection.selectedPiecePortId,
   };
 };
 
 const subDesignFromSelection = (design: Design, selection: DesignEditorSelection): Design => {
-  const subPieces = design.pieces?.filter((p) => selection.selectedPieceIds.includes(p.id_));
-  const subConnections = design.connections?.filter((c) => selection.selectedConnections.some((sc) => isSameConnection(selectionConnectionToConnectionId(sc), c)));
+  const subPieces = design.pieces?.filter((p: Piece) => selection.selectedPieceIds.includes(p.id_));
+  const subConnections = design.connections?.filter((c: Connection) => selection.selectedConnections.some((sc) => isSameConnection(selectionConnectionToConnectionId(sc), c)));
   return { ...design, pieces: subPieces, connections: subConnections };
 };
 
@@ -1208,6 +1228,7 @@ export function createInitialDesignEditorCoreState(props: { initialKit: Kit; des
   const defaultSelection = {
     selectedPieceIds: [],
     selectedConnections: [],
+    selectedDesignPieces: [],
     selectedPiecePortId: undefined,
   };
 
@@ -1707,7 +1728,7 @@ const DesignEditorCore: FC<DesignEditorProps> = (props) => {
         };
         const updated = {
           ...current,
-          fixedDesigns: [...(current.fixedDesigns || []), newEntry],
+          designPieces: [...(current.designPieces || []), newEntry],
         };
         dispatch({ type: DesignEditorAction.SetDesign, payload: updated });
       }
