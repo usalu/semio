@@ -121,7 +121,7 @@ const ensureDesignHasFixedPiece = (design: Design): Design => {
 };
 
 // Higher-level Sketchpad state management
-interface SketchpadState {
+export interface SketchpadState {
   isLoading: boolean;
   fileUrls: Map<string, string>;
   kit: Kit | null;
@@ -130,7 +130,7 @@ interface SketchpadState {
   designHistory: DesignId[]; // history of previously opened designs
 }
 
-enum SketchpadAction {
+export enum SketchpadAction {
   UrlsLoaded = "URLS_LOADED",
   ChangeActiveDesign = "CHANGE_ACTIVE_DESIGN",
   PreviousDesign = "PREVIOUS_DESIGN",
@@ -141,7 +141,7 @@ enum SketchpadAction {
   explodeDesign = "EXPAND_DESIGN",
 }
 
-type SketchpadActionType =
+export type SketchpadActionType =
   | {
       type: SketchpadAction.UrlsLoaded;
       payload: { fileUrls: Map<string, string> };
@@ -175,7 +175,7 @@ type SketchpadActionType =
       payload: DesignId;
     };
 
-const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): SketchpadState => {
+export const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): SketchpadState => {
   console.log("SKETCHPAD ACTION:", action.type, action.payload);
 
   let newState: SketchpadState;
@@ -529,6 +529,7 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
           selectedPieceIds: [],
           selectedConnections: [],
           selectedPiecePortId: undefined,
+          selectedDesignPieces: [],
         },
       });
 
@@ -705,7 +706,7 @@ const sketchpadReducer = (state: SketchpadState, action: SketchpadActionType): S
   return newState;
 };
 
-const createInitialSketchpadState = (): SketchpadState => {
+export const createInitialSketchpadState = (): SketchpadState => {
   return {
     isLoading: true,
     fileUrls: new Map(),
@@ -931,7 +932,3 @@ const Sketchpad: FC<SketchpadProps> = ({ mode = Mode.USER, theme, layout = Layou
 };
 
 export default Sketchpad;
-
-// Export Sketchpad state management types for external use
-export { SketchpadAction };
-export type { SketchpadActionType, SketchpadState };
