@@ -42,6 +42,7 @@ export {
   applyDesignDiff,
   arePortsCompatible,
   CameraSchema,
+  clusterDesign,
   colorPortsForTypes,
   connectionIdLikeToConnectionId,
   ConnectionSchema,
@@ -50,6 +51,7 @@ export {
   designIdLikeToDesignId,
   DesignSchema,
   DiffStatus,
+  ensureDesignHasFixedPiece,
   explodeDesignPieces,
   findConnectionInDesign,
   findDesignInKit,
@@ -134,6 +136,7 @@ export {
 export type {
   Author,
   Camera,
+  ClusterDesignResult,
   Connection,
   ConnectionDiff,
   ConnectionId,

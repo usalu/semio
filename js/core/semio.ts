@@ -2071,6 +2071,280 @@ export const updateDesignInKit = (kit: Kit, design: Design): Kit => {
   };
 };
 
+// Function to ensure design has at least one fixed piece using breadth-first search
+export const ensureDesignHasFixedPiece = (design: Design): Design => {
+  if (!design.pieces || design.pieces.length === 0) {
+    return design;
+  }
+
+  // Check if any piece is already fixed
+  const hasFixedPiece = design.pieces.some((piece: Piece) => piece.plane && piece.center);
+  if (hasFixedPiece) {
+    return design;
+  }
+
+  // Build adjacency list for BFS
+  const adjacencyList = new Map<string, string[]>();
+  design.pieces.forEach((piece: Piece) => {
+    if (piece.id_) {
+      adjacencyList.set(piece.id_, []);
+    }
+  });
+
+  // Add connections to adjacency list
+  design.connections?.forEach((connection: Connection) => {
+    const connectedId = connection.connected.piece.id_;
+    const connectingId = connection.connecting.piece.id_;
+
+    if (connectedId && connectingId) {
+      adjacencyList.get(connectedId)?.push(connectingId);
+      adjacencyList.get(connectingId)?.push(connectedId);
+    }
+  });
+
+  // Find the piece with the most connections using BFS
+  let maxConnections = -1;
+  let parentPieceId: string | null = null;
+
+  for (const piece of design.pieces) {
+    if (!piece.id_) continue;
+
+    const visited = new Set<string>();
+    const queue = [piece.id_];
+    visited.add(piece.id_);
+    let connectionCount = 0;
+
+    while (queue.length > 0) {
+      const currentId = queue.shift()!;
+      const neighbors = adjacencyList.get(currentId) || [];
+
+      connectionCount += neighbors.length;
+
+      for (const neighborId of neighbors) {
+        if (!visited.has(neighborId)) {
+          visited.add(neighborId);
+          queue.push(neighborId);
+        }
+      }
+    }
+
+    if (connectionCount > maxConnections) {
+      maxConnections = connectionCount;
+      parentPieceId = piece.id_;
+    }
+  }
+
+  // If no connections exist, just pick the first piece
+  if (!parentPieceId && design.pieces.length > 0) {
+    parentPieceId = design.pieces[0].id_ || null;
+  }
+
+  if (!parentPieceId) {
+    return design;
+  }
+
+  // Fix the parent piece with center and plane
+  const updatedPieces = design.pieces.map((piece: Piece) => {
+    if (piece.id_ === parentPieceId) {
+      return {
+        ...piece,
+        center: piece.center || { x: 0, y: 0 },
+        plane: piece.plane || {
+          origin: { x: 0, y: 0, z: 0 },
+          xAxis: { x: 1, y: 0, z: 0 },
+          yAxis: { x: 0, y: 1, z: 0 },
+        },
+      };
+    }
+    return piece;
+  });
+
+  return {
+    ...design,
+    pieces: updatedPieces,
+  };
+};
+
+export interface ClusterDesignResult {
+  updatedKit: Kit;
+  clusteredDesign: Design;
+  updatedSourceDesign: Design;
+}
+
+/**
+ * Clusters selected pieces from a design into a new hierarchical design
+ * @param kit - The kit containing the design and types
+ * @param sourceDesignId - The design to cluster pieces from
+ * @param selectedPieceIds - The piece IDs to cluster
+ * @param clusteredDesignName - Optional name for the clustered design (defaults to timestamp-based name)
+ * @returns Object containing the updated kit, clustered design, and updated source design
+ */
+export const clusterDesign = (kit: Kit, sourceDesignId: DesignIdLike, selectedPieceIds: string[], clusteredDesignName?: string): ClusterDesignResult => {
+  const normalizedSourceDesignId = designIdLikeToDesignId(sourceDesignId);
+  const design = findDesignInKit(kit, normalizedSourceDesignId);
+
+  // Validate clustering is possible
+  const clusterableGroups = getClusterableGroups(design, selectedPieceIds);
+  if (clusterableGroups.length === 0) {
+    throw new Error("No clusterable groups found with current selection");
+  }
+
+  // Use the first (and typically only) clusterable group
+  const finalClusterPieceIds = clusterableGroups[0];
+
+  const designName = clusteredDesignName || `Cluster-${Date.now()}`;
+
+  // Separate regular pieces from design nodes
+  const regularPieceIds = finalClusterPieceIds.filter((id) => !id.startsWith("design-"));
+  const designNodeIds = finalClusterPieceIds.filter((id) => id.startsWith("design-"));
+
+  // Collect all pieces to include in the cluster
+  let allPiecesToCluster: Piece[] = [];
+  let allConnectionsToCluster: Connection[] = [];
+  let allExternalConnections: Connection[] = [];
+
+  // Add regular pieces
+  if (regularPieceIds.length > 0) {
+    const regularPieces = (design.pieces || []).filter((piece: Piece) => regularPieceIds.includes(piece.id_));
+    allPiecesToCluster.push(...regularPieces);
+
+    // Find connections involving regular pieces
+    const regularConnections = (design.connections || []).filter((connection: Connection) => regularPieceIds.includes(connection.connected.piece.id_) || regularPieceIds.includes(connection.connecting.piece.id_));
+
+    // Separate internal and external connections for regular pieces
+    const internalRegularConnections = regularConnections.filter((connection: Connection) => regularPieceIds.includes(connection.connected.piece.id_) && regularPieceIds.includes(connection.connecting.piece.id_));
+
+    const externalRegularConnections = regularConnections.filter((connection: Connection) => {
+      const connectedInCluster = regularPieceIds.includes(connection.connected.piece.id_);
+      const connectingInCluster = regularPieceIds.includes(connection.connecting.piece.id_);
+      return connectedInCluster !== connectingInCluster; // XOR - exactly one is in cluster
+    });
+
+    allConnectionsToCluster.push(...internalRegularConnections);
+    allExternalConnections.push(...externalRegularConnections);
+  }
+
+  // Add pieces from design nodes
+  for (const designNodeId of designNodeIds) {
+    // Extract design name from design node ID (format: "design-DesignName")
+    const referencedDesignName = designNodeId.replace("design-", "");
+
+    let referencedDesign: Design | null = null;
+    try {
+      referencedDesign = findDesignInKit(kit, { name: referencedDesignName });
+    } catch (error) {
+      console.warn(`Referenced design ${referencedDesignName} not found in kit:`, error);
+      continue;
+    }
+
+    if (referencedDesign && referencedDesign.pieces) {
+      // Simply use the original pieces and connections
+      allPiecesToCluster.push(...referencedDesign.pieces);
+
+      // Use the original connections as-is
+      if (referencedDesign.connections) {
+        allConnectionsToCluster.push(...referencedDesign.connections);
+      }
+
+      // Find external connections that connect to this design node
+      const designExternalConnections = (design.connections || []).filter((connection: Connection) => connection.connected.designId === referencedDesignName || connection.connecting.designId === referencedDesignName);
+
+      allExternalConnections.push(...designExternalConnections);
+    }
+  }
+
+  // Create the clustered design with all collected pieces and connections
+  const clusteredDesign: Design = {
+    name: designName,
+    unit: design.unit,
+    description: `Hierarchical cluster with ${allPiecesToCluster.length} pieces`,
+    pieces: allPiecesToCluster,
+    connections: allConnectionsToCluster,
+    created: new Date(),
+    updated: new Date(),
+  };
+
+  // Ensure at least one piece is fixed
+  const processedClusteredDesign = ensureDesignHasFixedPiece(clusteredDesign);
+
+  // Remove all clustered items from the current design
+  const remainingPieces = (design.pieces || []).filter((piece: Piece) => !regularPieceIds.includes(piece.id_));
+
+  // Remove connections involving clustered regular pieces or design nodes
+  const remainingConnections = (design.connections || []).filter((connection: Connection) => {
+    const connectedInRegularCluster = regularPieceIds.includes(connection.connected.piece.id_);
+    const connectingInRegularCluster = regularPieceIds.includes(connection.connecting.piece.id_);
+    const connectedInDesignCluster = designNodeIds.some((designId) => {
+      const designName = designId.replace("design-", "");
+      return connection.connected.designId === designName;
+    });
+    const connectingInDesignCluster = designNodeIds.some((designId) => {
+      const designName = designId.replace("design-", "");
+      return connection.connecting.designId === designName;
+    });
+
+    return !connectedInRegularCluster && !connectingInRegularCluster && !connectedInDesignCluster && !connectingInDesignCluster;
+  });
+
+  // Update external connections to reference the new clustered design
+  const updatedExternalConnections = allExternalConnections.map((connection: Connection) => {
+    const connectedInCluster =
+      regularPieceIds.includes(connection.connected.piece.id_) ||
+      designNodeIds.some((designId) => {
+        const designName = designId.replace("design-", "");
+        return connection.connected.designId === designName;
+      });
+
+    const connectingInCluster =
+      regularPieceIds.includes(connection.connecting.piece.id_) ||
+      designNodeIds.some((designId) => {
+        const designName = designId.replace("design-", "");
+        return connection.connecting.designId === designName;
+      });
+
+    if (connectedInCluster) {
+      return {
+        ...connection,
+        connected: {
+          piece: { id_: connection.connected.piece.id_ },
+          port: connection.connected.port,
+          designId: processedClusteredDesign.name,
+        },
+      };
+    } else if (connectingInCluster) {
+      return {
+        ...connection,
+        connecting: {
+          piece: { id_: connection.connecting.piece.id_ },
+          port: connection.connecting.port,
+          designId: processedClusteredDesign.name,
+        },
+      };
+    }
+
+    return connection;
+  });
+
+  const updatedSourceDesign: Design = {
+    ...design,
+    pieces: remainingPieces,
+    connections: [...remainingConnections, ...updatedExternalConnections],
+    updated: new Date(),
+  };
+
+  // Add the clustered design to the kit
+  const kitWithClusteredDesign = addDesignToKit(kit, processedClusteredDesign);
+
+  // Update the current design in the kit
+  const updatedKit = updateDesignInKit(kitWithClusteredDesign, updatedSourceDesign);
+
+  return {
+    updatedKit,
+    clusteredDesign: processedClusteredDesign,
+    updatedSourceDesign,
+  };
+};
+
 export type IncludedDesignInfo = {
   id: string;
   designId: DesignId;

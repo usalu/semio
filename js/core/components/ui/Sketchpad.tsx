@@ -23,102 +23,8 @@ import { createContext, FC, ReactNode, useContext, useEffect, useReducer, useSta
 import DesignEditor, { createInitialDesignEditorCoreState, DesignEditorCoreState, DesignEditorDispatcher, designEditorReducer, DesignEditorState } from "./DesignEditor";
 
 import { default as Metabolism } from "@semio/assets/semio/kit_metabolism.json";
-import { addDesignToKit, Connection, Design, DesignId, findDesignInKit, getClusterableGroups, Kit, Piece, updateDesignInKit } from "@semio/js";
+import { addDesignToKit, clusterDesign, Connection, Design, DesignId, ensureDesignHasFixedPiece, findDesignInKit, Kit, updateDesignInKit } from "@semio/js";
 import { extractFilesAndCreateUrls } from "../../lib/utils";
-
-// Function to ensure design has at least one fixed piece using breadth-first search
-const ensureDesignHasFixedPiece = (design: Design): Design => {
-  if (!design.pieces || design.pieces.length === 0) {
-    return design;
-  }
-
-  // Check if any piece is already fixed
-  const hasFixedPiece = design.pieces.some((piece: Piece) => piece.plane && piece.center);
-  if (hasFixedPiece) {
-    return design;
-  }
-
-  // Build adjacency list for BFS
-  const adjacencyList = new Map<string, string[]>();
-  design.pieces.forEach((piece: Piece) => {
-    if (piece.id_) {
-      adjacencyList.set(piece.id_, []);
-    }
-  });
-
-  // Add connections to adjacency list
-  design.connections?.forEach((connection: Connection) => {
-    const connectedId = connection.connected.piece.id_;
-    const connectingId = connection.connecting.piece.id_;
-
-    if (connectedId && connectingId) {
-      adjacencyList.get(connectedId)?.push(connectingId);
-      adjacencyList.get(connectingId)?.push(connectedId);
-    }
-  });
-
-  // Find the piece with the most connections using BFS
-  let maxConnections = -1;
-  let parentPieceId: string | null = null;
-
-  for (const piece of design.pieces) {
-    if (!piece.id_) continue;
-
-    const visited = new Set<string>();
-    const queue = [piece.id_];
-    visited.add(piece.id_);
-    let connectionCount = 0;
-
-    while (queue.length > 0) {
-      const currentId = queue.shift()!;
-      const neighbors = adjacencyList.get(currentId) || [];
-
-      connectionCount += neighbors.length;
-
-      for (const neighborId of neighbors) {
-        if (!visited.has(neighborId)) {
-          visited.add(neighborId);
-          queue.push(neighborId);
-        }
-      }
-    }
-
-    if (connectionCount > maxConnections) {
-      maxConnections = connectionCount;
-      parentPieceId = piece.id_;
-    }
-  }
-
-  // If no connections exist, just pick the first piece
-  if (!parentPieceId && design.pieces.length > 0) {
-    parentPieceId = design.pieces[0].id_ || null;
-  }
-
-  if (!parentPieceId) {
-    return design;
-  }
-
-  // Fix the parent piece with center and plane
-  const updatedPieces = design.pieces.map((piece: Piece) => {
-    if (piece.id_ === parentPieceId) {
-      return {
-        ...piece,
-        center: piece.center || { x: 0, y: 0 },
-        plane: piece.plane || {
-          origin: { x: 0, y: 0, z: 0 },
-          xAxis: { x: 1, y: 0, z: 0 },
-          yAxis: { x: 0, y: 1, z: 0 },
-        },
-      };
-    }
-    return piece;
-  });
-
-  return {
-    ...design,
-    pieces: updatedPieces,
-  };
-};
 
 // Higher-level Sketchpad state management
 export interface SketchpadState {
@@ -339,212 +245,54 @@ export const sketchpadReducer = (state: SketchpadState, action: SketchpadActionT
       const currentDesignId = activeDesignEditorState.designId;
       const currentSelection = activeDesignEditorState.selection;
 
-      let design: Design;
-      try {
-        design = findDesignInKit(state.kit, currentDesignId);
-      } catch (error) {
-        console.error("Current design not found in kit:", error);
-        newState = state;
-        break;
-      }
-
       // Use selection from the design editor state
       const pieceIdsToCluster = currentSelection.selectedPieceIds || [];
 
-      // Validate clustering is possible
-      const clusterableGroups = getClusterableGroups(design, pieceIdsToCluster);
-      if (clusterableGroups.length === 0) {
-        console.warn("No clusterable groups found with current selection");
+      try {
+        // Use the new clusterDesign function from semio.ts
+        const clusterResult = clusterDesign(state.kit, currentDesignId, pieceIdsToCluster);
+
+        // Create a new DesignEditorCoreState for the clustered design
+        const clusteredDesignEditorCoreState = createInitialDesignEditorCoreState({
+          initialKit: clusterResult.updatedKit,
+          designId: {
+            name: clusterResult.clusteredDesign.name,
+            variant: clusterResult.clusteredDesign.variant || undefined,
+            view: clusterResult.clusteredDesign.view || undefined,
+          },
+          fileUrls: state.fileUrls,
+        });
+
+        // Update the current design's editor state to reflect changes and clear selection
+        const updatedCurrentDesignEditorCoreState = createInitialDesignEditorCoreState({
+          initialKit: clusterResult.updatedKit,
+          designId: currentDesignId,
+          fileUrls: state.fileUrls,
+          // Clear selection after clustering
+          initialSelection: {
+            selectedPieceIds: [],
+            selectedConnections: [],
+            selectedPiecePortId: undefined,
+            selectedDesignPieces: [],
+          },
+        });
+
+        // Update the designEditorCoreStates array
+        const updatedDesignEditorCoreStates = [...state.designEditorCoreStates];
+        updatedDesignEditorCoreStates[state.activeDesign] = updatedCurrentDesignEditorCoreState;
+        updatedDesignEditorCoreStates.push(clusteredDesignEditorCoreState);
+
+        newState = {
+          ...state,
+          kit: clusterResult.updatedKit,
+          designEditorCoreStates: updatedDesignEditorCoreStates,
+        };
+
+        console.log("Clustered design created:", clusterResult.clusteredDesign.name);
+      } catch (error) {
+        console.error("Error clustering design:", error);
         newState = state;
-        break;
       }
-
-      // Use the first (and typically only) clusterable group
-      const finalClusterPieceIds = clusterableGroups[0];
-
-      const designName = `Cluster-${Date.now()}`;
-
-      // Separate regular pieces from design nodes
-      const regularPieceIds = finalClusterPieceIds.filter((id) => !id.startsWith("design-"));
-      const designNodeIds = finalClusterPieceIds.filter((id) => id.startsWith("design-"));
-
-      // Collect all pieces to include in the cluster
-      let allPiecesToCluster: Piece[] = [];
-      let allConnectionsToCluster: Connection[] = [];
-      let allExternalConnections: Connection[] = [];
-
-      // Add regular pieces
-      if (regularPieceIds.length > 0) {
-        const regularPieces = (design.pieces || []).filter((piece: Piece) => regularPieceIds.includes(piece.id_));
-        allPiecesToCluster.push(...regularPieces);
-
-        // Find connections involving regular pieces
-        const regularConnections = (design.connections || []).filter((connection: Connection) => regularPieceIds.includes(connection.connected.piece.id_) || regularPieceIds.includes(connection.connecting.piece.id_));
-
-        // Separate internal and external connections for regular pieces
-        const internalRegularConnections = regularConnections.filter((connection: Connection) => regularPieceIds.includes(connection.connected.piece.id_) && regularPieceIds.includes(connection.connecting.piece.id_));
-
-        const externalRegularConnections = regularConnections.filter((connection: Connection) => {
-          const connectedInCluster = regularPieceIds.includes(connection.connected.piece.id_);
-          const connectingInCluster = regularPieceIds.includes(connection.connecting.piece.id_);
-          return connectedInCluster !== connectingInCluster; // XOR - exactly one is in cluster
-        });
-
-        allConnectionsToCluster.push(...internalRegularConnections);
-        allExternalConnections.push(...externalRegularConnections);
-      }
-
-      // Add pieces from design nodes
-      for (const designNodeId of designNodeIds) {
-        // Extract design name from design node ID (format: "design-DesignName")
-        const referencedDesignName = designNodeId.replace("design-", "");
-
-        let referencedDesign: Design | null = null;
-        try {
-          referencedDesign = findDesignInKit(state.kit, { name: referencedDesignName });
-        } catch (error) {
-          console.warn(`Referenced design ${referencedDesignName} not found in kit:`, error);
-          continue;
-        }
-
-        if (referencedDesign && referencedDesign.pieces) {
-          // Simply use the original pieces and connections
-          allPiecesToCluster.push(...referencedDesign.pieces);
-
-          // Use the original connections as-is
-          if (referencedDesign.connections) {
-            allConnectionsToCluster.push(...referencedDesign.connections);
-          }
-
-          // Find external connections that connect to this design node
-          const designExternalConnections = (design.connections || []).filter((connection: Connection) => connection.connected.designId === referencedDesignName || connection.connecting.designId === referencedDesignName);
-
-          allExternalConnections.push(...designExternalConnections);
-        }
-      }
-
-      // Create the clustered design with all collected pieces and connections
-      const clusteredDesign: Design = {
-        name: designName,
-        unit: design.unit,
-        description: `Hierarchical cluster with ${allPiecesToCluster.length} pieces`,
-        pieces: allPiecesToCluster,
-        connections: allConnectionsToCluster,
-        created: new Date(),
-        updated: new Date(),
-      };
-
-      // Ensure at least one piece is fixed
-      const processedClusteredDesign = ensureDesignHasFixedPiece(clusteredDesign);
-
-      // Remove all clustered items from the current design
-      const remainingPieces = (design.pieces || []).filter((piece: Piece) => !regularPieceIds.includes(piece.id_));
-
-      // Remove connections involving clustered regular pieces or design nodes
-      const remainingConnections = (design.connections || []).filter((connection: Connection) => {
-        const connectedInRegularCluster = regularPieceIds.includes(connection.connected.piece.id_);
-        const connectingInRegularCluster = regularPieceIds.includes(connection.connecting.piece.id_);
-        const connectedInDesignCluster = designNodeIds.some((designId) => {
-          const designName = designId.replace("design-", "");
-          return connection.connected.designId === designName;
-        });
-        const connectingInDesignCluster = designNodeIds.some((designId) => {
-          const designName = designId.replace("design-", "");
-          return connection.connecting.designId === designName;
-        });
-
-        return !connectedInRegularCluster && !connectingInRegularCluster && !connectedInDesignCluster && !connectingInDesignCluster;
-      });
-
-      // Update external connections to reference the new clustered design
-      const updatedExternalConnections = allExternalConnections.map((connection: Connection) => {
-        const connectedInCluster =
-          regularPieceIds.includes(connection.connected.piece.id_) ||
-          designNodeIds.some((designId) => {
-            const designName = designId.replace("design-", "");
-            return connection.connected.designId === designName;
-          });
-
-        const connectingInCluster =
-          regularPieceIds.includes(connection.connecting.piece.id_) ||
-          designNodeIds.some((designId) => {
-            const designName = designId.replace("design-", "");
-            return connection.connecting.designId === designName;
-          });
-
-        if (connectedInCluster) {
-          return {
-            ...connection,
-            connected: {
-              piece: { id_: connection.connected.piece.id_ },
-              port: connection.connected.port,
-              designId: processedClusteredDesign.name,
-            },
-          };
-        } else if (connectingInCluster) {
-          return {
-            ...connection,
-            connecting: {
-              piece: { id_: connection.connecting.piece.id_ },
-              port: connection.connecting.port,
-              designId: processedClusteredDesign.name,
-            },
-          };
-        }
-
-        return connection;
-      });
-
-      const updatedCurrentDesign: Design = {
-        ...design,
-        pieces: remainingPieces,
-        connections: [...remainingConnections, ...updatedExternalConnections],
-        updated: new Date(),
-      };
-
-      // Add the clustered design to the kit
-      const kitWithClusteredDesign = addDesignToKit(state.kit, processedClusteredDesign);
-
-      // Update the current design in the kit
-      const finalKit = updateDesignInKit(kitWithClusteredDesign, updatedCurrentDesign);
-
-      // Create a new DesignEditorCoreState for the clustered design
-      const clusteredDesignEditorCoreState = createInitialDesignEditorCoreState({
-        initialKit: finalKit,
-        designId: {
-          name: processedClusteredDesign.name,
-          variant: processedClusteredDesign.variant || undefined,
-          view: processedClusteredDesign.view || undefined,
-        },
-        fileUrls: state.fileUrls,
-      });
-
-      // Update the current design's editor state to reflect changes and clear selection
-      const updatedCurrentDesignEditorCoreState = createInitialDesignEditorCoreState({
-        initialKit: finalKit,
-        designId: currentDesignId,
-        fileUrls: state.fileUrls,
-        // Clear selection after clustering
-        initialSelection: {
-          selectedPieceIds: [],
-          selectedConnections: [],
-          selectedPiecePortId: undefined,
-          selectedDesignPieces: [],
-        },
-      });
-
-      // Update the designEditorCoreStates array
-      const updatedDesignEditorCoreStates = [...state.designEditorCoreStates];
-      updatedDesignEditorCoreStates[state.activeDesign] = updatedCurrentDesignEditorCoreState;
-      updatedDesignEditorCoreStates.push(clusteredDesignEditorCoreState);
-
-      newState = {
-        ...state,
-        kit: finalKit,
-        designEditorCoreStates: updatedDesignEditorCoreStates,
-      };
-
-      console.log("Clustered design created:", processedClusteredDesign.name);
       break;
 
     case SketchpadAction.explodeDesign:
