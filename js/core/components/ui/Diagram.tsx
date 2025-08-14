@@ -692,7 +692,15 @@ const getPieceIdFromNode = (node: DiagramNode): string => {
   return node.data.piece.id_;
 };
 
-const connectionToEdge = (connection: Connection, selected: boolean, isParentConnection: boolean = false, pieceIndexMap: Map<string, number>, connectionIndex: number = 0, designPieces?: Piece[], allConnections?: Connection[]): ConnectionEdge => {
+const connectionToEdge = (
+  connection: Connection,
+  selected: boolean,
+  isParentConnection: boolean = false,
+  pieceIndexMap: Map<string, number>,
+  connectionIndex: number = 0,
+  designPieces?: Piece[],
+  allConnections?: Connection[],
+): ConnectionEdge | null => {
   // Handle connections with design references - these reference pieces inside clustered designs
   let sourcePieceId = connection.connecting.piece.id_;
   let targetPieceId = connection.connected.piece.id_;
@@ -701,7 +709,7 @@ const connectionToEdge = (connection: Connection, selected: boolean, isParentCon
 
   // Handle connections with designId - these reference pieces inside clustered designs
   if (connection.connecting.designId && allConnections) {
-    const designPieceId = `design-${connection.connecting.designId}`;
+    const designPieceId = `connected-design-${connection.connecting.designId}`;
     sourcePieceId = designPieceId;
 
     // Find all external connections for this design
@@ -723,7 +731,7 @@ const connectionToEdge = (connection: Connection, selected: boolean, isParentCon
   }
 
   if (connection.connected.designId && allConnections) {
-    const designPieceId = `design-${connection.connected.designId}`;
+    const designPieceId = `connected-design-${connection.connected.designId}`;
     targetPieceId = designPieceId;
 
     // Find all external connections for this design
@@ -744,8 +752,19 @@ const connectionToEdge = (connection: Connection, selected: boolean, isParentCon
     targetPortId = portIndex >= 0 ? `port-${portIndex}` : "port-0";
   }
 
-  const sourceIndex = pieceIndexMap.get(sourcePieceId) ?? 0;
-  const targetIndex = pieceIndexMap.get(targetPieceId) ?? 0;
+  const sourceIndex = pieceIndexMap.get(sourcePieceId);
+  const targetIndex = pieceIndexMap.get(targetPieceId);
+
+  if (sourceIndex === undefined) {
+    console.warn(`Source piece not found in index map: ${sourcePieceId}`);
+    return null; // Return null to filter out invalid edges
+  }
+
+  if (targetIndex === undefined) {
+    console.warn(`Target piece not found in index map: ${targetPieceId}`);
+    return null; // Return null to filter out invalid edges
+  }
+
   const sourceNodeId = `piece-${sourceIndex}-${sourcePieceId}`;
   const targetNodeId = `piece-${targetIndex}-${targetPieceId}`;
 
@@ -950,14 +969,16 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
       : null;
 
   const connectionEdges =
-    design.connections?.map((connection, connectionIndex) => {
-      const isSelected = selection?.selectedConnections.some((c: { connectingPieceId: string; connectedPieceId: string }) => c.connectingPieceId === connection.connecting.piece.id_ && c.connectedPieceId === connection.connected.piece.id_) ?? false;
+    design.connections
+      ?.map((connection, connectionIndex) => {
+        const isSelected = selection?.selectedConnections.some((c: { connectingPieceId: string; connectedPieceId: string }) => c.connectingPieceId === connection.connecting.piece.id_ && c.connectedPieceId === connection.connected.piece.id_) ?? false;
 
-      const connectionId = `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`;
-      const isParentConnection = parentConnectionId === connectionId || parentConnectionId === `${connection.connected.piece.id_} -- ${connection.connecting.piece.id_}`;
+        const connectionId = `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`;
+        const isParentConnection = parentConnectionId === connectionId || parentConnectionId === `${connection.connected.piece.id_} -- ${connection.connecting.piece.id_}`;
 
-      return connectionToEdge(connection, isSelected, isParentConnection, pieceIndexMap, connectionIndex, design.pieces, design.connections);
-    }) ?? [];
+        return connectionToEdge(connection, isSelected, isParentConnection, pieceIndexMap, connectionIndex, design.pieces, design.connections);
+      })
+      .filter((edge): edge is ConnectionEdge => edge !== null) ?? [];
   return { nodes: [...pieceNodes, ...designNodes], edges: connectionEdges };
 };
 

@@ -457,6 +457,69 @@ describe("expandDesign", () => {
     expect(expandResult.expandedDesign.connections).toHaveLength(3);
   });
 
+  it("should preserve external connections with designId when clustering", () => {
+    // Start with original design
+    expect(mockDesign.pieces).toHaveLength(4);
+    expect(mockDesign.connections).toHaveLength(3);
+
+    // Cluster pieces 2 and 3 (use correct IDs: piece2, piece3)
+    const result = clusterDesign(mockKit, "test-design", ["piece2", "piece3"]);
+
+    // Check that the updated source design has the right structure
+    expect(result.updatedSourceDesign.pieces).toHaveLength(2); // piece1 and piece4 remain
+    expect(result.updatedSourceDesign.connections).toHaveLength(2); // 2 external connections
+
+    // Find the external connections that should reference the clustered design
+    const externalConnections = result.updatedSourceDesign.connections.filter((conn: Connection) => conn.connected.designId || conn.connecting.designId);
+
+    expect(externalConnections).toHaveLength(2); // One connection from piece1 to cluster, one from cluster to piece4
+
+    // Verify that external connections reference the clustered design
+    for (const connection of externalConnections) {
+      const hasDesignId = connection.connected.designId || connection.connecting.designId;
+      expect(hasDesignId).toBeTruthy();
+
+      if (connection.connected.designId) {
+        expect(connection.connected.designId).toBe(result.clusteredDesign.name);
+        expect(["piece2", "piece3"]).toContain(connection.connected.piece.id_);
+      } else if (connection.connecting.designId) {
+        expect(connection.connecting.designId).toBe(result.clusteredDesign.name);
+        expect(["piece2", "piece3"]).toContain(connection.connecting.piece.id_);
+      }
+    }
+
+    // Verify the clustered design has the expected pieces
+    expect(result.clusteredDesign.pieces).toHaveLength(2);
+    expect(result.clusteredDesign.connections).toHaveLength(1); // The internal connection between piece2 and piece3
+  });
+
+  it("should create external connections with designId properties when clustering", () => {
+    // Start with original design
+    expect(mockDesign.pieces).toHaveLength(4);
+    expect(mockDesign.connections).toHaveLength(3);
+
+    // Cluster pieces 2 and 3
+    const result = clusterDesign(mockKit, "test-design", ["piece2", "piece3"]);
+
+    // Check external connections in the updated source design
+    const externalConnections = result.updatedSourceDesign.connections.filter((conn: Connection) => conn.connected.designId || conn.connecting.designId);
+
+    expect(externalConnections).toHaveLength(2); // Should have 2 external connections
+
+    // Verify the external connections have the correct designId
+    externalConnections.forEach((conn: Connection) => {
+      const hasDesignId = conn.connected.designId || conn.connecting.designId;
+      expect(hasDesignId).toBeTruthy();
+
+      if (conn.connected.designId) {
+        expect(conn.connected.designId).toMatch(/^Cluster-\d+$/);
+      }
+      if (conn.connecting.designId) {
+        expect(conn.connecting.designId).toMatch(/^Cluster-\d+$/);
+      }
+    });
+  });
+
   it("should handle complex cluster and expand workflow", () => {
     // Start with original design
     expect(mockKit.designs).toHaveLength(1);
