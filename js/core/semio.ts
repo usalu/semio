@@ -2171,6 +2171,12 @@ export interface ClusterDesignResult {
   updatedSourceDesign: Design;
 }
 
+export interface ExpandDesignResult {
+  updatedKit: Kit;
+  expandedDesign: Design;
+  removedDesignName: string;
+}
+
 /**
  * Clusters selected pieces from a design into a new hierarchical design
  * @param kit - The kit containing the design and types
@@ -2342,6 +2348,110 @@ export const clusterDesign = (kit: Kit, sourceDesignId: DesignIdLike, selectedPi
     updatedKit,
     clusteredDesign: processedClusteredDesign,
     updatedSourceDesign,
+  };
+};
+
+/**
+ * Expands a clustered design back into its parent design by restoring the original pieces and connections
+ * @param kit - The kit containing the designs
+ * @param designToExpandId - The design to expand (remove from hierarchy)
+ * @returns Object containing the updated kit, expanded design, and removed design name
+ */
+export const expandDesign = (kit: Kit, designToExpandId: DesignIdLike): ExpandDesignResult => {
+  const normalizedDesignToExpandId = designIdLikeToDesignId(designToExpandId);
+  const designToExpand = findDesignInKit(kit, normalizedDesignToExpandId);
+
+  // Find all designs that have connections referencing the design to expand
+  const affectedDesigns: Design[] = [];
+  for (const design of kit.designs || []) {
+    if (design.name === designToExpand.name) continue; // Skip the design itself
+
+    const hasExternalConnections = (design.connections || []).some((connection: Connection) => connection.connected.designId === designToExpand.name || connection.connecting.designId === designToExpand.name);
+
+    if (hasExternalConnections) {
+      affectedDesigns.push(design);
+    }
+  }
+
+  if (affectedDesigns.length === 0) {
+    throw new Error("No affected designs found for expansion - this design may not be clustered");
+  }
+
+  // Update all affected designs to remove designId references to the expanded design
+  const updatedAffectedDesigns: Design[] = affectedDesigns.map((affectedDesign) => {
+    // Get all connections that reference the design to expand
+    const externalConnections = (affectedDesign.connections || []).filter((connection: Connection) => connection.connected.designId === designToExpand.name || connection.connecting.designId === designToExpand.name);
+
+    // Get all internal connections (not referencing the design to expand)
+    const internalConnections = (affectedDesign.connections || []).filter((connection: Connection) => connection.connected.designId !== designToExpand.name && connection.connecting.designId !== designToExpand.name);
+
+    // Remove designId from external connections to restore them as regular connections
+    const restoredConnections = externalConnections.map((connection: Connection) => {
+      const updatedConnection = { ...connection };
+
+      if (connection.connected.designId === designToExpand.name) {
+        updatedConnection.connected = {
+          ...connection.connected,
+          designId: undefined,
+        };
+      }
+
+      if (connection.connecting.designId === designToExpand.name) {
+        updatedConnection.connecting = {
+          ...connection.connecting,
+          designId: undefined,
+        };
+      }
+
+      return updatedConnection;
+    });
+
+    return {
+      ...affectedDesign,
+      connections: [...internalConnections, ...restoredConnections],
+      updated: new Date(),
+    };
+  });
+
+  // For simplicity, expand into the first affected design (typically the original design that was clustered)
+  const targetDesign = updatedAffectedDesigns[0];
+
+  // Combine all pieces from the target design and the design to expand
+  const combinedPieces = [...(targetDesign.pieces || []), ...(designToExpand.pieces || [])];
+
+  // Combine all connections: target design connections and connections from the expanded design
+  const combinedConnections = [...(targetDesign.connections || []), ...(designToExpand.connections || [])];
+
+  // Create the updated target design with expanded content
+  const expandedTargetDesign: Design = {
+    ...targetDesign,
+    pieces: combinedPieces,
+    connections: combinedConnections,
+    updated: new Date(),
+  };
+
+  // Remove the design to expand from the kit
+  const kitWithoutExpandedDesign: Kit = {
+    ...kit,
+    designs: (kit.designs || []).filter((design) => design.name !== designToExpand.name),
+  };
+
+  // Update all affected designs in the kit
+  let finalKitAfterExpansion = kitWithoutExpandedDesign;
+
+  // Update the target design with expanded content
+  finalKitAfterExpansion = updateDesignInKit(finalKitAfterExpansion, expandedTargetDesign);
+
+  // Update other affected designs (excluding the target design which was already updated)
+  for (let i = 1; i < updatedAffectedDesigns.length; i++) {
+    const affectedDesign = updatedAffectedDesigns[i];
+    finalKitAfterExpansion = updateDesignInKit(finalKitAfterExpansion, affectedDesign);
+  }
+
+  return {
+    updatedKit: finalKitAfterExpansion,
+    expandedDesign: expandedTargetDesign,
+    removedDesignName: designToExpand.name,
   };
 };
 

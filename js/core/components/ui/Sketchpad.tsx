@@ -23,7 +23,7 @@ import { createContext, FC, ReactNode, useContext, useEffect, useReducer, useSta
 import DesignEditor, { createInitialDesignEditorCoreState, DesignEditorCoreState, DesignEditorDispatcher, designEditorReducer, DesignEditorState } from "./DesignEditor";
 
 import { default as Metabolism } from "@semio/assets/semio/kit_metabolism.json";
-import { addDesignToKit, clusterDesign, Connection, Design, DesignId, ensureDesignHasFixedPiece, findDesignInKit, Kit, updateDesignInKit } from "@semio/js";
+import { addDesignToKit, clusterDesign, Design, DesignId, ensureDesignHasFixedPiece, expandDesign, Kit, updateDesignInKit } from "@semio/js";
 import { extractFilesAndCreateUrls } from "../../lib/utils";
 
 // Higher-level Sketchpad state management
@@ -303,146 +303,57 @@ export const sketchpadReducer = (state: SketchpadState, action: SketchpadActionT
       }
 
       const designToExplodeId = action.payload;
-      let designToExplode: Design;
+
       try {
-        designToExplode = findDesignInKit(state.kit, designToExplodeId);
-      } catch (error) {
-        console.error("Design to explode not found in kit:", error);
-        newState = state;
-        break;
-      }
+        // Use the new expandDesign function from semio.ts
+        const expandResult = expandDesign(state.kit, designToExplodeId);
 
-      // Find all designs that have connections referencing the design to explode
-      const affectedDesigns: Design[] = [];
-      for (const design of state.kit.designs || []) {
-        if (design.name === designToExplode.name) continue; // Skip the design itself
+        // Remove the DesignEditorCoreState for the expanded design
+        const expandedDesignStateIndex = state.designEditorCoreStates.findIndex(
+          (designState) => designState.designId.name === expandResult.removedDesignName && designState.designId.variant === designToExplodeId.variant && designState.designId.view === designToExplodeId.view,
+        );
 
-        const hasExternalConnections = (design.connections || []).some((connection: Connection) => connection.connected.designId === designToExplode.name || connection.connecting.designId === designToExplode.name);
-
-        if (hasExternalConnections) {
-          affectedDesigns.push(design);
+        let updatedDesignStatesAfterExpansion = [...state.designEditorCoreStates];
+        if (expandedDesignStateIndex !== -1) {
+          updatedDesignStatesAfterExpansion.splice(expandedDesignStateIndex, 1);
         }
-      }
 
-      if (affectedDesigns.length === 0) {
-        console.warn("No affected designs found for expansion");
-        newState = state;
-        break;
-      }
+        // Update the target design's editor state
+        const targetDesignStateIndex = updatedDesignStatesAfterExpansion.findIndex(
+          (designState) => designState.designId.name === expandResult.expandedDesign.name && designState.designId.variant === expandResult.expandedDesign.variant && designState.designId.view === expandResult.expandedDesign.view,
+        );
 
-      // Update all affected designs to remove designId references to the explodeed design
-      const updatedAffectedDesigns: Design[] = affectedDesigns.map((affectedDesign) => {
-        // Get all connections that reference the design to explode
-        const externalConnections = (affectedDesign.connections || []).filter((connection: Connection) => connection.connected.designId === designToExplode.name || connection.connecting.designId === designToExplode.name);
+        if (targetDesignStateIndex !== -1) {
+          const updatedTargetDesignEditorCoreState = createInitialDesignEditorCoreState({
+            initialKit: expandResult.updatedKit,
+            designId: {
+              name: expandResult.expandedDesign.name,
+              variant: expandResult.expandedDesign.variant || undefined,
+              view: expandResult.expandedDesign.view || undefined,
+            },
+            fileUrls: state.fileUrls,
+          });
+          updatedDesignStatesAfterExpansion[targetDesignStateIndex] = updatedTargetDesignEditorCoreState;
+        }
 
-        // Get all internal connections (not referencing the design to explode)
-        const internalConnections = (affectedDesign.connections || []).filter((connection: Connection) => connection.connected.designId !== designToExplode.name && connection.connecting.designId !== designToExplode.name);
+        // Adjust activeDesign index if necessary
+        let newActiveDesign = state.activeDesign;
+        if (expandedDesignStateIndex !== -1 && expandedDesignStateIndex <= state.activeDesign) {
+          newActiveDesign = Math.max(0, state.activeDesign - 1);
+        }
 
-        // Remove designId from external connections to restore them as regular connections
-        const restoredConnections = externalConnections.map((connection: Connection) => {
-          const updatedConnection = { ...connection };
-
-          if (connection.connected.designId === designToExplode.name) {
-            updatedConnection.connected = {
-              ...connection.connected,
-              designId: undefined,
-            };
-          }
-
-          if (connection.connecting.designId === designToExplode.name) {
-            updatedConnection.connecting = {
-              ...connection.connecting,
-              designId: undefined,
-            };
-          }
-
-          return updatedConnection;
-        });
-
-        return {
-          ...affectedDesign,
-          connections: [...internalConnections, ...restoredConnections],
-          updated: new Date(),
+        newState = {
+          ...state,
+          kit: expandResult.updatedKit,
+          designEditorCoreStates: updatedDesignStatesAfterExpansion,
+          activeDesign: newActiveDesign,
         };
-      });
 
-      // For simplicity, explode into the first affected design (typically the original design that was clustered)
-      const targetDesign = updatedAffectedDesigns[0];
-
-      // Combine all pieces from the target design and the design to explode
-      const combinedPieces = [...(targetDesign.pieces || []), ...(designToExplode.pieces || [])];
-
-      // Combine all connections: target design connections and connections from the explodeed design
-      const combinedConnections = [...(targetDesign.connections || []), ...(designToExplode.connections || [])];
-
-      // Create the updated target design with explodeed content
-      const explodeedTargetDesign: Design = {
-        ...targetDesign,
-        pieces: combinedPieces,
-        connections: combinedConnections,
-        updated: new Date(),
-      };
-
-      // Remove the design to explode from the kit
-      const kitWithoutexplodedDesign: Kit = {
-        ...state.kit!,
-        designs: (state.kit!.designs || []).filter((design) => design.name !== designToExplode.name),
-      };
-
-      // Update all affected designs in the kit
-      let finalKitAfterExpansion = kitWithoutexplodedDesign;
-
-      // Update the target design with explodeed content
-      finalKitAfterExpansion = updateDesignInKit(finalKitAfterExpansion, explodeedTargetDesign);
-
-      // Update other affected designs (excluding the target design which was already updated)
-      for (let i = 1; i < updatedAffectedDesigns.length; i++) {
-        const affectedDesign = updatedAffectedDesigns[i];
-        finalKitAfterExpansion = updateDesignInKit(finalKitAfterExpansion, affectedDesign);
+        console.log("Design expanded:", expandResult.removedDesignName, "into", expandResult.expandedDesign.name);
+      } catch (error) {
+        console.error("Error expanding design:", error);
+        newState = state;
       }
-
-      // Remove the DesignEditorCoreState for the explodeed design
-      const explodedDesignStateIndex = state.designEditorCoreStates.findIndex(
-        (designState) => designState.designId.name === designToExplode.name && designState.designId.variant === designToExplode.variant && designState.designId.view === designToExplode.view,
-      );
-
-      let updatedDesignStatesAfterExpansion = [...state.designEditorCoreStates];
-      if (explodedDesignStateIndex !== -1) {
-        updatedDesignStatesAfterExpansion.splice(explodedDesignStateIndex, 1);
-      }
-
-      // Update the target design's editor state
-      const targetDesignStateIndex = updatedDesignStatesAfterExpansion.findIndex(
-        (designState) => designState.designId.name === targetDesign.name && designState.designId.variant === targetDesign.variant && designState.designId.view === targetDesign.view,
-      );
-
-      if (targetDesignStateIndex !== -1) {
-        const updatedTargetDesignEditorCoreState = createInitialDesignEditorCoreState({
-          initialKit: finalKitAfterExpansion,
-          designId: {
-            name: targetDesign.name,
-            variant: targetDesign.variant || undefined,
-            view: targetDesign.view || undefined,
-          },
-          fileUrls: state.fileUrls,
-        });
-        updatedDesignStatesAfterExpansion[targetDesignStateIndex] = updatedTargetDesignEditorCoreState;
-      }
-
-      // Adjust activeDesign index if necessary
-      let newActiveDesign = state.activeDesign;
-      if (explodedDesignStateIndex !== -1 && explodedDesignStateIndex <= state.activeDesign) {
-        newActiveDesign = Math.max(0, state.activeDesign - 1);
-      }
-
-      newState = {
-        ...state,
-        kit: finalKitAfterExpansion,
-        designEditorCoreStates: updatedDesignStatesAfterExpansion,
-        activeDesign: newActiveDesign,
-      };
-
-      console.log("Design explodeed:", designToExplode.name, "into", targetDesign.name);
       break;
 
     default:
