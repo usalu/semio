@@ -18,12 +18,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-import { TooltipProvider } from "@semio/js/components/ui/Tooltip";
 import { FC, ReactNode, createContext, useContext, useEffect, useState } from "react";
 import DesignEditor from "./DesignEditor";
+import { TooltipProvider } from "./Tooltip";
 
-import { DesignId, KitId } from "@semio/js";
-import { DesignScopeProvider, KitScopeProvider, Layout, Mode, SketchpadScopeProvider, Theme, useSketchpadCommands, useSketchpadLayout, useSketchpadMode, useSketchpadStore, useSketchpadTheme } from "../../store";
+import { DesignId, DesignScopeProvider, KitId, KitScopeProvider, Layout, Mode, SketchpadScopeProvider, Theme, useCommands, useLayout, useMode, useSketchpadStore, useTheme } from "@semio/js";
 
 interface SketchpadContextType {
   navbarToolbar: ReactNode | null;
@@ -53,10 +52,10 @@ const Sketchpad: FC<SketchpadProps> = ({ onWindowEvents }) => {
   const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
 
   const store = useSketchpadStore();
-  const mode = useSketchpadMode();
-  const theme = useSketchpadTheme();
-  const layout = useSketchpadLayout();
-  const { setMode, setTheme, setLayout } = useSketchpadCommands();
+  const mode = useMode();
+  const theme = useTheme();
+  const layout = useLayout();
+  const { setMode, setTheme, setLayout } = useCommands();
 
   const defaultKitId: KitId = { name: "Metabolism", version: "r25.07-1" };
   const defaultDesignId: DesignId = { name: "Nakagin Capsule Tower", variant: "", view: "" };

@@ -81,6 +81,7 @@ import {
   DesignEditorStorePresenceOther,
   DesignEditorStoreSelection,
   PieceScopeProvider,
+  useCommands,
   useDesign,
   useDesignEditorStoreDesignDiff,
   useDesignEditorStoreFullscreenPanel,
@@ -90,7 +91,6 @@ import {
   useKit,
   useTypes,
 } from "../../store";
-import { useDesignEditorCommands } from "./DesignEditor";
 
 //#region ClusterMenu
 
@@ -387,7 +387,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
     type: { ports },
   } = data as PieceNodeProps & { diffStatus: DiffStatus };
 
-  const { selectPiecePort, deselectPiecePort, addConnection } = useDesignEditorCommands();
+  const { selectPiecePort, deselectPiecePort, addConnection } = useCommands();
   const selection = useDesignEditorStoreSelection();
 
   const onPortClick = (port: Port) => {
@@ -454,7 +454,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
     externalConnections,
   } = data as DesignNodeProps & { diffStatus: DiffStatus };
 
-  const { selectPiecePort, deselectPiecePort, addConnection } = useDesignEditorCommands();
+  const { selectPiecePort, deselectPiecePort, addConnection } = useCommands();
   const selection = useDesignEditorStoreSelection();
 
   // Create ports dynamically based on external connections (same logic as designPieceToNode)
@@ -952,7 +952,7 @@ const Diagram: FC = () => {
     setConnections,
     setPieces,
     executeCommand,
-  } = useDesignEditorCommands();
+  } = useCommands();
 
   const selection = useDesignEditorStoreSelection();
   const designDiff = useDesignEditorStoreDesignDiff();

@@ -29,6 +29,7 @@ import {
   DesignEditorStoreFullscreenPanel,
   DesignEditorStorePresenceOther,
   PieceScopeProvider,
+  useCommands,
   useDesign,
   useDesignEditorStoreDesignDiff,
   useDesignEditorStoreFileUrls,
@@ -37,7 +38,6 @@ import {
   useDesignEditorStoreSelection,
   useKit,
 } from "../../store";
-import { useDesignEditorCommands } from "./DesignEditor";
 
 const getComputedColor = (variable: string): string => {
   return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -88,7 +88,7 @@ interface ModelPieceProps {
 }
 
 const ModelPiece: FC<ModelPieceProps> = React.memo(({ piece, plane, fileUrl, selected, updating, diffStatus = DiffStatus.Unchanged, onSelect, onPieceUpdate }) => {
-  const { startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
+  const { startTransaction, finalizeTransaction, abortTransaction } = useCommands();
   const fixed = piece.plane !== undefined;
   const matrix = useMemo(() => {
     const planeRotationMatrix = planeToMatrix(plane);
@@ -217,7 +217,7 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(({ piece, plane, fileUrl, sel
 
 const ModelDesign: FC = () => {
   const designId = useDesign();
-  const { removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = useDesignEditorCommands();
+  const { removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = useCommands();
   const selection = useDesignEditorStoreSelection();
   const designDiff = useDesignEditorStoreDesignDiff();
   const fileUrls = useDesignEditorStoreFileUrls();
@@ -391,7 +391,7 @@ const ModelCore: FC = () => {
 };
 
 const Model: FC = () => {
-  const { deselectAll, toggleModelFullscreen } = useDesignEditorCommands();
+  const { deselectAll, toggleModelFullscreen } = useCommands();
   const onDoubleClickCapture = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();

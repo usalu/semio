@@ -2756,4 +2756,49 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
 
 //#endregion CRUDs
 
+//#region Helper Functions
+
+// Helper function to find replaceable designs for design piece
+export const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignId: DesignId, designPiece: Piece): Design[] => {
+  if (designPiece.type.name !== "design") return [];
+
+  // Parse the current design ID from the piece's type.variant
+  const currentVariant = designPiece.type.variant || "";
+  const parts = currentVariant.split("-");
+  const currentDesignName = parts[0];
+  const currentDesignVariant = parts[1] || "";
+  const currentDesignView = parts[2] || "";
+
+  // Find all designs in the kit that could be replacements
+  const allDesigns = kit.designs || [];
+
+  // For now, return designs with the same name but different variant/view
+  // This is a simplified implementation - in the future we could add more sophisticated
+  // compatibility checking based on piece IDs and port compatibility
+  return allDesigns.filter((design) => {
+    // Don't include the current design
+    if (design.name === currentDesignName && (design.variant || "") === currentDesignVariant && (design.view || "") === currentDesignView) {
+      return false;
+    }
+
+    // For now, allow any design to be a replacement
+    // TODO: Add more sophisticated compatibility checking:
+    // - Same piece IDs
+    // - Compatible outgoing ports
+    return true;
+  });
+};
+
+// Helper function to parse design ID from design piece variant
+export const parseDesignIdFromVariant = (variant: string): DesignId => {
+  const parts = variant.split("-");
+  return {
+    name: parts[0],
+    variant: parts[1] || undefined,
+    view: parts[2] || undefined,
+  };
+};
+
+//#endregion Helper Functions
+
 //#endregion

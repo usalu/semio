@@ -2,77 +2,22 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { Minus, Pin, Plus, Trash2 } from "lucide-react";
 import { FC, useState } from "react";
 
-import {
-  Connection,
-  ConnectionId,
-  Design,
-  DesignId,
-  Kit,
-  Piece,
-  PieceId,
-  PortId,
-  findConnectionInDesign,
-  findPieceInDesign,
-  findReplacableTypesForPieceInDesign,
-  findReplacableTypesForPiecesInDesign,
-  getIncludedDesigns,
-  piecesMetadata,
-} from "@semio/js";
-import Combobox from "@semio/js/components/ui/Combobox";
+import { Connection, ConnectionId, Design, Piece, PieceId, PortId, findConnectionInDesign, findPieceInDesign, findReplacableTypesForPieceInDesign, findReplacableTypesForPiecesInDesign, getIncludedDesigns, piecesMetadata } from "@semio/js";
 import { Input } from "@semio/js/components/ui/Input";
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
 import { Slider } from "@semio/js/components/ui/Slider";
 import Stepper from "@semio/js/components/ui/Stepper";
 import { Textarea } from "@semio/js/components/ui/Textarea";
 import { SortableTreeItems, Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
-import { useDesign, useDesignEditorStoreSelection, useDesignId, useKit, usePiece, useType } from "../../store";
-import { ResizablePanelProps, useDesignEditorCommands } from "./DesignEditor";
+import { findReplacableDesignsForDesignPiece, parseDesignIdFromVariant } from "../../semio";
+import { useCommands, useDesign, useDesignEditorStoreSelection, useDesignId, useKit, usePiece, useType } from "../../store";
+import Combobox from "./Combobox";
+import { ResizablePanelProps } from "./DesignEditor";
 
 interface DetailsProps extends ResizablePanelProps {}
 
-// Helper function to find replaceable designs
-const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignId: DesignId, designPiece: Piece): Design[] => {
-  if (designPiece.type.name !== "design") return [];
-
-  // Parse the current design ID from the piece's type.variant
-  const currentVariant = designPiece.type.variant || "";
-  const parts = currentVariant.split("-");
-  const currentDesignName = parts[0];
-  const currentDesignVariant = parts[1] || "";
-  const currentDesignView = parts[2] || "";
-
-  // Find all designs in the kit that could be replacements
-  const allDesigns = kit.designs || [];
-
-  // For now, return designs with the same name but different variant/view
-  // This is a simplified implementation - in the future we could add more sophisticated
-  // compatibility checking based on piece IDs and port compatibility
-  return allDesigns.filter((design) => {
-    // Don't include the current design
-    if (design.name === currentDesignName && (design.variant || "") === currentDesignVariant && (design.view || "") === currentDesignView) {
-      return false;
-    }
-
-    // For now, allow any design to be a replacement
-    // TODO: Add more sophisticated compatibility checking:
-    // - Same piece IDs
-    // - Compatible outgoing ports
-    return true;
-  });
-};
-
-// Helper function to parse design ID from design piece variant
-const parseDesignIdFromVariant = (variant: string): DesignId => {
-  const parts = variant.split("-");
-  return {
-    name: parts[0],
-    variant: parts[1] || undefined,
-    view: parts[2] || undefined,
-  };
-};
-
 const DesignSection: FC = () => {
-  const { setDesign, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
+  const { setDesign, startTransaction, finalizeTransaction, abortTransaction } = useCommands();
   const design = useDesign();
 
   const handleChange = (updatedDesign: Design) => {
@@ -446,7 +391,7 @@ const DesignSection: FC = () => {
 };
 
 const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
-  const { setDesign, setPiece, setPieces, setConnection, startTransaction, finalizeTransaction, abortTransaction, executeCommand } = useDesignEditorCommands();
+  const { setDesign, setPiece, setPieces, setConnection, startTransaction, finalizeTransaction, abortTransaction, executeCommand } = useCommands();
   const design = useDesign();
 
   // Handle both regular pieces and synthetic design pieces (fixed and connected)
@@ -1146,7 +1091,7 @@ const ConnectionsSection: FC<{
   connections: ConnectionId[];
   sectionLabel?: string;
 }> = ({ connections, sectionLabel }) => {
-  const { setConnection, setConnections, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
+  const { setConnection, setConnections, startTransaction, finalizeTransaction, abortTransaction } = useCommands();
   const design = useDesign();
   const connectionObjects = connections.map((conn) => {
     // Handle connections that may have a designId parameter

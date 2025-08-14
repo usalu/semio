@@ -23,6 +23,8 @@ import React, { createContext, useContext, useMemo, useRef, useSyncExternalStore
 import { v4 as uuidv4 } from "uuid";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
+import { create } from "zustand";
+import { subscribeWithSelector } from "zustand/middleware";
 // Import initSqlJs
 import type { Database, SqlJsStatic, SqlValue } from "sql.js";
 import initSqlJs from "sql.js";
@@ -721,7 +723,7 @@ class SketchpadStore {
   // Get stable selection object for useSyncExternalStore
   getStableSelection(id: string): DesignEditorStoreSelection {
     return this.getStableObject(`selection-${id}`, () => {
-      const designEditorStore = this.getDesignEditorStoreStore(id);
+      const designEditorStore = this.getDesignEditorStore(id);
       return designEditorStore?.getState().selection ?? { selectedPieceIds: [], selectedConnections: [] };
     });
   }
@@ -729,7 +731,7 @@ class SketchpadStore {
   // Get stable designDiff object for useSyncExternalStore
   getStableDesignDiff(id: string): DesignDiff {
     return this.getStableObject(`designDiff-${id}`, () => {
-      const designEditorStore = this.getDesignEditorStoreStore(id);
+      const designEditorStore = this.getDesignEditorStore(id);
       return designEditorStore?.getState().designDiff ?? { pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } };
     });
   }
@@ -2342,7 +2344,7 @@ class SketchpadStore {
     };
   }
 
-  getDesignEditorStoreStore(id: string): {
+  getDesignEditorStore(id: string): {
     getState: () => DesignEditorStoreState;
     setState: (s: DesignEditorStoreState) => void;
     getDesignId: () => DesignId;
@@ -3277,11 +3279,505 @@ class SketchpadStore {
     yRep.observe(o);
     return () => yRep.unobserve(o);
   }
+
+  // onUpdate methods using Yjs observe method for shallow observation
+  onUpdateKits(callback: () => void) {
+    const cleanup = this.onKitIdsChange(callback);
+    return cleanup;
+  }
+
+  onUpdateKit(id: KitIdLike, callback: () => void) {
+    return this.observeKitChanges(id, callback);
+  }
+
+  onUpdateDesigns(kitId: KitIdLike, callback: () => void) {
+    return this.observeDesignsChanges(kitId, callback);
+  }
+
+  onUpdateDesign(kitId: KitIdLike, id: DesignIdLike, callback: () => void) {
+    return this.observeDesignChanges(kitId, id, callback);
+  }
+
+  onUpdateTypes(kitId: KitIdLike, callback: () => void) {
+    return this.observeTypesChanges(kitId, callback);
+  }
+
+  onUpdateType(kitId: KitIdLike, id: TypeIdLike, callback: () => void) {
+    return this.observeTypeChanges(kitId, id, callback);
+  }
+
+  onUpdatePieces(kitId: KitIdLike, designId: DesignIdLike, callback: () => void) {
+    return this.observePiecesChanges(kitId, designId, callback);
+  }
+
+  onUpdatePiece(kitId: KitIdLike, designId: DesignIdLike, id: PieceIdLike, callback: () => void) {
+    return this.observePieceChanges(kitId, designId, id, callback);
+  }
+
+  onUpdateConnections(kitId: KitIdLike, designId: DesignIdLike, callback: () => void) {
+    return this.observeConnectionsChanges(kitId, designId, callback);
+  }
+
+  onUpdateConnection(kitId: KitIdLike, designId: DesignIdLike, id: ConnectionIdLike, callback: () => void) {
+    return this.observeConnectionChanges(kitId, designId, id, callback);
+  }
+
+  onUpdatePorts(kitId: KitIdLike, typeId: TypeIdLike, callback: () => void) {
+    return this.observePortsChanges(kitId, typeId, callback);
+  }
+
+  onUpdatePort(kitId: KitIdLike, typeId: TypeIdLike, id: PortIdLike, callback: () => void) {
+    return this.observePortChanges(kitId, typeId, id, callback);
+  }
+
+  onUpdateRepresentations(kitId: KitIdLike, typeId: TypeIdLike, callback: () => void) {
+    return this.observeRepresentationsChanges(kitId, typeId, callback);
+  }
+
+  onUpdateRepresentation(kitId: KitIdLike, typeId: TypeIdLike, id: RepresentationIdLike, callback: () => void) {
+    return this.observeRepresentationChanges(kitId, typeId, id, callback);
+  }
+
+  onUpdateDesignEditorStore(id: string, callback: () => void) {
+    return this.onDesignEditorStoreChange(id, callback);
+  }
+
+  onUpdateDesignEditorStoreFullscreenPanel(id: string, callback: () => void) {
+    return this.onDesignEditorStoreFullscreenPanelChange(id, callback);
+  }
+
+  onUpdateDesignEditorStoreSelection(id: string, callback: () => void) {
+    return this.onDesignEditorStoreSelectionChange(id, callback);
+  }
+
+  onUpdateDesignEditorStoreDesignDiff(id: string, callback: () => void) {
+    return this.onDesignEditorStoreDesignDiffChange(id, callback);
+  }
+
+  onUpdateDesignEditorStoreIsTransactionActive(id: string, callback: () => void) {
+    return this.onDesignEditorStoreIsTransactionActiveChange(id, callback);
+  }
+
+  onUpdateDesignEditorStorePresence(id: string, callback: () => void) {
+    return this.onDesignEditorStorePresenceChange(id, callback);
+  }
+
+  onUpdateDesignEditorStorePresenceOthers(id: string, callback: () => void) {
+    return this.onDesignEditorStorePresenceOthersChange(id, callback);
+  }
+
+  // onUpdateDeep methods using Yjs observeDeep method for deep observation
+  onUpdateKitsDeep(callback: () => void) {
+    const cleanup = this.onKitIdsChange(callback);
+    return cleanup;
+  }
+
+  onUpdateKitDeep(id: KitIdLike, callback: () => void) {
+    const yKit = this.getYKit(id);
+    const o = () => callback();
+    (yKit as unknown as Y.Map<any>).observeDeep(o);
+    return () => (yKit as unknown as Y.Map<any>).unobserveDeep(o);
+  }
+
+  onUpdateDesignsDeep(kitId: KitIdLike, callback: () => void) {
+    const yKit = this.getYKit(kitId);
+    const yDesigns = yKit.get("designs") as Y.Map<any>;
+    const observer = () => callback();
+    yDesigns.observeDeep(observer);
+    return () => yDesigns.unobserveDeep(observer);
+  }
+
+  onUpdateDesignDeep(kitId: KitIdLike, id: DesignIdLike, callback: () => void) {
+    const yDesign = this.getYDesign(kitId, id) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yDesign.observeDeep(o);
+    return () => yDesign.unobserveDeep(o);
+  }
+
+  onUpdateTypesDeep(kitId: KitIdLike, callback: () => void) {
+    const yKit = this.getYKit(kitId);
+    const yTypes = yKit.get("types") as Y.Map<any>;
+    const observer = () => callback();
+    yTypes.observeDeep(observer);
+    return () => yTypes.unobserveDeep(observer);
+  }
+
+  onUpdateTypeDeep(kitId: KitIdLike, id: TypeIdLike, callback: () => void) {
+    const yType = this.getYType(kitId, id) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yType.observeDeep(o);
+    return () => yType.unobserveDeep(o);
+  }
+
+  onUpdatePiecesDeep(kitId: KitIdLike, designId: DesignIdLike, callback: () => void) {
+    const yDesign = this.getYDesign(kitId, designId);
+    const yPieces = gDesign(yDesign, "pieces") as unknown as Y.Map<any>;
+    const o = () => callback();
+    yPieces.observeDeep(o);
+    return () => yPieces.unobserveDeep(o);
+  }
+
+  onUpdatePieceDeep(kitId: KitIdLike, designId: DesignIdLike, id: PieceIdLike, callback: () => void) {
+    const yPiece = this.getYPiece(kitId, designId, id) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yPiece.observeDeep(o);
+    return () => yPiece.unobserveDeep(o);
+  }
+
+  onUpdateConnectionsDeep(kitId: KitIdLike, designId: DesignIdLike, callback: () => void) {
+    const yDesign = this.getYDesign(kitId, designId);
+    const yConnections = gDesign(yDesign, "connections") as unknown as Y.Map<any>;
+    const o = () => callback();
+    yConnections.observeDeep(o);
+    return () => yConnections.unobserveDeep(o);
+  }
+
+  onUpdateConnectionDeep(kitId: KitIdLike, designId: DesignIdLike, id: ConnectionIdLike, callback: () => void) {
+    const yConn = this.getYConnection(kitId, designId, id) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yConn.observeDeep(o);
+    return () => yConn.unobserveDeep(o);
+  }
+
+  onUpdatePortsDeep(kitId: KitIdLike, typeId: TypeIdLike, callback: () => void) {
+    const yPorts = this.getYPorts(kitId, typeId) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yPorts.observeDeep(o);
+    return () => yPorts.unobserveDeep(o);
+  }
+
+  onUpdatePortDeep(kitId: KitIdLike, typeId: TypeIdLike, id: PortIdLike, callback: () => void) {
+    const yPort = this.getYPort(kitId, typeId, id) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yPort.observeDeep(o);
+    return () => yPort.unobserveDeep(o);
+  }
+
+  onUpdateRepresentationsDeep(kitId: KitIdLike, typeId: TypeIdLike, callback: () => void) {
+    const yReps = this.getYRepresentations(kitId, typeId) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yReps.observeDeep(o);
+    return () => yReps.unobserveDeep(o);
+  }
+
+  onUpdateRepresentationDeep(kitId: KitIdLike, typeId: TypeIdLike, id: RepresentationIdLike, callback: () => void) {
+    const yRep = this.getYRepresentation(kitId, typeId, id) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yRep.observeDeep(o);
+    return () => yRep.unobserveDeep(o);
+  }
+
+  onUpdateDesignEditorStoreDeep(id: string, callback: () => void) {
+    const yDesignEditorStore = this.getYDesignEditorStore(id) as unknown as Y.Map<any>;
+    const o = () => callback();
+    yDesignEditorStore.observeDeep(o);
+    return () => yDesignEditorStore.unobserveDeep(o);
+  }
+
+  onUpdateDesignEditorStoreFullscreenPanelDeep(id: string, callback: () => void) {
+    return this.onUpdateDesignEditorStoreDeep(id, callback);
+  }
+
+  onUpdateDesignEditorStoreSelectionDeep(id: string, callback: () => void) {
+    return this.onUpdateDesignEditorStoreDeep(id, callback);
+  }
+
+  onUpdateDesignEditorStoreDesignDiffDeep(id: string, callback: () => void) {
+    return this.onUpdateDesignEditorStoreDeep(id, callback);
+  }
+
+  onUpdateDesignEditorStoreIsTransactionActiveDeep(id: string, callback: () => void) {
+    return this.onUpdateDesignEditorStoreDeep(id, callback);
+  }
+
+  onUpdateDesignEditorStorePresenceDeep(id: string, callback: () => void) {
+    return this.onUpdateDesignEditorStoreDeep(id, callback);
+  }
+
+  onUpdateDesignEditorStorePresenceOthersDeep(id: string, callback: () => void) {
+    return this.onUpdateDesignEditorStoreDeep(id, callback);
+  }
 }
 
-const __defaultStore = new SketchpadStore();
-const __storeRegistry = new Map<string, SketchpadStore>();
-const SketchpadContext = createContext<SketchpadStore>(__defaultStore);
+// #region Zustand Store Mirrors
+
+// Zustand store for sketchpad state mirroring Yjs
+interface SketchpadZustandState {
+  mode: Mode;
+  theme: Theme;
+  layout: Layout;
+  activeDesignEditorStoreId?: string;
+}
+
+interface SketchpadZustandActions {
+  setMode: (mode: Mode) => void;
+  setTheme: (theme: Theme) => void;
+  setLayout: (layout: Layout) => void;
+  setActiveDesignEditorStoreId: (id?: string) => void;
+  // Internal method to sync from Yjs
+  _syncFromYjs: (state: SketchpadState) => void;
+}
+
+type SketchpadZustandStore = SketchpadZustandState & SketchpadZustandActions;
+
+// Zustand store for kits data mirroring Yjs
+interface KitsZustandState {
+  kits: Map<string, string[]>;
+}
+
+interface KitsZustandActions {
+  // Internal method to sync from Yjs
+  _syncFromYjs: (kits: Map<string, string[]>) => void;
+}
+
+type KitsZustandStore = KitsZustandState & KitsZustandActions;
+
+// Zustand store for individual kit data mirroring Yjs
+interface KitZustandState {
+  kit: Kit | null;
+}
+
+interface KitZustandActions {
+  // Internal method to sync from Yjs
+  _syncFromYjs: (kit: Kit) => void;
+}
+
+type KitZustandStore = KitZustandState & KitZustandActions;
+
+// Zustand store for design editor state mirroring Yjs
+interface DesignEditorZustandState {
+  designId: DesignId | null;
+  fullscreenPanel: DesignEditorStoreFullscreenPanel;
+  selection: DesignEditorStoreSelection;
+  designDiff: DesignDiff;
+  isTransactionActive: boolean;
+  presence: DesignEditorStorePresence;
+  others?: DesignEditorStorePresenceOther[];
+}
+
+interface DesignEditorZustandActions {
+  setDesignId: (designId: DesignId) => void;
+  setFullscreenPanel: (panel: DesignEditorStoreFullscreenPanel) => void;
+  setSelection: (selection: DesignEditorStoreSelection) => void;
+  setDesignDiff: (diff: DesignDiff) => void;
+  setIsTransactionActive: (active: boolean) => void;
+  setPresence: (presence: DesignEditorStorePresence) => void;
+  setOthers: (others: DesignEditorStorePresenceOther[]) => void;
+  // Internal method to sync from Yjs
+  _syncFromYjs: (state: DesignEditorStoreState) => void;
+}
+
+type DesignEditorZustandStore = DesignEditorZustandState & DesignEditorZustandActions;
+
+// Factory functions for creating Zustand stores
+const createSketchpadZustandStore = (initialState: SketchpadState) =>
+  create<SketchpadZustandStore>()(
+    subscribeWithSelector((set, get) => ({
+      mode: initialState.mode,
+      theme: initialState.theme,
+      layout: initialState.layout,
+      activeDesignEditorStoreId: initialState.activeDesignEditorStoreId,
+      
+      setMode: (mode: Mode) => set({ mode }),
+      setTheme: (theme: Theme) => set({ theme }),
+      setLayout: (layout: Layout) => set({ layout }),
+      setActiveDesignEditorStoreId: (id?: string) => set({ activeDesignEditorStoreId: id }),
+      
+      _syncFromYjs: (state: SketchpadState) => set(state),
+    }))
+  );
+
+const createKitsZustandStore = () =>
+  create<KitsZustandStore>()(
+    subscribeWithSelector((set, get) => ({
+      kits: new Map(),
+      
+      _syncFromYjs: (kits: Map<string, string[]>) => set({ kits }),
+    }))
+  );
+
+const createKitZustandStore = () =>
+  create<KitZustandStore>()(
+    subscribeWithSelector((set, get) => ({
+      kit: null,
+      
+      _syncFromYjs: (kit: Kit) => set({ kit }),
+    }))
+  );
+
+const createDesignEditorZustandStore = (initialState: DesignEditorStoreState) =>
+  create<DesignEditorZustandStore>()(
+    subscribeWithSelector((set, get) => ({
+      designId: initialState.designId,
+      fullscreenPanel: initialState.fullscreenPanel,
+      selection: initialState.selection,
+      designDiff: initialState.designDiff,
+      isTransactionActive: initialState.isTransactionActive,
+      presence: initialState.presence,
+      others: initialState.others,
+      
+      setDesignId: (designId: DesignId) => set({ designId }),
+      setFullscreenPanel: (fullscreenPanel: DesignEditorStoreFullscreenPanel) => set({ fullscreenPanel }),
+      setSelection: (selection: DesignEditorStoreSelection) => set({ selection }),
+      setDesignDiff: (designDiff: DesignDiff) => set({ designDiff }),
+      setIsTransactionActive: (isTransactionActive: boolean) => set({ isTransactionActive }),
+      setPresence: (presence: DesignEditorStorePresence) => set({ presence }),
+      setOthers: (others: DesignEditorStorePresenceOther[]) => set({ others }),
+      
+      _syncFromYjs: (state: DesignEditorStoreState) => set(state),
+    }))
+  );
+
+// #endregion Zustand Store Mirrors
+
+// Enhanced SketchpadStore that manages both Yjs and Zustand stores
+class EnhancedSketchpadStore extends SketchpadStore {
+  // Zustand store instances
+  private sketchpadZustandStore?: ReturnType<typeof createSketchpadZustandStore>;
+  private kitsZustandStore?: ReturnType<typeof createKitsZustandStore>;
+  private kitZustandStores = new Map<string, ReturnType<typeof createKitZustandStore>>();
+  private designEditorZustandStores = new Map<string, ReturnType<typeof createDesignEditorZustandStore>>();
+  
+  // Yjs observers for syncing to Zustand
+  private yjsObservers = new Map<string, () => void>();
+  
+  constructor(id?: string) {
+    super(id);
+    this.initializeZustandStores();
+    this.setupYjsToZustandSync();
+  }
+  
+  private initializeZustandStores() {
+    // Initialize sketchpad store
+    const sketchpadState = this.getSketchpadState();
+    this.sketchpadZustandStore = createSketchpadZustandStore(sketchpadState);
+    
+    // Initialize kits store
+    this.kitsZustandStore = createKitsZustandStore();
+    const kits = this.getKits();
+    this.kitsZustandStore.getState()._syncFromYjs(kits);
+  }
+  
+  private setupYjsToZustandSync() {
+    // Sync sketchpad state changes
+    const sketchpadObserver = () => {
+      if (this.sketchpadZustandStore) {
+        const state = this.getSketchpadState();
+        this.sketchpadZustandStore.getState()._syncFromYjs(state);
+      }
+    };
+    
+    // Access private method via protected/public accessor - we'll need to expose this
+    const ySketchpad = (this as any).getYSketchpad();
+    ySketchpad.observe(sketchpadObserver);
+    this.yjsObservers.set('sketchpad', () => ySketchpad.unobserve(sketchpadObserver));
+    
+    // Sync kits changes
+    const kitsObserver = () => {
+      if (this.kitsZustandStore) {
+        const kits = this.getKits();
+        this.kitsZustandStore.getState()._syncFromYjs(kits);
+      }
+    };
+    
+    const kitsCleanup = this.onKitIdsChange(kitsObserver);
+    this.yjsObservers.set('kits', kitsCleanup);
+  }
+  
+  // Get or create Zustand store for a specific kit
+  getKitZustandStore(kitId: KitId): ReturnType<typeof createKitZustandStore> {
+    const key = (this as any).key.kit(kitId);
+    
+    if (!this.kitZustandStores.has(key)) {
+      const store = createKitZustandStore();
+      this.kitZustandStores.set(key, store);
+      
+      // Sync initial data
+      try {
+        const kit = this.getKit(kitId);
+        store.getState()._syncFromYjs(kit);
+      } catch (e) {
+        // Kit doesn't exist yet, will be synced when created
+      }
+      
+      // Setup observer for this kit
+      const observer = () => {
+        try {
+          const kit = this.getKit(kitId);
+          store.getState()._syncFromYjs(kit);
+        } catch (e) {
+          // Kit might have been deleted - set empty kit
+          const emptyKit: Kit = { 
+            name: '', 
+            description: '', 
+            qualities: [], 
+            types: [], 
+            designs: [] 
+          };
+          store.getState()._syncFromYjs(emptyKit);
+        }
+      };
+      
+      const cleanup = this.observeKitChanges(kitId, observer);
+      this.yjsObservers.set(`kit-${key}`, cleanup);
+    }
+    
+    return this.kitZustandStores.get(key)!;
+  }
+  
+  // Get or create Zustand store for a specific design editor
+  getDesignEditorZustandStore(id: string): ReturnType<typeof createDesignEditorZustandStore> {
+    if (!this.designEditorZustandStores.has(id)) {
+      // Get initial state from Yjs
+      const designEditorStore = this.getDesignEditorStore(id);
+      if (!designEditorStore) {
+        throw new Error(`Design editor store with id ${id} not found`);
+      }
+      
+      const initialState = designEditorStore.getState();
+      const store = createDesignEditorZustandStore(initialState);
+      this.designEditorZustandStores.set(id, store);
+      
+      // Setup observer for this design editor
+      const observer = () => {
+        const editorStore = this.getDesignEditorStore(id);
+        if (editorStore) {
+          const state = editorStore.getState();
+          store.getState()._syncFromYjs(state);
+        }
+      };
+      
+      const cleanup = this.onDesignEditorStoreChange(id, observer);
+      this.yjsObservers.set(`design-editor-${id}`, cleanup);
+    }
+    
+    return this.designEditorZustandStores.get(id)!;
+  }
+  
+  // Override cleanup to also clean Zustand observers
+  destroy() {
+    // Clean up all Yjs observers
+    this.yjsObservers.forEach((cleanup) => cleanup());
+    this.yjsObservers.clear();
+    
+    // Clear Zustand stores
+    this.kitZustandStores.clear();
+    this.designEditorZustandStores.clear();
+  }
+  
+  // Expose Zustand stores for hooks
+  getSketchpadZustandStore() {
+    return this.sketchpadZustandStore!;
+  }
+  
+  getKitsZustandStore() {
+    return this.kitsZustandStore!;
+  }
+}
+
+const __defaultStore = new EnhancedSketchpadStore();
+const __storeRegistry = new Map<string, EnhancedSketchpadStore>();
+const SketchpadContext = createContext<EnhancedSketchpadStore>(__defaultStore);
 
 // Scoping contexts
 type SketchpadScope = { id: string };
@@ -3360,32 +3856,64 @@ export const usePortScope = () => useContext(PortypeScopeContext);
 export const useDesignEditorScope = () => useContext(DesignEditorStoreScopeContext);
 
 export function SketchpadProvider(props: { id?: string; children: React.ReactNode }) {
-  const ref = useRef<SketchpadStore | null>(null);
-  if (!ref.current) ref.current = props.id ? __storeRegistry.get(props.id) || new SketchpadStore(props.id) : new SketchpadStore(props.id);
+  const ref = useRef<EnhancedSketchpadStore | null>(null);
+  if (!ref.current) ref.current = props.id ? __storeRegistry.get(props.id) || new EnhancedSketchpadStore(props.id) : new EnhancedSketchpadStore(props.id);
   if (props.id && !__storeRegistry.has(props.id)) __storeRegistry.set(props.id, ref.current);
   return React.createElement(SketchpadContext.Provider, { value: ref.current! }, props.children as any);
 }
 
-export function useSketchpadStore() {
+export function useSketchpadStore<T = EnhancedSketchpadStore>(selector?: (store: EnhancedSketchpadStore) => T): T {
   const ctx = useContext(SketchpadContext);
   const sScope = useSketchpadScope();
-  const ref = useRef<SketchpadStore | null>(null);
+  const ref = useRef<EnhancedSketchpadStore | null>(null);
   const finalId = sScope?.id;
-  if (!finalId) return ctx || __defaultStore;
-  if (!ref.current) ref.current = __storeRegistry.get(finalId) || new SketchpadStore(finalId);
-  if (!__storeRegistry.has(finalId)) __storeRegistry.set(finalId, ref.current);
-  return ref.current;
+
+  let store: EnhancedSketchpadStore;
+  if (!finalId) {
+    store = ctx || __defaultStore;
+  } else {
+    if (!ref.current) ref.current = __storeRegistry.get(finalId) || new EnhancedSketchpadStore(finalId);
+    if (!__storeRegistry.has(finalId)) __storeRegistry.set(finalId, ref.current);
+    store = ref.current;
+  }
+
+  if (selector) {
+    return selector(store);
+  }
+
+  return store as T;
 }
 
-export function useKits() {
+// #region New Zustand-based Hooks
+
+// Sketchpad state hooks
+export function useSketchpadMode(): Mode {
   const store = useSketchpadStore();
-  return useSyncExternalStore(
-    (l) => store.onKitIdsChange(l),
-    () => store.getKits(),
-  );
+  return store.getSketchpadZustandStore()((state) => state.mode);
 }
 
-export function useKit(id?: KitId) {
+export function useSketchpadTheme(): Theme {
+  const store = useSketchpadStore();
+  return store.getSketchpadZustandStore()((state) => state.theme);
+}
+
+export function useSketchpadLayout(): Layout {
+  const store = useSketchpadStore();
+  return store.getSketchpadZustandStore()((state) => state.layout);
+}
+
+export function useSketchpadActiveDesignEditorStoreId(): string | undefined {
+  const store = useSketchpadStore();
+  return store.getSketchpadZustandStore()((state) => state.activeDesignEditorStoreId);
+}
+
+// Kits hooks
+export function useKits(): Map<string, string[]> {
+  const store = useSketchpadStore();
+  return store.getKitsZustandStore()((state) => state.kits);
+}
+
+export function useKit(id?: KitId): Kit {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   const designEditorScope = useDesignEditorScope();
@@ -3394,32 +3922,113 @@ export function useKit(id?: KitId) {
   if (designEditorScope?.id && !id && !kitScope) {
     const { kitId } = useDesignEditorKitAndDesignIds();
     if (!kitId) throw new Error("Invalid design editor scope");
-    return useSyncExternalStore(
-      (l) => store.observeKitChanges(kitId, l),
-      () => store.getKit(kitId),
-    );
+
+    return store.getKitZustandStore(kitId)((state) => state.kit || {
+      name: '', 
+      description: '', 
+      qualities: [], 
+      types: [], 
+      designs: [] 
+    });
   }
 
   const kitId = id ?? kitScope?.id;
   if (!kitId) throw new Error("useKit requires a kit id or must be inside a KitScope or DesignEditorScope");
-  return useSyncExternalStore(
-    (l) => store.observeKitChanges(kitId, l),
-    () => store.getKit(kitId),
-  );
+
+  return store.getKitZustandStore(kitId)((state) => state.kit || {
+    name: '', 
+    description: '', 
+    qualities: [], 
+    types: [], 
+    designs: [] 
+  });
 }
 
-export function useDesigns() {
+// Design editor hooks
+export function useDesignEditorStore(id?: string): DesignEditorStoreState {
+  const store = useSketchpadStore();
+  const designEditorScope = useDesignEditorScope();
+  const designEditorId = id ?? designEditorScope?.id;
+  if (!designEditorId) throw new Error("useDesignEditorStore requires an id or must be used within a DesignEditorStoreScope");
+
+  return store.getDesignEditorZustandStore(designEditorId)((state) => ({
+    designId: state.designId || { name: '', variant: '', view: '' },
+    fullscreenPanel: state.fullscreenPanel,
+    selection: state.selection,
+    designDiff: state.designDiff,
+    isTransactionActive: state.isTransactionActive,
+    operationStack: [],
+    operationIndex: 0,
+    presence: state.presence,
+    others: state.others,
+  }));
+}
+
+export function useDesignEditorStoreSelection(id?: string): DesignEditorStoreSelection {
+  const store = useSketchpadStore();
+  const designEditorScope = useDesignEditorScope();
+  const designEditorId = id ?? designEditorScope?.id;
+  if (!designEditorId) throw new Error("useDesignEditorStoreSelection requires an id or must be used within a DesignEditorStoreScope");
+
+  return store.getDesignEditorZustandStore(designEditorId)((state) => state.selection);
+}
+
+export function useDesignEditorStoreFullscreenPanel(id?: string): DesignEditorStoreFullscreenPanel {
+  const store = useSketchpadStore();
+  const designEditorScope = useDesignEditorScope();
+  const designEditorId = id ?? designEditorScope?.id;
+  if (!designEditorId) throw new Error("useDesignEditorStoreFullscreenPanel requires an id or must be used within a DesignEditorStoreScope");
+
+  return store.getDesignEditorZustandStore(designEditorId)((state) => state.fullscreenPanel);
+}
+
+export function useDesignEditorStoreDesignDiff(id?: string): DesignDiff {
+  const store = useSketchpadStore();
+  const designEditorScope = useDesignEditorScope();
+  const designEditorId = id ?? designEditorScope?.id;
+  if (!designEditorId) throw new Error("useDesignEditorStoreDesignDiff requires an id or must be used within a DesignEditorStoreScope");
+
+  return store.getDesignEditorZustandStore(designEditorId)((state) => state.designDiff);
+}
+
+export function useDesignEditorStoreIsTransactionActive(id?: string): boolean {
+  const store = useSketchpadStore();
+  const designEditorScope = useDesignEditorScope();
+  const designEditorId = id ?? designEditorScope?.id;
+  if (!designEditorId) throw new Error("useDesignEditorStoreIsTransactionActive requires an id or must be used within a DesignEditorStoreScope");
+
+  return store.getDesignEditorZustandStore(designEditorId)((state) => state.isTransactionActive);
+}
+
+export function useDesignEditorStorePresence(id?: string): DesignEditorStorePresence {
+  const store = useSketchpadStore();
+  const designEditorScope = useDesignEditorScope();
+  const designEditorId = id ?? designEditorScope?.id;
+  if (!designEditorId) throw new Error("useDesignEditorStorePresence requires an id or must be used within a DesignEditorStoreScope");
+
+  return store.getDesignEditorZustandStore(designEditorId)((state) => state.presence);
+}
+
+export function useDesignEditorStorePresenceOthers(id?: string): DesignEditorStorePresenceOther[] {
+  const store = useSketchpadStore();
+  const designEditorScope = useDesignEditorScope();
+  const designEditorId = id ?? designEditorScope?.id;
+  if (!designEditorId) throw new Error("useDesignEditorStorePresenceOthers requires an id or must be used within a DesignEditorStoreScope");
+
+  return store.getDesignEditorZustandStore(designEditorId)((state) => state.others || []);
+}
+
+// Keep existing data hooks that don't have state management issues - simplified without selectors
+export function useDesigns(): Design[] {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   if (!kitScope) throw new Error("useDesigns must be used within a KitScope");
   const { id } = kitScope;
-  return useSyncExternalStore(
-    (l) => store.observeDesignsChanges(id, l),
-    () => store.getDesigns(id),
-  );
+
+  return store.getDesigns(id);
 }
 
-export function useDesign(id?: DesignId) {
+export function useDesign(id?: DesignId): Design {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
@@ -3429,23 +4038,18 @@ export function useDesign(id?: DesignId) {
   if (designEditorScope?.id && !id && (!kitScope || !designScope)) {
     const { kitId, designId } = useDesignEditorKitAndDesignIds();
     if (!kitId || !designId) throw new Error("Invalid design editor scope");
-    return useSyncExternalStore(
-      (l) => store.observeDesignChanges(kitId, designId, l),
-      () => store.getDesign(kitId, designId),
-    );
+
+    return store.getDesign(kitId, designId);
   }
 
   if (!kitScope) throw new Error("useDesign must be used within a KitScope or DesignEditorScope");
   const designId = id ?? designScope?.id;
   if (!designId) throw new Error("useDesign requires a design id or must be inside a DesignScope or DesignEditorScope");
-  return useSyncExternalStore(
-    (l) => store.observeDesignChanges(kitScope.id, designId, l),
-    () => store.getDesign(kitScope.id, designId),
-  );
+
+  return store.getDesign(kitScope.id, designId);
 }
 
 export function useDesignId() {
-  const store = useSketchpadStore();
   const designScope = useDesignScope();
   const designEditorScope = useDesignEditorScope();
 
@@ -3461,43 +4065,37 @@ export function useDesignId() {
   return designId;
 }
 
-export function useTypes() {
+export function useTypes(): Type[] {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   if (!kitScope) throw new Error("useTypes must be used within a KitScope");
   const kitId = kitScope.id;
-  return useSyncExternalStore(
-    (l) => store.observeTypesChanges(kitId, l),
-    () => store.getTypes(kitId),
-  );
+
+  return store.getTypes(kitId);
 }
 
-export function useType(id?: TypeId) {
+export function useType(id?: TypeId): Type {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   if (!kitScope) throw new Error("useType must be used within a KitScope");
   const typeScope = useTypeScope();
   const typeId = id ?? typeScope?.id;
   if (!typeId) throw new Error("useType requires a type id or must be inside a TypeScope");
-  return useSyncExternalStore(
-    (l) => store.observeTypeChanges(kitScope.id, typeId, l),
-    () => store.getType(kitScope.id, typeId),
-  );
+
+  return store.getType(kitScope.id, typeId);
 }
 
-export function usePieces() {
+export function usePieces(): Piece[] {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   if (!kitScope) throw new Error("usePieces must be used within a KitScope");
   const designScope = useDesignScope();
   if (!designScope) throw new Error("usePieces must be used within a DesignScope");
-  return useSyncExternalStore(
-    (l) => store.observePiecesChanges(kitScope.id, designScope.id, l),
-    () => store.getPieces(kitScope.id, designScope.id),
-  );
+
+  return store.getPieces(kitScope.id, designScope.id);
 }
 
-export function usePiece(id?: PieceId) {
+export function usePiece(id?: PieceId): Piece {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   if (!kitScope) throw new Error("usePiece must be used within a KitScope");
@@ -3506,25 +4104,21 @@ export function usePiece(id?: PieceId) {
   const pieceScope = usePieceScope();
   const pieceId = id ?? pieceScope?.id;
   if (!pieceId) throw new Error("usePiece requires a piece id or must be inside a PieceScope");
-  return useSyncExternalStore(
-    (l) => store.observePieceChanges(kitScope.id, designScope.id, pieceId, l),
-    () => store.getPiece(kitScope.id, designScope.id, pieceId),
-  );
+
+  return store.getPiece(kitScope.id, designScope.id, pieceId);
 }
 
-export function useConnections() {
+export function useConnections(): Connection[] {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   if (!kitScope) throw new Error("useConnections must be used within a KitScope");
   const designScope = useDesignScope();
   if (!designScope) throw new Error("useConnections must be used within a DesignScope");
-  return useSyncExternalStore(
-    (l) => store.observeConnectionsChanges(kitScope.id, designScope.id, l),
-    () => store.getConnections(kitScope.id, designScope.id),
-  );
+  
+  return store.getConnections(kitScope.id, designScope.id);
 }
 
-export function useConnection(id?: ConnectionId) {
+export function useConnection(id?: ConnectionId): Connection | undefined {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   if (!kitScope) throw new Error("useConnection must be used within a KitScope");
@@ -3533,25 +4127,21 @@ export function useConnection(id?: ConnectionId) {
   const connectionScope = useConnectionScope();
   const connectionId = id ?? connectionScope?.id;
   if (!connectionId) throw new Error("useConnection requires a connection id or must be inside a ConnectionScope");
-  return useSyncExternalStore(
-    (l) => store.observeConnectionChanges(kitScope.id, designScope.id, connectionId, l),
-    () => store.getConnection(kitScope.id, designScope.id, connectionId),
-  );
+  
+  return store.getConnection(kitScope.id, designScope.id, connectionId);
 }
 
-export function usePorts(id?: PortId) {
+export function usePorts(): Port[] {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   if (!kitScope) throw new Error("usePorts must be used within a KitScope");
   const typeScope = useTypeScope();
   if (!typeScope) throw new Error("usePorts must be used within a TypeScope");
-  return useSyncExternalStore(
-    (l) => store.observePortsChanges(kitScope.id, typeScope.id, l),
-    () => store.getPorts(kitScope.id, typeScope.id),
-  );
+  
+  return store.getPorts(kitScope.id, typeScope.id);
 }
 
-export function usePort(id?: PortId) {
+export function usePort(id?: PortId): Port | undefined {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   if (!kitScope) throw new Error("usePort must be used within a KitScope");
@@ -3560,215 +4150,137 @@ export function usePort(id?: PortId) {
   const portScope = usePortScope();
   const portId = id ?? portScope?.id;
   if (!portId) throw new Error("usePort requires a port id or must be inside a PortypeScope");
-  return useSyncExternalStore(
-    (l) => store.observePortChanges(kitScope.id, typeScope.id, portId, l),
-    () => store.getPort(kitScope.id, typeScope.id, portId),
-  );
+  
+  return store.getPort(kitScope.id, typeScope.id, portId);
 }
 
-export function useRepresentations(id?: RepresentationId) {
+export function useRepresentations(): Representation[] {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   if (!kitScope) throw new Error("useRepresentations must be used within a KitScope");
   const typeScope = useTypeScope();
   if (!typeScope) throw new Error("useRepresentations must be used within a TypeScope");
-  return useSyncExternalStore(
-    (l) => store.observeRepresentationsChanges(kitScope.id, typeScope.id, l),
-    () => store.getRepresentations(kitScope.id, typeScope.id),
-  );
+  
+  return store.getRepresentations(kitScope.id, typeScope.id);
 }
 
-export function useDesignEditorStore(id?: string) {
+// File URLs hook
+export function useDesignEditorStoreFileUrls(): Map<string, string> {
   const store = useSketchpadStore();
-  const designEditorScope = useDesignEditorScope();
-  const designEditorId = id ?? designEditorScope?.id;
-  if (!designEditorId) throw new Error("useDesignEditorStore requires an id or must be used within a DesignEditorStoreScope");
-
-  const designEditorStore = store.getDesignEditorStoreStore(designEditorId);
-  if (!designEditorStore) throw new Error(`Design editor store with id ${designEditorId} not found`);
-
-  return useSyncExternalStore(
-    (l) => store.onDesignEditorStoreChange(designEditorId, l),
-    () => designEditorStore.getState(),
-  );
+  return store.getFileUrls();
 }
 
-export function useDesignEditorStoreFullscreenPanel(id?: string) {
+// #endregion New Zustand-based Hooks
+
+// Command hooks - consolidated into one hook
+export function useCommands() {
   const store = useSketchpadStore();
   const designEditorScope = useDesignEditorScope();
-  const designEditorId = id ?? designEditorScope?.id;
-  if (!designEditorId) throw new Error("useDesignEditorStoreFullscreenPanel requires an id or must be used within a DesignEditorStoreScope");
+  const designEditorId = designEditorScope?.id;
 
-  return useSyncExternalStore(
-    (l) => store.onDesignEditorStoreFullscreenPanelChange(designEditorId, l),
-    () => {
-      const designEditorStore = store.getDesignEditorStoreStore(designEditorId);
-      return designEditorStore?.getState().fullscreenPanel ?? DesignEditorStoreFullscreenPanel.None;
+  return useMemo(() => ({
+    // Selection commands
+    selectPiece: (pieceId: string) => {
+      if (!designEditorId) return;
+      const designEditorStore = store.getDesignEditorStore(designEditorId);
+      if (!designEditorStore) return;
+
+      const zustandStore = store.getDesignEditorZustandStore(designEditorId);
+      const currentSelection = zustandStore.getState().selection;
+
+      zustandStore.getState().setSelection({
+        selectedPieceIds: [...currentSelection.selectedPieceIds, { id_: pieceId }],
+        selectedConnections: currentSelection.selectedConnections,
+        selectedPiecePortId: currentSelection.selectedPiecePortId,
+      });
     },
-  );
-}
 
-export function useDesignEditorStoreSelection(id?: string) {
-  const store = useSketchpadStore();
-  const designEditorScope = useDesignEditorScope();
-  const designEditorId = id ?? designEditorScope?.id;
-  if (!designEditorId) throw new Error("useDesignEditorStoreSelection requires an id or must be used within a DesignEditorStoreScope");
+    deselectPiece: (pieceId: string) => {
+      if (!designEditorId) return;
+      const designEditorStore = store.getDesignEditorStore(designEditorId);
+      if (!designEditorStore) return;
 
-  return useSyncExternalStore(
-    (l) => store.onDesignEditorStoreSelectionChange(designEditorId, l),
-    () => store.getStableSelection(designEditorId),
-  );
-}
+      const zustandStore = store.getDesignEditorZustandStore(designEditorId);
+      const currentSelection = zustandStore.getState().selection;
 
-export function useDesignEditorStoreDesignDiff(id?: string) {
-  const store = useSketchpadStore();
-  const designEditorScope = useDesignEditorScope();
-  const designEditorId = id ?? designEditorScope?.id;
-  if (!designEditorId) throw new Error("useDesignEditorStoreDesignDiff requires an id or must be used within a DesignEditorStoreScope");
-
-  return useSyncExternalStore(
-    (l) => store.onDesignEditorStoreDesignDiffChange(designEditorId, l),
-    () => store.getStableDesignDiff(designEditorId),
-  );
-}
-
-export function useDesignEditorStoreIsTransactionActive(id?: string) {
-  const store = useSketchpadStore();
-  const designEditorScope = useDesignEditorScope();
-  const designEditorId = id ?? designEditorScope?.id;
-  if (!designEditorId) throw new Error("useDesignEditorStoreIsTransactionActive requires an id or must be used within a DesignEditorStoreScope");
-
-  return useSyncExternalStore(
-    (l) => store.onDesignEditorStoreIsTransactionActiveChange(designEditorId, l),
-    () => {
-      const designEditorStore = store.getDesignEditorStoreStore(designEditorId);
-      return designEditorStore?.getState().isTransactionActive ?? false;
+      zustandStore.getState().setSelection({
+        selectedPieceIds: currentSelection.selectedPieceIds.filter((p) => p.id_ !== pieceId),
+        selectedConnections: currentSelection.selectedConnections,
+        selectedPiecePortId: currentSelection.selectedPiecePortId,
+      });
     },
-  );
-}
 
-export function useDesignEditorStorePresence(id?: string) {
-  const store = useSketchpadStore();
-  const designEditorScope = useDesignEditorScope();
-  const designEditorId = id ?? designEditorScope?.id;
-  if (!designEditorId) throw new Error("useDesignEditorStorePresence requires an id or must be used within a DesignEditorStoreScope");
+    selectConnection: (connection: Connection) => {
+      if (!designEditorId) return;
+      const designEditorStore = store.getDesignEditorStore(designEditorId);
+      if (!designEditorStore) return;
 
-  return useSyncExternalStore(
-    (l) => store.onDesignEditorStorePresenceChange(designEditorId, l),
-    () => {
-      const designEditorStore = store.getDesignEditorStoreStore(designEditorId);
-      return designEditorStore?.getState().presence ?? {};
+      const zustandStore = store.getDesignEditorZustandStore(designEditorId);
+      const currentSelection = zustandStore.getState().selection;
+
+      zustandStore.getState().setSelection({
+        selectedPieceIds: currentSelection.selectedPieceIds,
+        selectedConnections: [...currentSelection.selectedConnections, {
+          connected: connection.connected,
+          connecting: connection.connecting,
+        }],
+        selectedPiecePortId: currentSelection.selectedPiecePortId,
+      });
     },
-  );
-}
 
-export function useDesignEditorStorePresenceOthers(id?: string) {
-  const store = useSketchpadStore();
-  const designEditorScope = useDesignEditorScope();
-  const designEditorId = id ?? designEditorScope?.id;
-  if (!designEditorId) throw new Error("useDesignEditorStorePresenceOthers requires an id or must be used within a DesignEditorStoreScope");
+    deselectConnection: (connection: Connection) => {
+      if (!designEditorId) return;
+      const designEditorStore = store.getDesignEditorStore(designEditorId);
+      if (!designEditorStore) return;
 
-  return useSyncExternalStore(
-    (l) => store.onDesignEditorStorePresenceOthersChange(designEditorId, l),
-    () => {
-      const designEditorStore = store.getDesignEditorStoreStore(designEditorId);
-      return designEditorStore?.getState().others ?? [];
+      const zustandStore = store.getDesignEditorZustandStore(designEditorId);
+      const currentSelection = zustandStore.getState().selection;
+
+      zustandStore.getState().setSelection({
+        selectedPieceIds: currentSelection.selectedPieceIds,
+        selectedConnections: currentSelection.selectedConnections.filter((c) => 
+          !(c.connected.piece.id_ === connection.connected.piece.id_ && 
+            c.connecting.piece.id_ === connection.connecting.piece.id_)
+        ),
+        selectedPiecePortId: currentSelection.selectedPiecePortId,
+      });
     },
-  );
-}
 
-export function useDesignEditorStoreFileUrls(id?: string) {
-  const store = useSketchpadStore();
-  return useSyncExternalStore(
-    () => () => {}, // File URLs don't change often, can use a dummy unsubscribe
-    () => store.getFileUrls(),
-  );
-}
+    // Port selection
+    selectPiecePort: (pieceId: string, portId: string) => {
+      if (!designEditorId) return;
+      const designEditorStore = store.getDesignEditorStore(designEditorId);
+      if (!designEditorStore) return;
 
-// Sketchpad store hooks following the same pattern as design editor store hooks
-export function useSketchpadStoreMode() {
-  const store = useSketchpadStore();
-  return useSyncExternalStore(
-    (callback) => store.onSketchpadStateChange(callback),
-    () => store.getSketchpadState().mode,
-  );
-}
+      const zustandStore = store.getDesignEditorZustandStore(designEditorId);
+      const currentSelection = zustandStore.getState().selection;
 
-export function useSketchpadStoreTheme() {
-  const store = useSketchpadStore();
-  return useSyncExternalStore(
-    (callback) => store.onSketchpadStateChange(callback),
-    () => store.getSketchpadState().theme,
-  );
-}
+      zustandStore.getState().setSelection({
+        ...currentSelection,
+        selectedPiecePortId: { pieceId: { id_: pieceId }, portId: { id_: portId } },
+      });
+    },
 
-export function useSketchpadStoreLayout() {
-  const store = useSketchpadStore();
-  return useSyncExternalStore(
-    (callback) => store.onSketchpadStateChange(callback),
-    () => store.getSketchpadState().layout,
-  );
-}
+    deselectPiecePort: () => {
+      if (!designEditorId) return;
+      const designEditorStore = store.getDesignEditorStore(designEditorId);
+      if (!designEditorStore) return;
 
-export function useSketchpadStoreActiveDesignEditorId() {
-  const store = useSketchpadStore();
-  return useSyncExternalStore(
-    (callback) => store.onSketchpadStateChange(callback),
-    () => store.getSketchpadState().activeDesignEditorStoreId,
-  );
-}
+      const zustandStore = store.getDesignEditorZustandStore(designEditorId);
+      const currentSelection = zustandStore.getState().selection;
 
-// Sketchpad state hooks
-export function useSketchpadMode() {
-  const store = useSketchpadStore();
-  return useSyncExternalStore(
-    (callback) => store.onSketchpadStateChange(callback),
-    () => store.getSketchpadState().mode,
-  );
-}
+      zustandStore.getState().setSelection({
+        ...currentSelection,
+        selectedPiecePortId: undefined,
+      });
+    },
 
-export function useSketchpadTheme() {
-  const store = useSketchpadStore();
-  return useSyncExternalStore(
-    (callback) => store.onSketchpadStateChange(callback),
-    () => store.getSketchpadState().theme,
-  );
-}
-
-export function useSketchpadLayout() {
-  const store = useSketchpadStore();
-  return useSyncExternalStore(
-    (callback) => store.onSketchpadStateChange(callback),
-    () => store.getSketchpadState().layout,
-  );
-}
-
-export function useActiveDesignEditorStoreId() {
-  const store = useSketchpadStore();
-  return useSyncExternalStore(
-    (callback) => store.onSketchpadStateChange(callback),
-    () => store.getSketchpadState().activeDesignEditorStoreId,
-  );
-}
-
-export function useSketchpadState() {
-  const store = useSketchpadStore();
-  return useSyncExternalStore(
-    (callback) => store.onSketchpadStateChange(callback),
-    () => store.getSketchpadState(),
-  );
-}
-
-// Sketchpad state setters (non-hook functions that can be used in event handlers)
-export function useSketchpadCommands() {
-  const store = useSketchpadStore();
-  return {
-    setMode: (mode: Mode) => store.setSketchpadMode(mode),
-    setTheme: (theme: Theme) => store.setSketchpadTheme(theme),
-    setLayout: (layout: Layout) => store.setSketchpadLayout(layout),
-    setActiveDesignEditorId: (id?: string) => store.setActiveDesignEditorStoreId(id),
-    getOrCreateDesignEditor: (kitId: KitIdLike, designId: DesignIdLike) => store.getOrCreateDesignEditorStoreId(kitId, designId),
-  };
+    // Command execution
+    executeCommand: async (commandName: string, payload?: Record<string, any>) => {
+      // TODO: Implement command execution logic
+      console.log("Executing command:", commandName, payload);
+    },
+  }), [store, designEditorId]);
 }
 
 // Hook to get the current design editor ID based on the kit and design scopes
@@ -3802,3 +4314,21 @@ export function useDesignEditorKitAndDesignIds() {
 
   return parseEditorId(designEditorScope.id);
 }
+
+// #region Concise Hook Aliases
+
+// Short aliases for common hooks - more concise as requested
+export const useMode = useSketchpadMode;
+export const useTheme = useSketchpadTheme;
+export const useLayout = useSketchpadLayout;
+
+// Most commonly used hooks with shorter names
+export const useSelection = useDesignEditorStoreSelection;
+export const useFullscreen = useDesignEditorStoreFullscreenPanel;
+export const useDiff = useDesignEditorStoreDesignDiff;
+export const useTransaction = useDesignEditorStoreIsTransactionActive;
+export const usePresence = useDesignEditorStorePresence;
+export const useOthers = useDesignEditorStorePresenceOthers;
+export const useFileUrls = useDesignEditorStoreFileUrls;
+
+// #endregion Concise Hook Aliases

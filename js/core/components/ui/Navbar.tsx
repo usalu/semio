@@ -18,16 +18,15 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-import { DesignId } from "@semio/js";
-import { Avatar, AvatarFallback, AvatarImage } from "@semio/js/components/ui/Avatar";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@semio/js/components/ui/Breadcrumb";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@semio/js/components/ui/Select";
-import { Toggle } from "@semio/js/components/ui/Toggle";
-import { ToggleCycle } from "@semio/js/components/ui/ToggleCycle";
-import { ToggleGroup, ToggleGroupItem } from "@semio/js/components/ui/ToggleGroup";
+import { DesignId, Layout, Theme, useCommands, useDesignId, useDesigns, useLayout, useTheme } from "@semio/js";
 import { AppWindow, Fingerprint, Home, Minus, Moon, Share2, Square, Sun, X } from "lucide-react";
 import { FC, ReactNode } from "react";
-import { Layout, Theme, useDesignId, useDesigns, useSketchpadCommands, useSketchpadLayout, useSketchpadTheme } from "../../store";
+import { Avatar, AvatarFallback, AvatarImage } from "./Avatar";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "./Breadcrumb";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./Select";
+import { Toggle } from "./Toggle";
+import { ToggleCycle } from "./ToggleCycle";
+import { ToggleGroup, ToggleGroupItem } from "./ToggleGroup";
 
 interface NavbarProps {
   toolbarContent?: ReactNode;
@@ -39,9 +38,9 @@ interface NavbarProps {
 }
 
 const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
-  const { setTheme, setLayout } = useSketchpadCommands();
-  const layout = useSketchpadLayout();
-  const theme = useSketchpadTheme();
+  const { setTheme, setLayout } = useCommands();
+  const layout = useLayout();
+  const theme = useTheme();
   const designId = useDesignId();
   const availableDesigns = useDesigns();
   // Create a unique key for each design
