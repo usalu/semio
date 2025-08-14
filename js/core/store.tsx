@@ -22,7 +22,9 @@
 // - Each Zustand store uses a single observeDeep on its corresponding yDoc
 // - Zustand handles granular reactivity through selectors, not multiple observers
 // - Main hooks: useSketchpad() and useKit(kitId) expose the Zustand stores
+// - All data hooks (useDesigns, useTypes, usePieces, etc.) use Zustand selectors
 // - No more granular onChange events - Zustand selectors handle fine-grained updates
+// - Scope mechanism is preserved and works seamlessly with Zustand selectors
 
 // #endregion
 import JSZip from "jszip";
@@ -3191,330 +3193,17 @@ class SketchpadStore {
       }
     }
   }
-
-  // Observer methods for React hooks (different from update methods)
-  observeKitChanges(id: KitIdLike, callback: () => void) {
-    const yKit = this.getYKit(id);
-    const o = () => callback();
-    (yKit as unknown as Y.Map<any>).observe(o);
-    return () => (yKit as unknown as Y.Map<any>).unobserve(o);
-  }
-
-  observeDesignsChanges(id: KitIdLike, callback: () => void) {
-    const yKit = this.getYKit(id);
-    const yDesigns = yKit.get("designs") as Y.Map<any>;
-    const observer = () => callback();
-    yDesigns.observe(observer);
-    return () => yDesigns.unobserve(observer);
-  }
-
-  observeDesignChanges(kitId: KitIdLike, id: DesignIdLike, callback: () => void) {
-    const yDesign = this.getYDesign(kitId, id) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yDesign.observe(o);
-    return () => yDesign.unobserve(o);
-  }
-
-  observeTypesChanges(id: KitIdLike, callback: () => void) {
-    const yKit = this.getYKit(id);
-    const yTypes = yKit.get("types") as Y.Map<any>;
-    const observer = () => callback();
-    yTypes.observe(observer);
-    return () => yTypes.unobserve(observer);
-  }
-
-  observeTypeChanges(kitId: KitIdLike, id: TypeIdLike, callback: () => void) {
-    const yType = this.getYType(kitId, id) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yType.observe(o);
-    return () => yType.unobserve(o);
-  }
-
-  observePiecesChanges(kitId: KitIdLike, id: DesignIdLike, callback: () => void) {
-    const yDesign = this.getYDesign(kitId, id);
-    const yPieces = gDesign(yDesign, "pieces") as unknown as Y.Map<any>;
-    const o = () => callback();
-    yPieces.observe(o);
-    return () => yPieces.unobserve(o);
-  }
-
-  observePieceChanges(kitId: KitIdLike, id: DesignIdLike, pieceId: PieceIdLike, callback: () => void) {
-    const yPiece = this.getYPiece(kitId, id, pieceId) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yPiece.observe(o);
-    return () => yPiece.unobserve(o);
-  }
-
-  observeConnectionsChanges(kitId: KitIdLike, id: DesignIdLike, callback: () => void) {
-    const yDesign = this.getYDesign(kitId, id);
-    const yConnections = gDesign(yDesign, "connections") as unknown as Y.Map<any>;
-    const o = () => callback();
-    yConnections.observe(o);
-    return () => yConnections.unobserve(o);
-  }
-
-  observeConnectionChanges(kitId: KitIdLike, designId: DesignIdLike, id: ConnectionIdLike, callback: () => void) {
-    const yConn = this.getYConnection(kitId, designId, id) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yConn.observe(o);
-    return () => yConn.unobserve(o);
-  }
-
-  observePortsChanges(kitId: KitIdLike, typeId: TypeIdLike, callback: () => void) {
-    const yPorts = this.getYPorts(kitId, typeId) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yPorts.observe(o);
-    return () => yPorts.unobserve(o);
-  }
-
-  observePortChanges(kitId: KitIdLike, typeId: TypeIdLike, id: PortIdLike, callback: () => void) {
-    const yPort = this.getYPort(kitId, typeId, id) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yPort.observe(o);
-    return () => yPort.unobserve(o);
-  }
-
-  observeRepresentationsChanges(kitId: KitIdLike, typeId: TypeIdLike, callback: () => void) {
-    const yReps = this.getYRepresentations(kitId, typeId) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yReps.observe(o);
-    return () => yReps.unobserve(o);
-  }
-
-  observeRepresentationChanges(kitId: KitIdLike, typeId: TypeIdLike, id: RepresentationIdLike, callback: () => void) {
-    const yRep = this.getYRepresentation(kitId, typeId, id) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yRep.observe(o);
-    return () => yRep.unobserve(o);
-  }
-
-  // onUpdate methods using Yjs observe method for shallow observation
-  onUpdateKits(callback: () => void) {
-    const cleanup = this.onKitIdsChange(callback);
-    return cleanup;
-  }
-
-  onUpdateKit(id: KitIdLike, callback: () => void) {
-    return this.observeKitChanges(id, callback);
-  }
-
-  onUpdateDesigns(kitId: KitIdLike, callback: () => void) {
-    return this.observeDesignsChanges(kitId, callback);
-  }
-
-  onUpdateDesign(kitId: KitIdLike, id: DesignIdLike, callback: () => void) {
-    return this.observeDesignChanges(kitId, id, callback);
-  }
-
-  onUpdateTypes(kitId: KitIdLike, callback: () => void) {
-    return this.observeTypesChanges(kitId, callback);
-  }
-
-  onUpdateType(kitId: KitIdLike, id: TypeIdLike, callback: () => void) {
-    return this.observeTypeChanges(kitId, id, callback);
-  }
-
-  onUpdatePieces(kitId: KitIdLike, designId: DesignIdLike, callback: () => void) {
-    return this.observePiecesChanges(kitId, designId, callback);
-  }
-
-  onUpdatePiece(kitId: KitIdLike, designId: DesignIdLike, id: PieceIdLike, callback: () => void) {
-    return this.observePieceChanges(kitId, designId, id, callback);
-  }
-
-  onUpdateConnections(kitId: KitIdLike, designId: DesignIdLike, callback: () => void) {
-    return this.observeConnectionsChanges(kitId, designId, callback);
-  }
-
-  onUpdateConnection(kitId: KitIdLike, designId: DesignIdLike, id: ConnectionIdLike, callback: () => void) {
-    return this.observeConnectionChanges(kitId, designId, id, callback);
-  }
-
-  onUpdatePorts(kitId: KitIdLike, typeId: TypeIdLike, callback: () => void) {
-    return this.observePortsChanges(kitId, typeId, callback);
-  }
-
-  onUpdatePort(kitId: KitIdLike, typeId: TypeIdLike, id: PortIdLike, callback: () => void) {
-    return this.observePortChanges(kitId, typeId, id, callback);
-  }
-
-  onUpdateRepresentations(kitId: KitIdLike, typeId: TypeIdLike, callback: () => void) {
-    return this.observeRepresentationsChanges(kitId, typeId, callback);
-  }
-
-  onUpdateRepresentation(kitId: KitIdLike, typeId: TypeIdLike, id: RepresentationIdLike, callback: () => void) {
-    return this.observeRepresentationChanges(kitId, typeId, id, callback);
-  }
-
-  onUpdateDesignEditorStore(id: string, callback: () => void) {
-    return this.onDesignEditorStoreChange(id, callback);
-  }
-
-  onUpdateDesignEditorStoreFullscreenPanel(id: string, callback: () => void) {
-    return this.onDesignEditorStoreFullscreenPanelChange(id, callback);
-  }
-
-  onUpdateDesignEditorStoreSelection(id: string, callback: () => void) {
-    return this.onDesignEditorStoreSelectionChange(id, callback);
-  }
-
-  onUpdateDesignEditorStoreDesignDiff(id: string, callback: () => void) {
-    return this.onDesignEditorStoreDesignDiffChange(id, callback);
-  }
-
-  onUpdateDesignEditorStoreIsTransactionActive(id: string, callback: () => void) {
-    return this.onDesignEditorStoreIsTransactionActiveChange(id, callback);
-  }
-
-  onUpdateDesignEditorStorePresence(id: string, callback: () => void) {
-    return this.onDesignEditorStorePresenceChange(id, callback);
-  }
-
-  onUpdateDesignEditorStorePresenceOthers(id: string, callback: () => void) {
-    return this.onDesignEditorStorePresenceOthersChange(id, callback);
-  }
-
-  // onUpdateDeep methods using Yjs observeDeep method for deep observation
-  onUpdateKitsDeep(callback: () => void) {
-    const cleanup = this.onKitIdsChange(callback);
-    return cleanup;
-  }
-
-  onUpdateKitDeep(id: KitIdLike, callback: () => void) {
-    const yKit = this.getYKit(id);
-    const o = () => callback();
-    (yKit as unknown as Y.Map<any>).observeDeep(o);
-    return () => (yKit as unknown as Y.Map<any>).unobserveDeep(o);
-  }
-
-  onUpdateDesignsDeep(kitId: KitIdLike, callback: () => void) {
-    const yKit = this.getYKit(kitId);
-    const yDesigns = yKit.get("designs") as Y.Map<any>;
-    const observer = () => callback();
-    yDesigns.observeDeep(observer);
-    return () => yDesigns.unobserveDeep(observer);
-  }
-
-  onUpdateDesignDeep(kitId: KitIdLike, id: DesignIdLike, callback: () => void) {
-    const yDesign = this.getYDesign(kitId, id) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yDesign.observeDeep(o);
-    return () => yDesign.unobserveDeep(o);
-  }
-
-  onUpdateTypesDeep(kitId: KitIdLike, callback: () => void) {
-    const yKit = this.getYKit(kitId);
-    const yTypes = yKit.get("types") as Y.Map<any>;
-    const observer = () => callback();
-    yTypes.observeDeep(observer);
-    return () => yTypes.unobserveDeep(observer);
-  }
-
-  onUpdateTypeDeep(kitId: KitIdLike, id: TypeIdLike, callback: () => void) {
-    const yType = this.getYType(kitId, id) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yType.observeDeep(o);
-    return () => yType.unobserveDeep(o);
-  }
-
-  onUpdatePiecesDeep(kitId: KitIdLike, designId: DesignIdLike, callback: () => void) {
-    const yDesign = this.getYDesign(kitId, designId);
-    const yPieces = gDesign(yDesign, "pieces") as unknown as Y.Map<any>;
-    const o = () => callback();
-    yPieces.observeDeep(o);
-    return () => yPieces.unobserveDeep(o);
-  }
-
-  onUpdatePieceDeep(kitId: KitIdLike, designId: DesignIdLike, id: PieceIdLike, callback: () => void) {
-    const yPiece = this.getYPiece(kitId, designId, id) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yPiece.observeDeep(o);
-    return () => yPiece.unobserveDeep(o);
-  }
-
-  onUpdateConnectionsDeep(kitId: KitIdLike, designId: DesignIdLike, callback: () => void) {
-    const yDesign = this.getYDesign(kitId, designId);
-    const yConnections = gDesign(yDesign, "connections") as unknown as Y.Map<any>;
-    const o = () => callback();
-    yConnections.observeDeep(o);
-    return () => yConnections.unobserveDeep(o);
-  }
-
-  onUpdateConnectionDeep(kitId: KitIdLike, designId: DesignIdLike, id: ConnectionIdLike, callback: () => void) {
-    const yConn = this.getYConnection(kitId, designId, id) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yConn.observeDeep(o);
-    return () => yConn.unobserveDeep(o);
-  }
-
-  onUpdatePortsDeep(kitId: KitIdLike, typeId: TypeIdLike, callback: () => void) {
-    const yPorts = this.getYPorts(kitId, typeId) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yPorts.observeDeep(o);
-    return () => yPorts.unobserveDeep(o);
-  }
-
-  onUpdatePortDeep(kitId: KitIdLike, typeId: TypeIdLike, id: PortIdLike, callback: () => void) {
-    const yPort = this.getYPort(kitId, typeId, id) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yPort.observeDeep(o);
-    return () => yPort.unobserveDeep(o);
-  }
-
-  onUpdateRepresentationsDeep(kitId: KitIdLike, typeId: TypeIdLike, callback: () => void) {
-    const yReps = this.getYRepresentations(kitId, typeId) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yReps.observeDeep(o);
-    return () => yReps.unobserveDeep(o);
-  }
-
-  onUpdateRepresentationDeep(kitId: KitIdLike, typeId: TypeIdLike, id: RepresentationIdLike, callback: () => void) {
-    const yRep = this.getYRepresentation(kitId, typeId, id) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yRep.observeDeep(o);
-    return () => yRep.unobserveDeep(o);
-  }
-
-  onUpdateDesignEditorStoreDeep(id: string, callback: () => void) {
-    const yDesignEditorStore = this.getYDesignEditorStore(id) as unknown as Y.Map<any>;
-    const o = () => callback();
-    yDesignEditorStore.observeDeep(o);
-    return () => yDesignEditorStore.unobserveDeep(o);
-  }
-
-  onUpdateDesignEditorStoreFullscreenPanelDeep(id: string, callback: () => void) {
-    return this.onUpdateDesignEditorStoreDeep(id, callback);
-  }
-
-  onUpdateDesignEditorStoreSelectionDeep(id: string, callback: () => void) {
-    return this.onUpdateDesignEditorStoreDeep(id, callback);
-  }
-
-  onUpdateDesignEditorStoreDesignDiffDeep(id: string, callback: () => void) {
-    return this.onUpdateDesignEditorStoreDeep(id, callback);
-  }
-
-  onUpdateDesignEditorStoreIsTransactionActiveDeep(id: string, callback: () => void) {
-    return this.onUpdateDesignEditorStoreDeep(id, callback);
-  }
-
-  onUpdateDesignEditorStorePresenceDeep(id: string, callback: () => void) {
-    return this.onUpdateDesignEditorStoreDeep(id, callback);
-  }
-
-  onUpdateDesignEditorStorePresenceOthersDeep(id: string, callback: () => void) {
-    return this.onUpdateDesignEditorStoreDeep(id, callback);
-  }
 }
 
 // #region Zustand Store Interfaces
 
-// Sketchpad state interface for Zustand  
+// Sketchpad state interface for Zustand
 interface SketchpadZustandState {
   mode: Mode;
   theme: Theme;
   layout: Layout;
   activeDesignEditorStoreId?: string;
+  kits: Map<string, string[]>; // Add kits data to sketchpad state
 }
 
 interface SketchpadZustandActions {
@@ -3565,11 +3254,13 @@ const createSketchpadZustandStore = (store: SketchpadStore) =>
     subscribeWithSelector((set, get) => {
       // Initial state
       const initialState = store.getSketchpadState();
+      const initialKits = store.getKits();
       const state = {
         mode: initialState.mode,
         theme: initialState.theme,
         layout: initialState.layout,
         activeDesignEditorStoreId: initialState.activeDesignEditorStoreId,
+        kits: initialKits,
 
         setMode: (mode: Mode) => {
           set({ mode });
@@ -3593,11 +3284,13 @@ const createSketchpadZustandStore = (store: SketchpadStore) =>
       const ySketchpad = (store as any).getYSketchpad();
       ySketchpad.observeDeep(() => {
         const newState = store.getSketchpadState();
+        const newKits = store.getKits();
         set({
           mode: newState.mode,
           theme: newState.theme,
           layout: newState.layout,
           activeDesignEditorStoreId: newState.activeDesignEditorStoreId,
+          kits: newKits,
         });
       });
 
@@ -3620,9 +3313,9 @@ const createKitZustandStore = (store: SketchpadStore, kitId: KitId) =>
         kit: initialKit,
       };
 
-      // Setup single observeDeep on the kit yDoc
-      const kitDoc = (store as any).getKitDoc(kitId);
-      kitDoc.observeDeep(() => {
+      // Setup single observeDeep on the kit yMap
+      const yKit = (store as any).getYKit(kitId);
+      (yKit as any).observeDeep(() => {
         try {
           const newKit = store.getKit(kitId);
           set({ kit: newKit });
@@ -3646,7 +3339,7 @@ const createDesignEditorZustandStore = (store: SketchpadStore, id: string) =>
       }
 
       const initialState = designEditorStore.getState();
-      
+
       const state = {
         designId: initialState.designId,
         fullscreenPanel: initialState.fullscreenPanel,
@@ -3693,9 +3386,9 @@ const createDesignEditorZustandStore = (store: SketchpadStore, id: string) =>
         },
       };
 
-      // Setup single observeDeep on the sketchpad yDoc (where design editors are stored)
-      const sketchpadDoc = (store as any).sketchpadDoc;
-      sketchpadDoc.observeDeep(() => {
+      // Setup single observeDeep on the design editors Y.Map within the sketchpad yDoc
+      const yDesignEditors = (store as any).sketchpadDoc.getMap("designEditors");
+      yDesignEditors.observeDeep(() => {
         const editorStore = store.getDesignEditorStore(id);
         if (editorStore) {
           const newState = editorStore.getState();
@@ -3878,9 +3571,6 @@ export function useSketchpadStore<T = EnhancedSketchpadStore>(selector?: (store:
   return store as T;
 }
 
-// #region New Zustand-based Hooks
-
-// Sketchpad state hooks - main useSketchpad hook
 export function useSketchpad(): ReturnType<typeof createSketchpadZustandStore> {
   const store = useSketchpadStore();
   return store.getSketchpadZustandStore();
@@ -3906,10 +3596,10 @@ export function useSketchpadActiveDesignEditorStoreId(): string | undefined {
   return store.getSketchpadZustandStore()((state) => state.activeDesignEditorStoreId);
 }
 
-// Kits hooks - note: since we don't have a dedicated kits store, we get this from the main store
+// Kits hooks - now using Zustand selector from sketchpad store
 export function useKits(): Map<string, string[]> {
   const store = useSketchpadStore();
-  return store.getKits();
+  return store.getSketchpadZustandStore()((state) => state.kits);
 }
 
 export function useKit(id?: KitId): Kit {
@@ -3922,25 +3612,31 @@ export function useKit(id?: KitId): Kit {
     const { kitId } = useDesignEditorKitAndDesignIds();
     if (!kitId) throw new Error("Invalid design editor scope");
 
-    return store.getKitZustandStore(kitId)((state) => state.kit || {
-      name: "",
-      description: "",
-      qualities: [],
-      types: [],
-      designs: [],
-    });
+    return store.getKitZustandStore(kitId)(
+      (state) =>
+        state.kit || {
+          name: "",
+          description: "",
+          qualities: [],
+          types: [],
+          designs: [],
+        },
+    );
   }
 
   const kitId = id ?? kitScope?.id;
   if (!kitId) throw new Error("useKit requires a kit id or must be inside a KitScope or DesignEditorScope");
 
-  return store.getKitZustandStore(kitId)((state) => state.kit || {
-    name: "",
-    description: "",
-    qualities: [],
-    types: [],
-    designs: [],
-  });
+  return store.getKitZustandStore(kitId)(
+    (state) =>
+      state.kit || {
+        name: "",
+        description: "",
+        qualities: [],
+        types: [],
+        designs: [],
+      },
+  );
 }
 
 // Design editor hooks
@@ -4017,14 +3713,14 @@ export function useDesignEditorStorePresenceOthers(id?: string): DesignEditorSto
   return store.getDesignEditorZustandStore(designEditorId)((state) => state.others || []);
 }
 
-// Keep existing data hooks that don't have state management issues - simplified without selectors
+// Keep existing data hooks but refactor to use Zustand with selectors
 export function useDesigns(): Design[] {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
   if (!kitScope) throw new Error("useDesigns must be used within a KitScope");
   const { id } = kitScope;
 
-  return store.getDesigns(id);
+  return store.getKitZustandStore(id)((state) => state.kit?.designs || []);
 }
 
 export function useDesign(id?: DesignId): Design {
@@ -4038,14 +3734,22 @@ export function useDesign(id?: DesignId): Design {
     const { kitId, designId } = useDesignEditorKitAndDesignIds();
     if (!kitId || !designId) throw new Error("Invalid design editor scope");
 
-    return store.getDesign(kitId, designId);
+    return store.getKitZustandStore(kitId)((state) => {
+      const design = state.kit?.designs?.find((d) => d.name === designId.name && d.variant === designId.variant && d.view === designId.view);
+      if (!design) throw new Error(`Design not found: ${JSON.stringify(designId)}`);
+      return design;
+    });
   }
 
   if (!kitScope) throw new Error("useDesign must be used within a KitScope or DesignEditorScope");
   const designId = id ?? designScope?.id;
   if (!designId) throw new Error("useDesign requires a design id or must be inside a DesignScope or DesignEditorScope");
 
-  return store.getDesign(kitScope.id, designId);
+  return store.getKitZustandStore(kitScope.id)((state) => {
+    const design = state.kit?.designs?.find((d) => d.name === designId.name && d.variant === designId.variant && d.view === designId.view);
+    if (!design) throw new Error(`Design not found: ${JSON.stringify(designId)}`);
+    return design;
+  });
 }
 
 export function useDesignId() {
@@ -4070,7 +3774,7 @@ export function useTypes(): Type[] {
   if (!kitScope) throw new Error("useTypes must be used within a KitScope");
   const kitId = kitScope.id;
 
-  return store.getTypes(kitId);
+  return store.getKitZustandStore(kitId)((state) => state.kit?.types || []);
 }
 
 export function useType(id?: TypeId): Type {
@@ -4081,7 +3785,11 @@ export function useType(id?: TypeId): Type {
   const typeId = id ?? typeScope?.id;
   if (!typeId) throw new Error("useType requires a type id or must be inside a TypeScope");
 
-  return store.getType(kitScope.id, typeId);
+  return store.getKitZustandStore(kitScope.id)((state) => {
+    const type = state.kit?.types?.find((t) => t.name === typeId.name && t.variant === typeId.variant);
+    if (!type) throw new Error(`Type not found: ${JSON.stringify(typeId)}`);
+    return type;
+  });
 }
 
 export function usePieces(): Piece[] {
@@ -4091,7 +3799,10 @@ export function usePieces(): Piece[] {
   const designScope = useDesignScope();
   if (!designScope) throw new Error("usePieces must be used within a DesignScope");
 
-  return store.getPieces(kitScope.id, designScope.id);
+  return store.getKitZustandStore(kitScope.id)((state) => {
+    const design = state.kit?.designs?.find((d) => d.name === designScope.id.name && d.variant === designScope.id.variant && d.view === designScope.id.view);
+    return design?.pieces || [];
+  });
 }
 
 export function usePiece(id?: PieceId): Piece {
@@ -4104,7 +3815,12 @@ export function usePiece(id?: PieceId): Piece {
   const pieceId = id ?? pieceScope?.id;
   if (!pieceId) throw new Error("usePiece requires a piece id or must be inside a PieceScope");
 
-  return store.getPiece(kitScope.id, designScope.id, pieceId);
+  return store.getKitZustandStore(kitScope.id)((state) => {
+    const design = state.kit?.designs?.find((d) => d.name === designScope.id.name && d.variant === designScope.id.variant && d.view === designScope.id.view);
+    const piece = design?.pieces?.find((p) => p.id_ === pieceId.id_);
+    if (!piece) throw new Error(`Piece not found: ${pieceId.id_}`);
+    return piece;
+  });
 }
 
 export function useConnections(): Connection[] {
@@ -4114,7 +3830,10 @@ export function useConnections(): Connection[] {
   const designScope = useDesignScope();
   if (!designScope) throw new Error("useConnections must be used within a DesignScope");
 
-  return store.getConnections(kitScope.id, designScope.id);
+  return store.getKitZustandStore(kitScope.id)((state) => {
+    const design = state.kit?.designs?.find((d) => d.name === designScope.id.name && d.variant === designScope.id.variant && d.view === designScope.id.view);
+    return design?.connections || [];
+  });
 }
 
 export function useConnection(id?: ConnectionId): Connection | undefined {
@@ -4127,7 +3846,10 @@ export function useConnection(id?: ConnectionId): Connection | undefined {
   const connectionId = id ?? connectionScope?.id;
   if (!connectionId) throw new Error("useConnection requires a connection id or must be inside a ConnectionScope");
 
-  return store.getConnection(kitScope.id, designScope.id, connectionId);
+  return store.getKitZustandStore(kitScope.id)((state) => {
+    const design = state.kit?.designs?.find((d) => d.name === designScope.id.name && d.variant === designScope.id.variant && d.view === designScope.id.view);
+    return design?.connections?.find((c) => c.connected.piece.id_ === connectionId.connected.piece.id_ && c.connecting.piece.id_ === connectionId.connecting.piece.id_);
+  });
 }
 
 export function usePorts(): Port[] {
@@ -4137,7 +3859,10 @@ export function usePorts(): Port[] {
   const typeScope = useTypeScope();
   if (!typeScope) throw new Error("usePorts must be used within a TypeScope");
 
-  return store.getPorts(kitScope.id, typeScope.id);
+  return store.getKitZustandStore(kitScope.id)((state) => {
+    const type = state.kit?.types?.find((t) => t.name === typeScope.id.name && t.variant === typeScope.id.variant);
+    return type?.ports || [];
+  });
 }
 
 export function usePort(id?: PortId): Port | undefined {
@@ -4150,7 +3875,10 @@ export function usePort(id?: PortId): Port | undefined {
   const portId = id ?? portScope?.id;
   if (!portId) throw new Error("usePort requires a port id or must be inside a PortypeScope");
 
-  return store.getPort(kitScope.id, typeScope.id, portId);
+  return store.getKitZustandStore(kitScope.id)((state) => {
+    const type = state.kit?.types?.find((t) => t.name === typeScope.id.name && t.variant === typeScope.id.variant);
+    return type?.ports?.find((p) => p.id_ === portId.id_);
+  });
 }
 
 export function useRepresentations(): Representation[] {
@@ -4160,7 +3888,10 @@ export function useRepresentations(): Representation[] {
   const typeScope = useTypeScope();
   if (!typeScope) throw new Error("useRepresentations must be used within a TypeScope");
 
-  return store.getRepresentations(kitScope.id, typeScope.id);
+  return store.getKitZustandStore(kitScope.id)((state) => {
+    const type = state.kit?.types?.find((t) => t.name === typeScope.id.name && t.variant === typeScope.id.variant);
+    return type?.representations || [];
+  });
 }
 
 // File URLs hook
@@ -4332,9 +4063,3 @@ export const useTransaction = useDesignEditorStoreIsTransactionActive;
 export const usePresence = useDesignEditorStorePresence;
 export const useOthers = useDesignEditorStorePresenceOthers;
 export const useFileUrls = useDesignEditorStoreFileUrls;
-
-// Main hooks as requested in the refactor
-// useKit - already exported above
-// useSketchpad - already exported above
-
-// #endregion Concise Hook Aliases
