@@ -2455,57 +2455,6 @@ export const expandDesign = (kit: Kit, designToExpandId: DesignIdLike): ExpandDe
   };
 };
 
-export type IncludedDesignInfo = {
-  id: string;
-  designId: DesignId;
-  type: "connected" | "fixed" | "referenced";
-  center?: DiagramPoint;
-  plane?: Plane;
-  externalConnections?: Connection[];
-};
-
-export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
-  const includedDesigns: IncludedDesignInfo[] = [];
-
-  // Add design pieces (both fixed and referenced designs)
-  (design.designPieces || []).forEach((designPiece: any) => {
-    const { designId: pieceDesignId, center, plane } = designPiece;
-    const type = plane || center ? "fixed" : "referenced";
-    includedDesigns.push({
-      id: `${type}-design-${pieceDesignId.name}-${pieceDesignId.variant || ""}-${pieceDesignId.view || ""}`,
-      designId: pieceDesignId,
-      type,
-      center,
-      plane,
-    });
-  });
-
-  // Add connected designs from external connections (clustered designs)
-  const designIds = new Set<string>();
-  design.connections?.forEach((conn: Connection) => {
-    if (conn.connected.designId) designIds.add(conn.connected.designId);
-    if (conn.connecting.designId) designIds.add(conn.connecting.designId);
-  });
-
-  Array.from(designIds).forEach((designIdString) => {
-    const externalConnections =
-      design.connections?.filter((connection: Connection) => {
-        const connectedToDesign = connection.connected.designId === designIdString;
-        const connectingToDesign = connection.connecting.designId === designIdString;
-        return connectedToDesign || connectingToDesign;
-      }) ?? [];
-
-    includedDesigns.push({
-      id: `connected-design-${designIdString}`,
-      designId: { name: designIdString },
-      type: "connected",
-      externalConnections,
-    });
-  });
-
-  return includedDesigns;
-};
-
 //#endregion Design
 
 //#region Kit

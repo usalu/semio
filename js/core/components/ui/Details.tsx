@@ -2,21 +2,7 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { Minus, Pin, Plus, Trash2 } from "lucide-react";
 import { FC, useState } from "react";
 
-import {
-  Connection,
-  Design,
-  DesignId,
-  Kit,
-  Piece,
-  findConnectionInDesign,
-  findDesignInKit,
-  findPieceInDesign,
-  findReplacableTypesForPieceInDesign,
-  findReplacableTypesForPiecesInDesign,
-  findTypeInKit,
-  getIncludedDesigns,
-  piecesMetadata,
-} from "@semio/js";
+import { Connection, Design, DesignId, Kit, Piece, findConnectionInDesign, findDesignInKit, findPieceInDesign, findReplacableTypesForPieceInDesign, findReplacableTypesForPiecesInDesign, findTypeInKit, piecesMetadata } from "@semio/js";
 import Combobox from "@semio/js/components/ui/Combobox";
 import { Input } from "@semio/js/components/ui/Input";
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
@@ -448,13 +434,42 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
   const design = findDesignInKit(kit, designId);
 
   // Handle both regular pieces and synthetic design pieces (fixed and connected)
-  const includedDesigns = getIncludedDesigns(design);
-  const includedDesignMap = new Map(includedDesigns.map((d) => [d.id, d]));
+  // Create maps for design pieces and connected designs
+  const designPieceMap = new Map();
+  (design.designPieces || []).forEach((designPiece) => {
+    const type = designPiece.plane || designPiece.center ? "fixed" : "referenced";
+    const designId = `${type}-design-${designPiece.designId.name}-${designPiece.designId.variant || ""}-${designPiece.designId.view || ""}`;
+    designPieceMap.set(designId, { ...designPiece, type, id: designId });
+  });
+
+  const connectedDesignMap = new Map();
+  const connectedDesignIds = new Set<string>();
+  design.connections?.forEach((conn: Connection) => {
+    if (conn.connected.designId) connectedDesignIds.add(conn.connected.designId);
+    if (conn.connecting.designId) connectedDesignIds.add(conn.connecting.designId);
+  });
+
+  Array.from(connectedDesignIds).forEach((designIdString) => {
+    const designId = `connected-design-${designIdString}`;
+    const externalConnections =
+      design.connections?.filter((connection: Connection) => {
+        const connectedToDesign = connection.connected.designId === designIdString;
+        const connectingToDesign = connection.connecting.designId === designIdString;
+        return connectedToDesign || connectingToDesign;
+      }) ?? [];
+
+    connectedDesignMap.set(designId, {
+      id: designId,
+      designId: { name: designIdString },
+      type: "connected",
+      externalConnections,
+    });
+  });
 
   // Helper function to find parent connection for a design piece
   const findParentConnectionForDesignPiece = (pieceId: string): Connection | null => {
-    const includedDesign = includedDesignMap.get(pieceId);
-    if (!includedDesign || includedDesign.type !== "connected") {
+    const connectedDesign = connectedDesignMap.get(pieceId);
+    if (!connectedDesign || connectedDesign.type !== "connected") {
       return null; // Fixed designs don't have parent connections
     }
 
@@ -472,8 +487,8 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
     // Look for a connection that connects the parent piece to this design piece
     // The connection should have the designId parameter set
     const parentConn = design.connections?.find((connection: Connection) => {
-      const isParentConnecting = connection.connecting.piece.id_ === parentPieceId && connection.connected.designId === includedDesign.designId.name;
-      const isParentConnected = connection.connected.piece.id_ === parentPieceId && connection.connecting.designId === includedDesign.designId.name;
+      const isParentConnecting = connection.connecting.piece.id_ === parentPieceId && connection.connected.designId === connectedDesign.designId.name;
+      const isParentConnected = connection.connected.piece.id_ === parentPieceId && connection.connecting.designId === connectedDesign.designId.name;
 
       return isParentConnecting || isParentConnected;
     });
@@ -487,26 +502,38 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
       return findPieceInDesign(design, id);
     } catch {
       // Check if it's a design piece (either fixed or connected)
-      const includedDesign = includedDesignMap.get(id);
-      if (includedDesign) {
-        // Create a synthetic piece that matches the design
+      const designPiece = designPieceMap.get(id);
+      const connectedDesign = connectedDesignMap.get(id);
+
+      if (designPiece) {
+        // Create a synthetic piece that matches the design piece
         return {
           id_: id,
           type: {
             name: "design",
-            variant:
-              includedDesign.type === "fixed"
-                ? `${includedDesign.designId.name}${includedDesign.designId.variant ? `-${includedDesign.designId.variant}` : ""}${includedDesign.designId.view ? `-${includedDesign.designId.view}` : ""}`
-                : includedDesign.designId.name,
+            variant: `${designPiece.designId.name}${designPiece.designId.variant ? `-${designPiece.designId.variant}` : ""}${designPiece.designId.view ? `-${designPiece.designId.view}` : ""}`,
           },
-          center: includedDesign.center,
-          plane: includedDesign.plane,
-          description: `${includedDesign.type === "fixed" ? "Fixed" : "Clustered"} design: ${includedDesign.designId.name}`,
+          center: designPiece.center,
+          plane: designPiece.plane,
+          description: `${designPiece.type === "fixed" ? "Fixed" : "Referenced"} design: ${designPiece.designId.name}`,
+        };
+      }
+
+      if (connectedDesign) {
+        // Create a synthetic piece that matches the connected design
+        return {
+          id_: id,
+          type: {
+            name: "design",
+            variant: connectedDesign.designId.name,
+          },
+          center: { x: 0, y: 0 }, // Default center for connected designs
+          description: `Clustered design: ${connectedDesign.designId.name}`,
         };
       }
 
       // If still not found, create a fallback synthetic piece instead of throwing an error
-      console.warn(`Piece ${id} not found in pieces or includedDesigns. Creating fallback piece.`);
+      console.warn(`Piece ${id} not found in pieces or design pieces. Creating fallback piece.`);
       return {
         id_: id,
         type: {
@@ -585,19 +612,20 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
     startTransaction();
     if (isSingle) {
       const pieceId = piece!.id_;
-      const includedDesign = includedDesignMap.get(pieceId);
+      const designPiece = designPieceMap.get(pieceId);
+      const connectedDesign = connectedDesignMap.get(pieceId);
 
-      if (includedDesign && includedDesign.type === "fixed") {
+      if (designPiece && (designPiece.type === "fixed" || designPiece.type === "referenced")) {
         // Handle fixed design piece - update the designPieces array
         const newDesignId = {
           name: value,
-          variant: includedDesign.designId.variant,
-          view: includedDesign.designId.view,
+          variant: designPiece.designId.variant,
+          view: designPiece.designId.view,
         };
 
         // Find and update the design piece entry
         const updatedDesignPieces = (design.designPieces || []).map((dp: any) => {
-          if (dp.designId.name === includedDesign.designId.name && (dp.designId.variant || undefined) === (includedDesign.designId.variant || undefined) && (dp.designId.view || undefined) === (includedDesign.designId.view || undefined)) {
+          if (dp.designId.name === designPiece.designId.name && (dp.designId.variant || undefined) === (designPiece.designId.variant || undefined) && (dp.designId.view || undefined) === (designPiece.designId.view || undefined)) {
             return { ...dp, designId: newDesignId };
           }
           return dp;
@@ -606,7 +634,7 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
         // Update the design with new designPieces array
         const updatedDesign = { ...design, designPieces: updatedDesignPieces };
         setDesign(updatedDesign);
-      } else if (includedDesign && includedDesign.type === "connected") {
+      } else if (connectedDesign) {
         // Connected designs cannot be renamed from here - they are clustered designs
         console.warn("Connected design pieces cannot be renamed - they represent clustered designs");
       } else {
@@ -632,14 +660,15 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
     startTransaction();
     if (isSingle) {
       const pieceId = piece!.id_;
-      const includedDesign = includedDesignMap.get(pieceId);
+      const designPiece = designPieceMap.get(pieceId);
+      const connectedDesign = connectedDesignMap.get(pieceId);
 
-      if (includedDesign && includedDesign.type === "fixed") {
+      if (designPiece && (designPiece.type === "fixed" || designPiece.type === "referenced")) {
         // Handle fixed design piece
         const newDesignId = {
-          name: includedDesign.designId.name,
+          name: designPiece.designId.name,
           variant: value || undefined,
-          view: includedDesign.designId.view,
+          view: designPiece.designId.view,
         };
 
         const updatedFixedDesigns = (design.fixedDesigns || []).map((fd: any) => {
@@ -651,7 +680,7 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
 
         const updatedDesign = { ...design, fixedDesigns: updatedFixedDesigns };
         setDesign(updatedDesign);
-      } else if (includedDesign && includedDesign.type === "connected") {
+      } else if (connectedDesign) {
         // Connected designs cannot have their variants changed
         console.warn("Connected design pieces cannot have variants changed - they represent clustered designs");
       } else {
@@ -677,12 +706,13 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
     startTransaction();
     if (isSingle) {
       const pieceId = piece!.id_;
-      const includedDesign = includedDesignMap.get(pieceId);
+      const designPiece = designPieceMap.get(pieceId);
+      const connectedDesign = connectedDesignMap.get(pieceId);
 
-      if (includedDesign && includedDesign.type === "fixed") {
+      if (designPiece && (designPiece.type === "fixed" || designPiece.type === "referenced")) {
         // Handle fixed design piece
         const newDesignId = {
-          name: includedDesign.designId.name,
+          name: designPiece.designId.name,
           variant: includedDesign.designId.variant,
           view: value || undefined,
         };
@@ -696,7 +726,7 @@ const PiecesSection: FC<{ pieceIds: string[] }> = ({ pieceIds }) => {
 
         const updatedDesign = { ...design, fixedDesigns: updatedFixedDesigns };
         setDesign(updatedDesign);
-      } else if (includedDesign && includedDesign.type === "connected") {
+      } else if (connectedDesign) {
         // Connected designs cannot have their views changed
         console.warn("Connected design pieces cannot have views changed - they represent clustered designs");
       } else if (piece) {
