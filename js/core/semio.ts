@@ -1639,130 +1639,6 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
 //#region Design Pieces
 
 /**
- * Creates a clustered design from a cluster of pieces and connections
- * @param originalDesign - The original design containing the pieces to cluster
- * @param clusterPieceIds - The IDs of pieces to include in the clustered design
- * @param designName - Name for the new design
- * @returns Object containing the clustered design and external connections
- */
-export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: string[], designName: string, kit?: Kit): { clusteredDesign: Design; externalConnections: Connection[] } => {
-  // Validate inputs
-  if (!originalDesign.pieces || originalDesign.pieces.length === 0) {
-    throw new Error("Original design has no pieces to cluster");
-  }
-  if (!clusterPieceIds || clusterPieceIds.length === 0) {
-    throw new Error("No piece IDs provided for clustering");
-  }
-
-  // If kit is provided, first flatten the original design to ensure all pieces have proper coordinates
-  let sourceDesign = originalDesign;
-  if (kit) {
-    try {
-      sourceDesign = flattenDesign(kit, originalDesign);
-    } catch (error) {
-      console.warn("Could not flatten design for clustering, using original design:", error);
-    }
-  }
-
-  // Extract clustered pieces and their connections, ensuring they have center and plane coordinates
-  const clusteredPieces = (sourceDesign.pieces || [])
-    .filter((piece: Piece) => clusterPieceIds.includes(piece.id_))
-    .map((piece: Piece) => {
-      const identityMatrix = new THREE.Matrix4().identity();
-      const identityPlane = matrixToPlane(identityMatrix);
-      return {
-        ...piece,
-        center: piece.center || { x: 0, y: 0 },
-        plane: piece.plane || identityPlane,
-      };
-    });
-
-  if (clusteredPieces.length === 0) {
-    throw new Error("No pieces found matching the provided IDs");
-  }
-
-  // Find internal connections (both pieces in cluster)
-  const internalConnections = (sourceDesign.connections || []).filter((connection: Connection) => clusterPieceIds.includes(connection.connected.piece.id_) && clusterPieceIds.includes(connection.connecting.piece.id_));
-
-  // Find external connections (one piece in cluster, one outside)
-  const externalConnections = (sourceDesign.connections || []).filter((connection: Connection) => {
-    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.id_);
-    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.id_);
-    return connectedInCluster !== connectingInCluster; // XOR - exactly one is in cluster
-  });
-
-  // Create the clustered design
-  const clusteredDesign: Design = {
-    name: designName,
-    unit: originalDesign.unit,
-    description: `Clustered design with ${clusteredPieces.length} pieces`,
-    pieces: clusteredPieces,
-    connections: internalConnections,
-    created: new Date(),
-    updated: new Date(),
-  };
-
-  return { clusteredDesign, externalConnections };
-};
-
-/**
- * Replaces clustered pieces with direct design references in connections
- * @param originalDesign - The original design
- * @param clusterPieceIds - IDs of pieces to remove and cluster
- * @param clusteredDesign - The clustered design to include
- * @param externalConnections - External connections to update
- * @returns Updated design with clustered pieces removed and direct design references
- */
-export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds: string[], clusteredDesign: Design, externalConnections: Connection[]): Design => {
-  // Remove clustered pieces
-  const remainingPieces = (originalDesign.pieces || []).filter((piece) => !clusterPieceIds.includes(piece.id_));
-
-  // Remove all connections involving clustered pieces
-  const remainingConnections = (originalDesign.connections || []).filter((connection) => {
-    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.id_);
-    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.id_);
-    return !connectedInCluster && !connectingInCluster;
-  });
-
-  // Update external connections to use direct design references
-  const updatedExternalConnections = externalConnections.map((connection) => {
-    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.id_);
-    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.id_);
-
-    if (connectedInCluster) {
-      // Keep original piece ID but add designId to reference the nested design
-      return {
-        ...connection,
-        connected: {
-          piece: { id_: connection.connected.piece.id_ }, // Keep original piece ID
-          port: connection.connected.port,
-          designId: clusteredDesign.name, // Reference to nested design
-        },
-      };
-    } else if (connectingInCluster) {
-      // Keep original piece ID but add designId to reference the nested design
-      return {
-        ...connection,
-        connecting: {
-          piece: { id_: connection.connecting.piece.id_ }, // Keep original piece ID
-          port: connection.connecting.port,
-          designId: clusteredDesign.name, // Reference to nested design
-        },
-      };
-    }
-
-    return connection;
-  });
-
-  return {
-    ...originalDesign,
-    pieces: remainingPieces, // No design piece added
-    connections: [...remainingConnections, ...updatedExternalConnections],
-    updated: new Date(),
-  };
-};
-
-/**
  * Explodes design pieces by replacing them with their constituent pieces and connections
  * @param design - The design to explode
  * @param kit - The kit containing type information
@@ -2352,12 +2228,12 @@ export const clusterDesign = (kit: Kit, sourceDesignId: DesignIdLike, selectedPi
 };
 
 /**
- * Expands a clustered design back into its parent design by restoring the original pieces and connections
+ * Explodes a clustered design back into its parent design by restoring the original pieces and connections
  * @param kit - The kit containing the designs
  * @param designToExpandId - The design to expand (remove from hierarchy)
  * @returns Object containing the updated kit, expanded design, and removed design name
  */
-export const expandDesign = (kit: Kit, designToExpandId: DesignIdLike): ExpandDesignResult => {
+export const explodeDesign = (kit: Kit, designToExpandId: DesignIdLike): ExpandDesignResult => {
   const normalizedDesignToExpandId = designIdLikeToDesignId(designToExpandId);
   const designToExpand = findDesignInKit(kit, normalizedDesignToExpandId);
 

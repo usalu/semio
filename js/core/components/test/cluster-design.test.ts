@@ -19,7 +19,7 @@
 
 // #endregion
 
-import { clusterDesign, Connection, Design, expandDesign, Kit, Piece, Type } from "@semio/js/semio";
+import { clusterDesign, Connection, Design, explodeDesign, Kit, Piece, Type } from "@semio/js/semio";
 import { beforeEach, describe, expect, it } from "vitest";
 
 describe("clusterDesign", () => {
@@ -408,7 +408,7 @@ describe("expandDesign", () => {
     expect(clusterResult.updatedSourceDesign.pieces).toHaveLength(2); // piece1 and piece4
 
     // Now expand the clustered design back
-    const expandResult = expandDesign(clusterResult.updatedKit, "test-cluster");
+    const expandResult = explodeDesign(clusterResult.updatedKit, "test-cluster");
 
     // Check that the clustered design was removed
     expect(expandResult.updatedKit.designs).toHaveLength(1);
@@ -427,13 +427,13 @@ describe("expandDesign", () => {
 
   it("should throw error when trying to expand a non-clustered design", () => {
     expect(() => {
-      expandDesign(mockKit, "test-design"); // This design is not clustered
+      explodeDesign(mockKit, "test-design"); // This design is not clustered
     }).toThrow("No affected designs found for expansion - this design may not be clustered");
   });
 
   it("should throw error when design to expand does not exist", () => {
     expect(() => {
-      expandDesign(mockKit, "non-existent-design");
+      explodeDesign(mockKit, "non-existent-design");
     }).toThrow("Design non-existent-design not found in kit test-kit");
   });
 
@@ -447,7 +447,7 @@ describe("expandDesign", () => {
     expect(externalConnections).toHaveLength(2);
 
     // Now expand the clustered design back
-    const expandResult = expandDesign(clusterResult.updatedKit, "test-cluster");
+    const expandResult = explodeDesign(clusterResult.updatedKit, "test-cluster");
 
     // Check that external connections were restored (no designId references)
     const connectionsWithDesignId = expandResult.expandedDesign.connections?.filter((c) => c.connected.designId || c.connecting.designId);
@@ -475,13 +475,13 @@ describe("expandDesign", () => {
     expect(clusterResult2.updatedSourceDesign.pieces).toHaveLength(0); // All pieces are now clustered
 
     // Step 3: Expand cluster-1 back
-    const expandResult1 = expandDesign(clusterResult2.updatedKit, "cluster-1");
+    const expandResult1 = explodeDesign(clusterResult2.updatedKit, "cluster-1");
     expect(expandResult1.updatedKit.designs).toHaveLength(2); // cluster-1 removed
     expect(expandResult1.removedDesignName).toBe("cluster-1");
     expect(expandResult1.expandedDesign.pieces).toHaveLength(2); // piece2 and piece3 restored
 
     // Step 4: Expand cluster-2 back
-    const expandResult2 = expandDesign(expandResult1.updatedKit, "cluster-2");
+    const expandResult2 = explodeDesign(expandResult1.updatedKit, "cluster-2");
     expect(expandResult2.updatedKit.designs).toHaveLength(1); // Back to single design
     expect(expandResult2.removedDesignName).toBe("cluster-2");
     expect(expandResult2.expandedDesign.pieces).toHaveLength(4); // All pieces restored
