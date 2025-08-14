@@ -35,20 +35,15 @@ export { extractFilesAndCreateUrls } from "./lib/utils";
 
 // #region Domain Logic (from semio.ts)
 export {
-  AuthorSchema, CameraSchema, ConnectionIdLikeSchema, ConnectionIdSchema, ConnectionSchema, DesignIdLikeSchema, DesignIdSchema, DesignSchema, DiagramPointSchema,
-  DiagramVectorSchema, DiffStatus,
-  // Constants
-  ICON_WIDTH, KitIdLikeSchema, KitIdSchema, KitSchema, LocationSchema, PieceIdLikeSchema, PieceIdSchema, PieceSchema, PlaneSchema, PointSchema, PortIdLikeSchema, PortIdSchema, PortSchema, QualityIdLikeSchema, QualityIdSchema,
-  // Schemas
-  QualitySchema, RepresentationIdLikeSchema, RepresentationIdSchema, RepresentationSchema, SideIdLikeSchema, SideIdSchema, SideSchema, TOLERANCE, TypeIdLikeSchema, TypeIdSchema, TypeSchema, VectorSchema, addConnectionToDesign,
-  addConnectionToDesignDiff,
   // Domain Logic Functions
   addConnectionsToDesign,
-  addConnectionsToDesignDiff, addDesignToKit, addPieceToDesign,
-  addPieceToDesignDiff, addPiecesToDesign,
-  addPiecesToDesignDiff, addTypeToKit,
+  addConnectionsToDesignDiff, addConnectionToDesign,
+  addConnectionToDesignDiff, addDesignToKit, addPiecesToDesign,
+  addPiecesToDesignDiff, addPieceToDesign,
+  addPieceToDesignDiff, addTypeToKit,
   applyDesignDiff,
-  arePortsCompatible, colorPortsForTypes, connectionIdLikeToConnectionId, createClusteredDesign, deserialize, designIdLikeToDesignId, expandDesignPieces,
+  arePortsCompatible, AuthorSchema, CameraSchema, colorPortsForTypes, ConnectionIdLikeSchema, connectionIdLikeToConnectionId, ConnectionIdSchema, ConnectionSchema, createClusteredDesign, deserialize, DesignIdLikeSchema, designIdLikeToDesignId, DesignIdSchema, DesignSchema, DiagramPointSchema,
+  DiagramVectorSchema, DiffStatus, expandDesignPieces,
   findConnectionInDesign,
   findDesignInKit,
   findPieceConnectionsInDesign,
@@ -66,14 +61,18 @@ export {
   flattenDesign,
   getClusterableGroups,
   getIncludedDesigns,
-  getPieceRepresentationUrls, isConnectionInDesign,
+  getPieceRepresentationUrls,
+  // Constants
+  ICON_WIDTH, isConnectionInDesign,
   isPortInUse,
   isSameConnection,
   isSameDesign,
   isSamePiece,
   isSamePort,
   isSameRepresentation,
-  isSameType, kitIdLikeToKitId, mergeDesigns, parseDesignIdFromVariant, pieceIdLikeToPieceId, piecesMetadata, planeToMatrix, portIdLikeToPortId, qualityIdLikeToQualityId, removeConnectionFromDesign,
+  isSameType, KitIdLikeSchema, kitIdLikeToKitId, KitIdSchema, KitSchema, LocationSchema, mergeDesigns, parseDesignIdFromVariant, PieceIdLikeSchema, pieceIdLikeToPieceId, PieceIdSchema, PieceSchema, piecesMetadata, PlaneSchema, planeToMatrix, PointSchema, PortIdLikeSchema, portIdLikeToPortId, PortIdSchema, PortSchema, QualityIdLikeSchema, qualityIdLikeToQualityId, QualityIdSchema,
+  // Schemas
+  QualitySchema, removeConnectionFromDesign,
   removeConnectionFromDesignDiff,
   removeConnectionsFromDesign,
   removeConnectionsFromDesignDiff,
@@ -84,7 +83,7 @@ export {
   removePiecesFromDesign,
   removePiecesFromDesignDiff,
   removeTypeFromKit,
-  replaceClusterWithDesign, representationIdLikeToRepresentationId, safeParse,
+  replaceClusterWithDesign, RepresentationIdLikeSchema, representationIdLikeToRepresentationId, RepresentationIdSchema, RepresentationSchema, safeParse,
   // Utilities
   schemas, serialize, setConnectionInDesign,
   setConnectionInDesignDiff,
@@ -97,11 +96,11 @@ export {
   setPiecesInDesignDiff,
   setQualities,
   setQuality,
-  setTypeInKit, toSemioQuaternion,
+  setTypeInKit, SideIdLikeSchema, SideIdSchema, SideSchema, TOLERANCE, toSemioQuaternion,
   toSemioRotation,
   toThreeQuaternion,
-  toThreeRotation, typeIdLikeToTypeId, unifyPortFamiliesAndCompatibleFamiliesForTypes,
-  updateDesignInKit, validate
+  toThreeRotation, TypeIdLikeSchema, typeIdLikeToTypeId, TypeIdSchema, TypeSchema, unifyPortFamiliesAndCompatibleFamiliesForTypes,
+  updateDesignInKit, validate, VectorSchema
 } from "./semio";
 // #endregion
 
@@ -158,17 +157,17 @@ export type {
 export {
   ConnectionScopeProvider, DesignEditorStoreScopeProvider, DesignScopeProvider, KitScopeProvider, PieceScopeProvider, PortypeScopeProvider, RepresentationScopeProvider,
   // Context providers
-  SketchpadScopeProvider, TypeScopeProvider, useCommands, useConnection, useConnectionScope, useConnections, useDesign, useDesignEditorScope,
+  SketchpadProvider, SketchpadScopeProvider, TypeScopeProvider, useCommands, useConnection, useConnections, useConnectionScope, useDesign, useDesignEditorScope,
   // Design Editor hooks
   useDesignEditorStore, useDesignEditorStoreDesignDiff, useDesignEditorStoreFileUrls, useDesignEditorStoreFullscreenPanel, useDesignEditorStoreIsTransactionActive,
   useDesignEditorStorePresence,
-  useDesignEditorStorePresenceOthers, useDesignEditorStoreSelection, useDesignId, useDesignScope, useDesigns, useDiff, useFileUrls, useFullscreen, useKit, useKitScope, useKits, useLayout,
+  useDesignEditorStorePresenceOthers, useDesignEditorStoreSelection, useDesignId, useDesigns, useDesignScope, useDiff, useFileUrls, useFullscreen, useKit, useKits, useKitScope, useLayout,
   // Concise hooks
-  useMode, useOthers, usePiece, usePieceScope, usePieces, usePort, usePortScope, usePorts, usePresence, useRepresentationScope, useRepresentations, useSelection,
+  useMode, useOthers, usePiece, usePieces, usePieceScope, usePort, usePorts, usePortScope, usePresence, useRepresentations, useRepresentationScope, useSelection,
   // Scope hooks
   useSketchpadScope,
   // Core hooks
-  useSketchpadStore, useTheme, useTransaction, useType, useTypeScope, useTypes
+  useSketchpadStore, useTheme, useTransaction, useType, useTypes, useTypeScope
 } from "./store";
 // #endregion
 
