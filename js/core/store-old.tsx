@@ -663,95 +663,6 @@ class SketchpadStore {
     return yDesignEditorStore;
   }
 
-  onKitIdsChange(callback: () => void) {
-    // Since kits are now managed per doc, we observe all kit docs
-    const observers = new Map<string, () => void>();
-    const cleanup = () => {
-      observers.forEach((observer, key) => {
-        const doc = this.kitDocs.get(key);
-        if (doc) {
-          (doc.getMap<YKitVal>("kit") as unknown as Y.Map<any>).unobserve(observer);
-        }
-      });
-      observers.clear();
-    };
-
-    // Set up observers for existing kits
-    this.kitDocs.forEach((doc, key) => {
-      const observer = () => callback();
-      (doc.getMap<YKitVal>("kit") as unknown as Y.Map<any>).observe(observer);
-      observers.set(key, observer);
-    });
-
-    return cleanup;
-  }
-
-  // TODO: Make all observers specific to the property they are observing
-  onDesignEditorStoreChange(id: string, callback: () => void) {
-    const yDesignEditorStore = this.getYDesignEditorStore(id);
-    const observer = () => {
-      // Clear stable objects when store changes
-      this.stableObjects.delete(`selection-${id}`);
-      this.stableObjects.delete(`designDiff-${id}`);
-      this.stableObjects.delete(`state-${id}`);
-      callback();
-    };
-    yDesignEditorStore.observe(observer);
-    return () => yDesignEditorStore.unobserve(observer);
-  }
-
-  // Helper to get stable object references for useSyncExternalStore
-  private getStableObject<T>(key: string, factory: () => T): T {
-    if (!this.stableObjects.has(key)) {
-      this.stableObjects.set(key, factory());
-    }
-    return this.stableObjects.get(key)!;
-  }
-
-  // Get stable selection object for useSyncExternalStore
-  getStableSelection(id: string): DesignEditorStoreSelection {
-    return this.getStableObject(`selection-${id}`, () => {
-      const designEditorStore = this.getDesignEditorStoreStore(id);
-      return designEditorStore?.getState().selection ?? { selectedPieceIds: [], selectedConnections: [] };
-    });
-  }
-
-  // Get stable designDiff object for useSyncExternalStore
-  getStableDesignDiff(id: string): DesignDiff {
-    return this.getStableObject(`designDiff-${id}`, () => {
-      const designEditorStore = this.getDesignEditorStoreStore(id);
-      return designEditorStore?.getState().designDiff ?? { pieces: { added: [], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } };
-    });
-  }
-
-  onDesignEditorStoreDesignIdChange(id: string, callback: () => void) {
-    return this.onDesignEditorStoreChange(id, callback);
-  }
-
-  onDesignEditorStoreFullscreenPanelChange(id: string, callback: () => void) {
-    return this.onDesignEditorStoreChange(id, callback);
-  }
-
-  onDesignEditorStoreSelectionChange(id: string, callback: () => void) {
-    return this.onDesignEditorStoreChange(id, callback);
-  }
-
-  onDesignEditorStoreDesignDiffChange(id: string, callback: () => void) {
-    return this.onDesignEditorStoreChange(id, callback);
-  }
-
-  onDesignEditorStoreIsTransactionActiveChange(id: string, callback: () => void) {
-    return this.onDesignEditorStoreChange(id, callback);
-  }
-
-  onDesignEditorStorePresenceChange(id: string, callback: () => void) {
-    return this.onDesignEditorStoreChange(id, callback);
-  }
-
-  onDesignEditorStorePresenceOthersChange(id: string, callback: () => void) {
-    return this.onDesignEditorStoreChange(id, callback);
-  }
-
   private createAuthor(author: Author): YAuthor {
     const yAuthor = new Y.Map<string>();
     yAuthor.set("name", author.name);
@@ -904,13 +815,7 @@ class SketchpadStore {
 
     if (!kit.name) throw new Error("Kit name is required to create a kit.");
 
-    const yKit = this.getYKit(kit);
-    // Check if kit already exists by looking at name
-    if (yKit.get("name") && yKit.get("name") !== "") {
-      const kitId = kitIdLikeToKitId(kit);
-      throw new Error(`Kit (${kitId.name}, ${kitId.version || ""}) already exists.`);
-    }
-
+    const yKit = new Y.Map<YKitVal>();
     yKit.set("uuid", uuidv4());
     yKit.set("name", kit.name);
     yKit.set("description", kit.description || "");
@@ -932,7 +837,6 @@ class SketchpadStore {
     yKit.set("qualities", this.createQualities(kit.qualities));
     yKit.set("created", new Date().toISOString());
     yKit.set("updated", new Date().toISOString());
-
     kit.types?.forEach((t) => this.createType(kit, t));
     kit.designs?.forEach((d) => this.createDesign(kit, d));
   }
@@ -1089,10 +993,7 @@ class SketchpadStore {
     }
 
     if (diffStack.length > 0) {
-      // Merge all diffs in the stack
       const mergedDiff = diffStack.reduce((merged, kitDiff) => diff.merge.kit(merged, kitDiff), {} as KitDiff);
-
-      // Apply the merged diff
       this.updateKitInternal(kitId, mergedDiff);
     }
 
@@ -1102,18 +1003,9 @@ class SketchpadStore {
   // Design Editor Transaction Management
   onDesignEditorStoreTransactionStart(editorId: string, kitId: KitIdLike): void {
     const kitKey = this.key.kit(kitId);
-    if (this.kitTransactionStacks.has(kitKey)) {
-      throw new Error(`Cannot start design editor transaction: kit transaction already active for ${kitKey}`);
-    }
-
-    if (this.designEditorTransactionStacks.has(editorId)) {
-      throw new Error(`Design editor transaction already active for ${editorId}`);
-    }
-
-    // Start kit transaction internally
+    if (this.kitTransactionStacks.has(kitKey)) throw new Error(`Cannot start design editor transaction: kit transaction already active for ${kitKey}`);
+    if (this.designEditorTransactionStacks.has(editorId)) throw new Error(`Design editor transaction already active for ${editorId}`);
     this.onKitTransactionStart(kitId);
-
-    // Track design editor transaction
     this.designEditorTransactionStacks.set(editorId, {
       kitDiffs: [],
       editorStates: [],
@@ -3157,99 +3049,99 @@ class SketchpadStore {
   }
 
   // Observer methods for React hooks (different from update methods)
-  observeKitChanges(id: KitIdLike, callback: () => void) {
+  observeKitChanges(id: KitIdLike, callback: () => void, deep = false) {
     const yKit = this.getYKit(id);
     const o = () => callback();
-    (yKit as unknown as Y.Map<any>).observe(o);
-    return () => (yKit as unknown as Y.Map<any>).unobserve(o);
+    deep ? (yKit as unknown as Y.Map<any>).observeDeep(o) : (yKit as unknown as Y.Map<any>).observe(o);
+    return () => (deep ? (yKit as unknown as Y.Map<any>).unobserveDeep(o) : (yKit as unknown as Y.Map<any>).unobserve(o));
   }
 
-  observeDesignsChanges(id: KitIdLike, callback: () => void) {
+  observeDesignsChanges(id: KitIdLike, callback: () => void, deep = false) {
     const yKit = this.getYKit(id);
     const yDesigns = yKit.get("designs") as Y.Map<any>;
     const observer = () => callback();
-    yDesigns.observe(observer);
-    return () => yDesigns.unobserve(observer);
+    deep ? yDesigns.observeDeep(observer) : yDesigns.observe(observer);
+    return () => (deep ? yDesigns.unobserveDeep(observer) : yDesigns.unobserve(observer));
   }
 
-  observeDesignChanges(kitId: KitIdLike, id: DesignIdLike, callback: () => void) {
+  observeDesignChanges(kitId: KitIdLike, id: DesignIdLike, callback: () => void, deep = false) {
     const yDesign = this.getYDesign(kitId, id) as unknown as Y.Map<any>;
     const o = () => callback();
-    yDesign.observe(o);
-    return () => yDesign.unobserve(o);
+    deep ? yDesign.observeDeep(o) : yDesign.observe(o);
+    return () => (deep ? yDesign.unobserveDeep(o) : yDesign.unobserve(o));
   }
 
-  observeTypesChanges(id: KitIdLike, callback: () => void) {
+  observeTypesChanges(id: KitIdLike, callback: () => void, deep = false) {
     const yKit = this.getYKit(id);
     const yTypes = yKit.get("types") as Y.Map<any>;
     const observer = () => callback();
-    yTypes.observe(observer);
-    return () => yTypes.unobserve(observer);
+    deep ? yTypes.observeDeep(observer) : yTypes.observe(observer);
+    return () => (deep ? yTypes.unobserveDeep(observer) : yTypes.unobserve(observer));
   }
 
-  observeTypeChanges(kitId: KitIdLike, id: TypeIdLike, callback: () => void) {
+  observeTypeChanges(kitId: KitIdLike, id: TypeIdLike, callback: () => void, deep = false) {
     const yType = this.getYType(kitId, id) as unknown as Y.Map<any>;
     const o = () => callback();
-    yType.observe(o);
-    return () => yType.unobserve(o);
+    deep ? yType.observeDeep(o) : yType.observe(o);
+    return () => (deep ? yType.unobserveDeep(o) : yType.unobserve(o));
   }
 
-  observePiecesChanges(kitId: KitIdLike, id: DesignIdLike, callback: () => void) {
+  observePiecesChanges(kitId: KitIdLike, id: DesignIdLike, callback: () => void, deep = false) {
     const yDesign = this.getYDesign(kitId, id);
     const yPieces = getDesign(yDesign, "pieces") as unknown as Y.Map<any>;
     const o = () => callback();
-    yPieces.observe(o);
-    return () => yPieces.unobserve(o);
+    deep ? yPieces.observeDeep(o) : yPieces.observe(o);
+    return () => (deep ? yPieces.unobserveDeep(o) : yPieces.unobserve(o));
   }
 
-  observePieceChanges(kitId: KitIdLike, id: DesignIdLike, pieceId: PieceIdLike, callback: () => void) {
+  observePieceChanges(kitId: KitIdLike, id: DesignIdLike, pieceId: PieceIdLike, callback: () => void, deep = false) {
     const yPiece = this.getYPiece(kitId, id, pieceId) as unknown as Y.Map<any>;
     const o = () => callback();
-    yPiece.observe(o);
-    return () => yPiece.unobserve(o);
+    deep ? yPiece.observeDeep(o) : yPiece.observe(o);
+    return () => (deep ? yPiece.unobserveDeep(o) : yPiece.unobserve(o));
   }
 
-  observeConnectionsChanges(kitId: KitIdLike, id: DesignIdLike, callback: () => void) {
+  observeConnectionsChanges(kitId: KitIdLike, id: DesignIdLike, callback: () => void, deep = false) {
     const yDesign = this.getYDesign(kitId, id);
     const yConnections = getDesign(yDesign, "connections") as unknown as Y.Map<any>;
     const o = () => callback();
-    yConnections.observe(o);
-    return () => yConnections.unobserve(o);
+    deep ? yConnections.observeDeep(o) : yConnections.observe(o);
+    return () => (deep ? yConnections.unobserveDeep(o) : yConnections.unobserve(o));
   }
 
-  observeConnectionChanges(kitId: KitIdLike, designId: DesignIdLike, id: ConnectionIdLike, callback: () => void) {
+  observeConnectionChanges(kitId: KitIdLike, designId: DesignIdLike, id: ConnectionIdLike, callback: () => void, deep = false) {
     const yConn = this.getYConnection(kitId, designId, id) as unknown as Y.Map<any>;
     const o = () => callback();
-    yConn.observe(o);
-    return () => yConn.unobserve(o);
+    deep ? yConn.observeDeep(o) : yConn.observe(o);
+    return () => (deep ? yConn.unobserveDeep(o) : yConn.unobserve(o));
   }
 
-  observePortsChanges(kitId: KitIdLike, typeId: TypeIdLike, callback: () => void) {
+  observePortsChanges(kitId: KitIdLike, typeId: TypeIdLike, callback: () => void, deep = false) {
     const yPorts = this.getYPorts(kitId, typeId) as unknown as Y.Map<any>;
     const o = () => callback();
-    yPorts.observe(o);
-    return () => yPorts.unobserve(o);
+    deep ? yPorts.observeDeep(o) : yPorts.observe(o);
+    return () => (deep ? yPorts.unobserveDeep(o) : yPorts.unobserve(o));
   }
 
-  observePortChanges(kitId: KitIdLike, typeId: TypeIdLike, id: PortIdLike, callback: () => void) {
+  observePortChanges(kitId: KitIdLike, typeId: TypeIdLike, id: PortIdLike, callback: () => void, deep = false) {
     const yPort = this.getYPort(kitId, typeId, id) as unknown as Y.Map<any>;
     const o = () => callback();
-    yPort.observe(o);
-    return () => yPort.unobserve(o);
+    deep ? yPort.observeDeep(o) : yPort.observe(o);
+    return () => (deep ? yPort.unobserveDeep(o) : yPort.unobserve(o));
   }
 
-  observeRepresentationsChanges(kitId: KitIdLike, typeId: TypeIdLike, callback: () => void) {
+  observeRepresentationsChanges(kitId: KitIdLike, typeId: TypeIdLike, callback: () => void, deep = false) {
     const yReps = this.getYRepresentations(kitId, typeId) as unknown as Y.Map<any>;
     const o = () => callback();
-    yReps.observe(o);
-    return () => yReps.unobserve(o);
+    deep ? yReps.observeDeep(o) : yReps.observe(o);
+    return () => (deep ? yReps.unobserveDeep(o) : yReps.unobserve(o));
   }
 
-  observeRepresentationChanges(kitId: KitIdLike, typeId: TypeIdLike, id: RepresentationIdLike, callback: () => void) {
+  observeRepresentationChanges(kitId: KitIdLike, typeId: TypeIdLike, id: RepresentationIdLike, callback: () => void, deep = false) {
     const yRep = this.getYRepresentation(kitId, typeId, id) as unknown as Y.Map<any>;
     const o = () => callback();
-    yRep.observe(o);
-    return () => yRep.unobserve(o);
+    deep ? yRep.observeDeep(o) : yRep.observe(o);
+    return () => (deep ? yRep.unobserveDeep(o) : yRep.unobserve(o));
   }
 }
 

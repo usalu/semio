@@ -52,6 +52,15 @@ export const QualitySchema = z.object({
 export const QualityIdSchema = z.object({ name: z.string() });
 export const QualityIdLikeSchema = z.union([QualitySchema, QualityIdSchema, z.string()]);
 
+// https://github.com/usalu/semio#-author-
+export const AuthorSchema = z.object({ name: z.string(), email: z.string() });
+
+// https://github.com/usalu/semio#-location-
+export const LocationSchema = z.object({
+  longitude: z.number(),
+  latitude: z.number(),
+});
+
 // https://github.com/usalu/semio#-representation-
 export const RepresentationSchema = z.object({
   url: z.string(),
@@ -99,15 +108,6 @@ export const PortSchema = z.object({
 });
 export const PortIdSchema = z.object({ id_: z.string().optional() });
 export const PortIdLikeSchema = z.union([PortSchema, PortIdSchema, z.string(), z.null(), z.undefined()]);
-
-// https://github.com/usalu/semio#-author-
-export const AuthorSchema = z.object({ name: z.string(), email: z.string() });
-
-// https://github.com/usalu/semio#-location-
-export const LocationSchema = z.object({
-  longitude: z.number(),
-  latitude: z.number(),
-});
 
 // https://github.com/usalu/semio#-type-
 export const TypeSchema = z.object({
