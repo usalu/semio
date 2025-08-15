@@ -2295,8 +2295,37 @@ export const explodeDesign = (kit: Kit, designToExpandId: DesignIdLike): ExpandD
   // Combine all pieces from the target design and the design to expand
   const combinedPieces = [...(targetDesign.pieces || []), ...(designToExpand.pieces || [])];
 
-  // Combine all connections: target design connections and connections from the expanded design
-  const combinedConnections = [...(targetDesign.connections || []), ...(designToExpand.connections || [])];
+  // Combine connections more carefully to preserve external designId references
+  const targetConnections = targetDesign.connections || [];
+  const expandedConnections = designToExpand.connections || [];
+
+  // Get all existing design names in the kit (excluding the one being expanded) to preserve designId references
+  const existingDesignNames = new Set((kit.designs || []).filter((d) => d.name !== designToExpand.name).map((d) => d.name));
+
+  // Process expanded design connections to preserve designId references to other existing designs
+  const processedExpandedConnections = expandedConnections.map((connection: Connection) => {
+    // If this connection references another existing design, preserve the designId
+    if (connection.connected.designId && existingDesignNames.has(connection.connected.designId)) {
+      return connection; // Keep as-is with designId
+    }
+    if (connection.connecting.designId && existingDesignNames.has(connection.connecting.designId)) {
+      return connection; // Keep as-is with designId
+    }
+    // Otherwise, it's an internal connection, remove designId
+    return {
+      ...connection,
+      connected: {
+        ...connection.connected,
+        designId: undefined,
+      },
+      connecting: {
+        ...connection.connecting,
+        designId: undefined,
+      },
+    };
+  });
+
+  const combinedConnections = [...targetConnections, ...processedExpandedConnections];
 
   // Create the updated target design with expanded content
   const expandedTargetDesign: Design = {

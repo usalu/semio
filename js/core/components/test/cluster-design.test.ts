@@ -553,4 +553,184 @@ describe("expandDesign", () => {
     expect(expandResult2.expandedDesign.pieces?.map((p) => p.id_)).toEqual(expect.arrayContaining(["piece1", "piece2", "piece3", "piece4"]));
     expect(expandResult2.expandedDesign.connections).toHaveLength(3);
   });
+
+  it("should preserve external connections to nested clustered designs when expanding", () => {
+    // This test reproduces the exact scenario described by the user:
+    // Original design #0 -> clustered design #1 -> nested clustered design #2
+    // When expanding #1, connections to #2 should be preserved
+
+    // Start with original design with 6 pieces to create a more complex scenario
+    const extendedPieces: Piece[] = [
+      ...mockDesign.pieces!,
+      {
+        id_: "piece5",
+        type: { name: "test-type" },
+        center: { x: 4, y: 0 },
+      },
+      {
+        id_: "piece6",
+        type: { name: "test-type" },
+        center: { x: 5, y: 0 },
+      },
+    ];
+
+    const extendedConnections: Connection[] = [
+      ...mockDesign.connections!,
+      {
+        connected: {
+          piece: { id_: "piece4" },
+          port: { id_: "port2" },
+        },
+        connecting: {
+          piece: { id_: "piece5" },
+          port: { id_: "port1" },
+        },
+      },
+      {
+        connected: {
+          piece: { id_: "piece5" },
+          port: { id_: "port2" },
+        },
+        connecting: {
+          piece: { id_: "piece6" },
+          port: { id_: "port1" },
+        },
+      },
+    ];
+
+    const extendedDesign: Design = {
+      ...mockDesign,
+      pieces: extendedPieces,
+      connections: extendedConnections,
+    };
+
+    const extendedKit: Kit = {
+      ...mockKit,
+      designs: [extendedDesign],
+    };
+
+    // Step 1: Create clustered design #1 with pieces 2, 3, 4
+    const clusterResult1 = clusterDesign(extendedKit, "test-design", ["piece2", "piece3", "piece4"], "cluster-1");
+    expect(clusterResult1.updatedKit.designs).toHaveLength(2);
+    expect(clusterResult1.clusteredDesign.pieces).toHaveLength(3);
+    expect(clusterResult1.updatedSourceDesign.pieces).toHaveLength(3); // piece1, piece5, piece6
+
+    // Step 2: Create nested clustered design #2 inside cluster-1 with pieces 3, 4
+    const clusterResult2 = clusterDesign(clusterResult1.updatedKit, "cluster-1", ["piece3", "piece4"], "cluster-2");
+    expect(clusterResult2.updatedKit.designs).toHaveLength(3);
+    expect(clusterResult2.clusteredDesign.pieces).toHaveLength(2); // piece3, piece4
+    expect(clusterResult2.updatedSourceDesign.pieces).toHaveLength(1); // piece2 remains in cluster-1
+
+    // Step 3: Go back to original design #0 and expand cluster-1
+    const expandResult = explodeDesign(clusterResult2.updatedKit, "cluster-1");
+
+    // After expansion, we should have:
+    // - Original design with piece1, piece2, piece5, piece6
+    // - cluster-2 should still exist as a separate design
+    // - External connections to cluster-2 should be preserved
+    expect(expandResult.updatedKit.designs).toHaveLength(2); // original + cluster-2
+    expect(expandResult.expandedDesign.pieces).toHaveLength(4); // piece1, piece2, piece5, piece6
+    expect(expandResult.expandedDesign.pieces?.map((p) => p.id_)).toEqual(expect.arrayContaining(["piece1", "piece2", "piece5", "piece6"]));
+
+    // Most importantly: Check that external connections to cluster-2 are preserved
+    const externalConnectionsToCluster2 = expandResult.expandedDesign.connections?.filter((c) => c.connected.designId === "cluster-2" || c.connecting.designId === "cluster-2");
+    expect(externalConnectionsToCluster2).toHaveLength(1); // Connection from piece2 to cluster-2
+
+    // Verify cluster-2 still exists
+    const cluster2 = expandResult.updatedKit.designs?.find((d) => d.name === "cluster-2");
+    expect(cluster2).toBeDefined();
+    expect(cluster2?.pieces).toHaveLength(2); // piece3, piece4
+  });
+
+  it("should preserve bidirectional external connections to nested clustered designs when expanding", () => {
+    // This test creates a scenario with bidirectional connections to nested clusters
+    // Original chain: piece1 - piece2 - piece3 - piece4 - piece5 - piece6 - piece7
+
+    const extendedPieces: Piece[] = [
+      ...mockDesign.pieces!,
+      {
+        id_: "piece5",
+        type: { name: "test-type" },
+        center: { x: 4, y: 0 },
+      },
+      {
+        id_: "piece6",
+        type: { name: "test-type" },
+        center: { x: 5, y: 0 },
+      },
+      {
+        id_: "piece7",
+        type: { name: "test-type" },
+        center: { x: 6, y: 0 },
+      },
+    ];
+
+    const extendedConnections: Connection[] = [
+      ...mockDesign.connections!,
+      {
+        connected: {
+          piece: { id_: "piece4" },
+          port: { id_: "port2" },
+        },
+        connecting: {
+          piece: { id_: "piece5" },
+          port: { id_: "port1" },
+        },
+      },
+      {
+        connected: {
+          piece: { id_: "piece5" },
+          port: { id_: "port2" },
+        },
+        connecting: {
+          piece: { id_: "piece6" },
+          port: { id_: "port1" },
+        },
+      },
+      {
+        connected: {
+          piece: { id_: "piece6" },
+          port: { id_: "port2" },
+        },
+        connecting: {
+          piece: { id_: "piece7" },
+          port: { id_: "port1" },
+        },
+      },
+    ];
+
+    const extendedDesign: Design = {
+      ...mockDesign,
+      pieces: extendedPieces,
+      connections: extendedConnections,
+    };
+
+    const extendedKit: Kit = {
+      ...mockKit,
+      designs: [extendedDesign],
+    };
+
+    // Step 1: Create clustered design #1 with pieces 2, 3, 4, 5
+    const clusterResult1 = clusterDesign(extendedKit, "test-design", ["piece2", "piece3", "piece4", "piece5"], "cluster-1");
+
+    // Step 2: Create nested clustered design #2 inside cluster-1 with pieces 3, 4
+    // This creates bidirectional connections: piece2 -> cluster-2 and cluster-2 -> piece5
+    const clusterResult2 = clusterDesign(clusterResult1.updatedKit, "cluster-1", ["piece3", "piece4"], "cluster-2");
+
+    // Step 3: Expand cluster-1 back to original design
+    const expandResult = explodeDesign(clusterResult2.updatedKit, "cluster-1");
+
+    // Should preserve both directions of external connections to cluster-2
+    const externalConnectionsToCluster2 = expandResult.expandedDesign.connections?.filter((c) => c.connected.designId === "cluster-2" || c.connecting.designId === "cluster-2");
+    expect(externalConnectionsToCluster2).toHaveLength(2); // piece2 -> cluster-2 and cluster-2 -> piece5
+
+    // Verify the specific connections
+    const incomingToCluster2 = externalConnectionsToCluster2?.find((c) => c.connecting.designId === "cluster-2");
+    const outgoingFromCluster2 = externalConnectionsToCluster2?.find((c) => c.connected.designId === "cluster-2");
+
+    expect(incomingToCluster2).toBeDefined();
+    expect(outgoingFromCluster2).toBeDefined();
+    expect(incomingToCluster2?.connected.piece.id_).toBe("piece2");
+    expect(outgoingFromCluster2?.connecting.piece.id_).toBe("piece5");
+  });
 });
