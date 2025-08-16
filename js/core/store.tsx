@@ -770,7 +770,9 @@ function useStore<T, S>(store: S, subscribe?: (cb: () => void) => () => void, se
   return value as T;
 }
 
-export function useSketchpad<T>(selector?: (sketchpad: SketchpadState) => T, id?: string): T {
+export function useSketchpad(): SketchpadState;
+export function useSketchpad<T>(selector: (sketchpad: SketchpadState) => T, id?: string): T;
+export function useSketchpad<T>(selector?: (sketchpad: SketchpadState) => T, id?: string): T | SketchpadState {
   const scope = useSketchpadScope();
   const storeId = scope?.id ?? id;
   if (!storeId) throw new Error("useSketchpad must be called within a SketchpadScopeProvider or be directly provided with an id");
@@ -779,7 +781,10 @@ export function useSketchpad<T>(selector?: (sketchpad: SketchpadState) => T, id?
   return useStore(store, store.on.updated.sketchpad, selector);
 }
 
-export function useDesignEditor<T>(selector?: (editor: DesignEditorState) => T, id?: DesignId): T {
+export function useDesignEditor(): DesignEditorState;
+export function useDesignEditor<T>(selector: (editor: DesignEditorState) => T): T;
+export function useDesignEditor<T>(selector: (editor: DesignEditorState) => T, id: DesignId): T;
+export function useDesignEditor<T>(selector?: (editor: DesignEditorState) => T, id?: DesignId): T | DesignEditorState {
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("useDesignEditor must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
@@ -791,14 +796,19 @@ export function useDesignEditor<T>(selector?: (editor: DesignEditorState) => T, 
   return useStore(designEditor, designEditor.on.updated.designEditor, selector);
 }
 
-export function useDesignEditors<T>(selector?: (editors: Map<DesignId, DesignEditorState>) => T): T {
+export function useDesignEditors(): Map<DesignId, DesignEditorStore>;
+export function useDesignEditors<T>(selector: (editors: Map<DesignId, DesignEditorStore>) => T): T;
+export function useDesignEditors<T>(selector?: (editors: Map<DesignId, DesignEditorStore>) => T): T | Map<DesignId, DesignEditorStore> {
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("useDesignEditors must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
-  return useStore(store, store.on.updated.designEditors, selector);
+  return useStore(store.designEditors, store.on.updated.designEditors, selector);
 }
 
-export function useKit<T>(selector?: (kit: Kit) => T, id?: KitId): T {
+export function useKit(): Kit;
+export function useKit<T>(selector: (kit: Kit) => T): T;
+export function useKit<T>(selector: (kit: Kit) => T, id: KitId): T;
+export function useKit<T>(selector?: (kit: Kit) => T, id?: KitId): T | Kit {
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("useKit must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
@@ -807,17 +817,22 @@ export function useKit<T>(selector?: (kit: Kit) => T, id?: KitId): T {
   if (!kitId) throw new Error("useKit must be called within a KitScopeProvider or be directly provided with an id");
   if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
   const kitStore = store.kits.get(kitId)!;
-  return useStore(kitStore, kitStore.on.updated.kit, selector);
+  return useStore(kitStore.kit, kitStore.on.updated.kit, selector);
 }
 
-export function useKits<T>(selector?: (kits: Map<KitId, Kit>) => T): T {
+export function useKits(): Map<KitId, KitStore>;
+export function useKits<T>(selector: (kits: Map<KitId, KitStore>) => T): T;
+export function useKits<T>(selector?: (kits: Map<KitId, KitStore>) => T): T | Map<KitId, KitStore> {
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("useKits must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
-  return useStore(store, store.on.updated.kits, selector);
+  return useStore(store.kits, store.on.updated.kits, selector);
 }
 
-export function useDesign<T>(selector?: (design: Design) => T, id?: DesignId): T {
+export function useDesign(): Design;
+export function useDesign<T>(selector: (design: Design) => T): T;
+export function useDesign<T>(selector: (design: Design) => T, id: DesignId): T;
+export function useDesign<T>(selector?: (design: Design) => T, id?: DesignId): T | Design {
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("useDesign must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
@@ -831,10 +846,12 @@ export function useDesign<T>(selector?: (design: Design) => T, id?: DesignId): T
   if (!designId) throw new Error("useDesign must be called within a DesignScopeProvider or be directly provided with an id");
   if (!kitStore.designs.has(designId)) throw new Error(`Design store not found for design ${designId}`);
   const designStore = kitStore.designs.get(designId)!;
-  return useStore(designStore, designStore.on.updated.design, selector);
+  return useStore(designStore.design, designStore.on.updated.design, selector);
 }
 
-export function useDesigns<T>(selector?: (designs: Map<DesignId, Design>) => T): T {
+export function useDesigns(): Map<DesignId, DesignStore>;
+export function useDesigns<T>(selector: (designs: Map<DesignId, DesignStore>) => T): T;
+export function useDesigns<T>(selector?: (designs: Map<DesignId, DesignStore>) => T): T | Map<DesignId, DesignStore> {
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("useDesigns must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
@@ -843,10 +860,13 @@ export function useDesigns<T>(selector?: (designs: Map<DesignId, Design>) => T):
   const kitId = kitScope.id;
   if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
   const kitStore = store.kits.get(kitId)!;
-  return useStore(kitStore, kitStore.on.updated.kit, selector);
+  return useStore(kitStore.designs, kitStore.on.updated.kit, selector);
 }
 
-export function useType<T>(selector?: (type: Type) => T, id?: TypeId): T {
+export function useType(): Type;
+export function useType<T>(selector: (type: Type) => T): T;
+export function useType<T>(selector: (type: Type) => T, id: TypeId): T;
+export function useType<T>(selector?: (type: Type) => T, id?: TypeId): T | Type {
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("useType must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
@@ -860,10 +880,12 @@ export function useType<T>(selector?: (type: Type) => T, id?: TypeId): T {
   if (!typeId) throw new Error("useType must be called within a TypeScopeProvider or be directly provided with an id");
   if (!kit.types.has(typeId)) throw new Error(`Type store not found for type ${typeId}`);
   const typeStore = kit.types.get(typeId)!;
-  return useStore(typeStore, typeStore.on.updated.type, selector);
+  return useStore(typeStore.type, typeStore.on.updated.type, selector);
 }
 
-export function useTypes<T>(selector?: (types: Map<TypeId, Type>) => T): T {
+export function useTypes(): Map<TypeId, TypeStore>;
+export function useTypes<T>(selector: (types: Map<TypeId, TypeStore>) => T): T;
+export function useTypes<T>(selector?: (types: Map<TypeId, TypeStore>) => T): T | Map<TypeId, TypeStore> {
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("useTypes must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
@@ -872,10 +894,13 @@ export function useTypes<T>(selector?: (types: Map<TypeId, Type>) => T): T {
   const kitId = kitScope.id;
   if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
   const kitStore = store.kits.get(kitId)!;
-  return useStore(kitStore, kitStore.on.updated.kit, selector);
+  return useStore(kitStore.types, kitStore.on.updated.kit, selector);
 }
 
-export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId): T {
+export function usePiece(): Piece;
+export function usePiece<T>(selector: (piece: Piece) => T): T;
+export function usePiece<T>(selector: (piece: Piece) => T, id: PieceId): T;
+export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId): T | Piece {
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("usePiece must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
@@ -894,10 +919,12 @@ export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId): T {
   if (!pieceId) throw new Error("usePiece must be called within a PieceScopeProvider or be directly provided with an id");
   if (!design.pieces.has(pieceId)) throw new Error(`Piece store not found for piece ${pieceId}`);
   const pieceStore = design.pieces.get(pieceId)!;
-  return useStore(pieceStore, pieceStore.on.updated.piece, selector);
+  return useStore(pieceStore.piece, pieceStore.on.updated.piece, selector);
 }
 
-export function usePieces<T>(selector?: (pieces: Map<PieceId, Piece>) => T): T {
+export function usePieces(): Map<PieceId, PieceStore>;
+export function usePieces<T>(selector: (pieces: Map<PieceId, PieceStore>) => T): T;
+export function usePieces<T>(selector?: (pieces: Map<PieceId, PieceStore>) => T): T | Map<PieceId, PieceStore> {
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("usePieces must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
@@ -911,10 +938,13 @@ export function usePieces<T>(selector?: (pieces: Map<PieceId, Piece>) => T): T {
   const designId = designScope.id;
   if (!kit.designs.has(designId)) throw new Error(`Design store not found for design ${designId}`);
   const designStore = kit.designs.get(designId)!;
-  return useStore(designStore, designStore.on.updated.design, selector);
+  return useStore(designStore.pieces, designStore.on.updated.design, selector);
 }
 
-export function useConnection<T>(selector?: (connection: Connection) => T, id?: ConnectionId): T {
+export function useConnection(): Connection;
+export function useConnection<T>(selector: (connection: Connection) => T): T;
+export function useConnection<T>(selector: (connection: Connection) => T, id: ConnectionId): T;
+export function useConnection<T>(selector?: (connection: Connection) => T, id?: ConnectionId): T | Connection {
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("useConnection must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
@@ -933,10 +963,12 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
   if (!connectionId) throw new Error("useConnection must be called within a ConnectionScopeProvider or be directly provided with an id");
   if (!design.connections.has(connectionId)) throw new Error(`Connection store not found for connection ${connectionId}`);
   const connectionStore = design.connections.get(connectionId)!;
-  return useStore(connectionStore, connectionStore.on.updated.connection, selector);
+  return useStore(connectionStore.connection, connectionStore.on.updated.connection, selector);
 }
 
-export function useConnections<T>(selector?: (connections: Map<ConnectionId, Connection>) => T): T {
+export function useConnections(): Map<ConnectionId, ConnectionStore>;
+export function useConnections<T>(selector: (connections: Map<ConnectionId, ConnectionStore>) => T): T;
+export function useConnections<T>(selector?: (connections: Map<ConnectionId, ConnectionStore>) => T): T | Map<ConnectionId, ConnectionStore> {
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("useConnections must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
@@ -950,10 +982,13 @@ export function useConnections<T>(selector?: (connections: Map<ConnectionId, Con
   const designId = designScope.id;
   if (!kit.designs.has(designId)) throw new Error(`Design store not found for design ${designId}`);
   const designStore = kit.designs.get(designId)!;
-  return useStore(designStore, designStore.on.updated.design, selector);
+  return useStore(designStore.connections, designStore.on.updated.design, selector);
 }
 
-export function usePort<T>(selector?: (port: Port) => T, id?: PortId): T {
+export function usePort(): Port;
+export function usePort<T>(selector: (port: Port) => T): T;
+export function usePort<T>(selector: (port: Port) => T, id: PortId): T;
+export function usePort<T>(selector?: (port: Port) => T, id?: PortId): T | Port {
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("usePort must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
@@ -972,10 +1007,12 @@ export function usePort<T>(selector?: (port: Port) => T, id?: PortId): T {
   if (!portId) throw new Error("usePort must be called within a PortScopeProvider or be directly provided with an id");
   if (!type.ports.has(portId)) throw new Error(`Port store not found for port ${portId}`);
   const portStore = type.ports.get(portId)!;
-  return useStore(portStore, portStore.on.updated.port, selector);
+  return useStore(portStore.port, portStore.on.updated.port, selector);
 }
 
-export function usePorts<T>(selector?: (ports: Map<PortId, Port>) => T): T {
+export function usePorts(): Map<PortId, Port>;
+export function usePorts<T>(selector: (ports: Map<PortId, Port>) => T): T;
+export function usePorts<T>(selector?: (ports: Map<PortId, Port>) => T): T | Map<PortId, Port> {
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("usePorts must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
@@ -989,10 +1026,19 @@ export function usePorts<T>(selector?: (ports: Map<PortId, Port>) => T): T {
   const typeId = typeScope.id;
   if (!kit.types.has(typeId)) throw new Error(`Type store not found for type ${typeId}`);
   const typeStore = kit.types.get(typeId)!;
-  return useStore(typeStore, typeStore.on.updated.type, selector);
+  return useStore(typeStore.ports, typeStore.on.updated.type, (ports) => {
+    const portsMap = new Map<PortId, Port>();
+    for (const [id, portStore] of ports) {
+      portsMap.set(id, portStore.port);
+    }
+    return selector ? selector(portsMap) : portsMap;
+  });
 }
 
-export function useRepresentation<T>(selector?: (representation: Representation) => T, id?: RepresentationId): T {
+export function useRepresentation(): Representation;
+export function useRepresentation<T>(selector: (representation: Representation) => T): T;
+export function useRepresentation<T>(selector: (representation: Representation) => T, id: RepresentationId): T;
+export function useRepresentation<T>(selector?: (representation: Representation) => T, id?: RepresentationId): T | Representation {
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("useRepresentation must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
@@ -1011,10 +1057,12 @@ export function useRepresentation<T>(selector?: (representation: Representation)
   if (!representationId) throw new Error("useRepresentation must be called within a RepresentationScopeProvider or be directly provided with an id");
   if (!typeStore.representations.has(representationId)) throw new Error(`Representation store not found for representation ${representationId}`);
   const representationStore = typeStore.representations.get(representationId)!;
-  return useStore(representationStore, representationStore.on.updated.representation, selector);
+  return useStore(representationStore.representation, representationStore.on.updated.representation, selector);
 }
 
-export function useRepresentations<T>(selector?: (representations: Map<RepresentationId, Representation>) => T): T {
+export function useRepresentations(): Map<RepresentationId, Representation>;
+export function useRepresentations<T>(selector: (representations: Map<RepresentationId, Representation>) => T): T;
+export function useRepresentations<T>(selector?: (representations: Map<RepresentationId, Representation>) => T): T | Map<RepresentationId, Representation> {
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("useRepresentations must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
@@ -1028,6 +1076,12 @@ export function useRepresentations<T>(selector?: (representations: Map<Represent
   const typeId = typeScope.id;
   if (!kitStore.types.has(typeId)) throw new Error(`Type store not found for type ${typeId}`);
   const typeStore = kitStore.types.get(typeId)!;
-  return useStore(typeStore, typeStore.on.updated.type, selector);
+  return useStore(typeStore.representations, typeStore.on.updated.type, (representations) => {
+    const representationsMap = new Map<RepresentationId, Representation>();
+    for (const [id, representationStore] of representations) {
+      representationsMap.set(id, representationStore.representation);
+    }
+    return selector ? selector(representationsMap) : representationsMap;
+  });
 }
 // #endregion Hooks

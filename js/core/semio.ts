@@ -598,13 +598,6 @@ export const schemas = {
 
 //#region Diff Functions
 
-// Temporary variable to store the diff object for internal references
-const diffTemp = {
-  get: {} as any,
-  apply: {} as any,
-  merge: {} as any
-};
-
 export const diff = {
   get: {
     quality: (before: Quality, after: Quality): QualityDiff => {
@@ -712,7 +705,7 @@ export const diff = {
         return bp && JSON.stringify(bp) !== JSON.stringify(ap);
       }).map(ap => {
         const bp = beforePieces.find(bp => bp.id_ === ap.id_)!;
-        return diffTemp.get.piece(bp, ap);
+        return diff.get.piece(bp, ap);
       });
 
       if (removedPieces.length > 0) piecesDiff.removed = removedPieces.map(p => ({ id_: p.id_ }));
@@ -745,7 +738,7 @@ export const diff = {
           bc.connected.piece.id_ === ac.connected.piece.id_ &&
           bc.connecting.piece.id_ === ac.connecting.piece.id_
         )!;
-        return diffTemp.get.connection(bc, ac);
+        return diff.get.connection(bc, ac);
       });
 
       if (removedConnections.length > 0) connectionsDiff.removed = removedConnections.map(c => ({
@@ -784,7 +777,7 @@ export const diff = {
         return bt && JSON.stringify(bt) !== JSON.stringify(at);
       }).map(at => {
         const bt = beforeTypes.find(bt => bt.name === at.name && bt.variant === at.variant)!;
-        return diffTemp.get.type(bt, at);
+        return diff.get.type(bt, at);
       });
 
       if (removedTypes.length > 0) typesDiff.removed = removedTypes.map(t => ({ name: t.name, variant: t.variant }));
@@ -805,7 +798,7 @@ export const diff = {
         return bd && JSON.stringify(bd) !== JSON.stringify(ad);
       }).map(ad => {
         const bd = beforeDesigns.find(bd => bd.name === ad.name && bd.variant === ad.variant && bd.view === ad.view)!;
-        return diffTemp.get.design(bd, ad);
+        return diff.get.design(bd, ad);
       });
 
       if (removedDesigns.length > 0) designsDiff.removed = removedDesigns.map(d => ({ name: d.name, variant: d.variant, view: d.view }));
@@ -826,7 +819,7 @@ export const diff = {
         const b = before[i];
         const a = after[i];
         if (b && a) {
-          const qualityDiff = diffTemp.get.quality(b, a);
+          const qualityDiff = diff.get.quality(b, a);
           if (Object.keys(qualityDiff).length > 0) {
             diffs.push(qualityDiff);
           }
@@ -837,7 +830,6 @@ export const diff = {
       return diffs;
     }
   },
-
   apply: {
     quality: (base: Quality, diff: QualityDiff): Quality => ({
       name: diff.name ?? base.name,
@@ -924,7 +916,7 @@ export const diff = {
         pieces = basePieces
           .map(p => {
             const updateDiff = diff.pieces?.updated?.find((up: PieceDiff) => up.id_ === p.id_);
-            return updateDiff ? diffTemp.apply.piece(p, updateDiff) : p;
+            return updateDiff ? ({ ...p, ...updateDiff, id_: p.id_ }) : p;
           })
           .filter(p => !diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_))
           .concat(diff.pieces?.added || []);
@@ -938,7 +930,12 @@ export const diff = {
               uc.connected?.piece?.id_ === c.connected.piece.id_ &&
               uc.connecting?.piece?.id_ === c.connecting.piece.id_
             );
-            return updateDiff ? diffTemp.apply.connection(c, updateDiff) : c;
+            return updateDiff ? ({
+              ...c,
+              ...updateDiff,
+              connected: updateDiff.connected ? { ...c.connected, ...updateDiff.connected } : c.connected,
+              connecting: updateDiff.connecting ? { ...c.connecting, ...updateDiff.connecting } : c.connecting
+            }) : c;
           })
           .filter(c => !diff.connections?.removed?.some((rc: ConnectionId) =>
             rc.connected.piece.id_ === c.connected.piece.id_ &&
@@ -975,7 +972,7 @@ export const diff = {
         types = baseTypes
           .map(t => {
             const updateDiff = diff.types?.updated?.find((ut: TypeDiff) => ut.name === t.name && ut.variant === t.variant);
-            return updateDiff ? diffTemp.apply.type(t, updateDiff) : t;
+            return updateDiff ? ({ ...t, ...updateDiff }) : t;
           })
           .filter(t => !diff.types?.removed?.some((rt: TypeId) => rt.name === t.name && rt.variant === t.variant))
           .concat(diff.types?.added || []);
@@ -986,7 +983,58 @@ export const diff = {
         designs = baseDesigns
           .map(d => {
             const updateDiff = diff.designs?.updated?.find((ud: DesignDiff) => ud.name === d.name && ud.variant === d.variant && ud.view === d.view);
-            return updateDiff ? diffTemp.apply.design(d, updateDiff) : d;
+            if (!updateDiff) return d;
+
+            // Apply the design diff properly by using the apply function logic
+            let pieces = d.pieces;
+            let connections = d.connections;
+
+            if (updateDiff.pieces) {
+              const basePieces = d.pieces || [];
+              pieces = basePieces
+                .map(p => {
+                  const pieceDiff = updateDiff.pieces?.updated?.find((up: PieceDiff) => up.id_ === p.id_);
+                  return pieceDiff ? ({ ...p, ...pieceDiff, id_: p.id_ }) : p;
+                })
+                .filter(p => !updateDiff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_))
+                .concat(updateDiff.pieces?.added || []);
+            }
+
+            if (updateDiff.connections) {
+              const baseConnections = d.connections || [];
+              connections = baseConnections
+                .map(c => {
+                  const connDiff = updateDiff.connections?.updated?.find((uc: ConnectionDiff) =>
+                    uc.connected?.piece?.id_ === c.connected.piece.id_ &&
+                    uc.connecting?.piece?.id_ === c.connecting.piece.id_
+                  );
+                  return connDiff ? ({
+                    ...c,
+                    ...connDiff,
+                    connected: connDiff.connected ? { ...c.connected, ...connDiff.connected } : c.connected,
+                    connecting: connDiff.connecting ? { ...c.connecting, ...connDiff.connecting } : c.connecting
+                  }) : c;
+                })
+                .filter(c => !updateDiff.connections?.removed?.some((rc: ConnectionId) =>
+                  rc.connected.piece.id_ === c.connected.piece.id_ &&
+                  rc.connecting.piece.id_ === c.connecting.piece.id_
+                ))
+                .concat(updateDiff.connections?.added || []);
+            }
+
+            return {
+              ...d,
+              name: updateDiff.name ?? d.name,
+              description: updateDiff.description ?? d.description,
+              icon: updateDiff.icon ?? d.icon,
+              image: updateDiff.image ?? d.image,
+              variant: updateDiff.variant ?? d.variant,
+              view: updateDiff.view ?? d.view,
+              location: updateDiff.location ?? d.location,
+              unit: updateDiff.unit ?? d.unit,
+              pieces,
+              connections
+            };
           })
           .filter(d => !diff.designs?.removed?.some((rd: DesignId) => rd.name === d.name && rd.variant === d.variant && rd.view === d.view))
           .concat(diff.designs?.added || []);
@@ -1014,14 +1062,13 @@ export const diff = {
       return diffs.map((qualityDiff, index) => {
         const baseQuality = base[index];
         if (baseQuality) {
-          return diffTemp.apply.quality(baseQuality, qualityDiff);
+          return diff.apply.quality(baseQuality, qualityDiff);
         } else {
           return qualityDiff as Quality;
         }
       });
     }
   },
-
   merge: {
     quality: (diff1: QualityDiff, diff2: QualityDiff): QualityDiff => ({
       name: diff2.name ?? diff1.name,
@@ -1128,20 +1175,239 @@ export const diff = {
     }),
 
     qualities: (diffs: KitDiff[]): KitDiff => {
-      return diffs.reduce((merged, kitDiff) => diffTemp.merge.kit(merged, kitDiff), {} as KitDiff);
+      return diffs.reduce((merged, kitDiff) => diff.merge.kit(merged, kitDiff), {} as KitDiff);
+    }
+  },
+
+  inverse: {
+    quality: (original: Quality, appliedDiff: QualityDiff): QualityDiff => {
+      const inverseDiff: any = {};
+      if (appliedDiff.name !== undefined) inverseDiff.name = original.name;
+      if (appliedDiff.value !== undefined) inverseDiff.value = original.value;
+      if (appliedDiff.unit !== undefined) inverseDiff.unit = original.unit;
+      if (appliedDiff.definition !== undefined) inverseDiff.definition = original.definition;
+      return inverseDiff;
+    },
+
+    representation: (original: Representation, appliedDiff: RepresentationDiff): RepresentationDiff => {
+      const inverseDiff: any = {};
+      if (appliedDiff.url !== undefined) inverseDiff.url = original.url;
+      if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
+      if (appliedDiff.tags !== undefined) inverseDiff.tags = original.tags;
+      if (appliedDiff.qualities !== undefined) inverseDiff.qualities = original.qualities;
+      return inverseDiff;
+    },
+
+    port: (original: Port, appliedDiff: PortDiff): PortDiff => {
+      const inverseDiff: any = {};
+      if (appliedDiff.id_ !== undefined) inverseDiff.id_ = original.id_;
+      if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
+      if (appliedDiff.family !== undefined) inverseDiff.family = original.family;
+      if (appliedDiff.mandatory !== undefined) inverseDiff.mandatory = original.mandatory;
+      if (appliedDiff.t !== undefined) inverseDiff.t = original.t;
+      if (appliedDiff.compatibleFamilies !== undefined) inverseDiff.compatibleFamilies = original.compatibleFamilies;
+      if (appliedDiff.point !== undefined) inverseDiff.point = original.point;
+      if (appliedDiff.direction !== undefined) inverseDiff.direction = original.direction;
+      if (appliedDiff.qualities !== undefined) inverseDiff.qualities = original.qualities;
+      return inverseDiff;
+    },
+
+    piece: (original: Piece, appliedDiff: PieceDiff): PieceDiff => {
+      const inverseDiff: any = { id_: original.id_ };
+      if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
+      if (appliedDiff.type !== undefined) inverseDiff.type = original.type;
+      if (appliedDiff.plane !== undefined) inverseDiff.plane = original.plane;
+      if (appliedDiff.center !== undefined) inverseDiff.center = original.center;
+      if (appliedDiff.qualities !== undefined) inverseDiff.qualities = original.qualities;
+      return inverseDiff;
+    },
+
+    connection: (original: Connection, appliedDiff: ConnectionDiff): ConnectionDiff => {
+      const inverseDiff: any = {
+        connected: { piece: original.connected.piece },
+        connecting: { piece: original.connecting.piece }
+      };
+      if (appliedDiff.connected?.port !== undefined) inverseDiff.connected.port = original.connected.port;
+      if (appliedDiff.connecting?.port !== undefined) inverseDiff.connecting.port = original.connecting.port;
+      if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
+      if (appliedDiff.gap !== undefined) inverseDiff.gap = original.gap;
+      if (appliedDiff.shift !== undefined) inverseDiff.shift = original.shift;
+      if (appliedDiff.rise !== undefined) inverseDiff.rise = original.rise;
+      if (appliedDiff.rotation !== undefined) inverseDiff.rotation = original.rotation;
+      if (appliedDiff.turn !== undefined) inverseDiff.turn = original.turn;
+      if (appliedDiff.tilt !== undefined) inverseDiff.tilt = original.tilt;
+      if (appliedDiff.x !== undefined) inverseDiff.x = original.x;
+      if (appliedDiff.y !== undefined) inverseDiff.y = original.y;
+      return inverseDiff;
+    },
+
+    type: (original: Type, appliedDiff: TypeDiff): TypeDiff => {
+      const inverseDiff: any = {};
+      if (appliedDiff.name !== undefined) inverseDiff.name = original.name;
+      if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
+      if (appliedDiff.icon !== undefined) inverseDiff.icon = original.icon;
+      if (appliedDiff.image !== undefined) inverseDiff.image = original.image;
+      if (appliedDiff.variant !== undefined) inverseDiff.variant = original.variant;
+      if (appliedDiff.stock !== undefined) inverseDiff.stock = original.stock;
+      if (appliedDiff.virtual !== undefined) inverseDiff.virtual = original.virtual;
+      if (appliedDiff.unit !== undefined) inverseDiff.unit = original.unit;
+      if (appliedDiff.created !== undefined) inverseDiff.created = original.created;
+      if (appliedDiff.updated !== undefined) inverseDiff.updated = original.updated;
+      if (appliedDiff.location !== undefined) inverseDiff.location = original.location;
+      if (appliedDiff.representations !== undefined) inverseDiff.representations = original.representations;
+      if (appliedDiff.ports !== undefined) inverseDiff.ports = original.ports;
+      if (appliedDiff.authors !== undefined) inverseDiff.authors = original.authors;
+      if (appliedDiff.qualities !== undefined) inverseDiff.qualities = original.qualities;
+      return inverseDiff;
+    },
+
+    design: (original: Design, appliedDiff: DesignDiff): DesignDiff => {
+      const inverseDiff: any = {};
+      if (appliedDiff.name !== undefined) inverseDiff.name = original.name;
+      if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
+      if (appliedDiff.icon !== undefined) inverseDiff.icon = original.icon;
+      if (appliedDiff.image !== undefined) inverseDiff.image = original.image;
+      if (appliedDiff.variant !== undefined) inverseDiff.variant = original.variant;
+      if (appliedDiff.view !== undefined) inverseDiff.view = original.view;
+      if (appliedDiff.location !== undefined) inverseDiff.location = original.location;
+      if (appliedDiff.unit !== undefined) inverseDiff.unit = original.unit;
+
+      // Handle pieces diff inverse
+      if (appliedDiff.pieces) {
+        const originalPieces = original.pieces || [];
+        const piecesDiff: PiecesDiff = {};
+
+        // Swap added and removed
+        if (appliedDiff.pieces.added) piecesDiff.removed = appliedDiff.pieces.added.map(p => ({ id_: p.id_ }));
+        if (appliedDiff.pieces.removed) piecesDiff.added = appliedDiff.pieces.removed.map(rp => {
+          return originalPieces.find(p => p.id_ === rp.id_)!;
+        });
+
+        // Inverse updated pieces
+        if (appliedDiff.pieces.updated) {
+          piecesDiff.updated = appliedDiff.pieces.updated.map(updatedPiece => {
+            const originalPiece = originalPieces.find(p => p.id_ === updatedPiece.id_)!;
+            return diff.inverse.piece(originalPiece, updatedPiece);
+          });
+        }
+
+        if (Object.keys(piecesDiff).length > 0) inverseDiff.pieces = piecesDiff;
+      }
+
+      // Handle connections diff inverse
+      if (appliedDiff.connections) {
+        const originalConnections = original.connections || [];
+        const connectionsDiff: ConnectionsDiff = {};
+
+        // Swap added and removed
+        if (appliedDiff.connections.added) connectionsDiff.removed = appliedDiff.connections.added.map(c => ({
+          connected: { piece: { id_: c.connected.piece.id_ } },
+          connecting: { piece: { id_: c.connecting.piece.id_ } }
+        }));
+        if (appliedDiff.connections.removed) connectionsDiff.added = appliedDiff.connections.removed.map(rc => {
+          return originalConnections.find(c =>
+            c.connected.piece.id_ === rc.connected.piece.id_ &&
+            c.connecting.piece.id_ === rc.connecting.piece.id_
+          )!;
+        });
+
+        // Inverse updated connections
+        if (appliedDiff.connections.updated) {
+          connectionsDiff.updated = appliedDiff.connections.updated.map(updatedConnection => {
+            const originalConnection = originalConnections.find(c =>
+              c.connected.piece.id_ === updatedConnection.connected?.piece?.id_ &&
+              c.connecting.piece.id_ === updatedConnection.connecting?.piece?.id_
+            )!;
+            return diff.inverse.connection(originalConnection, updatedConnection);
+          });
+        }
+
+        if (Object.keys(connectionsDiff).length > 0) inverseDiff.connections = connectionsDiff;
+      }
+
+      return inverseDiff;
+    },
+
+    kit: (original: Kit, appliedDiff: KitDiff): KitDiff => {
+      const inverseDiff: any = {};
+      if (appliedDiff.name !== undefined) inverseDiff.name = original.name;
+      if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
+      if (appliedDiff.icon !== undefined) inverseDiff.icon = original.icon;
+      if (appliedDiff.image !== undefined) inverseDiff.image = original.image;
+      if (appliedDiff.preview !== undefined) inverseDiff.preview = original.preview;
+      if (appliedDiff.version !== undefined) inverseDiff.version = original.version;
+      if (appliedDiff.remote !== undefined) inverseDiff.remote = original.remote;
+      if (appliedDiff.homepage !== undefined) inverseDiff.homepage = original.homepage;
+      if (appliedDiff.license !== undefined) inverseDiff.license = original.license;
+
+      // Handle types diff inverse
+      if (appliedDiff.types) {
+        const originalTypes = original.types || [];
+        const typesDiff: TypesDiff = {};
+
+        // Swap added and removed
+        if (appliedDiff.types.added) typesDiff.removed = appliedDiff.types.added.map(t => ({ name: t.name, variant: t.variant }));
+        if (appliedDiff.types.removed) typesDiff.added = appliedDiff.types.removed.map(rt => {
+          return originalTypes.find(t => t.name === rt.name && t.variant === rt.variant)!;
+        });
+
+        // Inverse updated types
+        if (appliedDiff.types.updated) {
+          typesDiff.updated = appliedDiff.types.updated.map(updatedType => {
+            const originalType = originalTypes.find(t => t.name === updatedType.name && t.variant === updatedType.variant)!;
+            return diff.inverse.type(originalType, updatedType);
+          });
+        }
+
+        if (Object.keys(typesDiff).length > 0) inverseDiff.types = typesDiff;
+      }
+
+      // Handle designs diff inverse
+      if (appliedDiff.designs) {
+        const originalDesigns = original.designs || [];
+        const designsDiff: DesignsDiff = {};
+
+        // Swap added and removed
+        if (appliedDiff.designs.added) designsDiff.removed = appliedDiff.designs.added.map(d => ({ name: d.name, variant: d.variant, view: d.view }));
+        if (appliedDiff.designs.removed) designsDiff.added = appliedDiff.designs.removed.map(rd => {
+          return originalDesigns.find(d => d.name === rd.name && d.variant === rd.variant && d.view === rd.view)!;
+        });
+
+        // Inverse updated designs
+        if (appliedDiff.designs.updated) {
+          designsDiff.updated = appliedDiff.designs.updated.map(updatedDesign => {
+            const originalDesign = originalDesigns.find(d => d.name === updatedDesign.name && d.variant === updatedDesign.variant && d.view === updatedDesign.view)!;
+            return diff.inverse.design(originalDesign, updatedDesign);
+          });
+        }
+
+        if (Object.keys(designsDiff).length > 0) inverseDiff.designs = designsDiff;
+      }
+
+      if (appliedDiff.qualities !== undefined) inverseDiff.qualities = original.qualities;
+
+      return inverseDiff;
+    },
+
+    qualities: (original: Quality[], appliedDiffs: QualityDiff[]): QualityDiff[] => {
+      return appliedDiffs.map((appliedDiff, index) => {
+        const originalQuality = original[index];
+        if (originalQuality) {
+          return diff.inverse.quality(originalQuality, appliedDiff);
+        } else {
+          // If there was no original, the inverse should be an empty diff (no change)
+          return {};
+        }
+      });
     }
   }
 };
-
-// Update the temporary references
-diffTemp.get = diff.get;
-diffTemp.apply = diff.apply;
-diffTemp.merge = diff.merge;
 
 // Keep old exports for backwards compatibility
 export const getDiff = diff.get;
 export const applyDiff = diff.apply;
 export const mergeDiff = diff.merge;
+export const inverseDiff = diff.inverse;
 
 //#endregion Diff Functions
 
