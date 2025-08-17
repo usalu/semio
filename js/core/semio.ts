@@ -272,30 +272,6 @@ export const CameraSchema = z.object({
   up: VectorSchema,
 });
 
-export const AuthorDiffSchema = z.object({
-  name: z.string().optional(),
-  email: z.string().optional(),
-});
-export const AuthorsDiffSchema = z.object({
-  removed: z.array(z.string()).optional(),
-  updated: z.array(AuthorDiffSchema).optional(),
-  added: z.array(AuthorSchema).optional(),
-});
-export const LocationDiffSchema = z.object({
-  longitude: z.number().optional(),
-  latitude: z.number().optional(),
-});
-export const QualityDiffSchema = z.object({
-  name: z.string().optional(),
-  value: z.string().optional(),
-  unit: z.string().optional(),
-  definition: z.string().optional(),
-});
-export const QualitiesDiffSchema = z.object({
-  removed: z.array(QualityIdSchema).optional(),
-  updated: z.array(QualityDiffSchema).optional(),
-  added: z.array(QualitySchema).optional(),
-});
 export const RepresentationDiffSchema = z.object({
   url: z.string().optional(),
   description: z.string().optional(),
@@ -401,7 +377,8 @@ export const DesignDiffSchema = z.object({
   unit: z.string().optional(),
   pieces: PiecesDiffSchema.optional(),
   connections: ConnectionsDiffSchema.optional(),
-  qualities: QualitiesDiffSchema.optional(),
+  qualities: z.array(QualitySchema).optional(),
+  authors: z.array(AuthorSchema).optional(),
 });
 export const DesignsDiffSchema = z.object({
   removed: z.array(DesignIdSchema).optional(),
@@ -420,7 +397,7 @@ export const KitDiffSchema = z.object({
   license: z.string().optional(),
   types: TypesDiffSchema.optional(),
   designs: DesignsDiffSchema.optional(),
-  qualities: QualitiesDiffSchema.optional(),
+  qualities: z.array(QualitySchema).optional(),
 });
 
 export const DiffStatusSchema = z.enum(["unchanged", "added", "removed", "modified"]);
@@ -462,7 +439,6 @@ export type DesignIdLike = z.infer<typeof DesignIdLikeSchema>;
 export type Kit = z.infer<typeof KitSchema>;
 export type KitId = z.infer<typeof KitIdSchema>;
 export type KitIdLike = z.infer<typeof KitIdLikeSchema>;
-export type QualityDiff = z.infer<typeof QualityDiffSchema>;
 export type RepresentationDiff = z.infer<typeof RepresentationDiffSchema>;
 export type PortDiff = z.infer<typeof PortDiffSchema>;
 export type TypeDiff = z.infer<typeof TypeDiffSchema>;
@@ -474,8 +450,6 @@ export type ConnectionsDiff = z.infer<typeof ConnectionsDiffSchema>;
 export type DesignDiff = z.infer<typeof DesignDiffSchema>;
 export type DesignsDiff = z.infer<typeof DesignsDiffSchema>;
 export type KitDiff = z.infer<typeof KitDiffSchema>;
-export type AuthorsDiff = z.infer<typeof AuthorsDiffSchema>;
-export type QualitiesDiff = z.infer<typeof QualitiesDiffSchema>;
 export type RepresentationsDiff = z.infer<typeof RepresentationsDiffSchema>;
 export type PortsDiff = z.infer<typeof PortsDiffSchema>;
 export type TypesDiff = z.infer<typeof TypesDiffSchema>;
@@ -600,15 +574,6 @@ export const schemas = {
 
 export const diff = {
   get: {
-    quality: (before: Quality, after: Quality): QualityDiff => {
-      const diff: any = {};
-      if (before.name !== after.name) diff.name = after.name;
-      if (before.value !== after.value) diff.value = after.value;
-      if (before.unit !== after.unit) diff.unit = after.unit;
-      if (before.definition !== after.definition) diff.definition = after.definition;
-      return diff;
-    },
-
     representation: (before: Representation, after: Representation): RepresentationDiff => {
       const diff: any = {};
       if (before.url !== after.url) diff.url = after.url;
@@ -617,7 +582,6 @@ export const diff = {
       if (JSON.stringify(before.qualities) !== JSON.stringify(after.qualities)) diff.qualities = after.qualities;
       return diff;
     },
-
     port: (before: Port, after: Port): PortDiff => {
       const diff: any = {};
       if (before.id_ !== after.id_) diff.id_ = after.id_;
@@ -631,7 +595,6 @@ export const diff = {
       if (JSON.stringify(before.qualities) !== JSON.stringify(after.qualities)) diff.qualities = after.qualities;
       return diff;
     },
-
     piece: (before: Piece, after: Piece): PieceDiff => {
       const diff: any = { id_: after.id_ };
       if (before.description !== after.description) diff.description = after.description;
@@ -641,7 +604,6 @@ export const diff = {
       if (JSON.stringify(before.qualities) !== JSON.stringify(after.qualities)) diff.qualities = after.qualities;
       return diff;
     },
-
     connection: (before: Connection, after: Connection): ConnectionDiff => {
       const diff: any = {
         connected: { piece: after.connected.piece },
@@ -661,7 +623,6 @@ export const diff = {
       if (JSON.stringify(before.qualities) !== JSON.stringify(after.qualities)) diff.qualities = after.qualities;
       return diff;
     },
-
     type: (before: Type, after: Type): TypeDiff => {
       const diff: any = {};
       if (before.name !== after.name) diff.name = after.name;
@@ -681,7 +642,6 @@ export const diff = {
       if (JSON.stringify(before.qualities) !== JSON.stringify(after.qualities)) diff.qualities = after.qualities;
       return diff;
     },
-
     design: (before: Design, after: Design): DesignDiff => {
       const diff: any = {};
       if (before.name !== after.name) diff.name = after.name;
@@ -810,41 +770,15 @@ export const diff = {
       if (JSON.stringify(before.qualities) !== JSON.stringify(after.qualities)) diff.qualities = after.qualities;
 
       return diff;
-    },
-
-    qualities: (before: Quality[], after: Quality[]): QualityDiff[] => {
-      const diffs: QualityDiff[] = [];
-      const maxLength = Math.max(before.length, after.length);
-      for (let i = 0; i < maxLength; i++) {
-        const b = before[i];
-        const a = after[i];
-        if (b && a) {
-          const qualityDiff = diff.get.quality(b, a);
-          if (Object.keys(qualityDiff).length > 0) {
-            diffs.push(qualityDiff);
-          }
-        } else if (a) {
-          diffs.push(a);
-        }
-      }
-      return diffs;
     }
   },
   apply: {
-    quality: (base: Quality, diff: QualityDiff): Quality => ({
-      name: diff.name ?? base.name,
-      value: diff.value ?? base.value,
-      unit: diff.unit ?? base.unit,
-      definition: diff.definition ?? base.definition,
-    }),
-
     representation: (base: Representation, diff: RepresentationDiff): Representation => ({
       url: diff.url ?? base.url,
       description: diff.description ?? base.description,
       tags: diff.tags ?? base.tags,
       qualities: diff.qualities ?? base.qualities,
     }),
-
     port: (base: Port, diff: PortDiff): Port => ({
       id_: diff.id_ ?? base.id_,
       description: diff.description ?? base.description,
@@ -856,7 +790,6 @@ export const diff = {
       direction: diff.direction ?? base.direction,
       qualities: diff.qualities ?? base.qualities,
     }),
-
     piece: (base: Piece, diff: PieceDiff): Piece => ({
       id_: base.id_,
       description: diff.description ?? base.description,
@@ -865,7 +798,6 @@ export const diff = {
       center: diff.center ?? base.center,
       qualities: diff.qualities ?? base.qualities,
     }),
-
     connection: (base: Connection, diff: ConnectionDiff): Connection => ({
       connected: {
         piece: diff.connected?.piece ?? base.connected.piece,
@@ -888,7 +820,6 @@ export const diff = {
       y: diff.y ?? base.y,
       qualities: base.qualities,
     }),
-
     type: (base: Type, diff: TypeDiff): Type => ({
       name: diff.name ?? base.name,
       description: diff.description ?? base.description,
@@ -906,7 +837,6 @@ export const diff = {
       authors: diff.authors ?? base.authors,
       qualities: diff.qualities ?? base.qualities,
     }),
-
     design: (base: Design, diff: DesignDiff): Design => {
       let pieces = base.pieces;
       let connections = base.connections;
@@ -921,7 +851,6 @@ export const diff = {
           .filter(p => !diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_))
           .concat(diff.pieces?.added || []);
       }
-
       if (diff.connections) {
         const baseConnections = base.connections || [];
         connections = baseConnections
@@ -943,7 +872,6 @@ export const diff = {
           ))
           .concat(diff.connections?.added || []);
       }
-
       return {
         name: diff.name ?? base.name,
         description: diff.description ?? base.description,
@@ -962,11 +890,9 @@ export const diff = {
         qualities: base.qualities,
       };
     },
-
     kit: (base: Kit, diff: KitDiff): Kit => {
       let types = base.types;
       let designs = base.designs;
-
       if (diff.types) {
         const baseTypes = base.types || [];
         types = baseTypes
@@ -977,14 +903,12 @@ export const diff = {
           .filter(t => !diff.types?.removed?.some((rt: TypeId) => rt.name === t.name && rt.variant === t.variant))
           .concat(diff.types?.added || []);
       }
-
       if (diff.designs) {
         const baseDesigns = base.designs || [];
         designs = baseDesigns
           .map(d => {
             const updateDiff = diff.designs?.updated?.find((ud: DesignDiff) => ud.name === d.name && ud.variant === d.variant && ud.view === d.view);
             if (!updateDiff) return d;
-
             // Apply the design diff properly by using the apply function logic
             let pieces = d.pieces;
             let connections = d.connections;
@@ -999,7 +923,6 @@ export const diff = {
                 .filter(p => !updateDiff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_))
                 .concat(updateDiff.pieces?.added || []);
             }
-
             if (updateDiff.connections) {
               const baseConnections = d.connections || [];
               connections = baseConnections
@@ -1021,7 +944,6 @@ export const diff = {
                 ))
                 .concat(updateDiff.connections?.added || []);
             }
-
             return {
               ...d,
               name: updateDiff.name ?? d.name,
@@ -1057,26 +979,8 @@ export const diff = {
         qualities: base.qualities,
       };
     },
-
-    qualities: (base: Quality[], diffs: QualityDiff[]): Quality[] => {
-      return diffs.map((qualityDiff, index) => {
-        const baseQuality = base[index];
-        if (baseQuality) {
-          return diff.apply.quality(baseQuality, qualityDiff);
-        } else {
-          return qualityDiff as Quality;
-        }
-      });
-    }
   },
   merge: {
-    quality: (diff1: QualityDiff, diff2: QualityDiff): QualityDiff => ({
-      name: diff2.name ?? diff1.name,
-      value: diff2.value ?? diff1.value,
-      unit: diff2.unit ?? diff1.unit,
-      definition: diff2.definition ?? diff1.definition,
-    }),
-
     representation: (diff1: RepresentationDiff, diff2: RepresentationDiff): RepresentationDiff => ({
       url: diff2.url ?? diff1.url,
       description: diff2.description ?? diff1.description,
@@ -1173,22 +1077,8 @@ export const diff = {
       designs: diff2.designs ?? diff1.designs,
       qualities: diff2.qualities ?? diff1.qualities,
     }),
-
-    qualities: (diffs: KitDiff[]): KitDiff => {
-      return diffs.reduce((merged, kitDiff) => diff.merge.kit(merged, kitDiff), {} as KitDiff);
-    }
   },
-
   inverse: {
-    quality: (original: Quality, appliedDiff: QualityDiff): QualityDiff => {
-      const inverseDiff: any = {};
-      if (appliedDiff.name !== undefined) inverseDiff.name = original.name;
-      if (appliedDiff.value !== undefined) inverseDiff.value = original.value;
-      if (appliedDiff.unit !== undefined) inverseDiff.unit = original.unit;
-      if (appliedDiff.definition !== undefined) inverseDiff.definition = original.definition;
-      return inverseDiff;
-    },
-
     representation: (original: Representation, appliedDiff: RepresentationDiff): RepresentationDiff => {
       const inverseDiff: any = {};
       if (appliedDiff.url !== undefined) inverseDiff.url = original.url;
@@ -1197,7 +1087,6 @@ export const diff = {
       if (appliedDiff.qualities !== undefined) inverseDiff.qualities = original.qualities;
       return inverseDiff;
     },
-
     port: (original: Port, appliedDiff: PortDiff): PortDiff => {
       const inverseDiff: any = {};
       if (appliedDiff.id_ !== undefined) inverseDiff.id_ = original.id_;
@@ -1211,7 +1100,6 @@ export const diff = {
       if (appliedDiff.qualities !== undefined) inverseDiff.qualities = original.qualities;
       return inverseDiff;
     },
-
     piece: (original: Piece, appliedDiff: PieceDiff): PieceDiff => {
       const inverseDiff: any = { id_: original.id_ };
       if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
@@ -1221,7 +1109,6 @@ export const diff = {
       if (appliedDiff.qualities !== undefined) inverseDiff.qualities = original.qualities;
       return inverseDiff;
     },
-
     connection: (original: Connection, appliedDiff: ConnectionDiff): ConnectionDiff => {
       const inverseDiff: any = {
         connected: { piece: original.connected.piece },
@@ -1240,7 +1127,6 @@ export const diff = {
       if (appliedDiff.y !== undefined) inverseDiff.y = original.y;
       return inverseDiff;
     },
-
     type: (original: Type, appliedDiff: TypeDiff): TypeDiff => {
       const inverseDiff: any = {};
       if (appliedDiff.name !== undefined) inverseDiff.name = original.name;
@@ -1260,7 +1146,6 @@ export const diff = {
       if (appliedDiff.qualities !== undefined) inverseDiff.qualities = original.qualities;
       return inverseDiff;
     },
-
     design: (original: Design, appliedDiff: DesignDiff): DesignDiff => {
       const inverseDiff: any = {};
       if (appliedDiff.name !== undefined) inverseDiff.name = original.name;
@@ -1327,7 +1212,6 @@ export const diff = {
 
       return inverseDiff;
     },
-
     kit: (original: Kit, appliedDiff: KitDiff): KitDiff => {
       const inverseDiff: any = {};
       if (appliedDiff.name !== undefined) inverseDiff.name = original.name;
@@ -1387,18 +1271,6 @@ export const diff = {
       if (appliedDiff.qualities !== undefined) inverseDiff.qualities = original.qualities;
 
       return inverseDiff;
-    },
-
-    qualities: (original: Quality[], appliedDiffs: QualityDiff[]): QualityDiff[] => {
-      return appliedDiffs.map((appliedDiff, index) => {
-        const originalQuality = original[index];
-        if (originalQuality) {
-          return diff.inverse.quality(originalQuality, appliedDiff);
-        } else {
-          // If there was no original, the inverse should be an empty diff (no change)
-          return {};
-        }
-      });
     }
   }
 };

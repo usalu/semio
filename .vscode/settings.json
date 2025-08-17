@@ -44,5 +44,6 @@
     }
   ],
   "dotnet.defaultSolution": "net/Semio.sln",
-  "chat.agent.maxRequests": 200
+  "chat.agent.maxRequests": 200,
+  "editor.minimap.enabled": true
 }
