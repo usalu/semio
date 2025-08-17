@@ -1402,13 +1402,6 @@ export const diff = {
     }
   }
 };
-
-// Keep old exports for backwards compatibility
-export const getDiff = diff.get;
-export const applyDiff = diff.apply;
-export const mergeDiff = diff.merge;
-export const inverseDiff = diff.inverse;
-
 //#endregion Diff Functions
 
 //#region Functions

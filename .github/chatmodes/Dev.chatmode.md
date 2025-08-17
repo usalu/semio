@@ -1,27 +1,6 @@
 ---
 description: Help senior developer working.
-tools:
-  [
-    "changes",
-    "codebase",
-    "editFiles",
-    "fetch",
-    "findTestFiles",
-    "problems",
-    "readCellOutput",
-    "runCommands",
-    "runNotebooks",
-    "runTasks",
-    "runTests",
-    "search",
-    "searchResults",
-    "terminalLastCommand",
-    "terminalSelection",
-    "testFailure",
-    "usages",
-    "vscodeAPI",
-    "markitdown",
-  ]
+tools: ["changes", "codebase", "editFiles", "fetch", "findTestFiles", "problems", "runCommands", "runNotebooks", "runTasks", "runTests", "search", "searchResults", "terminalLastCommand", "terminalSelection", "testFailure", "usages", "vscodeAPI"]
 model: Claude Sonnet 4
 ---
 
@@ -44,6 +23,7 @@ An ecosystem for designing kit-of-parts architecture together.
 - Don't add comments to the code.
 - Always use inline syntax if possible.
 - If a variable is only used once, use it inline unless the line of code exceeds the screen.
+- Don't add extra new lines inside of code.
 
 # Styling
 

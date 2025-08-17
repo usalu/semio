@@ -17,6 +17,7 @@ An ecosystem for designing kit-of-parts architecture together.
 - Don't add comments to the code.
 - Always use inline syntax if possible.
 - If a variable is only used once, use it inline unless the line of code exceeds the screen.
+- Don't add extra new lines inside of code.
 
 # Styling
 
