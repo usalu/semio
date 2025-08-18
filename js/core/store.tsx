@@ -80,14 +80,15 @@ export enum Layout {
 
 // #region Api
 
-type Subscribe = () => void;
-type Unsubscribe = () => void;
+export type Subscribe = () => void;
+export type Unsubscribe = () => void;
+export type Disposable = () => void;
 
-interface RepresentationState {
+export interface RepresentationState {
   representation: Representation;
 }
 
-interface RepresentationActions {
+export interface RepresentationActions {
   create: {};
   update: {
     representation: (diff: RepresentationDiff) => void;
@@ -95,7 +96,7 @@ interface RepresentationActions {
   delete: {};
 }
 
-interface RepresentationSubscriptions {
+export interface RepresentationSubscriptions {
   on: {
     created: {};
     updated: {
@@ -105,14 +106,18 @@ interface RepresentationSubscriptions {
   };
 }
 
-interface RepresentationChildStores {}
+export interface RepresentationChildStores {}
 
-interface RepresentationStore extends RepresentationState, RepresentationActions, RepresentationSubscriptions, RepresentationChildStores {}
+export interface RepresentationChildStoresFull {}
 
-interface PortState {
+export interface RepresentationStore extends RepresentationState, RepresentationChildStores {}
+
+export interface RepresentationStoreFull extends RepresentationState, RepresentationActions, RepresentationSubscriptions, RepresentationChildStoresFull {}
+
+export interface PortState {
   port: Port;
 }
-interface PortActions {
+export interface PortActions {
   create: {};
   update: {
     port: (diff: PortDiff) => void;
@@ -120,7 +125,7 @@ interface PortActions {
   delete: {};
 }
 
-interface PortSubscriptions {
+export interface PortSubscriptions {
   on: {
     created: {};
     updated: {
@@ -130,14 +135,18 @@ interface PortSubscriptions {
   };
 }
 
-interface PortChildStores {}
+export interface PortChildStores {}
 
-interface PortStore extends PortState, PortActions, PortSubscriptions, PortChildStores {}
+export interface PortChildStoresFull {}
 
-interface TypeState {
+export interface PortStore extends PortState, PortChildStores {}
+
+export interface PortStoreFull extends PortState, PortActions, PortSubscriptions, PortChildStoresFull {}
+
+export interface TypeState {
   type: Type;
 }
-interface TypeActions {
+export interface TypeActions {
   create: {
     representation: (representation: Representation) => void;
     representations: (representations: Representation[]) => void;
@@ -155,7 +164,7 @@ interface TypeActions {
   };
 }
 
-interface TypeSubscriptions {
+export interface TypeSubscriptions {
   on: {
     created: {
       representation: (subscribe: Subscribe) => Unsubscribe;
@@ -175,18 +184,25 @@ interface TypeSubscriptions {
   };
 }
 
-interface TypeChildStores {
+export interface TypeChildStores {
   representations: Map<RepresentationId, RepresentationStore>;
   ports: Map<PortId, PortStore>;
 }
 
-interface TypeStore extends TypeState, TypeActions, TypeSubscriptions, TypeChildStores {}
+export interface TypeChildStoresFull {
+  representations: Map<RepresentationId, RepresentationStoreFull>;
+  ports: Map<PortId, PortStoreFull>;
+}
 
-interface PieceState {
+export interface TypeStore extends TypeState, TypeChildStores {}
+
+export interface TypeStoreFull extends TypeState, TypeActions, TypeSubscriptions, TypeChildStoresFull {}
+
+export interface PieceState {
   piece: Piece;
 }
 
-interface PieceActions {
+export interface PieceActions {
   create: {};
   update: {
     piece: (diff: PieceDiff) => void;
@@ -194,7 +210,7 @@ interface PieceActions {
   delete: {};
 }
 
-interface PieceSubscriptions {
+export interface PieceSubscriptions {
   on: {
     created: {};
     updated: {
@@ -204,15 +220,19 @@ interface PieceSubscriptions {
   };
 }
 
-interface PieceChildStores {}
+export interface PieceChildStores {}
 
-interface PieceStore extends PieceState, PieceActions, PieceSubscriptions, PieceChildStores {}
+export interface PieceChildStoresFull {}
 
-interface ConnectionState {
+export interface PieceStore extends PieceState, PieceChildStores {}
+
+export interface PieceStoreFull extends PieceState, PieceActions, PieceSubscriptions, PieceChildStoresFull {}
+
+export interface ConnectionState {
   connection: Connection;
 }
 
-interface ConnectionActions {
+export interface ConnectionActions {
   create: {};
   update: {
     connection: (diff: ConnectionDiff) => void;
@@ -220,7 +240,7 @@ interface ConnectionActions {
   delete: {};
 }
 
-interface ConnectionSubscriptions {
+export interface ConnectionSubscriptions {
   on: {
     created: {};
     updated: {
@@ -230,15 +250,19 @@ interface ConnectionSubscriptions {
   };
 }
 
-interface ConnectionChildStores {}
+export interface ConnectionChildStores {}
 
-interface ConnectionStore extends ConnectionState, ConnectionActions, ConnectionSubscriptions, ConnectionChildStores {}
+export interface ConnectionChildStoresFull {}
 
-interface DesignState {
+export interface ConnectionStore extends ConnectionState, ConnectionChildStores {}
+
+export interface ConnectionStoreFull extends ConnectionState, ConnectionActions, ConnectionSubscriptions, ConnectionChildStoresFull {}
+
+export interface DesignState {
   design: Design;
 }
 
-interface DesignActions {
+export interface DesignActions {
   create: {
     piece: (piece: Piece) => void;
     pieces: (pieces: Piece[]) => void;
@@ -256,7 +280,7 @@ interface DesignActions {
   };
 }
 
-interface DesignSubscriptions {
+export interface DesignSubscriptions {
   on: {
     created: {
       piece: (subscribe: Subscribe) => Unsubscribe;
@@ -276,23 +300,33 @@ interface DesignSubscriptions {
   };
 }
 
-interface DesignChildStores {
+export interface DesignChildStores {
   pieces: Map<PieceId, PieceStore>;
   connections: Map<ConnectionId, ConnectionStore>;
 }
 
-interface DesignStore extends DesignState, DesignActions, DesignSubscriptions, DesignChildStores {}
-
-interface KitState {
-  kit: Kit;
+export interface DesignChildStoresFull {
+  pieces: Map<PieceId, PieceStoreFull>;
+  connections: Map<ConnectionId, ConnectionStoreFull>;
 }
 
-interface KitActions {
+export interface DesignStore extends DesignState, DesignChildStores {}
+
+export interface DesignStoreFull extends DesignState, DesignActions, DesignSubscriptions, DesignChildStoresFull {}
+
+export interface KitState {
+  kit: Kit;
+  files: File[];
+}
+
+export interface KitActions {
   create: {
     type: (type: Type) => void;
     types: (types: Type[]) => void;
     design: (design: Design) => void;
     designs: (designs: Design[]) => void;
+    file: (file: File) => void;
+    files: (files: File[]) => void;
   };
   update: {
     kit: (diff: KitDiff) => void;
@@ -302,16 +336,20 @@ interface KitActions {
     types: (ids: TypeId[]) => void;
     design: (id: DesignId) => void;
     designs: (ids: DesignId[]) => void;
+    file: (id: string) => void;
+    files: (ids: string[]) => void;
   };
 }
 
-interface KitSubscriptions {
+export interface KitSubscriptions {
   on: {
     created: {
       type: (subscribe: Subscribe) => Unsubscribe;
       types: (subscribe: Subscribe) => Unsubscribe;
       design: (subscribe: Subscribe) => Unsubscribe;
       designs: (subscribe: Subscribe) => Unsubscribe;
+      file: (subscribe: Subscribe) => Unsubscribe;
+      files: (subscribe: Subscribe) => Unsubscribe;
     };
     updated: {
       kit: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
@@ -321,16 +359,47 @@ interface KitSubscriptions {
       types: (subscribe: Subscribe) => Unsubscribe;
       design: (subscribe: Subscribe) => Unsubscribe;
       designs: (subscribe: Subscribe) => Unsubscribe;
+      file: (subscribe: Subscribe) => Unsubscribe;
+      files: (subscribe: Subscribe) => Unsubscribe;
     };
   };
 }
 
-interface KitChildStores {
+export interface KitCommandContext {
+  kit: Kit;
+  files: File[];
+}
+
+export interface KitCommandResult {
+  diff?: KitDiff;
+}
+
+export interface KitCommands {
+  commands: {
+    execute<T>(command: string, ...rest: any[]): Promise<T>;
+  };
+}
+
+export interface KitCommandsFull {
+  commands: {
+    execute<T>(command: string, ...rest: any[]): Promise<T>;
+    register(command: string, callback: (context: KitCommandContext, ...rest: any[]) => KitCommandResult): Disposable;
+  };
+}
+
+export interface KitChildStores {
   types: Map<TypeId, TypeStore>;
   designs: Map<DesignId, DesignStore>;
 }
 
-interface KitStore extends KitState, KitActions, KitSubscriptions, KitChildStores {}
+export interface KitChildStoresFull {
+  types: Map<TypeId, TypeStoreFull>;
+  designs: Map<DesignId, DesignStoreFull>;
+}
+
+export interface KitStore extends KitState, KitChildStores, KitCommands {}
+
+export interface KitStoreFull extends KitState, KitActions, KitSubscriptions, KitChildStoresFull, KitCommandsFull {}
 
 export interface DesignEditorSelection {
   pieceIds?: PieceId[];
@@ -353,7 +422,7 @@ export interface DesignEditorPresenceOther extends DesignEditorPresence {
   name: string;
 }
 
-interface DesignEditorState {
+export interface DesignEditorState {
   fullscreenPanel: DesignEditorFullscreenPanel;
   selection: DesignEditorSelection;
   isTransactionActive: boolean;
@@ -362,7 +431,7 @@ interface DesignEditorState {
   diff: KitDiff;
 }
 
-interface DesignEditorActions {
+export interface DesignEditorActions {
   undo: () => void;
   redo: () => void;
   set: {
@@ -378,7 +447,7 @@ interface DesignEditorActions {
   };
 }
 
-interface DesignEditorSubscriptions {
+export interface DesignEditorSubscriptions {
   on: {
     undone: (subscribe: Subscribe) => Unsubscribe;
     redone: (subscribe: Subscribe) => Unsubscribe;
@@ -399,9 +468,37 @@ interface DesignEditorSubscriptions {
   };
 }
 
-interface DesignEditorStore extends DesignEditorState, DesignEditorActions, DesignEditorSubscriptions {}
+export interface DesignEditorCommandContext {
+  sketchpadState: SketchpadState;
+  state: DesignEditorState;
+  files: File[];
+  kit: Kit;
+  designId: DesignId;
+}
 
-interface SketchpadState {
+export interface DesignEditorCommandResult {
+  state?: DesignEditorState;
+  diff?: KitDiff;
+}
+
+export interface DesignEditorCommands {
+  commands: {
+    execute<T>(command: string, ...rest: any[]): Promise<T>;
+  };
+}
+
+export interface DesignEditorCommandsFull {
+  commands: {
+    execute<T>(command: string, ...rest: any[]): Promise<T>;
+    register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable;
+  };
+}
+
+export interface DesignEditorStore extends DesignEditorState, DesignEditorCommands {}
+
+export interface DesignEditorStoreFull extends DesignEditorState, DesignEditorActions, DesignEditorSubscriptions, DesignEditorCommandsFull {}
+
+export interface SketchpadState {
   mode: Mode;
   theme: Theme;
   layout: Layout;
@@ -409,7 +506,7 @@ interface SketchpadState {
   persistantId?: string;
 }
 
-interface SketchpadActions {
+export interface SketchpadActions {
   create: {
     kits: (kits: Kit[]) => void;
     designEditors: (designIds: DesignId[]) => void;
@@ -429,7 +526,7 @@ interface SketchpadActions {
   };
 }
 
-interface SketchpadSubscriptions {
+export interface SketchpadSubscriptions {
   on: {
     created: {
       kit: (subscribe: Subscribe) => Unsubscribe;
@@ -451,40 +548,43 @@ interface SketchpadSubscriptions {
   };
 }
 
-interface SketchpadChildStores {
+export interface SketchpadChildStores {
   kits: Map<KitId, KitStore>;
   designEditors: Map<DesignId, DesignEditorStore>;
 }
 
-interface SketchpadStore extends SketchpadState, SketchpadActions, SketchpadSubscriptions, SketchpadChildStores {}
-
-interface KitCommandContext {
-  kit: Kit;
+export interface SketchpadChildStoresFull {
+  kits: Map<KitId, KitStoreFull>;
+  designEditors: Map<DesignId, DesignEditorStoreFull>;
 }
 
-interface KitCommandResult {
-  diff: KitDiff;
-}
-
-interface DesignEditorCommandContext {
-  store: SketchpadStore;
-  kitId: KitId;
-  designId: DesignId;
-}
-
-interface DesignEditorCommandResult {
-  state: DesignEditorState;
-  diff: KitDiff;
-}
-
-interface SketchpadCommandContext {
-  store: SketchpadStore;
-}
-
-interface SketchpadCommandResult {
+export interface SketchpadCommandContext {
   state: SketchpadState;
-  diffs: Map<KitId, KitDiff>;
+  kits: Kit[];
+  files: File[];
 }
+
+export interface SketchpadCommandResult {
+  state?: SketchpadState;
+  diffs?: Map<KitId, KitDiff>;
+}
+
+export interface SketchpadCommands {
+  commands: {
+    execute<T>(command: string, ...rest: any[]): Promise<T>;
+  };
+}
+
+export interface SketchpadCommandsFull {
+  commands: {
+    execute<T>(command: string, ...rest: any[]): Promise<T>;
+    register(command: string, callback: (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult): Disposable;
+  };
+}
+
+export interface SketchpadStore extends SketchpadState, SketchpadChildStores, SketchpadCommands {}
+
+export interface SketchpadStoreFull extends SketchpadState, SketchpadActions, SketchpadSubscriptions, SketchpadChildStoresFull, SketchpadCommandsFull {}
 
 // #endregion Api
 
@@ -607,7 +707,7 @@ function getAuthors(yAuthors: YAuthors | undefined): Author[] {
   return authors;
 }
 
-class YRepresentationStore implements RepresentationStore {
+class YRepresentationStore implements RepresentationStoreFull {
   public readonly yRepresentation: YRepresentation = new Y.Map<any>();
 
   constructor(representation: Representation) {
@@ -668,7 +768,7 @@ class YRepresentationStore implements RepresentationStore {
   };
 }
 
-class YPortStore implements PortStore {
+class YPortStore implements PortStoreFull {
   public readonly yPort: YPort = new Y.Map<any>();
 
   constructor(port: Port) {
@@ -775,7 +875,7 @@ class YPortStore implements PortStore {
   };
 }
 
-class YTypeStore implements TypeStore {
+class YTypeStore implements TypeStoreFull {
   public readonly yType: YType = new Y.Map<any>();
   public readonly representations: Map<RepresentationId, YRepresentationStore> = new Map();
   public readonly ports: Map<PortId, YPortStore> = new Map();
@@ -909,7 +1009,7 @@ class YTypeStore implements TypeStore {
   };
 }
 
-class YPieceStore implements PieceStore {
+class YPieceStore implements PieceStoreFull {
   public readonly yPiece: YPiece = new Y.Map<any>();
 
   constructor(piece: Piece) {
@@ -1078,7 +1178,7 @@ class YPieceStore implements PieceStore {
   };
 }
 
-class YConnectionStore implements ConnectionStore {
+class YConnectionStore implements ConnectionStoreFull {
   public readonly yConnection: YConnection = new Y.Map<any>();
 
   constructor(connection: Connection) {
@@ -1183,7 +1283,7 @@ class YConnectionStore implements ConnectionStore {
   };
 }
 
-class YDesignStore implements DesignStore {
+class YDesignStore implements DesignStoreFull {
   public readonly yDesign: YDesign = new Y.Map<any>();
   public readonly pieces: Map<PieceId, YPieceStore> = new Map();
   public readonly connections: Map<ConnectionId, YConnectionStore> = new Map();
@@ -1320,12 +1420,13 @@ class YDesignStore implements DesignStore {
   };
 }
 
-class YKitStore implements KitStore {
+class YKitStore implements KitStoreFull {
   public readonly yKit: YKit = new Y.Map() as YKit;
   public readonly types: Map<TypeId, YTypeStore> = new Map();
   public readonly designs: Map<DesignId, YDesignStore> = new Map();
   private readonly typeIds: Map<TypeId, string> = new Map();
   private readonly designIds: Map<DesignId, string> = new Map();
+  private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult> = new Map();
 
   constructor(kit: Kit) {
     this.yKit.set("name", kit.name);
@@ -1505,10 +1606,36 @@ class YKitStore implements KitStore {
       designs: (subscribe: Subscribe) => this.on.deleted.design(subscribe),
     },
   };
+
+  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    const callback = this.commandRegistry.get(command);
+    if (!callback) throw new Error(`Command "${command}" not found in kit store`);
+    const context: KitCommandContext = { kit: this.kit };
+    const result = callback(context, ...rest);
+    if (result.diff) {
+      this.update.kit(result.diff);
+    }
+    return result as T;
+  }
+
+  registerCommand(command: string, callback: (context: KitCommandContext, ...rest: any[]) => KitCommandResult): Disposable {
+    this.commandRegistry.set(command, callback);
+    return () => {
+      this.commandRegistry.delete(command);
+    };
+  }
+
+  get commands() {
+    return {
+      execute: this.executeCommand.bind(this),
+      register: this.registerCommand.bind(this),
+    };
+  }
 }
 
 class YDesignEditorStore implements DesignEditorStore {
   public readonly yDesignEditorStore: YDesignEditorStoreValMap = new Y.Map<YDesignEditorStoreVal>();
+  private readonly commandRegistry: Map<string, (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult> = new Map();
 
   constructor(state: DesignEditorState) {
     this.yDesignEditorStore.set("fullscreenPanel", state.fullscreenPanel);
@@ -1657,6 +1784,34 @@ class YDesignEditorStore implements DesignEditorStore {
       },
     },
   };
+
+  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    const callback = this.commandRegistry.get(command);
+    if (!callback) throw new Error(`Command "${command}" not found in design editor store`);
+    const context: DesignEditorCommandContext = {
+      store: this as any, // This would need proper context
+      kitId: { name: "", version: "" }, // This would need to be provided
+      designId: { name: "", variant: "", view: "" }, // This would need to be provided
+    };
+    const result = callback(context, ...rest);
+    // Apply state and diff changes
+    // This would need proper implementation
+    return result as T;
+  }
+
+  registerCommand(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable {
+    this.commandRegistry.set(command, callback);
+    return () => {
+      this.commandRegistry.delete(command);
+    };
+  }
+
+  get commands() {
+    return {
+      execute: this.executeCommand.bind(this),
+      register: this.registerCommand.bind(this),
+    };
+  }
 }
 
 class YSketchpadStore implements SketchpadStore {
@@ -1666,6 +1821,7 @@ class YSketchpadStore implements SketchpadStore {
   public readonly kitIndexeddbProviders: Map<KitId, IndexeddbPersistence> = new Map();
   public readonly kits: Map<KitId, KitStore> = new Map();
   public readonly designEditors: Map<DesignId, DesignEditorStore> = new Map();
+  private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult> = new Map();
 
   constructor(state: SketchpadState) {
     this.ySketchpadDoc = new Y.Doc();
@@ -1852,12 +2008,46 @@ class YSketchpadStore implements SketchpadStore {
       },
     },
   };
+
+  async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    const callback = this.commandRegistry.get(command);
+    if (!callback) throw new Error(`Command "${command}" not found in sketchpad store`);
+    const context: SketchpadCommandContext = { store: this };
+    const result = callback(context, ...rest);
+    // Apply state and diffs changes
+    if (result.state) {
+      // Apply state changes - would need proper implementation
+    }
+    if (result.diffs) {
+      result.diffs.forEach((diff, kitId) => {
+        const kit = this.kits.get(kitId);
+        if (kit) {
+          kit.update.kit(diff);
+        }
+      });
+    }
+    return result as T;
+  }
+
+  registerCommand(command: string, callback: (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult): Disposable {
+    this.commandRegistry.set(command, callback);
+    return () => {
+      this.commandRegistry.delete(command);
+    };
+  }
+
+  get commands() {
+    return {
+      execute: this.executeCommand.bind(this),
+      register: this.registerCommand.bind(this),
+    };
+  }
 }
 
 const stores: Map<string, YSketchpadStore> = new Map();
 
 // Factory function to create or get a store
-export function getOrCreateSketchpadStore(id: string, persisted: boolean = true): YSketchpadStore {
+export function getOrCreateSketchpadStore(id: string, persisted: boolean = true): SketchpadStore {
   if (!stores.has(id)) {
     const initialState: SketchpadState = {
       mode: Mode.GUEST,
@@ -1873,6 +2063,39 @@ export function getOrCreateSketchpadStore(id: string, persisted: boolean = true)
 // #endregion Stores
 
 // #region Commands
+
+const sketchpadCommands = {
+  "semio.sketchpad.turnDark": (context: SketchpadCommandContext): SketchpadCommandResult => {
+    return {
+      state: { ...context.state, theme: Theme.DARK },
+    };
+  },
+};
+
+const kitCommands = {
+  "semio.kit.addType": (context: KitCommandContext, type: Type): KitCommandResult => {
+    return {
+      diff: { types: { added: [type] } },
+    };
+  },
+};
+
+const designEditorCommands = {
+  "semio.designEditor.addPiece": (context: DesignEditorCommandContext, piece: Piece): DesignEditorCommandResult => {
+    return {
+      diff: {
+        designs: {
+          updated: {
+            name: context.designId.name,
+            variant: context.designId.variant,
+            view: context.designId.view,
+            pieces: { added: [piece] },
+          },
+        },
+      },
+    };
+  },
+};
 
 // #endregion Commands
 
@@ -1976,9 +2199,9 @@ function useStore<T, S>(store: S, subscribe?: (cb: () => void) => () => void, se
   return value as T;
 }
 
-export function useSketchpad(): SketchpadState;
-export function useSketchpad<T>(selector: (sketchpad: SketchpadState) => T, id?: string): T;
-export function useSketchpad<T>(selector?: (sketchpad: SketchpadState) => T, id?: string): T | SketchpadState {
+export function useSketchpad(): SketchpadStore;
+export function useSketchpad<T>(selector: (store: SketchpadStore) => T, id?: string): T;
+export function useSketchpad<T>(selector?: (store: SketchpadStore) => T, id?: string): T | SketchpadStore {
   const scope = useSketchpadScope();
   const storeId = scope?.id ?? id;
   if (!storeId) throw new Error("useSketchpad must be called within a SketchpadScopeProvider or be directly provided with an id");
@@ -1987,10 +2210,10 @@ export function useSketchpad<T>(selector?: (sketchpad: SketchpadState) => T, id?
   return useStore(store, store.on.updated.sketchpad, selector);
 }
 
-export function useDesignEditor(): DesignEditorState;
-export function useDesignEditor<T>(selector: (editor: DesignEditorState) => T): T;
-export function useDesignEditor<T>(selector: (editor: DesignEditorState) => T, id: DesignId): T;
-export function useDesignEditor<T>(selector?: (editor: DesignEditorState) => T, id?: DesignId): T | DesignEditorState {
+export function useDesignEditor(): DesignEditorStore;
+export function useDesignEditor<T>(selector: (store: DesignEditorStore) => T): T;
+export function useDesignEditor<T>(selector: (store: DesignEditorStore) => T, id: DesignId): T;
+export function useDesignEditor<T>(selector?: (store: DesignEditorStore) => T, id?: DesignId): T | DesignEditorStore {
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("useDesignEditor must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
@@ -2002,10 +2225,10 @@ export function useDesignEditor<T>(selector?: (editor: DesignEditorState) => T, 
   return useStore(designEditor, designEditor.on.updated.designEditor, selector);
 }
 
-export function useKit(): Kit;
-export function useKit<T>(selector: (kit: Kit) => T): T;
-export function useKit<T>(selector: (kit: Kit) => T, id: KitId): T;
-export function useKit<T>(selector?: (kit: Kit) => T, id?: KitId): T | Kit {
+export function useKit(): KitStore;
+export function useKit<T>(selector: (store: KitStore) => T): T;
+export function useKit<T>(selector: (store: KitStore) => T, id: KitId): T;
+export function useKit<T>(selector?: (store: KitStore) => T, id?: KitId): T | KitStore {
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("useKit must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
@@ -2014,7 +2237,7 @@ export function useKit<T>(selector?: (kit: Kit) => T, id?: KitId): T | Kit {
   if (!kitId) throw new Error("useKit must be called within a KitScopeProvider or be directly provided with an id");
   if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
   const kitStore = store.kits.get(kitId)!;
-  return useStore(kitStore.kit, kitStore.on.updated.kit, selector);
+  return useStore(kitStore, kitStore.on.updated.kit, selector);
 }
 
 export function useDesign(): Design;
