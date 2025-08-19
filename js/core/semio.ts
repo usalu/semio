@@ -42,6 +42,9 @@ export const TOLERANCE = 1e-5;
 
 //#region Persistence
 
+const dataUriRegex = /^data:([a-z]+\/[a-z0-9\-\.+]+(;[a-z0-9\-\.+]+=[a-z0-9\-\.+]+)?)?(;base64)?,[a-z0-9!$&',()*+;=\-._~:@/?%\s]*$/i;
+const DataUriSchema = z.string().regex(dataUriRegex, "Invalid data URI");
+
 // https://github.com/usalu/semio#-quality-
 export const QualitySchema = z.object({
   name: z.string(),
@@ -156,8 +159,8 @@ export const PieceIdLikeSchema = z.union([PieceSchema, PieceIdSchema, z.string()
 // https://github.com/usalu/semio#-side-
 export const SideSchema = z.object({
   piece: PieceIdSchema,
+  designPiece: PieceIdSchema.optional(),
   port: PortIdSchema,
-  designId: z.string().optional(),
 });
 export const SideIdSchema = z.object({ piece: PieceIdSchema });
 
@@ -224,11 +227,32 @@ export const DesignIdSchema = z.object({
   view: z.string().optional(),
 });
 export const DesignIdLikeSchema = z.union([DesignSchema, DesignIdSchema, z.tuple([z.string(), z.string().optional(), z.string().optional()]), z.tuple([z.string(), z.string().optional()]), z.string()]);
-
 export const DesignPieceSchema = z.object({
   designId: DesignIdSchema,
   plane: PlaneSchema.optional(),
   center: DiagramPointSchema.optional(),
+});
+
+// https://github.com/usalu/semio#-file-
+export const FileIdSchema = z.object({
+  url: z.url(),
+});
+export const FileIdLikeSchema = z.union([FileIdSchema, z.string()]);
+export const FileSchema = z.object({
+  url: z.url(),
+  data: DataUriSchema,
+  size: z.number().optional(),
+  hash: z.string().optional(),
+  created: z
+    .string()
+    .transform((val) => new Date(val))
+    .or(z.date())
+    .optional(),
+  updated: z
+    .string()
+    .transform((val) => new Date(val))
+    .or(z.date())
+    .optional(),
 });
 
 // https://github.com/usalu/semio#-kit-
@@ -254,6 +278,7 @@ export const KitSchema = z.object({
     .optional(),
   types: z.array(TypeSchema).optional(),
   designs: z.array(DesignSchema).optional(),
+  files: z.array(FileSchema).optional(),
   qualities: z.array(QualitySchema).optional(),
 });
 export const KitIdSchema = z.object({
@@ -345,8 +370,8 @@ export const PiecesDiffSchema = z.object({
 });
 export const SideDiffSchema = z.object({
   piece: PieceIdSchema.optional(),
+  designPiece: PieceIdSchema.optional(),
   port: PortIdSchema.optional(),
-  designId: z.string().optional(),
 });
 export const ConnectionDiffSchema = z.object({
   connected: SideDiffSchema.optional(),
@@ -385,6 +410,17 @@ export const DesignsDiffSchema = z.object({
   updated: z.array(DesignDiffSchema).optional(),
   added: z.array(DesignSchema).optional(),
 });
+export const FileDiffSchema = z.object({
+  url: z.url().optional(),
+  data: DataUriSchema.optional(),
+  size: z.number().optional(),
+  hash: z.string().optional(),
+});
+export const FilesDiffSchema = z.object({
+  removed: z.array(FileIdSchema).optional(),
+  updated: z.array(FileDiffSchema).optional(),
+  added: z.array(FileSchema).optional(),
+});
 export const KitDiffSchema = z.object({
   name: z.string().optional(),
   description: z.string().optional(),
@@ -397,141 +433,13 @@ export const KitDiffSchema = z.object({
   license: z.string().optional(),
   types: TypesDiffSchema.optional(),
   designs: DesignsDiffSchema.optional(),
+  files: FilesDiffSchema.optional(),
   qualities: z.array(QualitySchema).optional(),
 });
 
 export const DiffStatusSchema = z.enum(["unchanged", "added", "removed", "modified"]);
 
 //#endregion Ephermal
-
-export type Quality = z.infer<typeof QualitySchema>;
-export type QualityId = z.infer<typeof QualityIdSchema>;
-export type QualityIdLike = z.infer<typeof QualityIdLikeSchema>;
-export type Representation = z.infer<typeof RepresentationSchema>;
-export type RepresentationId = z.infer<typeof RepresentationIdSchema>;
-export type RepresentationIdLike = z.infer<typeof RepresentationIdLikeSchema>;
-export type DiagramPoint = z.infer<typeof DiagramPointSchema>;
-export type DiagramVector = z.infer<typeof DiagramVectorSchema>;
-export type Point = z.infer<typeof PointSchema>;
-export type Vector = z.infer<typeof VectorSchema>;
-export type Plane = z.infer<typeof PlaneSchema>;
-export type Port = z.infer<typeof PortSchema>;
-export type PortId = z.infer<typeof PortIdSchema>;
-export type PortIdLike = z.infer<typeof PortIdLikeSchema>;
-export type Author = z.infer<typeof AuthorSchema>;
-export type Location = z.infer<typeof LocationSchema>;
-export type Type = z.infer<typeof TypeSchema>;
-export type TypeId = z.infer<typeof TypeIdSchema>;
-export type TypeIdLike = z.infer<typeof TypeIdLikeSchema>;
-export type Piece = z.infer<typeof PieceSchema>;
-export type PieceId = z.infer<typeof PieceIdSchema>;
-export type PieceIdLike = z.infer<typeof PieceIdLikeSchema>;
-export type DesignPiece = { designId: DesignId; plane?: Plane; center?: DiagramPoint };
-export type Side = z.infer<typeof SideSchema>;
-export type SideId = z.infer<typeof SideIdSchema>;
-export type SideIdLike = z.infer<typeof SideIdLikeSchema>;
-export type Connection = z.infer<typeof ConnectionSchema>;
-export type ConnectionId = z.infer<typeof ConnectionIdSchema>;
-export type ConnectionIdLike = z.infer<typeof ConnectionIdLikeSchema>;
-export type Design = z.infer<typeof DesignSchema>;
-export type DesignId = z.infer<typeof DesignIdSchema>;
-export type DesignIdLike = z.infer<typeof DesignIdLikeSchema>;
-export type Kit = z.infer<typeof KitSchema>;
-export type KitId = z.infer<typeof KitIdSchema>;
-export type KitIdLike = z.infer<typeof KitIdLikeSchema>;
-export type RepresentationDiff = z.infer<typeof RepresentationDiffSchema>;
-export type PortDiff = z.infer<typeof PortDiffSchema>;
-export type TypeDiff = z.infer<typeof TypeDiffSchema>;
-export type PieceDiff = z.infer<typeof PieceDiffSchema>;
-export type PiecesDiff = z.infer<typeof PiecesDiffSchema>;
-export type SideDiff = z.infer<typeof SideDiffSchema>;
-export type ConnectionDiff = z.infer<typeof ConnectionDiffSchema>;
-export type ConnectionsDiff = z.infer<typeof ConnectionsDiffSchema>;
-export type DesignDiff = z.infer<typeof DesignDiffSchema>;
-export type DesignsDiff = z.infer<typeof DesignsDiffSchema>;
-export type KitDiff = z.infer<typeof KitDiffSchema>;
-export type RepresentationsDiff = z.infer<typeof RepresentationsDiffSchema>;
-export type PortsDiff = z.infer<typeof PortsDiffSchema>;
-export type TypesDiff = z.infer<typeof TypesDiffSchema>;
-export type Camera = z.infer<typeof CameraSchema>;
-
-export enum DiffStatus {
-  Unchanged = "unchanged",
-  Added = "added",
-  Removed = "removed",
-  Modified = "modified",
-}
-
-//#endregion Types
-
-// #region Serialization
-
-export const serialize = {
-  kit: (value: Kit): string => JSON.stringify(KitSchema.parse(value), null, 2),
-  design: (value: Design): string => JSON.stringify(DesignSchema.parse(value), null, 2),
-  type: (value: Type): string => JSON.stringify(TypeSchema.parse(value), null, 2),
-  piece: (value: Piece): string => JSON.stringify(PieceSchema.parse(value), null, 2),
-  connection: (value: Connection): string => JSON.stringify(ConnectionSchema.parse(value), null, 2),
-  port: (value: Port): string => JSON.stringify(PortSchema.parse(value), null, 2),
-  quality: (value: Quality): string => JSON.stringify(QualitySchema.parse(value), null, 2),
-  diagramPoint: (value: DiagramPoint): string => JSON.stringify(DiagramPointSchema.parse(value), null, 2),
-  diagramVector: (value: DiagramVector): string => JSON.stringify(DiagramVectorSchema.parse(value), null, 2),
-  plane: (value: Plane): string => JSON.stringify(PlaneSchema.parse(value), null, 2),
-  point: (value: Point): string => JSON.stringify(PointSchema.parse(value), null, 2),
-  vector: (value: Vector): string => JSON.stringify(VectorSchema.parse(value), null, 2),
-  author: (value: Author): string => JSON.stringify(AuthorSchema.parse(value), null, 2),
-  location: (value: Location): string => JSON.stringify(LocationSchema.parse(value), null, 2),
-  representation: (value: Representation): string => JSON.stringify(RepresentationSchema.parse(value), null, 2),
-};
-export const deserialize = {
-  kit: (json: string): Kit => KitSchema.parse(JSON.parse(json)),
-  design: (json: string): Design => DesignSchema.parse(JSON.parse(json)),
-  type: (json: string): Type => TypeSchema.parse(JSON.parse(json)),
-  piece: (json: string): Piece => PieceSchema.parse(JSON.parse(json)),
-  connection: (json: string): Connection => ConnectionSchema.parse(JSON.parse(json)),
-  port: (json: string): Port => PortSchema.parse(JSON.parse(json)),
-  quality: (json: string): Quality => QualitySchema.parse(JSON.parse(json)),
-  diagramPoint: (json: string): DiagramPoint => DiagramPointSchema.parse(JSON.parse(json)),
-  diagramVector: (json: string): DiagramVector => DiagramVectorSchema.parse(JSON.parse(json)),
-  plane: (json: string): Plane => PlaneSchema.parse(JSON.parse(json)),
-  point: (json: string): Point => PointSchema.parse(JSON.parse(json)),
-  vector: (json: string): Vector => VectorSchema.parse(JSON.parse(json)),
-  author: (json: string): Author => AuthorSchema.parse(JSON.parse(json)),
-  location: (json: string): Location => LocationSchema.parse(JSON.parse(json)),
-  representation: (json: string): Representation => RepresentationSchema.parse(JSON.parse(json)),
-};
-
-export const validate = {
-  kit: (data: unknown): Kit => KitSchema.parse(data),
-  design: (data: unknown): Design => DesignSchema.parse(data),
-  type: (data: unknown): Type => TypeSchema.parse(data),
-  piece: (data: unknown): Piece => PieceSchema.parse(data),
-  connection: (data: unknown): Connection => ConnectionSchema.parse(data),
-  port: (data: unknown): Port => PortSchema.parse(data),
-  quality: (data: unknown): Quality => QualitySchema.parse(data),
-  plane: (data: unknown): Plane => PlaneSchema.parse(data),
-  point: (data: unknown): Point => PointSchema.parse(data),
-  vector: (data: unknown): Vector => VectorSchema.parse(data),
-  author: (data: unknown): Author => AuthorSchema.parse(data),
-  location: (data: unknown): Location => LocationSchema.parse(data),
-  representation: (data: unknown): Representation => RepresentationSchema.parse(data),
-};
-
-export const safeParse = {
-  kit: (data: unknown) => KitSchema.safeParse(data),
-  design: (data: unknown) => DesignSchema.safeParse(data),
-  type: (data: unknown) => TypeSchema.safeParse(data),
-  piece: (data: unknown) => PieceSchema.safeParse(data),
-  connection: (data: unknown) => ConnectionSchema.safeParse(data),
-  port: (data: unknown) => PortSchema.safeParse(data),
-  quality: (data: unknown) => QualitySchema.safeParse(data),
-  plane: (data: unknown) => PlaneSchema.safeParse(data),
-  point: (data: unknown) => PointSchema.safeParse(data),
-  vector: (data: unknown) => VectorSchema.safeParse(data),
-  author: (data: unknown) => AuthorSchema.safeParse(data),
-  location: (data: unknown) => LocationSchema.safeParse(data),
-  representation: (data: unknown) => RepresentationSchema.safeParse(data),
-};
 
 export const schemas = {
   Kit: KitSchema,
@@ -565,12 +473,277 @@ export const schemas = {
   ConnectionDiff: ConnectionDiffSchema,
   ConnectionsDiff: ConnectionsDiffSchema,
   DesignDiff: DesignDiffSchema,
+  FileDiff: FileDiffSchema,
+  FilesDiff: FilesDiffSchema,
   DiffStatus: DiffStatusSchema,
 };
 
-//#endregion Serialization
 
-//#region Diff Functions
+export type Quality = z.infer<typeof QualitySchema>;
+export type QualityId = z.infer<typeof QualityIdSchema>;
+export type QualityIdLike = z.infer<typeof QualityIdLikeSchema>;
+export type Representation = z.infer<typeof RepresentationSchema>;
+export type RepresentationId = z.infer<typeof RepresentationIdSchema>;
+export type RepresentationIdLike = z.infer<typeof RepresentationIdLikeSchema>;
+export type DiagramPoint = z.infer<typeof DiagramPointSchema>;
+export type DiagramVector = z.infer<typeof DiagramVectorSchema>;
+export type Point = z.infer<typeof PointSchema>;
+export type Vector = z.infer<typeof VectorSchema>;
+export type Plane = z.infer<typeof PlaneSchema>;
+export type Port = z.infer<typeof PortSchema>;
+export type PortId = z.infer<typeof PortIdSchema>;
+export type PortIdLike = z.infer<typeof PortIdLikeSchema>;
+export type Author = z.infer<typeof AuthorSchema>;
+export type Location = z.infer<typeof LocationSchema>;
+export type Type = z.infer<typeof TypeSchema>;
+export type TypeId = z.infer<typeof TypeIdSchema>;
+export type TypeIdLike = z.infer<typeof TypeIdLikeSchema>;
+export type Piece = z.infer<typeof PieceSchema>;
+export type PieceId = z.infer<typeof PieceIdSchema>;
+export type PieceIdLike = z.infer<typeof PieceIdLikeSchema>;
+export type DesignPiece = { designId: DesignId; plane?: Plane; center?: DiagramPoint };
+export type Side = z.infer<typeof SideSchema>;
+export type SideId = z.infer<typeof SideIdSchema>;
+export type SideIdLike = z.infer<typeof SideIdLikeSchema>;
+export type Connection = z.infer<typeof ConnectionSchema>;
+export type ConnectionId = z.infer<typeof ConnectionIdSchema>;
+export type ConnectionIdLike = z.infer<typeof ConnectionIdLikeSchema>;
+export type Design = z.infer<typeof DesignSchema>;
+export type DesignId = z.infer<typeof DesignIdSchema>;
+export type DesignIdLike = z.infer<typeof DesignIdLikeSchema>;
+export type File = z.infer<typeof FileSchema>;
+export type FileId = z.infer<typeof FileIdSchema>;
+export type FileIdLike = z.infer<typeof FileIdLikeSchema>;
+export type Kit = z.infer<typeof KitSchema>;
+export type KitId = z.infer<typeof KitIdSchema>;
+export type KitIdLike = z.infer<typeof KitIdLikeSchema>;
+export type RepresentationDiff = z.infer<typeof RepresentationDiffSchema>;
+export type PortDiff = z.infer<typeof PortDiffSchema>;
+export type TypeDiff = z.infer<typeof TypeDiffSchema>;
+export type PieceDiff = z.infer<typeof PieceDiffSchema>;
+export type PiecesDiff = z.infer<typeof PiecesDiffSchema>;
+export type SideDiff = z.infer<typeof SideDiffSchema>;
+export type ConnectionDiff = z.infer<typeof ConnectionDiffSchema>;
+export type ConnectionsDiff = z.infer<typeof ConnectionsDiffSchema>;
+export type DesignDiff = z.infer<typeof DesignDiffSchema>;
+export type DesignsDiff = z.infer<typeof DesignsDiffSchema>;
+export type FileDiff = z.infer<typeof FileDiffSchema>;
+export type FilesDiff = z.infer<typeof FilesDiffSchema>;
+export type KitDiff = z.infer<typeof KitDiffSchema>;
+export type RepresentationsDiff = z.infer<typeof RepresentationsDiffSchema>;
+export type PortsDiff = z.infer<typeof PortsDiffSchema>;
+export type TypesDiff = z.infer<typeof TypesDiffSchema>;
+export type Camera = z.infer<typeof CameraSchema>;
+
+export enum DiffStatus {
+  Unchanged = "unchanged",
+  Added = "added",
+  Removed = "removed",
+  Modified = "modified",
+}
+
+//#endregion Types
+
+//#region Functions
+
+const normalize = (val: string | undefined | null): string => (val === undefined || val === null ? "" : val);
+const round = (value: number): number => Math.round(value / TOLERANCE) * TOLERANCE;
+export const jaccard = (a: string[] | undefined, b: string[] | undefined) => {
+  if ((a === undefined && b === undefined) || (a?.length === 0 && b?.length === 0)) return 1;
+  const setA = new Set(a);
+  const setB = new Set(b);
+  const intersection = [...setA].filter((x) => setB.has(x)).length;
+  const union = setA.size + setB.size - intersection;
+  if (union === 0) return 0;
+  return intersection / union;
+};
+
+//#region Mapping
+
+export const qualityIdLikeToQualityId = (qualityId: QualityIdLike): QualityId => {
+  if (typeof qualityId === "string") return { name: qualityId };
+  return { name: qualityId.name };
+};
+
+export const representationIdLikeToRepresentationId = (representationId: RepresentationIdLike): RepresentationId => {
+  if (representationId === undefined || representationId === null) return { tags: [] };
+  if (typeof representationId === "string") return { tags: [representationId] };
+  if (Array.isArray(representationId)) return { tags: representationId };
+  return { tags: representationId.tags ?? [] };
+};
+
+export const portIdLikeToPortId = (portId: PortIdLike): PortId => {
+  if (portId === undefined || portId === null) return { id_: "" };
+  if (typeof portId === "string") return { id_: portId };
+  return { id_: portId.id_ };
+};
+
+export const typeIdLikeToTypeId = (typeId: TypeIdLike): TypeId => {
+  if (typeof typeId === "string") return { name: typeId };
+  if (Array.isArray(typeId)) return { name: typeId[0], variant: typeId[1] ?? undefined };
+  return { name: typeId.name, variant: typeId.variant ?? undefined };
+};
+
+export const pieceIdLikeToPieceId = (pieceId: PieceIdLike): PieceId => {
+  if (typeof pieceId === "string") return { id_: pieceId };
+  return { id_: pieceId.id_ };
+};
+
+export const connectionIdLikeToConnectionId = (connectionId: ConnectionIdLike): ConnectionId => {
+  if (typeof connectionId === "string") {
+    const [connectedPieceId, connectingPieceId] = connectionId.split("--");
+    return {
+      connected: { piece: { id_: connectedPieceId } },
+      connecting: { piece: { id_: connectingPieceId } },
+    };
+  }
+  if (Array.isArray(connectionId)) {
+    const [connectedPieceId, connectingPieceId] = connectionId;
+    return {
+      connected: { piece: { id_: connectedPieceId } },
+      connecting: { piece: { id_: connectingPieceId } },
+    };
+  }
+  return {
+    connected: { piece: { id_: connectionId.connected.piece.id_ } },
+    connecting: { piece: { id_: connectionId.connecting.piece.id_ } },
+  };
+};
+
+export const designIdLikeToDesignId = (designId: DesignIdLike): DesignId => {
+  if (typeof designId === "string") return { name: designId };
+  if (Array.isArray(designId))
+    return {
+      name: designId[0],
+      variant: designId[1] ?? undefined,
+      view: designId[2] ?? undefined,
+    };
+  return {
+    name: designId.name,
+    variant: designId.variant ?? undefined,
+    view: designId.view ?? undefined,
+  };
+};
+
+export const fileIdLikeToFileId = (fileId: FileIdLike): FileId => {
+  if (typeof fileId === "string") return { url: fileId };
+  return { url: fileId.url };
+};
+
+export const kitIdLikeToKitId = (kitId: KitIdLike): KitId => {
+  if (typeof kitId === "string") return { name: kitId };
+  if (Array.isArray(kitId)) return { name: kitId[0], version: kitId[1] ?? undefined };
+  return { name: kitId.name, version: kitId.version ?? undefined };
+};
+
+export const toThreeRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
+export const toSemioRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
+export const toThreeQuaternion = (): THREE.Quaternion => new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476);
+export const toSemioQuaternion = (): THREE.Quaternion => new THREE.Quaternion(0.7071067811865476, 0, 0, -0.7071067811865476);
+
+export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
+  const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
+  const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z);
+  const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z);
+  const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis).normalize();
+  const orthoYAxis = new THREE.Vector3().crossVectors(zAxis, xAxis).normalize();
+  const matrix = new THREE.Matrix4().makeBasis(xAxis.normalize(), orthoYAxis, zAxis).setPosition(origin);
+  return matrix;
+};
+export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
+  const origin = new THREE.Vector3();
+  const xAxis = new THREE.Vector3();
+  const yAxis = new THREE.Vector3();
+  const zAxis = new THREE.Vector3();
+  matrix.decompose(origin, new THREE.Quaternion(), new THREE.Vector3());
+  matrix.extractBasis(xAxis, yAxis, zAxis);
+  return {
+    origin: { x: origin.x, y: origin.y, z: origin.z },
+    xAxis: { x: xAxis.x, y: xAxis.y, z: xAxis.z },
+    yAxis: { x: yAxis.x, y: yAxis.y, z: yAxis.z },
+  };
+};
+export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vector3(v.x, v.y, v.z);
+
+//#endregion Mapping
+
+// #region Serializing
+
+export const serialize = {
+  quality: (quality: Quality): string => JSON.stringify(QualitySchema.parse(quality), null, 2),
+  author: (author: Author): string => JSON.stringify(AuthorSchema.parse(author), null, 2),
+  diagramPoint: (diagramPoint: DiagramPoint): string => JSON.stringify(DiagramPointSchema.parse(diagramPoint), null, 2),
+  diagramVector: (diagramVector: DiagramVector): string => JSON.stringify(DiagramVectorSchema.parse(diagramVector), null, 2),
+  plane: (plane: Plane): string => JSON.stringify(PlaneSchema.parse(plane), null, 2),
+  point: (point: Point): string => JSON.stringify(PointSchema.parse(point), null, 2),
+  vector: (vector: Vector): string => JSON.stringify(VectorSchema.parse(vector), null, 2),
+  location: (location: Location): string => JSON.stringify(LocationSchema.parse(location), null, 2),
+  representation: (representation: Representation): string => JSON.stringify(RepresentationSchema.parse(representation), null, 2),
+  port: (port: Port): string => JSON.stringify(PortSchema.parse(port), null, 2),
+  piece: (piece: Piece): string => JSON.stringify(PieceSchema.parse(piece), null, 2),
+  connection: (connection: Connection): string => JSON.stringify(ConnectionSchema.parse(connection), null, 2),
+  type: (type: Type): string => JSON.stringify(TypeSchema.parse(type), null, 2),
+  design: (design: Design): string => JSON.stringify(DesignSchema.parse(design), null, 2),
+  file: (file: File): string => JSON.stringify(FileSchema.parse(file), null, 2),
+  kit: (kit: Kit): string => JSON.stringify(KitSchema.parse(kit), null, 2),
+};
+export const deserialize = {
+  quality: (json: string): Quality => QualitySchema.parse(JSON.parse(json)),
+  author: (json: string): Author => AuthorSchema.parse(JSON.parse(json)),
+  diagramPoint: (json: string): DiagramPoint => DiagramPointSchema.parse(JSON.parse(json)),
+  diagramVector: (json: string): DiagramVector => DiagramVectorSchema.parse(JSON.parse(json)),
+  plane: (json: string): Plane => PlaneSchema.parse(JSON.parse(json)),
+  point: (json: string): Point => PointSchema.parse(JSON.parse(json)),
+  vector: (json: string): Vector => VectorSchema.parse(JSON.parse(json)),
+  location: (json: string): Location => LocationSchema.parse(JSON.parse(json)),
+  representation: (json: string): Representation => RepresentationSchema.parse(JSON.parse(json)),
+  port: (json: string): Port => PortSchema.parse(JSON.parse(json)),
+  piece: (json: string): Piece => PieceSchema.parse(JSON.parse(json)),
+  connection: (json: string): Connection => ConnectionSchema.parse(JSON.parse(json)),
+  type: (json: string): Type => TypeSchema.parse(JSON.parse(json)),
+  design: (json: string): Design => DesignSchema.parse(JSON.parse(json)),
+  kit: (json: string): Kit => KitSchema.parse(JSON.parse(json)),
+};
+export const parse = {
+  quality: (json: string): Quality => QualitySchema.parse(JSON.parse(json)),
+  author: (json: string): Author => AuthorSchema.parse(JSON.parse(json)),
+  diagramPoint: (json: string): DiagramPoint => DiagramPointSchema.parse(JSON.parse(json)),
+  diagramVector: (json: string): DiagramVector => DiagramVectorSchema.parse(JSON.parse(json)),
+  plane: (json: string): Plane => PlaneSchema.parse(JSON.parse(json)),
+  point: (json: string): Point => PointSchema.parse(JSON.parse(json)),
+  vector: (json: string): Vector => VectorSchema.parse(JSON.parse(json)),
+  location: (json: string): Location => LocationSchema.parse(JSON.parse(json)),
+  representation: (json: string): Representation => RepresentationSchema.parse(JSON.parse(json)),
+  port: (json: string): Port => PortSchema.parse(JSON.parse(json)),
+  piece: (json: string): Piece => PieceSchema.parse(JSON.parse(json)),
+  connection: (json: string): Connection => ConnectionSchema.parse(JSON.parse(json)),
+  type: (json: string): Type => TypeSchema.parse(JSON.parse(json)),
+  design: (json: string): Design => DesignSchema.parse(JSON.parse(json)),
+  file: (json: string): File => FileSchema.parse(JSON.parse(json)),
+  kit: (json: string): Kit => KitSchema.parse(JSON.parse(json)),
+};
+export const safeParse = {
+  quality: (data: unknown) => QualitySchema.safeParse(data),
+  author: (data: unknown) => AuthorSchema.safeParse(data),
+  diagramPoint: (data: unknown) => DiagramPointSchema.safeParse(data),
+  diagramVector: (data: unknown) => DiagramVectorSchema.safeParse(data),
+  plane: (data: unknown) => PlaneSchema.safeParse(data),
+  point: (data: unknown) => PointSchema.safeParse(data),
+  vector: (data: unknown) => VectorSchema.safeParse(data),
+  location: (data: unknown) => LocationSchema.safeParse(data),
+  representation: (data: unknown) => RepresentationSchema.safeParse(data),
+  port: (data: unknown) => PortSchema.safeParse(data),
+  piece: (data: unknown) => PieceSchema.safeParse(data),
+  connection: (data: unknown) => ConnectionSchema.safeParse(data),
+  type: (data: unknown) => TypeSchema.safeParse(data),
+  design: (data: unknown) => DesignSchema.safeParse(data),
+  file: (data: unknown) => FileSchema.safeParse(data),
+  kit: (data: unknown) => KitSchema.safeParse(data),
+};
+
+//#endregion Serializing
+
+//#region Diffing
 
 export const diff = {
   get: {
@@ -712,7 +885,6 @@ export const diff = {
 
       return diff;
     },
-
     kit: (before: Kit, after: Kit): KitDiff => {
       const diff: any = {};
       if (before.name !== after.name) diff.name = after.name;
@@ -767,8 +939,37 @@ export const diff = {
 
       if (Object.keys(designsDiff).length > 0) diff.designs = designsDiff;
 
+      // Handle files diff
+      const beforeFiles = before.files || [];
+      const afterFiles = after.files || [];
+      const filesDiff: FilesDiff = {};
+
+      const removedFiles = beforeFiles.filter(bf => !afterFiles.find(af => af.url === bf.url));
+      const addedFiles = afterFiles.filter(af => !beforeFiles.find(bf => bf.url === af.url));
+      const updatedFiles = afterFiles.filter(af => {
+        const bf = beforeFiles.find(bf => bf.url === af.url);
+        return bf && JSON.stringify(bf) !== JSON.stringify(af);
+      }).map(af => {
+        const bf = beforeFiles.find(bf => bf.url === af.url)!;
+        return diff.get.file(bf, af);
+      });
+
+      if (removedFiles.length > 0) filesDiff.removed = removedFiles.map(f => ({ url: f.url }));
+      if (addedFiles.length > 0) filesDiff.added = addedFiles;
+      if (updatedFiles.length > 0) filesDiff.updated = updatedFiles;
+
+      if (Object.keys(filesDiff).length > 0) diff.files = filesDiff;
+
       if (JSON.stringify(before.qualities) !== JSON.stringify(after.qualities)) diff.qualities = after.qualities;
 
+      return diff;
+    },
+    file: (before: File, after: File): FileDiff => {
+      const diff: any = {};
+      if (before.url !== after.url) diff.url = after.url;
+      if (before.data !== after.data) diff.data = after.data;
+      if (before.size !== after.size) diff.size = after.size;
+      if (before.hash !== after.hash) diff.hash = after.hash;
       return diff;
     }
   },
@@ -802,12 +1003,12 @@ export const diff = {
       connected: {
         piece: diff.connected?.piece ?? base.connected.piece,
         port: diff.connected?.port ?? base.connected.port,
-        designId: diff.connected?.designId ?? base.connected.designId
+        designPiece: diff.connected?.designPiece ?? base.connected.designPiece
       },
       connecting: {
         piece: diff.connecting?.piece ?? base.connecting.piece,
         port: diff.connecting?.port ?? base.connecting.port,
-        designId: diff.connecting?.designId ?? base.connecting.designId
+        designPiece: diff.connecting?.designPiece ?? base.connecting.designPiece
       },
       description: diff.description ?? base.description,
       gap: diff.gap ?? base.gap,
@@ -893,6 +1094,7 @@ export const diff = {
     kit: (base: Kit, diff: KitDiff): Kit => {
       let types = base.types;
       let designs = base.designs;
+      let files = base.files;
       if (diff.types) {
         const baseTypes = base.types || [];
         types = baseTypes
@@ -902,6 +1104,16 @@ export const diff = {
           })
           .filter(t => !diff.types?.removed?.some((rt: TypeId) => rt.name === t.name && rt.variant === t.variant))
           .concat(diff.types?.added || []);
+      }
+      if (diff.files) {
+        const baseFiles = base.files || [];
+        files = baseFiles
+          .map(f => {
+            const updateDiff = diff.files?.updated?.find((uf: FileDiff) => uf.url === f.url);
+            return updateDiff ? ({ ...f, ...updateDiff }) : f;
+          })
+          .filter(f => !diff.files?.removed?.some((rf: FileId) => rf.url === f.url))
+          .concat(diff.files?.added || []);
       }
       if (diff.designs) {
         const baseDesigns = base.designs || [];
@@ -976,9 +1188,18 @@ export const diff = {
         updated: base.updated,
         types,
         designs,
+        files,
         qualities: base.qualities,
       };
     },
+    file: (base: File, diff: FileDiff): File => ({
+      url: diff.url ?? base.url,
+      data: diff.data ?? base.data,
+      size: diff.size ?? base.size,
+      hash: diff.hash ?? base.hash,
+      created: base.created,
+      updated: base.updated,
+    })
   },
   merge: {
     representation: (diff1: RepresentationDiff, diff2: RepresentationDiff): RepresentationDiff => ({
@@ -1013,12 +1234,12 @@ export const diff = {
       connected: {
         piece: diff2.connected?.piece ?? diff1.connected?.piece,
         port: diff2.connected?.port ?? diff1.connected?.port,
-        designId: diff2.connected?.designId ?? diff1.connected?.designId
+        designPiece: diff2.connected?.designPiece ?? diff1.connected?.designPiece
       },
       connecting: {
         piece: diff2.connecting?.piece ?? diff1.connecting?.piece,
         port: diff2.connecting?.port ?? diff1.connecting?.port,
-        designId: diff2.connecting?.designId ?? diff1.connecting?.designId
+        designPiece: diff2.connecting?.designPiece ?? diff1.connecting?.designPiece
       },
       description: diff2.description ?? diff1.description,
       gap: diff2.gap ?? diff1.gap,
@@ -1075,7 +1296,15 @@ export const diff = {
       license: diff2.license ?? diff1.license,
       types: diff2.types ?? diff1.types,
       designs: diff2.designs ?? diff1.designs,
+      files: diff2.files ?? diff1.files,
       qualities: diff2.qualities ?? diff1.qualities,
+    }),
+
+    file: (diff1: FileDiff, diff2: FileDiff): FileDiff => ({
+      url: diff2.url ?? diff1.url,
+      data: diff2.data ?? diff1.data,
+      size: diff2.size ?? diff1.size,
+      hash: diff2.hash ?? diff1.hash,
     }),
   },
   inverse: {
@@ -1268,131 +1497,43 @@ export const diff = {
         if (Object.keys(designsDiff).length > 0) inverseDiff.designs = designsDiff;
       }
 
+      // Handle files diff inverse
+      if (appliedDiff.files) {
+        const originalFiles = original.files || [];
+        const filesDiff: FilesDiff = {};
+
+        // Swap added and removed
+        if (appliedDiff.files.added) filesDiff.removed = appliedDiff.files.added.map(f => ({ url: f.url }));
+        if (appliedDiff.files.removed) filesDiff.added = appliedDiff.files.removed.map(rf => {
+          return originalFiles.find(f => f.url === rf.url)!;
+        });
+
+        // Inverse updated files
+        if (appliedDiff.files.updated) {
+          filesDiff.updated = appliedDiff.files.updated.map(updatedFile => {
+            const originalFile = originalFiles.find(f => f.url === updatedFile.url)!;
+            return diff.inverse.file(originalFile, updatedFile);
+          });
+        }
+
+        if (Object.keys(filesDiff).length > 0) inverseDiff.files = filesDiff;
+      }
+
       if (appliedDiff.qualities !== undefined) inverseDiff.qualities = original.qualities;
 
+      return inverseDiff;
+    },
+    file: (original: File, appliedDiff: FileDiff): FileDiff => {
+      const inverseDiff: any = {};
+      if (appliedDiff.url !== undefined) inverseDiff.url = original.url;
+      if (appliedDiff.data !== undefined) inverseDiff.data = original.data;
+      if (appliedDiff.size !== undefined) inverseDiff.size = original.size;
+      if (appliedDiff.hash !== undefined) inverseDiff.hash = original.hash;
       return inverseDiff;
     }
   }
 };
-//#endregion Diff Functions
-
-//#region Functions
-
-const normalize = (val: string | undefined | null): string => (val === undefined || val === null ? "" : val);
-const round = (value: number): number => Math.round(value / TOLERANCE) * TOLERANCE;
-export const jaccard = (a: string[] | undefined, b: string[] | undefined) => {
-  if ((a === undefined && b === undefined) || (a?.length === 0 && b?.length === 0)) return 1;
-  const setA = new Set(a);
-  const setB = new Set(b);
-  const intersection = [...setA].filter((x) => setB.has(x)).length;
-  const union = setA.size + setB.size - intersection;
-  if (union === 0) return 0;
-  return intersection / union;
-};
-
-//#region Mapping
-
-export const qualityIdLikeToQualityId = (qualityId: QualityIdLike): QualityId => {
-  if (typeof qualityId === "string") return { name: qualityId };
-  return { name: qualityId.name };
-};
-
-export const representationIdLikeToRepresentationId = (representationId: RepresentationIdLike): RepresentationId => {
-  if (representationId === undefined || representationId === null) return { tags: [] };
-  if (typeof representationId === "string") return { tags: [representationId] };
-  if (Array.isArray(representationId)) return { tags: representationId };
-  return { tags: representationId.tags ?? [] };
-};
-
-export const portIdLikeToPortId = (portId: PortIdLike): PortId => {
-  if (portId === undefined || portId === null) return { id_: "" };
-  if (typeof portId === "string") return { id_: portId };
-  return { id_: portId.id_ };
-};
-
-export const typeIdLikeToTypeId = (typeId: TypeIdLike): TypeId => {
-  if (typeof typeId === "string") return { name: typeId };
-  if (Array.isArray(typeId)) return { name: typeId[0], variant: typeId[1] ?? undefined };
-  return { name: typeId.name, variant: typeId.variant ?? undefined };
-};
-
-export const pieceIdLikeToPieceId = (pieceId: PieceIdLike): PieceId => {
-  if (typeof pieceId === "string") return { id_: pieceId };
-  return { id_: pieceId.id_ };
-};
-
-export const connectionIdLikeToConnectionId = (connectionId: ConnectionIdLike): ConnectionId => {
-  if (typeof connectionId === "string") {
-    const [connectedPieceId, connectingPieceId] = connectionId.split("--");
-    return {
-      connected: { piece: { id_: connectedPieceId } },
-      connecting: { piece: { id_: connectingPieceId } },
-    };
-  }
-  if (Array.isArray(connectionId)) {
-    const [connectedPieceId, connectingPieceId] = connectionId;
-    return {
-      connected: { piece: { id_: connectedPieceId } },
-      connecting: { piece: { id_: connectingPieceId } },
-    };
-  }
-  return {
-    connected: { piece: { id_: connectionId.connected.piece.id_ } },
-    connecting: { piece: { id_: connectionId.connecting.piece.id_ } },
-  };
-};
-
-export const designIdLikeToDesignId = (designId: DesignIdLike): DesignId => {
-  if (typeof designId === "string") return { name: designId };
-  if (Array.isArray(designId))
-    return {
-      name: designId[0],
-      variant: designId[1] ?? undefined,
-      view: designId[2] ?? undefined,
-    };
-  return {
-    name: designId.name,
-    variant: designId.variant ?? undefined,
-    view: designId.view ?? undefined,
-  };
-};
-
-export const kitIdLikeToKitId = (kitId: KitIdLike): KitId => {
-  if (typeof kitId === "string") return { name: kitId };
-  if (Array.isArray(kitId)) return { name: kitId[0], version: kitId[1] ?? undefined };
-  return { name: kitId.name, version: kitId.version ?? undefined };
-};
-
-export const toThreeRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
-export const toSemioRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
-export const toThreeQuaternion = (): THREE.Quaternion => new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476);
-export const toSemioQuaternion = (): THREE.Quaternion => new THREE.Quaternion(0.7071067811865476, 0, 0, -0.7071067811865476);
-
-export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
-  const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
-  const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z);
-  const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z);
-  const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis).normalize();
-  const orthoYAxis = new THREE.Vector3().crossVectors(zAxis, xAxis).normalize();
-  const matrix = new THREE.Matrix4().makeBasis(xAxis.normalize(), orthoYAxis, zAxis).setPosition(origin);
-  return matrix;
-};
-export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
-  const origin = new THREE.Vector3();
-  const xAxis = new THREE.Vector3();
-  const yAxis = new THREE.Vector3();
-  const zAxis = new THREE.Vector3();
-  matrix.decompose(origin, new THREE.Quaternion(), new THREE.Vector3());
-  matrix.extractBasis(xAxis, yAxis, zAxis);
-  return {
-    origin: { x: origin.x, y: origin.y, z: origin.z },
-    xAxis: { x: xAxis.x, y: xAxis.y, z: xAxis.z },
-    yAxis: { x: yAxis.x, y: yAxis.y, z: yAxis.z },
-  };
-};
-export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vector3(v.x, v.y, v.z);
-
-//#endregion Mapping
+//#endregion Diffing
 
 //#region Querying
 
@@ -1536,7 +1677,16 @@ export const findParentConnectionForPieceInDesign = (kit: Kit, designId: DesignI
   return findConnectionInDesign(findDesignInKit(kit, designId), parentPieceId);
 };
 export const findChildrenPiecesInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Piece[] => {
-  throw new Error("Not implemented");
+  const design = findDesignInKit(kit, designId);
+  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
+  const metadata = piecesMetadata(kit, designId);
+  const children: Piece[] = [];
+  for (const [id, data] of metadata) {
+    if (data.parentPieceId === normalizedPieceId.id_) {
+      children.push(findPieceInDesign(design, id));
+    }
+  }
+  return children;
 };
 export const findConnectionPiecesInDesign = (design: Design, connection: Connection | ConnectionId): { connecting: Piece; connected: Piece } => {
   return {
@@ -1907,7 +2057,16 @@ export const setPieceInDesign = (design: Design, piece: Piece): Design => ({
   pieces: (design.pieces || []).map((p) => (p.id_ === piece.id_ ? piece : p)),
 });
 export const removePieceFromDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Design => {
-  throw new Error("Not implemented");
+  const design = findDesignInKit(kit, designId);
+  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
+  return {
+    ...design,
+    pieces: (design.pieces || []).filter(p => p.id_ !== normalizedPieceId.id_),
+    connections: (design.connections || []).filter(c =>
+      c.connected.piece.id_ !== normalizedPieceId.id_ &&
+      c.connecting.piece.id_ !== normalizedPieceId.id_
+    )
+  };
 };
 
 export const addPiecesToDesign = (design: Design, pieces: Piece[]): Design => ({
@@ -1919,7 +2078,16 @@ export const setPiecesInDesign = (design: Design, pieces: Piece[]): Design => ({
   pieces: (design.pieces || []).map((p) => pieces.find((p2) => p2.id_ === p.id_) || p),
 });
 export const removePiecesFromDesign = (kit: Kit, designId: DesignIdLike, pieceIds: PieceIdLike[]): Design => {
-  throw new Error("Not implemented");
+  const design = findDesignInKit(kit, designId);
+  const normalizedPieceIds = pieceIds.map(pieceIdLikeToPieceId).map(p => p.id_);
+  return {
+    ...design,
+    pieces: (design.pieces || []).filter(p => !normalizedPieceIds.includes(p.id_)),
+    connections: (design.connections || []).filter(c =>
+      !normalizedPieceIds.includes(c.connected.piece.id_) &&
+      !normalizedPieceIds.includes(c.connecting.piece.id_)
+    )
+  };
 };
 
 /**
@@ -1975,7 +2143,12 @@ export const setConnectionInDesign = (design: Design, connection: Connection): D
   };
 };
 export const removeConnectionFromDesign = (kit: Kit, designId: DesignIdLike, connectionId: ConnectionIdLike): Design => {
-  throw new Error("Not implemented");
+  const design = findDesignInKit(kit, designId);
+  const normalizedConnectionId = connectionIdLikeToConnectionId(connectionId);
+  return {
+    ...design,
+    connections: (design.connections || []).filter(c => !isSameConnection(c, normalizedConnectionId))
+  };
 };
 
 export const addConnectionsToDesign = (design: Design, connections: Connection[]): Design => ({
@@ -1990,7 +2163,14 @@ export const setConnectionsInDesign = (design: Design, connections: Connection[]
   };
 };
 export const removeConnectionsFromDesign = (kit: Kit, designId: DesignIdLike, connectionIds: ConnectionIdLike[]): Design => {
-  throw new Error("Not implemented");
+  const design = findDesignInKit(kit, designId);
+  const normalizedConnectionIds = connectionIds.map(connectionIdLikeToConnectionId);
+  return {
+    ...design,
+    connections: (design.connections || []).filter(c =>
+      !normalizedConnectionIds.some(nci => isSameConnection(c, nci))
+    )
+  };
 };
 
 //#endregion Connection
@@ -2465,8 +2645,8 @@ export const getClusterableGroups = (design: Design, selectedPieceIds: string[])
 };
 
 export const expandDesignPieces = (design: Design, kit: Kit): Design => {
-  // Check if there are any connections with designId (indicating clustered pieces)
-  const hasDesignConnections = design.connections?.some((conn) => conn.connected.designId || conn.connecting.designId);
+  // Check if there are any connections with designPiece (indicating clustered pieces)
+  const hasDesignConnections = design.connections?.some((conn) => conn.connected.designPiece || conn.connecting.designPiece);
   if (!hasDesignConnections) {
     return design; // No design connections to expand
   }
@@ -2476,8 +2656,8 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
   // Find all unique designIds referenced in connections
   const designIds = new Set<string>();
   design.connections?.forEach((conn) => {
-    if (conn.connected.designId) designIds.add(conn.connected.designId);
-    if (conn.connecting.designId) designIds.add(conn.connecting.designId);
+    if (conn.connected.designPiece) designIds.add(conn.connected.designPiece.id_);
+    if (conn.connecting.designPiece) designIds.add(conn.connecting.designPiece.id_);
   });
 
   if (designIds.size === 0) {
@@ -2502,23 +2682,23 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
     const transformedConnections = expandedReferencedDesign.connections || [];
 
     const updatedExternalConnections = (expandedDesign.connections || []).map((connection) => {
-      if (connection.connected.designId === designName) {
+      if (connection.connected.designPiece?.id_ === designName) {
         return {
           ...connection,
           connected: {
             ...connection.connected,
-            designId: undefined,
+            designPiece: undefined,
           },
         };
       }
 
-      if (connection.connecting.designId === designName) {
+      if (connection.connecting.designPiece?.id_ === designName) {
         // Use the original piece ID directly (no namespacing)
         return {
           ...connection,
           connecting: {
             ...connection.connecting,
-            designId: undefined, // Remove designId since we've expanded
+            designPiece: undefined, // Remove designPiece since we've expanded
           },
         };
       }
@@ -2599,16 +2779,16 @@ export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
   // Get designs from external connections (clustered designs)
   const designIds = new Set<string>();
   design.connections?.forEach((conn: Connection) => {
-    if (conn.connected.designId) designIds.add(conn.connected.designId);
-    if (conn.connecting.designId) designIds.add(conn.connecting.designId);
+    if (conn.connected.designPiece) designIds.add(conn.connected.designPiece.id_);
+    if (conn.connecting.designPiece) designIds.add(conn.connecting.designPiece.id_);
   });
 
   // Add connected designs
   Array.from(designIds).forEach((designIdString) => {
     const externalConnections =
       design.connections?.filter((connection: Connection) => {
-        const connectedToDesign = connection.connected.designId === designIdString;
-        const connectingToDesign = connection.connecting.designId === designIdString;
+        const connectedToDesign = connection.connected.designPiece?.id_ === designIdString;
+        const connectingToDesign = connection.connecting.designPiece?.id_ === designIdString;
         return connectedToDesign || connectingToDesign;
       }) ?? [];
 
@@ -2803,12 +2983,12 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
               connected: {
                 piece: cd.connected?.piece ?? c.connected.piece,
                 port: cd.connected?.port ?? c.connected.port,
-                designId: cd.connected?.designId ?? c.connected.designId,
+                designPiece: cd.connected?.designPiece ?? c.connected.designPiece,
               },
               connecting: {
                 piece: cd.connecting?.piece ?? c.connecting.piece,
                 port: cd.connecting?.port ?? c.connecting.port,
-                designId: cd.connecting?.designId ?? c.connecting.designId,
+                designPiece: cd.connecting?.designPiece ?? c.connecting.designPiece,
               },
             }
             : c;
@@ -2861,12 +3041,12 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
               connected: {
                 piece: cd.connected?.piece ?? c.connected.piece,
                 port: cd.connected?.port ?? c.connected.port,
-                designId: cd.connected?.designId ?? c.connected.designId,
+                designPiece: cd.connected?.designPiece ?? c.connected.designPiece,
               },
               connecting: {
                 piece: cd.connecting?.piece ?? c.connecting.piece,
                 port: cd.connecting?.port ?? c.connecting.port,
-                designId: cd.connecting?.designId ?? c.connecting.designId,
+                designPiece: cd.connecting?.designPiece ?? c.connecting.designPiece,
               },
             }
             : c;
@@ -2927,6 +3107,62 @@ export const parseDesignIdFromVariant = (variant: string): DesignId => {
     name: parts[0],
     variant: parts[1] || undefined,
     view: parts[2] || undefined,
+  };
+};
+
+// File utility functions
+export const createFileFromDataUri = (url: string, dataUri: string): File => {
+  const sizeMatch = dataUri.match(/data:([^;]+)(;base64)?,(.+)/);
+  let size = 0;
+  if (sizeMatch) {
+    const data = sizeMatch[3];
+    if (sizeMatch[2] === ';base64') {
+      size = Math.floor(data.length * 0.75);
+    } else {
+      size = data.length;
+    }
+  }
+
+  // Simple hash calculation (not cryptographically secure, but sufficient for tracking)
+  let hash = 0;
+  for (let i = 0; i < dataUri.length; i++) {
+    const char = dataUri.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+
+  return {
+    url,
+    data: dataUri,
+    size,
+    hash: hash.toString(36),
+    created: new Date(),
+    updated: new Date(),
+  };
+};
+
+export const findFileInKit = (kit: Kit, fileId: FileIdLike): File => {
+  const normalizedFileId = fileIdLikeToFileId(fileId);
+  const file = (kit.files || []).find(f => f.url === normalizedFileId.url);
+  if (!file) throw new Error(`File ${normalizedFileId.url} not found in kit`);
+  return file;
+};
+
+export const addFileToKit = (kit: Kit, file: File): Kit => ({
+  ...kit,
+  files: [...(kit.files || []), file],
+});
+
+export const setFileInKit = (kit: Kit, file: File): Kit => ({
+  ...kit,
+  files: (kit.files || []).map(f => f.url === file.url ? file : f),
+});
+
+export const removeFileFromKit = (kit: Kit, fileId: FileIdLike): Kit => {
+  const normalizedFileId = fileIdLikeToFileId(fileId);
+  return {
+    ...kit,
+    files: (kit.files || []).filter(f => f.url !== normalizedFileId.url),
   };
 };
 

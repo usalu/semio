@@ -83,6 +83,11 @@ export enum Layout {
 export type Subscribe = () => void;
 export type Unsubscribe = () => void;
 export type Disposable = () => void;
+export type Url = string;
+
+export interface YStore {}
+
+export interface FileStore {}
 
 export interface RepresentationState {
   representation: Representation;
@@ -316,7 +321,6 @@ export interface DesignStoreFull extends DesignState, DesignActions, DesignSubsc
 
 export interface KitState {
   kit: Kit;
-  files: File[];
 }
 
 export interface KitActions {
@@ -336,8 +340,8 @@ export interface KitActions {
     types: (ids: TypeId[]) => void;
     design: (id: DesignId) => void;
     designs: (ids: DesignId[]) => void;
-    file: (id: string) => void;
-    files: (ids: string[]) => void;
+    file: (url: Url) => void;
+    files: (urls: Url[]) => void;
   };
 }
 
@@ -367,7 +371,7 @@ export interface KitSubscriptions {
 
 export interface KitCommandContext {
   kit: Kit;
-  files: File[];
+  fileUrls: Map<Url, Url>;
 }
 
 export interface KitCommandResult {
@@ -390,11 +394,13 @@ export interface KitCommandsFull {
 export interface KitChildStores {
   types: Map<TypeId, TypeStore>;
   designs: Map<DesignId, DesignStore>;
+  files: Map<Url, FileStore>;
 }
 
 export interface KitChildStoresFull {
   types: Map<TypeId, TypeStoreFull>;
   designs: Map<DesignId, DesignStoreFull>;
+  files: Map<Url, FileStoreFull>;
 }
 
 export interface KitStore extends KitState, KitChildStores, KitCommands {}
@@ -471,7 +477,7 @@ export interface DesignEditorSubscriptions {
 export interface DesignEditorCommandContext {
   sketchpadState: SketchpadState;
   state: DesignEditorState;
-  files: File[];
+  fileUrls: Map<Url, Url>;
   kit: Kit;
   designId: DesignId;
 }
@@ -561,7 +567,7 @@ export interface SketchpadChildStoresFull {
 export interface SketchpadCommandContext {
   state: SketchpadState;
   kits: Kit[];
-  files: File[];
+  fileUrls: Map<Url, Url>;
 }
 
 export interface SketchpadCommandResult {
@@ -930,7 +936,6 @@ class YTypeStore implements TypeStoreFull {
     },
     ports: (ports: Port[]) => ports.forEach((port) => this.create.port(port)),
   };
-
   update = {
     type: (diff: TypeDiff) => {
       if (diff.name !== undefined) this.yType.set("name", diff.name);
@@ -941,7 +946,6 @@ class YTypeStore implements TypeStoreFull {
       if (diff.virtual !== undefined) this.yType.set("virtual", diff.virtual);
     },
   };
-
   delete = {
     representation: (id: RepresentationId) => {
       const repId = representationIdLikeToRepresentationId(id);
@@ -960,7 +964,6 @@ class YTypeStore implements TypeStoreFull {
     },
     ports: (ids: PortId[]) => ids.forEach((id) => this.delete.port(id)),
   };
-
   on = {
     created: {
       representation: (subscribe: Subscribe) => {
@@ -1019,7 +1022,6 @@ class YPieceStore implements PieceStoreFull {
     yType.set("name", piece.type.name);
     if (piece.type.variant) yType.set("variant", piece.type.variant);
     this.yPiece.set("type", yType);
-
     if (piece.plane) {
       const yPlane = new Y.Map<any>();
       const yOrigin = new Y.Map<number>();
@@ -1039,19 +1041,16 @@ class YPieceStore implements PieceStoreFull {
       yPlane.set("yAxis", yYAxis);
       this.yPiece.set("plane", yPlane);
     }
-
     if (piece.center) {
       const yCenter = new Y.Map<number>();
       yCenter.set("x", piece.center.x);
       yCenter.set("y", piece.center.y);
       this.yPiece.set("center", yCenter);
     }
-
     const yQualities = new Y.Array<YQuality>();
     this.yPiece.set("qualities", yQualities);
     (piece.qualities || []).forEach((q) => yQualities.push([createQuality(q)]));
   }
-
   get piece(): Piece {
     const yType = this.yPiece.get("type") as Y.Map<string>;
     const yPlane = this.yPiece.get("plane") as Y.Map<any> | undefined;
@@ -1066,12 +1065,10 @@ class YPieceStore implements PieceStoreFull {
       },
       qualities: getQualities(this.yPiece.get("qualities") as YQualities),
     };
-
     if (yPlane) {
       const yOrigin = yPlane.get("origin") as Y.Map<number>;
       const yXAxis = yPlane.get("xAxis") as Y.Map<number>;
       const yYAxis = yPlane.get("yAxis") as Y.Map<number>;
-
       piece.plane = {
         origin: {
           x: yOrigin.get("x") as number,
@@ -1090,19 +1087,15 @@ class YPieceStore implements PieceStoreFull {
         },
       };
     }
-
     if (yCenter) {
       piece.center = {
         x: yCenter.get("x") as number,
         y: yCenter.get("y") as number,
       };
     }
-
     return piece;
   }
-
   create = {};
-
   update = {
     piece: (diff: PieceDiff) => {
       if (diff.id_ !== undefined) this.yPiece.set("id_", diff.id_);
@@ -1159,7 +1152,6 @@ class YPieceStore implements PieceStoreFull {
   };
 
   delete = {};
-
   on = {
     created: {},
     updated: {
@@ -1189,9 +1181,12 @@ class YConnectionStore implements ConnectionStoreFull {
     const yConnectedPort = new Y.Map<string>();
     yConnectedPort.set("id_", connection.connected.port.id_ || "");
     yConnected.set("port", yConnectedPort);
-    if (connection.connected.designId) yConnected.set("designId", connection.connected.designId);
+    if (connection.connected.designPiece) {
+      const yConnectedDesignPiece = new Y.Map<string>();
+      yConnectedDesignPiece.set("id_", connection.connected.designPiece.id_);
+      yConnected.set("designPiece", yConnectedDesignPiece);
+    }
     this.yConnection.set("connected", yConnected);
-
     const yConnecting = new Y.Map<any>();
     const yConnectingPiece = new Y.Map<string>();
     yConnectingPiece.set("id_", connection.connecting.piece.id_);
@@ -1199,9 +1194,12 @@ class YConnectionStore implements ConnectionStoreFull {
     const yConnectingPort = new Y.Map<string>();
     yConnectingPort.set("id_", connection.connecting.port.id_ || "");
     yConnecting.set("port", yConnectingPort);
-    if (connection.connecting.designId) yConnecting.set("designId", connection.connecting.designId);
+    if (connection.connecting.designPiece) {
+      const yConnectingDesignPiece = new Y.Map<string>();
+      yConnectingDesignPiece.set("id_", connection.connecting.designPiece.id_);
+      yConnecting.set("designPiece", yConnectingDesignPiece);
+    }
     this.yConnection.set("connecting", yConnecting);
-
     this.yConnection.set("description", connection.description || "");
     this.yConnection.set("gap", connection.gap || 0);
     this.yConnection.set("shift", connection.shift || 0);
