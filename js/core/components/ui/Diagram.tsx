@@ -51,10 +51,10 @@ import {
   DesignId,
   DiagramPoint,
   DiffStatus,
+  findAttributeValue,
   findConnectionInDesign,
   findDesignInKit,
   findPortInType,
-  findQualityValue,
   findTypeInKit,
   flattenDesign,
   getClusterableGroups,
@@ -355,7 +355,7 @@ const getPortPositionStyle = (port: Port): { x: number; y: number } => {
 
 const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false, onPortClick }) => {
   const { x, y } = getPortPositionStyle(port);
-  const portColor = findQualityValue(port, "semio.color", "var(--color-foreground)")!;
+  const portColor = findAttributeValue(port, "semio.color", "var(--color-foreground)")!;
 
   const onClick = (event: React.MouseEvent) => {
     event.stopPropagation();

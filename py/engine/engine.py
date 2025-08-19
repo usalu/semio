@@ -565,43 +565,43 @@ class TableEntity(Entity, Table, abc.ABC):
 # https://github.com/usalu/semio-attribute-
 
 
-class QualityNameField(RealField, abc.ABC):
+class AttributeNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 
-class QualityValueField(RealField, abc.ABC):
+class AttributeValueField(RealField, abc.ABC):
     value: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
-class QualityUnitField(RealField, abc.ABC):
+class AttributeUnitField(RealField, abc.ABC):
     unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
-class QualityDefinitionField(RealField, abc.ABC):
+class AttributeDefinitionField(RealField, abc.ABC):
     definition: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
-class QualityId(QualityNameField, Id):
+class AttributeId(AttributeNameField, Id):
     pass
 
 
-class QualityProps(QualityDefinitionField, QualityUnitField, QualityValueField, QualityNameField, Props):
+class AttributeProps(AttributeDefinitionField, AttributeUnitField, AttributeValueField, AttributeNameField, Props):
     pass
 
 
-class QualityInput(QualityDefinitionField, QualityUnitField, QualityValueField, QualityNameField, Input):
+class AttributeInput(AttributeDefinitionField, AttributeUnitField, AttributeValueField, AttributeNameField, Input):
     pass
 
 
-class QualityContext(QualityUnitField, QualityValueField, QualityNameField, Context):
+class AttributeContext(AttributeUnitField, AttributeValueField, AttributeNameField, Context):
     pass
 
 
-class QualityOutput(QualityDefinitionField, QualityUnitField, QualityValueField, QualityNameField, Output):
+class AttributeOutput(AttributeDefinitionField, AttributeUnitField, AttributeValueField, AttributeNameField, Output):
     pass
 
 
-class Attribute(QualityDefinitionField, QualityUnitField, QualityValueField, QualityNameField, TableEntity, table=True):
+class Attribute(AttributeDefinitionField, AttributeUnitField, AttributeValueField, AttributeNameField, TableEntity, table=True):
     PLURAL = "attributes"
     __tablename__ = "attribute"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
@@ -713,15 +713,15 @@ class RepresentationProps(RepresentationTagsField, RepresentationDescriptionFiel
 
 
 class RepresentationInput(RepresentationTagsField, RepresentationDescriptionField, RepresentationUrlField, Input):
-    attributes: list[QualityInput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
 
 class RepresentationContext(RepresentationTagsField, RepresentationDescriptionField, Context):
-    attributes: list[QualityContext] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
 
 class RepresentationOutput(RepresentationTagsField, RepresentationDescriptionField, RepresentationUrlField, Output):
-    attributes: list[QualityOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 
 class Representation(RepresentationDescriptionField, RepresentationUrlField, TableEntity, table=True):
@@ -1225,15 +1225,15 @@ class PortProps(PortTField, PortCompatibleFamiliesField, PortFamilyField, PortMa
 class PortInput(PortTField, PortCompatibleFamiliesField, PortFamilyField, PortMandatoryField, PortDescriptionField, PortIdField, Input):
     point: PointInput = sqlmodel.Field()
     direction: VectorInput = sqlmodel.Field()
-    attributes: list[QualityInput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
 
 class PortContext(PortTField, PortDirectionField, PortPointField, PortCompatibleFamiliesField, PortFamilyField, PortMandatoryField, PortDescriptionField, PortIdField, Context):
-    attributes: list[QualityContext] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
 
 class PortOutput(PortTField, PortDirectionField, PortPointField, PortCompatibleFamiliesField, PortFamilyField, PortMandatoryField, PortDescriptionField, PortIdField, Output):
-    attributes: list[QualityOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 
 class Port(PortTField, PortFamilyField, PortMandatoryField, PortDescriptionField, TableEntity, table=True):
@@ -1482,7 +1482,7 @@ class TypeInput(TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantFiel
     representations: list[RepresentationInput] = sqlmodel.Field(default_factory=list)
     ports: list[PortInput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorInput] = sqlmodel.Field(default_factory=list)
-    attributes: list[QualityInput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
 
 class TypeOutput(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantField, TypeImageField, TypeIconField, TypeDescriptionField, TypeNameField, Output):
@@ -1490,13 +1490,13 @@ class TypeOutput(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeVirtualF
     representations: list[RepresentationOutput] = sqlmodel.Field(default_factory=list)
     ports: list[PortOutput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorOutput] = sqlmodel.Field(default_factory=list)
-    attributes: list[QualityOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 
 class TypeContext(TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantField, TypeDescriptionField, TypeNameField, Context):
     location: typing.Optional[LocationContext] = sqlmodel.Field(default=None)
     ports: list[PortContext] = sqlmodel.Field(default_factory=list)
-    attributes: list[QualityContext] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
 
 class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantField, TypeImageField, TypeIconField, TypeDescriptionField, TypeNameField, TableEntity, table=True):
@@ -1677,19 +1677,19 @@ class PieceProps(PieceCenterField, PiecePlaneField, PieceDesignField, PieceTypeF
 class PieceInput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Input):
     plane: typing.Optional[PlaneInput] = sqlmodel.Field(default=None)
     center: typing.Optional[DiagramPointInput] = sqlmodel.Field(default=None)
-    attributes: list[QualityInput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
 
 class PieceContext(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Context):
     plane: typing.Optional[PlaneContext] = sqlmodel.Field(default=None)
     center: typing.Optional[DiagramPointContext] = sqlmodel.Field(default=None)
-    attributes: list[QualityContext] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
 
 class PieceOutput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Output):
     plane: typing.Optional[PlaneOutput] = sqlmodel.Field(default=None)
     center: typing.Optional[DiagramPointOutput] = sqlmodel.Field(default=None)
-    attributes: list[QualityOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 
 class PiecePrediction(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Prediction):
@@ -2193,7 +2193,7 @@ class DesignInput(DesignUnitField, DesignViewField, DesignVariantField, DesignIm
     pieces: list[PieceInput] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionInput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorInput] = sqlmodel.Field(default_factory=list)
-    attributes: list[QualityInput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
 
 class DesignContext(DesignUnitField, DesignViewField, DesignVariantField, DesignDescriptionField, DesignNameField, Context):
@@ -2202,7 +2202,7 @@ class DesignContext(DesignUnitField, DesignViewField, DesignVariantField, Design
     location: typing.Optional[LocationContext] = sqlmodel.Field(default=None)
     pieces: list[PieceContext] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionContext] = sqlmodel.Field(default_factory=list)
-    attributes: list[QualityContext] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
 
 class DesignOutput(DesignUpdatedField, DesignCreatedField, DesignUnitField, DesignViewField, DesignVariantField, DesignImageField, DesignIconField, DesignDescriptionField, DesignNameField, Output):
@@ -2212,7 +2212,7 @@ class DesignOutput(DesignUpdatedField, DesignCreatedField, DesignUnitField, Desi
     pieces: list[PieceOutput] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionOutput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorOutput] = sqlmodel.Field(default_factory=list)
-    attributes: list[QualityOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 
 class DesignPrediction(DesignDescriptionField, Prediction):
@@ -2410,7 +2410,7 @@ class KitInput(KitLicenseField, KitHomepage, KitRemoteField, KitVersionField, Ki
 
     types: list[TypeInput] = sqlmodel.Field(default_factory=list)
     designs: list[DesignInput] = sqlmodel.Field(default_factory=list)
-    attributes: list[QualityInput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
 
 class KitContext(KitDescriptionField, KitNameField, Context):
@@ -2418,7 +2418,7 @@ class KitContext(KitDescriptionField, KitNameField, Context):
 
     types: list[TypeContext] = sqlmodel.Field(default_factory=list)
     designs: list[DesignContext] = sqlmodel.Field(default_factory=list)
-    attributes: list[QualityContext] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
 
 class KitOutput(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, KitRemoteField, KitVersionField, KitPreviewField, KitImageField, KitIconField, KitDescriptionField, KitNameField, KitUriField, Output):
@@ -2426,7 +2426,7 @@ class KitOutput(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, 
 
     types: list[TypeOutput] = sqlmodel.Field(default_factory=list)
     designs: list[DesignOutput] = sqlmodel.Field(default_factory=list)
-    attributes: list[QualityOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 
 class Kit(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, KitRemoteField, KitVersionField, KitPreviewField, KitImageField, KitIconField, KitDescriptionField, KitNameField, KitUriField, TableEntity, table=True):
@@ -2807,12 +2807,12 @@ class DatabaseStore(Store, abc.ABC):
                             usedPort.attributes = []
                             self.session.flush()
 
-                            newQualities = []
-                            for newQuality in list(newPorts[usedPortId].attributes):
-                                newQuality.port = usedPort
-                                self.session.add(newQuality)
-                                newQualities.append(newQuality)
-                            usedPort.attributes = newQualities
+                            newAttributes = []
+                            for newAttribute in list(newPorts[usedPortId].attributes):
+                                newAttribute.port = usedPort
+                                self.session.add(newAttribute)
+                                newAttributes.append(newAttribute)
+                            usedPort.attributes = newAttributes
                             self.session.flush()
 
                         for unusedPort in list(unusedPorts):
@@ -3483,11 +3483,11 @@ GRAPHQLTYPES = {
     "float": graphene.NonNull(graphene.Float),
     "bool": graphene.NonNull(graphene.Boolean),
     "list[str]": graphene.NonNull(graphene.List(graphene.NonNull(graphene.String))),
-    "Attribute": graphene.NonNull(lambda: QualityNode),
-    "list[Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: QualityNode))),
-    "list[__main__.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: QualityNode))),
-    "list[__mp_main__.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: QualityNode))),
-    "list[engine.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: QualityNode))),
+    "Attribute": graphene.NonNull(lambda: AttributeNode),
+    "list[Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AttributeNode))),
+    "list[__main__.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AttributeNode))),
+    "list[__mp_main__.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AttributeNode))),
+    "list[engine.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AttributeNode))),
     "DiagramPoint": graphene.NonNull(lambda: DiagramPointNode),
     "typing.Optional[__main__.DiagramPoint]": lambda: DiagramPointNode,
     "typing.Optional[__mp_main__.DiagramPoint]": lambda: DiagramPointNode,
@@ -3644,14 +3644,14 @@ class TableEntityNode(TableNode):
         super().__init_subclass_with_meta__(model=model, **options)
 
 
-class QualityNode(TableEntityNode):
+class AttributeNode(TableEntityNode):
     class Meta:
         model = Attribute
 
 
-class QualityInputNode(InputNode):
+class AttributeInputNode(InputNode):
     class Meta:
-        model = QualityInput
+        model = AttributeInput
 
 
 class LocationNode(Node):
@@ -3669,9 +3669,9 @@ class RepresentationNode(TableEntityNode):
         model = Representation
         excludedFields = ("tags_",)
 
-    # attributes = graphene.List(graphene.NonNull(lambda: QualityNode))
+    # attributes = graphene.List(graphene.NonNull(lambda: AttributeNode))
 
-    # def resolve_qualities(self, info):
+    # def resolve_attributes(self, info):
     #     return self.attributes
 
 
@@ -3725,9 +3725,9 @@ class PortNode(TableEntityNode):
         model = Port
         exclude_fields = ("connecteds", "connectings")
 
-    # attributes = graphene.List(graphene.NonNull(lambda: QualityNode))
+    # attributes = graphene.List(graphene.NonNull(lambda: AttributeNode))
 
-    # def resolve_qualities(self, info):
+    # def resolve_attributes(self, info):
     #     return self.attributes
 
 

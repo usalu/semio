@@ -45,14 +45,14 @@
       "type": "array",
       "items": {
         "type": "object",
-        "description": "A attribute is a named value with a unit and a definition.",
+        "description": "A attribute is a key value pair with an an optional definition.",
         "properties": {
           "name": {
             "type": "string"
           },
           "value": {
             "type": "string",
-            "description": "The optional value [ text | url ] of the attribute. No value is equivalent to true for the name."
+            "description": "The optional value [ text | url ] of the attribute. No value is equivalent to true."
           },
           "unit": {
             "type": "string",

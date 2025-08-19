@@ -46,14 +46,14 @@ const dataUriRegex = /^data:([a-z]+\/[a-z0-9\-\.+]+(;[a-z0-9\-\.+]+=[a-z0-9\-\.+
 const DataUriSchema = z.string().regex(dataUriRegex, "Invalid data URI");
 
 // https://github.com/usalu/semio#-attribute-
-export const QualitySchema = z.object({
+export const AttributeSchema = z.object({
   name: z.string(),
   value: z.string().optional(),
   unit: z.string().optional(),
   definition: z.string().optional(),
 });
-export const QualityIdSchema = z.object({ name: z.string() });
-export const QualityIdLikeSchema = z.union([QualitySchema, QualityIdSchema, z.string()]);
+export const AttributeIdSchema = z.object({ name: z.string() });
+export const AttributeIdLikeSchema = z.union([AttributeSchema, AttributeIdSchema, z.string()]);
 
 // https://github.com/usalu/semio#-author-
 export const AuthorSchema = z.object({ name: z.string(), email: z.string() });
@@ -69,7 +69,7 @@ export const RepresentationSchema = z.object({
   url: z.string(),
   description: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  attributes: z.array(QualitySchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
 });
 export const RepresentationIdSchema = z.object({
   tags: z.array(z.string()).optional(),
@@ -107,7 +107,7 @@ export const PortSchema = z.object({
   compatibleFamilies: z.array(z.string()).optional(),
   point: PointSchema,
   direction: VectorSchema,
-  attributes: z.array(QualitySchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
 });
 export const PortIdSchema = z.object({ id_: z.string().optional() });
 export const PortIdLikeSchema = z.union([PortSchema, PortIdSchema, z.string(), z.null(), z.undefined()]);
@@ -136,7 +136,7 @@ export const TypeSchema = z.object({
   representations: z.array(RepresentationSchema).optional(),
   ports: z.array(PortSchema).optional(),
   authors: z.array(AuthorSchema).optional(),
-  attributes: z.array(QualitySchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
 });
 export const TypeIdSchema = z.object({
   name: z.string(),
@@ -151,7 +151,7 @@ export const PieceSchema = z.object({
   type: TypeIdSchema,
   plane: PlaneSchema.optional(),
   center: DiagramPointSchema.optional(),
-  attributes: z.array(QualitySchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
 });
 export const PieceIdSchema = z.object({ id_: z.string() });
 export const PieceIdLikeSchema = z.union([PieceSchema, PieceIdSchema, z.string()]);
@@ -179,7 +179,7 @@ export const ConnectionSchema = z.object({
   tilt: z.number().optional(),
   x: z.number().optional(),
   y: z.number().optional(),
-  attributes: z.array(QualitySchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
 });
 export const ConnectionIdSchema = z.object({
   connected: SideIdSchema,
@@ -219,7 +219,7 @@ export const DesignSchema = z.object({
     )
     .optional(),
   authors: z.array(AuthorSchema).optional(),
-  attributes: z.array(QualitySchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
 });
 export const DesignIdSchema = z.object({
   name: z.string(),
@@ -279,7 +279,7 @@ export const KitSchema = z.object({
   types: z.array(TypeSchema).optional(),
   designs: z.array(DesignSchema).optional(),
   files: z.array(FileSchema).optional(),
-  attributes: z.array(QualitySchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
 });
 export const KitIdSchema = z.object({
   name: z.string(),
@@ -301,7 +301,7 @@ export const RepresentationDiffSchema = z.object({
   url: z.string().optional(),
   description: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  attributes: z.array(QualitySchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
 });
 export const RepresentationsDiffSchema = z.object({
   removed: z.array(RepresentationIdSchema).optional(),
@@ -317,7 +317,7 @@ export const PortDiffSchema = z.object({
   compatibleFamilies: z.array(z.string()).optional(),
   point: PointSchema.optional(),
   direction: VectorSchema.optional(),
-  attributes: z.array(QualitySchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
 });
 export const PortsDiffSchema = z.object({
   removed: z.array(PortIdSchema).optional(),
@@ -347,7 +347,7 @@ export const TypeDiffSchema = z.object({
   representations: z.array(RepresentationSchema).optional(),
   ports: z.array(PortSchema).optional(),
   authors: z.array(AuthorSchema).optional(),
-  attributes: z.array(QualitySchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
 });
 export const TypesDiffSchema = z.object({
   removed: z.array(TypeIdSchema).optional(),
@@ -361,7 +361,7 @@ export const PieceDiffSchema = z.object({
   type: TypeIdSchema.optional(),
   plane: PlaneSchema.optional(),
   center: DiagramPointSchema.optional(),
-  attributes: z.array(QualitySchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
 });
 export const PiecesDiffSchema = z.object({
   removed: z.array(PieceIdSchema).optional(),
@@ -402,7 +402,7 @@ export const DesignDiffSchema = z.object({
   unit: z.string().optional(),
   pieces: PiecesDiffSchema.optional(),
   connections: ConnectionsDiffSchema.optional(),
-  attributes: z.array(QualitySchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
   authors: z.array(AuthorSchema).optional(),
 });
 export const DesignsDiffSchema = z.object({
@@ -434,7 +434,7 @@ export const KitDiffSchema = z.object({
   types: TypesDiffSchema.optional(),
   designs: DesignsDiffSchema.optional(),
   files: FilesDiffSchema.optional(),
-  attributes: z.array(QualitySchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
 });
 
 export const DiffStatusSchema = z.enum(["unchanged", "added", "removed", "modified"]);
@@ -448,7 +448,7 @@ export const schemas = {
   Piece: PieceSchema,
   Connection: ConnectionSchema,
   Port: PortSchema,
-  Attribute: QualitySchema,
+  Attribute: AttributeSchema,
   Plane: PlaneSchema,
   Point: PointSchema,
   Vector: VectorSchema,
@@ -465,7 +465,7 @@ export const schemas = {
   ConnectionId: ConnectionIdSchema,
   DesignId: DesignIdSchema,
   KitId: KitIdSchema,
-  QualityId: QualityIdSchema,
+  AttributeId: AttributeIdSchema,
   RepresentationId: RepresentationIdSchema,
   PieceDiff: PieceDiffSchema,
   PiecesDiff: PiecesDiffSchema,
@@ -479,9 +479,9 @@ export const schemas = {
 };
 
 
-export type Attribute = z.infer<typeof QualitySchema>;
-export type QualityId = z.infer<typeof QualityIdSchema>;
-export type QualityIdLike = z.infer<typeof QualityIdLikeSchema>;
+export type Attribute = z.infer<typeof AttributeSchema>;
+export type AttributeId = z.infer<typeof AttributeIdSchema>;
+export type AttributeIdLike = z.infer<typeof AttributeIdLikeSchema>;
 export type Representation = z.infer<typeof RepresentationSchema>;
 export type RepresentationId = z.infer<typeof RepresentationIdSchema>;
 export type RepresentationIdLike = z.infer<typeof RepresentationIdLikeSchema>;
@@ -560,9 +560,9 @@ export const jaccard = (a: string[] | undefined, b: string[] | undefined) => {
 
 //#region Mapping
 
-export const qualityIdLikeToQualityId = (qualityId: QualityIdLike): QualityId => {
-  if (typeof qualityId === "string") return { name: qualityId };
-  return { name: qualityId.name };
+export const attributeIdLikeToAttributeId = (attributeId: AttributeIdLike): AttributeId => {
+  if (typeof attributeId === "string") return { name: attributeId };
+  return { name: attributeId.name };
 };
 
 export const representationIdLikeToRepresentationId = (representationId: RepresentationIdLike): RepresentationId => {
@@ -670,7 +670,7 @@ export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vec
 // #region Serializing
 
 export const serialize = {
-  attribute: (attribute: Attribute): string => JSON.stringify(QualitySchema.parse(attribute), null, 2),
+  attribute: (attribute: Attribute): string => JSON.stringify(AttributeSchema.parse(attribute), null, 2),
   author: (author: Author): string => JSON.stringify(AuthorSchema.parse(author), null, 2),
   diagramPoint: (diagramPoint: DiagramPoint): string => JSON.stringify(DiagramPointSchema.parse(diagramPoint), null, 2),
   diagramVector: (diagramVector: DiagramVector): string => JSON.stringify(DiagramVectorSchema.parse(diagramVector), null, 2),
@@ -688,7 +688,7 @@ export const serialize = {
   kit: (kit: Kit): string => JSON.stringify(KitSchema.parse(kit), null, 2),
 };
 export const deserialize = {
-  attribute: (json: string): Attribute => QualitySchema.parse(JSON.parse(json)),
+  attribute: (json: string): Attribute => AttributeSchema.parse(JSON.parse(json)),
   author: (json: string): Author => AuthorSchema.parse(JSON.parse(json)),
   diagramPoint: (json: string): DiagramPoint => DiagramPointSchema.parse(JSON.parse(json)),
   diagramVector: (json: string): DiagramVector => DiagramVectorSchema.parse(JSON.parse(json)),
@@ -705,7 +705,7 @@ export const deserialize = {
   kit: (json: string): Kit => KitSchema.parse(JSON.parse(json)),
 };
 export const parse = {
-  attribute: (json: string): Attribute => QualitySchema.parse(JSON.parse(json)),
+  attribute: (json: string): Attribute => AttributeSchema.parse(JSON.parse(json)),
   author: (json: string): Author => AuthorSchema.parse(JSON.parse(json)),
   diagramPoint: (json: string): DiagramPoint => DiagramPointSchema.parse(JSON.parse(json)),
   diagramVector: (json: string): DiagramVector => DiagramVectorSchema.parse(JSON.parse(json)),
@@ -723,7 +723,7 @@ export const parse = {
   kit: (json: string): Kit => KitSchema.parse(JSON.parse(json)),
 };
 export const safeParse = {
-  attribute: (data: unknown) => QualitySchema.safeParse(data),
+  attribute: (data: unknown) => AttributeSchema.safeParse(data),
   author: (data: unknown) => AuthorSchema.safeParse(data),
   diagramPoint: (data: unknown) => DiagramPointSchema.safeParse(data),
   diagramVector: (data: unknown) => DiagramVectorSchema.safeParse(data),
@@ -1614,7 +1614,7 @@ export const isSameKit = (kit: Kit | KitId, other: Kit | KitId): boolean => {
 
 //#region Predicates
 
-export const findQualityValue = (entity: Kit | Type | Design | Piece | Connection | Representation | Port, name: string, defaultValue?: string | null): string | null => {
+export const findAttributeValue = (entity: Kit | Type | Design | Piece | Connection | Representation | Port, name: string, defaultValue?: string | null): string | null => {
   const attribute = entity.attributes?.find((q) => q.name === name);
   if (!attribute && defaultValue === undefined) throw new Error(`Attribute ${name} not found in ${entity}`);
   if (attribute?.value === undefined && defaultValue === null) return null;
@@ -1803,9 +1803,9 @@ export const piecesMetadata = (
 > => {
   const normalizedDesignId = designIdLikeToDesignId(designId);
   const flatDesign = flattenDesign(kit, normalizedDesignId);
-  const fixedPieceIds = flatDesign.pieces?.map((p) => findQualityValue(p, "semio.fixedPieceId") || p.id_);
-  const parentPieceIds = flatDesign.pieces?.map((p) => findQualityValue(p, "semio.parentPieceId", null));
-  const depths = flatDesign.pieces?.map((p) => parseInt(findQualityValue(p, "semio.depth", "0")!));
+  const fixedPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.fixedPieceId") || p.id_);
+  const parentPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.parentPieceId", null));
+  const depths = flatDesign.pieces?.map((p) => parseInt(findAttributeValue(p, "semio.depth", "0")!));
   return new Map(
     flatDesign.pieces?.map((p, index) => [
       p.id_,
@@ -1872,7 +1872,7 @@ export const colorPortsForTypes = (types: Type[]): Type[] => {
   for (const type of unifyPortFamiliesAndCompatibleFamiliesForTypes(types)) {
     const coloredType: Type = { ...type };
     for (const port of type.ports || []) {
-      const coloredPort = setQuality(port, {
+      const coloredPort = setAttribute(port, {
         name: "semio.color",
         value: getColorForText(port.family),
       });
@@ -1913,16 +1913,16 @@ const roundPlane = (plane: Plane): Plane => ({
 
 //#region Attribute
 
-export const setQuality = <T extends Kit | Design | Type | Piece | Connection | Representation | Port>(entity: T, attribute: Attribute): T => {
-  const qualitiesArray = entity.attributes || [];
-  const existingIndex = qualitiesArray.findIndex((q) => q.name === attribute.name);
-  if (existingIndex >= 0) qualitiesArray[existingIndex] = attribute;
-  else qualitiesArray.push(attribute);
-  return { ...entity, attributes: qualitiesArray };
+export const setAttribute = <T extends Kit | Design | Type | Piece | Connection | Representation | Port>(entity: T, attribute: Attribute): T => {
+  const attributesArray = entity.attributes || [];
+  const existingIndex = attributesArray.findIndex((q) => q.name === attribute.name);
+  if (existingIndex >= 0) attributesArray[existingIndex] = attribute;
+  else attributesArray.push(attribute);
+  return { ...entity, attributes: attributesArray };
 };
 
-export const setQualities = <T extends Kit | Design | Type | Piece | Connection | Representation | Port>(entity: T, attributes: Attribute[]): T => {
-  return attributes.reduce((acc, attribute) => setQuality(acc, attribute), entity);
+export const setAttributes = <T extends Kit | Design | Type | Piece | Connection | Representation | Port>(entity: T, attributes: Attribute[]): T => {
+  return attributes.reduce((acc, attribute) => setAttribute(acc, attribute), entity);
 };
 
 //#endregion Attribute
@@ -2377,7 +2377,7 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
     if (!rootNode) return;
     const rootPiece = pieceMap[rootNode.id()];
     if (!rootPiece || !rootPiece.id_) return;
-    const updatedRootPiece = setQualities(rootPiece, [
+    const updatedRootPiece = setAttributes(rootPiece, [
       { name: "semio.fixedPieceId", value: rootPiece.id_ },
       { name: "semio.depth", value: "0" },
     ]);
@@ -2443,7 +2443,7 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
           y: round(parentPiece.center!.y + (connection.y ?? 0) + direction.y),
         };
 
-        const flatChildPiece: Piece = setQualities(
+        const flatChildPiece: Piece = setAttributes(
           {
             ...childPiece,
             plane: childPlane,
@@ -2950,20 +2950,20 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
           const isRemoved = diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_);
           const baseWithUpdate = pd ? { ...p, ...pd } : p;
           const diffStatus = isRemoved ? DiffStatus.Removed : pd ? DiffStatus.Modified : DiffStatus.Unchanged;
-          return setQuality(baseWithUpdate, {
+          return setAttribute(baseWithUpdate, {
             name: "semio.diffStatus",
             value: diffStatus,
           });
         })
         .concat(
           (diff.pieces?.added || []).map((p: Piece) =>
-            setQuality(p, {
+            setAttribute(p, {
               name: "semio.diffStatus",
               value: DiffStatus.Added,
             }),
           ),
         )
-      : (diff.pieces?.added || []).map((p: Piece) => setQuality(p, { name: "semio.diffStatus", value: DiffStatus.Added }));
+      : (diff.pieces?.added || []).map((p: Piece) => setAttribute(p, { name: "semio.diffStatus", value: DiffStatus.Added }));
 
     const effectiveConnections: Connection[] = base.connections
       ? base.connections
@@ -2993,20 +2993,20 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
             }
             : c;
           const diffStatus = isRemoved ? DiffStatus.Removed : cd ? DiffStatus.Modified : DiffStatus.Unchanged;
-          return setQuality(baseWithUpdate, {
+          return setAttribute(baseWithUpdate, {
             name: "semio.diffStatus",
             value: diffStatus,
           });
         })
         .concat(
           (diff.connections?.added || []).map((c: Connection) =>
-            setQuality(c, {
+            setAttribute(c, {
               name: "semio.diffStatus",
               value: DiffStatus.Added,
             }),
           ),
         )
-      : (diff.connections?.added || []).map((c: Connection) => setQuality(c, { name: "semio.diffStatus", value: DiffStatus.Added }));
+      : (diff.connections?.added || []).map((c: Connection) => setAttribute(c, { name: "semio.diffStatus", value: DiffStatus.Added }));
 
     return {
       ...base,

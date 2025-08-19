@@ -186,17 +186,17 @@ namespace Semio.Grasshopper
         internal static System.Drawing.Bitmap port_serialize_24x24 =>
             (System.Drawing.Bitmap)ResourceManager.GetObject("port_serialize_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap quality_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("quality_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap attribute_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("attribute_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap quality_deserialize_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("quality_deserialize_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap attribute_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("attribute_deserialize_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap quality_modify_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("quality_modify_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap attribute_modify_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("attribute_modify_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap quality_serialize_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("quality_serialize_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap attribute_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("attribute_serialize_24x24", resourceCulture);
 
         internal static System.Drawing.Bitmap representation_24x24 =>
             (System.Drawing.Bitmap)ResourceManager.GetObject("representation_24x24", resourceCulture);

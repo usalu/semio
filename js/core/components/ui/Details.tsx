@@ -263,12 +263,12 @@ const DesignSection: FC = () => {
                     label="Name"
                     value={attribute.name}
                     onChange={(e) => {
-                      const updatedQualities = [...(design.attributes || [])];
-                      updatedQualities[index] = {
+                      const updatedAttributes = [...(design.attributes || [])];
+                      updatedAttributes[index] = {
                         ...attribute,
                         name: e.target.value,
                       };
-                      handleChange({ ...design, attributes: updatedQualities });
+                      handleChange({ ...design, attributes: updatedAttributes });
                     }}
                     onFocus={startTransaction}
                     onBlur={finalizeTransaction}
@@ -280,12 +280,12 @@ const DesignSection: FC = () => {
                     value={attribute.value || ""}
                     placeholder="Optional value"
                     onChange={(e) => {
-                      const updatedQualities = [...(design.attributes || [])];
-                      updatedQualities[index] = {
+                      const updatedAttributes = [...(design.attributes || [])];
+                      updatedAttributes[index] = {
                         ...attribute,
                         value: e.target.value,
                       };
-                      handleChange({ ...design, attributes: updatedQualities });
+                      handleChange({ ...design, attributes: updatedAttributes });
                     }}
                     onFocus={startTransaction}
                     onBlur={finalizeTransaction}
@@ -297,12 +297,12 @@ const DesignSection: FC = () => {
                     value={attribute.unit || ""}
                     placeholder="Optional unit"
                     onChange={(e) => {
-                      const updatedQualities = [...(design.attributes || [])];
-                      updatedQualities[index] = {
+                      const updatedAttributes = [...(design.attributes || [])];
+                      updatedAttributes[index] = {
                         ...attribute,
                         unit: e.target.value,
                       };
-                      handleChange({ ...design, attributes: updatedQualities });
+                      handleChange({ ...design, attributes: updatedAttributes });
                     }}
                     onFocus={startTransaction}
                     onBlur={finalizeTransaction}
@@ -314,12 +314,12 @@ const DesignSection: FC = () => {
                     value={attribute.definition || ""}
                     placeholder="Optional definition (text or URL)"
                     onChange={(e) => {
-                      const updatedQualities = [...(design.attributes || [])];
-                      updatedQualities[index] = {
+                      const updatedAttributes = [...(design.attributes || [])];
+                      updatedAttributes[index] = {
                         ...attribute,
                         definition: e.target.value,
                       };
-                      handleChange({ ...design, attributes: updatedQualities });
+                      handleChange({ ...design, attributes: updatedAttributes });
                     }}
                     onFocus={startTransaction}
                     onBlur={finalizeTransaction}

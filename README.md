@@ -63,7 +63,7 @@ Let me walk you through 🚶
    - [⭕ Piece](#-piece-)
    - [⚓ Port](#-port-)
    - [💾 Representation](#-representation-)
-   - [📏 Attribute](#-attribute-)
+   - [🏷️ Attribute](#-attribute-)
    - [🏷️ Tag](#%EF%B8%8F-tag-)
    - [◳ Plane](#-plane-)
    - [🔗 Url](#-url-)
@@ -231,7 +231,7 @@ No **[`tags`](#%EF%B8%8F-tag-)** means the _default_ representation 🔑
 
 The similarity of [`representations`](#-representation-) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#%EF%B8%8F-tag-)** 🔄
 
-## 📏 Attribute [↑](#-specs-)
+## 🏷️ Attribute [↑](#-specs-)
 
 A [`attribute`](#-attribute-) is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
 

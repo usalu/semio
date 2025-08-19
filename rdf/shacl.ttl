@@ -179,52 +179,52 @@ se:Type
       sh:description "A attribute of the type."@en ;
       sh:or (
         [
-          sh:class se:DecimalQuality ;
+          sh:class se:DecimalAttribute ;
           sh:name "decimal attribute"@en ;
           sh:description "A decimal attribute of the type."@en ;
         ]
         [
-          sh:class se:IntegerQuality ;
+          sh:class se:IntegerAttribute ;
           sh:name "integer attribute"@en ;
           sh:description "A integer attribute of the type."@en ;
         ]
         [
-          sh:class se:NaturalQuality ;
+          sh:class se:NaturalAttribute ;
           sh:name "natural attribute"@en ;
           sh:description "A natural attribute of the type."@en ;
         ]
         [
-          sh:class se:BooleanQuality ;
+          sh:class se:BooleanAttribute ;
           sh:name "boolean attribute"@en ;
           sh:description "A boolean attribute of the type."@en ;
         ]
         [
-          sh:class se:FuzzyQuality ;
+          sh:class se:FuzzyAttribute ;
           sh:name "fuzzy attribute"@en ;
           sh:description "A fuzzy attribute of the type."@en ;
         ]
         [
-          sh:class se:ChoiceQuality ;
+          sh:class se:ChoiceAttribute ;
           sh:name "choice attribute"@en ;
           sh:description "A choice attribute of the type."@en ;
         ]
         [
-          sh:class se:BlobQuality ;
+          sh:class se:BlobAttribute ;
           sh:name "blob attribute"@en ;
           sh:description "A blob attribute of the type."@en ;
         ]
         [
-          sh:class se:PointQuality ;
+          sh:class se:PointAttribute ;
           sh:name "point attribute"@en ;
           sh:description "A point attribute of the type."@en ;
         ]
         [
-          sh:class se:VectorQuality ;
+          sh:class se:VectorAttribute ;
           sh:name "vector attribute"@en ;
           sh:description "A vector attribute of the type."@en ;
         ]
         [
-          sh:class se:PlaneQuality ;
+          sh:class se:PlaneAttribute ;
           sh:name "plane attribute"@en ;
           sh:description "A plane attribute of the type."@en ;
         ]
@@ -258,61 +258,61 @@ se:Port
       sh:description "A attribute for the port."@en ;
       sh:or (
         [
-          sh:class se:DecimalQuality ;
+          sh:class se:DecimalAttribute ;
           sh:name "decimal attribute"@en ;
           sh:description "A decimal attribute of the port."@en ;
         ]
         [
-          sh:class se:IntegerQuality ;
+          sh:class se:IntegerAttribute ;
           sh:name "integer attribute"@en ;
           sh:description "A integer attribute of the port."@en ;
         ]
         [
-          sh:class se:NaturalQuality ;
+          sh:class se:NaturalAttribute ;
           sh:name "natural attribute"@en ;
           sh:description "A natural attribute of the port."@en ;
         ]
         [
-          sh:class se:BooleanQuality ;
+          sh:class se:BooleanAttribute ;
           sh:name "boolean attribute"@en ;
           sh:description "A boolean attribute of the port."@en ;
         ]
         [
-          sh:class se:FuzzyQuality ;
+          sh:class se:FuzzyAttribute ;
           sh:name "fuzzy attribute"@en ;
           sh:description "A fuzzy attribute of the port."@en ;
         ]
         [
-          sh:class se:ChoiceQuality ;
+          sh:class se:ChoiceAttribute ;
           sh:name "choice attribute"@en ;
           sh:description "A choice attribute of the port."@en ;
         ]
         [
-          sh:class se:BlobQuality ;
+          sh:class se:BlobAttribute ;
           sh:name "blob attribute"@en ;
           sh:description "A blob attribute of the port."@en ;
         ]
         [
-          sh:class se:PointQuality ;
+          sh:class se:PointAttribute ;
           sh:name "point attribute"@en ;
           sh:description "A point attribute of the port."@en ;
         ]
         [
-          sh:class se:VectorQuality ;
+          sh:class se:VectorAttribute ;
           sh:name "vector attribute"@en ;
           sh:description "A vector attribute of the port."@en ;
         ]
         [
-          sh:class se:PlaneQuality ;
+          sh:class se:PlaneAttribute ;
           sh:name "plane attribute"@en ;
           sh:description "A plane attribute of the port."@en ;
         ]
       )
     ] ;
 .
-se:DecimalQuality
+se:DecimalAttribute
   a sh:NodeShape ;
-  sh:targetClass se:DecimalQuality ;
+  sh:targetClass se:DecimalAttribute ;
   sh:name "decimal (number) attribute"@en ;
   sh:description "A decimal (number) attribute is a attribute with a real number (floating point arithmetic and double precision) value."@en ;
   sh:property
@@ -346,9 +346,9 @@ se:DecimalQuality
       sh:class se:Context ;
     ] ;
 .
-se:IntegerQuality
+se:IntegerAttribute
   a sh:NodeShape ;
-  sh:targetClass se:IntegerQuality ;
+  sh:targetClass se:IntegerAttribute ;
   sh:name "integer (number) attribute"@en ;
   sh:description "An integer (number) attribute is a attribute with a whole number (without decimals) value."@en ;
   sh:property
@@ -375,9 +375,9 @@ se:IntegerQuality
       sh:class se:Context ;
     ] ;
 .
-se:NaturalQuality
+se:NaturalAttribute
   a sh:NodeShape ;
-  sh:targetClass se:NaturalQuality ;
+  sh:targetClass se:NaturalAttribute ;
   sh:name "natural (number) attribute"@en ;
   sh:description "A natural (number) attribute is a attribute with a positive (=not zero or negative) integer (=no decimals) number value."@en ;
   sh:property
@@ -404,9 +404,9 @@ se:NaturalQuality
       sh:class se:Context ;
     ] ;
 .
-se:BooleanQuality
+se:BooleanAttribute
   a sh:NodeShape ;
-  sh:targetClass se:BooleanQuality ;
+  sh:targetClass se:BooleanAttribute ;
   sh:name "boolean attribute"@en ;
   sh:description "A boolean attribute is attribute with a boolean (either true or false) value."@en ;
   sh:property
@@ -433,9 +433,9 @@ se:BooleanQuality
       sh:class se:Context ;
     ] ;
 .
-se:FuzzyQuality
+se:FuzzyAttribute
   a sh:NodeShape ;
-  sh:targetClass se:FuzzyQuality ;
+  sh:targetClass se:FuzzyAttribute ;
   sh:name "fuzzy (logic) attribute"@en ;
   sh:description "A fuzzy (logic) attribute is a attribute with a fuzzy (real number between 0 and 1, inclusive) value."@en ;
   sh:property
@@ -464,9 +464,9 @@ se:FuzzyQuality
       sh:class se:Context ;
     ] ;
 .
-se:ChoiceQuality
+se:ChoiceAttribute
   a sh:NodeShape ;
-  sh:targetClass se:ChoiceQuality ;
+  sh:targetClass se:ChoiceAttribute ;
   sh:name "choice attribute"@en ;
   sh:description "A choice attribute is a attribute with a textual value which represents one choice from a known finite amount of possible choises."@en ;
   sh:property
@@ -495,9 +495,9 @@ se:ChoiceQuality
       sh:class se:Context ;
     ] ;
 .
-se:BlobQuality
+se:BlobAttribute
   a sh:NodeShape ;
-  sh:targetClass se:BlobQuality ;
+  sh:targetClass se:BlobAttribute ;
   sh:name "blob attribute"@en ;
   sh:description "A binary large object (blob) attribute is a attribute with a blob value."@en ;
   sh:property
@@ -587,9 +587,9 @@ se:Blob
       sh:maxCount 1 ;
     ] ;
 .
-se:PlaneQuality
+se:PlaneAttribute
   a sh:NodeShape ;
-  sh:targetClass se:PlaneQuality ;
+  sh:targetClass se:PlaneAttribute ;
   sh:name "plane attribute"@en ;
   sh:description "A plane attribute is a attribute with a plane (3d reference frame) value."@en ;
   sh:property
@@ -648,9 +648,9 @@ se:Plane
       sh:class se:Vector ; 
     ] ;
 .
-se:VectorQuality
+se:VectorAttribute
   a sh:NodeShape ;
-  sh:targetClass se:VectorQuality ;
+  sh:targetClass se:VectorAttribute ;
   sh:name "vector attribute"@en ;
   sh:description "A vector attribute has a vector as a value."@en ;
   sh:property
@@ -708,9 +708,9 @@ se:Vector
       sh:datatype xsd:double ; 
     ] ;
 .
-se:PointQuality
+se:PointAttribute
   a sh:NodeShape ;
-  sh:targetClass se:PointQuality ;
+  sh:targetClass se:PointAttribute ;
   sh:name "point attribute"@en ;
   sh:description "A point attribute has a point as a value."@en ;
   sh:property
@@ -872,52 +872,52 @@ se:InitializeKitCommand
 #       sh:description "A parameter of the transdesign."@en ;
 #       sh:or (
 #         [
-#           sh:class se:DecimalQuality ;
+#           sh:class se:DecimalAttribute ;
 #           sh:name "decimal attribute parameter"@en ;
 #           sh:description "A decimal attribute of the transdesign."@en ;
 #         ]
 #         [
-#           sh:class se:IntegerQuality ;
+#           sh:class se:IntegerAttribute ;
 #           sh:name "integer attribute parameter"@en ;
 #           sh:description "A integer attribute parameter of the transdesign."@en ;
 #         ]
 #         [
-#           sh:class se:NaturalQuality ;
+#           sh:class se:NaturalAttribute ;
 #           sh:name "natural attribute parameter"@en ;
 #           sh:description "A natural attribute parameter of the transdesign."@en ;
 #         ]
 #         [
-#           sh:class se:BooleanQuality ;
+#           sh:class se:BooleanAttribute ;
 #           sh:name "boolean attribute parameter"@en ;
 #           sh:description "A boolean attribute parameter of the transdesign."@en ;
 #         ]
 #         [
-#           sh:class se:FuzzyQuality ;
+#           sh:class se:FuzzyAttribute ;
 #           sh:name "fuzzy attribute parameter"@en ;
 #           sh:description "A fuzzy attribute parameter of the transdesign."@en ;
 #         ]
 #         [
-#           sh:class se:ChoiceQuality ;
+#           sh:class se:ChoiceAttribute ;
 #           sh:name "choice attribute parameter"@en ;
 #           sh:description "A choice attribute parameter of the transdesign."@en ;
 #         ]
 #         [
-#           sh:class se:BlobQuality ;
+#           sh:class se:BlobAttribute ;
 #           sh:name "blob attribute parameter"@en ;
 #           sh:description "A blob attribute parameter of the transdesign."@en ;
 #         ]
 #         [
-#           sh:class se:PointQuality ;
+#           sh:class se:PointAttribute ;
 #           sh:name "point attribute parameter"@en ;
 #           sh:description "A point attribute parameter of the transdesign."@en ;
 #         ]
 #         [
-#           sh:class se:VectorQuality ;
+#           sh:class se:VectorAttribute ;
 #           sh:name "vector attribute parameter"@en ;
 #           sh:description "A vector attribute parameter of the transdesign."@en ;
 #         ]
 #         [
-#           sh:class se:PlaneQuality ;
+#           sh:class se:PlaneAttribute ;
 #           sh:name "plane attribute parameter"@en ;
 #           sh:description "A plane attribute parameter of the transdesign."@en ;
 #         ]

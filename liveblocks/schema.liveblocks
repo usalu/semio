@@ -162,13 +162,13 @@ type TypeId {
 
 # ↗️ The output of a attribute.
 type Attribute {
-    # 📏 The optional definition [ text | url ] of the attribute.
+    # 🏷️ The optional definition [ text | url ] of the attribute.
     definition?: string;
-    # 📏 The name of the attribute.
+    # 🏷️ The name of the attribute.
     name: string;
-    # 📏 The optional unit of the value of the attribute.
+    # 🏷️ The optional unit of the value of the attribute.
     unit?: string;
-    # 📏 The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.
+    # 🏷️ The optional value [ text | url ] of the attribute. No value is equivalent to true.
     value?: string;
 }
 

@@ -954,7 +954,7 @@
           },
           "attributes": {
             "items": {
-              "$ref": "#/components/schemas/QualityContext"
+              "$ref": "#/components/schemas/AttributeContext"
             },
             "type": "array",
             "title": "Attributes"
@@ -1029,7 +1029,7 @@
           },
           "attributes": {
             "items": {
-              "$ref": "#/components/schemas/QualityContext"
+              "$ref": "#/components/schemas/AttributeContext"
             },
             "type": "array",
             "title": "Attributes"
@@ -1125,7 +1125,7 @@
           },
           "attributes": {
             "items": {
-              "$ref": "#/components/schemas/QualityInput"
+              "$ref": "#/components/schemas/AttributeInput"
             },
             "type": "array",
             "title": "Attributes"
@@ -1383,7 +1383,7 @@
           },
           "attributes": {
             "items": {
-              "$ref": "#/components/schemas/QualityContext"
+              "$ref": "#/components/schemas/AttributeContext"
             },
             "type": "array",
             "title": "Attributes",
@@ -1479,7 +1479,7 @@
           },
           "attributes": {
             "items": {
-              "$ref": "#/components/schemas/QualityInput"
+              "$ref": "#/components/schemas/AttributeInput"
             },
             "type": "array",
             "title": "Attributes",
@@ -1715,7 +1715,7 @@
           },
           "attributes": {
             "items": {
-              "$ref": "#/components/schemas/QualityContext"
+              "$ref": "#/components/schemas/AttributeContext"
             },
             "type": "array",
             "title": "Attributes",
@@ -1773,7 +1773,7 @@
           },
           "attributes": {
             "items": {
-              "$ref": "#/components/schemas/QualityContext"
+              "$ref": "#/components/schemas/AttributeContext"
             },
             "type": "array",
             "title": "Attributes",
@@ -1845,7 +1845,7 @@
           },
           "attributes": {
             "items": {
-              "$ref": "#/components/schemas/QualityInput"
+              "$ref": "#/components/schemas/AttributeInput"
             },
             "type": "array",
             "title": "Attributes",
@@ -2151,7 +2151,7 @@
           },
           "attributes": {
             "items": {
-              "$ref": "#/components/schemas/QualityContext"
+              "$ref": "#/components/schemas/AttributeContext"
             },
             "type": "array",
             "title": "Attributes",
@@ -2233,7 +2233,7 @@
           },
           "attributes": {
             "items": {
-              "$ref": "#/components/schemas/QualityInput"
+              "$ref": "#/components/schemas/AttributeInput"
             },
             "type": "array",
             "title": "Attributes",
@@ -2316,7 +2316,7 @@
         "title": "Port",
         "description": "\ud83d\udd0c A port is a connection point (with a direction) of a type."
       },
-      "QualityContext": {
+      "AttributeContext": {
         "properties": {
           "name": {
             "type": "string",
@@ -2328,7 +2328,7 @@
             "type": "string",
             "maxLength": 64,
             "title": "Value",
-            "description": "\ud83d\udccf The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.",
+            "description": "\ud83d\udccf The optional value [ text | url ] of the attribute. No value is equivalent to true.",
             "default": ""
           },
           "unit": {
@@ -2343,10 +2343,10 @@
         "required": [
           "name"
         ],
-        "title": "QualityContext",
-        "description": "\ud83d\udccf A attribute is a named value with a unit and a definition."
+        "title": "AttributeContext",
+        "description": "\ud83d\udccf A attribute is a key value pair with an an optional definition."
       },
-      "QualityInput": {
+      "AttributeInput": {
         "properties": {
           "name": {
             "type": "string",
@@ -2358,7 +2358,7 @@
             "type": "string",
             "maxLength": 64,
             "title": "Value",
-            "description": "\ud83d\udccf The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.",
+            "description": "\ud83d\udccf The optional value [ text | url ] of the attribute. No value is equivalent to true.",
             "default": ""
           },
           "unit": {
@@ -2380,8 +2380,8 @@
         "required": [
           "name"
         ],
-        "title": "QualityInput",
-        "description": "\ud83d\udccf A attribute is a named value with a unit and a definition."
+        "title": "AttributeInput",
+        "description": "\ud83d\udccf A attribute is a key value pair with an an optional definition."
       },
       "Attribute": {
         "properties": {
@@ -2395,7 +2395,7 @@
             "type": "string",
             "maxLength": 64,
             "title": "Value",
-            "description": "\ud83d\udccf The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.",
+            "description": "\ud83d\udccf The optional value [ text | url ] of the attribute. No value is equivalent to true.",
             "default": ""
           },
           "unit": {
@@ -2418,7 +2418,7 @@
           "name"
         ],
         "title": "Attribute",
-        "description": "\ud83d\udccf A attribute is a named value with a unit and a definition."
+        "description": "\ud83d\udccf A attribute is a key value pair with an an optional definition."
       },
       "RepresentationInput": {
         "properties": {
@@ -2445,7 +2445,7 @@
           },
           "attributes": {
             "items": {
-              "$ref": "#/components/schemas/QualityInput"
+              "$ref": "#/components/schemas/AttributeInput"
             },
             "type": "array",
             "title": "Attributes",
@@ -2626,7 +2626,7 @@
           },
           "attributes": {
             "items": {
-              "$ref": "#/components/schemas/QualityContext"
+              "$ref": "#/components/schemas/AttributeContext"
             },
             "type": "array",
             "title": "Attributes"
@@ -2699,7 +2699,7 @@
           },
           "attributes": {
             "items": {
-              "$ref": "#/components/schemas/QualityContext"
+              "$ref": "#/components/schemas/AttributeContext"
             },
             "type": "array",
             "title": "Attributes"
@@ -2823,7 +2823,7 @@
           },
           "attributes": {
             "items": {
-              "$ref": "#/components/schemas/QualityInput"
+              "$ref": "#/components/schemas/AttributeInput"
             },
             "type": "array",
             "title": "Attributes"

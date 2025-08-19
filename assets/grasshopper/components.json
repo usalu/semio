@@ -50,9 +50,9 @@
             "kind": "View"
           },
           {
-            "description": "The optional qualities of the design.",
+            "description": "The optional attributes of the design.",
             "name": "Attributes",
-            "nickname": "Ql*",
+            "nickname": "At*",
             "kind": "Attributes"
           },
           {
@@ -295,7 +295,7 @@
       },
       {
         "name": "Sum Attributes",
-        "description": "Sum up the qualities of a type for each piece with this type in a design.",
+        "description": "Sum up the attributes of a type for each piece with this type in a design.",
         "icon": "icon",
         "nickname": "\u2211Qal",
         "inputs": [
@@ -328,7 +328,7 @@
           {
             "description": "A attribute is meta-data for decision making.",
             "name": "Attribute",
-            "nickname": "Ql",
+            "nickname": "At",
             "kind": "Attribute"
           }
         ]
@@ -359,7 +359,7 @@
       },
       {
         "name": "Normalize Design",
-        "description": "Normalize a design for this document. This includes changing the unit to the document unit and rescaling the affected values. Further it reoders pieces, connections and qualities. Connections might be swapped, so that the connected piece id is lexically first. The order of authors is not changed.",
+        "description": "Normalize a design for this document. This includes changing the unit to the document unit and rescaling the affected values. Further it reoders pieces, connections and attributes. Connections might be swapped, so that the connected piece id is lexically first. The order of authors is not changed.",
         "icon": "icon",
         "nickname": "\u21d2Dsn",
         "inputs": [
@@ -381,7 +381,7 @@
       },
       {
         "name": "Normalize Type",
-        "description": "Normalize a type for this document. This converts the length unit of the type to the length unit of this document and it scales the ports by the right scaling factor. Further it sorts the representations, ports, qualities by it's keys. The order of authors is not changed.",
+        "description": "Normalize a type for this document. This converts the length unit of the type to the length unit of this document and it scales the ports by the right scaling factor. Further it sorts the representations, ports, attributes by it's keys. The order of authors is not changed.",
         "icon": "icon",
         "nickname": "\u21d2Typ",
         "inputs": [
@@ -554,7 +554,7 @@
             "kind": "Name"
           },
           {
-            "description": "The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.",
+            "description": "The optional value [ text | url ] of the attribute. No value is equivalent to true.",
             "name": "Value",
             "nickname": "Vl?",
             "kind": "Value"
@@ -568,9 +568,9 @@
         ],
         "outputs": [
           {
-            "description": "A attribute is a named value with a unit and a definition.",
+            "description": "A attribute is a key value pair with an an optional definition.",
             "name": "Attribute",
-            "nickname": "Ql",
+            "nickname": "At",
             "kind": "Attribute"
           }
         ]
@@ -987,12 +987,12 @@
         "name": "Select Attribute",
         "description": "Select a attribute by its name. If no attribute matches, null is returned.",
         "icon": "icon",
-        "nickname": "?Qal",
+        "nickname": "?Atr",
         "inputs": [
           {
-            "description": "A attribute is a named value with a unit and a definition.",
+            "description": "A attribute is a key value pair with an an optional definition.",
             "name": "Attribute",
-            "nickname": "Ql",
+            "nickname": "At",
             "kind": "Attribute"
           },
           {
@@ -1004,9 +1004,9 @@
         ],
         "outputs": [
           {
-            "description": "A attribute is a named value with a unit and a definition.",
+            "description": "A attribute is a key value pair with an an optional definition.",
             "name": "Attribute",
-            "nickname": "Ql",
+            "nickname": "At",
             "kind": "Attribute"
           }
         ]
@@ -1172,7 +1172,7 @@
       {
         "name": "Deserialize Attribute",
         "description": "Deserialize a attribute.",
-        "nickname": "<Qal",
+        "nickname": "<Atr",
         "inputs": [
           {
             "description": "Text of serialized Attribute.",
@@ -1185,7 +1185,7 @@
           {
             "description": "Deserialized Attribute.",
             "name": "Attribute",
-            "nickname": "Ql",
+            "nickname": "At",
             "kind": "Attribute"
           }
         ],
@@ -1654,12 +1654,12 @@
       {
         "name": "Serialize Attribute",
         "description": "Serialize a attribute.",
-        "nickname": ">Qal",
+        "nickname": ">Atr",
         "inputs": [
           {
             "description": "The attribute to serialize.",
             "name": "Attribute",
-            "nickname": "Ql",
+            "nickname": "At",
             "kind": "Attribute"
           },
           {
@@ -1851,9 +1851,9 @@
             "kind": "Designs"
           },
           {
-            "description": "The optional qualities of the kit.",
+            "description": "The optional attributes of the kit.",
             "name": "Attributes",
-            "nickname": "Ql*",
+            "nickname": "At*",
             "kind": "Attributes"
           }
         ],
@@ -1937,9 +1937,9 @@
             "kind": "Designs"
           },
           {
-            "description": "The optional qualities of the kit.",
+            "description": "The optional attributes of the kit.",
             "name": "Attributes",
-            "nickname": "Ql*",
+            "nickname": "At*",
             "kind": "Attributes"
           }
         ],
@@ -2029,9 +2029,9 @@
             "kind": "Authors"
           },
           {
-            "description": "The optional qualities of the design.",
+            "description": "The optional attributes of the design.",
             "name": "Attributes",
-            "nickname": "Ql*",
+            "nickname": "At*",
             "kind": "Attributes"
           }
         ],
@@ -2115,9 +2115,9 @@
             "kind": "Authors"
           },
           {
-            "description": "The optional qualities of the design.",
+            "description": "The optional attributes of the design.",
             "name": "Attributes",
-            "nickname": "Ql*",
+            "nickname": "At*",
             "kind": "Attributes"
           }
         ],
@@ -2213,9 +2213,9 @@
             "kind": "Authors"
           },
           {
-            "description": "The optional qualities of the type.",
+            "description": "The optional attributes of the type.",
             "name": "Attributes",
-            "nickname": "Ql*",
+            "nickname": "At*",
             "kind": "Attributes"
           }
         ],
@@ -2305,9 +2305,9 @@
             "kind": "Authors"
           },
           {
-            "description": "The optional qualities of the type.",
+            "description": "The optional attributes of the type.",
             "name": "Attributes",
-            "nickname": "Ql*",
+            "nickname": "At*",
             "kind": "Attributes"
           }
         ],
@@ -2409,9 +2409,9 @@
             "kind": "Y"
           },
           {
-            "description": "The optional qualities of the connection.",
+            "description": "The optional attributes of the connection.",
             "name": "Attributes",
-            "nickname": "Ql*",
+            "nickname": "At*",
             "kind": "Attributes"
           }
         ],
@@ -2507,9 +2507,9 @@
             "kind": "Y"
           },
           {
-            "description": "The optional qualities of the connection.",
+            "description": "The optional attributes of the connection.",
             "name": "Attributes",
-            "nickname": "Ql*",
+            "nickname": "At*",
             "kind": "Attributes"
           }
         ],
@@ -2581,9 +2581,9 @@
             "kind": "Locked"
           },
           {
-            "description": "The optional qualities of the piece.",
+            "description": "The optional attributes of the piece.",
             "name": "Attributes",
-            "nickname": "Ql*",
+            "nickname": "At*",
             "kind": "Attributes"
           }
         ],
@@ -2649,9 +2649,9 @@
             "kind": "Locked"
           },
           {
-            "description": "The optional qualities of the piece.",
+            "description": "The optional attributes of the piece.",
             "name": "Attributes",
-            "nickname": "Ql*",
+            "nickname": "At*",
             "kind": "Attributes"
           }
         ],
@@ -2723,9 +2723,9 @@
             "kind": "T"
           },
           {
-            "description": "The optional qualities of the port.",
+            "description": "The optional attributes of the port.",
             "name": "Attributes",
-            "nickname": "Ql*",
+            "nickname": "At*",
             "kind": "Attributes"
           }
         ],
@@ -2791,9 +2791,9 @@
             "kind": "T"
           },
           {
-            "description": "The optional qualities of the port.",
+            "description": "The optional attributes of the port.",
             "name": "Attributes",
-            "nickname": "Ql*",
+            "nickname": "At*",
             "kind": "Attributes"
           }
         ],
@@ -2835,9 +2835,9 @@
             "kind": "Tags"
           },
           {
-            "description": "The optional qualities of the representation.",
+            "description": "The optional attributes of the representation.",
             "name": "Attributes",
-            "nickname": "Ql*",
+            "nickname": "At*",
             "kind": "Attributes"
           }
         ],
@@ -2873,9 +2873,9 @@
             "kind": "Tags"
           },
           {
-            "description": "The optional qualities of the representation.",
+            "description": "The optional attributes of the representation.",
             "name": "Attributes",
-            "nickname": "Ql*",
+            "nickname": "At*",
             "kind": "Attributes"
           }
         ],
@@ -2884,12 +2884,12 @@
       {
         "name": "Model Attribute",
         "description": "Construct, deconstruct or modify a attribute",
-        "nickname": "~Qal",
+        "nickname": "~Atr",
         "inputs": [
           {
             "description": "The optional attribute to deconstruct or modify.",
             "name": "Attribute",
-            "nickname": "Ql?",
+            "nickname": "At?",
             "kind": "Attribute"
           },
           {
@@ -2905,7 +2905,7 @@
             "kind": "Name"
           },
           {
-            "description": "The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.",
+            "description": "The optional value [ text | url ] of the attribute. No value is equivalent to true.",
             "name": "Value",
             "nickname": "Vl?",
             "kind": "Value"
@@ -2927,7 +2927,7 @@
           {
             "description": "The constructed or modified attribute.",
             "name": "Attribute",
-            "nickname": "Ql",
+            "nickname": "At",
             "kind": "Attribute"
           },
           {
@@ -2943,7 +2943,7 @@
             "kind": "Name"
           },
           {
-            "description": "The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.",
+            "description": "The optional value [ text | url ] of the attribute. No value is equivalent to true.",
             "name": "Value",
             "nickname": "Vl?",
             "kind": "Value"
@@ -3813,7 +3813,7 @@
     "1": [
       {
         "name": "Assess Performance",
-        "description": "Simple performance assement based on the following qualities of the types (No unit conversion is applied for now, so make sure that all your types have the values with the same unit.): floor area, effective floor area, residents, workspaces, construction cost, maintenance expenses, income, transmission heat loss, ventilation heat loss, cooling energy demand, technical equipment energy demand,construction global warming potential, heating load, cooling load, ventilation air flow volume",
+        "description": "Simple performance assement based on the following attributes of the types (No unit conversion is applied for now, so make sure that all your types have the values with the same unit.): floor area, effective floor area, residents, workspaces, construction cost, maintenance expenses, income, transmission heat loss, ventilation heat loss, cooling energy demand, technical equipment energy demand,construction global warming potential, heating load, cooling load, ventilation air flow volume",
         "icon": "icon",
         "nickname": "!Prf",
         "inputs": [

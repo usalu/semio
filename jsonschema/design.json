@@ -285,7 +285,7 @@
       "type": "object"
     },
     "Attribute": {
-      "description": "\ud83d\udccf A attribute is a named value with a unit and a definition.",
+      "description": "\ud83d\udccf A attribute is a key value pair with an an optional definition.",
       "properties": {
         "name": {
           "description": "\ud83d\udccf The name of the attribute.",
@@ -295,7 +295,7 @@
         },
         "value": {
           "default": "",
-          "description": "\ud83d\udccf The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.",
+          "description": "\ud83d\udccf The optional value [ text | url ] of the attribute. No value is equivalent to true.",
           "maxLength": 64,
           "title": "Value",
           "type": "string"
