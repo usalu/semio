@@ -12,38 +12,57 @@
     {
       "url": "representations/capsule-with-balcony_L.glb",
       "description": "",
-      "tags": ["model/gltf-binary"],
-      "qualities": []
+      "tags": [
+        "model/gltf-binary"
+      ],
+      "attributes": []
     },
     {
       "url": "representations/capsule-with-balcony_L_1to500.3dm",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to500"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm",
+        "1to500"
+      ],
+      "attributes": []
     },
     {
       "url": "representations/capsule-with-balcony_L_1to200.3dm",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to200"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm",
+        "1to200"
+      ],
+      "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b8c26ca1c9",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to500", "model/vnd.speckle+json"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm",
+        "1to500",
+        "model/vnd.speckle+json"
+      ],
+      "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/a6e1f7d736",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to200", "model/vnd.speckle+json"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm",
+        "1to200",
+        "model/vnd.speckle+json"
+      ],
+      "attributes": []
     },
     {
       "url": "representations/capsule-with-balcony_L_collider.glb",
       "description": "",
-      "tags": ["model/gltf-binary", "collider"],
-      "qualities": []
+      "tags": [
+        "model/gltf-binary",
+        "collider"
+      ],
+      "attributes": []
     }
   ],
   "ports": [
@@ -52,17 +71,49 @@
       "description": "The middle of the main entrance door of the upper entrance floor.",
       "mandatory": false,
       "family": "door capsule west",
-      "compatibleFamilies": ["door tambour west"],
-      "point": { "x": 1.3, "y": -1.25, "z": 0.0 },
-      "direction": { "x": 1.0, "y": 0.0, "z": 0.0 },
+      "compatibleFamilies": [
+        "door tambour west"
+      ],
+      "point": {
+        "x": 1.3,
+        "y": -1.25,
+        "z": 0.0
+      },
+      "direction": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "t": 0.0,
-      "qualities": [{ "name": "entrance", "value": "", "unit": "", "definition": "" }]
+      "attributes": [
+        {
+          "name": "entrance",
+          "value": "",
+          "unit": "",
+          "definition": ""
+        }
+      ]
     }
   ],
-  "authors": [{ "name": "Ueli Saluz", "email": "ueli@semio-tech.org" }],
-  "qualities": [
-    { "name": "entrance", "value": "side", "unit": "", "definition": "" },
-    { "name": "view", "value": "front", "unit": "", "definition": "" },
+  "authors": [
+    {
+      "name": "Ueli Saluz",
+      "email": "ueli@semio-tech.org"
+    }
+  ],
+  "attributes": [
+    {
+      "name": "entrance",
+      "value": "side",
+      "unit": "",
+      "definition": ""
+    },
+    {
+      "name": "view",
+      "value": "front",
+      "unit": "",
+      "definition": ""
+    },
     {
       "name": "length",
       "value": "5.7",
@@ -81,7 +132,12 @@
       "unit": "m",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height"
     },
-    { "name": "window shape", "value": "round", "unit": "", "definition": "" },
+    {
+      "name": "window shape",
+      "value": "round",
+      "unit": "",
+      "definition": ""
+    },
     {
       "name": "effective floor area",
       "value": "10.17",
@@ -112,7 +168,12 @@
       "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
-    { "name": "income", "value": "13104", "unit": "€/a", "definition": "" },
+    {
+      "name": "income",
+      "value": "13104",
+      "unit": "€/a",
+      "definition": ""
+    },
     {
       "name": "maintenance expenses",
       "value": "1048",
@@ -125,6 +186,11 @@
       "unit": "kgCO2e",
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979 "
     },
-    { "name": "mirrored", "value": "", "unit": "", "definition": "" }
+    {
+      "name": "mirrored",
+      "value": "",
+      "unit": "",
+      "definition": ""
+    }
   ]
 }

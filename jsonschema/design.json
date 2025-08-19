@@ -16,7 +16,10 @@
           "type": "string"
         }
       },
-      "required": ["name", "email"],
+      "required": [
+        "name",
+        "email"
+      ],
       "title": "Author",
       "type": "object"
     },
@@ -93,7 +96,10 @@
           "description": "\ud83e\uddf2 The connecting side of the connection."
         }
       },
-      "required": ["connected", "connecting"],
+      "required": [
+        "connected",
+        "connecting"
+      ],
       "title": "Connection",
       "type": "object"
     },
@@ -111,7 +117,10 @@
           "type": "number"
         }
       },
-      "required": ["x", "y"],
+      "required": [
+        "x",
+        "y"
+      ],
       "title": "DiagramPoint",
       "type": "object"
     },
@@ -129,7 +138,10 @@
           "type": "number"
         }
       },
-      "required": ["longitude", "latitude"],
+      "required": [
+        "longitude",
+        "latitude"
+      ],
       "title": "Location",
       "type": "object"
     },
@@ -192,16 +204,18 @@
           "default": null,
           "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
         },
-        "qualities": {
-          "description": "\ud83d\udccf The qualities of the piece.",
+        "attributes": {
+          "description": "\ud83d\udccf The attributes of the piece.",
           "items": {
-            "$ref": "#/$defs/Quality"
+            "$ref": "#/$defs/Attribute"
           },
-          "title": "Qualities",
+          "title": "Attributes",
           "type": "array"
         }
       },
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "title": "Piece",
       "type": "object"
     },
@@ -221,7 +235,11 @@
           "description": "\u27a1\ufe0f The y-axis of the plane."
         }
       },
-      "required": ["origin", "xAxis", "yAxis"],
+      "required": [
+        "origin",
+        "xAxis",
+        "yAxis"
+      ],
       "title": "Plane",
       "type": "object"
     },
@@ -244,7 +262,11 @@
           "type": "number"
         }
       },
-      "required": ["x", "y", "z"],
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
       "title": "Point",
       "type": "object"
     },
@@ -262,39 +284,41 @@
       "title": "PortId",
       "type": "object"
     },
-    "Quality": {
-      "description": "\ud83d\udccf A quality is a named value with a unit and a definition.",
+    "Attribute": {
+      "description": "\ud83d\udccf A attribute is a named value with a unit and a definition.",
       "properties": {
         "name": {
-          "description": "\ud83d\udccf The name of the quality.",
+          "description": "\ud83d\udccf The name of the attribute.",
           "maxLength": 64,
           "title": "Name",
           "type": "string"
         },
         "value": {
           "default": "",
-          "description": "\ud83d\udccf The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
+          "description": "\ud83d\udccf The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.",
           "maxLength": 64,
           "title": "Value",
           "type": "string"
         },
         "unit": {
           "default": "",
-          "description": "\ud83d\udccf The optional unit of the value of the quality.",
+          "description": "\ud83d\udccf The optional unit of the value of the attribute.",
           "maxLength": 64,
           "title": "Unit",
           "type": "string"
         },
         "definition": {
           "default": "",
-          "description": "\ud83d\udccf The optional definition [ text | uri ] of the quality.",
+          "description": "\ud83d\udccf The optional definition [ text | uri ] of the attribute.",
           "maxLength": 512,
           "title": "Definition",
           "type": "string"
         }
       },
-      "required": ["name"],
-      "title": "Quality",
+      "required": [
+        "name"
+      ],
+      "title": "Attribute",
       "type": "object"
     },
     "Side": {
@@ -307,7 +331,10 @@
           "$ref": "#/$defs/PortId"
         }
       },
-      "required": ["piece", "port"],
+      "required": [
+        "piece",
+        "port"
+      ],
       "title": "Side",
       "type": "object"
     },
@@ -328,7 +355,9 @@
           "type": "string"
         }
       },
-      "required": ["name"],
+      "required": [
+        "name"
+      ],
       "title": "TypeId",
       "type": "object"
     },
@@ -351,7 +380,11 @@
           "type": "number"
         }
       },
-      "required": ["x", "y", "z"],
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
       "title": "Vector",
       "type": "object"
     }
@@ -450,15 +483,17 @@
       "title": "Authors",
       "type": "array"
     },
-    "qualities": {
+    "attributes": {
       "items": {
-        "$ref": "#/$defs/Quality"
+        "$ref": "#/$defs/Attribute"
       },
-      "title": "Qualities",
+      "title": "Attributes",
       "type": "array"
     }
   },
-  "required": ["name"],
+  "required": [
+    "name"
+  ],
   "title": "Design",
   "type": "object"
 }

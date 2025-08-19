@@ -30,7 +30,7 @@ type Kit implements Node {
   updated: DateTime!
   types(before: String, after: String, first: Int, last: Int): TypeNodeConnection
   designs(before: String, after: String, first: Int, last: Int): DesignNodeConnection
-  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
+  attributes(before: String, after: String, first: Int, last: Int): QualityNodeConnection
 
   """
   The ID of the object
@@ -111,7 +111,7 @@ type Type implements Node {
   representations(before: String, after: String, first: Int, last: Int): RepresentationNodeConnection
   ports(before: String, after: String, first: Int, last: Int): PortNodeConnection
   authors_(before: String, after: String, first: Int, last: Int): AuthorNodeConnection
-  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
+  attributes(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   kit: Kit
   pieces(before: String, after: String, first: Int, last: Int): PieceNodeConnection
 
@@ -153,7 +153,7 @@ type RepresentationNodeEdge {
 type Representation implements Node {
   url: String!
   description: String!
-  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
+  attributes(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   type: Type
 
   """
@@ -182,7 +182,7 @@ type QualityNodeEdge {
   """
   The item at the end of the edge
   """
-  node: Quality
+  node: Attribute
 
   """
   A cursor for use in pagination
@@ -190,7 +190,7 @@ type QualityNodeEdge {
   cursor: String!
 }
 
-type Quality implements Node {
+type Attribute implements Node {
   name: String!
   value: String!
   unit: String!
@@ -215,7 +215,7 @@ type Port implements Node {
   family: String!
   t: Float!
   id_: String
-  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
+  attributes(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   type: Type
 
   """
@@ -278,7 +278,7 @@ type Connection implements Node {
   tilt: Float!
   x: Float!
   y: Float!
-  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
+  attributes(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   design: Design
 
   """
@@ -302,7 +302,7 @@ type Design implements Node {
   pieces(before: String, after: String, first: Int, last: Int): PieceNodeConnection
   connections(before: String, after: String, first: Int, last: Int): ConnectionNodeConnection
   authors_(before: String, after: String, first: Int, last: Int): AuthorNodeConnection
-  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
+  attributes(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   kit: Kit
 
   """
@@ -345,7 +345,7 @@ type Piece implements Node {
   id_: String
   type: Type
   plane: Plane
-  qualities(before: String, after: String, first: Int, last: Int): QualityNodeConnection
+  attributes(before: String, after: String, first: Int, last: Int): QualityNodeConnection
   design: Design
 
   """
@@ -583,9 +583,9 @@ input KitInputNode {
   designs: [DesignInputNode] = null
 
   """
-  📏 The qualities of the kit.
+  📏 The attributes of the kit.
   """
-  qualities: [QualityInputNode] = null
+  attributes: [QualityInputNode] = null
 }
 
 input TypeInputNode {
@@ -632,7 +632,7 @@ input TypeInputNode {
   representations: [RepresentationInputNode] = null
   ports: [PortInputNode] = null
   authors: [AuthorInputNode] = null
-  qualities: [QualityInputNode] = null
+  attributes: [QualityInputNode] = null
 }
 
 input LocationInputNode {
@@ -664,29 +664,29 @@ input RepresentationInputNode {
   tags: [String] = null
 
   """
-  📏 The qualities of the representation.
+  📏 The attributes of the representation.
   """
-  qualities: [QualityInputNode] = null
+  attributes: [QualityInputNode] = null
 }
 
 input QualityInputNode {
   """
-  📏 The name of the quality.
+  📏 The name of the attribute.
   """
   name: String!
 
   """
-  📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
+  📏 The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.
   """
   value: String = ""
 
   """
-  📏 The optional unit of the value of the quality.
+  📏 The optional unit of the value of the attribute.
   """
   unit: String = ""
 
   """
-  📏 The optional definition [ text | uri ] of the quality.
+  📏 The optional definition [ text | uri ] of the attribute.
   """
   definition: String = ""
 }
@@ -733,9 +733,9 @@ input PortInputNode {
   direction: VectorInputNode!
 
   """
-  📏 The qualities of the port.
+  📏 The attributes of the port.
   """
-  qualities: [QualityInputNode] = null
+  attributes: [QualityInputNode] = null
 }
 
 input PointInputNode {
@@ -823,7 +823,7 @@ input DesignInputNode {
   pieces: [PieceInputNode] = null
   connections: [ConnectionInputNode] = null
   authors: [AuthorInputNode] = null
-  qualities: [QualityInputNode] = null
+  attributes: [QualityInputNode] = null
 }
 
 input PieceInputNode {
@@ -848,9 +848,9 @@ input PieceInputNode {
   center: DiagramPointInputNode = null
 
   """
-  📏 The qualities of the piece.
+  📏 The attributes of the piece.
   """
-  qualities: [QualityInputNode] = null
+  attributes: [QualityInputNode] = null
   type: TypeIdInputNode!
 }
 

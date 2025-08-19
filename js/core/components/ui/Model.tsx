@@ -256,7 +256,7 @@ const ModelDesign: FC = () => {
   const pieceDiffStatuses = useMemo(() => {
     return (
       flatDesign.pieces?.map((piece: Piece) => {
-        const diffQuality = piece.qualities?.find((q: any) => q.name === "semio.diffStatus");
+        const diffQuality = piece.attributes?.find((q: any) => q.name === "semio.diffStatus");
         return (diffQuality?.value as DiffStatus) || DiffStatus.Unchanged;
       }) || []
     );

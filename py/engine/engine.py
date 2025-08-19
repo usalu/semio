@@ -561,8 +561,8 @@ class TableEntity(Entity, Table, abc.ABC):
 
 # region Domain
 
-# region Quality
-# https://github.com/usalu/semio-quality-
+# region Attribute
+# https://github.com/usalu/semio-attribute-
 
 
 class QualityNameField(RealField, abc.ABC):
@@ -601,24 +601,24 @@ class QualityOutput(QualityDefinitionField, QualityUnitField, QualityValueField,
     pass
 
 
-class Quality(QualityDefinitionField, QualityUnitField, QualityValueField, QualityNameField, TableEntity, table=True):
-    PLURAL = "qualities"
-    __tablename__ = "quality"
+class Attribute(QualityDefinitionField, QualityUnitField, QualityValueField, QualityNameField, TableEntity, table=True):
+    PLURAL = "attributes"
+    __tablename__ = "attribute"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     representationPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("representation_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("representation.id")), default=None, exclude=True)
-    representation: typing.Optional["Representation"] = sqlmodel.Relationship(back_populates="qualities")
+    representation: typing.Optional["Representation"] = sqlmodel.Relationship(back_populates="attributes")
     portPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("port.id")), default=None, exclude=True)
-    port: typing.Optional["Port"] = sqlmodel.Relationship(back_populates="qualities")
+    port: typing.Optional["Port"] = sqlmodel.Relationship(back_populates="attributes")
     typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")), default=None, exclude=True)
-    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="qualities")
+    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="attributes")
     piecePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("piece.id")), default=None, exclude=True)
-    piece: typing.Optional["Piece"] = sqlmodel.Relationship(back_populates="qualities")
+    piece: typing.Optional["Piece"] = sqlmodel.Relationship(back_populates="attributes")
     connectionPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("connection_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("connection.id")), default=None, exclude=True)
-    connection: typing.Optional["Connection"] = sqlmodel.Relationship(back_populates="qualities")
+    connection: typing.Optional["Connection"] = sqlmodel.Relationship(back_populates="attributes")
     designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")), default=None, exclude=True)
-    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="qualities")
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="attributes")
     kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")), default=None, exclude=True)
-    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="qualities")
+    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="attributes")
 
     __table_args__ = (
         sqlalchemy.CheckConstraint(
@@ -665,7 +665,7 @@ class Quality(QualityDefinitionField, QualityUnitField, QualityValueField, Quali
         return self.name
 
 
-# endregion Quality
+# endregion Attribute
 
 # region Tag
 # https://github.com/usalu/semio-tag-
@@ -713,15 +713,15 @@ class RepresentationProps(RepresentationTagsField, RepresentationDescriptionFiel
 
 
 class RepresentationInput(RepresentationTagsField, RepresentationDescriptionField, RepresentationUrlField, Input):
-    qualities: list[QualityInput] = sqlmodel.Field(default_factory=list)
+    attributes: list[QualityInput] = sqlmodel.Field(default_factory=list)
 
 
 class RepresentationContext(RepresentationTagsField, RepresentationDescriptionField, Context):
-    qualities: list[QualityContext] = sqlmodel.Field(default_factory=list)
+    attributes: list[QualityContext] = sqlmodel.Field(default_factory=list)
 
 
 class RepresentationOutput(RepresentationTagsField, RepresentationDescriptionField, RepresentationUrlField, Output):
-    qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[QualityOutput] = sqlmodel.Field(default_factory=list)
 
 
 class Representation(RepresentationDescriptionField, RepresentationUrlField, TableEntity, table=True):
@@ -729,7 +729,7 @@ class Representation(RepresentationDescriptionField, RepresentationUrlField, Tab
     __tablename__ = "representation"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     tags_: list[Tag] = sqlmodel.Relationship(back_populates="representation", cascade_delete=True)
-    qualities: list[Quality] = sqlmodel.Relationship(back_populates="representation", cascade_delete=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="representation", cascade_delete=True)
     typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")), default=None, exclude=True)
     type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="representations")
 
@@ -759,7 +759,7 @@ class Representation(RepresentationDescriptionField, RepresentationUrlField, Tab
         except KeyError:
             pass
         try:
-            entity.qualities = [Quality.parse(quality) for quality in obj["qualities"]]
+            entity.attributes = [Attribute.parse(attribute) for attribute in obj["attributes"]]
         except KeyError:
             pass
         return entity
@@ -770,7 +770,7 @@ class Representation(RepresentationDescriptionField, RepresentationUrlField, Tab
         # Probably some sqlmodel issue with transient objects that are never written to the database.
         # 'str' object has no attribute 'order'
         # entity["tags"] = self.tags
-        entity["qualities"] = [q.dump() for q in self.qualities]
+        entity["attributes"] = [q.dump() for q in self.attributes]
         return RepresentationOutput(**entity)
 
     # TODO: Automatic derive from Id model.
@@ -1225,15 +1225,15 @@ class PortProps(PortTField, PortCompatibleFamiliesField, PortFamilyField, PortMa
 class PortInput(PortTField, PortCompatibleFamiliesField, PortFamilyField, PortMandatoryField, PortDescriptionField, PortIdField, Input):
     point: PointInput = sqlmodel.Field()
     direction: VectorInput = sqlmodel.Field()
-    qualities: list[QualityInput] = sqlmodel.Field(default_factory=list)
+    attributes: list[QualityInput] = sqlmodel.Field(default_factory=list)
 
 
 class PortContext(PortTField, PortDirectionField, PortPointField, PortCompatibleFamiliesField, PortFamilyField, PortMandatoryField, PortDescriptionField, PortIdField, Context):
-    qualities: list[QualityContext] = sqlmodel.Field(default_factory=list)
+    attributes: list[QualityContext] = sqlmodel.Field(default_factory=list)
 
 
 class PortOutput(PortTField, PortDirectionField, PortPointField, PortCompatibleFamiliesField, PortFamilyField, PortMandatoryField, PortDescriptionField, PortIdField, Output):
-    qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[QualityOutput] = sqlmodel.Field(default_factory=list)
 
 
 class Port(PortTField, PortFamilyField, PortMandatoryField, PortDescriptionField, TableEntity, table=True):
@@ -1253,7 +1253,7 @@ class Port(PortTField, PortFamilyField, PortMandatoryField, PortDescriptionField
     directionX: float = sqlmodel.Field(sa_column=sqlmodel.Column("direction_x", sqlalchemy.Float()), exclude=True)
     directionY: float = sqlmodel.Field(sa_column=sqlmodel.Column("direction_y", sqlalchemy.Float()), exclude=True)
     directionZ: float = sqlmodel.Field(sa_column=sqlmodel.Column("direction_z", sqlalchemy.Float()), exclude=True)
-    qualities: list["Quality"] = sqlmodel.Relationship(back_populates="port", cascade_delete=True)
+    attributes: list["Attribute"] = sqlmodel.Relationship(back_populates="port", cascade_delete=True)
     typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("type.id")), default=None, exclude=True)
     type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="ports")
     connecteds: list["Connection"] = sqlmodel.Relationship(back_populates="connectedPort", sa_relationship_kwargs={"foreign_keys": "Connection.connectedPortPk"})
@@ -1315,7 +1315,7 @@ class Port(PortTField, PortFamilyField, PortMandatoryField, PortDescriptionField
         except KeyError:
             pass
         try:
-            entity.qualities = [Quality.parse(q) for q in obj["qualities"]]
+            entity.attributes = [Attribute.parse(q) for q in obj["attributes"]]
         except KeyError:
             pass
         return entity
@@ -1325,7 +1325,7 @@ class Port(PortTField, PortFamilyField, PortMandatoryField, PortDescriptionField
         entity["point"] = self.point.dump()
         entity["direction"] = self.direction.dump()
         entity["compatibleFamilies"] = self.compatibleFamilies
-        entity["qualities"] = [q.dump() for q in self.qualities]
+        entity["attributes"] = [q.dump() for q in self.attributes]
         return PortOutput(**entity)
 
     # TODO: Automatic derive from Id model.
@@ -1482,7 +1482,7 @@ class TypeInput(TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantFiel
     representations: list[RepresentationInput] = sqlmodel.Field(default_factory=list)
     ports: list[PortInput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorInput] = sqlmodel.Field(default_factory=list)
-    qualities: list[QualityInput] = sqlmodel.Field(default_factory=list)
+    attributes: list[QualityInput] = sqlmodel.Field(default_factory=list)
 
 
 class TypeOutput(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantField, TypeImageField, TypeIconField, TypeDescriptionField, TypeNameField, Output):
@@ -1490,13 +1490,13 @@ class TypeOutput(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeVirtualF
     representations: list[RepresentationOutput] = sqlmodel.Field(default_factory=list)
     ports: list[PortOutput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorOutput] = sqlmodel.Field(default_factory=list)
-    qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[QualityOutput] = sqlmodel.Field(default_factory=list)
 
 
 class TypeContext(TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantField, TypeDescriptionField, TypeNameField, Context):
     location: typing.Optional[LocationContext] = sqlmodel.Field(default=None)
     ports: list[PortContext] = sqlmodel.Field(default_factory=list)
-    qualities: list[QualityContext] = sqlmodel.Field(default_factory=list)
+    attributes: list[QualityContext] = sqlmodel.Field(default_factory=list)
 
 
 class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantField, TypeImageField, TypeIconField, TypeDescriptionField, TypeNameField, TableEntity, table=True):
@@ -1514,7 +1514,7 @@ class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeVirtualField, 
 
     authors_: list[Author] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
 
-    qualities: list[Quality] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
 
     kitPk: typing.Optional[int] = sqlmodel.Field(
         # alias="kitId", # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
@@ -1589,7 +1589,7 @@ class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeVirtualField, 
         except KeyError:
             pass
         try:
-            entity.qualities = [Quality.parse(q) for q in obj["qualities"]]
+            entity.attributes = [Attribute.parse(q) for q in obj["attributes"]]
         except KeyError:
             pass
         try:
@@ -1606,7 +1606,7 @@ class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeVirtualField, 
         entity = {**TypeProps.model_validate(self).model_dump()}
         entity["representations"] = [r.dump() for r in self.representations]
         entity["ports"] = [p.dump() for p in self.ports]
-        entity["qualities"] = [q.dump() for q in self.qualities]
+        entity["attributes"] = [q.dump() for q in self.attributes]
         entity["authors"] = [a.dump() for a in self.authors]
         return TypeOutput(**entity)
 
@@ -1677,19 +1677,19 @@ class PieceProps(PieceCenterField, PiecePlaneField, PieceDesignField, PieceTypeF
 class PieceInput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Input):
     plane: typing.Optional[PlaneInput] = sqlmodel.Field(default=None)
     center: typing.Optional[DiagramPointInput] = sqlmodel.Field(default=None)
-    qualities: list[QualityInput] = sqlmodel.Field(default_factory=list)
+    attributes: list[QualityInput] = sqlmodel.Field(default_factory=list)
 
 
 class PieceContext(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Context):
     plane: typing.Optional[PlaneContext] = sqlmodel.Field(default=None)
     center: typing.Optional[DiagramPointContext] = sqlmodel.Field(default=None)
-    qualities: list[QualityContext] = sqlmodel.Field(default_factory=list)
+    attributes: list[QualityContext] = sqlmodel.Field(default_factory=list)
 
 
 class PieceOutput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Output):
     plane: typing.Optional[PlaneOutput] = sqlmodel.Field(default=None)
     center: typing.Optional[DiagramPointOutput] = sqlmodel.Field(default=None)
-    qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[QualityOutput] = sqlmodel.Field(default_factory=list)
 
 
 class PiecePrediction(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Prediction):
@@ -1714,7 +1714,7 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
     plane: typing.Optional[Plane] = sqlmodel.Relationship(back_populates="piece")
     centerX: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("center_x", sqlalchemy.Float()), exclude=True)
     centerY: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("center_y", sqlalchemy.Float()), exclude=True)
-    qualities: list[Quality] = sqlmodel.Relationship(back_populates="piece", cascade_delete=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="piece", cascade_delete=True)
     designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")), default=None, exclude=True)
     design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="pieces")
     connecteds: list["Connection"] = sqlmodel.Relationship(back_populates="connectedPiece", sa_relationship_kwargs={"foreign_keys": "Connection.connectedPiecePk"})
@@ -1791,7 +1791,7 @@ class Piece(PieceDescriptionField, TableEntity, table=True):
         entity = {**PieceProps.model_validate(self).model_dump()}
         entity["plane"] = self.plane.dump() if self.plane is not None else None
         entity["center"] = self.center.dump() if self.center is not None else None
-        entity["qualities"] = [q.dump() for q in self.qualities]
+        entity["attributes"] = [q.dump() for q in self.attributes]
         return PieceOutput(**entity)
 
     # TODO: Automatic emptying.
@@ -1975,7 +1975,7 @@ class Connection(ConnectionYField, ConnectionXField, ConnectionTiltField, Connec
         alias="connectingDesignPieceId", sa_column=sqlmodel.Column("connecting_design_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("piece.id"), nullable=True), default=None, exclude=True
     )
     connectingDesignPiece: typing.Optional[Piece] = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Piece", foreign_keys="[Connection.connectingDesignPiecePk]"))
-    qualities: list[Quality] = sqlmodel.Relationship(back_populates="connection", cascade_delete=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="connection", cascade_delete=True)
     designPk: typing.Optional[int] = sqlmodel.Field(alias="designId", sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("design.id")), default=None, exclude=True)
     design: "Design" = sqlmodel.Relationship(back_populates="connections")
     __table_args__ = (
@@ -2104,7 +2104,7 @@ class Connection(ConnectionYField, ConnectionXField, ConnectionTiltField, Connec
         entity = {**ConnectionProps.model_validate(self).model_dump()}
         entity["connected"] = self.connected.dump()
         entity["connecting"] = self.connecting.dump()
-        entity["qualities"] = [q.dump() for q in self.qualities]
+        entity["attributes"] = [q.dump() for q in self.attributes]
         return ConnectionOutput(**entity)
 
     # TODO: Automatic emptying.
@@ -2193,7 +2193,7 @@ class DesignInput(DesignUnitField, DesignViewField, DesignVariantField, DesignIm
     pieces: list[PieceInput] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionInput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorInput] = sqlmodel.Field(default_factory=list)
-    qualities: list[QualityInput] = sqlmodel.Field(default_factory=list)
+    attributes: list[QualityInput] = sqlmodel.Field(default_factory=list)
 
 
 class DesignContext(DesignUnitField, DesignViewField, DesignVariantField, DesignDescriptionField, DesignNameField, Context):
@@ -2202,7 +2202,7 @@ class DesignContext(DesignUnitField, DesignViewField, DesignVariantField, Design
     location: typing.Optional[LocationContext] = sqlmodel.Field(default=None)
     pieces: list[PieceContext] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionContext] = sqlmodel.Field(default_factory=list)
-    qualities: list[QualityContext] = sqlmodel.Field(default_factory=list)
+    attributes: list[QualityContext] = sqlmodel.Field(default_factory=list)
 
 
 class DesignOutput(DesignUpdatedField, DesignCreatedField, DesignUnitField, DesignViewField, DesignVariantField, DesignImageField, DesignIconField, DesignDescriptionField, DesignNameField, Output):
@@ -2212,7 +2212,7 @@ class DesignOutput(DesignUpdatedField, DesignCreatedField, DesignUnitField, Desi
     pieces: list[PieceOutput] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionOutput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorOutput] = sqlmodel.Field(default_factory=list)
-    qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[QualityOutput] = sqlmodel.Field(default_factory=list)
 
 
 class DesignPrediction(DesignDescriptionField, Prediction):
@@ -2233,7 +2233,7 @@ class Design(DesignUpdatedField, DesignCreatedField, DesignUnitField, DesignView
     pieces: list[Piece] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     connections: list[Connection] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     authors_: list[Author] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
-    qualities: list[Quality] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     kitPk: typing.Optional[int] = sqlmodel.Field(alias="kitId", sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")), default=None, exclude=True)
     kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="designs")
 
@@ -2302,8 +2302,8 @@ class Design(DesignUpdatedField, DesignCreatedField, DesignUnitField, DesignView
         except KeyError:
             pass
         try:
-            qualities = [Quality.parse(q) for q in obj["qualities"]]
-            entity.qualities = qualities
+            attributes = [Attribute.parse(q) for q in obj["attributes"]]
+            entity.attributes = attributes
         except KeyError:
             pass
         try:
@@ -2317,7 +2317,7 @@ class Design(DesignUpdatedField, DesignCreatedField, DesignUnitField, DesignView
         entity = {**DesignProps.model_validate(self).model_dump()}
         entity["pieces"] = [p.dump() for p in self.pieces]
         entity["connections"] = [c.dump() for c in self.connections]
-        entity["qualities"] = [q.dump() for q in self.qualities]
+        entity["attributes"] = [q.dump() for q in self.attributes]
         entity["authors"] = [a.dump() for a in self.authors]
         return DesignOutput(**entity)
 
@@ -2410,7 +2410,7 @@ class KitInput(KitLicenseField, KitHomepage, KitRemoteField, KitVersionField, Ki
 
     types: list[TypeInput] = sqlmodel.Field(default_factory=list)
     designs: list[DesignInput] = sqlmodel.Field(default_factory=list)
-    qualities: list[QualityInput] = sqlmodel.Field(default_factory=list)
+    attributes: list[QualityInput] = sqlmodel.Field(default_factory=list)
 
 
 class KitContext(KitDescriptionField, KitNameField, Context):
@@ -2418,7 +2418,7 @@ class KitContext(KitDescriptionField, KitNameField, Context):
 
     types: list[TypeContext] = sqlmodel.Field(default_factory=list)
     designs: list[DesignContext] = sqlmodel.Field(default_factory=list)
-    qualities: list[QualityContext] = sqlmodel.Field(default_factory=list)
+    attributes: list[QualityContext] = sqlmodel.Field(default_factory=list)
 
 
 class KitOutput(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, KitRemoteField, KitVersionField, KitPreviewField, KitImageField, KitIconField, KitDescriptionField, KitNameField, KitUriField, Output):
@@ -2426,7 +2426,7 @@ class KitOutput(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, 
 
     types: list[TypeOutput] = sqlmodel.Field(default_factory=list)
     designs: list[DesignOutput] = sqlmodel.Field(default_factory=list)
-    qualities: list[QualityOutput] = sqlmodel.Field(default_factory=list)
+    attributes: list[QualityOutput] = sqlmodel.Field(default_factory=list)
 
 
 class Kit(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, KitRemoteField, KitVersionField, KitPreviewField, KitImageField, KitIconField, KitDescriptionField, KitNameField, KitUriField, TableEntity, table=True):
@@ -2438,7 +2438,7 @@ class Kit(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, KitRem
 
     designs: list[Design] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
 
-    qualities: list[Quality] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
 
     __table_args__ = (sqlalchemy.UniqueConstraint("uri", name="unique"),)
 
@@ -2466,7 +2466,7 @@ class Kit(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, KitRem
         entity = {**KitProps.model_validate(self).model_dump()}
         entity["types"] = [t.dump() for t in self.types]
         entity["designs"] = [d.dump() for d in self.designs]
-        entity["qualities"] = [q.dump() for q in self.qualities]
+        entity["attributes"] = [q.dump() for q in self.attributes]
         return KitOutput(**entity)
 
     # TODO: Automatic emptying.
@@ -2802,17 +2802,17 @@ class DatabaseStore(Store, abc.ABC):
                             usedPort.point = newPorts[usedPortId].point
                             usedPort.direction = newPorts[usedPortId].direction
 
-                            for quality in list(usedPort.qualities):
-                                self.session.delete(quality)
-                            usedPort.qualities = []
+                            for attribute in list(usedPort.attributes):
+                                self.session.delete(attribute)
+                            usedPort.attributes = []
                             self.session.flush()
 
                             newQualities = []
-                            for newQuality in list(newPorts[usedPortId].qualities):
+                            for newQuality in list(newPorts[usedPortId].attributes):
                                 newQuality.port = usedPort
                                 self.session.add(newQuality)
                                 newQualities.append(newQuality)
-                            usedPort.qualities = newQualities
+                            usedPort.attributes = newQualities
                             self.session.flush()
 
                         for unusedPort in list(unusedPorts):
@@ -2832,10 +2832,10 @@ class DatabaseStore(Store, abc.ABC):
                             self.session.add(representation)
                         self.session.flush()
 
-                        existingType.qualities = []
-                        for quality in list(type.qualities):
-                            quality.type = existingType
-                            self.session.add(quality)
+                        existingType.attributes = []
+                        for attribute in list(type.attributes):
+                            attribute.type = existingType
+                            self.session.add(attribute)
                         self.session.flush()
 
                         existingType.authors = []
@@ -3102,8 +3102,8 @@ def encodeType(type: TypeContext):
     typeClone.description = encodeForPrompt(typeClone.description) if typeClone.description != "" else "NO_DESCRIPTION"
     for port in typeClone.ports:
         port.id_ = replaceDefault(port.id_, "DEFAULT")
-        # for quality in port.qualities:
-        #     quality.value = replaceDefault(quality.value, "TRUE")
+        # for attribute in port.attributes:
+        #     attribute.value = replaceDefault(attribute.value, "TRUE")
     return typeClone
 
 
@@ -3483,11 +3483,11 @@ GRAPHQLTYPES = {
     "float": graphene.NonNull(graphene.Float),
     "bool": graphene.NonNull(graphene.Boolean),
     "list[str]": graphene.NonNull(graphene.List(graphene.NonNull(graphene.String))),
-    "Quality": graphene.NonNull(lambda: QualityNode),
-    "list[Quality]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: QualityNode))),
-    "list[__main__.Quality]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: QualityNode))),
-    "list[__mp_main__.Quality]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: QualityNode))),
-    "list[engine.Quality]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: QualityNode))),
+    "Attribute": graphene.NonNull(lambda: QualityNode),
+    "list[Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: QualityNode))),
+    "list[__main__.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: QualityNode))),
+    "list[__mp_main__.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: QualityNode))),
+    "list[engine.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: QualityNode))),
     "DiagramPoint": graphene.NonNull(lambda: DiagramPointNode),
     "typing.Optional[__main__.DiagramPoint]": lambda: DiagramPointNode,
     "typing.Optional[__mp_main__.DiagramPoint]": lambda: DiagramPointNode,
@@ -3646,7 +3646,7 @@ class TableEntityNode(TableNode):
 
 class QualityNode(TableEntityNode):
     class Meta:
-        model = Quality
+        model = Attribute
 
 
 class QualityInputNode(InputNode):
@@ -3669,10 +3669,10 @@ class RepresentationNode(TableEntityNode):
         model = Representation
         excludedFields = ("tags_",)
 
-    # qualities = graphene.List(graphene.NonNull(lambda: QualityNode))
+    # attributes = graphene.List(graphene.NonNull(lambda: QualityNode))
 
     # def resolve_qualities(self, info):
-    #     return self.qualities
+    #     return self.attributes
 
 
 class RepresentationInputNode(InputNode):
@@ -3725,10 +3725,10 @@ class PortNode(TableEntityNode):
         model = Port
         exclude_fields = ("connecteds", "connectings")
 
-    # qualities = graphene.List(graphene.NonNull(lambda: QualityNode))
+    # attributes = graphene.List(graphene.NonNull(lambda: QualityNode))
 
     # def resolve_qualities(self, info):
-    #     return self.qualities
+    #     return self.attributes
 
 
 class PortInputNode(InputNode):

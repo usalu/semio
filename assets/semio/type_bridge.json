@@ -12,38 +12,57 @@
     {
       "url": "representations/bridge.glb",
       "description": "",
-      "tags": ["model/gltf-binary"],
-      "qualities": []
+      "tags": [
+        "model/gltf-binary"
+      ],
+      "attributes": []
     },
     {
       "url": "representations/bridge_1to500.3dm",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to500"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm",
+        "1to500"
+      ],
+      "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/833a270493",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to500", "model/vnd.speckle+json"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm",
+        "1to500",
+        "model/vnd.speckle+json"
+      ],
+      "attributes": []
     },
     {
       "url": "representations/bridge_1to200.3dm",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to200"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm",
+        "1to200"
+      ],
+      "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/c7c924a1d6",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to200", "model/vnd.speckle+json"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm",
+        "1to200",
+        "model/vnd.speckle+json"
+      ],
+      "attributes": []
     },
     {
       "url": "representations/bridge_collider.glb",
       "description": "",
-      "tags": ["model/gltf-binary", "collider"],
-      "qualities": []
+      "tags": [
+        "model/gltf-binary",
+        "collider"
+      ],
+      "attributes": []
     }
   ],
   "ports": [
@@ -52,27 +71,71 @@
       "description": "The middle of the east side of the plattform.",
       "mandatory": false,
       "family": "platform east",
-      "compatibleFamilies": ["door tambour west"],
-      "point": { "x": 5.6, "y": -1.3, "z": 0.0 },
-      "direction": { "x": 1.0, "y": 0.0, "z": 0.0 },
+      "compatibleFamilies": [
+        "door tambour west"
+      ],
+      "point": {
+        "x": 5.6,
+        "y": -1.3,
+        "z": 0.0
+      },
+      "direction": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "t": 0.25,
-      "qualities": [{ "name": "east", "value": "", "unit": "", "definition": "" }]
+      "attributes": [
+        {
+          "name": "east",
+          "value": "",
+          "unit": "",
+          "definition": ""
+        }
+      ]
     },
     {
       "id_": "w",
       "description": "The middle of the west side of the plattform.",
       "mandatory": false,
       "family": "platform west",
-      "compatibleFamilies": ["door tambour east"],
-      "point": { "x": 0.0, "y": -1.3, "z": 0.0 },
-      "direction": { "x": -1.0, "y": 0.0, "z": 0.0 },
+      "compatibleFamilies": [
+        "door tambour east"
+      ],
+      "point": {
+        "x": 0.0,
+        "y": -1.3,
+        "z": 0.0
+      },
+      "direction": {
+        "x": -1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "t": 0.75,
-      "qualities": [{ "name": "west", "value": "", "unit": "", "definition": "" }]
+      "attributes": [
+        {
+          "name": "west",
+          "value": "",
+          "unit": "",
+          "definition": ""
+        }
+      ]
     }
   ],
-  "authors": [{ "name": "Ueli Saluz", "email": "ueli@semio-tech.org" }],
-  "qualities": [
-    { "name": "length", "value": "5.6", "unit": "m", "definition": "" },
+  "authors": [
+    {
+      "name": "Ueli Saluz",
+      "email": "ueli@semio-tech.org"
+    }
+  ],
+  "attributes": [
+    {
+      "name": "length",
+      "value": "5.6",
+      "unit": "m",
+      "definition": ""
+    },
     {
       "name": "platform west length",
       "value": "2.6",
@@ -85,10 +148,30 @@
       "unit": "m",
       "definition": ""
     },
-    { "name": "gap", "value": "0.4", "unit": "m", "definition": "" },
-    { "name": "width", "value": "2.6", "unit": "m", "definition": "" },
-    { "name": "height", "value": "2.5", "unit": "m", "definition": "" },
-    { "name": "base height", "value": "20", "unit": "m", "definition": "" },
+    {
+      "name": "gap",
+      "value": "0.4",
+      "unit": "m",
+      "definition": ""
+    },
+    {
+      "name": "width",
+      "value": "2.6",
+      "unit": "m",
+      "definition": ""
+    },
+    {
+      "name": "height",
+      "value": "2.5",
+      "unit": "m",
+      "definition": ""
+    },
+    {
+      "name": "base height",
+      "value": "20",
+      "unit": "m",
+      "definition": ""
+    },
     {
       "name": "primary rod diameter",
       "value": "10",
@@ -107,7 +190,12 @@
       "unit": "m",
       "definition": ""
     },
-    { "name": "parapet height", "value": "125", "unit": "m", "definition": "" },
+    {
+      "name": "parapet height",
+      "value": "125",
+      "unit": "m",
+      "definition": ""
+    },
     {
       "name": "construction cost",
       "value": "65973",

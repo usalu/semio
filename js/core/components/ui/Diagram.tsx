@@ -383,7 +383,7 @@ const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false
 const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, data, selected }) => {
   const {
     piece,
-    piece: { id_, qualities },
+    piece: { id_, attributes },
     type: { ports },
   } = data as PieceNodeProps & { diffStatus: DiffStatus };
 
@@ -414,7 +414,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
   let strokeClass = "stroke-dark stroke-2";
   let opacity = 1;
 
-  const diff = (qualities?.find((q) => q.name === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
+  const diff = (attributes?.find((q) => q.name === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
 
   if (diff === DiffStatus.Added) {
     fillClass = selected ? "fill-[color-mix(in_srgb,theme(colors.success)_50%,theme(colors.primary)_50%)]" : "fill-success";
@@ -450,7 +450,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
 const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, data, selected }) => {
   const {
     piece,
-    piece: { id_, qualities },
+    piece: { id_, attributes },
     externalConnections,
   } = data as DesignNodeProps & { diffStatus: DiffStatus };
 
@@ -493,7 +493,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
       t: t, // Normalized parameter value like normal pieces
       point: { x: portX, y: portY, z: portZ }, // 3D position for connections
       direction: { x: directionX, y: directionY, z: directionZ }, // Points outward
-      qualities: [
+      attributes: [
         {
           name: "semio.originalPieceId",
           value: designSide.piece.id_ || "",
@@ -538,7 +538,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
   let strokeClass = "stroke-dark stroke-2";
   let opacity = 1;
 
-  const diff = (qualities?.find((q) => q.name === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
+  const diff = (attributes?.find((q) => q.name === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
 
   if (diff === DiffStatus.Added) {
     fillClass = selected ? "fill-[color-mix(in_srgb,theme(colors.success)_50%,theme(colors.primary)_50%)]" : "fill-success";
@@ -573,7 +573,7 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({ id, sour
   const HANDLE_HEIGHT = 5;
   const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`;
 
-  const diff = (data?.connection?.qualities?.find((q) => q.name === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
+  const diff = (data?.connection?.attributes?.find((q) => q.name === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
   const isParentConnection = data?.isParentConnection ?? false;
 
   let stroke = "var(--color-dark)";

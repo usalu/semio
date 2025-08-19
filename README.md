@@ -63,7 +63,7 @@ Let me walk you through 🚶
    - [⭕ Piece](#-piece-)
    - [⚓ Port](#-port-)
    - [💾 Representation](#-representation-)
-   - [📏 Quality](#-quality-)
+   - [📏 Attribute](#-attribute-)
    - [🏷️ Tag](#%EF%B8%8F-tag-)
    - [◳ Plane](#-plane-)
    - [🔗 Url](#-url-)
@@ -231,13 +231,13 @@ No **[`tags`](#%EF%B8%8F-tag-)** means the _default_ representation 🔑
 
 The similarity of [`representations`](#-representation-) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#%EF%B8%8F-tag-)** 🔄
 
-## 📏 Quality [↑](#-specs-)
+## 📏 Attribute [↑](#-specs-)
 
-A [`quality`](#-quality-) is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
+A [`attribute`](#-attribute-) is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
 
 The **name** is[kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) and with `.`-separated string similar to [toml keys](https://toml.io/en/v1.0.0#keys) 🔑
 
-No **value** is equivalent to the boolean _true_ where the **name** is the category of the quality 🔑
+No **value** is equivalent to the boolean _true_ where the **name** is the category of the attribute 🔑
 
 The **unit** is a [unit identifier](https://en.wikipedia.org/wiki/Unit_of_measurement) 🔢
 
@@ -254,7 +254,7 @@ The **unit** is a [unit identifier](https://en.wikipedia.org/wiki/Unit_of_measur
 - `Pa` for pascal, `kPa` for kilopascal, `MPa` for megapascal
 - …
 
-A list of [qualities](#-quality-) is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value** ↔️
+A list of [attributes](#-attribute-) is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value** ↔️
 
 ## 🏷️ Tag [↑](#-specs-)
 
@@ -431,7 +431,7 @@ If you change your architecture, just design proper interfaces for something con
 
 We are past the time where we copy code for no reason 📃
 
-Actually repeated code can improve the quality of your copilots suggestion 🤯
+Actually repeated code can improve the attribute of your copilots suggestion 🤯
 
 The main question is how can your application grow?
 

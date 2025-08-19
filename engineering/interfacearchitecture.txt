@@ -30,7 +30,7 @@ kit : !Kit{
             url : !String
             description : ?String
             tags : *String[] // default is empty list (meaning default LOD)
-            qualities : *Quality[]
+            attributes : *Attribute[]
         ]
         ports : +Port[
             id : !String // empty is default
@@ -49,14 +49,14 @@ kit : !Kit{
                 z : !Float
             }
             t : !Float // [0,1[ for diagram ring position
-            qualities : *Quality[]
+            attributes : *Attribute[]
         ]
         authors : *Author[
             name : !String
             email : !String
             rank : !Integer // for ordering
         ]
-        qualities : *Quality[]
+        attributes : *Attribute[]
     ]
     designs : +Design[
         name : !String
@@ -101,7 +101,7 @@ kit : !Kit{
                 x : !Float
                 y : !Float
             }
-            qualities : *Quality[]
+            attributes : *Attribute[]
         ]
         connections : +Connection[
             connected : !Side{
@@ -121,16 +121,16 @@ kit : !Kit{
             tilt : ?Float // degrees
             x : ?Float // diagram offset x
             y : ?Float // diagram offset y
-            qualities : *Quality[]
+            attributes : *Attribute[]
         ]
         authors : *Author[
             name : !String
             email : !String
             rank : !Integer
         ]
-        qualities : *Quality[]
+        attributes : *Attribute[]
     ]
-    qualities : *Quality[
+    attributes : *Attribute[
         name : !String
         value : ?String // No value means true
         unit : ?String

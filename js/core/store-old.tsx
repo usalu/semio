@@ -29,6 +29,7 @@ import initSqlJs from "sql.js";
 import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 import {
   applyDiff,
+  Attribute,
   Author,
   Camera,
   Connection,
@@ -61,7 +62,6 @@ import {
   PortId,
   PortIdLike,
   portIdLikeToPortId,
-  Quality,
   QualityDiff,
   Representation,
   RepresentationDiff,
@@ -192,7 +192,7 @@ type YKitKeysMap = {
   connectionIds: YIdMap;
   portIds: YIdMap;
   representationIds: YIdMap;
-  qualities: YQualities;
+  attributes: YQualities;
 };
 const getKit = <K extends keyof YKitKeysMap>(m: YKit, k: K): YKitKeysMap[K] => m.get(k as string) as YKitKeysMap[K];
 
@@ -208,7 +208,7 @@ type YTypeKeysMap = {
   representations: YRepresentationMap;
   ports: YPortMap;
   authors: YAuthors;
-  qualities: YQualities;
+  attributes: YQualities;
   created: string;
   updated: string;
 };
@@ -227,7 +227,7 @@ type YDesignKeysMap = {
   authors: YAuthors;
   pieces: YPieceMap;
   connections: YConnectionMap;
-  qualities: YQualities;
+  attributes: YQualities;
 };
 const getDesign = <K extends keyof YDesignKeysMap>(m: YDesign, k: K): YDesignKeysMap[K] => m.get(k as string) as YDesignKeysMap[K];
 
@@ -235,7 +235,7 @@ type YRepresentationKeysMap = {
   url: string;
   description: string;
   tags: YStringArray;
-  qualities: YQualities;
+  attributes: YQualities;
 };
 const getRep = <K extends keyof YRepresentationKeysMap>(m: YRepresentation, k: K): YRepresentationKeysMap[K] => m.get(k as string) as YRepresentationKeysMap[K];
 
@@ -248,7 +248,7 @@ type YPortKeysMap = {
   direction: YVec3;
   point: YVec3;
   t: number;
-  qualities: YQualities;
+  attributes: YQualities;
 };
 const getPort = <K extends keyof YPortKeysMap>(m: YPort, k: K): YPortKeysMap[K] => m.get(k as string) as YPortKeysMap[K];
 
@@ -258,7 +258,7 @@ type YPieceKeysMap = {
   type: YLeafMapString; // { name, variant }
   plane: YPlane;
   center: YLeafMapNumber; // { x,y }
-  qualities: YQualities;
+  attributes: YQualities;
 };
 const getPiece = <K extends keyof YPieceKeysMap>(m: YPiece, k: K): YPieceKeysMap[K] => m.get(k as string) as YPieceKeysMap[K];
 
@@ -280,7 +280,7 @@ type YConnectionKeysMap = {
   tilt: number;
   x: number;
   y: number;
-  qualities: YQualities;
+  attributes: YQualities;
 };
 const getConn = <K extends keyof YConnectionKeysMap>(m: YConnection, k: K): YConnectionKeysMap[K] => m.get(k as string) as YConnectionKeysMap[K];
 
@@ -435,7 +435,7 @@ class SketchpadStore {
       yKit.set("connectionIds", new Y.Map<string>());
       yKit.set("portIds", new Y.Map<string>());
       yKit.set("representationIds", new Y.Map<string>());
-      yKit.set("qualities", new Y.Array<YQuality>());
+      yKit.set("attributes", new Y.Array<YQuality>());
     } else {
       // Ensure UUID exists for existing kits
       if (!yKit.has("uuid")) {
@@ -683,24 +683,24 @@ class SketchpadStore {
     return authors;
   }
 
-  private createQuality(quality: Quality): YQuality {
+  private createQuality(attribute: Attribute): YQuality {
     const yMap = new Y.Map<string>();
-    yMap.set("name", quality.name);
-    if (quality.value !== undefined) yMap.set("value", quality.value);
-    if (quality.unit !== undefined) yMap.set("unit", quality.unit);
-    if (quality.definition !== undefined) yMap.set("definition", quality.definition);
+    yMap.set("name", attribute.name);
+    if (attribute.value !== undefined) yMap.set("value", attribute.value);
+    if (attribute.unit !== undefined) yMap.set("unit", attribute.unit);
+    if (attribute.definition !== undefined) yMap.set("definition", attribute.definition);
     return yMap;
   }
 
-  private createQualities(qualities: Quality[] | undefined): YQualities {
+  private createQualities(attributes: Attribute[] | undefined): YQualities {
     const yArr = new Y.Array<YQuality>();
-    (qualities || []).forEach((q) => yArr.push([this.createQuality(q)]));
+    (attributes || []).forEach((q) => yArr.push([this.createQuality(q)]));
     return yArr;
   }
 
-  private getQualities(yArr: YQualities | undefined): Quality[] {
+  private getQualities(yArr: YQualities | undefined): Attribute[] {
     if (!yArr) return [];
-    const list: Quality[] = [];
+    const list: Attribute[] = [];
     yArr.forEach((yMap: YQuality) => {
       list.push({ name: yMap.get("name") as string, value: yMap.get("value") as string | undefined, unit: yMap.get("unit") as string | undefined, definition: yMap.get("definition") as string | undefined });
     });
@@ -714,7 +714,7 @@ class SketchpadStore {
     const yTags = new Y.Array<string>();
     (rep.tags || []).forEach((t) => yTags.push([t]));
     yRep.set("tags", yTags);
-    yRep.set("qualities", this.createQualities(rep.qualities || []));
+    yRep.set("attributes", this.createQualities(rep.attributes || []));
     return yRep;
   }
 
@@ -738,7 +738,7 @@ class SketchpadStore {
     yPoint.set("z", port.point.z);
     yPort.set("point", yPoint);
     yPort.set("t", port.t || 0);
-    yPort.set("qualities", this.createQualities(port.qualities || []));
+    yPort.set("attributes", this.createQualities(port.attributes || []));
     return yPort;
   }
 
@@ -775,7 +775,7 @@ class SketchpadStore {
       yCenter.set("y", piece.center.y);
       yPiece.set("center", yCenter);
     }
-    yPiece.set("qualities", this.createQualities(piece.qualities) || []);
+    yPiece.set("attributes", this.createQualities(piece.attributes) || []);
     return yPiece;
   }
 
@@ -806,7 +806,7 @@ class SketchpadStore {
     yConnection.set("tilt", connection.tilt || 0);
     yConnection.set("x", connection.x || 0);
     yConnection.set("y", connection.y || 0);
-    yConnection.set("qualities", this.createQualities(connection.qualities));
+    yConnection.set("attributes", this.createQualities(connection.attributes));
     return yConnection;
   }
 
@@ -834,7 +834,7 @@ class SketchpadStore {
     yKit.set("connectionIds", new Y.Map<string>());
     yKit.set("portIds", new Y.Map<string>());
     yKit.set("representationIds", new Y.Map<string>());
-    yKit.set("qualities", this.createQualities(kit.qualities));
+    yKit.set("attributes", this.createQualities(kit.attributes));
     yKit.set("created", new Date().toISOString());
     yKit.set("updated", new Date().toISOString());
     kit.types?.forEach((t) => this.createType(kit, t));
@@ -873,7 +873,7 @@ class SketchpadStore {
       updated: new Date(getKit(yKit, "updated")),
       designs,
       types,
-      qualities: this.getQualities(getKit(yKit, "qualities")),
+      attributes: this.getQualities(getKit(yKit, "attributes")),
     };
   }
 
@@ -893,34 +893,34 @@ class SketchpadStore {
     if (kitDiff.homepage !== undefined) yKit.set("homepage", kitDiff.homepage);
     if (kitDiff.license !== undefined) yKit.set("license", kitDiff.license);
 
-    if (kitDiff.qualities !== undefined) {
+    if (kitDiff.attributes !== undefined) {
       const kit = this.getKit(kitId);
-      let updatedQualities = [...(kit.qualities || [])];
+      let updatedQualities = [...(kit.attributes || [])];
 
       // Apply QualitiesDiff
-      const qualitiesDiff = kitDiff.qualities;
+      const qualitiesDiff = kitDiff.attributes;
 
-      // Remove qualities
+      // Remove attributes
       if (qualitiesDiff.removed) {
         updatedQualities = updatedQualities.filter((q) => !qualitiesDiff.removed!.some((removed) => removed.name === q.name));
       }
 
-      // Update qualities
+      // Update attributes
       if (qualitiesDiff.updated) {
         qualitiesDiff.updated.forEach((update) => {
           const index = updatedQualities.findIndex((q) => q.name === update.name);
           if (index !== -1) {
-            updatedQualities[index] = { ...updatedQualities[index], ...update } as Quality;
+            updatedQualities[index] = { ...updatedQualities[index], ...update } as Attribute;
           }
         });
       }
 
-      // Add new qualities
+      // Add new attributes
       if (qualitiesDiff.added) {
         updatedQualities.push(...qualitiesDiff.added);
       }
 
-      yKit.set("qualities", this.createQualities(updatedQualities));
+      yKit.set("attributes", this.createQualities(updatedQualities));
     }
 
     if (kitDiff.types) {
@@ -1190,7 +1190,7 @@ class SketchpadStore {
     yType.set("representations", new Y.Map<YRepresentation>());
     yType.set("ports", new Y.Map<YPort>());
     yType.set("authors", this.createAuthors(type.authors));
-    yType.set("qualities", this.createQualities(type.qualities) || []);
+    yType.set("attributes", this.createQualities(type.attributes) || []);
     const typeUuid = uuidv4();
     types.set(typeUuid, yType);
     typeIds.set(compound, typeUuid);
@@ -1236,7 +1236,7 @@ class SketchpadStore {
       unit: getType(yType, "unit"),
       ports,
       representations,
-      qualities: this.getQualities(getType(yType, "qualities")),
+      attributes: this.getQualities(getType(yType, "attributes")),
       authors: this.getAuthors(getType(yType, "authors")),
       created: new Date(getType(yType, "created")),
       updated: new Date(getType(yType, "updated")),
@@ -1281,8 +1281,8 @@ class SketchpadStore {
       validPorts.forEach((p) => portsMap.set(p.id_!, this.buildYPort(p)));
       yType.set("ports", portsMap);
     }
-    if (diff.qualities !== undefined) {
-      yType.set("qualities", this.createQualities(base.qualities || []));
+    if (diff.attributes !== undefined) {
+      yType.set("attributes", this.createQualities(base.attributes || []));
     }
     if (diff.representations !== undefined) {
       const reps = new Y.Map<YRepresentation>();
@@ -1422,7 +1422,7 @@ class SketchpadStore {
     yDesign.set("unit", design.unit || "");
     yDesign.set("pieces", new Y.Map<YPiece>());
     yDesign.set("connections", new Y.Map<YConnection>());
-    yDesign.set("qualities", this.createQualities(design.qualities) || []);
+    yDesign.set("attributes", this.createQualities(design.attributes) || []);
     yDesign.set("authors", this.createAuthors(design.authors));
     const designUuid = uuidv4();
     designs.set(designUuid, yDesign);
@@ -1468,7 +1468,7 @@ class SketchpadStore {
       authors: this.getAuthors(getDesign(yDesign, "authors")),
       pieces,
       connections,
-      qualities: this.getQualities(getDesign(yDesign, "qualities")),
+      attributes: this.getQualities(getDesign(yDesign, "attributes")),
     };
   }
 
@@ -1556,8 +1556,8 @@ class SketchpadStore {
       }
     }
 
-    if (diff.qualities !== undefined) {
-      yDesign.set("qualities", this.createQualities(base.qualities || []));
+    if (diff.attributes !== undefined) {
+      yDesign.set("attributes", this.createQualities(base.attributes || []));
     }
 
     yDesign.set("updated", new Date().toISOString());
@@ -1660,7 +1660,7 @@ class SketchpadStore {
       type: { name: typeName, variant: typeVariant },
       plane: plane ?? undefined,
       center: center ?? undefined,
-      qualities: this.getQualities(getPiece(yPiece, "qualities")),
+      attributes: this.getQualities(getPiece(yPiece, "attributes")),
     };
   }
 
@@ -1794,7 +1794,7 @@ class SketchpadStore {
       tilt: getConn(yConnection, "tilt"),
       x: getConn(yConnection, "x"),
       y: getConn(yConnection, "y"),
-      qualities: this.getQualities(getConn(yConnection, "qualities")),
+      attributes: this.getQualities(getConn(yConnection, "attributes")),
     };
   }
 
@@ -1883,7 +1883,7 @@ class SketchpadStore {
       url: getRep(yRepresentation, "url"),
       description: getRep(yRepresentation, "description"),
       tags: getRep(yRepresentation, "tags").toArray(),
-      qualities: this.getQualities(getRep(yRepresentation, "qualities")),
+      attributes: this.getQualities(getRep(yRepresentation, "attributes")),
     };
   }
 
@@ -1899,11 +1899,11 @@ class SketchpadStore {
       const yTags = Y.Array.from(representation.tags || []);
       yRepresentation.set("tags", yTags);
     }
-    if (representation.qualities !== undefined) {
-      const yQualities = getRep(yRepresentation, "qualities") || new Y.Array<YQuality>();
+    if (representation.attributes !== undefined) {
+      const yQualities = getRep(yRepresentation, "attributes") || new Y.Array<YQuality>();
       yQualities.delete(0, yQualities.length);
-      representation.qualities.forEach((q) => yQualities.push([this.createQuality(q)]));
-      yRepresentation.set("qualities", yQualities);
+      representation.attributes.forEach((q) => yQualities.push([this.createQuality(q)]));
+      yRepresentation.set("attributes", yQualities);
     }
   }
 
@@ -1955,7 +1955,7 @@ class SketchpadStore {
     yPort.set("point", yPoint);
 
     yPort.set("t", port.t || 0);
-    yPort.set("qualities", this.createQualities(port.qualities || []));
+    yPort.set("attributes", this.createQualities(port.attributes || []));
 
     const portUuid = uuidv4();
     const typeKey = this.key.type(typeId);
@@ -1994,7 +1994,7 @@ class SketchpadStore {
         z: yPoint.get("z") as number,
       },
       t: getPort(yPort, "t"),
-      qualities: this.getQualities(getPort(yPort, "qualities")),
+      attributes: this.getQualities(getPort(yPort, "attributes")),
     };
   }
 
@@ -2020,11 +2020,11 @@ class SketchpadStore {
       yPort.set("point", yPoint);
     }
     if (port.t !== undefined) yPort.set("t", port.t);
-    if (port.qualities !== undefined) {
-      const yQualities = (yPort.get("qualities") as YQualities | undefined) || new Y.Array<YQuality>();
+    if (port.attributes !== undefined) {
+      const yQualities = (yPort.get("attributes") as YQualities | undefined) || new Y.Array<YQuality>();
       yQualities.delete(0, yQualities.length);
-      port.qualities.forEach((q) => yQualities.push([this.createQuality(q)]));
-      yPort.set("qualities", yQualities);
+      port.attributes.forEach((q) => yQualities.push([this.createQuality(q)]));
+      yPort.set("attributes", yQualities);
     }
     if (port.family !== undefined && yPort.set("family", port.family)) {
       const cf = yPort.get("compatibleFamilies") as YStringArray;
@@ -2064,13 +2064,13 @@ class SketchpadStore {
     return updated;
   }
 
-  updateQualityDiff(before: Quality, after: Quality): Quality {
-    const diff = getDiff.quality(before, after);
+  updateQualityDiff(before: Attribute, after: Attribute): Attribute {
+    const diff = getDiff.attribute(before, after);
     return this.applyQualityDiff(before, diff);
   }
 
-  applyQualityDiff(base: Quality, diff: QualityDiff): Quality {
-    return applyDiff.quality(base, diff);
+  applyQualityDiff(base: Attribute, diff: QualityDiff): Attribute {
+    return applyDiff.attribute(base, diff);
   }
 
   deletePort(kitId: KitId, typeId: TypeId, portId: string): void {
@@ -2426,7 +2426,7 @@ class SketchpadStore {
         remote: kit.remote,
         homepage: kit.homepage,
         license: kit.license,
-        qualities: kit.qualities ? { added: kit.qualities } : undefined,
+        attributes: kit.attributes ? { added: kit.attributes } : undefined,
         types: kit.types ? { added: kit.types } : undefined,
         designs: kit.designs ? { added: kit.designs } : undefined,
       };
@@ -2547,7 +2547,7 @@ class SketchpadStore {
         updated: new Date(String(kitRow[11] || "")),
         types: [],
         designs: [],
-        qualities: [],
+        attributes: [],
       };
       if (!kit) throw new Error("Invalid kit row");
       const queryAll = (sql: string, params: SqlValue[] = []): SqlValue[][] => {
@@ -2565,8 +2565,8 @@ class SketchpadStore {
       const kitIdRow = queryOne("SELECT id FROM kit WHERE name = ? AND version = ?", [kit.name, kit.version || ""]);
       const kitId = Number(kitIdRow ? (kitIdRow[0] as number) : 0);
       const kitIdActual = { name: kit.name, version: kit.version || "" };
-      const getQualities = (fkColumn: string, fkValue: number | string): Quality[] => {
-        const query = `SELECT name, value, unit, definition FROM quality WHERE ${fkColumn} = ?`;
+      const getQualities = (fkColumn: string, fkValue: number | string): Attribute[] => {
+        const query = `SELECT name, value, unit, definition FROM attribute WHERE ${fkColumn} = ?`;
         const rows = queryAll(query, [fkValue]);
         if (!rows || rows.length === 0) return [];
         return rows.map((row) => ({ name: String(row[0] || ""), value: (row[1] as string) || undefined, unit: (row[2] as string) || undefined, definition: (row[3] as string) || undefined }));
@@ -2577,7 +2577,7 @@ class SketchpadStore {
         if (!rows || rows.length === 0) return [];
         return rows.map((row) => ({ name: String(row[0] || ""), email: (row[1] as string) || undefined }) as Author);
       };
-      kit.qualities = getQualities("kit_id", kitId);
+      kit.attributes = getQualities("kit_id", kitId);
       const typeRows = queryAll("SELECT id, name, description, icon, image, variant, stock, virtual, unit, created, updated, location_longitude, location_latitude FROM type WHERE kit_id = ?", [kitId]);
       if (typeRows && typeRows.length > 0) {
         for (const typeRow of typeRows) {
@@ -2599,7 +2599,7 @@ class SketchpadStore {
             },
             representations: [],
             ports: [],
-            qualities: [],
+            attributes: [],
             authors: [],
           };
           const repRows = queryAll("SELECT id, url, description FROM representation WHERE type_id = ?", [typeId]);
@@ -2609,12 +2609,12 @@ class SketchpadStore {
                 url: String(repRow[1] || ""),
                 description: (repRow[2] as string) || undefined,
                 tags: [],
-                qualities: [],
+                attributes: [],
               };
               const repId = repRow[0] as number as number;
               const tagRows = queryAll('SELECT name FROM tag WHERE representation_id = ? ORDER BY "order"', [repId]);
               if (tagRows && tagRows.length > 0) representation.tags = tagRows.map((row) => (row as unknown[])[0] as string);
-              representation.qualities = getQualities("representation_id", repId);
+              representation.attributes = getQualities("representation_id", repId);
               if (!complete && !this.fileUrls.has(representation.url)) {
                 const fileEntry = zip.file(representation.url);
                 if (fileEntry) {
@@ -2647,16 +2647,16 @@ class SketchpadStore {
                   y: Number(portRow[10] ?? 0),
                   z: Number(portRow[11] ?? 0),
                 },
-                qualities: [],
+                attributes: [],
               };
               const portId = portRow[0] as number as number;
               const compFamRows = queryAll('SELECT name FROM compatible_family WHERE port_id = ? ORDER BY "order"', [portId]);
               if (compFamRows && compFamRows.length > 0) port.compatibleFamilies = compFamRows.map((row) => (row as unknown[])[0] as string);
-              port.qualities = getQualities("port_id", portId);
+              port.attributes = getQualities("port_id", portId);
               type.ports!.push(port);
             }
           }
-          type.qualities = getQualities("type_id", typeId);
+          type.attributes = getQualities("type_id", typeId);
           type.authors = getAuthors("type_id", typeId);
           kit!.types!.push(type);
         }
@@ -2676,7 +2676,7 @@ class SketchpadStore {
             updated: new Date(String(designRow[9] || "")),
             pieces: [],
             connections: [],
-            qualities: [],
+            attributes: [],
             authors: [],
           };
           const designId = designRow[0] as number as number;
@@ -2713,10 +2713,10 @@ class SketchpadStore {
                       }
                     : undefined,
                 center: pieceRow[14] !== null ? { x: (pieceRow[14] as number) ?? 0, y: (pieceRow[15] as number) ?? 0 } : undefined,
-                qualities: [],
+                attributes: [],
               };
               const pieceId = pieceRow[0] as number as number;
-              piece.qualities = getQualities("piece_id", pieceId);
+              piece.attributes = getQualities("piece_id", pieceId);
               design.pieces!.push(piece);
               pieceMap[piece.id_ as string] = piece;
               pieceIdMap[pieceId] = piece.id_;
@@ -2752,14 +2752,14 @@ class SketchpadStore {
                   piece: { id_: connectingPieceLocalId },
                   port: { id_: String(connRow[13] || "") },
                 },
-                qualities: [],
+                attributes: [],
               };
               const connId = connRow[0] as number as number;
-              connection.qualities = getQualities("connection_id", connId);
+              connection.attributes = getQualities("connection_id", connId);
               design.connections!.push(connection);
             }
           }
-          design.qualities = getQualities("design_id", designId);
+          design.attributes = getQualities("design_id", designId);
           design.authors = getAuthors("design_id", designId);
           kit!.designs!.push(design);
         }
@@ -2808,16 +2808,16 @@ class SketchpadStore {
             CREATE TABLE plane ( id INTEGER NOT NULL PRIMARY KEY, origin_x FLOAT, origin_y FLOAT, origin_z FLOAT, x_axis_x FLOAT, x_axis_y FLOAT, x_axis_z FLOAT, y_axis_x FLOAT, y_axis_y FLOAT, y_axis_z FLOAT );
             CREATE TABLE piece ( description VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, local_id VARCHAR(128), type_id INTEGER, plane_id INTEGER, center_x FLOAT, center_y FLOAT, design_id INTEGER, UNIQUE (local_id, design_id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(plane_id) REFERENCES plane (id), FOREIGN KEY(design_id) REFERENCES design (id) );
             CREATE TABLE connection ( description VARCHAR(512) NOT NULL, gap FLOAT NOT NULL, shift FLOAT NOT NULL, rise FLOAT NOT NULL, rotation FLOAT NOT NULL, turn FLOAT NOT NULL, tilt FLOAT NOT NULL, x FLOAT NOT NULL, y FLOAT NOT NULL, id INTEGER NOT NULL PRIMARY KEY, connected_piece_id INTEGER, connected_port_id INTEGER, connecting_piece_id INTEGER, connecting_port_id INTEGER, design_id INTEGER, CONSTRAINT "no reflexive connection" CHECK (connecting_piece_id != connected_piece_id), FOREIGN KEY(connected_piece_id) REFERENCES piece (id), FOREIGN KEY(connected_port_id) REFERENCES port (id), FOREIGN KEY(connecting_piece_id) REFERENCES piece (id), FOREIGN KEY(connecting_port_id) REFERENCES port (id), FOREIGN KEY(design_id) REFERENCES design (id) );
-            CREATE TABLE quality ( name VARCHAR(64) NOT NULL, value VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, definition VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, representation_id INTEGER, port_id INTEGER, type_id INTEGER, piece_id INTEGER, connection_id INTEGER, design_id INTEGER, kit_id INTEGER, FOREIGN KEY(representation_id) REFERENCES representation (id), FOREIGN KEY(port_id) REFERENCES port (id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(piece_id) REFERENCES piece (id), FOREIGN KEY(connection_id) REFERENCES connection (id), FOREIGN KEY(design_id) REFERENCES design (id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
+            CREATE TABLE attribute ( name VARCHAR(64) NOT NULL, value VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, definition VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, representation_id INTEGER, port_id INTEGER, type_id INTEGER, piece_id INTEGER, connection_id INTEGER, design_id INTEGER, kit_id INTEGER, FOREIGN KEY(representation_id) REFERENCES representation (id), FOREIGN KEY(port_id) REFERENCES port (id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(piece_id) REFERENCES piece (id), FOREIGN KEY(connection_id) REFERENCES connection (id), FOREIGN KEY(design_id) REFERENCES design (id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
             CREATE TABLE author ( name VARCHAR(64) NOT NULL, email VARCHAR(128) NOT NULL, rank INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, type_id INTEGER, design_id INTEGER, FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(design_id) REFERENCES design (id) );
         `;
 
     try {
       db.run(schema);
-      const insertQualities = (qualities: Quality[] | undefined, fkColumn: string, fkValue: number) => {
-        if (!qualities) return;
-        const stmt = db.prepare(`INSERT INTO quality (name, value, unit, definition, ${fkColumn}) VALUES (?, ?, ?, ?, ?)`);
-        qualities.forEach((q) => stmt.run([q.name, q.value ?? "", q.unit ?? "", q.definition ?? "", fkValue]));
+      const insertQualities = (attributes: Attribute[] | undefined, fkColumn: string, fkValue: number) => {
+        if (!attributes) return;
+        const stmt = db.prepare(`INSERT INTO attribute (name, value, unit, definition, ${fkColumn}) VALUES (?, ?, ?, ?, ?)`);
+        attributes.forEach((q) => stmt.run([q.name, q.value ?? "", q.unit ?? "", q.definition ?? "", fkValue]));
         stmt.free();
       };
       const insertAuthors = (authors: Author[] | undefined, fkColumn: string, fkValue: number) => {
@@ -2846,7 +2846,7 @@ class SketchpadStore {
       ]);
       kitStmt.free();
       const kitId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
-      insertQualities(kit.qualities, "kit_id", kitId);
+      insertQualities(kit.attributes, "kit_id", kitId);
       const typeIdMap: { [key: string]: number } = {}; // key: "name:variant"
       const portIdMap: { [typeDbId: number]: { [localId: string]: number } } = {};
       const repIdMap: { [typeDbId: number]: { [key: string]: number } } = {}; // key: "tags"
@@ -2863,7 +2863,7 @@ class SketchpadStore {
           typeIdMap[typeKey] = typeDbId;
           portIdMap[typeDbId] = {};
           repIdMap[typeDbId] = {};
-          insertQualities(type.qualities, "type_id", typeDbId);
+          insertQualities(type.attributes, "type_id", typeDbId);
           insertAuthors(type.authors, "type_id", typeDbId);
           if (type.representations) {
             for (const rep of type.representations) {
@@ -2871,7 +2871,7 @@ class SketchpadStore {
               repStmt.run([rep.url, rep.description ?? "", typeDbId]);
               const repDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
               repIdMap[typeDbId][repKey] = repDbId;
-              insertQualities(rep.qualities, "representation_id", repDbId);
+              insertQualities(rep.attributes, "representation_id", repDbId);
               if (rep.tags) {
                 rep.tags.forEach((tag, index) => tagStmt.run([tag, index, repDbId]));
               }
@@ -2911,7 +2911,7 @@ class SketchpadStore {
               ]);
               const portDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
               portIdMap[typeDbId][port.id_] = portDbId;
-              insertQualities(port.qualities, "port_id", portDbId);
+              insertQualities(port.attributes, "port_id", portDbId);
               if (port.compatibleFamilies) {
                 port.compatibleFamilies.forEach((fam, index) => compFamStmt.run([fam, index, portDbId]));
               }
@@ -2954,7 +2954,7 @@ class SketchpadStore {
           const designDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
           designIdMap[designKey] = designDbId;
           pieceIdMap[designDbId] = {};
-          insertQualities(design.qualities, "design_id", designDbId);
+          insertQualities(design.attributes, "design_id", designDbId);
           insertAuthors(design.authors, "design_id", designDbId);
           if (design.pieces) {
             for (const piece of design.pieces) {
@@ -2976,7 +2976,7 @@ class SketchpadStore {
               pieceStmt.run([piece.id_, piece.description || "", typeDbId, planeDbId, piece.center?.x ?? null, piece.center?.y ?? null, designDbId]);
               const pieceDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
               pieceIdMap[designDbId][piece.id_] = pieceDbId;
-              insertQualities(piece.qualities, "piece_id", pieceDbId);
+              insertQualities(piece.attributes, "piece_id", pieceDbId);
               if (planeDbId !== null) {
                 planeIdMap[pieceDbId] = planeDbId;
               }
@@ -3023,7 +3023,7 @@ class SketchpadStore {
                 designDbId,
               ]);
               const connDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
-              insertQualities(conn.qualities, "connection_id", connDbId);
+              insertQualities(conn.attributes, "connection_id", connDbId);
             }
           }
         }

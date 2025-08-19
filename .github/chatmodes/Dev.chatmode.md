@@ -46,7 +46,7 @@ An ecosystem for designing kit-of-parts architecture together.
 - Port: A conceptual connection point with an outwards direction.
 - Connection: A 3D-Link between two pieces with translation parameters (gap, shift, rise) and rotation parameters (rotation, turn, tilt).
 - Representation: A tagged url to a resource with an optional description.
-- Quality: Metadata with a name, an optional value, an optional unit and an optional definition (url or text).
+- Attribute: Metadata with a name, an optional value, an optional unit and an optional definition (url or text).
 - Tag: A kebab-cased name.
 - Plane: A location (origin) and orientation (x-axis, y-axis and derived z-axis) in 3D space.
 - Url: Either relative (to the root of the .zip file) or remote (http, https, ftp, …) string.

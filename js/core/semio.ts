@@ -45,7 +45,7 @@ export const TOLERANCE = 1e-5;
 const dataUriRegex = /^data:([a-z]+\/[a-z0-9\-\.+]+(;[a-z0-9\-\.+]+=[a-z0-9\-\.+]+)?)?(;base64)?,[a-z0-9!$&',()*+;=\-._~:@/?%\s]*$/i;
 const DataUriSchema = z.string().regex(dataUriRegex, "Invalid data URI");
 
-// https://github.com/usalu/semio#-quality-
+// https://github.com/usalu/semio#-attribute-
 export const QualitySchema = z.object({
   name: z.string(),
   value: z.string().optional(),
@@ -69,7 +69,7 @@ export const RepresentationSchema = z.object({
   url: z.string(),
   description: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  qualities: z.array(QualitySchema).optional(),
+  attributes: z.array(QualitySchema).optional(),
 });
 export const RepresentationIdSchema = z.object({
   tags: z.array(z.string()).optional(),
@@ -107,7 +107,7 @@ export const PortSchema = z.object({
   compatibleFamilies: z.array(z.string()).optional(),
   point: PointSchema,
   direction: VectorSchema,
-  qualities: z.array(QualitySchema).optional(),
+  attributes: z.array(QualitySchema).optional(),
 });
 export const PortIdSchema = z.object({ id_: z.string().optional() });
 export const PortIdLikeSchema = z.union([PortSchema, PortIdSchema, z.string(), z.null(), z.undefined()]);
@@ -136,7 +136,7 @@ export const TypeSchema = z.object({
   representations: z.array(RepresentationSchema).optional(),
   ports: z.array(PortSchema).optional(),
   authors: z.array(AuthorSchema).optional(),
-  qualities: z.array(QualitySchema).optional(),
+  attributes: z.array(QualitySchema).optional(),
 });
 export const TypeIdSchema = z.object({
   name: z.string(),
@@ -151,7 +151,7 @@ export const PieceSchema = z.object({
   type: TypeIdSchema,
   plane: PlaneSchema.optional(),
   center: DiagramPointSchema.optional(),
-  qualities: z.array(QualitySchema).optional(),
+  attributes: z.array(QualitySchema).optional(),
 });
 export const PieceIdSchema = z.object({ id_: z.string() });
 export const PieceIdLikeSchema = z.union([PieceSchema, PieceIdSchema, z.string()]);
@@ -179,7 +179,7 @@ export const ConnectionSchema = z.object({
   tilt: z.number().optional(),
   x: z.number().optional(),
   y: z.number().optional(),
-  qualities: z.array(QualitySchema).optional(),
+  attributes: z.array(QualitySchema).optional(),
 });
 export const ConnectionIdSchema = z.object({
   connected: SideIdSchema,
@@ -219,7 +219,7 @@ export const DesignSchema = z.object({
     )
     .optional(),
   authors: z.array(AuthorSchema).optional(),
-  qualities: z.array(QualitySchema).optional(),
+  attributes: z.array(QualitySchema).optional(),
 });
 export const DesignIdSchema = z.object({
   name: z.string(),
@@ -279,7 +279,7 @@ export const KitSchema = z.object({
   types: z.array(TypeSchema).optional(),
   designs: z.array(DesignSchema).optional(),
   files: z.array(FileSchema).optional(),
-  qualities: z.array(QualitySchema).optional(),
+  attributes: z.array(QualitySchema).optional(),
 });
 export const KitIdSchema = z.object({
   name: z.string(),
@@ -301,7 +301,7 @@ export const RepresentationDiffSchema = z.object({
   url: z.string().optional(),
   description: z.string().optional(),
   tags: z.array(z.string()).optional(),
-  qualities: z.array(QualitySchema).optional(),
+  attributes: z.array(QualitySchema).optional(),
 });
 export const RepresentationsDiffSchema = z.object({
   removed: z.array(RepresentationIdSchema).optional(),
@@ -317,7 +317,7 @@ export const PortDiffSchema = z.object({
   compatibleFamilies: z.array(z.string()).optional(),
   point: PointSchema.optional(),
   direction: VectorSchema.optional(),
-  qualities: z.array(QualitySchema).optional(),
+  attributes: z.array(QualitySchema).optional(),
 });
 export const PortsDiffSchema = z.object({
   removed: z.array(PortIdSchema).optional(),
@@ -347,7 +347,7 @@ export const TypeDiffSchema = z.object({
   representations: z.array(RepresentationSchema).optional(),
   ports: z.array(PortSchema).optional(),
   authors: z.array(AuthorSchema).optional(),
-  qualities: z.array(QualitySchema).optional(),
+  attributes: z.array(QualitySchema).optional(),
 });
 export const TypesDiffSchema = z.object({
   removed: z.array(TypeIdSchema).optional(),
@@ -361,7 +361,7 @@ export const PieceDiffSchema = z.object({
   type: TypeIdSchema.optional(),
   plane: PlaneSchema.optional(),
   center: DiagramPointSchema.optional(),
-  qualities: z.array(QualitySchema).optional(),
+  attributes: z.array(QualitySchema).optional(),
 });
 export const PiecesDiffSchema = z.object({
   removed: z.array(PieceIdSchema).optional(),
@@ -402,7 +402,7 @@ export const DesignDiffSchema = z.object({
   unit: z.string().optional(),
   pieces: PiecesDiffSchema.optional(),
   connections: ConnectionsDiffSchema.optional(),
-  qualities: z.array(QualitySchema).optional(),
+  attributes: z.array(QualitySchema).optional(),
   authors: z.array(AuthorSchema).optional(),
 });
 export const DesignsDiffSchema = z.object({
@@ -434,7 +434,7 @@ export const KitDiffSchema = z.object({
   types: TypesDiffSchema.optional(),
   designs: DesignsDiffSchema.optional(),
   files: FilesDiffSchema.optional(),
-  qualities: z.array(QualitySchema).optional(),
+  attributes: z.array(QualitySchema).optional(),
 });
 
 export const DiffStatusSchema = z.enum(["unchanged", "added", "removed", "modified"]);
@@ -448,7 +448,7 @@ export const schemas = {
   Piece: PieceSchema,
   Connection: ConnectionSchema,
   Port: PortSchema,
-  Quality: QualitySchema,
+  Attribute: QualitySchema,
   Plane: PlaneSchema,
   Point: PointSchema,
   Vector: VectorSchema,
@@ -479,7 +479,7 @@ export const schemas = {
 };
 
 
-export type Quality = z.infer<typeof QualitySchema>;
+export type Attribute = z.infer<typeof QualitySchema>;
 export type QualityId = z.infer<typeof QualityIdSchema>;
 export type QualityIdLike = z.infer<typeof QualityIdLikeSchema>;
 export type Representation = z.infer<typeof RepresentationSchema>;
@@ -670,7 +670,7 @@ export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vec
 // #region Serializing
 
 export const serialize = {
-  quality: (quality: Quality): string => JSON.stringify(QualitySchema.parse(quality), null, 2),
+  attribute: (attribute: Attribute): string => JSON.stringify(QualitySchema.parse(attribute), null, 2),
   author: (author: Author): string => JSON.stringify(AuthorSchema.parse(author), null, 2),
   diagramPoint: (diagramPoint: DiagramPoint): string => JSON.stringify(DiagramPointSchema.parse(diagramPoint), null, 2),
   diagramVector: (diagramVector: DiagramVector): string => JSON.stringify(DiagramVectorSchema.parse(diagramVector), null, 2),
@@ -688,7 +688,7 @@ export const serialize = {
   kit: (kit: Kit): string => JSON.stringify(KitSchema.parse(kit), null, 2),
 };
 export const deserialize = {
-  quality: (json: string): Quality => QualitySchema.parse(JSON.parse(json)),
+  attribute: (json: string): Attribute => QualitySchema.parse(JSON.parse(json)),
   author: (json: string): Author => AuthorSchema.parse(JSON.parse(json)),
   diagramPoint: (json: string): DiagramPoint => DiagramPointSchema.parse(JSON.parse(json)),
   diagramVector: (json: string): DiagramVector => DiagramVectorSchema.parse(JSON.parse(json)),
@@ -705,7 +705,7 @@ export const deserialize = {
   kit: (json: string): Kit => KitSchema.parse(JSON.parse(json)),
 };
 export const parse = {
-  quality: (json: string): Quality => QualitySchema.parse(JSON.parse(json)),
+  attribute: (json: string): Attribute => QualitySchema.parse(JSON.parse(json)),
   author: (json: string): Author => AuthorSchema.parse(JSON.parse(json)),
   diagramPoint: (json: string): DiagramPoint => DiagramPointSchema.parse(JSON.parse(json)),
   diagramVector: (json: string): DiagramVector => DiagramVectorSchema.parse(JSON.parse(json)),
@@ -723,7 +723,7 @@ export const parse = {
   kit: (json: string): Kit => KitSchema.parse(JSON.parse(json)),
 };
 export const safeParse = {
-  quality: (data: unknown) => QualitySchema.safeParse(data),
+  attribute: (data: unknown) => QualitySchema.safeParse(data),
   author: (data: unknown) => AuthorSchema.safeParse(data),
   diagramPoint: (data: unknown) => DiagramPointSchema.safeParse(data),
   diagramVector: (data: unknown) => DiagramVectorSchema.safeParse(data),
@@ -752,7 +752,7 @@ export const diff = {
       if (before.url !== after.url) diff.url = after.url;
       if (before.description !== after.description) diff.description = after.description;
       if (JSON.stringify(before.tags) !== JSON.stringify(after.tags)) diff.tags = after.tags;
-      if (JSON.stringify(before.qualities) !== JSON.stringify(after.qualities)) diff.qualities = after.qualities;
+      if (JSON.stringify(before.attributes) !== JSON.stringify(after.attributes)) diff.attributes = after.attributes;
       return diff;
     },
     port: (before: Port, after: Port): PortDiff => {
@@ -765,7 +765,7 @@ export const diff = {
       if (JSON.stringify(before.compatibleFamilies) !== JSON.stringify(after.compatibleFamilies)) diff.compatibleFamilies = after.compatibleFamilies;
       if (JSON.stringify(before.point) !== JSON.stringify(after.point)) diff.point = after.point;
       if (JSON.stringify(before.direction) !== JSON.stringify(after.direction)) diff.direction = after.direction;
-      if (JSON.stringify(before.qualities) !== JSON.stringify(after.qualities)) diff.qualities = after.qualities;
+      if (JSON.stringify(before.attributes) !== JSON.stringify(after.attributes)) diff.attributes = after.attributes;
       return diff;
     },
     piece: (before: Piece, after: Piece): PieceDiff => {
@@ -774,7 +774,7 @@ export const diff = {
       if (JSON.stringify(before.type) !== JSON.stringify(after.type)) diff.type = after.type;
       if (JSON.stringify(before.plane) !== JSON.stringify(after.plane)) diff.plane = after.plane;
       if (JSON.stringify(before.center) !== JSON.stringify(after.center)) diff.center = after.center;
-      if (JSON.stringify(before.qualities) !== JSON.stringify(after.qualities)) diff.qualities = after.qualities;
+      if (JSON.stringify(before.attributes) !== JSON.stringify(after.attributes)) diff.attributes = after.attributes;
       return diff;
     },
     connection: (before: Connection, after: Connection): ConnectionDiff => {
@@ -793,7 +793,7 @@ export const diff = {
       if (before.tilt !== after.tilt) diff.tilt = after.tilt;
       if (before.x !== after.x) diff.x = after.x;
       if (before.y !== after.y) diff.y = after.y;
-      if (JSON.stringify(before.qualities) !== JSON.stringify(after.qualities)) diff.qualities = after.qualities;
+      if (JSON.stringify(before.attributes) !== JSON.stringify(after.attributes)) diff.attributes = after.attributes;
       return diff;
     },
     type: (before: Type, after: Type): TypeDiff => {
@@ -812,7 +812,7 @@ export const diff = {
       if (JSON.stringify(before.representations) !== JSON.stringify(after.representations)) diff.representations = after.representations;
       if (JSON.stringify(before.ports) !== JSON.stringify(after.ports)) diff.ports = after.ports;
       if (JSON.stringify(before.authors) !== JSON.stringify(after.authors)) diff.authors = after.authors;
-      if (JSON.stringify(before.qualities) !== JSON.stringify(after.qualities)) diff.qualities = after.qualities;
+      if (JSON.stringify(before.attributes) !== JSON.stringify(after.attributes)) diff.attributes = after.attributes;
       return diff;
     },
     design: (before: Design, after: Design): DesignDiff => {
@@ -960,7 +960,7 @@ export const diff = {
 
       if (Object.keys(filesDiff).length > 0) diff.files = filesDiff;
 
-      if (JSON.stringify(before.qualities) !== JSON.stringify(after.qualities)) diff.qualities = after.qualities;
+      if (JSON.stringify(before.attributes) !== JSON.stringify(after.attributes)) diff.attributes = after.attributes;
 
       return diff;
     },
@@ -978,7 +978,7 @@ export const diff = {
       url: diff.url ?? base.url,
       description: diff.description ?? base.description,
       tags: diff.tags ?? base.tags,
-      qualities: diff.qualities ?? base.qualities,
+      attributes: diff.attributes ?? base.attributes,
     }),
     port: (base: Port, diff: PortDiff): Port => ({
       id_: diff.id_ ?? base.id_,
@@ -989,7 +989,7 @@ export const diff = {
       compatibleFamilies: diff.compatibleFamilies ?? base.compatibleFamilies,
       point: diff.point ?? base.point,
       direction: diff.direction ?? base.direction,
-      qualities: diff.qualities ?? base.qualities,
+      attributes: diff.attributes ?? base.attributes,
     }),
     piece: (base: Piece, diff: PieceDiff): Piece => ({
       id_: base.id_,
@@ -997,7 +997,7 @@ export const diff = {
       type: diff.type ?? base.type,
       plane: diff.plane ?? base.plane,
       center: diff.center ?? base.center,
-      qualities: diff.qualities ?? base.qualities,
+      attributes: diff.attributes ?? base.attributes,
     }),
     connection: (base: Connection, diff: ConnectionDiff): Connection => ({
       connected: {
@@ -1019,7 +1019,7 @@ export const diff = {
       tilt: diff.tilt ?? base.tilt,
       x: diff.x ?? base.x,
       y: diff.y ?? base.y,
-      qualities: base.qualities,
+      attributes: base.attributes,
     }),
     type: (base: Type, diff: TypeDiff): Type => ({
       name: diff.name ?? base.name,
@@ -1036,7 +1036,7 @@ export const diff = {
       representations: diff.representations ?? base.representations,
       ports: diff.ports ?? base.ports,
       authors: diff.authors ?? base.authors,
-      qualities: diff.qualities ?? base.qualities,
+      attributes: diff.attributes ?? base.attributes,
     }),
     design: (base: Design, diff: DesignDiff): Design => {
       let pieces = base.pieces;
@@ -1088,7 +1088,7 @@ export const diff = {
         connections,
         fixedDesigns: base.fixedDesigns,
         authors: base.authors,
-        qualities: base.qualities,
+        attributes: base.attributes,
       };
     },
     kit: (base: Kit, diff: KitDiff): Kit => {
@@ -1189,7 +1189,7 @@ export const diff = {
         types,
         designs,
         files,
-        qualities: base.qualities,
+        attributes: base.attributes,
       };
     },
     file: (base: File, diff: FileDiff): File => ({
@@ -1206,7 +1206,7 @@ export const diff = {
       url: diff2.url ?? diff1.url,
       description: diff2.description ?? diff1.description,
       tags: diff2.tags ?? diff1.tags,
-      qualities: diff2.qualities ?? diff1.qualities,
+      attributes: diff2.attributes ?? diff1.attributes,
     }),
 
     port: (diff1: PortDiff, diff2: PortDiff): PortDiff => ({
@@ -1218,7 +1218,7 @@ export const diff = {
       compatibleFamilies: diff2.compatibleFamilies ?? diff1.compatibleFamilies,
       point: diff2.point ?? diff1.point,
       direction: diff2.direction ?? diff1.direction,
-      qualities: diff2.qualities ?? diff1.qualities,
+      attributes: diff2.attributes ?? diff1.attributes,
     }),
 
     piece: (diff1: PieceDiff, diff2: PieceDiff): PieceDiff => ({
@@ -1227,7 +1227,7 @@ export const diff = {
       type: diff2.type ?? diff1.type,
       plane: diff2.plane ?? diff1.plane,
       center: diff2.center ?? diff1.center,
-      qualities: diff2.qualities ?? diff1.qualities,
+      attributes: diff2.attributes ?? diff1.attributes,
     }),
 
     connection: (diff1: ConnectionDiff, diff2: ConnectionDiff): ConnectionDiff => ({
@@ -1267,7 +1267,7 @@ export const diff = {
       representations: diff2.representations ?? diff1.representations,
       ports: diff2.ports ?? diff1.ports,
       authors: diff2.authors ?? diff1.authors,
-      qualities: diff2.qualities ?? diff1.qualities,
+      attributes: diff2.attributes ?? diff1.attributes,
     }),
 
     design: (diff1: DesignDiff, diff2: DesignDiff): DesignDiff => ({
@@ -1281,7 +1281,7 @@ export const diff = {
       unit: diff2.unit ?? diff1.unit,
       pieces: diff2.pieces ?? diff1.pieces,
       connections: diff2.connections ?? diff1.connections,
-      qualities: diff2.qualities ?? diff1.qualities,
+      attributes: diff2.attributes ?? diff1.attributes,
     }),
 
     kit: (diff1: KitDiff, diff2: KitDiff): KitDiff => ({
@@ -1297,7 +1297,7 @@ export const diff = {
       types: diff2.types ?? diff1.types,
       designs: diff2.designs ?? diff1.designs,
       files: diff2.files ?? diff1.files,
-      qualities: diff2.qualities ?? diff1.qualities,
+      attributes: diff2.attributes ?? diff1.attributes,
     }),
 
     file: (diff1: FileDiff, diff2: FileDiff): FileDiff => ({
@@ -1313,7 +1313,7 @@ export const diff = {
       if (appliedDiff.url !== undefined) inverseDiff.url = original.url;
       if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
       if (appliedDiff.tags !== undefined) inverseDiff.tags = original.tags;
-      if (appliedDiff.qualities !== undefined) inverseDiff.qualities = original.qualities;
+      if (appliedDiff.attributes !== undefined) inverseDiff.attributes = original.attributes;
       return inverseDiff;
     },
     port: (original: Port, appliedDiff: PortDiff): PortDiff => {
@@ -1326,7 +1326,7 @@ export const diff = {
       if (appliedDiff.compatibleFamilies !== undefined) inverseDiff.compatibleFamilies = original.compatibleFamilies;
       if (appliedDiff.point !== undefined) inverseDiff.point = original.point;
       if (appliedDiff.direction !== undefined) inverseDiff.direction = original.direction;
-      if (appliedDiff.qualities !== undefined) inverseDiff.qualities = original.qualities;
+      if (appliedDiff.attributes !== undefined) inverseDiff.attributes = original.attributes;
       return inverseDiff;
     },
     piece: (original: Piece, appliedDiff: PieceDiff): PieceDiff => {
@@ -1335,7 +1335,7 @@ export const diff = {
       if (appliedDiff.type !== undefined) inverseDiff.type = original.type;
       if (appliedDiff.plane !== undefined) inverseDiff.plane = original.plane;
       if (appliedDiff.center !== undefined) inverseDiff.center = original.center;
-      if (appliedDiff.qualities !== undefined) inverseDiff.qualities = original.qualities;
+      if (appliedDiff.attributes !== undefined) inverseDiff.attributes = original.attributes;
       return inverseDiff;
     },
     connection: (original: Connection, appliedDiff: ConnectionDiff): ConnectionDiff => {
@@ -1372,7 +1372,7 @@ export const diff = {
       if (appliedDiff.representations !== undefined) inverseDiff.representations = original.representations;
       if (appliedDiff.ports !== undefined) inverseDiff.ports = original.ports;
       if (appliedDiff.authors !== undefined) inverseDiff.authors = original.authors;
-      if (appliedDiff.qualities !== undefined) inverseDiff.qualities = original.qualities;
+      if (appliedDiff.attributes !== undefined) inverseDiff.attributes = original.attributes;
       return inverseDiff;
     },
     design: (original: Design, appliedDiff: DesignDiff): DesignDiff => {
@@ -1519,7 +1519,7 @@ export const diff = {
         if (Object.keys(filesDiff).length > 0) inverseDiff.files = filesDiff;
       }
 
-      if (appliedDiff.qualities !== undefined) inverseDiff.qualities = original.qualities;
+      if (appliedDiff.attributes !== undefined) inverseDiff.attributes = original.attributes;
 
       return inverseDiff;
     },
@@ -1615,10 +1615,10 @@ export const isSameKit = (kit: Kit | KitId, other: Kit | KitId): boolean => {
 //#region Predicates
 
 export const findQualityValue = (entity: Kit | Type | Design | Piece | Connection | Representation | Port, name: string, defaultValue?: string | null): string | null => {
-  const quality = entity.qualities?.find((q) => q.name === name);
-  if (!quality && defaultValue === undefined) throw new Error(`Quality ${name} not found in ${entity}`);
-  if (quality?.value === undefined && defaultValue === null) return null;
-  return quality?.value ?? defaultValue ?? "";
+  const attribute = entity.attributes?.find((q) => q.name === name);
+  if (!attribute && defaultValue === undefined) throw new Error(`Attribute ${name} not found in ${entity}`);
+  if (attribute?.value === undefined && defaultValue === null) return null;
+  return attribute?.value ?? defaultValue ?? "";
 };
 const findRepresentation = (representations: Representation[], tags: string[]): Representation => {
   const indices = representations.map((r) => jaccard(r.tags, tags));
@@ -1911,21 +1911,21 @@ const roundPlane = (plane: Plane): Plane => ({
 
 //#endregion Plane
 
-//#region Quality
+//#region Attribute
 
-export const setQuality = <T extends Kit | Design | Type | Piece | Connection | Representation | Port>(entity: T, quality: Quality): T => {
-  const qualitiesArray = entity.qualities || [];
-  const existingIndex = qualitiesArray.findIndex((q) => q.name === quality.name);
-  if (existingIndex >= 0) qualitiesArray[existingIndex] = quality;
-  else qualitiesArray.push(quality);
-  return { ...entity, qualities: qualitiesArray };
+export const setQuality = <T extends Kit | Design | Type | Piece | Connection | Representation | Port>(entity: T, attribute: Attribute): T => {
+  const qualitiesArray = entity.attributes || [];
+  const existingIndex = qualitiesArray.findIndex((q) => q.name === attribute.name);
+  if (existingIndex >= 0) qualitiesArray[existingIndex] = attribute;
+  else qualitiesArray.push(attribute);
+  return { ...entity, attributes: qualitiesArray };
 };
 
-export const setQualities = <T extends Kit | Design | Type | Piece | Connection | Representation | Port>(entity: T, qualities: Quality[]): T => {
-  return qualities.reduce((acc, quality) => setQuality(acc, quality), entity);
+export const setQualities = <T extends Kit | Design | Type | Piece | Connection | Representation | Port>(entity: T, attributes: Attribute[]): T => {
+  return attributes.reduce((acc, attribute) => setQuality(acc, attribute), entity);
 };
 
-//#endregion Quality
+//#endregion Attribute
 
 //#region Port
 
@@ -2452,7 +2452,7 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
           [
             {
               name: "semio.fixedPieceId",
-              value: parentPiece.qualities?.find((q) => q.name === "semio.fixedPieceId")?.value ?? "",
+              value: parentPiece.attributes?.find((q) => q.name === "semio.fixedPieceId")?.value ?? "",
             },
             {
               name: "semio.parentPieceId",

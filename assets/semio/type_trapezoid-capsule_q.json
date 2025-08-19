@@ -12,38 +12,57 @@
     {
       "url": "representations/trapezoid-capsule_q.glb",
       "description": "",
-      "tags": ["model/gltf-binary"],
-      "qualities": []
+      "tags": [
+        "model/gltf-binary"
+      ],
+      "attributes": []
     },
     {
       "url": "representations/trapezoid-capsule_q_1to500.3dm",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to500"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm",
+        "1to500"
+      ],
+      "attributes": []
     },
     {
       "url": "representations/trapezoid-capsule_q_1to200.3dm",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to200"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm",
+        "1to200"
+      ],
+      "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/9442aab847",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to500", "model/vnd.speckle+json"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm",
+        "1to500",
+        "model/vnd.speckle+json"
+      ],
+      "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/29526c7d12",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to200", "model/vnd.speckle+json"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm",
+        "1to200",
+        "model/vnd.speckle+json"
+      ],
+      "attributes": []
     },
     {
       "url": "representations/trapezoid-capsule_q_collider.glb",
       "description": "",
-      "tags": ["model/gltf-binary", "collider"],
-      "qualities": []
+      "tags": [
+        "model/gltf-binary",
+        "collider"
+      ],
+      "attributes": []
     }
   ],
   "ports": [
@@ -52,17 +71,49 @@
       "description": "The middle of the main entrance door of the upper entrance floor.",
       "mandatory": false,
       "family": "door capsule east",
-      "compatibleFamilies": ["door tambour east"],
-      "point": { "x": 0.42, "y": 0.0, "z": 0.0 },
-      "direction": { "x": -0.14780942, "y": -0.9890159, "z": 0.0 },
+      "compatibleFamilies": [
+        "door tambour east"
+      ],
+      "point": {
+        "x": 0.42,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "direction": {
+        "x": -0.14780942,
+        "y": -0.9890159,
+        "z": 0.0
+      },
       "t": 0.0,
-      "qualities": [{ "name": "entrance", "value": "", "unit": "", "definition": "" }]
+      "attributes": [
+        {
+          "name": "entrance",
+          "value": "",
+          "unit": "",
+          "definition": ""
+        }
+      ]
     }
   ],
-  "authors": [{ "name": "Ueli Saluz", "email": "ueli@semio-tech.org" }],
-  "qualities": [
-    { "name": "entrance", "value": "back", "unit": "", "definition": "" },
-    { "name": "view", "value": "side", "unit": "", "definition": "" },
+  "authors": [
+    {
+      "name": "Ueli Saluz",
+      "email": "ueli@semio-tech.org"
+    }
+  ],
+  "attributes": [
+    {
+      "name": "entrance",
+      "value": "back",
+      "unit": "",
+      "definition": ""
+    },
+    {
+      "name": "view",
+      "value": "side",
+      "unit": "",
+      "definition": ""
+    },
     {
       "name": "heigth",
       "value": "2.5",
@@ -99,7 +150,12 @@
       "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
-    { "name": "income", "value": "10780", "unit": "€/a", "definition": "" },
+    {
+      "name": "income",
+      "value": "10780",
+      "unit": "€/a",
+      "definition": ""
+    },
     {
       "name": "maintenance expenses",
       "value": "862",

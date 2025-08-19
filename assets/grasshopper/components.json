@@ -51,9 +51,9 @@
           },
           {
             "description": "The optional qualities of the design.",
-            "name": "Qualities",
+            "name": "Attributes",
             "nickname": "Ql*",
-            "kind": "Qualities"
+            "kind": "Attributes"
           },
           {
             "description": "The optional authors of the design.",
@@ -294,7 +294,7 @@
         ]
       },
       {
-        "name": "Sum Qualities",
+        "name": "Sum Attributes",
         "description": "Sum up the qualities of a type for each piece with this type in a design.",
         "icon": "icon",
         "nickname": "\u2211Qal",
@@ -312,7 +312,7 @@
             "kind": "Type"
           },
           {
-            "description": "Name of the quality.",
+            "description": "Name of the attribute.",
             "name": "Name",
             "nickname": "Na",
             "kind": "Name"
@@ -326,10 +326,10 @@
             "kind": "Number"
           },
           {
-            "description": "A quality is meta-data for decision making.",
-            "name": "Quality",
+            "description": "A attribute is meta-data for decision making.",
+            "name": "Attribute",
             "nickname": "Ql",
-            "kind": "Quality"
+            "kind": "Attribute"
           }
         ]
       }
@@ -542,19 +542,19 @@
         ]
       },
       {
-        "name": "Opinionated Quality",
-        "description": "Construct an opinionated quality with a standard name.",
+        "name": "Opinionated Attribute",
+        "description": "Construct an opinionated attribute with a standard name.",
         "icon": "icon",
         "nickname": "\u219dQal",
         "inputs": [
           {
-            "description": "The name of the quality.",
+            "description": "The name of the attribute.",
             "name": "Name",
             "nickname": "Na",
             "kind": "Name"
           },
           {
-            "description": "The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
+            "description": "The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.",
             "name": "Value",
             "nickname": "Vl?",
             "kind": "Value"
@@ -568,10 +568,10 @@
         ],
         "outputs": [
           {
-            "description": "A quality is a named value with a unit and a definition.",
-            "name": "Quality",
+            "description": "A attribute is a named value with a unit and a definition.",
+            "name": "Attribute",
             "nickname": "Ql",
-            "kind": "Quality"
+            "kind": "Attribute"
           }
         ]
       },
@@ -984,19 +984,19 @@
         ]
       },
       {
-        "name": "Select Quality",
-        "description": "Select a quality by its name. If no quality matches, null is returned.",
+        "name": "Select Attribute",
+        "description": "Select a attribute by its name. If no attribute matches, null is returned.",
         "icon": "icon",
         "nickname": "?Qal",
         "inputs": [
           {
-            "description": "A quality is a named value with a unit and a definition.",
-            "name": "Quality",
+            "description": "A attribute is a named value with a unit and a definition.",
+            "name": "Attribute",
             "nickname": "Ql",
-            "kind": "Quality"
+            "kind": "Attribute"
           },
           {
-            "description": "The name of the quality.",
+            "description": "The name of the attribute.",
             "name": "Name",
             "nickname": "Na",
             "kind": "Name"
@@ -1004,10 +1004,10 @@
         ],
         "outputs": [
           {
-            "description": "A quality is a named value with a unit and a definition.",
-            "name": "Quality",
+            "description": "A attribute is a named value with a unit and a definition.",
+            "name": "Attribute",
             "nickname": "Ql",
-            "kind": "Quality"
+            "kind": "Attribute"
           }
         ]
       }
@@ -1170,12 +1170,12 @@
         "icon": ""
       },
       {
-        "name": "Deserialize Quality",
-        "description": "Deserialize a quality.",
+        "name": "Deserialize Attribute",
+        "description": "Deserialize a attribute.",
         "nickname": "<Qal",
         "inputs": [
           {
-            "description": "Text of serialized Quality.",
+            "description": "Text of serialized Attribute.",
             "name": "Text",
             "nickname": "Tx",
             "kind": "Text"
@@ -1183,10 +1183,10 @@
         ],
         "outputs": [
           {
-            "description": "Deserialized Quality.",
-            "name": "Quality",
+            "description": "Deserialized Attribute.",
+            "name": "Attribute",
             "nickname": "Ql",
-            "kind": "Quality"
+            "kind": "Attribute"
           }
         ],
         "icon": ""
@@ -1652,18 +1652,18 @@
         "icon": ""
       },
       {
-        "name": "Serialize Quality",
-        "description": "Serialize a quality.",
+        "name": "Serialize Attribute",
+        "description": "Serialize a attribute.",
         "nickname": ">Qal",
         "inputs": [
           {
-            "description": "The quality to serialize.",
-            "name": "Quality",
+            "description": "The attribute to serialize.",
+            "name": "Attribute",
             "nickname": "Ql",
-            "kind": "Quality"
+            "kind": "Attribute"
           },
           {
-            "description": "The optional indent unit for the serialized quality. Empty text for no indent or spaces or tabs",
+            "description": "The optional indent unit for the serialized attribute. Empty text for no indent or spaces or tabs",
             "name": "Indent",
             "nickname": "In?",
             "kind": "Indent"
@@ -1671,7 +1671,7 @@
         ],
         "outputs": [
           {
-            "description": "Text of serialized Quality.",
+            "description": "Text of serialized Attribute.",
             "name": "Text",
             "nickname": "Tx",
             "kind": "Text"
@@ -1852,9 +1852,9 @@
           },
           {
             "description": "The optional qualities of the kit.",
-            "name": "Qualities",
+            "name": "Attributes",
             "nickname": "Ql*",
-            "kind": "Qualities"
+            "kind": "Attributes"
           }
         ],
         "outputs": [
@@ -1938,9 +1938,9 @@
           },
           {
             "description": "The optional qualities of the kit.",
-            "name": "Qualities",
+            "name": "Attributes",
             "nickname": "Ql*",
-            "kind": "Qualities"
+            "kind": "Attributes"
           }
         ],
         "icon": ""
@@ -2030,9 +2030,9 @@
           },
           {
             "description": "The optional qualities of the design.",
-            "name": "Qualities",
+            "name": "Attributes",
             "nickname": "Ql*",
-            "kind": "Qualities"
+            "kind": "Attributes"
           }
         ],
         "outputs": [
@@ -2116,9 +2116,9 @@
           },
           {
             "description": "The optional qualities of the design.",
-            "name": "Qualities",
+            "name": "Attributes",
             "nickname": "Ql*",
-            "kind": "Qualities"
+            "kind": "Attributes"
           }
         ],
         "icon": ""
@@ -2214,9 +2214,9 @@
           },
           {
             "description": "The optional qualities of the type.",
-            "name": "Qualities",
+            "name": "Attributes",
             "nickname": "Ql*",
-            "kind": "Qualities"
+            "kind": "Attributes"
           }
         ],
         "outputs": [
@@ -2306,9 +2306,9 @@
           },
           {
             "description": "The optional qualities of the type.",
-            "name": "Qualities",
+            "name": "Attributes",
             "nickname": "Ql*",
-            "kind": "Qualities"
+            "kind": "Attributes"
           }
         ],
         "icon": ""
@@ -2410,9 +2410,9 @@
           },
           {
             "description": "The optional qualities of the connection.",
-            "name": "Qualities",
+            "name": "Attributes",
             "nickname": "Ql*",
-            "kind": "Qualities"
+            "kind": "Attributes"
           }
         ],
         "outputs": [
@@ -2508,9 +2508,9 @@
           },
           {
             "description": "The optional qualities of the connection.",
-            "name": "Qualities",
+            "name": "Attributes",
             "nickname": "Ql*",
-            "kind": "Qualities"
+            "kind": "Attributes"
           }
         ],
         "icon": ""
@@ -2582,9 +2582,9 @@
           },
           {
             "description": "The optional qualities of the piece.",
-            "name": "Qualities",
+            "name": "Attributes",
             "nickname": "Ql*",
-            "kind": "Qualities"
+            "kind": "Attributes"
           }
         ],
         "outputs": [
@@ -2650,9 +2650,9 @@
           },
           {
             "description": "The optional qualities of the piece.",
-            "name": "Qualities",
+            "name": "Attributes",
             "nickname": "Ql*",
-            "kind": "Qualities"
+            "kind": "Attributes"
           }
         ],
         "icon": ""
@@ -2724,9 +2724,9 @@
           },
           {
             "description": "The optional qualities of the port.",
-            "name": "Qualities",
+            "name": "Attributes",
             "nickname": "Ql*",
-            "kind": "Qualities"
+            "kind": "Attributes"
           }
         ],
         "outputs": [
@@ -2792,9 +2792,9 @@
           },
           {
             "description": "The optional qualities of the port.",
-            "name": "Qualities",
+            "name": "Attributes",
             "nickname": "Ql*",
-            "kind": "Qualities"
+            "kind": "Attributes"
           }
         ],
         "icon": ""
@@ -2836,9 +2836,9 @@
           },
           {
             "description": "The optional qualities of the representation.",
-            "name": "Qualities",
+            "name": "Attributes",
             "nickname": "Ql*",
-            "kind": "Qualities"
+            "kind": "Attributes"
           }
         ],
         "outputs": [
@@ -2874,50 +2874,50 @@
           },
           {
             "description": "The optional qualities of the representation.",
-            "name": "Qualities",
+            "name": "Attributes",
             "nickname": "Ql*",
-            "kind": "Qualities"
+            "kind": "Attributes"
           }
         ],
         "icon": ""
       },
       {
-        "name": "Model Quality",
-        "description": "Construct, deconstruct or modify a quality",
+        "name": "Model Attribute",
+        "description": "Construct, deconstruct or modify a attribute",
         "nickname": "~Qal",
         "inputs": [
           {
-            "description": "The optional quality to deconstruct or modify.",
-            "name": "Quality",
+            "description": "The optional attribute to deconstruct or modify.",
+            "name": "Attribute",
             "nickname": "Ql?",
-            "kind": "Quality"
+            "kind": "Attribute"
           },
           {
-            "description": "Whether the quality should be validated.",
+            "description": "Whether the attribute should be validated.",
             "name": "Validate",
             "nickname": "Vd?",
             "kind": "Validate"
           },
           {
-            "description": "The name of the quality.",
+            "description": "The name of the attribute.",
             "name": "Name",
             "nickname": "Na",
             "kind": "Name"
           },
           {
-            "description": "The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
+            "description": "The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.",
             "name": "Value",
             "nickname": "Vl?",
             "kind": "Value"
           },
           {
-            "description": "The optional unit of the value of the quality.",
+            "description": "The optional unit of the value of the attribute.",
             "name": "Unit",
             "nickname": "Ut?",
             "kind": "Unit"
           },
           {
-            "description": "The optional definition [ text | uri ] of the quality.",
+            "description": "The optional definition [ text | uri ] of the attribute.",
             "name": "Definition",
             "nickname": "Df?",
             "kind": "Definition"
@@ -2925,37 +2925,37 @@
         ],
         "outputs": [
           {
-            "description": "The constructed or modified quality.",
-            "name": "Quality",
+            "description": "The constructed or modified attribute.",
+            "name": "Attribute",
             "nickname": "Ql",
-            "kind": "Quality"
+            "kind": "Attribute"
           },
           {
-            "description": "True if the quality is valid. Null if no validation was performed.",
+            "description": "True if the attribute is valid. Null if no validation was performed.",
             "name": "Valid",
             "nickname": "Vd?",
             "kind": "Valid"
           },
           {
-            "description": "The name of the quality.",
+            "description": "The name of the attribute.",
             "name": "Name",
             "nickname": "Na",
             "kind": "Name"
           },
           {
-            "description": "The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
+            "description": "The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.",
             "name": "Value",
             "nickname": "Vl?",
             "kind": "Value"
           },
           {
-            "description": "The optional unit of the value of the quality.",
+            "description": "The optional unit of the value of the attribute.",
             "name": "Unit",
             "nickname": "Ut?",
             "kind": "Unit"
           },
           {
-            "description": "The optional definition [ text | uri ] of the quality.",
+            "description": "The optional definition [ text | uri ] of the attribute.",
             "name": "Definition",
             "nickname": "Df?",
             "kind": "Definition"

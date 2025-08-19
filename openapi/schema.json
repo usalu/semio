@@ -431,7 +431,10 @@
           }
         },
         "type": "object",
-        "required": ["name", "email"],
+        "required": [
+          "name",
+          "email"
+        ],
         "title": "AuthorInput",
         "description": "\ud83d\udc64 The input for an author."
       },
@@ -451,7 +454,10 @@
           }
         },
         "type": "object",
-        "required": ["name", "email"],
+        "required": [
+          "name",
+          "email"
+        ],
         "title": "Author",
         "description": "\ud83d\udcd1 The output of an author."
       },
@@ -480,7 +486,10 @@
           }
         },
         "type": "object",
-        "required": ["description", "types"],
+        "required": [
+          "description",
+          "types"
+        ],
         "title": "Body_predict_design_assistant_predictDesign_get"
       },
       "ConnectionContext-Input": {
@@ -556,7 +565,10 @@
           }
         },
         "type": "object",
-        "required": ["connected", "connecting"],
+        "required": [
+          "connected",
+          "connecting"
+        ],
         "title": "ConnectionContext",
         "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design."
       },
@@ -633,7 +645,10 @@
           }
         },
         "type": "object",
-        "required": ["connected", "connecting"],
+        "required": [
+          "connected",
+          "connecting"
+        ],
         "title": "ConnectionContext",
         "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design."
       },
@@ -710,7 +725,10 @@
           }
         },
         "type": "object",
-        "required": ["connected", "connecting"],
+        "required": [
+          "connected",
+          "connecting"
+        ],
         "title": "ConnectionInput",
         "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design."
       },
@@ -787,7 +805,10 @@
           }
         },
         "type": "object",
-        "required": ["connected", "connecting"],
+        "required": [
+          "connected",
+          "connecting"
+        ],
         "title": "Connection",
         "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design."
       },
@@ -864,7 +885,10 @@
           }
         },
         "type": "object",
-        "required": ["connected", "connecting"],
+        "required": [
+          "connected",
+          "connecting"
+        ],
         "title": "ConnectionPrediction",
         "description": "\ud83d\udd87\ufe0f A bidirectional connection between two pieces of a design."
       },
@@ -928,16 +952,18 @@
             "type": "array",
             "title": "Connections"
           },
-          "qualities": {
+          "attributes": {
             "items": {
               "$ref": "#/components/schemas/QualityContext"
             },
             "type": "array",
-            "title": "Qualities"
+            "title": "Attributes"
           }
         },
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "DesignContext",
         "description": "\ud83c\udfd9\ufe0f A design is a collection of pieces that are connected."
       },
@@ -1001,16 +1027,18 @@
             "type": "array",
             "title": "Connections"
           },
-          "qualities": {
+          "attributes": {
             "items": {
               "$ref": "#/components/schemas/QualityContext"
             },
             "type": "array",
-            "title": "Qualities"
+            "title": "Attributes"
           }
         },
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "DesignContext",
         "description": "\ud83c\udfd9\ufe0f A design is a collection of pieces that are connected."
       },
@@ -1095,16 +1123,18 @@
             "type": "array",
             "title": "Authors"
           },
-          "qualities": {
+          "attributes": {
             "items": {
               "$ref": "#/components/schemas/QualityInput"
             },
             "type": "array",
-            "title": "Qualities"
+            "title": "Attributes"
           }
         },
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "DesignInput",
         "description": "\ud83c\udfd9\ufe0f A design is a collection of pieces that are connected."
       },
@@ -1201,16 +1231,18 @@
             "type": "array",
             "title": "Authors"
           },
-          "qualities": {
+          "attributes": {
             "items": {
-              "$ref": "#/components/schemas/Quality"
+              "$ref": "#/components/schemas/Attribute"
             },
             "type": "array",
-            "title": "Qualities"
+            "title": "Attributes"
           }
         },
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "Design",
         "description": "\ud83c\udfd9\ufe0f A design is a collection of pieces that are connected."
       },
@@ -1256,7 +1288,10 @@
           }
         },
         "type": "object",
-        "required": ["x", "y"],
+        "required": [
+          "x",
+          "y"
+        ],
         "title": "DiagramPointContext",
         "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system."
       },
@@ -1274,7 +1309,10 @@
           }
         },
         "type": "object",
-        "required": ["x", "y"],
+        "required": [
+          "x",
+          "y"
+        ],
         "title": "DiagramPointInput",
         "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system."
       },
@@ -1292,7 +1330,10 @@
           }
         },
         "type": "object",
-        "required": ["x", "y"],
+        "required": [
+          "x",
+          "y"
+        ],
         "title": "DiagramPoint",
         "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system."
       },
@@ -1340,17 +1381,19 @@
             "title": "Designs",
             "description": "\ud83c\udfd9\ufe0f The designs of the kit."
           },
-          "qualities": {
+          "attributes": {
             "items": {
               "$ref": "#/components/schemas/QualityContext"
             },
             "type": "array",
-            "title": "Qualities",
-            "description": "\ud83d\udccf The qualities of the kit."
+            "title": "Attributes",
+            "description": "\ud83d\udccf The attributes of the kit."
           }
         },
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "KitContext",
         "description": "\ud83d\uddc3\ufe0f A kit is a collection of types and designs."
       },
@@ -1434,17 +1477,19 @@
             "title": "Designs",
             "description": "\ud83c\udfd9\ufe0f The designs of the kit."
           },
-          "qualities": {
+          "attributes": {
             "items": {
               "$ref": "#/components/schemas/QualityInput"
             },
             "type": "array",
-            "title": "Qualities",
-            "description": "\ud83d\udccf The qualities of the kit."
+            "title": "Attributes",
+            "description": "\ud83d\udccf The attributes of the kit."
           }
         },
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "KitInput",
         "description": "\u2198\ufe0f The input for a kit."
       },
@@ -1546,17 +1591,20 @@
             "title": "Designs",
             "description": "\ud83c\udfd9\ufe0f The designs of the kit."
           },
-          "qualities": {
+          "attributes": {
             "items": {
-              "$ref": "#/components/schemas/Quality"
+              "$ref": "#/components/schemas/Attribute"
             },
             "type": "array",
-            "title": "Qualities",
-            "description": "\ud83d\udccf The qualities of the kit."
+            "title": "Attributes",
+            "description": "\ud83d\udccf The attributes of the kit."
           }
         },
         "type": "object",
-        "required": ["uri", "name"],
+        "required": [
+          "uri",
+          "name"
+        ],
         "title": "Kit",
         "description": "\ud83d\uddc3\ufe0f A kit is a collection of types and designs."
       },
@@ -1574,7 +1622,10 @@
           }
         },
         "type": "object",
-        "required": ["longitude", "latitude"],
+        "required": [
+          "longitude",
+          "latitude"
+        ],
         "title": "LocationContext",
         "description": "\ud83d\udccd The context of a location."
       },
@@ -1592,7 +1643,10 @@
           }
         },
         "type": "object",
-        "required": ["longitude", "latitude"],
+        "required": [
+          "longitude",
+          "latitude"
+        ],
         "title": "LocationInput",
         "description": "\ud83d\udccd The input for a location."
       },
@@ -1610,7 +1664,10 @@
           }
         },
         "type": "object",
-        "required": ["longitude", "latitude"],
+        "required": [
+          "longitude",
+          "latitude"
+        ],
         "title": "Location",
         "description": "\ud83d\udccd The output of a location."
       },
@@ -1656,17 +1713,19 @@
             ],
             "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
           },
-          "qualities": {
+          "attributes": {
             "items": {
               "$ref": "#/components/schemas/QualityContext"
             },
             "type": "array",
-            "title": "Qualities",
-            "description": "\ud83d\udccf The qualities of the piece."
+            "title": "Attributes",
+            "description": "\ud83d\udccf The attributes of the piece."
           }
         },
         "type": "object",
-        "required": ["type"],
+        "required": [
+          "type"
+        ],
         "title": "PieceContext",
         "description": "\u2b55 A piece is a 3d-instance of a type in a design."
       },
@@ -1712,17 +1771,19 @@
             ],
             "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
           },
-          "qualities": {
+          "attributes": {
             "items": {
               "$ref": "#/components/schemas/QualityContext"
             },
             "type": "array",
-            "title": "Qualities",
-            "description": "\ud83d\udccf The qualities of the piece."
+            "title": "Attributes",
+            "description": "\ud83d\udccf The attributes of the piece."
           }
         },
         "type": "object",
-        "required": ["type"],
+        "required": [
+          "type"
+        ],
         "title": "PieceContext",
         "description": "\u2b55 A piece is a 3d-instance of a type in a design."
       },
@@ -1782,17 +1843,19 @@
             ],
             "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
           },
-          "qualities": {
+          "attributes": {
             "items": {
               "$ref": "#/components/schemas/QualityInput"
             },
             "type": "array",
-            "title": "Qualities",
-            "description": "\ud83d\udccf The qualities of the piece."
+            "title": "Attributes",
+            "description": "\ud83d\udccf The attributes of the piece."
           }
         },
         "type": "object",
-        "required": ["type"],
+        "required": [
+          "type"
+        ],
         "title": "PieceInput",
         "description": "\u2b55 A piece is a 3d-instance of a type in a design."
       },
@@ -1838,17 +1901,19 @@
             ],
             "description": "\ud83d\udcfa The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
           },
-          "qualities": {
+          "attributes": {
             "items": {
-              "$ref": "#/components/schemas/Quality"
+              "$ref": "#/components/schemas/Attribute"
             },
             "type": "array",
-            "title": "Qualities",
-            "description": "\ud83d\udccf The qualities of the piece."
+            "title": "Attributes",
+            "description": "\ud83d\udccf The attributes of the piece."
           }
         },
         "type": "object",
-        "required": ["type"],
+        "required": [
+          "type"
+        ],
         "title": "Piece",
         "description": "\u2b55 A piece is a 3d-instance of a type in a design."
       },
@@ -1874,7 +1939,9 @@
           }
         },
         "type": "object",
-        "required": ["type"],
+        "required": [
+          "type"
+        ],
         "title": "PiecePrediction",
         "description": "\u2b55 A piece is a 3d-instance of a type in a design."
       },
@@ -1894,7 +1961,11 @@
           }
         },
         "type": "object",
-        "required": ["origin", "xAxis", "yAxis"],
+        "required": [
+          "origin",
+          "xAxis",
+          "yAxis"
+        ],
         "title": "PlaneContext",
         "description": "\u25f3 A plane is an origin (point) and an orientation (x-axis and y-axis)."
       },
@@ -1914,7 +1985,11 @@
           }
         },
         "type": "object",
-        "required": ["origin", "xAxis", "yAxis"],
+        "required": [
+          "origin",
+          "xAxis",
+          "yAxis"
+        ],
         "title": "PlaneInput",
         "description": "\u25f3 A plane is an origin (point) and an orientation (x-axis and y-axis)."
       },
@@ -1934,7 +2009,11 @@
           }
         },
         "type": "object",
-        "required": ["origin", "xAxis", "yAxis"],
+        "required": [
+          "origin",
+          "xAxis",
+          "yAxis"
+        ],
         "title": "Plane",
         "description": "\u25f3 A plane is an origin (point) and an orientation (x-axis and y-axis)."
       },
@@ -1957,7 +2036,11 @@
           }
         },
         "type": "object",
-        "required": ["x", "y", "z"],
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
         "title": "Point",
         "description": "\u2716\ufe0f A 3d-point (xyz) of floating point numbers."
       },
@@ -1980,7 +2063,11 @@
           }
         },
         "type": "object",
-        "required": ["x", "y", "z"],
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
         "title": "PointContext",
         "description": "\u2716\ufe0f A 3d-point (xyz) of floating point numbers."
       },
@@ -2003,7 +2090,11 @@
           }
         },
         "type": "object",
-        "required": ["x", "y", "z"],
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
         "title": "PointInput",
         "description": "\u2716\ufe0f A 3d-point (xyz) of floating point numbers."
       },
@@ -2058,17 +2149,20 @@
             "description": "\ud83d\udc8d The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
             "default": 0.0
           },
-          "qualities": {
+          "attributes": {
             "items": {
               "$ref": "#/components/schemas/QualityContext"
             },
             "type": "array",
-            "title": "Qualities",
-            "description": "\ud83d\udccf The qualities of the port."
+            "title": "Attributes",
+            "description": "\ud83d\udccf The attributes of the port."
           }
         },
         "type": "object",
-        "required": ["point", "direction"],
+        "required": [
+          "point",
+          "direction"
+        ],
         "title": "PortContext",
         "description": "\ud83d\udd0c A port is a connection point (with a direction) of a type."
       },
@@ -2137,17 +2231,20 @@
             "$ref": "#/components/schemas/VectorInput",
             "description": "\u27a1\ufe0f The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned."
           },
-          "qualities": {
+          "attributes": {
             "items": {
               "$ref": "#/components/schemas/QualityInput"
             },
             "type": "array",
-            "title": "Qualities",
-            "description": "\ud83d\udccf The qualities of the port."
+            "title": "Attributes",
+            "description": "\ud83d\udccf The attributes of the port."
           }
         },
         "type": "object",
-        "required": ["point", "direction"],
+        "required": [
+          "point",
+          "direction"
+        ],
         "title": "PortInput",
         "description": "\ud83d\udd0c A port is a connection point (with a direction) of a type."
       },
@@ -2202,17 +2299,20 @@
             "description": "\ud83d\udc8d The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.",
             "default": 0.0
           },
-          "qualities": {
+          "attributes": {
             "items": {
-              "$ref": "#/components/schemas/Quality"
+              "$ref": "#/components/schemas/Attribute"
             },
             "type": "array",
-            "title": "Qualities",
-            "description": "\ud83d\udccf The qualities of the port."
+            "title": "Attributes",
+            "description": "\ud83d\udccf The attributes of the port."
           }
         },
         "type": "object",
-        "required": ["point", "direction"],
+        "required": [
+          "point",
+          "direction"
+        ],
         "title": "Port",
         "description": "\ud83d\udd0c A port is a connection point (with a direction) of a type."
       },
@@ -2222,27 +2322,29 @@
             "type": "string",
             "maxLength": 64,
             "title": "Name",
-            "description": "\ud83d\udccf The name of the quality."
+            "description": "\ud83d\udccf The name of the attribute."
           },
           "value": {
             "type": "string",
             "maxLength": 64,
             "title": "Value",
-            "description": "\ud83d\udccf The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
+            "description": "\ud83d\udccf The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.",
             "default": ""
           },
           "unit": {
             "type": "string",
             "maxLength": 64,
             "title": "Unit",
-            "description": "\ud83d\udccf The optional unit of the value of the quality.",
+            "description": "\ud83d\udccf The optional unit of the value of the attribute.",
             "default": ""
           }
         },
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "QualityContext",
-        "description": "\ud83d\udccf A quality is a named value with a unit and a definition."
+        "description": "\ud83d\udccf A attribute is a named value with a unit and a definition."
       },
       "QualityInput": {
         "properties": {
@@ -2250,69 +2352,73 @@
             "type": "string",
             "maxLength": 64,
             "title": "Name",
-            "description": "\ud83d\udccf The name of the quality."
+            "description": "\ud83d\udccf The name of the attribute."
           },
           "value": {
             "type": "string",
             "maxLength": 64,
             "title": "Value",
-            "description": "\ud83d\udccf The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
+            "description": "\ud83d\udccf The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.",
             "default": ""
           },
           "unit": {
             "type": "string",
             "maxLength": 64,
             "title": "Unit",
-            "description": "\ud83d\udccf The optional unit of the value of the quality.",
+            "description": "\ud83d\udccf The optional unit of the value of the attribute.",
             "default": ""
           },
           "definition": {
             "type": "string",
             "maxLength": 512,
             "title": "Definition",
-            "description": "\ud83d\udccf The optional definition [ text | uri ] of the quality.",
+            "description": "\ud83d\udccf The optional definition [ text | uri ] of the attribute.",
             "default": ""
           }
         },
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "QualityInput",
-        "description": "\ud83d\udccf A quality is a named value with a unit and a definition."
+        "description": "\ud83d\udccf A attribute is a named value with a unit and a definition."
       },
-      "Quality": {
+      "Attribute": {
         "properties": {
           "name": {
             "type": "string",
             "maxLength": 64,
             "title": "Name",
-            "description": "\ud83d\udccf The name of the quality."
+            "description": "\ud83d\udccf The name of the attribute."
           },
           "value": {
             "type": "string",
             "maxLength": 64,
             "title": "Value",
-            "description": "\ud83d\udccf The optional value [ text | url ] of the quality. No value is equivalent to true for the name.",
+            "description": "\ud83d\udccf The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.",
             "default": ""
           },
           "unit": {
             "type": "string",
             "maxLength": 64,
             "title": "Unit",
-            "description": "\ud83d\udccf The optional unit of the value of the quality.",
+            "description": "\ud83d\udccf The optional unit of the value of the attribute.",
             "default": ""
           },
           "definition": {
             "type": "string",
             "maxLength": 512,
             "title": "Definition",
-            "description": "\ud83d\udccf The optional definition [ text | uri ] of the quality.",
+            "description": "\ud83d\udccf The optional definition [ text | uri ] of the attribute.",
             "default": ""
           }
         },
         "type": "object",
-        "required": ["name"],
-        "title": "Quality",
-        "description": "\ud83d\udccf A quality is a named value with a unit and a definition."
+        "required": [
+          "name"
+        ],
+        "title": "Attribute",
+        "description": "\ud83d\udccf A attribute is a named value with a unit and a definition."
       },
       "RepresentationInput": {
         "properties": {
@@ -2337,17 +2443,19 @@
             "title": "Tags",
             "description": "\ud83c\udff7\ufe0f The optional tags to group representations. No tags means default."
           },
-          "qualities": {
+          "attributes": {
             "items": {
               "$ref": "#/components/schemas/QualityInput"
             },
             "type": "array",
-            "title": "Qualities",
-            "description": "\ud83d\udccf The qualities of the representation."
+            "title": "Attributes",
+            "description": "\ud83d\udccf The attributes of the representation."
           }
         },
         "type": "object",
-        "required": ["url"],
+        "required": [
+          "url"
+        ],
         "title": "RepresentationInput",
         "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags."
       },
@@ -2374,17 +2482,19 @@
             "title": "Tags",
             "description": "\ud83c\udff7\ufe0f The optional tags to group representations. No tags means default."
           },
-          "qualities": {
+          "attributes": {
             "items": {
-              "$ref": "#/components/schemas/Quality"
+              "$ref": "#/components/schemas/Attribute"
             },
             "type": "array",
-            "title": "Qualities",
-            "description": "\ud83d\udccf The qualities of the representation."
+            "title": "Attributes",
+            "description": "\ud83d\udccf The attributes of the representation."
           }
         },
         "type": "object",
-        "required": ["url"],
+        "required": [
+          "url"
+        ],
         "title": "Representation",
         "description": "\ud83d\udcbe A representation is a link to a resource that describes a type for a certain level of detail and tags."
       },
@@ -2398,7 +2508,10 @@
           }
         },
         "type": "object",
-        "required": ["piece", "port"],
+        "required": [
+          "piece",
+          "port"
+        ],
         "title": "SideContext",
         "description": "\ud83e\uddf1 A side of a piece in a connection."
       },
@@ -2412,7 +2525,10 @@
           }
         },
         "type": "object",
-        "required": ["piece", "port"],
+        "required": [
+          "piece",
+          "port"
+        ],
         "title": "SideInput",
         "description": "\ud83e\uddf1 A side of a piece in a connection."
       },
@@ -2426,7 +2542,10 @@
           }
         },
         "type": "object",
-        "required": ["piece", "port"],
+        "required": [
+          "piece",
+          "port"
+        ],
         "title": "Side",
         "description": "\ud83e\uddf1 A side of a piece in a connection."
       },
@@ -2440,7 +2559,10 @@
           }
         },
         "type": "object",
-        "required": ["piece", "port"],
+        "required": [
+          "piece",
+          "port"
+        ],
         "title": "SidePrediction",
         "description": "\ud83e\uddf1 A side of a piece in a connection."
       },
@@ -2502,16 +2624,18 @@
             "type": "array",
             "title": "Ports"
           },
-          "qualities": {
+          "attributes": {
             "items": {
               "$ref": "#/components/schemas/QualityContext"
             },
             "type": "array",
-            "title": "Qualities"
+            "title": "Attributes"
           }
         },
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "TypeContext",
         "description": "\ud83e\udde9 A type is a reusable element that can be connected with other types over ports."
       },
@@ -2573,16 +2697,18 @@
             "type": "array",
             "title": "Ports"
           },
-          "qualities": {
+          "attributes": {
             "items": {
               "$ref": "#/components/schemas/QualityContext"
             },
             "type": "array",
-            "title": "Qualities"
+            "title": "Attributes"
           }
         },
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "TypeContext",
         "description": "\ud83e\udde9 A type is a reusable element that can be connected with other types over ports."
       },
@@ -2603,7 +2729,9 @@
           }
         },
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "TypeId",
         "description": "\ud83e\udeaa The props to identify the type."
       },
@@ -2693,16 +2821,18 @@
             "type": "array",
             "title": "Authors"
           },
-          "qualities": {
+          "attributes": {
             "items": {
               "$ref": "#/components/schemas/QualityInput"
             },
             "type": "array",
-            "title": "Qualities"
+            "title": "Attributes"
           }
         },
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "TypeInput",
         "description": "\ud83e\udde9 A type is a reusable element that can be connected with other types over ports."
       },
@@ -2804,16 +2934,18 @@
             "type": "array",
             "title": "Authors"
           },
-          "qualities": {
+          "attributes": {
             "items": {
-              "$ref": "#/components/schemas/Quality"
+              "$ref": "#/components/schemas/Attribute"
             },
             "type": "array",
-            "title": "Qualities"
+            "title": "Attributes"
           }
         },
         "type": "object",
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "Type",
         "description": "\ud83e\udde9 A type is a reusable element that can be connected with other types over ports."
       },
@@ -2843,7 +2975,11 @@
           }
         },
         "type": "object",
-        "required": ["loc", "msg", "type"],
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
         "title": "ValidationError"
       },
       "Vector": {
@@ -2865,7 +3001,11 @@
           }
         },
         "type": "object",
-        "required": ["x", "y", "z"],
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
         "title": "Vector",
         "description": "\u27a1\ufe0f A 3d-vector (xyz) of floating point numbers."
       },
@@ -2888,7 +3028,11 @@
           }
         },
         "type": "object",
-        "required": ["x", "y", "z"],
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
         "title": "VectorContext",
         "description": "\u27a1\ufe0f A 3d-vector (xyz) of floating point numbers."
       },
@@ -2911,7 +3055,11 @@
           }
         },
         "type": "object",
-        "required": ["x", "y", "z"],
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
         "title": "VectorInput",
         "description": "\u27a1\ufe0f A 3d-vector (xyz) of floating point numbers."
       }

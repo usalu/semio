@@ -12,38 +12,55 @@
     {
       "url": "representations/tambour.glb",
       "description": "",
-      "tags": ["model/gltf-binary"],
-      "qualities": []
+      "tags": [
+        "model/gltf-binary"
+      ],
+      "attributes": []
     },
     {
       "url": "representations/tambour_1to500.3dm",
       "description": "",
-      "tags": ["model/vnd.3dm"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm"
+      ],
+      "attributes": []
     },
     {
       "url": "representations/tambour_1to200.3dm",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to200"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm",
+        "1to200"
+      ],
+      "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/f9222724e5",
       "description": "",
-      "tags": ["model/vnd.3dm", "model/vnd.speckle+json"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm",
+        "model/vnd.speckle+json"
+      ],
+      "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/b27c179b7d",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to200", "model/vnd.speckle+json"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm",
+        "1to200",
+        "model/vnd.speckle+json"
+      ],
+      "attributes": []
     },
     {
       "url": "representations/tambour_collider.glb",
       "description": "",
-      "tags": ["model/gltf-binary", "collider"],
-      "qualities": []
+      "tags": [
+        "model/gltf-binary",
+        "collider"
+      ],
+      "attributes": []
     }
   ],
   "ports": [
@@ -52,12 +69,27 @@
       "description": "The bottom system center of the elevator.",
       "mandatory": false,
       "family": "tambour rectangular bottom",
-      "compatibleFamilies": ["tambour rectangular top"],
-      "point": { "x": 0.0, "y": 0.0, "z": 0.9166667 },
-      "direction": { "x": 0.0, "y": 0.0, "z": -1.0 },
+      "compatibleFamilies": [
+        "tambour rectangular top"
+      ],
+      "point": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.9166667
+      },
+      "direction": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -1.0
+      },
       "t": 0.5,
-      "qualities": [
-        { "name": "bottom", "value": "", "unit": "", "definition": "" },
+      "attributes": [
+        {
+          "name": "bottom",
+          "value": "",
+          "unit": "",
+          "definition": ""
+        },
         {
           "name": "wasp rotation",
           "value": "180",
@@ -71,103 +103,213 @@
       "description": "The top system center of the elevator.",
       "mandatory": false,
       "family": "tambour rectangular top",
-      "compatibleFamilies": ["tambour rectangular bottom"],
-      "point": { "x": 0.0, "y": 0.0, "z": 3.6666667 },
-      "direction": { "x": 0.0, "y": 0.0, "z": 1.0 },
+      "compatibleFamilies": [
+        "tambour rectangular bottom"
+      ],
+      "point": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 3.6666667
+      },
+      "direction": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 1.0
+      },
       "t": 0.0,
-      "qualities": [{ "name": "top", "value": "", "unit": "", "definition": "" }]
+      "attributes": [
+        {
+          "name": "top",
+          "value": "",
+          "unit": "",
+          "definition": ""
+        }
+      ]
     },
     {
       "id_": "sl0_d0",
       "description": "The first door of the side plattform in the east facade.",
       "mandatory": false,
       "family": "door tambour west",
-      "compatibleFamilies": ["door capsule east", "platform west"],
-      "point": { "x": 2.75, "y": 0.9, "z": 0.2 },
-      "direction": { "x": 1.0, "y": 0.0, "z": 0.0 },
+      "compatibleFamilies": [
+        "door capsule east",
+        "platform west"
+      ],
+      "point": {
+        "x": 2.75,
+        "y": 0.9,
+        "z": 0.2
+      },
+      "direction": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "t": 0.2,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "sl0_d1",
       "description": "The second door of the side plattform in the north facade.",
       "mandatory": false,
       "family": "door tambour east",
-      "compatibleFamilies": ["door capsule west", "platform east"],
-      "point": { "x": 0.9, "y": 2.75, "z": 0.2 },
-      "direction": { "x": 0.0, "y": 1.0, "z": 0.0 },
+      "compatibleFamilies": [
+        "door capsule west",
+        "platform east"
+      ],
+      "point": {
+        "x": 0.9,
+        "y": 2.75,
+        "z": 0.2
+      },
+      "direction": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
       "t": 0.05,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "sl0_d2",
       "description": "The third door of the side plattform in the north facade.",
       "mandatory": false,
       "family": "door tambour west",
-      "compatibleFamilies": ["door capsule east", "platform west"],
-      "point": { "x": -0.9, "y": 2.75, "z": 0.2 },
-      "direction": { "x": 0.0, "y": 1.0, "z": 0.0 },
+      "compatibleFamilies": [
+        "door capsule east",
+        "platform west"
+      ],
+      "point": {
+        "x": -0.9,
+        "y": 2.75,
+        "z": 0.2
+      },
+      "direction": {
+        "x": 0.0,
+        "y": 1.0,
+        "z": 0.0
+      },
       "t": 0.95,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "sl0_d3",
       "description": "The fourth door of the side plattform in the west facade.",
       "mandatory": false,
       "family": "door tambour east",
-      "compatibleFamilies": ["door capsule west", "platform east"],
-      "point": { "x": -2.75, "y": 0.9, "z": 0.2 },
-      "direction": { "x": -1.0, "y": 0.0, "z": 0.0 },
+      "compatibleFamilies": [
+        "door capsule west",
+        "platform east"
+      ],
+      "point": {
+        "x": -2.75,
+        "y": 0.9,
+        "z": 0.2
+      },
+      "direction": {
+        "x": -1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "t": 0.8,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "sl1_d0",
       "description": "The first door of the main plattform in the west facade.",
       "mandatory": false,
       "family": "door tambour west",
-      "compatibleFamilies": ["door capsule east", "platform west"],
-      "point": { "x": -2.75, "y": -0.9, "z": 1.1166667 },
-      "direction": { "x": -1.0, "y": 0.0, "z": 0.0 },
+      "compatibleFamilies": [
+        "door capsule east",
+        "platform west"
+      ],
+      "point": {
+        "x": -2.75,
+        "y": -0.9,
+        "z": 1.1166667
+      },
+      "direction": {
+        "x": -1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "t": 0.7,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "sl1_d1",
       "description": "The second door of the main plattform in the south facade.",
       "mandatory": false,
       "family": "door tambour east",
-      "compatibleFamilies": ["door capsule west", "platform east"],
-      "point": { "x": -0.9, "y": -2.75, "z": 1.1166667 },
-      "direction": { "x": 0.0, "y": -1.0, "z": 0.0 },
+      "compatibleFamilies": [
+        "door capsule west",
+        "platform east"
+      ],
+      "point": {
+        "x": -0.9,
+        "y": -2.75,
+        "z": 1.1166667
+      },
+      "direction": {
+        "x": 0.0,
+        "y": -1.0,
+        "z": 0.0
+      },
       "t": 0.55,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "sl2_d0",
       "description": "The first door of the main plattform in the south facade.",
       "mandatory": false,
       "family": "door tambour west",
-      "compatibleFamilies": ["door capsule east", "platform west"],
-      "point": { "x": 0.9, "y": -2.75, "z": 2.0333333 },
-      "direction": { "x": 0.0, "y": -1.0, "z": 0.0 },
+      "compatibleFamilies": [
+        "door capsule east",
+        "platform west"
+      ],
+      "point": {
+        "x": 0.9,
+        "y": -2.75,
+        "z": 2.0333333
+      },
+      "direction": {
+        "x": 0.0,
+        "y": -1.0,
+        "z": 0.0
+      },
       "t": 0.45,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "sl2_d1",
       "description": "The second door of the main plattform in the east facade.",
       "mandatory": false,
       "family": "door tambour east",
-      "compatibleFamilies": ["door capsule west", "platform east"],
-      "point": { "x": 2.75, "y": -0.9, "z": 2.0333333 },
-      "direction": { "x": 1.0, "y": 0.0, "z": 0.0 },
+      "compatibleFamilies": [
+        "door capsule west",
+        "platform east"
+      ],
+      "point": {
+        "x": 2.75,
+        "y": -0.9,
+        "z": 2.0333333
+      },
+      "direction": {
+        "x": 1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "t": 0.3,
-      "qualities": []
+      "attributes": []
     }
   ],
-  "authors": [{ "name": "Ueli Saluz", "email": "ueli@semio-tech.org" }],
-  "qualities": [
+  "authors": [
+    {
+      "name": "Ueli Saluz",
+      "email": "ueli@semio-tech.org"
+    }
+  ],
+  "attributes": [
     {
       "name": "width",
       "value": "5.5",
@@ -186,10 +328,30 @@
       "unit": "m",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight"
     },
-    { "name": "platform", "value": "north", "unit": "", "definition": "" },
-    { "name": "door width", "value": "0.8", "unit": "m", "definition": "" },
-    { "name": "door height", "value": "2", "unit": "m", "definition": "" },
-    { "name": "door offset", "value": "1.15", "unit": "m", "definition": "" },
+    {
+      "name": "platform",
+      "value": "north",
+      "unit": "",
+      "definition": ""
+    },
+    {
+      "name": "door width",
+      "value": "0.8",
+      "unit": "m",
+      "definition": ""
+    },
+    {
+      "name": "door height",
+      "value": "2",
+      "unit": "m",
+      "definition": ""
+    },
+    {
+      "name": "door offset",
+      "value": "1.15",
+      "unit": "m",
+      "definition": ""
+    },
     {
       "name": "effective floor area",
       "value": "24.21",

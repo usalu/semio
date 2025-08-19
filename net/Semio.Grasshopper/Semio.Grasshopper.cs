@@ -369,10 +369,10 @@ public class PortGoo : ModelGoo<Port>
     }
 }
 
-public class QualityGoo : ModelGoo<Quality>
+public class QualityGoo : ModelGoo<Attribute>
 {
     public QualityGoo() { }
-    public QualityGoo(Quality value) : base(value) { }
+    public QualityGoo(Attribute value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
@@ -389,7 +389,7 @@ public class QualityGoo : ModelGoo<Quality>
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new Quality { Name = str };
+            Value = new Attribute { Name = str };
             return true;
         }
         return false;
@@ -603,7 +603,7 @@ public class PortParam : ModelParam<PortGoo, Port>
     public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1B");
 }
 
-public class QualityParam : ModelParam<QualityGoo, Quality>
+public class QualityParam : ModelParam<QualityGoo, Attribute>
 {
     public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B94");
 }
@@ -862,7 +862,7 @@ public class PortComponent : ModelComponent<PortParam, PortGoo, Port>
     public override Guid ComponentGuid => new("E505C90C-71F4-413F-82FE-65559D9FFAB5");
 }
 
-public class QualityComponent : ModelComponent<QualityParam, QualityGoo, Quality>
+public class QualityComponent : ModelComponent<QualityParam, QualityGoo, Attribute>
 {
     public override Guid ComponentGuid => new("51146B05-ACEB-4810-AD75-10AC3E029D39");
 }
@@ -915,7 +915,7 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         pManager.AddParameter(new DiagramPointParam(), "Center", "Ce?", "The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("Hidden", "Hi?", "Whether the piece is hidden. A hidden piece is not visible in the model.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("Locked", "Lk?", "Whether the piece is locked. A locked piece cannot be edited.", GH_ParamAccess.item);
-        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "The optional qualities of the piece.", GH_ParamAccess.list);
+        pManager.AddParameter(new QualityParam(), "Attributes", "Ql*", "The optional attributes of the piece.", GH_ParamAccess.list);
     }
 
     protected override void GetProps(IGH_DataAccess DA, dynamic pieceGoo)
@@ -963,7 +963,7 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         if (DA.GetData(10, ref centerGoo)) pieceGoo.Value.Center = centerGoo.Value;
         if (DA.GetData(11, ref hidden)) pieceGoo.Value.Hidden = hidden;
         if (DA.GetData(12, ref locked)) pieceGoo.Value.Locked = locked;
-        if (DA.GetDataList(13, qualitiesGoos)) pieceGoo.Value.Qualities = qualitiesGoos.Select(q => q.Value).ToList();
+        if (DA.GetDataList(13, qualitiesGoos)) pieceGoo.Value.Attributes = qualitiesGoos.Select(q => q.Value).ToList();
     }
 
     protected override void SetData(IGH_DataAccess DA, dynamic pieceGoo)
@@ -981,7 +981,7 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         DA.SetData(11, pieceGoo.Value.Hidden);
         DA.SetData(12, pieceGoo.Value.Locked);
         var qualityGoos = new List<QualityGoo>();
-        foreach (Quality quality in pieceGoo.Value.Qualities) qualityGoos.Add(new QualityGoo(quality.DeepClone()));
+        foreach (Attribute attribute in pieceGoo.Value.Attributes) qualityGoos.Add(new QualityGoo(attribute.DeepClone()));
         DA.SetDataList(13, qualityGoos);
     }
 }
@@ -1007,7 +1007,7 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         pManager.AddNumberParameter("Tilt", "Tl?", "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.", GH_ParamAccess.item);
         pManager.AddNumberParameter("X", "X?", "The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Y", "Y?", "The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.", GH_ParamAccess.item);
-        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "The optional qualities of the connection.", GH_ParamAccess.list);
+        pManager.AddParameter(new QualityParam(), "Attributes", "Ql*", "The optional attributes of the connection.", GH_ParamAccess.list);
     }
 
     protected override void GetProps(IGH_DataAccess DA, dynamic connectionGoo)
@@ -1052,7 +1052,7 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         if (DA.GetData(14, ref tilt)) connectionGoo.Value.Tilt = (float)tilt;
         if (DA.GetData(15, ref x)) connectionGoo.Value.X = (float)x;
         if (DA.GetData(16, ref y)) connectionGoo.Value.Y = (float)y;
-        if (DA.GetDataList(17, qualitiesGoos)) connectionGoo.Value.Qualities = qualitiesGoos.Select(q => q.Value).ToList();
+        if (DA.GetDataList(17, qualitiesGoos)) connectionGoo.Value.Attributes = qualitiesGoos.Select(q => q.Value).ToList();
     }
 
     protected override void SetData(IGH_DataAccess DA, dynamic connectionGoo)
@@ -1073,7 +1073,7 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
         DA.SetData(15, connectionGoo.Value.X);
         DA.SetData(16, connectionGoo.Value.Y);
         var qualityGoos = new List<QualityGoo>();
-        foreach (Quality quality in connectionGoo.Value.Qualities) qualityGoos.Add(new QualityGoo(quality.DeepClone()));
+        foreach (Attribute attribute in connectionGoo.Value.Attributes) qualityGoos.Add(new QualityGoo(attribute.DeepClone()));
         DA.SetDataList(17, qualityGoos);
     }
 }
@@ -1363,7 +1363,7 @@ public class SerializePortComponent : SerializeComponent<PortParam, PortGoo, Por
     public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1B5");
 }
 
-public class SerializeQualityComponent : SerializeComponent<QualityParam, QualityGoo, Quality>
+public class SerializeQualityComponent : SerializeComponent<QualityParam, QualityGoo, Attribute>
 {
     public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8974-8588BCA75250");
 }
@@ -1468,7 +1468,7 @@ public class DeserializePortComponent : DeserializeComponent<PortParam, PortGoo,
 {
     public override Guid ComponentGuid => new("3CEB0315-5A51-4072-97A7-D8B1B63FEF31");
 }
-public class DeserializeQualityComponent : DeserializeComponent<QualityParam, QualityGoo, Quality>
+public class DeserializeQualityComponent : DeserializeComponent<QualityParam, QualityGoo, Attribute>
 {
     public override Guid ComponentGuid => new("AECB1169-EB65-470F-966E-D491EB46A625");
 }

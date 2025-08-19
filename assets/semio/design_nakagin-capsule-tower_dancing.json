@@ -11,1812 +11,2381 @@
     {
       "id_": "b",
       "description": "",
-      "type": { "name": "Base", "variant": "Blob" },
-      "plane": {
-        "origin": { "x": 0.0, "y": 0.0, "z": 0.0 },
-        "xAxis": { "x": 1.0, "y": 0.0, "z": 0.0 },
-        "yAxis": { "x": 0.0, "y": 1.0, "z": 0.0 }
+      "type": {
+        "name": "Base",
+        "variant": "Blob"
       },
-      "center": { "x": 0.0, "y": 0.0 },
+      "plane": {
+        "origin": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "xAxis": {
+          "x": 1.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "yAxis": {
+          "x": 0.0,
+          "y": 1.0,
+          "z": 0.0
+        }
+      },
+      "center": {
+        "x": 0.0,
+        "y": 0.0
+      },
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "ci_t_f8_b_c0",
       "description": "",
-      "type": { "name": "Cylindric Capital", "variant": "" },
+      "type": {
+        "name": "Cylindric Capital",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "ci_t_f10_b_c1",
       "description": "",
-      "type": { "name": "Cylindric Capital", "variant": "" },
+      "type": {
+        "name": "Cylindric Capital",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f0_b_c0",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "First Storey" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": "First Storey"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f1_b_c0",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f2_b_c0",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f3_b_c0",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f4_b_c0",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f5_b_c0",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f6_b_c0",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f7_b_c0",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f8_b_c0",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "Last Storey" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": "Last Storey"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f0_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f1_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f2_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f3_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f4_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f5_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f6_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f7_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f8_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d1_t_f0_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d1_t_f1_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d1_t_f2_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d1_t_f3_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d1_t_f4_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d1_t_f5_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d1_t_f6_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d1_t_f7_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d1_t_f8_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d2_t_f0_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d2_t_f1_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d2_t_f3_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d2_t_f4_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d2_t_f6_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d2_t_f7_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f0_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f1_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f2_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f3_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f4_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f5_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f6_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f7_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f8_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f0_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f1_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f2_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f3_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f4_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f5_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f6_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f7_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "s" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "s"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f8_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "s" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "s"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f0_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f1_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f2_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f3_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f4_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f5_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f6_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f7_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f8_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f0_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f1_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f2_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f3_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f4_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f5_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f6_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f7_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f8_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f0_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f1_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f2_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f3_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f4_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f5_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f6_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f7_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f8_b_c0",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f0_b_c1",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "First Storey" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": "First Storey"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f1_b_c1",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f2_b_c1",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f3_b_c1",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f4_b_c1",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f5_b_c1",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f6_b_c1",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f7_b_c1",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f8_b_c1",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f9_b_c1",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "t_f10_b_c1",
       "description": "",
-      "type": { "name": "Cylindric Tambour", "variant": "Last Storey" },
+      "type": {
+        "name": "Cylindric Tambour",
+        "variant": "Last Storey"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f0_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f1_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f2_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f3_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f4_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f5_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f6_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f7_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f8_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f9_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d0_t_f10_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d1_t_f0_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d1_t_f1_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d1_t_f3_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d1_t_f4_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d1_t_f6_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d1_t_f7_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d1_t_f9_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d1_t_f10_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d2_t_f0_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d2_t_f1_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d2_t_f2_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d2_t_f3_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d2_t_f4_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d2_t_f5_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d2_t_f6_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d2_t_f7_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d2_t_f8_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d2_t_f9_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d2_t_f10_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f0_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f1_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f2_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f3_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f4_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f5_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f6_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f7_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f8_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f9_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl0_d3_t_f10_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f0_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f1_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f2_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f3_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f4_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f5_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f6_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f7_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f8_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f9_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "J" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "J"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d0_t_f10_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "\\" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "\\"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f0_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f1_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f2_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f3_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f4_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f5_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f6_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f7_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f8_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "L" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "L"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f9_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl1_d1_t_f10_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "/" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "/"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f0_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "s" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "s"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f1_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "s" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "s"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f2_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "s" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "s"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f3_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "s" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "s"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f4_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "s" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "s"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f5_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "s" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "s"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f6_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "s" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "s"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f7_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "s" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "s"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f8_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "s" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "s"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f9_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "s" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "s"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d0_t_f10_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "s" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "s"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f0_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "p" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "p"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f1_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "p" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "p"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f2_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "p" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "p"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f3_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "p" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "p"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f4_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "p" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "p"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f5_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "p" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "p"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f6_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "p" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "p"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f7_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "p" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "p"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f8_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "p" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "p"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f9_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "p" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "p"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "cs_sl2_d1_t_f10_b_c1",
       "description": "",
-      "type": { "name": "Ellipsoid Capsule", "variant": "p" },
+      "type": {
+        "name": "Ellipsoid Capsule",
+        "variant": "p"
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "br_sl0_d2_t_f2_b_c0",
       "description": "",
-      "type": { "name": "Bridge", "variant": "" },
+      "type": {
+        "name": "Bridge",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "br_sl0_d2_t_f5_b_c0",
       "description": "",
-      "type": { "name": "Bridge", "variant": "" },
+      "type": {
+        "name": "Bridge",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     },
     {
       "id_": "br_sl0_d2_t_f8_b_c0",
       "description": "",
-      "type": { "name": "Bridge", "variant": "" },
+      "type": {
+        "name": "Bridge",
+        "variant": ""
+      },
       "plane": null,
       "center": null,
       "hidden": false,
       "locked": false,
-      "qualities": []
+      "attributes": []
     }
   ],
   "connections": [
     {
-      "connected": { "piece": { "id_": "b" }, "port": { "id_": "c0" } },
-      "connecting": { "piece": { "id_": "t_f0_b_c0" }, "port": { "id_": "b" } },
+      "connected": {
+        "piece": {
+          "id_": "b"
+        },
+        "port": {
+          "id_": "c0"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "t_f0_b_c0"
+        },
+        "port": {
+          "id_": "b"
+        }
+      },
       "description": "",
       "gap": 5.0,
       "shift": 5.0,
@@ -1826,11 +2395,25 @@
       "tilt": 5.0,
       "x": -1.2,
       "y": 1.2,
-      "qualities": []
+      "attributes": []
     },
     {
-      "connected": { "piece": { "id_": "b" }, "port": { "id_": "c1" } },
-      "connecting": { "piece": { "id_": "t_f0_b_c1" }, "port": { "id_": "b" } },
+      "connected": {
+        "piece": {
+          "id_": "b"
+        },
+        "port": {
+          "id_": "c1"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "t_f0_b_c1"
+        },
+        "port": {
+          "id_": "b"
+        }
+      },
       "description": "",
       "gap": 5.0,
       "shift": 5.0,
@@ -1840,13 +2423,24 @@
       "tilt": 5.0,
       "x": 1.2,
       "y": 1.2,
-      "qualities": []
+      "attributes": []
     },
     {
-      "connected": { "piece": { "id_": "t_f8_b_c0" }, "port": { "id_": "t" } },
+      "connected": {
+        "piece": {
+          "id_": "t_f8_b_c0"
+        },
+        "port": {
+          "id_": "t"
+        }
+      },
       "connecting": {
-        "piece": { "id_": "ci_t_f8_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "ci_t_f8_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 5.0,
@@ -1857,13 +2451,24 @@
       "tilt": 0.0,
       "x": 0.0,
       "y": 1.6,
-      "qualities": []
+      "attributes": []
     },
     {
-      "connected": { "piece": { "id_": "t_f10_b_c1" }, "port": { "id_": "t" } },
+      "connected": {
+        "piece": {
+          "id_": "t_f10_b_c1"
+        },
+        "port": {
+          "id_": "t"
+        }
+      },
       "connecting": {
-        "piece": { "id_": "ci_t_f10_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "ci_t_f10_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 5.0,
@@ -1874,11 +2479,25 @@
       "tilt": 0.0,
       "x": 0.0,
       "y": 1.6,
-      "qualities": []
+      "attributes": []
     },
     {
-      "connected": { "piece": { "id_": "t_f0_b_c0" }, "port": { "id_": "t" } },
-      "connecting": { "piece": { "id_": "t_f1_b_c0" }, "port": { "id_": "b" } },
+      "connected": {
+        "piece": {
+          "id_": "t_f0_b_c0"
+        },
+        "port": {
+          "id_": "t"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "t_f1_b_c0"
+        },
+        "port": {
+          "id_": "b"
+        }
+      },
       "description": "",
       "gap": 7.5,
       "shift": -0.5,
@@ -1888,11 +2507,25 @@
       "tilt": 358.0,
       "x": 0.0,
       "y": 2.96,
-      "qualities": []
+      "attributes": []
     },
     {
-      "connected": { "piece": { "id_": "t_f1_b_c0" }, "port": { "id_": "t" } },
-      "connecting": { "piece": { "id_": "t_f2_b_c0" }, "port": { "id_": "b" } },
+      "connected": {
+        "piece": {
+          "id_": "t_f1_b_c0"
+        },
+        "port": {
+          "id_": "t"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "t_f2_b_c0"
+        },
+        "port": {
+          "id_": "b"
+        }
+      },
       "description": "",
       "gap": 7.5,
       "shift": -0.5,
@@ -1902,11 +2535,25 @@
       "tilt": 358.0,
       "x": 0.0,
       "y": 2.96,
-      "qualities": []
+      "attributes": []
     },
     {
-      "connected": { "piece": { "id_": "t_f2_b_c0" }, "port": { "id_": "t" } },
-      "connecting": { "piece": { "id_": "t_f3_b_c0" }, "port": { "id_": "b" } },
+      "connected": {
+        "piece": {
+          "id_": "t_f2_b_c0"
+        },
+        "port": {
+          "id_": "t"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "t_f3_b_c0"
+        },
+        "port": {
+          "id_": "b"
+        }
+      },
       "description": "",
       "gap": 7.5,
       "shift": -0.5,
@@ -1916,11 +2563,25 @@
       "tilt": 358.0,
       "x": 0.0,
       "y": 2.96,
-      "qualities": []
+      "attributes": []
     },
     {
-      "connected": { "piece": { "id_": "t_f3_b_c0" }, "port": { "id_": "t" } },
-      "connecting": { "piece": { "id_": "t_f4_b_c0" }, "port": { "id_": "b" } },
+      "connected": {
+        "piece": {
+          "id_": "t_f3_b_c0"
+        },
+        "port": {
+          "id_": "t"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "t_f4_b_c0"
+        },
+        "port": {
+          "id_": "b"
+        }
+      },
       "description": "",
       "gap": 7.5,
       "shift": -0.5,
@@ -1930,11 +2591,25 @@
       "tilt": 358.0,
       "x": 0.0,
       "y": 2.96,
-      "qualities": []
+      "attributes": []
     },
     {
-      "connected": { "piece": { "id_": "t_f4_b_c0" }, "port": { "id_": "t" } },
-      "connecting": { "piece": { "id_": "t_f5_b_c0" }, "port": { "id_": "b" } },
+      "connected": {
+        "piece": {
+          "id_": "t_f4_b_c0"
+        },
+        "port": {
+          "id_": "t"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "t_f5_b_c0"
+        },
+        "port": {
+          "id_": "b"
+        }
+      },
       "description": "",
       "gap": 7.5,
       "shift": -0.5,
@@ -1944,11 +2619,25 @@
       "tilt": 358.0,
       "x": 0.0,
       "y": 2.96,
-      "qualities": []
+      "attributes": []
     },
     {
-      "connected": { "piece": { "id_": "t_f5_b_c0" }, "port": { "id_": "t" } },
-      "connecting": { "piece": { "id_": "t_f6_b_c0" }, "port": { "id_": "b" } },
+      "connected": {
+        "piece": {
+          "id_": "t_f5_b_c0"
+        },
+        "port": {
+          "id_": "t"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "t_f6_b_c0"
+        },
+        "port": {
+          "id_": "b"
+        }
+      },
       "description": "",
       "gap": 7.5,
       "shift": -0.5,
@@ -1958,11 +2647,25 @@
       "tilt": 358.0,
       "x": 0.0,
       "y": 2.96,
-      "qualities": []
+      "attributes": []
     },
     {
-      "connected": { "piece": { "id_": "t_f6_b_c0" }, "port": { "id_": "t" } },
-      "connecting": { "piece": { "id_": "t_f7_b_c0" }, "port": { "id_": "b" } },
+      "connected": {
+        "piece": {
+          "id_": "t_f6_b_c0"
+        },
+        "port": {
+          "id_": "t"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "t_f7_b_c0"
+        },
+        "port": {
+          "id_": "b"
+        }
+      },
       "description": "",
       "gap": 7.5,
       "shift": -0.5,
@@ -1972,11 +2675,25 @@
       "tilt": 358.0,
       "x": 0.0,
       "y": 2.96,
-      "qualities": []
+      "attributes": []
     },
     {
-      "connected": { "piece": { "id_": "t_f7_b_c0" }, "port": { "id_": "t" } },
-      "connecting": { "piece": { "id_": "t_f8_b_c0" }, "port": { "id_": "b" } },
+      "connected": {
+        "piece": {
+          "id_": "t_f7_b_c0"
+        },
+        "port": {
+          "id_": "t"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "t_f8_b_c0"
+        },
+        "port": {
+          "id_": "b"
+        }
+      },
       "description": "",
       "gap": 7.5,
       "shift": -0.5,
@@ -1986,16 +2703,24 @@
       "tilt": 358.0,
       "x": 0.0,
       "y": 2.96,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f0_b_c0" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f0_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f0_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d0_t_f0_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2006,16 +2731,24 @@
       "tilt": 2.0,
       "x": 0.31669903,
       "y": -0.36688107,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f1_b_c0" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f1_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f1_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d0_t_f1_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2026,16 +2759,24 @@
       "tilt": 2.0,
       "x": 0.31669903,
       "y": -0.36688107,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f2_b_c0" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f2_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f2_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d0_t_f2_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2046,16 +2787,24 @@
       "tilt": 2.0,
       "x": 0.31669903,
       "y": -0.36688107,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f3_b_c0" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f3_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f3_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d0_t_f3_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2066,16 +2815,24 @@
       "tilt": 2.0,
       "x": 0.31669903,
       "y": -0.36688107,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f4_b_c0" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f4_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f4_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d0_t_f4_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2086,16 +2843,24 @@
       "tilt": 2.0,
       "x": 0.31669903,
       "y": -0.36688107,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f5_b_c0" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f5_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f5_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d0_t_f5_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2106,16 +2871,24 @@
       "tilt": 2.0,
       "x": 0.31669903,
       "y": -0.36688107,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f6_b_c0" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f6_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f6_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d0_t_f6_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2126,16 +2899,24 @@
       "tilt": 2.0,
       "x": 0.31669903,
       "y": -0.36688107,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f7_b_c0" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f7_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f7_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d0_t_f7_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2146,16 +2927,24 @@
       "tilt": 2.0,
       "x": 0.31669903,
       "y": -0.36688107,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f8_b_c0" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f8_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f8_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d0_t_f8_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2166,16 +2955,24 @@
       "tilt": 2.0,
       "x": 0.31669903,
       "y": -0.36688107,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f0_b_c0" },
-        "port": { "id_": "sl0_d1" }
+        "piece": {
+          "id_": "t_f0_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d1_t_f0_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d1_t_f0_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2186,16 +2983,24 @@
       "tilt": 2.0,
       "x": 0.48408562,
       "y": -0.023687685,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f1_b_c0" },
-        "port": { "id_": "sl0_d1" }
+        "piece": {
+          "id_": "t_f1_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d1_t_f1_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d1_t_f1_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2206,16 +3011,24 @@
       "tilt": 2.0,
       "x": 0.48408562,
       "y": -0.023687685,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f2_b_c0" },
-        "port": { "id_": "sl0_d1" }
+        "piece": {
+          "id_": "t_f2_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d1_t_f2_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d1_t_f2_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2226,16 +3039,24 @@
       "tilt": 2.0,
       "x": 0.48408562,
       "y": -0.023687685,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f3_b_c0" },
-        "port": { "id_": "sl0_d1" }
+        "piece": {
+          "id_": "t_f3_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d1_t_f3_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d1_t_f3_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2246,16 +3067,24 @@
       "tilt": 2.0,
       "x": 0.48408562,
       "y": -0.023687685,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f4_b_c0" },
-        "port": { "id_": "sl0_d1" }
+        "piece": {
+          "id_": "t_f4_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d1_t_f4_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d1_t_f4_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2266,16 +3095,24 @@
       "tilt": 2.0,
       "x": 0.48408562,
       "y": -0.023687685,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f5_b_c0" },
-        "port": { "id_": "sl0_d1" }
+        "piece": {
+          "id_": "t_f5_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d1_t_f5_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d1_t_f5_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2286,16 +3123,24 @@
       "tilt": 2.0,
       "x": 0.48408562,
       "y": -0.023687685,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f6_b_c0" },
-        "port": { "id_": "sl0_d1" }
+        "piece": {
+          "id_": "t_f6_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d1_t_f6_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d1_t_f6_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2306,16 +3151,24 @@
       "tilt": 2.0,
       "x": 0.48408562,
       "y": -0.023687685,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f7_b_c0" },
-        "port": { "id_": "sl0_d1" }
+        "piece": {
+          "id_": "t_f7_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d1_t_f7_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d1_t_f7_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2326,16 +3179,24 @@
       "tilt": 2.0,
       "x": 0.48408562,
       "y": -0.023687685,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f8_b_c0" },
-        "port": { "id_": "sl0_d1" }
+        "piece": {
+          "id_": "t_f8_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d1_t_f8_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d1_t_f8_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2346,16 +3207,24 @@
       "tilt": 2.0,
       "x": 0.48408562,
       "y": -0.023687685,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f0_b_c0" },
-        "port": { "id_": "sl0_d2" }
+        "piece": {
+          "id_": "t_f0_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d2_t_f0_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d2_t_f0_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2366,36 +3235,24 @@
       "tilt": 2.0,
       "x": 0.36688107,
       "y": 0.31669903,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f1_b_c0" },
-        "port": { "id_": "sl0_d2" }
+        "piece": {
+          "id_": "t_f1_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d2_t_f1_b_c0" },
-        "port": { "id_": "" }
-      },
-      "description": "",
-      "gap": 2.5,
-      "shift": -0.5,
-      "rise": 0.0,
-      "rotation": 3.0,
-      "turn": 0.0,
-      "tilt": 2.0,
-      "x": 0.36688107,
-      "y": 0.31669903,
-      "qualities": []
-    },
-    {
-      "connected": {
-        "piece": { "id_": "t_f3_b_c0" },
-        "port": { "id_": "sl0_d2" }
-      },
-      "connecting": {
-        "piece": { "id_": "cs_sl0_d2_t_f3_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d2_t_f1_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2406,36 +3263,24 @@
       "tilt": 2.0,
       "x": 0.36688107,
       "y": 0.31669903,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f4_b_c0" },
-        "port": { "id_": "sl0_d2" }
+        "piece": {
+          "id_": "t_f3_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d2_t_f4_b_c0" },
-        "port": { "id_": "" }
-      },
-      "description": "",
-      "gap": 2.5,
-      "shift": -0.5,
-      "rise": 0.0,
-      "rotation": 3.0,
-      "turn": 0.0,
-      "tilt": 2.0,
-      "x": 0.36688107,
-      "y": 0.31669903,
-      "qualities": []
-    },
-    {
-      "connected": {
-        "piece": { "id_": "t_f6_b_c0" },
-        "port": { "id_": "sl0_d2" }
-      },
-      "connecting": {
-        "piece": { "id_": "cs_sl0_d2_t_f6_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d2_t_f3_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2446,16 +3291,24 @@
       "tilt": 2.0,
       "x": 0.36688107,
       "y": 0.31669903,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f7_b_c0" },
-        "port": { "id_": "sl0_d2" }
+        "piece": {
+          "id_": "t_f4_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d2_t_f7_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d2_t_f4_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2466,16 +3319,80 @@
       "tilt": 2.0,
       "x": 0.36688107,
       "y": 0.31669903,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f0_b_c0" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f6_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f0_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d2_t_f6_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
+      },
+      "description": "",
+      "gap": 2.5,
+      "shift": -0.5,
+      "rise": 0.0,
+      "rotation": 3.0,
+      "turn": 0.0,
+      "tilt": 2.0,
+      "x": 0.36688107,
+      "y": 0.31669903,
+      "attributes": []
+    },
+    {
+      "connected": {
+        "piece": {
+          "id_": "t_f7_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "cs_sl0_d2_t_f7_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
+      },
+      "description": "",
+      "gap": 2.5,
+      "shift": -0.5,
+      "rise": 0.0,
+      "rotation": 3.0,
+      "turn": 0.0,
+      "tilt": 2.0,
+      "x": 0.36688107,
+      "y": 0.31669903,
+      "attributes": []
+    },
+    {
+      "connected": {
+        "piece": {
+          "id_": "t_f0_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "cs_sl0_d3_t_f0_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2486,16 +3403,24 @@
       "tilt": 2.0,
       "x": 0.023687685,
       "y": 0.48408562,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f1_b_c0" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f1_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f1_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d3_t_f1_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2506,16 +3431,24 @@
       "tilt": 2.0,
       "x": 0.023687685,
       "y": 0.48408562,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f2_b_c0" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f2_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f2_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d3_t_f2_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2526,16 +3459,24 @@
       "tilt": 2.0,
       "x": 0.023687685,
       "y": 0.48408562,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f3_b_c0" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f3_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f3_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d3_t_f3_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2546,16 +3487,24 @@
       "tilt": 2.0,
       "x": 0.023687685,
       "y": 0.48408562,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f4_b_c0" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f4_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f4_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d3_t_f4_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2566,16 +3515,24 @@
       "tilt": 2.0,
       "x": 0.023687685,
       "y": 0.48408562,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f5_b_c0" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f5_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f5_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d3_t_f5_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2586,16 +3543,24 @@
       "tilt": 2.0,
       "x": 0.023687685,
       "y": 0.48408562,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f6_b_c0" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f6_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f6_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d3_t_f6_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2606,16 +3571,24 @@
       "tilt": 2.0,
       "x": 0.023687685,
       "y": 0.48408562,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f7_b_c0" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f7_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f7_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d3_t_f7_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2626,16 +3599,24 @@
       "tilt": 2.0,
       "x": 0.023687685,
       "y": 0.48408562,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f8_b_c0" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f8_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f8_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d3_t_f8_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2646,16 +3627,24 @@
       "tilt": 2.0,
       "x": 0.023687685,
       "y": 0.48408562,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f0_b_c0" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f0_b_c0"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f0_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f0_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2666,16 +3655,24 @@
       "tilt": 2.0,
       "x": -0.31669903,
       "y": 0.36688107,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f1_b_c0" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f1_b_c0"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f1_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f1_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2686,16 +3683,24 @@
       "tilt": 2.0,
       "x": -0.31669903,
       "y": 0.36688107,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f2_b_c0" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f2_b_c0"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f2_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f2_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2706,16 +3711,24 @@
       "tilt": 2.0,
       "x": -0.31669903,
       "y": 0.36688107,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f3_b_c0" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f3_b_c0"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f3_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f3_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2726,16 +3739,24 @@
       "tilt": 2.0,
       "x": -0.31669903,
       "y": 0.36688107,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f4_b_c0" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f4_b_c0"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f4_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f4_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2746,16 +3767,24 @@
       "tilt": 2.0,
       "x": -0.31669903,
       "y": 0.36688107,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f5_b_c0" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f5_b_c0"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f5_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f5_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2766,16 +3795,24 @@
       "tilt": 2.0,
       "x": -0.31669903,
       "y": 0.36688107,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f6_b_c0" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f6_b_c0"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f6_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f6_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2786,16 +3823,24 @@
       "tilt": 2.0,
       "x": -0.31669903,
       "y": 0.36688107,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f7_b_c0" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f7_b_c0"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f7_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f7_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2806,16 +3851,24 @@
       "tilt": 2.0,
       "x": -0.31669903,
       "y": 0.36688107,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f8_b_c0" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f8_b_c0"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f8_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f8_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2826,16 +3879,24 @@
       "tilt": 2.0,
       "x": -0.31669903,
       "y": 0.36688107,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f0_b_c0" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f0_b_c0"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f0_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f0_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2846,16 +3907,24 @@
       "tilt": 2.0,
       "x": -0.48408562,
       "y": 0.023687685,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f1_b_c0" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f1_b_c0"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f1_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f1_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2866,16 +3935,24 @@
       "tilt": 2.0,
       "x": -0.48408562,
       "y": 0.023687685,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f2_b_c0" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f2_b_c0"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f2_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f2_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2886,16 +3963,24 @@
       "tilt": 2.0,
       "x": -0.48408562,
       "y": 0.023687685,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f3_b_c0" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f3_b_c0"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f3_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f3_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2906,16 +3991,24 @@
       "tilt": 2.0,
       "x": -0.48408562,
       "y": 0.023687685,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f4_b_c0" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f4_b_c0"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f4_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f4_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2926,16 +4019,24 @@
       "tilt": 2.0,
       "x": -0.48408562,
       "y": 0.023687685,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f5_b_c0" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f5_b_c0"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f5_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f5_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2946,16 +4047,24 @@
       "tilt": 2.0,
       "x": -0.48408562,
       "y": 0.023687685,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f6_b_c0" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f6_b_c0"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f6_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f6_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2966,16 +4075,24 @@
       "tilt": 2.0,
       "x": -0.48408562,
       "y": 0.023687685,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f7_b_c0" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f7_b_c0"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f7_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f7_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -2986,16 +4103,24 @@
       "tilt": 2.0,
       "x": -0.48408562,
       "y": 0.023687685,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f8_b_c0" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f8_b_c0"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f8_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f8_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3006,16 +4131,24 @@
       "tilt": 2.0,
       "x": -0.48408562,
       "y": 0.023687685,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f0_b_c0" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f0_b_c0"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f0_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f0_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3026,16 +4159,24 @@
       "tilt": 2.0,
       "x": -0.36688107,
       "y": -0.31669903,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f1_b_c0" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f1_b_c0"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f1_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f1_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3046,16 +4187,24 @@
       "tilt": 2.0,
       "x": -0.36688107,
       "y": -0.31669903,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f2_b_c0" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f2_b_c0"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f2_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f2_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3066,16 +4215,24 @@
       "tilt": 2.0,
       "x": -0.36688107,
       "y": -0.31669903,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f3_b_c0" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f3_b_c0"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f3_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f3_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3086,16 +4243,24 @@
       "tilt": 2.0,
       "x": -0.36688107,
       "y": -0.31669903,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f4_b_c0" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f4_b_c0"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f4_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f4_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3106,16 +4271,24 @@
       "tilt": 2.0,
       "x": -0.36688107,
       "y": -0.31669903,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f5_b_c0" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f5_b_c0"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f5_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f5_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3126,16 +4299,24 @@
       "tilt": 2.0,
       "x": -0.36688107,
       "y": -0.31669903,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f6_b_c0" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f6_b_c0"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f6_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f6_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3146,16 +4327,24 @@
       "tilt": 2.0,
       "x": -0.36688107,
       "y": -0.31669903,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f7_b_c0" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f7_b_c0"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f7_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f7_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3166,16 +4355,24 @@
       "tilt": 2.0,
       "x": -0.36688107,
       "y": -0.31669903,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f8_b_c0" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f8_b_c0"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f8_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f8_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3186,16 +4383,24 @@
       "tilt": 2.0,
       "x": -0.36688107,
       "y": -0.31669903,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f0_b_c0" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f0_b_c0"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f0_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f0_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3206,16 +4411,24 @@
       "tilt": 2.0,
       "x": -0.023687685,
       "y": -0.48408562,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f1_b_c0" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f1_b_c0"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f1_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f1_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3226,16 +4439,24 @@
       "tilt": 2.0,
       "x": -0.023687685,
       "y": -0.48408562,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f2_b_c0" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f2_b_c0"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f2_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f2_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3246,16 +4467,24 @@
       "tilt": 2.0,
       "x": -0.023687685,
       "y": -0.48408562,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f3_b_c0" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f3_b_c0"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f3_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f3_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3266,16 +4495,24 @@
       "tilt": 2.0,
       "x": -0.023687685,
       "y": -0.48408562,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f4_b_c0" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f4_b_c0"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f4_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f4_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3286,16 +4523,24 @@
       "tilt": 2.0,
       "x": -0.023687685,
       "y": -0.48408562,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f5_b_c0" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f5_b_c0"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f5_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f5_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3306,16 +4551,24 @@
       "tilt": 2.0,
       "x": -0.023687685,
       "y": -0.48408562,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f6_b_c0" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f6_b_c0"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f6_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f6_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3326,16 +4579,24 @@
       "tilt": 2.0,
       "x": -0.023687685,
       "y": -0.48408562,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f7_b_c0" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f7_b_c0"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f7_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f7_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3346,16 +4607,24 @@
       "tilt": 2.0,
       "x": -0.023687685,
       "y": -0.48408562,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f8_b_c0" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f8_b_c0"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f8_b_c0" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f8_b_c0"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3366,139 +4635,24 @@
       "tilt": 2.0,
       "x": -0.023687685,
       "y": -0.48408562,
-      "qualities": []
+      "attributes": []
     },
     {
-      "connected": { "piece": { "id_": "t_f0_b_c1" }, "port": { "id_": "t" } },
-      "connecting": { "piece": { "id_": "t_f1_b_c1" }, "port": { "id_": "b" } },
-      "description": "",
-      "gap": 7.5,
-      "shift": -0.5,
-      "rise": 0.0,
-      "rotation": 15.0,
-      "turn": 0.0,
-      "tilt": 358.0,
-      "x": 0.0,
-      "y": 2.96,
-      "qualities": []
-    },
-    {
-      "connected": { "piece": { "id_": "t_f1_b_c1" }, "port": { "id_": "t" } },
-      "connecting": { "piece": { "id_": "t_f2_b_c1" }, "port": { "id_": "b" } },
-      "description": "",
-      "gap": 7.5,
-      "shift": -0.5,
-      "rise": 0.0,
-      "rotation": 15.0,
-      "turn": 0.0,
-      "tilt": 358.0,
-      "x": 0.0,
-      "y": 2.96,
-      "qualities": []
-    },
-    {
-      "connected": { "piece": { "id_": "t_f2_b_c1" }, "port": { "id_": "t" } },
-      "connecting": { "piece": { "id_": "t_f3_b_c1" }, "port": { "id_": "b" } },
-      "description": "",
-      "gap": 7.5,
-      "shift": -0.5,
-      "rise": 0.0,
-      "rotation": 15.0,
-      "turn": 0.0,
-      "tilt": 358.0,
-      "x": 0.0,
-      "y": 2.96,
-      "qualities": []
-    },
-    {
-      "connected": { "piece": { "id_": "t_f3_b_c1" }, "port": { "id_": "t" } },
-      "connecting": { "piece": { "id_": "t_f4_b_c1" }, "port": { "id_": "b" } },
-      "description": "",
-      "gap": 7.5,
-      "shift": -0.5,
-      "rise": 0.0,
-      "rotation": 15.0,
-      "turn": 0.0,
-      "tilt": 358.0,
-      "x": 0.0,
-      "y": 2.96,
-      "qualities": []
-    },
-    {
-      "connected": { "piece": { "id_": "t_f4_b_c1" }, "port": { "id_": "t" } },
-      "connecting": { "piece": { "id_": "t_f5_b_c1" }, "port": { "id_": "b" } },
-      "description": "",
-      "gap": 7.5,
-      "shift": -0.5,
-      "rise": 0.0,
-      "rotation": 15.0,
-      "turn": 0.0,
-      "tilt": 358.0,
-      "x": 0.0,
-      "y": 2.96,
-      "qualities": []
-    },
-    {
-      "connected": { "piece": { "id_": "t_f5_b_c1" }, "port": { "id_": "t" } },
-      "connecting": { "piece": { "id_": "t_f6_b_c1" }, "port": { "id_": "b" } },
-      "description": "",
-      "gap": 7.5,
-      "shift": -0.5,
-      "rise": 0.0,
-      "rotation": 15.0,
-      "turn": 0.0,
-      "tilt": 358.0,
-      "x": 0.0,
-      "y": 2.96,
-      "qualities": []
-    },
-    {
-      "connected": { "piece": { "id_": "t_f6_b_c1" }, "port": { "id_": "t" } },
-      "connecting": { "piece": { "id_": "t_f7_b_c1" }, "port": { "id_": "b" } },
-      "description": "",
-      "gap": 7.5,
-      "shift": -0.5,
-      "rise": 0.0,
-      "rotation": 15.0,
-      "turn": 0.0,
-      "tilt": 358.0,
-      "x": 0.0,
-      "y": 2.96,
-      "qualities": []
-    },
-    {
-      "connected": { "piece": { "id_": "t_f7_b_c1" }, "port": { "id_": "t" } },
-      "connecting": { "piece": { "id_": "t_f8_b_c1" }, "port": { "id_": "b" } },
-      "description": "",
-      "gap": 7.5,
-      "shift": -0.5,
-      "rise": 0.0,
-      "rotation": 15.0,
-      "turn": 0.0,
-      "tilt": 358.0,
-      "x": 0.0,
-      "y": 2.96,
-      "qualities": []
-    },
-    {
-      "connected": { "piece": { "id_": "t_f8_b_c1" }, "port": { "id_": "t" } },
-      "connecting": { "piece": { "id_": "t_f9_b_c1" }, "port": { "id_": "b" } },
-      "description": "",
-      "gap": 7.5,
-      "shift": -0.5,
-      "rise": 0.0,
-      "rotation": 15.0,
-      "turn": 0.0,
-      "tilt": 358.0,
-      "x": 0.0,
-      "y": 2.96,
-      "qualities": []
-    },
-    {
-      "connected": { "piece": { "id_": "t_f9_b_c1" }, "port": { "id_": "t" } },
+      "connected": {
+        "piece": {
+          "id_": "t_f0_b_c1"
+        },
+        "port": {
+          "id_": "t"
+        }
+      },
       "connecting": {
-        "piece": { "id_": "t_f10_b_c1" },
-        "port": { "id_": "b" }
+        "piece": {
+          "id_": "t_f1_b_c1"
+        },
+        "port": {
+          "id_": "b"
+        }
       },
       "description": "",
       "gap": 7.5,
@@ -3509,16 +4663,276 @@
       "tilt": 358.0,
       "x": 0.0,
       "y": 2.96,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f0_b_c1" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f1_b_c1"
+        },
+        "port": {
+          "id_": "t"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f0_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "t_f2_b_c1"
+        },
+        "port": {
+          "id_": "b"
+        }
+      },
+      "description": "",
+      "gap": 7.5,
+      "shift": -0.5,
+      "rise": 0.0,
+      "rotation": 15.0,
+      "turn": 0.0,
+      "tilt": 358.0,
+      "x": 0.0,
+      "y": 2.96,
+      "attributes": []
+    },
+    {
+      "connected": {
+        "piece": {
+          "id_": "t_f2_b_c1"
+        },
+        "port": {
+          "id_": "t"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "t_f3_b_c1"
+        },
+        "port": {
+          "id_": "b"
+        }
+      },
+      "description": "",
+      "gap": 7.5,
+      "shift": -0.5,
+      "rise": 0.0,
+      "rotation": 15.0,
+      "turn": 0.0,
+      "tilt": 358.0,
+      "x": 0.0,
+      "y": 2.96,
+      "attributes": []
+    },
+    {
+      "connected": {
+        "piece": {
+          "id_": "t_f3_b_c1"
+        },
+        "port": {
+          "id_": "t"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "t_f4_b_c1"
+        },
+        "port": {
+          "id_": "b"
+        }
+      },
+      "description": "",
+      "gap": 7.5,
+      "shift": -0.5,
+      "rise": 0.0,
+      "rotation": 15.0,
+      "turn": 0.0,
+      "tilt": 358.0,
+      "x": 0.0,
+      "y": 2.96,
+      "attributes": []
+    },
+    {
+      "connected": {
+        "piece": {
+          "id_": "t_f4_b_c1"
+        },
+        "port": {
+          "id_": "t"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "t_f5_b_c1"
+        },
+        "port": {
+          "id_": "b"
+        }
+      },
+      "description": "",
+      "gap": 7.5,
+      "shift": -0.5,
+      "rise": 0.0,
+      "rotation": 15.0,
+      "turn": 0.0,
+      "tilt": 358.0,
+      "x": 0.0,
+      "y": 2.96,
+      "attributes": []
+    },
+    {
+      "connected": {
+        "piece": {
+          "id_": "t_f5_b_c1"
+        },
+        "port": {
+          "id_": "t"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "t_f6_b_c1"
+        },
+        "port": {
+          "id_": "b"
+        }
+      },
+      "description": "",
+      "gap": 7.5,
+      "shift": -0.5,
+      "rise": 0.0,
+      "rotation": 15.0,
+      "turn": 0.0,
+      "tilt": 358.0,
+      "x": 0.0,
+      "y": 2.96,
+      "attributes": []
+    },
+    {
+      "connected": {
+        "piece": {
+          "id_": "t_f6_b_c1"
+        },
+        "port": {
+          "id_": "t"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "t_f7_b_c1"
+        },
+        "port": {
+          "id_": "b"
+        }
+      },
+      "description": "",
+      "gap": 7.5,
+      "shift": -0.5,
+      "rise": 0.0,
+      "rotation": 15.0,
+      "turn": 0.0,
+      "tilt": 358.0,
+      "x": 0.0,
+      "y": 2.96,
+      "attributes": []
+    },
+    {
+      "connected": {
+        "piece": {
+          "id_": "t_f7_b_c1"
+        },
+        "port": {
+          "id_": "t"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "t_f8_b_c1"
+        },
+        "port": {
+          "id_": "b"
+        }
+      },
+      "description": "",
+      "gap": 7.5,
+      "shift": -0.5,
+      "rise": 0.0,
+      "rotation": 15.0,
+      "turn": 0.0,
+      "tilt": 358.0,
+      "x": 0.0,
+      "y": 2.96,
+      "attributes": []
+    },
+    {
+      "connected": {
+        "piece": {
+          "id_": "t_f8_b_c1"
+        },
+        "port": {
+          "id_": "t"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "t_f9_b_c1"
+        },
+        "port": {
+          "id_": "b"
+        }
+      },
+      "description": "",
+      "gap": 7.5,
+      "shift": -0.5,
+      "rise": 0.0,
+      "rotation": 15.0,
+      "turn": 0.0,
+      "tilt": 358.0,
+      "x": 0.0,
+      "y": 2.96,
+      "attributes": []
+    },
+    {
+      "connected": {
+        "piece": {
+          "id_": "t_f9_b_c1"
+        },
+        "port": {
+          "id_": "t"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "t_f10_b_c1"
+        },
+        "port": {
+          "id_": "b"
+        }
+      },
+      "description": "",
+      "gap": 7.5,
+      "shift": -0.5,
+      "rise": 0.0,
+      "rotation": 15.0,
+      "turn": 0.0,
+      "tilt": 358.0,
+      "x": 0.0,
+      "y": 2.96,
+      "attributes": []
+    },
+    {
+      "connected": {
+        "piece": {
+          "id_": "t_f0_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "cs_sl0_d0_t_f0_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3529,16 +4943,24 @@
       "tilt": 2.0,
       "x": -0.2554071,
       "y": 0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f1_b_c1" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f1_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f1_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d0_t_f1_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3549,16 +4971,24 @@
       "tilt": 2.0,
       "x": -0.2554071,
       "y": 0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f2_b_c1" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f2_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f2_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d0_t_f2_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3569,16 +4999,24 @@
       "tilt": 2.0,
       "x": -0.2554071,
       "y": 0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f3_b_c1" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f3_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f3_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d0_t_f3_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3589,16 +5027,24 @@
       "tilt": 2.0,
       "x": -0.2554071,
       "y": 0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f4_b_c1" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f4_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f4_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d0_t_f4_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3609,16 +5055,24 @@
       "tilt": 2.0,
       "x": -0.2554071,
       "y": 0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f5_b_c1" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f5_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f5_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d0_t_f5_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3629,16 +5083,24 @@
       "tilt": 2.0,
       "x": -0.2554071,
       "y": 0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f6_b_c1" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f6_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f6_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d0_t_f6_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3649,16 +5111,24 @@
       "tilt": 2.0,
       "x": -0.2554071,
       "y": 0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f7_b_c1" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f7_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f7_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d0_t_f7_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3669,16 +5139,24 @@
       "tilt": 2.0,
       "x": -0.2554071,
       "y": 0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f8_b_c1" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f8_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f8_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d0_t_f8_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3689,16 +5167,24 @@
       "tilt": 2.0,
       "x": -0.2554071,
       "y": 0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f9_b_c1" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f9_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f9_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d0_t_f9_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3709,16 +5195,24 @@
       "tilt": 2.0,
       "x": -0.2554071,
       "y": 0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f10_b_c1" },
-        "port": { "id_": "sl0_d0" }
+        "piece": {
+          "id_": "t_f10_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d0_t_f10_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d0_t_f10_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3729,16 +5223,24 @@
       "tilt": 2.0,
       "x": -0.2554071,
       "y": 0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f0_b_c1" },
-        "port": { "id_": "sl0_d1" }
+        "piece": {
+          "id_": "t_f0_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d1_t_f0_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d1_t_f0_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3749,36 +5251,24 @@
       "tilt": 2.0,
       "x": -0.47442016,
       "y": 0.099123724,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f1_b_c1" },
-        "port": { "id_": "sl0_d1" }
+        "piece": {
+          "id_": "t_f1_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d1_t_f1_b_c1" },
-        "port": { "id_": "" }
-      },
-      "description": "",
-      "gap": 2.5,
-      "shift": 0.5,
-      "rise": 0.0,
-      "rotation": 3.0,
-      "turn": 0.0,
-      "tilt": 2.0,
-      "x": -0.47442016,
-      "y": 0.099123724,
-      "qualities": []
-    },
-    {
-      "connected": {
-        "piece": { "id_": "t_f3_b_c1" },
-        "port": { "id_": "sl0_d1" }
-      },
-      "connecting": {
-        "piece": { "id_": "cs_sl0_d1_t_f3_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d1_t_f1_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3789,36 +5279,24 @@
       "tilt": 2.0,
       "x": -0.47442016,
       "y": 0.099123724,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f4_b_c1" },
-        "port": { "id_": "sl0_d1" }
+        "piece": {
+          "id_": "t_f3_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d1_t_f4_b_c1" },
-        "port": { "id_": "" }
-      },
-      "description": "",
-      "gap": 2.5,
-      "shift": 0.5,
-      "rise": 0.0,
-      "rotation": 3.0,
-      "turn": 0.0,
-      "tilt": 2.0,
-      "x": -0.47442016,
-      "y": 0.099123724,
-      "qualities": []
-    },
-    {
-      "connected": {
-        "piece": { "id_": "t_f6_b_c1" },
-        "port": { "id_": "sl0_d1" }
-      },
-      "connecting": {
-        "piece": { "id_": "cs_sl0_d1_t_f6_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d1_t_f3_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3829,36 +5307,24 @@
       "tilt": 2.0,
       "x": -0.47442016,
       "y": 0.099123724,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f7_b_c1" },
-        "port": { "id_": "sl0_d1" }
+        "piece": {
+          "id_": "t_f4_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d1_t_f7_b_c1" },
-        "port": { "id_": "" }
-      },
-      "description": "",
-      "gap": 2.5,
-      "shift": 0.5,
-      "rise": 0.0,
-      "rotation": 3.0,
-      "turn": 0.0,
-      "tilt": 2.0,
-      "x": -0.47442016,
-      "y": 0.099123724,
-      "qualities": []
-    },
-    {
-      "connected": {
-        "piece": { "id_": "t_f9_b_c1" },
-        "port": { "id_": "sl0_d1" }
-      },
-      "connecting": {
-        "piece": { "id_": "cs_sl0_d1_t_f9_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d1_t_f4_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3869,16 +5335,24 @@
       "tilt": 2.0,
       "x": -0.47442016,
       "y": 0.099123724,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f10_b_c1" },
-        "port": { "id_": "sl0_d1" }
+        "piece": {
+          "id_": "t_f6_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d1_t_f10_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d1_t_f6_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3889,16 +5363,108 @@
       "tilt": 2.0,
       "x": -0.47442016,
       "y": 0.099123724,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f0_b_c1" },
-        "port": { "id_": "sl0_d2" }
+        "piece": {
+          "id_": "t_f7_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d2_t_f0_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d1_t_f7_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
+      },
+      "description": "",
+      "gap": 2.5,
+      "shift": 0.5,
+      "rise": 0.0,
+      "rotation": 3.0,
+      "turn": 0.0,
+      "tilt": 2.0,
+      "x": -0.47442016,
+      "y": 0.099123724,
+      "attributes": []
+    },
+    {
+      "connected": {
+        "piece": {
+          "id_": "t_f9_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d1"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "cs_sl0_d1_t_f9_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
+      },
+      "description": "",
+      "gap": 2.5,
+      "shift": 0.5,
+      "rise": 0.0,
+      "rotation": 3.0,
+      "turn": 0.0,
+      "tilt": 2.0,
+      "x": -0.47442016,
+      "y": 0.099123724,
+      "attributes": []
+    },
+    {
+      "connected": {
+        "piece": {
+          "id_": "t_f10_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d1"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "cs_sl0_d1_t_f10_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
+      },
+      "description": "",
+      "gap": 2.5,
+      "shift": 0.5,
+      "rise": 0.0,
+      "rotation": 3.0,
+      "turn": 0.0,
+      "tilt": 2.0,
+      "x": -0.47442016,
+      "y": 0.099123724,
+      "attributes": []
+    },
+    {
+      "connected": {
+        "piece": {
+          "id_": "t_f0_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "cs_sl0_d2_t_f0_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3909,36 +5475,24 @@
       "tilt": 2.0,
       "x": -0.4119068,
       "y": -0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f1_b_c1" },
-        "port": { "id_": "sl0_d2" }
+        "piece": {
+          "id_": "t_f1_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d2_t_f1_b_c1" },
-        "port": { "id_": "" }
-      },
-      "description": "",
-      "gap": 2.5,
-      "shift": -0.5,
-      "rise": 0.0,
-      "rotation": 3.0,
-      "turn": 0.0,
-      "tilt": 2.0,
-      "x": -0.4119068,
-      "y": -0.2554071,
-      "qualities": []
-    },
-    {
-      "connected": {
-        "piece": { "id_": "t_f2_b_c1" },
-        "port": { "id_": "sl0_d2" }
-      },
-      "connecting": {
-        "piece": { "id_": "cs_sl0_d2_t_f2_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d2_t_f1_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3949,36 +5503,24 @@
       "tilt": 2.0,
       "x": -0.4119068,
       "y": -0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f3_b_c1" },
-        "port": { "id_": "sl0_d2" }
+        "piece": {
+          "id_": "t_f2_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d2_t_f3_b_c1" },
-        "port": { "id_": "" }
-      },
-      "description": "",
-      "gap": 2.5,
-      "shift": -0.5,
-      "rise": 0.0,
-      "rotation": 3.0,
-      "turn": 0.0,
-      "tilt": 2.0,
-      "x": -0.4119068,
-      "y": -0.2554071,
-      "qualities": []
-    },
-    {
-      "connected": {
-        "piece": { "id_": "t_f4_b_c1" },
-        "port": { "id_": "sl0_d2" }
-      },
-      "connecting": {
-        "piece": { "id_": "cs_sl0_d2_t_f4_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d2_t_f2_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -3989,16 +5531,24 @@
       "tilt": 2.0,
       "x": -0.4119068,
       "y": -0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f5_b_c1" },
-        "port": { "id_": "sl0_d2" }
+        "piece": {
+          "id_": "t_f3_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d2_t_f5_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d2_t_f3_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4009,16 +5559,24 @@
       "tilt": 2.0,
       "x": -0.4119068,
       "y": -0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f6_b_c1" },
-        "port": { "id_": "sl0_d2" }
+        "piece": {
+          "id_": "t_f4_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d2_t_f6_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d2_t_f4_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4029,16 +5587,24 @@
       "tilt": 2.0,
       "x": -0.4119068,
       "y": -0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f7_b_c1" },
-        "port": { "id_": "sl0_d2" }
+        "piece": {
+          "id_": "t_f5_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d2_t_f7_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d2_t_f5_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4049,16 +5615,24 @@
       "tilt": 2.0,
       "x": -0.4119068,
       "y": -0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f8_b_c1" },
-        "port": { "id_": "sl0_d2" }
+        "piece": {
+          "id_": "t_f6_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d2_t_f8_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d2_t_f6_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4069,16 +5643,24 @@
       "tilt": 2.0,
       "x": -0.4119068,
       "y": -0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f9_b_c1" },
-        "port": { "id_": "sl0_d2" }
+        "piece": {
+          "id_": "t_f7_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d2_t_f9_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d2_t_f7_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4089,16 +5671,24 @@
       "tilt": 2.0,
       "x": -0.4119068,
       "y": -0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f10_b_c1" },
-        "port": { "id_": "sl0_d2" }
+        "piece": {
+          "id_": "t_f8_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d2_t_f10_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d2_t_f8_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4109,16 +5699,80 @@
       "tilt": 2.0,
       "x": -0.4119068,
       "y": -0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f0_b_c1" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f9_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f0_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d2_t_f9_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
+      },
+      "description": "",
+      "gap": 2.5,
+      "shift": -0.5,
+      "rise": 0.0,
+      "rotation": 3.0,
+      "turn": 0.0,
+      "tilt": 2.0,
+      "x": -0.4119068,
+      "y": -0.2554071,
+      "attributes": []
+    },
+    {
+      "connected": {
+        "piece": {
+          "id_": "t_f10_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "cs_sl0_d2_t_f10_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
+      },
+      "description": "",
+      "gap": 2.5,
+      "shift": -0.5,
+      "rise": 0.0,
+      "rotation": 3.0,
+      "turn": 0.0,
+      "tilt": 2.0,
+      "x": -0.4119068,
+      "y": -0.2554071,
+      "attributes": []
+    },
+    {
+      "connected": {
+        "piece": {
+          "id_": "t_f0_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
+      },
+      "connecting": {
+        "piece": {
+          "id_": "cs_sl0_d3_t_f0_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4129,16 +5783,24 @@
       "tilt": 2.0,
       "x": -0.099123724,
       "y": -0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f1_b_c1" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f1_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f1_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d3_t_f1_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4149,16 +5811,24 @@
       "tilt": 2.0,
       "x": -0.099123724,
       "y": -0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f2_b_c1" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f2_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f2_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d3_t_f2_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4169,16 +5839,24 @@
       "tilt": 2.0,
       "x": -0.099123724,
       "y": -0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f3_b_c1" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f3_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f3_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d3_t_f3_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4189,16 +5867,24 @@
       "tilt": 2.0,
       "x": -0.099123724,
       "y": -0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f4_b_c1" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f4_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f4_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d3_t_f4_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4209,16 +5895,24 @@
       "tilt": 2.0,
       "x": -0.099123724,
       "y": -0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f5_b_c1" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f5_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f5_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d3_t_f5_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4229,16 +5923,24 @@
       "tilt": 2.0,
       "x": -0.099123724,
       "y": -0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f6_b_c1" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f6_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f6_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d3_t_f6_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4249,16 +5951,24 @@
       "tilt": 2.0,
       "x": -0.099123724,
       "y": -0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f7_b_c1" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f7_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f7_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d3_t_f7_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4269,16 +5979,24 @@
       "tilt": 2.0,
       "x": -0.099123724,
       "y": -0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f8_b_c1" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f8_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f8_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d3_t_f8_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4289,16 +6007,24 @@
       "tilt": 2.0,
       "x": -0.099123724,
       "y": -0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f9_b_c1" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f9_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f9_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d3_t_f9_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4309,16 +6035,24 @@
       "tilt": 2.0,
       "x": -0.099123724,
       "y": -0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f10_b_c1" },
-        "port": { "id_": "sl0_d3" }
+        "piece": {
+          "id_": "t_f10_b_c1"
+        },
+        "port": {
+          "id_": "sl0_d3"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl0_d3_t_f10_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl0_d3_t_f10_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4329,16 +6063,24 @@
       "tilt": 2.0,
       "x": -0.099123724,
       "y": -0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f0_b_c1" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f0_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f0_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f0_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4349,16 +6091,24 @@
       "tilt": 2.0,
       "x": 0.2554071,
       "y": -0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f1_b_c1" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f1_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f1_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f1_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4369,16 +6119,24 @@
       "tilt": 2.0,
       "x": 0.2554071,
       "y": -0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f2_b_c1" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f2_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f2_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f2_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4389,16 +6147,24 @@
       "tilt": 2.0,
       "x": 0.2554071,
       "y": -0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f3_b_c1" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f3_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f3_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f3_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4409,16 +6175,24 @@
       "tilt": 2.0,
       "x": 0.2554071,
       "y": -0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f4_b_c1" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f4_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f4_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f4_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4429,16 +6203,24 @@
       "tilt": 2.0,
       "x": 0.2554071,
       "y": -0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f5_b_c1" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f5_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f5_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f5_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4449,16 +6231,24 @@
       "tilt": 2.0,
       "x": 0.2554071,
       "y": -0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f6_b_c1" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f6_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f6_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f6_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4469,16 +6259,24 @@
       "tilt": 2.0,
       "x": 0.2554071,
       "y": -0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f7_b_c1" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f7_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f7_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f7_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4489,16 +6287,24 @@
       "tilt": 2.0,
       "x": 0.2554071,
       "y": -0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f8_b_c1" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f8_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f8_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f8_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4509,16 +6315,24 @@
       "tilt": 2.0,
       "x": 0.2554071,
       "y": -0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f9_b_c1" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f9_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f9_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f9_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4529,16 +6343,24 @@
       "tilt": 2.0,
       "x": 0.2554071,
       "y": -0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f10_b_c1" },
-        "port": { "id_": "sl1_d0" }
+        "piece": {
+          "id_": "t_f10_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d0_t_f10_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d0_t_f10_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4549,16 +6371,24 @@
       "tilt": 2.0,
       "x": 0.2554071,
       "y": -0.4119068,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f0_b_c1" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f0_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f0_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f0_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4569,16 +6399,24 @@
       "tilt": 2.0,
       "x": 0.47442016,
       "y": -0.099123724,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f1_b_c1" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f1_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f1_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f1_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4589,16 +6427,24 @@
       "tilt": 2.0,
       "x": 0.47442016,
       "y": -0.099123724,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f2_b_c1" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f2_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f2_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f2_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4609,16 +6455,24 @@
       "tilt": 2.0,
       "x": 0.47442016,
       "y": -0.099123724,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f3_b_c1" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f3_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f3_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f3_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4629,16 +6483,24 @@
       "tilt": 2.0,
       "x": 0.47442016,
       "y": -0.099123724,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f4_b_c1" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f4_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f4_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f4_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4649,16 +6511,24 @@
       "tilt": 2.0,
       "x": 0.47442016,
       "y": -0.099123724,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f5_b_c1" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f5_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f5_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f5_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4669,16 +6539,24 @@
       "tilt": 2.0,
       "x": 0.47442016,
       "y": -0.099123724,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f6_b_c1" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f6_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f6_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f6_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4689,16 +6567,24 @@
       "tilt": 2.0,
       "x": 0.47442016,
       "y": -0.099123724,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f7_b_c1" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f7_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f7_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f7_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4709,16 +6595,24 @@
       "tilt": 2.0,
       "x": 0.47442016,
       "y": -0.099123724,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f8_b_c1" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f8_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f8_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f8_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4729,16 +6623,24 @@
       "tilt": 2.0,
       "x": 0.47442016,
       "y": -0.099123724,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f9_b_c1" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f9_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f9_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f9_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4749,16 +6651,24 @@
       "tilt": 2.0,
       "x": 0.47442016,
       "y": -0.099123724,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f10_b_c1" },
-        "port": { "id_": "sl1_d1" }
+        "piece": {
+          "id_": "t_f10_b_c1"
+        },
+        "port": {
+          "id_": "sl1_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl1_d1_t_f10_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl1_d1_t_f10_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4769,16 +6679,24 @@
       "tilt": 2.0,
       "x": 0.47442016,
       "y": -0.099123724,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f0_b_c1" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f0_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f0_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f0_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4789,16 +6707,24 @@
       "tilt": 2.0,
       "x": 0.4119068,
       "y": 0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f1_b_c1" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f1_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f1_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f1_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4809,16 +6735,24 @@
       "tilt": 2.0,
       "x": 0.4119068,
       "y": 0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f2_b_c1" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f2_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f2_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f2_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4829,16 +6763,24 @@
       "tilt": 2.0,
       "x": 0.4119068,
       "y": 0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f3_b_c1" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f3_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f3_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f3_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4849,16 +6791,24 @@
       "tilt": 2.0,
       "x": 0.4119068,
       "y": 0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f4_b_c1" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f4_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f4_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f4_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4869,16 +6819,24 @@
       "tilt": 2.0,
       "x": 0.4119068,
       "y": 0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f5_b_c1" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f5_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f5_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f5_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4889,16 +6847,24 @@
       "tilt": 2.0,
       "x": 0.4119068,
       "y": 0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f6_b_c1" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f6_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f6_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f6_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4909,16 +6875,24 @@
       "tilt": 2.0,
       "x": 0.4119068,
       "y": 0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f7_b_c1" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f7_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f7_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f7_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4929,16 +6903,24 @@
       "tilt": 2.0,
       "x": 0.4119068,
       "y": 0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f8_b_c1" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f8_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f8_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f8_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4949,16 +6931,24 @@
       "tilt": 2.0,
       "x": 0.4119068,
       "y": 0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f9_b_c1" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f9_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f9_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f9_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4969,16 +6959,24 @@
       "tilt": 2.0,
       "x": 0.4119068,
       "y": 0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f10_b_c1" },
-        "port": { "id_": "sl2_d0" }
+        "piece": {
+          "id_": "t_f10_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d0"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d0_t_f10_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d0_t_f10_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -4989,16 +6987,24 @@
       "tilt": 2.0,
       "x": 0.4119068,
       "y": 0.2554071,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f0_b_c1" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f0_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f0_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f0_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -5009,16 +7015,24 @@
       "tilt": 2.0,
       "x": 0.099123724,
       "y": 0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f1_b_c1" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f1_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f1_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f1_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -5029,16 +7043,24 @@
       "tilt": 2.0,
       "x": 0.099123724,
       "y": 0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f2_b_c1" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f2_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f2_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f2_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -5049,16 +7071,24 @@
       "tilt": 2.0,
       "x": 0.099123724,
       "y": 0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f3_b_c1" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f3_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f3_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f3_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -5069,16 +7099,24 @@
       "tilt": 2.0,
       "x": 0.099123724,
       "y": 0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f4_b_c1" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f4_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f4_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f4_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -5089,16 +7127,24 @@
       "tilt": 2.0,
       "x": 0.099123724,
       "y": 0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f5_b_c1" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f5_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f5_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f5_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -5109,16 +7155,24 @@
       "tilt": 2.0,
       "x": 0.099123724,
       "y": 0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f6_b_c1" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f6_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f6_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f6_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -5129,16 +7183,24 @@
       "tilt": 2.0,
       "x": 0.099123724,
       "y": 0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f7_b_c1" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f7_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f7_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f7_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -5149,16 +7211,24 @@
       "tilt": 2.0,
       "x": 0.099123724,
       "y": 0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f8_b_c1" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f8_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f8_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f8_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -5169,16 +7239,24 @@
       "tilt": 2.0,
       "x": 0.099123724,
       "y": 0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f9_b_c1" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f9_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f9_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f9_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -5189,16 +7267,24 @@
       "tilt": 2.0,
       "x": 0.099123724,
       "y": 0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f10_b_c1" },
-        "port": { "id_": "sl2_d1" }
+        "piece": {
+          "id_": "t_f10_b_c1"
+        },
+        "port": {
+          "id_": "sl2_d1"
+        }
       },
       "connecting": {
-        "piece": { "id_": "cs_sl2_d1_t_f10_b_c1" },
-        "port": { "id_": "" }
+        "piece": {
+          "id_": "cs_sl2_d1_t_f10_b_c1"
+        },
+        "port": {
+          "id_": ""
+        }
       },
       "description": "",
       "gap": 2.5,
@@ -5209,16 +7295,24 @@
       "tilt": 2.0,
       "x": 0.099123724,
       "y": 0.47442016,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f2_b_c0" },
-        "port": { "id_": "sl0_d2" }
+        "piece": {
+          "id_": "t_f2_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
       },
       "connecting": {
-        "piece": { "id_": "br_sl0_d2_t_f2_b_c0" },
-        "port": { "id_": "e" }
+        "piece": {
+          "id_": "br_sl0_d2_t_f2_b_c0"
+        },
+        "port": {
+          "id_": "e"
+        }
       },
       "description": "",
       "gap": 0.0,
@@ -5229,16 +7323,24 @@
       "tilt": 0.0,
       "x": 0.8468811,
       "y": 0.31669903,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f5_b_c0" },
-        "port": { "id_": "sl0_d2" }
+        "piece": {
+          "id_": "t_f5_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
       },
       "connecting": {
-        "piece": { "id_": "br_sl0_d2_t_f5_b_c0" },
-        "port": { "id_": "e" }
+        "piece": {
+          "id_": "br_sl0_d2_t_f5_b_c0"
+        },
+        "port": {
+          "id_": "e"
+        }
       },
       "description": "",
       "gap": 0.0,
@@ -5249,16 +7351,24 @@
       "tilt": 0.0,
       "x": 0.8468811,
       "y": 0.31669903,
-      "qualities": []
+      "attributes": []
     },
     {
       "connected": {
-        "piece": { "id_": "t_f8_b_c0" },
-        "port": { "id_": "sl0_d2" }
+        "piece": {
+          "id_": "t_f8_b_c0"
+        },
+        "port": {
+          "id_": "sl0_d2"
+        }
       },
       "connecting": {
-        "piece": { "id_": "br_sl0_d2_t_f8_b_c0" },
-        "port": { "id_": "e" }
+        "piece": {
+          "id_": "br_sl0_d2_t_f8_b_c0"
+        },
+        "port": {
+          "id_": "e"
+        }
       },
       "description": "",
       "gap": 0.0,
@@ -5269,11 +7379,16 @@
       "tilt": 0.0,
       "x": 0.8468811,
       "y": 0.31669903,
-      "qualities": []
+      "attributes": []
     }
   ],
-  "authors": [{ "name": "Ueli Saluz", "email": "ueli@semio-tech.org" }],
-  "qualities": [
+  "authors": [
+    {
+      "name": "Ueli Saluz",
+      "email": "ueli@semio-tech.org"
+    }
+  ],
+  "attributes": [
     {
       "name": "effective floor area",
       "value": "2128.8",
@@ -5292,7 +7407,12 @@
       "unit": "€",
       "definition": ""
     },
-    { "name": "return", "value": "3.9635e+6", "unit": "€/a", "definition": "" },
+    {
+      "name": "return",
+      "value": "3.9635e+6",
+      "unit": "€/a",
+      "definition": ""
+    },
     {
       "name": "construction global warming potential",
       "value": "729701",
@@ -5311,7 +7431,12 @@
       "unit": "kgCO2e/a",
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
     },
-    { "name": "income", "value": "4.3747e+6", "unit": "€", "definition": "" },
+    {
+      "name": "income",
+      "value": "4.3747e+6",
+      "unit": "€",
+      "definition": ""
+    },
     {
       "name": "maintenance expenses",
       "value": "336342",

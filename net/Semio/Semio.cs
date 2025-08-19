@@ -677,22 +677,22 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
 #region Models
 
 /// <summary>
-/// <see href="https://github.com/usalu/semio#-quality-"/>
+/// <see href="https://github.com/usalu/semio#-attribute-"/>
 /// </summary>
-[Model("📏", "Ql", "Qal", "A quality is a named value with a unit and a definition.")]
-public class Quality : Model<Quality>
+[Model("📏", "Ql", "Qal", "A attribute is a named value with a unit and a definition.")]
+public class Attribute : Model<Attribute>
 {
-    [Name("📏", "Na", "Nam", "The name of the quality.", PropImportance.ID)]
+    [Name("📏", "Na", "Nam", "The name of the attribute.", PropImportance.ID)]
     public string Name { get; set; } = "";
 
     [Description("🔢", "Vl?", "Val?",
-        "The optional value [ text | url ] of the quality. No value is equivalent to true for the name.")]
+        "The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.")]
     public string Value { get; set; } = "";
 
-    [Name("Ⓜ️", "Ut?", "Unt?", "The optional unit of the value of the quality.", isDefaultValid: true)]
+    [Name("Ⓜ️", "Ut?", "Unt?", "The optional unit of the value of the attribute.", isDefaultValid: true)]
     public string Unit { get; set; } = "";
 
-    [Description("📖", "Df?", "Def?", "The optional definition [ text | uri ] of the quality.")]
+    [Description("📖", "Df?", "Def?", "The optional definition [ text | uri ] of the attribute.")]
     public string Definition { get; set; } = "";
 
     public string ToIdString() => $"{Name}";
@@ -718,8 +718,8 @@ public class Representation : Model<Representation>
     [Name("🏷️", "Tg*", "Tags*", "The optional tags to group representations. No tags means default.", PropImportance.ID, skipValidation: true)]
     public List<string> Tags { get; set; } = new();
 
-    [ModelProp("📏", "Ql*", "Qals", "The optional qualities of the representation.", PropImportance.OPTIONAL)]
-    public List<Quality> Qualities { get; set; } = new();
+    [ModelProp("📏", "Ql*", "Qals", "The optional attributes of the representation.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
 
     public override (bool, List<string>) Validate()
     {
@@ -740,11 +740,11 @@ public class Representation : Model<Representation>
                     $"A tag must be at most {Constants.NameLengthLimit} characters long. The provided tag ({preview}) has {tag.Length} characters.");
             }
 
-            foreach (var quality in Qualities)
+            foreach (var attribute in Attributes)
             {
-                var (isValidQuality, errorsQuality) = quality.Validate();
+                var (isValidQuality, errorsQuality) = attribute.Validate();
                 isValid = isValid && isValidQuality;
-                errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
+                errors.AddRange(errorsQuality.Select(e => $"A attribute({attribute.ToHumanIdString()}) is invalid: " + e));
             }
         }
 
@@ -889,8 +889,8 @@ public class Port : Model<Port>
     public Vector? Direction { get; set; } = null;
     [NumberProp("💍", "T", "T", "The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.", PropImportance.REQUIRED)]
     public float T { get; set; } = 0;
-    [ModelProp("📏", "Ql*", "Qals", "The optional qualities of the port.", PropImportance.OPTIONAL)]
-    public List<Quality> Qualities { get; set; } = new();
+    [ModelProp("📏", "Ql*", "Qals", "The optional attributes of the port.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
     public string ToIdString() => $"{Id}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Por({ToHumanIdString()})";
@@ -921,11 +921,11 @@ public class Port : Model<Port>
             isValid = false;
             errors.Add("The direction must not be null.");
         }
-        foreach (var quality in Qualities)
+        foreach (var attribute in Attributes)
         {
-            var (isValidQuality, errorsQuality) = quality.Validate();
+            var (isValidQuality, errorsQuality) = attribute.Validate();
             isValid = isValid && isValidQuality;
-            errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
+            errors.AddRange(errorsQuality.Select(e => $"A attribute({attribute.ToHumanIdString()}) is invalid: " + e));
         }
         return (isValid, errors);
     }
@@ -1007,8 +1007,8 @@ public class Type : Model<Type>
     public List<Port> Ports { get; set; } = new();
     [ModelProp("👥", "Au*", "Auts*", "The optional authors of the type.", PropImportance.OPTIONAL)]
     public List<Author> Authors { get; set; } = new();
-    [ModelProp("📏", "Ql*", "Qals*", "The optional qualities of the type.", PropImportance.OPTIONAL)]
-    public List<Quality> Qualities { get; set; } = new();
+    [ModelProp("📏", "Ql*", "Qals*", "The optional attributes of the type.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
 
     public string ToIdString() => $"{Name}#{Variant}";
 
@@ -1042,11 +1042,11 @@ public class Type : Model<Type>
             errors.AddRange(errorsAuthor.Select(e => $"An author({author.ToHumanIdString()}) is invalid: " + e));
         }
 
-        foreach (var quality in Qualities)
+        foreach (var attribute in Attributes)
         {
-            var (isValidQuality, errorsQuality) = quality.Validate();
+            var (isValidQuality, errorsQuality) = attribute.Validate();
             isValid = isValid && isValidQuality;
-            errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
+            errors.AddRange(errorsQuality.Select(e => $"A attribute({attribute.ToHumanIdString()}) is invalid: " + e));
         }
 
         return (isValid, errors);
@@ -1101,8 +1101,8 @@ public class Piece : Model<Piece>
     public bool Hidden { get; set; } = false;
     [FalseOrTrue("🔒", "Lk?", "Lck?", "Whether the piece is locked. A locked piece cannot be edited.")]
     public bool Locked { get; set; } = false;
-    [ModelProp("📏", "Ql*", "Qals*", "The optional qualities of the piece.", PropImportance.OPTIONAL)]
-    public List<Quality> Qualities { get; set; } = new();
+    [ModelProp("📏", "Ql*", "Qals*", "The optional attributes of the piece.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
     public string ToIdString() => $"{Id}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Pce({ToHumanIdString()})";
@@ -1142,11 +1142,11 @@ public class Piece : Model<Piece>
             isValid = isValid && isValidCenter;
             errors.AddRange(errorsCenter.Select(e => "The center is invalid: " + e));
         }
-        foreach (var quality in Qualities)
+        foreach (var attribute in Attributes)
         {
-            var (isValidQuality, errorsQuality) = quality.Validate();
+            var (isValidQuality, errorsQuality) = attribute.Validate();
             isValid = isValid && isValidQuality;
-            errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
+            errors.AddRange(errorsQuality.Select(e => $"A attribute({attribute.ToHumanIdString()}) is invalid: " + e));
         }
         return (isValid, errors);
     }
@@ -1222,8 +1222,8 @@ public class Connection : Model<Connection>
     public float X { get; set; }
     [NumberProp("⬆️", "Y?", "Y?", "The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.")]
     public float Y { get; set; } = 1;
-    [ModelProp("📏", "Ql*", "Qals*", "The optional qualities of the connection.", PropImportance.OPTIONAL)]
-    public List<Quality> Qualities { get; set; } = new();
+    [ModelProp("📏", "Ql*", "Qals*", "The optional attributes of the connection.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
 
     public string ToIdString() => $"{Connected.Piece.Id + (Connected.Port.Id != "" ? ":" + Connected.Port.Id : "")}--{(Connecting.Port.Id != "" ? Connecting.Port.Id + ":" : "") + Connecting.Piece.Id}";
 
@@ -1247,11 +1247,11 @@ public class Connection : Model<Connection>
             errors.Add("The offset (x,y) must not be the zero vector.");
         }
 
-        foreach (var quality in Qualities)
+        foreach (var attribute in Attributes)
         {
-            var (isValidQuality, errorsQuality) = quality.Validate();
+            var (isValidQuality, errorsQuality) = attribute.Validate();
             isValid = isValid && isValidQuality;
-            errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
+            errors.AddRange(errorsQuality.Select(e => $"A attribute({attribute.ToHumanIdString()}) is invalid: " + e));
         }
 
         return (isValid, errors);
@@ -1286,8 +1286,8 @@ public class Design : Model<Design>
     public List<Connection> Connections { get; set; } = new();
     [ModelProp("👥", "Au*", "Auts*", "The optional authors of the design.", PropImportance.OPTIONAL)]
     public List<Author> Authors { get; set; } = new();
-    [ModelProp("📏", "Ql*", "Qals*", "The optional qualities of the design.", PropImportance.OPTIONAL)]
-    public List<Quality> Qualities { get; set; } = new();
+    [ModelProp("📏", "Ql*", "Qals*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
 
     public string ToIdString() => $"{Name}#{Variant}#{View}";
     public string ToHumanIdString() => $"{Name}" + (Variant.Length == 0 ? "" : $", {Variant}") + (View.Length == 0 ? "" : $", {View}");
@@ -1415,14 +1415,14 @@ public class Design : Model<Design>
                     Y = parent.Center.Y + connection.Y + direction.Y
                 };
                 child.Center = childCenter;
-                var semioQuality = child.Qualities.FirstOrDefault(q => q.Name == "semio.parent");
+                var semioQuality = child.Attributes.FirstOrDefault(q => q.Name == "semio.parent");
                 if (semioQuality != null)
                 {
                     semioQuality.Value = parent.Id;
                 }
                 else
                 {
-                    child.Qualities.Add(new Quality
+                    child.Attributes.Add(new Attribute
                     {
                         Name = "semio.parent",
                         Value = parent.Id
@@ -1732,11 +1732,11 @@ text {
             errors.AddRange(errorsAuthor.Select(e => $"An author({author.ToHumanIdString()}) is invalid: " + e));
         }
 
-        foreach (var quality in Qualities)
+        foreach (var attribute in Attributes)
         {
-            var (isValidQuality, errorsQuality) = quality.Validate();
+            var (isValidQuality, errorsQuality) = attribute.Validate();
             isValid = isValid && isValidQuality;
-            errors.AddRange(errorsQuality.Select(e => $"A quality({quality.ToHumanIdString()}) is invalid: " + e));
+            errors.AddRange(errorsQuality.Select(e => $"A attribute({attribute.ToHumanIdString()}) is invalid: " + e));
         }
 
         var pieceIds = Pieces.Select(p => p.Id);
@@ -1839,8 +1839,8 @@ public class Kit : Model<Kit>
     public List<Type> Types { get; set; } = new();
     [ModelProp("🏙️", "Dn*", "Dsns*", "The optional designs of the kit.", PropImportance.OPTIONAL)]
     public List<Design> Designs { get; set; } = new();
-    [ModelProp("📏", "Ql*", "Qals*", "The optional qualities of the kit.", PropImportance.OPTIONAL)]
-    public List<Quality> Qualities { get; set; } = new();
+    [ModelProp("📏", "Ql*", "Qals*", "The optional attributes of the kit.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
 
     // TODO: Implement reflexive validation for model properties.
     public override (bool, List<string>) Validate()
@@ -1905,11 +1905,11 @@ public class Kit : Model<Kit>
                 errors.Add(message);
             }
         }
-        foreach (var quality in Qualities)
+        foreach (var attribute in Attributes)
         {
-            var (isValidQuality, errorsQuality) = quality.Validate();
+            var (isValidQuality, errorsQuality) = attribute.Validate();
             isValid = isValid && isValidQuality;
-            errors.AddRange(errorsQuality.Select(e => $"A quality ({quality.ToIdString()}) is invalid: " + e));
+            errors.AddRange(errorsQuality.Select(e => $"A attribute ({attribute.ToIdString()}) is invalid: " + e));
         }
 
         return (isValid, errors);

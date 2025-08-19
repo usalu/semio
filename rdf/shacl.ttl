@@ -174,59 +174,59 @@ se:Type
       sh:uniqueLang true ;
     ] ,
     [
-      sh:path se:quality ;
-      sh:name "quality"@en ;
-      sh:description "A quality of the type."@en ;
+      sh:path se:attribute ;
+      sh:name "attribute"@en ;
+      sh:description "A attribute of the type."@en ;
       sh:or (
         [
           sh:class se:DecimalQuality ;
-          sh:name "decimal quality"@en ;
-          sh:description "A decimal quality of the type."@en ;
+          sh:name "decimal attribute"@en ;
+          sh:description "A decimal attribute of the type."@en ;
         ]
         [
           sh:class se:IntegerQuality ;
-          sh:name "integer quality"@en ;
-          sh:description "A integer quality of the type."@en ;
+          sh:name "integer attribute"@en ;
+          sh:description "A integer attribute of the type."@en ;
         ]
         [
           sh:class se:NaturalQuality ;
-          sh:name "natural quality"@en ;
-          sh:description "A natural quality of the type."@en ;
+          sh:name "natural attribute"@en ;
+          sh:description "A natural attribute of the type."@en ;
         ]
         [
           sh:class se:BooleanQuality ;
-          sh:name "boolean quality"@en ;
-          sh:description "A boolean quality of the type."@en ;
+          sh:name "boolean attribute"@en ;
+          sh:description "A boolean attribute of the type."@en ;
         ]
         [
           sh:class se:FuzzyQuality ;
-          sh:name "fuzzy quality"@en ;
-          sh:description "A fuzzy quality of the type."@en ;
+          sh:name "fuzzy attribute"@en ;
+          sh:description "A fuzzy attribute of the type."@en ;
         ]
         [
           sh:class se:ChoiceQuality ;
-          sh:name "choice quality"@en ;
-          sh:description "A choice quality of the type."@en ;
+          sh:name "choice attribute"@en ;
+          sh:description "A choice attribute of the type."@en ;
         ]
         [
           sh:class se:BlobQuality ;
-          sh:name "blob quality"@en ;
-          sh:description "A blob quality of the type."@en ;
+          sh:name "blob attribute"@en ;
+          sh:description "A blob attribute of the type."@en ;
         ]
         [
           sh:class se:PointQuality ;
-          sh:name "point quality"@en ;
-          sh:description "A point quality of the type."@en ;
+          sh:name "point attribute"@en ;
+          sh:description "A point attribute of the type."@en ;
         ]
         [
           sh:class se:VectorQuality ;
-          sh:name "vector quality"@en ;
-          sh:description "A vector quality of the type."@en ;
+          sh:name "vector attribute"@en ;
+          sh:description "A vector attribute of the type."@en ;
         ]
         [
           sh:class se:PlaneQuality ;
-          sh:name "plane quality"@en ;
-          sh:description "A plane quality of the type."@en ;
+          sh:name "plane attribute"@en ;
+          sh:description "A plane attribute of the type."@en ;
         ]
       )
     ] ,
@@ -253,59 +253,59 @@ se:Port
       sh:class se:Plane ;
     ] ,
     [
-      sh:path se:quality ;
-      sh:name "quality"@en ;
-      sh:description "A quality for the port."@en ;
+      sh:path se:attribute ;
+      sh:name "attribute"@en ;
+      sh:description "A attribute for the port."@en ;
       sh:or (
         [
           sh:class se:DecimalQuality ;
-          sh:name "decimal quality"@en ;
-          sh:description "A decimal quality of the port."@en ;
+          sh:name "decimal attribute"@en ;
+          sh:description "A decimal attribute of the port."@en ;
         ]
         [
           sh:class se:IntegerQuality ;
-          sh:name "integer quality"@en ;
-          sh:description "A integer quality of the port."@en ;
+          sh:name "integer attribute"@en ;
+          sh:description "A integer attribute of the port."@en ;
         ]
         [
           sh:class se:NaturalQuality ;
-          sh:name "natural quality"@en ;
-          sh:description "A natural quality of the port."@en ;
+          sh:name "natural attribute"@en ;
+          sh:description "A natural attribute of the port."@en ;
         ]
         [
           sh:class se:BooleanQuality ;
-          sh:name "boolean quality"@en ;
-          sh:description "A boolean quality of the port."@en ;
+          sh:name "boolean attribute"@en ;
+          sh:description "A boolean attribute of the port."@en ;
         ]
         [
           sh:class se:FuzzyQuality ;
-          sh:name "fuzzy quality"@en ;
-          sh:description "A fuzzy quality of the port."@en ;
+          sh:name "fuzzy attribute"@en ;
+          sh:description "A fuzzy attribute of the port."@en ;
         ]
         [
           sh:class se:ChoiceQuality ;
-          sh:name "choice quality"@en ;
-          sh:description "A choice quality of the port."@en ;
+          sh:name "choice attribute"@en ;
+          sh:description "A choice attribute of the port."@en ;
         ]
         [
           sh:class se:BlobQuality ;
-          sh:name "blob quality"@en ;
-          sh:description "A blob quality of the port."@en ;
+          sh:name "blob attribute"@en ;
+          sh:description "A blob attribute of the port."@en ;
         ]
         [
           sh:class se:PointQuality ;
-          sh:name "point quality"@en ;
-          sh:description "A point quality of the port."@en ;
+          sh:name "point attribute"@en ;
+          sh:description "A point attribute of the port."@en ;
         ]
         [
           sh:class se:VectorQuality ;
-          sh:name "vector quality"@en ;
-          sh:description "A vector quality of the port."@en ;
+          sh:name "vector attribute"@en ;
+          sh:description "A vector attribute of the port."@en ;
         ]
         [
           sh:class se:PlaneQuality ;
-          sh:name "plane quality"@en ;
-          sh:description "A plane quality of the port."@en ;
+          sh:name "plane attribute"@en ;
+          sh:description "A plane attribute of the port."@en ;
         ]
       )
     ] ;
@@ -313,13 +313,13 @@ se:Port
 se:DecimalQuality
   a sh:NodeShape ;
   sh:targetClass se:DecimalQuality ;
-  sh:name "decimal (number) quality"@en ;
-  sh:description "A decimal (number) quality is a quality with a real number (floating point arithmetic and double precision) value."@en ;
+  sh:name "decimal (number) attribute"@en ;
+  sh:description "A decimal (number) attribute is a attribute with a real number (floating point arithmetic and double precision) value."@en ;
   sh:property
     [
       sh:path se:name ;
       sh:name "name"@en ;
-      sh:description "The name of the decimal (number) quality."@en ;
+      sh:description "The name of the decimal (number) attribute."@en ;
       sh:minCount 1 ;
       sh:datatype rdf:langString ;
       sh:uniqueLang true ;
@@ -327,7 +327,7 @@ se:DecimalQuality
     [
       sh:path se:value ;
       sh:name "decimal (number) value"@en ;
-      sh:description "The decimal (number) value of the decimal (number) quality."@en ;
+      sh:description "The decimal (number) value of the decimal (number) attribute."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:double ; 
@@ -335,27 +335,27 @@ se:DecimalQuality
     [
       sh:path se:unit ;
       sh:name "unit"@en ;
-      sh:description "The unit of the decimal (number) quality."@en ;
+      sh:description "The unit of the decimal (number) attribute."@en ;
       sh:maxCount 1 ;
       sh:datatype xsd:string ; 
     ] ,
     [
       sh:path se:context ;
       se:name "context"@en ;
-      se:description "A context of the decimal (number) quality."@en ;
+      se:description "A context of the decimal (number) attribute."@en ;
       sh:class se:Context ;
     ] ;
 .
 se:IntegerQuality
   a sh:NodeShape ;
   sh:targetClass se:IntegerQuality ;
-  sh:name "integer (number) quality"@en ;
-  sh:description "An integer (number) quality is a quality with a whole number (without decimals) value."@en ;
+  sh:name "integer (number) attribute"@en ;
+  sh:description "An integer (number) attribute is a attribute with a whole number (without decimals) value."@en ;
   sh:property
     [
       sh:path se:name ;
       sh:name "name"@en ;
-      sh:description "The name of the integer (number) quality."@en ;
+      sh:description "The name of the integer (number) attribute."@en ;
       sh:minCount 1 ;
       sh:datatype rdf:langString ;
       sh:uniqueLang true ;
@@ -363,7 +363,7 @@ se:IntegerQuality
     [
       sh:path se:value ;
       sh:name "integer (number) value"@en ;
-      sh:description "The integer (number) value of the integer (number) quality."@en ;
+      sh:description "The integer (number) value of the integer (number) attribute."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:integer ;
@@ -371,20 +371,20 @@ se:IntegerQuality
     [
       sh:path se:context ;
       se:name "context"@en ;
-      se:description "A context of the integer (number) quality."@en ;
+      se:description "A context of the integer (number) attribute."@en ;
       sh:class se:Context ;
     ] ;
 .
 se:NaturalQuality
   a sh:NodeShape ;
   sh:targetClass se:NaturalQuality ;
-  sh:name "natural (number) quality"@en ;
-  sh:description "A natural (number) quality is a quality with a positive (=not zero or negative) integer (=no decimals) number value."@en ;
+  sh:name "natural (number) attribute"@en ;
+  sh:description "A natural (number) attribute is a attribute with a positive (=not zero or negative) integer (=no decimals) number value."@en ;
   sh:property
     [
       sh:path se:name ;
       sh:name "name"@en ;
-      sh:description "The name of the natural (number) quality."@en ;
+      sh:description "The name of the natural (number) attribute."@en ;
       sh:minCount 1 ;
       sh:datatype rdf:langString ;
       sh:uniqueLang true ;
@@ -392,7 +392,7 @@ se:NaturalQuality
     [
       sh:path se:value ;
       sh:name "natural (number) value"@en ;
-      sh:description "The natural (number) value of the natural (number) quality."@en ;
+      sh:description "The natural (number) value of the natural (number) attribute."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:positiveInteger ; 
@@ -400,20 +400,20 @@ se:NaturalQuality
     [
       sh:path se:context ;
       se:name "context"@en ;
-      se:description "A context of the natural (number) quality."@en ;
+      se:description "A context of the natural (number) attribute."@en ;
       sh:class se:Context ;
     ] ;
 .
 se:BooleanQuality
   a sh:NodeShape ;
   sh:targetClass se:BooleanQuality ;
-  sh:name "boolean quality"@en ;
-  sh:description "A boolean quality is quality with a boolean (either true or false) value."@en ;
+  sh:name "boolean attribute"@en ;
+  sh:description "A boolean attribute is attribute with a boolean (either true or false) value."@en ;
   sh:property
     [
       sh:path se:name ;
       sh:name "name"@en ;
-      sh:description "The name of the boolean quality."@en ;
+      sh:description "The name of the boolean attribute."@en ;
       sh:minCount 1 ;
       sh:datatype rdf:langString ;
       sh:uniqueLang true ;
@@ -421,7 +421,7 @@ se:BooleanQuality
     [
       sh:path se:value ;
       sh:name "boolean value"@en ;
-      sh:description "The boolean value of the boolean quality."@en ;
+      sh:description "The boolean value of the boolean attribute."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:boolean ;
@@ -429,20 +429,20 @@ se:BooleanQuality
     [
       sh:path se:context ;
       se:name "context"@en ;
-      se:description "A context of the boolean quality."@en ;
+      se:description "A context of the boolean attribute."@en ;
       sh:class se:Context ;
     ] ;
 .
 se:FuzzyQuality
   a sh:NodeShape ;
   sh:targetClass se:FuzzyQuality ;
-  sh:name "fuzzy (logic) quality"@en ;
-  sh:description "A fuzzy (logic) quality is a quality with a fuzzy (real number between 0 and 1, inclusive) value."@en ;
+  sh:name "fuzzy (logic) attribute"@en ;
+  sh:description "A fuzzy (logic) attribute is a attribute with a fuzzy (real number between 0 and 1, inclusive) value."@en ;
   sh:property
     [
       sh:path se:name ;
       sh:name "name"@en ;
-      sh:description "The name of the fuzzy (logic) quality."@en ;
+      sh:description "The name of the fuzzy (logic) attribute."@en ;
       sh:minCount 1 ;
       sh:datatype rdf:langString ;
       sh:uniqueLang true ;
@@ -450,7 +450,7 @@ se:FuzzyQuality
     [
       sh:path se:value ;
       sh:name "fuzzy (logic) value"@en ;
-      sh:description "The fuzzy (logic) value of the fuzzy (logic) quality."@en ;
+      sh:description "The fuzzy (logic) value of the fuzzy (logic) attribute."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype xsd:double ;
@@ -460,20 +460,20 @@ se:FuzzyQuality
     [
       sh:path se:context ;
       se:name "context"@en ;
-      se:description "A context of the fuzzy quality."@en ;
+      se:description "A context of the fuzzy attribute."@en ;
       sh:class se:Context ;
     ] ;
 .
 se:ChoiceQuality
   a sh:NodeShape ;
   sh:targetClass se:ChoiceQuality ;
-  sh:name "choice quality"@en ;
-  sh:description "A choice quality is a quality with a textual value which represents one choice from a known finite amount of possible choises."@en ;
+  sh:name "choice attribute"@en ;
+  sh:description "A choice attribute is a attribute with a textual value which represents one choice from a known finite amount of possible choises."@en ;
   sh:property
     [
       sh:path se:name ;
       sh:name "name"@en ;
-      sh:description "The name of the choice quality."@en ;
+      sh:description "The name of the choice attribute."@en ;
       sh:datatype rdf:langString ;
       sh:minCount 1 ;
       sh:uniqueLang true ;
@@ -481,7 +481,7 @@ se:ChoiceQuality
     [
       sh:path se:value ;
       sh:name "choice value"@en ;
-      sh:description "The choice value of the choice quality."@en ;
+      sh:description "The choice value of the choice attribute."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:datatype rdf:langString ;
@@ -491,20 +491,20 @@ se:ChoiceQuality
     [
       sh:path se:context ;
       se:name "context"@en ;
-      se:description "A context of the choice quality."@en ;
+      se:description "A context of the choice attribute."@en ;
       sh:class se:Context ;
     ] ;
 .
 se:BlobQuality
   a sh:NodeShape ;
   sh:targetClass se:BlobQuality ;
-  sh:name "blob quality"@en ;
-  sh:description "A binary large object (blob) quality is a quality with a blob value."@en ;
+  sh:name "blob attribute"@en ;
+  sh:description "A binary large object (blob) attribute is a attribute with a blob value."@en ;
   sh:property
     [
       sh:path se:name ;
       sh:name "name"@en ;
-      sh:description "The name of the blob quality."@en ;
+      sh:description "The name of the blob attribute."@en ;
       sh:datatype rdf:langString ;
       sh:minCount 1 ;
       sh:uniqueLang true ;
@@ -512,7 +512,7 @@ se:BlobQuality
     [
       sh:path se:value ;
       se:name "blob value"@en ;
-      se:description "The blob value of the blob quality."@en ;
+      se:description "The blob value of the blob attribute."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:class se:Blob ;
@@ -520,7 +520,7 @@ se:BlobQuality
     [
       sh:path se:context ;
       se:name "context"@en ;
-      se:description "A context of the blob quality."@en ;
+      se:description "A context of the blob attribute."@en ;
       sh:class se:Context ;
     ] ;
 .
@@ -552,7 +552,7 @@ se:Blob
     [
       sh:path se:encoding ;
       sh:name "encoding"@en ;
-      sh:description "The encoding format of the blob quality."@en ;
+      sh:description "The encoding format of the blob attribute."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:in (
@@ -566,7 +566,7 @@ se:Blob
     [
       sh:path se:dataFormat ;
       sh:name "data format"@en ;
-      sh:description "The data format of the blob quality."@en ;
+      sh:description "The data format of the blob attribute."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:in (
@@ -581,7 +581,7 @@ se:Blob
     [
       sh:path se:schema ;
       sh:name "schema"@en ;
-      sh:description "The schema of the blob quality."@en ;
+      sh:description "The schema of the blob attribute."@en ;
       sh:nodeKind sh:IRI ; 
       sh:minCount 1 ;
       sh:maxCount 1 ;
@@ -590,13 +590,13 @@ se:Blob
 se:PlaneQuality
   a sh:NodeShape ;
   sh:targetClass se:PlaneQuality ;
-  sh:name "plane quality"@en ;
-  sh:description "A plane quality is a quality with a plane (3d reference frame) value."@en ;
+  sh:name "plane attribute"@en ;
+  sh:description "A plane attribute is a attribute with a plane (3d reference frame) value."@en ;
   sh:property
     [
       sh:path se:name ;
       sh:name "name"@en ;
-      sh:description "The name of the plane quality."@en ;
+      sh:description "The name of the plane attribute."@en ;
       sh:datatype rdf:langString ;
       sh:minCount 1 ;
       sh:uniqueLang true ;
@@ -604,7 +604,7 @@ se:PlaneQuality
     [
       sh:path se:value ;
       se:name "plane value"@en ;
-      se:description "The plane value of the plane quality."@en ;
+      se:description "The plane value of the plane attribute."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:class se:Plane ;
@@ -612,7 +612,7 @@ se:PlaneQuality
     [
       sh:path se:context ;
       se:name "context"@en ;
-      se:description "A context of the plane quality."@en ;
+      se:description "A context of the plane attribute."@en ;
       sh:class se:Context ;
     ] ;
 .
@@ -651,13 +651,13 @@ se:Plane
 se:VectorQuality
   a sh:NodeShape ;
   sh:targetClass se:VectorQuality ;
-  sh:name "vector quality"@en ;
-  sh:description "A vector quality has a vector as a value."@en ;
+  sh:name "vector attribute"@en ;
+  sh:description "A vector attribute has a vector as a value."@en ;
   sh:property
     [
       sh:path se:name ;
       sh:name "name"@en ;
-      sh:description "The name of the vector quality."@en ;
+      sh:description "The name of the vector attribute."@en ;
       sh:datatype rdf:langString ;
       sh:minCount 1 ;
       sh:uniqueLang true ;
@@ -665,7 +665,7 @@ se:VectorQuality
     [
       sh:path se:value ;
       sh:name "vector value"@en ;
-      sh:description "The vector value of the vector quality."@en ;
+      sh:description "The vector value of the vector attribute."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:class se:Vector ; 
@@ -673,7 +673,7 @@ se:VectorQuality
     [
       sh:path se:context ;
       se:name "context"@en ;
-      se:description "A context of the vector quality."@en ;
+      se:description "A context of the vector attribute."@en ;
       sh:class se:Context ;
     ] ;
 .
@@ -711,13 +711,13 @@ se:Vector
 se:PointQuality
   a sh:NodeShape ;
   sh:targetClass se:PointQuality ;
-  sh:name "point quality"@en ;
-  sh:description "A point quality has a point as a value."@en ;
+  sh:name "point attribute"@en ;
+  sh:description "A point attribute has a point as a value."@en ;
   sh:property
     [
       sh:path se:name ;
       sh:name "name"@en ;
-      sh:description "The name of the point quality."@en ;
+      sh:description "The name of the point attribute."@en ;
       sh:datatype rdf:langString ;
       sh:minCount 1 ;
       sh:uniqueLang true ;
@@ -725,7 +725,7 @@ se:PointQuality
     [
       sh:path se:value ;
       sh:name "point value"@en ;
-      sh:description "The point value of the point quality."@en ;
+      sh:description "The point value of the point attribute."@en ;
       sh:minCount 1 ;
       sh:maxCount 1 ;
       sh:class se:Point ; 
@@ -733,7 +733,7 @@ se:PointQuality
     [
       sh:path se:context ;
       se:name "context"@en ;
-      se:description "A context of the point quality."@en ;
+      se:description "A context of the point attribute."@en ;
       sh:class se:Context ;
     ] ;
 .
@@ -873,53 +873,53 @@ se:InitializeKitCommand
 #       sh:or (
 #         [
 #           sh:class se:DecimalQuality ;
-#           sh:name "decimal quality parameter"@en ;
-#           sh:description "A decimal quality of the transdesign."@en ;
+#           sh:name "decimal attribute parameter"@en ;
+#           sh:description "A decimal attribute of the transdesign."@en ;
 #         ]
 #         [
 #           sh:class se:IntegerQuality ;
-#           sh:name "integer quality parameter"@en ;
-#           sh:description "A integer quality parameter of the transdesign."@en ;
+#           sh:name "integer attribute parameter"@en ;
+#           sh:description "A integer attribute parameter of the transdesign."@en ;
 #         ]
 #         [
 #           sh:class se:NaturalQuality ;
-#           sh:name "natural quality parameter"@en ;
-#           sh:description "A natural quality parameter of the transdesign."@en ;
+#           sh:name "natural attribute parameter"@en ;
+#           sh:description "A natural attribute parameter of the transdesign."@en ;
 #         ]
 #         [
 #           sh:class se:BooleanQuality ;
-#           sh:name "boolean quality parameter"@en ;
-#           sh:description "A boolean quality parameter of the transdesign."@en ;
+#           sh:name "boolean attribute parameter"@en ;
+#           sh:description "A boolean attribute parameter of the transdesign."@en ;
 #         ]
 #         [
 #           sh:class se:FuzzyQuality ;
-#           sh:name "fuzzy quality parameter"@en ;
-#           sh:description "A fuzzy quality parameter of the transdesign."@en ;
+#           sh:name "fuzzy attribute parameter"@en ;
+#           sh:description "A fuzzy attribute parameter of the transdesign."@en ;
 #         ]
 #         [
 #           sh:class se:ChoiceQuality ;
-#           sh:name "choice quality parameter"@en ;
-#           sh:description "A choice quality parameter of the transdesign."@en ;
+#           sh:name "choice attribute parameter"@en ;
+#           sh:description "A choice attribute parameter of the transdesign."@en ;
 #         ]
 #         [
 #           sh:class se:BlobQuality ;
-#           sh:name "blob quality parameter"@en ;
-#           sh:description "A blob quality parameter of the transdesign."@en ;
+#           sh:name "blob attribute parameter"@en ;
+#           sh:description "A blob attribute parameter of the transdesign."@en ;
 #         ]
 #         [
 #           sh:class se:PointQuality ;
-#           sh:name "point quality parameter"@en ;
-#           sh:description "A point quality parameter of the transdesign."@en ;
+#           sh:name "point attribute parameter"@en ;
+#           sh:description "A point attribute parameter of the transdesign."@en ;
 #         ]
 #         [
 #           sh:class se:VectorQuality ;
-#           sh:name "vector quality parameter"@en ;
-#           sh:description "A vector quality parameter of the transdesign."@en ;
+#           sh:name "vector attribute parameter"@en ;
+#           sh:description "A vector attribute parameter of the transdesign."@en ;
 #         ]
 #         [
 #           sh:class se:PlaneQuality ;
-#           sh:name "plane quality parameter"@en ;
-#           sh:description "A plane quality parameter of the transdesign."@en ;
+#           sh:name "plane attribute parameter"@en ;
+#           sh:description "A plane attribute parameter of the transdesign."@en ;
 #         ]
 #       )
 #     ] ;

@@ -12,38 +12,57 @@
     {
       "url": "representations/capsule_s.glb",
       "description": "",
-      "tags": ["model/gltf-binary"],
-      "qualities": []
+      "tags": [
+        "model/gltf-binary"
+      ],
+      "attributes": []
     },
     {
       "url": "representations/capsule_s_1to500.3dm",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to500"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm",
+        "1to500"
+      ],
+      "attributes": []
     },
     {
       "url": "representations/capsule_s_1to200.3dm",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to200"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm",
+        "1to200"
+      ],
+      "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/0da1e26dff",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to500", "model/vnd.speckle+json"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm",
+        "1to500",
+        "model/vnd.speckle+json"
+      ],
+      "attributes": []
     },
     {
       "url": "https://app.speckle.systems/projects/e7de1a2f8f/models/a3b1c730a1",
       "description": "",
-      "tags": ["model/vnd.3dm", "1to200", "model/vnd.speckle+json"],
-      "qualities": []
+      "tags": [
+        "model/vnd.3dm",
+        "1to200",
+        "model/vnd.speckle+json"
+      ],
+      "attributes": []
     },
     {
       "url": "representations/capsule_s_collider.glb",
       "description": "",
-      "tags": ["model/gltf-binary", "collider"],
-      "qualities": []
+      "tags": [
+        "model/gltf-binary",
+        "collider"
+      ],
+      "attributes": []
     }
   ],
   "ports": [
@@ -52,17 +71,49 @@
       "description": "The middle of the main entrance door of the upper entrance floor.",
       "mandatory": false,
       "family": "door capsule east",
-      "compatibleFamilies": ["door tambour west"],
-      "point": { "x": -1.3, "y": -1.25, "z": 0.0 },
-      "direction": { "x": -1.0, "y": 0.0, "z": 0.0 },
+      "compatibleFamilies": [
+        "door tambour west"
+      ],
+      "point": {
+        "x": -1.3,
+        "y": -1.25,
+        "z": 0.0
+      },
+      "direction": {
+        "x": -1.0,
+        "y": 0.0,
+        "z": 0.0
+      },
       "t": 0.0,
-      "qualities": [{ "name": "entrance", "value": "", "unit": "", "definition": "" }]
+      "attributes": [
+        {
+          "name": "entrance",
+          "value": "",
+          "unit": "",
+          "definition": ""
+        }
+      ]
     }
   ],
-  "authors": [{ "name": "Ueli Saluz", "email": "ueli@semio-tech.org" }],
-  "qualities": [
-    { "name": "entrance", "value": "side", "unit": "", "definition": "" },
-    { "name": "view", "value": "side", "unit": "", "definition": "" },
+  "authors": [
+    {
+      "name": "Ueli Saluz",
+      "email": "ueli@semio-tech.org"
+    }
+  ],
+  "attributes": [
+    {
+      "name": "entrance",
+      "value": "side",
+      "unit": "",
+      "definition": ""
+    },
+    {
+      "name": "view",
+      "value": "side",
+      "unit": "",
+      "definition": ""
+    },
     {
       "name": "length",
       "value": "4.2",
@@ -81,7 +132,12 @@
       "unit": "m",
       "definition": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height"
     },
-    { "name": "window shape", "value": "round", "unit": "", "definition": "" },
+    {
+      "name": "window shape",
+      "value": "round",
+      "unit": "",
+      "definition": ""
+    },
     {
       "name": "effective floor area",
       "value": "8.74",
@@ -112,7 +168,12 @@
       "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
-    { "name": "income", "value": "13104", "unit": "€/a", "definition": "" },
+    {
+      "name": "income",
+      "value": "13104",
+      "unit": "€/a",
+      "definition": ""
+    },
     {
       "name": "maintenance expenses",
       "value": "1048",

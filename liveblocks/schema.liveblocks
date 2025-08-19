@@ -47,7 +47,7 @@ type Design {
     # 📛 The name of the design.
     name: string;
     pieces?: Piece[];
-    qualities?: Quality[];
+    attributes?: Attribute[];
     # 📏 The unit of the design.
     unit?: string;
     # 🔀 The optional variant of the design. No variant means the default variant.
@@ -160,15 +160,15 @@ type TypeId {
     variant?: string;
 }
 
-# ↗️ The output of a quality.
-type Quality {
-    # 📏 The optional definition [ text | url ] of the quality.
+# ↗️ The output of a attribute.
+type Attribute {
+    # 📏 The optional definition [ text | url ] of the attribute.
     definition?: string;
-    # 📏 The name of the quality.
+    # 📏 The name of the attribute.
     name: string;
-    # 📏 The optional unit of the value of the quality.
+    # 📏 The optional unit of the value of the attribute.
     unit?: string;
-    # 📏 The optional value [ text | url ] of the quality. No value is equivalent to true for the name.
+    # 📏 The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.
     value?: string;
 }
 
@@ -188,7 +188,7 @@ type Type {
     # 📛 The name of the type.
     name: string;
     ports?: Port[];
-    qualities?: Quality[];
+    attributes?: Attribute[];
     representations?: Representation[];
     # Ⓜ️ The length unit of the point and the direction of the ports of the type.
     unit?: string;

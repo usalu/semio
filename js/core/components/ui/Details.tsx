@@ -223,9 +223,9 @@ const DesignSection: FC = () => {
           ]}
         ></TreeSection>
       )}
-      {design.qualities && design.qualities.length > 0 ? (
+      {design.attributes && design.attributes.length > 0 ? (
         <TreeSection
-          label="Qualities"
+          label="Attributes"
           actions={[
             {
               icon: <Plus size={12} />,
@@ -233,42 +233,42 @@ const DesignSection: FC = () => {
                 startTransaction();
                 handleChange({
                   ...design,
-                  qualities: [...(design.qualities || []), { name: "" }],
+                  attributes: [...(design.attributes || []), { name: "" }],
                 });
                 finalizeTransaction();
               },
-              title: "Add quality",
+              title: "Add attribute",
             },
           ]}
         >
           <SortableTreeItems
-            items={design.qualities.map((quality: any, index: number) => ({
-              ...quality,
-              id: `quality-${index}`,
+            items={design.attributes.map((attribute: any, index: number) => ({
+              ...attribute,
+              id: `attribute-${index}`,
               index,
             }))}
             onReorder={(oldIndex, newIndex) => {
               startTransaction();
               handleChange({
                 ...design,
-                qualities: arrayMove(design.qualities!, oldIndex, newIndex),
+                attributes: arrayMove(design.attributes!, oldIndex, newIndex),
               });
               finalizeTransaction();
             }}
           >
-            {(quality, index) => (
-              <TreeItem key={`quality-${index}`} label={quality.name || `Quality ${index + 1}`} sortable={true} sortableId={`quality-${index}`} isDragHandle={true}>
+            {(attribute, index) => (
+              <TreeItem key={`attribute-${index}`} label={attribute.name || `Attribute ${index + 1}`} sortable={true} sortableId={`attribute-${index}`} isDragHandle={true}>
                 <TreeItem>
                   <Input
                     label="Name"
-                    value={quality.name}
+                    value={attribute.name}
                     onChange={(e) => {
-                      const updatedQualities = [...(design.qualities || [])];
+                      const updatedQualities = [...(design.attributes || [])];
                       updatedQualities[index] = {
-                        ...quality,
+                        ...attribute,
                         name: e.target.value,
                       };
-                      handleChange({ ...design, qualities: updatedQualities });
+                      handleChange({ ...design, attributes: updatedQualities });
                     }}
                     onFocus={startTransaction}
                     onBlur={finalizeTransaction}
@@ -277,15 +277,15 @@ const DesignSection: FC = () => {
                 <TreeItem>
                   <Input
                     label="Value"
-                    value={quality.value || ""}
+                    value={attribute.value || ""}
                     placeholder="Optional value"
                     onChange={(e) => {
-                      const updatedQualities = [...(design.qualities || [])];
+                      const updatedQualities = [...(design.attributes || [])];
                       updatedQualities[index] = {
-                        ...quality,
+                        ...attribute,
                         value: e.target.value,
                       };
-                      handleChange({ ...design, qualities: updatedQualities });
+                      handleChange({ ...design, attributes: updatedQualities });
                     }}
                     onFocus={startTransaction}
                     onBlur={finalizeTransaction}
@@ -294,15 +294,15 @@ const DesignSection: FC = () => {
                 <TreeItem>
                   <Input
                     label="Unit"
-                    value={quality.unit || ""}
+                    value={attribute.unit || ""}
                     placeholder="Optional unit"
                     onChange={(e) => {
-                      const updatedQualities = [...(design.qualities || [])];
+                      const updatedQualities = [...(design.attributes || [])];
                       updatedQualities[index] = {
-                        ...quality,
+                        ...attribute,
                         unit: e.target.value,
                       };
-                      handleChange({ ...design, qualities: updatedQualities });
+                      handleChange({ ...design, attributes: updatedQualities });
                     }}
                     onFocus={startTransaction}
                     onBlur={finalizeTransaction}
@@ -311,15 +311,15 @@ const DesignSection: FC = () => {
                 <TreeItem>
                   <Input
                     label="Definition"
-                    value={quality.definition || ""}
+                    value={attribute.definition || ""}
                     placeholder="Optional definition (text or URL)"
                     onChange={(e) => {
-                      const updatedQualities = [...(design.qualities || [])];
+                      const updatedQualities = [...(design.attributes || [])];
                       updatedQualities[index] = {
-                        ...quality,
+                        ...attribute,
                         definition: e.target.value,
                       };
-                      handleChange({ ...design, qualities: updatedQualities });
+                      handleChange({ ...design, attributes: updatedQualities });
                     }}
                     onFocus={startTransaction}
                     onBlur={finalizeTransaction}
@@ -331,12 +331,12 @@ const DesignSection: FC = () => {
                       startTransaction();
                       handleChange({
                         ...design,
-                        qualities: design.qualities?.filter((_: any, i: number) => i !== index),
+                        attributes: design.attributes?.filter((_: any, i: number) => i !== index),
                       });
                       finalizeTransaction();
                     }}
                     className="text-destructive hover:text-destructive/80 p-1"
-                    title="Remove quality"
+                    title="Remove attribute"
                   >
                     <Trash2 size={12} />
                   </button>
@@ -347,7 +347,7 @@ const DesignSection: FC = () => {
         </TreeSection>
       ) : (
         <TreeSection
-          label="Qualities"
+          label="Attributes"
           actions={[
             {
               icon: <Plus size={12} />,
@@ -355,11 +355,11 @@ const DesignSection: FC = () => {
                 startTransaction();
                 handleChange({
                   ...design,
-                  qualities: [...(design.qualities || []), { name: "" }],
+                  attributes: [...(design.attributes || []), { name: "" }],
                 });
                 finalizeTransaction();
               },
-              title: "Add quality",
+              title: "Add attribute",
             },
           ]}
         ></TreeSection>
@@ -1315,10 +1315,10 @@ const PortSection: FC<{ pieceId: PieceId; portId: PortId }> = ({ pieceId, portId
             <Input label="Compatible Families" value={family} disabled />
           </TreeItem>
         ))}
-      {port.qualities &&
-        port.qualities.map((quality: any) => (
+      {port.attributes &&
+        port.attributes.map((attribute: any) => (
           <TreeItem>
-            <Input label="Qualities" value={`${quality.name}: ${quality.value || "N/A"} ${quality.unit && `(${quality.unit})`}`} disabled />
+            <Input label="Attributes" value={`${attribute.name}: ${attribute.value || "N/A"} ${attribute.unit && `(${attribute.unit})`}`} disabled />
           </TreeItem>
         ))}
     </TreeSection>

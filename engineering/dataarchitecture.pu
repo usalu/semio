@@ -7,7 +7,7 @@ entity Semio {
     *created : datetime
 }
 
-entity Quality {
+entity Attribute {
     *pk : int <<PK,generated>>
     *name : string
     *value : string
@@ -22,7 +22,7 @@ entity Quality {
     designPk : int <<FK>>
     kitPk : int <<FK>>
 }
-note bottom of Quality
+note bottom of Attribute
     value, definition can be empty
     empty value means true
     one of portPk, typePk, piecePk, connectionPk, designPk, kitPk must be set
@@ -206,28 +206,28 @@ end note
 
 Kit ||--o{ Type
 Kit ||--o{ Design
-Kit ||--o{ Quality
+Kit ||--o{ Attribute
 
 Design ||--o{ Piece
 Design ||--o{ Connection
 Design ||--o{ Author
-Design ||--o{ Quality
+Design ||--o{ Attribute
 
 Type ||--o{ Representation
 Type ||--o{ Port
 Type ||--o{ Author
-Type ||--o{ Quality
+Type ||--o{ Attribute
 
 Piece ||--o{ Plane
-Piece ||--o{ Quality
+Piece ||--o{ Attribute
 
-Connection ||--o{ Quality
+Connection ||--o{ Attribute
 
 Representation ||--o{ Tag
-Representation ||--o{ Quality
+Representation ||--o{ Attribute
 
 Port ||--o{ CompatibleFamily
-Port ||--o{ Quality
+Port ||--o{ Attribute
 
 Connection -- Piece : "connected"
 Connection -- Piece : "connecting"

@@ -24,6 +24,7 @@ import { v4 as uuidv4 } from "uuid";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 import {
+  Attribute,
   Author,
   Camera,
   Connection,
@@ -47,7 +48,6 @@ import {
   PortDiff,
   PortId,
   portIdLikeToPortId,
-  Quality,
   Representation,
   RepresentationDiff,
   RepresentationId,
@@ -659,24 +659,24 @@ type YSketchpadKeysMap = {
 const getSketchpadStore = <K extends keyof YSketchpadKeysMap>(m: YSketchpad, k: K): YSketchpadKeysMap[K] => m.get(k as string) as YSketchpadKeysMap[K];
 
 // Helper functions for Yjs type conversion
-function createQuality(quality: Quality): YQuality {
+function createQuality(attribute: Attribute): YQuality {
   const yMap = new Y.Map<string>();
-  yMap.set("name", quality.name);
-  if (quality.value !== undefined) yMap.set("value", quality.value);
-  if (quality.unit !== undefined) yMap.set("unit", quality.unit);
-  if (quality.definition !== undefined) yMap.set("definition", quality.definition);
+  yMap.set("name", attribute.name);
+  if (attribute.value !== undefined) yMap.set("value", attribute.value);
+  if (attribute.unit !== undefined) yMap.set("unit", attribute.unit);
+  if (attribute.definition !== undefined) yMap.set("definition", attribute.definition);
   return yMap;
 }
 
-function createQualities(qualities: Quality[] | undefined): YQualities {
+function createQualities(attributes: Attribute[] | undefined): YQualities {
   const yArr = new Y.Array<YQuality>();
-  (qualities || []).forEach((q) => yArr.push([createQuality(q)]));
+  (attributes || []).forEach((q) => yArr.push([createQuality(q)]));
   return yArr;
 }
 
-function getQualities(yArr: YQualities | undefined): Quality[] {
+function getQualities(yArr: YQualities | undefined): Attribute[] {
   if (!yArr) return [];
-  const list: Quality[] = [];
+  const list: Attribute[] = [];
   yArr.forEach((yMap: YQuality) => {
     list.push({
       name: yMap.get("name") as string,
@@ -722,7 +722,7 @@ class YRepresentationStore implements RepresentationStoreFull {
     const yTags = new Y.Array<string>();
     this.yRepresentation.set("tags", yTags);
     (representation.tags || []).forEach((t) => yTags.push([t]));
-    this.yRepresentation.set("qualities", createQualities(representation.qualities));
+    this.yRepresentation.set("attributes", createQualities(representation.attributes));
   }
 
   get representation(): Representation {
@@ -731,7 +731,7 @@ class YRepresentationStore implements RepresentationStoreFull {
       url: this.yRepresentation.get("url") as string,
       description: (this.yRepresentation.get("description") as string) || "",
       tags: yTags ? yTags.toArray() : [],
-      qualities: getQualities(this.yRepresentation.get("qualities") as YQualities),
+      attributes: getQualities(this.yRepresentation.get("attributes") as YQualities),
     };
   }
 
@@ -746,10 +746,10 @@ class YRepresentationStore implements RepresentationStoreFull {
         yTags.delete(0, yTags.length);
         diff.tags.forEach((tag) => yTags.push([tag]));
       }
-      if (diff.qualities !== undefined) {
-        const yQualities = this.yRepresentation.get("qualities") as YQualities;
+      if (diff.attributes !== undefined) {
+        const yQualities = this.yRepresentation.get("attributes") as YQualities;
         yQualities.delete(0, yQualities.length);
-        diff.qualities.forEach((q) => yQualities.push([createQuality(q)]));
+        diff.attributes.forEach((q) => yQualities.push([createQuality(q)]));
       }
     },
   };
@@ -797,8 +797,8 @@ class YPortStore implements PortStoreFull {
     yDirection.set("z", port.direction.z);
     this.yPort.set("direction", yDirection);
     const yQualities = new Y.Array<YQuality>();
-    this.yPort.set("qualities", yQualities);
-    (port.qualities || []).forEach((q) => yQualities.push([createQuality(q)]));
+    this.yPort.set("attributes", yQualities);
+    (port.attributes || []).forEach((q) => yQualities.push([createQuality(q)]));
   }
 
   get port(): Port {
@@ -823,7 +823,7 @@ class YPortStore implements PortStoreFull {
         z: yDirection.get("z") as number,
       },
       t: this.yPort.get("t") as number,
-      qualities: getQualities(this.yPort.get("qualities") as YQualities),
+      attributes: getQualities(this.yPort.get("attributes") as YQualities),
     };
   }
 
@@ -853,10 +853,10 @@ class YPortStore implements PortStoreFull {
         if (diff.direction.y !== undefined) yDirection.set("y", diff.direction.y);
         if (diff.direction.z !== undefined) yDirection.set("z", diff.direction.z);
       }
-      if (diff.qualities !== undefined) {
-        const yQualities = this.yPort.get("qualities") as YQualities;
+      if (diff.attributes !== undefined) {
+        const yQualities = this.yPort.get("attributes") as YQualities;
         yQualities.delete(0, yQualities.length);
-        createQualities(diff.qualities).forEach((q) => yQualities.push([q]));
+        createQualities(diff.attributes).forEach((q) => yQualities.push([q]));
       }
     },
   };
@@ -898,7 +898,7 @@ class YTypeStore implements TypeStoreFull {
     this.yType.set("representations", new Y.Map() as YRepresentationMap);
     this.yType.set("ports", new Y.Map() as YPortMap);
     this.yType.set("authors", createAuthors(type.authors));
-    this.yType.set("qualities", createQualities(type.qualities));
+    this.yType.set("attributes", createQualities(type.attributes));
     (type.representations || []).forEach((r) => this.representationIds.set(representationIdLikeToRepresentationId(r), uuidv4()));
     (type.ports || []).forEach((p) => this.portIds.set(portIdLikeToPortId(p), uuidv4()));
   }
@@ -914,7 +914,7 @@ class YTypeStore implements TypeStoreFull {
       representations: Array.from(this.representations.values()).map((store) => store.representation),
       ports: Array.from(this.ports.values()).map((store) => store.port),
       authors: getAuthors(this.yType.get("authors") as YAuthors),
-      qualities: getQualities(this.yType.get("qualities") as YQualities),
+      attributes: getQualities(this.yType.get("attributes") as YQualities),
     };
   }
 
@@ -1048,8 +1048,8 @@ class YPieceStore implements PieceStoreFull {
       this.yPiece.set("center", yCenter);
     }
     const yQualities = new Y.Array<YQuality>();
-    this.yPiece.set("qualities", yQualities);
-    (piece.qualities || []).forEach((q) => yQualities.push([createQuality(q)]));
+    this.yPiece.set("attributes", yQualities);
+    (piece.attributes || []).forEach((q) => yQualities.push([createQuality(q)]));
   }
   get piece(): Piece {
     const yType = this.yPiece.get("type") as Y.Map<string>;
@@ -1063,7 +1063,7 @@ class YPieceStore implements PieceStoreFull {
         name: yType.get("name") as string,
         variant: yType.get("variant") as string | undefined,
       },
-      qualities: getQualities(this.yPiece.get("qualities") as YQualities),
+      attributes: getQualities(this.yPiece.get("attributes") as YQualities),
     };
     if (yPlane) {
       const yOrigin = yPlane.get("origin") as Y.Map<number>;
@@ -1143,10 +1143,10 @@ class YPieceStore implements PieceStoreFull {
           if (diff.center.y !== undefined) yCenter.set("y", diff.center.y);
         }
       }
-      if (diff.qualities !== undefined) {
-        const yQualities = this.yPiece.get("qualities") as YQualities;
+      if (diff.attributes !== undefined) {
+        const yQualities = this.yPiece.get("attributes") as YQualities;
         yQualities.delete(0, yQualities.length);
-        diff.qualities.forEach((q) => yQualities.push([createQuality(q)]));
+        diff.attributes.forEach((q) => yQualities.push([createQuality(q)]));
       }
     },
   };
@@ -1210,8 +1210,8 @@ class YConnectionStore implements ConnectionStoreFull {
     this.yConnection.set("x", connection.x || 0);
     this.yConnection.set("y", connection.y || 0);
     const yQualities = new Y.Array<YQuality>();
-    this.yConnection.set("qualities", yQualities);
-    (connection.qualities || []).forEach((q) => yQualities.push([createQuality(q)]));
+    this.yConnection.set("attributes", yQualities);
+    (connection.attributes || []).forEach((q) => yQualities.push([createQuality(q)]));
   }
 
   get connection(): Connection {
@@ -1242,7 +1242,7 @@ class YConnectionStore implements ConnectionStoreFull {
       tilt: this.yConnection.get("tilt") as number,
       x: this.yConnection.get("x") as number,
       y: this.yConnection.get("y") as number,
-      qualities: getQualities(this.yConnection.get("qualities") as YQualities),
+      attributes: getQualities(this.yConnection.get("attributes") as YQualities),
     };
   }
   create = {};
@@ -1297,7 +1297,7 @@ class YDesignStore implements DesignStoreFull {
     this.yDesign.set("pieces", new Y.Map() as YPieceMap);
     this.yDesign.set("connections", new Y.Map() as YConnectionMap);
     this.yDesign.set("authors", createAuthors(design.authors));
-    this.yDesign.set("qualities", createQualities(design.qualities));
+    this.yDesign.set("attributes", createQualities(design.attributes));
     this.create.pieces(design.pieces || []);
     this.create.connections(design.connections || []);
   }
@@ -1312,7 +1312,7 @@ class YDesignStore implements DesignStoreFull {
       pieces: Array.from(this.pieces.values()).map((p) => p.piece),
       connections: Array.from(this.connections.values()).map((c) => c.connection),
       authors: getAuthors(this.yDesign.get("authors") as YAuthors),
-      qualities: getQualities(this.yDesign.get("qualities") as YQualities),
+      attributes: getQualities(this.yDesign.get("attributes") as YQualities),
     };
   }
 
@@ -1440,7 +1440,7 @@ class YKitStore implements KitStoreFull {
     this.yKit.set("updated", new Date().toISOString());
     this.yKit.set("types", new Y.Map<YType>());
     this.yKit.set("designs", new Y.Map<YDesign>());
-    this.yKit.set("qualities", new Y.Array<YQuality>());
+    this.yKit.set("attributes", new Y.Array<YQuality>());
     this.create.types(kit.types || []);
     this.create.designs(kit.designs || []);
   }
@@ -1460,7 +1460,7 @@ class YKitStore implements KitStoreFull {
       updated: this.yKit.get("updated") as Date | undefined,
       types: Array.from(this.types.values()).map((store) => store.type),
       designs: Array.from(this.designs.values()).map((store) => store.design),
-      qualities: getQualities(this.yKit.get("qualities") as YQualities),
+      attributes: getQualities(this.yKit.get("attributes") as YQualities),
     };
   }
 
@@ -1537,7 +1537,7 @@ class YKitStore implements KitStoreFull {
           });
         }
       }
-      // TODO: qualities
+      // TODO: attributes
       this.yKit.set("updated", new Date().toISOString());
     },
   };

@@ -6207,7 +6207,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         <item name="Access" type_name="gh_int32" type_code="3">1</item>
                         <item name="Description" type_name="gh_string" type_code="10">The optional qualities of the connection.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">3bfd6fff-62e5-4734-804d-1971af8ee0cf</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Qualities</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Attributes</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ql*</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">true</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -6624,7 +6624,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         <item name="Access" type_name="gh_int32" type_code="3">1</item>
                         <item name="Description" type_name="gh_string" type_code="10">The optional qualities of the connection.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">aea99c73-b382-45ed-b18a-aa8ed30485eb</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Qualities</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Attributes</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ql*</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -7026,7 +7026,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         <item name="Access" type_name="gh_int32" type_code="3">1</item>
                         <item name="Description" type_name="gh_string" type_code="10">The optional qualities of the design.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">3d7c19d9-0e94-4e0b-b04f-ebde9497566d</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Qualities</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Attributes</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ql*</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">true</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -7394,7 +7394,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         <item name="Access" type_name="gh_int32" type_code="3">1</item>
                         <item name="Description" type_name="gh_string" type_code="10">The optional qualities of the design.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">e9acc5ff-1d8d-42b4-b915-de3f8c1f6cfd</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Qualities</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Attributes</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ql*</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -8037,7 +8037,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         <item name="Access" type_name="gh_int32" type_code="3">1</item>
                         <item name="Description" type_name="gh_string" type_code="10">The optional qualities of the kit.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">21047583-629d-4167-aa6a-4cb2d3aa7216</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Qualities</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Attributes</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ql*</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">true</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -8404,7 +8404,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         <item name="Access" type_name="gh_int32" type_code="3">1</item>
                         <item name="Description" type_name="gh_string" type_code="10">The optional qualities of the kit.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">80560cc3-e537-43e9-803a-298bcf25702a</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Qualities</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Attributes</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ql*</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -8967,7 +8967,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         <item name="Access" type_name="gh_int32" type_code="3">1</item>
                         <item name="Description" type_name="gh_string" type_code="10">The optional qualities of the piece.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">b31967db-5611-49b9-bdd1-30b6eaf1e32e</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Qualities</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Attributes</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ql*</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">true</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -9254,7 +9254,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         <item name="Access" type_name="gh_int32" type_code="3">1</item>
                         <item name="Description" type_name="gh_string" type_code="10">The optional qualities of the piece.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">1c707c6c-08f4-45b7-964d-cb440564438b</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Qualities</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Attributes</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ql*</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -9576,7 +9576,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         <item name="Access" type_name="gh_int32" type_code="3">1</item>
                         <item name="Description" type_name="gh_string" type_code="10">The optional qualities of the port.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">72195cc1-18f9-48e5-b328-53cca8b4b988</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Qualities</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Attributes</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ql*</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">true</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -9864,7 +9864,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         <item name="Access" type_name="gh_int32" type_code="3">1</item>
                         <item name="Description" type_name="gh_string" type_code="10">The optional qualities of the port.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">97e0db3d-f49c-431a-be37-a83ef212b576</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Qualities</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Attributes</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ql*</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -9894,15 +9894,15 @@ If none is provided, it will try to see if the Grasshopper script is executed in
               <items count="3">
                 <item name="GUID" type_name="gh_guid" type_code="9">51146b05-aceb-4810-ad75-10ac3e029d39</item>
                 <item name="Lib" type_name="gh_guid" type_code="9">fe587cbf-5f7d-4091-aa6d-d9d30cf80b64</item>
-                <item name="Name" type_name="gh_string" type_code="10">Model Quality</item>
+                <item name="Name" type_name="gh_string" type_code="10">Model Attribute</item>
               </items>
               <chunks count="1">
                 <chunk name="Container">
                   <items count="5">
-                    <item name="Description" type_name="gh_string" type_code="10">Construct, deconstruct or modify a quality</item>
+                    <item name="Description" type_name="gh_string" type_code="10">Construct, deconstruct or modify a attribute</item>
                     <item name="Hidden" type_name="gh_bool" type_code="1">true</item>
                     <item name="InstanceGuid" type_name="gh_guid" type_code="9">240086e4-878e-4782-bc71-8cc60f614535</item>
-                    <item name="Name" type_name="gh_string" type_code="10">Model Quality</item>
+                    <item name="Name" type_name="gh_string" type_code="10">Model Attribute</item>
                     <item name="NickName" type_name="gh_string" type_code="10">~Qal</item>
                   </items>
                   <chunks count="13">
@@ -9922,9 +9922,9 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_input" index="0">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">The optional quality to deconstruct or modify.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">The optional attribute to deconstruct or modify.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">196b81e1-a426-480c-805a-dc735d0b11a5</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Quality</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Attribute</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ql?</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">true</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -9948,7 +9948,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_input" index="1">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">Whether the quality should be validated.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">Whether the attribute should be validated.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">cb2c6b8a-c86f-4172-8e79-4cdc6e8a95ce</item>
                         <item name="Name" type_name="gh_string" type_code="10">Validate</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Vd?</item>
@@ -9974,7 +9974,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_input" index="2">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">The name of the quality.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">The name of the attribute.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">22bedb77-ffff-41f1-acd1-d192f7acc91e</item>
                         <item name="Name" type_name="gh_string" type_code="10">Name</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Na</item>
@@ -10000,7 +10000,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_input" index="3">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">The optional value [ text | url ] of the quality. No value is equivalent to true for the name.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">9dc4890b-1d58-4037-b55a-5501f687cc83</item>
                         <item name="Name" type_name="gh_string" type_code="10">Value</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Vl?</item>
@@ -10026,7 +10026,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_input" index="4">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">The optional unit of the value of the quality.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">The optional unit of the value of the attribute.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">5374b35f-e1ba-4927-ab36-80c8df3c6bcb</item>
                         <item name="Name" type_name="gh_string" type_code="10">Unit</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ut?</item>
@@ -10052,7 +10052,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_input" index="5">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">The optional definition [ text | uri ] of the quality.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">The optional definition [ text | uri ] of the attribute.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">f071e0fb-1416-4e8b-913f-0be7c5fd7fe6</item>
                         <item name="Name" type_name="gh_string" type_code="10">Definition</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Df?</item>
@@ -10078,9 +10078,9 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_output" index="0">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">The constructed or modified quality.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">The constructed or modified attribute.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">968d2f8e-2936-451a-a0c9-0296c4cd9daf</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Quality</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Attribute</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ql</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -10104,7 +10104,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_output" index="1">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">True if the quality is valid. Null if no validation was performed.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">True if the attribute is valid. Null if no validation was performed.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">ddc00d0d-59d1-4722-9ff6-8da77b9f245c</item>
                         <item name="Name" type_name="gh_string" type_code="10">Valid</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Vd?</item>
@@ -10130,7 +10130,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_output" index="2">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">The name of the quality.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">The name of the attribute.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">7e236bf1-1b41-4b16-a66e-78e6c45760c7</item>
                         <item name="Name" type_name="gh_string" type_code="10">Name</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Na</item>
@@ -10156,7 +10156,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_output" index="3">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">The optional value [ text | url ] of the quality. No value is equivalent to true for the name.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">32c40500-6c65-4812-b99e-b90e880cc7fa</item>
                         <item name="Name" type_name="gh_string" type_code="10">Value</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Vl?</item>
@@ -10182,7 +10182,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_output" index="4">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">The optional unit of the value of the quality.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">The optional unit of the value of the attribute.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">f473c427-f392-4b24-a902-17d1ab921cc7</item>
                         <item name="Name" type_name="gh_string" type_code="10">Unit</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ut?</item>
@@ -10208,7 +10208,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_output" index="5">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">The optional definition [ text | uri ] of the quality.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">The optional definition [ text | uri ] of the attribute.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">66051a49-457c-4770-97c5-a5bb6ff18388</item>
                         <item name="Name" type_name="gh_string" type_code="10">Definition</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Df?</item>
@@ -10402,7 +10402,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         <item name="Access" type_name="gh_int32" type_code="3">1</item>
                         <item name="Description" type_name="gh_string" type_code="10">The optional qualities of the representation.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">cfdff70d-86cf-4360-b0c3-eb96b5a5a9fc</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Qualities</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Attributes</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ql*</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">true</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -10560,7 +10560,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         <item name="Access" type_name="gh_int32" type_code="3">1</item>
                         <item name="Description" type_name="gh_string" type_code="10">The optional qualities of the representation.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">c30beca4-9748-4fee-aa82-b05552a1b6cd</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Qualities</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Attributes</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ql*</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -10988,7 +10988,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         <item name="Access" type_name="gh_int32" type_code="3">1</item>
                         <item name="Description" type_name="gh_string" type_code="10">The optional qualities of the type.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">fe03aab7-f04d-4570-95a0-557a78e45859</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Qualities</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Attributes</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ql*</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">true</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -11382,7 +11382,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         <item name="Access" type_name="gh_int32" type_code="3">1</item>
                         <item name="Description" type_name="gh_string" type_code="10">The optional qualities of the type.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">5d4ec8f8-f513-4292-8b15-50594db61575</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Qualities</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Attributes</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ql*</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -17720,15 +17720,15 @@ If none is provided, it will try to see if the Grasshopper script is executed in
               <items count="3">
                 <item name="GUID" type_name="gh_guid" type_code="9">c651f24c-bff8-4821-8974-8588bca75250</item>
                 <item name="Lib" type_name="gh_guid" type_code="9">fe587cbf-5f7d-4091-aa6d-d9d30cf80b64</item>
-                <item name="Name" type_name="gh_string" type_code="10">Serialize Quality</item>
+                <item name="Name" type_name="gh_string" type_code="10">Serialize Attribute</item>
               </items>
               <chunks count="1">
                 <chunk name="Container">
                   <items count="5">
-                    <item name="Description" type_name="gh_string" type_code="10">Serialize a quality.</item>
+                    <item name="Description" type_name="gh_string" type_code="10">Serialize a attribute.</item>
                     <item name="Hidden" type_name="gh_bool" type_code="1">true</item>
                     <item name="InstanceGuid" type_name="gh_guid" type_code="9">53b1b011-f8b9-4973-bd2e-2da57c7fc85e</item>
-                    <item name="Name" type_name="gh_string" type_code="10">Serialize Quality</item>
+                    <item name="Name" type_name="gh_string" type_code="10">Serialize Attribute</item>
                     <item name="NickName" type_name="gh_string" type_code="10">&gt;Qal</item>
                   </items>
                   <chunks count="4">
@@ -17748,9 +17748,9 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_input" index="0">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">The quality to serialize.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">The attribute to serialize.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">39c76f46-b31c-4c5c-b93e-3b0e0f4c0db5</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Quality</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Attribute</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ql</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -17774,7 +17774,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_input" index="1">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">The optional indent unit for the serialized quality. Empty text for no indent or spaces or tabs</item>
+                        <item name="Description" type_name="gh_string" type_code="10">The optional indent unit for the serialized attribute. Empty text for no indent or spaces or tabs</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">c95f752e-1922-486f-8fc7-058ca297922b</item>
                         <item name="Name" type_name="gh_string" type_code="10">Indent</item>
                         <item name="NickName" type_name="gh_string" type_code="10">In?</item>
@@ -17821,7 +17821,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_output" index="0">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">Text of serialized Quality.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">Text of serialized Attribute.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">bdec18d3-2ebb-4dbe-a2f5-d2fa1b70529d</item>
                         <item name="Name" type_name="gh_string" type_code="10">Text</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Tx</item>
@@ -18807,15 +18807,15 @@ If none is provided, it will try to see if the Grasshopper script is executed in
               <items count="3">
                 <item name="GUID" type_name="gh_guid" type_code="9">aecb1169-eb65-470f-966e-d491eb46a625</item>
                 <item name="Lib" type_name="gh_guid" type_code="9">fe587cbf-5f7d-4091-aa6d-d9d30cf80b64</item>
-                <item name="Name" type_name="gh_string" type_code="10">Deserialize Quality</item>
+                <item name="Name" type_name="gh_string" type_code="10">Deserialize Attribute</item>
               </items>
               <chunks count="1">
                 <chunk name="Container">
                   <items count="5">
-                    <item name="Description" type_name="gh_string" type_code="10">Deserialize a quality.</item>
+                    <item name="Description" type_name="gh_string" type_code="10">Deserialize a attribute.</item>
                     <item name="Hidden" type_name="gh_bool" type_code="1">true</item>
                     <item name="InstanceGuid" type_name="gh_guid" type_code="9">847efc3d-4260-478a-b9af-9035eb95c04a</item>
-                    <item name="Name" type_name="gh_string" type_code="10">Deserialize Quality</item>
+                    <item name="Name" type_name="gh_string" type_code="10">Deserialize Attribute</item>
                     <item name="NickName" type_name="gh_string" type_code="10">&lt;Qal</item>
                   </items>
                   <chunks count="3">
@@ -18835,7 +18835,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_input" index="0">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">Text of serialized Quality.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">Text of serialized Attribute.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">9ca606a0-8525-4e70-98db-8a76c2f39fe8</item>
                         <item name="Name" type_name="gh_string" type_code="10">Text</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Tx</item>
@@ -18861,9 +18861,9 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_output" index="0">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">Deserialized Quality.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">Deserialized Attribute.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">a4b9e89f-ead8-4fa5-bf57-7be6c8ee9853</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Quality</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Attribute</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Ql</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -20013,7 +20013,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
             <chunk name="Object" index="96">
               <items count="2">
                 <item name="GUID" type_name="gh_guid" type_code="9">f31d8d7a-7536-4ac8-9c96-fde6ecda4d0a</item>
-                <item name="Name" type_name="gh_string" type_code="10">Select Quality</item>
+                <item name="Name" type_name="gh_string" type_code="10">Select Attribute</item>
               </items>
               <chunks count="1">
                 <chunk name="Container">
@@ -20021,13 +20021,13 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     <item name="ClusterDocument" type_name="gh_bytearray" type_code="20">
                       <stream length="5416">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</stream>
                     </item>
-                    <item name="Description" type_name="gh_string" type_code="10">Select a quality by its name. If no quality matches, null is returned.</item>
+                    <item name="Description" type_name="gh_string" type_code="10">Select a attribute by its name. If no attribute matches, null is returned.</item>
                     <item name="Hidden" type_name="gh_bool" type_code="1">true</item>
                     <item name="IconOverride" type_name="gh_drawing_bitmap" type_code="37">
                       <bitmap length="720">iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAdhQAAHYUB8Bsy7AAAAnJJREFUSEtjwAv4xRUZBMQrgXg3kP2MQVD8NxiD2CAxkBxIDcmAX1yBQUB0BdCwP0D8nwD+A1YL0kMUEBCLYeAS/4zFIPwYpAekFy8QFC8D4n8oGknDIL1lUNPQAMh2ygyH4X+YPgGFHznBgguDzEKJE0iE/rd29/jv4u8Px7pWNhiaNUwt/jv7+YHl7by8/vPKKsHl5HQMwGaA+SAzwQCUzKCp5cb1k/+/f36Mgps6msEaGIUk/s+ZPx1D/tmTq3BDc0oKwWaALQCZCU7CoLQMEfjPJibzn11cFo6LKkv/v3h2HSznGhDw/+vHh/9dAwP+s0tA5AUVVP+vWrP4/8kTe7FZAPQF0GxwhoEJoOGIxIT/79/cAbNT87L/P7h3AUNNbFrK/5dQR2CxYDcoiEA5FCEIxMwiUv/9IyP+nzt38P+hQ9vBYiAL7t89j6IOhGNSk3FbADIbyABlf7igqIrG/9On9///9O7+/yXL5/2X0dIDi5NlAchsMIEQ+J+Sm/X/OTDiJDV0kBVSYAFaELkFBv6fOK0fWREYhyfG/3/3+s5/YWV1FPG6lvr/t2+eAbOxBxFaJAdERf5fs24pQhEU88go/r908Sg4ordsW/N/89bV//ft3wJMWY/+55YWgtVgj2SkZArCpo7O/6saaxCKkLCgour/kuqy/5OnT/j/8e29/08eXf7vHhQEl7fz8v5f01yL0ANOpkgZjRTsHRr6/9XzG/91LK2xygMxNKOBALSoIBULK6lhFQdjeFEBAjQv7ECApsU1DNC0woEBkO3kBBdID06XowNQ+EEingaVPjIAJTNQWgZlGEiOJ7HZwsAAAL2OtSpnJdATAAAAAElFTkSuQmCC</bitmap>
                     </item>
                     <item name="InstanceGuid" type_name="gh_guid" type_code="9">32c2719c-1847-4984-91ff-bd4183c5c6b0</item>
-                    <item name="Name" type_name="gh_string" type_code="10">Select Quality</item>
+                    <item name="Name" type_name="gh_string" type_code="10">Select Attribute</item>
                     <item name="NickName" type_name="gh_string" type_code="10">?Qal</item>
                     <item name="PreviewDocument" type_name="gh_bool" type_code="1">false</item>
                   </items>
@@ -20076,9 +20076,9 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                       <chunks count="3">
                         <chunk name="InputParam" index="0">
                           <items count="6">
-                            <item name="Description" type_name="gh_string" type_code="10">A quality is a named value with a unit and a definition.</item>
+                            <item name="Description" type_name="gh_string" type_code="10">A attribute is a named value with a unit and a definition.</item>
                             <item name="InstanceGuid" type_name="gh_guid" type_code="9">0dea0a36-6aa0-4e79-ad43-46e23b64c19f</item>
-                            <item name="Name" type_name="gh_string" type_code="10">Quality</item>
+                            <item name="Name" type_name="gh_string" type_code="10">Attribute</item>
                             <item name="NickName" type_name="gh_string" type_code="10">Ql</item>
                             <item name="Optional" type_name="gh_bool" type_code="1">true</item>
                             <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -20102,7 +20102,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         </chunk>
                         <chunk name="InputParam" index="1">
                           <items count="6">
-                            <item name="Description" type_name="gh_string" type_code="10">The name of the quality.</item>
+                            <item name="Description" type_name="gh_string" type_code="10">The name of the attribute.</item>
                             <item name="InstanceGuid" type_name="gh_guid" type_code="9">78ba8a78-1885-429f-9474-ae476a76490b</item>
                             <item name="Name" type_name="gh_string" type_code="10">Name</item>
                             <item name="NickName" type_name="gh_string" type_code="10">Na</item>
@@ -20128,9 +20128,9 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         </chunk>
                         <chunk name="OutputParam" index="0">
                           <items count="6">
-                            <item name="Description" type_name="gh_string" type_code="10">A quality is a named value with a unit and a definition.</item>
+                            <item name="Description" type_name="gh_string" type_code="10">A attribute is a named value with a unit and a definition.</item>
                             <item name="InstanceGuid" type_name="gh_guid" type_code="9">6e09ef0e-0cb7-43a6-aafe-e5d9226b3ee7</item>
-                            <item name="Name" type_name="gh_string" type_code="10">Quality</item>
+                            <item name="Name" type_name="gh_string" type_code="10">Attribute</item>
                             <item name="NickName" type_name="gh_string" type_code="10">Ql</item>
                             <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                             <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -20895,7 +20895,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
             <chunk name="Object" index="101">
               <items count="2">
                 <item name="GUID" type_name="gh_guid" type_code="9">f31d8d7a-7536-4ac8-9c96-fde6ecda4d0a</item>
-                <item name="Name" type_name="gh_string" type_code="10">Opinionated Quality</item>
+                <item name="Name" type_name="gh_string" type_code="10">Opinionated Attribute</item>
               </items>
               <chunks count="1">
                 <chunk name="Container">
@@ -20903,12 +20903,12 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     <item name="ClusterDocument" type_name="gh_bytearray" type_code="20">
                       <stream length="6325">7FwHXFNX2w97IygiVcQrirthqMVRlIRgiExZaq3AJbkkV7NMbhiOliru/SJqHXWhONCKA5E6cFRp9bV1VtE6ClVbB2qto+W13zk3CeQmNyFK7Pp98Rc1Z91z/s88z/MkjhwZXyXBpMQf4GXFYDDswdtdLlYJcWl6NqZQ4jIp7EoAzbAbvhzhEO28KAwVYAo4BM6EL2dtF48Dm51AU+TadktPPbeJ/3zVF88EHr6hDgkKLBvHcmC/M3xokgisInDTNA/DxYR6TdjplISJMT4BNtJK0x+LKUXJeXIMjrDRbEw7N06mkKBi2NOV3M1SgXaWehlM0Ni3lCHw4mBZuBSHiycoZHJMQeCYEg6wBf1waVsOSpDPgYfecuP80fP/+d7RhYMp+QpcDqdpd8lwjMYwebwcI1tIqGzjUAnWeMTxOMEUipwSwV4gqORTtIi6aVsjZCo1KWy0YIJtjVOfHjZba5rtk1GFECNH+oGP2eBdCBaz/UAmk8BGO9Cw4tMrQ+1SwcEpj3KCLQaPcUrky2PQPJmqkQ/Ih3MVMpXcYLA9S0WIZAotTOT8CJk8T4ELRYT2vL25cSlIDKZUYgqEi0kxBSpGElSZYpyPxOB8TKrEkFQ1eyF97SJjUVysndlGhYnxcCUmwWXvEhhfxOTLJBQonVPAACQJFasmOozEMpU40djlJyIIuXJQYKAQJ0SqTDg1UKUEIwPJ9Vy5UawYPFOBKjRkhieFZ7CjHBK2OKjH5ZGENDw4fFj7RFkm4Bgklh+HYWKkG8JSKmV8HDCM0pon0PK+/otyFBeuAlUqRTI5YD0HDR7aPo8BzOC+zJB+IQNCmMFBQUHB2i1pN/032hLkS638e4BnYpJMcd4wlVisu3IUV5SQB3Yr7aMlfZj+en2QCJWYUCmwMCmmIgDP9NEwTTSWlywbj0nDpGDRVtonNLc9PXQY5mLA0D94IzvYmHXQJMhsTB0gm04czAyCf1p2UAfNKnrn0xEMnZMenjzq1ZT0xeFbJVfOu75wEVBOakfKhf5x7d6Dq3s2Kcf4TKiEGkWmDeQTdRtFcGC7vbodAqTVzbbclCZbYDfea8S9Uo+o7SqP0iHWqwfaAGTN2qpbrEwAeHqEChXjRB7QOFICxYFi0eo7N7gpGs3cC4xUEgoVn+iDCDC+9gMiUyASmQDPykNQZIJ6UfsoXCBo0uBWrjwwGJXyMa4Kb8Tz5R9bhNw6ftS6bT+8s0+c5mtik45xOH+8brftRyNQsTOLIBR4pgoIJUWnswGUArKpC/yc/zCCwUBYDMYONoPxgm2XgGfLSKQ7wd4qKw6DsYjtIkcVqCQdl8pVJOSQN62MAMFMFmGIjGwCylhzZISQ0aPCpD18p/s3PT/okcEqwOfcYa8se0o5vIOxY9uMEA91jNc8uRFdlySZSsHHDG2emfjUA3zCAT7V4L2WpYdP/jPQu5Oli49VM/j0GCnCCBGwV+CvRniAAKvEAiQTQ7JBgwBoUgE9MmHrl285yTwVUyFfIyz56bsNFGQcUzWTDaFJFbwlaBhsU9D0oLAOXMjBBDQ+kHWkYNuILEsXHnooBuXdEK+MTGTPrO/4c9nq8hIKFOQHAxis41BDFOzVKMA9w2W3O5xZmtx+dMwia7e08AEbWXQgWb0mSAkmQcqlgGTTDEhpFPkC7KLCkDEIgeUSyGREpRAjY/XRQ+JkmnG4EsEmqHDwATjOUCaBNGJIFpBGQoM8PdS7EpYfnRB8JH7aokyn0PRnVKjtANep6FiOThr1wHaZmWPj9bEnu/i73GOjc1+usATYi0yCXUwBm/TBzFZmKmCmtOCqATWHTx+ctz3x+PiZmMVz42cHli+8Q+XTFLCmIXYpRPPYKepdlw78eEB4KeEnHDs9f5glsKswid1pCnZ2zWD3HgU7QaOV1+VW3JBbaTHs4NjdanEHhFvQOWnw/EcfUa2hc5MHYYgkJ6t5JO+HLjrf88MAzpzWfUV+d+V3LIHkTZNIPmW7qpEEdyEzbGpXCGWj9cQEjfYTB/83Cdz1I/32X5xdHT997Loza77IdjHPklqPEBuAxmiptbDjqA3pTTpUGE6gdyeLgkpzlpSdDLUXTmEfqOJIEwq0HnBtYa+U1H7QLkLmy0GVCHCVgc6TGLOxF3LdQ34fzIrY+fWePUOux/gbaDtcYJ6BtQhk0MAah6wHlZG0NyTLWNi07aWOM3dkxK2a/M2FF3bTA9/QwloEhgSTMORSYdDen/5ONvTQk3lehZXxkVsH8Q72aZhz+Y1tqEXgXGQSzmIqnLav5fK/mZUM+Hjcs6jEoZGzvL68t3Zs25lvaiUtgk6FSXROU9GxawYdS9rBgQ1oie3B4JiV14QDneo327XMDloEq5smsXrK1tzU4fOs6W7qcdOvD0k6eS+84NSefMfH8Rdo5IJ6C/+7Ocf6PqzFnOP+dRfvVnCOxC7pxj7XriLgSgvdEsZmQCkP8I5iG1KrHK9hO1UO1FLL2lhcpSrAM2Lefn9W0fLn3b1KVy4xO66i9TXMp+UAlq5RR0kKCDS0ygGBV9BEqhpUKgD/bZIreio1INdTH6kmsfYujn6/dNkyrxY4Qnpk0nexWkqm1ho/iY5MZSN8OHEh5SwNmWyMCZX3D/M5rQd9E7Guf+3hz6tzOM0KlZNmFc8IlZKQSehSD87qLkoE013Tpgfb30Y29UXorRtdK2NU9WCphU8O3lVa+tkao9+r6buK2zBt2eUf+qzYJI/daIYoOb99ClpWIu8dfOrmxl3P23k/PZv5Mqy/5SRSX9bNlEhjtMvvzFHTj0I7O2O0EwLt2dWtJL4sd35VaTr7PtVGkzwHklNKwlAArY3gHgjSc9m4AIOYi8FMKCdyBabECDX4SigRfJFMBtJdWQqZxKwAM/dO3PWFbUdHTu3NtHVzn7bNCe7JACJH2AqjzbqNxk5kQCyG+XJEPohHYBL4oVG4InPhOXWTBt7+WFYWTFVmg7OKZUADoAoMpd7RvCIbhwwjh7DAEEfdzCwJi7miywgH76MMBp+M9WrIb2+M/LOvFp3C0PKIVayR1gfGPA6lsjVbJhNjqNR8K9hdMxLSni8Ta3LUkAMy1UtpWICWxozdRctuFR4Z9lm/TrI6f5fdtHsxFDGepFkRm3FZsNA3egJ3V2vHsqeVgbcs4ZvkG/FNLhy9yr7ybZHWN3EwhvyKipujZ9a94FVW7K0sG38rhqrsE1ApJqbi7mhC5nqwEDmcQRoZPqkjQSQBHIPUbqTVMgG8IHpB8MmeWFTl9ok/9n0Y2JFmK+YJC18BaJ4IQxewUZsTNClIKSAZngz21ygNdAKjRxc7Y3TJAGrPG/C9NIKRPyfCORYUBODSGCyL8kgXdXOiNjPfmO9XtyfL5LqtVOJuzRWzYj/wjmhFgkItj3DQ7ipCJgaH1ZZUfPDbH3+4cBRoDk8qAEn+RuG1coKNCSgh0mmKBQlQXAwo3giqa5IcA8lqcQTQak2Cb59EAFgkTWUVIxWovMkzV7Oe4z+A9fqvPrtszcoXnC1fWPntO5fj8leyno3k6C5zOW0G4DKvCDIP+XY4bVbXGRGxNV7/DE5zMnYBK0txYA3394spdjgc8nvkzx/pXsD0XxTSO0HjCs6B5VI50V3DiaBVgPFgYF87o9CtS4RMIpdJoc/Nk8KQKRlDdXPu8u5bfLk5g6CtUIRJs5mNj2cmqtRVS++HDHJzRsCri6bcR/Pp7W4IPiI9HSXLINLTkTDEv6kGwl/braljU/eHBIWA6pBgZvAATb/6b/1jQQLB4Y208TcyTiOw5ozV0ShwOAtklQlQ6IbwBKbngXo3JSokH5EamYiA4g8jAyNAhlkoU+TBkUkYYWRUkipTdyB07yhQIF1IZlP+aQQkk1YkAGFBpmiSAGN7Sia5uzFNk8Y2EkvnKObP1SFgzOtO1qMoOSAYXMGYTObrLqXV82CdYahYielD0zssuEXYQOZsCTY8S2AT8qdg0yWeDP/+eQysDjebz8Hq/Y3RmaZDJxOKwNR0HVLhrz9dj1jqIVRO1hlP4g2sARgaw8RhSw9eTzqHqbWhjnOPFOCETBEj46PakbCENRcY+hdwlro7CZ9I2kcEdOUAc/sfYAj1L89O4HOTXVRfHGGTevONba48kJ+NBzZAAfpgawBovQoCPLMT4rhuzu3Jsi1eFCcR/OsD347Qo7qZE/YCGmohKxY42mULXRpQ6CA5yaNGK0Fs5gB8WxUdUPDAmCk8Dis5Knr1EpeEJSleJ9sdwtpxrg8+Ji78tPZCP343VkbqCvy9Rb3j7lbvGuJYHJO2aX5B7Je9JJz+Rx955FSH9+Qk95BXc1uvz4jpOk3E2Twrv3r80Ixl3zm/+v3M9++O6o7P7PvLmoGTDk86U39N+U3a2Q2nU7olVUzKfSKVSpfHPQyJ/+zZimOlocM/Wx82bdt/N2ze0enEp+luA0bs4D7cYlXcsXbdVz9FfDgx1OtW93eO+2YdHKEKKJrYx7n6+Cph0aMRvlU1rQY/vuRXWN3q2pR228pDdxcuB4s5n/N+Xjt7+vDToz0K8tJ62W77wmPX5ytnN7itye6MVOK38w/e+PlR5res089T0S2Jc7+tSyuYcvEk59XtYr/SBQeHKMMvvEoTn3u6s8Cz5yBxdG1Z2LGuT3BJ7P2Lf1jJDzmPORNf0TUQPV/s63v7g4ZX3PpO7QU1i8NmbS79yEpuF19zlb8uStC502DP+v/O9vLvcGZZ/Fdbj88fzN/8u9K23Q7XDfefeCwY6SOvW2VVE2KTGO0axfRjHy3rfPzOSq9lwqodvmGXON/tbDPv+15V8u3tbUqK7oYdcCxhP7jZxfungi65t36ojxjlPaGD7Piesq/WntrwKtFl8/DhHN7QgUOsVWd7tHm5Z9Os0sz8V5OFdxXCDSPvzXpIOFxrGHU07ihjYzv7sobvU1/Ui4S13DbsZVFTNqUm7F0SVCZwTW8g1sye/IFLbslUK3vnsKpOE9jp5YxqeVX643O88DR8aFpfG9EJ3DW0W3Z4kdymw8XYy7s+90TXjD2ZGmvjP+Rz7uZK7w7ZI7sE7bKOtk7qvGySz69DT9ut6c44NIETf7tPw+MjS9oUT7khtBq1r6TtqZSfWtUp9i/eujJOsf90bj/0lc2Us3zv/BnLe+YXlErner/kjm1j/eOJJ0dt5+WMzDiw27a2Y95y0akqzjb7NqG1Qdcr3E5UZsxL3V6VcCXJp4e8TDTi+0lJjLO81d7LDvgfWJoiFPfMf1XgMmP4tSBFTccNQydllH54gjNk+9nQml8eBfzhnRXq5Dh7/LHe6L7HE+s6ll6/+MnGrePsfSSnW/dSzjhUXRTQnqkU8nh1u+uOhtYcq1FGieIv9SE21tTuGuecgXFc0mrOPakP6+MeEntCvtr+fzcGfoqwi2ZkjvT5qF/0I3z+obN+Y88Ifn3+7GrtuYllThn8e6eGvmpA39/9pF2fUSq/b16umTayarR90Ic1X1lvGTTOKqBDH+IT5jfvjL0SdzdqzfylAm6/bdO3zN7NnTLPa++YgNLfGkYO/G2DU2DBo+TLDSeTWPlHdq8r7TVo0K/LmIu37hq2ZFVY24Uh1o+63xBwNx0KWRTUueFsybqhh526uP1UcSPFJqRmvPvu6z02h3638NdC5vzwfh/1q60J6pkcPcB38pipM0Z9ddrq+bnbt6T/sV2dPvzsy71LjkR1njvQNk/p+LhWPmF17u38ck73PfV7Iyat7zioX2v7Lh0T5qybfMT70yOZSw6JB/fNLzldFHitD+se11f65dyze5LmjV/s+/PRgRc2D0jefidh/yXvd04Vrz14O+hebDdlSgKSErpa1OpB/5lhAv+zN3x7fe3y46jovvBewYuM4+xgZ0x1IdUiTwkvQk2XHrpL6Y4LbcYU32zHK7gtfNF3fm0Xd56SJciGowTa4CI5uRW4xylFqBgoVzi96XZl5CpjcJNt6jI38tRWU/8qhpEn/fpXRgjojWK7kTYNAxaGgxKo9hoL72fOJASUmzBZ5ahGRkDeTcF78uLfCi777Y6de2vSteGCovXafisj/S5q62IYjlW3Ny08WlC9wOqwE6fyYbtYt95tvlXvh9wuSQzNPHsWH1xflbpLtWKJxbKcZAWGNfWpq0JpLCwgapOlpqXwiHETQp6ivMjSh6yFvzkciafm72mjw1YxhmEHzyTy0eQBDPfsliQCW86TY1G4tKlOXD9vqh98Mxqb1K7UdLtuk7i4f7+UHPYnFR2ufaacds5cJmqnKRKGbx99Jsr3A70vWDqkIYO9b06HEBN0iPnSMXTVgx7xyyd9mmf/4PdRVDpA6TCkA+916MAwmw5mV9Jalg4whGycDnPYGtlqlBFTtRtuFBeVFvAZ532+9OEsZW0a070uqPRqDjXeRq+lrHCL12IwWBoWTADv5QZH55LAaIJLZJCfLrhE/FIzuvOBtOFTp6bY/j7xpx1UrQuFGIEcRA0gaTMhrdioUuMVk6fWPQQdtgGJGDgYBsLSKKKEgbIsnI/gYHkyh6VJdTHNymUlba87fij7ImenS52ifPPTO0b2bfhFCdhqLsDrItRZQJimyDcwFLtAb1caQwHRsaU3FDY0hkJfn+sbCvn+QczI6V8Mmyb29fwRdTmj7ScjeDTZJ0sZEkfjhoSOtk6QF0gC0tKrq/idie6/cHjTiA2FvZI+O/uGxkJP31yJXpkQsGkJt/KSR0Fi4pCqluak1gOSBgGCz6KtbioBvZv1lbo2N0WHiTNkNhBOAKJBC4oytm/76TkvOSW1X3Nr+kSXv6ki0UNFPwdoCVRemESlK9s9AcZClQQIB2jlgBReeBCDB9uzFQAKEUNHKRkOstX6mGRaYVLQFFJ04ZzGtK1UJclUa6RG1dlEHG1hrDHivAOD8GriwGQ6mWXPJE9OS6vxJx4dXVtUH7mgd2nXGU67h1MZGK5lSKqRltf5kBYxbFO0IP4SWjhoctOND9O3uaYy3q6knKAEMgnvPoUW/QmdJ46JnJnGna682vZd3laZQ6yKQDPFTdcIc5wey5vg/P0ahQFNsNzgq3QHSNHQmGCXN6rcoi8f+BNqt1pUhaBfK9CCKoSWVmHdBKUck/WrsFyN0aL+++3v9/Zziilc5L4w93nGGqpGjsUUQr0qOm1NEB2EHcnxAL9MFZAwCJ0AiCOiJJOBSrPcnDm/7VlQNj469pOe+z/rImMH0uzHAEZ1s7kK5UPNZXgnwCfDwMeZDXp9Wn4Zbs7H0e+3lA/jTO/DGCOYG6eJPkgwLUFshjPvS9x/iN6U/Ly8Y/3laQ6xqFyOS4WU05tUTvbkQ4INuZ8T3Hx9sF6mv6WWPU1zg/ACxP/WwJpMBL3V+v5OSyANoYXUfe2cJeeEjKhPOrm+59guaM+bQhpCA2lIs5DuPln435gpX7NKfv34xUVJ8OeWgNSHbQrSGLYx22gmpq0SMSWoPIAKRQJFnRZVfdeYCph6BUMTmWh5E7lIw2PQY0kwMJFLSLg0atntH1Bso88vf2WxjW0WYXa1TX5lhDryueltVdssKKiMOJvW9p9RbeP+D2C1U5zq9/Y6nmTvO5Q2JrtQ6PxXslqC9gdwQK5TSsCvoSqYmSpcLACKWilBFQRTphAGqhR4IKU1EM/iB/Zj9g2UA3YIjMMIsjoXFueaWyT2RM22VS6ct8S240RPIjq++w9h21b/tjhe7N3y0F3JCex9HdCA7aH+0rcRx8tfA3hoOdtIHC9/J+i9/P9xPPPieEPaFrb+H5PDLT/e8dnuxRJfy8Tx9DVdS7+OvxaQdJWxKEn+RljVz7ZgHK9o3yTvjkuPDVs4LT2wa3cfqYXiePp5BkugctwkKpf//XG883cZWa8KvGL2Deg2tKDkcPhfE8cjaXHfJC0YEf/COJ7+7278TeJ4jAqNwqCN44V/QYqGxgR7vNHXmskP5n8H6PV+tUE/7Wqh30V6MGREQf2ziTHFd3NjAz3Dglp6NS5mq0NNdN/4edD+EvvChnXaAJ3nGwVLaUD+EyKlr0crfVDfkFYWiYsy9L/h2NoY7A8v5XgWDuzGLhqVuO9//Fu1VDctWYFLEFjPYBgbtTX2Sy6JmEDFx0i8+KCQVIzlwi+ZAgRRBPjBGJKZRwY3wEWCHAOKRDGFRAZ1O6nnMKV5/uWqxI2LV62vDM+/4v9Ng8uLK0Y2buhfwi5zlfkJTQx1KsAyyMC/vET+Zpr+D+oZSa8as3JeZIiLRAYYuSwxCopfpbQnnjvabrJ7WEXkLo+U46krRLOoDEZ7WKvkZn0R/QRMS32Rk5qokJw2j3Xa6G/sGcMnII70ISADGbIKhMx4pGx76pRFqSt6cuYWtgveM7muH9V742ByQmSIGMfyLgGEBP70j3FIevwd3DPYbPBTVq8ZwfSE0gW/SU4mRCBX01JG//fO3pCVW+ocXNfwaj54IwYpkh9Isv0fAAAA//8DAA==</stream>
                     </item>
-                    <item name="Description" type_name="gh_string" type_code="10">Construct an opinionated quality with a standard name.</item>
+                    <item name="Description" type_name="gh_string" type_code="10">Construct an opinionated attribute with a standard name.</item>
                     <item name="IconOverride" type_name="gh_drawing_bitmap" type_code="37">
                       <bitmap length="684">iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAdhQAAHYUB8Bsy7AAAAk5JREFUSEtjwAv4xRUZBMQrgXg3kP2MQVD8NxiD2CAxkBxIDcmAX1yBQUB0BdCwP0D8nwD+A1YL0kMUEBCLASr+jMUg/BikB6QXLxAULwPifygaScMgvWVQ09AAyHbKDIfhf5g+AYUfOcGCC4PMQokTSIRiV0wuBpkJBqBkRlxq+c8oJPFfQEH1v5Ci6n8OCTmsapDwH7DZ4LSMXQEKltHW+3/27IH/b17e+v/q+Y3/b1/d+p9fXoxVLRyDzAZnGGySaLijr/1/3+QeOF9WW///u9e3/3NLK4D5IAdYuLiCsYGtPUQdyGygN0A5FCwACgJ2cVkwW0xV87+crgE4SED8GXOm/s8ozIVohGKQT4SV1f8Hx0b/f/bk6v+TJ/f+v3jh8P9rV09A1IDMBjJA2R9okMr/pSvm/1+1dglQQ8x/eT3D/8eO7YK7Gp8FGzev/B8WHwcW07awQlgAMhtMADkNbY3/1UzMwb6oa6n/v2bd0v/xGan/s4vzwYrxWbBt+9r/3qGhYDFMC5CCCBtmFpYE04WVpf937trw39HH57+dl9f/lNys/w/vX/zPKir9f/b86f+nzZr838Hb57+NhwdaEBEZyWxiMv+bO5v/79+/5f+3T4/+Hz++57+poxNYTlxN6//CJXP+7923+X9IXOz/JcvnQ/SBI5nIZIqMU4Gun7doFlY5FAxOpiRkNGTMBA06PBia0UCApkUFCNC8sAMBmhbXMEDTCgcGQLaTE1wgPThdjg5A4QeJeBpU+sgAlMxAaRmUYSA5nsRmCwMDAAQleM8B0THzAAAAAElFTkSuQmCC</bitmap>
                     </item>
                     <item name="InstanceGuid" type_name="gh_guid" type_code="9">baae0665-e28e-42ca-a556-8d38831cbb92</item>
-                    <item name="Name" type_name="gh_string" type_code="10">Opinionated Quality</item>
+                    <item name="Name" type_name="gh_string" type_code="10">Opinionated Attribute</item>
                     <item name="NickName" type_name="gh_string" type_code="10">↝Qal</item>
                     <item name="PreviewDocument" type_name="gh_bool" type_code="1">false</item>
                   </items>
@@ -20960,7 +20960,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                       <chunks count="4">
                         <chunk name="InputParam" index="0">
                           <items count="6">
-                            <item name="Description" type_name="gh_string" type_code="10">The name of the quality.</item>
+                            <item name="Description" type_name="gh_string" type_code="10">The name of the attribute.</item>
                             <item name="InstanceGuid" type_name="gh_guid" type_code="9">809421d3-33b2-495c-a8ef-e1116582f2ca</item>
                             <item name="Name" type_name="gh_string" type_code="10">Name</item>
                             <item name="NickName" type_name="gh_string" type_code="10">Na</item>
@@ -20986,7 +20986,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         </chunk>
                         <chunk name="InputParam" index="1">
                           <items count="6">
-                            <item name="Description" type_name="gh_string" type_code="10">The optional value [ text | url ] of the quality. No value is equivalent to true for the name.</item>
+                            <item name="Description" type_name="gh_string" type_code="10">The optional value [ text | url ] of the attribute. No value is equivalent to true for the name.</item>
                             <item name="InstanceGuid" type_name="gh_guid" type_code="9">5d7f4cae-7521-434b-9bac-9cb346ca5ec1</item>
                             <item name="Name" type_name="gh_string" type_code="10">Value</item>
                             <item name="NickName" type_name="gh_string" type_code="10">Vl?</item>
@@ -21058,9 +21058,9 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         </chunk>
                         <chunk name="OutputParam" index="0">
                           <items count="6">
-                            <item name="Description" type_name="gh_string" type_code="10">A quality is a named value with a unit and a definition.</item>
+                            <item name="Description" type_name="gh_string" type_code="10">A attribute is a named value with a unit and a definition.</item>
                             <item name="InstanceGuid" type_name="gh_guid" type_code="9">69559e90-5c01-46c4-b0ea-a030c24a9190</item>
-                            <item name="Name" type_name="gh_string" type_code="10">Quality</item>
+                            <item name="Name" type_name="gh_string" type_code="10">Attribute</item>
                             <item name="NickName" type_name="gh_string" type_code="10">Ql</item>
                             <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                             <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -22040,7 +22040,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                             <item name="Access" type_name="gh_int32" type_code="3">1</item>
                             <item name="Description" type_name="gh_string" type_code="10">The optional qualities of the design.</item>
                             <item name="InstanceGuid" type_name="gh_guid" type_code="9">e8ee65d4-de44-4444-9547-ed8b956e2d03</item>
-                            <item name="Name" type_name="gh_string" type_code="10">Qualities</item>
+                            <item name="Name" type_name="gh_string" type_code="10">Attributes</item>
                             <item name="NickName" type_name="gh_string" type_code="10">Ql*</item>
                             <item name="Optional" type_name="gh_bool" type_code="1">true</item>
                             <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -23238,7 +23238,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
             <chunk name="Object" index="116">
               <items count="2">
                 <item name="GUID" type_name="gh_guid" type_code="9">f31d8d7a-7536-4ac8-9c96-fde6ecda4d0a</item>
-                <item name="Name" type_name="gh_string" type_code="10">Sum Qualities</item>
+                <item name="Name" type_name="gh_string" type_code="10">Sum Attributes</item>
               </items>
               <chunks count="1">
                 <chunk name="Container">
@@ -23251,7 +23251,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                       <bitmap length="747">iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwAAADsABataJCQAAAo1JREFUSEtjwAv4xRUZBMQrgXg3kP2MQVD8NxiD2CAxkBxIDcmAX1yBQUB0BdCwP0D8nwD+A1YL0kMUEBCLYeAR/4zFIPwYpAekFy8QFC8D4n8oGknDIL1lUNPQAMh2ygyH4X+YPgGFHznBgguDzEKJE0iE/pfXM/yvbmKOFXNIysENEFJS+69qbArGgoqqcHFeWaX/cjoGED7ITDAAJTNoaimtqfj/6vmN/0ExUf/dg4LguKG98b+znx9YY3Nny/8vHx7+//75MRh//vDgf01TLVguPDH+/8mTe2EW/gGbDU7LEIH/TMIS/zduXvl/1rxpMEVgzAjEeta2/7UtrP5/fHfvv5G9438WUSkwtnBxBVr44L+SgTG6BUBfAM0GZxiYABCLKKv/v33rzP+olCSEQih28vX9//D+RQzxF0+vgS3CYsFuUBCBciiKBktXt//Pn1wDhz2yOMkWgMwGMkDZH0UDCBdVlf2fPnsKihjJFoDMBhNIimG4sr76v4S6NoqYg7f3/2ePr/5nFJKAizEJS/5/8/LWfzMnZxwWYAkiv4jw/07QVIOM+eSU/z8C+mDpivn/K+qrwHjVmsX/7945959LSh5HEKFFsgIwLxRWlCAUQbGAggqYVjU2+z95xoT/e/ZuAifTDZtWglMQSM7K3f1/e287Qh84kpGSKauYzP/2nrb/LCJSCEVAzC+v/D+3pBBFDBRMU2ZOxEjSKBicTJEyWhvQ8Ncvbv5/8vAyCv78/sH/qsYaDAOYgJawictgiEMxNKOBALSo4JVVBLpWBSvGYxB2DC8qQIDmhR0I0LS4hgGaVjgwALKdnOAC6cHpcnQACj9IxNOg0kcGoGQGSsugDAPJ8SQ2WxgYAEKSoBFhZVlKAAAAAElFTkSuQmCC</bitmap>
                     </item>
                     <item name="InstanceGuid" type_name="gh_guid" type_code="9">eb68495e-ee77-45aa-a111-781660237d79</item>
-                    <item name="Name" type_name="gh_string" type_code="10">Sum Qualities</item>
+                    <item name="Name" type_name="gh_string" type_code="10">Sum Attributes</item>
                     <item name="NickName" type_name="gh_string" type_code="10">∑Qal</item>
                     <item name="PreviewDocument" type_name="gh_bool" type_code="1">false</item>
                   </items>
@@ -23358,7 +23358,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         </chunk>
                         <chunk name="InputParam" index="2">
                           <items count="6">
-                            <item name="Description" type_name="gh_string" type_code="10">Name of the quality.</item>
+                            <item name="Description" type_name="gh_string" type_code="10">Name of the attribute.</item>
                             <item name="InstanceGuid" type_name="gh_guid" type_code="9">290d853a-efa8-458f-9099-707ab35b1fea</item>
                             <item name="Name" type_name="gh_string" type_code="10">Name</item>
                             <item name="NickName" type_name="gh_string" type_code="10">Na</item>
@@ -23410,9 +23410,9 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         </chunk>
                         <chunk name="OutputParam" index="1">
                           <items count="6">
-                            <item name="Description" type_name="gh_string" type_code="10">A quality is meta-data for decision making.</item>
+                            <item name="Description" type_name="gh_string" type_code="10">A attribute is meta-data for decision making.</item>
                             <item name="InstanceGuid" type_name="gh_guid" type_code="9">b3ebc892-0f86-4d10-880d-aafd4bc008e2</item>
-                            <item name="Name" type_name="gh_string" type_code="10">Quality</item>
+                            <item name="Name" type_name="gh_string" type_code="10">Attribute</item>
                             <item name="NickName" type_name="gh_string" type_code="10">Ql</item>
                             <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                             <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>

@@ -66,7 +66,7 @@ const Kit = z
     updated: z.string().describe("🕒 The last update date of the kit.").optional(),
     types: z.array(z.any()).describe("🧩 The types of the kit.").optional(),
     designs: z.array(z.any()).describe("🏙️ The designs of the kit.").optional(),
-    qualities: z.array(z.any()).describe("📏 The qualities of the kit.").optional(),
+    attributes: z.array(z.any()).describe("📏 The attributes of the kit.").optional(),
   })
   .describe("🗃️ A kit is a collection of types and designs.");
 
