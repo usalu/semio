@@ -47,12 +47,11 @@ const DataUriSchema = z.string().regex(dataUriRegex, "Invalid data URI");
 
 // https://github.com/usalu/semio#-attribute-
 export const AttributeSchema = z.object({
-  name: z.string(),
+  key: z.string(),
   value: z.string().optional(),
-  unit: z.string().optional(),
   definition: z.string().optional(),
 });
-export const AttributeIdSchema = z.object({ name: z.string() });
+export const AttributeIdSchema = z.object({ key: z.string() });
 export const AttributeIdLikeSchema = z.union([AttributeSchema, AttributeIdSchema, z.string()]);
 
 // https://github.com/usalu/semio#-author-

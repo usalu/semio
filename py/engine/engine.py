@@ -565,7 +565,7 @@ class TableEntity(Entity, Table, abc.ABC):
 # https://github.com/usalu/semio-attribute-
 
 
-class AttributeNameField(RealField, abc.ABC):
+class AttributeKeyField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 
@@ -573,35 +573,31 @@ class AttributeValueField(RealField, abc.ABC):
     value: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
-class AttributeUnitField(RealField, abc.ABC):
-    unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
-
-
 class AttributeDefinitionField(RealField, abc.ABC):
     definition: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
-class AttributeId(AttributeNameField, Id):
+class AttributeId(AttributeKeyField, Id):
     pass
 
 
-class AttributeProps(AttributeDefinitionField, AttributeUnitField, AttributeValueField, AttributeNameField, Props):
+class AttributeProps(AttributeDefinitionField, AttributeValueField, AttributeKeyField, Props):
     pass
 
 
-class AttributeInput(AttributeDefinitionField, AttributeUnitField, AttributeValueField, AttributeNameField, Input):
+class AttributeInput(AttributeDefinitionField, AttributeValueField, AttributeKeyField, Input):
     pass
 
 
-class AttributeContext(AttributeUnitField, AttributeValueField, AttributeNameField, Context):
+class AttributeContext(AttributeValueField, AttributeKeyField, Context):
     pass
 
 
-class AttributeOutput(AttributeDefinitionField, AttributeUnitField, AttributeValueField, AttributeNameField, Output):
+class AttributeOutput(AttributeDefinitionField, AttributeValueField, AttributeKeyField, Output):
     pass
 
 
-class Attribute(AttributeDefinitionField, AttributeUnitField, AttributeValueField, AttributeNameField, TableEntity, table=True):
+class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField, TableEntity, table=True):
     PLURAL = "attributes"
     __tablename__ = "attribute"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)

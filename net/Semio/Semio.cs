@@ -715,7 +715,7 @@ public class Representation : Model<Representation>
     [Name("🏷️", "Tg*", "Tags*", "The optional tags to group representations. No tags means default.", PropImportance.ID, skipValidation: true)]
     public List<string> Tags { get; set; } = new();
 
-    [ModelProp("🏷️", "At*", "Qals", "The optional attributes of the representation.", PropImportance.OPTIONAL)]
+    [ModelProp("🏷️", "At*", "Atr*", "The optional attributes of the representation.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public override (bool, List<string>) Validate()
@@ -886,7 +886,7 @@ public class Port : Model<Port>
     public Vector? Direction { get; set; } = null;
     [NumberProp("💍", "T", "T", "The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.", PropImportance.REQUIRED)]
     public float T { get; set; } = 0;
-    [ModelProp("🏷️", "At*", "Qals", "The optional attributes of the port.", PropImportance.OPTIONAL)]
+    [ModelProp("🏷️", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
     public string ToIdString() => $"{Id}";
     public string ToHumanIdString() => $"{ToIdString()}";
