@@ -71,7 +71,9 @@ public static class Constants
     public const int IdLengthLimit = 128;
     public const int UrlLengthLimit = 1024;
     public const int UriLengthLimit = 2048;
+    public const int ExpressionLengthLimit = 4096;
     public const int AttributesMax = 64;
+    public const int QualityMax = 1024;
     public const int TagsMax = 8;
     public const int RepresentationsMax = 32;
     public const int TypesMax = 256;
@@ -461,6 +463,14 @@ public class DescriptionAttribute : TextAttribute
     { }
 }
 
+public class ExpressionAttribute : TextAttribute
+{
+    public ExpressionAttribute(string emoji, string code, string abbreviation, string description,
+        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = false, bool skipValidation = false) :
+        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, Constants.ExpressionLengthLimit)
+    { }
+}
+
 public class FalseOrTrueAttribute : PropAttribute
 {
     public FalseOrTrueAttribute(string emoji, string code, string abbreviation, string description,
@@ -685,18 +695,380 @@ public class Attribute : Model<Attribute>
     [Name("🔑", "Ke", "Key", "The key of the attribute.", PropImportance.ID)]
     public string Key { get; set; } = "";
 
-    [Description("🔢", "Vl?", "Val?",
-        "The optional value [ text | url ] of the attribute. No value is equivalent to true.")]
+    [Description("🔢", "Vl?", "Val?", "The optional value [ text | url ] of the attribute. No value is equivalent to true.")]
     public string Value { get; set; } = "";
 
     [Description("📖", "Df?", "Def?", "The optional definition [ text | uri ] of the attribute.")]
     public string Definition { get; set; } = "";
-
     public string ToIdString() => $"{Key}";
-
     public string ToHumanIdString() => $"{ToIdString()}";
-
     public override string ToString() => $"Atr({ToHumanIdString()})";
+}
+
+public abstract class Symbol { }
+public abstract class Term : Symbol { }
+
+public class Constant : Term
+{
+    public float Value { get; set; }
+    public Constant(float value) { Value = value; }
+    public override string ToString() => Value.ToString(CultureInfo.InvariantCulture);
+}
+
+public class Variable : Term
+{
+    public string Name { get; set; }
+    public Variable(string name) { Name = name; }
+    public override string ToString() => Name;
+}
+
+public abstract class Operator : Symbol
+{
+    public abstract string Keyword { get; }          // e.g. "sum", "divide"
+    public abstract float Apply(params float[] args); // how to evaluate
+}
+
+public class Sum : Operator
+{
+    public override string Keyword => "sum";
+    public override float Apply(params float[] args) => args.Sum();
+}
+
+public class Divide : Operator
+{
+    public override string Keyword => "divide";
+    public override float Apply(params float[] args)
+    {
+        if (args.Length < 2) throw new ArgumentException("divide requires at least 2 operands");
+        float acc = args[0];
+        for (int i = 1; i < args.Length; i++)
+        {
+            if (args[i] == 0f) throw new DivideByZeroException("division by zero");
+            acc /= args[i];
+        }
+        return acc;
+    }
+}
+
+public class Operation : Term
+{
+    public Operator Operator { get; set; }
+    public Term[] Operands { get; set; }
+
+    public Operation(Operator op, params Term[] operands)
+    {
+        Operator = op ?? throw new ArgumentNullException(nameof(op));
+        Operands = operands ?? Array.Empty<Term>();
+    }
+
+    public float Evaluate(Dictionary<string, float> context = null)
+    {
+        float[] values = Operands.Select(o => EvaluateTerm(o, context)).ToArray();
+        return Operator.Apply(values);
+    }
+
+    private static float EvaluateTerm(Term t, Dictionary<string, float> ctx)
+    {
+        switch (t)
+        {
+            case Constant c:
+                return c.Value;
+            case Variable v:
+                if (ctx == null || !ctx.TryGetValue(v.Name, out var val))
+                    throw new KeyNotFoundException($"No value provided for variable '{v.Name}'.");
+                return val;
+            case Operation op:
+                return op.Evaluate(ctx);
+            default:
+                throw new InvalidOperationException($"Unknown term type: {t?.GetType().Name ?? "null"}");
+        }
+    }
+}
+
+public class Formula
+{
+    public Term Root { get; private set; }
+    private readonly Dictionary<string, Func<Operator>> _operators;
+
+    public Formula()
+    {
+        _operators = new Dictionary<string, Func<Operator>>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "sum", () => new Sum() },
+            { "divide", () => new Divide() }
+        };
+    }
+
+    public Formula[] Pop()
+    {
+        if (Root == null) throw new InvalidOperationException("Formula has no root term.");
+
+        if (Root is Operation operation)
+        {
+            return operation.Operands.Select(operand => new Formula { Root = operand }).ToArray();
+        }
+
+        throw new InvalidOperationException("Root term is not an operation, cannot pop operands.");
+    }
+
+    public float Calculate(Dictionary<string, float> context = null)
+    {
+        if (Root == null) throw new InvalidOperationException("Formula has no root term.");
+        return Root switch
+        {
+            Constant c => c.Value,
+            Variable v => context != null && context.TryGetValue(v.Name, out var val)
+                            ? val
+                            : throw new KeyNotFoundException($"No value provided for variable '{v.Name}'."),
+            Operation o => o.Evaluate(context),
+            _ => throw new InvalidOperationException("Unknown root term.")
+        };
+    }
+
+    public string Serialize()
+    {
+        if (Root == null) return string.Empty;
+        var sb = new StringBuilder();
+        SerializeTerm(Root, sb);
+        return sb.ToString();
+    }
+
+    public Formula Deserialize(string expression)
+    {
+        if (expression == null) throw new ArgumentNullException(nameof(expression));
+        var tokens = Tokenize(expression);
+        int index = 0;
+        Root = ParseExpr(tokens, ref index);
+        if (index != tokens.Count)
+            throw new FormatException($"Unexpected token '{tokens[index].Text}' at position {tokens[index].Position}.");
+        return this;
+    }
+
+    // --- Serialization helpers ---
+
+    private void SerializeTerm(Term term, StringBuilder sb)
+    {
+        switch (term)
+        {
+            case Constant c:
+                sb.Append(c.Value.ToString(CultureInfo.InvariantCulture));
+                break;
+            case Variable v:
+                sb.Append(v.Name);
+                break;
+            case Operation op:
+                sb.Append(op.Operator.Keyword);
+                sb.Append(" ( ");
+                for (int i = 0; i < op.Operands.Length; i++)
+                {
+                    if (i > 0) sb.Append(' ');
+                    SerializeTerm(op.Operands[i], sb);
+                }
+                sb.Append(" )");
+                break;
+            default:
+                throw new InvalidOperationException($"Unknown term type for serialization: {term?.GetType().Name ?? "null"}");
+        }
+    }
+
+    // --- Parsing ---
+
+    private enum TokenKind { Identifier, Number, LeftParenthesis, RightParenthesis }
+
+    private readonly struct Token
+    {
+        public TokenKind Kind { get; }
+        public string Text { get; }
+        public int Position { get; }
+        public Token(TokenKind k, string t, int pos) { Kind = k; Text = t; Position = pos; }
+        public override string ToString() => $"{Kind}:{Text}";
+    }
+
+    private static readonly HashSet<char> IdentifierExtraChars = new HashSet<char> { '.', '-', '_' };
+
+    private static List<Token> Tokenize(string input)
+    {
+        var tokens = new List<Token>();
+        int i = 0;
+        while (i < input.Length)
+        {
+            char c = input[i];
+
+            // skip whitespace
+            if (char.IsWhiteSpace(c)) { i++; continue; }
+
+            if (c == '(') { tokens.Add(new Token(TokenKind.LeftParenthesis, "(", i)); i++; continue; }
+            if (c == ')') { tokens.Add(new Token(TokenKind.RightParenthesis, ")", i)); i++; continue; }
+
+            // number (supports leading sign and decimal point)
+            if (char.IsDigit(c) || (c == '.' && i + 1 < input.Length && char.IsDigit(input[i + 1])))
+            {
+                int start = i;
+                i++;
+                while (i < input.Length && (char.IsDigit(input[i]) || input[i] == '.')) i++;
+                // optional exponent
+                if (i < input.Length && (input[i] == 'e' || input[i] == 'E'))
+                {
+                    int ePos = i++;
+                    if (i < input.Length && (input[i] == '+' || input[i] == '-')) i++;
+                    bool hasDigit = false;
+                    while (i < input.Length && char.IsDigit(input[i])) { hasDigit = true; i++; }
+                    if (!hasDigit) throw new FormatException($"Invalid exponent starting at {ePos}.");
+                }
+                tokens.Add(new Token(TokenKind.Number, input.Substring(start, i - start), start));
+                continue;
+            }
+
+            // identifier: letters/digits/_ plus '.' and '-' allowed within
+            if (char.IsLetter(c) || c == '_')
+            {
+                int start = i;
+                i++;
+                while (i < input.Length)
+                {
+                    char d = input[i];
+                    if (char.IsLetterOrDigit(d) || IdentifierExtraChars.Contains(d)) { i++; }
+                    else break;
+                }
+                tokens.Add(new Token(TokenKind.Identifier, input.Substring(start, i - start), start));
+                continue;
+            }
+
+            // allow identifiers that start with digits if they contain dot/hyphen? Not typical; reject:
+            throw new FormatException($"Unexpected character '{c}' at position {i}.");
+        }
+        return tokens;
+    }
+
+    // Grammar:
+    //   expr := number
+    //         | identifier
+    //         | identifier '(' expr* ')'
+    // Operands are space-separated; no commas required.
+    private Term ParseExpr(List<Token> tokens, ref int index)
+    {
+        if (index >= tokens.Count) throw new FormatException("Unexpected end of input.");
+
+        var t = tokens[index];
+
+        if (t.Kind == TokenKind.Number)
+        {
+            index++;
+            if (!float.TryParse(t.Text, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var val))
+                throw new FormatException($"Invalid number '{t.Text}' at {t.Position}.");
+            return new Constant(val);
+        }
+
+        if (t.Kind == TokenKind.Identifier)
+        {
+            // lookahead to see if this is a call: <ident> '(' ... ')'
+            string ident = t.Text;
+            int idPos = t.Position;
+            index++;
+
+            if (index < tokens.Count && tokens[index].Kind == TokenKind.LeftParenthesis)
+            {
+                // operator application
+                index++; // consume '('
+                var args = new List<Term>();
+                while (index < tokens.Count && tokens[index].Kind != TokenKind.RightParenthesis)
+                {
+                    // parse next expr
+                    args.Add(ParseExpr(tokens, ref index));
+                    // arguments are separated by whitespace; no special token to consume
+                }
+                if (index >= tokens.Count || tokens[index].Kind != TokenKind.RightParenthesis)
+                    throw new FormatException($"Missing closing ')' for call starting at {idPos}.");
+                index++; // consume ')'
+
+                var op = InstantiateOperator(ident, idPos);
+                // Optional arity checks per operator (divide >= 2)
+                if (op is Divide && args.Count < 2)
+                    throw new FormatException("divide requires at least 2 operands.");
+
+                return new Operation(op, args.ToArray());
+            }
+            else
+            {
+                // plain variable
+                return new Variable(ident);
+            }
+        }
+
+        if (t.Kind == TokenKind.LeftParenthesis)
+        {
+            // Support parenthesized single expression: ( expr )
+            index++; // '('
+            var inner = ParseExpr(tokens, ref index);
+            if (index >= tokens.Count || tokens[index].Kind != TokenKind.RightParenthesis)
+                throw new FormatException($"Missing ')' for parenthesized expression starting at {t.Position}.");
+            index++; // ')'
+            return inner;
+        }
+
+        throw new FormatException($"Unexpected token '{t.Text}' at position {t.Position}.");
+    }
+
+    private Operator InstantiateOperator(string keyword, int pos)
+    {
+        if (_operators.TryGetValue(keyword, out var ctor))
+            return ctor();
+
+        throw new KeyNotFoundException($"Unknown operator '{keyword}' at position {pos}.");
+    }
+}
+
+[Flags]
+public enum QualityKind
+{
+    General = 0,
+    Design = 1,
+    Type = 2,
+    Piece = 4,
+    Connection = 8,
+    Port = 16,
+}
+
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-quality-"/>
+/// </summary>
+[Model("📃", "Ql", "Qal", "A quality is numeric metadata used for stats and benchmarks.")]
+public class Quality : Model<Quality>
+{
+    [Id("🔑", "Ke", "Key", "The key of the quality.")]
+    public string Key { get; set; } = "";
+    [Name("📛", "Nm", "Name", "The name of the quality.", PropImportance.REQUIRED)]
+    public string Name { get; set; } = "";
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the quality.")]
+    public string Description { get; set; } = "";
+    [Url("🔗", "Ur?", "Uri?", "The Unique Resource Identifier (URI) of the quality.")]
+    public string Uri { get; set; } = "";
+    [Name("Ⓜ️", "SI?", "SI?", "The optional default SI unit of the quality.")]
+    public string SI { get; set; } = "";
+    [Name("🦶", "Im?", "Imp?", "The optional default imperial unit of the quality.")]
+    public string Imperial { get; set; } = "";
+    [NumberProp("⬆️", "Mx?", "Max?", "The optional maximum value of the quality.")]
+    public float Max { get; set; } = 0;
+    [FalseOrTrue("⬆️", "MxI?", "MxI?", "Whether the maximum value is included in the range.")]
+    public bool MaxIncluded { get; set; } = true;
+    [NumberProp("⬇️", "Mi?", "Min?", "The optional minimum value of the quality.")]
+    public float Min { get; set; } = 0;
+    [FalseOrTrue("⬇️", "MiI?", "MiI?", "Whether the minimum value is included in the range.")]
+    public bool MinIncluded { get; set; } = true;
+    [NumberProp("Ⓜ️", "Dl?", "Dfl?", "The optional default value of the quality. Either a default value or a formula can be set.")]
+    public float Default { get; set; } = 0;
+    [ModelProp("🟰", "Fo?", "For?", "The optional formula of the quality.")]
+    public string Formula { get; set; } = "";
+    [Name("🔢", "Kd", "Kn", "The kind of the quality.")]
+    public QualityKind Kind { get; set; } = QualityKind.General;
+    [ModelProp("🏷️", "At*", "Atr*", "The optional attributes of the quality.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
+}
+
+public class QualityId : Model<QualityId>
+{
+    [Id("🔑", "Ke", "Key", "The key of the quality.")]
+    public string Key { get; set; } = "";
 }
 
 /// <summary>
@@ -1149,8 +1521,7 @@ public class Piece : Model<Piece>
     }
 }
 
-[Model("⭕", "Pc", "Pce",
-    "The optional local identifier of the piece within the design. No id means the default piece.")]
+[Model("⭕", "Pc", "Pce", "The optional local identifier of the piece within the design. No id means the default piece.")]
 public class PieceId : Model<PieceId>
 {
     [Id("🆔", "Id?", "Id?", "The optional local identifier of the piece within the design. No id means the default piece.", isDefaultValid: true)]
@@ -1832,9 +2203,11 @@ public class Kit : Model<Kit>
     public string Homepage { get; set; } = "";
     [Url("⚖️", "Li?", "Lic?", "The optional license [ spdx id | url ] of the kit.")]
     public string License { get; set; } = "";
-    [ModelProp("🧩", "Ty*", "Typs*", "The optional types of the kit.", PropImportance.OPTIONAL)]
+    [ModelProp("📃", "Ql*", "Qal*", "The optional qualities of the kit.", PropImportance.OPTIONAL)]
+    public List<Quality> Qualities { get; set; } = new();
+    [ModelProp("🧩", "Ty*", "Typ*", "The optional types of the kit.", PropImportance.OPTIONAL)]
     public List<Type> Types { get; set; } = new();
-    [ModelProp("🏙️", "Dn*", "Dsns*", "The optional designs of the kit.", PropImportance.OPTIONAL)]
+    [ModelProp("🏙️", "Dn*", "Dsn*", "The optional designs of the kit.", PropImportance.OPTIONAL)]
     public List<Design> Designs { get; set; } = new();
     [ModelProp("🏷️", "At*", "Atr*", "The optional attributes of the kit.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
