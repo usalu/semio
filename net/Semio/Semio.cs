@@ -318,12 +318,12 @@ public static class Utility
             {
                 private static readonly QuantityInfo[] _included =
                 {
-                    Length.Info,
+                    UnitsNet.Length.Info,
                     Area.Info,
                     Volume.Info,
                     Duration.Info,
                     Energy.Info,
-                    Power.Info,
+                    UnitsNet.Power.Info,
                     Pressure.Info,
                     Mass.Info,
                     Angle.Info,
@@ -373,11 +373,33 @@ public abstract class Symbol { }
 public abstract class Term : Symbol { }
 public abstract class Constant : Term { }
 
-public class NumberConstant : Constant
+public class UnitValue
 {
     public float Value { get; set; }
-    public NumberConstant(float value) { Value = value; }
-    public override string ToString() => Value.ToString(CultureInfo.InvariantCulture);
+    public string Unit { get; set; }
+
+    public UnitValue(float value, string unit = "")
+    {
+        Value = value;
+        Unit = unit ?? "";
+    }
+
+    public float ConvertTo(string targetUnit)
+    {
+        if (string.IsNullOrEmpty(Unit) || string.IsNullOrEmpty(targetUnit) || Unit == targetUnit)
+            return Value;
+        return Utility.Units.Convert(Value, Unit, targetUnit);
+    }
+
+    public override string ToString() => string.IsNullOrEmpty(Unit) ? Value.ToString(CultureInfo.InvariantCulture) : $"'{Value.ToString(CultureInfo.InvariantCulture)} {Unit}'";
+}
+
+public class NumberConstant : Constant
+{
+    public UnitValue UnitValue { get; set; }
+    public NumberConstant(float value, string unit = "") { UnitValue = new UnitValue(value, unit); }
+    public NumberConstant(UnitValue unitValue) { UnitValue = unitValue ?? new UnitValue(0); }
+    public override string ToString() => UnitValue.ToString();
 }
 
 public class StringConstant : Constant
@@ -397,132 +419,247 @@ public class Variable : Term
 public abstract class Operator : Symbol
 {
     public abstract string Keyword { get; }
-    public abstract object Apply(params object[] args);
+    public abstract object Apply(object[] args, string targetUnit = "");
+
+    protected static UnitValue ConvertToUnitValue(object arg)
+    {
+        return arg switch
+        {
+            UnitValue uv => uv,
+            float f => new UnitValue(f),
+            _ => throw new ArgumentException($"Cannot convert {arg?.GetType().Name ?? "null"} to UnitValue")
+        };
+    }
+
+    protected static UnitValue[] ConvertArgsToUnitValues(object[] args)
+    {
+        return args.Select(ConvertToUnitValue).ToArray();
+    }
+
+    protected static string DetermineCommonUnit(UnitValue[] values)
+    {
+        var nonEmptyUnits = values.Where(v => !string.IsNullOrEmpty(v.Unit)).ToArray();
+        if (nonEmptyUnits.Length == 0) return "";
+        return nonEmptyUnits[0].Unit;
+    }
 }
 
 // Numeric Operators
 public class Sum : Operator
 {
     public override string Keyword => "sum";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
-        var floats = args.Cast<float>().ToArray();
-        return floats.Sum();
+        var unitValues = ConvertArgsToUnitValues(args);
+        if (unitValues.Length == 0) return new UnitValue(0);
+
+        var commonUnit = string.IsNullOrEmpty(targetUnit) ? DetermineCommonUnit(unitValues) : targetUnit;
+        float sum = 0;
+
+        foreach (var uv in unitValues)
+        {
+            if (string.IsNullOrEmpty(commonUnit))
+                sum += uv.Value;
+            else
+                sum += uv.ConvertTo(commonUnit);
+        }
+
+        return new UnitValue(sum, commonUnit);
     }
 }
 
 public class Multiply : Operator
 {
     public override string Keyword => "multiply";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
-        var floats = args.Cast<float>().ToArray();
-        if (floats.Length == 0) return 1f;
+        var unitValues = ConvertArgsToUnitValues(args);
+        if (unitValues.Length == 0) return new UnitValue(1);
+
         float result = 1f;
-        foreach (var arg in floats) result *= arg;
-        return result;
+        var units = new List<string>();
+
+        foreach (var uv in unitValues)
+        {
+            result *= uv.Value;
+            if (!string.IsNullOrEmpty(uv.Unit))
+                units.Add(uv.Unit);
+        }
+
+        var combinedUnit = string.Join("·", units);
+        return new UnitValue(result, combinedUnit);
     }
 }
 
 public class Subtract : Operator
 {
     public override string Keyword => "subtract";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
-        var floats = args.Cast<float>().ToArray();
-        if (floats.Length < 2) throw new ArgumentException("subtract requires at least 2 operands");
-        float result = floats[0];
-        for (int i = 1; i < floats.Length; i++) result -= floats[i];
-        return result;
+        var unitValues = ConvertArgsToUnitValues(args);
+        if (unitValues.Length < 2) throw new ArgumentException("subtract requires at least 2 operands");
+
+        var commonUnit = DetermineCommonUnit(unitValues);
+        float result = string.IsNullOrEmpty(commonUnit) ? unitValues[0].Value : unitValues[0].ConvertTo(commonUnit);
+
+        for (int i = 1; i < unitValues.Length; i++)
+        {
+            result -= string.IsNullOrEmpty(commonUnit) ? unitValues[i].Value : unitValues[i].ConvertTo(commonUnit);
+        }
+
+        return new UnitValue(result, commonUnit);
     }
 }
 
 public class Divide : Operator
 {
     public override string Keyword => "divide";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
-        var floats = args.Cast<float>().ToArray();
-        if (floats.Length < 2) throw new ArgumentException("divide requires at least 2 operands");
-        float acc = floats[0];
-        for (int i = 1; i < floats.Length; i++)
+        var unitValues = ConvertArgsToUnitValues(args);
+        if (unitValues.Length < 2) throw new ArgumentException("divide requires at least 2 operands");
+
+        float acc = unitValues[0].Value;
+        var numeratorUnit = unitValues[0].Unit;
+        var denominatorUnits = new List<string>();
+
+        for (int i = 1; i < unitValues.Length; i++)
         {
-            if (floats[i] == 0f) throw new DivideByZeroException("division by zero");
-            acc /= floats[i];
+            if (unitValues[i].Value == 0f) throw new DivideByZeroException("division by zero");
+            acc /= unitValues[i].Value;
+            if (!string.IsNullOrEmpty(unitValues[i].Unit))
+                denominatorUnits.Add(unitValues[i].Unit);
         }
-        return acc;
+
+        var resultUnit = "";
+        if (!string.IsNullOrEmpty(numeratorUnit) || denominatorUnits.Count > 0)
+        {
+            var denominatorPart = denominatorUnits.Count > 0 ? string.Join("·", denominatorUnits) : "";
+            if (!string.IsNullOrEmpty(numeratorUnit) && !string.IsNullOrEmpty(denominatorPart))
+                resultUnit = $"{numeratorUnit}/{denominatorPart}";
+            else if (!string.IsNullOrEmpty(numeratorUnit))
+                resultUnit = numeratorUnit;
+            else if (!string.IsNullOrEmpty(denominatorPart))
+                resultUnit = $"1/{denominatorPart}";
+        }
+
+        return new UnitValue(acc, resultUnit);
     }
 }
 
 public class Negate : Operator
 {
     public override string Keyword => "negate";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 1) throw new ArgumentException("negate requires exactly 1 operand");
-        return -((float)args[0]);
+        var unitValue = ConvertToUnitValue(args[0]);
+        return new UnitValue(-unitValue.Value, unitValue.Unit);
     }
 }
 
 public class SquareRoot : Operator
 {
     public override string Keyword => "sqrt";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 1) throw new ArgumentException("sqrt requires exactly 1 operand");
-        var val = (float)args[0];
-        if (val < 0f) throw new ArgumentException("sqrt requires non-negative operand");
-        return (float)Math.Sqrt(val);
+        var unitValue = ConvertToUnitValue(args[0]);
+        if (unitValue.Value < 0f) throw new ArgumentException("sqrt requires non-negative operand");
+        var resultUnit = string.IsNullOrEmpty(unitValue.Unit) ? "" : $"√({unitValue.Unit})";
+        return new UnitValue((float)Math.Sqrt(unitValue.Value), resultUnit);
     }
 }
 
 public class Power : Operator
 {
     public override string Keyword => "power";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 2) throw new ArgumentException("power requires exactly 2 operands");
-        return (float)Math.Pow((float)args[0], (float)args[1]);
+        var baseValue = ConvertToUnitValue(args[0]);
+        var exponent = ConvertToUnitValue(args[1]);
+        var resultUnit = string.IsNullOrEmpty(baseValue.Unit) ? "" : $"({baseValue.Unit})^{exponent.Value}";
+        return new UnitValue((float)Math.Pow(baseValue.Value, exponent.Value), resultUnit);
     }
 }
 
 public class Min : Operator
 {
     public override string Keyword => "min";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
-        if (args.Length == 0) throw new ArgumentException("min requires at least 1 operand");
-        return args.Cast<float>().Min();
+        var unitValues = ConvertArgsToUnitValues(args);
+        if (unitValues.Length == 0) throw new ArgumentException("min requires at least 1 operand");
+
+        var commonUnit = string.IsNullOrEmpty(targetUnit) ? DetermineCommonUnit(unitValues) : targetUnit;
+        float minValue = float.MaxValue;
+
+        foreach (var uv in unitValues)
+        {
+            var value = string.IsNullOrEmpty(commonUnit) ? uv.Value : uv.ConvertTo(commonUnit);
+            if (value < minValue) minValue = value;
+        }
+
+        return new UnitValue(minValue, commonUnit);
     }
 }
 
 public class Max : Operator
 {
     public override string Keyword => "max";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
-        if (args.Length == 0) throw new ArgumentException("max requires at least 1 operand");
-        return args.Cast<float>().Max();
+        var unitValues = ConvertArgsToUnitValues(args);
+        if (unitValues.Length == 0) throw new ArgumentException("max requires at least 1 operand");
+
+        var commonUnit = string.IsNullOrEmpty(targetUnit) ? DetermineCommonUnit(unitValues) : targetUnit;
+        float maxValue = float.MinValue;
+
+        foreach (var uv in unitValues)
+        {
+            var value = string.IsNullOrEmpty(commonUnit) ? uv.Value : uv.ConvertTo(commonUnit);
+            if (value > maxValue) maxValue = value;
+        }
+
+        return new UnitValue(maxValue, commonUnit);
     }
 }
 
 public class Average : Operator
 {
     public override string Keyword => "average";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
-        if (args.Length == 0) throw new ArgumentException("average requires at least 1 operand");
-        return args.Cast<float>().Average();
+        var unitValues = ConvertArgsToUnitValues(args);
+        if (unitValues.Length == 0) throw new ArgumentException("average requires at least 1 operand");
+
+        var commonUnit = string.IsNullOrEmpty(targetUnit) ? DetermineCommonUnit(unitValues) : targetUnit;
+        float sum = 0;
+
+        foreach (var uv in unitValues)
+        {
+            sum += string.IsNullOrEmpty(commonUnit) ? uv.Value : uv.ConvertTo(commonUnit);
+        }
+
+        return new UnitValue(sum / unitValues.Length, commonUnit);
     }
 }
 
 public class Modulo : Operator
 {
     public override string Keyword => "mod";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 2) throw new ArgumentException("mod requires exactly 2 operands");
-        return (float)args[0] % (float)args[1];
+        var value1 = ConvertToUnitValue(args[0]);
+        var value2 = ConvertToUnitValue(args[1]);
+        var commonUnit = string.IsNullOrEmpty(targetUnit) ? DetermineCommonUnit(new[] { value1, value2 }) : targetUnit;
+
+        var val1 = string.IsNullOrEmpty(commonUnit) ? value1.Value : value1.ConvertTo(commonUnit);
+        var val2 = string.IsNullOrEmpty(commonUnit) ? value2.Value : value2.ConvertTo(commonUnit);
+
+        return new UnitValue(val1 % val2, commonUnit);
     }
 }
 
@@ -530,7 +667,7 @@ public class Modulo : Operator
 public class And : Operator
 {
     public override string Keyword => "and";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length < 2) throw new ArgumentException("and requires at least 2 operands");
         return args.Cast<float>().All(x => x != 0f) ? 1f : 0f;
@@ -540,7 +677,7 @@ public class And : Operator
 public class Or : Operator
 {
     public override string Keyword => "or";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length < 2) throw new ArgumentException("or requires at least 2 operands");
         return args.Cast<float>().Any(x => x != 0f) ? 1f : 0f;
@@ -550,7 +687,7 @@ public class Or : Operator
 public class ExclusiveOr : Operator
 {
     public override string Keyword => "xor";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 2) throw new ArgumentException("xor requires exactly 2 operands");
         bool a = (float)args[0] != 0f;
@@ -562,10 +699,11 @@ public class ExclusiveOr : Operator
 public class Invert : Operator
 {
     public override string Keyword => "not";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 1) throw new ArgumentException("not requires exactly 1 operand");
-        return (float)args[0] == 0f ? 1f : 0f;
+        var value = ConvertToUnitValue(args[0]);
+        return new UnitValue(value.Value == 0f ? 1f : 0f);
     }
 }
 
@@ -573,21 +711,32 @@ public class Invert : Operator
 public class Equal : Operator
 {
     public override string Keyword => "equal";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 2) throw new ArgumentException("equal requires exactly 2 operands");
+
+        if (args[0] is UnitValue uv1 && args[1] is UnitValue uv2)
+        {
+            var commonUnit = DetermineCommonUnit(new[] { uv1, uv2 });
+            var val1 = string.IsNullOrEmpty(commonUnit) ? uv1.Value : uv1.ConvertTo(commonUnit);
+            var val2 = string.IsNullOrEmpty(commonUnit) ? uv2.Value : uv2.ConvertTo(commonUnit);
+            return new UnitValue(Math.Abs(val1 - val2) < float.Epsilon ? 1f : 0f);
+        }
+
         if (args[0] is float f1 && args[1] is float f2)
-            return Math.Abs(f1 - f2) < float.Epsilon ? 1f : 0f;
+            return new UnitValue(Math.Abs(f1 - f2) < float.Epsilon ? 1f : 0f);
+
         if (args[0] is string s1 && args[1] is string s2)
-            return string.Equals(s1, s2, StringComparison.Ordinal) ? 1f : 0f;
-        return 0f;
+            return new UnitValue(string.Equals(s1, s2, StringComparison.Ordinal) ? 1f : 0f);
+
+        return new UnitValue(0f);
     }
 }
 
 public class GreaterThan : Operator
 {
     public override string Keyword => "greater";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 2) throw new ArgumentException("greater requires exactly 2 operands");
         return (float)args[0] > (float)args[1] ? 1f : 0f;
@@ -597,7 +746,7 @@ public class GreaterThan : Operator
 public class LessThan : Operator
 {
     public override string Keyword => "less";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 2) throw new ArgumentException("less requires exactly 2 operands");
         return (float)args[0] < (float)args[1] ? 1f : 0f;
@@ -607,7 +756,7 @@ public class LessThan : Operator
 public class GreaterThanOrEqual : Operator
 {
     public override string Keyword => "greater-equal";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 2) throw new ArgumentException("greater-equal requires exactly 2 operands");
         return (float)args[0] >= (float)args[1] ? 1f : 0f;
@@ -617,7 +766,7 @@ public class GreaterThanOrEqual : Operator
 public class LessThanOrEqual : Operator
 {
     public override string Keyword => "less-equal";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 2) throw new ArgumentException("less-equal requires exactly 2 operands");
         return (float)args[0] <= (float)args[1] ? 1f : 0f;
@@ -628,7 +777,7 @@ public class LessThanOrEqual : Operator
 public class If : Operator
 {
     public override string Keyword => "if";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 3) throw new ArgumentException("if requires exactly 3 operands: condition, true-value, false-value");
         return (float)args[0] != 0f ? args[1] : args[2];
@@ -639,17 +788,18 @@ public class If : Operator
 public class Absolute : Operator
 {
     public override string Keyword => "abs";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 1) throw new ArgumentException("abs requires exactly 1 operand");
-        return Math.Abs((float)args[0]);
+        var uv = ConvertToUnitValue(args[0]);
+        return new UnitValue(Math.Abs(uv.Value), uv.Unit);
     }
 }
 
 public class Floor : Operator
 {
     public override string Keyword => "floor";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 1) throw new ArgumentException("floor requires exactly 1 operand");
         return (float)Math.Floor((float)args[0]);
@@ -659,7 +809,7 @@ public class Floor : Operator
 public class Ceiling : Operator
 {
     public override string Keyword => "ceil";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 1) throw new ArgumentException("ceil requires exactly 1 operand");
         return (float)Math.Ceiling((float)args[0]);
@@ -669,7 +819,7 @@ public class Ceiling : Operator
 public class Round : Operator
 {
     public override string Keyword => "round";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 1) throw new ArgumentException("round requires exactly 1 operand");
         return (float)Math.Round((float)args[0]);
@@ -680,7 +830,7 @@ public class Round : Operator
 public class Length : Operator
 {
     public override string Keyword => "length";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 1) throw new ArgumentException("length requires exactly 1 operand");
         return (float)((string)args[0]).Length;
@@ -690,7 +840,7 @@ public class Length : Operator
 public class StartsWith : Operator
 {
     public override string Keyword => "startswith";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 2) throw new ArgumentException("startswith requires exactly 2 operands");
         return ((string)args[0]).StartsWith((string)args[1], StringComparison.Ordinal) ? 1f : 0f;
@@ -700,7 +850,7 @@ public class StartsWith : Operator
 public class EndsWith : Operator
 {
     public override string Keyword => "endswith";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 2) throw new ArgumentException("endswith requires exactly 2 operands");
         return ((string)args[0]).EndsWith((string)args[1], StringComparison.Ordinal) ? 1f : 0f;
@@ -710,7 +860,7 @@ public class EndsWith : Operator
 public class Contains : Operator
 {
     public override string Keyword => "contains";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 2) throw new ArgumentException("contains requires exactly 2 operands");
         return ((string)args[0]).Contains((string)args[1]) ? 1f : 0f;
@@ -720,7 +870,7 @@ public class Contains : Operator
 public class Substring : Operator
 {
     public override string Keyword => "substring";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length < 2 || args.Length > 3) throw new ArgumentException("substring requires 2 or 3 operands");
         string str = (string)args[0];
@@ -737,7 +887,7 @@ public class Substring : Operator
 public class Concat : Operator
 {
     public override string Keyword => "concat";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         return string.Concat(args.Cast<string>());
     }
@@ -746,7 +896,7 @@ public class Concat : Operator
 public class ToUpper : Operator
 {
     public override string Keyword => "upper";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 1) throw new ArgumentException("upper requires exactly 1 operand");
         return ((string)args[0]).ToUpper();
@@ -756,7 +906,7 @@ public class ToUpper : Operator
 public class ToLower : Operator
 {
     public override string Keyword => "lower";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 1) throw new ArgumentException("lower requires exactly 1 operand");
         return ((string)args[0]).ToLower();
@@ -766,7 +916,7 @@ public class ToLower : Operator
 public class Trim : Operator
 {
     public override string Keyword => "trim";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 1) throw new ArgumentException("trim requires exactly 1 operand");
         return ((string)args[0]).Trim();
@@ -776,7 +926,7 @@ public class Trim : Operator
 public class Replace : Operator
 {
     public override string Keyword => "replace";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 3) throw new ArgumentException("replace requires exactly 3 operands");
         return ((string)args[0]).Replace((string)args[1], (string)args[2]);
@@ -787,7 +937,7 @@ public class Replace : Operator
 public class ToNumber : Operator
 {
     public override string Keyword => "number";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 1) throw new ArgumentException("number requires exactly 1 operand");
         if (args[0] is string str)
@@ -803,7 +953,7 @@ public class ToNumber : Operator
 public class ToText : Operator
 {
     public override string Keyword => "text";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 1) throw new ArgumentException("text requires exactly 1 operand");
         if (args[0] is float f)
@@ -815,7 +965,7 @@ public class ToText : Operator
 public class ToBoolean : Operator
 {
     public override string Keyword => "boolean";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 1) throw new ArgumentException("boolean requires exactly 1 operand");
         if (args[0] is float f)
@@ -830,7 +980,7 @@ public class ToBoolean : Operator
 public class Clamp : Operator
 {
     public override string Keyword => "clamp";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 3) throw new ArgumentException("clamp requires exactly 3 operands: value, min, max");
         float value = (float)args[0];
@@ -843,7 +993,7 @@ public class Clamp : Operator
 public class Lerp : Operator
 {
     public override string Keyword => "lerp";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 3) throw new ArgumentException("lerp requires exactly 3 operands: a, b, t");
         float a = (float)args[0];
@@ -856,7 +1006,7 @@ public class Lerp : Operator
 public class Sign : Operator
 {
     public override string Keyword => "sign";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 1) throw new ArgumentException("sign requires exactly 1 operand");
         return (float)Math.Sign((float)args[0]);
@@ -866,7 +1016,7 @@ public class Sign : Operator
 public class IsEmpty : Operator
 {
     public override string Keyword => "isempty";
-    public override object Apply(params object[] args)
+    public override object Apply(object[] args, string targetUnit = "")
     {
         if (args.Length != 1) throw new ArgumentException("isempty requires exactly 1 operand");
         if (args[0] is string str)
@@ -886,18 +1036,18 @@ public class Operation : Term
         Operands = operands ?? Array.Empty<Term>();
     }
 
-    public object Evaluate(Dictionary<string, object> context = null)
+    public object Evaluate(Dictionary<string, object>? context = null, string targetUnit = "")
     {
-        object[] values = Operands.Select(o => EvaluateTerm(o, context)).ToArray();
-        return Operator.Apply(values);
+        object[] values = Operands.Select(o => EvaluateTerm(o, context, targetUnit)).ToArray();
+        return Operator.Apply(values, targetUnit);
     }
 
-    private static object EvaluateTerm(Term t, Dictionary<string, object> ctx)
+    private static object EvaluateTerm(Term t, Dictionary<string, object>? ctx, string targetUnit = "")
     {
         switch (t)
         {
             case NumberConstant c:
-                return c.Value;
+                return c.UnitValue;
             case StringConstant sc:
                 return sc.Value;
             case Variable v:
@@ -905,7 +1055,7 @@ public class Operation : Term
                     throw new KeyNotFoundException($"No value provided for variable '{v.Name}'.");
                 return val;
             case Operation op:
-                return op.Evaluate(ctx);
+                return op.Evaluate(ctx, targetUnit);
             default:
                 throw new InvalidOperationException($"Unknown term type: {t?.GetType().Name ?? "null"}");
         }
@@ -914,7 +1064,7 @@ public class Operation : Term
 
 public class Expression
 {
-    public Term Root { get; private set; }
+    public Term? Root { get; private set; }
     private readonly Dictionary<string, Func<Operator>> _operators;
 
     public Expression()
@@ -991,17 +1141,17 @@ public class Expression
         throw new InvalidOperationException("Root term is not an operation, cannot pop operands.");
     }
 
-    public object Calculate(Dictionary<string, object> context = null)
+    public object Calculate(Dictionary<string, object>? context = null, string targetUnit = "")
     {
         if (Root == null) throw new InvalidOperationException("Expression has no root term.");
         return Root switch
         {
-            NumberConstant c => c.Value,
+            NumberConstant c => string.IsNullOrEmpty(targetUnit) ? c.UnitValue : c.UnitValue.ConvertTo(targetUnit),
             StringConstant sc => sc.Value,
             Variable v => context != null && context.TryGetValue(v.Name, out var val)
                             ? val
                             : throw new KeyNotFoundException($"No value provided for variable '{v.Name}'."),
-            Operation o => o.Evaluate(context),
+            Operation o => o.Evaluate(context, targetUnit),
             _ => throw new InvalidOperationException("Unknown root term.")
         };
     }
@@ -1032,7 +1182,7 @@ public class Expression
         switch (term)
         {
             case NumberConstant c:
-                sb.Append(c.Value.ToString(CultureInfo.InvariantCulture));
+                sb.Append(c.UnitValue.ToString());
                 break;
             case StringConstant sc:
                 sb.Append('"');
@@ -1059,7 +1209,7 @@ public class Expression
 
     // --- Parsing ---
 
-    private enum TokenKind { Identifier, Number, String, LeftParenthesis, RightParenthesis }
+    private enum TokenKind { Identifier, Number, String, UnitLiteral, LeftParenthesis, RightParenthesis }
 
     private readonly struct Token
     {
@@ -1116,6 +1266,39 @@ public class Expression
                 if (i >= input.Length) throw new FormatException($"Unterminated string literal starting at {start}.");
                 i++; // skip closing quote
                 tokens.Add(new Token(TokenKind.String, sb.ToString(), start));
+                continue;
+            }
+
+            // unit literal (single quotes)
+            if (c == '\'')
+            {
+                int start = i;
+                i++; // skip opening quote
+                var sb = new StringBuilder();
+                while (i < input.Length && input[i] != '\'')
+                {
+                    if (input[i] == '\\' && i + 1 < input.Length)
+                    {
+                        i++; // skip backslash
+                        switch (input[i])
+                        {
+                            case '\'': sb.Append('\''); break;
+                            case '\\': sb.Append('\\'); break;
+                            case 'n': sb.Append('\n'); break;
+                            case 't': sb.Append('\t'); break;
+                            case 'r': sb.Append('\r'); break;
+                            default: sb.Append(input[i]); break;
+                        }
+                    }
+                    else
+                    {
+                        sb.Append(input[i]);
+                    }
+                    i++;
+                }
+                if (i >= input.Length) throw new FormatException($"Unterminated unit literal starting at {start}.");
+                i++; // skip closing quote
+                tokens.Add(new Token(TokenKind.UnitLiteral, sb.ToString(), start));
                 continue;
             }
 
@@ -1183,6 +1366,29 @@ public class Expression
         {
             index++;
             return new StringConstant(t.Text);
+        }
+
+        if (t.Kind == TokenKind.UnitLiteral)
+        {
+            index++;
+            var parts = t.Text.Trim().Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0) throw new FormatException($"Empty unit literal at {t.Position}.");
+
+            if (parts.Length == 1)
+            {
+                // Just a number without unit: '2.3'
+                if (!float.TryParse(parts[0], NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var val))
+                    throw new FormatException($"Invalid number '{parts[0]}' in unit literal at {t.Position}.");
+                return new NumberConstant(val);
+            }
+            else
+            {
+                // Number with unit: '2.3 m'
+                if (!float.TryParse(parts[0], NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var val))
+                    throw new FormatException($"Invalid number '{parts[0]}' in unit literal at {t.Position}.");
+                var unit = string.Join(" ", parts.Skip(1));
+                return new NumberConstant(val, unit);
+            }
         }
 
         if (t.Kind == TokenKind.Identifier)
@@ -2350,7 +2556,7 @@ public class Design : Model<Design>
                     Y = parent.Center.Y + connection.Y + direction.Y
                 };
                 child.Center = childCenter;
-                var semioAttribute = child.Attributes.FirstOrDefault(q => q.Name == "semio.parent");
+                var semioAttribute = child.Attributes.FirstOrDefault(q => q.Key == "semio.parent");
                 if (semioAttribute != null)
                 {
                     semioAttribute.Value = parent.Id;
@@ -2359,7 +2565,7 @@ public class Design : Model<Design>
                 {
                     child.Attributes.Add(new Attribute
                     {
-                        Name = "semio.parent",
+                        Key = "semio.parent",
                         Value = parent.Id
                     });
                 }
