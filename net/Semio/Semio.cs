@@ -368,7 +368,885 @@ public static class Utility
     }
 }
 
-#endregion
+#region Expressions
+public abstract class Symbol { }
+public abstract class Term : Symbol { }
+public abstract class Constant : Term { }
+
+public class NumberConstant : Constant
+{
+    public float Value { get; set; }
+    public NumberConstant(float value) { Value = value; }
+    public override string ToString() => Value.ToString(CultureInfo.InvariantCulture);
+}
+
+public class StringConstant : Constant
+{
+    public string Value { get; set; }
+    public StringConstant(string value) { Value = value ?? string.Empty; }
+    public override string ToString() => $"\"{Value}\"";
+}
+
+public class Variable : Term
+{
+    public string Name { get; set; }
+    public Variable(string name) { Name = name; }
+    public override string ToString() => Name;
+}
+
+public abstract class Operator : Symbol
+{
+    public abstract string Keyword { get; }
+    public abstract object Apply(params object[] args);
+}
+
+// Numeric Operators
+public class Sum : Operator
+{
+    public override string Keyword => "sum";
+    public override object Apply(params object[] args)
+    {
+        var floats = args.Cast<float>().ToArray();
+        return floats.Sum();
+    }
+}
+
+public class Multiply : Operator
+{
+    public override string Keyword => "multiply";
+    public override object Apply(params object[] args)
+    {
+        var floats = args.Cast<float>().ToArray();
+        if (floats.Length == 0) return 1f;
+        float result = 1f;
+        foreach (var arg in floats) result *= arg;
+        return result;
+    }
+}
+
+public class Subtract : Operator
+{
+    public override string Keyword => "subtract";
+    public override object Apply(params object[] args)
+    {
+        var floats = args.Cast<float>().ToArray();
+        if (floats.Length < 2) throw new ArgumentException("subtract requires at least 2 operands");
+        float result = floats[0];
+        for (int i = 1; i < floats.Length; i++) result -= floats[i];
+        return result;
+    }
+}
+
+public class Divide : Operator
+{
+    public override string Keyword => "divide";
+    public override object Apply(params object[] args)
+    {
+        var floats = args.Cast<float>().ToArray();
+        if (floats.Length < 2) throw new ArgumentException("divide requires at least 2 operands");
+        float acc = floats[0];
+        for (int i = 1; i < floats.Length; i++)
+        {
+            if (floats[i] == 0f) throw new DivideByZeroException("division by zero");
+            acc /= floats[i];
+        }
+        return acc;
+    }
+}
+
+public class Negate : Operator
+{
+    public override string Keyword => "negate";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 1) throw new ArgumentException("negate requires exactly 1 operand");
+        return -((float)args[0]);
+    }
+}
+
+public class SquareRoot : Operator
+{
+    public override string Keyword => "sqrt";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 1) throw new ArgumentException("sqrt requires exactly 1 operand");
+        var val = (float)args[0];
+        if (val < 0f) throw new ArgumentException("sqrt requires non-negative operand");
+        return (float)Math.Sqrt(val);
+    }
+}
+
+public class Power : Operator
+{
+    public override string Keyword => "power";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 2) throw new ArgumentException("power requires exactly 2 operands");
+        return (float)Math.Pow((float)args[0], (float)args[1]);
+    }
+}
+
+public class Min : Operator
+{
+    public override string Keyword => "min";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length == 0) throw new ArgumentException("min requires at least 1 operand");
+        return args.Cast<float>().Min();
+    }
+}
+
+public class Max : Operator
+{
+    public override string Keyword => "max";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length == 0) throw new ArgumentException("max requires at least 1 operand");
+        return args.Cast<float>().Max();
+    }
+}
+
+public class Average : Operator
+{
+    public override string Keyword => "average";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length == 0) throw new ArgumentException("average requires at least 1 operand");
+        return args.Cast<float>().Average();
+    }
+}
+
+public class Modulo : Operator
+{
+    public override string Keyword => "mod";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 2) throw new ArgumentException("mod requires exactly 2 operands");
+        return (float)args[0] % (float)args[1];
+    }
+}
+
+// Boolean/Logical Operators (using 1.0f for true, 0.0f for false)
+public class And : Operator
+{
+    public override string Keyword => "and";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length < 2) throw new ArgumentException("and requires at least 2 operands");
+        return args.Cast<float>().All(x => x != 0f) ? 1f : 0f;
+    }
+}
+
+public class Or : Operator
+{
+    public override string Keyword => "or";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length < 2) throw new ArgumentException("or requires at least 2 operands");
+        return args.Cast<float>().Any(x => x != 0f) ? 1f : 0f;
+    }
+}
+
+public class ExclusiveOr : Operator
+{
+    public override string Keyword => "xor";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 2) throw new ArgumentException("xor requires exactly 2 operands");
+        bool a = (float)args[0] != 0f;
+        bool b = (float)args[1] != 0f;
+        return (a ^ b) ? 1f : 0f;
+    }
+}
+
+public class Invert : Operator
+{
+    public override string Keyword => "not";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 1) throw new ArgumentException("not requires exactly 1 operand");
+        return (float)args[0] == 0f ? 1f : 0f;
+    }
+}
+
+// Comparison Operators
+public class Equal : Operator
+{
+    public override string Keyword => "equal";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 2) throw new ArgumentException("equal requires exactly 2 operands");
+        if (args[0] is float f1 && args[1] is float f2)
+            return Math.Abs(f1 - f2) < float.Epsilon ? 1f : 0f;
+        if (args[0] is string s1 && args[1] is string s2)
+            return string.Equals(s1, s2, StringComparison.Ordinal) ? 1f : 0f;
+        return 0f;
+    }
+}
+
+public class GreaterThan : Operator
+{
+    public override string Keyword => "greater";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 2) throw new ArgumentException("greater requires exactly 2 operands");
+        return (float)args[0] > (float)args[1] ? 1f : 0f;
+    }
+}
+
+public class LessThan : Operator
+{
+    public override string Keyword => "less";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 2) throw new ArgumentException("less requires exactly 2 operands");
+        return (float)args[0] < (float)args[1] ? 1f : 0f;
+    }
+}
+
+public class GreaterThanOrEqual : Operator
+{
+    public override string Keyword => "greater-equal";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 2) throw new ArgumentException("greater-equal requires exactly 2 operands");
+        return (float)args[0] >= (float)args[1] ? 1f : 0f;
+    }
+}
+
+public class LessThanOrEqual : Operator
+{
+    public override string Keyword => "less-equal";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 2) throw new ArgumentException("less-equal requires exactly 2 operands");
+        return (float)args[0] <= (float)args[1] ? 1f : 0f;
+    }
+}
+
+// Conditional Operator
+public class If : Operator
+{
+    public override string Keyword => "if";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 3) throw new ArgumentException("if requires exactly 3 operands: condition, true-value, false-value");
+        return (float)args[0] != 0f ? args[1] : args[2];
+    }
+}
+
+// Additional Math Operators
+public class Absolute : Operator
+{
+    public override string Keyword => "abs";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 1) throw new ArgumentException("abs requires exactly 1 operand");
+        return Math.Abs((float)args[0]);
+    }
+}
+
+public class Floor : Operator
+{
+    public override string Keyword => "floor";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 1) throw new ArgumentException("floor requires exactly 1 operand");
+        return (float)Math.Floor((float)args[0]);
+    }
+}
+
+public class Ceiling : Operator
+{
+    public override string Keyword => "ceil";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 1) throw new ArgumentException("ceil requires exactly 1 operand");
+        return (float)Math.Ceiling((float)args[0]);
+    }
+}
+
+public class Round : Operator
+{
+    public override string Keyword => "round";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 1) throw new ArgumentException("round requires exactly 1 operand");
+        return (float)Math.Round((float)args[0]);
+    }
+}
+
+// Text/String Operators
+public class Length : Operator
+{
+    public override string Keyword => "length";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 1) throw new ArgumentException("length requires exactly 1 operand");
+        return (float)((string)args[0]).Length;
+    }
+}
+
+public class StartsWith : Operator
+{
+    public override string Keyword => "startswith";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 2) throw new ArgumentException("startswith requires exactly 2 operands");
+        return ((string)args[0]).StartsWith((string)args[1], StringComparison.Ordinal) ? 1f : 0f;
+    }
+}
+
+public class EndsWith : Operator
+{
+    public override string Keyword => "endswith";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 2) throw new ArgumentException("endswith requires exactly 2 operands");
+        return ((string)args[0]).EndsWith((string)args[1], StringComparison.Ordinal) ? 1f : 0f;
+    }
+}
+
+public class Contains : Operator
+{
+    public override string Keyword => "contains";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 2) throw new ArgumentException("contains requires exactly 2 operands");
+        return ((string)args[0]).Contains((string)args[1]) ? 1f : 0f;
+    }
+}
+
+public class Substring : Operator
+{
+    public override string Keyword => "substring";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length < 2 || args.Length > 3) throw new ArgumentException("substring requires 2 or 3 operands");
+        string str = (string)args[0];
+        int start = (int)(float)args[1];
+        if (args.Length == 3)
+        {
+            int length = (int)(float)args[2];
+            return str.Substring(start, length);
+        }
+        return str.Substring(start);
+    }
+}
+
+public class Concat : Operator
+{
+    public override string Keyword => "concat";
+    public override object Apply(params object[] args)
+    {
+        return string.Concat(args.Cast<string>());
+    }
+}
+
+public class ToUpper : Operator
+{
+    public override string Keyword => "upper";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 1) throw new ArgumentException("upper requires exactly 1 operand");
+        return ((string)args[0]).ToUpper();
+    }
+}
+
+public class ToLower : Operator
+{
+    public override string Keyword => "lower";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 1) throw new ArgumentException("lower requires exactly 1 operand");
+        return ((string)args[0]).ToLower();
+    }
+}
+
+public class Trim : Operator
+{
+    public override string Keyword => "trim";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 1) throw new ArgumentException("trim requires exactly 1 operand");
+        return ((string)args[0]).Trim();
+    }
+}
+
+public class Replace : Operator
+{
+    public override string Keyword => "replace";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 3) throw new ArgumentException("replace requires exactly 3 operands");
+        return ((string)args[0]).Replace((string)args[1], (string)args[2]);
+    }
+}
+
+// Conversion Operators
+public class ToNumber : Operator
+{
+    public override string Keyword => "number";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 1) throw new ArgumentException("number requires exactly 1 operand");
+        if (args[0] is string str)
+        {
+            if (float.TryParse(str, NumberStyles.Float, CultureInfo.InvariantCulture, out float result))
+                return result;
+            throw new FormatException($"Cannot convert '{str}' to number");
+        }
+        return (float)args[0];
+    }
+}
+
+public class ToText : Operator
+{
+    public override string Keyword => "text";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 1) throw new ArgumentException("text requires exactly 1 operand");
+        if (args[0] is float f)
+            return f.ToString(CultureInfo.InvariantCulture);
+        return (string)args[0];
+    }
+}
+
+public class ToBoolean : Operator
+{
+    public override string Keyword => "boolean";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 1) throw new ArgumentException("boolean requires exactly 1 operand");
+        if (args[0] is float f)
+            return f != 0f ? 1f : 0f;
+        if (args[0] is string s)
+            return string.IsNullOrEmpty(s) ? 0f : 1f;
+        return 0f;
+    }
+}
+
+// Additional Utility Operators
+public class Clamp : Operator
+{
+    public override string Keyword => "clamp";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 3) throw new ArgumentException("clamp requires exactly 3 operands: value, min, max");
+        float value = (float)args[0];
+        float min = (float)args[1];
+        float max = (float)args[2];
+        return Math.Max(min, Math.Min(max, value));
+    }
+}
+
+public class Lerp : Operator
+{
+    public override string Keyword => "lerp";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 3) throw new ArgumentException("lerp requires exactly 3 operands: a, b, t");
+        float a = (float)args[0];
+        float b = (float)args[1];
+        float t = (float)args[2];
+        return a + (b - a) * t;
+    }
+}
+
+public class Sign : Operator
+{
+    public override string Keyword => "sign";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 1) throw new ArgumentException("sign requires exactly 1 operand");
+        return (float)Math.Sign((float)args[0]);
+    }
+}
+
+public class IsEmpty : Operator
+{
+    public override string Keyword => "isempty";
+    public override object Apply(params object[] args)
+    {
+        if (args.Length != 1) throw new ArgumentException("isempty requires exactly 1 operand");
+        if (args[0] is string str)
+            return string.IsNullOrEmpty(str) ? 1f : 0f;
+        return 0f;
+    }
+}
+
+public class Operation : Term
+{
+    public Operator Operator { get; set; }
+    public Term[] Operands { get; set; }
+
+    public Operation(Operator op, params Term[] operands)
+    {
+        Operator = op ?? throw new ArgumentNullException(nameof(op));
+        Operands = operands ?? Array.Empty<Term>();
+    }
+
+    public object Evaluate(Dictionary<string, object> context = null)
+    {
+        object[] values = Operands.Select(o => EvaluateTerm(o, context)).ToArray();
+        return Operator.Apply(values);
+    }
+
+    private static object EvaluateTerm(Term t, Dictionary<string, object> ctx)
+    {
+        switch (t)
+        {
+            case NumberConstant c:
+                return c.Value;
+            case StringConstant sc:
+                return sc.Value;
+            case Variable v:
+                if (ctx == null || !ctx.TryGetValue(v.Name, out var val))
+                    throw new KeyNotFoundException($"No value provided for variable '{v.Name}'.");
+                return val;
+            case Operation op:
+                return op.Evaluate(ctx);
+            default:
+                throw new InvalidOperationException($"Unknown term type: {t?.GetType().Name ?? "null"}");
+        }
+    }
+}
+
+public class Expression
+{
+    public Term Root { get; private set; }
+    private readonly Dictionary<string, Func<Operator>> _operators;
+
+    public Expression()
+    {
+        _operators = new Dictionary<string, Func<Operator>>(StringComparer.OrdinalIgnoreCase)
+        {
+            // Arithmetic operators
+            { "sum", () => new Sum() },
+            { "multiply", () => new Multiply() },
+            { "subtract", () => new Subtract() },
+            { "divide", () => new Divide() },
+            { "negate", () => new Negate() },
+            { "power", () => new Power() },
+            { "sqrt", () => new SquareRoot() },
+            { "min", () => new Min() },
+            { "max", () => new Max() },
+            { "abs", () => new Absolute() },
+            { "floor", () => new Floor() },
+            { "ceil", () => new Ceiling() },
+            { "round", () => new Round() },
+            { "average", () => new Average() },
+            { "mod", () => new Modulo() },
+            
+            // Boolean operators
+            { "and", () => new And() },
+            { "or", () => new Or() },
+            { "xor", () => new ExclusiveOr() },
+            { "not", () => new Invert() },
+            
+            // Comparison operators
+            { "equal", () => new Equal() },
+            { "greater", () => new GreaterThan() },
+            { "less", () => new LessThan() },
+            { "greater-equal", () => new GreaterThanOrEqual() },
+            { "less-equal", () => new LessThanOrEqual() },
+            
+            // Conditional operator
+            { "if", () => new If() },
+            
+            // Text operators
+            { "length", () => new Length() },
+            { "startswith", () => new StartsWith() },
+            { "endswith", () => new EndsWith() },
+            { "contains", () => new Contains() },
+            { "substring", () => new Substring() },
+            { "concat", () => new Concat() },
+            { "upper", () => new ToUpper() },
+            { "lower", () => new ToLower() },
+            { "trim", () => new Trim() },
+            { "replace", () => new Replace() },
+            
+            // Conversion operators
+            { "number", () => new ToNumber() },
+            { "text", () => new ToText() },
+            { "boolean", () => new ToBoolean() },
+            
+            // Utility operators
+            { "clamp", () => new Clamp() },
+            { "lerp", () => new Lerp() },
+            { "sign", () => new Sign() },
+            { "isempty", () => new IsEmpty() }
+        };
+    }
+
+    public Expression[] Pop()
+    {
+        if (Root == null) throw new InvalidOperationException("Expression has no root term.");
+
+        if (Root is Operation operation)
+        {
+            return operation.Operands.Select(operand => new Expression { Root = operand }).ToArray();
+        }
+
+        throw new InvalidOperationException("Root term is not an operation, cannot pop operands.");
+    }
+
+    public object Calculate(Dictionary<string, object> context = null)
+    {
+        if (Root == null) throw new InvalidOperationException("Expression has no root term.");
+        return Root switch
+        {
+            NumberConstant c => c.Value,
+            StringConstant sc => sc.Value,
+            Variable v => context != null && context.TryGetValue(v.Name, out var val)
+                            ? val
+                            : throw new KeyNotFoundException($"No value provided for variable '{v.Name}'."),
+            Operation o => o.Evaluate(context),
+            _ => throw new InvalidOperationException("Unknown root term.")
+        };
+    }
+
+    public string Serialize()
+    {
+        if (Root == null) return string.Empty;
+        var sb = new StringBuilder();
+        SerializeTerm(Root, sb);
+        return sb.ToString();
+    }
+
+    public Expression Deserialize(string expression)
+    {
+        if (expression == null) throw new ArgumentNullException(nameof(expression));
+        var tokens = Tokenize(expression);
+        int index = 0;
+        Root = ParseExpr(tokens, ref index);
+        if (index != tokens.Count)
+            throw new FormatException($"Unexpected token '{tokens[index].Text}' at position {tokens[index].Position}.");
+        return this;
+    }
+
+    // --- Serialization helpers ---
+
+    private void SerializeTerm(Term term, StringBuilder sb)
+    {
+        switch (term)
+        {
+            case NumberConstant c:
+                sb.Append(c.Value.ToString(CultureInfo.InvariantCulture));
+                break;
+            case StringConstant sc:
+                sb.Append('"');
+                sb.Append(sc.Value.Replace("\"", "\\\""));
+                sb.Append('"');
+                break;
+            case Variable v:
+                sb.Append(v.Name);
+                break;
+            case Operation op:
+                sb.Append(op.Operator.Keyword);
+                sb.Append(" ( ");
+                for (int i = 0; i < op.Operands.Length; i++)
+                {
+                    if (i > 0) sb.Append(' ');
+                    SerializeTerm(op.Operands[i], sb);
+                }
+                sb.Append(" )");
+                break;
+            default:
+                throw new InvalidOperationException($"Unknown term type for serialization: {term?.GetType().Name ?? "null"}");
+        }
+    }
+
+    // --- Parsing ---
+
+    private enum TokenKind { Identifier, Number, String, LeftParenthesis, RightParenthesis }
+
+    private readonly struct Token
+    {
+        public TokenKind Kind { get; }
+        public string Text { get; }
+        public int Position { get; }
+        public Token(TokenKind k, string t, int pos) { Kind = k; Text = t; Position = pos; }
+        public override string ToString() => $"{Kind}:{Text}";
+    }
+
+    private static readonly HashSet<char> IdentifierExtraChars = new HashSet<char> { '.', '-', '_' };
+
+    private static List<Token> Tokenize(string input)
+    {
+        var tokens = new List<Token>();
+        int i = 0;
+        while (i < input.Length)
+        {
+            char c = input[i];
+
+            // skip whitespace
+            if (char.IsWhiteSpace(c)) { i++; continue; }
+
+            if (c == '(') { tokens.Add(new Token(TokenKind.LeftParenthesis, "(", i)); i++; continue; }
+            if (c == ')') { tokens.Add(new Token(TokenKind.RightParenthesis, ")", i)); i++; continue; }
+
+            // string literal
+            if (c == '"')
+            {
+                int start = i;
+                i++; // skip opening quote
+                var sb = new StringBuilder();
+                while (i < input.Length && input[i] != '"')
+                {
+                    if (input[i] == '\\' && i + 1 < input.Length)
+                    {
+                        i++; // skip backslash
+                        switch (input[i])
+                        {
+                            case '"': sb.Append('"'); break;
+                            case '\\': sb.Append('\\'); break;
+                            case 'n': sb.Append('\n'); break;
+                            case 't': sb.Append('\t'); break;
+                            case 'r': sb.Append('\r'); break;
+                            default: sb.Append(input[i]); break;
+                        }
+                    }
+                    else
+                    {
+                        sb.Append(input[i]);
+                    }
+                    i++;
+                }
+                if (i >= input.Length) throw new FormatException($"Unterminated string literal starting at {start}.");
+                i++; // skip closing quote
+                tokens.Add(new Token(TokenKind.String, sb.ToString(), start));
+                continue;
+            }
+
+            // number (supports leading sign and decimal point)
+            if (char.IsDigit(c) || (c == '.' && i + 1 < input.Length && char.IsDigit(input[i + 1])))
+            {
+                int start = i;
+                i++;
+                while (i < input.Length && (char.IsDigit(input[i]) || input[i] == '.')) i++;
+                // optional exponent
+                if (i < input.Length && (input[i] == 'e' || input[i] == 'E'))
+                {
+                    int ePos = i++;
+                    if (i < input.Length && (input[i] == '+' || input[i] == '-')) i++;
+                    bool hasDigit = false;
+                    while (i < input.Length && char.IsDigit(input[i])) { hasDigit = true; i++; }
+                    if (!hasDigit) throw new FormatException($"Invalid exponent starting at {ePos}.");
+                }
+                tokens.Add(new Token(TokenKind.Number, input.Substring(start, i - start), start));
+                continue;
+            }
+
+            // identifier: letters/digits/_ plus '.' and '-' allowed within
+            if (char.IsLetter(c) || c == '_')
+            {
+                int start = i;
+                i++;
+                while (i < input.Length)
+                {
+                    char d = input[i];
+                    if (char.IsLetterOrDigit(d) || IdentifierExtraChars.Contains(d)) { i++; }
+                    else break;
+                }
+                tokens.Add(new Token(TokenKind.Identifier, input.Substring(start, i - start), start));
+                continue;
+            }
+
+            // allow identifiers that start with digits if they contain dot/hyphen? Not typical; reject:
+            throw new FormatException($"Unexpected character '{c}' at position {i}.");
+        }
+        return tokens;
+    }
+
+    // Grammar:
+    //   expr := number
+    //         | string
+    //         | identifier
+    //         | identifier '(' expr* ')'
+    // Operands are space-separated; no commas required.
+    private Term ParseExpr(List<Token> tokens, ref int index)
+    {
+        if (index >= tokens.Count) throw new FormatException("Unexpected end of input.");
+
+        var t = tokens[index];
+
+        if (t.Kind == TokenKind.Number)
+        {
+            index++;
+            if (!float.TryParse(t.Text, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var val))
+                throw new FormatException($"Invalid number '{t.Text}' at {t.Position}.");
+            return new NumberConstant(val);
+        }
+
+        if (t.Kind == TokenKind.String)
+        {
+            index++;
+            return new StringConstant(t.Text);
+        }
+
+        if (t.Kind == TokenKind.Identifier)
+        {
+            // lookahead to see if this is a call: <ident> '(' ... ')'
+            string ident = t.Text;
+            int idPos = t.Position;
+            index++;
+
+            if (index < tokens.Count && tokens[index].Kind == TokenKind.LeftParenthesis)
+            {
+                // operator application
+                index++; // consume '('
+                var args = new List<Term>();
+                while (index < tokens.Count && tokens[index].Kind != TokenKind.RightParenthesis)
+                {
+                    // parse next expr
+                    args.Add(ParseExpr(tokens, ref index));
+                    // arguments are separated by whitespace; no special token to consume
+                }
+                if (index >= tokens.Count || tokens[index].Kind != TokenKind.RightParenthesis)
+                    throw new FormatException($"Missing closing ')' for call starting at {idPos}.");
+                index++; // consume ')'
+
+                var op = InstantiateOperator(ident, idPos);
+                // Optional arity checks per operator (divide >= 2)
+                if (op is Divide && args.Count < 2)
+                    throw new FormatException("divide requires at least 2 operands.");
+
+                return new Operation(op, args.ToArray());
+            }
+            else
+            {
+                // plain variable
+                return new Variable(ident);
+            }
+        }
+
+        if (t.Kind == TokenKind.LeftParenthesis)
+        {
+            // Support parenthesized single expression: ( expr )
+            index++; // '('
+            var inner = ParseExpr(tokens, ref index);
+            if (index >= tokens.Count || tokens[index].Kind != TokenKind.RightParenthesis)
+                throw new FormatException($"Missing ')' for parenthesized expression starting at {t.Position}.");
+            index++; // ')'
+            return inner;
+        }
+
+        throw new FormatException($"Unexpected token '{t.Text}' at position {t.Position}.");
+    }
+
+    private Operator InstantiateOperator(string keyword, int pos)
+    {
+        if (_operators.TryGetValue(keyword, out var ctor))
+            return ctor();
+
+        throw new KeyNotFoundException($"Unknown operator '{keyword}' at position {pos}.");
+    }
+}
+
+#endregion Expressions
+
+#endregion Utility
 
 #region Modeling
 
@@ -705,318 +1583,7 @@ public class Attribute : Model<Attribute>
     public override string ToString() => $"Atr({ToHumanIdString()})";
 }
 
-public abstract class Symbol { }
-public abstract class Term : Symbol { }
 
-public class Constant : Term
-{
-    public float Value { get; set; }
-    public Constant(float value) { Value = value; }
-    public override string ToString() => Value.ToString(CultureInfo.InvariantCulture);
-}
-
-public class Variable : Term
-{
-    public string Name { get; set; }
-    public Variable(string name) { Name = name; }
-    public override string ToString() => Name;
-}
-
-public abstract class Operator : Symbol
-{
-    public abstract string Keyword { get; }          // e.g. "sum", "divide"
-    public abstract float Apply(params float[] args); // how to evaluate
-}
-
-public class Sum : Operator
-{
-    public override string Keyword => "sum";
-    public override float Apply(params float[] args) => args.Sum();
-}
-
-public class Divide : Operator
-{
-    public override string Keyword => "divide";
-    public override float Apply(params float[] args)
-    {
-        if (args.Length < 2) throw new ArgumentException("divide requires at least 2 operands");
-        float acc = args[0];
-        for (int i = 1; i < args.Length; i++)
-        {
-            if (args[i] == 0f) throw new DivideByZeroException("division by zero");
-            acc /= args[i];
-        }
-        return acc;
-    }
-}
-
-public class Operation : Term
-{
-    public Operator Operator { get; set; }
-    public Term[] Operands { get; set; }
-
-    public Operation(Operator op, params Term[] operands)
-    {
-        Operator = op ?? throw new ArgumentNullException(nameof(op));
-        Operands = operands ?? Array.Empty<Term>();
-    }
-
-    public float Evaluate(Dictionary<string, float> context = null)
-    {
-        float[] values = Operands.Select(o => EvaluateTerm(o, context)).ToArray();
-        return Operator.Apply(values);
-    }
-
-    private static float EvaluateTerm(Term t, Dictionary<string, float> ctx)
-    {
-        switch (t)
-        {
-            case Constant c:
-                return c.Value;
-            case Variable v:
-                if (ctx == null || !ctx.TryGetValue(v.Name, out var val))
-                    throw new KeyNotFoundException($"No value provided for variable '{v.Name}'.");
-                return val;
-            case Operation op:
-                return op.Evaluate(ctx);
-            default:
-                throw new InvalidOperationException($"Unknown term type: {t?.GetType().Name ?? "null"}");
-        }
-    }
-}
-
-public class Formula
-{
-    public Term Root { get; private set; }
-    private readonly Dictionary<string, Func<Operator>> _operators;
-
-    public Formula()
-    {
-        _operators = new Dictionary<string, Func<Operator>>(StringComparer.OrdinalIgnoreCase)
-        {
-            { "sum", () => new Sum() },
-            { "divide", () => new Divide() }
-        };
-    }
-
-    public Formula[] Pop()
-    {
-        if (Root == null) throw new InvalidOperationException("Formula has no root term.");
-
-        if (Root is Operation operation)
-        {
-            return operation.Operands.Select(operand => new Formula { Root = operand }).ToArray();
-        }
-
-        throw new InvalidOperationException("Root term is not an operation, cannot pop operands.");
-    }
-
-    public float Calculate(Dictionary<string, float> context = null)
-    {
-        if (Root == null) throw new InvalidOperationException("Formula has no root term.");
-        return Root switch
-        {
-            Constant c => c.Value,
-            Variable v => context != null && context.TryGetValue(v.Name, out var val)
-                            ? val
-                            : throw new KeyNotFoundException($"No value provided for variable '{v.Name}'."),
-            Operation o => o.Evaluate(context),
-            _ => throw new InvalidOperationException("Unknown root term.")
-        };
-    }
-
-    public string Serialize()
-    {
-        if (Root == null) return string.Empty;
-        var sb = new StringBuilder();
-        SerializeTerm(Root, sb);
-        return sb.ToString();
-    }
-
-    public Formula Deserialize(string expression)
-    {
-        if (expression == null) throw new ArgumentNullException(nameof(expression));
-        var tokens = Tokenize(expression);
-        int index = 0;
-        Root = ParseExpr(tokens, ref index);
-        if (index != tokens.Count)
-            throw new FormatException($"Unexpected token '{tokens[index].Text}' at position {tokens[index].Position}.");
-        return this;
-    }
-
-    // --- Serialization helpers ---
-
-    private void SerializeTerm(Term term, StringBuilder sb)
-    {
-        switch (term)
-        {
-            case Constant c:
-                sb.Append(c.Value.ToString(CultureInfo.InvariantCulture));
-                break;
-            case Variable v:
-                sb.Append(v.Name);
-                break;
-            case Operation op:
-                sb.Append(op.Operator.Keyword);
-                sb.Append(" ( ");
-                for (int i = 0; i < op.Operands.Length; i++)
-                {
-                    if (i > 0) sb.Append(' ');
-                    SerializeTerm(op.Operands[i], sb);
-                }
-                sb.Append(" )");
-                break;
-            default:
-                throw new InvalidOperationException($"Unknown term type for serialization: {term?.GetType().Name ?? "null"}");
-        }
-    }
-
-    // --- Parsing ---
-
-    private enum TokenKind { Identifier, Number, LeftParenthesis, RightParenthesis }
-
-    private readonly struct Token
-    {
-        public TokenKind Kind { get; }
-        public string Text { get; }
-        public int Position { get; }
-        public Token(TokenKind k, string t, int pos) { Kind = k; Text = t; Position = pos; }
-        public override string ToString() => $"{Kind}:{Text}";
-    }
-
-    private static readonly HashSet<char> IdentifierExtraChars = new HashSet<char> { '.', '-', '_' };
-
-    private static List<Token> Tokenize(string input)
-    {
-        var tokens = new List<Token>();
-        int i = 0;
-        while (i < input.Length)
-        {
-            char c = input[i];
-
-            // skip whitespace
-            if (char.IsWhiteSpace(c)) { i++; continue; }
-
-            if (c == '(') { tokens.Add(new Token(TokenKind.LeftParenthesis, "(", i)); i++; continue; }
-            if (c == ')') { tokens.Add(new Token(TokenKind.RightParenthesis, ")", i)); i++; continue; }
-
-            // number (supports leading sign and decimal point)
-            if (char.IsDigit(c) || (c == '.' && i + 1 < input.Length && char.IsDigit(input[i + 1])))
-            {
-                int start = i;
-                i++;
-                while (i < input.Length && (char.IsDigit(input[i]) || input[i] == '.')) i++;
-                // optional exponent
-                if (i < input.Length && (input[i] == 'e' || input[i] == 'E'))
-                {
-                    int ePos = i++;
-                    if (i < input.Length && (input[i] == '+' || input[i] == '-')) i++;
-                    bool hasDigit = false;
-                    while (i < input.Length && char.IsDigit(input[i])) { hasDigit = true; i++; }
-                    if (!hasDigit) throw new FormatException($"Invalid exponent starting at {ePos}.");
-                }
-                tokens.Add(new Token(TokenKind.Number, input.Substring(start, i - start), start));
-                continue;
-            }
-
-            // identifier: letters/digits/_ plus '.' and '-' allowed within
-            if (char.IsLetter(c) || c == '_')
-            {
-                int start = i;
-                i++;
-                while (i < input.Length)
-                {
-                    char d = input[i];
-                    if (char.IsLetterOrDigit(d) || IdentifierExtraChars.Contains(d)) { i++; }
-                    else break;
-                }
-                tokens.Add(new Token(TokenKind.Identifier, input.Substring(start, i - start), start));
-                continue;
-            }
-
-            // allow identifiers that start with digits if they contain dot/hyphen? Not typical; reject:
-            throw new FormatException($"Unexpected character '{c}' at position {i}.");
-        }
-        return tokens;
-    }
-
-    // Grammar:
-    //   expr := number
-    //         | identifier
-    //         | identifier '(' expr* ')'
-    // Operands are space-separated; no commas required.
-    private Term ParseExpr(List<Token> tokens, ref int index)
-    {
-        if (index >= tokens.Count) throw new FormatException("Unexpected end of input.");
-
-        var t = tokens[index];
-
-        if (t.Kind == TokenKind.Number)
-        {
-            index++;
-            if (!float.TryParse(t.Text, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var val))
-                throw new FormatException($"Invalid number '{t.Text}' at {t.Position}.");
-            return new Constant(val);
-        }
-
-        if (t.Kind == TokenKind.Identifier)
-        {
-            // lookahead to see if this is a call: <ident> '(' ... ')'
-            string ident = t.Text;
-            int idPos = t.Position;
-            index++;
-
-            if (index < tokens.Count && tokens[index].Kind == TokenKind.LeftParenthesis)
-            {
-                // operator application
-                index++; // consume '('
-                var args = new List<Term>();
-                while (index < tokens.Count && tokens[index].Kind != TokenKind.RightParenthesis)
-                {
-                    // parse next expr
-                    args.Add(ParseExpr(tokens, ref index));
-                    // arguments are separated by whitespace; no special token to consume
-                }
-                if (index >= tokens.Count || tokens[index].Kind != TokenKind.RightParenthesis)
-                    throw new FormatException($"Missing closing ')' for call starting at {idPos}.");
-                index++; // consume ')'
-
-                var op = InstantiateOperator(ident, idPos);
-                // Optional arity checks per operator (divide >= 2)
-                if (op is Divide && args.Count < 2)
-                    throw new FormatException("divide requires at least 2 operands.");
-
-                return new Operation(op, args.ToArray());
-            }
-            else
-            {
-                // plain variable
-                return new Variable(ident);
-            }
-        }
-
-        if (t.Kind == TokenKind.LeftParenthesis)
-        {
-            // Support parenthesized single expression: ( expr )
-            index++; // '('
-            var inner = ParseExpr(tokens, ref index);
-            if (index >= tokens.Count || tokens[index].Kind != TokenKind.RightParenthesis)
-                throw new FormatException($"Missing ')' for parenthesized expression starting at {t.Position}.");
-            index++; // ')'
-            return inner;
-        }
-
-        throw new FormatException($"Unexpected token '{t.Text}' at position {t.Position}.");
-    }
-
-    private Operator InstantiateOperator(string keyword, int pos)
-    {
-        if (_operators.TryGetValue(keyword, out var ctor))
-            return ctor();
-
-        throw new KeyNotFoundException($"Unknown operator '{keyword}' at position {pos}.");
-    }
-}
 
 [Flags]
 public enum QualityKind
