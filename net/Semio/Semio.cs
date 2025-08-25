@@ -1833,6 +1833,16 @@ public enum QualityKind
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-quality-"/>
 /// </summary>
+[Model("🔑", "Ql", "Qal", "A quality id is a key for a quality.")]
+public class QualityId : Model<QualityId>
+{
+    [Id("🔑", "Ke", "Key", "The key of the quality.")]
+    public string Key { get; set; } = "";
+}
+
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-quality-"/>
+/// </summary>
 [Model("📃", "Ql", "Qal", "A quality is numeric metadata used for stats and benchmarks.")]
 public class Quality : Model<Quality>
 {
@@ -1870,13 +1880,6 @@ public class Quality : Model<Quality>
     public List<Attribute> Attributes { get; set; } = new();
 }
 
-[Model("🔑", "Ql", "Qal", "A quality id is a key for a quality.")]
-public class QualityId : Model<QualityId>
-{
-    [Id("🔑", "Ke", "Key", "The key of the quality.")]
-    public string Key { get; set; } = "";
-}
-
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-property-"/>
 /// </summary>
@@ -1911,6 +1914,17 @@ public class Stat : Model<Stat>
     public float Max { get; set; } = 0;
     [FalseOrTrue("⬆️", "MxE?", "MxE?", "Whether the maximum value is excluded from the range.")]
     public bool MaxExcluded { get; set; } = false;
+}
+
+[Model("💾", "Rp", "Rep", "The identifier of a representation.")]
+public class RepresentationId : Model<RepresentationId>
+{
+    [Name("🏷️", "Tg*", "Tags*", "The optional tags to group representations. No tags means default.", PropImportance.ID, skipValidation: true)]
+    public List<string> Tags { get; set; } = new();
+    public static implicit operator RepresentationId(Representation representation) => new() { Tags = representation.Tags };
+    public string ToIdString() => $"{string.Join(",", Tags.Select(t => Utility.Encode(t)))}";
+    public string ToHumanIdString() => string.Join(", ", Tags);
+    public override string ToString() => $"Rep({ToHumanIdString()})";
 }
 
 /// <summary>
@@ -1967,30 +1981,6 @@ public class Representation : Model<Representation>
     public string ToHumanIdString() => string.Join(", ", Tags);
 
     public override string ToString() => $"Rep({ToHumanIdString()})";
-}
-
-[Model("💾", "Rp", "Rep", "The identifier of a representation.")]
-public class RepresentationId : Model<RepresentationId>
-{
-    [Name("🏷️", "Tg*", "Tags*", "The optional tags to group representations. No tags means default.", PropImportance.ID, skipValidation: true)]
-    public List<string> Tags { get; set; } = new();
-    public static implicit operator RepresentationId(Representation representation) => new() { Tags = representation.Tags };
-    public string ToIdString() => $"{string.Join(",", Tags.Select(t => Utility.Encode(t)))}";
-    public string ToHumanIdString() => string.Join(", ", Tags);
-    public override string ToString() => $"Rep({ToHumanIdString()})";
-}
-
-[Model("🔗", "Cn", "ConId", "The identifier of a connection.")]
-public class ConnectionId : Model<ConnectionId>
-{
-    [ModelProp("🧲", "Cd", "Cnd", "The connected side of the piece of the connection.")]
-    public Side Connected { get; set; } = new();
-    [ModelProp("🧲", "Cg", "Cng", "The connecting side of the piece of the connection.")]
-    public Side Connecting { get; set; } = new();
-    public static implicit operator ConnectionId(Connection connection) => new() { Connected = connection.Connected, Connecting = connection.Connecting };
-    public string ToIdString() => $"{Connected.Piece.Id + (Connected.Port.Id != "" ? ":" + Connected.Port.Id : "")}--{(Connecting.Port.Id != "" ? Connecting.Port.Id + ":" : "") + Connecting.Piece.Id}";
-    public string ToHumanIdString() => $"{ToIdString()}";
-    public override string ToString() => $"ConId({ToIdString()})";
 }
 
 [Model("📄", "Fl", "Fil", "The identifier of a file.")]
@@ -2127,6 +2117,18 @@ public class Plane : Model<Plane>
     }
 }
 
+[Model("🔌", "Po", "Por", "The optional local identifier of the port within the type. No id means the default port.")]
+public class PortId : Model<PortId>
+{
+    [Id("🆔", "Id?", "Id?", "The local identifier of the port within the type.", isDefaultValid: true)]
+    [JsonProperty("id_")]
+    public string Id { get; set; } = "";
+    public static implicit operator PortId(Port port) => new() { Id = port.Id };
+    public string ToIdString() => $"{Id}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"Por({ToHumanIdString()})";
+}
+
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-port-"/>
 /// </summary>
@@ -2194,19 +2196,7 @@ public class Port : Model<Port>
     }
 }
 
-[Model("🔌", "Po", "Por", "The optional local identifier of the port within the type. No id means the default port.")]
-public class PortId : Model<PortId>
-{
-    [Id("🆔", "Id?", "Id?", "The local identifier of the port within the type.", isDefaultValid: true)]
-    [JsonProperty("id_")]
-    public string Id { get; set; } = "";
-    public static implicit operator PortId(Port port) => new() { Id = port.Id };
-    public string ToIdString() => $"{Id}";
-    public string ToHumanIdString() => $"{ToIdString()}";
-    public override string ToString() => $"Por({ToHumanIdString()})";
-}
-
-[Model("👤", "Au", "Aut", "The information about the author.")]
+[Model("", "Au", "Aut", "The information about the author.")]
 public class Author : Model<Author>
 {
     [Name("📛", "Na", "Nam", "The name of the author.", PropImportance.REQUIRED)]
@@ -2248,6 +2238,19 @@ public class Location : Model<Location>
     public float Longitude { get; set; }
     [NumberProp("↕️", "La", "Lat", "The latitude of the location in degrees.", PropImportance.REQUIRED)]
     public float Latitude { get; set; }
+}
+
+[Model("🧩", "Ty", "Typ", " identifier of the type within the kit.")]
+public class TypeId : Model<TypeId>
+{
+    [Name("📛", "Na", "Nam", "The name of the type.", PropImportance.ID)]
+    public string Name { get; set; } = ""; [Name("🔀", "Vn?", "Vnt?", "The optional variant of the type. No variant means the default variant. ", PropImportance.ID, true)]
+    public string Variant { get; set; } = "";
+    public string ToIdString() => $"{Name}#{Variant}";
+    public string ToHumanIdString() => $"{Name}" + (Variant.Length == 0 ? "" : $", {Variant}");
+    public override string ToString() => $"Typ({ToHumanIdString()})";
+
+    public static implicit operator TypeId(Type type) => new() { Name = type.Name, Variant = type.Variant };
 }
 
 /// <summary>
@@ -2338,19 +2341,6 @@ public class Type : Model<Type>
 
         return typesDict;
     }
-}
-
-[Model("🧩", "Ty", "Typ", " identifier of the type within the kit.")]
-public class TypeId : Model<TypeId>
-{
-    [Name("📛", "Na", "Nam", "The name of the type.", PropImportance.ID)]
-    public string Name { get; set; } = ""; [Name("🔀", "Vn?", "Vnt?", "The optional variant of the type. No variant means the default variant. ", PropImportance.ID, true)]
-    public string Variant { get; set; } = "";
-    public string ToIdString() => $"{Name}#{Variant}";
-    public string ToHumanIdString() => $"{Name}" + (Variant.Length == 0 ? "" : $", {Variant}");
-    public override string ToString() => $"Typ({ToHumanIdString()})";
-
-    public static implicit operator TypeId(Type type) => new() { Name = type.Name, Variant = type.Variant };
 }
 
 #region Diff Classes
@@ -2641,6 +2631,17 @@ public enum DiffStatus
 
 #endregion
 
+[Model("⭕", "Pc", "Pce", "The optional local identifier of the piece within the design. No id means the default piece.")]
+public class PieceId : Model<PieceId>
+{
+    [Id("🆔", "Id?", "Id?", "The optional local identifier of the piece within the design. No id means the default piece.", isDefaultValid: true)]
+    [JsonProperty("id_")]
+    public string Id { get; set; } = "";
+    public string ToIdString() => $"{Id}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"Pce({ToHumanIdString()})";
+}
+
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-piece-"/>
 /// </summary>
@@ -2717,17 +2718,6 @@ public class Piece : Model<Piece>
     }
 }
 
-[Model("⭕", "Pc", "Pce", "The optional local identifier of the piece within the design. No id means the default piece.")]
-public class PieceId : Model<PieceId>
-{
-    [Id("🆔", "Id?", "Id?", "The optional local identifier of the piece within the design. No id means the default piece.", isDefaultValid: true)]
-    [JsonProperty("id_")]
-    public string Id { get; set; } = "";
-    public string ToIdString() => $"{Id}";
-    public string ToHumanIdString() => $"{ToIdString()}";
-    public override string ToString() => $"Pce({ToHumanIdString()})";
-}
-
 [Model("🧱", "Sd", "Sde", "A side of a piece in a connection.")]
 public class Side : Model<Side>
 {
@@ -2738,6 +2728,22 @@ public class Side : Model<Side>
     [ModelProp("🔌", "Po", "Por", "The local identifier of the port within the type.")]
     public PortId Port { get; set; } = new();
     public override string ToString() => $"Sde({Piece.Id}" + (Port.Id != "" ? ":" + Port.Id : "") + ")";
+}
+
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-connection-"/>
+/// </summary>
+[Model("🧲", "Cn", "ConId", "The local identifier of the connection within the design.")]
+public class ConnectionId : Model<ConnectionId>
+{
+    [ModelProp("🧲", "Cd", "Cnd", "The connected side of the piece of the connection.")]
+    public Side Connected { get; set; } = new();
+    [ModelProp("🧲", "Cg", "Cng", "The connecting side of the piece of the connection.")]
+    public Side Connecting { get; set; } = new();
+    public static implicit operator ConnectionId(Connection connection) => new() { Connected = connection.Connected, Connecting = connection.Connecting };
+    public string ToIdString() => $"{Connected.Piece.Id + (Connected.Port.Id != "" ? ":" + Connected.Port.Id : "")}--{(Connecting.Port.Id != "" ? Connecting.Port.Id + ":" : "") + Connecting.Piece.Id}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"ConId({ToIdString()})";
 }
 
 /// <summary>
@@ -2822,6 +2828,20 @@ public class Connection : Model<Connection>
 
         return (isValid, errors);
     }
+}
+
+[Model("🏙️", "Dn", "Dsn", "The local identifier of the design within the kit.")]
+public class DesignId : Model<DesignId>
+{
+    [Name("📛", "Na", "Nam", "The name of the design.", PropImportance.ID)]
+    public string Name { get; set; } = "";
+    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the design. No variant means the default variant.", PropImportance.ID, true)]
+    public string Variant { get; set; } = "";
+    [Name("🥽", "Vw?", "Vew?", "The optional view of the design. No view means the default view.", PropImportance.ID, true)]
+    public string View { get; set; } = "";
+    public static implicit operator DesignId(Design design) => new() { Name = design.Name, Variant = design.Variant, View = design.View };
+
+    public string ToHumanIdString() => $"{Name}{(Variant == "" ? "" : ", " + Variant)}{(View == "" ? "" : ", " + View)}";
 }
 
 /// <summary>
@@ -3365,20 +3385,6 @@ text {
 
         return (isValid, errors);
     }
-}
-
-[Model("🏙️", "Dn", "Dsn", "The local identifier of the design within the kit.")]
-public class DesignId : Model<DesignId>
-{
-    [Name("📛", "Na", "Nam", "The name of the design.", PropImportance.ID)]
-    public string Name { get; set; } = "";
-    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the design. No variant means the default variant.", PropImportance.ID, true)]
-    public string Variant { get; set; } = "";
-    [Name("🥽", "Vw?", "Vew?", "The optional view of the design. No view means the default view.", PropImportance.ID, true)]
-    public string View { get; set; } = "";
-    public static implicit operator DesignId(Design design) => new() { Name = design.Name, Variant = design.Variant, View = design.View };
-
-    public string ToHumanIdString() => $"{Name}{(Variant == "" ? "" : ", " + Variant)}{(View == "" ? "" : ", " + View)}";
 }
 
 /// <summary>
