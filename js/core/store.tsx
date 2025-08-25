@@ -30,38 +30,33 @@ import {
   Connection,
   ConnectionDiff,
   ConnectionId,
-  ConnectionIdLike,
   connectionIdLikeToConnectionId,
   Design,
   DesignDiff,
   DesignId,
-  DesignIdLike,
   designIdLikeToDesignId,
   DiagramPoint,
   FileDiff,
   Kit,
   KitDiff,
   KitId,
+  KitIdLike,
   kitIdLikeToKitId,
   Piece,
   PieceDiff,
   PieceId,
-  PieceIdLike,
   pieceIdLikeToPieceId,
   Port,
   PortDiff,
   PortId,
-  PortIdLike,
   portIdLikeToPortId,
   Representation,
   RepresentationDiff,
   RepresentationId,
-  RepresentationIdLike,
   representationIdLikeToRepresentationId,
   Type,
   TypeDiff,
   TypeId,
-  TypeIdLike,
   typeIdLikeToTypeId,
 } from "./semio";
 
@@ -98,20 +93,16 @@ export interface FileState {
   file: File;
 }
 export interface FileActions {
-  create: {};
-  update: {
+  change: {
     file: (diff: FileDiff) => void;
   };
-  delete: {};
 }
 
 export interface FileSubscriptions {
   on: {
-    created: {};
-    updated: {
+    change: {
       file: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
     };
-    deleted: {};
   };
 }
 
@@ -128,20 +119,16 @@ export interface RepresentationState {
 }
 
 export interface RepresentationActions {
-  create: {};
-  update: {
+  change: {
     representation: (diff: RepresentationDiff) => void;
   };
-  delete: {};
 }
 
 export interface RepresentationSubscriptions {
   on: {
-    created: {};
-    updated: {
+    change: {
       representation: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
     };
-    deleted: {};
   };
 }
 
@@ -157,20 +144,16 @@ export interface PortState {
   port: Port;
 }
 export interface PortActions {
-  create: {};
-  update: {
+  change: {
     port: (diff: PortDiff) => void;
   };
-  delete: {};
 }
 
 export interface PortSubscriptions {
   on: {
-    created: {};
-    updated: {
+    change: {
       port: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
     };
-    deleted: {};
   };
 }
 
@@ -186,39 +169,15 @@ export interface TypeState {
   type: Type;
 }
 export interface TypeActions {
-  create: {
-    representation: (representation: Representation) => void;
-    representations: (representations: Representation[]) => void;
-    port: (port: Port) => void;
-    ports: (ports: Port[]) => void;
-  };
-  update: {
+  change: {
     type: (diff: TypeDiff) => void;
-  };
-  delete: {
-    representation: (id: RepresentationIdLike) => void;
-    representations: (ids: RepresentationIdLike[]) => void;
-    port: (id: PortIdLike) => void;
-    ports: (ids: PortIdLike[]) => void;
   };
 }
 
 export interface TypeSubscriptions {
   on: {
-    created: {
-      representation: (subscribe: Subscribe) => Unsubscribe;
-      representations: (subscribe: Subscribe) => Unsubscribe;
-      port: (subscribe: Subscribe) => Unsubscribe;
-      ports: (subscribe: Subscribe) => Unsubscribe;
-    };
-    updated: {
+    change: {
       type: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
-    };
-    deleted: {
-      representation: (subscribe: Subscribe) => Unsubscribe;
-      representations: (subscribe: Subscribe) => Unsubscribe;
-      port: (subscribe: Subscribe) => Unsubscribe;
-      ports: (subscribe: Subscribe) => Unsubscribe;
     };
   };
 }
@@ -242,20 +201,16 @@ export interface PieceState {
 }
 
 export interface PieceActions {
-  create: {};
-  update: {
+  change: {
     piece: (diff: PieceDiff) => void;
   };
-  delete: {};
 }
 
 export interface PieceSubscriptions {
   on: {
-    created: {};
-    updated: {
+    change: {
       piece: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
     };
-    deleted: {};
   };
 }
 
@@ -272,20 +227,16 @@ export interface ConnectionState {
 }
 
 export interface ConnectionActions {
-  create: {};
-  update: {
+  change: {
     connection: (diff: ConnectionDiff) => void;
   };
-  delete: {};
 }
 
 export interface ConnectionSubscriptions {
   on: {
-    created: {};
-    updated: {
+    change: {
       connection: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
     };
-    deleted: {};
   };
 }
 
@@ -302,39 +253,15 @@ export interface DesignState {
 }
 
 export interface DesignActions {
-  create: {
-    piece: (piece: Piece) => void;
-    pieces: (pieces: Piece[]) => void;
-    connection: (connection: Connection) => void;
-    connections: (connections: Connection[]) => void;
-  };
-  update: {
+  change: {
     design: (diff: DesignDiff) => void;
-  };
-  delete: {
-    piece: (id: PieceIdLike) => void;
-    pieces: (ids: PieceIdLike[]) => void;
-    connection: (id: ConnectionIdLike) => void;
-    connections: (ids: ConnectionIdLike[]) => void;
   };
 }
 
 export interface DesignSubscriptions {
   on: {
-    created: {
-      piece: (subscribe: Subscribe) => Unsubscribe;
-      pieces: (subscribe: Subscribe) => Unsubscribe;
-      connection: (subscribe: Subscribe) => Unsubscribe;
-      connections: (subscribe: Subscribe) => Unsubscribe;
-    };
-    updated: {
+    change: {
       design: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
-    };
-    deleted: {
-      piece: (subscribe: Subscribe) => Unsubscribe;
-      pieces: (subscribe: Subscribe) => Unsubscribe;
-      connection: (subscribe: Subscribe) => Unsubscribe;
-      connections: (subscribe: Subscribe) => Unsubscribe;
     };
   };
 }
@@ -359,47 +286,15 @@ export interface KitState {
 }
 
 export interface KitActions {
-  create: {
-    file: (file: File) => void;
-    files: (files: File[]) => void;
-    type: (type: Type) => void;
-    types: (types: Type[]) => void;
-    design: (design: Design) => void;
-    designs: (designs: Design[]) => void;
-  };
-  update: {
+  change: {
     kit: (diff: KitDiff) => void;
-  };
-  delete: {
-    file: (url: Url) => void;
-    files: (urls: Url[]) => void;
-    type: (id: TypeIdLike) => void;
-    types: (ids: TypeIdLike[]) => void;
-    design: (id: DesignIdLike) => void;
-    designs: (ids: DesignIdLike[]) => void;
   };
 }
 
 export interface KitSubscriptions {
   on: {
-    created: {
-      file: (subscribe: Subscribe) => Unsubscribe;
-      files: (subscribe: Subscribe) => Unsubscribe;
-      type: (subscribe: Subscribe) => Unsubscribe;
-      types: (subscribe: Subscribe) => Unsubscribe;
-      design: (subscribe: Subscribe) => Unsubscribe;
-      designs: (subscribe: Subscribe) => Unsubscribe;
-    };
-    updated: {
+    change: {
       kit: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
-    };
-    deleted: {
-      file: (subscribe: Subscribe) => Unsubscribe;
-      files: (subscribe: Subscribe) => Unsubscribe;
-      type: (subscribe: Subscribe) => Unsubscribe;
-      types: (subscribe: Subscribe) => Unsubscribe;
-      design: (subscribe: Subscribe) => Unsubscribe;
-      designs: (subscribe: Subscribe) => Unsubscribe;
     };
   };
 }
@@ -549,11 +444,8 @@ export interface SketchpadActions {
     kits: (kits: Kit[]) => void;
     designEditors: (designIds: DesignId[]) => void;
   };
-  update: {
-    kit: (kitId: KitId, diff: KitDiff) => void;
-  };
   delete: {
-    kits: (kitIds: KitId[]) => void;
+    kits: (ids: KitIdLike[]) => void;
     designEditors: (designIds: DesignId[]) => void;
   };
   set: {
@@ -710,9 +602,8 @@ function getAttributes(yArr: YAttributes | undefined): Attribute[] {
   const list: Attribute[] = [];
   yArr.forEach((yMap: YAttribute) => {
     list.push({
-      name: yMap.get("name") as string,
+      key: yMap.get("key") as string,
       value: yMap.get("value") as string | undefined,
-      unit: yMap.get("unit") as string | undefined,
       definition: yMap.get("definition") as string | undefined,
     });
   });
@@ -744,6 +635,54 @@ function getAuthors(yAuthors: YAuthors | undefined): Author[] {
   return authors;
 }
 
+class YFileStore implements FileStoreFull {
+  public readonly yFile: Y.Map<string> = new Y.Map<string>();
+
+  constructor(file: File) {
+    this.yFile.set("url", file.url);
+    this.yFile.set("data", file.data);
+    this.yFile.set("size", file.size?.toString() || "");
+    this.yFile.set("hash", file.hash || "");
+    this.yFile.set("created", file.created?.toISOString() || "");
+    this.yFile.set("updated", file.updated?.toISOString() || "");
+  }
+
+  get file(): File {
+    return {
+      url: this.yFile.get("url") as string,
+      data: this.yFile.get("data") as string,
+      size: this.yFile.get("size") ? parseInt(this.yFile.get("size") as string) : 0,
+      hash: (this.yFile.get("hash") as string) || undefined,
+      created: this.yFile.get("created") ? new Date(this.yFile.get("created") as string) : undefined,
+      updated: this.yFile.get("updated") ? new Date(this.yFile.get("updated") as string) : undefined,
+    };
+  }
+
+  change = {
+    file: (diff: FileDiff) => {
+      if (diff.url !== undefined) this.yFile.set("url", diff.url);
+      if (diff.data !== undefined) this.yFile.set("data", diff.data);
+      if (diff.size !== undefined) this.yFile.set("size", diff.size.toString());
+      if (diff.hash !== undefined) this.yFile.set("hash", diff.hash);
+    },
+  };
+
+  on = {
+    change: {
+      file: (subscribe: Subscribe, deep?: boolean) => {
+        const observer = () => subscribe();
+        if (deep) {
+          this.yFile.observeDeep(observer);
+          return () => this.yFile.unobserveDeep(observer);
+        } else {
+          this.yFile.observe(observer);
+          return () => this.yFile.unobserve(observer);
+        }
+      },
+    },
+  };
+}
+
 class YRepresentationStore implements RepresentationStoreFull {
   public readonly yRepresentation: YRepresentation = new Y.Map<any>();
 
@@ -766,9 +705,7 @@ class YRepresentationStore implements RepresentationStoreFull {
     };
   }
 
-  create = {};
-
-  update = {
+  change = {
     representation: (diff: RepresentationDiff) => {
       if (diff.url !== undefined) this.yRepresentation.set("url", diff.url);
       if (diff.description !== undefined) this.yRepresentation.set("description", diff.description);
@@ -785,11 +722,8 @@ class YRepresentationStore implements RepresentationStoreFull {
     },
   };
 
-  delete = {};
-
   on = {
-    created: {},
-    updated: {
+    change: {
       representation: (subscribe: Subscribe, deep?: boolean) => {
         const observer = () => subscribe();
         if (deep) {
@@ -801,7 +735,6 @@ class YRepresentationStore implements RepresentationStoreFull {
         }
       },
     },
-    deleted: {},
   };
 }
 
@@ -858,9 +791,7 @@ class YPortStore implements PortStoreFull {
     };
   }
 
-  create = {};
-
-  update = {
+  change = {
     port: (diff: PortDiff) => {
       if (diff.id_ !== undefined) this.yPort.set("id_", diff.id_);
       if (diff.description !== undefined) this.yPort.set("description", diff.description);
@@ -892,11 +823,8 @@ class YPortStore implements PortStoreFull {
     },
   };
 
-  delete = {};
-
   on = {
-    created: {},
-    updated: {
+    change: {
       port: (subscribe: Subscribe, deep?: boolean) => {
         const observer = () => subscribe();
         if (deep) {
@@ -908,7 +836,6 @@ class YPortStore implements PortStoreFull {
         }
       },
     },
-    deleted: {},
   };
 }
 
@@ -949,70 +876,42 @@ class YTypeStore implements TypeStoreFull {
     };
   }
 
-  create = {
-    representation: (representation: Representation) => {
-      const repId = representationIdLikeToRepresentationId(representation);
-      if (this.representationIds.get(repId)) throw new Error(`Representation ${repId} already exists`);
-      const uuid = uuidv4();
-      this.representationIds.set(repId, uuid);
-      this.representations.set(repId, new YRepresentationStore(representation));
-    },
-    representations: (representations: Representation[]) => representations.forEach((rep) => this.create.representation(rep)),
-    port: (port: Port) => {
-      const portId = portIdLikeToPortId(port);
-      if (this.portIds.get(portId)) throw new Error(`Port ${portId} already exists`);
-      const uuid = uuidv4();
-      this.portIds.set(portId, uuid);
-      this.ports.set(portId, new YPortStore(port));
-    },
-    ports: (ports: Port[]) => ports.forEach((port) => this.create.port(port)),
-  };
-  update = {
-    type: (id: TypeIdLike, diff: TypeDiff) => {
+  change = {
+    type: (diff: TypeDiff) => {
       if (diff.name !== undefined) this.yType.set("name", diff.name);
       if (diff.description !== undefined) this.yType.set("description", diff.description);
       if (diff.variant !== undefined) this.yType.set("variant", diff.variant);
       if (diff.unit !== undefined) this.yType.set("unit", diff.unit);
       if (diff.stock !== undefined) this.yType.set("stock", diff.stock);
       if (diff.virtual !== undefined) this.yType.set("virtual", diff.virtual);
+      if (diff.representations !== undefined) {
+        diff.representations.forEach((rep) => {
+          const repId = representationIdLikeToRepresentationId(rep);
+          if (!this.representationIds.get(repId)) {
+            const uuid = uuidv4();
+            this.representationIds.set(repId, uuid);
+            this.representations.set(repId, new YRepresentationStore(rep));
+          } else {
+            this.representations.get(repId)?.change.representation(rep);
+          }
+        });
+      }
+      if (diff.ports !== undefined) {
+        diff.ports.forEach((port) => {
+          const portId = portIdLikeToPortId(port);
+          if (!this.portIds.get(portId)) {
+            const uuid = uuidv4();
+            this.portIds.set(portId, uuid);
+            this.ports.set(portId, new YPortStore(port));
+          } else {
+            this.ports.get(portId)?.change.port(port);
+          }
+        });
+      }
     },
-  };
-  delete = {
-    representation: (id: RepresentationIdLike) => {
-      const repId = representationIdLikeToRepresentationId(id);
-      const uuid = this.representationIds.get(repId);
-      if (!uuid) throw new Error(`Representation ${repId} does not exist`);
-      this.representationIds.delete(repId);
-      this.representations.delete(repId);
-    },
-    representations: (ids: RepresentationIdLike[]) => ids.forEach((id) => this.delete.representation(id)),
-    port: (id: PortIdLike) => {
-      const portId = portIdLikeToPortId(id);
-      const uuid = this.portIds.get(portId);
-      if (!uuid) throw new Error(`Port ${portId} does not exist`);
-      this.portIds.delete(portId);
-      this.ports.delete(portId);
-    },
-    ports: (ids: PortIdLike[]) => ids.forEach((id) => this.delete.port(id)),
   };
   on = {
-    created: {
-      representation: (subscribe: Subscribe) => {
-        const yRepresentations = this.yType.get("representations") as YRepresentationMap;
-        const observer = () => subscribe();
-        yRepresentations.observe(observer);
-        return () => yRepresentations.unobserve(observer);
-      },
-      representations: (subscribe: Subscribe) => () => {},
-      port: (subscribe: Subscribe) => {
-        const yPorts = this.yType.get("ports") as YPortMap;
-        const observer = () => subscribe();
-        yPorts.observe(observer);
-        return () => yPorts.unobserve(observer);
-      },
-      ports: (subscribe: Subscribe) => () => {},
-    },
-    updated: {
+    change: {
       type: (subscribe: Subscribe, deep?: boolean) => {
         const observer = () => subscribe();
         if (deep) {
@@ -1023,22 +922,6 @@ class YTypeStore implements TypeStoreFull {
           return () => this.yType.unobserve(observer);
         }
       },
-    },
-    deleted: {
-      representation: (subscribe: Subscribe) => {
-        const yRepresentations = this.yType.get("representations") as YRepresentationMap;
-        const observer = () => subscribe();
-        yRepresentations.observe(observer);
-        return () => yRepresentations.unobserve(observer);
-      },
-      representations: (subscribe: Subscribe) => () => {},
-      port: (subscribe: Subscribe) => {
-        const yPorts = this.yType.get("ports") as YPortMap;
-        const observer = () => subscribe();
-        yPorts.observe(observer);
-        return () => yPorts.unobserve(observer);
-      },
-      ports: (subscribe: Subscribe) => () => {},
     },
   };
 }
@@ -1126,8 +1009,7 @@ class YPieceStore implements PieceStoreFull {
     }
     return piece;
   }
-  create = {};
-  update = {
+  change = {
     piece: (diff: PieceDiff) => {
       if (diff.id_ !== undefined) this.yPiece.set("id_", diff.id_);
       if (diff.description !== undefined) this.yPiece.set("description", diff.description);
@@ -1136,14 +1018,6 @@ class YPieceStore implements PieceStoreFull {
         yType.set("name", diff.type.name);
         if (diff.type.variant !== undefined) yType.set("variant", diff.type.variant);
       }
-      // if (diff.design !== undefined) {
-      //   const yDesign = this.yPiece.get("design") as Y.Map<string>;
-      //   if (yDesign) {
-      //     yDesign.set("name", diff.design.name);
-      //     if (diff.design.variant !== undefined) yDesign.set("variant", diff.design.variant);
-      //     if (diff.design.view !== undefined) yDesign.set("view", diff.design.view);
-      //   }
-      // }
       if (diff.plane !== undefined) {
         const yPlane = this.yPiece.get("plane") as Y.Map<any>;
         if (yPlane) {
@@ -1181,11 +1055,8 @@ class YPieceStore implements PieceStoreFull {
       }
     },
   };
-
-  delete = {};
   on = {
-    created: {},
-    updated: {
+    change: {
       piece: (subscribe: Subscribe, deep?: boolean) => {
         const observer = () => subscribe();
         if (deep) {
@@ -1197,7 +1068,6 @@ class YPieceStore implements PieceStoreFull {
         }
       },
     },
-    deleted: {},
   };
 }
 
@@ -1249,20 +1119,22 @@ class YConnectionStore implements ConnectionStoreFull {
     const yConnected = this.yConnection.get("connected") as Y.Map<any>;
     const yConnecting = this.yConnection.get("connecting") as Y.Map<any>;
     const yConnectedPiece = yConnected.get("piece") as Y.Map<string>;
+    const yConnectedDesignPiece = yConnected.get("designPiece") as Y.Map<string> | undefined;
     const yConnectedPort = yConnected.get("port") as Y.Map<string>;
     const yConnectingPiece = yConnecting.get("piece") as Y.Map<string>;
+    const yConnectingDesignPiece = yConnecting.get("designPiece") as Y.Map<string> | undefined;
     const yConnectingPort = yConnecting.get("port") as Y.Map<string>;
 
     return {
       connected: {
         piece: { id_: yConnectedPiece.get("id_") as string },
         port: { id_: yConnectedPort.get("id_") as string },
-        designId: yConnected.get("designId") as string | undefined,
+        designPiece: yConnectedDesignPiece ? { id_: yConnectedDesignPiece.get("id_") as string } : undefined,
       },
       connecting: {
         piece: { id_: yConnectingPiece.get("id_") as string },
         port: { id_: yConnectingPort.get("id_") as string },
-        designId: yConnecting.get("designId") as string | undefined,
+        designPiece: yConnectingDesignPiece ? { id_: yConnectingDesignPiece.get("id_") as string } : undefined,
       },
       description: (this.yConnection.get("description") as string) || "",
       gap: this.yConnection.get("gap") as number,
@@ -1276,9 +1148,7 @@ class YConnectionStore implements ConnectionStoreFull {
       attributes: getAttributes(this.yConnection.get("attributes") as YAttributes),
     };
   }
-  create = {};
-
-  update = {
+  change = {
     connection: (diff: ConnectionDiff) => {
       if (diff.description !== undefined) this.yConnection.set("description", diff.description);
       if (diff.gap !== undefined) this.yConnection.set("gap", diff.gap);
@@ -1292,11 +1162,8 @@ class YConnectionStore implements ConnectionStoreFull {
     },
   };
 
-  delete = {};
-
   on = {
-    created: {},
-    updated: {
+    change: {
       connection: (subscribe: Subscribe, deep?: boolean) => {
         const observer = () => subscribe();
         if (deep) {
@@ -1308,7 +1175,6 @@ class YConnectionStore implements ConnectionStoreFull {
         }
       },
     },
-    deleted: {},
   };
 }
 
@@ -1329,8 +1195,22 @@ class YDesignStore implements DesignStoreFull {
     this.yDesign.set("connections", new Y.Map() as YConnectionMap);
     this.yDesign.set("authors", createAuthors(design.authors));
     this.yDesign.set("attributes", createAttributes(design.attributes));
-    this.create.pieces(design.pieces || []);
-    this.create.connections(design.connections || []);
+    (design.pieces || []).forEach((piece) => {
+      const pieceId = pieceIdLikeToPieceId(piece);
+      const uuid = uuidv4();
+      const yPieceStore = new YPieceStore(piece);
+      (this.yDesign.get("pieces") as YPieceMap).set(uuid, yPieceStore.yPiece);
+      this.pieceIds.set(pieceId, uuid);
+      this.pieces.set(pieceId, yPieceStore);
+    });
+    (design.connections || []).forEach((connection) => {
+      const connectionId = connectionIdLikeToConnectionId(connection);
+      const uuid = uuidv4();
+      const yConnectionStore = new YConnectionStore(connection);
+      (this.yDesign.get("connections") as YConnectionMap).set(uuid, yConnectionStore.yConnection);
+      this.connectionIds.set(connectionId, uuid);
+      this.connections.set(connectionId, yConnectionStore);
+    });
   }
 
   get design(): Design {
@@ -1347,78 +1227,91 @@ class YDesignStore implements DesignStoreFull {
     };
   }
 
-  create = {
-    piece: (piece: Piece) => {
-      const pieceId = pieceIdLikeToPieceId(piece);
-      if (this.pieceIds.get(pieceId)) throw new Error(`Piece ${pieceId} already exists`);
-      const uuid = uuidv4();
-      const yPieceStore = new YPieceStore(piece);
-      (this.yDesign.get("pieces") as YPieceMap).set(uuid, yPieceStore.yPiece);
-      this.pieceIds.set(pieceId, uuid);
-      this.pieces.set(pieceId, yPieceStore);
-    },
-    pieces: (pieces: Piece[]) => pieces.forEach((piece) => this.create.piece(piece)),
-    connection: (connection: Connection) => {
-      const connectionId = connectionIdLikeToConnectionId(connection);
-      if (this.connectionIds.get(connectionId)) throw new Error(`Connection ${connectionId} already exists`);
-      const uuid = uuidv4();
-      const yConnectionStore = new YConnectionStore(connection);
-      (this.yDesign.get("connections") as YConnectionMap).set(uuid, yConnectionStore.yConnection);
-      this.connectionIds.set(connectionId, uuid);
-      this.connections.set(connectionId, yConnectionStore);
-    },
-    connections: (connections: Connection[]) => connections.forEach((connection) => this.create.connection(connection)),
-  };
-
-  update = {
+  change = {
     design: (diff: DesignDiff) => {
       if (diff.name !== undefined) this.yDesign.set("name", diff.name);
       if (diff.description !== undefined) this.yDesign.set("description", diff.description);
       if (diff.variant !== undefined) this.yDesign.set("variant", diff.variant);
       if (diff.view !== undefined) this.yDesign.set("view", diff.view);
       if (diff.unit !== undefined) this.yDesign.set("unit", diff.unit);
-    },
-  };
 
-  delete = {
-    piece: (id: PieceId) => {
-      const pieceId = pieceIdLikeToPieceId(id);
-      const uuid = this.pieceIds.get(pieceId);
-      if (!uuid) throw new Error(`Piece ${pieceId} does not exist`);
-      (this.yDesign.get("pieces") as YPieceMap).delete(uuid);
-      this.pieceIds.delete(pieceId);
-      this.pieces.delete(pieceId);
+      if (diff.pieces) {
+        if (diff.pieces.added) {
+          diff.pieces.added.forEach((piece) => {
+            const pieceId = pieceIdLikeToPieceId(piece);
+            if (!this.pieceIds.get(pieceId)) {
+              const uuid = uuidv4();
+              const yPieceStore = new YPieceStore(piece);
+              (this.yDesign.get("pieces") as YPieceMap).set(uuid, yPieceStore.yPiece);
+              this.pieceIds.set(pieceId, uuid);
+              this.pieces.set(pieceId, yPieceStore);
+            }
+          });
+        }
+        if (diff.pieces.removed) {
+          diff.pieces.removed.forEach((pieceId) => {
+            const id = pieceIdLikeToPieceId(pieceId);
+            const uuid = this.pieceIds.get(id);
+            if (uuid) {
+              (this.yDesign.get("pieces") as YPieceMap).delete(uuid);
+              this.pieceIds.delete(id);
+              this.pieces.delete(id);
+            }
+          });
+        }
+        if (diff.pieces.updated) {
+          diff.pieces.updated.forEach((pieceDiff) => {
+            const matchingPiece = Array.from(this.pieces.entries()).find(([_, store]) => {
+              const piece = store.piece;
+              return !pieceDiff.id_ || piece.id_ === pieceDiff.id_;
+            });
+            if (matchingPiece) {
+              matchingPiece[1].change.piece(pieceDiff);
+            }
+          });
+        }
+      }
+
+      if (diff.connections) {
+        if (diff.connections.added) {
+          diff.connections.added.forEach((connection) => {
+            const connectionId = connectionIdLikeToConnectionId(connection);
+            if (!this.connectionIds.get(connectionId)) {
+              const uuid = uuidv4();
+              const yConnectionStore = new YConnectionStore(connection);
+              (this.yDesign.get("connections") as YConnectionMap).set(uuid, yConnectionStore.yConnection);
+              this.connectionIds.set(connectionId, uuid);
+              this.connections.set(connectionId, yConnectionStore);
+            }
+          });
+        }
+        if (diff.connections.removed) {
+          diff.connections.removed.forEach((connectionId) => {
+            const id = connectionIdLikeToConnectionId(connectionId);
+            const uuid = this.connectionIds.get(id);
+            if (uuid) {
+              (this.yDesign.get("connections") as YConnectionMap).delete(uuid);
+              this.connectionIds.delete(id);
+              this.connections.delete(id);
+            }
+          });
+        }
+        if (diff.connections.updated) {
+          diff.connections.updated.forEach((connectionDiff) => {
+            const matchingConnection = Array.from(this.connections.values()).find((store) => {
+              return true; // Would need better matching logic based on connection structure
+            });
+            if (matchingConnection) {
+              matchingConnection.change.connection(connectionDiff);
+            }
+          });
+        }
+      }
     },
-    pieces: (ids: PieceId[]) => ids.forEach((id) => this.delete.piece(id)),
-    connection: (id: ConnectionId) => {
-      const connectionId = connectionIdLikeToConnectionId(id);
-      const uuid = this.connectionIds.get(connectionId);
-      if (!uuid) throw new Error(`Connection ${connectionId} does not exist`);
-      (this.yDesign.get("connections") as YConnectionMap).delete(uuid);
-      this.connectionIds.delete(connectionId);
-      this.connections.delete(connectionId);
-    },
-    connections: (ids: ConnectionId[]) => ids.forEach((id) => this.delete.connection(id)),
   };
 
   on = {
-    created: {
-      piece: (subscribe: Subscribe) => {
-        const yPieces = this.yDesign.get("pieces") as YPieceMap;
-        const observer = () => subscribe();
-        yPieces.observe(observer);
-        return () => yPieces.unobserve(observer);
-      },
-      pieces: (subscribe: Subscribe) => () => {},
-      connection: (subscribe: Subscribe) => {
-        const yConnections = this.yDesign.get("connections") as YConnectionMap;
-        const observer = () => subscribe();
-        yConnections.observe(observer);
-        return () => yConnections.unobserve(observer);
-      },
-      connections: (subscribe: Subscribe) => () => {},
-    },
-    updated: {
+    change: {
       design: (subscribe: Subscribe, deep?: boolean) => {
         const observer = () => subscribe();
         if (deep) {
@@ -1429,22 +1322,6 @@ class YDesignStore implements DesignStoreFull {
           return () => this.yDesign.unobserve(observer);
         }
       },
-    },
-    deleted: {
-      piece: (subscribe: Subscribe) => {
-        const yPieces = this.yDesign.get("pieces") as YPieceMap;
-        const observer = () => subscribe();
-        yPieces.observe(observer);
-        return () => yPieces.unobserve(observer);
-      },
-      pieces: (subscribe: Subscribe) => () => {},
-      connection: (subscribe: Subscribe) => {
-        const yConnections = this.yDesign.get("connections") as YConnectionMap;
-        const observer = () => subscribe();
-        yConnections.observe(observer);
-        return () => yConnections.unobserve(observer);
-      },
-      connections: (subscribe: Subscribe) => () => {},
     },
   };
 }
@@ -1472,8 +1349,22 @@ class YKitStore implements KitStoreFull {
     this.yKit.set("types", new Y.Map<YType>());
     this.yKit.set("designs", new Y.Map<YDesign>());
     this.yKit.set("attributes", new Y.Array<YAttribute>());
-    this.create.types(kit.types || []);
-    this.create.designs(kit.designs || []);
+    (kit.types || []).forEach((type) => {
+      const typeId = typeIdLikeToTypeId(type);
+      const uuid = uuidv4();
+      const yTypeStore = new YTypeStore(type);
+      (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
+      this.typeIds.set(typeId, uuid);
+      this.types.set(typeId, yTypeStore);
+    });
+    (kit.designs || []).forEach((design) => {
+      const designId = designIdLikeToDesignId(design);
+      const uuid = uuidv4();
+      const yDesignStore = new YDesignStore(design);
+      (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
+      this.designIds.set(designId, uuid);
+      this.designs.set(designId, yDesignStore);
+    });
   }
 
   get kit(): Kit {
@@ -1495,34 +1386,7 @@ class YKitStore implements KitStoreFull {
     };
   }
 
-  create = {
-    type: (type: Type) => {
-      const typeId = typeIdLikeToTypeId(type);
-      if (this.typeIds.get(typeId)) throw new Error(`Type ${typeId} already exists`);
-      const uuid = uuidv4();
-      const yTypeStore = new YTypeStore(type);
-      (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
-      this.typeIds.set(typeId, uuid);
-      this.types.set(typeId, yTypeStore);
-    },
-    types: (types: Type[]) => {
-      types.forEach((type) => this.create.type(type));
-    },
-    design: (design: Design) => {
-      const designId = designIdLikeToDesignId(design);
-      if (this.designIds.get(designId)) throw new Error(`Design ${designId} already exists`);
-      const uuid = uuidv4();
-      const yDesignStore = new YDesignStore(design);
-      (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
-      this.designIds.set(designId, uuid);
-      this.designs.set(designId, yDesignStore);
-    },
-    designs: (designs: Design[]) => {
-      designs.forEach((design) => this.create.design(design));
-    },
-  };
-
-  update = {
+  change = {
     kit: (diff: KitDiff) => {
       if (diff.name) this.yKit.set("name", diff.name);
       if (diff.description) this.yKit.set("description", diff.description);
@@ -1533,106 +1397,92 @@ class YKitStore implements KitStoreFull {
       if (diff.remote) this.yKit.set("remote", diff.remote);
       if (diff.homepage) this.yKit.set("homepage", diff.homepage);
       if (diff.license) this.yKit.set("license", diff.license);
+
       if (diff.types) {
-        if (diff.types.added) diff.types.added.forEach((type) => this.create.type(type));
-        if (diff.types.removed) diff.types.removed.forEach((typeId) => this.delete.type(typeId));
+        if (diff.types.added) {
+          diff.types.added.forEach((type) => {
+            const typeId = typeIdLikeToTypeId(type);
+            if (!this.typeIds.get(typeId)) {
+              const uuid = uuidv4();
+              const yTypeStore = new YTypeStore(type);
+              (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
+              this.typeIds.set(typeId, uuid);
+              this.types.set(typeId, yTypeStore);
+            }
+          });
+        }
+        if (diff.types.removed) {
+          diff.types.removed.forEach((typeId) => {
+            const id = typeIdLikeToTypeId(typeId);
+            const uuid = this.typeIds.get(id);
+            if (uuid) {
+              (this.yKit.get("types") as YTypeMap).delete(uuid);
+              this.typeIds.delete(id);
+              this.types.delete(id);
+            }
+          });
+        }
         if (diff.types.updated) {
-          // For updated types, we need to find the existing store and update it
-          // This is a limitation of the current diff structure - we need the full type ID
           diff.types.updated.forEach((typeDiff) => {
-            // Find the matching type by partial data - this is imperfect but necessary
             const matchingType = Array.from(this.types.entries()).find(([_, store]) => {
               const type = store.type;
               return (!typeDiff.name || type.name === typeDiff.name) && (!typeDiff.variant || type.variant === typeDiff.variant);
             });
             if (matchingType) {
-              matchingType[1].update.type(typeDiff);
+              matchingType[1].change.type(typeDiff);
             }
           });
         }
       }
+
       if (diff.designs) {
-        if (diff.designs.added) diff.designs.added.forEach((design) => this.create.design(design));
-        if (diff.designs.removed) diff.designs.removed.forEach((designId) => this.delete.design(designId));
+        if (diff.designs.added) {
+          diff.designs.added.forEach((design) => {
+            const designId = designIdLikeToDesignId(design);
+            if (!this.designIds.get(designId)) {
+              const uuid = uuidv4();
+              const yDesignStore = new YDesignStore(design);
+              (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
+              this.designIds.set(designId, uuid);
+              this.designs.set(designId, yDesignStore);
+            }
+          });
+        }
+        if (diff.designs.removed) {
+          diff.designs.removed.forEach((designId) => {
+            const id = designIdLikeToDesignId(designId);
+            const uuid = this.designIds.get(id);
+            if (uuid) {
+              (this.yKit.get("designs") as YDesignMap).delete(uuid);
+              this.designIds.delete(id);
+              this.designs.delete(id);
+            }
+          });
+        }
         if (diff.designs.updated) {
-          // For updated designs, we need to find the existing store and update it
           diff.designs.updated.forEach((designDiff) => {
-            // Find the matching design by partial data - this is imperfect but necessary
             const matchingDesign = Array.from(this.designs.entries()).find(([_, store]) => {
               const design = store.design;
               return (!designDiff.name || design.name === designDiff.name) && (!designDiff.variant || design.variant === designDiff.variant) && (!designDiff.view || design.view === designDiff.view);
             });
             if (matchingDesign) {
-              matchingDesign[1].update.design(designDiff);
+              matchingDesign[1].change.design(designDiff);
             }
           });
         }
       }
-      // TODO: attributes
+
       this.yKit.set("updated", new Date().toISOString());
     },
   };
 
-  delete = {
-    type: (id: TypeId) => {
-      const typeId = typeIdLikeToTypeId(id);
-      const uuid = this.typeIds.get(typeId);
-      if (!uuid) throw new Error(`Type ${typeId} does not exist`);
-      (this.yKit.get("types") as YTypeMap).delete(uuid);
-      this.typeIds.delete(typeId);
-      this.types.delete(typeId);
-    },
-    types: (ids: TypeId[]) => ids.forEach((id) => this.delete.type(id)),
-    design: (id: DesignId) => {
-      const designId = designIdLikeToDesignId(id);
-      const uuid = this.designIds.get(designId);
-      if (!uuid) throw new Error(`Design ${designId} does not exist`);
-      (this.yKit.get("designs") as YDesignMap).delete(uuid);
-      this.designIds.delete(designId);
-      this.designs.delete(designId);
-    },
-    designs: (ids: DesignId[]) => ids.forEach((id) => this.delete.design(id)),
-  };
-
   on = {
-    created: {
-      type: (subscribe: Subscribe) => {
-        const yTypes = this.yKit.get("types") as Y.Map<YType>;
-        const observer = () => subscribe();
-        yTypes.observe(observer);
-        return () => yTypes.unobserve(observer);
-      },
-      types: (subscribe: Subscribe) => this.on.created.type(subscribe),
-      design: (subscribe: Subscribe) => {
-        const yDesigns = this.yKit.get("designs") as Y.Map<YDesign>;
-        const observer = () => subscribe();
-        yDesigns.observe(observer);
-        return () => yDesigns.unobserve(observer);
-      },
-      designs: (subscribe: Subscribe) => this.on.created.design(subscribe),
-    },
-    updated: {
+    change: {
       kit: (subscribe: Subscribe, deep?: boolean) => {
         const observer = () => subscribe();
         deep ? (this.yKit as unknown as Y.Map<any>).observeDeep(observer) : (this.yKit as unknown as Y.Map<any>).observe(observer);
         return () => (deep ? (this.yKit as unknown as Y.Map<any>).unobserveDeep(observer) : (this.yKit as unknown as Y.Map<any>).unobserve(observer));
       },
-    },
-    deleted: {
-      type: (subscribe: Subscribe) => {
-        const yTypes = this.yKit.get("types") as Y.Map<YType>;
-        const observer = () => subscribe();
-        yTypes.observe(observer);
-        return () => yTypes.unobserve(observer);
-      },
-      types: (subscribe: Subscribe) => this.on.deleted.type(subscribe),
-      design: (subscribe: Subscribe) => {
-        const yDesigns = this.yKit.get("designs") as Y.Map<YDesign>;
-        const observer = () => subscribe();
-        yDesigns.observe(observer);
-        return () => yDesigns.unobserve(observer);
-      },
-      designs: (subscribe: Subscribe) => this.on.deleted.design(subscribe),
     },
   };
 
@@ -1642,7 +1492,7 @@ class YKitStore implements KitStoreFull {
     const context: KitCommandContext = { kit: this.kit };
     const result = callback(context, ...rest);
     if (result.diff) {
-      this.update.kit(result.diff);
+      this.change.kit(result.diff);
     }
     return result as T;
   }
@@ -1817,11 +1667,7 @@ class YDesignEditorStore implements DesignEditorStore {
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in design editor store`);
-    const context: DesignEditorCommandContext = {
-      store: this as any, // This would need proper context
-      kitId: { name: "", version: "" }, // This would need to be provided
-      designId: { name: "", variant: "", view: "" }, // This would need to be provided
-    };
+    const context: DesignEditorCommandContext = {};
     const result = callback(context, ...rest);
     // Apply state and diff changes
     // This would need proper implementation
@@ -1912,15 +1758,6 @@ class YSketchpadStore implements SketchpadStore {
     },
     designEditors: (designIds: DesignId[]) => {
       designIds.forEach((id) => this.create.designEditor(id));
-    },
-  };
-
-  update = {
-    kit: (kitId: KitId, diff: KitDiff) => {
-      const store = this.kits.get(kitId);
-      if (store) {
-        store.update.kit(diff);
-      }
     },
   };
 
@@ -2051,7 +1888,7 @@ class YSketchpadStore implements SketchpadStore {
       result.diffs.forEach((diff, kitId) => {
         const kit = this.kits.get(kitId);
         if (kit) {
-          kit.update.kit(diff);
+          kit.change.kit(diff);
         }
       });
     }

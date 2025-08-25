@@ -577,6 +577,114 @@ public class KitGoo : ModelGoo<Kit>
     public KitGoo(Kit value) : base(value) { }
 }
 
+public class RepresentationIdGoo : ModelGoo<RepresentationId>
+{
+    public RepresentationIdGoo() { }
+    public RepresentationIdGoo(RepresentationId value) : base(value) { }
+}
+
+public class ConnectionIdGoo : ModelGoo<ConnectionId>
+{
+    public ConnectionIdGoo() { }
+    public ConnectionIdGoo(ConnectionId value) : base(value) { }
+}
+
+public class FileIdGoo : ModelGoo<FileId>
+{
+    public FileIdGoo() { }
+    public FileIdGoo(FileId value) : base(value) { }
+}
+
+public class SemioFileGoo : ModelGoo<SemioFile>
+{
+    public SemioFileGoo() { }
+    public SemioFileGoo(SemioFile value) : base(value) { }
+}
+
+public class RepresentationDiffGoo : ModelGoo<RepresentationDiff>
+{
+    public RepresentationDiffGoo() { }
+    public RepresentationDiffGoo(RepresentationDiff value) : base(value) { }
+}
+
+public class PortDiffGoo : ModelGoo<PortDiff>
+{
+    public PortDiffGoo() { }
+    public PortDiffGoo(PortDiff value) : base(value) { }
+}
+
+public class TypeDiffGoo : ModelGoo<TypeDiff>
+{
+    public TypeDiffGoo() { }
+    public TypeDiffGoo(TypeDiff value) : base(value) { }
+}
+
+public class PieceDiffGoo : ModelGoo<PieceDiff>
+{
+    public PieceDiffGoo() { }
+    public PieceDiffGoo(PieceDiff value) : base(value) { }
+}
+
+public class SideDiffGoo : ModelGoo<SideDiff>
+{
+    public SideDiffGoo() { }
+    public SideDiffGoo(SideDiff value) : base(value) { }
+}
+
+public class ConnectionDiffGoo : ModelGoo<ConnectionDiff>
+{
+    public ConnectionDiffGoo() { }
+    public ConnectionDiffGoo(ConnectionDiff value) : base(value) { }
+}
+
+public class DesignDiffGoo : ModelGoo<DesignDiff>
+{
+    public DesignDiffGoo() { }
+    public DesignDiffGoo(DesignDiff value) : base(value) { }
+}
+
+public class TypesDiffGoo : ModelGoo<TypesDiff>
+{
+    public TypesDiffGoo() { }
+    public TypesDiffGoo(TypesDiff value) : base(value) { }
+}
+
+public class PiecesDiffGoo : ModelGoo<PiecesDiff>
+{
+    public PiecesDiffGoo() { }
+    public PiecesDiffGoo(PiecesDiff value) : base(value) { }
+}
+
+public class ConnectionsDiffGoo : ModelGoo<ConnectionsDiff>
+{
+    public ConnectionsDiffGoo() { }
+    public ConnectionsDiffGoo(ConnectionsDiff value) : base(value) { }
+}
+
+public class DesignsDiffGoo : ModelGoo<DesignsDiff>
+{
+    public DesignsDiffGoo() { }
+    public DesignsDiffGoo(DesignsDiff value) : base(value) { }
+}
+
+public class FileDiffGoo : ModelGoo<FileDiff>
+{
+    public FileDiffGoo() { }
+    public FileDiffGoo(FileDiff value) : base(value) { }
+}
+
+public class FilesDiffGoo : ModelGoo<FilesDiff>
+{
+    public FilesDiffGoo() { }
+    public FilesDiffGoo(FilesDiff value) : base(value) { }
+}
+
+public class KitDiffGoo : ModelGoo<KitDiff>
+{
+    public KitDiffGoo() { }
+    public KitDiffGoo(KitDiff value) : base(value) { }
+}
+
 #endregion
 
 #region Params
@@ -646,6 +754,96 @@ public class DesignParam : ModelParam<DesignGoo, Design>
 public class KitParam : ModelParam<KitGoo, Kit>
 {
     public override Guid ComponentGuid => new("BA9F161E-AFE3-41D5-8644-964DD20B887B");
+}
+
+public class RepresentationIdParam : ModelParam<RepresentationIdGoo, RepresentationId>
+{
+    public override Guid ComponentGuid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+}
+
+public class ConnectionIdParam : ModelParam<ConnectionIdGoo, ConnectionId>
+{
+    public override Guid ComponentGuid => new("40B2C3D4-E5F6-A7B8-C9D0-E1F2A3B4C5D6");
+}
+
+public class FileIdParam : ModelParam<FileIdGoo, FileId>
+{
+    public override Guid ComponentGuid => new("50C3D4E5-F6A7-B8C9-D0E1-F2A3B4C5D6E7");
+}
+
+public class SemioFileParam : ModelParam<SemioFileGoo, SemioFile>
+{
+    public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F8");
+}
+
+public class RepresentationDiffParam : ModelParam<RepresentationDiffGoo, RepresentationDiff>
+{
+    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A9");
+}
+
+public class PortDiffParam : ModelParam<PortDiffGoo, PortDiff>
+{
+    public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B0");
+}
+
+public class TypeDiffParam : ModelParam<TypeDiffGoo, TypeDiff>
+{
+    public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C1");
+}
+
+public class PieceDiffParam : ModelParam<PieceDiffGoo, PieceDiff>
+{
+    public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D2");
+}
+
+public class SideDiffParam : ModelParam<SideDiffGoo, SideDiff>
+{
+    public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E3");
+}
+
+public class ConnectionDiffParam : ModelParam<ConnectionDiffGoo, ConnectionDiff>
+{
+    public override Guid ComponentGuid => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F4");
+}
+
+public class DesignDiffParam : ModelParam<DesignDiffGoo, DesignDiff>
+{
+    public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A5");
+}
+
+public class TypesDiffParam : ModelParam<TypesDiffGoo, TypesDiff>
+{
+    public override Guid ComponentGuid => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B6");
+}
+
+public class PiecesDiffParam : ModelParam<PiecesDiffGoo, PiecesDiff>
+{
+    public override Guid ComponentGuid => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6C7");
+}
+
+public class ConnectionsDiffParam : ModelParam<ConnectionsDiffGoo, ConnectionsDiff>
+{
+    public override Guid ComponentGuid => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7D8");
+}
+
+public class DesignsDiffParam : ModelParam<DesignsDiffGoo, DesignsDiff>
+{
+    public override Guid ComponentGuid => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8E9");
+}
+
+public class FileDiffParam : ModelParam<FileDiffGoo, FileDiff>
+{
+    public override Guid ComponentGuid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F0");
+}
+
+public class FilesDiffParam : ModelParam<FilesDiffGoo, FilesDiff>
+{
+    public override Guid ComponentGuid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A1");
+}
+
+public class KitDiffParam : ModelParam<KitDiffGoo, KitDiff>
+{
+    public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B2");
 }
 
 #endregion

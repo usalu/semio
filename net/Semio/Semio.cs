@@ -1969,6 +1969,56 @@ public class Representation : Model<Representation>
     public override string ToString() => $"Rep({ToHumanIdString()})";
 }
 
+[Model("💾", "Rp", "Rep", "The identifier of a representation.")]
+public class RepresentationId : Model<RepresentationId>
+{
+    [Name("🏷️", "Tg*", "Tags*", "The optional tags to group representations. No tags means default.", PropImportance.ID, skipValidation: true)]
+    public List<string> Tags { get; set; } = new();
+    public static implicit operator RepresentationId(Representation representation) => new() { Tags = representation.Tags };
+    public string ToIdString() => $"{string.Join(",", Tags.Select(t => Utility.Encode(t)))}";
+    public string ToHumanIdString() => string.Join(", ", Tags);
+    public override string ToString() => $"Rep({ToHumanIdString()})";
+}
+
+[Model("🔗", "Cn", "ConId", "The identifier of a connection.")]
+public class ConnectionId : Model<ConnectionId>
+{
+    [ModelProp("🧲", "Cd", "Cnd", "The connected side of the piece of the connection.")]
+    public Side Connected { get; set; } = new();
+    [ModelProp("🧲", "Cg", "Cng", "The connecting side of the piece of the connection.")]
+    public Side Connecting { get; set; } = new();
+    public static implicit operator ConnectionId(Connection connection) => new() { Connected = connection.Connected, Connecting = connection.Connecting };
+    public string ToIdString() => $"{Connected.Piece.Id + (Connected.Port.Id != "" ? ":" + Connected.Port.Id : "")}--{(Connecting.Port.Id != "" ? Connecting.Port.Id + ":" : "") + Connecting.Piece.Id}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"ConId({ToIdString()})";
+}
+
+[Model("📄", "Fl", "Fil", "The identifier of a file.")]
+public class FileId : Model<FileId>
+{
+    [Url("🔗", "Ur", "Url", "The url of the file.", PropImportance.ID)]
+    public string Url { get; set; } = "";
+    public string ToIdString() => $"{Url}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"FilId({ToHumanIdString()})";
+}
+
+[Model("📄", "Fl", "Fil", "A file with content.")]
+public class SemioFile : Model<SemioFile>
+{
+    [Url("🔗", "Ur", "Url", "The url of the file.", PropImportance.ID)]
+    public string Url { get; set; } = "";
+    [Url("💾", "Da", "Dat", "The data URI of the file.", PropImportance.REQUIRED)]
+    public string Data { get; set; } = "";
+    [NumberProp("📏", "Sz?", "Siz?", "The optional size of the file in bytes.")]
+    public int? Size { get; set; }
+    [Name("🔐", "Hs?", "Has?", "The optional hash of the file.")]
+    public string Hash { get; set; } = "";
+    public string ToIdString() => $"{Url}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"Fil({ToHumanIdString()})";
+}
+
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-diagram-point-"/>
 /// </summary>
@@ -2302,6 +2352,294 @@ public class TypeId : Model<TypeId>
 
     public static implicit operator TypeId(Type type) => new() { Name = type.Name, Variant = type.Variant };
 }
+
+#region Diff Classes
+
+[Model("📊", "RD", "RDf", "A diff for representations.")]
+public class RepresentationDiff : Model<RepresentationDiff>
+{
+    [Url("🔗", "Ur?", "Url?", "The optional Unique Resource Locator (URL) to the resource of the representation.")]
+    public string Url { get; set; } = "";
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the representation.")]
+    public string Description { get; set; } = "";
+    [Name("🏷️", "Tg*", "Tags*", "The optional tags to group representations.", PropImportance.OPTIONAL)]
+    public List<string> Tags { get; set; } = new();
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the representation.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
+}
+
+[Model("📊", "RsD", "RsDf", "A diff for multiple representations.")]
+public class RepresentationsDiff : Model<RepresentationsDiff>
+{
+    [ModelProp("➖", "Rm*", "Rem*", "The optional removed representations.", PropImportance.OPTIONAL)]
+    public List<RepresentationId> Removed { get; set; } = new();
+    [ModelProp("✏️", "Up*", "Upd*", "The optional updated representations.", PropImportance.OPTIONAL)]
+    public List<RepresentationDiff> Updated { get; set; } = new();
+    [ModelProp("➕", "Ad*", "Add*", "The optional added representations.", PropImportance.OPTIONAL)]
+    public List<Representation> Added { get; set; } = new();
+}
+
+[Model("🔌", "PD", "PDf", "A diff for ports.")]
+public class PortDiff : Model<PortDiff>
+{
+    [Id("🆔", "Id?", "Idn?", "The optional local identifier of the port.", isDefaultValid: true)]
+    [JsonProperty("id_")]
+    public string Id { get; set; } = "";
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the port.")]
+    public string Description { get; set; } = "";
+    [Name("👨‍👩‍👧‍👦", "Fa?", "Fam?", "The optional family of the port.")]
+    public string Family { get; set; } = "";
+    [FalseOrTrue("💯", "Ma?", "Man?", "Whether the port is mandatory.")]
+    public bool? Mandatory { get; set; }
+    [NumberProp("💍", "T?", "T?", "The optional parameter t [0,1[.")]
+    public float? T { get; set; }
+    [Name("✅", "CF*", "CFas*", "The optional other compatible families of the port.", PropImportance.OPTIONAL)]
+    public List<string> CompatibleFamilies { get; set; } = new();
+    [ModelProp("✖️", "Pt?", "Pnt?", "The optional connection point of the port.", PropImportance.OPTIONAL)]
+    public Point? Point { get; set; }
+    [ModelProp("➡️", "Dr?", "Drn?", "The optional direction of the port.", PropImportance.OPTIONAL)]
+    public Vector? Direction { get; set; }
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
+}
+
+[Model("📊", "PsD", "PsDf", "A diff for multiple ports.")]
+public class PortsDiff : Model<PortsDiff>
+{
+    [ModelProp("➖", "Rm*", "Rem*", "The optional removed ports.", PropImportance.OPTIONAL)]
+    public List<PortId> Removed { get; set; } = new();
+    [ModelProp("✏️", "Up*", "Upd*", "The optional updated ports.", PropImportance.OPTIONAL)]
+    public List<PortDiff> Updated { get; set; } = new();
+    [ModelProp("➕", "Ad*", "Add*", "The optional added ports.", PropImportance.OPTIONAL)]
+    public List<Port> Added { get; set; } = new();
+}
+
+[Model("🧩", "TD", "TDf", "A diff for types.")]
+public class TypeDiff : Model<TypeDiff>
+{
+    [Name("📛", "Na?", "Nam?", "The optional name of the type.")]
+    public string Name { get; set; } = "";
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the type.")]
+    public string Description { get; set; } = "";
+    [Url("🪙", "Ic?", "Ico?", "The optional icon of the type.")]
+    public string Icon { get; set; } = "";
+    [Url("🖼️", "Im?", "Img?", "The optional url to the image of the type.")]
+    public string Image { get; set; } = "";
+    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the type.")]
+    public string Variant { get; set; } = "";
+    [IntProp("📦", "St?", "Stk?", "The optional number of items in stock.")]
+    public int? Stock { get; set; }
+    [FalseOrTrue("👻", "Vi?", "Vir?", "Whether the type is virtual.")]
+    public bool? Virtual { get; set; }
+    [Name("Ⓜ️", "Ut?", "Unt?", "The optional length unit of the type.")]
+    public string Unit { get; set; } = "";
+    [ModelProp("📍", "Lo?", "Loc?", "The optional location of the type.", PropImportance.OPTIONAL)]
+    public Location? Location { get; set; }
+    [ModelProp("💾", "Rp*", "Reps*", "The optional representations of the type.", PropImportance.OPTIONAL)]
+    public List<Representation> Representations { get; set; } = new();
+    [ModelProp("🔌", "Po*", "Pors*", "The optional ports of the type.", PropImportance.OPTIONAL)]
+    public List<Port> Ports { get; set; } = new();
+    [ModelProp("👥", "Au*", "Aut*", "The optional authors of the type.", PropImportance.OPTIONAL)]
+    public List<Author> Authors { get; set; } = new();
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the type.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
+}
+
+[Model("📊", "TsD", "TsDf", "A diff for multiple types.")]
+public class TypesDiff : Model<TypesDiff>
+{
+    [ModelProp("➖", "Rm*", "Rem*", "The optional removed types.", PropImportance.OPTIONAL)]
+    public List<TypeId> Removed { get; set; } = new();
+    [ModelProp("✏️", "Up*", "Upd*", "The optional updated types.", PropImportance.OPTIONAL)]
+    public List<TypeDiff> Updated { get; set; } = new();
+    [ModelProp("➕", "Ad*", "Add*", "The optional added types.", PropImportance.OPTIONAL)]
+    public List<Type> Added { get; set; } = new();
+}
+
+[Model("⭕", "PD", "PDf", "A diff for pieces.")]
+public class PieceDiff : Model<PieceDiff>
+{
+    [Id("🆔", "Id?", "Id?", "The optional local identifier of the piece.", isDefaultValid: true)]
+    [JsonProperty("id_")]
+    public string Id { get; set; } = "";
+    [Name("📛", "Na?", "Nam?", "The optional name of the piece.")]
+    public string Name { get; set; } = "";
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the piece.")]
+    public string Description { get; set; } = "";
+    [ModelProp("🧩", "Ty?", "Typ?", "The optional type of the piece.", PropImportance.OPTIONAL)]
+    public TypeId? Type { get; set; }
+    [ModelProp("◳", "Pn?", "Pln?", "The optional plane of the piece.", PropImportance.OPTIONAL)]
+    public Plane? Plane { get; set; }
+    [ModelProp("⌖", "Ce?", "Cen?", "The optional center of the piece in the diagram.", PropImportance.OPTIONAL)]
+    public DiagramPoint? Center { get; set; }
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the piece.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
+}
+
+[Model("📊", "PsD", "PsDf", "A diff for multiple pieces.")]
+public class PiecesDiff : Model<PiecesDiff>
+{
+    [ModelProp("➖", "Rm*", "Rem*", "The optional removed pieces.", PropImportance.OPTIONAL)]
+    public List<PieceId> Removed { get; set; } = new();
+    [ModelProp("✏️", "Up*", "Upd*", "The optional updated pieces.", PropImportance.OPTIONAL)]
+    public List<PieceDiff> Updated { get; set; } = new();
+    [ModelProp("➕", "Ad*", "Add*", "The optional added pieces.", PropImportance.OPTIONAL)]
+    public List<Piece> Added { get; set; } = new();
+}
+
+[Model("🧱", "SD", "SDf", "A diff for a side of a piece in a connection.")]
+public class SideDiff : Model<SideDiff>
+{
+    [ModelProp("⭕", "Pc?", "Pce?", "The optional piece-related information of the side.", PropImportance.OPTIONAL)]
+    public PieceId? Piece { get; set; }
+    [ModelProp("🏙️", "DP?", "DPc?", "The optional id of the piece inside the referenced design piece.", PropImportance.OPTIONAL)]
+    public PieceId? DesignPiece { get; set; }
+    [ModelProp("🔌", "Po?", "Por?", "The optional local identifier of the port.", PropImportance.OPTIONAL)]
+    public PortId? Port { get; set; }
+}
+
+[Model("🔗", "CD", "CDf", "A diff for connections.")]
+public class ConnectionDiff : Model<ConnectionDiff>
+{
+    [ModelProp("🧲", "Cd?", "Cnd?", "The optional connected side of the piece.", PropImportance.OPTIONAL)]
+    public SideDiff? Connected { get; set; }
+    [ModelProp("🧲", "Cg?", "Cng?", "The optional connecting side of the piece.", PropImportance.OPTIONAL)]
+    public SideDiff? Connecting { get; set; }
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the connection.")]
+    public string Description { get; set; } = "";
+    [NumberProp("↕️", "Gp?", "Gap?", "The optional longitudinal gap.")]
+    public float? Gap { get; set; }
+    [NumberProp("↔️", "Sf?", "Sft?", "The optional lateral shift.")]
+    public float? Shift { get; set; }
+    [NumberProp("🪜", "Rs?", "Ris?", "The optional vertical rise.")]
+    public float? Rise { get; set; }
+    [AnglePropAttribute("🔄", "Rt?", "Rot?", "The optional horizontal rotation.")]
+    public float? Rotation { get; set; }
+    [AnglePropAttribute("🛞", "Tu?", "Tur?", "The optional turn perpendicular.")]
+    public float? Turn { get; set; }
+    [AnglePropAttribute("∡", "Tl?", "Tlt?", "The optional horizontal tilt.")]
+    public float? Tilt { get; set; }
+    [NumberProp("➡️", "X?", "X?", "The optional offset in x direction.")]
+    public float? X { get; set; }
+    [NumberProp("⬆️", "Y?", "Y?", "The optional offset in y direction.")]
+    public float? Y { get; set; }
+}
+
+[Model("📊", "CsD", "CsDf", "A diff for multiple connections.")]
+public class ConnectionsDiff : Model<ConnectionsDiff>
+{
+    [ModelProp("➖", "Rm*", "Rem*", "The optional removed connections.", PropImportance.OPTIONAL)]
+    public List<ConnectionId> Removed { get; set; } = new();
+    [ModelProp("✏️", "Up*", "Upd*", "The optional updated connections.", PropImportance.OPTIONAL)]
+    public List<ConnectionDiff> Updated { get; set; } = new();
+    [ModelProp("➕", "Ad*", "Add*", "The optional added connections.", PropImportance.OPTIONAL)]
+    public List<Connection> Added { get; set; } = new();
+}
+
+[Model("🏙️", "DD", "DDf", "A diff for designs.")]
+public class DesignDiff : Model<DesignDiff>
+{
+    [Name("📛", "Na?", "Nam?", "The optional name of the design.")]
+    public string Name { get; set; } = "";
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the design.")]
+    public string Description { get; set; } = "";
+    [Url("🪙", "Ic?", "Ico?", "The optional icon of the design.")]
+    public string Icon { get; set; } = "";
+    [Url("🖼️", "Im?", "Img?", "The optional url to the image of the design.")]
+    public string Image { get; set; } = "";
+    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the design.")]
+    public string Variant { get; set; } = "";
+    [Name("🥽", "Vw?", "Vew?", "The optional view of the design.")]
+    public string View { get; set; } = "";
+    [ModelProp("📍", "Lo?", "Loc?", "The optional location of the design.", PropImportance.OPTIONAL)]
+    public Location? Location { get; set; }
+    [Name("Ⓜ️", "Ut?", "Unt?", "The optional length unit for the design.")]
+    public string Unit { get; set; } = "";
+    [ModelProp("⭕", "Pc*", "Pcs*", "The optional pieces diff for the design.", PropImportance.OPTIONAL)]
+    public PiecesDiff? Pieces { get; set; }
+    [ModelProp("🔗", "Co*", "Cons*", "The optional connections diff for the design.", PropImportance.OPTIONAL)]
+    public ConnectionsDiff? Connections { get; set; }
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
+    [ModelProp("👥", "Au*", "Aut*", "The optional authors of the design.", PropImportance.OPTIONAL)]
+    public List<Author> Authors { get; set; } = new();
+}
+
+[Model("📊", "DsD", "DsDf", "A diff for multiple designs.")]
+public class DesignsDiff : Model<DesignsDiff>
+{
+    [ModelProp("➖", "Rm*", "Rem*", "The optional removed designs.", PropImportance.OPTIONAL)]
+    public List<DesignId> Removed { get; set; } = new();
+    [ModelProp("✏️", "Up*", "Upd*", "The optional updated designs.", PropImportance.OPTIONAL)]
+    public List<DesignDiff> Updated { get; set; } = new();
+    [ModelProp("➕", "Ad*", "Add*", "The optional added designs.", PropImportance.OPTIONAL)]
+    public List<Design> Added { get; set; } = new();
+}
+
+[Model("📄", "FD", "FDf", "A diff for files.")]
+public class FileDiff : Model<FileDiff>
+{
+    [Url("🔗", "Ur?", "Url?", "The optional url of the file.")]
+    public string Url { get; set; } = "";
+    [Url("💾", "Da?", "Dat?", "The optional data URI of the file.")]
+    public string Data { get; set; } = "";
+    [NumberProp("📏", "Sz?", "Siz?", "The optional size of the file in bytes.")]
+    public int? Size { get; set; }
+    [Name("🔐", "Hs?", "Has?", "The optional hash of the file.")]
+    public string Hash { get; set; } = "";
+}
+
+[Model("📊", "FsD", "FsDf", "A diff for multiple files.")]
+public class FilesDiff : Model<FilesDiff>
+{
+    [ModelProp("➖", "Rm*", "Rem*", "The optional removed files.", PropImportance.OPTIONAL)]
+    public List<FileId> Removed { get; set; } = new();
+    [ModelProp("✏️", "Up*", "Upd*", "The optional updated files.", PropImportance.OPTIONAL)]
+    public List<FileDiff> Updated { get; set; } = new();
+    [ModelProp("➕", "Ad*", "Add*", "The optional added files.", PropImportance.OPTIONAL)]
+    public List<SemioFile> Added { get; set; } = new();
+}
+
+[Model("🗃️", "KD", "KDf", "A diff for kits.")]
+public class KitDiff : Model<KitDiff>
+{
+    [Name("📛", "Na?", "Nam?", "The optional name of the kit.")]
+    public string Name { get; set; } = "";
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the kit.")]
+    public string Description { get; set; } = "";
+    [Url("🪙", "Ic?", "Ico?", "The optional icon of the kit.")]
+    public string Icon { get; set; } = "";
+    [Url("🖼️", "Im?", "Img?", "The optional url to the image of the kit.")]
+    public string Image { get; set; } = "";
+    [Url("🔮", "Pv?", "Prv?", "The optional url of the preview image of the kit.")]
+    public string Preview { get; set; } = "";
+    [Name("🔀", "Vr?", "Ver?", "The optional version of the kit.")]
+    public string Version { get; set; } = "";
+    [Url("☁️", "Rm?", "Rmt?", "The optional URL where to fetch the kit remotely.")]
+    public string Remote { get; set; } = "";
+    [Url("🏠", "Hp?", "Hmp?", "The optional URL of the homepage of the kit.")]
+    public string Homepage { get; set; } = "";
+    [Url("⚖️", "Li?", "Lic?", "The optional license of the kit.")]
+    public string License { get; set; } = "";
+    [ModelProp("🧩", "Ty*", "Typ*", "The optional types diff for the kit.", PropImportance.OPTIONAL)]
+    public TypesDiff? Types { get; set; }
+    [ModelProp("🏙️", "Dn*", "Dsn*", "The optional designs diff for the kit.", PropImportance.OPTIONAL)]
+    public DesignsDiff? Designs { get; set; }
+    [ModelProp("📄", "Fl*", "Fil*", "The optional files diff for the kit.", PropImportance.OPTIONAL)]
+    public FilesDiff? Files { get; set; }
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the kit.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
+}
+
+public enum DiffStatus
+{
+    Unchanged,
+    Added,
+    Removed,
+    Modified
+}
+
+#endregion
 
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-piece-"/>
@@ -3157,6 +3495,416 @@ public class Kit : Model<Kit>
 #endregion
 
 #region Api
+
+#region Diff Operations
+
+public static class DiffOperations
+{
+    // Representation operations
+    public static Representation ApplyDiff(this Representation original, RepresentationDiff diff)
+    {
+        return new Representation
+        {
+            Url = string.IsNullOrEmpty(diff.Url) ? original.Url : diff.Url,
+            Description = string.IsNullOrEmpty(diff.Description) ? original.Description : diff.Description,
+            Tags = diff.Tags.Any() ? diff.Tags : original.Tags,
+            Attributes = diff.Attributes.Any() ? diff.Attributes : original.Attributes
+        };
+    }
+
+    public static RepresentationDiff CreateDiff(this Representation original, Representation modified)
+    {
+        return new RepresentationDiff
+        {
+            Url = original.Url != modified.Url ? modified.Url : "",
+            Description = original.Description != modified.Description ? modified.Description : "",
+            Tags = !original.Tags.SequenceEqual(modified.Tags) ? modified.Tags : new List<string>(),
+            Attributes = !original.Attributes.SequenceEqual(modified.Attributes) ? modified.Attributes : new List<Attribute>()
+        };
+    }
+
+    // Port operations
+    public static Port ApplyDiff(this Port original, PortDiff diff)
+    {
+        return new Port
+        {
+            Id = string.IsNullOrEmpty(diff.Id) ? original.Id : diff.Id,
+            Description = string.IsNullOrEmpty(diff.Description) ? original.Description : diff.Description,
+            Family = string.IsNullOrEmpty(diff.Family) ? original.Family : diff.Family,
+            Mandatory = diff.Mandatory ?? original.Mandatory,
+            T = diff.T ?? original.T,
+            CompatibleFamilies = diff.CompatibleFamilies.Any() ? diff.CompatibleFamilies : original.CompatibleFamilies,
+            Point = diff.Point ?? original.Point,
+            Direction = diff.Direction ?? original.Direction,
+            Props = original.Props,
+            Attributes = diff.Attributes.Any() ? diff.Attributes : original.Attributes
+        };
+    }
+
+    public static PortDiff CreateDiff(this Port original, Port modified)
+    {
+        return new PortDiff
+        {
+            Id = original.Id != modified.Id ? modified.Id : "",
+            Description = original.Description != modified.Description ? modified.Description : "",
+            Family = original.Family != modified.Family ? modified.Family : "",
+            Mandatory = original.Mandatory != modified.Mandatory ? modified.Mandatory : null,
+            T = Math.Abs(original.T - modified.T) > Constants.Tolerance ? modified.T : null,
+            CompatibleFamilies = !original.CompatibleFamilies.SequenceEqual(modified.CompatibleFamilies) ? modified.CompatibleFamilies : new List<string>(),
+            Point = !Equals(original.Point, modified.Point) ? modified.Point : null,
+            Direction = !Equals(original.Direction, modified.Direction) ? modified.Direction : null,
+            Attributes = !original.Attributes.SequenceEqual(modified.Attributes) ? modified.Attributes : new List<Attribute>()
+        };
+    }
+
+    // Type operations
+    public static Type ApplyDiff(this Type original, TypeDiff diff)
+    {
+        return new Type
+        {
+            Name = string.IsNullOrEmpty(diff.Name) ? original.Name : diff.Name,
+            Description = string.IsNullOrEmpty(diff.Description) ? original.Description : diff.Description,
+            Icon = string.IsNullOrEmpty(diff.Icon) ? original.Icon : diff.Icon,
+            Image = string.IsNullOrEmpty(diff.Image) ? original.Image : diff.Image,
+            Variant = string.IsNullOrEmpty(diff.Variant) ? original.Variant : diff.Variant,
+            Stock = diff.Stock ?? original.Stock,
+            Virtual = diff.Virtual ?? original.Virtual,
+            Unit = string.IsNullOrEmpty(diff.Unit) ? original.Unit : diff.Unit,
+            Location = diff.Location ?? original.Location,
+            Representations = diff.Representations.Any() ? diff.Representations : original.Representations,
+            Ports = diff.Ports.Any() ? diff.Ports : original.Ports,
+            Authors = diff.Authors.Any() ? diff.Authors.Select(a => new AuthorId { Email = a.Email }).ToList() : original.Authors,
+            Attributes = diff.Attributes.Any() ? diff.Attributes : original.Attributes,
+            Props = original.Props
+        };
+    }
+
+    public static TypeDiff CreateDiff(this Type original, Type modified)
+    {
+        return new TypeDiff
+        {
+            Name = original.Name != modified.Name ? modified.Name : "",
+            Description = original.Description != modified.Description ? modified.Description : "",
+            Icon = original.Icon != modified.Icon ? modified.Icon : "",
+            Image = original.Image != modified.Image ? modified.Image : "",
+            Variant = original.Variant != modified.Variant ? modified.Variant : "",
+            Stock = original.Stock != modified.Stock ? modified.Stock : null,
+            Virtual = original.Virtual != modified.Virtual ? modified.Virtual : null,
+            Unit = original.Unit != modified.Unit ? modified.Unit : "",
+            Location = !Equals(original.Location, modified.Location) ? modified.Location : null,
+            Representations = !original.Representations.SequenceEqual(modified.Representations) ? modified.Representations : new List<Representation>(),
+            Ports = !original.Ports.SequenceEqual(modified.Ports) ? modified.Ports : new List<Port>(),
+            Authors = !original.Authors.SequenceEqual(modified.Authors) ? modified.Authors.Select(a => new Author { Email = a.Email }).ToList() : new List<Author>(),
+            Attributes = !original.Attributes.SequenceEqual(modified.Attributes) ? modified.Attributes : new List<Attribute>()
+        };
+    }
+
+    // Piece operations
+    public static Piece ApplyDiff(this Piece original, PieceDiff diff)
+    {
+        return new Piece
+        {
+            Id = string.IsNullOrEmpty(diff.Id) ? original.Id : diff.Id,
+            Description = string.IsNullOrEmpty(diff.Description) ? original.Description : diff.Description,
+            Type = diff.Type ?? original.Type,
+            Design = original.Design,
+            Plane = diff.Plane ?? original.Plane,
+            Center = diff.Center ?? original.Center,
+            Hidden = original.Hidden,
+            Locked = original.Locked,
+            Props = original.Props,
+            Attributes = diff.Attributes.Any() ? diff.Attributes : original.Attributes
+        };
+    }
+
+    public static PieceDiff CreateDiff(this Piece original, Piece modified)
+    {
+        return new PieceDiff
+        {
+            Id = original.Id != modified.Id ? modified.Id : "",
+            Description = original.Description != modified.Description ? modified.Description : "",
+            Type = !Equals(original.Type, modified.Type) ? modified.Type : null,
+            Plane = !Equals(original.Plane, modified.Plane) ? modified.Plane : null,
+            Center = !Equals(original.Center, modified.Center) ? modified.Center : null,
+            Attributes = !original.Attributes.SequenceEqual(modified.Attributes) ? modified.Attributes : new List<Attribute>()
+        };
+    }
+
+    // Connection operations
+    public static Connection ApplyDiff(this Connection original, ConnectionDiff diff)
+    {
+        return new Connection
+        {
+            Connected = diff.Connected is not null ? new Side
+            {
+                Piece = diff.Connected.Piece ?? original.Connected.Piece,
+                DesignPiece = diff.Connected.DesignPiece ?? original.Connected.DesignPiece,
+                Port = diff.Connected.Port ?? original.Connected.Port
+            } : original.Connected,
+            Connecting = diff.Connecting is not null ? new Side
+            {
+                Piece = diff.Connecting.Piece ?? original.Connecting.Piece,
+                DesignPiece = diff.Connecting.DesignPiece ?? original.Connecting.DesignPiece,
+                Port = diff.Connecting.Port ?? original.Connecting.Port
+            } : original.Connecting,
+            Description = string.IsNullOrEmpty(diff.Description) ? original.Description : diff.Description,
+            Gap = diff.Gap ?? original.Gap,
+            Shift = diff.Shift ?? original.Shift,
+            Rise = diff.Rise ?? original.Rise,
+            Rotation = diff.Rotation ?? original.Rotation,
+            Turn = diff.Turn ?? original.Turn,
+            Tilt = diff.Tilt ?? original.Tilt,
+            X = diff.X ?? original.X,
+            Y = diff.Y ?? original.Y,
+            Props = original.Props,
+            Attributes = original.Attributes
+        };
+    }
+
+    public static ConnectionDiff CreateDiff(this Connection original, Connection modified)
+    {
+        return new ConnectionDiff
+        {
+            Connected = !original.Connected.Equals(modified.Connected) ? new SideDiff
+            {
+                Piece = original.Connected.Piece != modified.Connected.Piece ? modified.Connected.Piece : null,
+                DesignPiece = !Equals(original.Connected.DesignPiece, modified.Connected.DesignPiece) ? modified.Connected.DesignPiece : null,
+                Port = original.Connected.Port != modified.Connected.Port ? modified.Connected.Port : null
+            } : null,
+            Connecting = !original.Connecting.Equals(modified.Connecting) ? new SideDiff
+            {
+                Piece = original.Connecting.Piece != modified.Connecting.Piece ? modified.Connecting.Piece : null,
+                DesignPiece = !Equals(original.Connecting.DesignPiece, modified.Connecting.DesignPiece) ? modified.Connecting.DesignPiece : null,
+                Port = original.Connecting.Port != modified.Connecting.Port ? modified.Connecting.Port : null
+            } : null,
+            Description = original.Description != modified.Description ? modified.Description : "",
+            Gap = Math.Abs(original.Gap - modified.Gap) > Constants.Tolerance ? modified.Gap : null,
+            Shift = Math.Abs(original.Shift - modified.Shift) > Constants.Tolerance ? modified.Shift : null,
+            Rise = Math.Abs(original.Rise - modified.Rise) > Constants.Tolerance ? modified.Rise : null,
+            Rotation = Math.Abs(original.Rotation - modified.Rotation) > Constants.Tolerance ? modified.Rotation : null,
+            Turn = Math.Abs(original.Turn - modified.Turn) > Constants.Tolerance ? modified.Turn : null,
+            Tilt = Math.Abs(original.Tilt - modified.Tilt) > Constants.Tolerance ? modified.Tilt : null,
+            X = Math.Abs(original.X - modified.X) > Constants.Tolerance ? modified.X : null,
+            Y = Math.Abs(original.Y - modified.Y) > Constants.Tolerance ? modified.Y : null
+        };
+    }
+
+    // Design operations
+    public static Design ApplyDiff(this Design original, DesignDiff diff)
+    {
+        return new Design
+        {
+            Name = string.IsNullOrEmpty(diff.Name) ? original.Name : diff.Name,
+            Description = string.IsNullOrEmpty(diff.Description) ? original.Description : diff.Description,
+            Icon = string.IsNullOrEmpty(diff.Icon) ? original.Icon : diff.Icon,
+            Image = string.IsNullOrEmpty(diff.Image) ? original.Image : diff.Image,
+            Variant = string.IsNullOrEmpty(diff.Variant) ? original.Variant : diff.Variant,
+            View = string.IsNullOrEmpty(diff.View) ? original.View : diff.View,
+            Location = diff.Location ?? original.Location,
+            Unit = string.IsNullOrEmpty(diff.Unit) ? original.Unit : diff.Unit,
+            Pieces = diff.Pieces is not null ? ApplyPiecesDiff(original.Pieces, diff.Pieces) : original.Pieces,
+            Connections = diff.Connections is not null ? ApplyConnectionsDiff(original.Connections, diff.Connections) : original.Connections,
+            Props = original.Props,
+            Stats = original.Stats,
+            Authors = diff.Authors.Any() ? diff.Authors.Select(a => new AuthorId { Email = a.Email }).ToList() : original.Authors,
+            Attributes = diff.Attributes.Any() ? diff.Attributes : original.Attributes
+        };
+    }
+
+    public static DesignDiff CreateDiff(this Design original, Design modified)
+    {
+        return new DesignDiff
+        {
+            Name = original.Name != modified.Name ? modified.Name : "",
+            Description = original.Description != modified.Description ? modified.Description : "",
+            Icon = original.Icon != modified.Icon ? modified.Icon : "",
+            Image = original.Image != modified.Image ? modified.Image : "",
+            Variant = original.Variant != modified.Variant ? modified.Variant : "",
+            View = original.View != modified.View ? modified.View : "",
+            Location = !Equals(original.Location, modified.Location) ? modified.Location : null,
+            Unit = original.Unit != modified.Unit ? modified.Unit : "",
+            Pieces = CreatePiecesDiff(original.Pieces, modified.Pieces),
+            Connections = CreateConnectionsDiff(original.Connections, modified.Connections),
+            Authors = !original.Authors.SequenceEqual(modified.Authors) ? modified.Authors.Select(a => new Author { Name = "", Email = a.Email }).ToList() : new List<Author>(),
+            Attributes = !original.Attributes.SequenceEqual(modified.Attributes) ? modified.Attributes : new List<Attribute>()
+        };
+    }
+
+    // Kit operations
+    public static Kit ApplyDiff(this Kit original, KitDiff diff)
+    {
+        return new Kit
+        {
+            Name = string.IsNullOrEmpty(diff.Name) ? original.Name : diff.Name,
+            Description = string.IsNullOrEmpty(diff.Description) ? original.Description : diff.Description,
+            Icon = string.IsNullOrEmpty(diff.Icon) ? original.Icon : diff.Icon,
+            Image = string.IsNullOrEmpty(diff.Image) ? original.Image : diff.Image,
+            Preview = string.IsNullOrEmpty(diff.Preview) ? original.Preview : diff.Preview,
+            Version = string.IsNullOrEmpty(diff.Version) ? original.Version : diff.Version,
+            Remote = string.IsNullOrEmpty(diff.Remote) ? original.Remote : diff.Remote,
+            Homepage = string.IsNullOrEmpty(diff.Homepage) ? original.Homepage : diff.Homepage,
+            License = string.IsNullOrEmpty(diff.License) ? original.License : diff.License,
+            Authors = original.Authors,
+            Qualities = original.Qualities,
+            Types = diff.Types is not null ? ApplyTypesDiff(original.Types, diff.Types) : original.Types,
+            Designs = diff.Designs is not null ? ApplyDesignsDiff(original.Designs, diff.Designs) : original.Designs,
+            Attributes = diff.Attributes.Any() ? diff.Attributes : original.Attributes
+        };
+    }
+
+    public static KitDiff CreateDiff(this Kit original, Kit modified)
+    {
+        return new KitDiff
+        {
+            Name = original.Name != modified.Name ? modified.Name : "",
+            Description = original.Description != modified.Description ? modified.Description : "",
+            Icon = original.Icon != modified.Icon ? modified.Icon : "",
+            Image = original.Image != modified.Image ? modified.Image : "",
+            Preview = original.Preview != modified.Preview ? modified.Preview : "",
+            Version = original.Version != modified.Version ? modified.Version : "",
+            Remote = original.Remote != modified.Remote ? modified.Remote : "",
+            Homepage = original.Homepage != modified.Homepage ? modified.Homepage : "",
+            License = original.License != modified.License ? modified.License : "",
+            Types = CreateTypesDiff(original.Types, modified.Types),
+            Designs = CreateDesignsDiff(original.Designs, modified.Designs),
+            Attributes = !original.Attributes.SequenceEqual(modified.Attributes) ? modified.Attributes : new List<Attribute>()
+        };
+    }
+
+    // Helper methods for collection diffs
+    private static List<Piece> ApplyPiecesDiff(List<Piece> original, PiecesDiff diff)
+    {
+        var result = original.Where(p => !diff.Removed.Any(r => r.Id == p.Id)).ToList();
+        foreach (var updated in diff.Updated)
+        {
+            var index = result.FindIndex(p => p.Id == updated.Id);
+            if (index >= 0)
+                result[index] = result[index].ApplyDiff(updated);
+        }
+        result.AddRange(diff.Added);
+        return result;
+    }
+
+    private static PiecesDiff CreatePiecesDiff(List<Piece> original, List<Piece> modified)
+    {
+        var originalIds = original.Select(p => p.Id).ToHashSet();
+        var modifiedIds = modified.Select(p => p.Id).ToHashSet();
+        
+        return new PiecesDiff
+        {
+            Removed = original.Where(p => !modifiedIds.Contains(p.Id)).Select(p => new PieceId { Id = p.Id }).ToList(),
+            Updated = original.Where(p => modifiedIds.Contains(p.Id))
+                .Select(p => p.CreateDiff(modified.First(m => m.Id == p.Id)))
+                .Where(diff => !string.IsNullOrEmpty(diff.Id) || !string.IsNullOrEmpty(diff.Description) || diff.Type is not null || diff.Plane is not null || diff.Center is not null || diff.Attributes.Any())
+                .ToList(),
+            Added = modified.Where(p => !originalIds.Contains(p.Id)).ToList()
+        };
+    }
+
+    private static List<Connection> ApplyConnectionsDiff(List<Connection> original, ConnectionsDiff diff)
+    {
+        var result = original.Where(c => !diff.Removed.Any(r => 
+            r.Connected.Piece.Id == c.Connected.Piece.Id && 
+            r.Connecting.Piece.Id == c.Connecting.Piece.Id)).ToList();
+        
+        foreach (var updated in diff.Updated)
+        {
+            var index = result.FindIndex(c => 
+                (updated.Connected?.Piece?.Id ?? c.Connected.Piece.Id) == c.Connected.Piece.Id && 
+                (updated.Connecting?.Piece?.Id ?? c.Connecting.Piece.Id) == c.Connecting.Piece.Id);
+            if (index >= 0)
+                result[index] = result[index].ApplyDiff(updated);
+        }
+        result.AddRange(diff.Added);
+        return result;
+    }
+
+    private static ConnectionsDiff CreateConnectionsDiff(List<Connection> original, List<Connection> modified)
+    {
+        var originalKeys = original.Select(c => (c.Connected.Piece.Id, c.Connecting.Piece.Id)).ToHashSet();
+        var modifiedKeys = modified.Select(c => (c.Connected.Piece.Id, c.Connecting.Piece.Id)).ToHashSet();
+        
+        return new ConnectionsDiff
+        {
+            Removed = original.Where(c => !modifiedKeys.Contains((c.Connected.Piece.Id, c.Connecting.Piece.Id)))
+                .Select(c => new ConnectionId { Connected = c.Connected, Connecting = c.Connecting }).ToList(),
+            Updated = original.Where(c => modifiedKeys.Contains((c.Connected.Piece.Id, c.Connecting.Piece.Id)))
+                .Select(c => c.CreateDiff(modified.First(m => m.Connected.Piece.Id == c.Connected.Piece.Id && m.Connecting.Piece.Id == c.Connecting.Piece.Id)))
+                .Where(diff => diff.Connected != null || diff.Connecting != null || !string.IsNullOrEmpty(diff.Description) || 
+                       diff.Gap != null || diff.Shift != null || diff.Rise != null || diff.Rotation != null || diff.Turn != null || diff.Tilt != null || diff.X != null || diff.Y != null)
+                .ToList(),
+            Added = modified.Where(c => !originalKeys.Contains((c.Connected.Piece.Id, c.Connecting.Piece.Id))).ToList()
+        };
+    }
+
+    private static List<Type> ApplyTypesDiff(List<Type> original, TypesDiff diff)
+    {
+        var result = original.Where(t => !diff.Removed.Any(r => r.Name == t.Name && r.Variant == t.Variant)).ToList();
+        foreach (var updated in diff.Updated)
+        {
+            var index = result.FindIndex(t => t.Name == (updated.Name ?? t.Name) && t.Variant == (updated.Variant ?? t.Variant));
+            if (index >= 0)
+                result[index] = result[index].ApplyDiff(updated);
+        }
+        result.AddRange(diff.Added);
+        return result;
+    }
+
+    private static TypesDiff CreateTypesDiff(List<Type> original, List<Type> modified)
+    {
+        var originalKeys = original.Select(t => (t.Name, t.Variant)).ToHashSet();
+        var modifiedKeys = modified.Select(t => (t.Name, t.Variant)).ToHashSet();
+        
+        return new TypesDiff
+        {
+            Removed = original.Where(t => !modifiedKeys.Contains((t.Name, t.Variant)))
+                .Select(t => new TypeId { Name = t.Name, Variant = t.Variant }).ToList(),
+            Updated = original.Where(t => modifiedKeys.Contains((t.Name, t.Variant)))
+                .Select(t => t.CreateDiff(modified.First(m => m.Name == t.Name && m.Variant == t.Variant)))
+                .Where(diff => !string.IsNullOrEmpty(diff.Name) || !string.IsNullOrEmpty(diff.Description) || !string.IsNullOrEmpty(diff.Icon) || 
+                       !string.IsNullOrEmpty(diff.Image) || !string.IsNullOrEmpty(diff.Variant) || diff.Stock != null || diff.Virtual != null || 
+                       !string.IsNullOrEmpty(diff.Unit) || diff.Location != null || diff.Representations.Any() || diff.Ports.Any() || 
+                       diff.Authors.Any() || diff.Attributes.Any())
+                .ToList(),
+            Added = modified.Where(t => !originalKeys.Contains((t.Name, t.Variant))).ToList()
+        };
+    }
+
+    private static List<Design> ApplyDesignsDiff(List<Design> original, DesignsDiff diff)
+    {
+        var result = original.Where(d => !diff.Removed.Any(r => r.Name == d.Name && r.Variant == d.Variant && r.View == d.View)).ToList();
+        foreach (var updated in diff.Updated)
+        {
+            var index = result.FindIndex(d => d.Name == (updated.Name ?? d.Name) && d.Variant == (updated.Variant ?? d.Variant) && d.View == (updated.View ?? d.View));
+            if (index >= 0)
+                result[index] = result[index].ApplyDiff(updated);
+        }
+        result.AddRange(diff.Added);
+        return result;
+    }
+
+    private static DesignsDiff CreateDesignsDiff(List<Design> original, List<Design> modified)
+    {
+        var originalKeys = original.Select(d => (d.Name, d.Variant, d.View)).ToHashSet();
+        var modifiedKeys = modified.Select(d => (d.Name, d.Variant, d.View)).ToHashSet();
+        
+        return new DesignsDiff
+        {
+            Removed = original.Where(d => !modifiedKeys.Contains((d.Name, d.Variant, d.View)))
+                .Select(d => new DesignId { Name = d.Name, Variant = d.Variant, View = d.View }).ToList(),
+            Updated = original.Where(d => modifiedKeys.Contains((d.Name, d.Variant, d.View)))
+                .Select(d => d.CreateDiff(modified.First(m => m.Name == d.Name && m.Variant == d.Variant && m.View == d.View)))
+                .Where(diff => !string.IsNullOrEmpty(diff.Name) || !string.IsNullOrEmpty(diff.Description) || !string.IsNullOrEmpty(diff.Icon) || 
+                       !string.IsNullOrEmpty(diff.Image) || !string.IsNullOrEmpty(diff.Variant) || !string.IsNullOrEmpty(diff.View) || 
+                       diff.Location != null || !string.IsNullOrEmpty(diff.Unit) || diff.Pieces != null || diff.Connections != null || 
+                       diff.Authors.Any() || diff.Attributes.Any())
+                .ToList(),
+            Added = modified.Where(d => !originalKeys.Contains((d.Name, d.Variant, d.View))).ToList()
+        };
+    }
+}
+
+#endregion
 
 public class ApiException : Exception { public ApiException(string message) : base(message) { } }
 public class ServerException : ApiException { public ServerException(string message) : base(message) { } }
