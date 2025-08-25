@@ -93,93 +93,77 @@ export interface FileState {
   file: File;
 }
 export interface FileActions {
-  change: {
-    file: (diff: FileDiff) => void;
-  };
+  change: (diff: FileDiff) => void;
 }
 
 export interface FileSubscriptions {
-  on: {
-    change: {
-      file: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
-    };
+  change: {
+    file: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
   };
 }
 
-export interface FileChildStores {}
+export interface FileStore {
+  state: FileState;
+}
 
-export interface FileChildStoresFull {}
-
-export interface FileStore extends FileState, FileChildStores {}
-
-export interface FileStoreFull extends FileState, FileActions, FileSubscriptions, FileChildStoresFull {}
+export interface FileStoreFull {
+  state: FileState;
+  change: FileActions;
+  on: FileSubscriptions;
+}
 
 export interface RepresentationState {
   representation: Representation;
 }
 
 export interface RepresentationActions {
-  change: {
-    representation: (diff: RepresentationDiff) => void;
-  };
+  change: (diff: RepresentationDiff) => void;
 }
 
 export interface RepresentationSubscriptions {
-  on: {
-    change: {
-      representation: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
-    };
-  };
+  change: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
-export interface RepresentationChildStores {}
+export interface RepresentationStore {
+  state: RepresentationState;
+}
 
-export interface RepresentationChildStoresFull {}
-
-export interface RepresentationStore extends RepresentationState, RepresentationChildStores {}
-
-export interface RepresentationStoreFull extends RepresentationState, RepresentationActions, RepresentationSubscriptions, RepresentationChildStoresFull {}
+export interface RepresentationStoreFull {
+  state: RepresentationState;
+  change: RepresentationActions;
+  on: RepresentationSubscriptions;
+}
 
 export interface PortState {
   port: Port;
 }
 export interface PortActions {
-  change: {
-    port: (diff: PortDiff) => void;
-  };
+  change: (diff: PortDiff) => void;
 }
 
 export interface PortSubscriptions {
-  on: {
-    change: {
-      port: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
-    };
-  };
+  change: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
-export interface PortChildStores {}
+export interface PortStore {
+  state: PortState;
+}
 
-export interface PortChildStoresFull {}
-
-export interface PortStore extends PortState, PortChildStores {}
-
-export interface PortStoreFull extends PortState, PortActions, PortSubscriptions, PortChildStoresFull {}
+export interface PortStoreFull {
+  state: PortState;
+  change: PortActions;
+  on: PortSubscriptions;
+}
 
 export interface TypeState {
   type: Type;
 }
 export interface TypeActions {
-  change: {
-    type: (diff: TypeDiff) => void;
-  };
+  change: (diff: TypeDiff) => void;
 }
 
 export interface TypeSubscriptions {
-  on: {
-    change: {
-      type: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
-    };
-  };
+  change: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
 export interface TypeChildStores {
@@ -192,78 +176,78 @@ export interface TypeChildStoresFull {
   ports: Map<PortId, PortStoreFull>;
 }
 
-export interface TypeStore extends TypeState, TypeChildStores {}
+export interface TypeStore {
+  state: TypeState;
+  children: TypeChildStores;
+}
 
-export interface TypeStoreFull extends TypeState, TypeActions, TypeSubscriptions, TypeChildStoresFull {}
+export interface TypeStoreFull {
+  state: TypeState;
+  children: TypeChildStoresFull;
+  change: TypeActions;
+  on: TypeSubscriptions;
+}
 
 export interface PieceState {
   piece: Piece;
 }
 
 export interface PieceActions {
-  change: {
-    piece: (diff: PieceDiff) => void;
-  };
+  change: (diff: PieceDiff) => void;
 }
 
 export interface PieceSubscriptions {
-  on: {
-    change: {
-      piece: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
-    };
-  };
+  change: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
 export interface PieceChildStores {}
 
 export interface PieceChildStoresFull {}
 
-export interface PieceStore extends PieceState, PieceChildStores {}
+export interface PieceStore {
+  state: PieceState;
+  children: PieceChildStores;
+}
 
-export interface PieceStoreFull extends PieceState, PieceActions, PieceSubscriptions, PieceChildStoresFull {}
+export interface PieceStoreFull {
+  state: PieceState;
+  children: PieceChildStoresFull;
+  change: PieceActions;
+  on: PieceSubscriptions;
+}
 
 export interface ConnectionState {
   connection: Connection;
 }
 
 export interface ConnectionActions {
-  change: {
-    connection: (diff: ConnectionDiff) => void;
-  };
+  change: (diff: ConnectionDiff) => void;
 }
 
 export interface ConnectionSubscriptions {
-  on: {
-    change: {
-      connection: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
-    };
-  };
+  change: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
-export interface ConnectionChildStores {}
+export interface ConnectionStore {
+  state: ConnectionState;
+}
 
-export interface ConnectionChildStoresFull {}
-
-export interface ConnectionStore extends ConnectionState, ConnectionChildStores {}
-
-export interface ConnectionStoreFull extends ConnectionState, ConnectionActions, ConnectionSubscriptions, ConnectionChildStoresFull {}
+export interface ConnectionStoreFull {
+  state: ConnectionState;
+  change: ConnectionActions;
+  on: ConnectionSubscriptions;
+}
 
 export interface DesignState {
   design: Design;
 }
 
 export interface DesignActions {
-  change: {
-    design: (diff: DesignDiff) => void;
-  };
+  change: (diff: DesignDiff) => void;
 }
 
 export interface DesignSubscriptions {
-  on: {
-    change: {
-      design: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
-    };
-  };
+  change: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
 export interface DesignChildStores {
@@ -276,9 +260,17 @@ export interface DesignChildStoresFull {
   connections: Map<ConnectionId, ConnectionStoreFull>;
 }
 
-export interface DesignStore extends DesignState, DesignChildStores {}
+export interface DesignStore {
+  state: DesignState;
+  children: DesignChildStores;
+}
 
-export interface DesignStoreFull extends DesignState, DesignActions, DesignSubscriptions, DesignChildStoresFull {}
+export interface DesignStoreFull {
+  state: DesignState;
+  children: DesignChildStoresFull;
+  change: DesignActions;
+  on: DesignSubscriptions;
+}
 
 export interface KitState {
   kit: Kit;
@@ -286,17 +278,11 @@ export interface KitState {
 }
 
 export interface KitActions {
-  change: {
-    kit: (diff: KitDiff) => void;
-  };
+  change: (diff: KitDiff) => void;
 }
 
 export interface KitSubscriptions {
-  on: {
-    change: {
-      kit: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
-    };
-  };
+  change: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
 export interface KitCommandContext extends KitState {}
@@ -306,16 +292,12 @@ export interface KitCommandResult {
 }
 
 export interface KitCommands {
-  commands: {
-    execute<T>(command: string, ...rest: any[]): Promise<T>;
-  };
+  execute<T>(command: string, ...rest: any[]): Promise<T>;
 }
 
 export interface KitCommandsFull {
-  commands: {
-    execute<T>(command: string, ...rest: any[]): Promise<T>;
-    register(command: string, callback: (context: KitCommandContext, ...rest: any[]) => KitCommandResult): Disposable;
-  };
+  execute<T>(command: string, ...rest: any[]): Promise<T>;
+  register(command: string, callback: (context: KitCommandContext, ...rest: any[]) => KitCommandResult): Disposable;
 }
 
 export interface KitChildStores {
@@ -330,9 +312,19 @@ export interface KitChildStoresFull {
   files: Map<Url, FileStoreFull>;
 }
 
-export interface KitStore extends KitState, KitChildStores, KitCommands {}
+export interface KitStore {
+  state: KitState;
+  childStores: KitChildStores;
+  commands: KitCommands;
+}
 
-export interface KitStoreFull extends KitState, KitActions, KitSubscriptions, KitChildStoresFull, KitCommandsFull {}
+export interface KitStoreFull {
+  state: KitState;
+  childStores: KitChildStoresFull;
+  commands: KitCommandsFull;
+  change: KitActions;
+  on: KitSubscriptions;
+}
 
 export interface DesignEditorSelection {
   pieceIds?: PieceId[];
@@ -381,23 +373,21 @@ export interface DesignEditorActions {
 }
 
 export interface DesignEditorSubscriptions {
-  on: {
-    undone: (subscribe: Subscribe) => Unsubscribe;
-    redone: (subscribe: Subscribe) => Unsubscribe;
-    updated: {
-      designEditor: (subscribe: Subscribe) => Unsubscribe;
-    };
-    set: {
-      fullscreenPanel: (subscribe: Subscribe) => Unsubscribe;
-      selection: (subscribe: Subscribe) => Unsubscribe;
-      presence: (subscribe: Subscribe) => Unsubscribe;
-      others: (subscribe: Subscribe) => Unsubscribe;
-    };
-    transaction: {
-      started: (subscribe: Subscribe) => Unsubscribe;
-      aborted: (subscribe: Subscribe) => Unsubscribe;
-      finalized: (subscribe: Subscribe) => Unsubscribe;
-    };
+  undone: (subscribe: Subscribe) => Unsubscribe;
+  redone: (subscribe: Subscribe) => Unsubscribe;
+  updated: {
+    designEditor: (subscribe: Subscribe) => Unsubscribe;
+  };
+  set: {
+    fullscreenPanel: (subscribe: Subscribe) => Unsubscribe;
+    selection: (subscribe: Subscribe) => Unsubscribe;
+    presence: (subscribe: Subscribe) => Unsubscribe;
+    others: (subscribe: Subscribe) => Unsubscribe;
+  };
+  transaction: {
+    started: (subscribe: Subscribe) => Unsubscribe;
+    aborted: (subscribe: Subscribe) => Unsubscribe;
+    finalized: (subscribe: Subscribe) => Unsubscribe;
   };
 }
 
@@ -415,21 +405,25 @@ export interface DesignEditorCommandResult {
 }
 
 export interface DesignEditorCommands {
-  commands: {
-    execute<T>(command: string, ...rest: any[]): Promise<T>;
-  };
+  execute<T>(command: string, ...rest: any[]): Promise<T>;
 }
 
 export interface DesignEditorCommandsFull {
-  commands: {
-    execute<T>(command: string, ...rest: any[]): Promise<T>;
-    register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable;
-  };
+  execute<T>(command: string, ...rest: any[]): Promise<T>;
+  register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable;
 }
 
-export interface DesignEditorStore extends DesignEditorState, DesignEditorCommands {}
+export interface DesignEditorStore {
+  state: DesignEditorState;
+  commands: DesignEditorCommands;
+}
 
-export interface DesignEditorStoreFull extends DesignEditorState, DesignEditorActions, DesignEditorSubscriptions, DesignEditorCommandsFull {}
+export interface DesignEditorStoreFull {
+  state: DesignEditorState;
+  commands: DesignEditorCommandsFull;
+  change: DesignEditorActions;
+  on: DesignEditorSubscriptions;
+}
 
 export interface SketchpadState {
   mode: Mode;
@@ -457,24 +451,22 @@ export interface SketchpadActions {
 }
 
 export interface SketchpadSubscriptions {
-  on: {
-    created: {
-      kit: (subscribe: Subscribe) => Unsubscribe;
-      designEditor: (subscribe: Subscribe) => Unsubscribe;
-    };
-    updated: {
-      sketchpad: (subscribe: Subscribe) => Unsubscribe;
-    };
-    deleted: {
-      kit: (subscribe: Subscribe) => Unsubscribe;
-      designEditor: (subscribe: Subscribe) => Unsubscribe;
-    };
-    set: {
-      mode: (subscribe: Subscribe) => Unsubscribe;
-      theme: (subscribe: Subscribe) => Unsubscribe;
-      layout: (subscribe: Subscribe) => Unsubscribe;
-      activeDesignEditorDesignId: (subscribe: Subscribe) => Unsubscribe;
-    };
+  created: {
+    kit: (subscribe: Subscribe) => Unsubscribe;
+    designEditor: (subscribe: Subscribe) => Unsubscribe;
+  };
+  updated: {
+    sketchpad: (subscribe: Subscribe) => Unsubscribe;
+  };
+  deleted: {
+    kit: (subscribe: Subscribe) => Unsubscribe;
+    designEditor: (subscribe: Subscribe) => Unsubscribe;
+  };
+  set: {
+    mode: (subscribe: Subscribe) => Unsubscribe;
+    theme: (subscribe: Subscribe) => Unsubscribe;
+    layout: (subscribe: Subscribe) => Unsubscribe;
+    activeDesignEditorDesignId: (subscribe: Subscribe) => Unsubscribe;
   };
 }
 
@@ -500,21 +492,27 @@ export interface SketchpadCommandResult {
 }
 
 export interface SketchpadCommands {
-  commands: {
-    execute<T>(command: string, ...rest: any[]): Promise<T>;
-  };
+  execute<T>(command: string, ...rest: any[]): Promise<T>;
 }
 
 export interface SketchpadCommandsFull {
-  commands: {
-    execute<T>(command: string, ...rest: any[]): Promise<T>;
-    register(command: string, callback: (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult): Disposable;
-  };
+  execute<T>(command: string, ...rest: any[]): Promise<T>;
+  register(command: string, callback: (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult): Disposable;
 }
 
-export interface SketchpadStore extends SketchpadState, SketchpadChildStores, SketchpadCommands {}
+export interface SketchpadStore {
+  state: SketchpadState;
+  children: SketchpadChildStores;
+  commands: SketchpadCommands;
+}
 
-export interface SketchpadStoreFull extends SketchpadState, SketchpadActions, SketchpadSubscriptions, SketchpadChildStoresFull, SketchpadCommandsFull {}
+export interface SketchpadStoreFull {
+  state: SketchpadState;
+  children: SketchpadChildStoresFull;
+  commands: SketchpadCommandsFull;
+  change: SketchpadActions;
+  on: SketchpadSubscriptions;
+}
 
 // #endregion Api
 
@@ -636,9 +634,11 @@ function getAuthors(yAuthors: YAuthors | undefined): Author[] {
 }
 
 class YFileStore implements FileStoreFull {
+  public readonly parent: YKitStore;
   public readonly yFile: Y.Map<string> = new Y.Map<string>();
 
-  constructor(file: File) {
+  constructor(parent: YKitStore, file: File) {
+    this.parent = parent;
     this.yFile.set("url", file.url);
     this.yFile.set("data", file.data);
     this.yFile.set("size", file.size?.toString() || "");
@@ -684,9 +684,11 @@ class YFileStore implements FileStoreFull {
 }
 
 class YRepresentationStore implements RepresentationStoreFull {
+  public readonly parent: YKitStore;
   public readonly yRepresentation: YRepresentation = new Y.Map<any>();
 
-  constructor(representation: Representation) {
+  constructor(parent: YKitStore, representation: Representation) {
+    this.parent = parent;
     this.yRepresentation.set("url", representation.url);
     this.yRepresentation.set("description", representation.description || "");
     const yTags = new Y.Array<string>();
@@ -739,9 +741,11 @@ class YRepresentationStore implements RepresentationStoreFull {
 }
 
 class YPortStore implements PortStoreFull {
+  public readonly parent: YTypeStore;
   public readonly yPort: YPort = new Y.Map<any>();
 
-  constructor(port: Port) {
+  constructor(parent: YTypeStore, port: Port) {
+    this.parent = parent;
     this.yPort.set("id_", port.id_ || "");
     this.yPort.set("description", port.description || "");
     this.yPort.set("mandatory", port.mandatory || false);
@@ -840,13 +844,15 @@ class YPortStore implements PortStoreFull {
 }
 
 class YTypeStore implements TypeStoreFull {
+  public readonly parent: YKitStore;
   public readonly yType: YType = new Y.Map<any>();
   public readonly representations: Map<RepresentationId, YRepresentationStore> = new Map();
   public readonly ports: Map<PortId, YPortStore> = new Map();
   private readonly representationIds: Map<RepresentationId, string> = new Map();
   private readonly portIds: Map<PortId, string> = new Map();
 
-  constructor(type: Type) {
+  constructor(parent: YKitStore, type: Type) {
+    this.parent = parent;
     this.yType.set("name", type.name);
     this.yType.set("description", type.description || "");
     this.yType.set("variant", type.variant || "");
@@ -890,7 +896,7 @@ class YTypeStore implements TypeStoreFull {
           if (!this.representationIds.get(repId)) {
             const uuid = uuidv4();
             this.representationIds.set(repId, uuid);
-            this.representations.set(repId, new YRepresentationStore(rep));
+            this.representations.set(repId, new YRepresentationStore(this, rep));
           } else {
             this.representations.get(repId)?.change.representation(rep);
           }
@@ -902,7 +908,7 @@ class YTypeStore implements TypeStoreFull {
           if (!this.portIds.get(portId)) {
             const uuid = uuidv4();
             this.portIds.set(portId, uuid);
-            this.ports.set(portId, new YPortStore(port));
+            this.ports.set(portId, new YPortStore(this, port));
           } else {
             this.ports.get(portId)?.change.port(port);
           }
@@ -927,9 +933,11 @@ class YTypeStore implements TypeStoreFull {
 }
 
 class YPieceStore implements PieceStoreFull {
+  public readonly parent: YDesignStore;
   public readonly yPiece: YPiece = new Y.Map<any>();
 
-  constructor(piece: Piece) {
+  constructor(parent: YDesignStore, piece: Piece) {
+    this.parent = parent;
     this.yPiece.set("id_", piece.id_);
     this.yPiece.set("description", piece.description || "");
     const yType = new Y.Map<string>();
@@ -1072,9 +1080,11 @@ class YPieceStore implements PieceStoreFull {
 }
 
 class YConnectionStore implements ConnectionStoreFull {
+  public readonly parent: YDesignStore;
   public readonly yConnection: YConnection = new Y.Map<any>();
 
-  constructor(connection: Connection) {
+  constructor(parent: YDesignStore, connection: Connection) {
+    this.parent = parent;
     const yConnected = new Y.Map<any>();
     const yConnectedPiece = new Y.Map<string>();
     yConnectedPiece.set("id_", connection.connected.piece.id_);
@@ -1179,13 +1189,15 @@ class YConnectionStore implements ConnectionStoreFull {
 }
 
 class YDesignStore implements DesignStoreFull {
+  public readonly parent: YKitStore;
   public readonly yDesign: YDesign = new Y.Map<any>();
   public readonly pieces: Map<PieceId, YPieceStore> = new Map();
   public readonly connections: Map<ConnectionId, YConnectionStore> = new Map();
   private readonly pieceIds: Map<PieceId, string> = new Map();
   private readonly connectionIds: Map<ConnectionId, string> = new Map();
 
-  constructor(design: Design) {
+  constructor(parent: YKitStore, design: Design) {
+    this.parent = parent;
     this.yDesign.set("name", design.name);
     this.yDesign.set("description", design.description || "");
     this.yDesign.set("variant", design.variant || "");
@@ -1198,7 +1210,7 @@ class YDesignStore implements DesignStoreFull {
     (design.pieces || []).forEach((piece) => {
       const pieceId = pieceIdLikeToPieceId(piece);
       const uuid = uuidv4();
-      const yPieceStore = new YPieceStore(piece);
+      const yPieceStore = new YPieceStore(this, piece);
       (this.yDesign.get("pieces") as YPieceMap).set(uuid, yPieceStore.yPiece);
       this.pieceIds.set(pieceId, uuid);
       this.pieces.set(pieceId, yPieceStore);
@@ -1206,7 +1218,7 @@ class YDesignStore implements DesignStoreFull {
     (design.connections || []).forEach((connection) => {
       const connectionId = connectionIdLikeToConnectionId(connection);
       const uuid = uuidv4();
-      const yConnectionStore = new YConnectionStore(connection);
+      const yConnectionStore = new YConnectionStore(this, connection);
       (this.yDesign.get("connections") as YConnectionMap).set(uuid, yConnectionStore.yConnection);
       this.connectionIds.set(connectionId, uuid);
       this.connections.set(connectionId, yConnectionStore);
@@ -1241,7 +1253,7 @@ class YDesignStore implements DesignStoreFull {
             const pieceId = pieceIdLikeToPieceId(piece);
             if (!this.pieceIds.get(pieceId)) {
               const uuid = uuidv4();
-              const yPieceStore = new YPieceStore(piece);
+              const yPieceStore = new YPieceStore(this, piece);
               (this.yDesign.get("pieces") as YPieceMap).set(uuid, yPieceStore.yPiece);
               this.pieceIds.set(pieceId, uuid);
               this.pieces.set(pieceId, yPieceStore);
@@ -1278,7 +1290,7 @@ class YDesignStore implements DesignStoreFull {
             const connectionId = connectionIdLikeToConnectionId(connection);
             if (!this.connectionIds.get(connectionId)) {
               const uuid = uuidv4();
-              const yConnectionStore = new YConnectionStore(connection);
+              const yConnectionStore = new YConnectionStore(this, connection);
               (this.yDesign.get("connections") as YConnectionMap).set(uuid, yConnectionStore.yConnection);
               this.connectionIds.set(connectionId, uuid);
               this.connections.set(connectionId, yConnectionStore);
@@ -1333,8 +1345,10 @@ class YKitStore implements KitStoreFull {
   private readonly typeIds: Map<TypeId, string> = new Map();
   private readonly designIds: Map<DesignId, string> = new Map();
   private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult> = new Map();
+  private readonly parent: SketchpadStore;
 
-  constructor(kit: Kit) {
+  constructor(parent: SketchpadStore, kit: Kit) {
+    this.parent = parent;
     this.yKit.set("name", kit.name);
     this.yKit.set("version", kit.version || "");
     this.yKit.set("description", kit.description || "");
@@ -1352,7 +1366,7 @@ class YKitStore implements KitStoreFull {
     (kit.types || []).forEach((type) => {
       const typeId = typeIdLikeToTypeId(type);
       const uuid = uuidv4();
-      const yTypeStore = new YTypeStore(type);
+      const yTypeStore = new YTypeStore(this, type);
       (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
       this.typeIds.set(typeId, uuid);
       this.types.set(typeId, yTypeStore);
@@ -1360,7 +1374,7 @@ class YKitStore implements KitStoreFull {
     (kit.designs || []).forEach((design) => {
       const designId = designIdLikeToDesignId(design);
       const uuid = uuidv4();
-      const yDesignStore = new YDesignStore(design);
+      const yDesignStore = new YDesignStore(this, design);
       (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
       this.designIds.set(designId, uuid);
       this.designs.set(designId, yDesignStore);
@@ -1404,7 +1418,7 @@ class YKitStore implements KitStoreFull {
             const typeId = typeIdLikeToTypeId(type);
             if (!this.typeIds.get(typeId)) {
               const uuid = uuidv4();
-              const yTypeStore = new YTypeStore(type);
+              const yTypeStore = new YTypeStore(this, type);
               (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
               this.typeIds.set(typeId, uuid);
               this.types.set(typeId, yTypeStore);
@@ -1441,7 +1455,7 @@ class YKitStore implements KitStoreFull {
             const designId = designIdLikeToDesignId(design);
             if (!this.designIds.get(designId)) {
               const uuid = uuidv4();
-              const yDesignStore = new YDesignStore(design);
+              const yDesignStore = new YDesignStore(this, design);
               (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
               this.designIds.set(designId, uuid);
               this.designs.set(designId, yDesignStore);
@@ -1489,7 +1503,12 @@ class YKitStore implements KitStoreFull {
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in kit store`);
-    const context: KitCommandContext = { kit: this.kit };
+    const context: KitCommandContext = {
+      sketchpad: this.parent.state,
+      kit: this.kit,
+      kits: Array.from(this.parent.kits.values()).map((k) => k.kit),
+      fileUrls: new Map(),
+    };
     const result = callback(context, ...rest);
     if (result.diff) {
       this.change.kit(result.diff);
@@ -1515,8 +1534,10 @@ class YKitStore implements KitStoreFull {
 class YDesignEditorStore implements DesignEditorStore {
   public readonly yDesignEditorStore: YDesignEditorStoreValMap = new Y.Map<YDesignEditorStoreVal>();
   private readonly commandRegistry: Map<string, (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult> = new Map();
+  private readonly parent: SketchpadStore;
 
-  constructor(state: DesignEditorState) {
+  constructor(parent: SketchpadStore, state: DesignEditorState) {
+    this.parent = parent;
     this.yDesignEditorStore.set("fullscreenPanel", state.fullscreenPanel);
     this.yDesignEditorStore.set("selectedPieceIds", new Y.Array<string>());
     this.yDesignEditorStore.set("selectedConnections", new Y.Array<string>());
@@ -1667,7 +1688,13 @@ class YDesignEditorStore implements DesignEditorStore {
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in design editor store`);
-    const context: DesignEditorCommandContext = {};
+    const context: DesignEditorCommandContext = {
+      sketchpadState: this.parent.state,
+      state: this.state,
+      fileUrls: new Map(),
+      kit: this.parent.kits.get(this.parent.activeDesignEditorDesignId?.kitId || ("" as KitId))?.kit || ({} as Kit),
+      designId: this.parent.activeDesignEditorDesignId || ({} as DesignId),
+    };
     const result = callback(context, ...rest);
     // Apply state and diff changes
     // This would need proper implementation
@@ -1735,7 +1762,7 @@ class YSketchpadStore implements SketchpadStore {
     kit: (kit: Kit) => {
       const kitId = kitIdLikeToKitId(kit);
       if (this.kits.has(kitId)) throw new Error(`Kit ${kitId} already exists`);
-      const yKitStore = new YKitStore(kit);
+      const yKitStore = new YKitStore(this, kit);
       const yKitDoc = new Y.Doc();
       yKitDoc.getMap("kit").set("data", yKitStore.yKit);
       this.yKitDocs.set(kitId, yKitDoc);
@@ -1753,7 +1780,7 @@ class YSketchpadStore implements SketchpadStore {
         others: [],
         diff: {},
       };
-      const editorStore = new YDesignEditorStore(initialState);
+      const editorStore = new YDesignEditorStore(this, initialState);
       this.designEditors.set(designId, editorStore);
     },
     designEditors: (designIds: DesignId[]) => {
@@ -1878,7 +1905,11 @@ class YSketchpadStore implements SketchpadStore {
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in sketchpad store`);
-    const context: SketchpadCommandContext = { store: this };
+    const context: SketchpadCommandContext = {
+      state: this.state,
+      kits: Array.from(this.kits.values()).map((k) => k.kit),
+      fileUrls: new Map(),
+    };
     const result = callback(context, ...rest);
     // Apply state and diffs changes
     if (result.state) {
