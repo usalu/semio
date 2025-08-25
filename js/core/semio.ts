@@ -45,6 +45,28 @@ export const TOLERANCE = 1e-5;
 const dataUriRegex = /^data:([a-z]+\/[a-z0-9\-\.+]+(;[a-z0-9\-\.+]+=[a-z0-9\-\.+]+)?)?(;base64)?,[a-z0-9!$&',()*+;=\-._~:@/?%\s]*$/i;
 const DataUriSchema = z.string().regex(dataUriRegex, "Invalid data URI");
 
+// https://github.com/usalu/semio#-file-
+export const FileIdSchema = z.object({
+  url: z.url(),
+});
+export const FileIdLikeSchema = z.union([FileIdSchema, z.string()]);
+export const FileSchema = z.object({
+  url: z.url(),
+  data: DataUriSchema,
+  size: z.number().optional(),
+  hash: z.string().optional(),
+  created: z
+    .string()
+    .transform((val) => new Date(val))
+    .or(z.date())
+    .optional(),
+  updated: z
+    .string()
+    .transform((val) => new Date(val))
+    .or(z.date())
+    .optional(),
+});
+
 // https://github.com/usalu/semio#-attribute-
 export const AttributeSchema = z.object({
   key: z.string(),
@@ -230,28 +252,6 @@ export const DesignPieceSchema = z.object({
   designId: DesignIdSchema,
   plane: PlaneSchema.optional(),
   center: DiagramPointSchema.optional(),
-});
-
-// https://github.com/usalu/semio#-file-
-export const FileIdSchema = z.object({
-  url: z.url(),
-});
-export const FileIdLikeSchema = z.union([FileIdSchema, z.string()]);
-export const FileSchema = z.object({
-  url: z.url(),
-  data: DataUriSchema,
-  size: z.number().optional(),
-  hash: z.string().optional(),
-  created: z
-    .string()
-    .transform((val) => new Date(val))
-    .or(z.date())
-    .optional(),
-  updated: z
-    .string()
-    .transform((val) => new Date(val))
-    .or(z.date())
-    .optional(),
 });
 
 // https://github.com/usalu/semio#-kit-

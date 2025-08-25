@@ -30,12 +30,15 @@ import {
   Connection,
   ConnectionDiff,
   ConnectionId,
+  ConnectionIdLike,
   connectionIdLikeToConnectionId,
   Design,
   DesignDiff,
   DesignId,
+  DesignIdLike,
   designIdLikeToDesignId,
   DiagramPoint,
+  FileDiff,
   Kit,
   KitDiff,
   KitId,
@@ -43,18 +46,22 @@ import {
   Piece,
   PieceDiff,
   PieceId,
+  PieceIdLike,
   pieceIdLikeToPieceId,
   Port,
   PortDiff,
   PortId,
+  PortIdLike,
   portIdLikeToPortId,
   Representation,
   RepresentationDiff,
   RepresentationId,
+  RepresentationIdLike,
   representationIdLikeToRepresentationId,
   Type,
   TypeDiff,
   TypeId,
+  TypeIdLike,
   typeIdLikeToTypeId,
 } from "./semio";
 
@@ -87,7 +94,34 @@ export type Url = string;
 
 export interface YStore {}
 
-export interface FileStore {}
+export interface FileState {
+  file: File;
+}
+export interface FileActions {
+  create: {};
+  update: {
+    file: (diff: FileDiff) => void;
+  };
+  delete: {};
+}
+
+export interface FileSubscriptions {
+  on: {
+    created: {};
+    updated: {
+      file: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+    };
+    deleted: {};
+  };
+}
+
+export interface FileChildStores {}
+
+export interface FileChildStoresFull {}
+
+export interface FileStore extends FileState, FileChildStores {}
+
+export interface FileStoreFull extends FileState, FileActions, FileSubscriptions, FileChildStoresFull {}
 
 export interface RepresentationState {
   representation: Representation;
@@ -162,10 +196,10 @@ export interface TypeActions {
     type: (diff: TypeDiff) => void;
   };
   delete: {
-    representation: (id: RepresentationId) => void;
-    representations: (ids: RepresentationId[]) => void;
-    port: (id: PortId) => void;
-    ports: (ids: PortId[]) => void;
+    representation: (id: RepresentationIdLike) => void;
+    representations: (ids: RepresentationIdLike[]) => void;
+    port: (id: PortIdLike) => void;
+    ports: (ids: PortIdLike[]) => void;
   };
 }
 
@@ -278,10 +312,10 @@ export interface DesignActions {
     design: (diff: DesignDiff) => void;
   };
   delete: {
-    piece: (id: PieceId) => void;
-    pieces: (ids: PieceId[]) => void;
-    connection: (id: ConnectionId) => void;
-    connections: (ids: ConnectionId[]) => void;
+    piece: (id: PieceIdLike) => void;
+    pieces: (ids: PieceIdLike[]) => void;
+    connection: (id: ConnectionIdLike) => void;
+    connections: (ids: ConnectionIdLike[]) => void;
   };
 }
 
@@ -321,58 +355,56 @@ export interface DesignStoreFull extends DesignState, DesignActions, DesignSubsc
 
 export interface KitState {
   kit: Kit;
+  fileUrls: Map<Url, Url>;
 }
 
 export interface KitActions {
   create: {
+    file: (file: File) => void;
+    files: (files: File[]) => void;
     type: (type: Type) => void;
     types: (types: Type[]) => void;
     design: (design: Design) => void;
     designs: (designs: Design[]) => void;
-    file: (file: File) => void;
-    files: (files: File[]) => void;
   };
   update: {
     kit: (diff: KitDiff) => void;
   };
   delete: {
-    type: (id: TypeId) => void;
-    types: (ids: TypeId[]) => void;
-    design: (id: DesignId) => void;
-    designs: (ids: DesignId[]) => void;
     file: (url: Url) => void;
     files: (urls: Url[]) => void;
+    type: (id: TypeIdLike) => void;
+    types: (ids: TypeIdLike[]) => void;
+    design: (id: DesignIdLike) => void;
+    designs: (ids: DesignIdLike[]) => void;
   };
 }
 
 export interface KitSubscriptions {
   on: {
     created: {
+      file: (subscribe: Subscribe) => Unsubscribe;
+      files: (subscribe: Subscribe) => Unsubscribe;
       type: (subscribe: Subscribe) => Unsubscribe;
       types: (subscribe: Subscribe) => Unsubscribe;
       design: (subscribe: Subscribe) => Unsubscribe;
       designs: (subscribe: Subscribe) => Unsubscribe;
-      file: (subscribe: Subscribe) => Unsubscribe;
-      files: (subscribe: Subscribe) => Unsubscribe;
     };
     updated: {
       kit: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
     };
     deleted: {
+      file: (subscribe: Subscribe) => Unsubscribe;
+      files: (subscribe: Subscribe) => Unsubscribe;
       type: (subscribe: Subscribe) => Unsubscribe;
       types: (subscribe: Subscribe) => Unsubscribe;
       design: (subscribe: Subscribe) => Unsubscribe;
       designs: (subscribe: Subscribe) => Unsubscribe;
-      file: (subscribe: Subscribe) => Unsubscribe;
-      files: (subscribe: Subscribe) => Unsubscribe;
     };
   };
 }
 
-export interface KitCommandContext {
-  kit: Kit;
-  fileUrls: Map<Url, Url>;
-}
+export interface KitCommandContext extends KitState {}
 
 export interface KitCommandResult {
   diff?: KitDiff;
@@ -936,7 +968,7 @@ class YTypeStore implements TypeStoreFull {
     ports: (ports: Port[]) => ports.forEach((port) => this.create.port(port)),
   };
   update = {
-    type: (diff: TypeDiff) => {
+    type: (id: TypeIdLike, diff: TypeDiff) => {
       if (diff.name !== undefined) this.yType.set("name", diff.name);
       if (diff.description !== undefined) this.yType.set("description", diff.description);
       if (diff.variant !== undefined) this.yType.set("variant", diff.variant);
@@ -946,22 +978,22 @@ class YTypeStore implements TypeStoreFull {
     },
   };
   delete = {
-    representation: (id: RepresentationId) => {
+    representation: (id: RepresentationIdLike) => {
       const repId = representationIdLikeToRepresentationId(id);
       const uuid = this.representationIds.get(repId);
       if (!uuid) throw new Error(`Representation ${repId} does not exist`);
       this.representationIds.delete(repId);
       this.representations.delete(repId);
     },
-    representations: (ids: RepresentationId[]) => ids.forEach((id) => this.delete.representation(id)),
-    port: (id: PortId) => {
+    representations: (ids: RepresentationIdLike[]) => ids.forEach((id) => this.delete.representation(id)),
+    port: (id: PortIdLike) => {
       const portId = portIdLikeToPortId(id);
       const uuid = this.portIds.get(portId);
       if (!uuid) throw new Error(`Port ${portId} does not exist`);
       this.portIds.delete(portId);
       this.ports.delete(portId);
     },
-    ports: (ids: PortId[]) => ids.forEach((id) => this.delete.port(id)),
+    ports: (ids: PortIdLike[]) => ids.forEach((id) => this.delete.port(id)),
   };
   on = {
     created: {
