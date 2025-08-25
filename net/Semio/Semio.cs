@@ -72,6 +72,7 @@ public static class Constants
     public const int UrlLengthLimit = 1024;
     public const int UriLengthLimit = 2048;
     public const int ExpressionLengthLimit = 4096;
+    public const int ValueLengthLimit = 512;
     public const int AttributesMax = 64;
     public const int QualityMax = 1024;
     public const int TagsMax = 8;
@@ -1547,6 +1548,14 @@ public class DescriptionAttribute : TextAttribute
     { }
 }
 
+public class ValueAttribute : TextAttribute
+{
+    public ValueAttribute(string emoji, string code, string abbreviation, string description,
+        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
+        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, Constants.ValueLengthLimit)
+    { }
+}
+
 public class ExpressionAttribute : TextAttribute
 {
     public ExpressionAttribute(string emoji, string code, string abbreviation, string description,
@@ -1790,6 +1799,25 @@ public class Attribute : Model<Attribute>
 }
 
 
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-benchmark-"/>
+/// </summary>
+[Model("🔢", "Bm", "Bmk", "A benchmark is a value with an optional unit for a quality.")]
+public class Benchmark : Model<Benchmark>
+{
+    [Name("📛", "Nm", "Name", "The name of the benchmark.", PropImportance.REQUIRED)]
+    public string Name { get; set; } = "";
+    [Url("🖼️", "Ic", "Ico", "The icon [ emoji | url ] of the benchmark.")]
+    public string Icon { get; set; } = "";
+    [NumberProp("⬇️", "Mi?", "Min?", "The optional minimum value of the benchmark.")]
+    public float Min { get; set; } = 0;
+    [FalseOrTrue("⬇️", "MiE?", "MiE?", "Whether the minimum value is excluded from the range.")]
+    public bool MinExcluded { get; set; } = false;
+    [NumberProp("⬆️", "Mx?", "Max?", "The optional maximum value of the benchmark.")]
+    public float Max { get; set; } = 0;
+    [FalseOrTrue("⬆️", "MxE?", "MxE?", "Whether the maximum value is excluded from the range.")]
+    public bool MaxExcluded { get; set; } = false;
+}
 
 [Flags]
 public enum QualityKind
@@ -1816,32 +1844,73 @@ public class Quality : Model<Quality>
     public string Description { get; set; } = "";
     [Url("🔗", "Ur?", "Uri?", "The Unique Resource Identifier (URI) of the quality.")]
     public string Uri { get; set; } = "";
+    [FalseOrTrue("🔢", "Sc?", "Sc?", "Whether the quality is scalable.")]
+    public bool Scalable { get; set; } = false;
+    [Name("🔢", "Kd", "Kn", "The kind of the quality.")]
+    public QualityKind Kind { get; set; } = QualityKind.General;
     [Name("Ⓜ️", "SI?", "SI?", "The optional default SI unit of the quality.")]
     public string SI { get; set; } = "";
     [Name("🦶", "Im?", "Imp?", "The optional default imperial unit of the quality.")]
     public string Imperial { get; set; } = "";
-    [NumberProp("⬆️", "Mx?", "Max?", "The optional maximum value of the quality.")]
-    public float Max { get; set; } = 0;
-    [FalseOrTrue("⬆️", "MxI?", "MxI?", "Whether the maximum value is included in the range.")]
-    public bool MaxIncluded { get; set; } = true;
     [NumberProp("⬇️", "Mi?", "Min?", "The optional minimum value of the quality.")]
     public float Min { get; set; } = 0;
-    [FalseOrTrue("⬇️", "MiI?", "MiI?", "Whether the minimum value is included in the range.")]
-    public bool MinIncluded { get; set; } = true;
+    [FalseOrTrue("⬇️", "MiE?", "MiE?", "Whether the minimum value is excluded from the range.")]
+    public bool MinExcluded { get; set; } = true;
+    [NumberProp("⬆️", "Mx?", "Max?", "The optional maximum value of the quality.")]
+    public float Max { get; set; } = 0;
+    [FalseOrTrue("⬆️", "MxE?", "MxE?", "Whether the maximum value is excluded from the range.")]
+    public bool MaxExcluded { get; set; } = true;
     [NumberProp("Ⓜ️", "Dl?", "Dfl?", "The optional default value of the quality. Either a default value or a formula can be set.")]
     public float Default { get; set; } = 0;
     [ModelProp("🟰", "Fo?", "For?", "The optional formula of the quality.")]
     public string Formula { get; set; } = "";
-    [Name("🔢", "Kd", "Kn", "The kind of the quality.")]
-    public QualityKind Kind { get; set; } = QualityKind.General;
-    [ModelProp("🏷️", "At*", "Atr*", "The optional attributes of the quality.", PropImportance.OPTIONAL)]
+    [ModelProp("🔢", "Bm*", "Bmk*", "The optional benchmarks of the quality.", PropImportance.OPTIONAL)]
+    public List<Benchmark> Benchmarks { get; set; } = new();
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the quality.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 }
 
+[Model("🔑", "Ql", "Qal", "A quality id is a key for a quality.")]
 public class QualityId : Model<QualityId>
 {
     [Id("🔑", "Ke", "Key", "The key of the quality.")]
     public string Key { get; set; } = "";
+}
+
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-property-"/>
+/// </summary>
+[Model("🏷️", "Pp", "Prp", "A property is a value with an optional unit for a quality.")]
+public class Prop : Model<Prop>
+{
+    [Id("🔑", "Ke", "Key", "The key of the quality of the property.")]
+    public string Key { get; set; } = "";
+    [Value("🔢", "Vl", "Val", "The value [ number | text ] of the property.")]
+    public string Value { get; set; } = "";
+    [Name("Ⓜ️", "Ut?", "Unt?", "The optional unit of the property.")]
+    public string Unit { get; set; } = "";
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the property.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
+}
+
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-stat-"/>
+/// </summary>
+[Model("🔢", "St", "Stt", "A stat about a quality on a design which is optionally bounded.")]
+public class Stat : Model<Stat>
+{
+    [Id("🔑", "Ke", "Key", "The key of the stat.")]
+    public string Key { get; set; } = "";
+    [Name("Ⓜ️", "Ut?", "Unt?", "The optional unit of the stat.")]
+    public string Unit { get; set; } = "";
+    [NumberProp("⬇️", "Mi?", "Min?", "The optional minimum value of the stat.")]
+    public float Min { get; set; } = 0;
+    [FalseOrTrue("⬇️", "MiE?", "MiE?", "Whether the minimum value is excluded from the range.")]
+    public bool MinExcluded { get; set; } = false;
+    [NumberProp("⬆️", "Mx?", "Max?", "The optional maximum value of the stat.")]
+    public float Max { get; set; } = 0;
+    [FalseOrTrue("⬆️", "MxE?", "MxE?", "Whether the maximum value is excluded from the range.")]
+    public bool MaxExcluded { get; set; } = false;
 }
 
 /// <summary>
@@ -1860,7 +1929,7 @@ public class Representation : Model<Representation>
     [Name("🏷️", "Tg*", "Tags*", "The optional tags to group representations. No tags means default.", PropImportance.ID, skipValidation: true)]
     public List<string> Tags { get; set; } = new();
 
-    [ModelProp("🏷️", "At*", "Atr*", "The optional attributes of the representation.", PropImportance.OPTIONAL)]
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the representation.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public override (bool, List<string>) Validate()
@@ -2031,7 +2100,9 @@ public class Port : Model<Port>
     public Vector? Direction { get; set; } = null;
     [NumberProp("💍", "T", "T", "The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.", PropImportance.REQUIRED)]
     public float T { get; set; } = 0;
-    [ModelProp("🏷️", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
+    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the port.", PropImportance.OPTIONAL)]
+    public List<Prop> Props { get; set; } = new();
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
     public string ToIdString() => $"{Id}";
     public string ToHumanIdString() => $"{ToIdString()}";
@@ -2109,6 +2180,16 @@ public class Author : Model<Author>
         return (isValid, errors);
     }
 }
+[Model("👤", "Au", "Aut", "The id of the author.")]
+public class AuthorId : Model<AuthorId>
+{
+    [Email("📧", "Em", "Eml", "The email of the author.", PropImportance.ID)]
+    public string Email { get; set; } = "";
+    public static implicit operator AuthorId(Author author) => new() { Email = author.Email };
+    public string ToIdString() => $"{Email}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"Aut({ToHumanIdString()})";
+}
 
 [Model("📍", "Lc", "Loc", "A location on the earth surface (longitude, latitude).")]
 public class Location : Model<Location>
@@ -2147,9 +2228,11 @@ public class Type : Model<Type>
     public List<Representation> Representations { get; set; } = new();
     [ModelProp("🔌", "Po*", "Pors*", "The optional ports of the type.", PropImportance.OPTIONAL)]
     public List<Port> Ports { get; set; } = new();
-    [ModelProp("👥", "Au*", "Auts*", "The optional authors of the type.", PropImportance.OPTIONAL)]
-    public List<Author> Authors { get; set; } = new();
-    [ModelProp("🏷️", "At*", "Atr*", "The optional attributes of the type.", PropImportance.OPTIONAL)]
+    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the type.", PropImportance.OPTIONAL)]
+    public List<Prop> Props { get; set; } = new();
+    [ModelProp("👥", "Au*", "Aut*", "The optional authors of the type.", PropImportance.OPTIONAL)]
+    public List<AuthorId> Authors { get; set; } = new();
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the type.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public string ToIdString() => $"{Name}#{Variant}";
@@ -2243,7 +2326,9 @@ public class Piece : Model<Piece>
     public bool Hidden { get; set; } = false;
     [FalseOrTrue("🔒", "Lk?", "Lck?", "Whether the piece is locked. A locked piece cannot be edited.")]
     public bool Locked { get; set; } = false;
-    [ModelProp("🏷️", "At*", "Atr*", "The optional attributes of the piece.", PropImportance.OPTIONAL)]
+    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the piece.", PropImportance.OPTIONAL)]
+    public List<Prop> Props { get; set; } = new();
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the piece.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
     public string ToIdString() => $"{Id}";
     public string ToHumanIdString() => $"{ToIdString()}";
@@ -2363,7 +2448,9 @@ public class Connection : Model<Connection>
     public float X { get; set; }
     [NumberProp("⬆️", "Y?", "Y?", "The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.")]
     public float Y { get; set; } = 1;
-    [ModelProp("🏷️", "At*", "Atr*", "The optional attributes of the connection.", PropImportance.OPTIONAL)]
+    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the connection.", PropImportance.OPTIONAL)]
+    public List<Prop> Props { get; set; } = new();
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the connection.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public string ToIdString() => $"{Connected.Piece.Id + (Connected.Port.Id != "" ? ":" + Connected.Port.Id : "")}--{(Connecting.Port.Id != "" ? Connecting.Port.Id + ":" : "") + Connecting.Piece.Id}";
@@ -2425,9 +2512,13 @@ public class Design : Model<Design>
     public List<Piece> Pieces { get; set; } = new();
     [ModelProp("🔗", "Co*", "Cons*", "The optional connections of the design.", PropImportance.OPTIONAL)]
     public List<Connection> Connections { get; set; } = new();
-    [ModelProp("👥", "Au*", "Auts*", "The optional authors of the design.", PropImportance.OPTIONAL)]
-    public List<Author> Authors { get; set; } = new();
-    [ModelProp("🏷️", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
+    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the design.", PropImportance.OPTIONAL)]
+    public List<Prop> Props { get; set; } = new();
+    [ModelProp("🔢", "St*", "Stt*", "The optional stats of the design.", PropImportance.OPTIONAL)]
+    public List<Stat> Stats { get; set; } = new();
+    [ModelProp("👥", "Au*", "Aut*", "The optional authors of the design.", PropImportance.OPTIONAL)]
+    public List<AuthorId> Authors { get; set; } = new();
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public string ToIdString() => $"{Name}#{Variant}#{View}";
@@ -2976,13 +3067,15 @@ public class Kit : Model<Kit>
     public string Homepage { get; set; } = "";
     [Url("⚖️", "Li?", "Lic?", "The optional license [ spdx id | url ] of the kit.")]
     public string License { get; set; } = "";
+    [ModelProp("👥", "Au*", "Aut*", "The optional authors of the kit.", PropImportance.OPTIONAL)]
+    public List<Author> Authors { get; set; } = new();
     [ModelProp("📃", "Ql*", "Qal*", "The optional qualities of the kit.", PropImportance.OPTIONAL)]
     public List<Quality> Qualities { get; set; } = new();
     [ModelProp("🧩", "Ty*", "Typ*", "The optional types of the kit.", PropImportance.OPTIONAL)]
     public List<Type> Types { get; set; } = new();
     [ModelProp("🏙️", "Dn*", "Dsn*", "The optional designs of the kit.", PropImportance.OPTIONAL)]
     public List<Design> Designs { get; set; } = new();
-    [ModelProp("🏷️", "At*", "Atr*", "The optional attributes of the kit.", PropImportance.OPTIONAL)]
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the kit.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     // TODO: Implement reflexive validation for model properties.

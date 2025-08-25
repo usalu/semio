@@ -661,9 +661,8 @@ const getSketchpadStore = <K extends keyof YSketchpadKeysMap>(m: YSketchpad, k: 
 // Helper functions for Yjs type conversion
 function createAttribute(attribute: Attribute): YAttribute {
   const yMap = new Y.Map<string>();
-  yMap.set("name", attribute.name);
+  yMap.set("key", attribute.key);
   if (attribute.value !== undefined) yMap.set("value", attribute.value);
-  if (attribute.unit !== undefined) yMap.set("unit", attribute.unit);
   if (attribute.definition !== undefined) yMap.set("definition", attribute.definition);
   return yMap;
 }
