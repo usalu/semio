@@ -89,6 +89,16 @@ export type Unsubscribe = () => void;
 export type Disposable = () => void;
 export type Url = string;
 
+export interface DesignEditorStep {
+  diff: KitDiff;
+  selection: DesignEditorSelection;
+}
+
+export interface DesignEditorEdit {
+  do: DesignEditorStep;
+  undo: DesignEditorStep;
+}
+
 export interface YStore {}
 
 export interface FileSnapshot {
@@ -264,6 +274,8 @@ export interface DesignEditorStateFull extends DesignEditorState {
   isTransactionActive: boolean;
   others: DesignEditorPresenceOther[];
   diff: KitDiff;
+  currentTransactionStack: DesignEditorEdit[];
+  pastTransactionsStack: DesignEditorEdit[];
 }
 
 export interface DesignEditorSnapshot {
@@ -313,9 +325,12 @@ export interface DesignEditorCommandsFull {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
   register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable;
 }
-export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands {}
+export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands {
+  changed: (subscribe: Subscribe) => Unsubscribe;
+}
 export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, DesignEditorActions {
   on: DesignEditorSubscriptions;
+  changed: (subscribe: Subscribe) => Unsubscribe;
 }
 export interface SketchpadState {
   mode: Mode;
@@ -359,7 +374,8 @@ export interface SketchpadSubscriptions {
   };
 }
 export interface SketchpadChildStores {
-  designEditors: Map<DesignId, DesignEditorStore>;
+  kits: Map<KitId, KitStore>;
+  designEditors: Map<KitId, Map<DesignId, DesignEditorStore>>;
 }
 export interface SketchpadChildStoresFull {
   kits: Map<KitId, KitStoreFull>;
@@ -1123,13 +1139,13 @@ class YDesignStore implements DesignStoreFull {
         });
       }
       if (diff.pieces.updated) {
-        diff.pieces.updated.forEach((pieceDiff) => {
+        diff.pieces.updated.forEach((updatedItem) => {
           const matchingPiece = Array.from(this.pieces.entries()).find(([_, store]) => {
             const piece = store.snapshot();
-            return !pieceDiff.id_ || piece.id_ === pieceDiff.id_;
+            return !updatedItem.diff.id_ || piece.id_ === updatedItem.id.id_;
           });
           if (matchingPiece) {
-            matchingPiece[1].change(pieceDiff);
+            matchingPiece[1].change(updatedItem.diff);
           }
         });
       }
@@ -1160,12 +1176,13 @@ class YDesignStore implements DesignStoreFull {
         });
       }
       if (diff.connections.updated) {
-        diff.connections.updated.forEach((connectionDiff) => {
-          const matchingConnection = Array.from(this.connections.values()).find((store) => {
-            return true; // Would need better matching logic based on connection structure
+        diff.connections.updated.forEach((updatedItem) => {
+          const matchingConnection = Array.from(this.connections.entries()).find(([_, store]) => {
+            const connection = store.snapshot();
+            return connection.connected.piece.id_ === updatedItem.id.connected.piece.id_ && connection.connecting.piece.id_ === updatedItem.id.connecting.piece.id_;
           });
           if (matchingConnection) {
-            matchingConnection.change(connectionDiff);
+            matchingConnection[1].change(updatedItem.diff);
           }
         });
       }
@@ -1287,13 +1304,13 @@ class YKitStore implements KitStoreFull {
         });
       }
       if (diff.types.updated) {
-        diff.types.updated.forEach((typeDiff) => {
+        diff.types.updated.forEach((updatedItem) => {
           const matchingType = Array.from(this.types.entries()).find(([_, store]) => {
             const type = store.snapshot();
-            return (!typeDiff.name || type.name === typeDiff.name) && (!typeDiff.variant || type.variant === typeDiff.variant);
+            return (!updatedItem.diff.name || type.name === updatedItem.id.name) && (!updatedItem.diff.variant || type.variant === updatedItem.id.variant);
           });
           if (matchingType) {
-            matchingType[1].change(typeDiff);
+            matchingType[1].change(updatedItem.diff);
           }
         });
       }
@@ -1324,13 +1341,13 @@ class YKitStore implements KitStoreFull {
         });
       }
       if (diff.designs.updated) {
-        diff.designs.updated.forEach((designDiff) => {
+        diff.designs.updated.forEach((updatedItem) => {
           const matchingDesign = Array.from(this.designs.entries()).find(([_, store]) => {
             const design = store.snapshot();
-            return (!designDiff.name || design.name === designDiff.name) && (!designDiff.variant || design.variant === designDiff.variant) && (!designDiff.view || design.view === designDiff.view);
+            return (!updatedItem.diff.name || design.name === updatedItem.id.name) && (!updatedItem.diff.variant || design.variant === updatedItem.id.variant) && (!updatedItem.diff.view || design.view === updatedItem.id.view);
           });
           if (matchingDesign) {
-            matchingDesign[1].change(designDiff);
+            matchingDesign[1].change(updatedItem.diff);
           }
         });
       }
@@ -1382,7 +1399,7 @@ class YKitStore implements KitStoreFull {
   }
 }
 
-class YDesignEditorStore implements DesignEditorStore {
+class YDesignEditorStore implements DesignEditorStoreFull {
   public readonly yDesignEditorStore: YDesignEditorStoreValMap = new Y.Map<YDesignEditorStoreVal>();
   private readonly commandRegistry: Map<string, (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult> = new Map();
   private readonly parent: SketchpadStore;
@@ -1437,6 +1454,12 @@ class YDesignEditorStore implements DesignEditorStore {
   get diff(): KitDiff {
     return {};
   }
+  get currentTransactionStack(): DesignEditorEdit[] {
+    return [];
+  }
+  get pastTransactionsStack(): DesignEditorEdit[] {
+    return [];
+  }
 
   snapshot = (): DesignEditorStateFull => {
     return {
@@ -1446,6 +1469,8 @@ class YDesignEditorStore implements DesignEditorStore {
       presence: this.presence,
       others: this.others,
       diff: this.diff,
+      currentTransactionStack: this.currentTransactionStack,
+      pastTransactionsStack: this.pastTransactionsStack,
     };
   };
 
@@ -1527,12 +1552,13 @@ class YDesignEditorStore implements DesignEditorStore {
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in design editor store`);
+    const parent = this.parent as YSketchpadStore;
     const context: DesignEditorCommandContext = {
-      sketchpadState: this.parent.snapshot(),
+      sketchpadState: parent.snapshot(),
       state: this.snapshot(),
       fileUrls: new Map(),
-      kit: this.parent.kits.get(this.parent.activeDesignEditor!.kitId)!,
-      designId: this.parent.activeDesignEditor!.designId,
+      kit: parent.kits.get(parent.activeDesignEditor!.kitId)!.snapshot(),
+      designId: parent.activeDesignEditor!.designId,
     };
     const result = callback(context, ...rest);
     // Apply state and diff changes
@@ -1551,6 +1577,23 @@ class YDesignEditorStore implements DesignEditorStore {
     };
   }
 
+  register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable {
+    return this.registerCommand(command, callback);
+  }
+
+  get on(): DesignEditorSubscriptions {
+    return {
+      undone: this.undone,
+      redone: this.redone,
+      changed: this.changed,
+      transaction: {
+        started: this.transaction.started,
+        aborted: this.transaction.aborted,
+        finalized: this.transaction.finalized,
+      },
+    };
+  }
+
   get commands() {
     return {
       execute: this.executeCommand.bind(this),
@@ -1559,13 +1602,13 @@ class YDesignEditorStore implements DesignEditorStore {
   }
 }
 
-class YSketchpadStore implements SketchpadStore {
+class YSketchpadStore implements SketchpadStoreFull {
   public readonly ySketchpadDoc: Y.Doc;
   public readonly sketchpadIndexeddbProvider?: IndexeddbPersistence;
   public readonly yKitDocs: Map<KitId, Y.Doc> = new Map();
   public readonly kitIndexeddbProviders: Map<KitId, IndexeddbPersistence> = new Map();
   public readonly kits: Map<KitId, YKitStore> = new Map();
-  public readonly designEditors: Map<DesignId, DesignEditorStore> = new Map();
+  public readonly designEditors: Map<KitId, Map<DesignId, DesignEditorStoreFull>> = new Map();
   private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult> = new Map();
 
   private getYSketchpad(): YSketchpad {
@@ -1620,7 +1663,7 @@ class YSketchpadStore implements SketchpadStore {
       this.yKitDocs.set(kitId, yKitDoc);
       this.kits.set(kitId, yKitStore);
     },
-    designEditor: (designId: DesignId) => {
+    designEditor: (id: DesignEditorId) => {
       const initialState: DesignEditorStateFull = {
         fullscreenPanel: DesignEditorFullscreenPanel.None,
         selection: {},
@@ -1628,9 +1671,18 @@ class YSketchpadStore implements SketchpadStore {
         presence: {},
         others: [],
         diff: {},
+        currentTransactionStack: [],
+        pastTransactionsStack: [],
       };
       const editorStore = new YDesignEditorStore(this, initialState);
-      this.designEditors.set(designId, editorStore);
+
+      // Ensure the kitId map exists
+      if (!this.designEditors.has(id.kitId)) {
+        this.designEditors.set(id.kitId, new Map());
+      }
+
+      const kitEditors = this.designEditors.get(id.kitId)!;
+      kitEditors.set(id.designId, editorStore);
     },
   };
 
@@ -1642,11 +1694,23 @@ class YSketchpadStore implements SketchpadStore {
   }
 
   delete = {
-    kit: (kitId: KitId) => {
-      this.kits.delete(kitId);
+    kit: (id: KitIdLike) => {
+      const kitId = kitIdLikeToKitId(id);
+      if (this.kits.has(kitId)) {
+        this.kits.delete(kitId);
+      }
+      if (this.designEditors.has(kitId)) {
+        this.designEditors.delete(kitId);
+      }
     },
-    designEditor: (designId: DesignId) => {
-      this.designEditors.delete(designId);
+    designEditor: (id: DesignEditorId) => {
+      const kitEditors = this.designEditors.get(id.kitId);
+      if (kitEditors) {
+        kitEditors.delete(id.designId);
+        if (kitEditors.size === 0) {
+          this.designEditors.delete(id.kitId);
+        }
+      }
     },
   };
 
@@ -1667,26 +1731,31 @@ class YSketchpadStore implements SketchpadStore {
       return () => yDesignEditorStores.unobserve(observer);
     },
   };
-  changed = (subscribe: Subscribe): Unsubscribe => {
-    const ySketchpad = this.getYSketchpad();
-    const observer = () => subscribe();
-    ySketchpad.observe(observer);
-    return () => ySketchpad.unobserve(observer);
-  };
 
   deleted = {
     kit: (subscribe: Subscribe): Unsubscribe => {
-      // Kit deletion would be observed through document removal
-      const observer = () => subscribe();
+      // Would need to observe kit document removal
       return () => {}; // Placeholder
     },
     designEditor: (subscribe: Subscribe): Unsubscribe => {
-      const yDesignEditorStores = this.ySketchpadDoc.getMap("designEditorStores") as YDesignEditorStoreMap;
-      const observer = () => subscribe();
-      yDesignEditorStores.observe(observer);
-      return () => yDesignEditorStores.unobserve(observer);
+      // Would need to observe design editor removal
+      return () => {}; // Placeholder
     },
   };
+
+  changed = (subscribe: Subscribe): Unsubscribe => {
+    const observer = () => subscribe();
+    this.getYSketchpad().observe(observer);
+    return () => this.getYSketchpad().unobserve(observer);
+  };
+
+  get on(): SketchpadSubscriptions {
+    return {
+      created: this.created,
+      changed: this.changed,
+      deleted: this.deleted,
+    };
+  }
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
     const callback = this.commandRegistry.get(command);
@@ -1697,17 +1766,9 @@ class YSketchpadStore implements SketchpadStore {
       fileUrls: new Map(),
     };
     const result = callback(context, ...rest);
-    // Apply state and diffs changes
-    if (result.state) {
-      // Apply state changes - would need proper implementation
-    }
-    if (result.diffs) {
-      result.diffs.forEach((diff, kitId) => {
-        const kit = this.kits.get(kitId);
-        if (kit) {
-          kit.change(diff);
-        }
-      });
+    // Apply diff changes
+    if (result.diff) {
+      this.change(result.diff);
     }
     return result as T;
   }
@@ -1907,7 +1968,7 @@ const useDesignEditorScope = () => useContext(DesignEditorScopeContext);
 
 // #endregion Scoping
 
-function useSketchpadStore(): SketchpadStore {
+function useSketchpadStore(id?: string): SketchpadStore {
   const scope = useSketchpadScope();
   const storeId = scope?.id ?? id;
   if (!storeId) throw new Error("useSketchpad must be called within a SketchpadScopeProvider or be directly provided with an id");
@@ -1918,7 +1979,7 @@ function useSketchpadStore(): SketchpadStore {
     () => store.snapshot(),
     () => store.snapshot(),
   );
-  return state as SketchpadStore;
+  return store;
 }
 
 export function useSketchpad(): SketchpadStore;
@@ -1929,32 +1990,43 @@ export function useSketchpad<T>(selector?: (store: SketchpadStore) => T, id?: st
   if (!storeId) throw new Error("useSketchpad must be called within a SketchpadScopeProvider or be directly provided with an id");
   if (!stores.has(storeId)) throw new Error(`Sketchpad store was not found for id ${storeId}`);
   const store = stores.get(storeId)!;
+
   const state = useSyncExternalStore(
     store.changed,
     () => store.snapshot(),
     () => store.snapshot(),
   );
-  return selector ? selector(state as unknown as SketchpadStore) : (state as unknown as SketchpadStore);
+
+  return selector ? selector(store) : store;
 }
 
 export function useDesignEditor(): DesignEditorStore;
 export function useDesignEditor<T>(selector: (store: DesignEditorStore) => T): T;
-export function useDesignEditor<T>(selector: (store: DesignEditorStore) => T, id: DesignId): T;
-export function useDesignEditor<T>(selector?: (store: DesignEditorStore) => T, id?: DesignId): T | DesignEditorStore {
+export function useDesignEditor<T>(selector: (store: DesignEditorStore) => T, kitId: KitId, designId: DesignId): T;
+export function useDesignEditor<T>(selector?: (store: DesignEditorStore) => T, kitId?: KitId, designId?: DesignId): T | DesignEditorStore {
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("useDesignEditor must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
+
+  const kitScope = useKitStoreScope();
+  const resolvedKitId = kitScope?.id ?? kitId;
   const designScope = useDesignScope();
-  const designId = designScope?.id ?? id;
-  if (!designId) throw new Error("useDesignEditor must be called within a DesignScopeProvider or be directly provided with an id");
-  if (!store.designEditors.has(designId)) throw new Error(`Design editor store not found for design ${designId}`);
-  const designEditor = store.designEditors.get(designId)!;
+  const resolvedDesignId = designScope?.id ?? designId;
+
+  if (!resolvedKitId) throw new Error("useDesignEditor must be called within a KitScopeProvider or be directly provided with a kitId");
+  if (!resolvedDesignId) throw new Error("useDesignEditor must be called within a DesignScopeProvider or be directly provided with a designId");
+
+  if (!store.designEditors.has(resolvedKitId)) throw new Error(`Design editor store not found for kit ${resolvedKitId.name}`);
+  const kitEditors = store.designEditors.get(resolvedKitId)!;
+  if (!kitEditors.has(resolvedDesignId)) throw new Error(`Design editor store not found for design ${resolvedDesignId.name}`);
+  const designEditor = kitEditors.get(resolvedDesignId)!;
+
   const state = useSyncExternalStore(
     designEditor.changed,
     () => designEditor.snapshot(),
     () => designEditor.snapshot(),
   );
-  return selector ? selector(state as DesignEditorStateFull) : (state as DesignEditorStore);
+  return selector ? selector(designEditor) : designEditor;
 }
 
 export function useKitStore(): KitStore;
@@ -1974,7 +2046,7 @@ export function useKitStore<T>(selector?: (store: KitStore) => T, id?: KitId): T
     () => kitStore.snapshot(),
     () => kitStore.snapshot(),
   );
-  return selector ? selector(state as KitStore) : (state as KitStore);
+  return selector ? selector(kitStore) : kitStore;
 }
 
 export function useKit(): Kit;
@@ -2014,7 +2086,12 @@ export function useDesign<T>(selector?: (design: Design) => T, id?: DesignId): T
   if (!designId) throw new Error("useDesign must be called within a DesignScopeProvider or be directly provided with an id");
   if (!kitStore.designs.has(designId)) throw new Error(`Design store not found for design ${designId}`);
   const designStore = kitStore.designs.get(designId)!;
-  return useStore(designStore, designStore.changed, selector);
+  const state = useSyncExternalStore(
+    designStore.changed,
+    () => designStore.snapshot(),
+    () => designStore.snapshot(),
+  );
+  return selector ? selector(state) : state;
 }
 
 export function useType(): Type;
@@ -2034,7 +2111,12 @@ export function useType<T>(selector?: (type: Type) => T, id?: TypeId): T | Type 
   if (!typeId) throw new Error("useType must be called within a TypeScopeProvider or be directly provided with an id");
   if (!kit.types.has(typeId)) throw new Error(`Type store not found for type ${typeId}`);
   const typeStore = kit.types.get(typeId)!;
-  return useStore(typeStore, typeStore.changed, selector);
+  const state = useSyncExternalStore(
+    typeStore.changed,
+    () => typeStore.snapshot(),
+    () => typeStore.snapshot(),
+  );
+  return selector ? selector(state) : state;
 }
 
 export function usePiece(): Piece;
@@ -2059,7 +2141,12 @@ export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId): T | P
   if (!pieceId) throw new Error("usePiece must be called within a PieceScopeProvider or be directly provided with an id");
   if (!design.pieces.has(pieceId)) throw new Error(`Piece store not found for piece ${pieceId}`);
   const pieceStore = design.pieces.get(pieceId)!;
-  return useStore(pieceStore, pieceStore.changed, selector);
+  const state = useSyncExternalStore(
+    pieceStore.changed,
+    () => pieceStore.snapshot(),
+    () => pieceStore.snapshot(),
+  );
+  return selector ? selector(state) : state;
 }
 
 export function useConnection(): Connection;
@@ -2084,7 +2171,12 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
   if (!connectionId) throw new Error("useConnection must be called within a ConnectionScopeProvider or be directly provided with an id");
   if (!design.connections.has(connectionId)) throw new Error(`Connection store not found for connection ${connectionId}`);
   const connectionStore = design.connections.get(connectionId)!;
-  return useStore(connectionStore, connectionStore.changed, selector);
+  const state = useSyncExternalStore(
+    connectionStore.changed,
+    () => connectionStore.snapshot(),
+    () => connectionStore.snapshot(),
+  );
+  return selector ? selector(state) : state;
 }
 
 export function usePort(): Port;
@@ -2109,7 +2201,12 @@ export function usePort<T>(selector?: (port: Port) => T, id?: PortId): T | Port 
   if (!portId) throw new Error("usePort must be called within a PortScopeProvider or be directly provided with an id");
   if (!type.ports.has(portId)) throw new Error(`Port store not found for port ${portId}`);
   const portStore = type.ports.get(portId)!;
-  return useStore(portStore, portStore.changed, selector);
+  const state = useSyncExternalStore(
+    portStore.changed,
+    () => portStore.snapshot(),
+    () => portStore.snapshot(),
+  );
+  return selector ? selector(state) : state;
 }
 
 export function useRepresentation(): Representation;
@@ -2134,6 +2231,11 @@ export function useRepresentation<T>(selector?: (representation: Representation)
   if (!representationId) throw new Error("useRepresentation must be called within a RepresentationScopeProvider or be directly provided with an id");
   if (!typeStore.representations.has(representationId)) throw new Error(`Representation store not found for representation ${representationId}`);
   const representationStore = typeStore.representations.get(representationId)!;
-  return useStore(representationStore, representationStore.changed, selector);
+  const state = useSyncExternalStore(
+    representationStore.changed,
+    () => representationStore.snapshot(),
+    () => representationStore.snapshot(),
+  );
+  return selector ? selector(state) : state;
 }
 // #endregion Hooks
