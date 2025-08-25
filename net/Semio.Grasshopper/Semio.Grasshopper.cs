@@ -16,7 +16,7 @@
 //You should have received a copy of the GNU Affero General Public License
 //along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#endregion
+#endregion Header
 
 #region TODOs
 
@@ -65,10 +65,6 @@ public static class Constants
     public const string Version = "6.0.0";
 }
 
-#endregion
-
-#region General
-
 public class Semio_GrasshopperInfo : GH_AssemblyInfo
 {
     public override string Name => Semio.Constants.Name;
@@ -91,7 +87,7 @@ public class SemioCategoryIcon : GH_AssemblyPriority
     }
 }
 
-#endregion
+#endregion Constants
 
 #region Utility
 
@@ -226,7 +222,7 @@ public static class Utility
     }
 }
 
-#endregion
+#endregion Utility
 
 #region Converters
 
@@ -252,9 +248,9 @@ public static class RhinoConverter
     };
 }
 
-#endregion
+#endregion Converters
 
-#region Goos
+#region Models
 
 public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
 {
@@ -262,12 +258,12 @@ public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
     public ModelGoo(T value) { Value = value; }
     public override bool IsValid => true;
     public override string TypeName => typeof(T).Name;
-    public override string TypeDescription => ((ModelAttribute)System.Attribute.GetCustomAttribute(typeof(T), typeof(ModelAttribute))).Description;
+    public override string TypeDescription => ((ModelAttribute?)System.Attribute.GetCustomAttribute(typeof(T), typeof(ModelAttribute)))?.Description ?? "";
     public override IGH_Goo Duplicate()
     {
-        var duplicate = (ModelGoo<T>)Activator.CreateInstance(GetType());
-        duplicate.Value = Value.DeepClone();
-        return duplicate;
+        var duplicate = (ModelGoo<T>?)Activator.CreateInstance(GetType());
+        if (duplicate != null) duplicate.Value = Value.DeepClone();
+        return duplicate!;
     }
     public override string ToString() => Value.ToString();
     public override bool Write(GH_IWriter writer)
@@ -304,6 +300,447 @@ public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
     }
 }
 
+public abstract class ModelParam<T, U> : GH_PersistentParam<T> where T : ModelGoo<U> where U : Model<U>, new()
+{
+    internal ModelParam() : base(typeof(U).Name,
+        ((ModelAttribute?)System.Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute)))?.Code ?? "",
+        ((ModelAttribute?)System.Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute)))?.Description ?? "",
+        Constants.Category, "Params")
+    { }
+    protected override Bitmap Icon => (Bitmap?)Resources.ResourceManager.GetObject($"{typeof(U).Name.ToLower()}_24x24") ?? Resources.semio_24x24;
+    protected override GH_GetterResult Prompt_Singular(ref T value) => throw new NotImplementedException();
+    protected override GH_GetterResult Prompt_Plural(ref List<T> values) => throw new NotImplementedException();
+    public override GH_Exposure Exposure => GH_Exposure.primary;
+}
+
+public abstract class Component : GH_Component
+{
+    public Component(string name, string nickname, string description, string subcategory) : base(
+        name, nickname, description, Constants.Category, subcategory)
+    { }
+}
+
+public abstract class ModelComponent<T, U, V> : Component
+    where T : ModelParam<U, V> where U : ModelGoo<V> where V : Model<V>, new()
+{
+    public static readonly string NameM;
+    public static readonly System.Type TypeM;
+    public static readonly System.Type GooM;
+    public static readonly System.Type ParamM;
+    public static readonly ModelAttribute ModelM;
+    public static readonly ImmutableArray<PropertyInfo> PropertyM;
+    public static readonly ImmutableArray<PropAttribute> PropM;
+    public static readonly ImmutableArray<bool> IsPropertyList;
+    public static readonly ImmutableArray<bool> IsPropertyMapped;
+    public static readonly ImmutableArray<System.Type> PropertyItemType;
+    public static readonly ImmutableArray<bool> IsPropertyModel;
+    public static readonly ImmutableArray<System.Type> PropertyGooM;
+    public static readonly ImmutableArray<System.Type> PropertyParamM;
+    public static readonly ImmutableArray<System.Type> PropertyItemGoo;
+
+    static ModelComponent()
+    {
+        var dummyMetaGrasshopper = Meta.Goo;
+        NameM = typeof(V).Name;
+        TypeM = Semio.Meta.Type[NameM];
+        GooM = Meta.Goo[NameM];
+        ParamM = Meta.Param[NameM];
+        ModelM = Semio.Meta.Model[NameM];
+        PropertyM = Semio.Meta.Property[NameM];
+        PropM = Semio.Meta.Prop[NameM];
+        IsPropertyList = Semio.Meta.IsPropertyList[NameM];
+        IsPropertyMapped = Meta.IsPropertyMapped[NameM];
+        PropertyItemType = Semio.Meta.PropertyItemType[NameM];
+        PropertyItemGoo = Meta.PropertyItemGoo[NameM];
+        IsPropertyModel = Semio.Meta.IsPropertyModel[NameM];
+        PropertyGooM = Meta.PropertyGoo[NameM];
+        PropertyParamM = Meta.PropertyParam[NameM];
+    }
+
+    protected ModelComponent() : base($"Model {NameM}", $"~{ModelM.Abbreviation}",
+        $"Construct, deconstruct or modify {Semio.Utility.Grammar.GetArticle(NameM)} {NameM.ToLower()}", "Modeling")
+    { }
+
+    protected override Bitmap Icon =>
+        (Bitmap?)Resources.ResourceManager.GetObject($"{typeof(V).Name.ToLower()}_modify_24x24") ?? Resources.semio_24x24;
+
+    public override GH_Exposure Exposure => GH_Exposure.primary;
+
+    protected virtual void AddModelProps(dynamic pManager)
+    {
+        for (var i = 0; i < PropertyM.Length; i++)
+        {
+            var property = PropertyM[i];
+            var propAttribute = PropM[i];
+            var param = (IGH_Param?)Activator.CreateInstance(PropertyParamM[i]);
+            if (param != null)
+                pManager.AddParameter(param, property.Name, propAttribute.Code, propAttribute.Description,
+                    IsPropertyList[i] ? GH_ParamAccess.list : GH_ParamAccess.item);
+        }
+    }
+
+    protected void AddModelParameters(dynamic pManager, bool isOutput = false)
+    {
+        var modelParam = (IGH_Param?)Activator.CreateInstance(ParamM);
+        var description = isOutput
+            ? $"The constructed or modified {NameM.ToLower()}."
+            : $"The optional {NameM.ToLower()} to deconstruct or modify.";
+        if (modelParam != null)
+            pManager.AddParameter(modelParam, NameM, isOutput ? ModelM.Code : ModelM.Code + "?",
+                description, GH_ParamAccess.item);
+        pManager.AddBooleanParameter(isOutput ? "Valid" : "Validate", "Vd?",
+            isOutput
+                ? $"True if the {NameM.ToLower()} is valid. Null if no validation was performed."
+                : $"Whether the {NameM.ToLower()} should be validated.", GH_ParamAccess.item);
+
+        AddModelProps(pManager);
+
+        if (!isOutput)
+            for (var i = 0; i < pManager.ParamCount; i++)
+                pManager[i].Optional = true;
+    }
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        AddModelParameters(pManager);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        AddModelParameters(pManager, true);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        dynamic? modelGoo = Activator.CreateInstance(GooM);
+        if (modelGoo == null) return;
+        var validate = false;
+        if (DA.GetData(0, ref modelGoo!)) GetProps(DA, modelGoo);
+        DA.GetData(1, ref validate);
+        modelGoo!.Value = ProcessModel(modelGoo.Value);
+        if (validate) modelGoo.Value.Validate();
+        SetData(DA, modelGoo);
+    }
+
+    protected virtual void GetProps(IGH_DataAccess DA, dynamic modelGoo)
+    {
+        for (var i = 0; i < PropertyM.Length; i++)
+        {
+            var property = PropertyM[i];
+            var isList = IsPropertyList[i];
+            var isPropertyModel = IsPropertyModel[i];
+            var isPropertyMapped = IsPropertyMapped[i];
+            if (isList)
+            {
+                if (isPropertyModel)
+                {
+                    var goosList = new List<object>();
+                    if (DA.GetDataList(i + 2, goosList))
+                    {
+                        var list = (System.Collections.IList?)Activator.CreateInstance(typeof(List<>).MakeGenericType(PropertyItemType[i]));
+                        if (list != null)
+                        {
+                            foreach (var goo in goosList)
+                            {
+                                var value = goo?.GetType().GetProperty("Value")?.GetValue(goo);
+                                if (value != null)
+                                {
+                                    var deepCloneMethod = value.GetType().GetMethod("DeepClone");
+                                    var clonedValue = deepCloneMethod?.Invoke(value, null);
+                                    if (clonedValue != null) list.Add(clonedValue);
+                                }
+                            }
+                            property.SetValue(modelGoo.Value, list);
+                        }
+                    }
+                }
+                else
+                {
+                    var itemsList = new List<object>();
+                    if (DA.GetDataList(i + 2, itemsList))
+                    {
+                        var list = (System.Collections.IList?)Activator.CreateInstance(typeof(List<>).MakeGenericType(PropertyItemType[i]));
+                        if (list != null)
+                        {
+                            foreach (var item in itemsList)
+                                if (item != null) list.Add(item);
+                            property.SetValue(modelGoo.Value, list);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (isPropertyModel)
+                {
+                    dynamic? goo = Activator.CreateInstance(PropertyGooM[i]);
+                    if (goo != null && DA.GetData(i + 2, ref goo!))
+                    {
+                        var value = goo!.Value;
+                        if (value != null)
+                        {
+                            var deepCloneMethod = value.GetType().GetMethod("DeepClone");
+                            var clonedValue = deepCloneMethod?.Invoke(value, null);
+                            if (clonedValue != null) property.SetValue(modelGoo.Value, clonedValue);
+                        }
+                    }
+                }
+                else if (isPropertyMapped)
+                {
+                    dynamic? data = Activator.CreateInstance(PropertyItemType[i]);
+                    if (data != null && DA.GetData(i + 2, ref data!))
+                    {
+                        var convertMethod = typeof(RhinoConverter).GetMethod("Convert", new System.Type[] { data!.GetType() });
+                        var convertedValue = convertMethod?.Invoke(null, new object[] { data });
+                        if (convertedValue != null) property.SetValue(modelGoo.Value, convertedValue);
+                    }
+                }
+                else
+                {
+                    dynamic? data = Activator.CreateInstance(PropertyItemType[i]);
+                    if (data != null && DA.GetData(i + 2, ref data!)) property.SetValue(modelGoo.Value, data);
+                }
+            }
+        }
+    }
+
+    protected virtual void SetData(IGH_DataAccess DA, dynamic modelGoo)
+    {
+        DA.SetData(0, modelGoo);
+        DA.SetData(1, modelGoo.Value.IsValid);
+        for (var i = 0; i < PropertyM.Length; i++)
+        {
+            var property = PropertyM[i];
+            var isList = IsPropertyList[i];
+            var isPropertyModel = IsPropertyModel[i];
+            var isPropertyMapped = IsPropertyMapped[i];
+            var value = property.GetValue(modelGoo.Value);
+            if (value == null) continue;
+            if (isList)
+            {
+                if (isPropertyModel)
+                {
+                    dynamic? list = Activator.CreateInstance(PropertyGooM[i]);
+                    if (list != null)
+                    {
+                        foreach (var item in (System.Collections.IEnumerable)value)
+                        {
+                            var deepCloneMethod = item?.GetType().GetMethod("DeepClone");
+                            var clonedItem = deepCloneMethod?.Invoke(item, null);
+                            var itemGoo = Activator.CreateInstance(PropertyItemGoo[i], clonedItem);
+                            list!.Add(itemGoo);
+                        }
+                        value = list;
+                    }
+                }
+            }
+            else if (isPropertyModel)
+            {
+                if (isPropertyMapped)
+                {
+                    var convertMethod = typeof(RhinoConverter).GetMethod("Convert", new System.Type[] { value.GetType() });
+                    value = convertMethod?.Invoke(null, new[] { value });
+                }
+                else
+                {
+                    var deepCloneMethod = value.GetType().GetMethod("DeepClone");
+                    var clonedValue = deepCloneMethod?.Invoke(value, null);
+                    value = Activator.CreateInstance(PropertyItemGoo[i], clonedValue);
+                }
+            }
+            if (value != null)
+            {
+                if (isList) DA.SetDataList(i + 2, (System.Collections.IEnumerable)value);
+                else DA.SetData(i + 2, value);
+            }
+        }
+    }
+    protected virtual V ProcessModel(V model) => model;
+}
+
+public abstract class IdGoo<T> : ModelGoo<T> where T : Model<T>, new()
+{
+    public IdGoo() : base() { }
+    public IdGoo(T value) : base(value) { }
+}
+
+public abstract class IdParam<T, U> : ModelParam<T, U> where T : IdGoo<U> where U : Model<U>, new()
+{
+    internal IdParam() : base() { }
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
+}
+
+public abstract class IdComponent<T, U, V> : ModelComponent<T, U, V>
+    where T : IdParam<U, V> where U : IdGoo<V> where V : Model<V>, new()
+{
+    protected IdComponent() : base() { }
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
+}
+
+public abstract class DiffGoo<T> : ModelGoo<T> where T : Model<T>, new()
+{
+    public DiffGoo() : base() { }
+    public DiffGoo(T value) : base(value) { }
+}
+
+public abstract class DiffParam<T, U> : ModelParam<T, U> where T : DiffGoo<U> where U : Model<U>, new()
+{
+    internal DiffParam() : base() { }
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+
+}
+
+public abstract class DiffComponent<T, U, V> : ModelComponent<T, U, V>
+    where T : DiffParam<U, V> where U : DiffGoo<V> where V : Model<V>, new()
+{
+    protected DiffComponent() : base() { }
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+}
+
+#endregion Models
+
+#region Serialization
+
+public abstract class SerializeComponent<T, U, V> : ScriptingComponent
+    where T : ModelGoo<V>, new()
+    where U : ModelParam<T, V>, new()
+    where V : Model<V>, new()
+{
+    protected SerializeComponent(string name) : base($"Serialize {name}", $"{name}→Str", $"Serialize {name.ToLower()} to string.") { }
+    protected override void RegisterInputParams(GH_InputParamManager pManager) => pManager.AddParameter(new U(), typeof(V).Name, typeof(V).Name.Substring(0, 2), $"{typeof(V).Name} to serialize.", GH_ParamAccess.item);
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager) => pManager.AddTextParameter("String", "Str", "Serialized string.", GH_ParamAccess.item);
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var input = default(T);
+        DA.GetData(0, ref input);
+        if (input == null || !input.IsValid) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, $"{typeof(V).Name} is invalid."); return; }
+        DA.SetData(0, input.Value.Serialize());
+    }
+}
+
+public abstract class DeserializeComponent<T, U, V> : ScriptingComponent
+    where T : ModelGoo<V>, new()
+    where U : ModelParam<T, V>, new()
+    where V : Model<V>, new()
+{
+    protected DeserializeComponent(string name) : base($"Deserialize {name}", $"Str→{name}", $"Deserialize string to {name.ToLower()}.") { }
+    protected override void RegisterInputParams(GH_InputParamManager pManager) => pManager.AddTextParameter("String", "Str", "String to deserialize.", GH_ParamAccess.item);
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager) => pManager.AddParameter(new U(), typeof(V).Name, typeof(V).Name.Substring(0, 2), $"Deserialized {typeof(V).Name.ToLower()}.", GH_ParamAccess.item);
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var input = "";
+        DA.GetData(0, ref input);
+        if (string.IsNullOrEmpty(input)) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "String is null or empty."); return; }
+        try { DA.SetData(0, (T)Activator.CreateInstance(typeof(T), input.Deserialize<V>())!); }
+        catch (Exception ex) { AddRuntimeMessage(GH_RuntimeMessageLevel.Error, ex.Message); }
+    }
+}
+
+#endregion Serialization
+
+#region Attribute
+
+public class AttributeDiffGoo : DiffGoo<AttributeDiff>
+{
+    public AttributeDiffGoo() { }
+    public AttributeDiffGoo(AttributeDiff value) : base(value) { }
+}
+
+public class AttributeDiffParam : DiffParam<AttributeDiffGoo, AttributeDiff>
+{
+    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B95");
+}
+
+public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, AttributeDiffGoo, AttributeDiff>
+{
+    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B96");
+}
+
+public class AttributeGoo : ModelGoo<Attribute>
+{
+    public AttributeGoo() { }
+    public AttributeGoo(Attribute value) : base(value) { }
+
+    internal override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String(Value.Key);
+            return true;
+        }
+        return false;
+    }
+
+    internal override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+        {
+            Value = new Attribute { Key = str };
+            return true;
+        }
+        return false;
+    }
+}
+
+public class AttributeParam : ModelParam<AttributeGoo, Attribute>
+{
+    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B94");
+}
+
+public class AttributeComponent : ModelComponent<AttributeParam, AttributeGoo, Attribute>
+{
+    public override Guid ComponentGuid => new("51146B05-ACEB-4810-AD75-10AC3E029D39");
+}
+
+public class SerializeAttributeComponent : SerializeComponent<AttributeGoo, AttributeParam, Attribute>
+{
+    public SerializeAttributeComponent() : base("Attribute") { }
+    public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8974-8588BCA75250");
+}
+
+public class DeserializeAttributeComponent : DeserializeComponent<AttributeGoo, AttributeParam, Attribute>
+{
+    public DeserializeAttributeComponent() : base("Attribute") { }
+    public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8975-8588BCA75250");
+}
+
+#endregion
+
+#region Representation
+
+public class RepresentationIdGoo : IdGoo<RepresentationId>
+{
+    public RepresentationIdGoo() { }
+    public RepresentationIdGoo(RepresentationId value) : base(value) { }
+}
+
+public class RepresentationIdParam : IdParam<RepresentationIdGoo, RepresentationId>
+{
+    public override Guid ComponentGuid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+}
+
+public class RepresentationIdComponent : IdComponent<RepresentationIdParam, RepresentationIdGoo, RepresentationId>
+{
+    public override Guid ComponentGuid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
+}
+
+public class RepresentationDiffGoo : DiffGoo<RepresentationDiff>
+{
+    public RepresentationDiffGoo() { }
+    public RepresentationDiffGoo(RepresentationDiff value) : base(value) { }
+}
+
+public class RepresentationDiffParam : DiffParam<RepresentationDiffGoo, RepresentationDiff>
+{
+    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A9");
+}
+
+public class RepresentationDiffComponent : DiffComponent<RepresentationDiffParam, RepresentationDiffGoo, RepresentationDiff>
+{
+    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AA");
+}
+
 public class RepresentationGoo : ModelGoo<Representation>
 {
     public RepresentationGoo() { }
@@ -327,6 +764,191 @@ public class RepresentationGoo : ModelGoo<Representation>
         }
         return false;
     }
+}
+
+public class RepresentationParam : ModelParam<RepresentationGoo, Representation>
+{
+    public override Guid ComponentGuid => new("895BBC91-851A-4DFC-9C83-92DFE90029E8");
+}
+
+public class RepresentationComponent : ModelComponent<RepresentationParam, RepresentationGoo, Representation>
+{
+    public override Guid ComponentGuid => new("37228B2F-70DF-44B7-A3B6-781D5AFCE122");
+
+    protected override Representation ProcessModel(Representation model)
+    {
+        var mime = Semio.Utility.ParseMimeFromUrl(model.Url);
+        var firstTag = model.Tags.FirstOrDefault();
+        if (firstTag == null || (firstTag != null && mime != "" && !Semio.Utility.IsValidMime(firstTag))) model.Tags.Insert(0, mime);
+        model.Url = model.Url.Replace('\\', '/');
+        if (firstTag != null && Semio.Utility.IsValidMime(firstTag)) model.Tags[0] = firstTag;
+        return model;
+    }
+}
+
+public class SerializeRepresentationComponent : SerializeComponent<RepresentationGoo, RepresentationParam, Representation>
+{
+    public SerializeRepresentationComponent() : base("Representation") { }
+    public override Guid ComponentGuid => new("AC6E381C-23EE-4A81-BE0F-3523AEE32046");
+}
+
+public class DeserializeRepresentationComponent : DeserializeComponent<RepresentationGoo, RepresentationParam, Representation>
+{
+    public DeserializeRepresentationComponent() : base("Representation") { }
+    public override Guid ComponentGuid => new("AC6E381C-23EE-4A81-BE0F-3523AEE32047");
+}
+
+#endregion Representation
+
+#region File
+
+public class FileIdGoo : IdGoo<FileId>
+{
+    public FileIdGoo() { }
+    public FileIdGoo(FileId value) : base(value) { }
+}
+
+public class FileIdParam : IdParam<FileIdGoo, FileId>
+{
+    public override Guid ComponentGuid => new("50C3D4E5-F6A7-B8C9-D0E1-F2A3B4C5D6E7");
+}
+
+public class FileIdComponent : IdComponent<FileIdParam, FileIdGoo, FileId>
+{
+    public override Guid ComponentGuid => new("50C3D4E5-F6A7-B8C9-D0E1-F2A3B4C5D6E8");
+}
+
+public class FileDiffGoo : DiffGoo<FileDiff>
+{
+    public FileDiffGoo() { }
+    public FileDiffGoo(FileDiff value) : base(value) { }
+}
+
+public class FileDiffParam : DiffParam<FileDiffGoo, FileDiff>
+{
+    public override Guid ComponentGuid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F0");
+}
+
+public class FileDiffComponent : DiffComponent<FileDiffParam, FileDiffGoo, FileDiff>
+{
+    public override Guid ComponentGuid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F1");
+}
+
+public class FilesDiffGoo : DiffGoo<FilesDiff>
+{
+    public FilesDiffGoo() { }
+    public FilesDiffGoo(FilesDiff value) : base(value) { }
+}
+
+public class FilesDiffParam : DiffParam<FilesDiffGoo, FilesDiff>
+{
+    public override Guid ComponentGuid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A1");
+}
+
+public class SemioFileGoo : ModelGoo<SemioFile>
+{
+    public SemioFileGoo() { }
+    public SemioFileGoo(SemioFile value) : base(value) { }
+}
+
+public class SemioFileParam : ModelParam<SemioFileGoo, SemioFile>
+{
+    public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F8");
+}
+
+public class SemioFileComponent : ModelComponent<SemioFileParam, SemioFileGoo, SemioFile>
+{
+    public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F9");
+}
+
+#endregion File
+
+#region DiagramPoint
+
+public class DiagramPointGoo : ModelGoo<DiagramPoint>
+{
+    public DiagramPointGoo() { }
+    public DiagramPointGoo(DiagramPoint value) : base(value) { }
+
+    internal override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_Point)))
+        {
+            target = (Q)(object)new GH_Point(new Point3d(Value.X, Value.Y, 0));
+            return true;
+        }
+        return false;
+    }
+
+    internal override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+        Point3d point = new Point3d();
+        if (GH_Convert.ToPoint3d(source, ref point, GH_Conversion.Both))
+        {
+            Value = new DiagramPoint { X = (float)point.X, Y = (float)point.Y };
+            return true;
+        }
+        return false;
+    }
+}
+
+public class DiagramPointParam : ModelParam<DiagramPointGoo, DiagramPoint>
+{
+    public override Guid ComponentGuid => new("4685CCE8-C629-4638-8DF6-F76A17571841");
+}
+
+public class DiagramPointComponent : ModelComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
+{
+    public override Guid ComponentGuid => new("61FB9BBE-64DE-42B2-B7EF-69CD97FDD9E3");
+}
+
+public class SerializeDiagramPointComponent : SerializeComponent<DiagramPointGoo, DiagramPointParam, DiagramPoint>
+{
+    public SerializeDiagramPointComponent() : base("Diagram Point") { }
+    public override Guid ComponentGuid => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A99");
+}
+
+public class DeserializeDiagramPointComponent : DeserializeComponent<DiagramPointGoo, DiagramPointParam, DiagramPoint>
+{
+    public DeserializeDiagramPointComponent() : base("Diagram Point") { }
+    public override Guid ComponentGuid => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A9A");
+}
+
+#endregion DiagramPoint
+
+#region Port
+
+public class PortIdGoo : IdGoo<PortId>
+{
+    public PortIdGoo() { }
+    public PortIdGoo(PortId value) : base(value) { }
+}
+
+public class PortIdParam : IdParam<PortIdGoo, PortId>
+{
+    public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B1");
+}
+
+public class PortIdComponent : IdComponent<PortIdParam, PortIdGoo, PortId>
+{
+    public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B2");
+}
+
+public class PortDiffGoo : DiffGoo<PortDiff>
+{
+    public PortDiffGoo() { }
+    public PortDiffGoo(PortDiff value) : base(value) { }
+}
+
+public class PortDiffParam : DiffParam<PortDiffGoo, PortDiff>
+{
+    public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B0");
+}
+
+public class PortDiffComponent : DiffComponent<PortDiffParam, PortDiffGoo, PortDiff>
+{
+    public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B3");
 }
 
 public class PortGoo : ModelGoo<Port>
@@ -369,31 +991,46 @@ public class PortGoo : ModelGoo<Port>
     }
 }
 
-public class AttributeGoo : ModelGoo<Attribute>
+public class PortParam : ModelParam<PortGoo, Port>
 {
-    public AttributeGoo() { }
-    public AttributeGoo(Attribute value) : base(value) { }
+    public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1B");
+}
 
-    internal override bool CustomCastTo<Q>(ref Q target)
-    {
-        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-        {
-            target = (Q)(object)new GH_String(Value.Name);
-            return true;
-        }
-        return false;
-    }
+public class PortComponent : ModelComponent<PortParam, PortGoo, Port>
+{
+    public override Guid ComponentGuid => new("E505C90C-71F4-413F-82FE-65559D9FFAB5");
+}
 
-    internal override bool CustomCastFrom(object source)
-    {
-        if (source == null) return false;
-        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-        {
-            Value = new Attribute { Name = str };
-            return true;
-        }
-        return false;
-    }
+public class SerializePortComponent : SerializeComponent<PortGoo, PortParam, Port>
+{
+    public SerializePortComponent() : base("Port") { }
+    public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1B5");
+}
+
+public class DeserializePortComponent : DeserializeComponent<PortGoo, PortParam, Port>
+{
+    public DeserializePortComponent() : base("Port") { }
+    public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1B6");
+}
+
+#endregion Port
+
+#region Author
+
+public class AuthorIdGoo : IdGoo<AuthorId>
+{
+    public AuthorIdGoo() { }
+    public AuthorIdGoo(AuthorId value) : base(value) { }
+}
+
+public class AuthorIdParam : IdParam<AuthorIdGoo, AuthorId>
+{
+    public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1C");
+}
+
+public class AuthorIdComponent : IdComponent<AuthorIdParam, AuthorIdGoo, AuthorId>
+{
+    public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1D");
 }
 
 public class AuthorGoo : ModelGoo<Author>
@@ -421,6 +1058,32 @@ public class AuthorGoo : ModelGoo<Author>
     }
 }
 
+public class AuthorParam : ModelParam<AuthorGoo, Author>
+{
+    public override Guid ComponentGuid => new("9F52380B-1812-42F7-9DAD-952C2F7A635A");
+}
+
+public class AuthorComponent : ModelComponent<AuthorParam, AuthorGoo, Author>
+{
+    public override Guid ComponentGuid => new("5143ED92-0A2C-4D0C-84ED-F90CC8450894");
+}
+
+public class SerializeAuthorComponent : SerializeComponent<AuthorGoo, AuthorParam, Author>
+{
+    public SerializeAuthorComponent() : base("Author") { }
+    public override Guid ComponentGuid => new("99130A53-4FC1-4E64-9A46-2ACEC4634878");
+}
+
+public class DeserializeAuthorComponent : DeserializeComponent<AuthorGoo, AuthorParam, Author>
+{
+    public DeserializeAuthorComponent() : base("Author") { }
+    public override Guid ComponentGuid => new("99130A53-4FC1-4E64-9A46-2ACEC4634879");
+}
+
+#endregion Author
+
+#region Location
+
 public class LocationGoo : ModelGoo<Location>
 {
     public LocationGoo() { }
@@ -445,6 +1108,75 @@ public class LocationGoo : ModelGoo<Location>
         }
         return false;
     }
+}
+
+public class LocationParam : ModelParam<LocationGoo, Location>
+{
+    public override Guid ComponentGuid => new("CA9DA889-398E-469B-BF1B-AD2BDFCA7957");
+}
+
+public class LocationComponent : ModelComponent<LocationParam, LocationGoo, Location>
+{
+    public override Guid ComponentGuid => new("6F2EDF42-6E10-4944-8B05-4D41F4876ED0");
+}
+
+public class SerializeLocationComponent : SerializeComponent<LocationGoo, LocationParam, Location>
+{
+    public SerializeLocationComponent() : base("Location") { }
+    public override Guid ComponentGuid => new("DB94C7FC-3F0F-4FB4-992E-7E069C17D466");
+}
+
+public class DeserializeLocationComponent : DeserializeComponent<LocationGoo, LocationParam, Location>
+{
+    public DeserializeLocationComponent() : base("Location") { }
+    public override Guid ComponentGuid => new("DB94C7FC-3F0F-4FB4-992E-7E069C17D467");
+}
+
+#endregion Location
+
+#region Type
+
+public class TypeIdGoo : IdGoo<TypeId>
+{
+    public TypeIdGoo() { }
+    public TypeIdGoo(TypeId value) : base(value) { }
+}
+
+public class TypeIdParam : IdParam<TypeIdGoo, TypeId>
+{
+    public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C2");
+}
+
+public class TypeIdComponent : IdComponent<TypeIdParam, TypeIdGoo, TypeId>
+{
+    public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C3");
+}
+
+public class TypeDiffGoo : DiffGoo<TypeDiff>
+{
+    public TypeDiffGoo() { }
+    public TypeDiffGoo(TypeDiff value) : base(value) { }
+}
+
+public class TypeDiffParam : DiffParam<TypeDiffGoo, TypeDiff>
+{
+    public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C1");
+}
+
+public class TypeDiffComponent : DiffComponent<TypeDiffParam, TypeDiffGoo, TypeDiff>
+{
+    public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C4");
+}
+
+public class TypesDiffGoo : DiffGoo<TypesDiff>
+{
+    public TypesDiffGoo() { }
+    public TypesDiffGoo(TypesDiff value) : base(value) { }
+}
+
+public class TypesDiffParam : DiffParam<TypesDiffGoo, TypesDiff>
+{
+    public override Guid ComponentGuid => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B6");
 }
 
 public class TypeGoo : ModelGoo<Type>
@@ -489,32 +1221,79 @@ public class TypeGoo : ModelGoo<Type>
     }
 }
 
-public class DiagramPointGoo : ModelGoo<DiagramPoint>
+public class TypeParam : ModelParam<TypeGoo, Type>
 {
-    public DiagramPointGoo() { }
-    public DiagramPointGoo(DiagramPoint value) : base(value) { }
+    public override Guid ComponentGuid => new("301FCFFA-2160-4ACA-994F-E067C4673D45");
+}
 
-    internal override bool CustomCastTo<Q>(ref Q target)
-    {
-        if (typeof(Q).IsAssignableFrom(typeof(GH_Point)))
-        {
-            target = (Q)(object)new GH_Point(new Point3d(Value.X, Value.Y, 0));
-            return true;
-        }
-        return false;
-    }
+public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
+{
+    public override Guid ComponentGuid => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7");
 
-    internal override bool CustomCastFrom(object source)
+    protected override Type ProcessModel(Type type)
     {
-        if (source == null) return false;
-        var point = new Point3d();
-        if (GH_Convert.ToPoint3d(source, ref point, GH_Conversion.Both))
-        {
-            Value = new DiagramPoint { X = (float)point.X, Y = (float)point.Y };
-            return true;
-        }
-        return false;
+        if (type.Unit == "") type.Unit = Utility.LengthUnitSystemToAbbreviation(RhinoDoc.ActiveDoc.ModelUnitSystem);
+        return type;
     }
+}
+
+public class SerializeTypeComponent : SerializeComponent<TypeGoo, TypeParam, Type>
+{
+    public SerializeTypeComponent() : base("Type") { }
+    public override Guid ComponentGuid => new("BD184BB8-8124-4604-835C-E7B7C199673A");
+}
+
+public class DeserializeTypeComponent : DeserializeComponent<TypeGoo, TypeParam, Type>
+{
+    public DeserializeTypeComponent() : base("Type") { }
+    public override Guid ComponentGuid => new("BD184BB8-8124-4604-835C-E7B7C199673B");
+}
+
+#endregion Type
+
+#region Piece
+
+public class PieceIdGoo : IdGoo<PieceId>
+{
+    public PieceIdGoo() { }
+    public PieceIdGoo(PieceId value) : base(value) { }
+}
+
+public class PieceIdParam : IdParam<PieceIdGoo, PieceId>
+{
+    public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D3");
+}
+
+public class PieceIdComponent : IdComponent<PieceIdParam, PieceIdGoo, PieceId>
+{
+    public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D4");
+}
+
+public class PieceDiffGoo : DiffGoo<PieceDiff>
+{
+    public PieceDiffGoo() { }
+    public PieceDiffGoo(PieceDiff value) : base(value) { }
+}
+
+public class PieceDiffParam : DiffParam<PieceDiffGoo, PieceDiff>
+{
+    public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D2");
+}
+
+public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, PieceDiff>
+{
+    public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D5");
+}
+
+public class PiecesDiffGoo : DiffGoo<PiecesDiff>
+{
+    public PiecesDiffGoo() { }
+    public PiecesDiffGoo(PiecesDiff value) : base(value) { }
+}
+
+public class PiecesDiffParam : DiffParam<PiecesDiffGoo, PiecesDiff>
+{
+    public override Guid ComponentGuid => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6C7");
 }
 
 public class PieceGoo : ModelGoo<Piece>
@@ -559,629 +1338,120 @@ public class PieceGoo : ModelGoo<Piece>
     }
 }
 
+public class PieceParam : ModelParam<PieceGoo, Piece>
+{
+    public override Guid ComponentGuid => new("76F583DC-4142-4346-B1E1-6C241AF26086");
+}
+
+public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
+{
+    public override Guid ComponentGuid => new("49CD29FC-F6EB-43D2-8C7D-E88F8520BA48");
+}
+
+public class SerializePieceComponent : SerializeComponent<PieceGoo, PieceParam, Piece>
+{
+    public SerializePieceComponent() : base("Piece") { }
+    public override Guid ComponentGuid => new("A4EDA838-2246-4617-8298-9585ECFE00D9");
+}
+
+public class DeserializePieceComponent : DeserializeComponent<PieceGoo, PieceParam, Piece>
+{
+    public DeserializePieceComponent() : base("Piece") { }
+    public override Guid ComponentGuid => new("A4EDA838-2246-4617-8298-9585ECFE00DA");
+}
+
+#endregion Piece
+
+#region Side
+
+public class SideDiffGoo : DiffGoo<SideDiff>
+{
+    public SideDiffGoo() { }
+    public SideDiffGoo(SideDiff value) : base(value) { }
+}
+
+public class SideDiffParam : DiffParam<SideDiffGoo, SideDiff>
+{
+    public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E3");
+}
+
+public class SideDiffComponent : DiffComponent<SideDiffParam, SideDiffGoo, SideDiff>
+{
+    public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E4");
+}
+
+public class SideGoo : ModelGoo<Side>
+{
+    public SideGoo() { }
+    public SideGoo(Side value) : base(value) { }
+}
+
+public class SideParam : ModelParam<SideGoo, Side>
+{
+    public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E5");
+}
+
+public class SideComponent : ModelComponent<SideParam, SideGoo, Side>
+{
+    public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E6");
+}
+
+#endregion Side
+
+#region Connection
+
+public class ConnectionIdGoo : IdGoo<ConnectionId>
+{
+    public ConnectionIdGoo() { }
+    public ConnectionIdGoo(ConnectionId value) : base(value) { }
+}
+
+public class ConnectionIdParam : IdParam<ConnectionIdGoo, ConnectionId>
+{
+    public override Guid ComponentGuid => new("40B2C3D4-E5F6-A7B8-C9D0-E1F2A3B4C5D6");
+}
+
+public class ConnectionIdComponent : IdComponent<ConnectionIdParam, ConnectionIdGoo, ConnectionId>
+{
+    public override Guid ComponentGuid => new("40B2C3D4-E5F6-A7B8-C9D0-E1F2A3B4C5D7");
+}
+
+public class ConnectionDiffGoo : DiffGoo<ConnectionDiff>
+{
+    public ConnectionDiffGoo() { }
+    public ConnectionDiffGoo(ConnectionDiff value) : base(value) { }
+}
+
+public class ConnectionDiffParam : DiffParam<ConnectionDiffGoo, ConnectionDiff>
+{
+    public override Guid ComponentGuid => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F4");
+}
+
+public class ConnectionDiffComponent : DiffComponent<ConnectionDiffParam, ConnectionDiffGoo, ConnectionDiff>
+{
+    public override Guid ComponentGuid => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F5");
+}
+
+public class ConnectionsDiffGoo : DiffGoo<ConnectionsDiff>
+{
+    public ConnectionsDiffGoo() { }
+    public ConnectionsDiffGoo(ConnectionsDiff value) : base(value) { }
+}
+
+public class ConnectionsDiffParam : DiffParam<ConnectionsDiffGoo, ConnectionsDiff>
+{
+    public override Guid ComponentGuid => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7D8");
+}
+
 public class ConnectionGoo : ModelGoo<Connection>
 {
     public ConnectionGoo() { }
     public ConnectionGoo(Connection value) : base(value) { }
 }
 
-public class DesignGoo : ModelGoo<Design>
-{
-    public DesignGoo() { }
-    public DesignGoo(Design value) : base(value) { }
-}
-
-public class KitGoo : ModelGoo<Kit>
-{
-    public KitGoo() { }
-    public KitGoo(Kit value) : base(value) { }
-}
-
-public class RepresentationIdGoo : ModelGoo<RepresentationId>
-{
-    public RepresentationIdGoo() { }
-    public RepresentationIdGoo(RepresentationId value) : base(value) { }
-}
-
-public class ConnectionIdGoo : ModelGoo<ConnectionId>
-{
-    public ConnectionIdGoo() { }
-    public ConnectionIdGoo(ConnectionId value) : base(value) { }
-}
-
-public class FileIdGoo : ModelGoo<FileId>
-{
-    public FileIdGoo() { }
-    public FileIdGoo(FileId value) : base(value) { }
-}
-
-public class SemioFileGoo : ModelGoo<SemioFile>
-{
-    public SemioFileGoo() { }
-    public SemioFileGoo(SemioFile value) : base(value) { }
-}
-
-public class RepresentationDiffGoo : ModelGoo<RepresentationDiff>
-{
-    public RepresentationDiffGoo() { }
-    public RepresentationDiffGoo(RepresentationDiff value) : base(value) { }
-}
-
-public class PortDiffGoo : ModelGoo<PortDiff>
-{
-    public PortDiffGoo() { }
-    public PortDiffGoo(PortDiff value) : base(value) { }
-}
-
-public class TypeDiffGoo : ModelGoo<TypeDiff>
-{
-    public TypeDiffGoo() { }
-    public TypeDiffGoo(TypeDiff value) : base(value) { }
-}
-
-public class PieceDiffGoo : ModelGoo<PieceDiff>
-{
-    public PieceDiffGoo() { }
-    public PieceDiffGoo(PieceDiff value) : base(value) { }
-}
-
-public class SideDiffGoo : ModelGoo<SideDiff>
-{
-    public SideDiffGoo() { }
-    public SideDiffGoo(SideDiff value) : base(value) { }
-}
-
-public class ConnectionDiffGoo : ModelGoo<ConnectionDiff>
-{
-    public ConnectionDiffGoo() { }
-    public ConnectionDiffGoo(ConnectionDiff value) : base(value) { }
-}
-
-public class DesignDiffGoo : ModelGoo<DesignDiff>
-{
-    public DesignDiffGoo() { }
-    public DesignDiffGoo(DesignDiff value) : base(value) { }
-}
-
-public class TypesDiffGoo : ModelGoo<TypesDiff>
-{
-    public TypesDiffGoo() { }
-    public TypesDiffGoo(TypesDiff value) : base(value) { }
-}
-
-public class PiecesDiffGoo : ModelGoo<PiecesDiff>
-{
-    public PiecesDiffGoo() { }
-    public PiecesDiffGoo(PiecesDiff value) : base(value) { }
-}
-
-public class ConnectionsDiffGoo : ModelGoo<ConnectionsDiff>
-{
-    public ConnectionsDiffGoo() { }
-    public ConnectionsDiffGoo(ConnectionsDiff value) : base(value) { }
-}
-
-public class DesignsDiffGoo : ModelGoo<DesignsDiff>
-{
-    public DesignsDiffGoo() { }
-    public DesignsDiffGoo(DesignsDiff value) : base(value) { }
-}
-
-public class FileDiffGoo : ModelGoo<FileDiff>
-{
-    public FileDiffGoo() { }
-    public FileDiffGoo(FileDiff value) : base(value) { }
-}
-
-public class FilesDiffGoo : ModelGoo<FilesDiff>
-{
-    public FilesDiffGoo() { }
-    public FilesDiffGoo(FilesDiff value) : base(value) { }
-}
-
-public class KitDiffGoo : ModelGoo<KitDiff>
-{
-    public KitDiffGoo() { }
-    public KitDiffGoo(KitDiff value) : base(value) { }
-}
-
-#endregion
-
-#region Params
-
-public abstract class ModelParam<T, U> : GH_PersistentParam<T> where T : ModelGoo<U> where U : Model<U>, new()
-{
-    internal ModelParam() : base(typeof(U).Name,
-        ((ModelAttribute)System.Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Code,
-        ((ModelAttribute)System.Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Description,
-        Constants.Category, "Params")
-    { }
-    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(U).Name.ToLower()}_24x24");
-    protected override GH_GetterResult Prompt_Singular(ref T value) => throw new NotImplementedException();
-    protected override GH_GetterResult Prompt_Plural(ref List<T> values) => throw new NotImplementedException();
-}
-
-public class RepresentationParam : ModelParam<RepresentationGoo, Representation>
-{
-    public override Guid ComponentGuid => new("895BBC91-851A-4DFC-9C83-92DFE90029E8");
-}
-
-public class PortParam : ModelParam<PortGoo, Port>
-{
-    public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1B");
-}
-
-public class AttributeParam : ModelParam<AttributeGoo, Attribute>
-{
-    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B94");
-}
-
-public class AuthorParam : ModelParam<AuthorGoo, Author>
-{
-    public override Guid ComponentGuid => new("9F52380B-1812-42F7-9DAD-952C2F7A635A");
-}
-
-public class LocationParam : ModelParam<LocationGoo, Location>
-{
-    public override Guid ComponentGuid => new("CA9DA889-398E-469B-BF1B-AD2BDFCA7957");
-}
-
-public class TypeParam : ModelParam<TypeGoo, Type>
-{
-    public override Guid ComponentGuid => new("301FCFFA-2160-4ACA-994F-E067C4673D45");
-}
-
-public class DiagramPointParam : ModelParam<DiagramPointGoo, DiagramPoint>
-{
-    public override Guid ComponentGuid => new("4685CCE8-C629-4638-8DF6-F76A17571841");
-}
-
-public class PieceParam : ModelParam<PieceGoo, Piece>
-{
-    public override Guid ComponentGuid => new("76F583DC-4142-4346-B1E1-6C241AF26086");
-}
-
 public class ConnectionParam : ModelParam<ConnectionGoo, Connection>
 {
     public override Guid ComponentGuid => new("8B78CE81-27D6-4A07-9BF3-D862796B2FA4");
-}
-
-public class DesignParam : ModelParam<DesignGoo, Design>
-{
-    public override Guid ComponentGuid => new("1FB90496-93F2-43DE-A558-A7D6A9FE3596");
-}
-
-public class KitParam : ModelParam<KitGoo, Kit>
-{
-    public override Guid ComponentGuid => new("BA9F161E-AFE3-41D5-8644-964DD20B887B");
-}
-
-public class RepresentationIdParam : ModelParam<RepresentationIdGoo, RepresentationId>
-{
-    public override Guid ComponentGuid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
-}
-
-public class ConnectionIdParam : ModelParam<ConnectionIdGoo, ConnectionId>
-{
-    public override Guid ComponentGuid => new("40B2C3D4-E5F6-A7B8-C9D0-E1F2A3B4C5D6");
-}
-
-public class FileIdParam : ModelParam<FileIdGoo, FileId>
-{
-    public override Guid ComponentGuid => new("50C3D4E5-F6A7-B8C9-D0E1-F2A3B4C5D6E7");
-}
-
-public class SemioFileParam : ModelParam<SemioFileGoo, SemioFile>
-{
-    public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F8");
-}
-
-public class RepresentationDiffParam : ModelParam<RepresentationDiffGoo, RepresentationDiff>
-{
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A9");
-}
-
-public class PortDiffParam : ModelParam<PortDiffGoo, PortDiff>
-{
-    public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B0");
-}
-
-public class TypeDiffParam : ModelParam<TypeDiffGoo, TypeDiff>
-{
-    public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C1");
-}
-
-public class PieceDiffParam : ModelParam<PieceDiffGoo, PieceDiff>
-{
-    public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D2");
-}
-
-public class SideDiffParam : ModelParam<SideDiffGoo, SideDiff>
-{
-    public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E3");
-}
-
-public class ConnectionDiffParam : ModelParam<ConnectionDiffGoo, ConnectionDiff>
-{
-    public override Guid ComponentGuid => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F4");
-}
-
-public class DesignDiffParam : ModelParam<DesignDiffGoo, DesignDiff>
-{
-    public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A5");
-}
-
-public class TypesDiffParam : ModelParam<TypesDiffGoo, TypesDiff>
-{
-    public override Guid ComponentGuid => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B6");
-}
-
-public class PiecesDiffParam : ModelParam<PiecesDiffGoo, PiecesDiff>
-{
-    public override Guid ComponentGuid => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6C7");
-}
-
-public class ConnectionsDiffParam : ModelParam<ConnectionsDiffGoo, ConnectionsDiff>
-{
-    public override Guid ComponentGuid => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7D8");
-}
-
-public class DesignsDiffParam : ModelParam<DesignsDiffGoo, DesignsDiff>
-{
-    public override Guid ComponentGuid => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8E9");
-}
-
-public class FileDiffParam : ModelParam<FileDiffGoo, FileDiff>
-{
-    public override Guid ComponentGuid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F0");
-}
-
-public class FilesDiffParam : ModelParam<FilesDiffGoo, FilesDiff>
-{
-    public override Guid ComponentGuid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A1");
-}
-
-public class KitDiffParam : ModelParam<KitDiffGoo, KitDiff>
-{
-    public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B2");
-}
-
-#endregion
-
-#region Components
-
-public abstract class Component : GH_Component
-{
-    public Component(string name, string nickname, string description, string subcategory) : base(
-        name, nickname, description, Constants.Category, subcategory)
-    { }
-}
-
-#region Modeling
-
-public abstract class ModelComponent<T, U, V> : Component
-    where T : ModelParam<U, V> where U : ModelGoo<V> where V : Model<V>, new()
-{
-    public static readonly string NameM;
-    public static readonly System.Type TypeM;
-    public static readonly System.Type GooM;
-    public static readonly System.Type ParamM;
-    public static readonly ModelAttribute ModelM;
-    public static readonly ImmutableArray<PropertyInfo> PropertyM;
-    public static readonly ImmutableArray<PropAttribute> PropM;
-    public static readonly ImmutableArray<bool> IsPropertyList;
-    public static readonly ImmutableArray<bool> IsPropertyMapped;
-    public static readonly ImmutableArray<System.Type> PropertyItemType;
-    public static readonly ImmutableArray<bool> IsPropertyModel;
-    public static readonly ImmutableArray<System.Type> PropertyGooM;
-    public static readonly ImmutableArray<System.Type> PropertyParamM;
-    public static readonly ImmutableArray<System.Type> PropertyItemGoo;
-
-    static ModelComponent()
-    {
-        // force compiler to run static constructor of the the meta classes first.
-        var dummyMetaGrasshopper = Meta.Goo;
-
-        NameM = typeof(V).Name;
-        TypeM = Semio.Meta.Type[NameM];
-        GooM = Meta.Goo[NameM];
-        ParamM = Meta.Param[NameM];
-        ModelM = Semio.Meta.Model[NameM];
-        PropertyM = Semio.Meta.Property[NameM];
-        PropM = Semio.Meta.Prop[NameM];
-        IsPropertyList = Semio.Meta.IsPropertyList[NameM];
-        IsPropertyMapped = Meta.IsPropertyMapped[NameM];
-        PropertyItemType = Semio.Meta.PropertyItemType[NameM];
-        PropertyItemGoo = Meta.PropertyItemGoo[NameM];
-        IsPropertyModel = Semio.Meta.IsPropertyModel[NameM];
-        PropertyGooM = Meta.PropertyGoo[NameM];
-        PropertyParamM = Meta.PropertyParam[NameM];
-    }
-
-    protected ModelComponent() : base($"Model {NameM}", $"~{ModelM.Abbreviation}",
-        $"Construct, deconstruct or modify {Semio.Utility.Grammar.GetArticle(NameM)} {NameM.ToLower()}", "Modeling")
-    { }
-
-    protected override Bitmap Icon =>
-        (Bitmap)Resources.ResourceManager.GetObject($"{typeof(V).Name.ToLower()}_modify_24x24");
-
-    public override GH_Exposure Exposure => GH_Exposure.primary;
-
-    protected virtual void AddModelProps(dynamic pManager)
-    {
-        for (var i = 0; i < PropertyM.Length; i++)
-        {
-            var property = PropertyM[i];
-            var propAttribute = PropM[i];
-            var param = (IGH_Param)Activator.CreateInstance(PropertyParamM[i]);
-            pManager.AddParameter(param, property.Name, propAttribute.Code, propAttribute.Description,
-                IsPropertyList[i] ? GH_ParamAccess.list : GH_ParamAccess.item);
-        }
-    }
-
-    protected void AddModelParameters(dynamic pManager, bool isOutput = false)
-    {
-        var modelParam = (IGH_Param)Activator.CreateInstance(ParamM);
-        var description = isOutput
-            ? $"The constructed or modified {NameM.ToLower()}."
-            : $"The optional {NameM.ToLower()} to deconstruct or modify.";
-        pManager.AddParameter(modelParam, NameM, isOutput ? ModelM.Code : ModelM.Code + "?",
-            description, GH_ParamAccess.item);
-        pManager.AddBooleanParameter(isOutput ? "Valid" : "Validate", "Vd?",
-            isOutput
-                ? $"True if the {NameM.ToLower()} is valid. Null if no validation was performed."
-                : $"Whether the {NameM.ToLower()} should be validated.", GH_ParamAccess.item);
-
-        AddModelProps(pManager);
-
-        if (!isOutput)
-            for (var i = 0; i < pManager.ParamCount; i++)
-                ((GH_InputParamManager)pManager)[i].Optional = true;
-    }
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        AddModelParameters(pManager);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        AddModelParameters(pManager, true);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        dynamic modelGoo = Activator.CreateInstance(GooM);
-        var validate = false;
-        if (DA.GetData(0, ref modelGoo))
-            modelGoo = modelGoo.Duplicate();
-        DA.GetData(1, ref validate);
-        GetProps(DA, modelGoo);
-
-        modelGoo.Value = ProcessModel(modelGoo.Value);
-
-        if (validate)
-        {
-            var (isValid, errors) = ((bool, List<string>))modelGoo.Value.Validate();
-            foreach (var error in errors)
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, error);
-            DA.SetData(1, isValid);
-        }
-
-        DA.SetData(0, modelGoo.Duplicate());
-        SetData(DA, modelGoo);
-    }
-
-    protected virtual void GetProps(IGH_DataAccess DA, dynamic modelGoo)
-    {
-        for (var i = 0; i < PropertyM.Length; i++)
-        {
-            var property = PropertyM[i];
-            var isList = IsPropertyList[i];
-            var itemType = PropertyItemType[i];
-            dynamic gooValue = Activator.CreateInstance(PropertyGooM[i]);
-            var value = gooValue;
-            bool hasInput = isList ? DA.GetDataList(i + 2, value) : DA.GetData(i + 2, ref value);
-            if (hasInput)
-            {
-                if (isList)
-                {
-                    var listType = typeof(List<>).MakeGenericType(itemType);
-                    dynamic list = Activator.CreateInstance(listType);
-                    foreach (var item in gooValue)
-                        list.Add(itemType == typeof(string) || itemType == typeof(int) || itemType == typeof(float)
-                            ? item.Value
-                            : item.Value.DeepClone());
-
-                    value = list;
-                    property.SetValue(modelGoo.Value, value);
-                }
-                else property.SetValue(modelGoo.Value, RhinoConverter.Convert(value.Value));
-            }
-        }
-    }
-
-    protected virtual void SetData(IGH_DataAccess DA, dynamic modelGoo) // TODO: Check if dynamic is necessary
-    {
-        for (var i = 0; i < PropertyM.Length; i++)
-        {
-            var property = PropertyM[i];
-            var isList = IsPropertyList[i];
-            var isPropertyModel = IsPropertyModel[i];
-            var isPropertyMapped = IsPropertyMapped[i];
-            var value = property.GetValue(modelGoo.Value);
-            if (value == null) continue;
-            if (isList)
-            {
-                if (isPropertyModel)
-                {
-                    dynamic list = Activator.CreateInstance(PropertyGooM[i]);
-                    foreach (var item in value)
-                    {
-                        var itemGoo = Activator.CreateInstance(PropertyItemGoo[i], item.DeepClone());
-                        list.Add(itemGoo);
-                    }
-                    value = list;
-                }
-            }
-            else if (isPropertyModel)
-            {
-                if (isPropertyMapped)
-                {
-                    var convertMethod = typeof(RhinoConverter).GetMethod("Convert", new System.Type[] { value.GetType() });
-                    value = convertMethod.Invoke(null, new[] { value });
-                }
-                else value = Activator.CreateInstance(PropertyItemGoo[i], value.DeepClone());
-            }
-            if (isList) DA.SetDataList(i + 2, value);
-            else DA.SetData(i + 2, value);
-        }
-    }
-    protected virtual V ProcessModel(V model) => model;
-}
-
-public class RepresentationComponent : ModelComponent<RepresentationParam, RepresentationGoo, Representation>
-{
-    public override Guid ComponentGuid => new("37228B2F-70DF-44B7-A3B6-781D5AFCE122");
-
-    protected override Representation ProcessModel(Representation model)
-    {
-        var mime = Semio.Utility.ParseMimeFromUrl(model.Url);
-        var firstTag = model.Tags.FirstOrDefault();
-        if (firstTag == null || (firstTag != null && mime != "" && !Semio.Utility.IsValidMime(firstTag))) model.Tags.Insert(0, mime);
-        model.Url = model.Url.Replace('\\', '/');
-        if (firstTag != null && Semio.Utility.IsValidMime(firstTag)) model.Tags[0] = firstTag;
-        return model;
-    }
-}
-
-public class PortComponent : ModelComponent<PortParam, PortGoo, Port>
-{
-    public override Guid ComponentGuid => new("E505C90C-71F4-413F-82FE-65559D9FFAB5");
-}
-
-public class AttributeComponent : ModelComponent<AttributeParam, AttributeGoo, Attribute>
-{
-    public override Guid ComponentGuid => new("51146B05-ACEB-4810-AD75-10AC3E029D39");
-}
-
-public class AuthorComponent : ModelComponent<AuthorParam, AuthorGoo, Author>
-{
-    public override Guid ComponentGuid => new("5143ED92-0A2C-4D0C-84ED-F90CC8450894");
-}
-
-public class LocationComponent : ModelComponent<LocationParam, LocationGoo, Location>
-{
-    public override Guid ComponentGuid => new("6F2EDF42-6E10-4944-8B05-4D41F4876ED0");
-}
-
-public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
-{
-    public override Guid ComponentGuid => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7");
-
-    protected override Type ProcessModel(Type type)
-    {
-        if (type.Unit == "")
-            try { type.Unit = Utility.LengthUnitSystemToAbbreviation(RhinoDoc.ActiveDoc.ModelUnitSystem); }
-            catch (Exception) { type.Unit = "m"; }
-
-        type.Icon = type.Icon.Replace('\\', '/');
-        type.Image = type.Image.Replace('\\', '/');
-        return type;
-    }
-}
-
-public class DiagramPointComponent : ModelComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
-{
-    public override Guid ComponentGuid => new("61FB9BBE-64DE-42B2-B7EF-69CD97FDD9E3");
-}
-
-public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
-{
-    public override Guid ComponentGuid => new("49CD29FC-F6EB-43D2-8C7D-E88F8520BA48");
-
-    protected override void AddModelProps(dynamic pManager)
-    {
-        pManager.AddTextParameter("Id", "Id", "Id of the piece.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Dc?", "The optional human-readable description of the piece.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Type Name", "TNa?", "The optional name of the type of the piece. Either the type or the design must be set.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Type Variant", "TVn?", "The optional variant of the type of the piece. No variant means the default variant.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Design Name", "DNa?", "The optional name of the design of the piece. Either the type or the design must be set.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Design Variant", "DVn?", "Optional variant of the design of the piece.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Design View", "DVi?", "Optional view of the design of the piece.", GH_ParamAccess.item);
-        pManager.AddPlaneParameter("Plane", "Pn?", "The optional plane of the piece. When pieces are connected only one piece can have a plane.", GH_ParamAccess.item);
-        pManager.AddParameter(new DiagramPointParam(), "Center", "Ce?", "The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Hidden", "Hi?", "Whether the piece is hidden. A hidden piece is not visible in the model.", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Locked", "Lk?", "Whether the piece is locked. A locked piece cannot be edited.", GH_ParamAccess.item);
-        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes of the piece.", GH_ParamAccess.list);
-    }
-
-    protected override void GetProps(IGH_DataAccess DA, dynamic pieceGoo)
-    {
-        var id = "";
-        var description = "";
-        var typeName = "";
-        var typeVariant = "";
-        var designName = "";
-        var designVariant = "";
-        var designView = "";
-        var plane = new Rhino.Geometry.Plane();
-        var centerGoo = new DiagramPointGoo();
-        var attributesGoos = new List<AttributeGoo>();
-        var hidden = false;
-        var locked = false;
-        if (DA.GetData(2, ref id)) pieceGoo.Value.Id = id;
-        if (DA.GetData(3, ref description)) pieceGoo.Value.Description = description;
-        if (DA.GetData(4, ref typeName))
-        {
-            pieceGoo.Value.Type ??= new TypeId();
-            pieceGoo.Value.Type.Name = typeName;
-        }
-        if (DA.GetData(5, ref typeVariant))
-        {
-            pieceGoo.Value.Type ??= new TypeId();
-            pieceGoo.Value.Type.Variant = typeVariant;
-        }
-        if (DA.GetData(6, ref designName))
-        {
-            pieceGoo.Value.Design ??= new DesignId();
-            pieceGoo.Value.Design.Name = designName;
-        }
-        if (DA.GetData(7, ref designVariant))
-        {
-            pieceGoo.Value.Design ??= new DesignId();
-            pieceGoo.Value.Design.Variant = designVariant;
-        }
-        if (DA.GetData(8, ref designView))
-        {
-            pieceGoo.Value.Design ??= new DesignId();
-            pieceGoo.Value.Design.View = designView;
-        }
-        if (DA.GetData(9, ref plane)) pieceGoo.Value.Plane = plane.Convert();
-        if (DA.GetData(10, ref centerGoo)) pieceGoo.Value.Center = centerGoo.Value;
-        if (DA.GetData(11, ref hidden)) pieceGoo.Value.Hidden = hidden;
-        if (DA.GetData(12, ref locked)) pieceGoo.Value.Locked = locked;
-        if (DA.GetDataList(13, attributesGoos)) pieceGoo.Value.Attributes = attributesGoos.Select(q => q.Value).ToList();
-    }
-
-    protected override void SetData(IGH_DataAccess DA, dynamic pieceGoo)
-    {
-        DA.SetData(2, pieceGoo.Value.Id);
-        DA.SetData(3, pieceGoo.Value.Description);
-        DA.SetData(4, pieceGoo.Value.Type != null ? pieceGoo.Value.Type.Name : "");
-        DA.SetData(5, pieceGoo.Value.Type != null ? pieceGoo.Value.Type.Variant : "");
-        DA.SetData(6, pieceGoo.Value.Design != null ? pieceGoo.Value.Design.Name : "");
-        DA.SetData(7, pieceGoo.Value.Design != null ? pieceGoo.Value.Design.Variant : "");
-        DA.SetData(8, pieceGoo.Value.Design != null ? pieceGoo.Value.Design.View : "");
-        DA.SetData(9, (pieceGoo.Value.Plane as Plane)?.Convert());
-        var center = pieceGoo.Value != null ? pieceGoo.Value.Center as DiagramPoint : null;
-        if (center is not null) DA.SetData(10, new DiagramPointGoo(center));
-        DA.SetData(11, pieceGoo.Value.Hidden);
-        DA.SetData(12, pieceGoo.Value.Locked);
-        var attributeGoos = new List<AttributeGoo>();
-        foreach (Attribute attribute in pieceGoo.Value.Attributes) attributeGoos.Add(new AttributeGoo(attribute.DeepClone()));
-        DA.SetDataList(13, attributeGoos);
-    }
 }
 
 public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo, Connection>
@@ -1276,18 +1546,127 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
     }
 }
 
+public class SerializeConnectionComponent : SerializeComponent<ConnectionGoo, ConnectionParam, Connection>
+{
+    public SerializeConnectionComponent() : base("Connection") { }
+    public override Guid ComponentGuid => new("93FBA84E-79A1-4E32-BE61-A925F476DD60");
+}
+
+public class DeserializeConnectionComponent : DeserializeComponent<ConnectionGoo, ConnectionParam, Connection>
+{
+    public DeserializeConnectionComponent() : base("Connection") { }
+    public override Guid ComponentGuid => new("93FBA84E-79A1-4E32-BE61-A925F476DD61");
+}
+
+#endregion Connection
+
+#region Design
+
+public class DesignIdGoo : IdGoo<DesignId>
+{
+    public DesignIdGoo() { }
+    public DesignIdGoo(DesignId value) : base(value) { }
+}
+
+public class DesignIdParam : IdParam<DesignIdGoo, DesignId>
+{
+    public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A6");
+}
+
+public class DesignIdComponent : IdComponent<DesignIdParam, DesignIdGoo, DesignId>
+{
+    public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A7");
+}
+
+public class DesignDiffGoo : DiffGoo<DesignDiff>
+{
+    public DesignDiffGoo() { }
+    public DesignDiffGoo(DesignDiff value) : base(value) { }
+}
+
+public class DesignDiffParam : DiffParam<DesignDiffGoo, DesignDiff>
+{
+    public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A5");
+}
+
+public class DesignDiffComponent : DiffComponent<DesignDiffParam, DesignDiffGoo, DesignDiff>
+{
+    public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A8");
+}
+
+public class DesignsDiffGoo : DiffGoo<DesignsDiff>
+{
+    public DesignsDiffGoo() { }
+    public DesignsDiffGoo(DesignsDiff value) : base(value) { }
+}
+
+public class DesignsDiffParam : DiffParam<DesignsDiffGoo, DesignsDiff>
+{
+    public override Guid ComponentGuid => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8E9");
+}
+
+public class DesignGoo : ModelGoo<Design>
+{
+    public DesignGoo() { }
+    public DesignGoo(Design value) : base(value) { }
+}
+
+public class DesignParam : ModelParam<DesignGoo, Design>
+{
+    public override Guid ComponentGuid => new("1FB90496-93F2-43DE-A558-A7D6A9FE3596");
+}
+
 public class DesignComponent : ModelComponent<DesignParam, DesignGoo, Design>
 {
     public override Guid ComponentGuid => new("AAD8D144-2EEE-48F1-A8A9-52977E86CB54");
     protected override Design ProcessModel(Design design)
     {
-        if (design.Unit == "")
-            try { design.Unit = Utility.LengthUnitSystemToAbbreviation(RhinoDoc.ActiveDoc.ModelUnitSystem); }
-            catch (Exception) { design.Unit = "m"; }
-        design.Icon = design.Icon.Replace('\\', '/');
-        design.Image = design.Image.Replace('\\', '/');
+        if (design.Unit == "") design.Unit = Utility.LengthUnitSystemToAbbreviation(RhinoDoc.ActiveDoc.ModelUnitSystem);
         return design;
     }
+}
+
+public class SerializeDesignComponent : SerializeComponent<DesignGoo, DesignParam, Design>
+{
+    public SerializeDesignComponent() : base("Design") { }
+    public override Guid ComponentGuid => new("D755D6F1-27C4-441A-8856-6BA20E87DB58");
+}
+
+public class DeserializeDesignComponent : DeserializeComponent<DesignGoo, DesignParam, Design>
+{
+    public DeserializeDesignComponent() : base("Design") { }
+    public override Guid ComponentGuid => new("D755D6F1-27C4-441A-8856-6BA20E87DB59");
+}
+
+#endregion Design
+
+#region Kit
+
+public class KitDiffGoo : DiffGoo<KitDiff>
+{
+    public KitDiffGoo() { }
+    public KitDiffGoo(KitDiff value) : base(value) { }
+}
+
+public class KitDiffParam : DiffParam<KitDiffGoo, KitDiff>
+{
+    public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B2");
+}
+
+public class KitDiffComponent : DiffComponent<KitDiffParam, KitDiffGoo, KitDiff>
+{
+    public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B3");
+}
+
+public class KitGoo : ModelGoo<Kit>
+{
+    public KitGoo() { }
+    public KitGoo(Kit value) : base(value) { }
+}
+
+public class KitParam : ModelParam<KitGoo, Kit>
+{
+    public override Guid ComponentGuid => new("BA9F161E-AFE3-41D5-8644-964DD20B887B");
 }
 
 public class KitComponent : ModelComponent<KitParam, KitGoo, Kit>
@@ -1295,14 +1674,168 @@ public class KitComponent : ModelComponent<KitParam, KitGoo, Kit>
     public override Guid ComponentGuid => new("987560A8-10D4-43F6-BEBE-D71DC2FD86AF");
     protected override Kit ProcessModel(Kit kit)
     {
-        kit.Icon = kit.Icon.Replace('\\', '/');
-        kit.Image = kit.Image.Replace('\\', '/');
-        kit.Preview = kit.Preview.Replace('\\', '/');
+        kit.Name = kit.Name.Humanize(LetterCasing.Title);
         return kit;
     }
 }
 
-#endregion
+public class SerializeKitComponent : SerializeComponent<KitGoo, KitParam, Kit>
+{
+    public SerializeKitComponent() : base("Kit") { }
+    public override Guid ComponentGuid => new("78202ACE-A876-45AF-BA72-D1FC00FE4165");
+}
+
+public class DeserializeKitComponent : DeserializeComponent<KitGoo, KitParam, Kit>
+{
+    public DeserializeKitComponent() : base("Kit") { }
+    public override Guid ComponentGuid => new("78202ACE-A876-45AF-BA72-D1FC00FE4166");
+}
+
+#endregion Kit
+
+#region Quality
+
+public class QualityIdGoo : IdGoo<QualityId>
+{
+    public QualityIdGoo() { }
+    public QualityIdGoo(QualityId value) : base(value) { }
+}
+
+public class QualityIdParam : IdParam<QualityIdGoo, QualityId>
+{
+    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
+}
+
+public class QualityIdComponent : IdComponent<QualityIdParam, QualityIdGoo, QualityId>
+{
+    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+}
+
+public class QualityGoo : ModelGoo<Quality>
+{
+    public QualityGoo() { }
+    public QualityGoo(Quality value) : base(value) { }
+}
+
+public class QualityParam : ModelParam<QualityGoo, Quality>
+{
+    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
+}
+
+public class QualityComponent : ModelComponent<QualityParam, QualityGoo, Quality>
+{
+    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
+}
+
+public class SerializeQualityComponent : SerializeComponent<QualityGoo, QualityParam, Quality>
+{
+    public SerializeQualityComponent() : base("Quality") { }
+    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C8");
+}
+
+public class DeserializeQualityComponent : DeserializeComponent<QualityGoo, QualityParam, Quality>
+{
+    public DeserializeQualityComponent() : base("Quality") { }
+    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C9");
+}
+
+#endregion Quality
+
+#region Benchmark
+
+public class BenchmarkGoo : ModelGoo<Benchmark>
+{
+    public BenchmarkGoo() { }
+    public BenchmarkGoo(Benchmark value) : base(value) { }
+}
+
+public class BenchmarkParam : ModelParam<BenchmarkGoo, Benchmark>
+{
+    public override Guid ComponentGuid => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
+}
+
+public class BenchmarkComponent : ModelComponent<BenchmarkParam, BenchmarkGoo, Benchmark>
+{
+    public override Guid ComponentGuid => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+}
+
+public class SerializeBenchmarkComponent : SerializeComponent<BenchmarkGoo, BenchmarkParam, Benchmark>
+{
+    public SerializeBenchmarkComponent() : base("Benchmark") { }
+    public override Guid ComponentGuid => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
+}
+
+public class DeserializeBenchmarkComponent : DeserializeComponent<BenchmarkGoo, BenchmarkParam, Benchmark>
+{
+    public DeserializeBenchmarkComponent() : base("Benchmark") { }
+    public override Guid ComponentGuid => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
+}
+
+#endregion Benchmark
+
+#region Prop
+
+public class PropGoo : ModelGoo<Prop>
+{
+    public PropGoo() { }
+    public PropGoo(Prop value) : base(value) { }
+}
+
+public class PropParam : ModelParam<PropGoo, Prop>
+{
+    public override Guid ComponentGuid => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
+}
+
+public class PropComponent : ModelComponent<PropParam, PropGoo, Prop>
+{
+    public override Guid ComponentGuid => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+}
+
+public class SerializePropComponent : SerializeComponent<PropGoo, PropParam, Prop>
+{
+    public SerializePropComponent() : base("Prop") { }
+    public override Guid ComponentGuid => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
+}
+
+public class DeserializePropComponent : DeserializeComponent<PropGoo, PropParam, Prop>
+{
+    public DeserializePropComponent() : base("Prop") { }
+    public override Guid ComponentGuid => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
+}
+
+#endregion Prop
+
+#region Stat
+
+public class StatGoo : ModelGoo<Stat>
+{
+    public StatGoo() { }
+    public StatGoo(Stat value) : base(value) { }
+}
+
+public class StatParam : ModelParam<StatGoo, Stat>
+{
+    public override Guid ComponentGuid => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
+}
+
+public class StatComponent : ModelComponent<StatParam, StatGoo, Stat>
+{
+    public override Guid ComponentGuid => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+}
+
+public class SerializeStatComponent : SerializeComponent<StatGoo, StatParam, Stat>
+{
+    public SerializeStatComponent() : base("Stat") { }
+    public override Guid ComponentGuid => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
+}
+
+public class DeserializeStatComponent : DeserializeComponent<StatGoo, StatParam, Stat>
+{
+    public DeserializeStatComponent() : base("Stat") { }
+    public override Guid ComponentGuid => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
+}
+
+#endregion Stat
 
 #region Scripting
 
@@ -1365,7 +1898,7 @@ public class DecodeTextComponent : ScriptingComponent
         pManager[1].Optional = true;
         pManager.AddTextParameter("Replace", "Re", "Placeholder text that was used to encode forbidden text after encoding and is restored before decoding. It will be applied sequentially. Make sure to invert the order of your original list.", GH_ParamAccess.list);
         pManager[2].Optional = true;
-        pManager.AddTextParameter("Original", "Or", "Original forbidden text to restore from replaced before decoding. It will be applied sequentially. Make sure to invert the order of your original list.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Forbidden", "Fb", "Forbidden text that gets restored before decoding.", GH_ParamAccess.list);
         pManager[3].Optional = true;
     }
 
@@ -1376,18 +1909,17 @@ public class DecodeTextComponent : ScriptingComponent
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        var encoded = "";
+        var text = "";
         var mode = 0;
         var replace = new List<string>();
-        var original = new List<string>();
-        DA.GetData(0, ref encoded);
+        var forbidden = new List<string>();
+        DA.GetData(0, ref text);
         DA.GetData(1, ref mode);
         DA.GetDataList(2, replace);
-        DA.GetDataList(3, original);
-        DA.SetData(0, Semio.Utility.Decode(encoded, (EncodeMode)mode, new Tuple<List<string>, List<string>>(replace, original)));
+        DA.GetDataList(3, forbidden);
+        DA.SetData(0, Semio.Utility.Decode(text, (EncodeMode)mode, new Tuple<List<string>, List<string>>(replace, forbidden)));
     }
 }
-
 
 public class ObjectsToTextComponent : ScriptingComponent
 {
@@ -1447,30 +1979,6 @@ public class NormalizeTextComponent : ScriptingComponent
     }
 }
 
-//public class NumberToTextComponent : ScriptingComponent
-//{
-//    public NumberToTextComponent() : base("Number To Text", "Num→Txt", "Converts a number to its textual representation.")
-//    {
-//    }
-
-//    public override Guid ComponentGuid => new("891063B8-7935-409A-AF9F-435E4E752922");
-
-//    protected override void RegisterInputParams(GH_InputParamManager pManager)
-//    {
-//        pManager.AddNumberParameter("Number", "Num", "Number to convert.", GH_ParamAccess.item);
-//    }
-
-//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-//    {
-//        pManager.AddTextParameter("Text", "Tx", "Textual representation of the number.", GH_ParamAccess.item);
-//    }
-
-//    protected override void SolveInstance(IGH_DataAccess DA)
-//    {
-
-//    }
-//}
-
 public class TruncateTextComponent : ScriptingComponent
 {
     public TruncateTextComponent() : base("Truncate Text", "…Txt", "Truncates text by length and an optional termination.") { }
@@ -1508,204 +2016,8 @@ public class TruncateTextComponent : ScriptingComponent
     }
 }
 
-#region Serialize
 
-public abstract class SerializeComponent<T, U, V> : ScriptingComponent
-    where T : ModelParam<U, V>, new() where U : ModelGoo<V>, new() where V : Model<V>, new()
-
-{
-    public static readonly string NameM;
-    public static readonly ModelAttribute ModelM;
-    static SerializeComponent()
-    {
-        // force compiler to run static constructor of the the meta classes first.
-        var dummyMetaGrasshopper = Meta.Goo;
-        NameM = typeof(V).Name;
-        ModelM = Semio.Meta.Model[NameM];
-    }
-
-    protected SerializeComponent() : base($"Serialize {NameM}", $">{ModelM.Abbreviation}", $"Serialize a {NameM.ToLower()}.") { }
-
-    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_serialize_24x24");
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new T(), NameM, ModelM.Code, $"The {NameM.ToLower()} to serialize.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Indent", "In?", $"The optional indent unit for the serialized {NameM.ToLower()}. Empty text for no indent or spaces or tabs", GH_ParamAccess.item, "");
-        pManager[1].Optional = true;
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "Tx", "Text of serialized " + NameM + ".", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var goo = new U();
-        var indent = "";
-        DA.GetData(0, ref goo);
-        DA.GetData(1, ref indent);
-        var text = goo.Value.Serialize(indent);
-        DA.SetData(0, text);
-    }
-}
-
-public class SerializeRepresentationComponent : SerializeComponent<RepresentationParam, RepresentationGoo, Representation>
-{
-    public override Guid ComponentGuid => new("AC6E381C-23EE-4A81-BE0F-3523AEE32046");
-}
-
-public class SerializePortComponent : SerializeComponent<PortParam, PortGoo, Port>
-{
-    public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1B5");
-}
-
-public class SerializeAttributeComponent : SerializeComponent<AttributeParam, AttributeGoo, Attribute>
-{
-    public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8974-8588BCA75250");
-}
-
-public class SerializeAuthorComponent : SerializeComponent<AuthorParam, AuthorGoo, Author>
-{
-    public override Guid ComponentGuid => new("99130A53-4FC1-4E64-9A46-2ACEC4634878");
-}
-
-public class SerializeLocationComponent : SerializeComponent<LocationParam, LocationGoo, Location>
-{
-    public override Guid ComponentGuid => new("DB94C7FC-3F0F-4FB4-992E-7E069C17D466");
-}
-
-public class SerializeTypeComponent : SerializeComponent<TypeParam, TypeGoo, Type>
-{
-    public override Guid ComponentGuid => new("BD184BB8-8124-4604-835C-E7B7C199673A");
-}
-
-public class SerializeDiagramPointComponent : SerializeComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
-{
-    public override Guid ComponentGuid => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A99");
-}
-
-public class SerializePieceComponent : SerializeComponent<PieceParam, PieceGoo, Piece>
-{
-    public override Guid ComponentGuid => new("A4EDA838-2246-4617-8298-9585ECFE00D9");
-}
-
-public class SerializeConnectionComponent : SerializeComponent<ConnectionParam, ConnectionGoo, Connection>
-{
-    public override Guid ComponentGuid => new("93FBA84E-79A1-4E32-BE61-A925F476DD60");
-}
-
-public class SerializeDesignComponent : SerializeComponent<DesignParam, DesignGoo, Design>
-{
-    public override Guid ComponentGuid => new("D755D6F1-27C4-441A-8856-6BA20E87DB58");
-}
-
-public class SerializeKitComponent : SerializeComponent<KitParam, KitGoo, Kit>
-{
-    public override Guid ComponentGuid => new("78202ACE-A876-45AF-BA72-D1FC00FE4165");
-}
-
-#endregion
-
-#region Deserialize
-
-public abstract class DeserializeComponent<T, U, V> : ScriptingComponent
-    where T : ModelParam<U, V>, new() where U : ModelGoo<V>, new() where V : Model<V>, new()
-
-{
-    public static readonly string NameM;
-    public static readonly ModelAttribute ModelM;
-
-    static DeserializeComponent()
-    {
-        // force compiler to run static constructor of the the meta classes first.
-        var dummyMetaGrasshopper = Meta.Goo;
-
-        NameM = typeof(V).Name;
-        ModelM = Semio.Meta.Model[NameM];
-    }
-
-    protected DeserializeComponent() : base($"Deserialize {NameM}", $"<{ModelM.Abbreviation}",
-        $"Deserialize a {NameM.ToLower()}.")
-    {
-    }
-
-    protected override Bitmap Icon =>
-        (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_deserialize_24x24");
-
-    public override GH_Exposure Exposure => GH_Exposure.tertiary;
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "Tx", $"Text of serialized {NameM}.", GH_ParamAccess.item);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddParameter(new T(), NameM, ModelM.Code,
-            $"Deserialized {NameM}.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var text = "";
-        DA.GetData(0, ref text);
-        var value = text.Deserialize<V>();
-        var goo = new U();
-        goo.Value = value;
-        DA.SetData(0, goo);
-    }
-}
-
-public class DeserializeRepresentationComponent : DeserializeComponent<RepresentationParam, RepresentationGoo, Representation>
-{
-    public override Guid ComponentGuid => new("B8ADAF54-3A91-402D-9542-A288D935015F");
-}
-public class DeserializePortComponent : DeserializeComponent<PortParam, PortGoo, Port>
-{
-    public override Guid ComponentGuid => new("3CEB0315-5A51-4072-97A7-D8B1B63FEF31");
-}
-public class DeserializeAttributeComponent : DeserializeComponent<AttributeParam, AttributeGoo, Attribute>
-{
-    public override Guid ComponentGuid => new("AECB1169-EB65-470F-966E-D491EB46A625");
-}
-public class DeserializeAuthorComponent : DeserializeComponent<AuthorParam, AuthorGoo, Author>
-{
-    public override Guid ComponentGuid => new("DDC0A2EC-4BAD-4FFE-B3A6-F9644C8B0072");
-}
-public class DeserializeLocationComponent : DeserializeComponent<LocationParam, LocationGoo, Location>
-{
-    public override Guid ComponentGuid => new("B4107B24-B730-4F5D-B9BB-46AE585FCFE9");
-}
-public class DeserializeTypeComponent : DeserializeComponent<TypeParam, TypeGoo, Type>
-{
-    public override Guid ComponentGuid => new("F21A80E0-2A62-4BFD-BC2B-A04363732F84");
-}
-public class DeserializeDiagramPointComponent : DeserializeComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
-{
-    public override Guid ComponentGuid => new("7FBEECE1-ECAC-4AC1-8DAF-C659A9B6238C");
-}
-public class DeserializePieceComponent : DeserializeComponent<PieceParam, PieceGoo, Piece>
-{
-    public override Guid ComponentGuid => new("1FB7F2FB-DCE2-4666-91B5-54DF6B6D9FA4");
-}
-public class DeserializeConnectionComponent : DeserializeComponent<ConnectionParam, ConnectionGoo, Connection>
-{
-    public override Guid ComponentGuid => new("41C33A9F-15AC-4CD0-8A9D-4A75CE599282");
-}
-public class DeserializeDesignComponent : DeserializeComponent<DesignParam, DesignGoo, Design>
-{
-    public override Guid ComponentGuid => new("464D4D72-CFF1-4391-8C31-9E37EB9434C6");
-}
-public class DeserializeKitComponent : DeserializeComponent<KitParam, KitGoo, Kit>
-{
-    public override Guid ComponentGuid => new("79AF9C1D-2B96-4D03-BDD9-C6514DA63E70");
-}
-
-#endregion
-
-#endregion
+#endregion Scripting
 
 #region Engine
 
@@ -1872,555 +2184,9 @@ public class LoadKitComponent : PersistenceComponent
     }
 }
 
-public class CreateKitComponent : PersistenceComponent
-{
-    public CreateKitComponent() : base("Create Kit", "+Kit", "Create a kit.") { }
-    protected override string RunDescription => "True to create the kit.";
-    protected override string SuccessDescription => "True if the kit was successfully created. False otherwise.";
-    public override Guid ComponentGuid => new("1CC1BE06-85B8-4B0E-A59A-35B4D7C6E0FD");
-    protected override Bitmap Icon => Resources.kit_create_24x24;
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
-    protected override void RegisterPersitenceInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new KitParam());
-    }
-    protected override dynamic GetPersistentInput(IGH_DataAccess DA)
-    {
-        var kitGoo = new KitGoo();
-        DA.GetData(0, ref kitGoo);
-        return kitGoo.Value;
-    }
-    protected override dynamic? RunOnKit(string uri, dynamic? input = null)
-    {
-        Api.CreateKit(uri, input);
-        return null;
-    }
-}
-
-public class DeleteKitComponent : PersistenceComponent
-{
-    public DeleteKitComponent() : base("Delete Kit", "-Kit", "Delete a kit.") { }
-    protected override string RunDescription => "True to delete the kit.";
-    protected override string SuccessDescription => "True if the kit was successfully deleted. False otherwise.";
-    public override Guid ComponentGuid => new("38D4283C-510C-4E77-9105-92A5BE3E3BA0");
-    protected override Bitmap Icon => Resources.kit_delete_24x24;
-    public override GH_Exposure Exposure => GH_Exposure.tertiary;
-    protected override dynamic? RunOnKit(string uri, dynamic? input = null)
-    {
-        Api.DeleteKit(uri);
-        return null;
-    }
-}
-
-#region Putting
-
-public abstract class PutComponent<T, U, V> : PersistenceComponent where T : ModelParam<U, V>, new()
-    where U : ModelGoo<V>, new()
-    where V : Model<V>, new()
-
-{
-    public static readonly string NameM;
-    public static readonly ModelAttribute ModelM;
-
-    static PutComponent()
-    {
-        // force compiler to run static constructor of the the meta classes first.
-        var dummyMetaGrasshopper = Meta.Goo;
-
-        NameM = typeof(V).Name;
-        ModelM = Semio.Meta.Model[NameM];
-    }
-    protected PutComponent() : base($"Put {NameM}", $"+{ModelM.Abbreviation}", $"Put a {NameM.ToLower()} to the kit. If the same {NameM.ToLower()} (same name and variant) exists it will be overwritten") { }
-    protected override string RunDescription => $"True to put the {NameM.ToLower()} to the kit.";
-    protected override string SuccessDescription => $"True if the {NameM.ToLower()} was put to the kit.";
-    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_put_24x24");
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
-    protected override void RegisterPersitenceInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new T());
-    }
-    protected override dynamic GetPersistentInput(IGH_DataAccess DA)
-    {
-        var goo = new U();
-        DA.GetData(0, ref goo);
-        return goo.Value;
-    }
-}
-
-public class PutTypeComponent : PutComponent<TypeParam, TypeGoo, Type>
-{
-    public override Guid ComponentGuid => new("BC46DC07-C0BE-433F-9E2F-60CCBAA39148");
-    protected override dynamic? RunOnKit(string uri, dynamic? input = null)
-    {
-        Api.PutType(uri, input);
-        return null;
-    }
-}
-
-public class PutDesignComponent : PutComponent<DesignParam, DesignGoo, Design>
-{
-    public override Guid ComponentGuid => new("8B7AA946-0CB1-4CA8-A712-610B60425368");
-    protected override dynamic? RunOnKit(string uri, dynamic? input = null)
-    {
-        Api.PutDesign(uri, input);
-        return null;
-    }
-}
-
 #endregion
 
-#region Removing
-
-public abstract class RemoveComponent<T, U, V> : PersistenceComponent where T : ModelParam<U, V>, new()
-    where U : ModelGoo<V>, new()
-    where V : Model<V>, new()
-{
-    public static readonly string NameM;
-    public static readonly ModelAttribute ModelM;
-    static RemoveComponent()
-    {
-        // force compiler to run static constructor of the the meta classes first.
-        var dummyMetaGrasshopper = Meta.Goo;
-
-        NameM = typeof(V).Name;
-        ModelM = Semio.Meta.Model[NameM];
-    }
-
-    public RemoveComponent() : base($"Remove {NameM}", $"-{Semio.Meta.Model[NameM].Abbreviation}", $"Remove a {NameM.ToLower()} from a kit.") { }
-    protected override string RunDescription => $"True to remove the {NameM.ToLower()} from the kit.";
-    protected override string SuccessDescription => $"True if the {NameM.ToLower()} was removed from the kit.";
-    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_remove_24x24");
-    public override GH_Exposure Exposure => GH_Exposure.tertiary;
-    protected override void RegisterPersitenceInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddTextParameter($"{NameM} Name", "Na", $"Name of the {NameM.ToLower()} to remove.", GH_ParamAccess.item);
-        pManager.AddTextParameter($"{NameM} Variant", "Vn?", $"The optional variant of the {NameM.ToLower()} to remove. No variant means the default variant.", GH_ParamAccess.item);
-        pManager[pManager.ParamCount - 1].Optional = true;
-    }
-
-    protected override dynamic GetPersistentInput(IGH_DataAccess DA)
-    {
-        var name = "";
-        var variant = "";
-        DA.GetData(0, ref name);
-        DA.GetData(1, ref variant);
-        return ConstructId(name, variant);
-    }
-    protected virtual dynamic ConstructId(string name, string variant) => new { Name = name, Variant = variant };
-}
-
-public class RemoveTypeComponent : RemoveComponent<TypeParam, TypeGoo, Type>
-{
-    public override Guid ComponentGuid => new("F38D0E82-5A58-425A-B705-7A62FD9DB957");
-    protected override dynamic ConstructId(string name, string variant) => new TypeId { Name = name, Variant = variant };
-    protected override dynamic? RunOnKit(string uri, dynamic? input = null)
-    {
-        Api.RemoveType(uri, input);
-        return null;
-    }
-}
-
-public class RemoveDesignComponent : RemoveComponent<DesignParam, DesignGoo, Design>
-{
-    public override Guid ComponentGuid => new("9ECCE095-9D1E-4554-A3EB-1EAEEE2B12D5");
-    protected override dynamic ConstructId(string name, string variant) => new DesignId { Name = name, Variant = variant };
-    protected override dynamic? RunOnKit(string uri, dynamic? input = null)
-    {
-        Api.RemoveDesign(uri, input);
-        return null;
-    }
-}
-
-#endregion
-
-public class CacheRepresentationComponent : Component
-{
-    public CacheRepresentationComponent() : base("Cache Representation", "↓Rep", "Download and cache a remote representation.", "Persistence") { }
-    public override Guid ComponentGuid => new("56673DF0-4524-40BC-AB26-37920F71E3E0");
-    protected override Bitmap Icon => Resources.representation_cache_24x24;
-    public override GH_Exposure Exposure => GH_Exposure.primary;
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddTextParameter("Url", "Ur", "Unique Resource Locator (URL) of the remote representation.", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Run", "R", "True to downloaded and cache the remote representation.", GH_ParamAccess.item, false);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddParameter(new Param_FilePath(), "Path", "Pa", "Path to the cached representation.", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Success", "Sc", "True if the representation was successfully downloaded and cached.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var url = "";
-        var run = false;
-        DA.GetData(0, ref url);
-        DA.GetData(1, ref run);
-        DA.SetData(1, false);
-        if (!run) return;
-        var userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var cachePath = Path.Combine(userPath, ".semio", "cache");
-        if (!Directory.Exists(cachePath))
-            Directory.CreateDirectory(cachePath);
-        var encodedUri = Semio.Utility.Encode(url);
-        var path = Path.Combine(cachePath, encodedUri);
-        if (File.Exists(path))
-        {
-            DA.SetData(0, path);
-            DA.SetData(1, true);
-            return;
-        }
-        var http = new HttpClient();
-        var response = http.GetAsync(url).Result;
-        if (!response.IsSuccessStatusCode) return;
-        var content = response.Content.ReadAsByteArrayAsync().Result;
-        File.WriteAllBytes(path, content);
-        DA.SetData(0, path);
-        DA.SetData(1, true);
-    }
-}
-
-public class ClearCacheComponent : Component
-{
-    public ClearCacheComponent() : base("Clear Cache", "-Cac", "Clear the cache of all the remote kits.", "Persistence") { }
-    public override Guid ComponentGuid => new("500BB2EA-56DE-4C38-9C5D-61B8EA0A8948");
-    protected override Bitmap Icon => Resources.cache_clear_24x24;
-    public override GH_Exposure Exposure => GH_Exposure.tertiary;
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddTextParameter("Uri|Url", "Ur?", "Optional Unique Resource Identifier (URI) of a kit or Unique Resource Locator (URL) of a representation. If None is provided, it will clear the entire cache.", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Run", "R", "True to clear the cache.", GH_ParamAccess.item, false);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddBooleanParameter("Success", "Sc", "True if the cache was successfully cleared.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var ur = "";
-        var run = false;
-        DA.GetData(0, ref ur);
-        DA.GetData(1, ref run);
-        DA.SetData(0, false);
-        if (!run) return;
-        try
-        {
-            // find process semio-engine.exe and kill it
-            var processes = Process.GetProcessesByName("semio-engine");
-            if (processes.Length > 0)
-                foreach (var process in processes)
-                {
-                    process.Kill();
-                    process.WaitForExit();
-                }
-        }
-        catch (Exception) { }
-        var userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var cachePath = Path.Combine(userPath, ".semio", "cache");
-        if (Directory.Exists(cachePath))
-        {
-            if (ur != "")
-            {
-                var encodedUri = Semio.Utility.Encode(ur);
-                var path = Path.Combine(cachePath, encodedUri);
-                if (Directory.Exists(path))
-                    Directory.Delete(path, true);
-            }
-            else
-            {
-                Directory.Delete(cachePath, true);
-                Directory.CreateDirectory(cachePath);
-            }
-        }
-        DA.SetData(0, true);
-    }
-}
-
-#endregion
-
-#region Assistant
-
-public abstract class AssistantComponent : EngineComponent
-{
-    public AssistantComponent(string name, string nickname, string description) : base(name, nickname, description, "Assistant") { }
-}
-
-public class PredictDesignComponent : AssistantComponent
-{
-    public PredictDesignComponent() : base("Predict Design", "%Dsn", "Predict a design.") { }
-    protected override string RunDescription => "True to predict the design.";
-    protected override string SuccessDescription => "True if the design was successfully predicted. False otherwise.";
-    public override Guid ComponentGuid => new("1EAD6636-2D8C-47CC-894A-E4FE2465AAA7");
-    protected override Bitmap Icon => Resources.design_predict_24x24;
-    protected override void RegisterEngineInputParams(GH_InputParamManager pManager)
-    {
-        var pCount = pManager.ParamCount;
-        pManager.AddTextParameter("Description", "Dc", "The description of the design or an instruction how to change the base design.", GH_ParamAccess.item);
-        pManager.AddParameter(new TypeParam(), "Types", "Ty+", "The types to use in the design.", GH_ParamAccess.list);
-        pManager.AddParameter(new DesignParam(), "Design", "Dn?", "The optional design to use a base.", GH_ParamAccess.item);
-        pManager[pCount + 2].Optional = true;
-    }
-
-    protected override void RegisterEngineOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddParameter(new DesignParam(), "Design", "Dsn", "Predicted design.", GH_ParamAccess.item);
-    }
-
-    protected override dynamic? GetInput(IGH_DataAccess DA)
-    {
-        var description = "";
-        var types = new List<TypeGoo>();
-        var designGoo = new DesignGoo();
-        DA.GetData(0, ref description);
-        DA.GetDataList(1, types);
-        Design? design;
-        if (DA.GetData(2, ref designGoo)) design = designGoo.Value;
-        else design = null;
-        return new { Description = description, Types = types.Select(t => t.Value).ToArray(), Design = design };
-    }
-    protected override dynamic? Run(dynamic? input = null) => input != null ? Api.PredictDesign(input.Description, input.Types, input.Design) : null;
-    protected override void SetOutput(IGH_DataAccess DA, dynamic response)
-    {
-        DA.SetData(1, new DesignGoo(response));
-    }
-}
-
-#endregion
-
-#endregion
-
-#region Display
-
-public class DrawDiagramComponent : Component
-{
-    public DrawDiagramComponent() : base("Draw Diagram", ":Dgm", "Draw the diagram of the design.", "Display") { }
-    public override Guid ComponentGuid => new("C53A0CC8-6DD7-415E-A20A-C5887CBE0DB9");
-    protected override Bitmap Icon => Resources.diagram_draw_24x24;
-    public override GH_Exposure Exposure => GH_Exposure.tertiary;
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new DesignParam());
-        pManager.AddParameter(new TypeParam(), "Types", "Ty+",
-            "Types that are used by the pieces in the design.", GH_ParamAccess.list);
-        pManager.AddTextParameter("Uri", "Ur?",
-            "Optional Unique Resource Identifier (URI) of the kit. This can be an absolute path to a local kit or a url to a remote kit.\n" +
-            "If none is provided, it will try to see if the Grasshopper script is executed inside a local kit.",
-            GH_ParamAccess.item);
-        pManager[2].Optional = true;
-        pManager.AddBooleanParameter("Run", "R", "True to create the diagram of the design.", GH_ParamAccess.item);
-    }
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddTextParameter("Scalable Vector Graphics", "SVG",
-            "The diagram as a Scalable Vector Graphics (SVG).", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var designGoo = new DesignGoo();
-        var typesGoos = new List<TypeGoo>();
-        var uri = "";
-        var run = false;
-        DA.GetData(0, ref designGoo);
-        DA.GetDataList(1, typesGoos);
-        if (!DA.GetData(2, ref uri))
-            uri = OnPingDocument().IsFilePathDefined
-                ? Path.GetDirectoryName(OnPingDocument().FilePath)
-                : Directory.GetCurrentDirectory();
-        DA.GetData(3, ref run);
-        if (!run) return;
-        var design = designGoo.Value;
-        var types = typesGoos.Select(t => t.Value).ToArray();
-        var svg = design.Diagram(types, Utility.ComputeChildPlane, uri);
-        DA.SetData(0, svg);
-    }
-}
-
-#endregion
-
-
-#region Templates
-
-public abstract class TemplateComponent : Component
-{
-    protected TemplateComponent(string name, string nickname, string description, string subcategory = "Templates") : base(name, nickname, description, subcategory) { }
-}
-
-public class RandomIdsComponent : TemplateComponent
-{
-    public RandomIdsComponent() : base("Random Ids", "%Ids", "Generate random ids.") { }
-    public override Guid ComponentGuid => new("27E48D59-10BE-4239-8AAC-9031BF6AFBCC");
-    protected override Bitmap Icon => Resources.id_random_24x24;
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddIntegerParameter("Count", "Ct", "Number of ids to generate.", GH_ParamAccess.item, 1);
-        pManager.AddIntegerParameter("Seed", "Se", "Seed for the random generator.", GH_ParamAccess.item, 0);
-        pManager.AddBooleanParameter("Unique Component", "UC", "If true, the generated ids will be unique for this component.", GH_ParamAccess.item, true);
-    }
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddTextParameter("Ids", "Id+", "Generated ids.", GH_ParamAccess.list);
-    }
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var count = 0;
-        var seed = 0;
-        var unique = true;
-        DA.GetData(0, ref count);
-        DA.GetData(1, ref seed);
-        DA.GetData(2, ref unique);
-        var ids = new List<string>();
-        for (var i = 0; i < count; i++)
-        {
-            var hashString = seed + ";" + i;
-            if (unique)
-                hashString += ";" + InstanceGuid;
-            using (var md5 = MD5.Create())
-            {
-                var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(hashString));
-                var id = Semio.Utility.GenerateRandomId(BitConverter.ToInt32(hash, 0));
-                ids.Add(id);
-            }
-        }
-        DA.SetDataList(0, ids);
-    }
-}
-
-#endregion
-
-#region Util
-
-public class FlattenDesignComponent : Component
-{
-    public FlattenDesignComponent() : base("Flatten Design", "↓Dsn", "Flatten a design.", "Util") { }
-    public override Guid ComponentGuid => new("434144EA-2AFB-4D39-9F75-BB77A9223595");
-    protected override Bitmap Icon => Resources.design_flatten_24x24;
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new DesignParam(), "Design", "Dn",
-            "Design to flatten.", GH_ParamAccess.item);
-        pManager.AddParameter(new TypeParam(), "Types", "Ty+",
-            "Types that are used by the pieces in the design.", GH_ParamAccess.list);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddParameter(new DesignParam(), "Design", "Dn",
-            "Flat Design with no connections.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var designGoo = new DesignGoo();
-        var typesGoos = new List<TypeGoo>();
-        DA.GetData(0, ref designGoo);
-        DA.GetDataList(1, typesGoos);
-        var design = designGoo.Value;
-        var types = typesGoos.Select(t => t.Value).ToArray();
-        var flatDesign = design.DeepClone().Flatten(types, Utility.ComputeChildPlane);
-        DA.SetData(0, new DesignGoo(flatDesign));
-    }
-}
-
-public class SortDesignComponent : Component
-{
-    public SortDesignComponent() : base("Sort Design", "⁐Dsn", "Sort a design by reordering pieces and connections to appear in order that they are discovered by breadth-first-search and some times flipping connected and connecting if the connected is not the parent of the connecting.", "Util") { }
-    public override Guid ComponentGuid => new("F5E118B2-66EC-4622-9B8C-E77785AA1183");
-    protected override Bitmap Icon => Resources.design_sort_24x24;
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new DesignParam(), "Design", "Dn", "Design to sort.", GH_ParamAccess.item);
-    }
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddParameter(new DesignParam(), "Design", "Dn", "Sorted Design.", GH_ParamAccess.item);
-    }
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var designGoo = new DesignGoo();
-        DA.GetData(0, ref designGoo);
-        var design = designGoo.Value;
-        var sortedDesign = design.DeepClone().Sort();
-        DA.SetData(0, new DesignGoo(sortedDesign));
-    }
-}
-
-public class ConvertUnitComponent : Component
-{
-    public ConvertUnitComponent() : base("Convert Unit", "↦Unt", "Convert a unit.", "Util") { }
-    public override Guid ComponentGuid => new("4EEB48B6-39A2-4FE1-B83F-6755EE355FF5");
-    protected override Bitmap Icon => Resources.unit_convert_24x24;
-    public override GH_Exposure Exposure => GH_Exposure.tertiary;
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddNumberParameter("Value", "Vl", "Value to convert.", GH_ParamAccess.item, 1);
-        pManager.AddTextParameter("From Unit", "FU", "Unit to convert from.", GH_ParamAccess.item);
-        pManager.AddTextParameter("To Unit", "TU", "Unit to convert to.", GH_ParamAccess.item);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddNumberParameter("Converted Value", "CV", "Converted value.", GH_ParamAccess.item);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var value = 0.0;
-        var from = "";
-        var to = "";
-        DA.GetData(0, ref value);
-        DA.GetData(1, ref from);
-        DA.GetData(2, ref to);
-        var convertedValue = Semio.Utility.Units.Convert((float)value, from, to);
-        DA.SetData(0, (double)convertedValue);
-    }
-}
-
-
-//public class UpdateComponents : Component
-//{
-//    public UpdateComponents()
-//    : base("Update Components", "↑Cmps", "Update all components.", "Util")
-//    {
-//    }
-
-//    public override Guid ComponentGuid => new("51AC98FB-167F-41EC-9BBA-867A0B3F9E0A");
-
-//    protected override Bitmap Icon => Resources.components_update_24x24;
-
-//    protected override void RegisterInputParams(GH_InputParamManager pManager)
-//    {
-//        pManager.AddBooleanParameter("Update", "Up", "Update all components.", GH_ParamAccess.item);
-//    }
-
-//    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-//    {
-//        pManager.AddBooleanParameter("Updated", "Upd", "True if components were updated.", GH_ParamAccess.item);
-//    }
-
-//    protected override void SolveInstance(IGH_DataAccess DA)
-//    {
-//        var update = false;
-//        DA.GetData(0, ref update);
-//        if (update)
-//        {
-//            foreach (var obj in Instances.ActiveCanvas.Document.Objects)
-//            {
-//                if (obj is GH_Component component)
-//                    component.ExpireSolution(true);
-//            }
-//        }
-
-//        DA.SetData(0, update);
-//    }
-//}
-
-#endregion
-
-#endregion
+#endregion Engine
 
 #region Meta
 
@@ -2458,9 +2224,7 @@ public static class Meta
 
     static Meta()
     {
-        // force compiler to run static constructor of the the meta classes first.
         var dummyMeta = Semio.Meta.Model;
-
         var goo = new Dictionary<string, System.Type>();
         var propertyGoo = new Dictionary<string, List<System.Type>>();
         var propertyItemGoo = new Dictionary<string, List<System.Type>>();
@@ -2484,7 +2248,6 @@ public static class Meta
             goo[name + "List"] = typeof(List<>).MakeGenericType(goo[name]);
             param[name] = manualMappedTypeKvp.Value.Item2;
         }
-
         foreach (var kvp in Semio.Meta.Type)
         {
             var baseName = typeof(Meta).Namespace + "." + kvp.Key;
@@ -2496,18 +2259,15 @@ public static class Meta
                     goo[kvp.Key] = equivalentGooType;
                     goo[kvp.Key + "List"] = typeof(List<>).MakeGenericType(goo[kvp.Key]);
                 }
-
                 var equivalentParamType = Assembly.GetExecutingAssembly().GetType(baseName + "Param");
                 if (equivalentParamType != null)
                     param[kvp.Key] = equivalentParamType;
             }
-
             propertyGoo[kvp.Key] = new List<System.Type>();
             propertyItemGoo[kvp.Key] = new List<System.Type>();
             propertyParam[kvp.Key] = new List<System.Type>();
             isPropertyMapped[kvp.Key] = new List<bool>();
         }
-
         foreach (var modelKvp in Semio.Meta.Property)
             for (var i = 0; i < modelKvp.Value.Length; i++)
             {
@@ -2525,7 +2285,6 @@ public static class Meta
                 {
                     isPropertyMappedValue = false;
                 }
-
                 isPropertyMapped[modelKvp.Key].Add(isPropertyMappedValue);
                 try
                 {
@@ -2536,7 +2295,6 @@ public static class Meta
                 {
                     // ignored
                 }
-
                 try
                 {
                     propertyParam[modelKvp.Key].Add(param[propertyTypeName]);
@@ -2546,7 +2304,6 @@ public static class Meta
                     // ignored
                 }
             }
-
         Goo = goo.ToImmutableDictionary();
         PropertyGoo = propertyGoo.ToImmutableDictionary(
             kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
@@ -2560,4 +2317,4 @@ public static class Meta
     }
 }
 
-#endregion
+#endregion Meta

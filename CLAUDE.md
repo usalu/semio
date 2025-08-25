@@ -2,6 +2,61 @@
 
 An ecosystem for designing kit-of-parts architecture together.
 
+# File Structure
+
+├── .claude
+├── .cursor
+├── .github
+│ ├── chatmodes
+│ └── workflows
+├── .vscode
+├── antlr
+├── assets
+│ ├── badges
+│ ├── contributors
+│ ├── cursors
+│ ├── fonts
+│ ├── grasshopper
+│ ├── icons
+│ ├── images
+│ ├── lists
+│ ├── logo
+│ ├── models
+│ └── semio
+├── engineering
+├── examples
+│ ├── geometry
+│ ├── hello-semio
+│ ├── starters
+│ ├── urban-patterns
+│ └── voxels
+├── graphql
+├── js
+│ ├── ai
+│ ├── core
+│ ├── docs
+│ ├── play
+│ ├── playground
+│ └── sketchpad
+├── jsonschema
+├── liveblocks
+├── meta
+├── net
+│ ├── Semio
+│ │ ├── UserObjects
+│ │ │ ├── github
+│ │ │ ├── gitlab
+│ │ │ ├── monoceros
+│ │ │ ├── semio
+│ │ │ └── wasp
+│ ├── Semio.Grasshopper.Tests
+│ └── Semio.Tests
+├── rb
+├── rdf
+├── scripts
+├── sqlite
+└── yak
+
 # Guidelines
 
 - Toolfriendly over intuitive.
@@ -15,6 +70,7 @@ An ecosystem for designing kit-of-parts architecture together.
 - README.md files are for developers which are GFM.
 - Assume all dev servers, debugging and testing processes are running. No need to ask to start them. Don't ask to run commands for building, testing, linting, etc if you are not inspecting the output yourself.
 - Don't add comments to the code.
+- Don't create tests unless you are explicitly asked to.
 - Always use inline syntax if possible.
 - If a variable is only used once, use it inline unless the line of code exceeds the screen.
 - Don't add extra new lines inside of code.

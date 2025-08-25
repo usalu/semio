@@ -275,9 +275,9 @@ export const KitSchema = z.object({
     .transform((val) => new Date(val))
     .or(z.date())
     .optional(),
+  files: z.array(FileSchema).optional(),
   types: z.array(TypeSchema).optional(),
   designs: z.array(DesignSchema).optional(),
-  files: z.array(FileSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
 export const KitIdSchema = z.object({
@@ -295,7 +295,17 @@ export const CameraSchema = z.object({
   forward: VectorSchema,
   up: VectorSchema,
 });
-
+export const FileDiffSchema = z.object({
+  url: z.url().optional(),
+  data: DataUriSchema.optional(),
+  size: z.number().optional(),
+  hash: z.string().optional(),
+});
+export const FilesDiffSchema = z.object({
+  removed: z.array(FileIdSchema).optional(),
+  updated: z.array(z.object({ id: FileIdSchema, diff: FileDiffSchema })).optional(),
+  added: z.array(FileSchema).optional(),
+});
 export const RepresentationDiffSchema = z.object({
   url: z.string().optional(),
   description: z.string().optional(),
@@ -304,7 +314,7 @@ export const RepresentationDiffSchema = z.object({
 });
 export const RepresentationsDiffSchema = z.object({
   removed: z.array(RepresentationIdSchema).optional(),
-  updated: z.array(RepresentationDiffSchema).optional(),
+  updated: z.array(z.object({ id: RepresentationIdSchema, diff: RepresentationDiffSchema })).optional(),
   added: z.array(RepresentationSchema).optional(),
 });
 export const PortDiffSchema = z.object({
@@ -320,7 +330,7 @@ export const PortDiffSchema = z.object({
 });
 export const PortsDiffSchema = z.object({
   removed: z.array(PortIdSchema).optional(),
-  updated: z.array(PortDiffSchema).optional(),
+  updated: z.array(z.object({ id: PortIdSchema, diff: PortDiffSchema })).optional(),
   added: z.array(PortSchema).optional(),
 });
 export const TypeDiffSchema = z.object({
@@ -350,7 +360,7 @@ export const TypeDiffSchema = z.object({
 });
 export const TypesDiffSchema = z.object({
   removed: z.array(TypeIdSchema).optional(),
-  updated: z.array(TypeDiffSchema).optional(),
+  updated: z.array(z.object({ id: TypeIdSchema, diff: TypeDiffSchema })).optional(),
   added: z.array(TypeSchema).optional(),
 });
 export const PieceDiffSchema = z.object({
@@ -364,7 +374,7 @@ export const PieceDiffSchema = z.object({
 });
 export const PiecesDiffSchema = z.object({
   removed: z.array(PieceIdSchema).optional(),
-  updated: z.array(PieceDiffSchema).optional(),
+  updated: z.array(z.object({ id: PieceIdSchema, diff: PieceDiffSchema })).optional(),
   added: z.array(PieceSchema).optional(),
 });
 export const SideDiffSchema = z.object({
@@ -387,7 +397,7 @@ export const ConnectionDiffSchema = z.object({
 });
 export const ConnectionsDiffSchema = z.object({
   removed: z.array(ConnectionIdSchema).optional(),
-  updated: z.array(ConnectionDiffSchema).optional(),
+  updated: z.array(z.object({ id: ConnectionIdSchema, diff: ConnectionDiffSchema })).optional(),
   added: z.array(ConnectionSchema).optional(),
 });
 export const DesignDiffSchema = z.object({
@@ -406,19 +416,8 @@ export const DesignDiffSchema = z.object({
 });
 export const DesignsDiffSchema = z.object({
   removed: z.array(DesignIdSchema).optional(),
-  updated: z.array(DesignDiffSchema).optional(),
+  updated: z.array(z.object({ id: DesignIdSchema, diff: DesignDiffSchema })).optional(),
   added: z.array(DesignSchema).optional(),
-});
-export const FileDiffSchema = z.object({
-  url: z.url().optional(),
-  data: DataUriSchema.optional(),
-  size: z.number().optional(),
-  hash: z.string().optional(),
-});
-export const FilesDiffSchema = z.object({
-  removed: z.array(FileIdSchema).optional(),
-  updated: z.array(FileDiffSchema).optional(),
-  added: z.array(FileSchema).optional(),
 });
 export const KitDiffSchema = z.object({
   name: z.string().optional(),
@@ -560,8 +559,8 @@ export const jaccard = (a: string[] | undefined, b: string[] | undefined) => {
 //#region Mapping
 
 export const attributeIdLikeToAttributeId = (attributeId: AttributeIdLike): AttributeId => {
-  if (typeof attributeId === "string") return { name: attributeId };
-  return { name: attributeId.name };
+  if (typeof attributeId === "string") return { key: attributeId };
+  return { key: attributeId.key };
 };
 
 export const representationIdLikeToRepresentationId = (representationId: RepresentationIdLike): RepresentationId => {
@@ -1614,7 +1613,7 @@ export const isSameKit = (kit: Kit | KitId, other: Kit | KitId): boolean => {
 //#region Predicates
 
 export const findAttributeValue = (entity: Kit | Type | Design | Piece | Connection | Representation | Port, name: string, defaultValue?: string | null): string | null => {
-  const attribute = entity.attributes?.find((q) => q.name === name);
+  const attribute = entity.attributes?.find((q) => q.key === name);
   if (!attribute && defaultValue === undefined) throw new Error(`Attribute ${name} not found in ${entity}`);
   if (attribute?.value === undefined && defaultValue === null) return null;
   return attribute?.value ?? defaultValue ?? "";
@@ -1872,7 +1871,7 @@ export const colorPortsForTypes = (types: Type[]): Type[] => {
     const coloredType: Type = { ...type };
     for (const port of type.ports || []) {
       const coloredPort = setAttribute(port, {
-        name: "semio.color",
+        key: "semio.color",
         value: getColorForText(port.family),
       });
       coloredType.ports = [...(coloredType.ports || []), coloredPort];
@@ -1914,7 +1913,7 @@ const roundPlane = (plane: Plane): Plane => ({
 
 export const setAttribute = <T extends Kit | Design | Type | Piece | Connection | Representation | Port>(entity: T, attribute: Attribute): T => {
   const attributesArray = entity.attributes || [];
-  const existingIndex = attributesArray.findIndex((q) => q.name === attribute.name);
+  const existingIndex = attributesArray.findIndex((q) => q.key === attribute.key);
   if (existingIndex >= 0) attributesArray[existingIndex] = attribute;
   else attributesArray.push(attribute);
   return { ...entity, attributes: attributesArray };
@@ -2377,8 +2376,8 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
     const rootPiece = pieceMap[rootNode.id()];
     if (!rootPiece || !rootPiece.id_) return;
     const updatedRootPiece = setAttributes(rootPiece, [
-      { name: "semio.fixedPieceId", value: rootPiece.id_ },
-      { name: "semio.depth", value: "0" },
+      { key: "semio.fixedPieceId", value: rootPiece.id_ },
+      { key: "semio.depth", value: "0" },
     ]);
     pieceMap[rootNode.id()] = updatedRootPiece;
     let rootPlane: Plane;
@@ -2450,15 +2449,15 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
           },
           [
             {
-              name: "semio.fixedPieceId",
-              value: parentPiece.attributes?.find((q) => q.name === "semio.fixedPieceId")?.value ?? "",
+              key: "semio.fixedPieceId",
+              value: parentPiece.attributes?.find((q) => q.key === "semio.fixedPieceId")?.value ?? "",
             },
             {
-              name: "semio.parentPieceId",
+              key: "semio.parentPieceId",
               value: parentPiece.id_,
             },
             {
-              name: "semio.depth",
+              key: "semio.depth",
               value: depth.toString(),
             },
           ],
@@ -2950,19 +2949,19 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
           const baseWithUpdate = pd ? { ...p, ...pd } : p;
           const diffStatus = isRemoved ? DiffStatus.Removed : pd ? DiffStatus.Modified : DiffStatus.Unchanged;
           return setAttribute(baseWithUpdate, {
-            name: "semio.diffStatus",
+            key: "semio.diffStatus",
             value: diffStatus,
           });
         })
         .concat(
           (diff.pieces?.added || []).map((p: Piece) =>
             setAttribute(p, {
-              name: "semio.diffStatus",
+              key: "semio.diffStatus",
               value: DiffStatus.Added,
             }),
           ),
         )
-      : (diff.pieces?.added || []).map((p: Piece) => setAttribute(p, { name: "semio.diffStatus", value: DiffStatus.Added }));
+      : (diff.pieces?.added || []).map((p: Piece) => setAttribute(p, { key: "semio.diffStatus", value: DiffStatus.Added }));
 
     const effectiveConnections: Connection[] = base.connections
       ? base.connections
@@ -2993,19 +2992,19 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
             : c;
           const diffStatus = isRemoved ? DiffStatus.Removed : cd ? DiffStatus.Modified : DiffStatus.Unchanged;
           return setAttribute(baseWithUpdate, {
-            name: "semio.diffStatus",
+            key: "semio.diffStatus",
             value: diffStatus,
           });
         })
         .concat(
           (diff.connections?.added || []).map((c: Connection) =>
             setAttribute(c, {
-              name: "semio.diffStatus",
+              key: "semio.diffStatus",
               value: DiffStatus.Added,
             }),
           ),
         )
-      : (diff.connections?.added || []).map((c: Connection) => setAttribute(c, { name: "semio.diffStatus", value: DiffStatus.Added }));
+      : (diff.connections?.added || []).map((c: Connection) => setAttribute(c, { key: "semio.diffStatus", value: DiffStatus.Added }));
 
     return {
       ...base,

@@ -135,13 +135,12 @@ export type {
 
 // #region State Management (from store.tsx)
 export {
-  DesignEditorStoreFullscreenPanel, Layout, Mode,
+  DesignEditorFullscreenPanel, Layout, Mode,
   Theme
 } from "./store";
 
 export type {
-  DesignEditorStoreOperationStackEntry, DesignEditorStorePresence,
-  DesignEditorStorePresenceOther, DesignEditorStoreSelection, DesignEditorStoreState
+  DesignEditorPresence, DesignEditorPresenceOther, DesignEditorSelection, DesignEditorState
 } from "./store";
 // #endregion
 
