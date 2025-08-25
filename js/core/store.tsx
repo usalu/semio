@@ -34,6 +34,7 @@ import {
   Design,
   DesignDiff,
   DesignId,
+  DesignIdLike,
   designIdLikeToDesignId,
   DiagramPoint,
   FileDiff,
@@ -89,264 +90,162 @@ export type Url = string;
 
 export interface YStore {}
 
-export interface FileState {
-  file: File;
-}
+export interface FileState extends File {}
 export interface FileActions {
   change: (diff: FileDiff) => void;
 }
 
 export interface FileSubscriptions {
-  change: {
-    file: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
-  };
+  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
-export interface FileStore {
-  state: FileState;
-}
+export interface FileStore extends FileState {}
 
-export interface FileStoreFull {
-  state: FileState;
-  change: FileActions;
-  on: FileSubscriptions;
-}
+export interface FileStoreFull extends FileState, FileActions, FileSubscriptions {}
 
-export interface RepresentationState {
-  representation: Representation;
-}
+export interface RepresentationState extends Representation {}
 
 export interface RepresentationActions {
   change: (diff: RepresentationDiff) => void;
 }
 
 export interface RepresentationSubscriptions {
-  change: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
-export interface RepresentationStore {
-  state: RepresentationState;
-}
+export interface RepresentationStore extends RepresentationState {}
 
-export interface RepresentationStoreFull {
-  state: RepresentationState;
-  change: RepresentationActions;
-  on: RepresentationSubscriptions;
-}
+export interface RepresentationStoreFull extends RepresentationState, RepresentationActions, RepresentationSubscriptions {}
 
 export interface PortState {
-  port: Port;
+  port(): Port;
 }
 export interface PortActions {
   change: (diff: PortDiff) => void;
 }
-
 export interface PortSubscriptions {
-  change: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-
-export interface PortStore {
-  state: PortState;
-}
-
-export interface PortStoreFull {
-  state: PortState;
-  change: PortActions;
-  on: PortSubscriptions;
-}
+export interface PortStore extends PortState {}
+export interface PortStoreFull extends PortState, PortActions, PortSubscriptions {}
 
 export interface TypeState {
-  type: Type;
+  type(): Type;
 }
 export interface TypeActions {
   change: (diff: TypeDiff) => void;
 }
-
 export interface TypeSubscriptions {
-  change: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-
 export interface TypeChildStores {
   representations: Map<RepresentationId, RepresentationStore>;
   ports: Map<PortId, PortStore>;
 }
-
 export interface TypeChildStoresFull {
   representations: Map<RepresentationId, RepresentationStoreFull>;
   ports: Map<PortId, PortStoreFull>;
 }
-
-export interface TypeStore {
-  state: TypeState;
-  children: TypeChildStores;
-}
-
-export interface TypeStoreFull {
-  state: TypeState;
-  children: TypeChildStoresFull;
-  change: TypeActions;
-  on: TypeSubscriptions;
-}
+export interface TypeStore extends TypeState, TypeChildStores {}
+export interface TypeStoreFull extends TypeChildStoresFull, TypeActions, TypeSubscriptions {}
 
 export interface PieceState {
-  piece: Piece;
+  piece(): Piece;
 }
-
 export interface PieceActions {
   change: (diff: PieceDiff) => void;
 }
-
 export interface PieceSubscriptions {
-  change: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-
 export interface PieceChildStores {}
-
 export interface PieceChildStoresFull {}
-
-export interface PieceStore {
-  state: PieceState;
-  children: PieceChildStores;
-}
-
-export interface PieceStoreFull {
-  state: PieceState;
-  children: PieceChildStoresFull;
-  change: PieceActions;
-  on: PieceSubscriptions;
-}
+export interface PieceStore extends PieceState, PieceChildStores {}
+export interface PieceStoreFull extends PieceActions, PieceSubscriptions {}
 
 export interface ConnectionState {
-  connection: Connection;
+  connection(): Connection;
 }
-
 export interface ConnectionActions {
   change: (diff: ConnectionDiff) => void;
 }
-
 export interface ConnectionSubscriptions {
-  change: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-
-export interface ConnectionStore {
-  state: ConnectionState;
-}
-
-export interface ConnectionStoreFull {
-  state: ConnectionState;
-  change: ConnectionActions;
-  on: ConnectionSubscriptions;
-}
+export interface ConnectionStore extends ConnectionState {}
+export interface ConnectionStoreFull extends ConnectionState, ConnectionActions, ConnectionSubscriptions {}
 
 export interface DesignState {
-  design: Design;
+  design(): Design;
 }
-
 export interface DesignActions {
   change: (diff: DesignDiff) => void;
 }
-
 export interface DesignSubscriptions {
-  change: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-
 export interface DesignChildStores {
   pieces: Map<PieceId, PieceStore>;
   connections: Map<ConnectionId, ConnectionStore>;
 }
-
 export interface DesignChildStoresFull {
   pieces: Map<PieceId, PieceStoreFull>;
   connections: Map<ConnectionId, ConnectionStoreFull>;
 }
-
-export interface DesignStore {
-  state: DesignState;
-  children: DesignChildStores;
-}
-
-export interface DesignStoreFull {
-  state: DesignState;
-  children: DesignChildStoresFull;
-  change: DesignActions;
-  on: DesignSubscriptions;
-}
+export interface DesignStore extends DesignState, DesignChildStores {}
+export interface DesignStoreFull extends DesignState, DesignChildStoresFull, DesignActions, DesignSubscriptions {}
 
 export interface KitState {
-  kit: Kit;
-  fileUrls: Map<Url, Url>;
+  kit(): Kit;
+  fileUrls(): Map<Url, Url>;
 }
-
 export interface KitActions {
   change: (diff: KitDiff) => void;
 }
-
 export interface KitSubscriptions {
-  change: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-
 export interface KitCommandContext extends KitState {}
-
 export interface KitCommandResult {
   diff?: KitDiff;
 }
-
 export interface KitCommands {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
 }
-
 export interface KitCommandsFull {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
   register(command: string, callback: (context: KitCommandContext, ...rest: any[]) => KitCommandResult): Disposable;
 }
-
 export interface KitChildStores {
   types: Map<TypeId, TypeStore>;
   designs: Map<DesignId, DesignStore>;
   files: Map<Url, FileStore>;
 }
-
 export interface KitChildStoresFull {
   types: Map<TypeId, TypeStoreFull>;
   designs: Map<DesignId, DesignStoreFull>;
   files: Map<Url, FileStoreFull>;
 }
-
-export interface KitStore {
-  state: KitState;
-  childStores: KitChildStores;
-  commands: KitCommands;
-}
-
-export interface KitStoreFull {
-  state: KitState;
-  childStores: KitChildStoresFull;
-  commands: KitCommandsFull;
-  change: KitActions;
-  on: KitSubscriptions;
-}
+export interface KitStore extends KitState, KitChildStores {}
+export interface KitStoreFull extends KitState, KitChildStoresFull, KitCommandsFull {}
 
 export interface DesignEditorSelection {
   pieceIds?: PieceId[];
   connectionIds?: ConnectionId[];
   portId?: { pieceId: PieceId; designPieceId?: PieceId; portId: PortId };
 }
-
 export enum DesignEditorFullscreenPanel {
   None = "none",
   Diagram = "diagram",
   Model = "model",
 }
-
 export interface DesignEditorPresence {
   cursor?: DiagramPoint;
   camera?: Camera;
 }
-
 export interface DesignEditorPresenceOther extends DesignEditorPresence {
   name: string;
 }
-
 export interface DesignEditorState {
   fullscreenPanel: DesignEditorFullscreenPanel;
   selection: DesignEditorSelection;
@@ -355,7 +254,6 @@ export interface DesignEditorState {
   others: DesignEditorPresenceOther[];
   diff: KitDiff;
 }
-
 export interface DesignEditorActions {
   undo: () => void;
   redo: () => void;
@@ -371,13 +269,10 @@ export interface DesignEditorActions {
     finalize: () => void;
   };
 }
-
 export interface DesignEditorSubscriptions {
   undone: (subscribe: Subscribe) => Unsubscribe;
   redone: (subscribe: Subscribe) => Unsubscribe;
-  updated: {
-    designEditor: (subscribe: Subscribe) => Unsubscribe;
-  };
+  changed: (subscribe: Subscribe) => Unsubscribe;
   set: {
     fullscreenPanel: (subscribe: Subscribe) => Unsubscribe;
     selection: (subscribe: Subscribe) => Unsubscribe;
@@ -390,7 +285,6 @@ export interface DesignEditorSubscriptions {
     finalized: (subscribe: Subscribe) => Unsubscribe;
   };
 }
-
 export interface DesignEditorCommandContext {
   sketchpadState: SketchpadState;
   state: DesignEditorState;
@@ -398,30 +292,22 @@ export interface DesignEditorCommandContext {
   kit: Kit;
   designId: DesignId;
 }
-
 export interface DesignEditorCommandResult {
   state?: DesignEditorState;
   diff?: KitDiff;
 }
-
 export interface DesignEditorCommands {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
 }
-
 export interface DesignEditorCommandsFull {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
   register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable;
 }
-
-export interface DesignEditorStore {
-  state: DesignEditorState;
-  commands: DesignEditorCommands;
+export interface DesignEditorStore extends DesignEditorState, DesignEditorCommands {
+  state(): DesignEditorState;
 }
-
-export interface DesignEditorStoreFull {
-  state: DesignEditorState;
-  commands: DesignEditorCommandsFull;
-  change: DesignEditorActions;
+export interface DesignEditorStoreFull extends DesignEditorState, DesignEditorCommandsFull, DesignEditorActions {
+  state(): DesignEditorState;
   on: DesignEditorSubscriptions;
 }
 
@@ -432,24 +318,22 @@ export interface SketchpadState {
   activeDesignEditorDesignId?: DesignId;
   persistantId?: string;
 }
-
 export interface SketchpadActions {
   create: {
-    kits: (kits: Kit[]) => void;
-    designEditors: (designIds: DesignId[]) => void;
+    kit: (kit: Kit) => void;
+    designEditor: (designId: DesignId) => void;
   };
   delete: {
-    kits: (ids: KitIdLike[]) => void;
-    designEditors: (designIds: DesignId[]) => void;
+    kit: (id: KitIdLike) => void;
+    designEditor: (designId: DesignId) => void;
   };
   set: {
     mode: (mode: Mode) => void;
     theme: (theme: Theme) => void;
     layout: (layout: Layout) => void;
-    activeDesignEditorDesignId: (id?: string) => void;
+    activeDesignEditorDesignId: (id?: DesignIdLike) => void;
   };
 }
-
 export interface SketchpadSubscriptions {
   created: {
     kit: (subscribe: Subscribe) => Unsubscribe;
@@ -469,48 +353,33 @@ export interface SketchpadSubscriptions {
     activeDesignEditorDesignId: (subscribe: Subscribe) => Unsubscribe;
   };
 }
-
 export interface SketchpadChildStores {
   kits: Map<KitId, KitStore>;
   designEditors: Map<DesignId, DesignEditorStore>;
 }
-
 export interface SketchpadChildStoresFull {
   kits: Map<KitId, KitStoreFull>;
   designEditors: Map<DesignId, DesignEditorStoreFull>;
 }
-
 export interface SketchpadCommandContext {
   state: SketchpadState;
   kits: Kit[];
   fileUrls: Map<Url, Url>;
 }
-
 export interface SketchpadCommandResult {
   state?: SketchpadState;
   diffs?: Map<KitId, KitDiff>;
 }
-
 export interface SketchpadCommands {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
 }
-
 export interface SketchpadCommandsFull {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
   register(command: string, callback: (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult): Disposable;
 }
-
-export interface SketchpadStore {
-  state: SketchpadState;
-  children: SketchpadChildStores;
-  commands: SketchpadCommands;
-}
-
-export interface SketchpadStoreFull {
-  state: SketchpadState;
-  children: SketchpadChildStoresFull;
-  commands: SketchpadCommandsFull;
-  change: SketchpadActions;
+export interface SketchpadStore extends SketchpadState, SketchpadCommands, SketchpadChildStores {}
+export interface SketchpadStoreFull extends SketchpadState, SketchpadCommands, SketchpadChildStoresFull, SketchpadActions {
+  state(): SketchpadState;
   on: SketchpadSubscriptions;
 }
 
@@ -658,28 +527,22 @@ class YFileStore implements FileStoreFull {
     };
   }
 
-  change = {
-    file: (diff: FileDiff) => {
-      if (diff.url !== undefined) this.yFile.set("url", diff.url);
-      if (diff.data !== undefined) this.yFile.set("data", diff.data);
-      if (diff.size !== undefined) this.yFile.set("size", diff.size.toString());
-      if (diff.hash !== undefined) this.yFile.set("hash", diff.hash);
-    },
+  change = (diff: FileDiff) => {
+    if (diff.url !== undefined) this.yFile.set("url", diff.url);
+    if (diff.data !== undefined) this.yFile.set("data", diff.data);
+    if (diff.size !== undefined) this.yFile.set("size", diff.size.toString());
+    if (diff.hash !== undefined) this.yFile.set("hash", diff.hash);
   };
 
-  on = {
-    change: {
-      file: (subscribe: Subscribe, deep?: boolean) => {
-        const observer = () => subscribe();
-        if (deep) {
-          this.yFile.observeDeep(observer);
-          return () => this.yFile.unobserveDeep(observer);
-        } else {
-          this.yFile.observe(observer);
-          return () => this.yFile.unobserve(observer);
-        }
-      },
-    },
+  on = (subscribe: Subscribe, deep?: boolean) => {
+    const observer = () => subscribe();
+    if (deep) {
+      this.yFile.observeDeep(observer);
+      return () => this.yFile.unobserveDeep(observer);
+    } else {
+      this.yFile.observe(observer);
+      return () => this.yFile.unobserve(observer);
+    }
   };
 }
 
@@ -1379,6 +1242,10 @@ class YKitStore implements KitStoreFull {
       this.designIds.set(designId, uuid);
       this.designs.set(designId, yDesignStore);
     });
+
+    Object.entries(kitCommands).forEach(([commandId, command]) => {
+      this.registerCommand(commandId, command);
+    });
   }
 
   get kit(): Kit {
@@ -1544,6 +1411,10 @@ class YDesignEditorStore implements DesignEditorStore {
     this.yDesignEditorStore.set("isTransactionActive", state.isTransactionActive);
     this.yDesignEditorStore.set("presenceCursorX", state.presence.cursor?.x || 0);
     this.yDesignEditorStore.set("presenceCursorY", state.presence.cursor?.y || 0);
+
+    Object.entries(designEditorCommands).forEach(([commandId, command]) => {
+      this.registerCommand(commandId, command);
+    });
   }
 
   get fullscreenPanel(): DesignEditorFullscreenPanel {
@@ -1754,6 +1625,22 @@ class YSketchpadStore implements SketchpadStore {
     return JSON.parse(designIdStr) as DesignId;
   }
 
+  get state(): SketchpadState {
+    return {
+      mode: this.mode,
+      theme: this.theme,
+      layout: this.layout,
+      activeDesignEditorDesignId: this.activeDesignEditorDesignId,
+    };
+  }
+
+  get children(): SketchpadChildStores {
+    return {
+      kits: this.kits,
+      designEditors: this.designEditors,
+    };
+  }
+
   private getYSketchpad(): YSketchpad {
     return this.ySketchpadDoc.getMap("sketchpad");
   }
@@ -1952,7 +1839,13 @@ export function getOrCreateSketchpadStore(id: string, persisted: boolean = true)
       layout: Layout.NORMAL,
       persistantId: persisted ? id : undefined,
     };
-    stores.set(id, new YSketchpadStore(initialState));
+    const store = new YSketchpadStore(initialState);
+
+    Object.entries(sketchpadCommands).forEach(([commandId, command]) => {
+      store.registerCommand(commandId, command);
+    });
+
+    stores.set(id, store);
   }
   return stores.get(id)!;
 }
@@ -1962,9 +1855,19 @@ export function getOrCreateSketchpadStore(id: string, persisted: boolean = true)
 // #region Commands
 
 const sketchpadCommands = {
-  "semio.sketchpad.turnDark": (context: SketchpadCommandContext): SketchpadCommandResult => {
+  "semio.sketchpad.setTheme": (context: SketchpadCommandContext, theme: Theme): SketchpadCommandResult => {
     return {
-      state: { ...context.state, theme: Theme.DARK },
+      state: { ...context.state, theme },
+    };
+  },
+  "semio.sketchpad.setMode": (context: SketchpadCommandContext, mode: Mode): SketchpadCommandResult => {
+    return {
+      state: { ...context.state, mode },
+    };
+  },
+  "semio.sketchpad.setLayout": (context: SketchpadCommandContext, layout: Layout): SketchpadCommandResult => {
+    return {
+      state: { ...context.state, layout },
     };
   },
 };
@@ -1975,6 +1878,75 @@ const kitCommands = {
       diff: { types: { added: [type] } },
     };
   },
+  "semio.kit.setDesign": (context: KitCommandContext, design: Design): KitCommandResult => {
+    return {
+      diff: { designs: { updated: [design] } },
+    };
+  },
+  "semio.kit.setPiece": (context: KitCommandContext, designId: DesignId, piece: Piece): KitCommandResult => {
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              name: designId.name,
+              variant: designId.variant,
+              view: designId.view,
+              pieces: { updated: [piece] },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.kit.setPieces": (context: KitCommandContext, designId: DesignId, pieces: Piece[]): KitCommandResult => {
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              name: designId.name,
+              variant: designId.variant,
+              view: designId.view,
+              pieces: { updated: pieces },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.kit.setConnection": (context: KitCommandContext, designId: DesignId, connection: Connection): KitCommandResult => {
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              name: designId.name,
+              variant: designId.variant,
+              view: designId.view,
+              connections: { updated: [connection] },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.kit.setConnections": (context: KitCommandContext, designId: DesignId, connections: Connection[]): KitCommandResult => {
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              name: designId.name,
+              variant: designId.variant,
+              view: designId.view,
+              connections: { updated: connections },
+            },
+          ],
+        },
+      },
+    };
+  },
 };
 
 const designEditorCommands = {
@@ -1982,13 +1954,56 @@ const designEditorCommands = {
     return {
       diff: {
         designs: {
-          updated: {
-            name: context.designId.name,
-            variant: context.designId.variant,
-            view: context.designId.view,
-            pieces: { added: [piece] },
-          },
+          updated: [
+            {
+              name: context.state.designId.name,
+              variant: context.state.designId.variant,
+              view: context.state.designId.view,
+              pieces: { added: [piece] },
+            },
+          ],
         },
+      },
+    };
+  },
+  "semio.designEditor.startTransaction": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    return {
+      state: { ...context.state, isTransactionActive: true },
+    };
+  },
+  "semio.designEditor.finalizeTransaction": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    return {
+      state: { ...context.state, isTransactionActive: false },
+    };
+  },
+  "semio.designEditor.abortTransaction": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    return {
+      state: { ...context.state, isTransactionActive: false },
+    };
+  },
+  "semio.designEditor.executeCommand": (context: DesignEditorCommandContext, commandId: string, ...args: any[]): DesignEditorCommandResult => {
+    return {};
+  },
+  "semio.designEditor.selectAll": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    return {};
+  },
+  "semio.designEditor.deselectAll": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    return {};
+  },
+  "semio.designEditor.deleteSelected": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    return {};
+  },
+  "semio.designEditor.undo": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    return {};
+  },
+  "semio.designEditor.redo": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    return {};
+  },
+  "semio.designEditor.toggleDiagramFullscreen": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    return {
+      state: {
+        ...context.state,
+        fullscreenPanel: context.state.fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? DesignEditorFullscreenPanel.None : DesignEditorFullscreenPanel.Diagram,
       },
     };
   },
@@ -2071,7 +2086,7 @@ export const DesignEditorScopeProvider = (props: { id: string; children: React.R
 };
 
 const useSketchpadScope = () => useContext(SketchpadScopeContext);
-const useKitScope = () => useContext(KitScopeContext);
+const useKitStoreScope = () => useContext(KitScopeContext);
 const useDesignScope = () => useContext(DesignScopeContext);
 const useTypeScope = () => useContext(TypeScopeContext);
 const usePieceScope = () => useContext(PieceScopeContext);
@@ -2122,19 +2137,26 @@ export function useDesignEditor<T>(selector?: (store: DesignEditorStore) => T, i
   return useStore(designEditor, designEditor.on.updated.designEditor, selector);
 }
 
-export function useKit(): KitStore;
-export function useKit<T>(selector: (store: KitStore) => T): T;
-export function useKit<T>(selector: (store: KitStore) => T, id: KitId): T;
-export function useKit<T>(selector?: (store: KitStore) => T, id?: KitId): T | KitStore {
+export function useKitStore(): KitStore;
+export function useKitStore<T>(selector: (store: KitStore) => T): T;
+export function useKitStore<T>(selector: (store: KitStore) => T, id: KitId): T;
+export function useKitStore<T>(selector?: (store: KitStore) => T, id?: KitId): T | KitStore {
   const sketchpadScope = useSketchpadScope();
-  if (!sketchpadScope) throw new Error("useKit must be called within a SketchpadScopeProvider");
+  if (!sketchpadScope) throw new Error("useKitStore must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
-  const kitScope = useKitScope();
+  const kitScope = useKitStoreScope();
   const kitId = kitScope?.id ?? id;
-  if (!kitId) throw new Error("useKit must be called within a KitScopeProvider or be directly provided with an id");
+  if (!kitId) throw new Error("useKitStore must be called within a KitScopeProvider or be directly provided with an id");
   if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
   const kitStore = store.kits.get(kitId)!;
-  return useStore(kitStore, kitStore.on.updated.kit, selector);
+  return useStore(kitStore, kitStore.on.changed, selector);
+}
+
+export function useKit(): Kit;
+export function useKit<T>(selector: (kit: Kit) => T): T;
+export function useKit<T>(selector: (kit: Kit) => T, id: KitId): T;
+export function useKit<T>(selector?: (kit: Kit) => T, id?: KitId): T | Kit {
+  return useKitStore((store) => (selector ? selector(store.kit()) : store.kit()));
 }
 
 export function useDesign(): Design;
@@ -2144,7 +2166,7 @@ export function useDesign<T>(selector?: (design: Design) => T, id?: DesignId): T
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("useDesign must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
-  const kitScope = useKitScope();
+  const kitScope = useKitStoreScope();
   if (!kitScope) throw new Error("useDesign must be called within a KitScopeProvider");
   const kitId = kitScope.id;
   if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
@@ -2154,7 +2176,7 @@ export function useDesign<T>(selector?: (design: Design) => T, id?: DesignId): T
   if (!designId) throw new Error("useDesign must be called within a DesignScopeProvider or be directly provided with an id");
   if (!kitStore.designs.has(designId)) throw new Error(`Design store not found for design ${designId}`);
   const designStore = kitStore.designs.get(designId)!;
-  return useStore(designStore.design, designStore.on.updated.design, selector);
+  return useStore(designStore.state.design, designStore.on.changed, selector);
 }
 
 export function useType(): Type;
@@ -2164,7 +2186,7 @@ export function useType<T>(selector?: (type: Type) => T, id?: TypeId): T | Type 
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("useType must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
-  const kitScope = useKitScope();
+  const kitScope = useKitStoreScope();
   if (!kitScope) throw new Error("useType must be called within a KitScopeProvider");
   const kitId = kitScope.id;
   if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
@@ -2174,7 +2196,7 @@ export function useType<T>(selector?: (type: Type) => T, id?: TypeId): T | Type 
   if (!typeId) throw new Error("useType must be called within a TypeScopeProvider or be directly provided with an id");
   if (!kit.types.has(typeId)) throw new Error(`Type store not found for type ${typeId}`);
   const typeStore = kit.types.get(typeId)!;
-  return useStore(typeStore.type, typeStore.on.updated.type, selector);
+  return useStore(typeStore.state.type, typeStore.on.changed, selector);
 }
 
 export function usePiece(): Piece;
@@ -2184,7 +2206,7 @@ export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId): T | P
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("usePiece must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
-  const kitScope = useKitScope();
+  const kitScope = useKitStoreScope();
   if (!kitScope) throw new Error("usePiece must be called within a KitScopeProvider");
   const kitId = kitScope.id;
   if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
@@ -2199,7 +2221,7 @@ export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId): T | P
   if (!pieceId) throw new Error("usePiece must be called within a PieceScopeProvider or be directly provided with an id");
   if (!design.pieces.has(pieceId)) throw new Error(`Piece store not found for piece ${pieceId}`);
   const pieceStore = design.pieces.get(pieceId)!;
-  return useStore(pieceStore.piece, pieceStore.on.updated.piece, selector);
+  return useStore(pieceStore.state.piece, pieceStore.on.changed, selector);
 }
 
 export function useConnection(): Connection;
@@ -2209,7 +2231,7 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("useConnection must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
-  const kitScope = useKitScope();
+  const kitScope = useKitStoreScope();
   if (!kitScope) throw new Error("useConnection must be called within a KitScopeProvider");
   const kitId = kitScope.id;
   if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
@@ -2224,7 +2246,7 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
   if (!connectionId) throw new Error("useConnection must be called within a ConnectionScopeProvider or be directly provided with an id");
   if (!design.connections.has(connectionId)) throw new Error(`Connection store not found for connection ${connectionId}`);
   const connectionStore = design.connections.get(connectionId)!;
-  return useStore(connectionStore.connection, connectionStore.on.updated.connection, selector);
+  return useStore(connectionStore.state.connection, connectionStore.on.changed, selector);
 }
 
 export function usePort(): Port;
@@ -2234,7 +2256,7 @@ export function usePort<T>(selector?: (port: Port) => T, id?: PortId): T | Port 
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("usePort must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
-  const kitScope = useKitScope();
+  const kitScope = useKitStoreScope();
   if (!kitScope) throw new Error("usePort must be called within a KitScopeProvider");
   const kitId = kitScope.id;
   if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
@@ -2249,7 +2271,7 @@ export function usePort<T>(selector?: (port: Port) => T, id?: PortId): T | Port 
   if (!portId) throw new Error("usePort must be called within a PortScopeProvider or be directly provided with an id");
   if (!type.ports.has(portId)) throw new Error(`Port store not found for port ${portId}`);
   const portStore = type.ports.get(portId)!;
-  return useStore(portStore.port, portStore.on.updated.port, selector);
+  return useStore(portStore.state.port, portStore.on.changed, selector);
 }
 
 export function useRepresentation(): Representation;
@@ -2259,7 +2281,7 @@ export function useRepresentation<T>(selector?: (representation: Representation)
   const sketchpadScope = useSketchpadScope();
   if (!sketchpadScope) throw new Error("useRepresentation must be called within a SketchpadScopeProvider");
   const store = stores.get(sketchpadScope.id)!;
-  const kitScope = useKitScope();
+  const kitScope = useKitStoreScope();
   if (!kitScope) throw new Error("useRepresentation must be called within a KitScopeProvider");
   const kitId = kitScope.id;
   if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);

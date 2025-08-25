@@ -49,14 +49,14 @@ const invertSelection = (selection: any, design: Design): any => {
       connectedPieceId: c.connected.piece.id_,
       connectingPieceId: c.connecting.piece.id_,
     })) || [];
-  const newSelectedPieceIds = allPieceIds.filter((id) => !selection.selectedPieceIds.includes(id));
+  const newSelectedPieceIds = allPieceIds.filter((id) => !(selection.pieceIds || []).includes(id));
   const newSelectedConnections = allConnections.filter((conn) => {
-    return !selection.selectedConnections.some((selected: any) => selected.connectingPieceId === conn.connectingPieceId && selected.connectedPieceId === conn.connectedPieceId);
+    return !(selection.connectionIds || []).some((selected: any) => selected.connectingPieceId === conn.connectingPieceId && selected.connectedPieceId === conn.connectedPieceId);
   });
   return {
-    selectedPieceIds: newSelectedPieceIds,
-    selectedConnections: newSelectedConnections,
-    selectedPiecePortId: undefined,
+    pieceIds: newSelectedPieceIds,
+    connectionIds: newSelectedConnections,
+    portId: undefined,
   };
 };
 
@@ -78,7 +78,7 @@ const selectAllConnections = (design: Design): any => ({
 
 const selectConnected = (design: Design, selection: any): any => {
   const connectedPieceIds = new Set<string>();
-  selection.selectedPieceIds.forEach((pieceId: string) => {
+  selection.pieceIds || [].forEach((pieceId: string) => {
     design.connections?.forEach((conn: any) => {
       if (conn.connecting.piece.id_ === pieceId) {
         connectedPieceIds.add(conn.connected.piece.id_);
@@ -90,7 +90,7 @@ const selectConnected = (design: Design, selection: any): any => {
   });
   return {
     ...selection,
-    selectedPieceIds: [...new Set([...selection.selectedPieceIds, ...Array.from(connectedPieceIds)])],
+    selectedPieceIds: [...new Set([...selection.pieceIds || [], ...Array.from(connectedPieceIds)])],
   };
 };
 
@@ -104,7 +104,7 @@ const selectDisconnected = (design: Design): any => {
   return {
     selectedPieceIds: disconnectedPieceIds,
     selectedConnections: [],
-    selectedPiecePortId: undefined,
+    portId: undefined,
   };
 };
 
@@ -113,7 +113,7 @@ const selectPiecesOfType = (design: Design, typeId: any): any => {
   return {
     selectedPieceIds: matchingPieceIds,
     selectedConnections: [],
-    selectedPiecePortId: undefined,
+    portId: undefined,
   };
 };
 
@@ -178,8 +178,8 @@ export const designEditorCommands: Command[] = [
       let newDesign = design;
       const newPieceIds: string[] = [];
 
-      for (const pieceId of selection.selectedPieceIds) {
-        const piece = design.pieces?.find((p) => p.id_ === pieceId);
+      for (const pieceId of selection.pieceIds || []) {
+        const piece = design.pieces?.find((p) => p.id_ === (typeof pieceId === 'string' ? pieceId : pieceId.id_));
         if (piece) {
           const newPiece = {
             ...piece,
@@ -214,8 +214,8 @@ export const designEditorCommands: Command[] = [
       const design = findDesignInKit(kit, designId);
       let newDesign = design;
 
-      for (const pieceId of selection.selectedPieceIds) {
-        const piece = design.pieces?.find((p) => p.id_ === pieceId);
+      for (const pieceId of selection.pieceIds || []) {
+        const piece = design.pieces?.find((p) => p.id_ === (typeof pieceId === 'string' ? pieceId : pieceId.id_));
         if (piece && !piece.plane) {
           const updatedPiece = {
             ...piece,
@@ -235,7 +235,7 @@ export const designEditorCommands: Command[] = [
 
       return {
         design: newDesign,
-        content: `✅ Fixed ${selection.selectedPieceIds.length} pieces`,
+        content: `✅ Fixed ${selection.pieceIds || [].length} pieces`,
       };
     },
   },
@@ -252,8 +252,8 @@ export const designEditorCommands: Command[] = [
       const design = findDesignInKit(kit, designId);
       let newDesign = design;
 
-      for (const pieceId of selection.selectedPieceIds) {
-        const piece = design.pieces?.find((p) => p.id_ === pieceId);
+      for (const pieceId of selection.pieceIds || []) {
+        const piece = design.pieces?.find((p) => p.id_ === (typeof pieceId === 'string' ? pieceId : pieceId.id_));
         if (piece && piece.plane) {
           const updatedPiece = { ...piece, plane: undefined };
           newDesign = setPieceInDesign(newDesign, updatedPiece);
@@ -262,7 +262,7 @@ export const designEditorCommands: Command[] = [
 
       return {
         design: newDesign,
-        content: `✅ Unfixed ${selection.selectedPieceIds.length} pieces`,
+        content: `✅ Unfixed ${selection.pieceIds || [].length} pieces`,
       };
     },
   },
@@ -654,9 +654,9 @@ export const designEditorCommands: Command[] = [
       const pieceIds = payload.pieceIds.split(",").map((id: string) => id.trim());
       return {
         selection: {
-          selectedPieceIds: pieceIds,
-          selectedConnections: [],
-          selectedPiecePortId: undefined,
+          pieceIds: pieceIds,
+          connectionIds: [],
+          portId: undefined,
         },
         content: `✅ Selected ${pieceIds.length} pieces`,
       };
@@ -690,7 +690,7 @@ export const designEditorCommands: Command[] = [
         selection: {
           selectedPieceIds: [],
           selectedConnections: connectionPairs,
-          selectedPiecePortId: undefined,
+          portId: undefined,
         },
         content: `✅ Selected ${connectionPairs.length} connections`,
       };
@@ -707,10 +707,10 @@ export const designEditorCommands: Command[] = [
     hotkey: "delete",
     execute: async (context) => {
       const { kit, designId, selection } = context;
-      const selectedPieces = selection.selectedPieceIds.map((id: string) => ({
+      const selectedPieces = selection.pieceIds || [].map((id: string) => ({
         id_: id,
       }));
-      const selectedConnections = selection.selectedConnections.map((conn: any) => ({
+      const selectedConnections = (selection.connectionIds || []).map((conn: any) => ({
         connecting: { piece: { id_: conn.connectingPieceId } },
         connected: { piece: { id_: conn.connectedPieceId } },
       }));
@@ -1008,11 +1008,11 @@ export const designEditorCommands: Command[] = [
       const { kit, designId, selection } = context;
       const design = findDesignInKit(kit, designId);
 
-      if (selection.selectedPieceIds.length < 2) {
+      if (selection.pieceIds || [].length < 2) {
         return { content: `⚠️ Select at least 2 pieces to align` };
       }
 
-      const selectedPieces = design.pieces?.filter((p) => selection.selectedPieceIds.includes(p.id_)) || [];
+      const selectedPieces = design.pieces?.filter((p) => selection.pieceIds || [].includes(p.id_)) || [];
       const yPositions = selectedPieces.map((p) => p.center?.y || 0);
 
       let targetY: number;
@@ -1065,11 +1065,11 @@ export const designEditorCommands: Command[] = [
       const { kit, designId, selection } = context;
       const design = findDesignInKit(kit, designId);
 
-      if (selection.selectedPieceIds.length < 2) {
+      if (selection.pieceIds || [].length < 2) {
         return { content: `⚠️ Select at least 2 pieces to align` };
       }
 
-      const selectedPieces = design.pieces?.filter((p) => selection.selectedPieceIds.includes(p.id_)) || [];
+      const selectedPieces = design.pieces?.filter((p) => selection.pieceIds || [].includes(p.id_)) || [];
       const xPositions = selectedPieces.map((p) => p.center?.x || 0);
 
       let targetX: number;
@@ -1110,11 +1110,11 @@ export const designEditorCommands: Command[] = [
       const { kit, designId, selection } = context;
       const design = findDesignInKit(kit, designId);
 
-      if (selection.selectedPieceIds.length < 3) {
+      if (selection.pieceIds || [].length < 3) {
         return { content: `⚠️ Select at least 3 pieces to distribute` };
       }
 
-      const selectedPieces = design.pieces?.filter((p) => selection.selectedPieceIds.includes(p.id_)) || [];
+      const selectedPieces = design.pieces?.filter((p) => selection.pieceIds || [].includes(p.id_)) || [];
       selectedPieces.sort((a, b) => (a.center?.x || 0) - (b.center?.x || 0));
 
       const minX = selectedPieces[0].center?.x || 0;
@@ -1148,11 +1148,11 @@ export const designEditorCommands: Command[] = [
       const { kit, designId, selection } = context;
       const design = findDesignInKit(kit, designId);
 
-      if (selection.selectedPieceIds.length < 3) {
+      if (selection.pieceIds || [].length < 3) {
         return { content: `⚠️ Select at least 3 pieces to distribute` };
       }
 
-      const selectedPieces = design.pieces?.filter((p) => selection.selectedPieceIds.includes(p.id_)) || [];
+      const selectedPieces = design.pieces?.filter((p) => selection.pieceIds || [].includes(p.id_)) || [];
       selectedPieces.sort((a, b) => (a.center?.y || 0) - (b.center?.y || 0));
 
       const minY = selectedPieces[0].center?.y || 0;
@@ -1197,13 +1197,13 @@ export const designEditorCommands: Command[] = [
       const design = findDesignInKit(kit, designId);
       const offset = payload.offset.split(",").map((n: string) => parseFloat(n.trim()));
 
-      if (selection.selectedPieceIds.length === 0) {
+      if (selection.pieceIds || [].length === 0) {
         return { content: `⚠️ No pieces selected to move` };
       }
 
       let newDesign = design;
-      for (const pieceId of selection.selectedPieceIds) {
-        const piece = design.pieces?.find((p) => p.id_ === pieceId);
+      for (const pieceId of selection.pieceIds || []) {
+        const piece = design.pieces?.find((p) => p.id_ === (typeof pieceId === 'string' ? pieceId : pieceId.id_));
         if (piece) {
           const updatedPiece = {
             ...piece,
@@ -1218,7 +1218,7 @@ export const designEditorCommands: Command[] = [
 
       return {
         design: newDesign,
-        content: `✅ Moved ${selection.selectedPieceIds.length} pieces`,
+        content: `✅ Moved ${selection.pieceIds || [].length} pieces`,
       };
     },
   },
@@ -1242,11 +1242,11 @@ export const designEditorCommands: Command[] = [
       const { kit, designId, selection } = context;
       const design = findDesignInKit(kit, designId);
 
-      if (selection.selectedPieceIds.length === 0) {
+      if (selection.pieceIds || [].length === 0) {
         return { content: `⚠️ No pieces selected to rotate` };
       }
 
-      const selectedPieces = design.pieces?.filter((p) => selection.selectedPieceIds.includes(p.id_)) || [];
+      const selectedPieces = design.pieces?.filter((p) => selection.pieceIds || [].includes(p.id_)) || [];
 
       // Calculate centroid
       const totalX = selectedPieces.reduce((sum, p) => sum + (p.center?.x || 0), 0);
@@ -1297,11 +1297,11 @@ export const designEditorCommands: Command[] = [
       const { kit, designId, selection } = context;
       const design = findDesignInKit(kit, designId);
 
-      if (selection.selectedPieceIds.length === 0) {
+      if (selection.pieceIds || [].length === 0) {
         return { content: `⚠️ No pieces selected to scale` };
       }
 
-      const selectedPieces = design.pieces?.filter((p) => selection.selectedPieceIds.includes(p.id_)) || [];
+      const selectedPieces = design.pieces?.filter((p) => selection.pieceIds || [].includes(p.id_)) || [];
 
       // Calculate centroid
       const totalX = selectedPieces.reduce((sum, p) => sum + (p.center?.x || 0), 0);
@@ -1391,13 +1391,13 @@ ${typesList}`,
       const { kit, designId, selection } = context;
       const design = findDesignInKit(kit, designId);
 
-      if (selection.selectedPieceIds.length === 0) {
+      if (selection.pieceIds || [].length === 0) {
         return { content: `⚠️ No pieces selected to randomize` };
       }
 
       let newDesign = design;
-      for (const pieceId of selection.selectedPieceIds) {
-        const piece = design.pieces?.find((p) => p.id_ === pieceId);
+      for (const pieceId of selection.pieceIds || []) {
+        const piece = design.pieces?.find((p) => p.id_ === (typeof pieceId === 'string' ? pieceId : pieceId.id_));
         if (piece) {
           const updatedPiece = {
             ...piece,
@@ -1412,7 +1412,7 @@ ${typesList}`,
 
       return {
         design: newDesign,
-        content: `✅ Randomized ${selection.selectedPieceIds.length} piece positions`,
+        content: `✅ Randomized ${selection.pieceIds || [].length} piece positions`,
       };
     },
   },
@@ -1442,11 +1442,11 @@ ${typesList}`,
       const { kit, designId, selection } = context;
       const design = findDesignInKit(kit, designId);
 
-      if (selection.selectedPieceIds.length === 0) {
+      if (selection.pieceIds || [].length === 0) {
         return { content: `⚠️ No pieces selected to arrange` };
       }
 
-      const selectedPieces = design.pieces?.filter((p) => selection.selectedPieceIds.includes(p.id_)) || [];
+      const selectedPieces = design.pieces?.filter((p) => selection.pieceIds || [].includes(p.id_)) || [];
       const { columns, spacing } = payload;
 
       let newDesign = design;
@@ -1480,11 +1480,11 @@ ${typesList}`,
       const { kit, designId, selection } = context;
       const design = findDesignInKit(kit, designId);
 
-      if (selection.selectedPieceIds.length === 0) {
+      if (selection.pieceIds || [].length === 0) {
         return { content: `⚠️ No pieces selected to mirror` };
       }
 
-      const selectedPieces = design.pieces?.filter((p) => selection.selectedPieceIds.includes(p.id_)) || [];
+      const selectedPieces = design.pieces?.filter((p) => selection.pieceIds || [].includes(p.id_)) || [];
 
       // Calculate centroid
       const totalX = selectedPieces.reduce((sum, p) => sum + (p.center?.x || 0), 0);
@@ -1520,11 +1520,11 @@ ${typesList}`,
       const { kit, designId, selection } = context;
       const design = findDesignInKit(kit, designId);
 
-      if (selection.selectedPieceIds.length === 0) {
+      if (selection.pieceIds || [].length === 0) {
         return { content: `⚠️ No pieces selected to mirror` };
       }
 
-      const selectedPieces = design.pieces?.filter((p) => selection.selectedPieceIds.includes(p.id_)) || [];
+      const selectedPieces = design.pieces?.filter((p) => selection.pieceIds || [].includes(p.id_)) || [];
 
       // Calculate centroid
       const totalY = selectedPieces.reduce((sum, p) => sum + (p.center?.y || 0), 0);
@@ -1561,7 +1561,7 @@ ${typesList}`,
       const { kit, designId, selection, clusterDesign } = context;
 
       // Determine which pieces to cluster
-      const clusterPieceIds: string[] = selection.selectedPieceIds;
+      const clusterPieceIds: string[] = selection.pieceIds || [];
 
       if (clusterPieceIds.length === 0) {
         return { content: `⚠️ No pieces selected to cluster` };
@@ -1598,7 +1598,7 @@ ${typesList}`,
       const { kit, designId, selection, expandDesign } = context;
 
       // Find selected design nodes
-      const selectedDesignPieceIds = selection.selectedPieceIds.filter((id) => id.startsWith("design-"));
+      const selectedDesignPieceIds = selection.pieceIds || [].filter((id) => id.startsWith("design-"));
 
       if (selectedDesignPieceIds.length === 0) {
         return { content: `⚠️ No clustered design selected to expand` };
@@ -1642,11 +1642,11 @@ ${typesList}`,
       const { kit, designId, selection } = context;
       const design = findDesignInKit(kit, designId);
 
-      if (selection.selectedPieceIds.length === 0) {
+      if (selection.pieceIds || [].length === 0) {
         return { content: `⚠️ No pieces selected to export` };
       }
 
-      const selectedPieces = design.pieces?.filter((p) => selection.selectedPieceIds.includes(p.id_)) || [];
+      const selectedPieces = design.pieces?.filter((p) => selection.pieceIds || [].includes(p.id_)) || [];
       const selectedConnections = design.connections?.filter((conn) => selection.selectedConnections.some((selConn: any) => selConn.connectingPieceId === conn.connecting.piece.id_ && selConn.connectedPieceId === conn.connected.piece.id_)) || [];
 
       const exportData = {
@@ -1679,11 +1679,11 @@ ${typesList}`,
       const { kit, designId, selection } = context;
       const design = findDesignInKit(kit, designId);
 
-      if (selection.selectedPieceIds.length === 0) {
+      if (selection.pieceIds || [].length === 0) {
         return { content: `⚠️ No pieces selected to copy` };
       }
 
-      const selectedPieces = design.pieces?.filter((p) => selection.selectedPieceIds.includes(p.id_)) || [];
+      const selectedPieces = design.pieces?.filter((p) => selection.pieceIds || [].includes(p.id_)) || [];
       const selectedConnections = design.connections?.filter((conn) => selection.selectedConnections.some((selConn: any) => selConn.connectingPieceId === conn.connecting.piece.id_ && selConn.connectedPieceId === conn.connected.piece.id_)) || [];
 
       const exportData = {
@@ -1714,14 +1714,14 @@ ${typesList}`,
     execute: async (context) => {
       const { kit, designId, selection } = context;
 
-      if (selection.selectedPieceIds.length === 0) {
+      if (selection.pieceIds || [].length === 0) {
         return { content: `⚠️ No pieces selected to cut` };
       }
 
       const design = findDesignInKit(kit, designId);
 
       // First export to clipboard
-      const selectedPieces = design.pieces?.filter((p) => selection.selectedPieceIds.includes(p.id_)) || [];
+      const selectedPieces = design.pieces?.filter((p) => selection.pieceIds || [].includes(p.id_)) || [];
       const selectedConnections = design.connections?.filter((conn) => selection.selectedConnections.some((selConn: any) => selConn.connectingPieceId === conn.connecting.piece.id_ && selConn.connectedPieceId === conn.connected.piece.id_)) || [];
 
       const exportData = {
@@ -1736,7 +1736,7 @@ ${typesList}`,
       }
 
       // Then delete the selected items
-      const piecesToDelete = selection.selectedPieceIds.map((id: string) => ({
+      const piecesToDelete = selection.pieceIds || [].map((id: string) => ({
         id_: id,
       }));
       const connectionsToDelete = selection.selectedConnections.map((conn: any) => ({
@@ -1801,7 +1801,7 @@ ${typesList}`,
           selection: {
             selectedPieceIds: newPieceIds,
             selectedConnections: [],
-            selectedPiecePortId: undefined,
+            portId: undefined,
           },
           content: `✅ Pasted ${data.pieces.length} pieces`,
         };

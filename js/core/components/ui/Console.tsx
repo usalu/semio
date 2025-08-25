@@ -1164,12 +1164,12 @@ class TerminalConsole {
 
     try {
       const context = {
-        kit: useKit(),
+        kit: useKit((store) => store.state.kit),
         designId: useDesignId() || "",
         selection: useDesignEditorStoreSelection() || {
-          selectedPieceIds: [],
-          selectedConnections: [],
-          selectedPiecePortId: undefined,
+          pieceIds: [],
+          connectionIds: [],
+          portId: undefined,
         },
       };
 
