@@ -2238,4 +2238,104 @@ export function useRepresentation<T>(selector?: (representation: Representation)
   );
   return selector ? selector(state) : state;
 }
+
+// Additional utility hooks for the new store architecture
+export function useMode(): Mode {
+  return useSketchpad((store) => store.snapshot().mode);
+}
+
+export function useTheme(): Theme {
+  return useSketchpad((store) => store.snapshot().theme);
+}
+
+export function useLayout(): Layout {
+  return useSketchpad((store) => store.snapshot().layout);
+}
+
+export function useDesignId(): DesignId {
+  const designScope = useDesignScope();
+  if (!designScope) throw new Error("useDesignId must be called within a DesignScopeProvider");
+  return designScope.id;
+}
+
+export function useDesigns(): DesignId[] {
+  const kit = useKit();
+  return kit.designs
+    ? kit.designs.map((design) => ({
+        name: design.name,
+        variant: design.variant,
+        view: design.view,
+      }))
+    : [];
+}
+
+export function useCommands() {
+  const designEditor = useDesignEditor();
+  return {
+    // State management commands
+    setMode: (mode: Mode) => designEditor.execute("setMode", mode),
+    setTheme: (theme: Theme) => designEditor.execute("setTheme", theme),
+    setLayout: (layout: Layout) => designEditor.execute("setLayout", layout),
+
+    // Transaction commands
+    startTransaction: () => designEditor.execute("startTransaction"),
+    finalizeTransaction: () => designEditor.execute("finalizeTransaction"),
+    abortTransaction: () => designEditor.execute("abortTransaction"),
+
+    // History commands
+    undo: () => designEditor.execute("undo"),
+    redo: () => designEditor.execute("redo"),
+
+    // Design editing commands
+    setDesign: (design: Design) => designEditor.execute("setDesign", design),
+    setPiece: (piece: Piece) => designEditor.execute("setPiece", piece),
+    setPieces: (pieces: Piece[]) => designEditor.execute("setPieces", pieces),
+    setConnection: (connection: Connection) => designEditor.execute("setConnection", connection),
+    setConnections: (connections: Connection[]) => designEditor.execute("setConnections", connections),
+
+    // Selection commands
+    selectAll: () => designEditor.execute("selectAll"),
+    deselectAll: () => designEditor.execute("deselectAll"),
+    selectPiece: (pieceId: PieceId) => designEditor.execute("selectPiece", pieceId),
+    selectPieces: (pieceIds: PieceId[]) => designEditor.execute("selectPieces", pieceIds),
+    addPieceToSelection: (pieceId: PieceId) => designEditor.execute("addPieceToSelection", pieceId),
+    removePieceFromSelection: (pieceId: PieceId) => designEditor.execute("removePieceFromSelection", pieceId),
+    selectPiecePort: (pieceId: PieceId, portId: PortId) => designEditor.execute("selectPiecePort", pieceId, portId),
+    deselectPiecePort: () => designEditor.execute("deselectPiecePort"),
+
+    // Connection commands
+    addConnection: (connection: Connection) => designEditor.execute("addConnection", connection),
+    deleteSelected: () => designEditor.execute("deleteSelected"),
+
+    // UI state commands
+    toggleDiagramFullscreen: () => designEditor.execute("toggleDiagramFullscreen"),
+    toggleModelFullscreen: () => designEditor.execute("toggleModelFullscreen"),
+
+    // Complex operations
+    executeCommand: (command: string, ...args: any[]) => designEditor.execute(command, ...args),
+  };
+}
+
+// Design editor state hooks
+export function useDesignEditorStoreSelection(): DesignEditorSelection {
+  return useDesignEditor((store) => store.snapshot().selection);
+}
+
+export function useDesignEditorStoreFullscreenPanel(): DesignEditorFullscreenPanel {
+  return useDesignEditor((store) => store.snapshot().fullscreenPanel);
+}
+
+export function useDesignEditorStoreDesignDiff(): KitDiff {
+  return useDesignEditor((store) => store.snapshot().diff);
+}
+
+export function useDesignEditorStoreFileUrls(): Map<string, string> {
+  const kitStore = useKitStore();
+  return kitStore.fileUrls();
+}
+
+export function useDesignEditorStorePresenceOthers(): DesignEditorPresenceOther[] {
+  return useDesignEditor((store) => store.snapshot().others);
+}
+
 // #endregion Hooks

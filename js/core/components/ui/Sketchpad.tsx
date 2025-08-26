@@ -22,7 +22,7 @@ import { FC, ReactNode, createContext, useContext, useEffect, useState } from "r
 import DesignEditor from "./DesignEditor";
 import { TooltipProvider } from "./Tooltip";
 
-import { DesignId, DesignScopeProvider, KitId, KitScopeProvider, Layout, Mode, SketchpadProvider, SketchpadScopeProvider, Theme, useCommands, useLayout, useMode, useSketchpadStore, useTheme } from "@semio/js";
+import { DesignId, DesignScopeProvider, KitId, KitScopeProvider, Layout, Mode, SketchpadScopeProvider, Theme, useCommands, useLayout, useMode, useSketchpad as useSketchpadStore, useTheme } from "@semio/js";
 
 interface SketchpadContextType {
   navbarToolbar: ReactNode | null;
@@ -65,8 +65,9 @@ const Sketchpad: FC<SketchpadProps> = ({ userId, onWindowEvents }) => {
     let mounted = true;
     (async () => {
       try {
-        await store.importKit("metabolism.json", true, true);
-        await store.importFiles("metabolism.zip", defaultKitId, true);
+        // TODO: Initialize default kit data
+        // await store.importKit("metabolism.json", true, true);
+        // await store.importFiles("metabolism.zip", defaultKitId, true);
       } catch (e) {
         console.error("Failed to import default kit:", e);
       } finally {
@@ -108,24 +109,22 @@ const Sketchpad: FC<SketchpadProps> = ({ userId, onWindowEvents }) => {
 
   return (
     <TooltipProvider>
-      <SketchpadProvider id={userId}>
-        <SketchpadScopeProvider id={userId}>
-          <KitScopeProvider id={defaultKitId}>
-            <DesignScopeProvider id={defaultDesignId}>
-              <SketchpadContext.Provider
-                value={{
-                  navbarToolbar: navbarToolbar,
-                  setNavbarToolbar: setNavbarToolbar,
-                }}
-              >
-                <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
-                  <DesignEditor />
-                </div>
-              </SketchpadContext.Provider>
-            </DesignScopeProvider>
-          </KitScopeProvider>
-        </SketchpadScopeProvider>
-      </SketchpadProvider>
+      <SketchpadScopeProvider id={userId || "default-user"} persisted={true}>
+        <KitScopeProvider id={defaultKitId}>
+          <DesignScopeProvider id={defaultDesignId}>
+            <SketchpadContext.Provider
+              value={{
+                navbarToolbar: navbarToolbar,
+                setNavbarToolbar: setNavbarToolbar,
+              }}
+            >
+              <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
+                <DesignEditor />
+              </div>
+            </SketchpadContext.Provider>
+          </DesignScopeProvider>
+        </KitScopeProvider>
+      </SketchpadScopeProvider>
     </TooltipProvider>
   );
 };

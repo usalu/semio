@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from "@semio/js/components/ui/Avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/components/ui/HoverCard";
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
 import { Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
-import { useDesign, useDesignId, useKit, useType } from "../../store";
+import { useDesignId, useKit } from "../../store";
 import { ResizablePanelProps } from "./DesignEditor";
 
 interface TypeAvatarProps {
@@ -15,7 +15,10 @@ interface TypeAvatarProps {
 }
 
 export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, showHoverCard = false }) => {
-  const type = useType(typeId);
+  // Get the kit and find the type from it
+  const kit = useKit();
+  const type = kit.types?.find((t) => t.name === typeId.name && (t.variant || undefined) === typeId.variant);
+
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: `type-${typeId.name}-${typeId.variant || ""}`,
   });
@@ -28,7 +31,7 @@ export const TypeAvatar: FC<TypeAvatarProps> = ({ typeId, showHoverCard = false 
     </Avatar>
   );
 
-  if (!showHoverCard) {
+  if (!showHoverCard || !type) {
     return avatar;
   }
 
@@ -58,11 +61,18 @@ interface DesignAvatarProps {
 }
 
 export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, showHoverCard = false, isActive = false }) => {
-  const design = useDesign(designId);
+  // Get the kit and find the design from it
+  const kit = useKit();
+  const design = kit.designs?.find((d) => d.name === designId.name && (d.variant || undefined) === designId.variant && (d.view || undefined) === designId.view);
+
   const { attributes, listeners, setNodeRef } = useDraggable({
     id: `design-${designId.name}-${designId.variant || ""}-${designId.view || ""}`,
     disabled: isActive,
   });
+
+  if (!design) {
+    return null; // Design not found
+  }
 
   // Determine if this is the default variant and view
   const isDefault = (!design.variant || design.variant === design.name) && (!design.view || design.view === "Default");

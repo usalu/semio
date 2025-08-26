@@ -26,8 +26,8 @@ import { applyDesignDiff, DiffStatus, flattenDesign, getPieceRepresentationUrls,
 import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import {
-  DesignEditorStoreFullscreenPanel,
-  DesignEditorStorePresenceOther,
+  DesignEditorFullscreenPanel,
+  DesignEditorPresenceOther,
   PieceScopeProvider,
   useCommands,
   useDesign,
@@ -43,7 +43,7 @@ const getComputedColor = (variable: string): string => {
   return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 };
 
-const PresenceThree: FC<DesignEditorStorePresenceOther> = React.memo(({ name, cursor, camera }) => {
+const PresenceThree: FC<DesignEditorPresenceOther> = React.memo(({ name, cursor, camera }) => {
   if (!camera) return null;
   const cameraHelper = useMemo(() => {
     const perspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1);
@@ -292,7 +292,7 @@ const ModelDesign: FC = () => {
   const renderedOthers = useMemo(() => others.map((presence, id) => <PresenceThree key={id} name={presence.name} cursor={presence.cursor} camera={presence.camera} />), [others]);
 
   const renderedPieces = useMemo(() => {
-    const selectedPieceIdSet = new Set(selection.selectedPieceIds.map((id) => id.id_));
+    const selectedPieceIdSet = new Set(selection.pieceIds?.map((id) => id.id_) || []);
     return flatDesign.pieces?.map((piece: Piece, index: number) => (
       <ModelPiece
         key={`piece-${piece.id_}`}
@@ -305,7 +305,7 @@ const ModelDesign: FC = () => {
         onPieceUpdate={onPieceUpdate}
       />
     ));
-  }, [flatDesign.pieces, piecePlanes, fileUrls, pieceRepresentationUrls, selection.selectedPieceIds, pieceDiffStatuses, onSelect, onPieceUpdate]);
+  }, [flatDesign.pieces, piecePlanes, fileUrls, pieceRepresentationUrls, selection.pieceIds, pieceDiffStatuses, onSelect, onPieceUpdate]);
 
   const filterFunction = useCallback((items: any) => items, []);
 
@@ -337,7 +337,7 @@ const Gizmo: FC = () => {
 };
 
 const ModelCore: FC = () => {
-  const fullscreen = useDesignEditorStoreFullscreenPanel() === DesignEditorStoreFullscreenPanel.Model;
+  const fullscreen = useDesignEditorStoreFullscreenPanel() === DesignEditorFullscreenPanel.Model;
 
   const initialGridColors = useMemo(
     () => ({

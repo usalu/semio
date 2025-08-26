@@ -33,7 +33,7 @@ import Details from "./Details";
 import Diagram from "./Diagram";
 import Model from "./Model";
 import Navbar from "./Navbar";
-import Workbench, { TypeAvatar } from "./Workbench";
+import Workbench, { DesignAvatar, TypeAvatar } from "./Workbench";
 
 export interface DesignEditorProps {}
 
@@ -49,21 +49,6 @@ interface VisiblePanels {
   console: boolean;
   chat: boolean;
 }
-
-interface DesignAvatarProps {
-  designId: DesignId;
-  showHoverCard?: boolean;
-}
-
-export const DesignAvatar: FC<DesignAvatarProps> = ({ designId, showHoverCard = false }) => {
-  const displayName = designId.name || "Untitled";
-  return (
-    <div className="flex items-center gap-2 p-2 rounded border cursor-pointer hover:bg-gray-100">
-      <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center text-xs font-medium">{displayName.substring(0, 2).toUpperCase()}</div>
-      <span className="text-sm">{displayName}</span>
-    </div>
-  );
-};
 
 const DesignEditor: FC<DesignEditorProps> = () => {
   const kit = useKit();
@@ -142,7 +127,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
   if (fullscreenPanel && fullscreenPanel !== "none") {
     return (
       <div className="h-screen w-screen bg-background">
-        {fullscreenPanel === "diagram" && <Diagram />}
+        {fullscreenPanel === "diagram" && <Diagram visible={true} width={800} />}
         {fullscreenPanel === "model" && <Model />}
       </div>
     );
@@ -184,7 +169,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
               <div className="flex-1 flex flex-col">
                 <div className="flex-1 flex">
                   <div className="flex-1 relative">
-                    <Diagram />
+                    <Diagram visible={true} width={400} />
                   </div>
                   <div className="flex-1 relative">
                     <Model />

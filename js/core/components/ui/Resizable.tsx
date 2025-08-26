@@ -90,9 +90,9 @@ function ResizableHandle({
         "[&[data-panel-group-direction=vertical]>div]:rotate-90",
         className,
       )}
-      onMouseDown={handleMouseDown}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseDown={handleMouseDown as any}
+      onMouseEnter={handleMouseEnter as any}
+      onMouseLeave={handleMouseLeave as any}
       {...props}
     >
       {withHandle && (

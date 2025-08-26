@@ -53,18 +53,18 @@ const Gltf: FC<GltfProps> = ({ src, roughness, metalness }) => {
   useEffect(() => {
     if (roughness !== undefined || metalness !== undefined) {
       scene.traverse((node) => {
-        if (node.isMesh && node.material) {
+        if ((node as any).isMesh && (node as any).material) {
           // Apply to single material
-          if (node.material.roughness !== undefined && roughness !== undefined) {
-            node.material.roughness = roughness;
+          if ((node as any).material.roughness !== undefined && roughness !== undefined) {
+            (node as any).material.roughness = roughness;
           }
-          if (node.material.metalness !== undefined && metalness !== undefined) {
-            node.material.metalness = metalness;
+          if ((node as any).material.metalness !== undefined && metalness !== undefined) {
+            (node as any).material.metalness = metalness;
           }
 
           // Handle array of materials if present
-          if (Array.isArray(node.material)) {
-            node.material.forEach((material) => {
+          if (Array.isArray((node as any).material)) {
+            (node as any).material.forEach((material: any) => {
               if (material.roughness !== undefined && roughness !== undefined) {
                 material.roughness = roughness;
               }
@@ -75,8 +75,8 @@ const Gltf: FC<GltfProps> = ({ src, roughness, metalness }) => {
           }
 
           // Make sure changes are visible
-          if (node.material.needsUpdate !== undefined) {
-            node.material.needsUpdate = true;
+          if ((node as any).material.needsUpdate !== undefined) {
+            (node as any).material.needsUpdate = true;
           }
         }
       });

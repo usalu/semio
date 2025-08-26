@@ -25,7 +25,7 @@ import "@xterm/xterm/css/xterm.css";
 import React, { FC, useEffect, useRef, useState } from "react";
 
 import { Design, DesignId, Kit } from "@semio/js";
-import { DesignEditorStoreSelection, useDesignEditorStoreSelection, useDesignId, useKit } from "../../store";
+import { DesignEditorSelection, useDesignEditorStoreSelection, useDesignId, useKit } from "../../store";
 
 export interface CommandParameter {
   name: string;
@@ -39,14 +39,14 @@ export interface CommandParameter {
 export interface CommandContext {
   kit: Kit;
   designId: DesignId;
-  selection: DesignEditorStoreSelection;
+  selection: DesignEditorSelection;
   clusterDesign?: () => void;
   expandDesign?: (designId: DesignId) => void;
 }
 
 export interface CommandResult {
   design?: Design;
-  selection?: DesignEditorStoreSelection;
+  selection?: DesignEditorSelection;
   fileUrls?: string[];
   fullscreenPanel?: any;
   content?: React.ReactNode;
@@ -1164,7 +1164,7 @@ class TerminalConsole {
 
     try {
       const context = {
-        kit: useKit((store) => store.state.kit),
+        kit: useKit(),
         designId: useDesignId() || "",
         selection: useDesignEditorStoreSelection() || {
           pieceIds: [],

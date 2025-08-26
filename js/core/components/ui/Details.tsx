@@ -2,7 +2,21 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { Minus, Pin, Plus, Trash2 } from "lucide-react";
 import { FC, useState } from "react";
 
-import { Connection, ConnectionId, Design, Piece, PieceId, PortId, findConnectionInDesign, findPieceInDesign, findReplacableTypesForPieceInDesign, findReplacableTypesForPiecesInDesign, getIncludedDesigns, piecesMetadata } from "@semio/js";
+import {
+  Connection,
+  ConnectionId,
+  Design,
+  Piece,
+  PieceId,
+  PortId,
+  findConnectionInDesign,
+  findPieceInDesign,
+  findReplacableTypesForPieceInDesign,
+  findReplacableTypesForPiecesInDesign,
+  findTypeInKit,
+  getIncludedDesigns,
+  piecesMetadata,
+} from "@semio/js";
 import { Input } from "@semio/js/components/ui/Input";
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
 import { Slider } from "@semio/js/components/ui/Slider";
@@ -10,7 +24,7 @@ import Stepper from "@semio/js/components/ui/Stepper";
 import { Textarea } from "@semio/js/components/ui/Textarea";
 import { SortableTreeItems, Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
 import { findReplacableDesignsForDesignPiece, parseDesignIdFromVariant } from "../../semio";
-import { useCommands, useDesign, useDesignEditorStoreSelection, useDesignId, useKit, usePiece, useType } from "../../store";
+import { useCommands, useDesign, useDesignEditorStoreSelection, useDesignId, useKit } from "../../store";
 import Combobox from "./Combobox";
 import { ResizablePanelProps } from "./DesignEditor";
 
@@ -233,7 +247,7 @@ const DesignSection: FC = () => {
                 startTransaction();
                 handleChange({
                   ...design,
-                  attributes: [...(design.attributes || []), { name: "" }],
+                  attributes: [...(design.attributes || []), { key: "" }],
                 });
                 finalizeTransaction();
               },
@@ -257,16 +271,16 @@ const DesignSection: FC = () => {
             }}
           >
             {(attribute, index) => (
-              <TreeItem key={`attribute-${index}`} label={attribute.name || `Attribute ${index + 1}`} sortable={true} sortableId={`attribute-${index}`} isDragHandle={true}>
+              <TreeItem key={`attribute-${index}`} label={attribute.key || `Attribute ${index + 1}`} sortable={true} sortableId={`attribute-${index}`} isDragHandle={true}>
                 <TreeItem>
                   <Input
                     label="Name"
-                    value={attribute.name}
+                    value={attribute.key}
                     onChange={(e) => {
                       const updatedAttributes = [...(design.attributes || [])];
                       updatedAttributes[index] = {
                         ...attribute,
-                        name: e.target.value,
+                        key: e.target.value,
                       };
                       handleChange({ ...design, attributes: updatedAttributes });
                     }}
@@ -355,7 +369,7 @@ const DesignSection: FC = () => {
                 startTransaction();
                 handleChange({
                   ...design,
-                  attributes: [...(design.attributes || []), { name: "" }],
+                  attributes: [...(design.attributes || []), { key: "" }],
                 });
                 finalizeTransaction();
               },
@@ -421,8 +435,8 @@ const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
     // Look for a connection that connects the parent piece to this design piece
     // The connection should have the designId parameter set
     const parentConn = design.connections?.find((connection: Connection) => {
-      const isParentConnecting = connection.connecting.piece.id_ === parentPieceId && connection.connected.designId === includedDesign.designId.name;
-      const isParentConnected = connection.connected.piece.id_ === parentPieceId && connection.connecting.designId === includedDesign.designId.name;
+      const isParentConnecting = connection.connecting.piece.id_ === parentPieceId && connection.connected.designPiece?.id_ === includedDesign.designId.name;
+      const isParentConnected = connection.connected.piece.id_ === parentPieceId && connection.connecting.designPiece?.id_ === includedDesign.designId.name;
 
       return isParentConnecting || isParentConnected;
     });
@@ -433,14 +447,20 @@ const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
   const pieces = pieceIds.map((id) => {
     try {
       // Try to find as regular piece first
-      return findPieceInDesign(design, id);
+      const foundPiece = findPieceInDesign(design, id);
+      // Normalize the piece to ensure consistent ID structure
+      return {
+        ...foundPiece,
+        id_: getPieceId(foundPiece),
+      };
     } catch {
       // Check if it's a design piece (either fixed or connected)
-      const includedDesign = includedDesignMap.get(id.id_);
+      const pieceIdString = getPieceId({ id_: id } as any);
+      const includedDesign = includedDesignMap.get(pieceIdString);
       if (includedDesign) {
         // Create a synthetic piece that matches the design
         return {
-          id_: id,
+          id_: pieceIdString,
           type: {
             name: "design",
             variant:
@@ -455,14 +475,14 @@ const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
       }
 
       // If still not found, create a fallback synthetic piece instead of throwing an error
-      console.warn(`Piece ${id} not found in pieces or includedDesigns. Creating fallback piece.`);
+      console.warn(`Piece ${pieceIdString} not found in pieces or includedDesigns. Creating fallback piece.`);
       return {
-        id_: id,
+        id_: pieceIdString,
         type: {
           name: "unknown",
           variant: "",
         },
-        description: `Unknown piece: ${id}`,
+        description: `Unknown piece: ${pieceIdString}`,
       };
     }
   });
@@ -506,7 +526,7 @@ const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
 
     startTransaction();
     if (isSingle) {
-      setPiece({ ...piece!, id_: getPieceId(piece!), type: { ...piece!.type, name: value } } as Piece);
+      setPiece({ ...piece!, id_: piece!.id_, type: { ...piece!.type, name: value } } as Piece);
     } else {
       const updatedPieces = pieces.map((piece) => ({
         ...piece,
@@ -523,11 +543,11 @@ const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
 
     startTransaction();
     if (isSingle) {
-      setPiece({ ...piece!, id_: getPieceId(piece!), type: { ...piece!.type, variant: value } } as Piece);
+      setPiece({ ...piece!, id_: piece!.id_, type: { ...piece!.type, variant: value } } as Piece);
     } else {
       const updatedPieces = pieces.map((piece) => ({
         ...piece,
-        id_: getPieceId(piece),
+        id_: piece.id_,
         type: { ...piece.type, variant: value },
       }));
       setPieces(updatedPieces as Piece[]);
@@ -541,7 +561,7 @@ const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
 
     startTransaction();
     if (isSingle) {
-      const pieceId = piece!.id_;
+      const pieceId = getPieceId(piece!);
       const includedDesign = includedDesignMap.get(pieceId);
 
       if (includedDesign && includedDesign.type === "fixed") {
@@ -588,7 +608,7 @@ const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
 
     startTransaction();
     if (isSingle) {
-      const pieceId = piece!.id_;
+      const pieceId = getPieceId(piece!);
       const includedDesign = includedDesignMap.get(pieceId);
 
       if (includedDesign && includedDesign.type === "fixed") {
@@ -633,7 +653,7 @@ const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
 
     startTransaction();
     if (isSingle) {
-      const pieceId = piece!.id_;
+      const pieceId = getPieceId(piece!);
       const includedDesign = includedDesignMap.get(pieceId);
 
       if (includedDesign && includedDesign.type === "fixed") {
@@ -1061,26 +1081,7 @@ const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
       )}
       {(parentConnection || parentConnections.length > 0) && (
         <div style={{ marginTop: "0.5rem" }}>
-          <ConnectionsSection
-            connections={
-              isSingle && parentConnection
-                ? [
-                    {
-                      connectingPieceId: parentConnection.connecting.piece.id_,
-                      connectedPieceId: parentConnection.connected.piece.id_,
-                      ...(parentConnection.connecting.designId && { designId: parentConnection.connecting.designId }),
-                      ...(parentConnection.connected.designId && { designId: parentConnection.connected.designId }),
-                    },
-                  ]
-                : parentConnections.map((conn) => ({
-                    connectingPieceId: conn.connecting.piece.id_,
-                    connectedPieceId: conn.connected.piece.id_,
-                    ...(conn.connecting.designId && { designId: conn.connecting.designId }),
-                    ...(conn.connected.designId && { designId: conn.connected.designId }),
-                  }))
-            }
-            sectionLabel={isSingle ? "Parent Connection" : `Parent Connections (${parentConnections.length})`}
-          />
+          <ConnectionsSection connections={isSingle && parentConnection ? [parentConnection] : parentConnections} sectionLabel={isSingle ? "Parent Connection" : `Parent Connections (${parentConnections.length})`} />
         </div>
       )}
     </>
@@ -1094,15 +1095,18 @@ const ConnectionsSection: FC<{
   const { setConnection, setConnections, startTransaction, finalizeTransaction, abortTransaction } = useCommands();
   const design = useDesign();
   const connectionObjects = connections.map((conn) => {
-    // Handle connections that may have a designId parameter
+    // The conn is already a ConnectionId, but we need to create a full ConnectionId to query
     const connectionId = {
       connecting: {
         piece: conn.connecting.piece,
-        ...(conn.connecting.designPiece && { designPiece: conn.connecting.designPiece }),
+        // Include port and designPiece only if they exist in the connection
+        ...((conn.connecting as any).port && { port: (conn.connecting as any).port }),
+        ...((conn.connecting as any).designPiece && { designPiece: (conn.connecting as any).designPiece }),
       },
       connected: {
         piece: conn.connected.piece,
-        ...(conn.connected.designPiece && { designPiece: conn.connected.designPiece }),
+        ...((conn.connected as any).port && { port: (conn.connected as any).port }),
+        ...((conn.connected as any).designPiece && { designPiece: (conn.connected as any).designPiece }),
       },
     };
 
@@ -1194,9 +1198,9 @@ const ConnectionsSection: FC<{
             <TreeItem>
               <Input label="Port ID" value={connection!.connecting.port.id_} disabled />
             </TreeItem>
-            {connection!.connecting.designId && (
+            {connection!.connecting.designPiece && (
               <TreeItem>
-                <Input label="Design ID" value={connection!.connecting.designId} disabled />
+                <Input label="Design Piece ID" value={connection!.connecting.designPiece.id_} disabled />
               </TreeItem>
             )}
           </TreeItem>
@@ -1207,9 +1211,9 @@ const ConnectionsSection: FC<{
             <TreeItem>
               <Input label="Port ID" value={connection!.connected.port.id_} disabled />
             </TreeItem>
-            {connection!.connected.designId && (
+            {connection!.connected.designPiece && (
               <TreeItem>
-                <Input label="Design ID" value={connection!.connected.designId} disabled />
+                <Input label="Design Piece ID" value={connection!.connected.designPiece.id_} disabled />
               </TreeItem>
             )}
           </TreeItem>
@@ -1287,8 +1291,19 @@ const ConnectionsSection: FC<{
 };
 
 const PortSection: FC<{ pieceId: PieceId; portId: PortId }> = ({ pieceId, portId }) => {
-  const piece = usePiece(pieceId);
-  const type = piece ? useType(piece.type) : null;
+  const design = useDesign();
+  const kit = useKit();
+
+  // Find the piece using the same pattern as in PiecesSection
+  const piece = (() => {
+    try {
+      return findPieceInDesign(design, pieceId);
+    } catch {
+      return null; // Piece not found
+    }
+  })();
+
+  const type = piece ? findTypeInKit(kit, piece.type) : null;
   const port = type?.ports?.find((p: any) => p.id_ === portId);
 
   if (!piece || !type || !port) {
@@ -1318,7 +1333,7 @@ const PortSection: FC<{ pieceId: PieceId; portId: PortId }> = ({ pieceId, portId
       {port.attributes &&
         port.attributes.map((attribute: any) => (
           <TreeItem>
-            <Input label="Attributes" value={`${attribute.name}: ${attribute.value || "N/A"} ${attribute.unit && `(${attribute.unit})`}`} disabled />
+            <Input label="Attributes" value={`${attribute.key}: ${attribute.value || "N/A"} ${attribute.unit && `(${attribute.unit})`}`} disabled />
           </TreeItem>
         ))}
     </TreeSection>

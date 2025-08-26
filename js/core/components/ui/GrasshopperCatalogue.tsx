@@ -147,7 +147,7 @@ const GrasshopperCatalogue: FC<GrasshopperCatalogueProps> = ({ props }) => {
         ))}
       </TabsList>
       {groups.map((group) => {
-        const exposures = Object.keys(props[group]).sort((a, b) => Number(a) - Number(b));
+        const exposures = Object.keys((props as any)[group]).sort((a, b) => Number(a) - Number(b));
         return (
           <TabsContent key={group} value={group}>
             <Tabs className="w-full h-full" defaultValue={exposures[0]}>
@@ -161,7 +161,7 @@ const GrasshopperCatalogue: FC<GrasshopperCatalogueProps> = ({ props }) => {
               {exposures.map((exposure) => (
                 <TabsContent key={exposure} value={exposure}>
                   <div className="flex flex-row flex-wrap gap-2 p-2">
-                    {(props[group][Number(exposure)] as GrasshopperComponentProps[]).map((component: GrasshopperComponentProps, idx: number) => (
+                    {((props as any)[group][Number(exposure)] as GrasshopperComponentProps[]).map((component: GrasshopperComponentProps, idx: number) => (
                       <GrasshopperComponent key={idx} {...component} />
                     ))}
                   </div>

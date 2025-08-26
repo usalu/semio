@@ -95,13 +95,13 @@ export {
   toSemioRotation,
   toThreeQuaternion,
   toThreeRotation, TypeIdLikeSchema, typeIdLikeToTypeId, TypeIdSchema, TypeSchema, unifyPortFamiliesAndCompatibleFamiliesForTypes,
-  updateDesignInKit, validate, VectorSchema
+  updateDesignInKit, VectorSchema
 } from "./semio";
 // #endregion
 
 // #region Types (from semio.ts)
 export type {
-  AttributeId, Attributete, Author,
+  Attribute, AttributeId, Author,
   Camera,
   Connection,
   ConnectionDiff,
@@ -146,19 +146,19 @@ export type {
 
 // #region Hooks (from store.tsx)
 export {
-  ConnectionScopeProvider, DesignEditorStoreScopeProvider, DesignScopeProvider, KitScopeProvider, PieceScopeProvider, PortypeScopeProvider, RepresentationScopeProvider,
+  ConnectionScopeProvider, DesignEditorScopeProvider, DesignScopeProvider, KitScopeProvider, PieceScopeProvider, PortypeScopeProvider, RepresentationScopeProvider,
   // Context providers
-  SketchpadProvider, SketchpadScopeProvider, TypeScopeProvider, useCommands, useConnection, useConnections, useConnectionScope, useDesign, useDesignEditorScope,
+  SketchpadScopeProvider, TypeScopeProvider, useCommands, useConnection, useDesign, useDesignEditor,
   // Design Editor hooks
-  useDesignEditorStore, useDesignEditorStoreDesignDiff, useDesignEditorStoreFileUrls, useDesignEditorStoreFullscreenPanel, useDesignEditorStoreIsTransactionActive,
-  useDesignEditorStorePresence,
-  useDesignEditorStorePresenceOthers, useDesignEditorStoreSelection, useDesignId, useDesigns, useDesignScope, useDiff, useFileUrls, useFullscreen, useKit, useKits, useKitScope, useLayout,
+  useDesignEditorStoreDesignDiff, useDesignEditorStoreFileUrls, useDesignEditorStoreFullscreenPanel,
+  useDesignEditorStorePresenceOthers,
+  useDesignEditorStoreSelection, useDesignId, useDesigns, useKit, useLayout,
   // Concise hooks
-  useMode, useOthers, usePiece, usePieces, usePieceScope, usePort, usePorts, usePortScope, usePresence, useRepresentations, useRepresentationScope, useSelection,
+  useMode, usePiece, usePort, useRepresentation,
   // Scope hooks
-  useSketchpadScope,
+  useSketchpad,
   // Core hooks
-  useSketchpadStore, useTheme, useTransaction, useType, useTypes, useTypeScope
+  useTheme, useType
 } from "./store";
 // #endregion
 

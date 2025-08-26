@@ -550,7 +550,7 @@ export const jaccard = (a: string[] | undefined, b: string[] | undefined) => {
   if ((a === undefined && b === undefined) || (a?.length === 0 && b?.length === 0)) return 1;
   const setA = new Set(a);
   const setB = new Set(b);
-  const intersection = [...setA].filter((x) => setB.has(x)).length;
+  const intersection = Array.from(setA).filter((x) => setB.has(x)).length;
   const union = setA.size + setB.size - intersection;
   if (union === 0) return 0;
   return intersection / union;
@@ -614,7 +614,7 @@ export const designIdLikeToDesignId = (designId: DesignIdLike): DesignId => {
     return {
       name: designId[0],
       variant: designId[1] ?? undefined,
-      view: designId[2] ?? undefined,
+      view: typeof designId[2] === 'string' ? designId[2] : undefined,
     };
   return {
     name: designId.name,
@@ -1044,8 +1044,8 @@ export const diff = {
         const basePieces = base.pieces || [];
         pieces = basePieces
           .map(p => {
-            const updateDiff = diff.pieces?.updated?.find((up: PieceDiff) => up.id_ === p.id_);
-            return updateDiff ? ({ ...p, ...updateDiff, id_: p.id_ }) : p;
+            const updateDiff = diff.pieces?.updated?.find((up) => up.id.id_ === p.id_);
+            return updateDiff ? ({ ...p, ...updateDiff.diff, id_: p.id_ }) : p;
           })
           .filter(p => !diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_))
           .concat(diff.pieces?.added || []);
@@ -1054,15 +1054,15 @@ export const diff = {
         const baseConnections = base.connections || [];
         connections = baseConnections
           .map(c => {
-            const updateDiff = diff.connections?.updated?.find((uc: ConnectionDiff) =>
-              uc.connected?.piece?.id_ === c.connected.piece.id_ &&
-              uc.connecting?.piece?.id_ === c.connecting.piece.id_
+            const updateDiff = diff.connections?.updated?.find((uc) =>
+              uc.id.connected.piece.id_ === c.connected.piece.id_ &&
+              uc.id.connecting.piece.id_ === c.connecting.piece.id_
             );
             return updateDiff ? ({
               ...c,
-              ...updateDiff,
-              connected: updateDiff.connected ? { ...c.connected, ...updateDiff.connected } : c.connected,
-              connecting: updateDiff.connecting ? { ...c.connecting, ...updateDiff.connecting } : c.connecting
+              ...updateDiff.diff,
+              connected: updateDiff.diff.connected ? { ...c.connected, ...updateDiff.diff.connected } : c.connected,
+              connecting: updateDiff.diff.connecting ? { ...c.connecting, ...updateDiff.diff.connecting } : c.connecting
             }) : c;
           })
           .filter(c => !diff.connections?.removed?.some((rc: ConnectionId) =>
@@ -1097,8 +1097,8 @@ export const diff = {
         const baseTypes = base.types || [];
         types = baseTypes
           .map(t => {
-            const updateDiff = diff.types?.updated?.find((ut: TypeDiff) => ut.name === t.name && ut.variant === t.variant);
-            return updateDiff ? ({ ...t, ...updateDiff }) : t;
+            const updateDiff = diff.types?.updated?.find((ut) => ut.id.name === t.name && ut.id.variant === t.variant);
+            return updateDiff ? ({ ...t, ...updateDiff.diff }) : t;
           })
           .filter(t => !diff.types?.removed?.some((rt: TypeId) => rt.name === t.name && rt.variant === t.variant))
           .concat(diff.types?.added || []);
@@ -1107,8 +1107,8 @@ export const diff = {
         const baseFiles = base.files || [];
         files = baseFiles
           .map(f => {
-            const updateDiff = diff.files?.updated?.find((uf: FileDiff) => uf.url === f.url);
-            return updateDiff ? ({ ...f, ...updateDiff }) : f;
+            const updateDiff = diff.files?.updated?.find((uf) => uf.id.url === f.url);
+            return updateDiff ? ({ ...f, ...updateDiff.diff }) : f;
           })
           .filter(f => !diff.files?.removed?.some((rf: FileId) => rf.url === f.url))
           .concat(diff.files?.added || []);
@@ -1117,53 +1117,53 @@ export const diff = {
         const baseDesigns = base.designs || [];
         designs = baseDesigns
           .map(d => {
-            const updateDiff = diff.designs?.updated?.find((ud: DesignDiff) => ud.name === d.name && ud.variant === d.variant && ud.view === d.view);
+            const updateDiff = diff.designs?.updated?.find((ud) => ud.id.name === d.name && ud.id.variant === d.variant && ud.id.view === d.view);
             if (!updateDiff) return d;
             // Apply the design diff properly by using the apply function logic
             let pieces = d.pieces;
             let connections = d.connections;
 
-            if (updateDiff.pieces) {
+            if (updateDiff.diff.pieces) {
               const basePieces = d.pieces || [];
               pieces = basePieces
                 .map(p => {
-                  const pieceDiff = updateDiff.pieces?.updated?.find((up: PieceDiff) => up.id_ === p.id_);
-                  return pieceDiff ? ({ ...p, ...pieceDiff, id_: p.id_ }) : p;
+                  const pieceDiff = updateDiff.diff.pieces?.updated?.find((up) => up.id.id_ === p.id_);
+                  return pieceDiff ? ({ ...p, ...pieceDiff.diff, id_: p.id_ }) : p;
                 })
-                .filter(p => !updateDiff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_))
-                .concat(updateDiff.pieces?.added || []);
+                .filter(p => !updateDiff.diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_))
+                .concat(updateDiff.diff.pieces?.added || []);
             }
-            if (updateDiff.connections) {
+            if (updateDiff.diff.connections) {
               const baseConnections = d.connections || [];
               connections = baseConnections
                 .map(c => {
-                  const connDiff = updateDiff.connections?.updated?.find((uc: ConnectionDiff) =>
-                    uc.connected?.piece?.id_ === c.connected.piece.id_ &&
-                    uc.connecting?.piece?.id_ === c.connecting.piece.id_
+                  const connDiff = updateDiff.diff.connections?.updated?.find((uc) =>
+                    uc.id.connected.piece.id_ === c.connected.piece.id_ &&
+                    uc.id.connecting.piece.id_ === c.connecting.piece.id_
                   );
                   return connDiff ? ({
                     ...c,
-                    ...connDiff,
-                    connected: connDiff.connected ? { ...c.connected, ...connDiff.connected } : c.connected,
-                    connecting: connDiff.connecting ? { ...c.connecting, ...connDiff.connecting } : c.connecting
+                    ...connDiff.diff,
+                    connected: connDiff.diff.connected ? { ...c.connected, ...connDiff.diff.connected } : c.connected,
+                    connecting: connDiff.diff.connecting ? { ...c.connecting, ...connDiff.diff.connecting } : c.connecting
                   }) : c;
                 })
-                .filter(c => !updateDiff.connections?.removed?.some((rc: ConnectionId) =>
+                .filter(c => !updateDiff.diff.connections?.removed?.some((rc: ConnectionId) =>
                   rc.connected.piece.id_ === c.connected.piece.id_ &&
                   rc.connecting.piece.id_ === c.connecting.piece.id_
                 ))
-                .concat(updateDiff.connections?.added || []);
+                .concat(updateDiff.diff.connections?.added || []);
             }
             return {
               ...d,
-              name: updateDiff.name ?? d.name,
-              description: updateDiff.description ?? d.description,
-              icon: updateDiff.icon ?? d.icon,
-              image: updateDiff.image ?? d.image,
-              variant: updateDiff.variant ?? d.variant,
-              view: updateDiff.view ?? d.view,
-              location: updateDiff.location ?? d.location,
-              unit: updateDiff.unit ?? d.unit,
+              name: updateDiff.diff.name ?? d.name,
+              description: updateDiff.diff.description ?? d.description,
+              icon: updateDiff.diff.icon ?? d.icon,
+              image: updateDiff.diff.image ?? d.image,
+              variant: updateDiff.diff.variant ?? d.variant,
+              view: updateDiff.diff.view ?? d.view,
+              location: updateDiff.diff.location ?? d.location,
+              unit: updateDiff.diff.unit ?? d.unit,
               pieces,
               connections
             };
@@ -1398,8 +1398,11 @@ export const diff = {
         // Inverse updated pieces
         if (appliedDiff.pieces.updated) {
           piecesDiff.updated = appliedDiff.pieces.updated.map(updatedPiece => {
-            const originalPiece = originalPieces.find(p => p.id_ === updatedPiece.id_)!;
-            return diff.inverse.piece(originalPiece, updatedPiece);
+            const originalPiece = originalPieces.find(p => p.id_ === updatedPiece.id.id_)!;
+            return {
+              id: updatedPiece.id,
+              diff: diff.inverse.piece(originalPiece, updatedPiece.diff)
+            };
           });
         }
 
@@ -1427,10 +1430,13 @@ export const diff = {
         if (appliedDiff.connections.updated) {
           connectionsDiff.updated = appliedDiff.connections.updated.map(updatedConnection => {
             const originalConnection = originalConnections.find(c =>
-              c.connected.piece.id_ === updatedConnection.connected?.piece?.id_ &&
-              c.connecting.piece.id_ === updatedConnection.connecting?.piece?.id_
+              c.connected.piece.id_ === updatedConnection.id.connected.piece.id_ &&
+              c.connecting.piece.id_ === updatedConnection.id.connecting.piece.id_
             )!;
-            return diff.inverse.connection(originalConnection, updatedConnection);
+            return {
+              id: updatedConnection.id,
+              diff: diff.inverse.connection(originalConnection, updatedConnection.diff)
+            };
           });
         }
 
@@ -1465,8 +1471,11 @@ export const diff = {
         // Inverse updated types
         if (appliedDiff.types.updated) {
           typesDiff.updated = appliedDiff.types.updated.map(updatedType => {
-            const originalType = originalTypes.find(t => t.name === updatedType.name && t.variant === updatedType.variant)!;
-            return diff.inverse.type(originalType, updatedType);
+            const originalType = originalTypes.find(t => t.name === updatedType.id.name && t.variant === updatedType.id.variant)!;
+            return {
+              id: updatedType.id,
+              diff: diff.inverse.type(originalType, updatedType.diff)
+            };
           });
         }
 
@@ -1487,8 +1496,11 @@ export const diff = {
         // Inverse updated designs
         if (appliedDiff.designs.updated) {
           designsDiff.updated = appliedDiff.designs.updated.map(updatedDesign => {
-            const originalDesign = originalDesigns.find(d => d.name === updatedDesign.name && d.variant === updatedDesign.variant && d.view === updatedDesign.view)!;
-            return diff.inverse.design(originalDesign, updatedDesign);
+            const originalDesign = originalDesigns.find(d => d.name === updatedDesign.id.name && d.variant === updatedDesign.id.variant && d.view === updatedDesign.id.view)!;
+            return {
+              id: updatedDesign.id,
+              diff: diff.inverse.design(originalDesign, updatedDesign.diff)
+            };
           });
         }
 
@@ -1509,8 +1521,11 @@ export const diff = {
         // Inverse updated files
         if (appliedDiff.files.updated) {
           filesDiff.updated = appliedDiff.files.updated.map(updatedFile => {
-            const originalFile = originalFiles.find(f => f.url === updatedFile.url)!;
-            return diff.inverse.file(originalFile, updatedFile);
+            const originalFile = originalFiles.find(f => f.url === updatedFile.id.url)!;
+            return {
+              id: updatedFile.id,
+              diff: diff.inverse.file(originalFile, updatedFile.diff)
+            };
           });
         }
 
@@ -1679,7 +1694,7 @@ export const findChildrenPiecesInDesign = (kit: Kit, designId: DesignIdLike, pie
   const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
   const metadata = piecesMetadata(kit, designId);
   const children: Piece[] = [];
-  for (const [id, data] of metadata) {
+  for (const [id, data] of Array.from(metadata)) {
     if (data.parentPieceId === normalizedPieceId.id_) {
       children.push(findPieceInDesign(design, id));
     }
@@ -1943,7 +1958,7 @@ export const unifyPortFamiliesAndCompatibleFamiliesForTypes = (types: Type[]): T
   const rank = new Map<string, number>();
 
   // Initialize each family as its own parent
-  for (const family of allFamilies) {
+  for (const family of Array.from(allFamilies)) {
     parent.set(family, family);
     rank.set(family, 0);
   }
@@ -2004,7 +2019,7 @@ export const unifyPortFamiliesAndCompatibleFamiliesForTypes = (types: Type[]): T
 
   // Create mapping from any family to its representative
   const familyToRepresentative = new Map<string, string>();
-  for (const family of allFamilies) {
+  for (const family of Array.from(allFamilies)) {
     familyToRepresentative.set(family, find(family));
   }
 
@@ -2612,7 +2627,7 @@ export const getClusterableGroups = (design: Design, selectedPieceIds: string[])
     currentGroup.push(pieceId);
 
     const neighbors = adjacencyMap.get(pieceId) || new Set();
-    for (const neighbor of neighbors) {
+    for (const neighbor of Array.from(neighbors)) {
       if (selectedPieceIds.includes(neighbor) && !visited.has(neighbor)) {
         dfs(neighbor, currentGroup);
       }
@@ -2663,7 +2678,7 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
   }
 
   // For each referenced design, expand it
-  for (const designName of designIds) {
+  for (const designName of Array.from(designIds)) {
     // Find the design in the kit
     const referencedDesign = findDesignInKit(kit, { name: designName });
     if (!referencedDesign) continue;
@@ -2944,9 +2959,9 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
     const effectivePieces: Piece[] = base.pieces
       ? base.pieces
         .map((p: Piece) => {
-          const pd = diff.pieces?.updated?.find((up: PieceDiff) => up.id_ === p.id_);
+          const pd = diff.pieces?.updated?.find((up) => up.id.id_ === p.id_);
           const isRemoved = diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_);
-          const baseWithUpdate = pd ? { ...p, ...pd } : p;
+          const baseWithUpdate = pd ? { ...p, ...pd.diff } : p;
           const diffStatus = isRemoved ? DiffStatus.Removed : pd ? DiffStatus.Modified : DiffStatus.Unchanged;
           return setAttribute(baseWithUpdate, {
             key: "semio.diffStatus",
@@ -2967,26 +2982,24 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
       ? base.connections
         .map((c: Connection) => {
           const cd = diff.connections?.updated?.find(
-            (ud: ConnectionDiff) =>
-              ud.connected?.piece?.id_ === c.connected.piece.id_ &&
-              ud.connecting?.piece?.id_ === c.connecting.piece.id_ &&
-              (ud.connected?.port?.id_ || "") === (c.connected.port?.id_ || "") &&
-              (ud.connecting?.port?.id_ || "") === (c.connecting.port?.id_ || ""),
+            (ud) =>
+              ud.id.connected.piece.id_ === c.connected.piece.id_ &&
+              ud.id.connecting.piece.id_ === c.connecting.piece.id_
           );
           const isRemoved = diff.connections?.removed?.some((rc: ConnectionId) => rc.connected.piece.id_ === c.connected.piece.id_ && rc.connecting.piece.id_ === c.connecting.piece.id_);
           const baseWithUpdate = cd
             ? {
               ...c,
-              ...cd,
+              ...cd.diff,
               connected: {
-                piece: cd.connected?.piece ?? c.connected.piece,
-                port: cd.connected?.port ?? c.connected.port,
-                designPiece: cd.connected?.designPiece ?? c.connected.designPiece,
+                piece: cd.diff.connected?.piece ?? c.connected.piece,
+                port: cd.diff.connected?.port ?? c.connected.port,
+                designPiece: cd.diff.connected?.designPiece ?? c.connected.designPiece,
               },
               connecting: {
-                piece: cd.connecting?.piece ?? c.connecting.piece,
-                port: cd.connecting?.port ?? c.connecting.port,
-                designPiece: cd.connecting?.designPiece ?? c.connecting.designPiece,
+                piece: cd.diff.connecting?.piece ?? c.connecting.piece,
+                port: cd.diff.connecting?.port ?? c.connecting.port,
+                designPiece: cd.diff.connecting?.designPiece ?? c.connecting.designPiece,
               },
             }
             : c;
@@ -3015,8 +3028,8 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
     const effectivePieces: Piece[] = base.pieces
       ? base.pieces
         .map((p: Piece) => {
-          const pd = diff.pieces?.updated?.find((up: PieceDiff) => up.id_ === p.id_);
-          return pd ? { ...p, ...pd } : p;
+          const pd = diff.pieces?.updated?.find((up) => up.id.id_ === p.id_);
+          return pd ? { ...p, ...pd.diff } : p;
         })
         .filter((p: Piece) => !diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_))
         .concat(diff.pieces?.added || [])
@@ -3026,25 +3039,23 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
       ? base.connections
         .map((c: Connection) => {
           const cd = diff.connections?.updated?.find(
-            (ud: ConnectionDiff) =>
-              ud.connected?.piece?.id_ === c.connected.piece.id_ &&
-              ud.connecting?.piece?.id_ === c.connecting.piece.id_ &&
-              (ud.connected?.port?.id_ || "") === (c.connected.port?.id_ || "") &&
-              (ud.connecting?.port?.id_ || "") === (c.connecting.port?.id_ || ""),
+            (ud) =>
+              ud.id.connected.piece.id_ === c.connected.piece.id_ &&
+              ud.id.connecting.piece.id_ === c.connecting.piece.id_
           );
           return cd
             ? {
               ...c,
-              ...cd,
+              ...cd.diff,
               connected: {
-                piece: cd.connected?.piece ?? c.connected.piece,
-                port: cd.connected?.port ?? c.connected.port,
-                designPiece: cd.connected?.designPiece ?? c.connected.designPiece,
+                piece: cd.diff.connected?.piece ?? c.connected.piece,
+                port: cd.diff.connected?.port ?? c.connected.port,
+                designPiece: cd.diff.connected?.designPiece ?? c.connected.designPiece,
               },
               connecting: {
-                piece: cd.connecting?.piece ?? c.connecting.piece,
-                port: cd.connecting?.port ?? c.connecting.port,
-                designPiece: cd.connecting?.designPiece ?? c.connecting.designPiece,
+                piece: cd.diff.connecting?.piece ?? c.connecting.piece,
+                port: cd.diff.connecting?.port ?? c.connecting.port,
+                designPiece: cd.diff.connecting?.designPiece ?? c.connecting.designPiece,
               },
             }
             : c;
