@@ -48,7 +48,8 @@ interface SketchpadProps {
   };
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ userId, onWindowEvents }) => {
+// Component that uses basic store hooks (no kit context needed)
+const SketchpadInner: FC<{ defaultKitId: KitId; defaultDesignId: DesignId }> = ({ defaultKitId, defaultDesignId }) => {
   const [isImporting, setIsImporting] = useState<boolean>(true);
   const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
 
@@ -56,10 +57,6 @@ const Sketchpad: FC<SketchpadProps> = ({ userId, onWindowEvents }) => {
   const mode = useMode();
   const theme = useTheme();
   const layout = useLayout();
-  const { setMode, setTheme, setLayout } = useCommands();
-
-  const defaultKitId: KitId = { name: "Metabolism", version: "r25.07-1" };
-  const defaultDesignId: DesignId = { name: "Nakagin Capsule Tower", variant: "", view: "" };
 
   useEffect(() => {
     let mounted = true;
@@ -77,17 +74,7 @@ const Sketchpad: FC<SketchpadProps> = ({ userId, onWindowEvents }) => {
     return () => {
       mounted = false;
     };
-  }, [store]);
-
-  useEffect(() => {
-    if (mode !== Mode.USER) setMode(mode);
-    if (layout !== Layout.NORMAL) setLayout(layout);
-    if (theme && theme !== Theme.SYSTEM) setTheme(theme);
-    if (!theme && theme === Theme.SYSTEM && typeof window !== "undefined") {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      setTheme(prefersDark ? Theme.DARK : Theme.LIGHT);
-    }
-  }, [mode, theme, layout, setMode, setTheme, setLayout]);
+  }, [store, defaultKitId]);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -108,22 +95,56 @@ const Sketchpad: FC<SketchpadProps> = ({ userId, onWindowEvents }) => {
   if (isImporting) return null;
 
   return (
+    <KitScopeProvider id={defaultKitId}>
+      <DesignScopeProvider id={defaultDesignId}>
+        <SketchpadWithCommands mode={mode} theme={theme} layout={layout} navbarToolbar={navbarToolbar} setNavbarToolbar={setNavbarToolbar} />
+      </DesignScopeProvider>
+    </KitScopeProvider>
+  );
+};
+
+// Component that uses hooks requiring kit context
+const SketchpadWithCommands: FC<{
+  mode: Mode;
+  theme: Theme;
+  layout: Layout;
+  navbarToolbar: ReactNode;
+  setNavbarToolbar: (toolbar: ReactNode) => void;
+}> = ({ mode, theme, layout, navbarToolbar, setNavbarToolbar }) => {
+  const { setMode, setTheme, setLayout } = useCommands();
+
+  useEffect(() => {
+    if (mode !== Mode.USER) setMode(mode);
+    if (layout !== Layout.NORMAL) setLayout(layout);
+    if (theme && theme !== Theme.SYSTEM) setTheme(theme);
+    if (!theme && theme === Theme.SYSTEM && typeof window !== "undefined") {
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setTheme(prefersDark ? Theme.DARK : Theme.LIGHT);
+    }
+  }, [mode, theme, layout, setMode, setTheme, setLayout]);
+
+  return (
+    <SketchpadContext.Provider
+      value={{
+        navbarToolbar: navbarToolbar,
+        setNavbarToolbar: setNavbarToolbar,
+      }}
+    >
+      <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
+        <DesignEditor />
+      </div>
+    </SketchpadContext.Provider>
+  );
+};
+
+const Sketchpad: FC<SketchpadProps> = ({ userId, onWindowEvents }) => {
+  const defaultKitId: KitId = { name: "Metabolism", version: "r25.07-1" };
+  const defaultDesignId: DesignId = { name: "Nakagin Capsule Tower", variant: "", view: "" };
+
+  return (
     <TooltipProvider>
       <SketchpadScopeProvider id={userId || "default-user"} persisted={true}>
-        <KitScopeProvider id={defaultKitId}>
-          <DesignScopeProvider id={defaultDesignId}>
-            <SketchpadContext.Provider
-              value={{
-                navbarToolbar: navbarToolbar,
-                setNavbarToolbar: setNavbarToolbar,
-              }}
-            >
-              <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
-                <DesignEditor />
-              </div>
-            </SketchpadContext.Provider>
-          </DesignScopeProvider>
-        </KitScopeProvider>
+        <SketchpadInner defaultKitId={defaultKitId} defaultDesignId={defaultDesignId} />
       </SketchpadScopeProvider>
     </TooltipProvider>
   );

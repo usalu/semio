@@ -113,6 +113,23 @@ public enum EncodeMode
 
 public static class Utility
 {
+    public static string Normalize(string val) => string.IsNullOrEmpty(val) ? "" : val;
+    
+    public static float Jaccard(IEnumerable<string> a, IEnumerable<string> b)
+    {
+        var listA = a?.ToList() ?? new List<string>();
+        var listB = b?.ToList() ?? new List<string>();
+        
+        if (listA.Count == 0 && listB.Count == 0) return 1f;
+        
+        var setA = new HashSet<string>(listA);
+        var setB = new HashSet<string>(listB);
+        var intersection = setA.Intersect(setB).Count();
+        var union = setA.Union(setB).Count();
+        
+        if (union == 0) return 0f;
+        return (float)intersection / union;
+    }
     public static bool UriIsNotAbsoluteFilePath(string uri)
     {
         return !(Uri.IsWellFormedUriString(uri, UriKind.Relative) || uri.StartsWith("http"));
@@ -2416,6 +2433,53 @@ public class Port : Model<Port>
         }
         return (isValid, errors);
     }
+
+    public bool IsCompatibleWith(Port otherPort)
+    {
+        var normalizedPortFamily = Utility.Normalize(Family);
+        var normalizedOtherPortFamily = Utility.Normalize(otherPort.Family);
+        if (normalizedPortFamily == "" || normalizedOtherPortFamily == "") return true;
+        return (CompatibleFamilies ?? new List<string>()).Contains(normalizedOtherPortFamily) || 
+               (otherPort.CompatibleFamilies ?? new List<string>()).Contains(normalizedPortFamily);
+    }
+
+    public bool IsSameAs(Port other)
+    {
+        return Utility.Normalize(Id) == Utility.Normalize(other.Id);
+    }
+
+    public string FindAttributeValue(string name, string defaultValue = "")
+    {
+        var attribute = Attributes?.FirstOrDefault(a => a.Key == name);
+        if (attribute == null && defaultValue == null) 
+            throw new InvalidOperationException($"Attribute {name} not found in port {Id}");
+        return attribute?.Value ?? defaultValue;
+    }
+
+    public Port SetAttribute(Attribute attribute)
+    {
+        var attributes = new List<Attribute>(Attributes ?? new List<Attribute>());
+        var existingIndex = attributes.FindIndex(a => a.Key == attribute.Key);
+        
+        if (existingIndex >= 0)
+            attributes[existingIndex] = attribute;
+        else
+            attributes.Add(attribute);
+
+        return new Port
+        {
+            Id = Id,
+            Description = Description,
+            Mandatory = Mandatory,
+            Family = Family,
+            CompatibleFamilies = CompatibleFamilies,
+            Point = Point,
+            Direction = Direction,
+            T = T,
+            Props = Props,
+            Attributes = attributes
+        };
+    }
 }
 
 [Model("", "Au", "Aut", "The information about the author.")]
@@ -2685,6 +2749,66 @@ public class Type : Model<Type>
         }
 
         return typesDict;
+    }
+
+    public bool IsSameAs(Type other)
+    {
+        return Name == other.Name && Utility.Normalize(Variant) == Utility.Normalize(other.Variant);
+    }
+
+    public Port FindPort(string portId)
+    {
+        var port = Ports?.FirstOrDefault(p => Utility.Normalize(p.Id) == Utility.Normalize(portId));
+        if (port == null) throw new InvalidOperationException($"Port {portId} not found in type {Name}");
+        return port;
+    }
+
+    public Representation FindRepresentation(List<string> tags)
+    {
+        if (Representations == null || Representations.Count == 0)
+            throw new ArgumentException($"No representations available in type {Name}");
+
+        var indices = Representations.Select(r => Utility.Jaccard(r.Tags, tags)).ToList();
+        var maxIndex = indices.Max();
+        var maxIndexIndex = indices.IndexOf(maxIndex);
+        return Representations[maxIndexIndex];
+    }
+
+    public string FindAttributeValue(string name, string defaultValue = "")
+    {
+        var attribute = Attributes?.FirstOrDefault(a => a.Key == name);
+        if (attribute == null && defaultValue == null) 
+            throw new InvalidOperationException($"Attribute {name} not found in type {Name}");
+        return attribute?.Value ?? defaultValue;
+    }
+
+    public Type SetAttribute(Attribute attribute)
+    {
+        var attributes = new List<Attribute>(Attributes ?? new List<Attribute>());
+        var existingIndex = attributes.FindIndex(a => a.Key == attribute.Key);
+        
+        if (existingIndex >= 0)
+            attributes[existingIndex] = attribute;
+        else
+            attributes.Add(attribute);
+
+        return new Type
+        {
+            Name = Name,
+            Description = Description,
+            Icon = Icon,
+            Image = Image,
+            Variant = Variant,
+            Stock = Stock,
+            Virtual = Virtual,
+            Location = Location,
+            Unit = Unit,
+            Representations = Representations,
+            Ports = Ports,
+            Props = Props,
+            Authors = Authors,
+            Attributes = attributes
+        };
     }
 }
 
@@ -3082,6 +3206,53 @@ public class Piece : Model<Piece>
         }
         return (isValid, errors);
     }
+
+    public bool IsSameAs(Piece other)
+    {
+        return Utility.Normalize(Id) == Utility.Normalize(other.Id);
+    }
+
+    public bool IsFixed()
+    {
+        var isPlaneSet = Plane != null;
+        var isCenterSet = Center != null;
+        if (isPlaneSet != isCenterSet) 
+            throw new InvalidOperationException($"Piece {Id} has inconsistent plane and center");
+        return isPlaneSet;
+    }
+
+    public string FindAttributeValue(string name, string defaultValue = "")
+    {
+        var attribute = Attributes?.FirstOrDefault(a => a.Key == name);
+        if (attribute == null && defaultValue == null) 
+            throw new InvalidOperationException($"Attribute {name} not found in piece {Id}");
+        return attribute?.Value ?? defaultValue;
+    }
+
+    public Piece SetAttribute(Attribute attribute)
+    {
+        var attributes = new List<Attribute>(Attributes ?? new List<Attribute>());
+        var existingIndex = attributes.FindIndex(a => a.Key == attribute.Key);
+        
+        if (existingIndex >= 0)
+            attributes[existingIndex] = attribute;
+        else
+            attributes.Add(attribute);
+
+        return new Piece
+        {
+            Id = Id,
+            Description = Description,
+            Type = Type,
+            Design = Design,
+            Plane = Plane,
+            Center = Center,
+            Hidden = Hidden,
+            Locked = Locked,
+            Props = Props,
+            Attributes = attributes
+        };
+    }
 }
 
 [Model("🧱", "Sd", "Sde", "A side of a piece in a connection.")]
@@ -3284,6 +3455,55 @@ public class Connection : Model<Connection>
         }
 
         return (isValid, errors);
+    }
+
+    public bool IsSameAs(Connection other, bool strict = false)
+    {
+        var connectedPiece1 = Connected?.Piece?.Id ?? "";
+        var connectingPiece1 = Connecting?.Piece?.Id ?? "";
+        var connectedPiece2 = other.Connected?.Piece?.Id ?? "";
+        var connectingPiece2 = other.Connecting?.Piece?.Id ?? "";
+
+        var isExactMatch = connectingPiece1 == connectingPiece2 && connectedPiece1 == connectedPiece2;
+        if (strict) return isExactMatch;
+        var isSwappedMatch = connectingPiece1 == connectedPiece2 && connectedPiece1 == connectingPiece2;
+        return isExactMatch || isSwappedMatch;
+    }
+
+    public string FindAttributeValue(string name, string defaultValue = "")
+    {
+        var attribute = Attributes?.FirstOrDefault(a => a.Key == name);
+        if (attribute == null && defaultValue == null) 
+            throw new InvalidOperationException($"Attribute {name} not found in connection");
+        return attribute?.Value ?? defaultValue;
+    }
+
+    public Connection SetAttribute(Attribute attribute)
+    {
+        var attributes = new List<Attribute>(Attributes ?? new List<Attribute>());
+        var existingIndex = attributes.FindIndex(a => a.Key == attribute.Key);
+        
+        if (existingIndex >= 0)
+            attributes[existingIndex] = attribute;
+        else
+            attributes.Add(attribute);
+
+        return new Connection
+        {
+            Connected = Connected,
+            Connecting = Connecting,
+            Description = Description,
+            Gap = Gap,
+            Shift = Shift,
+            Rise = Rise,
+            Rotation = Rotation,
+            Turn = Turn,
+            Tilt = Tilt,
+            X = X,
+            Y = Y,
+            Props = Props,
+            Attributes = attributes
+        };
     }
 }
 
@@ -3991,6 +4211,156 @@ text {
 
         return (isValid, errors);
     }
+
+    public bool IsSameAs(Design other)
+    {
+        if (other == null) return false;
+        return Name == other.Name && 
+               Utility.Normalize(Variant) == Utility.Normalize(other.Variant) && 
+               Utility.Normalize(View) == Utility.Normalize(other.View);
+    }
+
+    public Piece FindPiece(string pieceId)
+    {
+        var piece = Pieces.FirstOrDefault(p => p.Id == pieceId);
+        if (piece == null) throw new ArgumentException($"Piece {pieceId} not found in design");
+        return piece;
+    }
+
+    public Connection FindConnection(Connection connectionToFind, bool strict = false)
+    {
+        var connection = Connections.FirstOrDefault(c => c.IsSameAs(connectionToFind, strict));
+        if (connection == null) 
+            throw new ArgumentException($"Connection {connectionToFind.Connected.Piece.Id} -> {connectionToFind.Connecting.Piece.Id} not found in design");
+        return connection;
+    }
+
+    public List<Connection> FindPieceConnections(string pieceId)
+    {
+        return Connections.Where(c => 
+            c.Connected.Piece.Id == pieceId || 
+            c.Connecting.Piece.Id == pieceId).ToList();
+    }
+
+    public Design AddPiece(Piece piece)
+    {
+        var newPieces = new List<Piece>(Pieces) { piece };
+        return new Design
+        {
+            Name = Name,
+            Description = Description,
+            Icon = Icon,
+            Image = Image,
+            Variant = Variant,
+            View = View,
+            Location = Location,
+            Unit = Unit,
+            Pieces = newPieces,
+            Connections = new List<Connection>(Connections),
+            Props = new List<Prop>(Props),
+            Stats = new List<Stat>(Stats),
+            Authors = new List<AuthorId>(Authors),
+            Attributes = new List<Attribute>(Attributes)
+        };
+    }
+
+    public Design RemovePiece(string pieceId)
+    {
+        var newPieces = Pieces.Where(p => p.Id != pieceId).ToList();
+        var newConnections = Connections.Where(c => 
+            c.Connected.Piece.Id != pieceId && 
+            c.Connecting.Piece.Id != pieceId).ToList();
+        return new Design
+        {
+            Name = Name,
+            Description = Description,
+            Icon = Icon,
+            Image = Image,
+            Variant = Variant,
+            View = View,
+            Location = Location,
+            Unit = Unit,
+            Pieces = newPieces,
+            Connections = newConnections,
+            Props = new List<Prop>(Props),
+            Stats = new List<Stat>(Stats),
+            Authors = new List<AuthorId>(Authors),
+            Attributes = new List<Attribute>(Attributes)
+        };
+    }
+
+    public Design AddConnection(Connection connection)
+    {
+        var newConnections = new List<Connection>(Connections) { connection };
+        return new Design
+        {
+            Name = Name,
+            Description = Description,
+            Icon = Icon,
+            Image = Image,
+            Variant = Variant,
+            View = View,
+            Location = Location,
+            Unit = Unit,
+            Pieces = new List<Piece>(Pieces),
+            Connections = newConnections,
+            Props = new List<Prop>(Props),
+            Stats = new List<Stat>(Stats),
+            Authors = new List<AuthorId>(Authors),
+            Attributes = new List<Attribute>(Attributes)
+        };
+    }
+
+    public Design RemoveConnection(Connection connectionToRemove)
+    {
+        var newConnections = Connections.Where(c => !c.IsSameAs(connectionToRemove)).ToList();
+        return new Design
+        {
+            Name = Name,
+            Description = Description,
+            Icon = Icon,
+            Image = Image,
+            Variant = Variant,
+            View = View,
+            Location = Location,
+            Unit = Unit,
+            Pieces = new List<Piece>(Pieces),
+            Connections = newConnections,
+            Props = new List<Prop>(Props),
+            Stats = new List<Stat>(Stats),
+            Authors = new List<AuthorId>(Authors),
+            Attributes = new List<Attribute>(Attributes)
+        };
+    }
+
+    public string FindAttributeValue(string key, string defaultValue = "")
+    {
+        var attribute = Attributes.FirstOrDefault(a => a.Key == key);
+        return attribute?.Value ?? defaultValue;
+    }
+
+    public Design SetAttribute(Attribute attribute)
+    {
+        var newAttributes = Attributes.Where(a => a.Key != attribute.Key).ToList();
+        newAttributes.Add(attribute);
+        return new Design
+        {
+            Name = Name,
+            Description = Description,
+            Icon = Icon,
+            Image = Image,
+            Variant = Variant,
+            View = View,
+            Location = Location,
+            Unit = Unit,
+            Pieces = new List<Piece>(Pieces),
+            Connections = new List<Connection>(Connections),
+            Props = new List<Prop>(Props),
+            Stats = new List<Stat>(Stats),
+            Authors = new List<AuthorId>(Authors),
+            Attributes = newAttributes
+        };
+    }
 }
 
 /// <summary>
@@ -4258,582 +4628,162 @@ public class Kit : Model<Kit>
 
         return (isValid, errors);
     }
-}
 
-#endregion
-
-#region Domain Logic Extensions
-
-public static class DomainLogic
-{
-    public static string Normalize(string val) => string.IsNullOrEmpty(val) ? "" : val;
-    private static float Round(float value) => (float)(Math.Round(value / Constants.Tolerance) * Constants.Tolerance);
-
-    public static float Jaccard(IEnumerable<string> a, IEnumerable<string> b)
+    public bool IsSameAs(Kit other)
     {
-        var listA = a?.ToList() ?? new List<string>();
-        var listB = b?.ToList() ?? new List<string>();
-        
-        if (listA.Count == 0 && listB.Count == 0) return 1f;
-        
-        var setA = new HashSet<string>(listA);
-        var setB = new HashSet<string>(listB);
-        var intersection = setA.Intersect(setB).Count();
-        var union = setA.Union(setB).Count();
-        
-        if (union == 0) return 0f;
-        return (float)intersection / union;
+        if (other == null) return false;
+        return Name == other.Name;
     }
 
-    public static bool ArePortsCompatible(Port port, Port otherPort)
+    public Type FindType(string typeName, string variant = "")
     {
-        var normalizedPortFamily = Normalize(port.Family);
-        var normalizedOtherPortFamily = Normalize(otherPort.Family);
-        if (normalizedPortFamily == "" || normalizedOtherPortFamily == "") return true;
-        return (port.CompatibleFamilies ?? new List<string>()).Contains(normalizedOtherPortFamily) || 
-               (otherPort.CompatibleFamilies ?? new List<string>()).Contains(normalizedPortFamily);
-    }
-
-    public static bool IsPortInUse(Design design, Piece piece, Port port)
-    {
-        var connections = FindPieceConnectionsInDesign(design, piece.Id);
-        foreach (var connection in connections)
-        {
-            var isPieceConnected = connection.Connected.Piece.Id == piece.Id;
-            var isPortConnected = isPieceConnected 
-                ? connection.Connected.Port.Id == port.Id 
-                : connection.Connecting.Port.Id == port.Id;
-            if (isPortConnected) return true;
-        }
-        return false;
-    }
-
-    public static bool IsConnectionInDesign(Design design, Connection connection)
-    {
-        return (design.Connections ?? new List<Connection>()).Any(c => IsSameConnection(c, connection));
-    }
-
-    public static bool IsFixedPiece(Piece piece)
-    {
-        var isPlaneSet = piece.Plane != null;
-        var isCenterSet = piece.Center != null;
-        if (isPlaneSet != isCenterSet) 
-            throw new InvalidOperationException($"Piece {piece.Id} has inconsistent plane and center");
-        return isPlaneSet;
-    }
-
-    public static bool IsSameRepresentation(Representation representation, Representation other)
-    {
-        return (representation.Tags ?? new List<string>()).All(tag => 
-            (other.Tags ?? new List<string>()).Contains(tag));
-    }
-
-    public static bool IsSamePort(Port port, Port other)
-    {
-        return Normalize(port.Id) == Normalize(other.Id);
-    }
-
-    public static bool IsSameType(Type type, Type other)
-    {
-        return type.Name == other.Name && Normalize(type.Variant) == Normalize(other.Variant);
-    }
-
-    public static bool IsSamePiece(Piece piece, Piece other)
-    {
-        return Normalize(piece.Id) == Normalize(other.Id);
-    }
-
-    public static bool IsSameConnection(Connection connection, Connection other, bool strict = false)
-    {
-        var connectedPiece1 = connection.Connected?.Piece?.Id ?? "";
-        var connectingPiece1 = connection.Connecting?.Piece?.Id ?? "";
-        var connectedPiece2 = other.Connected?.Piece?.Id ?? "";
-        var connectingPiece2 = other.Connecting?.Piece?.Id ?? "";
-
-        var isExactMatch = connectingPiece1 == connectingPiece2 && connectedPiece1 == connectedPiece2;
-        if (strict) return isExactMatch;
-        var isSwappedMatch = connectingPiece1 == connectedPiece2 && connectedPiece1 == connectingPiece2;
-        return isExactMatch || isSwappedMatch;
-    }
-
-    public static bool IsSameDesign(Design design, Design other)
-    {
-        return design.Name == other.Name && 
-               Normalize(design.Variant) == Normalize(other.Variant) && 
-               Normalize(design.View) == Normalize(other.View);
-    }
-
-    public static bool IsSameKit(Kit kit, Kit other)
-    {
-        return kit.Name == other.Name && Normalize(kit.Version) == Normalize(other.Version);
-    }
-
-    public static string FindAttributeValue<T>(T entity, string name, string defaultValue = "") 
-        where T : class
-    {
-        var attributes = entity.GetType().GetProperty("Attributes")?.GetValue(entity) as List<Attribute>;
-        var attribute = attributes?.FirstOrDefault(a => a.Key == name);
-        if (attribute == null && defaultValue == null) 
-            throw new InvalidOperationException($"Attribute {name} not found in {typeof(T).Name}");
-        return attribute?.Value ?? defaultValue;
-    }
-
-    public static Representation FindRepresentation(List<Representation> representations, List<string> tags)
-    {
-        if (representations == null || representations.Count == 0)
-            throw new ArgumentException("No representations available");
-
-        var indices = representations.Select(r => Jaccard(r.Tags, tags)).ToList();
-        var maxIndex = indices.Max();
-        var maxIndexIndex = indices.IndexOf(maxIndex);
-        return representations[maxIndexIndex];
-    }
-
-    public static Port FindPort(List<Port> ports, string portId)
-    {
-        var port = ports?.FirstOrDefault(p => Normalize(p.Id) == Normalize(portId));
-        if (port == null) throw new InvalidOperationException($"Port {portId} not found in ports");
-        return port;
-    }
-
-    public static Port FindPortInType(Type type, string portId)
-    {
-        return FindPort(type.Ports ?? new List<Port>(), portId);
-    }
-
-    public static Piece FindPiece(List<Piece> pieces, string pieceId)
-    {
-        var piece = pieces?.FirstOrDefault(p => p.Id == pieceId);
-        if (piece == null) throw new InvalidOperationException($"Piece {pieceId} not found in pieces");
-        return piece;
-    }
-
-    public static Piece FindPieceInDesign(Design design, string pieceId)
-    {
-        return FindPiece(design.Pieces ?? new List<Piece>(), pieceId);
-    }
-
-    public static Connection FindConnection(List<Connection> connections, Connection connectionToFind, bool strict = false)
-    {
-        var connection = connections?.FirstOrDefault(c => IsSameConnection(c, connectionToFind, strict));
-        if (connection == null) 
-            throw new InvalidOperationException($"Connection {connectionToFind.Connected?.Piece?.Id} -> {connectionToFind.Connecting?.Piece?.Id} not found");
-        return connection;
-    }
-
-    public static Connection FindConnectionInDesign(Design design, Connection connectionToFind, bool strict = false)
-    {
-        return FindConnection(design.Connections ?? new List<Connection>(), connectionToFind, strict);
-    }
-
-    public static List<Connection> FindConnectionsInDesign(Design design, List<Connection> connectionsToFind)
-    {
-        return connectionsToFind.Select(c => FindConnectionInDesign(design, c)).ToList();
-    }
-
-    public static List<Connection> FindPieceConnections(List<Connection> connections, string pieceId)
-    {
-        return connections?.Where(c => 
-            c.Connected?.Piece?.Id == pieceId || 
-            c.Connecting?.Piece?.Id == pieceId).ToList() ?? new List<Connection>();
-    }
-
-    public static List<Connection> FindPieceConnectionsInDesign(Design design, string pieceId)
-    {
-        return FindPieceConnections(design.Connections ?? new List<Connection>(), pieceId);
-    }
-
-    public static List<Connection> FindStaleConnectionsInDesign(Design design)
-    {
-        return (design.Connections ?? new List<Connection>()).Where(c => 
-        {
-            try
-            {
-                FindPieceInDesign(design, c.Connected?.Piece?.Id ?? "");
-                FindPieceInDesign(design, c.Connecting?.Piece?.Id ?? "");
-                return false;
-            }
-            catch
-            {
-                return true;
-            }
-        }).ToList();
-    }
-
-    public static Type FindTypeInKit(Kit kit, string typeName, string variant = "")
-    {
-        var type = kit.Types?.FirstOrDefault(t => 
-            t.Name == typeName && Normalize(t.Variant) == Normalize(variant));
-        if (type == null) 
-            throw new InvalidOperationException($"Type {typeName} not found in kit {kit.Name}");
+        var normalizedVariant = Utility.Normalize(variant);
+        var type = Types.FirstOrDefault(t => 
+            t.Name == typeName && 
+            Utility.Normalize(t.Variant) == normalizedVariant);
+        if (type == null) throw new ArgumentException($"Type {typeName} not found in kit {Name}");
         return type;
     }
 
-    public static Design FindDesignInKit(Kit kit, string designName, string variant = "", string view = "")
+    public Design FindDesign(string designName, string variant = "", string view = "")
     {
-        var design = kit.Designs?.FirstOrDefault(d => 
+        var normalizedVariant = Utility.Normalize(variant);
+        var normalizedView = Utility.Normalize(view);
+        var design = Designs.FirstOrDefault(d => 
             d.Name == designName && 
-            Normalize(d.Variant) == Normalize(variant) && 
-            Normalize(d.View) == Normalize(view));
-        if (design == null) 
-            throw new InvalidOperationException($"Design {designName} not found in kit {kit.Name}");
+            Utility.Normalize(d.Variant) == normalizedVariant && 
+            Utility.Normalize(d.View) == normalizedView);
+        if (design == null) throw new ArgumentException($"Design {designName} not found in kit {Name}");
         return design;
     }
-}
 
-public static class ModelExtensions
-{
-    public static T SetAttribute<T>(this T entity, Attribute attribute) where T : class
+    public Kit AddType(Type type)
     {
-        var attributesProperty = typeof(T).GetProperty("Attributes");
-        if (attributesProperty == null) return entity;
-
-        var attributes = (attributesProperty.GetValue(entity) as List<Attribute>) ?? new List<Attribute>();
-        var existingIndex = attributes.FindIndex(a => a.Key == attribute.Key);
-        
-        var newAttributes = new List<Attribute>(attributes);
-        if (existingIndex >= 0)
-            newAttributes[existingIndex] = attribute;
-        else
-            newAttributes.Add(attribute);
-
-        var clone = entity.Serialize().Deserialize<T>();
-        attributesProperty.SetValue(clone, newAttributes);
-        return clone;
-    }
-
-    public static T SetAttributes<T>(this T entity, IEnumerable<Attribute> attributes) where T : class
-    {
-        return attributes.Aggregate(entity, (acc, attribute) => acc.SetAttribute(attribute));
-    }
-
-    public static Design AddPiece(this Design design, Piece piece)
-    {
-        var newPieces = new List<Piece>(design.Pieces ?? new List<Piece>()) { piece };
-        return new Design
-        {
-            Name = design.Name,
-            Description = design.Description,
-            Icon = design.Icon,
-            Image = design.Image,
-            Variant = design.Variant,
-            View = design.View,
-            Location = design.Location,
-            Unit = design.Unit,
-            Authors = design.Authors,
-            Pieces = newPieces,
-            Connections = design.Connections,
-            Props = design.Props,
-            Stats = design.Stats,
-            Attributes = design.Attributes
-        };
-    }
-
-    public static Design SetPiece(this Design design, Piece piece)
-    {
-        var newPieces = (design.Pieces ?? new List<Piece>())
-            .Select(p => p.Id == piece.Id ? piece : p).ToList();
-        return new Design
-        {
-            Name = design.Name,
-            Description = design.Description,
-            Icon = design.Icon,
-            Image = design.Image,
-            Variant = design.Variant,
-            View = design.View,
-            Location = design.Location,
-            Unit = design.Unit,
-            Authors = design.Authors,
-            Pieces = newPieces,
-            Connections = design.Connections,
-            Props = design.Props,
-            Stats = design.Stats,
-            Attributes = design.Attributes
-        };
-    }
-
-    public static Design RemovePiece(this Design design, string pieceId)
-    {
-        var newPieces = (design.Pieces ?? new List<Piece>())
-            .Where(p => p.Id != pieceId).ToList();
-        var newConnections = (design.Connections ?? new List<Connection>())
-            .Where(c => c.Connected?.Piece?.Id != pieceId && c.Connecting?.Piece?.Id != pieceId).ToList();
-        
-        return new Design
-        {
-            Name = design.Name,
-            Description = design.Description,
-            Icon = design.Icon,
-            Image = design.Image,
-            Variant = design.Variant,
-            View = design.View,
-            Location = design.Location,
-            Unit = design.Unit,
-            Authors = design.Authors,
-            Pieces = newPieces,
-            Connections = newConnections,
-            Props = design.Props,
-            Stats = design.Stats,
-            Attributes = design.Attributes
-        };
-    }
-
-    public static Design AddPieces(this Design design, IEnumerable<Piece> pieces)
-    {
-        var newPieces = new List<Piece>(design.Pieces ?? new List<Piece>());
-        newPieces.AddRange(pieces);
-        return new Design
-        {
-            Name = design.Name,
-            Description = design.Description,
-            Icon = design.Icon,
-            Image = design.Image,
-            Variant = design.Variant,
-            View = design.View,
-            Location = design.Location,
-            Unit = design.Unit,
-            Authors = design.Authors,
-            Pieces = newPieces,
-            Connections = design.Connections,
-            Props = design.Props,
-            Stats = design.Stats,
-            Attributes = design.Attributes
-        };
-    }
-
-    public static Design AddConnection(this Design design, Connection connection)
-    {
-        var newConnections = new List<Connection>(design.Connections ?? new List<Connection>()) { connection };
-        return new Design
-        {
-            Name = design.Name,
-            Description = design.Description,
-            Icon = design.Icon,
-            Image = design.Image,
-            Variant = design.Variant,
-            View = design.View,
-            Location = design.Location,
-            Unit = design.Unit,
-            Authors = design.Authors,
-            Pieces = design.Pieces,
-            Connections = newConnections,
-            Props = design.Props,
-            Stats = design.Stats,
-            Attributes = design.Attributes
-        };
-    }
-
-    public static Design SetConnection(this Design design, Connection connection)
-    {
-        var newConnections = (design.Connections ?? new List<Connection>())
-            .Select(c => DomainLogic.IsSameConnection(c, connection) ? connection : c).ToList();
-        return new Design
-        {
-            Name = design.Name,
-            Description = design.Description,
-            Icon = design.Icon,
-            Image = design.Image,
-            Variant = design.Variant,
-            View = design.View,
-            Location = design.Location,
-            Unit = design.Unit,
-            Authors = design.Authors,
-            Pieces = design.Pieces,
-            Connections = newConnections,
-            Props = design.Props,
-            Stats = design.Stats,
-            Attributes = design.Attributes
-        };
-    }
-
-    public static Design RemoveConnection(this Design design, Connection connection)
-    {
-        var newConnections = (design.Connections ?? new List<Connection>())
-            .Where(c => !DomainLogic.IsSameConnection(c, connection)).ToList();
-        return new Design
-        {
-            Name = design.Name,
-            Description = design.Description,
-            Icon = design.Icon,
-            Image = design.Image,
-            Variant = design.Variant,
-            View = design.View,
-            Location = design.Location,
-            Unit = design.Unit,
-            Authors = design.Authors,
-            Pieces = design.Pieces,
-            Connections = newConnections,
-            Props = design.Props,
-            Stats = design.Stats,
-            Attributes = design.Attributes
-        };
-    }
-
-    public static Design AddConnections(this Design design, IEnumerable<Connection> connections)
-    {
-        var newConnections = new List<Connection>(design.Connections ?? new List<Connection>());
-        newConnections.AddRange(connections);
-        return new Design
-        {
-            Name = design.Name,
-            Description = design.Description,
-            Icon = design.Icon,
-            Image = design.Image,
-            Variant = design.Variant,
-            View = design.View,
-            Location = design.Location,
-            Unit = design.Unit,
-            Authors = design.Authors,
-            Pieces = design.Pieces,
-            Connections = newConnections,
-            Props = design.Props,
-            Stats = design.Stats,
-            Attributes = design.Attributes
-        };
-    }
-
-    public static Kit AddType(this Kit kit, Type type)
-    {
-        var newTypes = new List<Type>(kit.Types ?? new List<Type>()) { type };
+        var newTypes = new List<Type>(Types) { type };
         return new Kit
         {
-            Name = kit.Name,
-            Description = kit.Description,
-            Icon = kit.Icon,
-            Image = kit.Image,
-            Preview = kit.Preview,
-            Version = kit.Version,
-            Remote = kit.Remote,
-            Homepage = kit.Homepage,
-            License = kit.License,
-            Authors = kit.Authors,
-            Qualities = kit.Qualities,
+            Name = Name,
+            Description = Description,
+            Icon = Icon,
+            Image = Image,
+            Preview = Preview,
+            Version = Version,
+            Remote = Remote,
+            Homepage = Homepage,
+            License = License,
             Types = newTypes,
-            Designs = kit.Designs,
-            Attributes = kit.Attributes
+            Designs = new List<Design>(Designs),
+            Authors = new List<Author>(Authors),
+            Qualities = new List<Quality>(Qualities),
+            Attributes = new List<Attribute>(Attributes)
         };
     }
 
-    public static Kit SetType(this Kit kit, Type type)
+    public Kit RemoveType(string typeName, string variant = "")
     {
-        var newTypes = (kit.Types ?? new List<Type>())
-            .Select(t => DomainLogic.IsSameType(t, type) ? type : t).ToList();
+        var normalizedVariant = Utility.Normalize(variant);
+        var newTypes = Types.Where(t => 
+            !(t.Name == typeName && Utility.Normalize(t.Variant) == normalizedVariant)).ToList();
         return new Kit
         {
-            Name = kit.Name,
-            Description = kit.Description,
-            Icon = kit.Icon,
-            Image = kit.Image,
-            Preview = kit.Preview,
-            Version = kit.Version,
-            Remote = kit.Remote,
-            Homepage = kit.Homepage,
-            License = kit.License,
-            Authors = kit.Authors,
-            Qualities = kit.Qualities,
+            Name = Name,
+            Description = Description,
+            Icon = Icon,
+            Image = Image,
+            Preview = Preview,
+            Version = Version,
+            Remote = Remote,
+            Homepage = Homepage,
+            License = License,
             Types = newTypes,
-            Designs = kit.Designs,
-            Attributes = kit.Attributes
+            Designs = new List<Design>(Designs),
+            Authors = new List<Author>(Authors),
+            Qualities = new List<Quality>(Qualities),
+            Attributes = new List<Attribute>(Attributes)
         };
     }
 
-    public static Kit RemoveType(this Kit kit, string typeName, string variant = "")
+    public Kit AddDesign(Design design)
     {
-        var newTypes = (kit.Types ?? new List<Type>())
-            .Where(t => !(t.Name == typeName && DomainLogic.Normalize(t.Variant) == DomainLogic.Normalize(variant)))
-            .ToList();
+        var newDesigns = new List<Design>(Designs) { design };
         return new Kit
         {
-            Name = kit.Name,
-            Description = kit.Description,
-            Icon = kit.Icon,
-            Image = kit.Image,
-            Preview = kit.Preview,
-            Version = kit.Version,
-            Remote = kit.Remote,
-            Homepage = kit.Homepage,
-            License = kit.License,
-            Authors = kit.Authors,
-            Qualities = kit.Qualities,
-            Types = newTypes,
-            Designs = kit.Designs,
-            Attributes = kit.Attributes
-        };
-    }
-
-    public static Kit AddDesign(this Kit kit, Design design)
-    {
-        var newDesigns = new List<Design>(kit.Designs ?? new List<Design>()) { design };
-        return new Kit
-        {
-            Name = kit.Name,
-            Description = kit.Description,
-            Icon = kit.Icon,
-            Image = kit.Image,
-            Preview = kit.Preview,
-            Version = kit.Version,
-            Remote = kit.Remote,
-            Homepage = kit.Homepage,
-            License = kit.License,
-            Authors = kit.Authors,
-            Qualities = kit.Qualities,
-            Types = kit.Types,
+            Name = Name,
+            Description = Description,
+            Icon = Icon,
+            Image = Image,
+            Preview = Preview,
+            Version = Version,
+            Remote = Remote,
+            Homepage = Homepage,
+            License = License,
+            Types = new List<Type>(Types),
             Designs = newDesigns,
-            Attributes = kit.Attributes
+            Authors = new List<Author>(Authors),
+            Qualities = new List<Quality>(Qualities),
+            Attributes = new List<Attribute>(Attributes)
         };
     }
 
-    public static Kit SetDesign(this Kit kit, Design design)
+    public Kit RemoveDesign(string designName, string variant = "", string view = "")
     {
-        var newDesigns = (kit.Designs ?? new List<Design>())
-            .Select(d => DomainLogic.IsSameDesign(d, design) ? design : d).ToList();
+        var normalizedVariant = Utility.Normalize(variant);
+        var normalizedView = Utility.Normalize(view);
+        var newDesigns = Designs.Where(d => 
+            !(d.Name == designName && 
+              Utility.Normalize(d.Variant) == normalizedVariant && 
+              Utility.Normalize(d.View) == normalizedView)).ToList();
         return new Kit
         {
-            Name = kit.Name,
-            Description = kit.Description,
-            Icon = kit.Icon,
-            Image = kit.Image,
-            Preview = kit.Preview,
-            Version = kit.Version,
-            Remote = kit.Remote,
-            Homepage = kit.Homepage,
-            License = kit.License,
-            Authors = kit.Authors,
-            Qualities = kit.Qualities,
-            Types = kit.Types,
+            Name = Name,
+            Description = Description,
+            Icon = Icon,
+            Image = Image,
+            Preview = Preview,
+            Version = Version,
+            Remote = Remote,
+            Homepage = Homepage,
+            License = License,
+            Types = new List<Type>(Types),
             Designs = newDesigns,
-            Attributes = kit.Attributes
+            Authors = new List<Author>(Authors),
+            Qualities = new List<Quality>(Qualities),
+            Attributes = new List<Attribute>(Attributes)
         };
     }
 
-    public static Kit RemoveDesign(this Kit kit, string designName, string variant = "", string view = "")
+    public string FindAttributeValue(string key, string defaultValue = "")
     {
-        var newDesigns = (kit.Designs ?? new List<Design>())
-            .Where(d => !(d.Name == designName && 
-                         DomainLogic.Normalize(d.Variant) == DomainLogic.Normalize(variant) &&
-                         DomainLogic.Normalize(d.View) == DomainLogic.Normalize(view)))
-            .ToList();
+        var attribute = Attributes.FirstOrDefault(a => a.Key == key);
+        return attribute?.Value ?? defaultValue;
+    }
+
+    public Kit SetAttribute(Attribute attribute)
+    {
+        var newAttributes = Attributes.Where(a => a.Key != attribute.Key).ToList();
+        newAttributes.Add(attribute);
         return new Kit
         {
-            Name = kit.Name,
-            Description = kit.Description,
-            Icon = kit.Icon,
-            Image = kit.Image,
-            Preview = kit.Preview,
-            Version = kit.Version,
-            Remote = kit.Remote,
-            Homepage = kit.Homepage,
-            License = kit.License,
-            Authors = kit.Authors,
-            Qualities = kit.Qualities,
-            Types = kit.Types,
-            Designs = newDesigns,
-            Attributes = kit.Attributes
+            Name = Name,
+            Description = Description,
+            Icon = Icon,
+            Image = Image,
+            Preview = Preview,
+            Version = Version,
+            Remote = Remote,
+            Homepage = Homepage,
+            License = License,
+            Types = new List<Type>(Types),
+            Designs = new List<Design>(Designs),
+            Authors = new List<Author>(Authors),
+            Qualities = new List<Quality>(Qualities),
+            Attributes = newAttributes
         };
     }
 }
 
 #endregion
+
 
 #endregion
 

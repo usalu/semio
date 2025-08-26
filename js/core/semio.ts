@@ -38,21 +38,22 @@ export const TOLERANCE = 1e-5;
 
 // #endregion Constants
 
-//#region Types
+//#region Schemas
 
 //#region Persistence
 
-const dataUriRegex = /^data:([a-z]+\/[a-z0-9\-\.+]+(;[a-z0-9\-\.+]+=[a-z0-9\-\.+]+)?)?(;base64)?,[a-z0-9!$&',()*+;=\-._~:@/?%\s]*$/i;
-const DataUriSchema = z.string().regex(dataUriRegex, "Invalid data URI");
+// https://github.com/usalu/semio#-author-
+export const AuthorIdSchema = z.object({ email: z.string() });
+export const AuthorSchema = z.object({ name: z.string(), email: z.string() });
+export const AuthorIdLikeSchema = z.union([AuthorSchema, AuthorIdSchema, z.string()]);
 
 // https://github.com/usalu/semio#-file-
 export const FileIdSchema = z.object({
-  url: z.url(),
+  path: z.url(),
 });
-export const FileIdLikeSchema = z.union([FileIdSchema, z.string()]);
 export const FileSchema = z.object({
-  url: z.url(),
-  data: DataUriSchema,
+  path: z.url(),
+  remote: z.url().optional(),
   size: z.number().optional(),
   hash: z.string().optional(),
   created: z
@@ -60,12 +61,15 @@ export const FileSchema = z.object({
     .transform((val) => new Date(val))
     .or(z.date())
     .optional(),
+  createdBy: AuthorIdSchema.optional(),
   updated: z
     .string()
     .transform((val) => new Date(val))
     .or(z.date())
     .optional(),
+  updatedBy: AuthorIdSchema.optional(),
 });
+export const FileIdLikeSchema = z.union([FileSchema, FileIdSchema, z.string()]);
 
 // https://github.com/usalu/semio#-attribute-
 export const AttributeSchema = z.object({
@@ -75,9 +79,6 @@ export const AttributeSchema = z.object({
 });
 export const AttributeIdSchema = z.object({ key: z.string() });
 export const AttributeIdLikeSchema = z.union([AttributeSchema, AttributeIdSchema, z.string()]);
-
-// https://github.com/usalu/semio#-author-
-export const AuthorSchema = z.object({ name: z.string(), email: z.string() });
 
 // https://github.com/usalu/semio#-location-
 export const LocationSchema = z.object({
@@ -296,10 +297,14 @@ export const CameraSchema = z.object({
   up: VectorSchema,
 });
 export const FileDiffSchema = z.object({
+  path: z.url().optional(),
   url: z.url().optional(),
-  data: DataUriSchema.optional(),
   size: z.number().optional(),
   hash: z.string().optional(),
+  created: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
+  createdBy: z.email().optional(),
+  updated: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
+  updatedBy: z.email().optional(),
 });
 export const FilesDiffSchema = z.object({
   removed: z.array(FileIdSchema).optional(),
@@ -440,96 +445,117 @@ export const DiffStatusSchema = z.enum(["unchanged", "added", "removed", "modifi
 //#endregion Ephermal
 
 export const schemas = {
-  Kit: KitSchema,
-  Design: DesignSchema,
-  Type: TypeSchema,
-  Piece: PieceSchema,
-  Connection: ConnectionSchema,
-  Port: PortSchema,
-  Attribute: AttributeSchema,
-  Plane: PlaneSchema,
-  Point: PointSchema,
-  Vector: VectorSchema,
+  AuthorId: AuthorIdSchema,
   Author: AuthorSchema,
-  Location: LocationSchema,
-  Representation: RepresentationSchema,
-  DiagramPoint: DiagramPointSchema,
-  DiagramVector: DiagramVectorSchema,
-  TypeId: TypeIdSchema,
-  PieceId: PieceIdSchema,
-  PortId: PortIdSchema,
-  Side: SideSchema,
-  SideId: SideIdSchema,
-  ConnectionId: ConnectionIdSchema,
-  DesignId: DesignIdSchema,
-  KitId: KitIdSchema,
-  AttributeId: AttributeIdSchema,
-  RepresentationId: RepresentationIdSchema,
-  PieceDiff: PieceDiffSchema,
-  PiecesDiff: PiecesDiffSchema,
-  SideDiff: SideDiffSchema,
-  ConnectionDiff: ConnectionDiffSchema,
-  ConnectionsDiff: ConnectionsDiffSchema,
-  DesignDiff: DesignDiffSchema,
+  AuthorIdLike: AuthorIdLikeSchema,
+  FileId: FileIdSchema,
+  File: FileSchema,
+  FileIdLike: FileIdLikeSchema,
   FileDiff: FileDiffSchema,
   FilesDiff: FilesDiffSchema,
-  DiffStatus: DiffStatusSchema,
+  AttributeId: AttributeIdSchema,
+  Attribute: AttributeSchema,
+  AttributeIdLike: AttributeIdLikeSchema,
+  RepresentationId: RepresentationIdSchema,
+  Representation: RepresentationSchema,
+  RepresentationIdLike: RepresentationIdLikeSchema,
+  RepresentationDiff: RepresentationDiffSchema,
+  RepresentationsDiff: RepresentationsDiffSchema,
+  Location: LocationSchema,
+  DiagramPoint: DiagramPointSchema,
+  DiagramVector: DiagramVectorSchema,
+  Point: PointSchema,
+  Vector: VectorSchema,
+  Plane: PlaneSchema,
+  PortId: PortIdSchema,
+  Port: PortSchema,
+  PortIdLike: PortIdLikeSchema,
+  PortDiff: PortDiffSchema,
+  PortsDiff: PortsDiffSchema,
+  TypeId: TypeIdSchema,
+  Type: TypeSchema,
+  TypeIdLike: TypeIdLikeSchema,
+  TypeDiff: TypeDiffSchema,
+  TypesDiff: TypesDiffSchema,
+  PieceId: PieceIdSchema,
+  Piece: PieceSchema,
+  PieceIdLike: PieceIdLikeSchema,
+  PieceDiff: PieceDiffSchema,
+  PiecesDiff: PiecesDiffSchema,
+  SideId: SideIdSchema,
+  Side: SideSchema,
+  SideIdLike: SideIdLikeSchema,
+  SideDiff: SideDiffSchema,
+  ConnectionId: ConnectionIdSchema,
+  Connection: ConnectionSchema,
+  ConnectionIdLike: ConnectionIdLikeSchema,
+  ConnectionDiff: ConnectionDiffSchema,
+  ConnectionsDiff: ConnectionsDiffSchema,
+  DesignId: DesignIdSchema,
+  Design: DesignSchema,
+  DesignIdLike: DesignIdLikeSchema,
+  DesignDiff: DesignDiffSchema,
+  DesignsDiff: DesignsDiffSchema,
+  KitId: KitIdSchema,
+  Kit: KitSchema,
+  KitIdLike: KitIdLikeSchema,
+  KitDiff: KitDiffSchema,
 };
 
-
-export type Attribute = z.infer<typeof AttributeSchema>;
+export type AuthorId = z.infer<typeof AuthorIdSchema>;
+export type Author = z.infer<typeof AuthorSchema>;
+export type AuthorIdLike = z.infer<typeof AuthorIdLikeSchema>;
+export type FileId = z.infer<typeof FileIdSchema>;
+export type File = z.infer<typeof FileSchema>;
+export type FileIdLike = z.infer<typeof FileIdLikeSchema>;
+export type FileDiff = z.infer<typeof FileDiffSchema>;
+export type FilesDiff = z.infer<typeof FilesDiffSchema>;
 export type AttributeId = z.infer<typeof AttributeIdSchema>;
+export type Attribute = z.infer<typeof AttributeSchema>;
 export type AttributeIdLike = z.infer<typeof AttributeIdLikeSchema>;
-export type Representation = z.infer<typeof RepresentationSchema>;
 export type RepresentationId = z.infer<typeof RepresentationIdSchema>;
+export type Representation = z.infer<typeof RepresentationSchema>;
 export type RepresentationIdLike = z.infer<typeof RepresentationIdLikeSchema>;
+export type RepresentationDiff = z.infer<typeof RepresentationDiffSchema>;
+export type RepresentationsDiff = z.infer<typeof RepresentationsDiffSchema>;
+export type Location = z.infer<typeof LocationSchema>;
 export type DiagramPoint = z.infer<typeof DiagramPointSchema>;
 export type DiagramVector = z.infer<typeof DiagramVectorSchema>;
 export type Point = z.infer<typeof PointSchema>;
 export type Vector = z.infer<typeof VectorSchema>;
 export type Plane = z.infer<typeof PlaneSchema>;
-export type Port = z.infer<typeof PortSchema>;
 export type PortId = z.infer<typeof PortIdSchema>;
+export type Port = z.infer<typeof PortSchema>;
 export type PortIdLike = z.infer<typeof PortIdLikeSchema>;
-export type Author = z.infer<typeof AuthorSchema>;
-export type Location = z.infer<typeof LocationSchema>;
-export type Type = z.infer<typeof TypeSchema>;
+export type PortDiff = z.infer<typeof PortDiffSchema>;
+export type PortsDiff = z.infer<typeof PortsDiffSchema>;
 export type TypeId = z.infer<typeof TypeIdSchema>;
+export type Type = z.infer<typeof TypeSchema>;
 export type TypeIdLike = z.infer<typeof TypeIdLikeSchema>;
-export type Piece = z.infer<typeof PieceSchema>;
+export type TypeDiff = z.infer<typeof TypeDiffSchema>;
 export type PieceId = z.infer<typeof PieceIdSchema>;
+export type PieceDiff = z.infer<typeof PieceDiffSchema>;
+export type Piece = z.infer<typeof PieceSchema>;
 export type PieceIdLike = z.infer<typeof PieceIdLikeSchema>;
-export type DesignPiece = { designId: DesignId; plane?: Plane; center?: DiagramPoint };
-export type Side = z.infer<typeof SideSchema>;
+export type PiecesDiff = z.infer<typeof PiecesDiffSchema>;
 export type SideId = z.infer<typeof SideIdSchema>;
+export type Side = z.infer<typeof SideSchema>;
+export type SideDiff = z.infer<typeof SideDiffSchema>;
 export type SideIdLike = z.infer<typeof SideIdLikeSchema>;
-export type Connection = z.infer<typeof ConnectionSchema>;
 export type ConnectionId = z.infer<typeof ConnectionIdSchema>;
+export type Connection = z.infer<typeof ConnectionSchema>;
+export type ConnectionDiff = z.infer<typeof ConnectionDiffSchema>;
 export type ConnectionIdLike = z.infer<typeof ConnectionIdLikeSchema>;
-export type Design = z.infer<typeof DesignSchema>;
 export type DesignId = z.infer<typeof DesignIdSchema>;
+export type Design = z.infer<typeof DesignSchema>;
+export type DesignDiff = z.infer<typeof DesignDiffSchema>;
 export type DesignIdLike = z.infer<typeof DesignIdLikeSchema>;
-export type File = z.infer<typeof FileSchema>;
-export type FileId = z.infer<typeof FileIdSchema>;
-export type FileIdLike = z.infer<typeof FileIdLikeSchema>;
+export type DesignsDiff = z.infer<typeof DesignsDiffSchema>;
 export type Kit = z.infer<typeof KitSchema>;
 export type KitId = z.infer<typeof KitIdSchema>;
-export type KitIdLike = z.infer<typeof KitIdLikeSchema>;
-export type RepresentationDiff = z.infer<typeof RepresentationDiffSchema>;
-export type PortDiff = z.infer<typeof PortDiffSchema>;
-export type TypeDiff = z.infer<typeof TypeDiffSchema>;
-export type PieceDiff = z.infer<typeof PieceDiffSchema>;
-export type PiecesDiff = z.infer<typeof PiecesDiffSchema>;
-export type SideDiff = z.infer<typeof SideDiffSchema>;
-export type ConnectionDiff = z.infer<typeof ConnectionDiffSchema>;
-export type ConnectionsDiff = z.infer<typeof ConnectionsDiffSchema>;
-export type DesignDiff = z.infer<typeof DesignDiffSchema>;
-export type DesignsDiff = z.infer<typeof DesignsDiffSchema>;
-export type FileDiff = z.infer<typeof FileDiffSchema>;
-export type FilesDiff = z.infer<typeof FilesDiffSchema>;
 export type KitDiff = z.infer<typeof KitDiffSchema>;
-export type RepresentationsDiff = z.infer<typeof RepresentationsDiffSchema>;
-export type PortsDiff = z.infer<typeof PortsDiffSchema>;
+export type KitIdLike = z.infer<typeof KitIdLikeSchema>;
+export type ConnectionsDiff = z.infer<typeof ConnectionsDiffSchema>;
 export type TypesDiff = z.infer<typeof TypesDiffSchema>;
 export type Camera = z.infer<typeof CameraSchema>;
 
@@ -540,7 +566,7 @@ export enum DiffStatus {
   Modified = "modified",
 }
 
-//#endregion Types
+//#endregion Schemas
 
 //#region Functions
 
