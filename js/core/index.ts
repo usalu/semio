@@ -30,7 +30,7 @@ export { default as Sketchpad } from "./components/ui/Sketchpad";
 // #endregion
 
 // #region Utils
-export { extractFilesAndCreateUrls } from "./lib/utils";
+
 // #endregion
 
 // #region Domain Logic (from semio.ts)

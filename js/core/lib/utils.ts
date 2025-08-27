@@ -19,7 +19,6 @@
 
 // #endregion
 import { clsx, type ClassValue } from "clsx";
-import JSZip from "jszip";
 import { twMerge } from "tailwind-merge";
 
 import { default as adjectives } from "@semio/assets/lists/adjectives.json";
@@ -28,30 +27,6 @@ import { default as animals } from "@semio/assets/lists/animals.json";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
-
-export const extractFilesAndCreateUrls = async (url: string): Promise<Map<string, string>> => {
-  const fileUrls: Map<string, string> = new Map();
-
-  try {
-    const zipData = await fetch(url).then((res) => res.arrayBuffer());
-    const zip = await JSZip.loadAsync(zipData);
-
-    for (const fileEntry of Object.values(zip.files)) {
-      if (!fileEntry.dir) {
-        const fileData = await fileEntry.async("uint8array");
-        const mimeType = fileEntry.name.split(".").pop() || "";
-        const blob = new Blob([fileData], { type: mimeType });
-        const blobUrl = URL.createObjectURL(blob);
-        fileUrls.set(fileEntry.name, blobUrl);
-      }
-    }
-  } catch (error) {
-    console.error(`Failed to extract files from ${url}:`, error);
-    throw new Error(`Failed to extract files from ${url}`);
-  }
-
-  return fileUrls;
-};
 
 class SeededRandom {
   private seed: number;

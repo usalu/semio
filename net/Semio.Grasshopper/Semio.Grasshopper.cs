@@ -1,4 +1,4 @@
-﻿#region Header
+#region Header
 
 //Semio.Grasshopper.cs
 //2020-2025 Ueli Saluz
@@ -607,6 +607,7 @@ public abstract class SerializeComponent<T, U, V> : ScriptingComponent
     where V : Model<V>, new()
 {
     protected SerializeComponent(string name) : base($"Serialize {name}", $"{name}→Str", $"Serialize {name.ToLower()} to string.") { }
+    protected override Bitmap Icon => (Bitmap?)Resources.ResourceManager.GetObject($"{typeof(V).Name.ToLower()}_serialize_24x24") ?? Resources.serialize_24x24;
     protected override void RegisterInputParams(GH_InputParamManager pManager) => pManager.AddParameter(new U(), typeof(V).Name, typeof(V).Name.Substring(0, 2), $"{typeof(V).Name} to serialize.", GH_ParamAccess.item);
     protected override void RegisterOutputParams(GH_OutputParamManager pManager) => pManager.AddTextParameter("String", "Str", "Serialized string.", GH_ParamAccess.item);
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -624,6 +625,7 @@ public abstract class DeserializeComponent<T, U, V> : ScriptingComponent
     where V : Model<V>, new()
 {
     protected DeserializeComponent(string name) : base($"Deserialize {name}", $"Str→{name}", $"Deserialize string to {name.ToLower()}.") { }
+    protected override Bitmap Icon => (Bitmap?)Resources.ResourceManager.GetObject($"{typeof(V).Name.ToLower()}_deserialize_24x24") ?? Resources.deserialize_24x24;
     protected override void RegisterInputParams(GH_InputParamManager pManager) => pManager.AddTextParameter("String", "Str", "String to deserialize.", GH_ParamAccess.item);
     protected override void RegisterOutputParams(GH_OutputParamManager pManager) => pManager.AddParameter(new U(), typeof(V).Name, typeof(V).Name.Substring(0, 2), $"Deserialized {typeof(V).Name.ToLower()}.", GH_ParamAccess.item);
     protected override void SolveInstance(IGH_DataAccess DA)
@@ -741,6 +743,22 @@ public class RepresentationDiffComponent : DiffComponent<RepresentationDiffParam
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AA");
 }
 
+public class RepresentationsDiffGoo : DiffGoo<RepresentationsDiff>
+{
+    public RepresentationsDiffGoo() { }
+    public RepresentationsDiffGoo(RepresentationsDiff value) : base(value) { }
+}
+
+public class RepresentationsDiffParam : DiffParam<RepresentationsDiffGoo, RepresentationsDiff>
+{
+    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AB");
+}
+
+public class RepresentationsDiffComponent : DiffComponent<RepresentationsDiffParam, RepresentationsDiffGoo, RepresentationsDiff>
+{
+    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AC");
+}
+
 public class RepresentationGoo : ModelGoo<Representation>
 {
     public RepresentationGoo() { }
@@ -845,6 +863,11 @@ public class FilesDiffParam : DiffParam<FilesDiffGoo, FilesDiff>
     public override Guid ComponentGuid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A1");
 }
 
+public class FilesDiffComponent : DiffComponent<FilesDiffParam, FilesDiffGoo, FilesDiff>
+{
+    public override Guid ComponentGuid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A2");
+}
+
 public class SemioFileGoo : ModelGoo<SemioFile>
 {
     public SemioFileGoo() { }
@@ -859,6 +882,18 @@ public class SemioFileParam : ModelParam<SemioFileGoo, SemioFile>
 public class SemioFileComponent : ModelComponent<SemioFileParam, SemioFileGoo, SemioFile>
 {
     public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F9");
+}
+
+public class SerializeSemioFileComponent : SerializeComponent<SemioFileGoo, SemioFileParam, SemioFile>
+{
+    public SerializeSemioFileComponent() : base("File") { }
+    public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7FA");
+}
+
+public class DeserializeSemioFileComponent : DeserializeComponent<SemioFileGoo, SemioFileParam, SemioFile>
+{
+    public DeserializeSemioFileComponent() : base("File") { }
+    public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7FB");
 }
 
 #endregion File
@@ -1011,6 +1046,22 @@ public class DeserializePortComponent : DeserializeComponent<PortGoo, PortParam,
 {
     public DeserializePortComponent() : base("Port") { }
     public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1B6");
+}
+
+public class PortsDiffGoo : DiffGoo<PortsDiff>
+{
+    public PortsDiffGoo() { }
+    public PortsDiffGoo(PortsDiff value) : base(value) { }
+}
+
+public class PortsDiffParam : DiffParam<PortsDiffGoo, PortsDiff>
+{
+    public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1C0");
+}
+
+public class PortsDiffComponent : DiffComponent<PortsDiffParam, PortsDiffGoo, PortsDiff>
+{
+    public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1C1");
 }
 
 #endregion Port
@@ -1179,6 +1230,11 @@ public class TypesDiffParam : DiffParam<TypesDiffGoo, TypesDiff>
     public override Guid ComponentGuid => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B6");
 }
 
+public class TypesDiffComponent : DiffComponent<TypesDiffParam, TypesDiffGoo, TypesDiff>
+{
+    public override Guid ComponentGuid => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B7");
+}
+
 public class TypeGoo : ModelGoo<Type>
 {
     public TypeGoo() { }
@@ -1186,15 +1242,6 @@ public class TypeGoo : ModelGoo<Type>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
-        if (target is PieceGoo piece)
-        {
-            piece.Value = new Piece
-            {
-                Id = Semio.Utility.GenerateRandomId(new Random().Next()),
-                Type = new TypeId { Name = Value.Name, Variant = Value.Variant }
-            };
-            return true;
-        }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
             target = (Q)(object)new GH_String(Value.Name);
@@ -1206,12 +1253,6 @@ public class TypeGoo : ModelGoo<Type>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
-        if (source is PieceGoo piece)
-        {
-            if (piece.Value.Type is null) return false;
-            Value = new Type { Name = piece.Value.Type.Name, Variant = piece.Value.Type.Variant };
-            return true;
-        }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             Value = new Type { Name = str };
@@ -1296,46 +1337,31 @@ public class PiecesDiffParam : DiffParam<PiecesDiffGoo, PiecesDiff>
     public override Guid ComponentGuid => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6C7");
 }
 
+public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, PieceDiff>
+{
+    public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D5");
+}
+
+public class PiecesDiffGoo : DiffGoo<PiecesDiff>
+{
+    public PiecesDiffGoo() { }
+    public PiecesDiffGoo(PiecesDiff value) : base(value) { }
+}
+
+public class PiecesDiffParam : DiffParam<PiecesDiffGoo, PiecesDiff>
+{
+    public override Guid ComponentGuid => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6C7");
+}
+
+public class PiecesDiffComponent : DiffComponent<PiecesDiffParam, PiecesDiffGoo, PiecesDiff>
+{
+    public override Guid ComponentGuid => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6C8");
+}
+
 public class PieceGoo : ModelGoo<Piece>
 {
     public PieceGoo() { }
     public PieceGoo(Piece value) : base(value) { }
-
-    internal override bool CustomCastTo<Q>(ref Q target)
-    {
-        if (target is TypeGoo type)
-        {
-            if (Value.Type is null) return false;
-            type.Value = new Type { Name = Value.Type.Name, Variant = Value.Type.Variant };
-            return true;
-        }
-        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-        {
-            target = (Q)(object)new GH_String(Value.Id);
-            return true;
-        }
-        return false;
-    }
-
-    internal override bool CustomCastFrom(object source)
-    {
-        if (source == null) return false;
-        if (source is TypeGoo type)
-        {
-            Value = new Piece
-            {
-                Id = Semio.Utility.GenerateRandomId(new Random().Next()),
-                Type = new TypeId { Name = type.Value.Name, Variant = type.Value.Variant }
-            };
-            return true;
-        }
-        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-        {
-            Value = new Piece { Id = str };
-            return true;
-        }
-        return false;
-    }
 }
 
 public class PieceParam : ModelParam<PieceGoo, Piece>
@@ -1396,6 +1422,18 @@ public class SideComponent : ModelComponent<SideParam, SideGoo, Side>
     public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E6");
 }
 
+public class SerializeSideComponent : SerializeComponent<SideGoo, SideParam, Side>
+{
+    public SerializeSideComponent() : base("Side") { }
+    public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E7");
+}
+
+public class DeserializeSideComponent : DeserializeComponent<SideGoo, SideParam, Side>
+{
+    public DeserializeSideComponent() : base("Side") { }
+    public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E8");
+}
+
 #endregion Side
 
 #region Connection
@@ -1443,6 +1481,27 @@ public class ConnectionsDiffParam : DiffParam<ConnectionsDiffGoo, ConnectionsDif
     public override Guid ComponentGuid => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7D8");
 }
 
+public class ConnectionDiffComponent : DiffComponent<ConnectionDiffParam, ConnectionDiffGoo, ConnectionDiff>
+{
+    public override Guid ComponentGuid => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F5");
+}
+
+public class ConnectionsDiffGoo : DiffGoo<ConnectionsDiff>
+{
+    public ConnectionsDiffGoo() { }
+    public ConnectionsDiffGoo(ConnectionsDiff value) : base(value) { }
+}
+
+public class ConnectionsDiffParam : DiffParam<ConnectionsDiffGoo, ConnectionsDiff>
+{
+    public override Guid ComponentGuid => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7D8");
+}
+
+public class ConnectionsDiffComponent : DiffComponent<ConnectionsDiffParam, ConnectionsDiffGoo, ConnectionsDiff>
+{
+    public override Guid ComponentGuid => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7D9");
+}
+
 public class ConnectionGoo : ModelGoo<Connection>
 {
     public ConnectionGoo() { }
@@ -1457,93 +1516,6 @@ public class ConnectionParam : ModelParam<ConnectionGoo, Connection>
 public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo, Connection>
 {
     public override Guid ComponentGuid => new("AB212F90-124C-4985-B3EE-1C13D7827560");
-
-    protected override void AddModelProps(dynamic pManager)
-    {
-        pManager.AddTextParameter("Connected Piece Id", "CdPc", "Id of the connected piece.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Connected Design Piece Id", "CdDP?", "Optional id of the piece inside the referenced design.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Connected Piece Type Port Id", "CdPo?", "Optional id of the port of type of the piece. Otherwise the default port will be selected.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Connecting Piece Id", "CgPc", "Id of the connected piece.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Connecting Design Piece Id", "CgDP?", "Optional id of the piece inside the referenced design.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Connecting Piece Type Port Id", "CgPo?", "Optional id of the port of type of the piece. Otherwise the default port will be selected.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Dc?", "The optional human-readable description of the connection.", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Gap", "Gp?", "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Shift", "Sf?", "The optional lateral shift (applied after rotation and tilt in port direction) between the connected and the connecting piece.", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Rise", "Rs?", "The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Rotation", "Rt?", "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Turn", "Tu?", "The optional turn perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.  Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Tilt", "Tl?", "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.", GH_ParamAccess.item);
-        pManager.AddNumberParameter("X", "X?", "The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Y", "Y?", "The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.", GH_ParamAccess.item);
-        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes of the connection.", GH_ParamAccess.list);
-    }
-
-    protected override void GetProps(IGH_DataAccess DA, dynamic connectionGoo)
-    {
-        var connectedPieceId = "";
-        var connectedDesignPieceId = "";
-        var connectedPortId = "";
-        var connectingPieceId = "";
-        var connectingDesignPieceId = "";
-        var connectingPortId = "";
-        var description = "";
-        var gap = 0.0;
-        var shift = 0.0;
-        var raise = 0.0;
-        var rotation = 0.0;
-        var turn = 0.0;
-        var tilt = 0.0;
-        var x = 0.0;
-        var y = 0.0;
-        var attributesGoos = new List<AttributeGoo>();
-        if (DA.GetData(2, ref connectedPieceId)) connectionGoo.Value.Connected.Piece.Id = connectedPieceId;
-        if (DA.GetData(3, ref connectedDesignPieceId))
-        {
-            connectionGoo.Value.Connected.DesignPiece ??= new PieceId();
-            connectionGoo.Value.Connected.DesignPiece.Id = connectedDesignPieceId;
-        }
-        if (DA.GetData(4, ref connectedPortId)) connectionGoo.Value.Connected.Port.Id = connectedPortId;
-        if (DA.GetData(5, ref connectingPieceId))
-            connectionGoo.Value.Connecting.Piece.Id = connectingPieceId;
-        if (DA.GetData(6, ref connectingDesignPieceId))
-        {
-            connectionGoo.Value.Connecting.DesignPiece ??= new PieceId();
-            connectionGoo.Value.Connecting.DesignPiece.Id = connectingDesignPieceId;
-        }
-        if (DA.GetData(7, ref connectingPortId)) connectionGoo.Value.Connecting.Port.Id = connectingPortId;
-        if (DA.GetData(8, ref description)) connectionGoo.Value.Description = description;
-        if (DA.GetData(9, ref gap)) connectionGoo.Value.Gap = (float)gap;
-        if (DA.GetData(10, ref shift)) connectionGoo.Value.Shift = (float)shift;
-        if (DA.GetData(11, ref raise)) connectionGoo.Value.Rise = (float)raise;
-        if (DA.GetData(12, ref rotation)) connectionGoo.Value.Rotation = (float)rotation;
-        if (DA.GetData(13, ref turn)) connectionGoo.Value.Turn = (float)turn;
-        if (DA.GetData(14, ref tilt)) connectionGoo.Value.Tilt = (float)tilt;
-        if (DA.GetData(15, ref x)) connectionGoo.Value.X = (float)x;
-        if (DA.GetData(16, ref y)) connectionGoo.Value.Y = (float)y;
-        if (DA.GetDataList(17, attributesGoos)) connectionGoo.Value.Attributes = attributesGoos.Select(q => q.Value).ToList();
-    }
-
-    protected override void SetData(IGH_DataAccess DA, dynamic connectionGoo)
-    {
-        DA.SetData(2, connectionGoo.Value.Connected.Piece.Id);
-        DA.SetData(3, connectionGoo.Value.Connected.DesignPiece != null ? connectionGoo.Value.Connected.DesignPiece.Id : "");
-        DA.SetData(4, connectionGoo.Value.Connected.Port.Id);
-        DA.SetData(5, connectionGoo.Value.Connecting.Piece.Id);
-        DA.SetData(6, connectionGoo.Value.Connecting.DesignPiece != null ? connectionGoo.Value.Connecting.DesignPiece.Id : "");
-        DA.SetData(7, connectionGoo.Value.Connecting.Port.Id);
-        DA.SetData(8, connectionGoo.Value.Description);
-        DA.SetData(9, connectionGoo.Value.Gap);
-        DA.SetData(10, connectionGoo.Value.Shift);
-        DA.SetData(11, connectionGoo.Value.Rise);
-        DA.SetData(12, connectionGoo.Value.Rotation);
-        DA.SetData(13, connectionGoo.Value.Turn);
-        DA.SetData(14, connectionGoo.Value.Tilt);
-        DA.SetData(15, connectionGoo.Value.X);
-        DA.SetData(16, connectionGoo.Value.Y);
-        var attributeGoos = new List<AttributeGoo>();
-        foreach (Attribute attribute in connectionGoo.Value.Attributes) attributeGoos.Add(new AttributeGoo(attribute.DeepClone()));
-        DA.SetDataList(17, attributeGoos);
-    }
 }
 
 public class SerializeConnectionComponent : SerializeComponent<ConnectionGoo, ConnectionParam, Connection>
@@ -1603,6 +1575,27 @@ public class DesignsDiffGoo : DiffGoo<DesignsDiff>
 public class DesignsDiffParam : DiffParam<DesignsDiffGoo, DesignsDiff>
 {
     public override Guid ComponentGuid => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8E9");
+}
+
+public class DesignDiffComponent : DiffComponent<DesignDiffParam, DesignDiffGoo, DesignDiff>
+{
+    public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A8");
+}
+
+public class DesignsDiffGoo : DiffGoo<DesignsDiff>
+{
+    public DesignsDiffGoo() { }
+    public DesignsDiffGoo(DesignsDiff value) : base(value) { }
+}
+
+public class DesignsDiffParam : DiffParam<DesignsDiffGoo, DesignsDiff>
+{
+    public override Guid ComponentGuid => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8E9");
+}
+
+public class DesignsDiffComponent : DiffComponent<DesignsDiffParam, DesignsDiffGoo, DesignsDiff>
+{
+    public override Guid ComponentGuid => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8EA");
 }
 
 public class DesignGoo : ModelGoo<Design>

@@ -23,6 +23,10 @@ import React, { createContext, useContext, useMemo, useSyncExternalStore } from 
 import { v4 as uuidv4 } from "uuid";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
+import JSZip from "jszip";
+import type { Database, SqlJsStatic } from "sql.js";
+import initSqlJs from "sql.js";
+import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 import {
   Attribute,
   Author,
@@ -37,6 +41,7 @@ import {
   designIdLikeToDesignId,
   DiagramPoint,
   FileDiff,
+  fileIdLikeToFileId,
   findDesignInKit,
   Kit,
   KitDiff,
@@ -91,8 +96,8 @@ export type Url = string;
 type Merge<A, B> = { [K in keyof A | keyof B]: K extends keyof A ? (K extends keyof B ? (A[K] extends object ? (B[K] extends object ? Merge<A[K], B[K]> : A[K] | B[K]) : A[K] | B[K]) : A[K]) : K extends keyof B ? B[K] : never };
 
 export interface DesignEditorStep {
-  diff: KitDiff;
-  selection: DesignEditorSelection;
+  diff?: KitDiff;
+  selection?: DesignEditorSelection;
 }
 
 export interface DesignEditorEdit {
@@ -217,6 +222,9 @@ export interface KitSnapshot {
 export interface KitActions {
   change: (diff: KitDiff) => void;
 }
+export interface KitFileUrls {
+  fileUrls(): Map<Url, Url>;
+}
 export interface KitSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
@@ -245,8 +253,8 @@ export interface KitChildStoresFull {
   designs: Map<DesignId, DesignStoreFull>;
   files: Map<Url, FileStoreFull>;
 }
-export interface KitStore extends KitSnapshot, KitChildStores {}
-export interface KitStoreFull extends KitSnapshot, KitActions, KitSubscriptions, KitCommandsFull, KitChildStoresFull {}
+export interface KitStore extends KitSnapshot, KitChildStores, KitFileUrls, KitCommands {}
+export interface KitStoreFull extends KitSnapshot, KitActions, KitSubscriptions, KitCommandsFull, KitChildStoresFull, KitFileUrls {}
 
 export interface DesignEditorId {
   kitId: KitId;
@@ -293,6 +301,13 @@ export interface DesignEditorStateDiff {
 }
 export interface DesignEditorActions {
   change: (diff: DesignEditorStateDiff) => void;
+  undo: () => void;
+  redo: () => void;
+  transaction: {
+    start: () => void;
+    abort: () => void;
+    finalize: () => void;
+  };
 }
 export interface DesignEditorSubscriptions {
   undone: (subscribe: Subscribe) => Unsubscribe;
@@ -314,27 +329,13 @@ export interface DesignEditorCommandResult {
 }
 export interface DesignEditorCommands {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
-  undo: () => void;
-  redo: () => void;
-  transaction: {
-    start: () => void;
-    abort: () => void;
-    finalize: () => void;
-  };
 }
 export interface DesignEditorCommandsFull {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
   register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable;
-  undo: () => void;
-  redo: () => void;
-  transaction: {
-    start: () => void;
-    abort: () => void;
-    finalize: () => void;
-  };
 }
 export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands {}
-export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorActions, Merge<DesignEditorCommandsFull, DesignEditorSubscriptions> {}
+export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, Merge<DesignEditorActions, DesignEditorSubscriptions> {}
 export interface SketchpadState {
   mode: Mode;
   theme: Theme;
@@ -527,8 +528,8 @@ class YFileStore implements FileStoreFull {
 
   constructor(parent: YKitStore, file: SemioFile) {
     this.parent = parent;
-    this.yFile.set("url", file.url);
-    this.yFile.set("data", file.data);
+    this.yFile.set("path", file.path);
+    this.yFile.set("remote", file.remote || "");
     this.yFile.set("size", file.size?.toString() || "");
     this.yFile.set("hash", file.hash || "");
     this.yFile.set("created", file.created?.toISOString() || "");
@@ -536,9 +537,9 @@ class YFileStore implements FileStoreFull {
   }
 
   get file(): SemioFile {
-    const url = this.yFile.get("url") as string;
-    const data = this.yFile.get("data") as string;
-    const file: SemioFile = { url, data };
+    const path = this.yFile.get("path") as string;
+    const remote = this.yFile.get("remote") as string;
+    const file: SemioFile = { path, remote: remote || undefined };
     const size = this.yFile.get("size");
     if (size) file.size = parseInt(size as string);
     const hash = this.yFile.get("hash");
@@ -551,8 +552,8 @@ class YFileStore implements FileStoreFull {
   }
 
   change = (diff: FileDiff) => {
-    if (diff.url !== undefined) this.yFile.set("url", diff.url);
-    if (diff.data !== undefined) this.yFile.set("data", diff.data);
+    if (diff.path !== undefined) this.yFile.set("path", diff.path);
+    if (diff.remote !== undefined) this.yFile.set("remote", diff.remote);
     if (diff.size !== undefined) this.yFile.set("size", diff.size.toString());
     if (diff.hash !== undefined) this.yFile.set("hash", diff.hash);
   };
@@ -1210,6 +1211,7 @@ class YKitStore implements KitStoreFull {
   private readonly typeIds: Map<TypeId, string> = new Map();
   private readonly designIds: Map<DesignId, string> = new Map();
   private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult> = new Map();
+  private readonly regularFiles: Map<Url, string> = new Map();
   private readonly parent: SketchpadStore;
 
   constructor(parent: SketchpadStore, kit: Kit) {
@@ -1261,8 +1263,8 @@ class YKitStore implements KitStoreFull {
       remote: this.yKit.get("remote") as string | undefined,
       homepage: this.yKit.get("homepage") as string | undefined,
       license: this.yKit.get("license") as string | undefined,
-      created: this.yKit.get("created") as Date | undefined,
-      updated: this.yKit.get("updated") as Date | undefined,
+      created: this.yKit.get("created") ? new Date(this.yKit.get("created") as string) : undefined,
+      updated: this.yKit.get("updated") ? new Date(this.yKit.get("updated") as string) : undefined,
       types: Array.from(this.types.values()).map((store) => store.snapshot()),
       designs: Array.from(this.designs.values()).map((store) => store.snapshot()),
       attributes: getAttributes(this.yKit.get("attributes") as YAttributes),
@@ -1354,11 +1356,37 @@ class YKitStore implements KitStoreFull {
       }
     }
 
+    if (diff.files) {
+      if (diff.files.added) {
+        diff.files.added.forEach((file) => {
+          const fileId = fileIdLikeToFileId(file);
+          const yFileStore = new YFileStore(this, file);
+          this.files.set(fileId.path, yFileStore);
+        });
+      }
+      if (diff.files.removed) {
+        diff.files.removed.forEach((fileId) => {
+          const normalizedFileId = fileIdLikeToFileId(fileId);
+          this.files.delete(normalizedFileId.path);
+          this.regularFiles.delete(normalizedFileId.path);
+        });
+      }
+      if (diff.files.updated) {
+        diff.files.updated.forEach((update) => {
+          const fileId = fileIdLikeToFileId(update.id);
+          const yFileStore = this.files.get(fileId.path);
+          if (yFileStore) {
+            yFileStore.change(update.diff);
+          }
+        });
+      }
+    }
+
     this.yKit.set("updated", new Date().toISOString());
   };
 
   fileUrls = (): Map<Url, Url> => {
-    return new Map();
+    return this.regularFiles;
   };
 
   changed = (subscribe: Subscribe, deep?: boolean) => {
@@ -1370,9 +1398,19 @@ class YKitStore implements KitStoreFull {
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in kit store`);
-    const result = callback(this, ...rest);
+    const context: KitCommandContext = {
+      kit: this.snapshot(),
+      fileUrls: this.fileUrls(),
+    };
+    const result = callback(context, ...rest);
     if (result.diff) {
       this.change(result.diff);
+    }
+    if (result.files) {
+      result.files.forEach((file) => {
+        const objectUrl = URL.createObjectURL(file);
+        this.regularFiles.set(file.name, objectUrl);
+      });
     }
     return result as T;
   }
@@ -1413,6 +1451,8 @@ class YDesignEditorStore implements DesignEditorStoreFull {
     this.yDesignEditorStore.set("isTransactionActive", state.isTransactionActive);
     this.yDesignEditorStore.set("presenceCursorX", state.presence.cursor?.x || 0);
     this.yDesignEditorStore.set("presenceCursorY", state.presence.cursor?.y || 0);
+    this.yDesignEditorStore.set("currentTransactionStack", new Y.Array<any>());
+    this.yDesignEditorStore.set("pastTransactionsStack", new Y.Array<any>());
 
     Object.entries(designEditorCommands).forEach(([commandId, command]) => {
       this.registerCommand(commandId, command);
@@ -1456,10 +1496,12 @@ class YDesignEditorStore implements DesignEditorStoreFull {
     return {};
   }
   get currentTransactionStack(): DesignEditorEdit[] {
-    return [];
+    const yStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
+    return yStack ? yStack.toArray() : [];
   }
   get pastTransactionsStack(): DesignEditorEdit[] {
-    return [];
+    const yStack = this.yDesignEditorStore.get("pastTransactionsStack") as Y.Array<any>;
+    return yStack ? yStack.toArray() : [];
   }
 
   snapshot = (): DesignEditorStateFull => {
@@ -1518,7 +1560,13 @@ class YDesignEditorStore implements DesignEditorStoreFull {
       return () => this.yDesignEditorStore.unobserve(observer);
     },
     abort: () => {
-      this.yDesignEditorStore.set("isTransactionActive", false);
+      if (this.isTransactionActive) {
+        const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
+        if (currentStack) {
+          currentStack.delete(0, currentStack.length);
+        }
+        this.yDesignEditorStore.set("isTransactionActive", false);
+      }
     },
     aborted: (subscribe: Subscribe) => {
       const observer = () => subscribe();
@@ -1527,6 +1575,12 @@ class YDesignEditorStore implements DesignEditorStoreFull {
     },
     finalize: () => {
       if (this.isTransactionActive) {
+        const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
+        const pastStack = this.yDesignEditorStore.get("pastTransactionsStack") as Y.Array<any>;
+        if (currentStack && currentStack.length > 0) {
+          pastStack.push(currentStack.toArray());
+          currentStack.delete(0, currentStack.length);
+        }
         this.yDesignEditorStore.set("isTransactionActive", false);
       }
     },
@@ -1537,13 +1591,53 @@ class YDesignEditorStore implements DesignEditorStoreFull {
     },
   };
 
-  undo = () => {};
+  undo = () => {
+    if (this.isTransactionActive) {
+      const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
+      if (currentStack && currentStack.length > 0) {
+        const edit = currentStack.get(currentStack.length - 1);
+        currentStack.delete(currentStack.length - 1, 1);
+        if (edit && edit.undo) {
+          edit.undo.diff && this.change(edit.undo.diff);
+        }
+      }
+    } else {
+      const pastStack = this.yDesignEditorStore.get("pastTransactionsStack") as Y.Array<any>;
+      if (pastStack && pastStack.length > 0) {
+        const edit = pastStack.get(pastStack.length - 1);
+        pastStack.delete(pastStack.length - 1, 1);
+        if (edit && edit.undo) {
+          edit.undo.diff && this.change(edit.undo.diff);
+        }
+      }
+    }
+  };
   undone = (subscribe: Subscribe) => {
     const observer = () => subscribe();
     this.yDesignEditorStore.observe(observer);
     return () => this.yDesignEditorStore.unobserve(observer);
   };
-  redo = () => {};
+  redo = () => {
+    if (this.isTransactionActive) {
+      const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
+      if (currentStack && currentStack.length > 0) {
+        const edit = currentStack.get(0);
+        currentStack.delete(0, 1);
+        if (edit && edit.do) {
+          edit.do.diff && this.change(edit.do.diff);
+        }
+      }
+    } else {
+      const pastStack = this.yDesignEditorStore.get("pastTransactionsStack") as Y.Array<any>;
+      if (pastStack && pastStack.length > 0) {
+        const edit = pastStack.get(0);
+        pastStack.delete(0, 1);
+        if (edit && edit.do) {
+          edit.do.diff && this.change(edit.do.diff);
+        }
+      }
+    }
+  };
   redone = (subscribe: Subscribe) => {
     const observer = () => subscribe();
     this.yDesignEditorStore.observe(observer);
@@ -1551,20 +1645,56 @@ class YDesignEditorStore implements DesignEditorStoreFull {
   };
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    if (command === "semio.designEditor.startTransaction") {
+      this.transaction.start();
+      return {} as T;
+    }
+    if (command === "semio.designEditor.finalizeTransaction") {
+      this.transaction.finalize();
+      return {} as T;
+    }
+    if (command === "semio.designEditor.abortTransaction") {
+      this.transaction.abort();
+      return {} as T;
+    }
+
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in design editor store`);
     const parent = this.parent as YSketchpadStore;
     const kitStore = parent.kits.get(parent.activeDesignEditor!.kitId)!;
+
+    const beforeState = this.snapshot();
+
     const context: DesignEditorCommandContext = {
-      sketchpad: parent.snapshot(),
       designEditor: this.snapshot(),
       kit: kitStore.snapshot(),
       designId: parent.activeDesignEditor!.designId,
       fileUrls: kitStore.fileUrls(),
     };
     const result = callback(context, ...rest);
-    // Apply state and diff changes
-    // This would need proper implementation
+
+    if (result.diff) {
+      this.change(result.diff);
+    }
+    if (result.kitDiff) {
+      kitStore.change(result.kitDiff);
+    }
+
+    if (this.isTransactionActive && (result.diff || result.kitDiff)) {
+      const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
+      const edit: DesignEditorEdit = {
+        do: {
+          diff: result.kitDiff,
+          selection: this.snapshot().selection,
+        },
+        undo: {
+          diff: undefined,
+          selection: beforeState.selection,
+        },
+      };
+      currentStack.push([edit]);
+    }
+
     return result as T;
   }
 
@@ -1836,15 +1966,518 @@ const sketchpadCommands = {
   },
 };
 
+
 const kitCommands = {
   "semio.kit.addType": (context: KitCommandContext, type: Type): KitCommandResult => {
     return {
       diff: { types: { added: [type] } },
     };
   },
+  "semio.kit.removeType": (context: KitCommandContext, typeId: TypeId): KitCommandResult => {
+    return {
+      diff: { types: { removed: [typeId] } },
+    };
+  },
+  "semio.kit.updateType": (context: KitCommandContext, typeId: TypeId, typeDiff: TypeDiff): KitCommandResult => {
+    return {
+      diff: { types: { updated: [{ id: typeId, diff: typeDiff }] } },
+    };
+  },
+  "semio.kit.addDesign": (context: KitCommandContext, design: Design): KitCommandResult => {
+    return {
+      diff: { designs: { added: [design] } },
+    };
+  },
+  "semio.kit.removeDesign": (context: KitCommandContext, designId: DesignId): KitCommandResult => {
+    return {
+      diff: { designs: { removed: [designId] } },
+    };
+  },
+  "semio.kit.updateDesign": (context: KitCommandContext, designId: DesignId, designDiff: DesignDiff): KitCommandResult => {
+    return {
+      diff: { designs: { updated: [{ id: designId, diff: designDiff }] } },
+    };
+  },
+  "semio.kit.addFile": (context: KitCommandContext, file: SemioFile, blob?: Blob): KitCommandResult => {
+    const files: File[] = blob ? [new File([blob], file.path.split("/").pop() || file.path)] : [];
+    return {
+      diff: { files: { added: [file] } },
+      files,
+    };
+  },
+  "semio.kit.removeFile": (context: KitCommandContext, url: Url): KitCommandResult => {
+    return {
+      diff: { files: { removed: [{ path: url }] } },
+    };
+  },
+  "semio.kit.updateFile": (context: KitCommandContext, url: Url, fileDiff: FileDiff, blob?: Blob): KitCommandResult => {
+    const files: File[] = blob ? [new File([blob], url.split("/").pop() || url)] : [];
+    return {
+      diff: { files: { updated: [{ id: { path: url }, diff: fileDiff }] } },
+      files,
+    };
+  },
+  "semio.kit.import": (context: KitCommandContext, url: string): KitCommandResult => {
+    (async () => {
+      try {
+        if (url.endsWith('.json')) {
+          const response = await fetch(url);
+          const kit: Kit = await response.json();
+          const filesToFetch: { path: string; url: string }[] = [];
+          const extractFileUrls = (obj: any) => {
+            if (typeof obj === 'object' && obj !== null) {
+              if (Array.isArray(obj)) {
+                obj.forEach((item) => extractFileUrls(item));
+              } else {
+                Object.entries(obj).forEach(([key, value]) => {
+                  if (key === 'url' && typeof value === 'string' && !value.startsWith('http')) {
+                    filesToFetch.push({ path: value, url: new URL(value, url).href });
+                  }
+                  extractFileUrls(value);
+                });
+              }
+            }
+          };
+          extractFileUrls(kit);
+          const files: KitCommandResult['files'] = [];
+          for (const file of filesToFetch) {
+            try {
+              const fileResponse = await fetch(file.url);
+              const fileBlob = await fileResponse.blob();
+              files.push(new File([fileBlob], file.path));
+            } catch (error) {
+              console.warn(`Failed to fetch file ${file.path}:`, error);
+            }
+          }
+          return {
+            diff: {
+              name: kit.name,
+              description: kit.description,
+              version: kit.version,
+              types: kit.types ? { added: kit.types } : undefined,
+              designs: kit.designs ? { added: kit.designs } : undefined,
+              files: kit.files ? { added: kit.files } : undefined,
+            },
+            files,
+          };
+        } else {
+          let SQL: SqlJsStatic;
+          let db: Database;
+          try {
+            SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
+          } catch (err) {
+            throw new Error("SQL.js failed to initialize for import.");
+          }
+          const response = await fetch(url);
+          const zipData = await response.arrayBuffer();
+          const zip = await JSZip.loadAsync(zipData);
+          let kit: Kit | null = null;
+          const files: KitCommandResult['files'] = [];
+          
+          const kitDbFile = zip.file('kit.db');
+          if (kitDbFile) {
+            const dbData = await kitDbFile.async('uint8array');
+            db = new SQL.Database(dbData);
+            const kitResult = db.exec("SELECT * FROM kit LIMIT 1");
+            if (kitResult.length > 0) {
+              const kitRow = kitResult[0];
+              const kitData = Object.fromEntries(
+                kitRow.columns.map((col, i) => [col, kitRow.values[0][i]])
+              );
+              kit = {
+                name: kitData.name as string,
+                description: kitData.description as string,
+                version: kitData.version as string,
+                icon: kitData.icon as string,
+                image: kitData.image as string,
+                preview: kitData.preview as string,
+                remote: kitData.remote as string,
+                homepage: kitData.homepage as string,
+                license: kitData.license as string,
+                types: [],
+                designs: [],
+                files: [],
+              };
+            }
+            db.close();
+          } else {
+            const kitJsonFile = zip.file('kit.json');
+            if (kitJsonFile) {
+              const kitData = await kitJsonFile.async('text');
+              kit = JSON.parse(kitData);
+            }
+          }
+          
+          for (const [filename, file] of Object.entries(zip.files)) {
+            if (!(file as any).dir && filename !== 'kit.db' && filename !== 'kit.json') {
+              const fileData = await (file as any).async('uint8array');
+              files.push(new File([new Uint8Array(fileData)], filename));
+            }
+          }
+          
+          if (!kit) {
+            throw new Error('No kit.json or kit.db found in ZIP file');
+          }
+          
+          return {
+            diff: {
+              name: kit.name,
+              description: kit.description,
+              version: kit.version,
+              types: kit.types ? { added: kit.types } : undefined,
+              designs: kit.designs ? { added: kit.designs } : undefined,
+              files: kit.files ? { added: kit.files } : undefined,
+            },
+            files,
+          };
+        }
+      } catch (error) {
+        console.error('Error importing kit:', error);
+        throw error;
+      }
+    })();
+    return { diff: {} };
+  },
+  "semio.kit.export": (context: KitCommandContext): KitCommandResult => {
+    (async () => {
+      let SQL: SqlJsStatic;
+      let db: Database;
+      try {
+        SQL = await initSqlJs({ locateFile: () => sqlWasmUrl });
+      } catch (err) {
+        throw new Error("SQL.js failed to initialize for export.");
+      }
+      
+      db = new SQL.Database();
+      const zip = new JSZip();
+      const kit = context.kit;
+      
+      const schema = `
+        CREATE TABLE kit ( uri VARCHAR(2048) NOT NULL UNIQUE, name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, preview VARCHAR(1024) NOT NULL, version VARCHAR(64) NOT NULL, remote VARCHAR(1024) NOT NULL, homepage VARCHAR(1024) NOT NULL, license VARCHAR(1024) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY );
+        CREATE TABLE type ( name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, variant VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, CONSTRAINT "Unique name and variant" UNIQUE (name, variant, kit_id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
+        CREATE TABLE design ( name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, variant VARCHAR(64) NOT NULL, "view" VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, UNIQUE (name, variant, "view", kit_id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
+        CREATE TABLE representation ( url VARCHAR(1024) NOT NULL, description VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, type_id INTEGER, FOREIGN KEY(type_id) REFERENCES type (id) );
+        CREATE TABLE tag ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, representation_id INTEGER, FOREIGN KEY(representation_id) REFERENCES representation (id) );
+        CREATE TABLE port ( description VARCHAR(512) NOT NULL, family VARCHAR(64) NOT NULL, t FLOAT NOT NULL, id INTEGER NOT NULL PRIMARY KEY, local_id VARCHAR(128), point_x FLOAT, point_y FLOAT, point_z FLOAT, direction_x FLOAT, direction_y FLOAT, direction_z FLOAT, type_id INTEGER, CONSTRAINT "Unique local_id" UNIQUE (local_id, type_id), FOREIGN KEY(type_id) REFERENCES type (id) );
+        CREATE TABLE compatible_family ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, port_id INTEGER, FOREIGN KEY(port_id) REFERENCES port (id) );
+        CREATE TABLE plane ( id INTEGER NOT NULL PRIMARY KEY, origin_x FLOAT, origin_y FLOAT, origin_z FLOAT, x_axis_x FLOAT, x_axis_y FLOAT, x_axis_z FLOAT, y_axis_x FLOAT, y_axis_y FLOAT, y_axis_z FLOAT );
+        CREATE TABLE piece ( description VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, local_id VARCHAR(128), type_id INTEGER, plane_id INTEGER, center_x FLOAT, center_y FLOAT, design_id INTEGER, UNIQUE (local_id, design_id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(plane_id) REFERENCES plane (id), FOREIGN KEY(design_id) REFERENCES design (id) );
+        CREATE TABLE connection ( description VARCHAR(512) NOT NULL, gap FLOAT NOT NULL, shift FLOAT NOT NULL, rise FLOAT NOT NULL, rotation FLOAT NOT NULL, turn FLOAT NOT NULL, tilt FLOAT NOT NULL, x FLOAT NOT NULL, y FLOAT NOT NULL, id INTEGER NOT NULL PRIMARY KEY, connected_piece_id INTEGER, connected_port_id INTEGER, connecting_piece_id INTEGER, connecting_port_id INTEGER, design_id INTEGER, CONSTRAINT "no reflexive connection" CHECK (connecting_piece_id != connected_piece_id), FOREIGN KEY(connected_piece_id) REFERENCES piece (id), FOREIGN KEY(connected_port_id) REFERENCES port (id), FOREIGN KEY(connecting_piece_id) REFERENCES piece (id), FOREIGN KEY(connecting_port_id) REFERENCES port (id), FOREIGN KEY(design_id) REFERENCES design (id) );
+        CREATE TABLE quality ( name VARCHAR(64) NOT NULL, value VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, definition VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, representation_id INTEGER, port_id INTEGER, type_id INTEGER, piece_id INTEGER, connection_id INTEGER, design_id INTEGER, kit_id INTEGER, FOREIGN KEY(representation_id) REFERENCES representation (id), FOREIGN KEY(port_id) REFERENCES port (id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(piece_id) REFERENCES piece (id), FOREIGN KEY(connection_id) REFERENCES connection (id), FOREIGN KEY(design_id) REFERENCES design (id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
+        CREATE TABLE author ( name VARCHAR(64) NOT NULL, email VARCHAR(128) NOT NULL, rank INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, type_id INTEGER, design_id INTEGER, FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(design_id) REFERENCES design (id) );
+      `;
+
+      try {
+        db.run(schema);
+        const insertQualities = (qualities: Attribute[] | undefined, fkColumn: string, fkValue: number) => {
+          if (!qualities) return;
+          const stmt = db.prepare(`INSERT INTO quality (name, value, unit, definition, ${fkColumn}) VALUES (?, ?, ?, ?, ?)`);
+          qualities.forEach((q) => stmt.run([q.key, q.value ?? "", "", q.definition ?? "", fkValue]));
+          stmt.free();
+        };
+        const insertAuthors = (authors: Author[] | undefined, fkColumn: string, fkValue: number) => {
+          if (!authors) return;
+          const stmt = db.prepare(`INSERT INTO author (name, email, rank, ${fkColumn}) VALUES (?, ?, ?, ?)`);
+          let rank = 0;
+          authors.forEach((a) => stmt.run([a.name, a.email ?? "", rank++, fkValue]));
+          stmt.free();
+        };
+
+        const kitStmt = db.prepare("INSERT INTO kit (uri, name, description, icon, image, preview, version, remote, homepage, license, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        const nowIso = new Date().toISOString();
+        kitStmt.run([
+          `urn:kit:${kit.name}:${kit.version || ""}`,
+          kit.name,
+          kit.description || "",
+          kit.icon || "",
+          kit.image || "",
+          kit.preview || "",
+          kit.version || "",
+          kit.remote || "",
+          kit.homepage || "",
+          kit.license || "",
+          nowIso,
+          nowIso,
+        ]);
+        kitStmt.free();
+        const kitId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
+        insertQualities(kit.attributes, "kit_id", kitId);
+
+        if (kit.types) {
+          const typeStmt = db.prepare("INSERT INTO type (name, description, icon, image, variant, unit, created, updated, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+          const repStmt = db.prepare("INSERT INTO representation (url, description, type_id) VALUES (?, ?, ?)");
+          const tagStmt = db.prepare('INSERT INTO tag (name, "order", representation_id) VALUES (?, ?, ?)');
+          const portStmt = db.prepare("INSERT INTO port (local_id, description, family, t, point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+          
+          for (const type of kit.types) {
+            typeStmt.run([type.name, type.description || "", type.icon || "", type.image || "", type.variant || "", type.unit, nowIso, nowIso, kitId]);
+            const typeDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
+            insertQualities(type.attributes, "type_id", typeDbId);
+            insertAuthors(type.authors, "type_id", typeDbId);
+            
+            if (type.representations) {
+              for (const rep of type.representations) {
+                repStmt.run([rep.url, rep.description ?? "", typeDbId]);
+                const repDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
+                insertQualities(rep.attributes, "representation_id", repDbId);
+                if (rep.tags) {
+                  rep.tags.forEach((tag, index) => tagStmt.run([tag, index, repDbId]));
+                }
+                const fileUrl = context.fileUrls.get(rep.url);
+                if (fileUrl) {
+                  try {
+                    const response = await fetch(fileUrl);
+                    const fileBlob = await response.blob();
+                    const fileData = await fileBlob.arrayBuffer();
+                    zip.file(rep.url, fileData);
+                  } catch (error) {
+                    console.warn(`Failed to fetch file ${rep.url}:`, error);
+                  }
+                }
+              }
+            }
+            
+            if (type.ports) {
+              for (const port of type.ports) {
+                portStmt.run([
+                  port.id_ || "", port.description || "", port.family || "default", port.t || 0,
+                  port.point?.x || 0, port.point?.y || 0, port.point?.z || 0,
+                  port.direction?.x || 0, port.direction?.y || 0, port.direction?.z || 1,
+                  typeDbId
+                ]);
+                const portDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
+                insertQualities(port.attributes, "port_id", portDbId);
+              }
+            }
+          }
+          typeStmt.free();
+          repStmt.free();
+          tagStmt.free();
+          portStmt.free();
+        }
+
+        const dbBuffer = db.export();
+        zip.file('kit.db', dbBuffer);
+        zip.file('kit.json', JSON.stringify(kit, null, 2));
+        
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${kit.name}-${kit.version || 'latest'}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error("Error exporting kit:", error);
+        throw error;
+      } finally {
+        if (db) {
+          db.close();
+        }
+      }
+    })();
+    return { diff: {} };
+  },
 };
 
 const designEditorCommands = {
+  "semio.designEditor.setMode": (context: DesignEditorCommandContext, mode: Mode): DesignEditorCommandResult => {
+    return { diff: {} };
+  },
+  "semio.designEditor.setTheme": (context: DesignEditorCommandContext, theme: Theme): DesignEditorCommandResult => {
+    return { diff: {} };
+  },
+  "semio.designEditor.setLayout": (context: DesignEditorCommandContext, layout: Layout): DesignEditorCommandResult => {
+    return { diff: {} };
+  },
+  "semio.designEditor.startTransaction": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    return { diff: {} };
+  },
+  "semio.designEditor.finalizeTransaction": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    return { diff: {} };
+  },
+  "semio.designEditor.abortTransaction": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    return { diff: {} };
+  },
+  "semio.designEditor.setDesign": (context: DesignEditorCommandContext, design: Design): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [{ id: context.designId, diff: { name: design.name, description: design.description } }],
+        },
+      },
+    };
+  },
+  "semio.designEditor.setPiece": (context: DesignEditorCommandContext, piece: Piece): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { pieces: { updated: [{ id: { id_: piece.id_ }, diff: piece }] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.setPieces": (context: DesignEditorCommandContext, pieces: Piece[]): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { pieces: { updated: pieces.map((p) => ({ id: { id_: p.id_ }, diff: p })) } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.setConnection": (context: DesignEditorCommandContext, connection: Connection): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { connections: { updated: [{ id: { connected: { piece: connection.connected.piece }, connecting: { piece: connection.connecting.piece } }, diff: connection }] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.setConnections": (context: DesignEditorCommandContext, connections: Connection[]): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { connections: { updated: connections.map((c) => ({ id: { connected: { piece: c.connected.piece }, connecting: { piece: c.connecting.piece } }, diff: c })) } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.addPiece": (context: DesignEditorCommandContext, piece: Piece): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { pieces: { added: [piece] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.addPieces": (context: DesignEditorCommandContext, pieces: Piece[]): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { pieces: { added: pieces } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.removePiece": (context: DesignEditorCommandContext, pieceId: PieceId): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { pieces: { removed: [pieceId] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.removePieces": (context: DesignEditorCommandContext, pieceIds: PieceId[]): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { pieces: { removed: pieceIds } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.addConnection": (context: DesignEditorCommandContext, connection: Connection): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { connections: { added: [connection] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.addConnections": (context: DesignEditorCommandContext, connections: Connection[]): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { connections: { added: connections } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.removeConnection": (context: DesignEditorCommandContext, connectionId: ConnectionId): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { connections: { removed: [connectionId] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.removeConnections": (context: DesignEditorCommandContext, connectionIds: ConnectionId[]): DesignEditorCommandResult => {
+    return {
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { connections: { removed: connectionIds } },
+            },
+          ],
+        },
+      },
+    };
+  },
   "semio.designEditor.selectAll": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
     const design = findDesignInKit(context.kit, context.designId)!;
     return {
@@ -1857,6 +2490,52 @@ const designEditorCommands = {
     return {
       diff: {
         selection: { pieceIds: [], connectionIds: [] },
+      },
+    };
+  },
+  "semio.designEditor.selectPiece": (context: DesignEditorCommandContext, pieceId: PieceId): DesignEditorCommandResult => {
+    return {
+      diff: {
+        selection: { pieceIds: [pieceId], connectionIds: [] },
+      },
+    };
+  },
+  "semio.designEditor.selectPieces": (context: DesignEditorCommandContext, pieceIds: PieceId[]): DesignEditorCommandResult => {
+    return {
+      diff: {
+        selection: { pieceIds, connectionIds: [] },
+      },
+    };
+  },
+  "semio.designEditor.addPieceToSelection": (context: DesignEditorCommandContext, pieceId: PieceId): DesignEditorCommandResult => {
+    const currentSelection = context.designEditor.selection;
+    const newPieceIds = [...(currentSelection.pieceIds ?? []), pieceId];
+    return {
+      diff: {
+        selection: { pieceIds: newPieceIds, connectionIds: currentSelection.connectionIds ?? [] },
+      },
+    };
+  },
+  "semio.designEditor.removePieceFromSelection": (context: DesignEditorCommandContext, pieceId: PieceId): DesignEditorCommandResult => {
+    const currentSelection = context.designEditor.selection;
+    const newPieceIds = (currentSelection.pieceIds ?? []).filter((id) => id.id_ !== pieceId.id_);
+    return {
+      diff: {
+        selection: { pieceIds: newPieceIds, connectionIds: currentSelection.connectionIds ?? [] },
+      },
+    };
+  },
+  "semio.designEditor.selectPiecePort": (context: DesignEditorCommandContext, pieceId: PieceId, portId: PortId): DesignEditorCommandResult => {
+    return {
+      diff: {
+        selection: { portId: { pieceId, portId } },
+      },
+    };
+  },
+  "semio.designEditor.deselectPiecePort": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    return {
+      diff: {
+        selection: { portId: undefined },
       },
     };
   },
@@ -1875,6 +2554,24 @@ const designEditorCommands = {
             },
           ],
         },
+      },
+    };
+  },
+  "semio.designEditor.toggleDiagramFullscreen": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    const currentPanel = context.designEditor.fullscreenPanel;
+    const newPanel = currentPanel === DesignEditorFullscreenPanel.Diagram ? DesignEditorFullscreenPanel.None : DesignEditorFullscreenPanel.Diagram;
+    return {
+      diff: {
+        fullscreenPanel: newPanel,
+      },
+    };
+  },
+  "semio.designEditor.toggleModelFullscreen": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    const currentPanel = context.designEditor.fullscreenPanel;
+    const newPanel = currentPanel === DesignEditorFullscreenPanel.Model ? DesignEditorFullscreenPanel.None : DesignEditorFullscreenPanel.Model;
+    return {
+      diff: {
+        fullscreenPanel: newPanel,
       },
     };
   },
@@ -2272,45 +2969,56 @@ export function useDesigns(): DesignId[] {
 export function useCommands() {
   // return the commands of the active editor
   const designEditor = useDesignEditor();
+  const kitStore = useKitStore();
   return {
     // State management commands
-    setMode: (mode: Mode) => designEditor.execute("setMode", mode),
-    setTheme: (theme: Theme) => designEditor.execute("setTheme", theme),
-    setLayout: (layout: Layout) => designEditor.execute("setLayout", layout),
+    setMode: (mode: Mode) => designEditor.execute("semio.designEditor.setMode", mode),
+    setTheme: (theme: Theme) => designEditor.execute("semio.designEditor.setTheme", theme),
+    setLayout: (layout: Layout) => designEditor.execute("semio.designEditor.setLayout", layout),
 
     // Transaction commands
-    startTransaction: () => designEditor.execute("startTransaction"),
-    finalizeTransaction: () => designEditor.execute("finalizeTransaction"),
-    abortTransaction: () => designEditor.execute("abortTransaction"),
+    startTransaction: () => designEditor.execute("semio.designEditor.startTransaction"),
+    finalizeTransaction: () => designEditor.execute("semio.designEditor.finalizeTransaction"),
+    abortTransaction: () => designEditor.execute("semio.designEditor.abortTransaction"),
 
     // History commands
-    undo: () => designEditor.undo(),
-    redo: () => designEditor.redo(),
+    undo: () => designEditor.execute("semio.designEditor.undo"),
+    redo: () => designEditor.execute("semio.designEditor.redo"),
 
     // Design editing commands
-    setDesign: (design: Design) => designEditor.execute("setDesign", design),
-    setPiece: (piece: Piece) => designEditor.execute("setPiece", piece),
-    setPieces: (pieces: Piece[]) => designEditor.execute("setPieces", pieces),
-    setConnection: (connection: Connection) => designEditor.execute("setConnection", connection),
-    setConnections: (connections: Connection[]) => designEditor.execute("setConnections", connections),
+    setDesign: (design: Design) => designEditor.execute("semio.designEditor.setDesign", design),
+    setPiece: (piece: Piece) => designEditor.execute("semio.designEditor.setPiece", piece),
+    setPieces: (pieces: Piece[]) => designEditor.execute("semio.designEditor.setPieces", pieces),
+    setConnection: (connection: Connection) => designEditor.execute("semio.designEditor.setConnection", connection),
+    setConnections: (connections: Connection[]) => designEditor.execute("semio.designEditor.setConnections", connections),
+    addPiece: (piece: Piece) => designEditor.execute("semio.designEditor.addPiece", piece),
+    addPieces: (pieces: Piece[]) => designEditor.execute("semio.designEditor.addPieces", pieces),
+    removePiece: (pieceId: PieceId) => designEditor.execute("semio.designEditor.removePiece", pieceId),
+    removePieces: (pieceIds: PieceId[]) => designEditor.execute("semio.designEditor.removePieces", pieceIds),
+    removeConnection: (connectionId: ConnectionId) => designEditor.execute("semio.designEditor.removeConnection", connectionId),
+    removeConnections: (connectionIds: ConnectionId[]) => designEditor.execute("semio.designEditor.removeConnections", connectionIds),
 
     // Selection commands
-    selectAll: () => designEditor.execute("selectAll"),
-    deselectAll: () => designEditor.execute("deselectAll"),
-    selectPiece: (pieceId: PieceId) => designEditor.execute("selectPiece", pieceId),
-    selectPieces: (pieceIds: PieceId[]) => designEditor.execute("selectPieces", pieceIds),
-    addPieceToSelection: (pieceId: PieceId) => designEditor.execute("addPieceToSelection", pieceId),
-    removePieceFromSelection: (pieceId: PieceId) => designEditor.execute("removePieceFromSelection", pieceId),
-    selectPiecePort: (pieceId: PieceId, portId: PortId) => designEditor.execute("selectPiecePort", pieceId, portId),
-    deselectPiecePort: () => designEditor.execute("deselectPiecePort"),
+    selectAll: () => designEditor.execute("semio.designEditor.selectAll"),
+    deselectAll: () => designEditor.execute("semio.designEditor.deselectAll"),
+    selectPiece: (pieceId: PieceId) => designEditor.execute("semio.designEditor.selectPiece", pieceId),
+    selectPieces: (pieceIds: PieceId[]) => designEditor.execute("semio.designEditor.selectPieces", pieceIds),
+    addPieceToSelection: (pieceId: PieceId) => designEditor.execute("semio.designEditor.addPieceToSelection", pieceId),
+    removePieceFromSelection: (pieceId: PieceId) => designEditor.execute("semio.designEditor.removePieceFromSelection", pieceId),
+    selectPiecePort: (pieceId: PieceId, portId: PortId) => designEditor.execute("semio.designEditor.selectPiecePort", pieceId, portId),
+    deselectPiecePort: () => designEditor.execute("semio.designEditor.deselectPiecePort"),
 
     // Connection commands
-    addConnection: (connection: Connection) => designEditor.execute("addConnection", connection),
-    deleteSelected: () => designEditor.execute("deleteSelected"),
+    addConnection: (connection: Connection) => designEditor.execute("semio.designEditor.addConnection", connection),
+    deleteSelected: () => designEditor.execute("semio.designEditor.deleteSelected"),
 
     // UI state commands
-    toggleDiagramFullscreen: () => designEditor.execute("toggleDiagramFullscreen"),
-    toggleModelFullscreen: () => designEditor.execute("toggleModelFullscreen"),
+    toggleDiagramFullscreen: () => designEditor.execute("semio.designEditor.toggleDiagramFullscreen"),
+    toggleModelFullscreen: () => designEditor.execute("semio.designEditor.toggleModelFullscreen"),
+
+    // Kit operations
+    importKit: (url: string) => kitStore.execute("semio.kit.import", url),
+    exportKit: () => kitStore.execute("semio.kit.export"),
 
     // Complex operations
     executeCommand: (command: string, ...args: any[]) => designEditor.execute(command, ...args),
