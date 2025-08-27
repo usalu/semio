@@ -25,7 +25,7 @@ import "@xterm/xterm/css/xterm.css";
 import React, { FC, useEffect, useRef, useState } from "react";
 
 import { Design, DesignId, Kit } from "@semio/js";
-import { DesignEditorSelection, useDesignEditorStoreSelection, useDesignId, useKit } from "../../store";
+import { DesignEditorSelection, useDesignId, useKit, useSelection } from "../../store";
 
 export interface CommandParameter {
   name: string;
@@ -1166,7 +1166,7 @@ class TerminalConsole {
       const context = {
         kit: useKit(),
         designId: useDesignId() || "",
-        selection: useDesignEditorStoreSelection() || {
+        selection: useSelection() || {
           pieceIds: [],
           connectionIds: [],
           portId: undefined,
@@ -1177,8 +1177,8 @@ class TerminalConsole {
         const result = await command.execute(context, payload);
 
         // TODO: implement
-        // if (result.selection && useDesignEditorStoreSelection) {
-        //   useDesignEditorStoreSelection(result.selection);
+        // if (result.selection && useSelection) {
+        //   useSelection(result.selection);
         // }
 
         if (result.content) {

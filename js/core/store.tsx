@@ -88,6 +88,7 @@ export type Subscribe = () => void;
 export type Unsubscribe = () => void;
 export type Disposable = () => void;
 export type Url = string;
+type Merge<A, B> = { [K in keyof A | keyof B]: K extends keyof A ? (K extends keyof B ? (A[K] extends object ? (B[K] extends object ? Merge<A[K], B[K]> : A[K] | B[K]) : A[K] | B[K]) : A[K]) : K extends keyof B ? B[K] : never };
 
 export interface DesignEditorStep {
   diff: KitDiff;
@@ -212,7 +213,6 @@ export interface DesignStoreFull extends DesignSnapshot, DesignActions, DesignSu
 
 export interface KitSnapshot {
   snapshot(): Kit;
-  fileUrls(): Map<Url, Url>;
 }
 export interface KitActions {
   change: (diff: KitDiff) => void;
@@ -220,9 +220,13 @@ export interface KitActions {
 export interface KitSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-export interface KitCommandContext extends KitSnapshot {}
+export interface KitCommandContext {
+  kit: Kit;
+  fileUrls: Map<Url, Url>;
+}
 export interface KitCommandResult {
-  diff: KitDiff;
+  diff?: KitDiff;
+  files?: File[];
 }
 export interface KitCommands {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
@@ -288,14 +292,7 @@ export interface DesignEditorStateDiff {
   others?: DesignEditorPresenceOther[];
 }
 export interface DesignEditorActions {
-  undo: () => void;
-  redo: () => void;
   change: (diff: DesignEditorStateDiff) => void;
-  transaction: {
-    start: () => void;
-    abort: () => void;
-    finalize: () => void;
-  };
 }
 export interface DesignEditorSubscriptions {
   undone: (subscribe: Subscribe) => Unsubscribe;
@@ -307,11 +304,8 @@ export interface DesignEditorSubscriptions {
     finalized: (subscribe: Subscribe) => Unsubscribe;
   };
 }
-export interface DesignEditorCommandContext {
-  sketchpadState: SketchpadStateFull;
-  state: DesignEditorStateFull;
-  fileUrls: Map<Url, Url>;
-  kit: Kit;
+export interface DesignEditorCommandContext extends KitCommandContext {
+  designEditor: DesignEditorStateFull;
   designId: DesignId;
 }
 export interface DesignEditorCommandResult {
@@ -320,18 +314,27 @@ export interface DesignEditorCommandResult {
 }
 export interface DesignEditorCommands {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
+  undo: () => void;
+  redo: () => void;
+  transaction: {
+    start: () => void;
+    abort: () => void;
+    finalize: () => void;
+  };
 }
 export interface DesignEditorCommandsFull {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
   register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable;
+  undo: () => void;
+  redo: () => void;
+  transaction: {
+    start: () => void;
+    abort: () => void;
+    finalize: () => void;
+  };
 }
-export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands {
-  changed: (subscribe: Subscribe) => Unsubscribe;
-}
-export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, DesignEditorActions {
-  on: DesignEditorSubscriptions;
-  changed: (subscribe: Subscribe) => Unsubscribe;
-}
+export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands {}
+export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorActions, Merge<DesignEditorCommandsFull, DesignEditorSubscriptions> {}
 export interface SketchpadState {
   mode: Mode;
   theme: Theme;
@@ -382,9 +385,7 @@ export interface SketchpadChildStoresFull {
   designEditors: Map<KitId, Map<DesignId, DesignEditorStoreFull>>;
 }
 export interface SketchpadCommandContext {
-  state: SketchpadStateFull;
-  kits: Kit[];
-  fileUrls: Map<Url, Url>;
+  sketchpad: SketchpadStateFull;
 }
 export interface SketchpadCommandResult {
   diff: SketchpadStateDiff;
@@ -1553,12 +1554,13 @@ class YDesignEditorStore implements DesignEditorStoreFull {
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in design editor store`);
     const parent = this.parent as YSketchpadStore;
+    const kitStore = parent.kits.get(parent.activeDesignEditor!.kitId)!;
     const context: DesignEditorCommandContext = {
-      sketchpadState: parent.snapshot(),
-      state: this.snapshot(),
-      fileUrls: new Map(),
-      kit: parent.kits.get(parent.activeDesignEditor!.kitId)!.snapshot(),
+      sketchpad: parent.snapshot(),
+      designEditor: this.snapshot(),
+      kit: kitStore.snapshot(),
       designId: parent.activeDesignEditor!.designId,
+      fileUrls: kitStore.fileUrls(),
     };
     const result = callback(context, ...rest);
     // Apply state and diff changes
@@ -1761,9 +1763,7 @@ class YSketchpadStore implements SketchpadStoreFull {
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in sketchpad store`);
     const context: SketchpadCommandContext = {
-      state: this.snapshot(),
-      kits: Array.from(this.kits.values()).map((k) => k.snapshot()),
-      fileUrls: new Map(),
+      sketchpad: this.snapshot(),
     };
     const result = callback(context, ...rest);
     // Apply diff changes
@@ -1861,7 +1861,7 @@ const designEditorCommands = {
     };
   },
   "semio.designEditor.deleteSelected": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
-    const selection = context.state.selection;
+    const selection = context.designEditor.selection;
     return {
       diff: {
         selection: { pieceIds: [], connectionIds: [] },
@@ -2270,6 +2270,7 @@ export function useDesigns(): DesignId[] {
 }
 
 export function useCommands() {
+  // return the commands of the active editor
   const designEditor = useDesignEditor();
   return {
     // State management commands
@@ -2283,8 +2284,8 @@ export function useCommands() {
     abortTransaction: () => designEditor.execute("abortTransaction"),
 
     // History commands
-    undo: () => designEditor.execute("undo"),
-    redo: () => designEditor.execute("redo"),
+    undo: () => designEditor.undo(),
+    redo: () => designEditor.redo(),
 
     // Design editing commands
     setDesign: (design: Design) => designEditor.execute("setDesign", design),
@@ -2317,24 +2318,24 @@ export function useCommands() {
 }
 
 // Design editor state hooks
-export function useDesignEditorStoreSelection(): DesignEditorSelection {
+export function useSelection(): DesignEditorSelection {
   return useDesignEditor((store) => store.snapshot().selection);
 }
 
-export function useDesignEditorStoreFullscreenPanel(): DesignEditorFullscreenPanel {
+export function useFullscreen(): DesignEditorFullscreenPanel {
   return useDesignEditor((store) => store.snapshot().fullscreenPanel);
 }
 
-export function useDesignEditorStoreDesignDiff(): KitDiff {
+export function useDiff(): KitDiff {
   return useDesignEditor((store) => store.snapshot().diff);
 }
 
-export function useDesignEditorStoreFileUrls(): Map<string, string> {
+export function useFileUrls(): Map<Url, Url> {
   const kitStore = useKitStore();
   return kitStore.fileUrls();
 }
 
-export function useDesignEditorStorePresenceOthers(): DesignEditorPresenceOther[] {
+export function useOthers(): DesignEditorPresenceOther[] {
   return useDesignEditor((store) => store.snapshot().others);
 }
 

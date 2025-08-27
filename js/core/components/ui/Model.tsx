@@ -25,19 +25,7 @@ import { Canvas, ThreeEvent } from "@react-three/fiber";
 import { applyDesignDiff, DiffStatus, flattenDesign, getPieceRepresentationUrls, Piece, Plane, planeToMatrix, toSemioRotation, updateDesignInKit } from "@semio/js";
 import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import {
-  DesignEditorFullscreenPanel,
-  DesignEditorPresenceOther,
-  PieceScopeProvider,
-  useCommands,
-  useDesign,
-  useDesignEditorStoreDesignDiff,
-  useDesignEditorStoreFileUrls,
-  useDesignEditorStoreFullscreenPanel,
-  useDesignEditorStorePresenceOthers,
-  useDesignEditorStoreSelection,
-  useKit,
-} from "../../store";
+import { DesignEditorFullscreenPanel, DesignEditorPresenceOther, PieceScopeProvider, useCommands, useDesign, useDiff, useFileUrls, useFullscreen, useKit, useOthers, useSelection } from "../../store";
 
 const getComputedColor = (variable: string): string => {
   return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -218,10 +206,10 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(({ piece, plane, fileUrl, sel
 const ModelDesign: FC = () => {
   const designId = useDesign();
   const { removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = useCommands();
-  const selection = useDesignEditorStoreSelection();
-  const designDiff = useDesignEditorStoreDesignDiff();
-  const fileUrls = useDesignEditorStoreFileUrls();
-  const others = useDesignEditorStorePresenceOthers();
+  const selection = useSelection();
+  const designDiff = useDiff();
+  const fileUrls = useFileUrls();
+  const others = useOthers();
   const storeKit = useKit();
   const baseDesign = useDesign();
   if (!storeKit || !baseDesign) return null;
@@ -337,7 +325,7 @@ const Gizmo: FC = () => {
 };
 
 const ModelCore: FC = () => {
-  const fullscreen = useDesignEditorStoreFullscreenPanel() === DesignEditorFullscreenPanel.Model;
+  const fullscreen = useFullscreen() === DesignEditorFullscreenPanel.Model;
 
   const initialGridColors = useMemo(
     () => ({

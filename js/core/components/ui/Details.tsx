@@ -24,7 +24,7 @@ import Stepper from "@semio/js/components/ui/Stepper";
 import { Textarea } from "@semio/js/components/ui/Textarea";
 import { SortableTreeItems, Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
 import { findReplacableDesignsForDesignPiece, parseDesignIdFromVariant } from "../../semio";
-import { useCommands, useDesign, useDesignEditorStoreSelection, useDesignId, useKit } from "../../store";
+import { useCommands, useDesign, useDesignId, useKit, useSelection } from "../../store";
 import Combobox from "./Combobox";
 import { ResizablePanelProps } from "./DesignEditor";
 
@@ -1369,7 +1369,7 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
-  const selection = useDesignEditorStoreSelection();
+  const selection = useSelection();
 
   const hasPieces = (selection.pieceIds || []).length > 0;
   const hasConnections = (selection.connectionIds || []).length > 0;

@@ -26,7 +26,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 
 import { DesignId, TypeId } from "@semio/js";
 import { ReactFlowProvider } from "@xyflow/react";
-import { DesignScopeProvider, useCommands, useDesign, useDesignEditorStoreFullscreenPanel, useDesignId, useKit } from "../../store";
+import { DesignScopeProvider, useCommands, useDesign, useDesignId, useFullscreen, useKit } from "../../store";
 import Chat from "./Chat";
 import Console from "./Console";
 import Details from "./Details";
@@ -54,7 +54,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
   const kit = useKit();
   const design = useDesign();
   const designId = useDesignId();
-  const fullscreenPanel = useDesignEditorStoreFullscreenPanel();
+  const fullscreenPanel = useFullscreen();
   const commands = useCommands();
 
   // Panel visibility and sizing state

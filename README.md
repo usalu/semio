@@ -86,7 +86,7 @@ Let me walk you through 🚶
    - [🟨 @semio/js](#-semiojs-)
    - [✏️ @semio/sketchpad](#️-semiosketchpad-)
    - [📚 @semio/docs](#-semiodocs-)
-   - [🎛️ @semio/playground](#%EF%B8%8F-semioplayground-)
+   - [🎛️ @semio/play](#%EF%B8%8F-semioplay-)
    - [🤖 @semio/assistant](#-semioassistant-)
    - [⚙️ @semio/engine](#️-semioengine-)
    - [🟪 @semio/net](#-semionet-)
@@ -853,7 +853,7 @@ Mostly a [Large Language Model](https://en.wikipedia.org/wiki/Large_language_mod
 
 </details>
 
-## 🎛️ [@semio/playground](https://playground.semio-tech.com) [↑](#-components-)
+## 🎛️ [@semio/play](https://play.semio-tech.com) [↑](#-components-)
 
 A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
 
@@ -1221,7 +1221,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-semiosketchpad-" title="✏️@semio/sketchpad"><sub>✏️<sub></a>
         <a href="#-semioengine-" title="⚙️@semio/engine"><sub>⚙️<sub></a>
         <a href="#-semioassistant-" title="🤖@semio/assistant"><sub>🤖<sub></a>
-        <a href="#%EF%B8%8F-semioplayground-" title="🎛️@semio/playground"><sub>🎛️<sub></a>
+        <a href="#%EF%B8%8F-semioplay-" title="🎛️@semio/play"><sub>🎛️<sub></a>
         <br />
         <a href="#-semiodocs-" title="📚@semio/docs"><sub>📚<sub></a>
         <a href="#-semioassets-" title="🛍️@semio/assets"><sub>🛍️<sub></a>
