@@ -19,14 +19,14 @@
 
 // #endregion
 
-import React, { createContext, useContext, useMemo, useSyncExternalStore } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { IndexeddbPersistence } from "y-indexeddb";
-import * as Y from "yjs";
 import JSZip from "jszip";
+import React, { createContext, useContext, useMemo, useSyncExternalStore } from "react";
 import type { Database, SqlJsStatic } from "sql.js";
 import initSqlJs from "sql.js";
 import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
+import { v4 as uuidv4 } from "uuid";
+import { IndexeddbPersistence } from "y-indexeddb";
+import * as Y from "yjs";
 import {
   Attribute,
   Author,
@@ -253,7 +253,7 @@ export interface KitChildStoresFull {
   designs: Map<DesignId, DesignStoreFull>;
   files: Map<Url, FileStoreFull>;
 }
-export interface KitStore extends KitSnapshot, KitChildStores, KitFileUrls, KitCommands {}
+export interface KitStore extends KitSnapshot, KitChildStores, KitFileUrls, KitCommands, KitSubscriptions {}
 export interface KitStoreFull extends KitSnapshot, KitActions, KitSubscriptions, KitCommandsFull, KitChildStoresFull, KitFileUrls {}
 
 export interface DesignEditorId {
@@ -387,6 +387,7 @@ export interface SketchpadChildStoresFull {
 }
 export interface SketchpadCommandContext {
   sketchpad: SketchpadStateFull;
+  store: YSketchpadStore;
 }
 export interface SketchpadCommandResult {
   diff: SketchpadStateDiff;
@@ -1216,40 +1217,53 @@ class YKitStore implements KitStoreFull {
 
   constructor(parent: SketchpadStore, kit: Kit) {
     this.parent = parent;
+    
+    this.yKit.set("uuid", uuidv4());
     this.yKit.set("name", kit.name);
-    this.yKit.set("version", kit.version || "");
     this.yKit.set("description", kit.description || "");
     this.yKit.set("icon", kit.icon || "");
     this.yKit.set("image", kit.image || "");
+    this.yKit.set("version", kit.version || "");
     this.yKit.set("preview", kit.preview || "");
     this.yKit.set("remote", kit.remote || "");
     this.yKit.set("homepage", kit.homepage || "");
     this.yKit.set("license", kit.license || "");
-    this.yKit.set("created", new Date().toISOString());
-    this.yKit.set("updated", new Date().toISOString());
     this.yKit.set("types", new Y.Map<YType>());
     this.yKit.set("designs", new Y.Map<YDesign>());
     this.yKit.set("attributes", new Y.Array<YAttribute>());
-    (kit.types || []).forEach((type) => {
-      const typeId = typeIdLikeToTypeId(type);
-      const uuid = uuidv4();
-      const yTypeStore = new YTypeStore(this, type);
-      (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
-      this.typeIds.set(typeId, uuid);
-      this.types.set(typeId, yTypeStore);
-    });
-    (kit.designs || []).forEach((design) => {
-      const designId = designIdLikeToDesignId(design);
-      const uuid = uuidv4();
-      const yDesignStore = new YDesignStore(this, design);
-      (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
-      this.designIds.set(designId, uuid);
-      this.designs.set(designId, yDesignStore);
-    });
+    this.yKit.set("created", new Date().toISOString());
+    this.yKit.set("updated", new Date().toISOString());
+
+    kit.types?.forEach((type) => this.createType(type));
+    kit.designs?.forEach((design) => this.createDesign(design));
 
     Object.entries(kitCommands).forEach(([commandId, command]) => {
       this.registerCommand(commandId, command);
     });
+  }
+
+  private createType(type: Type): void {
+    const typeId = typeIdLikeToTypeId(type);
+    if (this.typeIds.has(typeId)) {
+      throw new Error(`Type (${typeId.name}, ${typeId.variant || ""}) already exists.`);
+    }
+    const uuid = uuidv4();
+    const yTypeStore = new YTypeStore(this, type);
+    (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
+    this.typeIds.set(typeId, uuid);
+    this.types.set(typeId, yTypeStore);
+  }
+
+  private createDesign(design: Design): void {
+    const designId = designIdLikeToDesignId(design);
+    if (this.designIds.has(designId)) {
+      throw new Error(`Design (${designId.name}, ${designId.variant || ""}) already exists.`);
+    }
+    const uuid = uuidv4();
+    const yDesignStore = new YDesignStore(this, design);
+    (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
+    this.designIds.set(designId, uuid);
+    this.designs.set(designId, yDesignStore);
   }
 
   snapshot = (): Kit => {
@@ -1787,13 +1801,7 @@ class YSketchpadStore implements SketchpadStoreFull {
 
   create = {
     kit: (kit: Kit) => {
-      const kitId = kitIdLikeToKitId(kit);
-      if (this.kits.has(kitId)) throw new Error(`Kit ${kitId} already exists`);
-      const yKitStore = new YKitStore(this, kit);
-      const yKitDoc = new Y.Doc();
-      yKitDoc.getMap("kit").set("data", yKitStore.yKit);
-      this.yKitDocs.set(kitId, yKitDoc);
-      this.kits.set(kitId, yKitStore);
+      throw new Error("Use semio.sketchpad.createKit command instead of directly calling create.kit");
     },
     designEditor: (id: DesignEditorId) => {
       const initialState: DesignEditorStateFull = {
@@ -1890,10 +1898,40 @@ class YSketchpadStore implements SketchpadStoreFull {
   }
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    if (command === "semio.sketchpad.createKit") {
+      const kit = rest[0] as Kit;
+      const callback = this.commandRegistry.get(command);
+      if (!callback) throw new Error(`Command "${command}" not found in sketchpad store`);
+      const context: SketchpadCommandContext = {
+        sketchpad: this.snapshot(),
+        store: this,
+      };
+      const result = callback(context, kit);
+      if (result.diff) {
+        this.change(result.diff);
+      }
+      return result as T;
+    }
+    if (command === "semio.sketchpad.createDesignEditor") {
+      const id = rest[0] as DesignEditorId;
+      this.create.designEditor(id);
+      return {} as T;
+    }
+    if (command === "semio.sketchpad.importKit") {
+      const kitId = rest[0] as KitId;
+      const url = rest[1] as string;
+      const kitStore = this.kits.get(kitId);
+      if (kitStore) {
+        await kitStore.execute("semio.kit.import", url);
+      }
+      return {} as T;
+    }
+
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in sketchpad store`);
     const context: SketchpadCommandContext = {
       sketchpad: this.snapshot(),
+      store: this,
     };
     const result = callback(context, ...rest);
     // Apply diff changes
@@ -1964,8 +2002,40 @@ const sketchpadCommands = {
       diff: { layout },
     };
   },
-};
+  "semio.sketchpad.createKit": (context: SketchpadCommandContext, kit: Kit): SketchpadCommandResult => {
+    if (!kit.name) throw new Error("Kit name is required to create a kit.");
+    
+    const kitId = kitIdLikeToKitId(kit);
+    if (context.store.kits.has(kitId)) {
+      throw new Error(`Kit (${kitId.name}, ${kitId.version || ""}) already exists.`);
+    }
 
+    const yKitStore = new YKitStore(context.store, kit);
+    const yKitDoc = new Y.Doc();
+    yKitDoc.getMap("kit").set("data", yKitStore.yKit);
+    context.store.yKitDocs.set(kitId, yKitDoc);
+    context.store.kits.set(kitId, yKitStore);
+    
+    return {
+      diff: {},
+    };
+  },
+  "semio.sketchpad.createDesignEditor": (context: SketchpadCommandContext, id: DesignEditorId): SketchpadCommandResult => {
+    return {
+      diff: {},
+    };
+  },
+  "semio.sketchpad.setActiveDesignEditor": (context: SketchpadCommandContext, id: DesignEditorId): SketchpadCommandResult => {
+    return {
+      diff: { activeDesignEditor: id },
+    };
+  },
+  "semio.sketchpad.importKit": (context: SketchpadCommandContext, kitId: KitId, url: string): SketchpadCommandResult => {
+    return {
+      diff: {},
+    };
+  },
+};
 
 const kitCommands = {
   "semio.kit.addType": (context: KitCommandContext, type: Type): KitCommandResult => {
@@ -2020,17 +2090,17 @@ const kitCommands = {
   "semio.kit.import": (context: KitCommandContext, url: string): KitCommandResult => {
     (async () => {
       try {
-        if (url.endsWith('.json')) {
+        if (url.endsWith(".json")) {
           const response = await fetch(url);
           const kit: Kit = await response.json();
           const filesToFetch: { path: string; url: string }[] = [];
           const extractFileUrls = (obj: any) => {
-            if (typeof obj === 'object' && obj !== null) {
+            if (typeof obj === "object" && obj !== null) {
               if (Array.isArray(obj)) {
                 obj.forEach((item) => extractFileUrls(item));
               } else {
                 Object.entries(obj).forEach(([key, value]) => {
-                  if (key === 'url' && typeof value === 'string' && !value.startsWith('http')) {
+                  if (key === "url" && typeof value === "string" && !value.startsWith("http")) {
                     filesToFetch.push({ path: value, url: new URL(value, url).href });
                   }
                   extractFileUrls(value);
@@ -2039,7 +2109,7 @@ const kitCommands = {
             }
           };
           extractFileUrls(kit);
-          const files: KitCommandResult['files'] = [];
+          const files: KitCommandResult["files"] = [];
           for (const file of filesToFetch) {
             try {
               const fileResponse = await fetch(file.url);
@@ -2072,18 +2142,16 @@ const kitCommands = {
           const zipData = await response.arrayBuffer();
           const zip = await JSZip.loadAsync(zipData);
           let kit: Kit | null = null;
-          const files: KitCommandResult['files'] = [];
-          
-          const kitDbFile = zip.file('kit.db');
+          const files: KitCommandResult["files"] = [];
+
+          const kitDbFile = zip.file("kit.db");
           if (kitDbFile) {
-            const dbData = await kitDbFile.async('uint8array');
+            const dbData = await kitDbFile.async("uint8array");
             db = new SQL.Database(dbData);
             const kitResult = db.exec("SELECT * FROM kit LIMIT 1");
             if (kitResult.length > 0) {
               const kitRow = kitResult[0];
-              const kitData = Object.fromEntries(
-                kitRow.columns.map((col, i) => [col, kitRow.values[0][i]])
-              );
+              const kitData = Object.fromEntries(kitRow.columns.map((col, i) => [col, kitRow.values[0][i]]));
               kit = {
                 name: kitData.name as string,
                 description: kitData.description as string,
@@ -2101,24 +2169,24 @@ const kitCommands = {
             }
             db.close();
           } else {
-            const kitJsonFile = zip.file('kit.json');
+            const kitJsonFile = zip.file("kit.json");
             if (kitJsonFile) {
-              const kitData = await kitJsonFile.async('text');
+              const kitData = await kitJsonFile.async("text");
               kit = JSON.parse(kitData);
             }
           }
-          
+
           for (const [filename, file] of Object.entries(zip.files)) {
-            if (!(file as any).dir && filename !== 'kit.db' && filename !== 'kit.json') {
-              const fileData = await (file as any).async('uint8array');
+            if (!(file as any).dir && filename !== "kit.db" && filename !== "kit.json") {
+              const fileData = await (file as any).async("uint8array");
               files.push(new File([new Uint8Array(fileData)], filename));
             }
           }
-          
+
           if (!kit) {
-            throw new Error('No kit.json or kit.db found in ZIP file');
+            throw new Error("No kit.json or kit.db found in ZIP file");
           }
-          
+
           return {
             diff: {
               name: kit.name,
@@ -2132,7 +2200,7 @@ const kitCommands = {
           };
         }
       } catch (error) {
-        console.error('Error importing kit:', error);
+        console.error("Error importing kit:", error);
         throw error;
       }
     })();
@@ -2147,11 +2215,11 @@ const kitCommands = {
       } catch (err) {
         throw new Error("SQL.js failed to initialize for export.");
       }
-      
+
       db = new SQL.Database();
       const zip = new JSZip();
       const kit = context.kit;
-      
+
       const schema = `
         CREATE TABLE kit ( uri VARCHAR(2048) NOT NULL UNIQUE, name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, preview VARCHAR(1024) NOT NULL, version VARCHAR(64) NOT NULL, remote VARCHAR(1024) NOT NULL, homepage VARCHAR(1024) NOT NULL, license VARCHAR(1024) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY );
         CREATE TABLE type ( name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, variant VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, CONSTRAINT "Unique name and variant" UNIQUE (name, variant, kit_id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
@@ -2185,20 +2253,7 @@ const kitCommands = {
 
         const kitStmt = db.prepare("INSERT INTO kit (uri, name, description, icon, image, preview, version, remote, homepage, license, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         const nowIso = new Date().toISOString();
-        kitStmt.run([
-          `urn:kit:${kit.name}:${kit.version || ""}`,
-          kit.name,
-          kit.description || "",
-          kit.icon || "",
-          kit.image || "",
-          kit.preview || "",
-          kit.version || "",
-          kit.remote || "",
-          kit.homepage || "",
-          kit.license || "",
-          nowIso,
-          nowIso,
-        ]);
+        kitStmt.run([`urn:kit:${kit.name}:${kit.version || ""}`, kit.name, kit.description || "", kit.icon || "", kit.image || "", kit.preview || "", kit.version || "", kit.remote || "", kit.homepage || "", kit.license || "", nowIso, nowIso]);
         kitStmt.free();
         const kitId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
         insertQualities(kit.attributes, "kit_id", kitId);
@@ -2208,13 +2263,13 @@ const kitCommands = {
           const repStmt = db.prepare("INSERT INTO representation (url, description, type_id) VALUES (?, ?, ?)");
           const tagStmt = db.prepare('INSERT INTO tag (name, "order", representation_id) VALUES (?, ?, ?)');
           const portStmt = db.prepare("INSERT INTO port (local_id, description, family, t, point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-          
+
           for (const type of kit.types) {
             typeStmt.run([type.name, type.description || "", type.icon || "", type.image || "", type.variant || "", type.unit, nowIso, nowIso, kitId]);
             const typeDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
             insertQualities(type.attributes, "type_id", typeDbId);
             insertAuthors(type.authors, "type_id", typeDbId);
-            
+
             if (type.representations) {
               for (const rep of type.representations) {
                 repStmt.run([rep.url, rep.description ?? "", typeDbId]);
@@ -2236,14 +2291,21 @@ const kitCommands = {
                 }
               }
             }
-            
+
             if (type.ports) {
               for (const port of type.ports) {
                 portStmt.run([
-                  port.id_ || "", port.description || "", port.family || "default", port.t || 0,
-                  port.point?.x || 0, port.point?.y || 0, port.point?.z || 0,
-                  port.direction?.x || 0, port.direction?.y || 0, port.direction?.z || 1,
-                  typeDbId
+                  port.id_ || "",
+                  port.description || "",
+                  port.family || "default",
+                  port.t || 0,
+                  port.point?.x || 0,
+                  port.point?.y || 0,
+                  port.point?.z || 0,
+                  port.direction?.x || 0,
+                  port.direction?.y || 0,
+                  port.direction?.z || 1,
+                  typeDbId,
                 ]);
                 const portDbId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
                 insertQualities(port.attributes, "port_id", portDbId);
@@ -2257,14 +2319,14 @@ const kitCommands = {
         }
 
         const dbBuffer = db.export();
-        zip.file('kit.db', dbBuffer);
-        zip.file('kit.json', JSON.stringify(kit, null, 2));
-        
-        const blob = await zip.generateAsync({ type: 'blob' });
+        zip.file("kit.db", dbBuffer);
+        zip.file("kit.json", JSON.stringify(kit, null, 2));
+
+        const blob = await zip.generateAsync({ type: "blob" });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
-        a.download = `${kit.name}-${kit.version || 'latest'}.zip`;
+        a.download = `${kit.name}-${kit.version || "latest"}.zip`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -2738,11 +2800,6 @@ export function useKitStore<T>(selector?: (store: KitStore) => T, id?: KitId): T
   if (!kitId) throw new Error("useKitStore must be called within a KitScopeProvider or be directly provided with an id");
   if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
   const kitStore = store.kits.get(kitId)!;
-  const state = useSyncExternalStore(
-    kitStore.changed,
-    () => kitStore.snapshot(),
-    () => kitStore.snapshot(),
-  );
   return selector ? selector(kitStore) : kitStore;
 }
 
@@ -2750,14 +2807,7 @@ export function useKit(): Kit;
 export function useKit<T>(selector: (kit: Kit) => T): T;
 export function useKit<T>(selector: (kit: Kit) => T, id: KitId): T;
 export function useKit<T>(selector?: (kit: Kit) => T, id?: KitId): T | Kit {
-  const sketchpadScope = useSketchpadScope();
-  if (!sketchpadScope) throw new Error("useKitStore must be called within a SketchpadScopeProvider");
-  const store = stores.get(sketchpadScope.id)!;
-  const kitScope = useKitStoreScope();
-  const kitId = kitScope?.id ?? id;
-  if (!kitId) throw new Error("useKitStore must be called within a KitScopeProvider or be directly provided with an id");
-  if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kitStore = store.kits.get(kitId)!;
+  const kitStore = useKitStore();
   const kit = useSyncExternalStore(
     kitStore.changed,
     () => kitStore.snapshot(),

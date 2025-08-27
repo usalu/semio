@@ -49,7 +49,7 @@ interface SketchpadProps {
 }
 
 // Component that uses basic store hooks (no kit context needed)
-const SketchpadInner: FC<{ defaultKitId: KitId; defaultDesignId: DesignId }> = ({ defaultKitId, defaultDesignId }) => {
+const SketchpadInner: FC = () => {
   const [isImporting, setIsImporting] = useState<boolean>(true);
   const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
 
@@ -58,15 +58,24 @@ const SketchpadInner: FC<{ defaultKitId: KitId; defaultDesignId: DesignId }> = (
   const theme = useTheme();
   const layout = useLayout();
 
+  const defaultKitId: KitId = { name: "Metabolism", version: "r25.07-1" };
+  const defaultDesignId: DesignId = { name: "Nakagin Capsule Tower", variant: "", view: "" };
+
   useEffect(() => {
     let mounted = true;
     (async () => {
+      await store.execute("semio.sketchpad.createKit", defaultKitId);
       try {
-        // TODO: Initialize default kit data
-        // await store.importKit("metabolism.json", true, true);
-        // await store.importFiles("metabolism.zip", defaultKitId, true);
+        await store.execute("semio.sketchpad.importKit", defaultKitId, "/metabolism.zip");
+      } catch (importError) {
+        console.warn("Failed to import metabolism.zip, continuing with empty kit:", importError);
+      }
+
+      try {
+        await store.execute("semio.sketchpad.createDesignEditor", { kitId: defaultKitId, designId: defaultDesignId });
+        await store.execute("semio.sketchpad.setActiveDesignEditor", { kitId: defaultKitId, designId: defaultDesignId });
       } catch (e) {
-        console.error("Failed to import default kit:", e);
+        console.error("Failed to initialize default kit:", e);
       } finally {
         if (mounted) setIsImporting(false);
       }
@@ -74,7 +83,7 @@ const SketchpadInner: FC<{ defaultKitId: KitId; defaultDesignId: DesignId }> = (
     return () => {
       mounted = false;
     };
-  }, [store, defaultKitId]);
+  }, [store, defaultKitId, defaultDesignId]);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -138,13 +147,10 @@ const SketchpadWithCommands: FC<{
 };
 
 const Sketchpad: FC<SketchpadProps> = ({ userId, onWindowEvents }) => {
-  const defaultKitId: KitId = { name: "Metabolism", version: "r25.07-1" };
-  const defaultDesignId: DesignId = { name: "Nakagin Capsule Tower", variant: "", view: "" };
-
   return (
     <TooltipProvider>
-      <SketchpadScopeProvider id={userId || "default-user"} persisted={true}>
-        <SketchpadInner defaultKitId={defaultKitId} defaultDesignId={defaultDesignId} />
+      <SketchpadScopeProvider id={userId || "default-user"} persisted={false}>
+        <SketchpadInner />
       </SketchpadScopeProvider>
     </TooltipProvider>
   );
