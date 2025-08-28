@@ -315,11 +315,11 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_{h,CO₂}",
-      "formula": "Multiply ( semio.energy.heating.heating-global-warming-potential semio.cost.energy.CO2-price )",
+      "formula": "Multiply ( semio.energy.heating.heating-gwp semio.cost.energy.CO2-price )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.heating.heating-global-warming-potential",
+      "key": "semio.energy.heating.heating-gwp",
       "name": "Heating Global Warming Potential",
       "translation": {
         "de": "Heizung Treibhauspotenzial"
@@ -328,11 +328,11 @@
       "si": "kgCO2e/a",
       "imperial": "lbCO2e/yr",
       "symbol": "GWP_h",
-      "formula": "Multiply ( semio.energy.heating.final-heating-energy-demand semio.energy.heating.heating-global-warming-potential-factor )",
+      "formula": "Multiply ( semio.energy.heating.final-heating-energy-demand semio.energy.heating.heating-gwp-factor )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.heating.heating-global-warming-potential-factor",
+      "key": "semio.energy.heating.heating-gwp-factor",
       "name": "Heating Global Warming Potential Factor",
       "translation": {
         "de": "Wärme Treibhauspotenzial-Faktor"
@@ -341,7 +341,7 @@
       "si": "kgCO2e/kWh",
       "imperial": "kgCO2e/kWh",
       "symbol": "f_{h,GWP}",
-      "formula": "Multiply ( 1 semio.energy.heating.heating-global-warming-potential-factor )",
+      "formula": "Multiply ( 1 semio.energy.heating.heating-gwp-factor )",
       "format": "#,##0.##"
     },
     {
@@ -422,11 +422,11 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_{e,CO₂}",
-      "formula": "Multiply ( semio.energy.electricity.electricity-global-warming-potential semio.cost.energy.CO2-price )",
+      "formula": "Multiply ( semio.energy.electricity.electricity-gwp semio.cost.energy.CO2-price )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.electricity.electricity-global-warming-potential",
+      "key": "semio.energy.electricity.electricity-gwp",
       "name": "Electricity Global Warming Potential",
       "translation": {
         "de": "Strom Treibhauspotenzial"
@@ -435,11 +435,11 @@
       "si": "kgCO2e/a",
       "imperial": "lbCO2e/yr",
       "symbol": "GWP_e",
-      "formula": "Multiply ( semio.energy.electricity.electricity-energy-demand semio.energy.electricity.electricity-global-warming-potential-factor )",
+      "formula": "Multiply ( semio.energy.electricity.electricity-energy-demand semio.energy.electricity.electricity-gwp-factor )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.electricity.electricity-global-warming-potential-factor",
+      "key": "semio.energy.electricity.electricity-gwp-factor",
       "name": "Electricity Global Warming Potential Factor",
       "translation": {
         "de": "Strom Treibhausfaktor"
@@ -448,7 +448,7 @@
       "si": "kgCO2e/kWh",
       "imperial": "kgCO2e/kWh",
       "symbol": "f_{e,GWP}",
-      "formula": "Multiply ( 1 semio.energy.electricity.electricity-global-warming-potential-factor )",
+      "formula": "Multiply ( 1 semio.energy.electricity.electricity-gwp-factor )",
       "format": "#,##0.##"
     },
 
@@ -516,11 +516,11 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_{v,CO2}",
-      "formula": "Multiply ( semio.energy.electricity.ventilation-global-warming-potential semio.cost.energy.CO2-price )",
+      "formula": "Multiply ( semio.energy.electricity.ventilation-gwp semio.cost.energy.CO2-price )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.ventilation.ventilation-global-warming-potential",
+      "key": "semio.energy.ventilation.ventilation-gwp",
       "name": "Ventilation Global Warming Potential",
       "translation": {
         "de": "Lüftungs-Treibhauspotenzial"
@@ -529,7 +529,7 @@
       "si": "kgCO2e/a",
       "imperial": "lbCO2e/yr",
       "symbol": "GWP_v",
-      "formula": "Multiply ( semio.energy.ventilation.final-ventilation-energy-demand semio.energy.electricity.electricity-global-warming-potential-factor )",
+      "formula": "Multiply ( semio.energy.ventilation.final-ventilation-energy-demand semio.energy.electricity.electricity-gwp-factor )",
       "format": "#,##0.##"
     },
 
@@ -558,7 +558,7 @@
       "si": "kgCO2e/a",
       "imperial": "lbCO2e/yr",
       "symbol": "GWP_{energy}",
-      "formula": "Add ( semio.energy.heating.heating-global-warming-potential semio.energy.electricity.electricity-global-warming-potential semio.energy.ventilation.ventilation-global-warming-potential )",
+      "formula": "Add ( semio.energy.heating.heating-gwp semio.energy.electricity.electricity-gwp semio.energy.ventilation.ventilation-gwp )",
       "format": "#,##0.##"
     },
     {
@@ -681,7 +681,824 @@
       "si": "",
       "imperial": "",
       "symbol": "f_{e,primary}",
-      "formula": "Multiply ( semio.energy.ventilation.final-ventilation-energy-demand semio.energy.electricity.electricity-primary-energy-factor )"
+      "formula": "Multiply ( 1 semio.energy.electricity.electricity-primary-energy-factor )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.energy.ventilation.primary-ventilation-energy-demand",
+      "name": "Primary Ventilation Energy Demand",
+      "translation": {
+        "de": "Primärenergiebedarf Lüftung"
+      },
+      "description": "The primary ventilation energy demand is the product of final ventilation energy demand and electricity primary energy factor for one year.",
+      "si": "kWh/a",
+      "imperial": "kBtu/yr",
+      "symbol": "E_{v,primary}",
+      "formula": "Multiply ( semio.energy.ventilation.final-ventilation-energy-demand semio.energy.electricity.electricity-primary-energy-factor )",
+      "format": "#,##0.##"
+    },
+
+    // Building Geometry
+
+    {
+      "key": "semio.area.floor-area",
+      "name": "Floor Area",
+      "translation": {
+        "de": "Grundfläche"
+      },
+      "description": "The total floor area of the building.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_floor",
+      "formula": "Multiply ( 1 semio.area.floor-area )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.effective-floor-area",
+      "name": "Effective Floor Area",
+      "translation": {
+        "de": "Effektive Grundfläche"
+      },
+      "description": "The effective usable floor area of the building.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_effective",
+      "formula": "Multiply ( 1 semio.area.effective-floor-area )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.area-efficiency",
+      "name": "Area Efficiency",
+      "translation": {
+        "de": "Flächeneffizienz"
+      },
+      "description": "The ratio of effective floor area to total floor area.",
+      "si": "",
+      "imperial": "",
+      "symbol": "η_area",
+      "formula": "Divide ( semio.area.effective-floor-area semio.area.floor-area )",
+      "format": "#,##0.###"
+    },
+    {
+      "key": "semio.volume.gross-volume",
+      "name": "Gross Volume",
+      "translation": {
+        "de": "Bruttovolumen"
+      },
+      "description": "The total gross volume of the building.",
+      "si": "m³",
+      "imperial": "ft³",
+      "symbol": "V_gross",
+      "formula": "Multiply ( 1 semio.volume.gross-volume )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.volume.net-volume",
+      "name": "Net Volume",
+      "translation": {
+        "de": "Nettovolumen"
+      },
+      "description": "The net volume of the building interior.",
+      "si": "m³",
+      "imperial": "ft³",
+      "symbol": "V_net",
+      "formula": "Multiply ( 1 semio.volume.net-volume )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.volume.volume-efficiency",
+      "name": "Volume Efficiency",
+      "translation": {
+        "de": "Volumeneffizienz"
+      },
+      "description": "The ratio of net volume to gross volume.",
+      "si": "",
+      "imperial": "",
+      "symbol": "η_volume",
+      "formula": "Divide ( semio.volume.net-volume semio.volume.gross-volume )",
+      "format": "#,##0.###"
+    },
+    {
+      "key": "semio.area.envelope-area",
+      "name": "Envelope Area",
+      "translation": {
+        "de": "Gebäudehüllfläche"
+      },
+      "description": "The total area of the building envelope.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_envelope",
+      "formula": "Multiply ( 1 semio.area.envelope-area )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.window-area",
+      "name": "Window Area",
+      "translation": {
+        "de": "Fensterfläche"
+      },
+      "description": "The total area of windows in the building.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_window",
+      "formula": "Multiply ( 1 semio.area.window-area )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.wall-area",
+      "name": "Wall Area",
+      "translation": {
+        "de": "Wandfläche"
+      },
+      "description": "The total area of exterior walls.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_wall",
+      "formula": "Multiply ( 1 semio.area.wall-area )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.roof-area",
+      "name": "Roof Area",
+      "translation": {
+        "de": "Dachfläche"
+      },
+      "description": "The total area of the roof.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_roof",
+      "formula": "Multiply ( 1 semio.area.roof-area )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.ratio.window-wall-ratio",
+      "name": "Window-to-Wall Ratio",
+      "translation": {
+        "de": "Fenster-Wand-Verhältnis"
+      },
+      "description": "The ratio of window area to wall area.",
+      "si": "",
+      "imperial": "",
+      "symbol": "WWR",
+      "formula": "Divide ( semio.area.window-area semio.area.wall-area )",
+      "format": "#,##0.###"
+    },
+    {
+      "key": "semio.ratio.surface-volume-ratio",
+      "name": "Surface-to-Volume Ratio",
+      "translation": {
+        "de": "Oberflächen-Volumen-Verhältnis"
+      },
+      "description": "The ratio of envelope area to gross volume.",
+      "si": "1/m",
+      "imperial": "1/ft",
+      "symbol": "A/V",
+      "formula": "Divide ( semio.area.envelope-area semio.volume.gross-volume )",
+      "format": "#,##0.###"
+    },
+
+    // Envelope Properties
+
+    {
+      "key": "semio.envelope.u-value-wall",
+      "name": "Wall U-Value",
+      "translation": {
+        "de": "U-Wert Wand"
+      },
+      "description": "The thermal transmittance of the exterior walls.",
+      "si": "W/m²K",
+      "imperial": "Btu/h·ft²·°F",
+      "symbol": "U_wall",
+      "formula": "Multiply ( 1 semio.envelope.u-value-wall )",
+      "format": "#,##0.###"
+    },
+    {
+      "key": "semio.envelope.u-value-window",
+      "name": "Window U-Value",
+      "translation": {
+        "de": "U-Wert Fenster"
+      },
+      "description": "The thermal transmittance of the windows.",
+      "si": "W/m²K",
+      "imperial": "Btu/h·ft²·°F",
+      "symbol": "U_window",
+      "formula": "Multiply ( 1 semio.envelope.u-value-window )",
+      "format": "#,##0.###"
+    },
+    {
+      "key": "semio.envelope.u-value-roof",
+      "name": "Roof U-Value",
+      "translation": {
+        "de": "U-Wert Dach"
+      },
+      "description": "The thermal transmittance of the roof.",
+      "si": "W/m²K",
+      "imperial": "Btu/h·ft²·°F",
+      "symbol": "U_roof",
+      "formula": "Multiply ( 1 semio.envelope.u-value-roof )",
+      "format": "#,##0.###"
+    },
+    {
+      "key": "semio.envelope.g-value-window",
+      "name": "Window G-Value",
+      "translation": {
+        "de": "g-Wert Fenster"
+      },
+      "description": "The solar heat gain coefficient of the windows.",
+      "si": "",
+      "imperial": "",
+      "symbol": "g_window",
+      "formula": "Multiply ( 1 semio.envelope.g-value-window )",
+      "format": "#,##0.###"
+    },
+    {
+      "key": "semio.envelope.u-value-average",
+      "name": "Average Envelope U-Value",
+      "translation": {
+        "de": "Durchschnittlicher U-Wert Gebäudehülle"
+      },
+      "description": "The area-weighted average U-value of the building envelope.",
+      "si": "W/m²K",
+      "imperial": "Btu/h·ft²·°F",
+      "symbol": "U_avg",
+      "formula": "Divide ( Add ( Multiply ( semio.envelope.u-value-wall semio.area.wall-area ) Multiply ( semio.envelope.u-value-window semio.area.window-area ) Multiply ( semio.envelope.u-value-roof semio.area.roof-area ) ) semio.area.envelope-area )",
+      "format": "#,##0.###"
+    },
+    {
+      "key": "semio.heat-loss.transmission-losses",
+      "name": "Transmission Heat Losses",
+      "translation": {
+        "de": "Transmissionswärmeverluste"
+      },
+      "description": "The heat losses through the building envelope due to transmission.",
+      "si": "kWh/a",
+      "imperial": "kBtu/yr",
+      "symbol": "Q_transmission",
+      "formula": "Multiply ( semio.envelope.u-value-average semio.area.envelope-area semio.environment.heating-degree-days )",
+      "format": "#,##0.##"
+    },
+
+    // HVAC System Properties
+
+    {
+      "key": "semio.hvac.heating-system-efficiency",
+      "name": "Heating System Efficiency",
+      "translation": {
+        "de": "Heizungswirkungsgrad"
+      },
+      "description": "The efficiency of the heating system.",
+      "si": "",
+      "imperial": "",
+      "symbol": "η_heating",
+      "formula": "Multiply ( 1 semio.hvac.heating-system-efficiency )",
+      "format": "#,##0.###"
+    },
+    {
+      "key": "semio.hvac.ventilation-system-efficiency",
+      "name": "Ventilation System Efficiency",
+      "translation": {
+        "de": "Lüftungsanlagenwirkungsgrad"
+      },
+      "description": "The efficiency of the ventilation system.",
+      "si": "",
+      "imperial": "",
+      "symbol": "η_ventilation",
+      "formula": "Multiply ( 1 semio.hvac.ventilation-system-efficiency )",
+      "format": "#,##0.###"
+    },
+    {
+      "key": "semio.hvac.heat-recovery-efficiency",
+      "name": "Heat Recovery Efficiency",
+      "translation": {
+        "de": "Wärmerückgewinnungseffizienz"
+      },
+      "description": "The efficiency of the heat recovery system.",
+      "si": "",
+      "imperial": "",
+      "symbol": "η_recovery",
+      "formula": "Multiply ( 1 semio.hvac.heat-recovery-efficiency )",
+      "format": "#,##0.###"
+    },
+    {
+      "key": "semio.hvac.overall-system-efficiency",
+      "name": "Overall System Efficiency",
+      "translation": {
+        "de": "Gesamtsystemeffizienz"
+      },
+      "description": "The combined efficiency of heating and ventilation systems.",
+      "si": "",
+      "imperial": "",
+      "symbol": "η_total",
+      "formula": "Multiply ( semio.hvac.heating-system-efficiency semio.hvac.ventilation-system-efficiency )",
+      "format": "#,##0.###"
+    },
+    {
+      "key": "semio.energy.useful-energy-output",
+      "name": "Useful Energy Output",
+      "translation": {
+        "de": "Nutzenergie-Ausgang"
+      },
+      "description": "The useful energy delivered by the systems.",
+      "si": "kWh/a",
+      "imperial": "kBtu/yr",
+      "symbol": "E_useful",
+      "formula": "Multiply ( semio.energy.final-energy-demand semio.hvac.overall-system-efficiency )",
+      "format": "#,##0.##"
+    },
+
+    // Environmental Conditions
+
+    {
+      "key": "semio.environment.outdoor-temperature",
+      "name": "Outdoor Temperature",
+      "translation": {
+        "de": "Außentemperatur"
+      },
+      "description": "The average outdoor temperature.",
+      "si": "°C",
+      "imperial": "°F",
+      "symbol": "T_outdoor",
+      "formula": "Multiply ( 1 semio.environment.outdoor-temperature )",
+      "format": "#,##0.#"
+    },
+    {
+      "key": "semio.environment.indoor-temperature",
+      "name": "Indoor Temperature",
+      "translation": {
+        "de": "Innentemperatur"
+      },
+      "description": "The desired indoor temperature.",
+      "si": "°C",
+      "imperial": "°F",
+      "symbol": "T_indoor",
+      "formula": "Multiply ( 1 semio.environment.indoor-temperature )",
+      "format": "#,##0.#"
+    },
+    {
+      "key": "semio.environment.heating-degree-days",
+      "name": "Heating Degree Days",
+      "translation": {
+        "de": "Heizgradtage"
+      },
+      "description": "The number of heating degree days for the location.",
+      "si": "Kd",
+      "imperial": "°F·d",
+      "symbol": "HDD",
+      "formula": "Multiply ( 1 semio.environment.heating-degree-days )",
+      "format": "#,##0"
+    },
+    {
+      "key": "semio.environment.cooling-degree-days",
+      "name": "Cooling Degree Days",
+      "translation": {
+        "de": "Kühlgradtage"
+      },
+      "description": "The number of cooling degree days for the location.",
+      "si": "Kd",
+      "imperial": "°F·d",
+      "symbol": "CDD",
+      "formula": "Multiply ( 1 semio.environment.cooling-degree-days )",
+      "format": "#,##0"
+    },
+
+    // Energy Demands (specific)
+
+    {
+      "key": "semio.energy.heating.space-heating-demand",
+      "name": "Space Heating Demand",
+      "translation": {
+        "de": "Heizwärmebedarf"
+      },
+      "description": "The space heating energy demand of the building.",
+      "si": "kWh/a",
+      "imperial": "kBtu/yr",
+      "symbol": "Q_heating",
+      "formula": "Multiply ( 1 semio.energy.heating.space-heating-demand )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.energy.cooling.space-cooling-demand",
+      "name": "Space Cooling Demand",
+      "translation": {
+        "de": "Kühlenergiebedarf"
+      },
+      "description": "The space cooling energy demand of the building.",
+      "si": "kWh/a",
+      "imperial": "kBtu/yr",
+      "symbol": "Q_cooling",
+      "formula": "Multiply ( 1 semio.energy.cooling.space-cooling-demand )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.energy.dhw.domestic-hot-water-demand",
+      "name": "Domestic Hot Water Demand",
+      "translation": {
+        "de": "Warmwasserbedarf"
+      },
+      "description": "The domestic hot water energy demand.",
+      "si": "kWh/a",
+      "imperial": "kBtu/yr",
+      "symbol": "Q_dhw",
+      "formula": "Multiply ( 1 semio.energy.dhw.domestic-hot-water-demand )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.energy.lighting.lighting-demand",
+      "name": "Lighting Energy Demand",
+      "translation": {
+        "de": "Beleuchtungsenergiebedarf"
+      },
+      "description": "The lighting energy demand of the building.",
+      "si": "kWh/a",
+      "imperial": "kBtu/yr",
+      "symbol": "Q_lighting",
+      "formula": "Multiply ( 1 semio.energy.lighting.lighting-demand )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.energy.equipment.equipment-demand",
+      "name": "Equipment Energy Demand",
+      "translation": {
+        "de": "Geräteenergiebedarf"
+      },
+      "description": "The equipment energy demand of the building.",
+      "si": "kWh/a",
+      "imperial": "kBtu/yr",
+      "symbol": "Q_equipment",
+      "formula": "Multiply ( 1 semio.energy.equipment.equipment-demand )",
+      "format": "#,##0.##"
+    },
+
+    // Specific Energy Intensities
+
+    {
+      "key": "semio.energy.heating.heating-intensity",
+      "name": "Heating Energy Intensity",
+      "translation": {
+        "de": "Heizenergie-Intensität"
+      },
+      "description": "The heating energy intensity per floor area.",
+      "si": "kWh/m²a",
+      "imperial": "kBtu/ft²yr",
+      "symbol": "q_heating",
+      "formula": "Divide ( semio.energy.heating.final-heating-energy-demand semio.area.floor-area )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.energy.cooling.cooling-intensity",
+      "name": "Cooling Energy Intensity",
+      "translation": {
+        "de": "Kühlenergie-Intensität"
+      },
+      "description": "The cooling energy intensity per floor area.",
+      "si": "kWh/m²a",
+      "imperial": "kBtu/ft²yr",
+      "symbol": "q_cooling",
+      "formula": "Divide ( semio.energy.cooling.space-cooling-demand semio.area.floor-area )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.energy.electricity.electricity-intensity",
+      "name": "Electricity Energy Intensity",
+      "translation": {
+        "de": "Stromenergie-Intensität"
+      },
+      "description": "The electricity energy intensity per floor area.",
+      "si": "kWh/m²a",
+      "imperial": "kBtu/ft²yr",
+      "symbol": "q_electricity",
+      "formula": "Divide ( semio.energy.electricity.electricity-energy-demand semio.area.floor-area )",
+      "format": "#,##0.##"
+    },
+
+    // Material Properties and Construction
+
+    {
+      "key": "semio.construction.concrete-volume",
+      "name": "Concrete Volume",
+      "translation": {
+        "de": "Betonvolumen"
+      },
+      "description": "The total volume of concrete used in construction.",
+      "si": "m³",
+      "imperial": "ft³",
+      "symbol": "V_concrete",
+      "formula": "Multiply ( 1 semio.construction.concrete-volume )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.construction.steel-mass",
+      "name": "Steel Mass",
+      "translation": {
+        "de": "Stahlmasse"
+      },
+      "description": "The total mass of steel used in construction.",
+      "si": "kg",
+      "imperial": "lb",
+      "symbol": "m_steel",
+      "formula": "Multiply ( 1 semio.construction.steel-mass )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.construction.insulation-thickness",
+      "name": "Insulation Thickness",
+      "translation": {
+        "de": "Dämmstärke"
+      },
+      "description": "The thickness of thermal insulation.",
+      "si": "m",
+      "imperial": "in",
+      "symbol": "t_insulation",
+      "formula": "Multiply ( 1 semio.construction.insulation-thickness )",
+      "format": "#,##0.###"
+    },
+    {
+      "key": "semio.construction.window-type",
+      "name": "Window Type",
+      "translation": {
+        "de": "Fenstertyp"
+      },
+      "description": "The type of windows used (single, double, triple glazing).",
+      "si": "",
+      "imperial": "",
+      "symbol": "window_type",
+      "formula": "Multiply ( 1 semio.construction.window-type )",
+      "format": "#,##0"
+    },
+
+    // Additional Cost Components
+
+    {
+      "key": "semio.cost.investment.land-cost",
+      "name": "Land Cost",
+      "translation": {
+        "de": "Grundstückskosten"
+      },
+      "description": "The cost of land acquisition.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_land",
+      "formula": "Multiply ( 1 semio.cost.investment.land-cost )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.investment.planning-cost",
+      "name": "Planning Cost",
+      "translation": {
+        "de": "Planungskosten"
+      },
+      "description": "The cost of architectural and engineering planning.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_planning",
+      "formula": "Multiply ( 1 semio.cost.investment.planning-cost )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.operating.maintenance-cost",
+      "name": "Maintenance Cost",
+      "translation": {
+        "de": "Wartungskosten"
+      },
+      "description": "The annual maintenance costs.",
+      "si": "€/a",
+      "imperial": "$/yr",
+      "symbol": "C_maintenance",
+      "formula": "Multiply ( 1 semio.cost.operating.maintenance-cost )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.operating.cleaning-cost",
+      "name": "Cleaning Cost",
+      "translation": {
+        "de": "Reinigungskosten"
+      },
+      "description": "The annual cleaning costs.",
+      "si": "€/a",
+      "imperial": "$/yr",
+      "symbol": "C_cleaning",
+      "formula": "Multiply ( 1 semio.cost.operating.cleaning-cost )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.operating.insurance-cost",
+      "name": "Insurance Cost",
+      "translation": {
+        "de": "Versicherungskosten"
+      },
+      "description": "The annual insurance costs.",
+      "si": "€/a",
+      "imperial": "$/yr",
+      "symbol": "C_insurance",
+      "formula": "Multiply ( 1 semio.cost.operating.insurance-cost )",
+      "format": "#,##0.##"
+    },
+
+    // Energy Cost Components
+
+    {
+      "key": "semio.cost.energy.heating-energy-price",
+      "name": "Heating Energy Price",
+      "translation": {
+        "de": "Heizenergie-Preis"
+      },
+      "description": "The price per unit of heating energy.",
+      "si": "€/kWh",
+      "imperial": "$/kBtu",
+      "symbol": "p_heating",
+      "formula": "Multiply ( 1 semio.cost.energy.heating-energy-price )",
+      "format": "#,##0.####"
+    },
+    {
+      "key": "semio.cost.energy.electricity-price",
+      "name": "Electricity Price",
+      "translation": {
+        "de": "Strompreis"
+      },
+      "description": "The price per unit of electricity.",
+      "si": "€/kWh",
+      "imperial": "$/kBtu",
+      "symbol": "p_electricity",
+      "formula": "Multiply ( 1 semio.cost.energy.electricity-price )",
+      "format": "#,##0.####"
+    },
+    {
+      "key": "semio.cost.energy.gas-price",
+      "name": "Gas Price",
+      "translation": {
+        "de": "Gaspreis"
+      },
+      "description": "The price per unit of gas energy.",
+      "si": "€/kWh",
+      "imperial": "$/kBtu",
+      "symbol": "p_gas",
+      "formula": "Multiply ( 1 semio.cost.energy.gas-price )",
+      "format": "#,##0.####"
+    },
+
+    // Additional Energy Parameters
+
+    {
+      "key": "semio.energy.renewable.solar-potential",
+      "name": "Solar Energy Potential",
+      "translation": {
+        "de": "Solarenergie-Potenzial"
+      },
+      "description": "The potential solar energy generation on the building.",
+      "si": "kWh/a",
+      "imperial": "kBtu/yr",
+      "symbol": "E_solar",
+      "formula": "Multiply ( 1 semio.energy.renewable.solar-potential )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.energy.renewable.geothermal-potential",
+      "name": "Geothermal Energy Potential",
+      "translation": {
+        "de": "Geothermie-Potenzial"
+      },
+      "description": "The potential geothermal energy for heating and cooling.",
+      "si": "kWh/a",
+      "imperial": "kBtu/yr",
+      "symbol": "E_geothermal",
+      "formula": "Multiply ( 1 semio.energy.renewable.geothermal-potential )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.energy.heat-gains.internal-gains",
+      "name": "Internal Heat Gains",
+      "translation": {
+        "de": "Interne Wärmegewinne"
+      },
+      "description": "The internal heat gains from occupants and equipment.",
+      "si": "kWh/a",
+      "imperial": "kBtu/yr",
+      "symbol": "Q_internal",
+      "formula": "Multiply ( 1 semio.energy.heat-gains.internal-gains )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.energy.heat-gains.solar-gains",
+      "name": "Solar Heat Gains",
+      "translation": {
+        "de": "Solare Wärmegewinne"
+      },
+      "description": "The solar heat gains through windows and building envelope.",
+      "si": "kWh/a",
+      "imperial": "kBtu/yr",
+      "symbol": "Q_solar",
+      "formula": "Multiply ( 1 semio.energy.heat-gains.solar-gains )",
+      "format": "#,##0.##"
+    },
+
+    // Performance Indicators
+
+    {
+      "key": "semio.performance.energy-efficiency-ratio",
+      "name": "Energy Efficiency Ratio",
+      "translation": {
+        "de": "Energieeffizienz-Verhältnis"
+      },
+      "description": "The ratio of useful energy output to energy input.",
+      "si": "",
+      "imperial": "",
+      "symbol": "EER",
+      "formula": "Divide ( semio.energy.useful-energy-output semio.energy.final-energy-demand )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.performance.cost-effectiveness",
+      "name": "Cost Effectiveness",
+      "translation": {
+        "de": "Kosteneffizienz"
+      },
+      "description": "The ratio of benefits to costs over the building lifecycle.",
+      "si": "",
+      "imperial": "",
+      "symbol": "CE",
+      "formula": "Divide ( semio.cost.life-cycle.earnings semio.cost.life-cycle-costs )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.performance.carbon-intensity",
+      "name": "Carbon Intensity",
+      "translation": {
+        "de": "Kohlenstoff-Intensität"
+      },
+      "description": "The carbon emissions per unit floor area.",
+      "si": "kgCO2e/m²a",
+      "imperial": "lbCO2e/ft²yr",
+      "symbol": "CI",
+      "formula": "Divide ( semio.energy.energy-gwp semio.area.floor-area )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.performance.energy-cost-ratio",
+      "name": "Energy Cost Ratio",
+      "translation": {
+        "de": "Energiekosten-Verhältnis"
+      },
+      "description": "The ratio of energy costs to total operating costs.",
+      "si": "",
+      "imperial": "",
+      "symbol": "ECR",
+      "formula": "Divide ( Add ( semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.heating-costs semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.electricity-costs ) semio.cost.life-cycle-costs.operating-costs )",
+      "format": "#,##0.###"
+    },
+    {
+      "key": "semio.performance.payback-period",
+      "name": "Simple Payback Period",
+      "translation": {
+        "de": "Einfache Amortisationszeit"
+      },
+      "description": "The time to recover the initial investment through savings.",
+      "si": "a",
+      "imperial": "yr",
+      "symbol": "T_payback",
+      "formula": "Divide ( semio.cost.investment.initial semio.cost.life-cycle.earnings.income )",
+      "format": "#,##0.#"
+    },
+
+    // Occupancy and Usage
+
+    {
+      "key": "semio.occupancy.occupant-density",
+      "name": "Occupant Density",
+      "translation": {
+        "de": "Nutzerdichte"
+      },
+      "description": "The number of occupants per unit floor area.",
+      "si": "persons/m²",
+      "imperial": "persons/ft²",
+      "symbol": "ρ_occupants",
+      "formula": "Multiply ( 1 semio.occupancy.occupant-density )",
+      "format": "#,##0.###"
+    },
+    {
+      "key": "semio.occupancy.usage-hours",
+      "name": "Usage Hours",
+      "translation": {
+        "de": "Nutzungsstunden"
+      },
+      "description": "The number of hours the building is in use per year.",
+      "si": "h/a",
+      "imperial": "h/yr",
+      "symbol": "t_usage",
+      "formula": "Multiply ( 1 semio.occupancy.usage-hours )",
+      "format": "#,##0"
+    },
+    {
+      "key": "semio.occupancy.ventilation-rate",
+      "name": "Ventilation Rate",
+      "translation": {
+        "de": "Lüftungsrate"
+      },
+      "description": "The required fresh air ventilation rate per person.",
+      "si": "m³/h·person",
+      "imperial": "cfm/person",
+      "symbol": "V_ventilation",
+      "formula": "Multiply ( 1 semio.occupancy.ventilation-rate )",
+      "format": "#,##0.##"
     }
 
     // Output values
