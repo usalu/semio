@@ -645,7 +645,7 @@ public class AttributeDiffGoo : DiffGoo<AttributeDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Serialize());
+            target = (Q)(object)new GH_String(Value.Key);
             return true;
         }
         return false;
@@ -737,7 +737,7 @@ public class RepresentationIdGoo : IdGoo<RepresentationId>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Name);
+            target = (Q)(object)new GH_String(Value.ToIdString());
             return true;
         }
         return false;
@@ -748,7 +748,7 @@ public class RepresentationIdGoo : IdGoo<RepresentationId>
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new RepresentationId { Name = str };
+            Value = new RepresentationId { Tags = new List<string> { str } };
             return true;
         }
         return false;
@@ -774,7 +774,7 @@ public class RepresentationDiffGoo : DiffGoo<RepresentationDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Serialize());
+            target = (Q)(object)new GH_String(string.Join(",", Value.Tags));
             return true;
         }
         return false;
@@ -815,7 +815,7 @@ public class RepresentationsDiffGoo : DiffGoo<RepresentationsDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Serialize());
+            target = (Q)(object)new GH_String("RepresentationsDiff");
             return true;
         }
         return false;
@@ -855,7 +855,7 @@ public class RepresentationGoo : ModelGoo<Representation>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Url);
+            target = (Q)(object)new GH_String(Value.ToIdString());
             return true;
         }
         return false;
@@ -865,7 +865,7 @@ public class RepresentationGoo : ModelGoo<Representation>
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new Representation { Url = str };
+            Value = new Representation { Tags = new List<string> { str } };
             return true;
         }
         return false;
@@ -954,7 +954,7 @@ public class FileDiffGoo : DiffGoo<FileDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Serialize());
+            target = (Q)(object)new GH_String(Value.Url);
             return true;
         }
         return false;
@@ -995,7 +995,7 @@ public class FilesDiffGoo : DiffGoo<FilesDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Serialize());
+            target = (Q)(object)new GH_String("FilesDiff");
             return true;
         }
         return false;
@@ -1143,7 +1143,7 @@ public class PortIdGoo : IdGoo<PortId>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Name);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -1154,7 +1154,7 @@ public class PortIdGoo : IdGoo<PortId>
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new PortId { Name = str };
+            Value = new PortId { Id = str };
             return true;
         }
         return false;
@@ -1180,7 +1180,7 @@ public class PortDiffGoo : DiffGoo<PortDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Serialize());
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -1227,7 +1227,7 @@ public class PortGoo : ModelGoo<Port>
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Serialize());
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -1283,7 +1283,7 @@ public class PortsDiffGoo : DiffGoo<PortsDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Serialize());
+            target = (Q)(object)new GH_String("PortsDiff");
             return true;
         }
         return false;
@@ -1328,7 +1328,7 @@ public class AuthorIdGoo : IdGoo<AuthorId>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Name);
+            target = (Q)(object)new GH_String(Value.Email);
             return true;
         }
         return false;
@@ -1339,7 +1339,7 @@ public class AuthorIdGoo : IdGoo<AuthorId>
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new AuthorId { Name = str };
+            Value = new AuthorId { Email = str };
             return true;
         }
         return false;
@@ -1468,7 +1468,7 @@ public class TypeIdGoo : IdGoo<TypeId>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Name);
+            target = (Q)(object)new GH_String(Value.ToIdString());
             return true;
         }
         return false;
@@ -1505,7 +1505,7 @@ public class TypeDiffGoo : DiffGoo<TypeDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Serialize());
+            target = (Q)(object)new GH_String(Value.Name);
             return true;
         }
         return false;
@@ -1546,7 +1546,7 @@ public class TypesDiffGoo : DiffGoo<TypesDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Serialize());
+            target = (Q)(object)new GH_String("TypesDiff");
             return true;
         }
         return false;
@@ -1703,7 +1703,7 @@ public class PieceDiffGoo : DiffGoo<PieceDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Serialize());
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -1744,7 +1744,7 @@ public class PiecesDiffGoo : DiffGoo<PiecesDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Serialize());
+            target = (Q)(object)new GH_String("PiecesDiff");
             return true;
         }
         return false;
@@ -1853,7 +1853,7 @@ public class SideDiffGoo : DiffGoo<SideDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Serialize());
+            target = (Q)(object)new GH_String("SideDiff");
             return true;
         }
         return false;
@@ -1894,7 +1894,7 @@ public class SideGoo : ModelGoo<Side>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Piece);
+            target = (Q)(object)new GH_String(Value.Piece.Id);
             return true;
         }
         return false;
@@ -1905,7 +1905,7 @@ public class SideGoo : ModelGoo<Side>
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new Side { Piece = str };
+            Value = new Side { Piece = new PieceId { Id = str } };
             return true;
         }
         return false;
@@ -1943,26 +1943,26 @@ public class ConnectionIdGoo : IdGoo<ConnectionId>
     public ConnectionIdGoo() { }
     public ConnectionIdGoo(ConnectionId value) : base(value) { }
 
-    internal override bool CustomCastTo<Q>(ref Q target)
-    {
-        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-        {
-            target = (Q)(object)new GH_String(Value.Id);
-            return true;
-        }
-        return false;
-    }
+    //internal override bool CustomCastTo<Q>(ref Q target)
+    //{
+    //    if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+    //    {
+    //        target = (Q)(object)new GH_String(Value.Id);
+    //        return true;
+    //    }
+    //    return false;
+    //}
 
-    internal override bool CustomCastFrom(object source)
-    {
-        if (source == null) return false;
-        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-        {
-            Value = new ConnectionId { Id = str };
-            return true;
-        }
-        return false;
-    }
+    //internal override bool CustomCastFrom(object source)
+    //{
+    //    if (source == null) return false;
+    //    if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+    //    {
+    //        Value = new ConnectionId { Id = str };
+    //        return true;
+    //    }
+    //    return false;
+    //}
 }
 
 public class ConnectionIdParam : IdParam<ConnectionIdGoo, ConnectionId>
@@ -1984,7 +1984,7 @@ public class ConnectionDiffGoo : DiffGoo<ConnectionDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Serialize());
+            target = (Q)(object)new GH_String("ConnectionDiff");
             return true;
         }
         return false;
@@ -2025,7 +2025,7 @@ public class ConnectionsDiffGoo : DiffGoo<ConnectionsDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Serialize());
+            target = (Q)(object)new GH_String("ConnectionsDiff");
             return true;
         }
         return false;
@@ -2062,26 +2062,26 @@ public class ConnectionGoo : ModelGoo<Connection>
     public ConnectionGoo() { }
     public ConnectionGoo(Connection value) : base(value) { }
 
-    internal override bool CustomCastTo<Q>(ref Q target)
-    {
-        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-        {
-            target = (Q)(object)new GH_String(Value.Id);
-            return true;
-        }
-        return false;
-    }
+    //internal override bool CustomCastTo<Q>(ref Q target)
+    //{
+    //    if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+    //    {
+    //        target = (Q)(object)new GH_String(Value.Id);
+    //        return true;
+    //    }
+    //    return false;
+    //}
 
-    internal override bool CustomCastFrom(object source)
-    {
-        if (source == null) return false;
-        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-        {
-            Value = new Connection { Id = str };
-            return true;
-        }
-        return false;
-    }
+    //internal override bool CustomCastFrom(object source)
+    //{
+    //    if (source == null) return false;
+    //    if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+    //    {
+    //        Value = new Connection { Id = str };
+    //        return true;
+    //    }
+    //    return false;
+    //}
 }
 
 public class ConnectionParam : ModelParam<ConnectionGoo, Connection>
@@ -2119,7 +2119,7 @@ public class DesignIdGoo : IdGoo<DesignId>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Name);
+            target = (Q)(object)new GH_String(Value.ToHumanIdString());
             return true;
         }
         return false;
@@ -2156,7 +2156,7 @@ public class DesignDiffGoo : DiffGoo<DesignDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Serialize());
+            target = (Q)(object)new GH_String(Value.Name);
             return true;
         }
         return false;
@@ -2197,7 +2197,7 @@ public class DesignsDiffGoo : DiffGoo<DesignsDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Serialize());
+            target = (Q)(object)new GH_String("DesignsDiff");
             return true;
         }
         return false;
@@ -2300,7 +2300,7 @@ public class KitDiffGoo : DiffGoo<KitDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Serialize());
+            target = (Q)(object)new GH_String(Value.Name);
             return true;
         }
         return false;
@@ -2397,26 +2397,26 @@ public class QualityIdGoo : IdGoo<QualityId>
     public QualityIdGoo() { }
     public QualityIdGoo(QualityId value) : base(value) { }
 
-    internal override bool CustomCastTo<Q>(ref Q target)
-    {
-        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-        {
-            target = (Q)(object)new GH_String(Value.Name);
-            return true;
-        }
-        return false;
-    }
+    //internal override bool CustomCastTo<Q>(ref Q target)
+    //{
+    //    if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+    //    {
+    //        target = (Q)(object)new GH_String(Value.Name);
+    //        return true;
+    //    }
+    //    return false;
+    //}
 
-    internal override bool CustomCastFrom(object source)
-    {
-        if (source == null) return false;
-        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-        {
-            Value = new QualityId { Name = str };
-            return true;
-        }
-        return false;
-    }
+    //internal override bool CustomCastFrom(object source)
+    //{
+    //    if (source == null) return false;
+    //    if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+    //    {
+    //        Value = new QualityId { Name = str };
+    //        return true;
+    //    }
+    //    return false;
+    //}
 }
 
 public class QualityIdParam : IdParam<QualityIdGoo, QualityId>
@@ -2540,26 +2540,26 @@ public class PropGoo : ModelGoo<Prop>
     public PropGoo() { }
     public PropGoo(Prop value) : base(value) { }
 
-    internal override bool CustomCastTo<Q>(ref Q target)
-    {
-        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-        {
-            target = (Q)(object)new GH_String(Value.Name);
-            return true;
-        }
-        return false;
-    }
+    //internal override bool CustomCastTo<Q>(ref Q target)
+    //{
+    //    if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+    //    {
+    //        target = (Q)(object)new GH_String(Value.Name);
+    //        return true;
+    //    }
+    //    return false;
+    //}
 
-    internal override bool CustomCastFrom(object source)
-    {
-        if (source == null) return false;
-        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-        {
-            Value = new Prop { Name = str };
-            return true;
-        }
-        return false;
-    }
+    //internal override bool CustomCastFrom(object source)
+    //{
+    //    if (source == null) return false;
+    //    if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+    //    {
+    //        Value = new Prop { Name = str };
+    //        return true;
+    //    }
+    //    return false;
+    //}
 }
 
 public class PropParam : ModelParam<PropGoo, Prop>
@@ -2593,26 +2593,26 @@ public class StatGoo : ModelGoo<Stat>
     public StatGoo() { }
     public StatGoo(Stat value) : base(value) { }
 
-    internal override bool CustomCastTo<Q>(ref Q target)
-    {
-        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-        {
-            target = (Q)(object)new GH_String(Value.Name);
-            return true;
-        }
-        return false;
-    }
+    //internal override bool CustomCastTo<Q>(ref Q target)
+    //{
+    //    if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+    //    {
+    //        target = (Q)(object)new GH_String(Value.Name);
+    //        return true;
+    //    }
+    //    return false;
+    //}
 
-    internal override bool CustomCastFrom(object source)
-    {
-        if (source == null) return false;
-        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-        {
-            Value = new Stat { Name = str };
-            return true;
-        }
-        return false;
-    }
+    //internal override bool CustomCastFrom(object source)
+    //{
+    //    if (source == null) return false;
+    //    if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+    //    {
+    //        Value = new Stat { Name = str };
+    //        return true;
+    //    }
+    //    return false;
+    //}
 }
 
 public class StatParam : ModelParam<StatGoo, Stat>
