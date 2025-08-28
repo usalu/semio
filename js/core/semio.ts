@@ -572,8 +572,9 @@ export enum DiffStatus {
 
 const normalize = (val: string | undefined | null): string => (val === undefined || val === null ? "" : val);
 const round = (value: number): number => Math.round(value / TOLERANCE) * TOLERANCE;
-export const jaccard = (a: string[] | undefined, b: string[] | undefined) => {
+export const jaccard = (a: string[] | undefined, b: string[] | undefined): number => {
   if ((a === undefined && b === undefined) || (a?.length === 0 && b?.length === 0)) return 1;
+  if (a === undefined || b === undefined) return 0;
   const setA = new Set(a);
   const setB = new Set(b);
   const intersection = Array.from(setA).filter((x) => setB.has(x)).length;
@@ -597,7 +598,7 @@ export const representationIdLikeToRepresentationId = (representationId: Represe
 };
 
 export const portIdLikeToPortId = (portId: PortIdLike): PortId => {
-  if (portId === undefined || portId === null) return { id_: "" };
+  if (portId === undefined || portId === null) return { id_: undefined };
   if (typeof portId === "string") return { id_: portId };
   return { id_: portId.id_ };
 };
@@ -659,6 +660,15 @@ export const kitIdLikeToKitId = (kitId: KitIdLike): KitId => {
   if (Array.isArray(kitId)) return { name: kitId[0], version: kitId[1] ?? undefined };
   return { name: kitId.name, version: kitId.version ?? undefined };
 };
+
+export const kitIdToString = (kitId: KitId): string => `${kitId.name}${kitId.version ? `@${kitId.version}` : ''}`;
+export const designIdToString = (designId: DesignId): string => `${designId.name}${designId.variant ? `#${designId.variant}` : ''}${designId.view ? `?${designId.view}` : ''}`;
+export const typeIdToString = (typeId: TypeId): string => `${typeId.name}${typeId.variant ? `#${typeId.variant}` : ''}`;
+export const pieceIdToString = (pieceId: PieceId): string => pieceId.id_;
+export const connectionIdToString = (connectionId: ConnectionId): string => `${connectionId.connected.piece.id_}->${connectionId.connecting.piece.id_}`;
+export const representationIdToString = (representationId: RepresentationId): string => representationId.tags?.join('|') ?? '';
+export const portIdToString = (portId: PortId): string => portId.id_ ?? '';
+export const fileIdToString = (fileId: FileId): string => fileId.path;
 
 export const toThreeRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
 export const toSemioRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
@@ -767,77 +777,110 @@ export const safeParse = {
 
 //#endregion Serializing
 
+//#region Utility Functions
+
+const deepEqual = (a: any, b: any): boolean => {
+  if (a === b) return true;
+  if (a == null || b == null) return a === b;
+  if (typeof a !== typeof b) return false;
+
+  if (Array.isArray(a)) {
+    if (!Array.isArray(b) || a.length !== b.length) return false;
+    return a.every((item, index) => deepEqual(item, b[index]));
+  }
+
+  if (typeof a === 'object') {
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    if (keysA.length !== keysB.length) return false;
+    return keysA.every(key => keysB.includes(key) && deepEqual(a[key], b[key]));
+  }
+
+  return false;
+};
+
+const arraysEqual = <T>(a: T[] | undefined, b: T[] | undefined): boolean => {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return a.length === b.length && a.every((val, index) => deepEqual(val, b[index]));
+};
+
+//#endregion Utility Functions
+
 //#region Diffing
 
 export const diff = {
   get: {
     representation: (before: Representation, after: Representation): RepresentationDiff => {
-      const diff: any = {};
-      if (before.url !== after.url) diff.url = after.url;
-      if (before.description !== after.description) diff.description = after.description;
-      if (JSON.stringify(before.tags) !== JSON.stringify(after.tags)) diff.tags = after.tags;
-      if (JSON.stringify(before.attributes) !== JSON.stringify(after.attributes)) diff.attributes = after.attributes;
-      return diff;
+      const diffResult: Partial<RepresentationDiff> = {};
+      if (before.url !== after.url) diffResult.url = after.url;
+      if (before.description !== after.description) diffResult.description = after.description;
+      if (!arraysEqual(before.tags, after.tags)) diffResult.tags = after.tags;
+      if (!arraysEqual(before.attributes, after.attributes)) diffResult.attributes = after.attributes;
+      return diffResult;
     },
     port: (before: Port, after: Port): PortDiff => {
-      const diff: any = {};
-      if (before.id_ !== after.id_) diff.id_ = after.id_;
-      if (before.description !== after.description) diff.description = after.description;
-      if (before.family !== after.family) diff.family = after.family;
-      if (before.mandatory !== after.mandatory) diff.mandatory = after.mandatory;
-      if (before.t !== after.t) diff.t = after.t;
-      if (JSON.stringify(before.compatibleFamilies) !== JSON.stringify(after.compatibleFamilies)) diff.compatibleFamilies = after.compatibleFamilies;
-      if (JSON.stringify(before.point) !== JSON.stringify(after.point)) diff.point = after.point;
-      if (JSON.stringify(before.direction) !== JSON.stringify(after.direction)) diff.direction = after.direction;
-      if (JSON.stringify(before.attributes) !== JSON.stringify(after.attributes)) diff.attributes = after.attributes;
-      return diff;
+      const diffResult: Partial<PortDiff> = {};
+      if (before.id_ !== after.id_) diffResult.id_ = after.id_;
+      if (before.description !== after.description) diffResult.description = after.description;
+      if (before.family !== after.family) diffResult.family = after.family;
+      if (before.mandatory !== after.mandatory) diffResult.mandatory = after.mandatory;
+      if (before.t !== after.t) diffResult.t = after.t;
+      if (!arraysEqual(before.compatibleFamilies, after.compatibleFamilies)) diffResult.compatibleFamilies = after.compatibleFamilies;
+      if (!deepEqual(before.point, after.point)) diffResult.point = after.point;
+      if (!deepEqual(before.direction, after.direction)) diffResult.direction = after.direction;
+      if (!arraysEqual(before.attributes, after.attributes)) diffResult.attributes = after.attributes;
+      return diffResult;
     },
     piece: (before: Piece, after: Piece): PieceDiff => {
-      const diff: any = { id_: after.id_ };
-      if (before.description !== after.description) diff.description = after.description;
-      if (JSON.stringify(before.type) !== JSON.stringify(after.type)) diff.type = after.type;
-      if (JSON.stringify(before.plane) !== JSON.stringify(after.plane)) diff.plane = after.plane;
-      if (JSON.stringify(before.center) !== JSON.stringify(after.center)) diff.center = after.center;
-      if (JSON.stringify(before.attributes) !== JSON.stringify(after.attributes)) diff.attributes = after.attributes;
-      return diff;
+      const diffResult: Partial<PieceDiff> = { id_: after.id_ };
+      if (before.description !== after.description) diffResult.description = after.description;
+      if (!deepEqual(before.type, after.type)) diffResult.type = after.type;
+      if (!deepEqual(before.plane, after.plane)) diffResult.plane = after.plane;
+      if (!deepEqual(before.center, after.center)) diffResult.center = after.center;
+      if (!arraysEqual(before.attributes, after.attributes)) diffResult.attributes = after.attributes;
+      return diffResult;
     },
     connection: (before: Connection, after: Connection): ConnectionDiff => {
-      const diff: any = {
+      const diffResult: any = {
         connected: { piece: after.connected.piece },
         connecting: { piece: after.connecting.piece }
       };
-      if (JSON.stringify(before.connected.port) !== JSON.stringify(after.connected.port)) diff.connected.port = after.connected.port;
-      if (JSON.stringify(before.connecting.port) !== JSON.stringify(after.connecting.port)) diff.connecting.port = after.connecting.port;
-      if (before.description !== after.description) diff.description = after.description;
-      if (before.gap !== after.gap) diff.gap = after.gap;
-      if (before.shift !== after.shift) diff.shift = after.shift;
-      if (before.rise !== after.rise) diff.rise = after.rise;
-      if (before.rotation !== after.rotation) diff.rotation = after.rotation;
-      if (before.turn !== after.turn) diff.turn = after.turn;
-      if (before.tilt !== after.tilt) diff.tilt = after.tilt;
-      if (before.x !== after.x) diff.x = after.x;
-      if (before.y !== after.y) diff.y = after.y;
-      if (JSON.stringify(before.attributes) !== JSON.stringify(after.attributes)) diff.attributes = after.attributes;
-      return diff;
+      if (!deepEqual(before.connected.port, after.connected.port)) {
+        diffResult.connected.port = after.connected.port;
+      }
+      if (!deepEqual(before.connecting.port, after.connecting.port)) {
+        diffResult.connecting.port = after.connecting.port;
+      }
+      if (before.description !== after.description) diffResult.description = after.description;
+      if (before.gap !== after.gap) diffResult.gap = after.gap;
+      if (before.shift !== after.shift) diffResult.shift = after.shift;
+      if (before.rise !== after.rise) diffResult.rise = after.rise;
+      if (before.rotation !== after.rotation) diffResult.rotation = after.rotation;
+      if (before.turn !== after.turn) diffResult.turn = after.turn;
+      if (before.tilt !== after.tilt) diffResult.tilt = after.tilt;
+      if (before.x !== after.x) diffResult.x = after.x;
+      if (before.y !== after.y) diffResult.y = after.y;
+      return diffResult;
     },
     type: (before: Type, after: Type): TypeDiff => {
-      const diff: any = {};
-      if (before.name !== after.name) diff.name = after.name;
-      if (before.description !== after.description) diff.description = after.description;
-      if (before.icon !== after.icon) diff.icon = after.icon;
-      if (before.image !== after.image) diff.image = after.image;
-      if (before.variant !== after.variant) diff.variant = after.variant;
-      if (before.stock !== after.stock) diff.stock = after.stock;
-      if (before.virtual !== after.virtual) diff.virtual = after.virtual;
-      if (before.unit !== after.unit) diff.unit = after.unit;
-      if (before.created !== after.created) diff.created = after.created;
-      if (before.updated !== after.updated) diff.updated = after.updated;
-      if (JSON.stringify(before.location) !== JSON.stringify(after.location)) diff.location = after.location;
-      if (JSON.stringify(before.representations) !== JSON.stringify(after.representations)) diff.representations = after.representations;
-      if (JSON.stringify(before.ports) !== JSON.stringify(after.ports)) diff.ports = after.ports;
-      if (JSON.stringify(before.authors) !== JSON.stringify(after.authors)) diff.authors = after.authors;
-      if (JSON.stringify(before.attributes) !== JSON.stringify(after.attributes)) diff.attributes = after.attributes;
-      return diff;
+      const diffResult: any = {};
+      if (before.name !== after.name) diffResult.name = after.name;
+      if (before.description !== after.description) diffResult.description = after.description;
+      if (before.icon !== after.icon) diffResult.icon = after.icon;
+      if (before.image !== after.image) diffResult.image = after.image;
+      if (before.variant !== after.variant) diffResult.variant = after.variant;
+      if (before.stock !== after.stock) diffResult.stock = after.stock;
+      if (before.virtual !== after.virtual) diffResult.virtual = after.virtual;
+      if (before.unit !== after.unit) diffResult.unit = after.unit;
+      if (before.created !== after.created) diffResult.created = after.created;
+      if (before.updated !== after.updated) diffResult.updated = after.updated;
+      if (!deepEqual(before.location, after.location)) diffResult.location = after.location;
+      if (!arraysEqual(before.representations, after.representations)) diffResult.representations = after.representations;
+      if (!arraysEqual(before.ports, after.ports)) diffResult.ports = after.ports;
+      if (!arraysEqual(before.authors, after.authors)) diffResult.authors = after.authors;
+      if (!arraysEqual(before.attributes, after.attributes)) diffResult.attributes = after.attributes;
+      return diffResult;
     },
     design: (before: Design, after: Design): DesignDiff => {
       const diff: any = {};
@@ -1696,7 +1739,8 @@ export const findPiece = (pieces: Piece[], pieceId: PieceIdLike): Piece => {
   return piece;
 };
 export const findPortForPieceInConnection = (type: Type, connection: Connection, pieceId: PieceIdLike): Port => {
-  const portId = connection.connected.piece.id_ === pieceId ? connection.connected.port.id_ : connection.connecting.port.id_;
+  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
+  const portId = connection.connected.piece.id_ === normalizedPieceId.id_ ? connection.connected.port.id_ : connection.connecting.port.id_;
   return findPortInType(type, portId);
 };
 export const findPieceInDesign = (design: Design, pieceId: PieceIdLike): Piece => findPiece(design.pieces ?? [], pieceId);
@@ -1784,14 +1828,15 @@ export const findUsedPortsByPieceInDesign = (kit: Kit, designId: DesignIdLike, p
 };
 export const findReplacableTypesForPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike, variants?: string[]): Type[] => {
   const design = findDesignInKit(kit, designId);
+  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
   const connections = findPieceConnectionsInDesign(design, pieceId);
   const requiredPorts: Port[] = [];
   for (const connection of connections) {
     try {
-      const otherPieceId = connection.connected.piece.id_ === pieceId ? connection.connecting.piece.id_ : connection.connected.piece.id_;
+      const otherPieceId = connection.connected.piece.id_ === normalizedPieceId.id_ ? connection.connecting.piece.id_ : connection.connected.piece.id_;
       const otherPiece = findPieceInDesign(design, otherPieceId);
       const otherType = findTypeInKit(kit, otherPiece.type);
-      const otherPortId = connection.connected.piece.id_ === pieceId ? connection.connecting.port.id_ : connection.connected.port.id_;
+      const otherPortId = connection.connected.piece.id_ === normalizedPieceId.id_ ? connection.connecting.port.id_ : connection.connected.port.id_;
       const otherPort = findPortInType(otherType, otherPortId || "");
       requiredPorts.push(otherPort);
     } catch (error) {
@@ -1811,7 +1856,7 @@ export const findReplacableTypesForPieceInDesign = (kit: Kit, designId: DesignId
 export const findReplacableTypesForPiecesInDesign = (kit: Kit, designId: DesignIdLike, pieceIds: PieceIdLike[], variants?: string[]): Type[] => {
   const design = findDesignInKit(kit, designId);
   const normalizedPieceIds = pieceIds.map((id) => (typeof id === "string" ? id : id.id_));
-  const pieces = pieceIds.map((id) => findPieceInDesign(design, id));
+  const pieces = normalizedPieceIds.map((id) => findPieceInDesign(design, id));
   const externalConnections: Array<{
     connection: Connection;
     requiredPort: Port;
@@ -2308,7 +2353,7 @@ export const fixPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: Piec
 export const fixPiecesInDesign = (kit: Kit, designId: DesignIdLike, pieceIds: PieceIdLike[]): DesignDiff => {
   const normalizedDesignId = designIdLikeToDesignId(designId);
   const normalizedPieceIds = pieceIds.map(pieceIdLikeToPieceId);
-  const parentConnections = normalizedPieceIds.map((pieceId) => findParentConnectionForPieceInDesign(kit, normalizedDesignId, pieceId));
+  const parentConnections = normalizedPieceIds.map((pieceId) => findParentConnectionForPieceInDesign(kit, normalizedDesignId, pieceId.id_));
 
   return {
     connections: {

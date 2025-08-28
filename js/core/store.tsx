@@ -67,6 +67,7 @@ import {
   typeIdLikeToTypeId,
 } from "./semio";
 
+
 // #region Constants
 
 export enum Mode {
@@ -93,7 +94,20 @@ export type Subscribe = () => void;
 export type Unsubscribe = () => void;
 export type Disposable = () => void;
 export type Url = string;
-type Merge<A, B> = { [K in keyof A | keyof B]: K extends keyof A ? (K extends keyof B ? (A[K] extends object ? (B[K] extends object ? Merge<A[K], B[K]> : A[K] | B[K]) : A[K] | B[K]) : A[K]) : K extends keyof B ? B[K] : never };
+// Simplified merge type
+type Merge<A, B> = {
+  [K in keyof A | keyof B]: K extends keyof A
+  ? K extends keyof B
+  ? A[K] extends object
+  ? B[K] extends object
+  ? Merge<A[K], B[K]>
+  : A[K] | B[K]
+  : A[K] | B[K]
+  : A[K]
+  : K extends keyof B
+  ? B[K]
+  : never;
+};
 
 export interface DesignEditorStep {
   diff?: KitDiff;
@@ -105,7 +119,7 @@ export interface DesignEditorEdit {
   undo: DesignEditorStep;
 }
 
-export interface YStore {}
+export interface YStore { }
 
 export interface FileSnapshot {
   snapshot(): SemioFile;
@@ -118,9 +132,9 @@ export interface FileSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
-export interface FileStore extends FileSnapshot {}
+export interface FileStore extends FileSnapshot { }
 
-export interface FileStoreFull extends FileSnapshot, FileActions, FileSubscriptions {}
+export interface FileStoreFull extends FileSnapshot, FileActions, FileSubscriptions { }
 
 export interface RepresentationSnapshot {
   snapshot(): Representation;
@@ -134,9 +148,9 @@ export interface RepresentationSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
-export interface RepresentationStore extends RepresentationSnapshot {}
+export interface RepresentationStore extends RepresentationSnapshot { }
 
-export interface RepresentationStoreFull extends RepresentationSnapshot, RepresentationActions, RepresentationSubscriptions {}
+export interface RepresentationStoreFull extends RepresentationSnapshot, RepresentationActions, RepresentationSubscriptions { }
 
 export interface PortSnapshot {
   snapshot(): Port;
@@ -147,8 +161,8 @@ export interface PortActions {
 export interface PortSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-export interface PortStore extends PortSnapshot {}
-export interface PortStoreFull extends PortSnapshot, PortActions, PortSubscriptions {}
+export interface PortStore extends PortSnapshot { }
+export interface PortStoreFull extends PortSnapshot, PortActions, PortSubscriptions { }
 
 export interface TypeSnapshot {
   snapshot(): Type;
@@ -167,8 +181,8 @@ export interface TypeChildStoresFull {
   representations: Map<RepresentationId, RepresentationStoreFull>;
   ports: Map<PortId, PortStoreFull>;
 }
-export interface TypeStore extends TypeSnapshot, TypeChildStores {}
-export interface TypeStoreFull extends TypeSnapshot, TypeChildStoresFull, TypeActions, TypeSubscriptions {}
+export interface TypeStore extends TypeSnapshot, TypeChildStores { }
+export interface TypeStoreFull extends TypeSnapshot, TypeChildStoresFull, TypeActions, TypeSubscriptions { }
 
 export interface PieceSnapshot {
   snapshot(): Piece;
@@ -179,10 +193,10 @@ export interface PieceActions {
 export interface PieceSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-export interface PieceChildStores {}
-export interface PieceChildStoresFull {}
-export interface PieceStore extends PieceSnapshot, PieceChildStores {}
-export interface PieceStoreFull extends PieceSnapshot, PieceChildStoresFull, PieceActions, PieceSubscriptions {}
+export interface PieceChildStores { }
+export interface PieceChildStoresFull { }
+export interface PieceStore extends PieceSnapshot, PieceChildStores { }
+export interface PieceStoreFull extends PieceSnapshot, PieceChildStoresFull, PieceActions, PieceSubscriptions { }
 
 export interface ConnectionSnapshot {
   snapshot(): Connection;
@@ -193,8 +207,8 @@ export interface ConnectionActions {
 export interface ConnectionSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-export interface ConnectionStore extends ConnectionSnapshot {}
-export interface ConnectionStoreFull extends ConnectionSnapshot, ConnectionActions, ConnectionSubscriptions {}
+export interface ConnectionStore extends ConnectionSnapshot { }
+export interface ConnectionStoreFull extends ConnectionSnapshot, ConnectionActions, ConnectionSubscriptions { }
 
 export interface DesignSnapshot {
   snapshot(): Design;
@@ -213,8 +227,8 @@ export interface DesignChildStoresFull {
   pieces: Map<PieceId, PieceStoreFull>;
   connections: Map<ConnectionId, ConnectionStoreFull>;
 }
-export interface DesignStore extends DesignSnapshot, DesignChildStores {}
-export interface DesignStoreFull extends DesignSnapshot, DesignActions, DesignSubscriptions, DesignChildStoresFull {}
+export interface DesignStore extends DesignSnapshot, DesignChildStores { }
+export interface DesignStoreFull extends DesignSnapshot, DesignActions, DesignSubscriptions, DesignChildStoresFull { }
 
 export interface KitSnapshot {
   snapshot(): Kit;
@@ -253,8 +267,8 @@ export interface KitChildStoresFull {
   designs: Map<DesignId, DesignStoreFull>;
   files: Map<Url, FileStoreFull>;
 }
-export interface KitStore extends KitSnapshot, KitChildStores, KitFileUrls, KitCommands, KitSubscriptions {}
-export interface KitStoreFull extends KitSnapshot, KitActions, KitSubscriptions, KitCommandsFull, KitChildStoresFull, KitFileUrls {}
+export interface KitStore extends KitSnapshot, KitChildStores, KitFileUrls, KitCommands, KitSubscriptions { }
+export interface KitStoreFull extends KitSnapshot, KitActions, KitSubscriptions, KitCommandsFull, KitChildStoresFull, KitFileUrls { }
 
 export interface DesignEditorId {
   kitId: KitId;
@@ -334,8 +348,8 @@ export interface DesignEditorCommandsFull {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
   register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable;
 }
-export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands {}
-export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, Merge<DesignEditorActions, DesignEditorSubscriptions> {}
+export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands { }
+export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, Merge<DesignEditorActions, DesignEditorSubscriptions> { }
 export interface SketchpadState {
   mode: Mode;
   theme: Theme;
@@ -399,7 +413,7 @@ export interface SketchpadCommandsFull {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
   register(command: string, callback: (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult): Disposable;
 }
-export interface SketchpadStore extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStores {}
+export interface SketchpadStore extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStores { }
 export interface SketchpadStoreFull extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStoresFull, SketchpadActions {
   on: SketchpadSubscriptions;
 }
@@ -407,6 +421,19 @@ export interface SketchpadStoreFull extends SketchpadSnapshot, SketchpadCommands
 // #endregion Api
 
 // #region Stores
+
+// Base class for common functionality
+abstract class BaseYStore<TYObject extends Y.AbstractType<any>> {
+  protected abstract yObject: TYObject;
+
+  protected createObserver = (subscribe: Subscribe, deep?: boolean): Unsubscribe => {
+    return createObserver(this.yObject, subscribe, deep);
+  };
+
+  changed = (subscribe: Subscribe, deep?: boolean) => {
+    return this.createObserver(subscribe, deep);
+  };
+}
 
 type YAuthor = Y.Map<string>;
 type YAuthors = Y.Map<YAuthor>;
@@ -481,21 +508,21 @@ function createAttribute(attribute: Attribute): YAttribute {
 
 function createAttributes(attributes: Attribute[] | undefined): YAttributes {
   const yArr = new Y.Array<YAttribute>();
-  (attributes || []).forEach((q) => yArr.push([createAttribute(q)]));
+  (attributes || []).forEach((attr) => yArr.push([createAttribute(attr)]));
   return yArr;
 }
 
 function getAttributes(yArr: YAttributes | undefined): Attribute[] {
   if (!yArr) return [];
-  const list: Attribute[] = [];
+  const attributes: Attribute[] = [];
   yArr.forEach((yMap: YAttribute) => {
-    list.push({
+    attributes.push({
       key: yMap.get("key") as string,
       value: yMap.get("value") as string | undefined,
       definition: yMap.get("definition") as string | undefined,
     });
   });
-  return list;
+  return attributes;
 }
 
 function createAuthor(author: Author): YAuthor {
@@ -507,20 +534,146 @@ function createAuthor(author: Author): YAuthor {
 
 function createAuthors(authors: Author[] | undefined): YAuthors {
   const yAuthors = new Y.Map<YAuthor>();
-  (authors || []).forEach((a) => yAuthors.set(a.name, createAuthor(a)));
+  (authors || []).forEach((author) => yAuthors.set(author.name, createAuthor(author)));
   return yAuthors;
 }
 
 function getAuthors(yAuthors: YAuthors | undefined): Author[] {
   if (!yAuthors) return [];
   const authors: Author[] = [];
-  yAuthors.forEach((yAuthor: YAuthor) =>
+  yAuthors.forEach((yAuthor: YAuthor) => {
     authors.push({
       name: yAuthor.get("name") as string,
       email: (yAuthor.get("email") as string) || "",
-    }),
-  );
+    });
+  });
   return authors;
+}
+
+// Helper for creating Vec3 Y.Map objects
+function createVec3(vec: { x: number; y: number; z: number }): Y.Map<number> {
+  const yVec = new Y.Map<number>();
+  yVec.set("x", vec.x);
+  yVec.set("y", vec.y);
+  yVec.set("z", vec.z);
+  return yVec;
+}
+
+function getVec3(yVec: Y.Map<number>): { x: number; y: number; z: number } {
+  return {
+    x: yVec.get("x") as number,
+    y: yVec.get("y") as number,
+    z: yVec.get("z") as number,
+  };
+}
+
+function updateVec3(yVec: Y.Map<number>, diff: { x?: number; y?: number; z?: number }): void {
+  if (diff.x !== undefined) yVec.set("x", diff.x);
+  if (diff.y !== undefined) yVec.set("y", diff.y);
+  if (diff.z !== undefined) yVec.set("z", diff.z);
+}
+
+// Helper for creating Vec2 Y.Map objects
+function createVec2(vec: { x: number; y: number }): Y.Map<number> {
+  const yVec = new Y.Map<number>();
+  yVec.set("x", vec.x);
+  yVec.set("y", vec.y);
+  return yVec;
+}
+
+function getVec2(yVec: Y.Map<number>): { x: number; y: number } {
+  return {
+    x: yVec.get("x") as number,
+    y: yVec.get("y") as number,
+  };
+}
+
+function updateVec2(yVec: Y.Map<number>, diff: { x?: number; y?: number }): void {
+  if (diff.x !== undefined) yVec.set("x", diff.x);
+  if (diff.y !== undefined) yVec.set("y", diff.y);
+}
+
+// Helper for string arrays
+function createStringArray(items: string[]): Y.Array<string> {
+  const yArr = new Y.Array<string>();
+  items.forEach((item) => yArr.push([item]));
+  return yArr;
+}
+
+function updateStringArray(yArr: Y.Array<string>, items: string[]): void {
+  yArr.delete(0, yArr.length);
+  items.forEach((item) => yArr.push([item]));
+}
+
+// Helper for attributes update
+function updateAttributes(yAttributes: YAttributes, attributes: Attribute[]): void {
+  yAttributes.delete(0, yAttributes.length);
+  attributes.forEach((attr) => yAttributes.push([createAttribute(attr)]));
+}
+
+// Generic observer helper
+function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscribe, deep?: boolean): Unsubscribe {
+  const observer = () => subscribe();
+  if (deep) {
+    yObject.observeDeep(observer);
+    return () => yObject.unobserveDeep(observer);
+  } else {
+    yObject.observe(observer);
+    return () => yObject.unobserve(observer);
+  }
+}
+
+// Helper for UUID-based ID mapping operations
+class IdMapper<T> {
+  private readonly idToUuid = new Map<T, string>();
+
+  getId(item: T): string | undefined {
+    return this.idToUuid.get(item);
+  }
+
+  setId(item: T, uuid?: string): string {
+    const id = uuid || uuidv4();
+    this.idToUuid.set(item, id);
+    return id;
+  }
+
+  deleteId(item: T): boolean {
+    return this.idToUuid.delete(item);
+  }
+
+  has(item: T): boolean {
+    return this.idToUuid.has(item);
+  }
+}
+
+// Helper for conditional property assignment
+function setIfDefined<T>(map: Y.Map<any>, key: string, value: T | undefined): void {
+  if (value !== undefined) {
+    map.set(key, value);
+  }
+}
+
+// Helper for safe property access with defaults
+function getWithDefault<T>(map: Y.Map<any>, key: string, defaultValue: T): T {
+  const value = map.get(key);
+  return value !== undefined ? value : defaultValue;
+}
+
+// Helper for plane objects
+function createPlane(plane: { origin: { x: number; y: number; z: number }; xAxis: { x: number; y: number; z: number }; yAxis: { x: number; y: number; z: number } }): Y.Map<any> {
+  const yPlane = new Y.Map<any>();
+  yPlane.set("origin", createVec3(plane.origin));
+  yPlane.set("xAxis", createVec3(plane.xAxis));
+  yPlane.set("yAxis", createVec3(plane.yAxis));
+  return yPlane;
+}
+
+function getPlane(yPlane: Y.Map<any>): { origin: { x: number; y: number; z: number }; xAxis: { x: number; y: number; z: number }; yAxis: { x: number; y: number; z: number } } {
+  return {
+    origin: getVec3(yPlane.get("origin") as Y.Map<number>),
+    xAxis: getVec3(yPlane.get("xAxis") as Y.Map<number>),
+    yAxis: getVec3(yPlane.get("yAxis") as Y.Map<number>),
+  };
 }
 
 class YFileStore implements FileStoreFull {
@@ -564,14 +717,7 @@ class YFileStore implements FileStoreFull {
   };
 
   changed = (subscribe: Subscribe, deep?: boolean) => {
-    const observer = () => subscribe();
-    if (deep) {
-      this.yFile.observeDeep(observer);
-      return () => this.yFile.unobserveDeep(observer);
-    } else {
-      this.yFile.observe(observer);
-      return () => this.yFile.unobserve(observer);
-    }
+    return createObserver(this.yFile, subscribe, deep);
   };
 }
 
@@ -583,9 +729,7 @@ class YRepresentationStore implements RepresentationStoreFull {
     this.parent = parent;
     this.yRepresentation.set("url", representation.url);
     this.yRepresentation.set("description", representation.description || "");
-    const yTags = new Y.Array<string>();
-    this.yRepresentation.set("tags", yTags);
-    (representation.tags || []).forEach((t) => yTags.push([t]));
+    this.yRepresentation.set("tags", createStringArray(representation.tags || []));
     this.yRepresentation.set("attributes", createAttributes(representation.attributes));
   }
 
@@ -603,26 +747,15 @@ class YRepresentationStore implements RepresentationStoreFull {
     if (diff.url !== undefined) this.yRepresentation.set("url", diff.url);
     if (diff.description !== undefined) this.yRepresentation.set("description", diff.description);
     if (diff.tags !== undefined) {
-      const yTags = this.yRepresentation.get("tags") as Y.Array<string>;
-      yTags.delete(0, yTags.length);
-      diff.tags.forEach((tag) => yTags.push([tag]));
+      updateStringArray(this.yRepresentation.get("tags") as Y.Array<string>, diff.tags);
     }
     if (diff.attributes !== undefined) {
-      const yAttributes = this.yRepresentation.get("attributes") as YAttributes;
-      yAttributes.delete(0, yAttributes.length);
-      diff.attributes.forEach((q) => yAttributes.push([createAttribute(q)]));
+      updateAttributes(this.yRepresentation.get("attributes") as YAttributes, diff.attributes);
     }
   };
 
   changed = (subscribe: Subscribe, deep?: boolean) => {
-    const observer = () => subscribe();
-    if (deep) {
-      this.yRepresentation.observeDeep(observer);
-      return () => this.yRepresentation.unobserveDeep(observer);
-    } else {
-      this.yRepresentation.observe(observer);
-      return () => this.yRepresentation.unobserve(observer);
-    }
+    return createObserver(this.yRepresentation, subscribe, deep);
   };
 }
 
@@ -637,22 +770,10 @@ class YPortStore implements PortStoreFull {
     this.yPort.set("mandatory", port.mandatory || false);
     this.yPort.set("family", port.family || "");
     this.yPort.set("t", port.t);
-    const yCompatibleFamilies = new Y.Array<string>();
-    this.yPort.set("compatibleFamilies", yCompatibleFamilies);
-    (port.compatibleFamilies || []).forEach((f) => yCompatibleFamilies.push([f]));
-    const yPoint = new Y.Map<number>();
-    yPoint.set("x", port.point.x);
-    yPoint.set("y", port.point.y);
-    yPoint.set("z", port.point.z);
-    this.yPort.set("point", yPoint);
-    const yDirection = new Y.Map<number>();
-    yDirection.set("x", port.direction.x);
-    yDirection.set("y", port.direction.y);
-    yDirection.set("z", port.direction.z);
-    this.yPort.set("direction", yDirection);
-    const yAttributes = new Y.Array<YAttribute>();
-    this.yPort.set("attributes", yAttributes);
-    (port.attributes || []).forEach((q) => yAttributes.push([createAttribute(q)]));
+    this.yPort.set("compatibleFamilies", createStringArray(port.compatibleFamilies || []));
+    this.yPort.set("point", createVec3(port.point));
+    this.yPort.set("direction", createVec3(port.direction));
+    this.yPort.set("attributes", createAttributes(port.attributes));
   }
 
   snapshot = (): Port => {
@@ -666,16 +787,8 @@ class YPortStore implements PortStoreFull {
       mandatory: this.yPort.get("mandatory") as boolean,
       family: (this.yPort.get("family") as string) || "",
       compatibleFamilies: yCompatibleFamilies ? yCompatibleFamilies.toArray() : [],
-      point: {
-        x: yPoint.get("x") as number,
-        y: yPoint.get("y") as number,
-        z: yPoint.get("z") as number,
-      },
-      direction: {
-        x: yDirection.get("x") as number,
-        y: yDirection.get("y") as number,
-        z: yDirection.get("z") as number,
-      },
+      point: getVec3(yPoint),
+      direction: getVec3(yDirection),
       t: this.yPort.get("t") as number,
       attributes: getAttributes(this.yPort.get("attributes") as YAttributes),
     };
@@ -688,38 +801,21 @@ class YPortStore implements PortStoreFull {
     if (diff.family !== undefined) this.yPort.set("family", diff.family);
     if (diff.t !== undefined) this.yPort.set("t", diff.t);
     if (diff.compatibleFamilies !== undefined) {
-      const yCompatibleFamilies = this.yPort.get("compatibleFamilies") as Y.Array<string>;
-      yCompatibleFamilies.delete(0, yCompatibleFamilies.length);
-      diff.compatibleFamilies.forEach((family) => yCompatibleFamilies.push([family]));
+      updateStringArray(this.yPort.get("compatibleFamilies") as Y.Array<string>, diff.compatibleFamilies);
     }
     if (diff.point !== undefined) {
-      const yPoint = this.yPort.get("point") as Y.Map<number>;
-      if (diff.point.x !== undefined) yPoint.set("x", diff.point.x);
-      if (diff.point.y !== undefined) yPoint.set("y", diff.point.y);
-      if (diff.point.z !== undefined) yPoint.set("z", diff.point.z);
+      updateVec3(this.yPort.get("point") as Y.Map<number>, diff.point);
     }
     if (diff.direction !== undefined) {
-      const yDirection = this.yPort.get("direction") as Y.Map<number>;
-      if (diff.direction.x !== undefined) yDirection.set("x", diff.direction.x);
-      if (diff.direction.y !== undefined) yDirection.set("y", diff.direction.y);
-      if (diff.direction.z !== undefined) yDirection.set("z", diff.direction.z);
+      updateVec3(this.yPort.get("direction") as Y.Map<number>, diff.direction);
     }
     if (diff.attributes !== undefined) {
-      const yAttributes = this.yPort.get("attributes") as YAttributes;
-      yAttributes.delete(0, yAttributes.length);
-      createAttributes(diff.attributes).forEach((q) => yAttributes.push([q]));
+      updateAttributes(this.yPort.get("attributes") as YAttributes, diff.attributes);
     }
   };
 
   changed = (subscribe: Subscribe, deep?: boolean) => {
-    const observer = () => subscribe();
-    if (deep) {
-      this.yPort.observeDeep(observer);
-      return () => this.yPort.unobserveDeep(observer);
-    } else {
-      this.yPort.observe(observer);
-      return () => this.yPort.unobserve(observer);
-    }
+    return createObserver(this.yPort, subscribe, deep);
   };
 }
 
@@ -800,14 +896,7 @@ class YTypeStore implements TypeStoreFull {
   };
 
   changed = (subscribe: Subscribe, deep?: boolean) => {
-    const observer = () => subscribe();
-    if (deep) {
-      this.yType.observeDeep(observer);
-      return () => this.yType.unobserveDeep(observer);
-    } else {
-      this.yType.observe(observer);
-      return () => this.yType.unobserve(observer);
-    }
+    return createObserver(this.yType, subscribe, deep);
   };
 }
 
@@ -824,33 +913,12 @@ class YPieceStore implements PieceStoreFull {
     if (piece.type.variant) yType.set("variant", piece.type.variant);
     this.yPiece.set("type", yType);
     if (piece.plane) {
-      const yPlane = new Y.Map<any>();
-      const yOrigin = new Y.Map<number>();
-      yOrigin.set("x", piece.plane.origin.x);
-      yOrigin.set("y", piece.plane.origin.y);
-      yOrigin.set("z", piece.plane.origin.z);
-      yPlane.set("origin", yOrigin);
-      const yXAxis = new Y.Map<number>();
-      yXAxis.set("x", piece.plane.xAxis.x);
-      yXAxis.set("y", piece.plane.xAxis.y);
-      yXAxis.set("z", piece.plane.xAxis.z);
-      yPlane.set("xAxis", yXAxis);
-      const yYAxis = new Y.Map<number>();
-      yYAxis.set("x", piece.plane.yAxis.x);
-      yYAxis.set("y", piece.plane.yAxis.y);
-      yYAxis.set("z", piece.plane.yAxis.z);
-      yPlane.set("yAxis", yYAxis);
-      this.yPiece.set("plane", yPlane);
+      this.yPiece.set("plane", createPlane(piece.plane));
     }
     if (piece.center) {
-      const yCenter = new Y.Map<number>();
-      yCenter.set("x", piece.center.x);
-      yCenter.set("y", piece.center.y);
-      this.yPiece.set("center", yCenter);
+      this.yPiece.set("center", createVec2(piece.center));
     }
-    const yAttributes = new Y.Array<YAttribute>();
-    this.yPiece.set("attributes", yAttributes);
-    (piece.attributes || []).forEach((q) => yAttributes.push([createAttribute(q)]));
+    this.yPiece.set("attributes", createAttributes(piece.attributes));
   }
 
   snapshot = (): Piece => {
@@ -868,32 +936,10 @@ class YPieceStore implements PieceStoreFull {
       attributes: getAttributes(this.yPiece.get("attributes") as YAttributes),
     };
     if (yPlane) {
-      const yOrigin = yPlane.get("origin") as Y.Map<number>;
-      const yXAxis = yPlane.get("xAxis") as Y.Map<number>;
-      const yYAxis = yPlane.get("yAxis") as Y.Map<number>;
-      piece.plane = {
-        origin: {
-          x: yOrigin.get("x") as number,
-          y: yOrigin.get("y") as number,
-          z: yOrigin.get("z") as number,
-        },
-        xAxis: {
-          x: yXAxis.get("x") as number,
-          y: yXAxis.get("y") as number,
-          z: yXAxis.get("z") as number,
-        },
-        yAxis: {
-          x: yYAxis.get("x") as number,
-          y: yYAxis.get("y") as number,
-          z: yYAxis.get("z") as number,
-        },
-      };
+      piece.plane = getPlane(yPlane);
     }
     if (yCenter) {
-      piece.center = {
-        x: yCenter.get("x") as number,
-        y: yCenter.get("y") as number,
-      };
+      piece.center = getVec2(yCenter);
     }
     return piece;
   };
@@ -910,48 +956,29 @@ class YPieceStore implements PieceStoreFull {
       const yPlane = this.yPiece.get("plane") as Y.Map<any>;
       if (yPlane) {
         if (diff.plane.origin !== undefined) {
-          const yOrigin = yPlane.get("origin") as Y.Map<number>;
-          if (diff.plane.origin.x !== undefined) yOrigin.set("x", diff.plane.origin.x);
-          if (diff.plane.origin.y !== undefined) yOrigin.set("y", diff.plane.origin.y);
-          if (diff.plane.origin.z !== undefined) yOrigin.set("z", diff.plane.origin.z);
+          updateVec3(yPlane.get("origin") as Y.Map<number>, diff.plane.origin);
         }
         if (diff.plane.xAxis !== undefined) {
-          const yXAxis = yPlane.get("xAxis") as Y.Map<number>;
-          if (diff.plane.xAxis.x !== undefined) yXAxis.set("x", diff.plane.xAxis.x);
-          if (diff.plane.xAxis.y !== undefined) yXAxis.set("y", diff.plane.xAxis.y);
-          if (diff.plane.xAxis.z !== undefined) yXAxis.set("z", diff.plane.xAxis.z);
+          updateVec3(yPlane.get("xAxis") as Y.Map<number>, diff.plane.xAxis);
         }
         if (diff.plane.yAxis !== undefined) {
-          const yYAxis = yPlane.get("yAxis") as Y.Map<number>;
-          if (diff.plane.yAxis.x !== undefined) yYAxis.set("x", diff.plane.yAxis.x);
-          if (diff.plane.yAxis.y !== undefined) yYAxis.set("y", diff.plane.yAxis.y);
-          if (diff.plane.yAxis.z !== undefined) yYAxis.set("z", diff.plane.yAxis.z);
+          updateVec3(yPlane.get("yAxis") as Y.Map<number>, diff.plane.yAxis);
         }
       }
     }
     if (diff.center !== undefined) {
       const yCenter = this.yPiece.get("center") as Y.Map<number>;
       if (yCenter) {
-        if (diff.center.x !== undefined) yCenter.set("x", diff.center.x);
-        if (diff.center.y !== undefined) yCenter.set("y", diff.center.y);
+        updateVec2(yCenter, diff.center);
       }
     }
     if (diff.attributes !== undefined) {
-      const yAttributes = this.yPiece.get("attributes") as YAttributes;
-      yAttributes.delete(0, yAttributes.length);
-      diff.attributes.forEach((q) => yAttributes.push([createAttribute(q)]));
+      updateAttributes(this.yPiece.get("attributes") as YAttributes, diff.attributes);
     }
   };
 
   changed = (subscribe: Subscribe, deep?: boolean) => {
-    const observer = () => subscribe();
-    if (deep) {
-      this.yPiece.observeDeep(observer);
-      return () => this.yPiece.unobserveDeep(observer);
-    } else {
-      this.yPiece.observe(observer);
-      return () => this.yPiece.unobserve(observer);
-    }
+    return createObserver(this.yPiece, subscribe, deep);
   };
 }
 
@@ -996,9 +1023,7 @@ class YConnectionStore implements ConnectionStoreFull {
     this.yConnection.set("tilt", connection.tilt || 0);
     this.yConnection.set("x", connection.x || 0);
     this.yConnection.set("y", connection.y || 0);
-    const yAttributes = new Y.Array<YAttribute>();
-    this.yConnection.set("attributes", yAttributes);
-    (connection.attributes || []).forEach((q) => yAttributes.push([createAttribute(q)]));
+    this.yConnection.set("attributes", createAttributes(connection.attributes));
   }
 
   snapshot = (): Connection => {
@@ -1048,14 +1073,7 @@ class YConnectionStore implements ConnectionStoreFull {
   };
 
   changed = (subscribe: Subscribe, deep?: boolean) => {
-    const observer = () => subscribe();
-    if (deep) {
-      this.yConnection.observeDeep(observer);
-      return () => this.yConnection.unobserveDeep(observer);
-    } else {
-      this.yConnection.observe(observer);
-      return () => this.yConnection.unobserve(observer);
-    }
+    return createObserver(this.yConnection, subscribe, deep);
   };
 }
 
@@ -1217,7 +1235,7 @@ class YKitStore implements KitStoreFull {
 
   constructor(parent: SketchpadStore, kit: Kit) {
     this.parent = parent;
-    
+
     this.yKit.set("uuid", uuidv4());
     this.yKit.set("name", kit.name);
     this.yKit.set("description", kit.description || "");
@@ -1483,9 +1501,9 @@ class YDesignEditorStore implements DesignEditorStoreFull {
       pieceIds: selectedPieceIds ? selectedPieceIds.toArray().map((id) => ({ id_: id })) : [],
       connectionIds: selectedConnections
         ? selectedConnections.toArray().map((id) => ({
-            connected: { piece: { id_: id.split("->")[0] || "" } },
-            connecting: { piece: { id_: id.split("->")[1] || "" } },
-          }))
+          connected: { piece: { id_: id.split("->")[0] || "" } },
+          connecting: { piece: { id_: id.split("->")[1] || "" } },
+        }))
         : [],
     };
   }
@@ -1861,7 +1879,7 @@ class YSketchpadStore implements SketchpadStoreFull {
       // This is a simplified approach - would need more sophisticated tracking in full implementation
       const observer = () => subscribe();
       // Note: Would need to observe kit document creation across all kit docs
-      return () => {}; // Placeholder unsubscribe
+      return () => { }; // Placeholder unsubscribe
     },
     designEditor: (subscribe: Subscribe): Unsubscribe => {
       // Observe design editor stores map changes
@@ -1875,11 +1893,11 @@ class YSketchpadStore implements SketchpadStoreFull {
   deleted = {
     kit: (subscribe: Subscribe): Unsubscribe => {
       // Would need to observe kit document removal
-      return () => {}; // Placeholder
+      return () => { }; // Placeholder
     },
     designEditor: (subscribe: Subscribe): Unsubscribe => {
       // Would need to observe design editor removal
-      return () => {}; // Placeholder
+      return () => { }; // Placeholder
     },
   };
 
@@ -2004,7 +2022,7 @@ const sketchpadCommands = {
   },
   "semio.sketchpad.createKit": (context: SketchpadCommandContext, kit: Kit): SketchpadCommandResult => {
     if (!kit.name) throw new Error("Kit name is required to create a kit.");
-    
+
     const kitId = kitIdLikeToKitId(kit);
     if (context.store.kits.has(kitId)) {
       throw new Error(`Kit (${kitId.name}, ${kitId.version || ""}) already exists.`);
@@ -2015,7 +2033,7 @@ const sketchpadCommands = {
     yKitDoc.getMap("kit").set("data", yKitStore.yKit);
     context.store.yKitDocs.set(kitId, yKitDoc);
     context.store.kits.set(kitId, yKitStore);
-    
+
     return {
       diff: {},
     };
@@ -3009,10 +3027,10 @@ export function useDesigns(): DesignId[] {
   const kit = useKit();
   return kit.designs
     ? kit.designs.map((design) => ({
-        name: design.name,
-        variant: design.variant,
-        view: design.view,
-      }))
+      name: design.name,
+      variant: design.variant,
+      view: design.view,
+    }))
     : [];
 }
 

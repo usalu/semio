@@ -79,6 +79,7 @@ import PySide6.QtWidgets
 import requests
 import sqlalchemy
 import sqlalchemy.exc
+import sqlalchemy.orm
 import sqlmodel
 import starlette
 import starlette_graphene3
@@ -166,8 +167,8 @@ def decode(value: str) -> str:
     return urllib.parse.unquote(value)
 
 
-def encodeList(list: list[str]) -> str:
-    return ",".join([encode(t) for t in list])
+def encodeList(items: list[str]) -> str:
+    return ",".join([encode(t) for t in items])
 
 
 def decodeList(encodedList: str) -> list[str]:
@@ -182,7 +183,7 @@ def encodeRecursiveAnyList(recursiveAnyList: RecursiveAnyList) -> str:
 
 
 # I would just have to prove Applicative <=>. I miss you Haskell (。﹏。)
-def id(recursiveAnyList: RecursiveAnyList) -> str:
+def create_id(recursiveAnyList: RecursiveAnyList) -> str:
     """🆔 Turn any into `encoded(str(any))` or a recursive list into a flat comma [,] separated encoded list."""
     if not isinstance(recursiveAnyList, list):
         return encode(str(recursiveAnyList))
@@ -196,7 +197,7 @@ def pretty(number: float) -> str:
     return f"{number:.5f}".rstrip("0").rstrip(".")
 
 
-def changeValues(c: dict | list, key: str, func: callable) -> None:
+def changeValues(c: dict | list, key: str, func: typing.Callable[[typing.Any], typing.Any]) -> None:
     if isinstance(c, dict):
         if key in c:
             c[key] = func(c[key])
@@ -209,7 +210,7 @@ def changeValues(c: dict | list, key: str, func: callable) -> None:
                 changeValues(v, key, func)
 
 
-def changeKeys(c: dict | list, func: callable) -> None:
+def changeKeys(c: dict | list, func: typing.Callable[[typing.Any], typing.Any]) -> None:
     if isinstance(c, dict):
         for k in list(c.keys()):
             newKey = func(k)
@@ -522,7 +523,7 @@ class Entity(Model, abc.ABC):
 
     def id(self) -> str:
         """🆔 The id of the entity within its parent."""
-        return id(self.idMembers())
+        return create_id(self.idMembers())
 
     def guid(self) -> str:
         """🆔 A Globally Unique Identifier (GUID) of the entity."""
@@ -539,11 +540,14 @@ class Entity(Model, abc.ABC):
     # @abc.abstractmethod
     def empty(self) -> "Entity":
         """🪣 Empty all props and children of the entity."""
+        return self.__class__()
 
     # TODO: Automatic updating based on props.
     # @abc.abstractmethod
     def update(self, other: "Entity") -> "Entity":
         """🔄 Update the props of the entity."""
+        return self
+        return self
 
 
 class Table(Model, abc.ABC):
@@ -744,9 +748,9 @@ class Representation(RepresentationDescriptionField, RepresentationUrlField, Tab
 
     # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
     @classmethod
-    def parse(cls: "Representation", input: str | dict | RepresentationInput | typing.Any | None) -> "Representation":
+    def parse(cls, input: str | dict | RepresentationInput | typing.Any | None) -> "Representation":
         if input is None:
-            return cls()
+            return cls(url="")
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
         props = RepresentationProps.model_validate(obj)
         entity = cls(**props.model_dump())
@@ -755,7 +759,7 @@ class Representation(RepresentationDescriptionField, RepresentationUrlField, Tab
         except KeyError:
             pass
         try:
-            entity.attributes = [Attribute.parse(attribute) for attribute in obj["attributes"]]
+            entity.attributes = [typing.cast(Attribute, Attribute.parse(attribute)) for attribute in obj["attributes"]]
         except KeyError:
             pass
         return entity
@@ -2930,8 +2934,8 @@ def cache(remoteUri: str) -> str:
 
     try:
         response = requests.get(remoteUri)
-        response.risefor_status()
-    except requests.exceptions.HTTPError as e:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError:
         # TODO: Better error message.
         raise KitNotFound(remoteUri)
 
@@ -2970,13 +2974,14 @@ class SqliteStore(DatabaseStore):
         sqlitePath = pathlib.Path(path) / pathlib.Path(KIT_LOCAL_FOLDERNAME) / pathlib.Path(KIT_LOCAL_FILENAME)
         connectionString = f"sqlite:///{sqlitePath}"
         engine = sqlalchemy.create_engine(connectionString, echo=True)
-        session = sqlalchemy.orm.sessionmaker(bind=engine)()
+        SessionMaker = sqlalchemy.orm.sessionmaker(bind=engine)
         try:  # change uri if local kit is already created
-            kit = session.query(Kit).first()
-            kit.uri = uri
-            session.commit()
-            session.close()
-        except sqlalchemy.exc.OperationalError as e:
+            with SessionMaker() as session:
+                kit = session.query(Kit).first()
+                if kit:
+                    kit.uri = uri
+                    session.commit()
+        except sqlalchemy.exc.OperationalError:
             pass
         return SqliteStore(uri, engine, sqlitePath)
 
@@ -2986,12 +2991,12 @@ class SqliteStore(DatabaseStore):
             exist_ok=True,
         )
         sqlmodel.SQLModel.metadata.create_all(self.engine)
-        session = sqlalchemy.orm.sessionmaker(bind=self.engine)()
-        existingSemio = session.query(Semio).one_or_none()
-        if not existingSemio:
-            session.add(Semio())
-            session.commit()
-        session.close()
+        SessionMaker = sqlalchemy.orm.sessionmaker(bind=self.engine)
+        with SessionMaker() as session:
+            existingSemio = session.query(Semio).one_or_none()
+            if not existingSemio:
+                session.add(Semio())
+                session.commit()
 
     def postDeleteKit(self: "SqliteStore") -> None:
         # sqlachemy can't maintain the connection to the database after the file is deleted.
@@ -3048,7 +3053,7 @@ def StoreFactory(uri: str) -> Store:
             if not os.path.exists(path):
                 cache(uri)
             return SqliteStore.fromUri(uri, path)
-        raise RemoteKitsNotYetSupported()
+        raise RemoteKitsNotYetSupported(uri)
     raise LocalKitUriIsNotAbsolute(uri)
 
 
@@ -3167,29 +3172,29 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
     # TODO: Try closest embedding instead of smallest Levenshtein distance.
     for piece in designClone.pieces:
         pieceD[piece.id_] = piece
-        if piece.type.name not in typeD:
+        if piece.type and piece.type.name not in typeD:
             # TODO: Remove piece if type name is not found instead of taking the first.
             try:
                 piece.type.name = difflib.get_close_matches(piece.type.name, typeD.keys(), n=1)[0]
-            except Error as e:  # TODO: Make more specific
-                piece.type.name = typeD.keys()[0]
-        if piece.type.variant not in typeD[piece.type.name]:
+            except Error:  # TODO: Make more specific
+                piece.type.name = list(typeD.keys())[0]
+        if piece.type and piece.type.name and piece.type.variant not in typeD[piece.type.name]:
             try:
                 piece.type.variant = difflib.get_close_matches(piece.type.variant, typeD[piece.type.name].keys(), n=1)[0]
-            except Error as e:  # TODO: Make more specific
-                piece.type.variant = typeD[piece.type.name].keys()[0]
+            except Error:  # TODO: Make more specific
+                piece.type.variant = list(typeD[piece.type.name].keys())[0]
 
     validConnections = []
     for connection in designClone.connections:
         if connection.connected.piece.id_ not in pieceD:
             try:
                 connection.connected.piece.id_ = difflib.get_close_matches(connection.connected.piece.id_, pieceD.keys(), n=1)[0]
-            except Error as e:
+            except Error:
                 continue
         if connection.connecting.piece.id_ not in pieceD:
             try:
                 connection.connecting.piece.id_ = difflib.get_close_matches(connection.connecting.piece.id_, pieceD.keys(), n=1)[0]
-            except Error as e:
+            except Error:
                 continue
         connectedType = typeD[pieceD[connection.connected.piece.id_].type.name][pieceD[connection.connected.piece.id_].type.variant]
         connectingType = typeD[pieceD[connection.connecting.piece.id_].type.name][pieceD[connection.connecting.piece.id_].type.variant]
@@ -3217,8 +3222,8 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
 
 try:
     openaiClient = openai.Client()
-except openai.OpenAIError as e:
-    pass
+except openai.OpenAIError:
+    openaiClient = None
 
 systemPrompt = """You are a kit-of-parts design assistant.
 Rules:
@@ -3381,6 +3386,9 @@ designResponseFormat = json.loads(
 
 def predictDesign(description: str, types: list[TypeContext], design: DesignInput | None = None) -> DesignPrediction:
     """🔮 Predict a design based on a description, the types that should be used and an optional base design."""
+    if openaiClient is None:
+        raise FeatureNotYetSupported("OpenAI client not available")
+
     prompt = designGenerationPromptTemplate.render(description=description, types=[encodeType(t) for t in types])
     logger.debug("Generated prompt: {}", prompt)
     try:
@@ -3418,54 +3426,59 @@ def predictDesign(description: str, types: list[TypeContext], design: DesignInpu
             # frequency_penalty=0,
             # presence_penalty=0,
         )
-        responseDump = {
-            "id": response.id,
-            "created": response.created,
-            "model": response.model,
-            "object": response.object,
-            "system_fingerprint": response.system_fingerprint,
-            "usage": {
-                "completion_tokens": response.usage.completion_tokens,
-                "prompt_tokens": response.usage.prompt_tokens,
-                "total_tokens": response.usage.total_tokens,
-            },
-            "_request_id": response._request_id,
-            "choices": [
-                {
-                    "finish_reason": c.finish_reason,
-                    "message": {
-                        "content": c.message.content,
-                        "refusal": c.message.refusal,
-                        "role": c.message.role,
-                    },
-                }
-                for c in response.choices
-            ],
-        }
-        logger.debug("Received response: {}", responseDump)
-    except Error as e:
-        logger.error("Error occurred: {}", e)
-        pass
+        if response.usage:
+            responseDump = {
+                "id": response.id,
+                "created": response.created,
+                "model": response.model,
+                "object": response.object,
+                "system_fingerprint": response.system_fingerprint,
+                "usage": {
+                    "completion_tokens": response.usage.completion_tokens,
+                    "prompt_tokens": response.usage.prompt_tokens,
+                    "total_tokens": response.usage.total_tokens,
+                },
+                "_request_id": response._request_id,
+                "choices": [
+                    {
+                        "finish_reason": c.finish_reason,
+                        "message": {
+                            "content": c.message.content,
+                            "refusal": c.message.refusal,
+                            "role": c.message.role,
+                        },
+                    }
+                    for c in response.choices
+                ],
+            }
+            logger.debug("Received response: {}", responseDump)
+    except Error:
+        logger.error("Error occurred during OpenAI request")
+        raise FeatureNotYetSupported("OpenAI request failed")
 
     logger.debug("Schema: {}", json.dumps(designResponseFormat, indent=4))
     logger.debug("Prompt: {}", prompt)
     logger.debug("System Prompt: {}", systemPrompt)
-    logger.debug("Predicted Design Raw: {}", json.dumps(json.loads(response.choices[0].message.content), indent=4))
 
-    result = response.choices[0]
-    if result.finish_reason == "stop" and result.message.refusal is None:
+    result = response.choices[0] if response.choices else None
+    if result and result.message.content:
+        logger.debug("Predicted Design Raw: {}", json.dumps(json.loads(result.message.content), indent=4))
+
+    if result and result.finish_reason == "stop" and result.message.refusal is None and result.message.content:
         design = decodeDesign(json.loads(result.message.content))
 
-        logger.debug("Predicted Design: {}", json.dumps(design.model_dump(), indent=4))
+        if hasattr(design, "model_dump"):
+            logger.debug("Predicted Design: {}", json.dumps(design.model_dump(), indent=4))
 
         # piece healing of variants that do not exist
-        healedDesign = healDesign(design, types)
+        healedDesign = healDesign(typing.cast(DesignPrediction, design), types)
         logger.debug(
             "Predicted Design Healed: {}",
             json.dumps(healedDesign.model_dump(), indent=4),
         )
+        return healedDesign
 
-    return healedDesign
+    raise FeatureNotYetSupported("OpenAI response was invalid or incomplete")
 
 
 # endregion Assistant

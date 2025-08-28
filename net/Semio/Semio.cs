@@ -1909,6 +1909,8 @@ public class QualityId : Model<QualityId>
 {
     [Id("🔑", "Ke", "Key", "The key of the quality.")]
     public string Key { get; set; } = "";
+    
+    public static implicit operator QualityId(Quality quality) => new() { Key = quality.Key };
 }
 
 /// <summary>
@@ -1949,6 +1951,8 @@ public class Quality : Model<Quality>
     public List<Benchmark> Benchmarks { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the quality.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
+    
+    public static implicit operator Quality(QualityId id) => new() { Key = id.Key };
 }
 
 /// <summary>
@@ -1993,6 +1997,7 @@ public class RepresentationId : Model<RepresentationId>
     [Name("🏷️", "Tg*", "Tags*", "The optional tags to group representations. No tags means default.", PropImportance.ID, skipValidation: true)]
     public List<string> Tags { get; set; } = new();
     public static implicit operator RepresentationId(Representation representation) => new() { Tags = representation.Tags };
+    public static implicit operator RepresentationId(RepresentationDiff diff) => new() { Tags = diff.Tags };
     public string ToIdString() => $"{string.Join(",", Tags.Select(t => Utility.Encode(t)))}";
     public string ToHumanIdString() => string.Join(", ", Tags);
     public override string ToString() => $"Rep({ToHumanIdString()})";
@@ -2009,6 +2014,9 @@ public class RepresentationDiff : Model<RepresentationDiff>
     public List<string> Tags { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the representation.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
+
+    public static implicit operator RepresentationDiff(RepresentationId id) => new() { Tags = id.Tags };
+    public static implicit operator RepresentationDiff(Representation representation) => new() { Url = representation.Url, Description = representation.Description, Tags = representation.Tags, Attributes = representation.Attributes };
 
     public RepresentationDiff MergeDiff(RepresentationDiff other)
     {
@@ -2051,6 +2059,9 @@ public class Representation : Model<Representation>
 
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the representation.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
+
+    public static implicit operator Representation(RepresentationId id) => new() { Tags = id.Tags };
+    public static implicit operator Representation(RepresentationDiff diff) => new() { Url = diff.Url, Description = diff.Description, Tags = diff.Tags, Attributes = diff.Attributes };
 
     public Representation ApplyDiff(RepresentationDiff diff)
     {
@@ -2130,6 +2141,9 @@ public class FileId : Model<FileId>
     public string ToIdString() => $"{Url}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"FilId({ToHumanIdString()})";
+    
+    public static implicit operator FileId(SemioFile file) => new() { Url = file.Url };
+    public static implicit operator FileId(FileDiff diff) => new() { Url = diff.Url ?? "" };
 }
 
 [Model("📄", "Fl", "Fil", "A file with content.")]
@@ -2146,6 +2160,9 @@ public class SemioFile : Model<SemioFile>
     public string ToIdString() => $"{Url}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Fil({ToHumanIdString()})";
+    
+    public static implicit operator SemioFile(FileId id) => new() { Url = id.Url };
+    public static implicit operator SemioFile(FileDiff diff) => new() { Url = diff.Url ?? "", Data = diff.Data ?? "", Size = diff.Size, Hash = diff.Hash ?? "" };
 }
 
 /// <summary>
@@ -2263,6 +2280,7 @@ public class PortId : Model<PortId>
     [JsonProperty("id_")]
     public string Id { get; set; } = "";
     public static implicit operator PortId(Port port) => new() { Id = port.Id };
+    public static implicit operator PortId(PortDiff diff) => new() { Id = diff.Id };
     public string ToIdString() => $"{Id}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Por({ToHumanIdString()})";
@@ -2290,6 +2308,9 @@ public class PortDiff : Model<PortDiff>
     public Vector? Direction { get; set; }
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
+
+    public static implicit operator PortDiff(PortId id) => new() { Id = id.Id };
+    public static implicit operator PortDiff(Port port) => new() { Id = port.Id, Description = port.Description, Family = port.Family, Mandatory = port.Mandatory, T = port.T, CompatibleFamilies = port.CompatibleFamilies, Point = port.Point, Direction = port.Direction, Attributes = port.Attributes };
 
     public PortDiff MergeDiff(PortDiff other)
     {
@@ -2349,6 +2370,9 @@ public class Port : Model<Port>
     public string ToIdString() => $"{Id}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Por({ToHumanIdString()})";
+
+    public static implicit operator Port(PortId id) => new() { Id = id.Id };
+    public static implicit operator Port(PortDiff diff) => new() { Id = diff.Id ?? "", Description = diff.Description ?? "", Family = diff.Family ?? "", Mandatory = diff.Mandatory ?? false, T = diff.T ?? 0, CompatibleFamilies = diff.CompatibleFamilies ?? new(), Point = diff.Point, Direction = diff.Direction, Attributes = diff.Attributes ?? new() };
 
     public Port ApplyDiff(PortDiff diff)
     {
@@ -2493,6 +2517,8 @@ public class Author : Model<Author>
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Aut({ToHumanIdString()})";
 
+    public static implicit operator Author(AuthorId id) => new() { Email = id.Email };
+
     public override (bool, List<string>) Validate()
     {
         // TODO: proper email validation
@@ -2537,6 +2563,7 @@ public class TypeId : Model<TypeId>
     public string ToHumanIdString() => $"{Name}" + (Variant.Length == 0 ? "" : $", {Variant}");
     public override string ToString() => $"Typ({ToHumanIdString()})";
     public static implicit operator TypeId(Type type) => new() { Name = type.Name, Variant = type.Variant };
+    public static implicit operator TypeId(TypeDiff diff) => new() { Name = diff.Name ?? "", Variant = diff.Variant ?? "" };
 }
 
 [Model("🧩", "TD", "TDf", "A diff for types.")]
@@ -2588,6 +2615,9 @@ public class TypeDiff : Model<TypeDiff>
             Attributes = other.Attributes.Any() ? other.Attributes : Attributes
         };
     }
+    
+    public static implicit operator TypeDiff(TypeId id) => new() { Name = id.Name, Variant = id.Variant };
+    public static implicit operator TypeDiff(Type type) => new() { Name = type.Name, Description = type.Description, Icon = type.Icon, Image = type.Image, Variant = type.Variant, Stock = type.Stock, Virtual = type.Virtual, Unit = type.Unit, Location = type.Location, Representations = type.Representations, Ports = type.Ports, Authors = type.Authors, Attributes = type.Attributes };
 }
 
 [Model("📊", "TsD", "TsDf", "A diff for multiple types.")]
@@ -2641,6 +2671,9 @@ public class Type : Model<Type>
     public string ToHumanIdString() => $"{Name}" + (Variant.Length == 0 ? "" : $", {Variant}");
 
     public override string ToString() => $"Typ({ToHumanIdString()})";
+
+    public static implicit operator Type(TypeId id) => new() { Name = id.Name, Variant = id.Variant };
+    public static implicit operator Type(TypeDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Variant = diff.Variant ?? "", Stock = diff.Stock ?? 2147483647, Virtual = diff.Virtual ?? false, Unit = diff.Unit ?? "", Location = diff.Location, Representations = diff.Representations ?? new(), Ports = diff.Ports ?? new(), Authors = diff.Authors?.Select(a => new AuthorId { Email = a.Email }).ToList() ?? new(), Attributes = diff.Attributes ?? new() };
 
     public Type ApplyDiff(TypeDiff diff)
     {
@@ -2857,6 +2890,9 @@ public class ConnectionDiff : Model<ConnectionDiff>
             Y = other.Y ?? Y
         };
     }
+    
+    public static implicit operator ConnectionDiff(ConnectionId id) => new() { Connected = new SideDiff { Piece = new PieceDiff { Id = id.Connected.Piece.Id }, Port = new PortDiff { Id = id.Connected.Port.Id } }, Connecting = new SideDiff { Piece = new PieceDiff { Id = id.Connecting.Piece.Id }, Port = new PortDiff { Id = id.Connecting.Port.Id } } };
+    public static implicit operator ConnectionDiff(Connection connection) => new() { Connected = new SideDiff { Piece = new PieceDiff { Id = connection.Connected.Piece.Id }, Port = new PortDiff { Id = connection.Connected.Port.Id } }, Connecting = new SideDiff { Piece = new PieceDiff { Id = connection.Connecting.Piece.Id }, Port = new PortDiff { Id = connection.Connecting.Port.Id } }, Description = connection.Description, Gap = connection.Gap, Shift = connection.Shift, Rise = connection.Rise, Rotation = connection.Rotation, Turn = connection.Turn, Tilt = connection.Tilt, X = connection.X, Y = connection.Y };
 }
 
 [Model("📊", "CsD", "CsDf", "A diff for multiple connections.")]
@@ -2916,6 +2952,9 @@ public class DesignDiff : Model<DesignDiff>
             Authors = other.Authors.Any() ? other.Authors : Authors
         };
     }
+    
+    public static implicit operator DesignDiff(DesignId id) => new() { Name = id.Name, Variant = id.Variant, View = id.View };
+    public static implicit operator DesignDiff(Design design) => new() { Name = design.Name, Description = design.Description, Icon = design.Icon, Image = design.Image, Variant = design.Variant, View = design.View, Location = design.Location, Unit = design.Unit, Attributes = design.Attributes, Authors = design.Authors };
 }
 
 [Model("📊", "DsD", "DsDf", "A diff for multiple designs.")]
@@ -2951,6 +2990,9 @@ public class FileDiff : Model<FileDiff>
             Hash = string.IsNullOrEmpty(other.Hash) ? Hash : other.Hash
         };
     }
+    
+    public static implicit operator FileDiff(FileId id) => new() { Url = id.Url };
+    public static implicit operator FileDiff(SemioFile file) => new() { Url = file.Url, Data = file.Data, Size = file.Size, Hash = file.Hash };
 }
 
 [Model("📊", "FsD", "FsDf", "A diff for multiple files.")]
@@ -3013,6 +3055,8 @@ public class KitDiff : Model<KitDiff>
             Attributes = other.Attributes.Any() ? other.Attributes : Attributes
         };
     }
+    
+    public static implicit operator KitDiff(Kit kit) => new() { Name = kit.Name, Description = kit.Description, Icon = kit.Icon, Image = kit.Image, Preview = kit.Preview, Version = kit.Version, Remote = kit.Remote, Homepage = kit.Homepage, License = kit.License, Attributes = kit.Attributes };
 }
 
 public enum DiffStatus
@@ -3034,6 +3078,9 @@ public class PieceId : Model<PieceId>
     public string ToIdString() => $"{Id}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Pce({ToHumanIdString()})";
+    
+    public static implicit operator PieceId(PieceDiff diff) => new() { Id = diff.Id ?? "" };
+    public static implicit operator PieceId(Piece piece) => new() { Id = piece.Id };
 }
 
 [Model("⭕", "PD", "PDf", "A diff for pieces.")]
@@ -3065,6 +3112,9 @@ public class PieceDiff : Model<PieceDiff>
             Attributes = other.Attributes.Any() ? other.Attributes : Attributes
         };
     }
+    
+    public static implicit operator PieceDiff(PieceId id) => new() { Id = id.Id };
+    public static implicit operator PieceDiff(Piece piece) => new() { Id = piece.Id, Type = new TypeId { Name = piece.Type.Name, Variant = piece.Type.Variant }, Description = piece.Description, Plane = piece.Plane, Center = piece.Center, Attributes = piece.Attributes };
 }
 
 [Model("📊", "PsD", "PsDf", "A diff for multiple pieces.")]
@@ -3132,6 +3182,9 @@ public class Piece : Model<Piece>
     public string ToIdString() => $"{Id}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Pce({ToHumanIdString()})";
+
+    public static implicit operator Piece(PieceId id) => new() { Id = id.Id };
+    public static implicit operator Piece(PieceDiff diff) => new() { Id = diff.Id ?? "", Description = diff.Description ?? "", Type = diff.Type, Plane = diff.Plane, Center = diff.Center, Attributes = diff.Attributes ?? new() };
 
     public Piece ApplyDiff(PieceDiff diff)
     {
@@ -3311,6 +3364,7 @@ public class ConnectionId : Model<ConnectionId>
     [ModelProp("🧲", "Cg", "Cng", "The connecting side of the piece of the connection.")]
     public Side Connecting { get; set; } = new();
     public static implicit operator ConnectionId(Connection connection) => new() { Connected = connection.Connected, Connecting = connection.Connecting };
+    public static implicit operator ConnectionId(ConnectionDiff diff) => new() { Connected = diff.Connected ?? new(), Connecting = diff.Connecting ?? new() };
     public string ToIdString() => $"{Connected.Piece.Id + (Connected.Port.Id != "" ? ":" + Connected.Port.Id : "")}--{(Connecting.Port.Id != "" ? Connecting.Port.Id + ":" : "") + Connecting.Piece.Id}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"ConId({ToIdString()})";
@@ -3372,6 +3426,9 @@ public class Connection : Model<Connection>
     public string ToHumanIdString() => $"{ToIdString()}";
 
     public override string ToString() => $"Con({ToIdString()})";
+
+    public static implicit operator Connection(ConnectionId id) => new() { Connected = id.Connected, Connecting = id.Connecting };
+    public static implicit operator Connection(ConnectionDiff diff) => new() { Connected = new Side { Piece = diff.Connected?.Piece ?? new PieceId(), DesignPiece = diff.Connected?.DesignPiece, Port = diff.Connected?.Port ?? new PortId() }, Connecting = new Side { Piece = diff.Connecting?.Piece ?? new PieceId(), DesignPiece = diff.Connecting?.DesignPiece, Port = diff.Connecting?.Port ?? new PortId() }, Description = diff.Description ?? "", Gap = diff.Gap ?? 0, Shift = diff.Shift ?? 0, Rise = diff.Rise ?? 0, Rotation = diff.Rotation ?? 0, Turn = diff.Turn ?? 0, Tilt = diff.Tilt ?? 0, X = diff.X ?? 0, Y = diff.Y ?? 1, Attributes = diff.Attributes ?? new() };
 
     public Connection ApplyDiff(ConnectionDiff diff)
     {
@@ -3517,6 +3574,7 @@ public class DesignId : Model<DesignId>
     [Name("🥽", "Vw?", "Vew?", "The optional view of the design. No view means the default view.", PropImportance.ID, true)]
     public string View { get; set; } = "";
     public static implicit operator DesignId(Design design) => new() { Name = design.Name, Variant = design.Variant, View = design.View };
+    public static implicit operator DesignId(DesignDiff diff) => new() { Name = diff.Name ?? "", Variant = diff.Variant ?? "", View = diff.View ?? "" };
 
     public string ToHumanIdString() => $"{Name}{(Variant == "" ? "" : ", " + Variant)}{(View == "" ? "" : ", " + View)}";
 }
@@ -3559,6 +3617,9 @@ public class Design : Model<Design>
     public string ToIdString() => $"{Name}#{Variant}#{View}";
     public string ToHumanIdString() => $"{Name}" + (Variant.Length == 0 ? "" : $", {Variant}") + (View.Length == 0 ? "" : $", {View}");
     public override string ToString() => $"Dsn({ToHumanIdString()})";
+
+    public static implicit operator Design(DesignId id) => new() { Name = id.Name, Variant = id.Variant, View = id.View };
+    public static implicit operator Design(DesignDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Variant = diff.Variant ?? "", View = diff.View ?? "", Location = diff.Location, Unit = diff.Unit ?? "", Attributes = diff.Attributes ?? new(), Authors = diff.Authors?.Select(a => new AuthorId { Email = a.Email }).ToList() ?? new() };
 
     public Design ApplyDiff(DesignDiff diff)
     {
@@ -4397,6 +4458,8 @@ public class Kit : Model<Kit>
     public List<Design> Designs { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the kit.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
+
+    public static implicit operator Kit(KitDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Preview = diff.Preview ?? "", Version = diff.Version ?? "", Remote = diff.Remote ?? "", Homepage = diff.Homepage ?? "", License = diff.License ?? "", Attributes = diff.Attributes ?? new() };
 
     public Kit ApplyDiff(KitDiff diff)
     {
