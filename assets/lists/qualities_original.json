@@ -1,0 +1,2515 @@
+{
+  "semio": {
+    "TYPE": "VENDOR",
+    "area": {
+      "TYPE": "TAXONOMY",
+      "UNITS": ["m²", "ft²"],
+      "SYMBOL": "$A$",
+      "NAME": "Floor Area",
+      "TRANSLATIONS": {
+        "DE": "Grundfläche"
+      },
+      "gfa": {
+        "NAME": "Gross Floor Area",
+        "SYMBOL": "$A_{gfa}$",
+        "TRANSLATIONS": {
+          "DE": "Brutto-Grundfläche"
+        },
+        "nfa": {
+          "NAME": "Net Floor Area",
+          "SYMBOL": "$A_{nfa}$",
+          "TRANSLATIONS": {
+            "DE": "Netto-Raumfläche"
+          },
+          "usbl": {
+            "NAME": "Usable Floor Area",
+            "SYMBOL": "$A_{usbl}$",
+            "TRANSLATIONS": {
+              "DE": "Nutzungsfläche"
+            },
+            "liv-stay": {
+              "NAME": "Living And Staying Floor Area",
+              "SYMBOL": "$A_{liv}$",
+              "TRANSLATIONS": {
+                "DE": "Wohnen und Aufenthalt"
+              },
+              "liv-rm": {
+                "NAME": "Living Room Floor Area",
+                "SYMBOL": "$A_{liv-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Wohnzimmerfläche"
+                },
+                "liv": {
+                  "NAME": "Living Floor Area",
+                  "SYMBOL": "$A_{liv}$",
+                  "TRANSLATIONS": {
+                    "DE": "Wohnfläche"
+                  }
+                },
+                "kit": {
+                  "NAME": "Kitchen Floor Area",
+                  "SYMBOL": "$A_{kit}$",
+                  "TRANSLATIONS": {
+                    "DE": "Küchenfläche"
+                  }
+                },
+                "san": {
+                  "NAME": "Sanitary Floor Area",
+                  "SYMBOL": "$A_{san}$",
+                  "TRANSLATIONS": {
+                    "DE": "Sanitärfläche"
+                  }
+                },
+                "circ": {
+                  "NAME": "Circulation Floor Area",
+                  "SYMBOL": "$A_{circ}$",
+                  "TRANSLATIONS": {
+                    "DE": "Verkehrsfläche"
+                  }
+                },
+                "out-seat": {
+                  "NAME": "Outdoor Seating Floor Area",
+                  "SYMBOL": "$A_{out-seat}$",
+                  "TRANSLATIONS": {
+                    "DE": "Freisitzfläche"
+                  }
+                },
+                "stor": {
+                  "NAME": "Storage Floor Area",
+                  "SYMBOL": "$A_{stor}$",
+                  "TRANSLATIONS": {
+                    "DE": "Abstellraumfläche"
+                  }
+                }
+              },
+              "com-rm": {
+                "NAME": "Common Room Floor Area",
+                "SYMBOL": "$A_{com-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Gemeinschaftsraumfläche"
+                }
+              },
+              "brk-rm": {
+                "NAME": "Break Room Floor Area",
+                "SYMBOL": "$A_{brk-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Pausenraumfläche"
+                }
+              },
+              "wait-rm": {
+                "NAME": "Waiting Room Floor Area",
+                "SYMBOL": "$A_{wait-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Warteraumfläche"
+                }
+              },
+              "din-rm": {
+                "NAME": "Dining Room Floor Area",
+                "SYMBOL": "$A_{din-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Speiseraumfläche"
+                }
+              },
+              "det-rm": {
+                "NAME": "Detention Room Floor Area",
+                "SYMBOL": "$A_{det-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Haftraumfläche"
+                }
+              }
+            },
+            "ofc-work": {
+              "NAME": "Office Work Floor Area",
+              "SYMBOL": "$A_{ofc}$",
+              "TRANSLATIONS": {
+                "DE": "Büroarbeit"
+              },
+              "ofc-rm": {
+                "NAME": "Office Room Floor Area",
+                "SYMBOL": "$A_{ofc-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Büroraumfläche"
+                }
+              },
+              "open-ofc": {
+                "NAME": "Open Plan Office Floor Area",
+                "SYMBOL": "$A_{open-ofc}$",
+                "TRANSLATIONS": {
+                  "DE": "Großraumbürofläche"
+                }
+              },
+              "meet-rm": {
+                "NAME": "Meeting Room Floor Area",
+                "SYMBOL": "$A_{meet-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Besprechungsraumfläche"
+                }
+              },
+              "des-rm": {
+                "NAME": "Design Room Floor Area",
+                "SYMBOL": "$A_{des-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Konstruktionsraumfläche"
+                }
+              },
+              "cnt-rm": {
+                "NAME": "Counter Room Floor Area",
+                "SYMBOL": "$A_{cnt-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Schalterraumfläche"
+                }
+              },
+              "ctrl-rm": {
+                "NAME": "Control Room Floor Area",
+                "SYMBOL": "$A_{ctrl-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Kontrollraumfläche"
+                }
+              },
+              "sup-rm": {
+                "NAME": "Supervision Room Floor Area",
+                "SYMBOL": "$A_{sup-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Aufsichtsraumfläche"
+                }
+              },
+              "ofc-tech-rm": {
+                "NAME": "Office Technology Room Floor Area",
+                "SYMBOL": "$A_{ofc-tech}$",
+                "TRANSLATIONS": {
+                  "DE": "Bürotechnikraumfläche"
+                }
+              },
+              "other": {
+                "NAME": "Other Office Work Floor Area",
+                "SYMBOL": "$A_{other-ofc}$",
+                "TRANSLATIONS": {
+                  "DE": "Sonstige Büroarbeitsfläche"
+                }
+              }
+            },
+            "prod-exp": {
+              "NAME": "Production Experiments Work Floor Area",
+              "SYMBOL": "$A_{prod}$",
+              "TRANSLATIONS": {
+                "DE": "Produktion, Hand- und Maschinenarbeit, Experimente"
+              },
+              "prod-hall": {
+                "NAME": "Production Hall Floor Area",
+                "SYMBOL": "$A_{prod-hall}$",
+                "TRANSLATIONS": {
+                  "DE": "Produktionshallenfläche"
+                }
+              },
+              "work": {
+                "NAME": "Workshop Floor Area",
+                "SYMBOL": "$A_{work}$",
+                "TRANSLATIONS": {
+                  "DE": "Werkstattfläche"
+                }
+              },
+              "tech-lab": {
+                "NAME": "Technology Lab Floor Area",
+                "SYMBOL": "$A_{tech-lab}$",
+                "TRANSLATIONS": {
+                  "DE": "Techniklaborfläche"
+                }
+              },
+              "phys-elec-lab": {
+                "NAME": "Physics Electrical Lab Floor Area",
+                "SYMBOL": "$A_{phys-lab}$",
+                "TRANSLATIONS": {
+                  "DE": "Physik- und Elektrolaborfläche"
+                }
+              },
+              "chem-bio-lab": {
+                "NAME": "Chemistry Biology Lab Floor Area",
+                "SYMBOL": "$A_{chem-lab}$",
+                "TRANSLATIONS": {
+                  "DE": "Chemie- und Biologielaborfläche"
+                }
+              },
+              "anim-rm": {
+                "NAME": "Animal Husbandry Room Floor Area",
+                "SYMBOL": "$A_{anim}$",
+                "TRANSLATIONS": {
+                  "DE": "Tierhaltungsraumfläche"
+                }
+              },
+              "plant-rm": {
+                "NAME": "Plant Cultivation Room Floor Area",
+                "SYMBOL": "$A_{plant}$",
+                "TRANSLATIONS": {
+                  "DE": "Pflanzenzuchtraumfläche"
+                }
+              },
+              "kit": {
+                "NAME": "Kitchen Floor Area",
+                "SYMBOL": "$A_{kit}$",
+                "TRANSLATIONS": {
+                  "DE": "Küchenfläche"
+                }
+              },
+              "spec-work-rm": {
+                "NAME": "Special Work Room Floor Area",
+                "SYMBOL": "$A_{spec-work}$",
+                "TRANSLATIONS": {
+                  "DE": "Sonderarbeitsraumfläche"
+                }
+              }
+            },
+            "stor-dist-sales": {
+              "NAME": "Storage Distribution Sales Floor Area",
+              "SYMBOL": "$A_{stor-sales}$",
+              "TRANSLATIONS": {
+                "DE": "Lagern, Verteilen und Verkaufen"
+              },
+              "stor-rm": {
+                "NAME": "Storage Room Floor Area",
+                "SYMBOL": "$A_{stor-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Lagerraumfläche"
+                }
+              },
+              "coll-arch": {
+                "NAME": "Collection Archive Floor Area",
+                "SYMBOL": "$A_{arch}$",
+                "TRANSLATIONS": {
+                  "DE": "Sammlungs- und Archivfläche"
+                }
+              },
+              "cold-stor": {
+                "NAME": "Cold Storage Room Floor Area",
+                "SYMBOL": "$A_{cold-stor}$",
+                "TRANSLATIONS": {
+                  "DE": "Kühllagerraumfläche"
+                }
+              },
+              "recv-disp": {
+                "NAME": "Receiving Dispatch Room Floor Area",
+                "SYMBOL": "$A_{recv}$",
+                "TRANSLATIONS": {
+                  "DE": "Warenannahme- und Versandfläche"
+                }
+              },
+              "sales-rm": {
+                "NAME": "Sales Room Floor Area",
+                "SYMBOL": "$A_{sales}$",
+                "TRANSLATIONS": {
+                  "DE": "Verkaufsraumfläche"
+                }
+              },
+              "exh-rm": {
+                "NAME": "Exhibition Room Floor Area",
+                "SYMBOL": "$A_{exh}$",
+                "TRANSLATIONS": {
+                  "DE": "Ausstellungsraumfläche"
+                }
+              },
+              "other": {
+                "NAME": "Other Storage Distribution Sales Floor Area",
+                "SYMBOL": "$A_{other-stor}$",
+                "TRANSLATIONS": {
+                  "DE": "Sonstige Lager-, Verteil- und Verkaufsfläche"
+                }
+              }
+            },
+            "edu-cult": {
+              "NAME": "Education Culture Instruction Floor Area",
+              "SYMBOL": "$A_{edu}$",
+              "TRANSLATIONS": {
+                "DE": "Bildung, Unterricht und Kultur"
+              },
+              "class-fix-seat": {
+                "NAME": "Class With Fixed Seating Floor Area",
+                "SYMBOL": "$A_{class}$",
+                "TRANSLATIONS": {
+                  "DE": "Hörsaalfläche"
+                }
+              },
+              "teach-prac": {
+                "NAME": "Teaching Practice Room Floor Area",
+                "SYMBOL": "$A_{teach}$",
+                "TRANSLATIONS": {
+                  "DE": "Unterrichts- und Übungsraumfläche"
+                }
+              },
+              "spec-class": {
+                "NAME": "Special Classroom Floor Area",
+                "SYMBOL": "$A_{spec-class}$",
+                "TRANSLATIONS": {
+                  "DE": "Sonderunterrichtsraumfläche"
+                }
+              },
+              "lib": {
+                "NAME": "Library Room Floor Area",
+                "SYMBOL": "$A_{lib}$",
+                "TRANSLATIONS": {
+                  "DE": "Bibliotheks- und Lesesaalfläche"
+                }
+              },
+              "sport": {
+                "NAME": "Sports Room Floor Area",
+                "SYMBOL": "$A_{sport}$",
+                "TRANSLATIONS": {
+                  "DE": "Sportraumfläche"
+                }
+              },
+              "assm-rm": {
+                "NAME": "Assembly Room Floor Area",
+                "SYMBOL": "$A_{assm}$",
+                "TRANSLATIONS": {
+                  "DE": "Versammlungsraumfläche"
+                }
+              },
+              "stage-studio": {
+                "NAME": "Stage Studio Room Floor Area",
+                "SYMBOL": "$A_{stage}$",
+                "TRANSLATIONS": {
+                  "DE": "Bühnen- und Studioraumfläche"
+                }
+              },
+              "disp-rm": {
+                "NAME": "Display Room Floor Area",
+                "SYMBOL": "$A_{disp}$",
+                "TRANSLATIONS": {
+                  "DE": "Schau- und Vorführraumfläche"
+                }
+              },
+              "sacr-rm": {
+                "NAME": "Sacred Room Floor Area",
+                "SYMBOL": "$A_{sacr}$",
+                "TRANSLATIONS": {
+                  "DE": "Sakralraumfläche"
+                }
+              }
+            },
+            "heal-care": {
+              "NAME": "Healing And Care Floor Area",
+              "SYMBOL": "$A_{med}$",
+              "TRANSLATIONS": {
+                "DE": "Heilen und Pflegen"
+              },
+              "gen-med-equip": {
+                "NAME": "General Medical Equipment Room Floor Area",
+                "SYMBOL": "$A_{gen-med}$",
+                "TRANSLATIONS": {
+                  "DE": "Raum für allgemeine medizinische Ausstattung"
+                }
+              },
+              "spec-med-equip": {
+                "NAME": "Special Medical Equipment Room Floor Area",
+                "SYMBOL": "$A_{spec-med}$",
+                "TRANSLATIONS": {
+                  "DE": "Raum für spezielle medizinische Ausstattung"
+                }
+              },
+              "surg-rm": {
+                "NAME": "Surgical Room Floor Area",
+                "SYMBOL": "$A_{surg}$",
+                "TRANSLATIONS": {
+                  "DE": "Operationsraumfläche"
+                }
+              },
+              "rad-diag": {
+                "NAME": "Radiation Diagnostic Room Floor Area",
+                "SYMBOL": "$A_{rad-diag}$",
+                "TRANSLATIONS": {
+                  "DE": "Strahlendiagnostikraumfläche"
+                }
+              },
+              "rad-ther": {
+                "NAME": "Radiation Therapy Room Floor Area",
+                "SYMBOL": "$A_{rad-ther}$",
+                "TRANSLATIONS": {
+                  "DE": "Strahlentherapieraumfläche"
+                }
+              },
+              "rehab-physio": {
+                "NAME": "Rehabilitation Physiotherapy Floor Area",
+                "SYMBOL": "$A_{rehab}$",
+                "TRANSLATIONS": {
+                  "DE": "Rehabilitations- und Physiotherapiefläche"
+                }
+              },
+              "gen-pat-rm": {
+                "NAME": "General Patient Room Floor Area",
+                "SYMBOL": "$A_{gen-pat}$",
+                "TRANSLATIONS": {
+                  "DE": "Allgemeines Patientenzimmerfläche"
+                }
+              },
+              "spec-pat-rm": {
+                "NAME": "Special Patient Room Floor Area",
+                "SYMBOL": "$A_{spec-pat}$",
+                "TRANSLATIONS": {
+                  "DE": "Spezielles Patientenzimmerfläche"
+                }
+              },
+              "other": {
+                "NAME": "Other Healing And Care Floor Area",
+                "SYMBOL": "$A_{other-med}$",
+                "TRANSLATIONS": {
+                  "DE": "Sonstige Heil- und Pflegefläche"
+                }
+              }
+            },
+            "other": {
+              "NAME": "Other Usable Floor Area",
+              "SYMBOL": "$A_{other-usbl}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige Nutzungsfläche"
+              },
+              "san-rm": {
+                "NAME": "Sanitary Room Floor Area",
+                "SYMBOL": "$A_{san-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Sanitärraumfläche"
+                }
+              },
+              "cloak": {
+                "NAME": "Cloakroom Floor Area",
+                "SYMBOL": "$A_{cloak}$",
+                "TRANSLATIONS": {
+                  "DE": "Garderobenfläche"
+                }
+              },
+              "stor-rm": {
+                "NAME": "Storage Room Floor Area",
+                "SYMBOL": "$A_{stor-rm}$",
+                "TRANSLATIONS": {
+                  "DE": "Abstellraumfläche"
+                }
+              },
+              "veh-park": {
+                "NAME": "Vehicle Parking Floor Area",
+                "SYMBOL": "$A_{park}$",
+                "TRANSLATIONS": {
+                  "DE": "Fahrzeugabstellfläche"
+                }
+              },
+              "pass": {
+                "NAME": "Passenger Floor Area",
+                "SYMBOL": "$A_{pass}$",
+                "TRANSLATIONS": {
+                  "DE": "Personenverkehrsfläche"
+                }
+              },
+              "cent-tech": {
+                "NAME": "Central Technical Room Floor Area",
+                "SYMBOL": "$A_{cent-tech}$",
+                "TRANSLATIONS": {
+                  "DE": "Zentraler Technikraum"
+                }
+              },
+              "prot-rm": {
+                "NAME": "Protective Room Floor Area",
+                "SYMBOL": "$A_{prot}$",
+                "TRANSLATIONS": {
+                  "DE": "Schutzraumfläche"
+                }
+              },
+              "laund": {
+                "NAME": "Laundry Room Floor Area",
+                "SYMBOL": "$A_{laund}$",
+                "TRANSLATIONS": {
+                  "DE": "Wäschereiraumfläche"
+                }
+              },
+              "other": {
+                "NAME": "Other Floor Area",
+                "SYMBOL": "$A_{other}$",
+                "TRANSLATIONS": {
+                  "DE": "Sonstige Nutzungsfläche"
+                }
+              }
+            }
+          },
+          "tech": {
+            "NAME": "Technical Floor Area",
+            "SYMBOL": "$A_{tech}$",
+            "TRANSLATIONS": {
+              "DE": "Technikfläche"
+            },
+            "waste-gas-water": {
+              "NAME": "Wastewater Gases Water Supply Floor Area",
+              "SYMBOL": "$A_{water}$",
+              "TRANSLATIONS": {
+                "DE": "Abwasser-, Gas- und Wasserversorgung"
+              }
+            },
+            "heat-hw": {
+              "NAME": "Heating Hot Water Floor Area",
+              "SYMBOL": "$A_{heat}$",
+              "TRANSLATIONS": {
+                "DE": "Heizung und Warmwasser"
+              }
+            },
+            "vent-ac": {
+              "NAME": "Ventilation Air Conditioning Floor Area",
+              "SYMBOL": "$A_{vent}$",
+              "TRANSLATIONS": {
+                "DE": "Lüftung und Klimatisierung"
+              }
+            },
+            "elec-pwr": {
+              "NAME": "Electrical Power Supply Floor Area",
+              "SYMBOL": "$A_{elec}$",
+              "TRANSLATIONS": {
+                "DE": "Stromversorgung"
+              }
+            },
+            "telecom": {
+              "NAME": "Telecommunications Floor Area",
+              "SYMBOL": "$A_{telecom}$",
+              "TRANSLATIONS": {
+                "DE": "Telekommunikation"
+              }
+            },
+            "elev-conv": {
+              "NAME": "Elevator Conveyor Systems Floor Area",
+              "SYMBOL": "$A_{elev}$",
+              "TRANSLATIONS": {
+                "DE": "Aufzugs- und Förderanlagen"
+              }
+            },
+            "other": {
+              "NAME": "Other Technical Floor Area",
+              "SYMBOL": "$A_{other-tech}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige Technikfläche"
+              }
+            }
+          },
+          "circ": {
+            "NAME": "Circulation Floor Area",
+            "SYMBOL": "$A_{circ}$",
+            "TRANSLATIONS": {
+              "DE": "Verkehrsfläche"
+            },
+            "corr-hall": {
+              "NAME": "Corridor Hall Floor Area",
+              "SYMBOL": "$A_{corr}$",
+              "TRANSLATIONS": {
+                "DE": "Flur und Halle"
+              }
+            },
+            "stair": {
+              "NAME": "Stair Floor Area",
+              "SYMBOL": "$A_{stair}$",
+              "TRANSLATIONS": {
+                "DE": "Treppenraum"
+              }
+            },
+            "shaft-conv": {
+              "NAME": "Shaft For Conveyor System Floor Area",
+              "SYMBOL": "$A_{shaft}$",
+              "TRANSLATIONS": {
+                "DE": "Schacht für Förderanlage"
+              }
+            },
+            "veh-traf": {
+              "NAME": "Vehicle Traffic Floor Area",
+              "SYMBOL": "$A_{veh-traf}$",
+              "TRANSLATIONS": {
+                "DE": "Fahrzeugverkehr"
+              }
+            },
+            "other": {
+              "NAME": "Other Circulation Floor Area",
+              "SYMBOL": "$A_{other-circ}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige Verkehrsfläche"
+              }
+            }
+          },
+          "const": {
+            "NAME": "Construction Floor Area",
+            "SYMBOL": "$A_{const}$",
+            "TRANSLATIONS": {
+              "DE": "Konstruktions-Grundfläche"
+            },
+            "ext-wall-const": {
+              "NAME": "Exterior Wall Construction Floor Area",
+              "SYMBOL": "$A_{ext-wall}$",
+              "TRANSLATIONS": {
+                "DE": "Außenwandkonstruktion"
+              }
+            },
+            "int-wall-const": {
+              "NAME": "Interior Wall Construction Floor Area",
+              "SYMBOL": "$A_{int-wall}$",
+              "TRANSLATIONS": {
+                "DE": "Innenwandkonstruktion"
+              }
+            },
+            "part-wall": {
+              "NAME": "Partition Wall Floor Area",
+              "SYMBOL": "$A_{part-wall}$",
+              "TRANSLATIONS": {
+                "DE": "Trennwandausbildung"
+              }
+            },
+            "col": {
+              "NAME": "Column Floor Area",
+              "SYMBOL": "$A_{col}$",
+              "TRANSLATIONS": {
+                "DE": "Stütze"
+              }
+            },
+            "shaft": {
+              "NAME": "Shaft Floor Area",
+              "SYMBOL": "$A_{shaft}$",
+              "TRANSLATIONS": {
+                "DE": "Schacht"
+              }
+            },
+            "beam": {
+              "NAME": "Beam Floor Area",
+              "SYMBOL": "$A_{beam}$",
+              "TRANSLATIONS": {
+                "DE": "Träger"
+              }
+            },
+            "other": {
+              "NAME": "Other Construction Floor Area",
+              "SYMBOL": "$A_{other-const}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige Konstruktionsfläche"
+              }
+            }
+          }
+        },
+        "prop": {
+          "NAME": "Property Area",
+          "SYMBOL": "$A_{prop}$",
+          "TRANSLATIONS": {
+            "DE": "Grundstücksfläche"
+          },
+          "built": {
+            "NAME": "Built Up Area",
+            "SYMBOL": "$A_{built}$",
+            "TRANSLATIONS": {
+              "DE": "Bebaute Fläche"
+            }
+          },
+          "unbuilt": {
+            "NAME": "Unbuilt Area",
+            "SYMBOL": "$A_{unbuilt}$",
+            "TRANSLATIONS": {
+              "DE": "Unbebaute Fläche"
+            }
+          },
+          "out-fac": {
+            "NAME": "Outdoor Facility Area",
+            "SYMBOL": "$A_{out-fac}$",
+            "TRANSLATIONS": {
+              "DE": "Außenanlagenfläche"
+            },
+            "traf": {
+              "NAME": "Traffic Area",
+              "SYMBOL": "$A_{traf}$",
+              "TRANSLATIONS": {
+                "DE": "Verkehrsfläche"
+              }
+            },
+            "sidewalk": {
+              "NAME": "Sidewalk Area",
+              "SYMBOL": "$A_{sidewalk}$",
+              "TRANSLATIONS": {
+                "DE": "Gehwegfläche"
+              }
+            },
+            "drive": {
+              "NAME": "Driveway Area",
+              "SYMBOL": "$A_{drive}$",
+              "TRANSLATIONS": {
+                "DE": "Zufahrtsfläche"
+              }
+            },
+            "park-sp": {
+              "NAME": "Parking Space Area",
+              "SYMBOL": "$A_{park-sp}$",
+              "TRANSLATIONS": {
+                "DE": "Stellplatzfläche"
+              }
+            },
+            "bike-park": {
+              "NAME": "Bicycle Parking Area",
+              "SYMBOL": "$A_{bike-park}$",
+              "TRANSLATIONS": {
+                "DE": "Fahrradabstellfläche"
+              }
+            },
+            "turn": {
+              "NAME": "Turning Area",
+              "SYMBOL": "$A_{turn}$",
+              "TRANSLATIONS": {
+                "DE": "Wendeplatzfläche"
+              }
+            },
+            "other": {
+              "NAME": "Other Traffic Area",
+              "SYMBOL": "$A_{other-traf}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige Verkehrsfläche"
+              }
+            }
+          },
+          "green": {
+            "NAME": "Green Area",
+            "SYMBOL": "$A_{green}$",
+            "TRANSLATIONS": {
+              "DE": "Grünfläche"
+            },
+            "lawn": {
+              "NAME": "Lawn Area",
+              "SYMBOL": "$A_{lawn}$",
+              "TRANSLATIONS": {
+                "DE": "Rasenfläche"
+              }
+            },
+            "plant-bed": {
+              "NAME": "Planted Bed Area",
+              "SYMBOL": "$A_{plant-bed}$",
+              "TRANSLATIONS": {
+                "DE": "Pflanzbeetfläche"
+              }
+            },
+            "hedge": {
+              "NAME": "Hedge Area",
+              "SYMBOL": "$A_{hedge}$",
+              "TRANSLATIONS": {
+                "DE": "Heckenfläche"
+              }
+            },
+            "tree": {
+              "NAME": "Tree Area",
+              "SYMBOL": "$A_{tree}$",
+              "TRANSLATIONS": {
+                "DE": "Baumfläche"
+              }
+            },
+            "roof-green": {
+              "NAME": "Roof Greening Area",
+              "SYMBOL": "$A_{roof-green}$",
+              "TRANSLATIONS": {
+                "DE": "Dachbegrünungsfläche"
+              }
+            },
+            "fac-green": {
+              "NAME": "Facade Greening Area",
+              "SYMBOL": "$A_{fac-green}$",
+              "TRANSLATIONS": {
+                "DE": "Fassadenbegrünungsfläche"
+              }
+            },
+            "other": {
+              "NAME": "Other Green Area",
+              "SYMBOL": "$A_{other-green}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige Grünfläche"
+              }
+            }
+          },
+          "paved": {
+            "NAME": "Paved Area",
+            "SYMBOL": "$A_{paved}$",
+            "TRANSLATIONS": {
+              "DE": "Befestigte Fläche"
+            },
+            "terr": {
+              "NAME": "Terrace Area",
+              "SYMBOL": "$A_{terr}$",
+              "TRANSLATIONS": {
+                "DE": "Terrassenfläche"
+              }
+            },
+            "balc": {
+              "NAME": "Balcony Area",
+              "SYMBOL": "$A_{balc}$",
+              "TRANSLATIONS": {
+                "DE": "Balkonfläche"
+              }
+            },
+            "court": {
+              "NAME": "Courtyard Area",
+              "SYMBOL": "$A_{court}$",
+              "TRANSLATIONS": {
+                "DE": "Hoffläche"
+              }
+            },
+            "stor-util": {
+              "NAME": "Storage Utility Area",
+              "SYMBOL": "$A_{stor-util}$",
+              "TRANSLATIONS": {
+                "DE": "Lager- und Nutzfläche"
+              }
+            },
+            "play": {
+              "NAME": "Playground Area",
+              "SYMBOL": "$A_{play}$",
+              "TRANSLATIONS": {
+                "DE": "Spielplatzfläche"
+              }
+            },
+            "other": {
+              "NAME": "Other Paved Area",
+              "SYMBOL": "$A_{other-paved}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige befestigte Fläche"
+              }
+            }
+          },
+          "tech-fac": {
+            "NAME": "Technical Facility Area",
+            "SYMBOL": "$A_{tech-fac}$",
+            "TRANSLATIONS": {
+              "DE": "Technische Anlagenfläche"
+            },
+            "waste-coll": {
+              "NAME": "Waste Collection Point Area",
+              "SYMBOL": "$A_{waste-coll}$",
+              "TRANSLATIONS": {
+                "DE": "Müllsammelplatzfläche"
+              }
+            },
+            "util-line": {
+              "NAME": "Utility Line Area",
+              "SYMBOL": "$A_{util-line}$",
+              "TRANSLATIONS": {
+                "DE": "Versorgungsleitungsfläche"
+              }
+            },
+            "storm-mgmt": {
+              "NAME": "Stormwater Management Area",
+              "SYMBOL": "$A_{storm}$",
+              "TRANSLATIONS": {
+                "DE": "Regenwasserbewirtschaftungsfläche"
+              }
+            },
+            "light-sys": {
+              "NAME": "Lighting System Area",
+              "SYMBOL": "$A_{light}$",
+              "TRANSLATIONS": {
+                "DE": "Beleuchtungsanlagenfläche"
+              }
+            },
+            "fence": {
+              "NAME": "Fence Enclosure Area",
+              "SYMBOL": "$A_{fence}$",
+              "TRANSLATIONS": {
+                "DE": "Zaun- und Einfriedungsfläche"
+              }
+            },
+            "other": {
+              "NAME": "Other Technical Facility Area",
+              "SYMBOL": "$A_{other-tech-fac}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige technische Anlagenfläche"
+              }
+            }
+          },
+          "water": {
+            "NAME": "Water Area",
+            "SYMBOL": "$A_{water}$",
+            "TRANSLATIONS": {
+              "DE": "Wasserfläche"
+            },
+            "pond": {
+              "NAME": "Pond Area",
+              "SYMBOL": "$A_{pond}$",
+              "TRANSLATIONS": {
+                "DE": "Teichfläche"
+              }
+            },
+            "fountain": {
+              "NAME": "Fountain Area",
+              "SYMBOL": "$A_{fountain}$",
+              "TRANSLATIONS": {
+                "DE": "Brunnenfläche"
+              }
+            },
+            "storm-ret": {
+              "NAME": "Stormwater Retention Area",
+              "SYMBOL": "$A_{storm-ret}$",
+              "TRANSLATIONS": {
+                "DE": "Regenwasserrückhaltefläche"
+              }
+            },
+            "other": {
+              "NAME": "Other Water Area",
+              "SYMBOL": "$A_{other-water}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige Wasserfläche"
+              }
+            }
+          },
+          "other": {
+            "NAME": "Other Outdoor Facility Area",
+            "SYMBOL": "$A_{other-out}$",
+            "TRANSLATIONS": {
+              "DE": "Sonstige Außenanlagenfläche"
+            }
+          }
+        }
+      },
+      "vol": {
+        "TYPE": "TAXONOMY",
+        "UNITS": ["m³", "ft³"],
+        "SYMBOL": "$V$",
+        "gv": {
+          "NAME": "Gross Volume",
+          "SYMBOL": "$V_{gv}$",
+          "nv": {
+            "NAME": "Net Volume",
+            "SYMBOL": "$V_{nv}$",
+            "TRANSLATIONS": {
+              "DE": "Netto-Rauminhalt"
+            }
+          },
+          "const-vol": {
+            "NAME": "Construction Volume",
+            "SYMBOL": "$V_{const}$",
+            "TRANSLATIONS": {
+              "DE": "Konstruktions-Rauminhalt"
+            }
+          }
+        }
+      },
+      "ppl": {
+        "TYPE": "TAXONOMY",
+        "UNITS": ["count"],
+        "SYMBOL": "$N$",
+        "stat": {
+          "NAME": "Stationary People",
+          "SYMBOL": "$N_{stat}$",
+          "liv": {
+            "NAME": "Living People",
+            "SYMBOL": "$N_{liv}$",
+            "res": {
+              "NAME": "Residents",
+              "SYMBOL": "$N_{res}$",
+              "TRANSLATIONS": {
+                "DE": "Einwohner"
+              }
+            },
+            "guest": {
+              "NAME": "Guests",
+              "SYMBOL": "$N_{guest}$",
+              "TRANSLATIONS": {
+                "DE": "Gäste"
+              }
+            }
+          },
+          "work": {
+            "NAME": "Working People",
+            "SYMBOL": "$N_{work}$",
+            "ofc": {
+              "NAME": "Office Workers",
+              "SYMBOL": "$N_{ofc}$",
+              "TRANSLATIONS": {
+                "DE": "Büroangestellte"
+              }
+            },
+            "prod": {
+              "NAME": "Production Workers",
+              "SYMBOL": "$N_{prod}$",
+              "TRANSLATIONS": {
+                "DE": "Produktionsmitarbeiter"
+              }
+            },
+            "serv": {
+              "NAME": "Service Workers",
+              "SYMBOL": "$N_{serv}$",
+              "TRANSLATIONS": {
+                "DE": "Dienstleistungsmitarbeiter"
+              }
+            },
+            "edu": {
+              "NAME": "Education Workers",
+              "SYMBOL": "$N_{edu}$",
+              "TRANSLATIONS": {
+                "DE": "Bildungspersonal"
+              }
+            },
+            "health": {
+              "NAME": "Healthcare Workers",
+              "SYMBOL": "$N_{health}$",
+              "TRANSLATIONS": {
+                "DE": "Gesundheitspersonal"
+              }
+            },
+            "other": {
+              "NAME": "Other Workers",
+              "SYMBOL": "$N_{other-work}$",
+              "TRANSLATIONS": {
+                "DE": "Sonstige Arbeitskräfte"
+              }
+            }
+          },
+          "stud": {
+            "NAME": "Students",
+            "SYMBOL": "$N_{stud}$",
+            "pupil": {
+              "NAME": "Pupils",
+              "SYMBOL": "$N_{pupil}$",
+              "TRANSLATIONS": {
+                "DE": "Schüler"
+              }
+            },
+            "stud": {
+              "NAME": "Students",
+              "SYMBOL": "$N_{stud}$",
+              "TRANSLATIONS": {
+                "DE": "Studenten"
+              }
+            }
+          },
+          "client": {
+            "NAME": "Clients",
+            "SYMBOL": "$N_{client}$",
+            "cust": {
+              "NAME": "Customers",
+              "SYMBOL": "$N_{cust}$",
+              "TRANSLATIONS": {
+                "DE": "Kunden"
+              }
+            },
+            "visit": {
+              "NAME": "Visitors",
+              "SYMBOL": "$N_{visit}$",
+              "TRANSLATIONS": {
+                "DE": "Besucher"
+              }
+            },
+            "pat": {
+              "NAME": "Patients",
+              "SYMBOL": "$N_{pat}$",
+              "TRANSLATIONS": {
+                "DE": "Patienten"
+              }
+            }
+          }
+        },
+        "mobile": {
+          "NAME": "Mobile People",
+          "SYMBOL": "$N_{mobile}$",
+          "visit": {
+            "NAME": "Mobile Visitors",
+            "SYMBOL": "$N_{mobile-visit}$",
+            "cust": {
+              "NAME": "Mobile Customers",
+              "SYMBOL": "$N_{mobile-cust}$",
+              "TRANSLATIONS": {
+                "DE": "Mobile Kunden"
+              }
+            },
+            "guest": {
+              "NAME": "Mobile Guests",
+              "SYMBOL": "$N_{mobile-guest}$",
+              "TRANSLATIONS": {
+                "DE": "Mobile Gäste"
+              }
+            },
+            "tourist": {
+              "NAME": "Tourists",
+              "SYMBOL": "$N_{tourist}$",
+              "TRANSLATIONS": {
+                "DE": "Touristen"
+              }
+            }
+          },
+          "emp": {
+            "NAME": "Mobile Employees",
+            "SYMBOL": "$N_{mobile-emp}$",
+            "mobile-work": {
+              "NAME": "Mobile Workers",
+              "SYMBOL": "$N_{mobile-work}$",
+              "TRANSLATIONS": {
+                "DE": "Mobile Arbeitskräfte"
+              }
+            },
+            "deliv": {
+              "NAME": "Delivery Personnel",
+              "SYMBOL": "$N_{deliv}$",
+              "TRANSLATIONS": {
+                "DE": "Lieferpersonal"
+              }
+            }
+          },
+          "stud": {
+            "NAME": "Mobile Students",
+            "SYMBOL": "$N_{mobile-stud}$",
+            "commute": {
+              "NAME": "Commuters",
+              "SYMBOL": "$N_{commute}$",
+              "TRANSLATIONS": {
+                "DE": "Pendler"
+              }
+            },
+            "exch": {
+              "NAME": "Exchange Students",
+              "SYMBOL": "$N_{exch}$",
+              "TRANSLATIONS": {
+                "DE": "Austauschstudenten"
+              }
+            }
+          }
+        }
+      },
+      "energy": {
+        "TYPE": "CLASSIFICATION",
+        "SYMBOL": "$E$",
+        "prim-dem": {
+          "TYPE": "TAXONOMY",
+          "UNITS": ["kWh/m²a"],
+          "NAME": "Primary Energy Demand",
+          "SYMBOL": "$E_{prim}$",
+          "TRANSLATIONS": {
+            "DE": ""
+          },
+          "prim-heat": {
+            "NAME": "Primary Heating Energy Demand",
+            "SYMBOL": "$E_{prim-heat}$",
+            "TRANSLATIONS": {
+              "DE": ""
+            },
+            "final": {
+              "NAME": "Final Heating Energy Demand",
+              "SYMBOL": "$E_{final-heat}$",
+              "TRANSLATIONS": {
+                "DE": ""
+              },
+              "FACTOR": "Primary Heating Energy Factor",
+              "heat": {
+                "NAME": "Heating Energy Demand",
+                "SYMBOL": "$E_{heat}$",
+                "TRANSLATIONS": {
+                  "DE": ""
+                },
+                "FACTOR": "Heating Efficiency Factor",
+                "trans": {
+                  "NAME": "Transmission Heat Loss",
+                  "SYMBOL": "$Q_{trans}$",
+                  "TRANSLATIONS": {
+                    "DE": ""
+                  }
+                },
+                "final-vent": {
+                  "NAME": "Final Ventilation Heat Loss",
+                  "SYMBOL": "$Q_{final-vent}$",
+                  "TRANSLATIONS": {
+                    "DE": ""
+                  },
+                  "vent": {
+                    "NAME": "Ventilation Heat Loss",
+                    "SYMBOL": "$Q_{vent}$",
+                    "TRANSLATIONS": {
+                      "DE": ""
+                    },
+                    "FACTOR": "1-Ventilation Heat Recovery Factor"
+                  }
+                }
+              }
+            }
+          },
+          "prim-cool": {
+            "NAME": "Primary Cooling Energy Demand",
+            "SYMBOL": "$E_{prim-cool}$",
+            "TRANSLATIONS": {
+              "DE": ""
+            },
+            "final": {
+              "NAME": "Final Cooling Energy Demand",
+              "SYMBOL": "$E_{final-cool}$",
+              "TRANSLATIONS": {
+                "DE": ""
+              },
+              "FACTOR": "Primary Cooling Energy Factor",
+              "cool-energy": {
+                "NAME": "Cooling Energy Demand",
+                "SYMBOL": "$E_{cool}$",
+                "TRANSLATIONS": {
+                  "DE": ""
+                },
+                "FACTOR": "Cooling Efficiency Factor"
+              }
+            }
+          },
+          "prim-elec": {
+            "NAME": "Primary Electricity Energy Demand",
+            "SYMBOL": "$E_{prim-elec}$",
+            "TRANSLATIONS": {
+              "DE": ""
+            },
+            "elec": {
+              "NAME": "Electricity Energy Demand",
+              "SYMBOL": "$E_{elec}$",
+              "TRANSLATIONS": {
+                "DE": ""
+              },
+              "FACTOR": "Electricity Primary Energy Factor",
+              "tech-equip": {
+                "NAME": "Technical Equipment Energy Demand",
+                "SYMBOL": "$E_{tech-equip}$",
+                "TRANSLATIONS": {
+                  "DE": ""
+                }
+              }
+            }
+          }
+        },
+        "load": {
+          "TYPE": "CLASSIFICATION",
+          "SYMBOL": "$P$",
+          "heat": {
+            "TYPE": "TAXONOMY",
+            "NAME": "Heating Load",
+            "SYMBOL": "$P_{heat}$",
+            "TRANSLATIONS": {
+              "DE": "Heizlast"
+            }
+          },
+          "cool": {
+            "TYPE": "TAXONOMY",
+            "NAME": "Cooling Load",
+            "SYMBOL": "$P_{cool}$",
+            "TRANSLATIONS": {
+              "DE": "Kühllast"
+            }
+          },
+          "light": {
+            "TYPE": "TAXONOMY",
+            "NAME": "Lighting Load",
+            "SYMBOL": "$P_{light}$",
+            "TRANSLATIONS": {
+              "DE": "Beleuchtungslast"
+            }
+          },
+          "vent": {
+            "TYPE": "TAXONOMY",
+            "NAME": "Ventilation Load",
+            "SYMBOL": "$P_{vent}$",
+            "TRANSLATIONS": {
+              "DE": "Lüftungslast"
+            }
+          },
+          "hw": {
+            "TYPE": "TAXONOMY",
+            "NAME": "Hot Water Load",
+            "SYMBOL": "$P_{hw}$",
+            "TRANSLATIONS": {
+              "DE": "Warmwasserlast"
+            }
+          }
+        }
+      },
+      "gwp": {
+        "TYPE": "TAXONOMY",
+        "UNITS": ["tCO₂e", "MtCO₂e"],
+        "SYMBOL": "$GWP$",
+        "embod": {
+          "NAME": "Embodied GWP",
+          "SYMBOL": "$GWP_{embod}$",
+          "const": {
+            "NAME": "Construction GWP",
+            "SYMBOL": "$GWP_{const}$",
+            "TRANSLATIONS": {
+              "DE": "Herstellung (Baukonstruktion)"
+            }
+          },
+          "tech-equip": {
+            "NAME": "Technical Equipment GWP",
+            "SYMBOL": "$GWP_{tech-equip}$",
+            "TRANSLATIONS": {
+              "DE": "Herstellung (Technische Anlagen)"
+            }
+          }
+        },
+        "oper": {
+          "NAME": "Operational GWP",
+          "SYMBOL": "$GWP_{oper}$",
+          "heat": {
+            "NAME": "Heating GWP",
+            "SYMBOL": "$GWP_{heat}$",
+            "TRANSLATIONS": {
+              "DE": "Betrieb (Heizung)"
+            }
+          },
+          "cool": {
+            "NAME": "Cooling GWP",
+            "SYMBOL": "$GWP_{cool}$",
+            "TRANSLATIONS": {
+              "DE": "Betrieb (Kühlung)"
+            }
+          },
+          "light": {
+            "NAME": "Lighting GWP",
+            "SYMBOL": "$GWP_{light}$",
+            "TRANSLATIONS": {
+              "DE": "Betrieb (Beleuchtung)"
+            }
+          },
+          "vent": {
+            "NAME": "Ventilation GWP",
+            "SYMBOL": "$GWP_{vent}$",
+            "TRANSLATIONS": {
+              "DE": "Betrieb (Lüftung)"
+            }
+          },
+          "hw": {
+            "NAME": "Hot Water GWP",
+            "SYMBOL": "$GWP_{hw}$",
+            "TRANSLATIONS": {
+              "DE": "Betrieb (Warmwasser)"
+            }
+          },
+          "other": {
+            "NAME": "Other GWP",
+            "SYMBOL": "$GWP_{other}$",
+            "TRANSLATIONS": {
+              "DE": "Betrieb (Sonstige)"
+            }
+          }
+        }
+      },
+      "costs": {
+        "TYPE": "CLASSIFICATION",
+        "SYMBOL": "$C$",
+        "glcc": {
+          "TYPE": "TAXONOMY",
+          "NAME": "Global Life Cycle Costs",
+          "SYMBOL": "$C_{glcc}$",
+          "TRANSLATIONS": {
+            "DE": "Globale Lebenszykluskosten"
+          },
+          "UNITS": ["currency"],
+          "lcc": {
+            "NAME": "Life Cycle Costs",
+            "SYMBOL": "$C_{lcc}$",
+            "TRANSLATIONS": {
+              "DE": "Lebenszykluskosten"
+            },
+            "inv-const": {
+              "NAME": "Investment Costs Construction Phase",
+              "SYMBOL": "$C_{inv-const}$",
+              "TRANSLATIONS": {
+                "DE": "Investitionskosten in der Bauphase"
+              },
+              "land-costs": {
+                "NAME": "Land Costs",
+                "SYMBOL": "$C_{land}$",
+                "TRANSLATIONS": {
+                  "DE": "Grundstückskosten"
+                },
+                "land": {
+                  "NAME": "Land",
+                  "SYMBOL": "$C_{land-base}$",
+                  "TRANSLATIONS": {
+                    "DE": "Grundstück"
+                  },
+                  "land-val": {
+                    "NAME": "Land Value",
+                    "SYMBOL": "$C_{land-val}$",
+                    "TRANSLATIONS": {
+                      "DE": "Grundstückswert"
+                    }
+                  },
+                  "anc-land": {
+                    "NAME": "Ancillary Land Costs",
+                    "SYMBOL": "$C_{anc-land}$",
+                    "TRANSLATIONS": {
+                      "DE": "Grundstücksnebenkosten"
+                    },
+                    "surv-fees": {
+                      "NAME": "Surveying Fees",
+                      "SYMBOL": "$C_{surv}$",
+                      "TRANSLATIONS": {
+                        "DE": "Vermessungsgebühren"
+                      }
+                    },
+                    "court-fees": {
+                      "NAME": "Court Fees",
+                      "SYMBOL": "$C_{court}$",
+                      "TRANSLATIONS": {
+                        "DE": "Gerichtsgebühren"
+                      }
+                    },
+                    "not-fees": {
+                      "NAME": "Notary Fees",
+                      "SYMBOL": "$C_{notary}$",
+                      "TRANSLATIONS": {
+                        "DE": "Notargebühren"
+                      }
+                    },
+                    "land-trans-tax": {
+                      "NAME": "Land Transfer Tax",
+                      "SYMBOL": "$C_{land-tax}$",
+                      "TRANSLATIONS": {
+                        "DE": "Grunderwerbsteuer"
+                      }
+                    },
+                    "invest": {
+                      "NAME": "Investigations",
+                      "SYMBOL": "$C_{invest}$",
+                      "TRANSLATIONS": {
+                        "DE": "Untersuchungen"
+                      }
+                    },
+                    "val": {
+                      "NAME": "Valuations",
+                      "SYMBOL": "$C_{val}$",
+                      "TRANSLATIONS": {
+                        "DE": "Gutachten"
+                      }
+                    },
+                    "perm-fees": {
+                      "NAME": "Permit Fees",
+                      "SYMBOL": "$C_{permit}$",
+                      "TRANSLATIONS": {
+                        "DE": "Genehmigungsgebühren"
+                      }
+                    },
+                    "land-reorg": {
+                      "NAME": "Land Reorganization",
+                      "SYMBOL": "$C_{land-reorg}$",
+                      "TRANSLATIONS": {
+                        "DE": "Bodenordnung"
+                      }
+                    },
+                    "other": {
+                      "NAME": "Other Ancillary Land Costs",
+                      "SYMBOL": "$C_{other-anc-land}$",
+                      "TRANSLATIONS": {
+                        "DE": "Sonstige Grundstücksnebenkosten"
+                      }
+                    }
+                  },
+                  "third-party-rights": {
+                    "NAME": "Third Party Rights",
+                    "TRANSLATIONS": {
+                      "DE": "Rechte Dritter"
+                    },
+                    "compensations": {
+                      "NAME": "Third Party Compensations",
+                      "TRANSLATIONS": {
+                        "DE": "Entschädigungen"
+                      }
+                    },
+                    "redemption-of-real-rights": {
+                      "NAME": "Redemption Of Real Rights",
+                      "TRANSLATIONS": {
+                        "DE": "Ablösung von dinglichen Rechten"
+                      }
+                    },
+                    "other": {
+                      "NAME": "Other Third Party Rights",
+                      "TRANSLATIONS": {
+                        "DE": "Sonstige Rechte Dritter"
+                      }
+                    }
+                  },
+                  "compensations": {
+                    "NAME": "Land Compensations",
+                    "TRANSLATIONS": {
+                      "DE": "Entschädigungen"
+                    }
+                  },
+                  "redemption-of-real-rights": {
+                    "NAME": "Land Redemption Of Real Rights",
+                    "TRANSLATIONS": {
+                      "DE": "Ablösung von dinglichen Rechten"
+                    }
+                  },
+                  "other": {
+                    "NAME": "Other Land Costs",
+                    "TRANSLATIONS": {
+                      "DE": "Sonstige Grundstückskosten"
+                    }
+                  }
+                },
+                "other": {
+                  "NAME": "Other Land Costs",
+                  "TRANSLATIONS": {
+                    "DE": "Sonstige Grundstückskosten"
+                  }
+                }
+              },
+              "development-costs": {
+                "NAME": "Development Costs",
+                "TRANSLATIONS": {
+                  "DE": "Erschließungskosten"
+                },
+                "preparatory-measures": {
+                  "NAME": "Preparatory Measures",
+                  "TRANSLATIONS": {
+                    "DE": "Vorbereitende Maßnahmen"
+                  },
+                  "site-preparation": {
+                    "NAME": "Site Preparation",
+                    "TRANSLATIONS": {
+                      "DE": "Herrichten des Grundstücks"
+                    },
+                    "safety-measures": {
+                      "NAME": "Safety Measures",
+                      "TRANSLATIONS": {
+                        "DE": "Sicherungsmaßnahmen"
+                      }
+                    },
+                    "demolition-measures": {
+                      "NAME": "Demolition Measures",
+                      "TRANSLATIONS": {
+                        "DE": "Abbruchmaßnahmen"
+                      }
+                    },
+                    "contaminated-site-remediation": {
+                      "NAME": "Contaminated Site Remediation",
+                      "TRANSLATIONS": {
+                        "DE": "Altlastensanierung"
+                      }
+                    },
+                    "surface-preparation": {
+                      "NAME": "Surface Preparation",
+                      "TRANSLATIONS": {
+                        "DE": "Oberflächenvorbereitung"
+                      }
+                    },
+                    "explosive-ordnance-clearance": {
+                      "NAME": "Explosive Ordnance Clearance",
+                      "TRANSLATIONS": {
+                        "DE": "Kampfmittelbeseitigung"
+                      }
+                    },
+                    "cultural-heritage-finds": {
+                      "NAME": "Cultural Heritage Finds",
+                      "TRANSLATIONS": {
+                        "DE": "Kulturerbe-Funde"
+                      }
+                    },
+                    "other": {
+                      "NAME": "Other Site Preparation",
+                      "TRANSLATIONS": {
+                        "DE": "Sonstiges Herrichten des Grundstücks"
+                      }
+                    }
+                  },
+                  "public-infrastructure-development": {
+                    "NAME": "Public Infrastructure Development",
+                    "TRANSLATIONS": {
+                      "DE": "Öffentliche Erschließung"
+                    },
+                    "wastewater-disposal": {
+                      "NAME": "Wastewater Disposal",
+                      "TRANSLATIONS": {
+                        "DE": "Abwasserentsorgung"
+                      }
+                    },
+                    "water-supply": {
+                      "NAME": "Water Supply",
+                      "TRANSLATIONS": {
+                        "DE": "Wasserversorgung"
+                      }
+                    },
+                    "gas-supply": {
+                      "NAME": "Gas Supply",
+                      "TRANSLATIONS": {
+                        "DE": "Gasversorgung"
+                      }
+                    },
+                    "district-heating-supply": {
+                      "NAME": "District Heating Supply",
+                      "TRANSLATIONS": {
+                        "DE": "Fernwärmeversorgung"
+                      }
+                    },
+                    "power-supply": {
+                      "NAME": "Power Supply",
+                      "TRANSLATIONS": {
+                        "DE": "Stromversorgung"
+                      }
+                    },
+                    "telecommunications": {
+                      "NAME": "Telecommunications",
+                      "TRANSLATIONS": {
+                        "DE": "Telekommunikation"
+                      }
+                    },
+                    "traffic-development": {
+                      "NAME": "Traffic Development",
+                      "TRANSLATIONS": {
+                        "DE": "Verkehrserschließung"
+                      }
+                    },
+                    "waste-disposal": {
+                      "NAME": "Waste Disposal",
+                      "TRANSLATIONS": {
+                        "DE": "Abfallentsorgung"
+                      }
+                    },
+                    "other": {
+                      "NAME": "Other Public Infrastructure Development",
+                      "TRANSLATIONS": {
+                        "DE": "Sonstige öffentliche Erschließung"
+                      }
+                    }
+                  },
+                  "private-infrastructure-development": {
+                    "NAME": "Private Infrastructure Development",
+                    "TRANSLATIONS": {
+                      "DE": "Private Erschließung"
+                    }
+                  },
+                  "compensatory-measures-and-levies": {
+                    "NAME": "Compensatory Measures And Levies",
+                    "TRANSLATIONS": {
+                      "DE": "Ausgleichsmaßnahmen und -abgaben"
+                    },
+                    "compensatory-measures": {
+                      "NAME": "Compensatory Measures",
+                      "TRANSLATIONS": {
+                        "DE": "Ausgleichsmaßnahmen"
+                      }
+                    },
+                    "compensatory-levies": {
+                      "NAME": "Compensatory Levies",
+                      "TRANSLATIONS": {
+                        "DE": "Ausgleichsabgaben"
+                      }
+                    },
+                    "other": {
+                      "NAME": "Other Compensatory Measures And Levies",
+                      "TRANSLATIONS": {
+                        "DE": "Sonstige Ausgleichsmaßnahmen und -abgaben"
+                      }
+                    }
+                  },
+                  "transitional-measures": {
+                    "NAME": "Transitional Measures",
+                    "TRANSLATIONS": {
+                      "DE": "Übergangsmaßnahmen"
+                    },
+                    "structural-measures": {
+                      "NAME": "Structural Measures",
+                      "TRANSLATIONS": {
+                        "DE": "Bauliche Maßnahmen"
+                      }
+                    },
+                    "organizational-measures": {
+                      "NAME": "Organizational Measures",
+                      "TRANSLATIONS": {
+                        "DE": "Organisatorische Maßnahmen"
+                      }
+                    },
+                    "other": {
+                      "NAME": "Other Transitional Measures",
+                      "TRANSLATIONS": {
+                        "DE": "Sonstige Übergangsmaßnahmen"
+                      }
+                    }
+                  }
+                },
+                "other": {
+                  "NAME": "Other Development Costs",
+                  "TRANSLATIONS": {
+                    "DE": "Sonstige Erschließungskosten"
+                  }
+                }
+              },
+              "building-structural-components": {
+                "NAME": "Building Structural Components",
+                "TRANSLATIONS": {
+                  "DE": "Bauwerk - Baukonstruktionen"
+                },
+                "excavation-earthworks": {
+                  "NAME": "Excavation Earthworks",
+                  "TRANSLATIONS": {
+                    "DE": "Baugrube/Erdarbeiten"
+                  }
+                },
+                "foundation-substructure": {
+                  "NAME": "Foundation Substructure",
+                  "TRANSLATIONS": {
+                    "DE": "Gründung/Unterbau"
+                  }
+                },
+                "external-walls-vertical-structural-components-outside": {
+                  "NAME": "External Walls Vertical Structural Components Outside",
+                  "TRANSLATIONS": {
+                    "DE": "Außenwände/Vertikale Baukonstruktionen, außen"
+                  }
+                },
+                "internal-walls-vertical-structural-components-inside": {
+                  "NAME": "Internal Walls Vertical Structural Components Inside",
+                  "TRANSLATIONS": {
+                    "DE": "Innenwände/Vertikale Baukonstruktionen, innen"
+                  }
+                },
+                "ceilings-horizontal-structural-components": {
+                  "NAME": "Ceilings Horizontal Structural Components",
+                  "TRANSLATIONS": {
+                    "DE": "Decken/Horizontale Baukonstruktionen"
+                  }
+                },
+                "roofs": {
+                  "NAME": "Roofs",
+                  "TRANSLATIONS": {
+                    "DE": "Dächer"
+                  }
+                },
+                "infrastructure-facilities": {
+                  "NAME": "Infrastructure Facilities",
+                  "TRANSLATIONS": {
+                    "DE": "Infrastrukturanlagen"
+                  }
+                },
+                "structural-installations": {
+                  "NAME": "Structural Installations",
+                  "TRANSLATIONS": {
+                    "DE": "Baukonstruktive Einbauten"
+                  }
+                },
+                "other-measures-for-structural-components": {
+                  "NAME": "Other Measures For Structural Components",
+                  "TRANSLATIONS": {
+                    "DE": "Sonstige Maßnahmen für Baukonstruktionen"
+                  }
+                }
+              },
+              "technical-systems": {
+                "NAME": "Technical Systems",
+                "TRANSLATIONS": {
+                  "DE": "Bauwerk - Technische Anlagen"
+                },
+                "wastewater-water-gas-systems": {
+                  "NAME": "Wastewater Water Gas Systems",
+                  "TRANSLATIONS": {
+                    "DE": "Abwasser-, Wasser-, Gasanlagen"
+                  }
+                },
+                "heating-supply-systems": {
+                  "NAME": "Heating Supply Systems",
+                  "TRANSLATIONS": {
+                    "DE": "Wärmeversorgungsanlagen"
+                  }
+                },
+                "room-air-technology-systems": {
+                  "NAME": "Room Air Technology Systems",
+                  "TRANSLATIONS": {
+                    "DE": "Lufttechnische Anlagen"
+                  }
+                },
+                "electrical-systems": {
+                  "NAME": "Electrical Systems",
+                  "TRANSLATIONS": {
+                    "DE": "Starkstromanlagen"
+                  }
+                },
+                "communication-safety-and-information-technology-systems": {
+                  "NAME": "Communication Safety And Information Technology Systems",
+                  "TRANSLATIONS": {
+                    "DE": "Kommunikations-, Sicherheits- und informationstechnische Anlagen"
+                  }
+                },
+                "conveying-systems": {
+                  "NAME": "Conveying Systems",
+                  "TRANSLATIONS": {
+                    "DE": "Förderanlagen"
+                  }
+                },
+                "usage-specific-and-process-engineering-systems": {
+                  "NAME": "Usage Specific And Process Engineering Systems",
+                  "TRANSLATIONS": {
+                    "DE": "Nutzungsspezifische und verfahrenstechnische Anlagen"
+                  }
+                },
+                "building-and-facility-automation": {
+                  "NAME": "Building And Facility Automation",
+                  "TRANSLATIONS": {
+                    "DE": "Gebäude- und Anlagenautomation"
+                  }
+                },
+                "other-measures-for-technical-systems": {
+                  "NAME": "Other Measures For Technical Systems",
+                  "TRANSLATIONS": {
+                    "DE": "Sonstige Maßnahmen für technische Anlagen"
+                  }
+                }
+              },
+              "outdoor-facilities-and-open-spaces": {
+                "NAME": "Outdoor Facilities And Open Spaces",
+                "TRANSLATIONS": {
+                  "DE": "Außenanlagen und Freiflächen"
+                },
+                "earthworks": {
+                  "NAME": "Earthworks",
+                  "TRANSLATIONS": {
+                    "DE": "Erdarbeiten"
+                  }
+                },
+                "foundation-substructure": {
+                  "NAME": "Foundation Substructure",
+                  "TRANSLATIONS": {
+                    "DE": "Gründung/Unterbau"
+                  }
+                },
+                "pavement-surface-courses": {
+                  "NAME": "Pavement Surface Courses",
+                  "TRANSLATIONS": {
+                    "DE": "Beläge, Oberflächenschichten"
+                  }
+                },
+                "structural-components": {
+                  "NAME": "Structural Components",
+                  "TRANSLATIONS": {
+                    "DE": "Baukonstruktionen"
+                  }
+                },
+                "technical-systems": {
+                  "NAME": "Technical Systems",
+                  "TRANSLATIONS": {
+                    "DE": "Technische Anlagen"
+                  }
+                },
+                "installations-in-outdoor-facilities-and-open-spaces": {
+                  "NAME": "Installations In Outdoor Facilities And Open Spaces",
+                  "TRANSLATIONS": {
+                    "DE": "Einbauten in Außenanlagen und Freiflächen"
+                  }
+                },
+                "other-measures-for-outdoor-facilities-and-open-spaces": {
+                  "NAME": "Other Measures For Outdoor Facilities And Open Spaces",
+                  "TRANSLATIONS": {
+                    "DE": "Sonstige Maßnahmen für Außenanlagen und Freiflächen"
+                  }
+                }
+              },
+              "equipment-and-artworks": {
+                "NAME": "Equipment And Artworks",
+                "TRANSLATIONS": {
+                  "DE": "Ausstattung und Kunstwerke"
+                },
+                "general-equipment": {
+                  "NAME": "General Equipment",
+                  "TRANSLATIONS": {
+                    "DE": "Allgemeine Ausstattung"
+                  }
+                },
+                "special-equipment": {
+                  "NAME": "Special Equipment",
+                  "TRANSLATIONS": {
+                    "DE": "Besondere Ausstattung"
+                  }
+                },
+                "information-technology-equipment": {
+                  "NAME": "Information Technology Equipment",
+                  "TRANSLATIONS": {
+                    "DE": "Informationstechnische Ausstattung"
+                  }
+                },
+                "artistic-equipment": {
+                  "NAME": "Artistic Equipment",
+                  "TRANSLATIONS": {
+                    "DE": "Künstlerische Ausstattung"
+                  },
+                  "art-objects": {
+                    "NAME": "Art Objects",
+                    "TRANSLATIONS": {
+                      "DE": "Kunstobjekte"
+                    }
+                  },
+                  "artistic-design-of-the-building": {
+                    "NAME": "Artistic Design Of The Building",
+                    "TRANSLATIONS": {
+                      "DE": "Künstlerische Gestaltung des Bauwerks"
+                    }
+                  },
+                  "artistic-design-of-outdoor-facilities-and-open-spaces": {
+                    "NAME": "Artistic Design Of Outdoor Facilities And Open Spaces",
+                    "TRANSLATIONS": {
+                      "DE": "Künstlerische Gestaltung der Außenanlagen und Freiflächen"
+                    }
+                  },
+                  "other": {
+                    "NAME": "Other Artistic Equipment",
+                    "TRANSLATIONS": {
+                      "DE": "Sonstige künstlerische Ausstattung"
+                    }
+                  }
+                },
+                "other": {
+                  "NAME": "Other Equipment And Artworks",
+                  "TRANSLATIONS": {
+                    "DE": "Sonstige Ausstattung und Kunstwerke"
+                  }
+                }
+              },
+              "construction-ancillary-costs": {
+                "NAME": "Construction Ancillary Costs",
+                "TRANSLATIONS": {
+                  "DE": "Baunebenkosten"
+                },
+                "client-tasks": {
+                  "NAME": "Client Tasks",
+                  "TRANSLATIONS": {
+                    "DE": "Bauherrenaufgaben"
+                  },
+                  "project-management": {
+                    "NAME": "Project Management",
+                    "TRANSLATIONS": {
+                      "DE": "Projektleitung"
+                    }
+                  },
+                  "needs-assessment": {
+                    "NAME": "Needs Assessment",
+                    "TRANSLATIONS": {
+                      "DE": "Bedarfsplanung"
+                    }
+                  },
+                  "project-control": {
+                    "NAME": "Project Control",
+                    "TRANSLATIONS": {
+                      "DE": "Projektsteuerung"
+                    }
+                  },
+                  "safety-and-health-protection-coordination": {
+                    "NAME": "Safety And Health Protection Coordination",
+                    "TRANSLATIONS": {
+                      "DE": "Sicherheits- und Gesundheitsschutzkoordination"
+                    }
+                  },
+                  "award-procedures": {
+                    "NAME": "Award Procedures",
+                    "TRANSLATIONS": {
+                      "DE": "Vergabeverfahren"
+                    }
+                  },
+                  "other": {
+                    "NAME": "Other Client Tasks",
+                    "TRANSLATIONS": {
+                      "DE": "Sonstige Bauherrenaufgaben"
+                    }
+                  }
+                },
+                "preparation-of-object-planning": {
+                  "NAME": "Preparation Of Object Planning",
+                  "TRANSLATIONS": {
+                    "DE": "Vorbereitung der Objektplanung"
+                  },
+                  "investigations": {
+                    "NAME": "Investigations",
+                    "TRANSLATIONS": {
+                      "DE": "Untersuchungen"
+                    }
+                  },
+                  "valuations": {
+                    "NAME": "Valuations",
+                    "TRANSLATIONS": {
+                      "DE": "Gutachten"
+                    }
+                  },
+                  "urban-planning-services": {
+                    "NAME": "Urban Planning Services",
+                    "TRANSLATIONS": {
+                      "DE": "Städtebauliche Leistungen"
+                    }
+                  },
+                  "landscape-planning-services": {
+                    "NAME": "Landscape Planning Services",
+                    "TRANSLATIONS": {
+                      "DE": "Landschaftsplanerische Leistungen"
+                    }
+                  },
+                  "competitions": {
+                    "NAME": "Competitions",
+                    "TRANSLATIONS": {
+                      "DE": "Wettbewerbe"
+                    }
+                  },
+                  "other": {
+                    "NAME": "Other Preparation Of Object Planning",
+                    "TRANSLATIONS": {
+                      "DE": "Sonstige Vorbereitung der Objektplanung"
+                    }
+                  }
+                },
+                "object-planning": {
+                  "NAME": "Object Planning",
+                  "TRANSLATIONS": {
+                    "DE": "Objektplanung"
+                  },
+                  "buildings-and-interiors": {
+                    "NAME": "Buildings And Interiors",
+                    "TRANSLATIONS": {
+                      "DE": "Gebäude und Innenräume"
+                    }
+                  },
+                  "open-spaces": {
+                    "NAME": "Open Spaces",
+                    "TRANSLATIONS": {
+                      "DE": "Freianlagen"
+                    }
+                  },
+                  "civil-engineering-structures": {
+                    "NAME": "Civil Engineering Structures",
+                    "TRANSLATIONS": {
+                      "DE": "Ingenieurbauwerke"
+                    }
+                  },
+                  "traffic-facilities": {
+                    "NAME": "Traffic Facilities",
+                    "TRANSLATIONS": {
+                      "DE": "Verkehrsanlagen"
+                    }
+                  },
+                  "other": {
+                    "NAME": "Other Object Planning",
+                    "TRANSLATIONS": {
+                      "DE": "Sonstige Objektplanung"
+                    }
+                  }
+                },
+                "specialist-planning": {
+                  "NAME": "Specialist Planning",
+                  "TRANSLATIONS": {
+                    "DE": "Fachplanung"
+                  },
+                  "structural-planning": {
+                    "NAME": "Structural Planning",
+                    "TRANSLATIONS": {
+                      "DE": "Tragwerksplanung"
+                    }
+                  },
+                  "technical-equipment": {
+                    "NAME": "Technical Equipment",
+                    "TRANSLATIONS": {
+                      "DE": "Technische Ausrüstung"
+                    }
+                  },
+                  "building-physics": {
+                    "NAME": "Building Physics",
+                    "TRANSLATIONS": {
+                      "DE": "Bauphysik"
+                    }
+                  },
+                  "geotechnics": {
+                    "NAME": "Geotechnics",
+                    "TRANSLATIONS": {
+                      "DE": "Geotechnik"
+                    }
+                  },
+                  "engineering-surveying": {
+                    "NAME": "Engineering Surveying",
+                    "TRANSLATIONS": {
+                      "DE": "Ingenieurvermessung"
+                    }
+                  },
+                  "lighting-technology-daylight-technology": {
+                    "NAME": "Lighting Technology Daylight Technology",
+                    "TRANSLATIONS": {
+                      "DE": "Lichttechnik/Tageslichttechnik"
+                    }
+                  },
+                  "fire-protection": {
+                    "NAME": "Fire Protection",
+                    "TRANSLATIONS": {
+                      "DE": "Brandschutz"
+                    }
+                  },
+                  "contaminated-sites-explosive-ordnance-cultural-heritage-finds": {
+                    "NAME": "Contaminated Sites Explosive Ordnance Cultural Heritage Finds",
+                    "TRANSLATIONS": {
+                      "DE": "Altlasten, Kampfmittel, Kulturerbe-Funde"
+                    }
+                  },
+                  "other": {
+                    "NAME": "Other Specialist Planning",
+                    "TRANSLATIONS": {
+                      "DE": "Sonstige Fachplanung"
+                    }
+                  }
+                },
+                "artistic-services": {
+                  "NAME": "Artistic Services",
+                  "TRANSLATIONS": {
+                    "DE": "Künstlerische Leistungen"
+                  },
+                  "art-competitions": {
+                    "NAME": "Art Competitions",
+                    "TRANSLATIONS": {
+                      "DE": "Kunstwettbewerbe"
+                    }
+                  },
+                  "fees": {
+                    "NAME": "Artistic Service Fees",
+                    "TRANSLATIONS": {
+                      "DE": "Honorare für künstlerische Leistungen"
+                    }
+                  },
+                  "other": {
+                    "NAME": "Other Artistic Services",
+                    "TRANSLATIONS": {
+                      "DE": "Sonstige künstlerische Leistungen"
+                    }
+                  }
+                },
+                "general-construction-ancillary-costs": {
+                  "NAME": "General Construction Ancillary Costs",
+                  "TRANSLATIONS": {
+                    "DE": "Allgemeine Baunebenkosten"
+                  },
+                  "expertise-and-consulting": {
+                    "NAME": "Expertise And Consulting",
+                    "TRANSLATIONS": {
+                      "DE": "Gutachten und Beratung"
+                    }
+                  },
+                  "inspections-approvals-acceptance": {
+                    "NAME": "Inspections Approvals Acceptance",
+                    "TRANSLATIONS": {
+                      "DE": "Prüfungen, Genehmigungen, Abnahmen"
+                    }
+                  },
+                  "operating-costs": {
+                    "NAME": "Operating Costs",
+                    "TRANSLATIONS": {
+                      "DE": "Betriebskosten"
+                    }
+                  },
+                  "sampling-costs": {
+                    "NAME": "Sampling Costs",
+                    "TRANSLATIONS": {
+                      "DE": "Bemusterungskosten"
+                    }
+                  },
+                  "operating-costs-after-acceptance": {
+                    "NAME": "Operating Costs After Acceptance",
+                    "TRANSLATIONS": {
+                      "DE": "Betriebskosten nach Abnahme"
+                    }
+                  },
+                  "insurance": {
+                    "NAME": "Insurance",
+                    "TRANSLATIONS": {
+                      "DE": "Versicherungen"
+                    }
+                  },
+                  "other": {
+                    "NAME": "Other General Construction Ancillary Costs",
+                    "TRANSLATIONS": {
+                      "DE": "Sonstige allgemeine Baunebenkosten"
+                    }
+                  }
+                },
+                "other-construction-ancillary-costs": {
+                  "NAME": "Other Construction Ancillary Costs",
+                  "TRANSLATIONS": {
+                    "DE": "Sonstige Baunebenkosten"
+                  },
+                  "documentation-of-existing-conditions": {
+                    "NAME": "Documentation Of Existing Conditions",
+                    "TRANSLATIONS": {
+                      "DE": "Bestandsdokumentation"
+                    }
+                  },
+                  "other": {
+                    "NAME": "Other Construction Ancillary Costs",
+                    "TRANSLATIONS": {
+                      "DE": "Sonstige Baunebenkosten"
+                    }
+                  }
+                }
+              },
+              "financing": {
+                "NAME": "Financing",
+                "TRANSLATIONS": {
+                  "DE": "Finanzierung"
+                },
+                "financing-ancillary-costs": {
+                  "NAME": "Financing Ancillary Costs",
+                  "TRANSLATIONS": {
+                    "DE": "Finanzierungsnebenkosten"
+                  }
+                },
+                "debt-capital-interest": {
+                  "NAME": "Debt Capital Interest",
+                  "TRANSLATIONS": {
+                    "DE": "Fremdkapitalzinsen"
+                  }
+                },
+                "equity-capital-interest": {
+                  "NAME": "Equity Capital Interest",
+                  "TRANSLATIONS": {
+                    "DE": "Eigenkapitalzinsen"
+                  }
+                },
+                "guarantees": {
+                  "NAME": "Guarantees",
+                  "TRANSLATIONS": {
+                    "DE": "Bürgschaften"
+                  }
+                },
+                "other": {
+                  "NAME": "Other Financing",
+                  "TRANSLATIONS": {
+                    "DE": "Sonstige Finanzierung"
+                  }
+                }
+              },
+              "taxes-and-duties": {
+                "NAME": "Construction Taxes And Duties",
+                "TRANSLATIONS": {
+                  "DE": "Steuern und Abgaben"
+                }
+              },
+              "grants-subsidies": {
+                "NAME": "Construction Grants Subsidies",
+                "TRANSLATIONS": {
+                  "DE": "Zuschüsse, Subventionen"
+                }
+              },
+              "income": {
+                "NAME": "Construction Income",
+                "TRANSLATIONS": {
+                  "DE": "Einnahmen"
+                }
+              }
+            },
+            "operating-costs-ongoing-use": {
+              "NAME": "Operating Costs Ongoing Use",
+              "TRANSLATIONS": {
+                "DE": "Betriebskosten im laufenden Betrieb"
+              },
+              "operational-management-costs": {
+                "NAME": "Operational Management Costs",
+                "TRANSLATIONS": {
+                  "DE": "Betriebsführungskosten"
+                },
+                "property-management": {
+                  "NAME": "Property Management Costs",
+                  "TRANSLATIONS": {
+                    "DE": "Hausverwaltung"
+                  }
+                },
+                "caretaker": {
+                  "NAME": "Caretaker Costs",
+                  "TRANSLATIONS": {
+                    "DE": "Hausmeister"
+                  }
+                },
+                "insurance": {
+                  "NAME": "Insurance Costs",
+                  "TRANSLATIONS": {
+                    "DE": "Versicherungen"
+                  }
+                }
+              },
+              "energy-costs": {
+                "NAME": "Energy Costs",
+                "TRANSLATIONS": {
+                  "DE": "Energiekosten"
+                },
+                "electricity": {
+                  "NAME": "Electricity Costs",
+                  "TRANSLATIONS": {
+                    "DE": "Strom"
+                  }
+                },
+                "heating": {
+                  "NAME": "Heating Costs",
+                  "TRANSLATIONS": {
+                    "DE": "Heizung"
+                  }
+                },
+                "hot-water": {
+                  "NAME": "Hot Water Costs",
+                  "TRANSLATIONS": {
+                    "DE": "Warmwasser"
+                  }
+                }
+              },
+              "water-costs-wastewater-fees": {
+                "NAME": "Water Costs Wastewater Fees",
+                "TRANSLATIONS": {
+                  "DE": "Wasserkosten, Abwassergebühren"
+                }
+              },
+              "waste-disposal": {
+                "NAME": "Waste Disposal Costs",
+                "TRANSLATIONS": {
+                  "DE": "Müllentsorgung"
+                }
+              },
+              "security-and-maintenance-costs": {
+                "NAME": "Security And Maintenance Costs",
+                "TRANSLATIONS": {
+                  "DE": "Sicherheits- und Wartungskosten"
+                }
+              },
+              "costs-for-common-facilities": {
+                "NAME": "Costs For Common Facilities",
+                "TRANSLATIONS": {
+                  "DE": "Kosten für Gemeinschaftsanlagen"
+                },
+                "elevators": {
+                  "NAME": "Elevators Common Facility Costs",
+                  "TRANSLATIONS": {
+                    "DE": "Aufzüge"
+                  }
+                },
+                "underground-garage": {
+                  "NAME": "Underground Garage Common Facility Costs",
+                  "TRANSLATIONS": {
+                    "DE": "Tiefgarage"
+                  }
+                },
+                "technical-rooms": {
+                  "NAME": "Technical Rooms Common Facility Costs",
+                  "TRANSLATIONS": {
+                    "DE": "Technikräume"
+                  }
+                }
+              }
+            },
+            "maintenance-and-modernization-costs": {
+              "NAME": "Maintenance And Modernization Costs",
+              "TRANSLATIONS": {
+                "DE": "Instandhaltungs- und Modernisierungskosten"
+              },
+              "regular-maintenance": {
+                "NAME": "Regular Maintenance",
+                "TRANSLATIONS": {
+                  "DE": "Regelmäßige Wartung"
+                },
+                "elevators": {
+                  "NAME": "Elevators Maintenance",
+                  "TRANSLATIONS": {
+                    "DE": "Aufzüge"
+                  }
+                },
+                "heating-systems": {
+                  "NAME": "Heating Systems Maintenance",
+                  "TRANSLATIONS": {
+                    "DE": "Heizungsanlagen"
+                  }
+                }
+              },
+              "replacement-of-components": {
+                "NAME": "Replacement Of Components",
+                "TRANSLATIONS": {
+                  "DE": "Austausch von Bauteilen"
+                },
+                "windows": {
+                  "NAME": "Windows Replacement",
+                  "TRANSLATIONS": {
+                    "DE": "Fenster"
+                  }
+                },
+                "facade": {
+                  "NAME": "Facade Replacement",
+                  "TRANSLATIONS": {
+                    "DE": "Fassade"
+                  }
+                },
+                "roofs": {
+                  "NAME": "Roofs Replacement",
+                  "TRANSLATIONS": {
+                    "DE": "Dächer"
+                  }
+                }
+              },
+              "modernization": {
+                "NAME": "Modernization",
+                "TRANSLATIONS": {
+                  "DE": "Modernisierung"
+                },
+                "energy-rehabilitation": {
+                  "NAME": "Energy Rehabilitation",
+                  "TRANSLATIONS": {
+                    "DE": "Energetische Sanierung"
+                  }
+                },
+                "barrier-free-conversion": {
+                  "NAME": "Barrier Free Conversion",
+                  "TRANSLATIONS": {
+                    "DE": "Barrierefreier Umbau"
+                  }
+                }
+              }
+            },
+            "dismantling-and-disposal-costs": {
+              "NAME": "Dismantling And Disposal Costs",
+              "TRANSLATIONS": {
+                "DE": "Rückbau- und Entsorgungskosten"
+              },
+              "demolition-costs": {
+                "NAME": "Demolition Costs",
+                "TRANSLATIONS": {
+                  "DE": "Abbruchkosten"
+                }
+              },
+              "disposal-of-contaminated-materials": {
+                "NAME": "Disposal Of Contaminated Materials",
+                "TRANSLATIONS": {
+                  "DE": "Entsorgung von kontaminierten Materialien"
+                }
+              },
+              "renaturation-or-reuse-of-the-land": {
+                "NAME": "Renaturation Or Reuse Of The Land",
+                "TRANSLATIONS": {
+                  "DE": "Renaturierung oder Wiederverwendung des Grundstücks"
+                }
+              }
+            }
+          },
+          "financing-costs": {
+            "NAME": "Financing Costs",
+            "TRANSLATIONS": {
+              "DE": "Finanzierungskosten"
+            },
+            "interest": {
+              "NAME": "Financing Interest",
+              "TRANSLATIONS": {
+                "DE": "Zinsen"
+              }
+            },
+            "fees": {
+              "NAME": "Financing Fees",
+              "TRANSLATIONS": {
+                "DE": "Gebühren"
+              }
+            }
+          },
+          "taxes-and-duties": {
+            "NAME": "Taxes And Duties",
+            "TRANSLATIONS": {
+              "DE": "Steuern und Abgaben"
+            }
+          },
+          "grants-subsidies": {
+            "NAME": "Grants Subsidies",
+            "TRANSLATIONS": {
+              "DE": "Zuschüsse, Subventionen"
+            }
+          },
+          "income": {
+            "NAME": "Income",
+            "TRANSLATIONS": {
+              "DE": "Einnahmen"
+            }
+          }
+        }
+      }
+    },
+    "wasp": {
+      "connection": {
+        "rotation": {
+          "NAME": "rotation",
+          "TRANSLATIONS": {
+            "DE": "Drehung"
+          }
+        }
+      }
+    }
+  }
+}
