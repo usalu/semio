@@ -1796,6 +1796,41 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
 
 #region Models
 
+
+[Model("🔐", "AI", "AtI", "The ID of the attribute.")]
+public class AttributeId : Model<AttributeId>
+{
+    [Name("🔑", "Ke?", "Key?", "The optional key of the attribute.")]
+    public string Key { get; set; } = "";
+
+    public static implicit operator AttributeId(Attribute attribute) => new() { Key = attribute.Key };
+    public static implicit operator AttributeId(AttributeDiff diff) => new() { Key = diff.Key };
+}
+
+[Model("🔐", "AD", "ADf", "A diff for attributes.")]
+public class AttributeDiff : Model<AttributeDiff>
+{
+    [Name("🔑", "Ke?", "Key?", "The optional key of the attribute.")]
+    public string Key { get; set; } = "";
+    [Description("🔢", "Vl?", "Val?", "The optional value of the attribute.")]
+    public string Value { get; set; } = "";
+    [Description("📖", "Df?", "Def?", "The optional definition of the attribute.")]
+    public string Definition { get; set; } = "";
+
+    public static implicit operator AttributeDiff(AttributeId id) => new() { Key = id.Key };
+    public static implicit operator AttributeDiff(Attribute attribute) => new() { Key = attribute.Key, Value = attribute.Value, Definition = attribute.Definition };
+
+    public AttributeDiff MergeDiff(AttributeDiff other)
+    {
+        return new AttributeDiff
+        {
+            Key = string.IsNullOrEmpty(other.Key) ? Key : other.Key,
+            Value = string.IsNullOrEmpty(other.Value) ? Value : other.Value,
+            Definition = string.IsNullOrEmpty(other.Definition) ? Definition : other.Definition
+        };
+    }
+}
+
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-attribute-"/>
 /// </summary>
@@ -1811,6 +1846,9 @@ public class Attribute : Model<Attribute>
     [Description("📖", "Df?", "Def?", "The optional definition [ text | uri ] of the attribute.")]
     public string Definition { get; set; } = "";
 
+    public static implicit operator Attribute(AttributeId id) => new() { Key = id.Key };
+    public static implicit operator Attribute(AttributeDiff diff) => new() { Key = diff.Key, Value = diff.Value, Definition = diff.Definition };
+
     public Attribute ApplyDiff(AttributeDiff diff)
     {
         return new Attribute
@@ -1820,7 +1858,6 @@ public class Attribute : Model<Attribute>
             Definition = !string.IsNullOrEmpty(diff.Definition) ? diff.Definition : Definition
         };
     }
-
     public AttributeDiff CreateDiff()
     {
         return new AttributeDiff
@@ -1830,9 +1867,6 @@ public class Attribute : Model<Attribute>
             Definition = Definition
         };
     }
-
-
-
     public AttributeDiff InverseDiff(AttributeDiff appliedDiff)
     {
         return new AttributeDiff
@@ -1847,28 +1881,6 @@ public class Attribute : Model<Attribute>
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Atr({ToHumanIdString()})";
 }
-
-[Model("🔐", "AD", "ADf", "A diff for attributes.")]
-public class AttributeDiff : Model<AttributeDiff>
-{
-    [Name("🔑", "Ke?", "Key?", "The optional key of the attribute.")]
-    public string Key { get; set; } = "";
-    [Description("🔢", "Vl?", "Val?", "The optional value of the attribute.")]
-    public string Value { get; set; } = "";
-    [Description("📖", "Df?", "Def?", "The optional definition of the attribute.")]
-    public string Definition { get; set; } = "";
-
-    public AttributeDiff MergeDiff(AttributeDiff other)
-    {
-        return new AttributeDiff
-        {
-            Key = string.IsNullOrEmpty(other.Key) ? Key : other.Key,
-            Value = string.IsNullOrEmpty(other.Value) ? Value : other.Value,
-            Definition = string.IsNullOrEmpty(other.Definition) ? Definition : other.Definition
-        };
-    }
-}
-
 
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-benchmark-"/>
@@ -1911,6 +1923,47 @@ public class QualityId : Model<QualityId>
     public string Key { get; set; } = "";
 
     public static implicit operator QualityId(Quality quality) => new() { Key = quality.Key };
+    public static implicit operator QualityId(QualityDiff diff) => new() { Key = diff.Key };
+}
+
+public class QualityDiff : Model<QualityDiff>
+{
+    [Id("🔑", "Ke", "Key", "The key of the quality.")]
+    public string Key { get; set; } = "";
+    [Name("📛", "Nm", "Name", "The name of the quality.", PropImportance.REQUIRED)]
+    public string Name { get; set; } = "";
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the quality.")]
+    public string Description { get; set; } = "";
+    [Url("🔗", "Ur?", "Uri?", "The Unique Resource Identifier (URI) of the quality.")]
+    public string Uri { get; set; } = "";
+    [FalseOrTrue("🔢", "Sc?", "Sc?", "Whether the quality is scalable.")]
+    public bool Scalable { get; set; } = false;
+    [Name("🔢", "Kd", "Kn", "The kind of the quality.")]
+    public QualityKind Kind { get; set; } = QualityKind.General;
+    [Name("Ⓜ️", "SI?", "SI?", "The optional default SI unit of the quality.")]
+    public string SI { get; set; } = "";
+    [Name("🦶", "Im?", "Imp?", "The optional default imperial unit of the quality.")]
+    public string Imperial { get; set; } = "";
+    [NumberProp("⬇️", "Mi?", "Min?", "The optional minimum value of the quality.")]
+    public float Min { get; set; } = 0;
+    [FalseOrTrue("⬇️", "MiE?", "MiE?", "Whether the minimum value is excluded from the range.")]
+    public bool MinExcluded { get; set; } = true;
+    [NumberProp("⬆️", "Mx?", "Max?", "The optional maximum value of the quality.")]
+    public float Max { get; set; } = 0;
+    [FalseOrTrue("⬆️", "MxE?", "MxE?", "Whether the maximum value is excluded from the range.")]
+    public bool MaxExcluded { get; set; } = true;
+    [NumberProp("Ⓜ️", "Dl?", "Dfl?", "The optional default value of the quality. Either a default value or a formula can be set.")]
+    public float Default { get; set; } = 0;
+    [ModelProp("🟰", "Fo?", "For?", "The optional formula of the quality.")]
+    public string Formula { get; set; } = "";
+    [ModelProp("🔢", "Bm*", "Bmk*", "The optional benchmarks of the quality.", PropImportance.OPTIONAL)]
+    public List<Benchmark> Benchmarks { get; set; } = new();
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the quality.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
+
+    public static implicit operator QualityDiff(QualityId quality) => new() { Key = quality.Key };
+
+    public static implicit operator QualityDiff(Quality quality) => new() { Key = quality.Key, Name = quality.Name, Description = quality.Description, Uri = quality.Uri, Scalable = quality.Scalable, Kind = quality.Kind, SI = quality.SI, Imperial = quality.Imperial, Min = quality.Min, MinExcluded = quality.MinExcluded, Max = quality.Max, MaxExcluded = quality.MaxExcluded, Default = quality.Default, Formula = quality.Formula, Benchmarks = quality.Benchmarks, Attributes = quality.Attributes };
 }
 
 /// <summary>
@@ -1953,6 +2006,26 @@ public class Quality : Model<Quality>
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator Quality(QualityId id) => new() { Key = id.Key };
+    public static implicit operator Quality(QualityDiff diff) => new()
+    {
+        Key = diff.Key,
+        Name = diff.Name,
+        Description = diff.Description,
+        Uri = diff.Uri,
+        Scalable = diff.Scalable,
+        Kind = diff.Kind,
+        SI = diff.SI,
+        Imperial = diff.Imperial,
+        Min = diff.Min,
+        MinExcluded = diff.MinExcluded,
+        Max = diff.Max,
+        MaxExcluded = diff.MaxExcluded,
+        Default = diff.Default,
+        Formula = diff.Formula,
+        Benchmarks = diff.Benchmarks,
+        Attributes = diff.Attributes
+    };
+
 }
 
 /// <summary>
@@ -3167,6 +3240,8 @@ public class SideDiff : Model<SideDiff>
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the side.")]
     public string Description { get; set; } = "";
 
+    public static implicit operator SideDiff(Side side) => new() { Piece = side.Piece, DesignPiece = side.DesignPiece, Port = side.Port };
+
     public SideDiff MergeDiff(SideDiff other)
     {
         return new SideDiff
@@ -3346,6 +3421,8 @@ public class Side : Model<Side>
     public PieceId? DesignPiece { get; set; } = null;
     [ModelProp("🔌", "Po", "Por", "The local identifier of the port within the type.")]
     public PortId Port { get; set; } = new();
+
+    public static implicit operator Side(SideDiff diff) => new() { Piece = diff.Piece ?? new(), DesignPiece = diff.DesignPiece, Port = diff.Port ?? new() };
 
     public Side ApplyDiff(SideDiff diff)
     {

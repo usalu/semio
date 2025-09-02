@@ -35,10 +35,12 @@ import {
   ConnectionDiff,
   ConnectionId,
   connectionIdLikeToConnectionId,
+  connectionIdToString,
   Design,
   DesignDiff,
   DesignId,
   designIdLikeToDesignId,
+  designIdToString,
   DiagramPoint,
   FileDiff,
   fileIdLikeToFileId,
@@ -48,25 +50,131 @@ import {
   KitId,
   KitIdLike,
   kitIdLikeToKitId,
+  kitIdToString,
   Piece,
   PieceDiff,
   PieceId,
   pieceIdLikeToPieceId,
+  pieceIdToString,
   Port,
   PortDiff,
   PortId,
   portIdLikeToPortId,
+  portIdToString,
   Representation,
   RepresentationDiff,
   RepresentationId,
   representationIdLikeToRepresentationId,
+  representationIdToString,
   File as SemioFile,
   Type,
   TypeDiff,
   TypeId,
   typeIdLikeToTypeId,
+  typeIdToString,
 } from "./semio";
 
+// #region ID Map Wrapper
+
+class IdMap<K, V> {
+  private stringMap = new Map<string, V>();
+  private keyToString: (key: K) => string;
+
+  constructor(keyToString: (key: K) => string) {
+    this.keyToString = keyToString;
+  }
+
+  set(key: K, value: V): this {
+    const stringKey = this.keyToString(key);
+    this.stringMap.set(stringKey, value);
+    return this;
+  }
+
+  get(key: K): V | undefined {
+    const stringKey = this.keyToString(key);
+    return this.stringMap.get(stringKey);
+  }
+
+  has(key: K): boolean {
+    const stringKey = this.keyToString(key);
+    return this.stringMap.has(stringKey);
+  }
+
+  delete(key: K): boolean {
+    const stringKey = this.keyToString(key);
+    return this.stringMap.delete(stringKey);
+  }
+
+  clear(): void {
+    this.stringMap.clear();
+  }
+
+  get size(): number {
+    return this.stringMap.size;
+  }
+
+  values() {
+    return this.stringMap.values();
+  }
+
+  keys() {
+    throw new Error("IdMap.keys() is not implemented - use direct access instead");
+  }
+
+  entries() {
+    throw new Error("IdMap.entries() is not implemented - use direct access instead");
+  }
+
+  forEach() {
+    throw new Error("IdMap.forEach() is not implemented - use direct access instead");
+  }
+
+  [Symbol.iterator]() {
+    throw new Error("IdMap iteration is not implemented - use direct access instead");
+  }
+}
+
+class NestedIdMap<K1, K2, V> {
+  private stringMap = new Map<string, IdMap<K2, V>>();
+  private key1ToString: (key: K1) => string;
+  private key2ToString: (key: K2) => string;
+
+  constructor(key1ToString: (key: K1) => string, key2ToString: (key: K2) => string) {
+    this.key1ToString = key1ToString;
+    this.key2ToString = key2ToString;
+  }
+
+  has(key1: K1): boolean {
+    const stringKey1 = this.key1ToString(key1);
+    return this.stringMap.has(stringKey1);
+  }
+
+  get(key1: K1): IdMap<K2, V> | undefined {
+    const stringKey1 = this.key1ToString(key1);
+    return this.stringMap.get(stringKey1);
+  }
+
+  set(key1: K1, value: IdMap<K2, V>): this {
+    const stringKey1 = this.key1ToString(key1);
+    this.stringMap.set(stringKey1, value);
+    return this;
+  }
+
+  delete(key1: K1): boolean {
+    const stringKey1 = this.key1ToString(key1);
+    return this.stringMap.delete(stringKey1);
+  }
+
+  clear(): void {
+    this.stringMap.clear();
+  }
+
+  get size(): number {
+    return this.stringMap.size;
+  }
+}
+
+// #endregion
 
 // #region Constants
 
@@ -96,17 +204,7 @@ export type Disposable = () => void;
 export type Url = string;
 // Simplified merge type
 type Merge<A, B> = {
-  [K in keyof A | keyof B]: K extends keyof A
-  ? K extends keyof B
-  ? A[K] extends object
-  ? B[K] extends object
-  ? Merge<A[K], B[K]>
-  : A[K] | B[K]
-  : A[K] | B[K]
-  : A[K]
-  : K extends keyof B
-  ? B[K]
-  : never;
+  [K in keyof A | keyof B]: K extends keyof A ? (K extends keyof B ? (A[K] extends object ? (B[K] extends object ? Merge<A[K], B[K]> : A[K] | B[K]) : A[K] | B[K]) : A[K]) : K extends keyof B ? B[K] : never;
 };
 
 export interface DesignEditorStep {
@@ -119,7 +217,7 @@ export interface DesignEditorEdit {
   undo: DesignEditorStep;
 }
 
-export interface YStore { }
+export interface YStore {}
 
 export interface FileSnapshot {
   snapshot(): SemioFile;
@@ -132,9 +230,9 @@ export interface FileSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
-export interface FileStore extends FileSnapshot { }
+export interface FileStore extends FileSnapshot {}
 
-export interface FileStoreFull extends FileSnapshot, FileActions, FileSubscriptions { }
+export interface FileStoreFull extends FileSnapshot, FileActions, FileSubscriptions {}
 
 export interface RepresentationSnapshot {
   snapshot(): Representation;
@@ -148,9 +246,9 @@ export interface RepresentationSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
-export interface RepresentationStore extends RepresentationSnapshot { }
+export interface RepresentationStore extends RepresentationSnapshot {}
 
-export interface RepresentationStoreFull extends RepresentationSnapshot, RepresentationActions, RepresentationSubscriptions { }
+export interface RepresentationStoreFull extends RepresentationSnapshot, RepresentationActions, RepresentationSubscriptions {}
 
 export interface PortSnapshot {
   snapshot(): Port;
@@ -161,8 +259,8 @@ export interface PortActions {
 export interface PortSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-export interface PortStore extends PortSnapshot { }
-export interface PortStoreFull extends PortSnapshot, PortActions, PortSubscriptions { }
+export interface PortStore extends PortSnapshot {}
+export interface PortStoreFull extends PortSnapshot, PortActions, PortSubscriptions {}
 
 export interface TypeSnapshot {
   snapshot(): Type;
@@ -174,15 +272,15 @@ export interface TypeSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 export interface TypeChildStores {
-  representations: Map<RepresentationId, RepresentationStore>;
-  ports: Map<PortId, PortStore>;
+  representations: Map<string, RepresentationStore>;
+  ports: Map<string, PortStore>;
 }
 export interface TypeChildStoresFull {
-  representations: Map<RepresentationId, RepresentationStoreFull>;
-  ports: Map<PortId, PortStoreFull>;
+  representations: Map<string, RepresentationStoreFull>;
+  ports: Map<string, PortStoreFull>;
 }
-export interface TypeStore extends TypeSnapshot, TypeChildStores { }
-export interface TypeStoreFull extends TypeSnapshot, TypeChildStoresFull, TypeActions, TypeSubscriptions { }
+export interface TypeStore extends TypeSnapshot, TypeChildStores {}
+export interface TypeStoreFull extends TypeSnapshot, TypeChildStoresFull, TypeActions, TypeSubscriptions {}
 
 export interface PieceSnapshot {
   snapshot(): Piece;
@@ -193,10 +291,10 @@ export interface PieceActions {
 export interface PieceSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-export interface PieceChildStores { }
-export interface PieceChildStoresFull { }
-export interface PieceStore extends PieceSnapshot, PieceChildStores { }
-export interface PieceStoreFull extends PieceSnapshot, PieceChildStoresFull, PieceActions, PieceSubscriptions { }
+export interface PieceChildStores {}
+export interface PieceChildStoresFull {}
+export interface PieceStore extends PieceSnapshot, PieceChildStores {}
+export interface PieceStoreFull extends PieceSnapshot, PieceChildStoresFull, PieceActions, PieceSubscriptions {}
 
 export interface ConnectionSnapshot {
   snapshot(): Connection;
@@ -207,8 +305,8 @@ export interface ConnectionActions {
 export interface ConnectionSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-export interface ConnectionStore extends ConnectionSnapshot { }
-export interface ConnectionStoreFull extends ConnectionSnapshot, ConnectionActions, ConnectionSubscriptions { }
+export interface ConnectionStore extends ConnectionSnapshot {}
+export interface ConnectionStoreFull extends ConnectionSnapshot, ConnectionActions, ConnectionSubscriptions {}
 
 export interface DesignSnapshot {
   snapshot(): Design;
@@ -220,15 +318,15 @@ export interface DesignSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 export interface DesignChildStores {
-  pieces: Map<PieceId, PieceStore>;
-  connections: Map<ConnectionId, ConnectionStore>;
+  pieces: Map<string, PieceStore>;
+  connections: Map<string, ConnectionStore>;
 }
 export interface DesignChildStoresFull {
-  pieces: Map<PieceId, PieceStoreFull>;
-  connections: Map<ConnectionId, ConnectionStoreFull>;
+  pieces: Map<string, PieceStoreFull>;
+  connections: Map<string, ConnectionStoreFull>;
 }
-export interface DesignStore extends DesignSnapshot, DesignChildStores { }
-export interface DesignStoreFull extends DesignSnapshot, DesignActions, DesignSubscriptions, DesignChildStoresFull { }
+export interface DesignStore extends DesignSnapshot, DesignChildStores {}
+export interface DesignStoreFull extends DesignSnapshot, DesignActions, DesignSubscriptions, DesignChildStoresFull {}
 
 export interface KitSnapshot {
   snapshot(): Kit;
@@ -267,8 +365,8 @@ export interface KitChildStoresFull {
   designs: Map<DesignId, DesignStoreFull>;
   files: Map<Url, FileStoreFull>;
 }
-export interface KitStore extends KitSnapshot, KitChildStores, KitFileUrls, KitCommands, KitSubscriptions { }
-export interface KitStoreFull extends KitSnapshot, KitActions, KitSubscriptions, KitCommandsFull, KitChildStoresFull, KitFileUrls { }
+export interface KitStore extends KitSnapshot, KitChildStores, KitFileUrls, KitCommands, KitSubscriptions {}
+export interface KitStoreFull extends KitSnapshot, KitActions, KitSubscriptions, KitCommandsFull, KitChildStoresFull, KitFileUrls {}
 
 export interface DesignEditorId {
   kitId: KitId;
@@ -348,8 +446,8 @@ export interface DesignEditorCommandsFull {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
   register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable;
 }
-export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands { }
-export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, Merge<DesignEditorActions, DesignEditorSubscriptions> { }
+export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands {}
+export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, Merge<DesignEditorActions, DesignEditorSubscriptions> {}
 export interface SketchpadState {
   mode: Mode;
   theme: Theme;
@@ -392,19 +490,19 @@ export interface SketchpadSubscriptions {
   };
 }
 export interface SketchpadChildStores {
-  kits: Map<KitId, KitStore>;
-  designEditors: Map<KitId, Map<DesignId, DesignEditorStore>>;
+  kits: IdMap<KitId, KitStore>;
+  designEditors: NestedIdMap<KitId, DesignId, DesignEditorStore>;
 }
 export interface SketchpadChildStoresFull {
-  kits: Map<KitId, KitStoreFull>;
-  designEditors: Map<KitId, Map<DesignId, DesignEditorStoreFull>>;
+  kits: IdMap<KitId, KitStoreFull>;
+  designEditors: NestedIdMap<KitId, DesignId, DesignEditorStoreFull>;
 }
 export interface SketchpadCommandContext {
   sketchpad: SketchpadStateFull;
   store: YSketchpadStore;
 }
 export interface SketchpadCommandResult {
-  diff: SketchpadStateDiff;
+  diff?: SketchpadStateDiff;
 }
 export interface SketchpadCommands {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
@@ -413,7 +511,7 @@ export interface SketchpadCommandsFull {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
   register(command: string, callback: (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult): Disposable;
 }
-export interface SketchpadStore extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStores { }
+export interface SketchpadStore extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStores {}
 export interface SketchpadStoreFull extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStoresFull, SketchpadActions {
   on: SketchpadSubscriptions;
 }
@@ -822,10 +920,10 @@ class YPortStore implements PortStoreFull {
 class YTypeStore implements TypeStoreFull {
   public readonly parent: YKitStore;
   public readonly yType: YType = new Y.Map<any>();
-  public readonly representations: Map<RepresentationId, YRepresentationStore> = new Map();
-  public readonly ports: Map<PortId, YPortStore> = new Map();
-  private readonly representationIds: Map<RepresentationId, string> = new Map();
-  private readonly portIds: Map<PortId, string> = new Map();
+  public readonly representations: IdMap<RepresentationId, YRepresentationStore> = new IdMap(representationIdToString);
+  public readonly ports: IdMap<PortId, YPortStore> = new IdMap(portIdToString);
+  private readonly representationIds: Map<string, string> = new Map();
+  private readonly portIds: Map<string, string> = new Map();
 
   constructor(parent: YKitStore, type: Type) {
     this.parent = parent;
@@ -839,8 +937,8 @@ class YTypeStore implements TypeStoreFull {
     this.yType.set("ports", new Y.Map() as YPortMap);
     this.yType.set("authors", createAuthors(type.authors));
     this.yType.set("attributes", createAttributes(type.attributes));
-    (type.representations || []).forEach((r) => this.representationIds.set(representationIdLikeToRepresentationId(r), uuidv4()));
-    (type.ports || []).forEach((p) => this.portIds.set(portIdLikeToPortId(p), uuidv4()));
+    (type.representations || []).forEach((r) => this.representationIds.set(representationIdToString(representationIdLikeToRepresentationId(r)), uuidv4()));
+    (type.ports || []).forEach((p) => this.portIds.set(portIdToString(portIdLikeToPortId(p)), uuidv4()));
   }
 
   type = (): Type => {
@@ -868,9 +966,10 @@ class YTypeStore implements TypeStoreFull {
     if (diff.representations !== undefined) {
       diff.representations.forEach((rep) => {
         const repId = representationIdLikeToRepresentationId(rep);
-        if (!this.representationIds.get(repId)) {
+        const repIdStr = representationIdToString(repId);
+        if (!this.representationIds.get(repIdStr)) {
           const uuid = uuidv4();
-          this.representationIds.set(repId, uuid);
+          this.representationIds.set(repIdStr, uuid);
           this.representations.set(repId, new YRepresentationStore(this.parent, rep));
         } else {
           this.representations.get(repId)?.change(rep);
@@ -880,9 +979,10 @@ class YTypeStore implements TypeStoreFull {
     if (diff.ports !== undefined) {
       diff.ports.forEach((port) => {
         const portId = portIdLikeToPortId(port);
-        if (!this.portIds.get(portId)) {
+        const portIdStr = portIdToString(portId);
+        if (!this.portIds.get(portIdStr)) {
           const uuid = uuidv4();
-          this.portIds.set(portId, uuid);
+          this.portIds.set(portIdStr, uuid);
           this.ports.set(portId, new YPortStore(this, port));
         } else {
           this.ports.get(portId)?.change(port);
@@ -1080,10 +1180,10 @@ class YConnectionStore implements ConnectionStoreFull {
 class YDesignStore implements DesignStoreFull {
   public readonly parent: YKitStore;
   public readonly yDesign: YDesign = new Y.Map<any>();
-  public readonly pieces: Map<PieceId, YPieceStore> = new Map();
-  public readonly connections: Map<ConnectionId, YConnectionStore> = new Map();
-  private readonly pieceIds: Map<PieceId, string> = new Map();
-  private readonly connectionIds: Map<ConnectionId, string> = new Map();
+  public readonly pieces: IdMap<PieceId, YPieceStore> = new IdMap(pieceIdToString);
+  public readonly connections: IdMap<ConnectionId, YConnectionStore> = new IdMap(connectionIdToString);
+  private readonly pieceIds: Map<string, string> = new Map();
+  private readonly connectionIds: Map<string, string> = new Map();
 
   constructor(parent: YKitStore, design: Design) {
     this.parent = parent;
@@ -1101,7 +1201,8 @@ class YDesignStore implements DesignStoreFull {
       const uuid = uuidv4();
       const yPieceStore = new YPieceStore(this, piece);
       (this.yDesign.get("pieces") as YPieceMap).set(uuid, yPieceStore.yPiece);
-      this.pieceIds.set(pieceId, uuid);
+      const pieceIdStr = pieceIdToString(pieceId);
+      this.pieceIds.set(pieceIdStr, uuid);
       this.pieces.set(pieceId, yPieceStore);
     });
     (design.connections || []).forEach((connection) => {
@@ -1109,7 +1210,8 @@ class YDesignStore implements DesignStoreFull {
       const uuid = uuidv4();
       const yConnectionStore = new YConnectionStore(this, connection);
       (this.yDesign.get("connections") as YConnectionMap).set(uuid, yConnectionStore.yConnection);
-      this.connectionIds.set(connectionId, uuid);
+      const connectionIdStr = connectionIdToString(connectionId);
+      this.connectionIds.set(connectionIdStr, uuid);
       this.connections.set(connectionId, yConnectionStore);
     });
   }
@@ -1139,11 +1241,12 @@ class YDesignStore implements DesignStoreFull {
       if (diff.pieces.added) {
         diff.pieces.added.forEach((piece) => {
           const pieceId = pieceIdLikeToPieceId(piece);
-          if (!this.pieceIds.get(pieceId)) {
+          const pieceIdStr = pieceIdToString(pieceId);
+          if (!this.pieceIds.get(pieceIdStr)) {
             const uuid = uuidv4();
             const yPieceStore = new YPieceStore(this, piece);
             (this.yDesign.get("pieces") as YPieceMap).set(uuid, yPieceStore.yPiece);
-            this.pieceIds.set(pieceId, uuid);
+            this.pieceIds.set(pieceIdStr, uuid);
             this.pieces.set(pieceId, yPieceStore);
           }
         });
@@ -1151,10 +1254,11 @@ class YDesignStore implements DesignStoreFull {
       if (diff.pieces.removed) {
         diff.pieces.removed.forEach((pieceId) => {
           const id = pieceIdLikeToPieceId(pieceId);
-          const uuid = this.pieceIds.get(id);
+          const idStr = pieceIdToString(id);
+          const uuid = this.pieceIds.get(idStr);
           if (uuid) {
             (this.yDesign.get("pieces") as YPieceMap).delete(uuid);
-            this.pieceIds.delete(id);
+            this.pieceIds.delete(idStr);
             this.pieces.delete(id);
           }
         });
@@ -1176,11 +1280,12 @@ class YDesignStore implements DesignStoreFull {
       if (diff.connections.added) {
         diff.connections.added.forEach((connection) => {
           const connectionId = connectionIdLikeToConnectionId(connection);
-          if (!this.connectionIds.get(connectionId)) {
+          const connectionIdStr = connectionIdToString(connectionId);
+          if (!this.connectionIds.get(connectionIdStr)) {
             const uuid = uuidv4();
             const yConnectionStore = new YConnectionStore(this, connection);
             (this.yDesign.get("connections") as YConnectionMap).set(uuid, yConnectionStore.yConnection);
-            this.connectionIds.set(connectionId, uuid);
+            this.connectionIds.set(connectionIdStr, uuid);
             this.connections.set(connectionId, yConnectionStore);
           }
         });
@@ -1188,10 +1293,11 @@ class YDesignStore implements DesignStoreFull {
       if (diff.connections.removed) {
         diff.connections.removed.forEach((connectionId) => {
           const id = connectionIdLikeToConnectionId(connectionId);
-          const uuid = this.connectionIds.get(id);
+          const idStr = connectionIdToString(id);
+          const uuid = this.connectionIds.get(idStr);
           if (uuid) {
             (this.yDesign.get("connections") as YConnectionMap).delete(uuid);
-            this.connectionIds.delete(id);
+            this.connectionIds.delete(idStr);
             this.connections.delete(id);
           }
         });
@@ -1224,11 +1330,11 @@ class YDesignStore implements DesignStoreFull {
 
 class YKitStore implements KitStoreFull {
   public readonly yKit: YKit = new Y.Map() as YKit;
-  public readonly types: Map<TypeId, YTypeStore> = new Map();
-  public readonly designs: Map<DesignId, YDesignStore> = new Map();
+  public readonly types: IdMap<TypeId, YTypeStore> = new IdMap(typeIdToString);
+  public readonly designs: IdMap<DesignId, YDesignStore> = new IdMap(designIdToString);
   public readonly files: Map<Url, YFileStore> = new Map();
-  private readonly typeIds: Map<TypeId, string> = new Map();
-  private readonly designIds: Map<DesignId, string> = new Map();
+  private readonly typeIds: Map<string, string> = new Map();
+  private readonly designIds: Map<string, string> = new Map();
   private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult> = new Map();
   private readonly regularFiles: Map<Url, string> = new Map();
   private readonly parent: SketchpadStore;
@@ -1262,25 +1368,27 @@ class YKitStore implements KitStoreFull {
 
   private createType(type: Type): void {
     const typeId = typeIdLikeToTypeId(type);
-    if (this.typeIds.has(typeId)) {
+    const typeIdStr = typeIdToString(typeId);
+    if (this.typeIds.has(typeIdStr)) {
       throw new Error(`Type (${typeId.name}, ${typeId.variant || ""}) already exists.`);
     }
     const uuid = uuidv4();
     const yTypeStore = new YTypeStore(this, type);
     (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
-    this.typeIds.set(typeId, uuid);
+    this.typeIds.set(typeIdStr, uuid);
     this.types.set(typeId, yTypeStore);
   }
 
   private createDesign(design: Design): void {
     const designId = designIdLikeToDesignId(design);
-    if (this.designIds.has(designId)) {
+    const designIdStr = designIdToString(designId);
+    if (this.designIds.has(designIdStr)) {
       throw new Error(`Design (${designId.name}, ${designId.variant || ""}) already exists.`);
     }
     const uuid = uuidv4();
     const yDesignStore = new YDesignStore(this, design);
     (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
-    this.designIds.set(designId, uuid);
+    this.designIds.set(designIdStr, uuid);
     this.designs.set(designId, yDesignStore);
   }
 
@@ -1318,11 +1426,12 @@ class YKitStore implements KitStoreFull {
       if (diff.types.added) {
         diff.types.added.forEach((type) => {
           const typeId = typeIdLikeToTypeId(type);
-          if (!this.typeIds.get(typeId)) {
+          const typeIdStr = typeIdToString(typeId);
+          if (!this.typeIds.get(typeIdStr)) {
             const uuid = uuidv4();
             const yTypeStore = new YTypeStore(this, type);
             (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
-            this.typeIds.set(typeId, uuid);
+            this.typeIds.set(typeIdStr, uuid);
             this.types.set(typeId, yTypeStore);
           }
         });
@@ -1330,10 +1439,11 @@ class YKitStore implements KitStoreFull {
       if (diff.types.removed) {
         diff.types.removed.forEach((typeId) => {
           const id = typeIdLikeToTypeId(typeId);
-          const uuid = this.typeIds.get(id);
+          const idStr = typeIdToString(id);
+          const uuid = this.typeIds.get(idStr);
           if (uuid) {
             (this.yKit.get("types") as YTypeMap).delete(uuid);
-            this.typeIds.delete(id);
+            this.typeIds.delete(idStr);
             this.types.delete(id);
           }
         });
@@ -1355,11 +1465,12 @@ class YKitStore implements KitStoreFull {
       if (diff.designs.added) {
         diff.designs.added.forEach((design) => {
           const designId = designIdLikeToDesignId(design);
-          if (!this.designIds.get(designId)) {
+          const designIdStr = designIdToString(designId);
+          if (!this.designIds.get(designIdStr)) {
             const uuid = uuidv4();
             const yDesignStore = new YDesignStore(this, design);
             (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
-            this.designIds.set(designId, uuid);
+            this.designIds.set(designIdStr, uuid);
             this.designs.set(designId, yDesignStore);
           }
         });
@@ -1367,10 +1478,11 @@ class YKitStore implements KitStoreFull {
       if (diff.designs.removed) {
         diff.designs.removed.forEach((designId) => {
           const id = designIdLikeToDesignId(designId);
-          const uuid = this.designIds.get(id);
+          const idStr = designIdToString(id);
+          const uuid = this.designIds.get(idStr);
           if (uuid) {
             (this.yKit.get("designs") as YDesignMap).delete(uuid);
-            this.designIds.delete(id);
+            this.designIds.delete(idStr);
             this.designs.delete(id);
           }
         });
@@ -1501,9 +1613,9 @@ class YDesignEditorStore implements DesignEditorStoreFull {
       pieceIds: selectedPieceIds ? selectedPieceIds.toArray().map((id) => ({ id_: id })) : [],
       connectionIds: selectedConnections
         ? selectedConnections.toArray().map((id) => ({
-          connected: { piece: { id_: id.split("->")[0] || "" } },
-          connecting: { piece: { id_: id.split("->")[1] || "" } },
-        }))
+            connected: { piece: { id_: id.split("->")[0] || "" } },
+            connecting: { piece: { id_: id.split("->")[1] || "" } },
+          }))
         : [],
     };
   }
@@ -1769,10 +1881,10 @@ class YDesignEditorStore implements DesignEditorStoreFull {
 class YSketchpadStore implements SketchpadStoreFull {
   public readonly ySketchpadDoc: Y.Doc;
   public readonly sketchpadIndexeddbProvider?: IndexeddbPersistence;
-  public readonly yKitDocs: Map<KitId, Y.Doc> = new Map();
-  public readonly kitIndexeddbProviders: Map<KitId, IndexeddbPersistence> = new Map();
-  public readonly kits: Map<KitId, YKitStore> = new Map();
-  public readonly designEditors: Map<KitId, Map<DesignId, DesignEditorStoreFull>> = new Map();
+  public readonly yKitDocs: Map<string, Y.Doc> = new Map();
+  public readonly kitIndexeddbProviders: Map<string, IndexeddbPersistence> = new Map();
+  public readonly kits: IdMap<KitId, YKitStore> = new IdMap(kitIdToString);
+  public readonly designEditors: NestedIdMap<KitId, DesignId, DesignEditorStoreFull> = new NestedIdMap(kitIdToString, designIdToString);
   private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult> = new Map();
 
   private getYSketchpad(): YSketchpad {
@@ -1836,7 +1948,7 @@ class YSketchpadStore implements SketchpadStoreFull {
 
       // Ensure the kitId map exists
       if (!this.designEditors.has(id.kitId)) {
-        this.designEditors.set(id.kitId, new Map());
+        this.designEditors.set(id.kitId, new IdMap(designIdToString));
       }
 
       const kitEditors = this.designEditors.get(id.kitId)!;
@@ -1879,7 +1991,7 @@ class YSketchpadStore implements SketchpadStoreFull {
       // This is a simplified approach - would need more sophisticated tracking in full implementation
       const observer = () => subscribe();
       // Note: Would need to observe kit document creation across all kit docs
-      return () => { }; // Placeholder unsubscribe
+      return () => {}; // Placeholder unsubscribe
     },
     designEditor: (subscribe: Subscribe): Unsubscribe => {
       // Observe design editor stores map changes
@@ -1893,11 +2005,11 @@ class YSketchpadStore implements SketchpadStoreFull {
   deleted = {
     kit: (subscribe: Subscribe): Unsubscribe => {
       // Would need to observe kit document removal
-      return () => { }; // Placeholder
+      return () => {}; // Placeholder
     },
     designEditor: (subscribe: Subscribe): Unsubscribe => {
       // Would need to observe design editor removal
-      return () => { }; // Placeholder
+      return () => {}; // Placeholder
     },
   };
 
@@ -2024,6 +2136,7 @@ const sketchpadCommands = {
     if (!kit.name) throw new Error("Kit name is required to create a kit.");
 
     const kitId = kitIdLikeToKitId(kit);
+    const kitIdStr = kitIdToString(kitId);
     if (context.store.kits.has(kitId)) {
       throw new Error(`Kit (${kitId.name}, ${kitId.version || ""}) already exists.`);
     }
@@ -2031,12 +2144,10 @@ const sketchpadCommands = {
     const yKitStore = new YKitStore(context.store, kit);
     const yKitDoc = new Y.Doc();
     yKitDoc.getMap("kit").set("data", yKitStore.yKit);
-    context.store.yKitDocs.set(kitId, yKitDoc);
+    context.store.yKitDocs.set(kitIdStr, yKitDoc);
     context.store.kits.set(kitId, yKitStore);
 
-    return {
-      diff: {},
-    };
+    return {};
   },
   "semio.sketchpad.createDesignEditor": (context: SketchpadCommandContext, id: DesignEditorId): SketchpadCommandResult => {
     return {
@@ -2869,8 +2980,9 @@ export function useType<T>(selector?: (type: Type) => T, id?: TypeId): T | Type 
   const kitScope = useKitStoreScope();
   if (!kitScope) throw new Error("useType must be called within a KitScopeProvider");
   const kitId = kitScope.id;
-  if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kit = store.kits.get(kitId)!;
+  const kitIdStr = kitIdToString(kitId);
+  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kit = store.kits.get(kitIdStr)!;
   const typeScope = useTypeScope();
   const typeId = typeScope?.id ?? id;
   if (!typeId) throw new Error("useType must be called within a TypeScopeProvider or be directly provided with an id");
@@ -2894,13 +3006,15 @@ export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId): T | P
   const kitScope = useKitStoreScope();
   if (!kitScope) throw new Error("usePiece must be called within a KitScopeProvider");
   const kitId = kitScope.id;
-  if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kit = store.kits.get(kitId)!;
+  const kitIdStr = kitIdToString(kitId);
+  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kit = store.kits.get(kitIdStr)!;
   const designScope = useDesignScope();
   if (!designScope) throw new Error("usePiece must be called within a DesignScopeProvider");
   const designId = designScope.id;
-  if (!kit.designs.has(designId)) throw new Error(`Design store not found for design ${designId}`);
-  const design = kit.designs.get(designId)!;
+  const designIdStr = designIdToString(designId);
+  if (!kit.designs.has(designIdStr)) throw new Error(`Design store not found for design ${designId}`);
+  const design = kit.designs.get(designIdStr)!;
   const pieceScope = usePieceScope();
   const pieceId = pieceScope?.id ?? id;
   if (!pieceId) throw new Error("usePiece must be called within a PieceScopeProvider or be directly provided with an id");
@@ -2924,13 +3038,15 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
   const kitScope = useKitStoreScope();
   if (!kitScope) throw new Error("useConnection must be called within a KitScopeProvider");
   const kitId = kitScope.id;
-  if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kit = store.kits.get(kitId)!;
+  const kitIdStr = kitIdToString(kitId);
+  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kit = store.kits.get(kitIdStr)!;
   const designScope = useDesignScope();
   if (!designScope) throw new Error("useConnection must be called within a DesignScopeProvider");
   const designId = designScope.id;
-  if (!kit.designs.has(designId)) throw new Error(`Design store not found for design ${designId}`);
-  const design = kit.designs.get(designId)!;
+  const designIdStr = designIdToString(designId);
+  if (!kit.designs.has(designIdStr)) throw new Error(`Design store not found for design ${designId}`);
+  const design = kit.designs.get(designIdStr)!;
   const connectionScope = useConnectionScope();
   const connectionId = connectionScope?.id ?? id;
   if (!connectionId) throw new Error("useConnection must be called within a ConnectionScopeProvider or be directly provided with an id");
@@ -2954,13 +3070,15 @@ export function usePort<T>(selector?: (port: Port) => T, id?: PortId): T | Port 
   const kitScope = useKitStoreScope();
   if (!kitScope) throw new Error("usePort must be called within a KitScopeProvider");
   const kitId = kitScope.id;
-  if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kit = store.kits.get(kitId)!;
+  const kitIdStr = kitIdToString(kitId);
+  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kit = store.kits.get(kitIdStr)!;
   const typeScope = useTypeScope();
   if (!typeScope) throw new Error("usePort must be called within a TypeScopeProvider");
   const typeId = typeScope.id;
-  if (!kit.types.has(typeId)) throw new Error(`Type store not found for type ${typeId}`);
-  const type = kit.types.get(typeId)!;
+  const typeIdStr = typeIdToString(typeId);
+  if (!kit.types.has(typeIdStr)) throw new Error(`Type store not found for type ${typeId}`);
+  const type = kit.types.get(typeIdStr)!;
   const portScope = usePortScope();
   const portId = portScope?.id ?? id;
   if (!portId) throw new Error("usePort must be called within a PortScopeProvider or be directly provided with an id");
@@ -2984,8 +3102,9 @@ export function useRepresentation<T>(selector?: (representation: Representation)
   const kitScope = useKitStoreScope();
   if (!kitScope) throw new Error("useRepresentation must be called within a KitScopeProvider");
   const kitId = kitScope.id;
-  if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kit = store.kits.get(kitId)!;
+  const kitIdStr = kitIdToString(kitId);
+  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kit = store.kits.get(kitIdStr)!;
   const typeScope = useTypeScope();
   if (!typeScope) throw new Error("useRepresentation must be called within a TypeScopeProvider");
   const typeId = typeScope.id;
@@ -3027,10 +3146,10 @@ export function useDesigns(): DesignId[] {
   const kit = useKit();
   return kit.designs
     ? kit.designs.map((design) => ({
-      name: design.name,
-      variant: design.variant,
-      view: design.view,
-    }))
+        name: design.name,
+        variant: design.variant,
+        view: design.view,
+      }))
     : [];
 }
 
