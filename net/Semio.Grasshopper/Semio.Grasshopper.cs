@@ -1,4 +1,4 @@
-﻿#region Header
+#region Header
 
 //Semio.Grasshopper.cs
 //2020-2025 Ueli Saluz
@@ -1943,26 +1943,35 @@ public class ConnectionIdGoo : IdGoo<ConnectionId>
     public ConnectionIdGoo() { }
     public ConnectionIdGoo(ConnectionId value) : base(value) { }
 
-    //internal override bool CustomCastTo<Q>(ref Q target)
-    //{
-    //    if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-    //    {
-    //        target = (Q)(object)new GH_String(Value.Id);
-    //        return true;
-    //    }
-    //    return false;
-    //}
+    internal override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String(Value.ToIdString());
+            return true;
+        }
+        return false;
+    }
 
-    //internal override bool CustomCastFrom(object source)
-    //{
-    //    if (source == null) return false;
-    //    if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-    //    {
-    //        Value = new ConnectionId { Id = str };
-    //        return true;
-    //    }
-    //    return false;
-    //}
+    internal override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+        {
+            try
+            {
+                Value = str.Deserialize<ConnectionId>();
+                return true;
+            }
+            catch { return false; }
+        }
+        return false;
+    }
+
+    public static implicit operator ConnectionGoo(ConnectionIdGoo idGoo) => new(idGoo.Value);
+    public static implicit operator ConnectionDiffGoo(ConnectionIdGoo idGoo) => new(idGoo.Value);
+    public static implicit operator ConnectionIdGoo(ConnectionGoo goo) => new((ConnectionId)goo.Value);
+    public static implicit operator ConnectionIdGoo(ConnectionDiffGoo diffGoo) => new((ConnectionId)diffGoo.Value);
 }
 
 public class ConnectionIdParam : IdParam<ConnectionIdGoo, ConnectionId>
@@ -2062,26 +2071,35 @@ public class ConnectionGoo : ModelGoo<Connection>
     public ConnectionGoo() { }
     public ConnectionGoo(Connection value) : base(value) { }
 
-    //internal override bool CustomCastTo<Q>(ref Q target)
-    //{
-    //    if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-    //    {
-    //        target = (Q)(object)new GH_String(Value.Id);
-    //        return true;
-    //    }
-    //    return false;
-    //}
+    internal override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String(Value.ToIdString());
+            return true;
+        }
+        return false;
+    }
 
-    //internal override bool CustomCastFrom(object source)
-    //{
-    //    if (source == null) return false;
-    //    if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-    //    {
-    //        Value = new Connection { Id = str };
-    //        return true;
-    //    }
-    //    return false;
-    //}
+    internal override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+        {
+            try
+            {
+                Value = str.Deserialize<Connection>();
+                return true;
+            }
+            catch { return false; }
+        }
+        return false;
+    }
+
+    public static implicit operator ConnectionIdGoo(ConnectionGoo goo) => new((ConnectionId)goo.Value);
+    public static implicit operator ConnectionDiffGoo(ConnectionGoo goo) => new((ConnectionDiff)goo.Value);
+    public static implicit operator ConnectionGoo(ConnectionIdGoo idGoo) => new((Connection)idGoo.Value);
+    public static implicit operator ConnectionGoo(ConnectionDiffGoo diffGoo) => new((Connection)diffGoo.Value);
 }
 
 public class ConnectionParam : ModelParam<ConnectionGoo, Connection>
@@ -2397,26 +2415,33 @@ public class QualityIdGoo : IdGoo<QualityId>
     public QualityIdGoo() { }
     public QualityIdGoo(QualityId value) : base(value) { }
 
-    //internal override bool CustomCastTo<Q>(ref Q target)
-    //{
-    //    if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-    //    {
-    //        target = (Q)(object)new GH_String(Value.Name);
-    //        return true;
-    //    }
-    //    return false;
-    //}
+    internal override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String(Value.Key);
+            return true;
+        }
+        return false;
+    }
 
-    //internal override bool CustomCastFrom(object source)
-    //{
-    //    if (source == null) return false;
-    //    if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-    //    {
-    //        Value = new QualityId { Name = str };
-    //        return true;
-    //    }
-    //    return false;
-    //}
+    internal override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+        {
+            try
+            {
+                Value = str.Deserialize<QualityId>();
+                return true;
+            }
+            catch { return false; }
+        }
+        return false;
+    }
+
+    public static implicit operator QualityGoo(QualityIdGoo idGoo) => new(idGoo.Value);
+    public static implicit operator QualityIdGoo(QualityGoo goo) => new((QualityId)goo.Value);
 }
 
 public class QualityIdParam : IdParam<QualityIdGoo, QualityId>
@@ -2438,7 +2463,7 @@ public class QualityGoo : ModelGoo<Quality>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Name);
+            target = (Q)(object)new GH_String(Value.Key);
             return true;
         }
         return false;
@@ -2449,11 +2474,18 @@ public class QualityGoo : ModelGoo<Quality>
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new Quality { Name = str };
-            return true;
+            try
+            {
+                Value = str.Deserialize<Quality>();
+                return true;
+            }
+            catch { return false; }
         }
         return false;
     }
+
+    public static implicit operator QualityIdGoo(QualityGoo goo) => new((QualityId)goo.Value);
+    public static implicit operator QualityGoo(QualityIdGoo idGoo) => new((Quality)idGoo.Value);
 }
 
 public class QualityParam : ModelParam<QualityGoo, Quality>
@@ -2540,26 +2572,30 @@ public class PropGoo : ModelGoo<Prop>
     public PropGoo() { }
     public PropGoo(Prop value) : base(value) { }
 
-    //internal override bool CustomCastTo<Q>(ref Q target)
-    //{
-    //    if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-    //    {
-    //        target = (Q)(object)new GH_String(Value.Name);
-    //        return true;
-    //    }
-    //    return false;
-    //}
+    internal override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String(Value.Key);
+            return true;
+        }
+        return false;
+    }
 
-    //internal override bool CustomCastFrom(object source)
-    //{
-    //    if (source == null) return false;
-    //    if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-    //    {
-    //        Value = new Prop { Name = str };
-    //        return true;
-    //    }
-    //    return false;
-    //}
+    internal override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+        {
+            try
+            {
+                Value = str.Deserialize<Prop>();
+                return true;
+            }
+            catch { return false; }
+        }
+        return false;
+    }
 }
 
 public class PropParam : ModelParam<PropGoo, Prop>
@@ -2593,26 +2629,30 @@ public class StatGoo : ModelGoo<Stat>
     public StatGoo() { }
     public StatGoo(Stat value) : base(value) { }
 
-    //internal override bool CustomCastTo<Q>(ref Q target)
-    //{
-    //    if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-    //    {
-    //        target = (Q)(object)new GH_String(Value.Name);
-    //        return true;
-    //    }
-    //    return false;
-    //}
+    internal override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String(Value.Key);
+            return true;
+        }
+        return false;
+    }
 
-    //internal override bool CustomCastFrom(object source)
-    //{
-    //    if (source == null) return false;
-    //    if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-    //    {
-    //        Value = new Stat { Name = str };
-    //        return true;
-    //    }
-    //    return false;
-    //}
+    internal override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+        {
+            try
+            {
+                Value = str.Deserialize<Stat>();
+                return true;
+            }
+            catch { return false; }
+        }
+        return false;
+    }
 }
 
 public class StatParam : ModelParam<StatGoo, Stat>

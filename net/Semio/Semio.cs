@@ -114,19 +114,19 @@ public enum EncodeMode
 public static class Utility
 {
     public static string Normalize(string val) => string.IsNullOrEmpty(val) ? "" : val;
-    
+
     public static float Jaccard(IEnumerable<string> a, IEnumerable<string> b)
     {
         var listA = a?.ToList() ?? new List<string>();
         var listB = b?.ToList() ?? new List<string>();
-        
+
         if (listA.Count == 0 && listB.Count == 0) return 1f;
-        
+
         var setA = new HashSet<string>(listA);
         var setB = new HashSet<string>(listB);
         var intersection = setA.Intersect(setB).Count();
         var union = setA.Union(setB).Count();
-        
+
         if (union == 0) return 0f;
         return (float)intersection / union;
     }
@@ -1845,8 +1845,6 @@ public class Attribute : Model<Attribute>
 
     public string ToIdString() => $"{Key}";
     public string ToHumanIdString() => $"{ToIdString()}";
-    public string ToId() => ToIdString();
-    public string ToHumanId() => ToHumanIdString();
     public override string ToString() => $"Atr({ToHumanIdString()})";
 }
 
@@ -1911,7 +1909,7 @@ public class QualityId : Model<QualityId>
 {
     [Id("🔑", "Ke", "Key", "The key of the quality.")]
     public string Key { get; set; } = "";
-    
+
     public static implicit operator QualityId(Quality quality) => new() { Key = quality.Key };
 }
 
@@ -1953,7 +1951,7 @@ public class Quality : Model<Quality>
     public List<Benchmark> Benchmarks { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the quality.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
-    
+
     public static implicit operator Quality(QualityId id) => new() { Key = id.Key };
 }
 
@@ -2133,7 +2131,7 @@ public class Representation : Model<Representation>
     public string ToIdString() => $"{string.Join(",", Tags.Select(t => Utility.Encode(t)))}";
 
     public string ToHumanIdString() => string.Join(", ", Tags);
-    
+
     public string ToId() => ToIdString();
     public string ToHumanId() => ToHumanIdString();
 
@@ -2150,7 +2148,7 @@ public class FileId : Model<FileId>
     public string ToId() => ToIdString();
     public string ToHumanId() => ToHumanIdString();
     public override string ToString() => $"FilId({ToHumanIdString()})";
-    
+
     public static implicit operator FileId(SemioFile file) => new() { Url = file.Url };
     public static implicit operator FileId(FileDiff diff) => new() { Url = diff.Url ?? "" };
 }
@@ -2171,7 +2169,7 @@ public class SemioFile : Model<SemioFile>
     public string ToId() => ToIdString();
     public string ToHumanId() => ToHumanIdString();
     public override string ToString() => $"Fil({ToHumanIdString()})";
-    
+
     public static implicit operator SemioFile(FileId id) => new() { Url = id.Url };
     public static implicit operator SemioFile(FileDiff diff) => new() { Url = diff.Url ?? "", Data = diff.Data ?? "", Size = diff.Size, Hash = diff.Hash ?? "" };
 }
@@ -2480,7 +2478,7 @@ public class Port : Model<Port>
         var normalizedPortFamily = Utility.Normalize(Family);
         var normalizedOtherPortFamily = Utility.Normalize(otherPort.Family);
         if (normalizedPortFamily == "" || normalizedOtherPortFamily == "") return true;
-        return (CompatibleFamilies ?? new List<string>()).Contains(normalizedOtherPortFamily) || 
+        return (CompatibleFamilies ?? new List<string>()).Contains(normalizedOtherPortFamily) ||
                (otherPort.CompatibleFamilies ?? new List<string>()).Contains(normalizedPortFamily);
     }
 
@@ -2492,7 +2490,7 @@ public class Port : Model<Port>
     public string FindAttributeValue(string name, string defaultValue = "")
     {
         var attribute = Attributes?.FirstOrDefault(a => a.Key == name);
-        if (attribute == null && defaultValue == null) 
+        if (attribute == null && defaultValue == null)
             throw new InvalidOperationException($"Attribute {name} not found in port {Id}");
         return attribute?.Value ?? defaultValue;
     }
@@ -2501,7 +2499,7 @@ public class Port : Model<Port>
     {
         var attributes = new List<Attribute>(Attributes ?? new List<Attribute>());
         var existingIndex = attributes.FindIndex(a => a.Key == attribute.Key);
-        
+
         if (existingIndex >= 0)
             attributes[existingIndex] = attribute;
         else
@@ -2632,7 +2630,7 @@ public class TypeDiff : Model<TypeDiff>
             Attributes = other.Attributes.Any() ? other.Attributes : Attributes
         };
     }
-    
+
     public static implicit operator TypeDiff(TypeId id) => new() { Name = id.Name, Variant = id.Variant };
     public static implicit operator TypeDiff(Type type) => new() { Name = type.Name, Description = type.Description, Icon = type.Icon, Image = type.Image, Variant = type.Variant, Stock = type.Stock, Virtual = type.Virtual, Unit = type.Unit, Location = type.Location, Representations = type.Representations, Ports = type.Ports, Authors = type.Authors.Select(a => (Author)a).ToList(), Attributes = type.Attributes };
 }
@@ -2831,7 +2829,7 @@ public class Type : Model<Type>
     public string FindAttributeValue(string name, string defaultValue = "")
     {
         var attribute = Attributes?.FirstOrDefault(a => a.Key == name);
-        if (attribute == null && defaultValue == null) 
+        if (attribute == null && defaultValue == null)
             throw new InvalidOperationException($"Attribute {name} not found in type {Name}");
         return attribute?.Value ?? defaultValue;
     }
@@ -2840,7 +2838,7 @@ public class Type : Model<Type>
     {
         var attributes = new List<Attribute>(Attributes ?? new List<Attribute>());
         var existingIndex = attributes.FindIndex(a => a.Key == attribute.Key);
-        
+
         if (existingIndex >= 0)
             attributes[existingIndex] = attribute;
         else
@@ -2911,7 +2909,7 @@ public class ConnectionDiff : Model<ConnectionDiff>
             Y = other.Y ?? Y
         };
     }
-    
+
     public static implicit operator ConnectionDiff(ConnectionId id) => new() { Connected = new SideDiff { Piece = new PieceDiff { Id = id.Connected.Piece.Id }, Port = new PortDiff { Id = id.Connected.Port.Id } }, Connecting = new SideDiff { Piece = new PieceDiff { Id = id.Connecting.Piece.Id }, Port = new PortDiff { Id = id.Connecting.Port.Id } } };
     public static implicit operator ConnectionDiff(Connection connection) => new() { Connected = new SideDiff { Piece = new PieceDiff { Id = connection.Connected.Piece.Id }, Port = new PortDiff { Id = connection.Connected.Port.Id } }, Connecting = new SideDiff { Piece = new PieceDiff { Id = connection.Connecting.Piece.Id }, Port = new PortDiff { Id = connection.Connecting.Port.Id } }, Description = connection.Description, Gap = connection.Gap, Shift = connection.Shift, Rise = connection.Rise, Rotation = connection.Rotation, Turn = connection.Turn, Tilt = connection.Tilt, X = connection.X, Y = connection.Y };
 }
@@ -2975,7 +2973,7 @@ public class DesignDiff : Model<DesignDiff>
             Authors = other.Authors.Any() ? other.Authors : Authors
         };
     }
-    
+
     public static implicit operator DesignDiff(DesignId id) => new() { Name = id.Name, Variant = id.Variant, View = id.View };
     public static implicit operator DesignDiff(Design design) => new() { Name = design.Name, Description = design.Description, Icon = design.Icon, Image = design.Image, Variant = design.Variant, View = design.View, Location = design.Location, Unit = design.Unit, Attributes = design.Attributes, Authors = design.Authors.Select(a => (Author)a).ToList() };
 }
@@ -3015,7 +3013,7 @@ public class FileDiff : Model<FileDiff>
             Hash = string.IsNullOrEmpty(other.Hash) ? Hash : other.Hash
         };
     }
-    
+
     public static implicit operator FileDiff(FileId id) => new() { Url = id.Url };
     public static implicit operator FileDiff(SemioFile file) => new() { Url = file.Url, Data = file.Data, Size = file.Size, Hash = file.Hash };
 }
@@ -3082,7 +3080,7 @@ public class KitDiff : Model<KitDiff>
             Attributes = other.Attributes.Any() ? other.Attributes : Attributes
         };
     }
-    
+
     public static implicit operator KitDiff(Kit kit) => new() { Name = kit.Name, Description = kit.Description, Icon = kit.Icon, Image = kit.Image, Preview = kit.Preview, Version = kit.Version, Remote = kit.Remote, Homepage = kit.Homepage, License = kit.License, Attributes = kit.Attributes };
 }
 
@@ -3105,7 +3103,7 @@ public class PieceId : Model<PieceId>
     public string ToIdString() => $"{Id}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Pce({ToHumanIdString()})";
-    
+
     public static implicit operator PieceId(PieceDiff diff) => new() { Id = diff.Id ?? "" };
     public static implicit operator PieceId(Piece piece) => new() { Id = piece.Id };
 }
@@ -3139,7 +3137,7 @@ public class PieceDiff : Model<PieceDiff>
             Attributes = other.Attributes.Any() ? other.Attributes : Attributes
         };
     }
-    
+
     public static implicit operator PieceDiff(PieceId id) => new() { Id = id.Id };
     public static implicit operator PieceDiff(Piece piece) => new() { Id = piece.Id, Type = new TypeId { Name = piece.Type.Name, Variant = piece.Type.Variant }, Description = piece.Description, Plane = piece.Plane, Center = piece.Center, Attributes = piece.Attributes };
 }
@@ -3300,7 +3298,7 @@ public class Piece : Model<Piece>
     {
         var isPlaneSet = Plane != null;
         var isCenterSet = Center != null;
-        if (isPlaneSet != isCenterSet) 
+        if (isPlaneSet != isCenterSet)
             throw new InvalidOperationException($"Piece {Id} has inconsistent plane and center");
         return isPlaneSet;
     }
@@ -3308,7 +3306,7 @@ public class Piece : Model<Piece>
     public string FindAttributeValue(string name, string defaultValue = "")
     {
         var attribute = Attributes?.FirstOrDefault(a => a.Key == name);
-        if (attribute == null && defaultValue == null) 
+        if (attribute == null && defaultValue == null)
             throw new InvalidOperationException($"Attribute {name} not found in piece {Id}");
         return attribute?.Value ?? defaultValue;
     }
@@ -3317,7 +3315,7 @@ public class Piece : Model<Piece>
     {
         var attributes = new List<Attribute>(Attributes ?? new List<Attribute>());
         var existingIndex = attributes.FindIndex(a => a.Key == attribute.Key);
-        
+
         if (existingIndex >= 0)
             attributes[existingIndex] = attribute;
         else
@@ -3561,7 +3559,7 @@ public class Connection : Model<Connection>
     public string FindAttributeValue(string name, string defaultValue = "")
     {
         var attribute = Attributes?.FirstOrDefault(a => a.Key == name);
-        if (attribute == null && defaultValue == null) 
+        if (attribute == null && defaultValue == null)
             throw new InvalidOperationException($"Attribute {name} not found in connection");
         return attribute?.Value ?? defaultValue;
     }
@@ -3570,7 +3568,7 @@ public class Connection : Model<Connection>
     {
         var attributes = new List<Attribute>(Attributes ?? new List<Attribute>());
         var existingIndex = attributes.FindIndex(a => a.Key == attribute.Key);
-        
+
         if (existingIndex >= 0)
             attributes[existingIndex] = attribute;
         else
@@ -3607,7 +3605,11 @@ public class DesignId : Model<DesignId>
     public static implicit operator DesignId(Design design) => new() { Name = design.Name, Variant = design.Variant, View = design.View };
     public static implicit operator DesignId(DesignDiff diff) => new() { Name = diff.Name ?? "", Variant = diff.Variant ?? "", View = diff.View ?? "" };
 
+    public string ToIdString() => $"{Name}#{Variant}#{View}";
     public string ToHumanIdString() => $"{Name}{(Variant == "" ? "" : ", " + Variant)}{(View == "" ? "" : ", " + View)}";
+    public string ToId() => ToIdString();
+    public string ToHumanId() => ToHumanIdString();
+    public override string ToString() => $"DsnId({ToHumanIdString()})";
 }
 
 /// <summary>
@@ -3741,12 +3743,13 @@ public class Design : Model<Design>
     {
         var originalIds = original.Select(p => p.Id).ToHashSet();
         var modifiedIds = modified.Select(p => p.Id).ToHashSet();
-        
+
         return new PiecesDiff
         {
             Removed = original.Where(p => !modifiedIds.Contains(p.Id)).Select(p => new PieceId { Id = p.Id }).ToList(),
             Modified = original.Where(p => modifiedIds.Contains(p.Id))
-                .SelectMany(p => {
+                .SelectMany(p =>
+                {
                     var modifiedPiece = modified.First(m => m.Id == p.Id);
                     var diff = p.CreateDiff();
                     return !Equals(p, modifiedPiece) ? new[] { diff } : new PieceDiff[] { };
@@ -3766,13 +3769,13 @@ public class Design : Model<Design>
 
     private List<Connection> ApplyConnectionsDiff(List<Connection> original, ConnectionsDiff diff)
     {
-        var result = original.Where(c => !diff.Removed.Any(r => 
-            r.Connected.Piece.Id == c.Connected.Piece.Id && 
+        var result = original.Where(c => !diff.Removed.Any(r =>
+            r.Connected.Piece.Id == c.Connected.Piece.Id &&
             r.Connecting.Piece.Id == c.Connecting.Piece.Id)).ToList();
-        
+
         foreach (var updated in diff.Updated)
         {
-            var index = result.FindIndex(c => 
+            var index = result.FindIndex(c =>
                 c.Connected.Piece.Id == (updated.Connected?.Piece?.Id ?? c.Connected.Piece.Id) &&
                 c.Connecting.Piece.Id == (updated.Connecting?.Piece?.Id ?? c.Connecting.Piece.Id));
             if (index >= 0)
@@ -3786,13 +3789,14 @@ public class Design : Model<Design>
     {
         var originalKeys = original.Select(c => (c.Connected.Piece.Id, c.Connecting.Piece.Id)).ToHashSet();
         var modifiedKeys = modified.Select(c => (c.Connected.Piece.Id, c.Connecting.Piece.Id)).ToHashSet();
-        
+
         return new ConnectionsDiff
         {
             Removed = original.Where(c => !modifiedKeys.Contains((c.Connected.Piece.Id, c.Connecting.Piece.Id)))
                 .Select(c => new ConnectionId { Connected = c.Connected, Connecting = c.Connecting }).ToList(),
             Updated = original.Where(c => modifiedKeys.Contains((c.Connected.Piece.Id, c.Connecting.Piece.Id)))
-                .SelectMany(c => {
+                .SelectMany(c =>
+                {
                     var modifiedConnection = modified.First(m => m.Connected.Piece.Id == c.Connected.Piece.Id && m.Connecting.Piece.Id == c.Connecting.Piece.Id);
                     var diff = c.CreateDiff();
                     return !Equals(c, modifiedConnection) ? new[] { diff } : new ConnectionDiff[] { };
@@ -4309,8 +4313,8 @@ text {
     public bool IsSameAs(Design other)
     {
         if (other == null) return false;
-        return Name == other.Name && 
-               Utility.Normalize(Variant) == Utility.Normalize(other.Variant) && 
+        return Name == other.Name &&
+               Utility.Normalize(Variant) == Utility.Normalize(other.Variant) &&
                Utility.Normalize(View) == Utility.Normalize(other.View);
     }
 
@@ -4324,15 +4328,15 @@ text {
     public Connection FindConnection(Connection connectionToFind, bool strict = false)
     {
         var connection = Connections.FirstOrDefault(c => c.IsSameAs(connectionToFind, strict));
-        if (connection == null) 
+        if (connection == null)
             throw new ArgumentException($"Connection {connectionToFind.Connected.Piece.Id} -> {connectionToFind.Connecting.Piece.Id} not found in design");
         return connection;
     }
 
     public List<Connection> FindPieceConnections(string pieceId)
     {
-        return Connections.Where(c => 
-            c.Connected.Piece.Id == pieceId || 
+        return Connections.Where(c =>
+            c.Connected.Piece.Id == pieceId ||
             c.Connecting.Piece.Id == pieceId).ToList();
     }
 
@@ -4361,8 +4365,8 @@ text {
     public Design RemovePiece(string pieceId)
     {
         var newPieces = Pieces.Where(p => p.Id != pieceId).ToList();
-        var newConnections = Connections.Where(c => 
-            c.Connected.Piece.Id != pieceId && 
+        var newConnections = Connections.Where(c =>
+            c.Connected.Piece.Id != pieceId &&
             c.Connecting.Piece.Id != pieceId).ToList();
         return new Design
         {
@@ -4590,13 +4594,14 @@ public class Kit : Model<Kit>
     {
         var originalKeys = original.Select(t => (t.Name, t.Variant)).ToHashSet();
         var modifiedKeys = modified.Select(t => (t.Name, t.Variant)).ToHashSet();
-        
+
         return new TypesDiff
         {
             Removed = original.Where(t => !modifiedKeys.Contains((t.Name, t.Variant)))
                 .Select(t => new TypeId { Name = t.Name, Variant = t.Variant }).ToList(),
             Modified = original.Where(t => modifiedKeys.Contains((t.Name, t.Variant)))
-                .SelectMany(t => {
+                .SelectMany(t =>
+                {
                     var modifiedType = modified.First(m => m.Name == t.Name && m.Variant == t.Variant);
                     var diff = t.CreateDiff();
                     return !Equals(t, modifiedType) ? new[] { diff } : new TypeDiff[] { };
@@ -4638,13 +4643,14 @@ public class Kit : Model<Kit>
     {
         var originalKeys = original.Select(d => (d.Name, d.Variant, d.View)).ToHashSet();
         var modifiedKeys = modified.Select(d => (d.Name, d.Variant, d.View)).ToHashSet();
-        
+
         return new DesignsDiff
         {
             Removed = original.Where(d => !modifiedKeys.Contains((d.Name, d.Variant, d.View)))
                 .Select(d => new DesignId { Name = d.Name, Variant = d.Variant, View = d.View }).ToList(),
             Updated = original.Where(d => modifiedKeys.Contains((d.Name, d.Variant, d.View)))
-                .SelectMany(d => {
+                .SelectMany(d =>
+                {
                     var modifiedDesign = modified.First(m => m.Name == d.Name && m.Variant == d.Variant && m.View == d.View);
                     var diff = d.CreateDiff();
                     return !Equals(d, modifiedDesign) ? new[] { diff } : new DesignDiff[] { };
@@ -4736,8 +4742,8 @@ public class Kit : Model<Kit>
     public Type FindType(string typeName, string variant = "")
     {
         var normalizedVariant = Utility.Normalize(variant);
-        var type = Types.FirstOrDefault(t => 
-            t.Name == typeName && 
+        var type = Types.FirstOrDefault(t =>
+            t.Name == typeName &&
             Utility.Normalize(t.Variant) == normalizedVariant);
         if (type == null) throw new ArgumentException($"Type {typeName} not found in kit {Name}");
         return type;
@@ -4747,9 +4753,9 @@ public class Kit : Model<Kit>
     {
         var normalizedVariant = Utility.Normalize(variant);
         var normalizedView = Utility.Normalize(view);
-        var design = Designs.FirstOrDefault(d => 
-            d.Name == designName && 
-            Utility.Normalize(d.Variant) == normalizedVariant && 
+        var design = Designs.FirstOrDefault(d =>
+            d.Name == designName &&
+            Utility.Normalize(d.Variant) == normalizedVariant &&
             Utility.Normalize(d.View) == normalizedView);
         if (design == null) throw new ArgumentException($"Design {designName} not found in kit {Name}");
         return design;
@@ -4780,7 +4786,7 @@ public class Kit : Model<Kit>
     public Kit RemoveType(string typeName, string variant = "")
     {
         var normalizedVariant = Utility.Normalize(variant);
-        var newTypes = Types.Where(t => 
+        var newTypes = Types.Where(t =>
             !(t.Name == typeName && Utility.Normalize(t.Variant) == normalizedVariant)).ToList();
         return new Kit
         {
@@ -4827,9 +4833,9 @@ public class Kit : Model<Kit>
     {
         var normalizedVariant = Utility.Normalize(variant);
         var normalizedView = Utility.Normalize(view);
-        var newDesigns = Designs.Where(d => 
-            !(d.Name == designName && 
-              Utility.Normalize(d.Variant) == normalizedVariant && 
+        var newDesigns = Designs.Where(d =>
+            !(d.Name == designName &&
+              Utility.Normalize(d.Variant) == normalizedVariant &&
               Utility.Normalize(d.View) == normalizedView)).ToList();
         return new Kit
         {
