@@ -638,11 +638,6 @@ public class AttributeIdGoo : IdGoo<AttributeId>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
-        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-        {
-            target = (Q)(object)new GH_String(Value.Key);
-            return true;
-        }
         if (typeof(Q).IsAssignableFrom(typeof(AttributeGoo)))
         {
             target = (Q)(object)new AttributeGoo(Value);
@@ -653,20 +648,25 @@ public class AttributeIdGoo : IdGoo<AttributeId>
             target = (Q)(object)new AttributeDiffGoo(Value);
             return true;
         }
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String(Value.Key);
+            return true;
+        }
         return false;
     }
 
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
-        if (source is AttributeGoo attrGoo)
-        {
-            Value = attrGoo.Value;
-            return true;
-        }
         if (source is AttributeDiffGoo diffGoo)
         {
             Value = diffGoo.Value;
+            return true;
+        }
+        if (source is AttributeGoo attrGoo)
+        {
+            Value = attrGoo.Value;
             return true;
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -684,11 +684,6 @@ public class AttributeDiffGoo : DiffGoo<AttributeDiff>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
-        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-        {
-            target = (Q)(object)new GH_String(Value.Key);
-            return true;
-        }
         if (typeof(Q).IsAssignableFrom(typeof(AttributeIdGoo)))
         {
             target = (Q)(object)new AttributeIdGoo(Value);
@@ -697,6 +692,11 @@ public class AttributeDiffGoo : DiffGoo<AttributeDiff>
         if (typeof(Q).IsAssignableFrom(typeof(AttributeGoo)))
         {
             target = (Q)(object)new AttributeGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String(Value.Key);
             return true;
         }
         return false;
@@ -745,11 +745,6 @@ public class AttributeGoo : ModelGoo<Attribute>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
-        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-        {
-            target = (Q)(object)new GH_String(Value.Key);
-            return true;
-        }
         if (typeof(Q).IsAssignableFrom(typeof(AttributeIdGoo)))
         {
             target = (Q)(object)new AttributeIdGoo(Value);
@@ -758,6 +753,11 @@ public class AttributeGoo : ModelGoo<Attribute>
         if (typeof(Q).IsAssignableFrom(typeof(AttributeDiffGoo)))
         {
             target = (Q)(object)new AttributeDiffGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String(Value.Key);
             return true;
         }
         return false;
@@ -815,9 +815,9 @@ public class RepresentationIdGoo : IdGoo<RepresentationId>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
-        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        if (typeof(Q).IsAssignableFrom(typeof(RepresentationDiffGoo)))
         {
-            target = (Q)(object)new GH_String(Value.ToIdString());
+            target = (Q)(object)new RepresentationDiffGoo(Value);
             return true;
         }
         if (typeof(Q).IsAssignableFrom(typeof(RepresentationGoo)))
@@ -825,9 +825,9 @@ public class RepresentationIdGoo : IdGoo<RepresentationId>
             target = (Q)(object)new RepresentationGoo(Value);
             return true;
         }
-        if (typeof(Q).IsAssignableFrom(typeof(RepresentationDiffGoo)))
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new RepresentationDiffGoo(Value);
+            target = (Q)(object)new GH_String(Value.ToIdString());
             return true;
         }
         return false;
@@ -836,14 +836,14 @@ public class RepresentationIdGoo : IdGoo<RepresentationId>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
-        if (source is RepresentationGoo reprGoo)
-        {
-            Value = reprGoo.Value;
-            return true;
-        }
         if (source is RepresentationDiffGoo diffGoo)
         {
             Value = diffGoo.Value;
+            return true;
+        }
+        if (source is RepresentationGoo reprGoo)
+        {
+            Value = reprGoo.Value;
             return true;
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -1241,9 +1241,9 @@ public class PortIdGoo : IdGoo<PortId>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
-        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        if (typeof(Q).IsAssignableFrom(typeof(PortDiffGoo)))
         {
-            target = (Q)(object)new GH_String(Value.Id);
+            target = (Q)(object)new PortDiffGoo(Value);
             return true;
         }
         if (typeof(Q).IsAssignableFrom(typeof(PortGoo)))
@@ -1251,9 +1251,9 @@ public class PortIdGoo : IdGoo<PortId>
             target = (Q)(object)new PortGoo(Value);
             return true;
         }
-        if (typeof(Q).IsAssignableFrom(typeof(PortDiffGoo)))
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new PortDiffGoo(Value);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -1298,11 +1298,6 @@ public class PortDiffGoo : DiffGoo<PortDiff>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
-        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-        {
-            target = (Q)(object)new GH_String(Value.Id);
-            return true;
-        }
         if (typeof(Q).IsAssignableFrom(typeof(PortIdGoo)))
         {
             target = (Q)(object)new PortIdGoo(Value);
@@ -1311,6 +1306,11 @@ public class PortDiffGoo : DiffGoo<PortDiff>
         if (typeof(Q).IsAssignableFrom(typeof(PortGoo)))
         {
             target = (Q)(object)new PortGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -1365,11 +1365,6 @@ public class PortGoo : ModelGoo<Port>
             target = (Q)(object)new GH_Plane(Utility.GetPlaneFromYAxis(Value.Direction.Convert(), 0, Value.Point.Convert()));
             return true;
         }
-        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-        {
-            target = (Q)(object)new GH_String(Value.Id);
-            return true;
-        }
         if (typeof(Q).IsAssignableFrom(typeof(PortIdGoo)))
         {
             target = (Q)(object)new PortIdGoo(Value);
@@ -1378,6 +1373,11 @@ public class PortGoo : ModelGoo<Port>
         if (typeof(Q).IsAssignableFrom(typeof(PortDiffGoo)))
         {
             target = (Q)(object)new PortDiffGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -1626,6 +1626,16 @@ public class TypeIdGoo : IdGoo<TypeId>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
+        if (typeof(Q).IsAssignableFrom(typeof(TypeGoo)))
+        {
+            target = (Q)(object)new TypeGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(TypeDiffGoo)))
+        {
+            target = (Q)(object)new TypeDiffGoo(Value);
+            return true;
+        }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
             target = (Q)(object)new GH_String(Value.ToIdString());
@@ -1637,6 +1647,16 @@ public class TypeIdGoo : IdGoo<TypeId>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
+        if (source is TypeGoo typeGoo)
+        {
+            Value = typeGoo.Value;
+            return true;
+        }
+        if (source is TypeDiffGoo diffGoo)
+        {
+            Value = diffGoo.Value;
+            return true;
+        }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             Value = new TypeId { Name = str };
@@ -1663,6 +1683,16 @@ public class TypeDiffGoo : DiffGoo<TypeDiff>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
+        if (typeof(Q).IsAssignableFrom(typeof(TypeGoo)))
+        {
+            target = (Q)(object)new TypeGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(TypeIdGoo)))
+        {
+            target = (Q)(object)new TypeIdGoo(Value);
+            return true;
+        }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
             target = (Q)(object)new GH_String(Value.Name);
@@ -1674,6 +1704,16 @@ public class TypeDiffGoo : DiffGoo<TypeDiff>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
+        if (source is TypeGoo typeGoo)
+        {
+            Value = typeGoo.Value;
+            return true;
+        }
+        if (source is TypeIdGoo typeIdGoo)
+        {
+            Value = typeIdGoo.Value;
+            return true;
+        }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             try
@@ -1745,6 +1785,16 @@ public class TypeGoo : ModelGoo<Type>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
+        if (typeof(Q).IsAssignableFrom(typeof(TypeDiffGoo)))
+        {
+            target = (Q)(object)new TypeDiffGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(TypeIdGoo)))
+        {
+            target = (Q)(object)new TypeIdGoo(Value);
+            return true;
+        }
         if (target is PieceGoo piece)
         {
             piece.Value = new Piece
@@ -1765,6 +1815,16 @@ public class TypeGoo : ModelGoo<Type>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
+        if (source is TypeDiffGoo diffGoo)
+        {
+            Value = diffGoo.Value;
+            return true;
+        }
+        if (source is TypeIdGoo idGoo)
+        {
+            Value = idGoo.Value;
+            return true;
+        }
         if (source is PieceGoo piece)
         {
             if (piece.Value.Type is null) return false;
@@ -1824,6 +1884,16 @@ public class PieceIdGoo : IdGoo<PieceId>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
+        if (typeof(Q).IsAssignableFrom(typeof(PieceGoo)))
+        {
+            target = (Q)(object)new PieceGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(PieceDiffGoo)))
+        {
+            target = (Q)(object)new PieceDiffGoo(Value);
+            return true;
+        }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
             target = (Q)(object)new GH_String(Value.Id);
@@ -1835,6 +1905,16 @@ public class PieceIdGoo : IdGoo<PieceId>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
+        if (source is PieceGoo pieceGoo)
+        {
+            Value = pieceGoo.Value;
+            return true;
+        }
+        if (source is PieceDiffGoo diffGoo)
+        {
+            Value = diffGoo.Value;
+            return true;
+        }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             Value = new PieceId { Id = str };
@@ -1861,6 +1941,16 @@ public class PieceDiffGoo : DiffGoo<PieceDiff>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
+        if (typeof(Q).IsAssignableFrom(typeof(PieceGoo)))
+        {
+            target = (Q)(object)new PieceGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(PieceIdGoo)))
+        {
+            target = (Q)(object)new PieceIdGoo(Value);
+            return true;
+        }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
             target = (Q)(object)new GH_String(Value.Id);
@@ -1872,6 +1962,16 @@ public class PieceDiffGoo : DiffGoo<PieceDiff>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
+        if (source is PieceGoo pieceGoo)
+        {
+            Value = pieceGoo.Value;
+            return true;
+        }
+        if (source is PieceIdGoo pieceIdGoo)
+        {
+            Value = pieceIdGoo.Value;
+            return true;
+        }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             try
@@ -1943,6 +2043,16 @@ public class PieceGoo : ModelGoo<Piece>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
+        if (typeof(Q).IsAssignableFrom(typeof(PieceDiffGoo)))
+        {
+            target = (Q)(object)new PieceDiffGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(PieceIdGoo)))
+        {
+            target = (Q)(object)new PieceIdGoo(Value);
+            return true;
+        }
         if (target is TypeGoo type)
         {
             if (Value.Type is null) return false;
@@ -1960,6 +2070,16 @@ public class PieceGoo : ModelGoo<Piece>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
+        if (source is PieceDiffGoo diffGoo)
+        {
+            Value = diffGoo.Value;
+            return true;
+        }
+        if (source is PieceIdGoo idGoo)
+        {
+            Value = idGoo.Value;
+            return true;
+        }
         if (source is TypeGoo type)
         {
             Value = new Piece
@@ -2105,6 +2225,16 @@ public class ConnectionIdGoo : IdGoo<ConnectionId>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
+        if (typeof(Q).IsAssignableFrom(typeof(ConnectionGoo)))
+        {
+            target = (Q)(object)new ConnectionGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(ConnectionDiffGoo)))
+        {
+            target = (Q)(object)new ConnectionDiffGoo(Value);
+            return true;
+        }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
             target = (Q)(object)new GH_String(Value.ToIdString());
@@ -2116,6 +2246,16 @@ public class ConnectionIdGoo : IdGoo<ConnectionId>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
+        if (source is ConnectionGoo connectionGoo)
+        {
+            Value = connectionGoo.Value;
+            return true;
+        }
+        if (source is ConnectionDiffGoo diffGoo)
+        {
+            Value = diffGoo.Value;
+            return true;
+        }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             try
@@ -2151,6 +2291,16 @@ public class ConnectionDiffGoo : DiffGoo<ConnectionDiff>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
+        if (typeof(Q).IsAssignableFrom(typeof(ConnectionGoo)))
+        {
+            target = (Q)(object)new ConnectionGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(ConnectionIdGoo)))
+        {
+            target = (Q)(object)new ConnectionIdGoo(Value);
+            return true;
+        }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
             target = (Q)(object)new GH_String("ConnectionDiff");
@@ -2162,6 +2312,16 @@ public class ConnectionDiffGoo : DiffGoo<ConnectionDiff>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
+        if (source is ConnectionGoo connectionGoo)
+        {
+            Value = connectionGoo.Value;
+            return true;
+        }
+        if (source is ConnectionIdGoo connectionIdGoo)
+        {
+            Value = connectionIdGoo.Value;
+            return true;
+        }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             try
@@ -2233,6 +2393,16 @@ public class ConnectionGoo : ModelGoo<Connection>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
+        if (typeof(Q).IsAssignableFrom(typeof(ConnectionDiffGoo)))
+        {
+            target = (Q)(object)new ConnectionDiffGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(ConnectionIdGoo)))
+        {
+            target = (Q)(object)new ConnectionIdGoo(Value);
+            return true;
+        }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
             target = (Q)(object)new GH_String(Value.ToIdString());
@@ -2244,6 +2414,16 @@ public class ConnectionGoo : ModelGoo<Connection>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
+        if (source is ConnectionDiffGoo diffGoo)
+        {
+            Value = diffGoo.Value;
+            return true;
+        }
+        if (source is ConnectionIdGoo idGoo)
+        {
+            Value = idGoo.Value;
+            return true;
+        }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             try
@@ -2295,6 +2475,16 @@ public class DesignIdGoo : IdGoo<DesignId>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
+        if (typeof(Q).IsAssignableFrom(typeof(DesignGoo)))
+        {
+            target = (Q)(object)new DesignGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(DesignDiffGoo)))
+        {
+            target = (Q)(object)new DesignDiffGoo(Value);
+            return true;
+        }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
             target = (Q)(object)new GH_String(Value.ToHumanIdString());
@@ -2306,6 +2496,16 @@ public class DesignIdGoo : IdGoo<DesignId>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
+        if (source is DesignGoo designGoo)
+        {
+            Value = designGoo.Value;
+            return true;
+        }
+        if (source is DesignDiffGoo diffGoo)
+        {
+            Value = diffGoo.Value;
+            return true;
+        }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             Value = new DesignId { Name = str };
@@ -2332,6 +2532,16 @@ public class DesignDiffGoo : DiffGoo<DesignDiff>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
+        if (typeof(Q).IsAssignableFrom(typeof(DesignGoo)))
+        {
+            target = (Q)(object)new DesignGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(DesignIdGoo)))
+        {
+            target = (Q)(object)new DesignIdGoo(Value);
+            return true;
+        }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
             target = (Q)(object)new GH_String(Value.Name);
@@ -2343,6 +2553,16 @@ public class DesignDiffGoo : DiffGoo<DesignDiff>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
+        if (source is DesignGoo designGoo)
+        {
+            Value = designGoo.Value;
+            return true;
+        }
+        if (source is DesignIdGoo designIdGoo)
+        {
+            Value = designIdGoo.Value;
+            return true;
+        }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             try
@@ -2414,6 +2634,16 @@ public class DesignGoo : ModelGoo<Design>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
+        if (typeof(Q).IsAssignableFrom(typeof(DesignDiffGoo)))
+        {
+            target = (Q)(object)new DesignDiffGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(DesignIdGoo)))
+        {
+            target = (Q)(object)new DesignIdGoo(Value);
+            return true;
+        }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
             target = (Q)(object)new GH_String(Value.Name);
@@ -2425,6 +2655,16 @@ public class DesignGoo : ModelGoo<Design>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
+        if (source is DesignDiffGoo diffGoo)
+        {
+            Value = diffGoo.Value;
+            return true;
+        }
+        if (source is DesignIdGoo idGoo)
+        {
+            Value = idGoo.Value;
+            return true;
+        }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             Value = new Design { Name = str };
@@ -2476,6 +2716,11 @@ public class KitDiffGoo : DiffGoo<KitDiff>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
+        if (typeof(Q).IsAssignableFrom(typeof(KitGoo)))
+        {
+            target = (Q)(object)new KitGoo(Value);
+            return true;
+        }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
             target = (Q)(object)new GH_String(Value.Name);
@@ -2487,6 +2732,11 @@ public class KitDiffGoo : DiffGoo<KitDiff>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
+        if (source is KitGoo kitGoo)
+        {
+            Value = kitGoo.Value;
+            return true;
+        }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             try
@@ -2517,6 +2767,11 @@ public class KitGoo : ModelGoo<Kit>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
+        if (typeof(Q).IsAssignableFrom(typeof(KitDiffGoo)))
+        {
+            target = (Q)(object)new KitDiffGoo(Value);
+            return true;
+        }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
             target = (Q)(object)new GH_String(Value.Name);
@@ -2528,6 +2783,11 @@ public class KitGoo : ModelGoo<Kit>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
+        if (source is KitDiffGoo diffGoo)
+        {
+            Value = diffGoo.Value;
+            return true;
+        }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             Value = new Kit { Name = str };
@@ -2577,6 +2837,16 @@ public class QualityIdGoo : IdGoo<QualityId>
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
+        if (typeof(Q).IsAssignableFrom(typeof(QualityGoo)))
+        {
+            target = (Q)(object)new QualityGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(QualityDiffGoo)))
+        {
+            target = (Q)(object)new QualityDiffGoo(Value);
+            return true;
+        }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
             target = (Q)(object)new GH_String(Value.Key);
@@ -2588,6 +2858,16 @@ public class QualityIdGoo : IdGoo<QualityId>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
+        if (source is QualityGoo qualityGoo)
+        {
+            Value = qualityGoo.Value;
+            return true;
+        }
+        if (source is QualityDiffGoo diffGoo)
+        {
+            Value = diffGoo.Value;
+            return true;
+        }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             try
@@ -2614,13 +2894,23 @@ public class QualityIdComponent : IdComponent<QualityIdParam, QualityIdGoo, Qual
     public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
 }
 
-public class QualityGoo : ModelGoo<Quality>
+public class QualityDiffGoo : DiffGoo<QualityDiff>
 {
-    public QualityGoo() { }
-    public QualityGoo(Quality value) : base(value) { }
+    public QualityDiffGoo() { }
+    public QualityDiffGoo(QualityDiff value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
+        if (typeof(Q).IsAssignableFrom(typeof(QualityGoo)))
+        {
+            target = (Q)(object)new QualityGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(QualityIdGoo)))
+        {
+            target = (Q)(object)new QualityIdGoo(Value);
+            return true;
+        }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
             target = (Q)(object)new GH_String(Value.Key);
@@ -2632,6 +2922,82 @@ public class QualityGoo : ModelGoo<Quality>
     internal override bool CustomCastFrom(object source)
     {
         if (source == null) return false;
+        if (source is QualityGoo qualityGoo)
+        {
+            Value = qualityGoo.Value;
+            return true;
+        }
+        if (source is QualityIdGoo qualityIdGoo)
+        {
+            Value = qualityIdGoo.Value;
+            return true;
+        }
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+        {
+            try
+            {
+                Value = str.Deserialize<QualityDiff>();
+                return true;
+            }
+            catch { return false; }
+        }
+        return false;
+    }
+
+    public static implicit operator QualityIdGoo(QualityDiffGoo diffGoo) => new((QualityId)diffGoo.Value);
+    public static implicit operator QualityGoo(QualityDiffGoo diffGoo) => new((Quality)diffGoo.Value);
+    public static implicit operator QualityDiffGoo(QualityIdGoo idGoo) => new((QualityDiff)idGoo.Value);
+    public static implicit operator QualityDiffGoo(QualityGoo goo) => new((QualityDiff)goo.Value);
+}
+
+public class QualityDiffParam : DiffParam<QualityDiffGoo, QualityDiff>
+{
+    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4DA");
+}
+
+public class QualityDiffComponent : DiffComponent<QualityDiffParam, QualityDiffGoo, QualityDiff>
+{
+    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4DB");
+}
+
+public class QualityGoo : ModelGoo<Quality>
+{
+    public QualityGoo() { }
+    public QualityGoo(Quality value) : base(value) { }
+
+    internal override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(QualityDiffGoo)))
+        {
+            target = (Q)(object)new QualityDiffGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(QualityIdGoo)))
+        {
+            target = (Q)(object)new QualityIdGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String(Value.Key);
+            return true;
+        }
+        return false;
+    }
+
+    internal override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+        if (source is QualityDiffGoo diffGoo)
+        {
+            Value = diffGoo.Value;
+            return true;
+        }
+        if (source is QualityIdGoo idGoo)
+        {
+            Value = idGoo.Value;
+            return true;
+        }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
             try
