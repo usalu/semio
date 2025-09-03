@@ -62,7 +62,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{liv-rm}",
-      "formula": "Multiply ( 1 semio.area.floor.gross.net.usable.living-staying.living-room )",
       "format": "#,##0.##"
     },
     {
@@ -88,7 +87,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{kit}",
-      "formula": "Multiply ( 1 semio.area.floor.gross.net.usable.living-staying.living.kitchen )",
       "format": "#,##0.##"
     },
     {
@@ -101,7 +99,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{san}",
-      "formula": "Multiply ( 1 semio.area.floor.gross.net.usable.living-staying.living.sanitary )",
       "format": "#,##0.##"
     },
     {
@@ -114,7 +111,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{circ}",
-      "formula": "Multiply ( 1 semio.area.floor.gross.net.usable.living-staying.living.circulation )",
       "format": "#,##0.##"
     },
     {
@@ -127,7 +123,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{out-seat}",
-      "formula": "Multiply ( 1 semio.area.floor.gross.net.usable.living-staying.living.outdoor-seating )",
       "format": "#,##0.##"
     },
     {
@@ -140,7 +135,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{stor}",
-      "formula": "Multiply ( 1 semio.area.floor.gross.net.usable.living-staying.living.storage )",
       "format": "#,##0.##"
     },
     {
@@ -153,7 +147,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{com-rm}",
-      "formula": "Multiply ( 1 semio.area.floor.gross.net.usable.living-staying.common-room )",
       "format": "#,##0.##"
     },
     {
@@ -166,7 +159,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{brk-rm}",
-      "formula": "Multiply ( 1 semio.area.floor.gross.net.usable.living-staying.break-room )",
       "format": "#,##0.##"
     },
     {
@@ -179,7 +171,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{wait-rm}",
-      "formula": "Multiply ( 1 semio.area.floor.gross.net.usable.living-staying.waiting-room )",
       "format": "#,##0.##"
     },
     {
@@ -192,7 +183,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{din-rm}",
-      "formula": "Multiply ( 1 semio.area.floor.gross.net.usable.living-staying.dining-room )",
       "format": "#,##0.##"
     },
     {
@@ -205,7 +195,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{det-rm}",
-      "formula": "Multiply ( 1 semio.area.floor.gross.net.usable.living-staying.detention-room )",
       "format": "#,##0.##"
     },
     {
@@ -231,7 +220,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{ofc-rm}",
-      "formula": "Multiply ( 1 semio.area.ofc-rm )",
       "format": "#,##0.##"
     },
     {
@@ -244,7 +232,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{open-ofc}",
-      "formula": "Multiply ( 1 semio.area.open-ofc )",
       "format": "#,##0.##"
     },
     {
@@ -257,7 +244,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{meet-rm}",
-      "formula": "Multiply ( 1 semio.area.meet-rm )",
       "format": "#,##0.##"
     },
     {
@@ -270,7 +256,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{des-rm}",
-      "formula": "Multiply ( 1 semio.area.des-rm )",
       "format": "#,##0.##"
     },
     {
@@ -283,7 +268,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{cnt-rm}",
-      "formula": "Multiply ( 1 semio.area.cnt-rm )",
       "format": "#,##0.##"
     },
     {
@@ -296,7 +280,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{ctrl-rm}",
-      "formula": "Multiply ( 1 semio.area.ctrl-rm )",
       "format": "#,##0.##"
     },
     {
@@ -309,7 +292,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{sup-rm}",
-      "formula": "Multiply ( 1 semio.area.sup-rm )",
       "format": "#,##0.##"
     },
     {
@@ -322,7 +304,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{ofc-tech}",
-      "formula": "Multiply ( 1 semio.area.ofc-tech-rm )",
       "format": "#,##0.##"
     },
     {
@@ -335,7 +316,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{other-ofc}",
-      "formula": "Multiply ( 1 semio.area.other-ofc )",
       "format": "#,##0.##"
     },
     {
@@ -361,7 +341,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{prod-hall}",
-      "formula": "Multiply ( 1 semio.area.prod-hall )",
       "format": "#,##0.##"
     },
     {
@@ -374,7 +353,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{work}",
-      "formula": "Multiply ( 1 semio.area.work )",
       "format": "#,##0.##"
     },
     {
@@ -387,7 +365,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{tech-lab}",
-      "formula": "Multiply ( 1 semio.area.tech-lab )",
       "format": "#,##0.##"
     },
     {
@@ -400,7 +377,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{phys-lab}",
-      "formula": "Multiply ( 1 semio.area.phys-elec-lab )",
       "format": "#,##0.##"
     },
     {
@@ -413,7 +389,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{chem-lab}",
-      "formula": "Multiply ( 1 semio.area.chem-bio-lab )",
       "format": "#,##0.##"
     },
     {
@@ -426,7 +401,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{anim}",
-      "formula": "Multiply ( 1 semio.area.anim-rm )",
       "format": "#,##0.##"
     },
     {
@@ -439,7 +413,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{plant}",
-      "formula": "Multiply ( 1 semio.area.plant-rm )",
       "format": "#,##0.##"
     },
     {
@@ -452,7 +425,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{kit}",
-      "formula": "Multiply ( 1 semio.area.kit-prod )",
       "format": "#,##0.##"
     },
     {
@@ -465,7 +437,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{spec-work}",
-      "formula": "Multiply ( 1 semio.area.spec-work-rm )",
       "format": "#,##0.##"
     },
     {
@@ -491,7 +462,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{stor-rm}",
-      "formula": "Multiply ( 1 semio.area.stor-rm )",
       "format": "#,##0.##"
     },
     {
@@ -504,7 +474,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{arch}",
-      "formula": "Multiply ( 1 semio.area.coll-arch )",
       "format": "#,##0.##"
     },
     {
@@ -517,7 +486,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{cold-stor}",
-      "formula": "Multiply ( 1 semio.area.cold-stor )",
       "format": "#,##0.##"
     },
     {
@@ -530,7 +498,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{recv}",
-      "formula": "Multiply ( 1 semio.area.recv-disp )",
       "format": "#,##0.##"
     },
     {
@@ -543,7 +510,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{sales}",
-      "formula": "Multiply ( 1 semio.area.sales-rm )",
       "format": "#,##0.##"
     },
     {
@@ -556,7 +522,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{exh}",
-      "formula": "Multiply ( 1 semio.area.exh-rm )",
       "format": "#,##0.##"
     },
     {
@@ -569,7 +534,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{other-stor}",
-      "formula": "Multiply ( 1 semio.area.other-stor )",
       "format": "#,##0.##"
     },
     {
@@ -595,7 +559,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{class}",
-      "formula": "Multiply ( 1 semio.area.class-fix-seat )",
       "format": "#,##0.##"
     },
     {
@@ -608,7 +571,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{teach}",
-      "formula": "Multiply ( 1 semio.area.teach-prac )",
       "format": "#,##0.##"
     },
     {
@@ -621,7 +583,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{spec-class}",
-      "formula": "Multiply ( 1 semio.area.spec-class )",
       "format": "#,##0.##"
     },
     {
@@ -634,7 +595,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{lib}",
-      "formula": "Multiply ( 1 semio.area.lib )",
       "format": "#,##0.##"
     },
     {
@@ -647,7 +607,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{sport}",
-      "formula": "Multiply ( 1 semio.area.sport )",
       "format": "#,##0.##"
     },
     {
@@ -660,7 +619,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{assm}",
-      "formula": "Multiply ( 1 semio.area.assm-rm )",
       "format": "#,##0.##"
     },
     {
@@ -673,7 +631,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{stage}",
-      "formula": "Multiply ( 1 semio.area.stage-studio )",
       "format": "#,##0.##"
     },
     {
@@ -686,7 +643,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{disp}",
-      "formula": "Multiply ( 1 semio.area.disp-rm )",
       "format": "#,##0.##"
     },
     {
@@ -699,7 +655,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{sacr}",
-      "formula": "Multiply ( 1 semio.area.sacr-rm )",
       "format": "#,##0.##"
     },
     {
@@ -725,7 +680,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{gen-med}",
-      "formula": "Multiply ( 1 semio.area.gen-med-equip )",
       "format": "#,##0.##"
     },
     {
@@ -738,7 +692,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{spec-med}",
-      "formula": "Multiply ( 1 semio.area.spec-med-equip )",
       "format": "#,##0.##"
     },
     {
@@ -751,7 +704,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{surg}",
-      "formula": "Multiply ( 1 semio.area.surg-rm )",
       "format": "#,##0.##"
     },
     {
@@ -764,7 +716,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{rad-diag}",
-      "formula": "Multiply ( 1 semio.area.rad-diag )",
       "format": "#,##0.##"
     },
     {
@@ -777,7 +728,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{rad-ther}",
-      "formula": "Multiply ( 1 semio.area.rad-ther )",
       "format": "#,##0.##"
     },
     {
@@ -790,7 +740,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{rehab}",
-      "formula": "Multiply ( 1 semio.area.rehab-physio )",
       "format": "#,##0.##"
     },
     {
@@ -803,7 +752,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{gen-pat}",
-      "formula": "Multiply ( 1 semio.area.gen-pat-rm )",
       "format": "#,##0.##"
     },
     {
@@ -816,7 +764,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{spec-pat}",
-      "formula": "Multiply ( 1 semio.area.spec-pat-rm )",
       "format": "#,##0.##"
     },
     {
@@ -829,7 +776,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{other-med}",
-      "formula": "Multiply ( 1 semio.area.other-med )",
       "format": "#,##0.##"
     },
     {
@@ -855,7 +801,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{san-rm}",
-      "formula": "Multiply ( 1 semio.area.san-rm )",
       "format": "#,##0.##"
     },
     {
@@ -868,7 +813,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{cloak}",
-      "formula": "Multiply ( 1 semio.area.cloak )",
       "format": "#,##0.##"
     },
     {
@@ -881,7 +825,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{stor-rm}",
-      "formula": "Multiply ( 1 semio.area.stor-rm-other )",
       "format": "#,##0.##"
     },
     {
@@ -894,7 +837,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{park}",
-      "formula": "Multiply ( 1 semio.area.veh-park )",
       "format": "#,##0.##"
     },
     {
@@ -907,7 +849,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{pass}",
-      "formula": "Multiply ( 1 semio.area.pass )",
       "format": "#,##0.##"
     },
     {
@@ -920,7 +861,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{cent-tech}",
-      "formula": "Multiply ( 1 semio.area.cent-tech )",
       "format": "#,##0.##"
     },
     {
@@ -933,7 +873,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{prot}",
-      "formula": "Multiply ( 1 semio.area.prot-rm )",
       "format": "#,##0.##"
     },
     {
@@ -946,7 +885,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{laund}",
-      "formula": "Multiply ( 1 semio.area.laund )",
       "format": "#,##0.##"
     },
     {
@@ -959,7 +897,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{other}",
-      "formula": "Multiply ( 1 semio.area.other )",
       "format": "#,##0.##"
     },
     {
@@ -985,7 +922,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{water}",
-      "formula": "Multiply ( 1 semio.area.waste-gas-water )",
       "format": "#,##0.##"
     },
     {
@@ -998,7 +934,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{heat}",
-      "formula": "Multiply ( 1 semio.area.heat-hw )",
       "format": "#,##0.##"
     },
     {
@@ -1011,7 +946,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{vent}",
-      "formula": "Multiply ( 1 semio.area.vent-ac )",
       "format": "#,##0.##"
     },
     {
@@ -1024,7 +958,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{elec}",
-      "formula": "Multiply ( 1 semio.area.elec-pwr )",
       "format": "#,##0.##"
     },
     {
@@ -1037,7 +970,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{telecom}",
-      "formula": "Multiply ( 1 semio.area.telecom )",
       "format": "#,##0.##"
     },
     {
@@ -1050,7 +982,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{elev}",
-      "formula": "Multiply ( 1 semio.area.elev-conv )",
       "format": "#,##0.##"
     },
     {
@@ -1063,7 +994,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{other-tech}",
-      "formula": "Multiply ( 1 semio.area.other-tech )",
       "format": "#,##0.##"
     },
     {
@@ -1089,7 +1019,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{corr}",
-      "formula": "Multiply ( 1 semio.area.corr-hall )",
       "format": "#,##0.##"
     },
     {
@@ -1102,7 +1031,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{stair}",
-      "formula": "Multiply ( 1 semio.area.stair )",
       "format": "#,##0.##"
     },
     {
@@ -1115,7 +1043,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{shaft}",
-      "formula": "Multiply ( 1 semio.area.shaft-conv )",
       "format": "#,##0.##"
     },
     {
@@ -1128,7 +1055,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{veh-traf}",
-      "formula": "Multiply ( 1 semio.area.veh-traf )",
       "format": "#,##0.##"
     },
     {
@@ -1141,7 +1067,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{other-circ}",
-      "formula": "Multiply ( 1 semio.area.other-circ )",
       "format": "#,##0.##"
     },
     {
@@ -1167,7 +1092,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{ext-wall}",
-      "formula": "Multiply ( 1 semio.area.ext-wall-const )",
       "format": "#,##0.##"
     },
     {
@@ -1180,7 +1104,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{int-wall}",
-      "formula": "Multiply ( 1 semio.area.int-wall-const )",
       "format": "#,##0.##"
     },
     {
@@ -1193,7 +1116,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{part-wall}",
-      "formula": "Multiply ( 1 semio.area.part-wall )",
       "format": "#,##0.##"
     },
     {
@@ -1206,7 +1128,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{col}",
-      "formula": "Multiply ( 1 semio.area.col )",
       "format": "#,##0.##"
     },
     {
@@ -1219,7 +1140,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{shaft}",
-      "formula": "Multiply ( 1 semio.area.shaft )",
       "format": "#,##0.##"
     },
     {
@@ -1232,7 +1152,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{beam}",
-      "formula": "Multiply ( 1 semio.area.beam )",
       "format": "#,##0.##"
     },
     {
@@ -1245,7 +1164,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{other-const}",
-      "formula": "Multiply ( 1 semio.area.other-const )",
       "format": "#,##0.##"
     },
     {
@@ -1271,7 +1189,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{built}",
-      "formula": "Multiply ( 1 semio.area.floor.property.built )",
       "format": "#,##0.##"
     },
     {
@@ -1310,7 +1227,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{traf}",
-      "formula": "Multiply ( 1 semio.area.traf )",
       "format": "#,##0.##"
     },
     {
@@ -1323,7 +1239,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{sidewalk}",
-      "formula": "Multiply ( 1 semio.area.sidewalk )",
       "format": "#,##0.##"
     },
     {
@@ -1336,7 +1251,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{drive}",
-      "formula": "Multiply ( 1 semio.area.drive )",
       "format": "#,##0.##"
     },
     {
@@ -1349,7 +1263,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{park-sp}",
-      "formula": "Multiply ( 1 semio.area.park-sp )",
       "format": "#,##0.##"
     },
     {
@@ -1362,7 +1275,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{bike-park}",
-      "formula": "Multiply ( 1 semio.area.bike-park )",
       "format": "#,##0.##"
     },
     {
@@ -1375,7 +1287,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{turn}",
-      "formula": "Multiply ( 1 semio.area.turn )",
       "format": "#,##0.##"
     },
     {
@@ -1388,7 +1299,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{other-traf}",
-      "formula": "Multiply ( 1 semio.area.other-traf )",
       "format": "#,##0.##"
     },
     {
@@ -1414,7 +1324,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{lawn}",
-      "formula": "Multiply ( 1 semio.area.lawn )",
       "format": "#,##0.##"
     },
     {
@@ -1427,7 +1336,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{plant-bed}",
-      "formula": "Multiply ( 1 semio.area.plant-bed )",
       "format": "#,##0.##"
     },
     {
@@ -1440,7 +1348,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{hedge}",
-      "formula": "Multiply ( 1 semio.area.hedge )",
       "format": "#,##0.##"
     },
     {
@@ -1453,7 +1360,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{tree}",
-      "formula": "Multiply ( 1 semio.area.tree )",
       "format": "#,##0.##"
     },
     {
@@ -1466,7 +1372,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{roof-green}",
-      "formula": "Multiply ( 1 semio.area.roof-green )",
       "format": "#,##0.##"
     },
     {
@@ -1479,7 +1384,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{fac-green}",
-      "formula": "Multiply ( 1 semio.area.fac-green )",
       "format": "#,##0.##"
     },
     {
@@ -1492,7 +1396,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{other-green}",
-      "formula": "Multiply ( 1 semio.area.other-green )",
       "format": "#,##0.##"
     },
     {
@@ -1518,7 +1421,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{terr}",
-      "formula": "Multiply ( 1 semio.area.terr )",
       "format": "#,##0.##"
     },
     {
@@ -1531,7 +1433,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{balc}",
-      "formula": "Multiply ( 1 semio.area.balc )",
       "format": "#,##0.##"
     },
     {
@@ -1544,7 +1445,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{court}",
-      "formula": "Multiply ( 1 semio.area.court )",
       "format": "#,##0.##"
     },
     {
@@ -1557,7 +1457,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{stor-util}",
-      "formula": "Multiply ( 1 semio.area.stor-util )",
       "format": "#,##0.##"
     },
     {
@@ -1570,7 +1469,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{play}",
-      "formula": "Multiply ( 1 semio.area.play )",
       "format": "#,##0.##"
     },
     {
@@ -1583,7 +1481,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{other-paved}",
-      "formula": "Multiply ( 1 semio.area.other-paved )",
       "format": "#,##0.##"
     },
     {
@@ -1609,7 +1506,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{waste-coll}",
-      "formula": "Multiply ( 1 semio.area.waste-coll )",
       "format": "#,##0.##"
     },
     {
@@ -1622,7 +1518,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{util-line}",
-      "formula": "Multiply ( 1 semio.area.util-line )",
       "format": "#,##0.##"
     },
     {
@@ -1635,7 +1530,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{storm}",
-      "formula": "Multiply ( 1 semio.area.storm-mgmt )",
       "format": "#,##0.##"
     },
     {
@@ -1648,7 +1542,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{light}",
-      "formula": "Multiply ( 1 semio.area.light-sys )",
       "format": "#,##0.##"
     },
     {
@@ -1661,7 +1554,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{fence}",
-      "formula": "Multiply ( 1 semio.area.fence )",
       "format": "#,##0.##"
     },
     {
@@ -1674,7 +1566,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{other-tech-fac}",
-      "formula": "Multiply ( 1 semio.area.other-tech-fac )",
       "format": "#,##0.##"
     },
     {
@@ -1700,7 +1591,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{pond}",
-      "formula": "Multiply ( 1 semio.area.pond )",
       "format": "#,##0.##"
     },
     {
@@ -1713,7 +1603,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{fountain}",
-      "formula": "Multiply ( 1 semio.area.fountain )",
       "format": "#,##0.##"
     },
     {
@@ -1726,7 +1615,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{storm-ret}",
-      "formula": "Multiply ( 1 semio.area.storm-ret )",
       "format": "#,##0.##"
     },
     {
@@ -1739,7 +1627,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{other-water}",
-      "formula": "Multiply ( 1 semio.area.other-water )",
       "format": "#,##0.##"
     },
     {
@@ -1752,7 +1639,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{other-out}",
-      "formula": "Multiply ( 1 semio.area.other-out )",
       "format": "#,##0.##"
     }
   ]

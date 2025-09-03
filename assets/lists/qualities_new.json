@@ -23,7 +23,7 @@
       "si": "€",
       "imperial": "$",
       "symbol": "E",
-      "formula": "Multiply ( semio.cost.life-cycle.earnings.life-time semio.cost.life-cycle.earnings.income )",
+      "formula": "Multiply ( semio.cost.life-cycle.life-time semio.cost.life-cycle.earnings.income )",
       "format": "#,##0.##"
     },
     {
@@ -36,7 +36,6 @@
       "si": "a",
       "imperial": "yr",
       "symbol": "t",
-      "formula": "Multiply ( 1 semio.cost.life-cycle.life-time )",
       "format": "#,##0.##"
     },
     {
@@ -49,7 +48,6 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "I",
-      "formula": "Multiply ( 1 semio.cost.life-cycle.earnings.income )",
       "format": "#,##0.##"
     },
     {
@@ -62,7 +60,6 @@
       "si": "€",
       "imperial": "$",
       "symbol": "I_total",
-      "formula": "Multiply ( 1 semio.income )",
       "format": "#,##0.##"
     },
     {
@@ -88,7 +85,6 @@
       "si": "€",
       "imperial": "$",
       "symbol": "C_c",
-      "formula": "Multiply ( 1 semio.cost.investment.initial.construction-costs )",
       "format": "#,##0.##"
     },
     {
@@ -101,11 +97,10 @@
       "si": "€",
       "imperial": "$",
       "symbol": "C_{eq}",
-      "formula": "Multiply ( 1 semio.cost.investment.initial.technical-equipment )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.life-cycle-costs",
+      "key": "semio.cost.life-cycle",
       "name": "Life Cycle Costs",
       "translation": {
         "de": "Lebenszykluskosten"
@@ -114,14 +109,12 @@
       "si": "€",
       "imperial": "$",
       "symbol": "LCC",
-      "formula": "Add ( semio.cost.investment.initial semio.cost.life-cycle-costs.operating-costs )",
+      "formula": "Add ( semio.cost.investment.initial semio.cost.life-cycle.operating )",
       "format": "#,##0.##"
     },
 
-    // life cycle expenses = operating costs
-
     {
-      "key": "semio.cost.life-cycle-costs.operating-costs",
+      "key": "semio.cost.life-cycle.operating",
       "name": "Operating Costs",
       "translation": {
         "de": "Betriebskosten"
@@ -130,11 +123,11 @@
       "si": "€",
       "imperial": "$",
       "symbol": "C_o",
-      "formula": "Multiply ( semio.cost.life-cycle.life-time semio.cost.life-cycle-costs.operating-costs.expenses )",
+      "formula": "Multiply ( semio.cost.life-cycle.life-time semio.cost.life-cycle.operating.expenses )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.life-cycle-costs.operating-costs.expenses",
+      "key": "semio.cost.life-cycle.operating.expenses",
       "name": "Operating Expenses",
       "translation": {
         "de": "laufende Ausgaben"
@@ -143,11 +136,11 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_{op}",
-      "formula": "Add ( semio.cost.life-cycle-costs.operating-costs.expenses.maintenance semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses )",
+      "formula": "Add ( semio.cost.life-cycle.operating.expenses.maintenance semio.cost.life-cycle.operating.expenses.energy )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.life-cycle-costs.operating-costs.expenses.maintenance",
+      "key": "semio.cost.life-cycle.operating.expenses.maintenance",
       "name": "Maintenance Expenses",
       "translation": {
         "de": "Instandhaltungskosten"
@@ -156,11 +149,10 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_m",
-      "formula": "Multiply ( 1 semio.cost.life-cycle-costs.operating-costs.expenses.maintenance )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses",
+      "key": "semio.cost.life-cycle.operating.expenses.energy",
       "name": "Energy Expenses",
       "translation": {
         "de": "Energiekosten"
@@ -169,11 +161,11 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_E",
-      "formula": "Add ( semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.heating semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.electricity semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.ventilation )",
+      "formula": "Add ( semio.cost.life-cycle.operating.expenses.energy.heating semio.cost.life-cycle.operating.expenses.energy.electricity semio.cost.life-cycle.operating.expenses.energy.ventilation )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.heating",
+      "key": "semio.cost.life-cycle.operating.expenses.energy.heating",
       "name": "Heating Expenses",
       "translation": {
         "de": "Heizkosten"
@@ -182,11 +174,11 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_h",
-      "formula": "Add ( semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.heating-costs semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.heating-CO2-price )",
+      "formula": "Add ( semio.cost.life-cycle.operating.expenses.energy.heating semio.cost.life-cycle.operating.expenses.energy.heating.co2-price )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.electricity",
+      "key": "semio.cost.life-cycle.operating.expenses.energy.electricity",
       "name": "Electricity Expenses",
       "translation": {
         "de": "Stromkosten"
@@ -195,11 +187,11 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_e",
-      "formula": "Add ( semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.electricity-costs semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.electricity-CO2-price )",
+      "formula": "Add ( semio.cost.life-cycle.operating.expenses.energy.electricity semio.cost.life-cycle.operating.expenses.energy.electricity.co2-price )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.ventilation",
+      "key": "semio.cost.life-cycle.operating.expenses.energy.ventilation",
       "name": "Ventilation Expenses",
       "translation": {
         "de": "Ventilationskosten"
@@ -208,14 +200,12 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_v",
-      "formula": "Add ( semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.electricity-costs-ventilation semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.ventilation-CO2-price )",
+      "formula": "Add ( semio.cost.life-cycle.operating.expenses.energy.electricity-ventilation semio.cost.life-cycle.operating.expenses.energy.ventilation.co2-price )",
       "format": "#,##0.##"
     },
 
-    // heating expenses
-
     {
-      "key": "semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.heating-costs",
+      "key": "semio.cost.life-cycle.operating.expenses.energy.heating",
       "name": "Heating Costs",
       "translation": {
         "de": "Heizkosten"
@@ -224,11 +214,11 @@
       "si": "€",
       "imperial": "$",
       "symbol": "C_{h,cost}",
-      "formula": "Multiply ( semio.energy.heating.final-heating-energy-demand semio.cost.energy.heating-energy-price )",
+      "formula": "Multiply ( semio.energy.heating.final.energy-demand semio.cost.energy.heating.price )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.heating.final-heating-energy-demand",
+      "key": "semio.energy.heating.final.energy-demand",
       "name": "Final Heating Energy Demand",
       "translation": {
         "de": "Endenergiebedarf Heizung"
@@ -237,11 +227,11 @@
       "si": "kWh",
       "imperial": "kWh",
       "symbol": "Q_{h,f}",
-      "formula": "Multiply ( semio.energy.heating.heating-efficiency-factor semio.energy.heating.heating-energy-demand )",
+      "formula": "Multiply ( semio.energy.heating.efficiency-factor semio.energy.heating.energy-demand )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.heating.heating-efficiency-factor",
+      "key": "semio.energy.heating.efficiency-factor",
       "name": "Heating Efficiency Factor",
       "translation": {
         "de": "Heizungseffizienzfaktor"
@@ -250,11 +240,10 @@
       "si": "",
       "imperial": "",
       "symbol": "η_h",
-      "formula": "Multiply ( 1 semio.energy.heating.heating-efficiency-factor )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.heating.heating-energy-demand",
+      "key": "semio.energy.heating.energy-demand",
       "name": "Heating Energy Demand",
       "translation": {
         "de": "Heizenergiebedarf"
@@ -263,11 +252,11 @@
       "si": "kWh",
       "imperial": "kWh",
       "symbol": "Q_{v,loss}",
-      "formula": "Add ( Multiply (semio.energy.heating.ventilation-heat-loss Subtract( 1 semio.energy.heating.ventilation-heat-recovery-factor ) ) semio.energy.heating.transmission-heat-loss )",
+      "formula": "Add ( Multiply (semio.energy.heating.ventilation.heat-loss Subtract( 1 semio.energy.heating.ventilation.heat-recovery-factor ) ) semio.energy.heating.transmission.heat-loss )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.heating.heating-load",
+      "key": "semio.energy.heating.load",
       "name": "Heating Load",
       "translation": {
         "de": "Heizlast"
@@ -276,7 +265,6 @@
       "si": "kW",
       "imperial": "kW",
       "symbol": "P_h",
-      "formula": "Multiply ( 1 semio.energy.heating.heating-load )",
       "format": "#,##0.##"
     },
     {
@@ -289,11 +277,10 @@
       "si": "kW",
       "imperial": "kW",
       "symbol": "P_c",
-      "formula": "Multiply ( 1 semio.energy.cooling.cooling-load )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.heating.transmission-heat-loss",
+      "key": "semio.energy.heating.transmission.heat-loss",
       "name": "Transmission Heat Loss",
       "translation": {
         "de": "Transmissionswärmeverlust"
@@ -302,11 +289,10 @@
       "si": "kWh/a",
       "imperial": "kWh/yr",
       "symbol": "Q_{t,loss}",
-      "formula": "Multiply ( 1 semio.energy.heating.transmission-heat-loss )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.heating.ventilation-heat-loss",
+      "key": "semio.energy.heating.ventilation.heat-loss",
       "name": "Ventilation Heat Loss",
       "translation": {
         "de": "Lüftungswärmeverlust"
@@ -315,11 +301,11 @@
       "si": "kWh/a",
       "imperial": "kWh/yr",
       "symbol": "Q_{v,loss}",
-      "formula": "Multiply ( semio.energy.heating.ventilation-heat-loss-factor semio.energy.heating.heating-energy-demand )",
+      "formula": "Multiply ( semio.energy.heating.ventilation.heat-loss-factor semio.energy.heating.energy-demand )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.heating.ventilation-heat-recovery-factor",
+      "key": "semio.energy.heating.ventilation.heat-recovery-factor",
       "name": "Ventilation Heat Recovery Factor",
       "translation": {
         "de": "Lüftungswärmerückgewinnungsfaktor"
@@ -328,11 +314,10 @@
       "si": "",
       "imperial": "",
       "symbol": "f_{v,recovery}",
-      "formula": "Multiply ( 1 semio.energy.heating.ventilation-heat-recovery-factor )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.energy.heating-energy-price",
+      "key": "semio.cost.energy.heating.price",
       "name": "Heating Energy Price",
       "translation": {
         "de": "Heizenergie-Preis"
@@ -341,11 +326,10 @@
       "si": "€/kWh",
       "imperial": "$/kWh",
       "symbol": "p_h",
-      "formula": "Multiply ( 1 semio.cost.energy.heating-energy-price )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.heating-CO2-price",
+      "key": "semio.cost.life-cycle.operating.expenses.energy.heating.co2-price",
       "name": "Heating CO2 Price",
       "translation": {
         "de": "CO2-Preis zum heizen"
@@ -354,11 +338,11 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_{h,CO₂}",
-      "formula": "Multiply ( semio.energy.heating.heating-gwp semio.cost.energy.CO2-price )",
+      "formula": "Multiply ( semio.energy.heating.gwp semio.cost.energy.CO2-price )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.heating.heating-gwp",
+      "key": "semio.energy.heating.gwp",
       "name": "Heating Global Warming Potential",
       "translation": {
         "de": "Heizung Treibhauspotenzial"
@@ -367,11 +351,11 @@
       "si": "kgCO2e/a",
       "imperial": "lbCO2e/yr",
       "symbol": "GWP_h",
-      "formula": "Multiply ( semio.energy.heating.final-heating-energy-demand semio.energy.heating.heating-gwp-factor )",
+      "formula": "Multiply ( semio.energy.heating.final.energy-demand semio.energy.heating.gwp-factor )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.heating.heating-gwp-factor",
+      "key": "semio.energy.heating.gwp-factor",
       "name": "Heating Global Warming Potential Factor",
       "translation": {
         "de": "Wärme Treibhauspotenzial-Faktor"
@@ -380,7 +364,6 @@
       "si": "kgCO2e/kWh",
       "imperial": "kgCO2e/kWh",
       "symbol": "f_{h,GWP}",
-      "formula": "Multiply ( 1 semio.energy.heating.heating-gwp-factor )",
       "format": "#,##0.##"
     },
     {
@@ -393,14 +376,11 @@
       "si": "€/kgCO2e",
       "imperial": "$/kgCO2e",
       "symbol": "p_{CO₂}",
-      "formula": "Multiply ( 1 semio.cost.energy.CO2-price )",
       "format": "#,##0.##"
     },
 
-    // electricity expenses
-
     {
-      "key": "semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.electricity-costs",
+      "key": "semio.cost.life-cycle.operating.expenses.energy.electricity",
       "name": "Electricity Costs",
       "translation": {
         "de": "Stromkosten"
@@ -409,11 +389,11 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_{e,cost}",
-      "formula": "Multiply ( semio.energy.electricity.electricity-energy-demand semio.cost.energy.electricity-energy-price )",
+      "formula": "Multiply ( semio.energy.electricity.energy-demand semio.cost.energy.electricity.price )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.electricity.electricity-energy-demand",
+      "key": "semio.energy.electricity.energy-demand",
       "name": "Electricity Energy Demand",
       "translation": {
         "de": "Strombedarf"
@@ -422,11 +402,10 @@
       "si": "kWh/a",
       "imperial": "kWh/yr",
       "symbol": "Q_{e,f}",
-      "formula": "Multiply ( 1 semio.energy.electricity.electricity-energy-demand.technical-equipment-energy-demand )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.electricity.electricity-energy-demand.technical-equipment-energy-demand",
+      "key": "semio.energy.electricity.energy-demand.technical-equipment",
       "name": "Technical Equipment Energy Demand",
       "translation": {
         "de": "Energiebedarf der technischen Ausstattung"
@@ -435,11 +414,10 @@
       "si": "kWh/a",
       "imperial": "kWh/yr",
       "symbol": "Q_{e,f,tech}",
-      "formula": "Multiply ( 1 semio.energy.electricity.electricity-energy-demand.technical-equipment-energy-demand )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.energy.electricity-energy-price",
+      "key": "semio.cost.energy.electricity.price",
       "name": "Electricity Energy Price",
       "translation": {
         "de": "Strompreis"
@@ -448,11 +426,10 @@
       "si": "€/kWh",
       "imperial": "$/kWh",
       "symbol": "p_e",
-      "formula": "Multiply ( 1 semio.cost.energy.electricity-energy-price )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.electricity-CO2-price",
+      "key": "semio.cost.life-cycle.operating.expenses.energy.electricity.co2-price",
       "name": "Electricity CO2 Price",
       "translation": {
         "de": "CO2-Preis Strom"
@@ -461,11 +438,11 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_{e,CO₂}",
-      "formula": "Multiply ( semio.energy.electricity.electricity-gwp semio.cost.energy.CO2-price )",
+      "formula": "Multiply ( semio.energy.electricity.gwp semio.cost.energy.CO2-price )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.electricity.electricity-gwp",
+      "key": "semio.energy.electricity.gwp",
       "name": "Electricity Global Warming Potential",
       "translation": {
         "de": "Strom Treibhauspotenzial"
@@ -474,11 +451,11 @@
       "si": "kgCO2e/a",
       "imperial": "lbCO2e/yr",
       "symbol": "GWP_e",
-      "formula": "Multiply ( semio.energy.electricity.electricity-energy-demand semio.energy.electricity.electricity-gwp-factor )",
+      "formula": "Multiply ( semio.energy.electricity.energy-demand semio.energy.electricity.gwp-factor )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.electricity.electricity-gwp-factor",
+      "key": "semio.energy.electricity.gwp-factor",
       "name": "Electricity Global Warming Potential Factor",
       "translation": {
         "de": "Strom Treibhausfaktor"
@@ -487,14 +464,11 @@
       "si": "kgCO2e/kWh",
       "imperial": "kgCO2e/kWh",
       "symbol": "f_{e,GWP}",
-      "formula": "Multiply ( 1 semio.energy.electricity.electricity-gwp-factor )",
       "format": "#,##0.##"
     },
 
-    // ventilation expenses
-
     {
-      "key": "semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.electricity-costs-Ventilation",
+      "key": "semio.cost.life-cycle.operating.expenses.energy.electricity-Ventilation",
       "name": "Ventilation Costs",
       "translation": {
         "de": "Ventilationskosten"
@@ -503,11 +477,11 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_{v,cost}",
-      "formula": "Multiply ( semio.energy.ventilation.final-ventilation-energy-demand semio.cost.energy.electricity-energy-price )",
+      "formula": "Multiply ( semio.energy.ventilation.final.energy-demand semio.cost.energy.electricity.price )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.ventilation.final-ventilation-energy-demand",
+      "key": "semio.energy.ventilation.final.energy-demand",
       "name": "Final Ventilation Energy Demand",
       "translation": {
         "de": "Endenergiebedarf Ventilation"
@@ -516,11 +490,11 @@
       "si": "kWh/a",
       "imperial": "kWh/yr",
       "symbol": "Q_{v,f}",
-      "formula": "Multiply ( semio.energy.ventilation.ventilation-efficiency-factor semio.energy.ventilation.ventilation-energy-demand )",
+      "formula": "Multiply ( semio.energy.ventilation.efficiency-factor semio.energy.ventilation.energy-demand )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.ventilation.ventilation-efficiency-factor",
+      "key": "semio.energy.ventilation.efficiency-factor",
       "name": "Ventilation Efficiency Factor",
       "translation": {
         "de": "Ventilationseffizienzfaktor"
@@ -529,11 +503,10 @@
       "si": "",
       "imperial": "",
       "symbol": "η_v",
-      "formula": "Multiply ( 1 semio.energy.ventilation.ventilation-efficiency-factor )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.ventilation.ventilation-energy-demand",
+      "key": "semio.energy.ventilation.energy-demand",
       "name": "Ventilation Energy Demand",
       "translation": {
         "de": "Ventilationsenergiebedarf"
@@ -542,11 +515,10 @@
       "si": "kWh/a",
       "imperial": "kWh/yr",
       "symbol": "Q_v",
-      "formula": "Multiply ( 1 semio.energy.ventilation.ventilation-energy-demand )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.ventilation.ventilation-air-flow-volume",
+      "key": "semio.energy.ventilation.air-flow-volume",
       "name": "Ventilation Air Flow Volume",
       "translation": {
         "de": "Lüftungsvolumenstrom"
@@ -555,11 +527,10 @@
       "si": "m³/h",
       "imperial": "ft³/h",
       "symbol": "V̇_v",
-      "formula": "Multiply ( 1 semio.energy.ventilation.ventilation-air-flow-volume )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.life-cycle-costs.operating-costs.expenses.energy-expenses.ventilation-CO2-price",
+      "key": "semio.cost.life-cycle.operating.expenses.energy.ventilation.co2-price",
       "name": "Ventilation CO2 Price",
       "translation": {
         "de": "CO2-Preis für die Lüftungsanlage"
@@ -568,11 +539,11 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_{v,CO2}",
-      "formula": "Multiply ( semio.energy.electricity.ventilation-gwp semio.cost.energy.CO2-price )",
+      "formula": "Multiply ( semio.energy.ventilation.electricity.gwp semio.cost.energy.CO2-price )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.ventilation.ventilation-gwp",
+      "key": "semio.energy.ventilation.gwp",
       "name": "Ventilation Global Warming Potential",
       "translation": {
         "de": "Lüftungs-Treibhauspotenzial"
@@ -581,11 +552,9 @@
       "si": "kgCO2e/a",
       "imperial": "lbCO2e/yr",
       "symbol": "GWP_v",
-      "formula": "Multiply ( semio.energy.ventilation.final-ventilation-energy-demand semio.energy.electricity.electricity-gwp-factor )",
+      "formula": "Multiply ( semio.energy.ventilation.final.energy-demand semio.energy.electricity.gwp-factor )",
       "format": "#,##0.##"
     },
-
-    // Global Warming Potential
 
     {
       "key": "semio.life-cycle.gwp",
@@ -610,7 +579,7 @@
       "si": "kgCO2e/a",
       "imperial": "lbCO2e/yr",
       "symbol": "GWP_{energy}",
-      "formula": "Add ( semio.energy.heating.heating-gwp semio.energy.electricity.electricity-gwp semio.energy.ventilation.ventilation-gwp )",
+      "formula": "Add ( semio.energy.heating.gwp semio.energy.electricity.gwp semio.energy.ventilation.gwp )",
       "format": "#,##0.##"
     },
     {
@@ -623,11 +592,11 @@
       "si": "kgCO2e",
       "imperial": "lbCO2e",
       "symbol": "GWP_{construction}",
-      "formula": "Add ( semio.construction.building-construction-gwp semio.construction.technical-equipment-gwp )",
+      "formula": "Add ( semio.construction.building.gwp semio.construction.technical-equipment.gwp )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.construction.building-construction-gwp",
+      "key": "semio.construction.building.gwp",
       "name": "Building Construction Global Warming Potential",
       "translation": {
         "de": "Treibhauspotenzial der Konstruktion"
@@ -636,11 +605,10 @@
       "si": "kgCO2e",
       "imperial": "lbCO2e",
       "symbol": "GWP_{construction,building}",
-      "formula": "Multiply ( 1 semio.construction.building-construction-gwp )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.construction.technical-equipment-gwp",
+      "key": "semio.construction.technical-equipment.gwp",
       "name": "Technical Equipment Global Warming Potential",
       "translation": {
         "de": "Treibhauspotenzial der technischen Ausstattung"
@@ -649,11 +617,8 @@
       "si": "kgCO2e",
       "imperial": "lbCO2e",
       "symbol": "GWP_{construction,technical}",
-      "formula": "Multiply ( 1 semio.construction.technical-equipment-gwp )",
       "format": "#,##0.##"
     },
-
-    // Energy Demand
 
     {
       "key": "semio.energy.final-energy-demand",
@@ -665,11 +630,9 @@
       "si": "kWh/a",
       "imperial": "kBtu/yr",
       "symbol": "E_{final}",
-      "formula": "Add ( semio.energy.heating.final-heating-energy-demand semio.energy.electricity.electricity-energy-demand semio.energy.ventilation.final-ventilation-energy-demand )",
+      "formula": "Add ( semio.energy.heating.final.energy-demand semio.energy.electricity.energy-demand semio.energy.ventilation.final.energy-demand )",
       "format": "#,##0.##"
     },
-
-    // primary energy
 
     {
       "key": "semio.energy.primary-energy-demand",
@@ -681,11 +644,11 @@
       "si": "kWh/a",
       "imperial": "kBtu/yr",
       "symbol": "E_{primary}",
-      "formula": "Add ( semio.energy.heating.primary-heating-energy-demand semio.energy.electricity.primary-electricity-energy-demand semio.energy.ventilation.primary-ventilation-energy-demand )",
+      "formula": "Add ( semio.energy.heating.primary.energy-demand semio.energy.electricity.primary.energy-demand semio.energy.ventilation.primary.energy-demand )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.heating.primary-heating-energy-demand",
+      "key": "semio.energy.heating.primary.energy-demand",
       "name": "Primary Heating Energy Demand",
       "translation": {
         "de": "Primärenergiebedarf Heizung"
@@ -694,11 +657,11 @@
       "si": "kWh/a",
       "imperial": "kBtu/yr",
       "symbol": "E_{h,primary}",
-      "formula": "Multiply ( semio.energy.heating.final-heating-energy-demand semio.energy.heating.heating-primary-energy-factor )",
+      "formula": "Multiply ( semio.energy.heating.final.energy-demand semio.energy.heating.primary-energy-factor )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.heating.heating-primary-energy-factor",
+      "key": "semio.energy.heating.primary-energy-factor",
       "name": "Heating Primary Energy Factor",
       "translation": {
         "de": "Heizung Primärenergiefaktor"
@@ -707,11 +670,10 @@
       "si": "",
       "imperial": "",
       "symbol": "f_{h,primary}",
-      "formula": "Multiply ( 1 semio.energy.heating.heating-primary-energy-factor )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.electricity.primary-electricity-energy-demand",
+      "key": "semio.energy.electricity.primary.energy-demand",
       "name": "Primary Electricity Energy Demand",
       "translation": {
         "de": "Primärenergiebedarf Strom"
@@ -720,11 +682,11 @@
       "si": "kWh/a",
       "imperial": "kBtu/yr",
       "symbol": "E_{e,primary}",
-      "formula": "Multiply ( semio.energy.electricity.electricity-energy-demand semio.energy.electricity.electricity-primary-energy-factor )",
+      "formula": "Multiply ( semio.energy.electricity.energy-demand semio.energy.electricity.primary-energy-factor )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.electricity.electricity-primary-energy-factor",
+      "key": "semio.energy.electricity.primary-energy-factor",
       "name": "Electricity Primary Energy Factor",
       "translation": {
         "de": "Strom Primärenergiefaktor"
@@ -733,11 +695,10 @@
       "si": "",
       "imperial": "",
       "symbol": "f_{e,primary}",
-      "formula": "Multiply ( 1 semio.energy.electricity.electricity-primary-energy-factor )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.ventilation.primary-ventilation-energy-demand",
+      "key": "semio.energy.ventilation.primary.energy-demand",
       "name": "Primary Ventilation Energy Demand",
       "translation": {
         "de": "Primärenergiebedarf Lüftung"
@@ -746,11 +707,9 @@
       "si": "kWh/a",
       "imperial": "kBtu/yr",
       "symbol": "E_{v,primary}",
-      "formula": "Multiply ( semio.energy.ventilation.final-ventilation-energy-demand semio.energy.electricity.electricity-primary-energy-factor )",
+      "formula": "Multiply ( semio.energy.ventilation.final.energy-demand semio.energy.electricity.primary-energy-factor )",
       "format": "#,##0.##"
     },
-
-    // Building Geometry
 
     {
       "key": "semio.area.floor-area",
@@ -762,7 +721,6 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_floor",
-      "formula": "Multiply ( 1 semio.area.floor-area )",
       "format": "#,##0.##"
     },
     {
@@ -775,11 +733,10 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_effective",
-      "formula": "Multiply ( 1 semio.area.effective-floor-area )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.area.area-efficiency",
+      "key": "semio.area.efficiency",
       "name": "Area Efficiency",
       "translation": {
         "de": "Flächeneffizienz"
@@ -801,7 +758,7 @@
       "si": "kWh/m²a",
       "imperial": "kWh/ft²yr",
       "symbol": "Q_{h,area}",
-      "formula": "Divide ( semio.energy.heating.heating-energy-demand semio.area.floor-area )",
+      "formula": "Divide ( semio.energy.heating.energy-demand semio.area.floor-area )",
       "format": "#,##0.##"
     },
     {
@@ -853,7 +810,7 @@
       "si": "€/m²",
       "imperial": "$/ft²",
       "symbol": "LCC_{area}",
-      "formula": "Divide ( semio.cost.life-cycle-costs semio.area.effective-floor-area )",
+      "formula": "Divide ( semio.cost.life-cycle semio.area.effective-floor-area )",
       "format": "#,##0.##"
     },
     {
@@ -893,12 +850,11 @@
       "si": "persons",
       "imperial": "persons",
       "symbol": "U",
-      "formula": "Multiply ( 1 semio.users )",
       "format": "#,##0"
     },
 
     {
-      "key": "semio.area.area-comfort",
+      "key": "semio.area.comfort",
       "name": "Area Comfort",
       "translation": {
         "de": "Flächenkomfort"
@@ -933,7 +889,7 @@
       "si": "€/user",
       "imperial": "$/user",
       "symbol": "LCC_{user}",
-      "formula": "Divide ( semio.cost.life-cycle-costs semio.users )",
+      "formula": "Divide ( semio.cost.life-cycle semio.users )",
       "format": "#,##0.##"
     },
     {
@@ -976,7 +932,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.heating.heating-energy-demand-per-user",
+      "key": "semio.energy.heating.energy-demand-per-user",
       "name": "Heating Energy Demand per User",
       "translation": {
         "de": "Heizenergiebedarf pro Nutzer"
@@ -985,7 +941,7 @@
       "si": "kWh/user/a",
       "imperial": "kWh/user/yr",
       "symbol": "Q_{h,user}",
-      "formula": "Divide ( semio.energy.heating.heating-energy-demand semio.users )",
+      "formula": "Divide ( semio.energy.heating.energy-demand semio.users )",
       "format": "#,##0.##"
     },
     {
@@ -998,11 +954,11 @@
       "si": "kWh/m²/a",
       "imperial": "kWh/ft²/yr",
       "symbol": "Q_{v,area}",
-      "formula": "Divide ( semio.energy.ventilation.ventilation-energy-demand semio.area.effective-floor-area )",
+      "formula": "Divide ( semio.energy.ventilation.energy-demand semio.area.effective-floor-area )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.ventilation.ventilation-energy-demand-per-user",
+      "key": "semio.energy.ventilation.energy-demand-per-user",
       "name": "Ventilation Energy Demand per User",
       "translation": {
         "de": "Lüftungsenergiebedarf pro Nutzer"
@@ -1011,7 +967,7 @@
       "si": "kWh/user/a",
       "imperial": "kWh/user/yr",
       "symbol": "Q_{v,user}",
-      "formula": "Divide ( semio.energy.ventilation.ventilation-energy-demand semio.users )",
+      "formula": "Divide ( semio.energy.ventilation.energy-demand semio.users )",
       "format": "#,##0.##"
     },
     {
@@ -1029,3 +985,15 @@
     }
   ]
 }
+
+
+
+
+
+
+
+
+
+
+
+
