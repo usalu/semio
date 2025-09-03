@@ -148,13 +148,13 @@ export type {
 export {
   ConnectionScopeProvider, DesignEditorScopeProvider, DesignScopeProvider, KitScopeProvider, PieceScopeProvider, PortypeScopeProvider, RepresentationScopeProvider,
   // Context providers
-  SketchpadScopeProvider, TypeScopeProvider, useCommands, useConnection, useDesign, useDesignEditor, useDesignId, useDesigns,
+  SketchpadScopeProvider, TypeScopeProvider, useConnection, useDesign, useDesignEditor, useDesignEditorCommands, useDesignId, useDesigns,
   // Design Editor hooks
-  useDiff, useFileUrls, useFullscreen, useKit, useLayout,
+  useDiff, useFileUrls, useFullscreen, useKit, useKitCommands, useLayout,
   // Concise hooks
   useMode, useOthers, usePiece, usePort, useRepresentation, useSelection,
   // Scope hooks
-  useSketchpad,
+  useSketchpad, useSketchpadCommands,
   // Core hooks
   useTheme, useType
 } from "./store";

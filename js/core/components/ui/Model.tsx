@@ -25,7 +25,7 @@ import { Canvas, ThreeEvent } from "@react-three/fiber";
 import { applyDesignDiff, DiffStatus, flattenDesign, getPieceRepresentationUrls, Piece, Plane, planeToMatrix, toSemioRotation, updateDesignInKit } from "@semio/js";
 import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { DesignEditorFullscreenPanel, DesignEditorPresenceOther, PieceScopeProvider, useCommands, useDesign, useDiff, useFileUrls, useFullscreen, useKit, useOthers, useSelection } from "../../store";
+import { DesignEditorFullscreenPanel, DesignEditorPresenceOther, PieceScopeProvider, useDesignEditorCommands, useDesign, useDiff, useFileUrls, useFullscreen, useKit, useOthers, useSelection } from "../../store";
 
 const getComputedColor = (variable: string): string => {
   return getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
@@ -76,7 +76,7 @@ interface ModelPieceProps {
 }
 
 const ModelPiece: FC<ModelPieceProps> = React.memo(({ piece, plane, fileUrl, selected, updating, diffStatus = DiffStatus.Unchanged, onSelect, onPieceUpdate }) => {
-  const { startTransaction, finalizeTransaction, abortTransaction } = useCommands();
+  const { startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
   const fixed = piece.plane !== undefined;
   const matrix = useMemo(() => {
     const planeRotationMatrix = planeToMatrix(plane);
@@ -205,7 +205,7 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(({ piece, plane, fileUrl, sel
 
 const ModelDesign: FC = () => {
   const designId = useDesign();
-  const { removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = useCommands();
+  const { removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = useDesignEditorCommands();
   const selection = useSelection();
   const designDiff = useDiff();
   const fileUrls = useFileUrls();
@@ -379,7 +379,7 @@ const ModelCore: FC = () => {
 };
 
 const Model: FC = () => {
-  const { deselectAll, toggleModelFullscreen } = useCommands();
+  const { deselectAll, toggleModelFullscreen } = useDesignEditorCommands();
   const onDoubleClickCapture = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();

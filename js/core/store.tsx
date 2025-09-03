@@ -715,9 +715,9 @@ class YFileStore implements FileStoreFull {
   snapshot = (): SemioFile => {
     const currentData = {
       path: this.yFile.get("path") as string,
-      remote: this.yFile.get("remote") as string || undefined,
+      remote: (this.yFile.get("remote") as string) || undefined,
       size: this.yFile.get("size") ? parseInt(this.yFile.get("size") as string) : undefined,
-      hash: this.yFile.get("hash") as string || undefined,
+      hash: (this.yFile.get("hash") as string) || undefined,
       created: this.yFile.get("created") ? new Date(this.yFile.get("created") as string) : undefined,
       updated: this.yFile.get("updated") ? new Date(this.yFile.get("updated") as string) : undefined,
     };
@@ -729,12 +729,12 @@ class YFileStore implements FileStoreFull {
       created: currentData.created?.toISOString(),
       updated: currentData.updated?.toISOString(),
     });
-    
+
     if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
       this.cachedSnapshot = currentData;
       this.lastSnapshotHash = currentHash;
     }
-    
+
     return this.cachedSnapshot;
   };
 
@@ -770,7 +770,7 @@ class YRepresentationStore implements RepresentationStoreFull {
         });
       });
     }
-    
+
     const currentData = {
       url: this.yRepresentation.get("url") as string,
       description: (this.yRepresentation.get("description") as string) || "",
@@ -778,12 +778,12 @@ class YRepresentationStore implements RepresentationStoreFull {
       attributes: attributes,
     };
     const currentHash = JSON.stringify(currentData);
-    
+
     if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
       this.cachedSnapshot = currentData;
       this.lastSnapshotHash = currentHash;
     }
-    
+
     return this.cachedSnapshot;
   };
 
@@ -827,7 +827,7 @@ class YPortStore implements PortStoreFull {
     const yPoint = this.yPort.get("point") as Y.Map<number>;
     const yDirection = this.yPort.get("direction") as Y.Map<number>;
     const yAttributes = this.yPort.get("attributes") as YAttributes;
-    
+
     const attributes: Attribute[] = [];
     if (yAttributes) {
       yAttributes.forEach((yMap: YAttribute) => {
@@ -859,12 +859,12 @@ class YPortStore implements PortStoreFull {
       attributes: attributes,
     };
     const currentHash = JSON.stringify(currentData);
-    
+
     if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
       this.cachedSnapshot = currentData;
       this.lastSnapshotHash = currentHash;
     }
-    
+
     return this.cachedSnapshot;
   };
 
@@ -961,7 +961,7 @@ class YTypeStore implements TypeStoreFull {
   snapshot = (): Type => {
     const yAuthors = this.yType.get("authors") as YAuthors;
     const yAttributes = this.yType.get("attributes") as YAttributes;
-    
+
     const authors: Author[] = [];
     if (yAuthors) {
       yAuthors.forEach((yAuthor: YAuthor) => {
@@ -971,7 +971,7 @@ class YTypeStore implements TypeStoreFull {
         });
       });
     }
-    
+
     const attributes: Attribute[] = [];
     if (yAttributes) {
       yAttributes.forEach((yMap: YAttribute) => {
@@ -982,7 +982,7 @@ class YTypeStore implements TypeStoreFull {
         });
       });
     }
-    
+
     const currentData = {
       name: this.yType.get("name") as string,
       description: (this.yType.get("description") as string) || "",
@@ -996,12 +996,12 @@ class YTypeStore implements TypeStoreFull {
       attributes: attributes,
     };
     const currentHash = JSON.stringify(currentData);
-    
+
     if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
       this.cachedSnapshot = currentData;
       this.lastSnapshotHash = currentHash;
     }
-    
+
     return this.cachedSnapshot;
   };
 
@@ -1038,7 +1038,7 @@ class YPieceStore implements PieceStoreFull {
     const yPlane = this.yPiece.get("plane") as Y.Map<any> | undefined;
     const yCenter = this.yPiece.get("center") as Y.Map<number> | undefined;
     const yAttributes = this.yPiece.get("attributes") as YAttributes;
-    
+
     const attributes: Attribute[] = [];
     if (yAttributes) {
       yAttributes.forEach((yMap: YAttribute) => {
@@ -1059,7 +1059,7 @@ class YPieceStore implements PieceStoreFull {
       },
       attributes: attributes,
     };
-    
+
     if (yPlane) {
       const yOrigin = yPlane.get("origin") as Y.Map<number>;
       const yXAxis = yPlane.get("xAxis") as Y.Map<number>;
@@ -1082,21 +1082,21 @@ class YPieceStore implements PieceStoreFull {
         },
       };
     }
-    
+
     if (yCenter) {
       currentData.center = {
         x: yCenter.get("x") as number,
         y: yCenter.get("y") as number,
       };
     }
-    
+
     const currentHash = JSON.stringify(currentData);
-    
+
     if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
       this.cachedSnapshot = currentData;
       this.lastSnapshotHash = currentHash;
     }
-    
+
     return this.cachedSnapshot;
   };
 
@@ -1229,12 +1229,12 @@ class YConnectionStore implements ConnectionStoreFull {
       attributes: attributes,
     };
     const currentHash = JSON.stringify(currentData);
-    
+
     if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
       this.cachedSnapshot = currentData;
       this.lastSnapshotHash = currentHash;
     }
-    
+
     return this.cachedSnapshot;
   };
 
@@ -1299,7 +1299,7 @@ class YDesignStore implements DesignStoreFull {
   snapshot = (): Design => {
     const yAuthors = this.yDesign.get("authors") as YAuthors;
     const yAttributes = this.yDesign.get("attributes") as YAttributes;
-    
+
     const authors: Author[] = [];
     if (yAuthors) {
       yAuthors.forEach((yAuthor: YAuthor) => {
@@ -1309,7 +1309,7 @@ class YDesignStore implements DesignStoreFull {
         });
       });
     }
-    
+
     const attributes: Attribute[] = [];
     if (yAttributes) {
       yAttributes.forEach((yMap: YAttribute) => {
@@ -1320,7 +1320,7 @@ class YDesignStore implements DesignStoreFull {
         });
       });
     }
-    
+
     const currentData = {
       name: this.yDesign.get("name") as string,
       description: this.yDesign.get("description") as string | undefined,
@@ -1333,12 +1333,12 @@ class YDesignStore implements DesignStoreFull {
       attributes: attributes,
     };
     const currentHash = JSON.stringify(currentData);
-    
+
     if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
       this.cachedSnapshot = currentData;
       this.lastSnapshotHash = currentHash;
     }
-    
+
     return this.cachedSnapshot;
   };
 
@@ -1518,7 +1518,7 @@ class YKitStore implements KitStoreFull {
         });
       });
     }
-    
+
     const currentData = {
       name: this.yKit.get("name") as string,
       version: this.yKit.get("version") as string | undefined,
@@ -1536,12 +1536,12 @@ class YKitStore implements KitStoreFull {
       attributes: attributes,
     };
     const currentHash = JSON.stringify(currentData);
-    
+
     if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
       this.cachedSnapshot = currentData;
       this.lastSnapshotHash = currentHash;
     }
-    
+
     return this.cachedSnapshot;
   };
 
@@ -2039,7 +2039,7 @@ class YSketchpadStore implements SketchpadStoreFull {
   public readonly designEditors: Map<string, Map<string, DesignEditorStoreFull>> = new Map();
   private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult> = new Map();
   private cachedSnapshot?: SketchpadStateFull;
-  private lastSnapshotValues?: {mode: Mode; theme: Theme; layout: Layout; activeDesignEditor?: DesignEditorId};
+  private lastSnapshotValues?: { mode: Mode; theme: Theme; layout: Layout; activeDesignEditor?: DesignEditorId };
 
   private getYSketchpad(): YSketchpad {
     return this.ySketchpadDoc.getMap("sketchpad");
@@ -2082,12 +2082,13 @@ class YSketchpadStore implements SketchpadStoreFull {
       activeDesignEditor: this.activeDesignEditor,
     };
 
-    if (!this.lastSnapshotValues || 
-        this.lastSnapshotValues.mode !== currentValues.mode ||
-        this.lastSnapshotValues.theme !== currentValues.theme ||
-        this.lastSnapshotValues.layout !== currentValues.layout ||
-        this.lastSnapshotValues.activeDesignEditor !== currentValues.activeDesignEditor) {
-      
+    if (
+      !this.lastSnapshotValues ||
+      this.lastSnapshotValues.mode !== currentValues.mode ||
+      this.lastSnapshotValues.theme !== currentValues.theme ||
+      this.lastSnapshotValues.layout !== currentValues.layout ||
+      this.lastSnapshotValues.activeDesignEditor !== currentValues.activeDesignEditor
+    ) {
       this.cachedSnapshot = currentValues;
       this.lastSnapshotValues = currentValues;
     }
@@ -3034,11 +3035,7 @@ function useSketchpadStore(id?: string): SketchpadStore {
   if (!stores.has(storeId)) throw new Error(`Sketchpad store was not found for id ${storeId}`);
   const store = useMemo(() => stores.get(storeId)!, [storeId]);
   const getSnapshot = useMemo(() => () => store.snapshot(), [store]);
-  const state = useSyncExternalStore(
-    store.changed,
-    getSnapshot,
-    getSnapshot,
-  );
+  const state = useSyncExternalStore(store.changed, getSnapshot, getSnapshot);
   return store;
 }
 
@@ -3059,11 +3056,7 @@ export function useSketchpad<T>(selector?: (store: SketchpadStore) => T, id?: st
     return lastSnapshot.current;
   }, [store]);
 
-  const state = useSyncExternalStore(
-    store.changed,
-    getSnapshot,
-    getSnapshot,
-  );
+  const state = useSyncExternalStore(store.changed, getSnapshot, getSnapshot);
 
   return selector ? selector(store) : store;
 }
@@ -3092,11 +3085,7 @@ export function useDesignEditor<T>(selector?: (store: DesignEditorStore) => T, k
   const designEditor = useMemo(() => kitEditors.get(resolvedDesignIdStr)!, [kitEditors, resolvedDesignIdStr]);
   const getSnapshot = useMemo(() => () => designEditor.snapshot(), [designEditor]);
 
-  const state = useSyncExternalStore(
-    designEditor.changed,
-    getSnapshot,
-    getSnapshot,
-  );
+  const state = useSyncExternalStore(designEditor.changed, getSnapshot, getSnapshot);
   return selector ? selector(designEditor) : designEditor;
 }
 
@@ -3122,11 +3111,7 @@ export function useKit<T>(selector: (kit: Kit) => T, id: KitId): T;
 export function useKit<T>(selector?: (kit: Kit) => T, id?: KitId): T | Kit {
   const kitStore = useKitStore();
   const getSnapshot = useMemo(() => () => kitStore.snapshot(), [kitStore]);
-  const kit = useSyncExternalStore(
-    kitStore.changed,
-    getSnapshot,
-    getSnapshot,
-  );
+  const kit = useSyncExternalStore(kitStore.changed, getSnapshot, getSnapshot);
   return selector ? selector(kit as Kit) : (kit as Kit);
 }
 
@@ -3150,11 +3135,7 @@ export function useDesign<T>(selector?: (design: Design) => T, id?: DesignId): T
   if (!kitStore.designs.has(designIdStr)) throw new Error(`Design store not found for design ${designId}`);
   const designStore = useMemo(() => kitStore.designs.get(designIdStr)!, [kitStore, designIdStr]);
   const getSnapshot = useMemo(() => () => designStore.snapshot(), [designStore]);
-  const state = useSyncExternalStore(
-    designStore.changed,
-    getSnapshot,
-    getSnapshot,
-  );
+  const state = useSyncExternalStore(designStore.changed, getSnapshot, getSnapshot);
   return selector ? selector(state) : state;
 }
 
@@ -3178,11 +3159,7 @@ export function useType<T>(selector?: (type: Type) => T, id?: TypeId): T | Type 
   if (!kit.types.has(typeIdStr)) throw new Error(`Type store not found for type ${typeId}`);
   const typeStore = useMemo(() => kit.types.get(typeIdStr)!, [kit, typeIdStr]);
   const getSnapshot = useMemo(() => () => typeStore.snapshot(), [typeStore]);
-  const state = useSyncExternalStore(
-    typeStore.changed,
-    getSnapshot,
-    getSnapshot,
-  );
+  const state = useSyncExternalStore(typeStore.changed, getSnapshot, getSnapshot);
   return selector ? selector(state) : state;
 }
 
@@ -3212,11 +3189,7 @@ export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId): T | P
   if (!design.pieces.has(pieceIdStr)) throw new Error(`Piece store not found for piece ${pieceId}`);
   const pieceStore = useMemo(() => design.pieces.get(pieceIdStr)!, [design, pieceIdStr]);
   const getSnapshot = useMemo(() => () => pieceStore.snapshot(), [pieceStore]);
-  const state = useSyncExternalStore(
-    pieceStore.changed,
-    getSnapshot,
-    getSnapshot,
-  );
+  const state = useSyncExternalStore(pieceStore.changed, getSnapshot, getSnapshot);
   return selector ? selector(state) : state;
 }
 
@@ -3246,11 +3219,7 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
   if (!design.connections.has(connectionIdStr)) throw new Error(`Connection store not found for connection ${connectionId}`);
   const connectionStore = useMemo(() => design.connections.get(connectionIdStr)!, [design, connectionIdStr]);
   const getSnapshot = useMemo(() => () => connectionStore.snapshot(), [connectionStore]);
-  const state = useSyncExternalStore(
-    connectionStore.changed,
-    getSnapshot,
-    getSnapshot,
-  );
+  const state = useSyncExternalStore(connectionStore.changed, getSnapshot, getSnapshot);
   return selector ? selector(state) : state;
 }
 
@@ -3280,11 +3249,7 @@ export function usePort<T>(selector?: (port: Port) => T, id?: PortId): T | Port 
   if (!type.ports.has(portIdStr)) throw new Error(`Port store not found for port ${portId}`);
   const portStore = useMemo(() => type.ports.get(portIdStr)!, [type, portIdStr]);
   const getSnapshot = useMemo(() => () => portStore.snapshot(), [portStore]);
-  const state = useSyncExternalStore(
-    portStore.changed,
-    getSnapshot,
-    getSnapshot,
-  );
+  const state = useSyncExternalStore(portStore.changed, getSnapshot, getSnapshot);
   return selector ? selector(state) : state;
 }
 
@@ -3314,11 +3279,7 @@ export function useRepresentation<T>(selector?: (representation: Representation)
   if (!typeStore.representations.has(representationIdStr)) throw new Error(`Representation store not found for representation ${representationId}`);
   const representationStore = useMemo(() => typeStore.representations.get(representationIdStr)!, [typeStore, representationIdStr]);
   const getSnapshot = useMemo(() => () => representationStore.snapshot(), [representationStore]);
-  const state = useSyncExternalStore(
-    representationStore.changed,
-    getSnapshot,
-    getSnapshot,
-  );
+  const state = useSyncExternalStore(representationStore.changed, getSnapshot, getSnapshot);
   return selector ? selector(state) : state;
 }
 
@@ -3352,16 +3313,26 @@ export function useDesigns(): DesignId[] {
     : [];
 }
 
-export function useCommands() {
-  // return the commands of the active editor
+export function useSketchpadCommands() {
   const designEditor = useDesignEditor();
-  const kitStore = useKitStore();
   return {
-    // State management commands
     setMode: (mode: Mode) => designEditor.execute("semio.designEditor.setMode", mode),
     setTheme: (theme: Theme) => designEditor.execute("semio.designEditor.setTheme", theme),
     setLayout: (layout: Layout) => designEditor.execute("semio.designEditor.setLayout", layout),
+  };
+}
 
+export function useKitCommands() {
+  const kitStore = useKitStore();
+  return {
+    importKit: (url: string) => kitStore.execute("semio.kit.import", url),
+    exportKit: () => kitStore.execute("semio.kit.export"),
+  };
+}
+
+export function useDesignEditorCommands() {
+  const designEditor = useDesignEditor();
+  return {
     // Transaction commands
     startTransaction: () => designEditor.execute("semio.designEditor.startTransaction"),
     finalizeTransaction: () => designEditor.execute("semio.designEditor.finalizeTransaction"),
@@ -3402,15 +3373,10 @@ export function useCommands() {
     toggleDiagramFullscreen: () => designEditor.execute("semio.designEditor.toggleDiagramFullscreen"),
     toggleModelFullscreen: () => designEditor.execute("semio.designEditor.toggleModelFullscreen"),
 
-    // Kit operations
-    importKit: (url: string) => kitStore.execute("semio.kit.import", url),
-    exportKit: () => kitStore.execute("semio.kit.export"),
-
     // Complex operations
     executeCommand: (command: string, ...args: any[]) => designEditor.execute(command, ...args),
   };
 }
-
 // Design editor state hooks
 export function useSelection(): DesignEditorSelection {
   return useDesignEditor((store) => store.snapshot().selection);

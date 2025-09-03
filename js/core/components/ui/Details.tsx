@@ -24,14 +24,14 @@ import Stepper from "@semio/js/components/ui/Stepper";
 import { Textarea } from "@semio/js/components/ui/Textarea";
 import { SortableTreeItems, Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
 import { findReplacableDesignsForDesignPiece, parseDesignIdFromVariant } from "../../semio";
-import { useCommands, useDesign, useDesignId, useKit, useSelection } from "../../store";
+import { useDesignEditorCommands, useDesign, useDesignId, useKit, useSelection } from "../../store";
 import Combobox from "./Combobox";
 import { ResizablePanelProps } from "./DesignEditor";
 
 interface DetailsProps extends ResizablePanelProps {}
 
 const DesignSection: FC = () => {
-  const { setDesign, startTransaction, finalizeTransaction, abortTransaction } = useCommands();
+  const { setDesign, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
   const design = useDesign();
 
   const handleChange = (updatedDesign: Design) => {
@@ -405,7 +405,7 @@ const DesignSection: FC = () => {
 };
 
 const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
-  const { setDesign, setPiece, setPieces, setConnection, startTransaction, finalizeTransaction, abortTransaction, executeCommand } = useCommands();
+  const { setDesign, setPiece, setPieces, setConnection, startTransaction, finalizeTransaction, abortTransaction, executeCommand } = useDesignEditorCommands();
   const design = useDesign();
 
   // Handle both regular pieces and synthetic design pieces (fixed and connected)
@@ -1092,7 +1092,7 @@ const ConnectionsSection: FC<{
   connections: ConnectionId[];
   sectionLabel?: string;
 }> = ({ connections, sectionLabel }) => {
-  const { setConnection, setConnections, startTransaction, finalizeTransaction, abortTransaction } = useCommands();
+  const { setConnection, setConnections, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
   const design = useDesign();
   const connectionObjects = connections.map((conn) => {
     // The conn is already a ConnectionId, but we need to create a full ConnectionId to query

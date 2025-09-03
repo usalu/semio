@@ -22,21 +22,55 @@ import { FC, ReactNode, createContext, useContext, useEffect, useState } from "r
 import DesignEditor from "./DesignEditor";
 import { TooltipProvider } from "./Tooltip";
 
-import { DesignId, DesignScopeProvider, KitId, KitScopeProvider, Layout, Mode, SketchpadScopeProvider, Theme, useCommands, useLayout, useMode, useSketchpad as useSketchpadStore, useTheme } from "@semio/js";
+import { DesignId, DesignScopeProvider, KitId, KitScopeProvider, Layout, Mode, SketchpadScopeProvider, Theme, useSketchpadCommands, useLayout, useMode, useSketchpad as useSketchpadStore, useTheme } from "@semio/js";
 
-interface SketchpadContextType {
+interface NavbarContextType {
   navbarToolbar: ReactNode | null;
   setNavbarToolbar: (toolbar: ReactNode) => void;
 }
 
-const SketchpadContext = createContext<SketchpadContextType | null>(null);
+const NavbarContext = createContext<NavbarContextType | null>(null);
 
-export const useSketchpad = () => {
-  const context = useContext(SketchpadContext);
+export const useNavbar = () => {
+  const context = useContext(NavbarContext);
   if (!context) {
-    throw new Error("useSketchpad must be used within a SketchpadProvider");
+    throw new Error("useNavbar must be used within a NavbarProvider");
   }
   return context;
+};
+
+// Component that uses hooks requiring kit context
+const SketchpadWithCommands: FC<{
+  mode: Mode;
+  theme: Theme;
+  layout: Layout;
+  navbarToolbar: ReactNode;
+  setNavbarToolbar: (toolbar: ReactNode) => void;
+}> = ({ mode, theme, layout, navbarToolbar, setNavbarToolbar }) => {
+  const { setMode, setTheme, setLayout } = useSketchpadCommands();
+
+  useEffect(() => {
+    if (mode !== Mode.USER) setMode(mode);
+    if (layout !== Layout.NORMAL) setLayout(layout);
+    if (theme && theme !== Theme.SYSTEM) setTheme(theme);
+    if (!theme && theme === Theme.SYSTEM && typeof window !== "undefined") {
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setTheme(prefersDark ? Theme.DARK : Theme.LIGHT);
+    }
+  }, [mode, theme, layout, setMode, setTheme, setLayout]);
+
+  return (
+    <NavbarContext.Provider
+      value={{
+        navbarToolbar: navbarToolbar,
+        setNavbarToolbar: setNavbarToolbar,
+      }}
+    >
+      <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
+        <DesignEditor />
+      </div>
+    </NavbarContext.Provider>
+  );
 };
 
 interface SketchpadProps {
@@ -109,40 +143,6 @@ const SketchpadInner: FC = () => {
         <SketchpadWithCommands mode={mode} theme={theme} layout={layout} navbarToolbar={navbarToolbar} setNavbarToolbar={setNavbarToolbar} />
       </DesignScopeProvider>
     </KitScopeProvider>
-  );
-};
-
-// Component that uses hooks requiring kit context
-const SketchpadWithCommands: FC<{
-  mode: Mode;
-  theme: Theme;
-  layout: Layout;
-  navbarToolbar: ReactNode;
-  setNavbarToolbar: (toolbar: ReactNode) => void;
-}> = ({ mode, theme, layout, navbarToolbar, setNavbarToolbar }) => {
-  const { setMode, setTheme, setLayout } = useCommands();
-
-  useEffect(() => {
-    if (mode !== Mode.USER) setMode(mode);
-    if (layout !== Layout.NORMAL) setLayout(layout);
-    if (theme && theme !== Theme.SYSTEM) setTheme(theme);
-    if (!theme && theme === Theme.SYSTEM && typeof window !== "undefined") {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      setTheme(prefersDark ? Theme.DARK : Theme.LIGHT);
-    }
-  }, [mode, theme, layout, setMode, setTheme, setLayout]);
-
-  return (
-    <SketchpadContext.Provider
-      value={{
-        navbarToolbar: navbarToolbar,
-        setNavbarToolbar: setNavbarToolbar,
-      }}
-    >
-      <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
-        <DesignEditor />
-      </div>
-    </SketchpadContext.Provider>
   );
 };
 

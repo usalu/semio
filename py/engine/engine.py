@@ -3736,6 +3736,12 @@ class PortNode(TableEntityNode):
         model = Port
         exclude_fields = ("connecteds", "connectings")
 
+    # Add localId field to follow GraphQL naming conventions instead of id_
+    localId = graphene.String()
+
+    def resolve_localId(self, info):
+        return getattr(self, 'id_', '')
+
     # attributes = graphene.List(graphene.NonNull(lambda: AttributeNode))
 
     # def resolve_attributes(self, info):
@@ -3781,6 +3787,12 @@ class PieceNode(TableEntityNode):
     class Meta:
         model = Piece
         exclude_fields = ("connecteds", "connectings")
+
+    # Add localId field to follow GraphQL naming conventions instead of id_
+    localId = graphene.String()
+
+    def resolve_localId(self, info):
+        return getattr(self, 'id_', '')
 
 
 class PieceInputNode(InputNode):
