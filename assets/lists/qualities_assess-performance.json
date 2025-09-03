@@ -494,7 +494,7 @@
     },
 
     {
-      "key": "semio.energy.final-energy-demand",
+      "key": "semio.energy.demand.final",
       "name": "Final Energy Demand",
       "translation": {
         "de": "Endenergiebedarf"
@@ -508,7 +508,7 @@
     },
 
     {
-      "key": "semio.energy.primary-energy-demand",
+      "key": "semio.energy.demand.primary",
       "name": "Primary Energy Demand",
       "translation": {
         "de": "Primärenergiebedarf"
@@ -517,11 +517,11 @@
       "si": "kWh/a",
       "imperial": "kBtu/yr",
       "symbol": "E_{primary}",
-      "formula": "Add ( semio.energy.heating.primary.energy-demand semio.energy.electricity.primary.energy-demand semio.energy.ventilation.primary.energy-demand )",
+      "formula": "Add ( semio.energy.demand.heating.primary semio.energy.demand.primary.electricity semio.energy.ventilation.primary.energy-demand )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.heating.primary.energy-demand",
+      "key": "semio.energy.demand.heating.primary",
       "name": "Primary Heating Energy Demand",
       "translation": {
         "de": "Primärenergiebedarf Heizung"
@@ -530,11 +530,11 @@
       "si": "kWh/a",
       "imperial": "kBtu/yr",
       "symbol": "E_{h,primary}",
-      "formula": "Multiply ( semio.energy.heating.final.energy-demand semio.energy.heating.primary-energy-factor )",
+      "formula": "Multiply ( semio.energy.heating.final.energy-demand semio.factor.energy.primary.heating )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.heating.primary-energy-factor",
+      "key": "semio.factor.energy.primary.heating",
       "name": "Heating Primary Energy Factor",
       "translation": {
         "de": "Heizung Primärenergiefaktor"
@@ -546,7 +546,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.electricity.primary.energy-demand",
+      "key": "semio.energy.demand.primary.electricity",
       "name": "Primary Electricity Energy Demand",
       "translation": {
         "de": "Primärenergiebedarf Strom"
@@ -555,11 +555,11 @@
       "si": "kWh/a",
       "imperial": "kBtu/yr",
       "symbol": "E_{e,primary}",
-      "formula": "Multiply ( semio.energy.electricity.energy-demand semio.energy.electricity.primary-energy-factor )",
+      "formula": "Multiply ( semio.energy.electricity.energy-demand semio.factor.energy.primary.electricity )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.electricity.primary-energy-factor",
+      "key": "semio.factor.energy.primary.electricity",
       "name": "Electricity Primary Energy Factor",
       "translation": {
         "de": "Strom Primärenergiefaktor"
@@ -580,7 +580,7 @@
       "si": "kWh/a",
       "imperial": "kBtu/yr",
       "symbol": "E_{v,primary}",
-      "formula": "Multiply ( semio.energy.ventilation.final.energy-demand semio.energy.electricity.primary-energy-factor )",
+      "formula": "Multiply ( semio.energy.ventilation.final.energy-demand semio.factor.energy.primary.electricity )",
       "format": "#,##0.##"
     },
 
@@ -644,11 +644,11 @@
       "si": "kWh/m²a",
       "imperial": "kWh/ft²yr",
       "symbol": "E_{final,area}",
-      "formula": "Divide ( semio.energy.final-energy-demand semio.area.effective-floor-area )",
+      "formula": "Divide ( semio.energy.demand.final semio.area.effective-floor-area )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.specific-primary-energy-demand",
+      "key": "semio.energy.demand.primary.specific",
       "name": "Specific Primary Energy Demand",
       "translation": {
         "de": "Spezifischer Primärenergiebedarf"
@@ -657,7 +657,7 @@
       "si": "kWh/m²a",
       "imperial": "kWh/ft²yr",
       "symbol": "E_{primary,area}",
-      "formula": "Divide ( semio.energy.primary-energy-demand semio.area.effective-floor-area )",
+      "formula": "Divide ( semio.energy.demand.primary semio.area.effective-floor-area )",
       "format": "#,##0.##"
     },
     {
@@ -779,7 +779,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.primary-energy-demand-per-user",
+      "key": "semio.energy.demand.primary-per-user",
       "name": "Primary Energy Demand per User",
       "translation": {
         "de": "Primärenergiebedarf pro Nutzer"
@@ -788,11 +788,11 @@
       "si": "kWh/user/a",
       "imperial": "kWh/user/yr",
       "symbol": "E_{primary,user}",
-      "formula": "Divide ( semio.energy.primary-energy-demand semio.users )",
+      "formula": "Divide ( semio.energy.demand.primary semio.users )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.final-energy-demand-per-user",
+      "key": "semio.energy.demand.final-per-user",
       "name": "Final Energy Demand per User",
       "translation": {
         "de": "Endenergiebedarf pro Nutzer"
@@ -801,7 +801,7 @@
       "si": "kWh/user/a",
       "imperial": "kWh/user/yr",
       "symbol": "E_{final,user}",
-      "formula": "Divide ( semio.energy.final-energy-demand semio.users )",
+      "formula": "Divide ( semio.energy.demand.final semio.users )",
       "format": "#,##0.##"
     },
     {
