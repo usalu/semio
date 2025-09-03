@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SVG Swarm + Ripple Interaction</title>
+<style>
+  html, body { height: 100%; margin: 0; background: radial-gradient(circle at 50% 50%, #0e0f14, #08090c); }
+  svg { width: 100%; height: 100%; display: block; cursor: crosshair; }
+  .agent { fill: #c8e7ff; opacity: 0.9; }
+  .ripple { fill: none; stroke: #79c0ff; stroke-width: 2; opacity: 0.6; }
+  .hud { position: fixed; left: 12px; bottom: 12px; font: 12px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color: #a8b3c7; background: #0b0d1255; padding: 8px 10px; border-radius: 10px; backdrop-filter: blur(4px); }
+  .hud kbd { background:#10131a; border:1px solid #222837; padding:2px 6px; border-radius:6px; color:#cdd7e5 }
+</style>
+</head>
+<body>
+<svg id="stage" xmlns="http://www.w3.org/2000/svg"></svg>
+<div class="hud">
+  click to create ripples • drag for many<br/>
+  particles: <span id="count"></span> • ripples: <span id="rcount"></span><br/>
+  <kbd>R</kbd> reset • <kbd>Space</kbd> toggle pause
+</div>
+
+<script>
+(() => {
+  // ---- Tunables -----------------------------------------------------------
+  const AGENT_COUNT = 140;
+  const AGENT_RADIUS = 2.4;
+  const MAX_SPEED = 1.6;
+  const WANDER = 0.22;          // random jitter
+  const ALIGN_RADIUS = 45;      // neighbor radius for alignment/cohesion
+  const SEPARATE_RADIUS = 18;   // neighbor radius for separation
+  const ALIGN_STRENGTH = 0.06;
+  const COHESION_STRENGTH = 0.015;
+  const SEPARATION_STRENGTH = 0.12;
+  const EDGE_WRAP = true;       // wrap around edges (true) or bounce (false)
+
+  // Ripple behavior
+  const RIPPLE_SPEED = 3.2;     // px/frame expansion speed
+  const RIPPLE_WIDTH = 18;      // the ring thickness used for force falloff
+  const RIPPLE_STRENGTH = 1.8;  // force multiplier (higher = stronger push)
+  const RIPPLE_DRAG = 0.98;     // decay of impulse effect over its lifetime
+  const RIPPLE_MAX_LIFE = 900;  // frames safeguard; auto remove when too old
+
+  // ---- Setup SVG ----------------------------------------------------------
+  const svg = document.getElementById('stage');
+  const hudCount = document.getElementById('count');
+  const hudRCount = document.getElementById('rcount');
+
+  function sizeSVG() {
+    const { innerWidth:w, innerHeight:h } = window;
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    svg.setAttribute('width', w);
+    svg.setAttribute('height', h);
+  }
+  sizeSVG();
+  addEventListener('resize', sizeSVG);
+
+  // Layers: ensure ripples draw above agents
+  const agentLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  const rippleLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  svg.appendChild(agentLayer);
+  svg.appendChild(rippleLayer);
+
+  // ---- Utilities ----------------------------------------------------------
+  const rnd = (min, max) => Math.random()*(max-min)+min;
+  const clamp = (v, lo, hi) => v < lo ? lo : (v > hi ? hi : v);
+  function limitVec(v, max) {
+    const m2 = v.x*v.x + v.y*v.y;
+    if (m2 > max*max) {
+      const m = Math.sqrt(m2);
+      v.x = v.x / m * max;
+      v.y = v.y / m * max;
+    }
+    return v;
+  }
+
+  // ---- Agents (simple boids-ish) -----------------------------------------
+  const agents = [];
+  function createAgent(x, y) {
+    const node = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    node.setAttribute('class', 'agent');
+    node.setAttribute('r', AGENT_RADIUS);
+    agentLayer.appendChild(node);
+    const a = {
+      x, y,
+      vx: rnd(-1,1), vy: rnd(-1,1),
+      el: node
+    };
+    agents.push(a);
+    return a;
+  }
+
+  function initAgents() {
+    agentLayer.innerHTML = '';
+    agents.length = 0;
+    const { innerWidth:w, innerHeight:h } = window;
+    for (let i=0;i<AGENT_COUNT;i++) createAgent(rnd(0,w), rnd(0,h));
+  }
+  initAgents();
+
+  // ---- Ripples ------------------------------------------------------------
+  const ripples = [];
+
+  function spawnRipple(x, y) {
+    const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    ring.setAttribute('class', 'ripple');
+    ring.setAttribute('cx', x);
+    ring.setAttribute('cy', y);
+    ring.setAttribute('r', 0);
+    rippleLayer.appendChild(ring);
+
+    ripples.push({
+      x, y,
+      r: 0,
+      life: 0,
+      strength: RIPPLE_STRENGTH,
+      el: ring
+    });
+  }
+
+  // click / drag to create ripples
+  let isDown = false;
+  svg.addEventListener('pointerdown', e => { isDown = true; spawnRipple(e.clientX, e.clientY); });
+  svg.addEventListener('pointermove', e => { if (isDown) spawnRipple(e.clientX, e.clientY); });
+  addEventListener('pointerup', () => isDown = false);
+  addEventListener('pointerleave', () => isDown = false);
+
+  // ---- Physics step -------------------------------------------------------
+  let paused = false;
+  addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'r') {
+      // reset scene
+      rippleLayer.innerHTML = '';
+      ripples.length = 0;
+      initAgents();
+    } else if (e.key === ' ') {
+      paused = !paused;
+    }
+  });
+
+  function step() {
+    if (paused) { requestAnimationFrame(step); return; }
+    const w = innerWidth, h = innerHeight;
+
+    // Update ripples (expand + fade)
+    for (let i=ripples.length-1; i>=0; i--) {
+      const rp = ripples[i];
+      rp.r += RIPPLE_SPEED;
+      rp.life++;
+      rp.strength *= RIPPLE_DRAG;
+      rp.el.setAttribute('r', rp.r);
+      const alpha = Math.max(0, Math.min(0.8, rp.strength / RIPPLE_STRENGTH));
+      rp.el.setAttribute('opacity', alpha);
+      // Remove if fully faded or too old or out of bounds
+      if (rp.strength < 0.02 || rp.life > RIPPLE_MAX_LIFE || rp.r > Math.hypot(w, h)) {
+        rp.el.remove();
+        ripples.splice(i,1);
+      }
+    }
+
+    // Agent interactions
+    for (let i=0;i<agents.length;i++) {
+      const a = agents[i];
+
+      // baseline wander
+      a.vx += rnd(-WANDER, WANDER);
+      a.vy += rnd(-WANDER, WANDER);
+
+      // neighborhood forces
+      let ax=0, ay=0, countAlign=0, countCoh=0, sx=0, sy=0, cx=0, cy=0;
+      for (let j=0;j<agents.length;j++) {
+        if (i===j) continue;
+        const b = agents[j];
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const d2 = dx*dx + dy*dy;
+        if (d2 < ALIGN_RADIUS*ALIGN_RADIUS) {
+          // alignment
+          ax += b.vx; ay += b.vy; countAlign++;
+          // cohesion
+          cx += b.x; cy += b.y; countCoh++;
+        }
+        if (d2 < SEPARATE_RADIUS*SEPARATE_RADIUS && d2 > 0.0001) {
+          // separation (push away)
+          const d = Math.sqrt(d2);
+          sx -= dx / d; sy -= dy / d;
+        }
+      }
+      if (countAlign) { a.vx += (ax/countAlign - a.vx)*ALIGN_STRENGTH; a.vy += (ay/countAlign - a.vy)*ALIGN_STRENGTH; }
+      if (countCoh)   { a.vx += ((cx/countCoh - a.x))*COHESION_STRENGTH; a.vy += ((cy/countCoh - a.y))*COHESION_STRENGTH; }
+      a.vx += sx*SEPARATION_STRENGTH; a.vy += sy*SEPARATION_STRENGTH;
+
+      // ripple forces (shell-shaped: strongest near the ring)
+      for (let k=0;k<ripples.length;k++) {
+        const rp = ripples[k];
+        const dx = a.x - rp.x, dy = a.y - rp.y;
+        const d = Math.hypot(dx, dy);
+        // Falloff peaks on the ring (distance close to ripple radius)
+        const distToRing = Math.abs(d - rp.r);
+        if (distToRing <= RIPPLE_WIDTH) {
+          // Smooth pulse: closer to the ring -> stronger impulse
+          const t = 1 - (distToRing / RIPPLE_WIDTH);      // 0..1
+          const force = (t*t) * rp.strength;              // ease-in quad
+          if (d > 0.001) {
+            a.vx += (dx / d) * force;  // push outward
+            a.vy += (dy / d) * force;
+          } else {
+            // if exactly on center, kick randomly
+            a.vx += rnd(-force, force);
+            a.vy += rnd(-force, force);
+          }
+        }
+      }
+
+      // speed limit
+      limitVec(a, MAX_SPEED);
+
+      // integrate
+      a.x += a.vx;
+      a.y += a.vy;
+
+      // edges
+      if (EDGE_WRAP) {
+        if (a.x < -AGENT_RADIUS) a.x = w + AGENT_RADIUS;
+        if (a.x > w + AGENT_RADIUS) a.x = -AGENT_RADIUS;
+        if (a.y < -AGENT_RADIUS) a.y = h + AGENT_RADIUS;
+        if (a.y > h + AGENT_RADIUS) a.y = -AGENT_RADIUS;
+      } else {
+        if (a.x < AGENT_RADIUS || a.x > w-AGENT_RADIUS) a.vx *= -1;
+        if (a.y < AGENT_RADIUS || a.y > h-AGENT_RADIUS) a.vy *= -1;
+        a.x = clamp(a.x, AGENT_RADIUS, w-AGENT_RADIUS);
+        a.y = clamp(a.y, AGENT_RADIUS, h-AGENT_RADIUS);
+      }
+
+      // draw
+      a.el.setAttribute('cx', a.x);
+      a.el.setAttribute('cy', a.y);
+    }
+
+    // HUD
+    hudCount.textContent = agents.length;
+    hudRCount.textContent = ripples.length;
+
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+})();
+</script>
+</body>
+</html>
