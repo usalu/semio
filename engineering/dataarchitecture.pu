@@ -3,8 +3,8 @@ skinparam linetype ortho
 
 entity semio {
     *release : string <<PK>>
-    *engine : string
-    *sketchpad : string
+    *created_by_app : string
+    *app_version : string
     *created_at : datetime
 }
 
@@ -22,12 +22,16 @@ entity attributes {
     connection_id : int <<FK>>
     design_id : int <<FK>>
     kit_id : int <<FK>>
+    --
+    CHECK (( (representation_id IS NOT NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+        OR (representation_id IS NULL AND port_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+        OR (representation_id IS NULL AND port_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+        OR (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+        OR (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL)
+        OR (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL)
+        OR (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL)
+        ))
 }
-note bottom of attributes
-    value, definition can be empty
-    empty value means true
-    one of representation_id, port_id, type_id, piece_id, connection_id, design_id, kit_id must be set
-end note
 
 
 entity qualities {
@@ -36,8 +40,8 @@ entity qualities {
     *name : string
     *description : string
     *uri : string
-    *can_scale : boolean
     *kind : int
+    *can_scale : boolean
     *default_si_unit : string
     *default_imperial_unit : string
     *min : float
@@ -50,11 +54,10 @@ entity qualities {
     *updated_at : datetime
     ..
     kit_id : int <<FK>>
+    --
+    CHECK (kind >= 0 AND kind <= 63)
+    CHECK (kind & (kind - 1) = 0 OR kind IN (0, 1, 2, 4, 8, 16))
 }
-note right of qualities
-    description, uri, default_si_unit, default_imperial_unit, formula can be empty
-    kind: 0=General, 1=Design, 2=Type, 4=Piece, 8=Connection, 16=Port (flags)
-end note
 
 entity benchmarks {
     *id : int <<PK,generated>>
@@ -66,10 +69,8 @@ entity benchmarks {
     *is_max_excluded : boolean
     ..
     quality_id : int <<FK>>
+    --
 }
-note right of benchmarks
-    icon can be empty
-end note
 
 entity props {
     *id : int <<PK,generated>>
@@ -80,11 +81,8 @@ entity props {
     *updated_at : datetime
     ..
     port_id : int <<FK>>
+    --
 }
-note right of props
-    unit can be empty
-    key references quality.key
-end note
 
 entity stats {
     *id : int <<PK,generated>>
@@ -98,11 +96,8 @@ entity stats {
     *updated_at : datetime
     ..
     design_id : int <<FK>>
+    --
 }
-note right of stats
-    unit can be empty
-    key references quality.key
-end note
 
 entity tags {
     *id : int <<PK,generated>>
@@ -118,10 +113,8 @@ entity representations {
     *description : string
     ..
     type_id : int <<FK>>
+    --
 }
-note right of representations
-    description can be empty
-end note
 
 entity planes {
     *id : int <<PK,generated>>
@@ -159,19 +152,27 @@ entity ports {
     *t : float
     ..
     type_id : int <<FK>>
+    --
+    CHECK (t >= 0 AND t < 1)
+    UNIQUE (port_id, type_id)
 }
-note right of ports
-    description, family can be empty
-    t is in [0,1[
-end note
 
 entity authors {
     *id : int <<PK,generated>>
     *name : string
     *email : string
-    *rank : int
     ..
     kit_id : int <<FK>>
+}
+
+entity author_artifact {
+    *author_id : int <<PK,FK>>
+    *rank : int
+    type_id : int <<PK,FK>>
+    design_id : int <<PK,FK>>
+    --
+    CHECK ((type_id IS NOT NULL AND design_id IS NULL) OR
+           (type_id IS NULL AND design_id IS NOT NULL))
 }
 
 entity types {
@@ -192,12 +193,12 @@ entity types {
     *updated_at : datetime
     ..
     kit_id : int <<FK>>
+    --
+    UNIQUE (name, variant, kit_id)
+    CHECK (stock >= 0 AND stock <= 2147483647)
+    CHECK (location_longitude IS NULL AND location_latitude IS NULL
+    OR (location_longitude IS NOT NULL AND location_latitude IS NOT NULL))
 }
-note right of types
-    description, icon, image_url, variant can be empty
-    empty variant means default
-    stock is default to +infinity
-end note
 
 entity pieces {
     *id : int <<PK,generated>>
@@ -215,12 +216,12 @@ entity pieces {
     type_id : int <<FK>>
     design_id : int <<FK>>
     parent_piece_id : int <<FK>>
+    --
+    CHECK ((type_id IS NOT NULL AND design_id IS NULL AND parent_piece_id IS NULL) OR
+           (type_id IS NULL AND design_id IS NOT NULL AND parent_piece_id IS NOT NULL))
+    CHECK (color = '' OR color ~ '^#[0-9A-Fa-f]{6}$')
+    UNIQUE (piece_id, design_id)
 }
-note right of pieces
-    description can be empty
-    one of type_id or (design_id and parent_piece_id) must be set
-    color can be empty or hex string
-end note
 
 entity connections {
     *id : int <<PK,generated>>
@@ -241,10 +242,10 @@ entity connections {
     *y : float
     ..
     design_id : int <<FK>>
+    --
+    CHECK (description IS NOT NULL OR description = '')
+    CHECK (connecting_piece_id != connected_piece_id)
 }
-note right of connections
-    description can be empty
-end note
 
 entity layers {
     *id : int <<PK,generated>>
@@ -280,18 +281,19 @@ entity designs {
     *can_scale : boolean
     *can_mirror : boolean
     *unit : string
-    *location_longitude : float
-    *location_latitude : float
+    location_longitude : float
+    location_latitude : float
     *created_at : datetime
     *updated_at : datetime
     ..
     kit_id : int <<FK>>
+    --
+    UNIQUE (name, variant, view, kit_id)
+    CHECK (name != '')
+    CHECK (unit != '')
+    CHECK (location_longitude IS NULL AND location_latitude IS NULL
+    OR (location_longitude IS NOT NULL AND location_latitude IS NOT NULL))
 }
-note right of designs
-    description, icon, image_url, variant, view can be empty
-    empty variant means default
-    empty view means default
-end note
 
 entity kits {
     *id : int <<PK,generated>>
@@ -306,11 +308,9 @@ entity kits {
     *license : string
     *created_at : datetime
     *updated_at : datetime
+    --
+    CHECK (name != '')
 }
-note left of kits
-    description, icon, image_url, avatar_url, version, remote_url, homepage_url, license can be empty
-    empty version means latest
-end note
 
 kits ||--o{ types
 kits ||--o{ designs
@@ -322,8 +322,8 @@ designs ||--o{ layers
 designs ||--o{ pieces
 designs ||--o{ groups
 designs ||--o{ connections
-designs ||--o{ attributes
 designs ||--o{ stats
+designs ||--o{ attributes
 designs -- authors
 
 group_pieces -- groups

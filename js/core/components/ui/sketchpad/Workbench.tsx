@@ -6,8 +6,8 @@ import { Avatar, AvatarFallback } from "@semio/js/components/ui/Avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/components/ui/HoverCard";
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
 import { Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
-import { useDesignId, useKit } from "../../store";
-import { ResizablePanelProps } from "./sketchpad/DesignEditor";
+import { useDesignId, useKit } from "../../../store";
+import { ResizablePanelProps } from "./DesignEditor";
 
 interface TypeAvatarProps {
   typeId: TypeId;

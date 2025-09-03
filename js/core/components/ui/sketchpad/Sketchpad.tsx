@@ -99,11 +99,11 @@ const SketchpadInner: FC = () => {
     let mounted = true;
     (async () => {
       await store.execute("semio.sketchpad.createKit", defaultKitId);
-      try {
-        await store.execute("semio.sketchpad.importKit", defaultKitId, "/metabolism.zip");
-      } catch (importError) {
-        console.warn("Failed to import metabolism.zip, continuing with empty kit:", importError);
-      }
+      // try {
+      //   await store.execute("semio.sketchpad.importKit", defaultKitId, "/metabolism.zip");
+      // } catch (importError) {
+      //   console.warn("Failed to import metabolism.zip, continuing with empty kit:", importError);
+      // }
 
       try {
         await store.execute("semio.sketchpad.createDesignEditor", { kitId: defaultKitId, designId: defaultDesignId });
@@ -111,7 +111,8 @@ const SketchpadInner: FC = () => {
       } catch (e) {
         console.error("Failed to initialize default kit:", e);
       } finally {
-        if (mounted) setIsImporting(false);
+        // if (mounted) setIsImporting(false);
+        setIsImporting(false);
       }
     })();
     return () => {

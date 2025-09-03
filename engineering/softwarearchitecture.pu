@@ -25,6 +25,20 @@ class Kit {
   designs: list[Design]
   authors: list[Author]
   attributes: list[Attribute]
+  --
+  context Kit inv optionalFieldsCanBeEmpty:
+    description->notEmpty() or description->isEmpty() and
+    icon->notEmpty() or icon->isEmpty() and
+    image->notEmpty() or image->isEmpty() and
+    preview->notEmpty() or preview->isEmpty() and
+    version->notEmpty() or version->isEmpty() and
+    remote->notEmpty() or remote->isEmpty() and
+    homepage->notEmpty() or homepage->isEmpty() and
+    license->notEmpty() or license->isEmpty()
+  context Kit inv emptyVersionMeansLatest:
+    version->isEmpty() implies version = 'latest'
+  context Kit inv validUri:
+    uri->matches('^https?://.*') or uri->matches('^file://.*')
 }
 
 class Type {
@@ -43,6 +57,18 @@ class Type {
   ports: list[Port]
   authors: list[Author]
   attributes: list[Attribute]
+  --
+  context Type inv optionalFieldsCanBeEmpty:
+    description->notEmpty() or description->isEmpty() and
+    icon->notEmpty() or icon->isEmpty() and
+    image->notEmpty() or image->isEmpty() and
+    variant->notEmpty() or variant->isEmpty()
+  context Type inv emptyVariantMeansDefault:
+    variant->isEmpty() implies variant = 'default'
+  context Type inv stockPositive:
+    stock >= 0
+  context Type inv virtualTypesHaveNoPorts:
+    virtual = true implies ports->isEmpty()
 }
 
 class Design {
@@ -60,6 +86,19 @@ class Design {
   layers: list[Layer]
   groups: list[Group]
   attributes: list[Attribute]
+  --
+  context Design inv optionalFieldsCanBeEmpty:
+    description->notEmpty() or description->isEmpty() and
+    icon->notEmpty() or icon->isEmpty() and
+    image->notEmpty() or image->isEmpty() and
+    variant->notEmpty() or variant->isEmpty() and
+    view->notEmpty() or view->isEmpty()
+  context Design inv emptyVariantMeansDefault:
+    variant->isEmpty() implies variant = 'default'
+  context Design inv emptyViewMeansDefault:
+    view->isEmpty() implies view = 'default'
+  context Design inv connectionsReferenceDesignPieces:
+    connections->forAll(c | pieces->includes(c.connecting.piece) and pieces->includes(c.connected.piece))
 }
 
 class Representation {
@@ -67,6 +106,11 @@ class Representation {
   description: str
   tags: list[str]
   attributes: list[Attribute]
+  --
+  context Representation inv descriptionCanBeEmpty:
+    description->notEmpty() or description->isEmpty()
+  context Representation inv validUrl:
+    url->matches('^https?://.*') or url->matches('^file://.*') or url->matches('^[^/]+\.(png|jpg|jpeg|gif|svg|obj|3dm|step|stp)$')
 }
 
 class Port {
@@ -79,6 +123,16 @@ class Port {
   direction: Vector
   t: float
   attributes: list[Attribute]
+  --
+  context Port inv optionalFieldsCanBeEmpty:
+    description->notEmpty() or description->isEmpty() and
+    family->notEmpty() or family->isEmpty()
+  context Port inv tInValidRange:
+    t >= 0 and t < 1
+  context Port inv directionIsUnitVector:
+    direction.x * direction.x + direction.y * direction.y + direction.z * direction.z = 1
+  context Port inv compatibleFamiliesIncludesOwnFamily:
+    family->notEmpty() implies compatibleFamilies->includes(family)
 }
 
 class Layer {
@@ -112,12 +166,30 @@ class Piece {
   design: Design
   piece: Piece
   attributes: list[Attribute]
+  --
+  context Piece inv descriptionCanBeEmpty:
+    description->notEmpty() or description->isEmpty()
+  context Piece inv validPieceReference:
+    (type->notEmpty() and design->isEmpty() and piece->isEmpty()) or
+    (type->isEmpty() and design->notEmpty() and piece->notEmpty())
+  context Piece inv colorValidation:
+    color->isEmpty() or color.matches('^#[0-9A-Fa-f]{6}$')
+  context Piece inv scalePositive:
+    scale > 0
+  context Piece inv noSelfReference:
+    piece <> self
 }
 
 class Plane {
   origin: Point
   xAxis: Vector
   yAxis: Vector
+  --
+  context Plane inv axesAreOrthogonal:
+    xAxis.x * yAxis.x + xAxis.y * yAxis.y + xAxis.z * yAxis.z = 0
+  context Plane inv axesAreUnitVectors:
+    xAxis.x * xAxis.x + xAxis.y * xAxis.y + xAxis.z * xAxis.z = 1 and
+    yAxis.x * yAxis.x + yAxis.y * yAxis.y + yAxis.z * yAxis.z = 1
 }
 
 class Connection {
@@ -133,6 +205,20 @@ class Connection {
   x: float
   y: float
   attributes: list[Attribute]
+  --
+  context Connection inv descriptionCanBeEmpty:
+    description->notEmpty() or description->isEmpty()
+  context Connection inv portsAreCompatible:
+    connecting.port.compatibleFamilies->includes(connected.port.family) or
+    connected.port.compatibleFamilies->includes(connecting.port.family)
+  context Connection inv noDuplicateConnections:
+    connecting <> connected
+  context Connection inv rotationInValidRange:
+    rotation >= -180 and rotation <= 180
+  context Connection inv turnInValidRange:
+    turn >= -180 and turn <= 180
+  context Connection inv tiltInValidRange:
+    tilt >= -180 and tilt <= 180
 }
 
 class Side {
@@ -145,6 +231,15 @@ class Attribute {
   value: str
   unit: str
   definition: str
+  --
+  context Attribute inv valueCanBeEmpty:
+    value->notEmpty() or value->isEmpty()
+  context Attribute inv definitionCanBeEmpty:
+    definition->notEmpty() or definition->isEmpty()
+  context Attribute inv emptyValueMeansTrue:
+    value->isEmpty() implies value = 'true'
+  context Attribute inv unitCanBeEmpty:
+    unit->notEmpty() or unit->isEmpty()
 }
 
 class Author {
@@ -162,6 +257,9 @@ class Vector {
   x: float
   y: float
   z: float
+  --
+  context Vector inv notZeroVector:
+    x <> 0 or y <> 0 or z <> 0
 }
 
 class DiagramPoint {
@@ -186,6 +284,18 @@ class Quality {
   formula: str
   benchmarks: list[Benchmark]
   attributes: list[Attribute]
+  --
+  context Quality inv optionalFieldsCanBeEmpty:
+    description->notEmpty() or description->isEmpty() and
+    uri->notEmpty() or uri->isEmpty() and
+    si->notEmpty() or si->isEmpty() and
+    imperial->notEmpty() or imperial->isEmpty() and
+    formula->notEmpty() or formula->isEmpty()
+  context Quality inv defaultValueInRange:
+    (min->notEmpty() implies default >= min) and
+    (max->notEmpty() implies default <= max)
+  context Quality inv minLessThanMax:
+    min->notEmpty() and max->notEmpty() implies min < max
 }
 
 class QualityKind {
@@ -205,6 +315,11 @@ class Benchmark {
   minExcluded: bool
   max: float
   maxExcluded: bool
+  --
+  context Benchmark inv iconCanBeEmpty:
+    icon->notEmpty() or icon->isEmpty()
+  context Benchmark inv minLessThanMax:
+    min < max
 }
 
 class Prop {
@@ -212,6 +327,9 @@ class Prop {
   value: str
   unit: str
   attributes: list[Attribute]
+  --
+  context Prop inv unitCanBeEmpty:
+    unit->notEmpty() or unit->isEmpty()
 }
 
 class Stat {
@@ -221,6 +339,11 @@ class Stat {
   minExcluded: bool
   max: float
   maxExcluded: bool
+  --
+  context Stat inv unitCanBeEmpty:
+    unit->notEmpty() or unit->isEmpty()
+  context Stat inv minLessThanMax:
+    min < max
 }
 
 Kit *-- "0..*" Type : contains >
