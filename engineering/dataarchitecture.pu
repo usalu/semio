@@ -1,153 +1,156 @@
 @startuml "data architecture"
 skinparam linetype ortho
 
-entity Semio {
+entity semio {
     *release : string <<PK>>
     *engine : string
-    *created : datetime
+    *sketchpad : string
+    *created_at : datetime
 }
 
-entity Attribute {
-    *pk : int <<PK,generated>>
+entity attributes {
+    *id : int <<PK,generated>>
     *name : string
     *value : string
     *unit : string
     *definition : string
     ..
-    representationPk : int <<FK>>
-    portPk : int <<FK>>
-    typePk : int <<FK>>
-    piecePk : int <<FK>>
-    connectionPk : int <<FK>>
-    designPk : int <<FK>>
-    kitPk : int <<FK>>
+    representation_id : int <<FK>>
+    port_id : int <<FK>>
+    type_id : int <<FK>>
+    piece_id : int <<FK>>
+    connection_id : int <<FK>>
+    design_id : int <<FK>>
+    kit_id : int <<FK>>
 }
-note bottom of Attribute
+note bottom of attributes
     value, definition can be empty
     empty value means true
-    one of portPk, typePk, piecePk, connectionPk, designPk, kitPk must be set
+    one of representation_id, port_id, type_id, piece_id, connection_id, design_id, kit_id must be set
 end note
 
-entity Tag {
-    *pk : int <<PK,generated>>
+entity tags {
+    *id : int <<PK,generated>>
     *name : string
     *order : int
     ..
-    representationPk : int <<FK>>
+    representation_id : int <<FK>>
 }
 
-entity Representation {
-    *pk : int <<PK,generated>>
+entity representations {
+    *id : int <<PK,generated>>
     *url : string
     *description : string
     ..
-    typePk : int <<FK>>
+    type_id : int <<FK>>
 }
-note right of Representation
+note right of representations
     description can be empty
 end note
 
-entity Plane {
-    *pk : int <<PK,generated>>
-    *originX : float
-    *originY : float
-    *originZ : float
-    *xAxisX : float
-    *xAxisY : float
-    *xAxisZ : float
-    *yAxisX : float
-    *yAxisY : float
-    *yAxisZ : float
+entity planes {
+    *id : int <<PK,generated>>
+    *origin_x : float
+    *origin_y : float
+    *origin_z : float
+    *x_axis_x : float
+    *x_axis_y : float
+    *x_axis_z : float
+    *y_axis_x : float
+    *y_axis_y : float
+    *y_axis_z : float
 }
 
-entity CompatibleFamily {
-  *pk : int <<PK,generated>>
+entity compatible_families {
+  *id : int <<PK,generated>>
   *name : string
   *order : int
   ..
-  portPk : int <<FK>>
+  port_id : int <<FK>>
 }
 
-entity Port {
-    *pk : int <<PK,generated>>
-    *id : string
+entity ports {
+    *id : int <<PK,generated>>
+    *port_id : string
     *description : string
     *family : string
-    *mandatory : boolean
-    *pointX : float
-    *pointY : float
-    *pointZ : float
-    *directionX : float
-    *directionY : float
-    *directionZ : float
+    *is_mandatory : boolean
+    *point_x : float
+    *point_y : float
+    *point_z : float
+    *direction_x : float
+    *direction_y : float
+    *direction_z : float
     *t : float
     ..
-    typePk : int <<FK>>
+    type_id : int <<FK>>
 }
-note right of Port
+note right of ports
     description, family can be empty
     t is in [0,1[
 end note
 
-entity Author {
-    *pk : int <<PK,generated>>
+entity authors {
+    *id : int <<PK,generated>>
     *name : string
     *email : string
     *rank : int
     ..
-    typePk : int <<FK>>
-    designPk : int <<FK>>
+    kit_id : int <<FK>>
 }
-note right of Author
-    one of typePk or designPk must be set
-end note
 
-entity Type {
-    *pk : int <<PK,generated>>
+entity types {
+    *id : int <<PK,generated>>
     *name : string
     *description : string
     *icon : string
     *image : string
     *variant : string
     *stock : float
-    *virtual : boolean
+    *is_virtual : boolean
     *unit : string
     *longitude : float
     *latitude : float
-    *created : datetime
-    *updated : datetime
+    *created_at : datetime
+    *updated_at : datetime
     ..
-    kitPk : int <<FK>>
+    kit_id : int <<FK>>
 }
-note right of Type
+note right of types
     description, icon, image, variant can be empty
     empty variant means default
     stock is default to +infinity
 end note
 
-entity Piece {
-    *pk : int <<PK,generated>>
-    *id : string
+entity pieces {
+    *id : int <<PK,generated>>
+    *piece_id : string
     *description : string
-    *planePk : int <<FK>>
-    *centerX : float
-    *centerY : float
+    *plane_id : int <<FK>>
+    *center_x : float
+    *center_y : float
+    *scale : float
+    mirror_plane_id : int <<FK>>
+    *is_hidden: boolean
+    *is_locked: boolean
+    *color: string
     ..
-    typePk : int <<FK>>
-    designPk : int <<FK>>
-    piecePk : int <<FK>>
+    type_id : int <<FK>>
+    design_id : int <<FK>>
+    parent_piece_id : int <<FK>>
 }
-note right of Piece
+note right of pieces
     description can be empty
-    one of typePk or (designPk and piecePk) must be set
+    one of type_id or (design_id and parent_piece_id) must be set
+    color can be empty or hex string
 end note
 
-entity Connection {
-    *pk : int <<PK,generated>>
-    *connectedPiecePk : int <<FK>>
-    *connectedPortPk : int <<FK>>
-    *connectingPiecePk : int <<FK>>
-    *connectingPortPk : int <<FK>>
+entity connections {
+    *id : int <<PK,generated>>
+    *connected_piece_id : int <<FK>>
+    *connected_port_id : int <<FK>>
+    *connecting_piece_id : int <<FK>>
+    *connecting_port_id : int <<FK>>
     *description : string
     *gap : float
     *shift : float
@@ -158,14 +161,37 @@ entity Connection {
     *x : float
     *y : float
     ..
-    designPk : int <<FK>>
+    design_id : int <<FK>>
 }
-note right of Connection
+note right of connections
     description can be empty
 end note
 
-entity Design {
-    *pk : int <<PK,generated>>
+entity layers {
+    *id : int <<PK,generated>>
+    *name : string
+    *description : string
+    *color: string
+    ..
+    design_id : int <<FK>>
+}
+
+entity groups {
+    *id : int <<PK,generated>>
+    *name : string
+    *description : string
+    *color: string
+    ..
+    design_id : int <<FK>>
+}
+
+entity group_pieces {
+    *group_id : int <<PK,FK>>
+    *piece_id : int <<PK,FK>>
+}
+
+entity designs {
+    *id : int <<PK,generated>>
     *name : string
     *description : string
     *icon : string
@@ -173,19 +199,19 @@ entity Design {
     *variant : string
     *view : string
     *unit : string
-    *created : datetime
-    *updated : datetime
+    *created_at : datetime
+    *updated_at : datetime
     ..
-    kitPk : int <<FK>>
+    kit_id : int <<FK>>
 }
-note right of Design
+note right of designs
     description, icon, image, variant, view can be empty
     empty variant means default
     empty view means default
 end note
 
-entity Kit {
-    *pk : int <<PK,generated>>
+entity kits {
+    *id : int <<PK,generated>>
     *uri : string <<Unique>>
     *name : string
     *description : string
@@ -196,42 +222,49 @@ entity Kit {
     *remote : string
     *homepage : string
     *license : string
-    *created : datetime
-    *updated : datetime
+    *created_at : datetime
+    *updated_at : datetime
 }
-note left of Kit
+note left of kits
     description, icon, image, preview, version, remote, homepage, license can be empty
     empty version means latest
 end note
 
-Kit ||--o{ Type
-Kit ||--o{ Design
-Kit ||--o{ Attribute
+kits ||--o{ types
+kits ||--o{ designs
+kits ||--o{ attributes
+kits ||--o{ authors
 
-Design ||--o{ Piece
-Design ||--o{ Connection
-Design ||--o{ Author
-Design ||--o{ Attribute
+designs ||--o{ layers
+designs ||--o{ pieces
+designs ||--o{ groups
+designs ||--o{ connections
+designs ||--o{ attributes
+designs -- authors
 
-Type ||--o{ Representation
-Type ||--o{ Port
-Type ||--o{ Author
-Type ||--o{ Attribute
+group_pieces -- groups
+group_pieces -- pieces
 
-Piece ||--o{ Plane
-Piece ||--o{ Attribute
+types ||--o{ representations
+types ||--o{ ports
+types ||--o{ authors
+types ||--o{ attributes
+types -- authors
 
-Connection ||--o{ Attribute
+pieces ||--o{ planes
+pieces ||--o{ attributes
 
-Representation ||--o{ Tag
-Representation ||--o{ Attribute
+connections ||--o{ attributes
 
-Port ||--o{ CompatibleFamily
-Port ||--o{ Attribute
+representations ||--o{ tags
+representations ||--o{ attributes
 
-Connection -- Piece : "connected"
-Connection -- Piece : "connecting"
-Connection -- Port : "connected"
-Connection -- Port : "connecting"
+ports ||--o{ compatible_families
+ports ||--o{ attributes
+
+connections -- pieces : "connected" >
+connections -- pieces : "connecting" >
+connections -- ports : "connected" >
+connections -- ports : "connecting" >
 
 @enduml

@@ -20,7 +20,7 @@
 // #endregion
 
 import JSZip from "jszip";
-import React, { createContext, useCallback, useContext, useMemo, useSyncExternalStore } from "react";
+import React, { createContext, useCallback, useContext, useMemo, useRef, useSyncExternalStore } from "react";
 import type { Database, SqlJsStatic } from "sql.js";
 import initSqlJs from "sql.js";
 import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
@@ -675,6 +675,8 @@ function getPlane(yPlane: Y.Map<any>): { origin: { x: number; y: number; z: numb
 class YFileStore implements FileStoreFull {
   public readonly parent: YKitStore;
   public readonly yFile: Y.Map<string> = new Y.Map<string>();
+  private cachedSnapshot?: SemioFile;
+  private lastSnapshotHash?: string;
 
   constructor(parent: YKitStore, file: SemioFile) {
     this.parent = parent;
@@ -706,10 +708,34 @@ class YFileStore implements FileStoreFull {
     if (diff.remote !== undefined) this.yFile.set("remote", diff.remote);
     if (diff.size !== undefined) this.yFile.set("size", diff.size.toString());
     if (diff.hash !== undefined) this.yFile.set("hash", diff.hash);
+    this.cachedSnapshot = undefined; // Invalidate cache when data changes
+    this.lastSnapshotHash = undefined; // Invalidate hash when data changes
   };
 
   snapshot = (): SemioFile => {
-    return this.file;
+    const currentData = {
+      path: this.yFile.get("path") as string,
+      remote: this.yFile.get("remote") as string || undefined,
+      size: this.yFile.get("size") ? parseInt(this.yFile.get("size") as string) : undefined,
+      hash: this.yFile.get("hash") as string || undefined,
+      created: this.yFile.get("created") ? new Date(this.yFile.get("created") as string) : undefined,
+      updated: this.yFile.get("updated") ? new Date(this.yFile.get("updated") as string) : undefined,
+    };
+    const currentHash = JSON.stringify({
+      path: currentData.path,
+      remote: currentData.remote,
+      size: currentData.size,
+      hash: currentData.hash,
+      created: currentData.created?.toISOString(),
+      updated: currentData.updated?.toISOString(),
+    });
+    
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+    
+    return this.cachedSnapshot;
   };
 
   changed = (subscribe: Subscribe, deep?: boolean) => {
@@ -720,6 +746,8 @@ class YFileStore implements FileStoreFull {
 class YRepresentationStore implements RepresentationStoreFull {
   public readonly parent: YKitStore;
   public readonly yRepresentation: YRepresentation = new Y.Map<any>();
+  private cachedSnapshot?: Representation;
+  private lastSnapshotHash?: string;
 
   constructor(parent: YKitStore, representation: Representation) {
     this.parent = parent;
@@ -731,12 +759,32 @@ class YRepresentationStore implements RepresentationStoreFull {
 
   snapshot = (): Representation => {
     const yTags = this.yRepresentation.get("tags") as Y.Array<string>;
-    return {
+    const yAttributes = this.yRepresentation.get("attributes") as YAttributes;
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
+    }
+    
+    const currentData = {
       url: this.yRepresentation.get("url") as string,
       description: (this.yRepresentation.get("description") as string) || "",
       tags: yTags ? yTags.toArray() : [],
-      attributes: getAttributes(this.yRepresentation.get("attributes") as YAttributes),
+      attributes: attributes,
     };
+    const currentHash = JSON.stringify(currentData);
+    
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+    
+    return this.cachedSnapshot;
   };
 
   change = (diff: RepresentationDiff) => {
@@ -758,6 +806,8 @@ class YRepresentationStore implements RepresentationStoreFull {
 class YPortStore implements PortStoreFull {
   public readonly parent: YTypeStore;
   public readonly yPort: YPort = new Y.Map<any>();
+  private cachedSnapshot?: Port;
+  private lastSnapshotHash?: string;
 
   constructor(parent: YTypeStore, port: Port) {
     this.parent = parent;
@@ -776,18 +826,46 @@ class YPortStore implements PortStoreFull {
     const yCompatibleFamilies = this.yPort.get("compatibleFamilies") as Y.Array<string>;
     const yPoint = this.yPort.get("point") as Y.Map<number>;
     const yDirection = this.yPort.get("direction") as Y.Map<number>;
+    const yAttributes = this.yPort.get("attributes") as YAttributes;
+    
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
+    }
 
-    return {
+    const currentData = {
       id_: this.yPort.get("id_") as string,
       description: (this.yPort.get("description") as string) || "",
       mandatory: this.yPort.get("mandatory") as boolean,
       family: (this.yPort.get("family") as string) || "",
       compatibleFamilies: yCompatibleFamilies ? yCompatibleFamilies.toArray() : [],
-      point: getVec3(yPoint),
-      direction: getVec3(yDirection),
+      point: {
+        x: yPoint.get("x") as number,
+        y: yPoint.get("y") as number,
+        z: yPoint.get("z") as number,
+      },
+      direction: {
+        x: yDirection.get("x") as number,
+        y: yDirection.get("y") as number,
+        z: yDirection.get("z") as number,
+      },
       t: this.yPort.get("t") as number,
-      attributes: getAttributes(this.yPort.get("attributes") as YAttributes),
+      attributes: attributes,
     };
+    const currentHash = JSON.stringify(currentData);
+    
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+    
+    return this.cachedSnapshot;
   };
 
   change = (diff: PortDiff) => {
@@ -822,6 +900,8 @@ class YTypeStore implements TypeStoreFull {
   public readonly ports: Map<string, YPortStore> = new Map();
   private readonly representationIds: Map<string, string> = new Map();
   private readonly portIds: Map<string, string> = new Map();
+  private cachedSnapshot?: Type;
+  private lastSnapshotHash?: string;
 
   constructor(parent: YKitStore, type: Type) {
     this.parent = parent;
@@ -840,18 +920,7 @@ class YTypeStore implements TypeStoreFull {
   }
 
   type = (): Type => {
-    return {
-      name: this.yType.get("name") as string,
-      description: (this.yType.get("description") as string) || "",
-      variant: this.yType.get("variant") as string | undefined,
-      unit: (this.yType.get("unit") as string) || "",
-      stock: this.yType.get("stock") as number | undefined,
-      virtual: this.yType.get("virtual") as boolean | undefined,
-      representations: Array.from(this.representations.values()).map((store) => store.snapshot()),
-      ports: Array.from(this.ports.values()).map((store) => store.snapshot()),
-      authors: getAuthors(this.yType.get("authors") as YAuthors),
-      attributes: getAttributes(this.yType.get("attributes") as YAttributes),
-    };
+    return this.snapshot();
   };
 
   change = (diff: TypeDiff) => {
@@ -890,7 +959,50 @@ class YTypeStore implements TypeStoreFull {
   };
 
   snapshot = (): Type => {
-    return this.type();
+    const yAuthors = this.yType.get("authors") as YAuthors;
+    const yAttributes = this.yType.get("attributes") as YAttributes;
+    
+    const authors: Author[] = [];
+    if (yAuthors) {
+      yAuthors.forEach((yAuthor: YAuthor) => {
+        authors.push({
+          name: yAuthor.get("name") as string,
+          email: (yAuthor.get("email") as string) || "",
+        });
+      });
+    }
+    
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
+    }
+    
+    const currentData = {
+      name: this.yType.get("name") as string,
+      description: (this.yType.get("description") as string) || "",
+      variant: this.yType.get("variant") as string | undefined,
+      unit: (this.yType.get("unit") as string) || "",
+      stock: this.yType.get("stock") as number | undefined,
+      virtual: this.yType.get("virtual") as boolean | undefined,
+      representations: Array.from(this.representations.values()).map((store) => store.snapshot()),
+      ports: Array.from(this.ports.values()).map((store) => store.snapshot()),
+      authors: authors,
+      attributes: attributes,
+    };
+    const currentHash = JSON.stringify(currentData);
+    
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+    
+    return this.cachedSnapshot;
   };
 
   changed = (subscribe: Subscribe, deep?: boolean) => {
@@ -901,6 +1013,8 @@ class YTypeStore implements TypeStoreFull {
 class YPieceStore implements PieceStoreFull {
   public readonly parent: YDesignStore;
   public readonly yPiece: YPiece = new Y.Map<any>();
+  private cachedSnapshot?: Piece;
+  private lastSnapshotHash?: string;
 
   constructor(parent: YDesignStore, piece: Piece) {
     this.parent = parent;
@@ -923,23 +1037,67 @@ class YPieceStore implements PieceStoreFull {
     const yType = this.yPiece.get("type") as Y.Map<string>;
     const yPlane = this.yPiece.get("plane") as Y.Map<any> | undefined;
     const yCenter = this.yPiece.get("center") as Y.Map<number> | undefined;
+    const yAttributes = this.yPiece.get("attributes") as YAttributes;
+    
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
+    }
 
-    const piece: Piece = {
+    const currentData: Piece = {
       id_: this.yPiece.get("id_") as string,
       description: (this.yPiece.get("description") as string) || "",
       type: {
         name: yType.get("name") as string,
         variant: yType.get("variant") as string | undefined,
       },
-      attributes: getAttributes(this.yPiece.get("attributes") as YAttributes),
+      attributes: attributes,
     };
+    
     if (yPlane) {
-      piece.plane = getPlane(yPlane);
+      const yOrigin = yPlane.get("origin") as Y.Map<number>;
+      const yXAxis = yPlane.get("xAxis") as Y.Map<number>;
+      const yYAxis = yPlane.get("yAxis") as Y.Map<number>;
+      currentData.plane = {
+        origin: {
+          x: yOrigin.get("x") as number,
+          y: yOrigin.get("y") as number,
+          z: yOrigin.get("z") as number,
+        },
+        xAxis: {
+          x: yXAxis.get("x") as number,
+          y: yXAxis.get("y") as number,
+          z: yXAxis.get("z") as number,
+        },
+        yAxis: {
+          x: yYAxis.get("x") as number,
+          y: yYAxis.get("y") as number,
+          z: yYAxis.get("z") as number,
+        },
+      };
     }
+    
     if (yCenter) {
-      piece.center = getVec2(yCenter);
+      currentData.center = {
+        x: yCenter.get("x") as number,
+        y: yCenter.get("y") as number,
+      };
     }
-    return piece;
+    
+    const currentHash = JSON.stringify(currentData);
+    
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+    
+    return this.cachedSnapshot;
   };
 
   change = (diff: PieceDiff) => {
@@ -983,6 +1141,8 @@ class YPieceStore implements PieceStoreFull {
 class YConnectionStore implements ConnectionStoreFull {
   public readonly parent: YDesignStore;
   public readonly yConnection: YConnection = new Y.Map<any>();
+  private cachedSnapshot?: Connection;
+  private lastSnapshotHash?: string;
 
   constructor(parent: YDesignStore, connection: Connection) {
     this.parent = parent;
@@ -1034,7 +1194,19 @@ class YConnectionStore implements ConnectionStoreFull {
     const yConnectingDesignPiece = yConnecting.get("designPiece") as Y.Map<string> | undefined;
     const yConnectingPort = yConnecting.get("port") as Y.Map<string>;
 
-    return {
+    const yAttributes = this.yConnection.get("attributes") as YAttributes;
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
+    }
+
+    const currentData = {
       connected: {
         piece: { id_: yConnectedPiece.get("id_") as string },
         port: { id_: yConnectedPort.get("id_") as string },
@@ -1054,8 +1226,16 @@ class YConnectionStore implements ConnectionStoreFull {
       tilt: this.yConnection.get("tilt") as number,
       x: this.yConnection.get("x") as number,
       y: this.yConnection.get("y") as number,
-      attributes: getAttributes(this.yConnection.get("attributes") as YAttributes),
+      attributes: attributes,
     };
+    const currentHash = JSON.stringify(currentData);
+    
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+    
+    return this.cachedSnapshot;
   };
 
   change = (diff: ConnectionDiff) => {
@@ -1082,6 +1262,8 @@ class YDesignStore implements DesignStoreFull {
   public readonly connections: Map<string, YConnectionStore> = new Map();
   private readonly pieceIds: Map<string, string> = new Map();
   private readonly connectionIds: Map<string, string> = new Map();
+  private cachedSnapshot?: Design;
+  private lastSnapshotHash?: string;
 
   constructor(parent: YKitStore, design: Design) {
     this.parent = parent;
@@ -1115,7 +1297,31 @@ class YDesignStore implements DesignStoreFull {
   }
 
   snapshot = (): Design => {
-    return {
+    const yAuthors = this.yDesign.get("authors") as YAuthors;
+    const yAttributes = this.yDesign.get("attributes") as YAttributes;
+    
+    const authors: Author[] = [];
+    if (yAuthors) {
+      yAuthors.forEach((yAuthor: YAuthor) => {
+        authors.push({
+          name: yAuthor.get("name") as string,
+          email: (yAuthor.get("email") as string) || "",
+        });
+      });
+    }
+    
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
+    }
+    
+    const currentData = {
       name: this.yDesign.get("name") as string,
       description: this.yDesign.get("description") as string | undefined,
       variant: this.yDesign.get("variant") as string | undefined,
@@ -1123,9 +1329,17 @@ class YDesignStore implements DesignStoreFull {
       unit: this.yDesign.get("unit") as string,
       pieces: Array.from(this.pieces.values()).map((p) => p.snapshot()),
       connections: Array.from(this.connections.values()).map((c) => c.snapshot()),
-      authors: getAuthors(this.yDesign.get("authors") as YAuthors),
-      attributes: getAttributes(this.yDesign.get("attributes") as YAttributes),
+      authors: authors,
+      attributes: attributes,
     };
+    const currentHash = JSON.stringify(currentData);
+    
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+    
+    return this.cachedSnapshot;
   };
 
   change = (diff: DesignDiff) => {
@@ -1236,6 +1450,8 @@ class YKitStore implements KitStoreFull {
   private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult> = new Map();
   private readonly regularFiles: Map<Url, string> = new Map();
   private readonly parent: SketchpadStore;
+  private cachedSnapshot?: Kit;
+  private lastSnapshotHash?: string;
 
   constructor(parent: SketchpadStore, kit: Kit) {
     this.parent = parent;
@@ -1291,7 +1507,19 @@ class YKitStore implements KitStoreFull {
   }
 
   snapshot = (): Kit => {
-    return {
+    const yAttributes = this.yKit.get("attributes") as YAttributes;
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
+    }
+    
+    const currentData = {
       name: this.yKit.get("name") as string,
       version: this.yKit.get("version") as string | undefined,
       description: this.yKit.get("description") as string | undefined,
@@ -1305,8 +1533,16 @@ class YKitStore implements KitStoreFull {
       updated: this.yKit.get("updated") ? new Date(this.yKit.get("updated") as string) : undefined,
       types: Array.from(this.types.values()).map((store) => store.snapshot()),
       designs: Array.from(this.designs.values()).map((store) => store.snapshot()),
-      attributes: getAttributes(this.yKit.get("attributes") as YAttributes),
+      attributes: attributes,
     };
+    const currentHash = JSON.stringify(currentData);
+    
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+    
+    return this.cachedSnapshot;
   };
 
   change = (diff: KitDiff) => {
@@ -1484,6 +1720,8 @@ class YDesignEditorStore implements DesignEditorStoreFull {
   public readonly yDesignEditorStore: YDesignEditorStoreValMap = new Y.Map<YDesignEditorStoreVal>();
   private readonly commandRegistry: Map<string, (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult> = new Map();
   private readonly parent: SketchpadStore;
+  private cachedSnapshot?: DesignEditorStateFull;
+  private lastSnapshotHash?: string;
 
   constructor(parent: SketchpadStore, state: DesignEditorStateFull) {
     this.parent = parent;
@@ -1547,7 +1785,7 @@ class YDesignEditorStore implements DesignEditorStoreFull {
   }
 
   snapshot = (): DesignEditorStateFull => {
-    return {
+    const currentHash = JSON.stringify({
       fullscreenPanel: this.fullscreenPanel,
       selection: this.selection,
       isTransactionActive: this.isTransactionActive,
@@ -1556,7 +1794,23 @@ class YDesignEditorStore implements DesignEditorStoreFull {
       diff: this.diff,
       currentTransactionStack: this.currentTransactionStack,
       pastTransactionsStack: this.pastTransactionsStack,
-    };
+    });
+
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = {
+        fullscreenPanel: this.fullscreenPanel,
+        selection: this.selection,
+        isTransactionActive: this.isTransactionActive,
+        presence: this.presence,
+        others: this.others,
+        diff: this.diff,
+        currentTransactionStack: this.currentTransactionStack,
+        pastTransactionsStack: this.pastTransactionsStack,
+      };
+      this.lastSnapshotHash = currentHash;
+    }
+
+    return this.cachedSnapshot;
   };
 
   change = (diff: DesignEditorStateDiff) => {
@@ -1784,6 +2038,8 @@ class YSketchpadStore implements SketchpadStoreFull {
   public readonly kits: Map<string, YKitStore> = new Map();
   public readonly designEditors: Map<string, Map<string, DesignEditorStoreFull>> = new Map();
   private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult> = new Map();
+  private cachedSnapshot?: SketchpadStateFull;
+  private lastSnapshotValues?: {mode: Mode; theme: Theme; layout: Layout; activeDesignEditor?: DesignEditorId};
 
   private getYSketchpad(): YSketchpad {
     return this.ySketchpadDoc.getMap("sketchpad");
@@ -1819,12 +2075,24 @@ class YSketchpadStore implements SketchpadStoreFull {
   }
 
   snapshot = (): SketchpadStateFull => {
-    return {
+    const currentValues = {
       mode: this.mode,
       theme: this.theme,
       layout: this.layout,
       activeDesignEditor: this.activeDesignEditor,
     };
+
+    if (!this.lastSnapshotValues || 
+        this.lastSnapshotValues.mode !== currentValues.mode ||
+        this.lastSnapshotValues.theme !== currentValues.theme ||
+        this.lastSnapshotValues.layout !== currentValues.layout ||
+        this.lastSnapshotValues.activeDesignEditor !== currentValues.activeDesignEditor) {
+      
+      this.cachedSnapshot = currentValues;
+      this.lastSnapshotValues = currentValues;
+    }
+
+    return this.cachedSnapshot!;
   };
 
   create = {
@@ -2764,8 +3032,8 @@ function useSketchpadStore(id?: string): SketchpadStore {
   const storeId = scope?.id ?? id;
   if (!storeId) throw new Error("useSketchpad must be called within a SketchpadScopeProvider or be directly provided with an id");
   if (!stores.has(storeId)) throw new Error(`Sketchpad store was not found for id ${storeId}`);
-  const store = stores.get(storeId)!;
-  const getSnapshot = useCallback(() => store.snapshot(), [store]);
+  const store = useMemo(() => stores.get(storeId)!, [storeId]);
+  const getSnapshot = useMemo(() => () => store.snapshot(), [store]);
   const state = useSyncExternalStore(
     store.changed,
     getSnapshot,
@@ -2781,8 +3049,15 @@ export function useSketchpad<T>(selector?: (store: SketchpadStore) => T, id?: st
   const storeId = scope?.id ?? id;
   if (!storeId) throw new Error("useSketchpad must be called within a SketchpadScopeProvider or be directly provided with an id");
   if (!stores.has(storeId)) throw new Error(`Sketchpad store was not found for id ${storeId}`);
-  const store = stores.get(storeId)!;
-  const getSnapshot = useCallback(() => store.snapshot(), [store]);
+  const store = useMemo(() => stores.get(storeId)!, [storeId]);
+  const lastSnapshot = useRef<any>();
+  const getSnapshot = useCallback(() => {
+    const currentSnapshot = store.snapshot();
+    if (!lastSnapshot.current || JSON.stringify(lastSnapshot.current) !== JSON.stringify(currentSnapshot)) {
+      lastSnapshot.current = currentSnapshot;
+    }
+    return lastSnapshot.current;
+  }, [store]);
 
   const state = useSyncExternalStore(
     store.changed,
@@ -2814,8 +3089,8 @@ export function useDesignEditor<T>(selector?: (store: DesignEditorStore) => T, k
   if (!store.designEditors.has(resolvedKitIdStr)) throw new Error(`Design editor store not found for kit ${resolvedKitId.name}`);
   const kitEditors = store.designEditors.get(resolvedKitIdStr)!;
   if (!kitEditors.has(resolvedDesignIdStr)) throw new Error(`Design editor store not found for design ${resolvedDesignId.name}`);
-  const designEditor = kitEditors.get(resolvedDesignIdStr)!;
-  const getSnapshot = useCallback(() => designEditor.snapshot(), [designEditor]);
+  const designEditor = useMemo(() => kitEditors.get(resolvedDesignIdStr)!, [kitEditors, resolvedDesignIdStr]);
+  const getSnapshot = useMemo(() => () => designEditor.snapshot(), [designEditor]);
 
   const state = useSyncExternalStore(
     designEditor.changed,
@@ -2846,7 +3121,7 @@ export function useKit<T>(selector: (kit: Kit) => T): T;
 export function useKit<T>(selector: (kit: Kit) => T, id: KitId): T;
 export function useKit<T>(selector?: (kit: Kit) => T, id?: KitId): T | Kit {
   const kitStore = useKitStore();
-  const getSnapshot = useCallback(() => kitStore.snapshot(), [kitStore]);
+  const getSnapshot = useMemo(() => () => kitStore.snapshot(), [kitStore]);
   const kit = useSyncExternalStore(
     kitStore.changed,
     getSnapshot,
@@ -2873,8 +3148,8 @@ export function useDesign<T>(selector?: (design: Design) => T, id?: DesignId): T
   if (!designId) throw new Error("useDesign must be called within a DesignScopeProvider or be directly provided with an id");
   const designIdStr = designIdToString(designId);
   if (!kitStore.designs.has(designIdStr)) throw new Error(`Design store not found for design ${designId}`);
-  const designStore = kitStore.designs.get(designIdStr)!;
-  const getSnapshot = useCallback(() => designStore.snapshot(), [designStore]);
+  const designStore = useMemo(() => kitStore.designs.get(designIdStr)!, [kitStore, designIdStr]);
+  const getSnapshot = useMemo(() => () => designStore.snapshot(), [designStore]);
   const state = useSyncExternalStore(
     designStore.changed,
     getSnapshot,
@@ -2901,8 +3176,8 @@ export function useType<T>(selector?: (type: Type) => T, id?: TypeId): T | Type 
   if (!typeId) throw new Error("useType must be called within a TypeScopeProvider or be directly provided with an id");
   const typeIdStr = typeIdToString(typeId);
   if (!kit.types.has(typeIdStr)) throw new Error(`Type store not found for type ${typeId}`);
-  const typeStore = kit.types.get(typeIdStr)!;
-  const getSnapshot = useCallback(() => typeStore.snapshot(), [typeStore]);
+  const typeStore = useMemo(() => kit.types.get(typeIdStr)!, [kit, typeIdStr]);
+  const getSnapshot = useMemo(() => () => typeStore.snapshot(), [typeStore]);
   const state = useSyncExternalStore(
     typeStore.changed,
     getSnapshot,
@@ -2935,8 +3210,8 @@ export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId): T | P
   if (!pieceId) throw new Error("usePiece must be called within a PieceScopeProvider or be directly provided with an id");
   const pieceIdStr = pieceIdToString(pieceId);
   if (!design.pieces.has(pieceIdStr)) throw new Error(`Piece store not found for piece ${pieceId}`);
-  const pieceStore = design.pieces.get(pieceIdStr)!;
-  const getSnapshot = useCallback(() => pieceStore.snapshot(), [pieceStore]);
+  const pieceStore = useMemo(() => design.pieces.get(pieceIdStr)!, [design, pieceIdStr]);
+  const getSnapshot = useMemo(() => () => pieceStore.snapshot(), [pieceStore]);
   const state = useSyncExternalStore(
     pieceStore.changed,
     getSnapshot,
@@ -2969,8 +3244,8 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
   if (!connectionId) throw new Error("useConnection must be called within a ConnectionScopeProvider or be directly provided with an id");
   const connectionIdStr = connectionIdToString(connectionId);
   if (!design.connections.has(connectionIdStr)) throw new Error(`Connection store not found for connection ${connectionId}`);
-  const connectionStore = design.connections.get(connectionIdStr)!;
-  const getSnapshot = useCallback(() => connectionStore.snapshot(), [connectionStore]);
+  const connectionStore = useMemo(() => design.connections.get(connectionIdStr)!, [design, connectionIdStr]);
+  const getSnapshot = useMemo(() => () => connectionStore.snapshot(), [connectionStore]);
   const state = useSyncExternalStore(
     connectionStore.changed,
     getSnapshot,
@@ -3003,8 +3278,8 @@ export function usePort<T>(selector?: (port: Port) => T, id?: PortId): T | Port 
   if (!portId) throw new Error("usePort must be called within a PortScopeProvider or be directly provided with an id");
   const portIdStr = portIdToString(portId);
   if (!type.ports.has(portIdStr)) throw new Error(`Port store not found for port ${portId}`);
-  const portStore = type.ports.get(portIdStr)!;
-  const getSnapshot = useCallback(() => portStore.snapshot(), [portStore]);
+  const portStore = useMemo(() => type.ports.get(portIdStr)!, [type, portIdStr]);
+  const getSnapshot = useMemo(() => () => portStore.snapshot(), [portStore]);
   const state = useSyncExternalStore(
     portStore.changed,
     getSnapshot,
@@ -3037,8 +3312,8 @@ export function useRepresentation<T>(selector?: (representation: Representation)
   if (!representationId) throw new Error("useRepresentation must be called within a RepresentationScopeProvider or be directly provided with an id");
   const representationIdStr = representationIdToString(representationId);
   if (!typeStore.representations.has(representationIdStr)) throw new Error(`Representation store not found for representation ${representationId}`);
-  const representationStore = typeStore.representations.get(representationIdStr)!;
-  const getSnapshot = useCallback(() => representationStore.snapshot(), [representationStore]);
+  const representationStore = useMemo(() => typeStore.representations.get(representationIdStr)!, [typeStore, representationIdStr]);
+  const getSnapshot = useMemo(() => () => representationStore.snapshot(), [representationStore]);
   const state = useSyncExternalStore(
     representationStore.changed,
     getSnapshot,

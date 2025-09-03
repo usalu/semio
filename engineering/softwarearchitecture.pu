@@ -1,6 +1,12 @@
 @startuml "software architecture"
 skinparam linetype ortho
 
+class Semio {
+  release: str
+  engine: str
+  sketchpad: str
+  created: datetime
+}
 
 class Kit {
   uri: str
@@ -17,6 +23,7 @@ class Kit {
   updated: datetime
   types: list[Type]
   designs: list[Design]
+  authors: list[Author]
   attributes: list[Attribute]
 }
 
@@ -50,7 +57,8 @@ class Design {
   updated: datetime
   pieces: list[Piece]
   connections: list[Connection]
-  authors: list[Author]
+  layers: list[Layer]
+  groups: list[Group]
   attributes: list[Attribute]
 }
 
@@ -65,8 +73,25 @@ class Port {
   id: str
   description: str
   mandatory: bool
+  family: str
+  compatibleFamilies: list[str]
+  point: Point
+  direction: Vector
   t: float
   attributes: list[Attribute]
+}
+
+class Layer {
+  name: str
+  description: str
+  color: str
+}
+
+class Group {
+  name: str
+  description: str
+  color: str
+  pieces: list[Piece]
 }
 
 class PortFamily {
@@ -80,6 +105,11 @@ class Piece {
   description: str
   plane: Plane
   center: DiagramPoint
+  scale: float
+  mirrorPlane: Plane
+  hidden: bool
+  locked: bool
+  color: str
   type: Type
   design: Design
   piece: Piece
@@ -141,30 +171,28 @@ class DiagramPoint {
   y: float
 }
 
-class Location {
-  longitude: float
-  latitude: float
-}
-
 Kit *-- "0..*" Type : contains >
 Kit *-- "0..*" Design : contains >
+Kit *-- "0..*" Author : has >
 Kit *-- "0..*" Attribute : has >
 
 Design *-- "0..*" Piece : contains >
 Design *-- "0..*" Connection : contains >
-Design *-- "0..*" Author : authored by >
+Design *-- "0..*" Layer : has >
+Design *-- "0..*" Group : has >
 Design *-- "0..*" Attribute : has >
 
-Type *-- "0..1" Location : has >
 Type *-- "0..*" Representation : has >
 Type *-- "0..*" Port : has >
-Type *-- "0..*" Author : authored by >
 Type *-- "0..*" Attribute : has >
 
 Piece *-- "1" Type : instance of >
 Piece o-- "0..1" Plane : located by >
+Piece o-- "0..1" Plane : mirrored by >
 Piece *-- "0..*" Attribute : has >
 Piece o-- "0..1" DiagramPoint : has center >
+
+Group *-- "0..*" Piece : contains >
 
 Connection *-- "0..*" Attribute : has >
 Connection o-- "1" Side : connected >
@@ -173,10 +201,8 @@ Connection o-- "1" Side : connecting >
 Side o-- "1" Piece : refers to >
 Side o-- "1" Port : refers to >
 
-Representation *-- "0..*" Tag : tagged with >
 Representation *-- "0..*" Attribute : has >
 
-Port *-- "0..*" Port : compatible with >
 Port *-- "0..*" Attribute : has >
 Port *-- "1" Point : at >
 Port *-- "1" Vector : oriented by >
