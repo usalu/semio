@@ -94,10 +94,8 @@ class Group {
   pieces: list[Piece]
 }
 
-class PortFamily {
+class Family {
   name: str
-  
-  ports: list[Port]
 }
 
 class Piece {
@@ -128,7 +126,7 @@ class Connection {
   description: str
   gap: float
   shift: float
-  raise: float
+  rise: float
   rotation: float
   turn: float
   tilt: float
@@ -171,16 +169,72 @@ class DiagramPoint {
   y: float
 }
 
+class Quality {
+  key: str
+  name: str
+  description: str
+  uri: str
+  scalable: bool
+  kind: QualityKind
+  si: str
+  imperial: str
+  min: float
+  minExcluded: bool
+  max: float
+  maxExcluded: bool
+  default: float
+  formula: str
+  benchmarks: list[Benchmark]
+  attributes: list[Attribute]
+}
+
+class QualityKind {
+  <<enumeration>>
+  General
+  Design
+  Type
+  Piece
+  Connection
+  Port
+}
+
+class Benchmark {
+  name: str
+  icon: str
+  min: float
+  minExcluded: bool
+  max: float
+  maxExcluded: bool
+}
+
+class Prop {
+  key: str
+  value: str
+  unit: str
+  attributes: list[Attribute]
+}
+
+class Stat {
+  key: str
+  unit: str
+  min: float
+  minExcluded: bool
+  max: float
+  maxExcluded: bool
+}
+
 Kit *-- "0..*" Type : contains >
 Kit *-- "0..*" Design : contains >
 Kit *-- "0..*" Author : has >
 Kit *-- "0..*" Attribute : has >
+Kit *-- "0..*" Quality : defines >
 
 Design *-- "0..*" Piece : contains >
 Design *-- "0..*" Connection : contains >
 Design *-- "0..*" Layer : has >
 Design *-- "0..*" Group : has >
 Design *-- "0..*" Attribute : has >
+Design *-- "0..*" Stat : measures >
 
 Type *-- "0..*" Representation : has >
 Type *-- "0..*" Port : has >
@@ -206,9 +260,21 @@ Representation *-- "0..*" Attribute : has >
 Port *-- "0..*" Attribute : has >
 Port *-- "1" Point : at >
 Port *-- "1" Vector : oriented by >
+Port *-- "1" Family : has >
+Port *-- "0..*" Family : compatible with >
+Port *-- "0..*" Prop : has >
 
 Plane *-- "1" Point : origin >
 Plane *-- "1" Vector : xAxis >
 Plane *-- "1" Vector : yAxis >
+
+Quality *-- "0..*" Benchmark : has >
+Quality *-- "0..*" Attribute : has >
+Quality *-- "1" QualityKind : classified by >
+
+Prop o-- "1" Quality : references >
+Prop *-- "0..*" Attribute : has >
+
+Stat o-- "1" Quality : references >
 
 @enduml

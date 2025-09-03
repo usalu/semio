@@ -25,7 +25,7 @@ import "@xterm/xterm/css/xterm.css";
 import React, { FC, useEffect, useRef, useState } from "react";
 
 import { Design, DesignId, Kit } from "@semio/js";
-import { DesignEditorSelection, useDesignId, useKit, useSelection } from "../../store";
+import { DesignEditorSelection, useDesignId, useKit, useSelection } from "../../../store";
 
 export interface CommandParameter {
   name: string;

@@ -29,6 +29,81 @@ note bottom of attributes
     one of representation_id, port_id, type_id, piece_id, connection_id, design_id, kit_id must be set
 end note
 
+
+entity qualities {
+    *id : int <<PK,generated>>
+    *key : string
+    *name : string
+    *description : string
+    *uri : string
+    *can_scale : boolean
+    *kind : int
+    *default_si_unit : string
+    *default_imperial_unit : string
+    *min : float
+    *is_min_excluded : boolean
+    *max : float
+    *is_max_excluded : boolean
+    *default_value : float
+    *formula : string
+    *created_at : datetime
+    *updated_at : datetime
+    ..
+    kit_id : int <<FK>>
+}
+note right of qualities
+    description, uri, default_si_unit, default_imperial_unit, formula can be empty
+    kind: 0=General, 1=Design, 2=Type, 4=Piece, 8=Connection, 16=Port (flags)
+end note
+
+entity benchmarks {
+    *id : int <<PK,generated>>
+    *name : string
+    *icon : string
+    *min : float
+    *is_min_excluded : boolean
+    *max : float
+    *is_max_excluded : boolean
+    ..
+    quality_id : int <<FK>>
+}
+note right of benchmarks
+    icon can be empty
+end note
+
+entity props {
+    *id : int <<PK,generated>>
+    *key : string
+    *value : string
+    *unit : string
+    *created_at : datetime
+    *updated_at : datetime
+    ..
+    port_id : int <<FK>>
+}
+note right of props
+    unit can be empty
+    key references quality.key
+end note
+
+entity stats {
+    *id : int <<PK,generated>>
+    *key : string
+    *unit : string
+    *min : float
+    *is_min_excluded : boolean
+    *max : float
+    *is_max_excluded : boolean
+    *created_at : datetime
+    *updated_at : datetime
+    ..
+    design_id : int <<FK>>
+}
+note right of stats
+    unit can be empty
+    key references quality.key
+end note
+
 entity tags {
     *id : int <<PK,generated>>
     *name : string
@@ -104,20 +179,22 @@ entity types {
     *name : string
     *description : string
     *icon : string
-    *image : string
+    *image_url : string
     *variant : string
     *stock : float
     *is_virtual : boolean
+    *can_scale : boolean
+    *can_mirror : boolean
     *unit : string
-    *longitude : float
-    *latitude : float
+    *location_longitude : float
+    *location_latitude : float
     *created_at : datetime
     *updated_at : datetime
     ..
     kit_id : int <<FK>>
 }
 note right of types
-    description, icon, image, variant can be empty
+    description, icon, image_url, variant can be empty
     empty variant means default
     stock is default to +infinity
 end note
@@ -148,13 +225,15 @@ end note
 entity connections {
     *id : int <<PK,generated>>
     *connected_piece_id : int <<FK>>
+    *connected_design_piece_id : int <<FK>>
     *connected_port_id : int <<FK>>
     *connecting_piece_id : int <<FK>>
+    *connecting_design_piece_id : int <<FK>>
     *connecting_port_id : int <<FK>>
     *description : string
     *gap : float
     *shift : float
-    *raise : float
+    *rise : float
     *rotation : float
     *turn : float
     *tilt : float
@@ -195,38 +274,41 @@ entity designs {
     *name : string
     *description : string
     *icon : string
-    *image : string
+    *image_url : string
     *variant : string
     *view : string
+    *can_scale : boolean
+    *can_mirror : boolean
     *unit : string
+    *location_longitude : float
+    *location_latitude : float
     *created_at : datetime
     *updated_at : datetime
     ..
     kit_id : int <<FK>>
 }
 note right of designs
-    description, icon, image, variant, view can be empty
+    description, icon, image_url, variant, view can be empty
     empty variant means default
     empty view means default
 end note
 
 entity kits {
     *id : int <<PK,generated>>
-    *uri : string <<Unique>>
     *name : string
     *description : string
     *icon : string
-    *image : string
-    *preview : string
+    *image_url : string
+    *avatar_url : string
     *version : string
-    *remote : string
-    *homepage : string
+    *remote_url : string
+    *homepage_url : string
     *license : string
     *created_at : datetime
     *updated_at : datetime
 }
 note left of kits
-    description, icon, image, preview, version, remote, homepage, license can be empty
+    description, icon, image_url, avatar_url, version, remote_url, homepage_url, license can be empty
     empty version means latest
 end note
 
@@ -234,12 +316,14 @@ kits ||--o{ types
 kits ||--o{ designs
 kits ||--o{ attributes
 kits ||--o{ authors
+kits ||--o{ qualities
 
 designs ||--o{ layers
 designs ||--o{ pieces
 designs ||--o{ groups
 designs ||--o{ connections
 designs ||--o{ attributes
+designs ||--o{ stats
 designs -- authors
 
 group_pieces -- groups
@@ -261,6 +345,9 @@ representations ||--o{ attributes
 
 ports ||--o{ compatible_families
 ports ||--o{ attributes
+ports ||--o{ props
+
+qualities ||--o{ benchmarks
 
 connections -- pieces : "connected" >
 connections -- pieces : "connecting" >

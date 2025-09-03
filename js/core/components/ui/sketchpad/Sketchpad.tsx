@@ -19,10 +19,10 @@
 
 // #endregion
 import { FC, ReactNode, createContext, useContext, useEffect, useState } from "react";
+import { TooltipProvider } from "../Tooltip";
 import DesignEditor from "./DesignEditor";
-import { TooltipProvider } from "./Tooltip";
 
-import { DesignId, DesignScopeProvider, KitId, KitScopeProvider, Layout, Mode, SketchpadScopeProvider, Theme, useSketchpadCommands, useLayout, useMode, useSketchpad as useSketchpadStore, useTheme } from "@semio/js";
+import { DesignId, DesignScopeProvider, KitId, KitScopeProvider, Layout, Mode, SketchpadScopeProvider, Theme, useLayout, useMode, useSketchpadCommands, useSketchpad as useSketchpadStore, useTheme } from "@semio/js";
 
 interface NavbarContextType {
   navbarToolbar: ReactNode | null;

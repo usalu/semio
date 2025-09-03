@@ -1,6 +1,6 @@
 import { FC, useState } from "react";
 import { useDesign } from "../../store";
-import { ResizablePanelProps } from "./DesignEditor";
+import { ResizablePanelProps } from "./sketchpad/DesignEditor";
 
 interface DiagramProps extends ResizablePanelProps {}
 

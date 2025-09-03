@@ -20,7 +20,7 @@
 // #endregion
 import type { Meta, StoryObj } from "@storybook/react";
 
-import { default as GrasshopperCatalogue } from "@semio/js/components/ui/GrasshopperCatalogue";
+import { default as GrasshopperCatalogue } from "./GrasshopperCatalogue";
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {

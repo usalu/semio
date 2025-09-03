@@ -9,8 +9,6 @@ kit : !Kit{
     remote : ?String // url for remote fetching
     homepage : ?String // url
     license : ?String // spdx id | url
-    created : !String // date
-    updated : !String // date
     authors : *Author[
         name : !String
         email : !String
@@ -23,11 +21,13 @@ kit : !Kit{
         variant : ?String // empty is default
         stock : !Float // default is +infinity
         virtual : ?Boolean // default false
+        scalable : ?Boolean // default true
+        mirrorable : ?Boolean // default true
         unit : !String // e.g., mm, cm, m
-        created : !String // date
-        updated : !String // date
-        longitude : ?Float
-        latitude : ?Float
+        location : ?Location{
+            longitude : ?Float
+            latitude : ?Float
+        }
         representations : +Representation[
             url : !String
             description : ?String
@@ -51,7 +51,43 @@ kit : !Kit{
                 z : !Float
             }
             t : !Float // [0,1[ for diagram ring position
+            props : *Prop[
+                key : !String // quality key
+                value : !String // number | text
+                unit : ?String
+                attributes : *Attribute[]
+            ]
             attributes : *Attribute[]
+        ]
+        authors: *AuthorId[
+            email : !String
+        ]
+        attributes : *Attribute[]
+        created : !String // date
+        updated : !String // date
+    ]
+    qualities : *Quality[
+        key : !String
+        name : !String
+        description : ?String
+        uri : ?String
+        scalable : ?Boolean // default false
+        kind : !QualityKind // enum: General, Design, Type, Piece, Connection, Port
+        si : ?String
+        imperial : ?String
+        min : ?Float
+        minExcluded : ?Boolean // default true
+        max : ?Float
+        maxExcluded : ?Boolean // default true
+        default : ?Float
+        formula : ?String
+        benchmarks : *Benchmark[
+            name : !String
+            icon : ?String
+            min : ?Float
+            minExcluded : ?Boolean // default false
+            max : ?Float
+            maxExcluded : ?Boolean // default false
         ]
         attributes : *Attribute[]
     ]
@@ -63,8 +99,10 @@ kit : !Kit{
         variant : ?String // empty is default
         view : ?String // empty is default
         unit : !String // e.g., mm, cm, m
-        created : !String // date
-        updated : !String // date
+        location : ?Location{
+            longitude : ?Float
+            latitude : ?Float
+        }
         pieces : +Piece[
             id : !String
             description : ?String
@@ -133,7 +171,7 @@ kit : !Kit{
             description : ?String
             gap : ?Float
             shift : ?Float
-            raise : ?Float
+            rise : ?Float
             rotation : ?Float // degrees
             turn : ?Float // degrees
             tilt : ?Float // degrees
@@ -154,7 +192,20 @@ kit : !Kit{
                 id : !String
             ]
         ]
+        authors: *AuthorId[
+            email : !String
+        ]
+        stats : *Stat[
+            key : !String // quality key
+            unit : ?String
+            min : ?Float
+            minExcluded : ?Boolean // default false
+            max : ?Float
+            maxExcluded : ?Boolean // default false
+        ]
         attributes : *Attribute[]
+        created : !String // date
+        updated : !String // date
     ]
     attributes : *Attribute[
         name : !String
@@ -162,4 +213,6 @@ kit : !Kit{
         unit : ?String
         definition : ?String // text | uri
     ]
+    created : !String // date
+    updated : !String // date
 }

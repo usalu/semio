@@ -23,9 +23,9 @@ import { Slider } from "@semio/js/components/ui/Slider";
 import Stepper from "@semio/js/components/ui/Stepper";
 import { Textarea } from "@semio/js/components/ui/Textarea";
 import { SortableTreeItems, Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
-import { findReplacableDesignsForDesignPiece, parseDesignIdFromVariant } from "../../semio";
-import { useDesignEditorCommands, useDesign, useDesignId, useKit, useSelection } from "../../store";
-import Combobox from "./Combobox";
+import { findReplacableDesignsForDesignPiece, parseDesignIdFromVariant } from "../../../semio";
+import { useDesign, useDesignEditorCommands, useDesignId, useKit, useSelection } from "../../../store";
+import Combobox from "../Combobox";
 import { ResizablePanelProps } from "./DesignEditor";
 
 interface DetailsProps extends ResizablePanelProps {}

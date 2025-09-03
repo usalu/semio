@@ -26,13 +26,13 @@ import { useHotkeys } from "react-hotkeys-hook";
 
 import { DesignId, TypeId } from "@semio/js";
 import { ReactFlowProvider } from "@xyflow/react";
-import { DesignScopeProvider, useDesignEditorCommands, useDesign, useDesignId, useFullscreen, useKit } from "../../store";
+import { DesignScopeProvider, useDesign, useDesignEditorCommands, useDesignId, useFullscreen, useKit } from "../../../store";
+import Navbar from "../Navbar";
 import Chat from "./Chat";
 import Console from "./Console";
 import Details from "./Details";
 import Diagram from "./Diagram";
 import Model from "./Model";
-import Navbar from "./Navbar";
 import Workbench, { DesignAvatar, TypeAvatar } from "./Workbench";
 
 export interface DesignEditorProps {}
