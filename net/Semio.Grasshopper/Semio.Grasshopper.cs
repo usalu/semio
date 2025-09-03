@@ -3205,6 +3205,120 @@ public class DeserializeStatComponent : DeserializeComponent<StatParam, StatGoo,
 
 #endregion Stat
 
+#region Layer
+
+public class LayerGoo : ModelGoo<Layer>
+{
+    public LayerGoo() { }
+    public LayerGoo(Layer value) : base(value) { }
+
+    internal override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String(Value.Name);
+            return true;
+        }
+        return false;
+    }
+
+    internal override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+        {
+            try
+            {
+                Value = str.Deserialize<Layer>();
+                return true;
+            }
+            catch { return false; }
+        }
+        return false;
+    }
+}
+
+public class LayerParam : ModelParam<LayerGoo, Layer>
+{
+    public override Guid ComponentGuid => new("90A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
+}
+
+public class LayerComponent : ModelComponent<LayerParam, LayerGoo, Layer>
+{
+    public override Guid ComponentGuid => new("90A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+}
+
+public class SerializeLayerComponent : SerializeComponent<LayerParam, LayerGoo, Layer>
+{
+    public SerializeLayerComponent() { }
+    public override Guid ComponentGuid => new("90A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
+}
+
+public class DeserializeLayerComponent : DeserializeComponent<LayerParam, LayerGoo, Layer>
+{
+    public DeserializeLayerComponent() { }
+    public override Guid ComponentGuid => new("90A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
+}
+
+#endregion Layer
+
+#region Group
+
+public class GroupGoo : ModelGoo<Group>
+{
+    public GroupGoo() { }
+    public GroupGoo(Group value) : base(value) { }
+
+    internal override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String(Value.Name);
+            return true;
+        }
+        return false;
+    }
+
+    internal override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+        {
+            try
+            {
+                Value = str.Deserialize<Group>();
+                return true;
+            }
+            catch { return false; }
+        }
+        return false;
+    }
+}
+
+public class GroupParam : ModelParam<GroupGoo, Group>
+{
+    public override Guid ComponentGuid => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
+}
+
+public class GroupComponent : ModelComponent<GroupParam, GroupGoo, Group>
+{
+    public override Guid ComponentGuid => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+}
+
+public class SerializeGroupComponent : SerializeComponent<GroupParam, GroupGoo, Group>
+{
+    public SerializeGroupComponent() { }
+    public override Guid ComponentGuid => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
+}
+
+public class DeserializeGroupComponent : DeserializeComponent<GroupParam, GroupGoo, Group>
+{
+    public DeserializeGroupComponent() { }
+    public override Guid ComponentGuid => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
+}
+
+#endregion Group
+
 #region Scripting
 
 public abstract class ScriptingComponent : Component

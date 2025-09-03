@@ -25,6 +25,7 @@ class Kit {
   designs: list[Design]
   authors: list[Author]
   attributes: list[Attribute]
+  topics: list[str]
   --
   context Kit inv optionalFieldsCanBeEmpty:
     description->notEmpty() or description->isEmpty() and
@@ -109,8 +110,6 @@ class Representation {
   --
   context Representation inv descriptionCanBeEmpty:
     description->notEmpty() or description->isEmpty()
-  context Representation inv validUrl:
-    url->matches('^https?://.*') or url->matches('^file://.*') or url->matches('^[^/]+\.(png|jpg|jpeg|gif|svg|obj|3dm|step|stp)$')
 }
 
 class Port {

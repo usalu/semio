@@ -109,7 +109,10 @@ NAME_LENGTH_LIMIT = 64
 ID_LENGTH_LIMIT = 128
 URL_LENGTH_LIMIT = 1024
 URI_LENGTH_LIMIT = 2048
-QUALITIES_MAX = 6
+EXPRESSION_LENGTH_LIMIT = 4096
+VALUE_LENGTH_LIMIT = 512
+ATTRIBUTES_MAX = 64
+QUALITIES_MAX = 1024
 TAGS_MAX = 8
 REPRESENTATIONS_MAX = 32
 TYPES_MAX = 256
@@ -619,24 +622,32 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
     design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="attributes")
     kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
     kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="attributes")
+    qualityPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("quality_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("qualities.id")), default=None, exclude=True)
+    quality: typing.Optional["Quality"] = sqlmodel.Relationship(back_populates="attributes")
+    propPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("prop_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("props.id")), default=None, exclude=True)
+    prop: typing.Optional["Prop"] = sqlmodel.Relationship(back_populates="attributes")
 
     __table_args__ = (
         sqlalchemy.CheckConstraint(
             """
         (
-            (representation_id IS NOT NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+            (representation_id IS NOT NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+            (representation_id IS NULL AND port_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL AND quality_id IS NULL AND prop_id IS NULL)
+        OR
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NOT NULL AND prop_id IS NULL)
+        OR
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NOT NULL)
         )
         """,
             name="ck_attributes_parent_set",
@@ -644,7 +655,7 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
         sqlalchemy.UniqueConstraint("name", "type_id", "design_id", name="uq_attributes_name_type_id_design_id"),
     )
 
-    def parent(self) -> typing.Union["Representation", "Port", "Type", "Piece", "Connection", "Design", "Kit", None]:
+    def parent(self) -> typing.Union["Representation", "Port", "Type", "Piece", "Connection", "Design", "Kit", "Quality", "Prop", None]:
         if self.representation is not None:
             return self.representation
         if self.port is not None:
@@ -659,6 +670,10 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
             return self.design
         if self.kit is not None:
             return self.kit
+        if self.quality is not None:
+            return self.quality
+        if self.prop is not None:
+            return self.prop
         raise NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned()
 
     def idMembers(self) -> RecursiveAnyList:
@@ -687,6 +702,18 @@ class Tag(TagOrderField, TagNameField, Table, table=True):
 
 
 # endregion Tag
+
+# region Topic
+
+
+class Topic(TagOrderField, TagNameField, Table, table=True):
+    __tablename__ = "topics"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
+    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="topics_")
+
+
+# endregion Topic
 
 # region Representation
 # https://github.com/usalu/semio-representation-
@@ -1254,6 +1281,7 @@ class Port(PortTField, PortFamilyField, PortMandatoryField, PortDescriptionField
     directionY: float = sqlmodel.Field(sa_column=sqlmodel.Column("direction_y", sqlalchemy.Float()), exclude=True)
     directionZ: float = sqlmodel.Field(sa_column=sqlmodel.Column("direction_z", sqlalchemy.Float()), exclude=True)
     attributes: list["Attribute"] = sqlmodel.Relationship(back_populates="port", cascade_delete=True)
+    props: list["Prop"] = sqlmodel.Relationship(back_populates="port", cascade_delete=True)
     typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
     type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="ports")
     connecteds: list["Connection"] = sqlmodel.Relationship(back_populates="connectedPort", sa_relationship_kwargs={"foreign_keys": "Connection.connectedPortPk"})
@@ -1375,17 +1403,21 @@ class Author(AuthorRankField, AuthorEmailField, AuthorNameField, TableEntity, ta
     type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="authors_")
     designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
     design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="authors_")
+    kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
+    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="authors_")
 
     __table_args__ = (
-        sqlalchemy.CheckConstraint("type_id IS NOT NULL AND design_id IS NULL OR type_id IS NULL AND design_id IS NOT NULL", name="ck_authors_parent_set"),
-        sqlalchemy.UniqueConstraint("email", "type_id", "design_id", name="uq_authors_email_type_id_design_id"),
+        sqlalchemy.CheckConstraint("(type_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL) OR (type_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL) OR (type_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL)", name="ck_authors_parent_set"),
+        sqlalchemy.UniqueConstraint("email", "type_id", "design_id", "kit_id", name="uq_authors_email_type_id_design_id_kit_id"),
     )
 
-    def parent(self) -> "Type":
+    def parent(self) -> typing.Union["Type", "Design", "Kit", None]:
         if self.type is not None:
             return self.type
         if self.design is not None:
             return self.design
+        if self.kit is not None:
+            return self.kit
         raise NoTypeOrDesignAssigned()
 
     def idMembers(self) -> RecursiveAnyList:
@@ -1453,6 +1485,14 @@ class TypeVirtualField(RealField, abc.ABC):
     is_virtual: bool = sqlmodel.Field(default=False)
 
 
+class TypeScalableField(RealField, abc.ABC):
+    can_scale: bool = sqlmodel.Field(default=True)
+
+
+class TypeMirrborableField(RealField, abc.ABC):
+    can_mirror: bool = sqlmodel.Field(default=True)
+
+
 class TypeUnitField(RealField, abc.ABC):
     unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
@@ -1499,7 +1539,7 @@ class TypeContext(TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantFi
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
 
-class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantField, TypeImageField, TypeIconField, TypeDescriptionField, TypeNameField, TableEntity, table=True):
+class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeMirrborableField, TypeScalableField, TypeVirtualField, TypeStockField, TypeVariantField, TypeImageField, TypeIconField, TypeDescriptionField, TypeNameField, TableEntity, table=True):
     PLURAL = "types"
     __tablename__ = "types"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
@@ -1666,6 +1706,26 @@ class PieceCenterField(MaskedField, abc.ABC):
     center: typing.Optional[DiagramPoint] = sqlmodel.Field(default=None)
 
 
+class PieceScaleField(RealField, abc.ABC):
+    scale: float = sqlmodel.Field(default=1.0)
+
+
+class PieceMirrorPlaneField(MaskedField, abc.ABC):
+    mirrorPlane: typing.Optional[Plane] = sqlmodel.Field(default=None)
+
+
+class PieceHiddenField(RealField, abc.ABC):
+    is_hidden: bool = sqlmodel.Field(default=False)
+
+
+class PieceLockedField(RealField, abc.ABC):
+    is_locked: bool = sqlmodel.Field(default=False)
+
+
+class PieceColorField(RealField, abc.ABC):
+    color: str = sqlmodel.Field(default="", max_length=7)
+
+
 class PieceId(PieceIdField, Id):
     pass
 
@@ -1701,7 +1761,7 @@ class PiecePrediction(PieceDesignField, PieceTypeField, PieceDescriptionField, P
     # """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
 
 
-class Piece(PieceDescriptionField, TableEntity, table=True):
+class Piece(PieceColorField, PieceLockedField, PieceHiddenField, PieceMirrorPlaneField, PieceScaleField, PieceDescriptionField, TableEntity, table=True):
     PLURAL = "pieces"
     __tablename__ = "pieces"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
@@ -2172,6 +2232,14 @@ class DesignUnitField(RealField, abc.ABC):
     unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
+class DesignScalableField(RealField, abc.ABC):
+    can_scale: bool = sqlmodel.Field(default=True)
+
+
+class DesignMirrorableField(RealField, abc.ABC):
+    can_mirror: bool = sqlmodel.Field(default=True)
+
+
 class DesignCreatedField(RealField, abc.ABC):
     created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
@@ -2224,7 +2292,7 @@ class DesignPrediction(DesignDescriptionField, Prediction):
     connections: list[ConnectionPrediction] = sqlmodel.Field(default_factory=list)
 
 
-class Design(DesignUpdatedField, DesignCreatedField, DesignUnitField, DesignViewField, DesignVariantField, DesignImageField, DesignIconField, DesignDescriptionField, DesignNameField, TableEntity, table=True):
+class Design(DesignUpdatedField, DesignCreatedField, DesignMirrorableField, DesignScalableField, DesignUnitField, DesignViewField, DesignVariantField, DesignImageField, DesignIconField, DesignDescriptionField, DesignNameField, TableEntity, table=True):
     PLURAL = "designs"
     __tablename__ = "designs"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
@@ -2234,6 +2302,9 @@ class Design(DesignUpdatedField, DesignCreatedField, DesignUnitField, DesignView
 
     pieces: list[Piece] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     connections: list[Connection] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    layers: list[Layer] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    groups: list[Group] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    stats: list[Stat] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     authors_: list[Author] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     kitPk: typing.Optional[int] = sqlmodel.Field(alias="kitId", sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
@@ -2347,6 +2418,359 @@ class Design(DesignUpdatedField, DesignCreatedField, DesignUnitField, DesignView
 
 # endregion Design
 
+# region Quality
+
+
+class QualityKeyField(RealField, abc.ABC):
+    key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT, primary_key=True)
+
+
+class QualityNameField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class QualityDescriptionField(RealField, abc.ABC):
+    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+
+
+class QualityUriField(RealField, abc.ABC):
+    uri: str = sqlmodel.Field(default="", max_length=URI_LENGTH_LIMIT)
+
+
+class QualityScalableField(RealField, abc.ABC):
+    scalable: bool = sqlmodel.Field(default=False)
+
+
+class QualityKindField(RealField, abc.ABC):
+    kind: int = sqlmodel.Field(default=0)
+
+
+class QualitySiField(RealField, abc.ABC):
+    si: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+
+
+class QualityImperialField(RealField, abc.ABC):
+    imperial: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+
+
+class QualityMinField(RealField, abc.ABC):
+    min: typing.Optional[float] = sqlmodel.Field(default=None)
+
+
+class QualityMinExcludedField(RealField, abc.ABC):
+    min_excluded: bool = sqlmodel.Field(default=True)
+
+
+class QualityMaxField(RealField, abc.ABC):
+    max: typing.Optional[float] = sqlmodel.Field(default=None)
+
+
+class QualityMaxExcludedField(RealField, abc.ABC):
+    max_excluded: bool = sqlmodel.Field(default=True)
+
+
+class QualityDefaultField(RealField, abc.ABC):
+    default: typing.Optional[float] = sqlmodel.Field(default=None)
+
+
+class QualityFormulaField(RealField, abc.ABC):
+    formula: str = sqlmodel.Field(default="", max_length=EXPRESSION_LENGTH_LIMIT)
+
+
+class QualityCreatedField(RealField, abc.ABC):
+    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class QualityUpdatedField(RealField, abc.ABC):
+    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class QualityId(QualityKeyField, Id):
+    pass
+
+
+class QualityProps(QualityFormulaField, QualityDefaultField, QualityMaxExcludedField, QualityMaxField, QualityMinExcludedField, QualityMinField, QualityImperialField, QualitySiField, QualityKindField, QualityScalableField, QualityUriField, QualityDescriptionField, QualityNameField, QualityKeyField, Props):
+    pass
+
+
+class QualityInput(QualityFormulaField, QualityDefaultField, QualityMaxExcludedField, QualityMaxField, QualityMinExcludedField, QualityMinField, QualityImperialField, QualitySiField, QualityKindField, QualityScalableField, QualityUriField, QualityDescriptionField, QualityNameField, QualityKeyField, Input):
+    pass
+
+
+class QualityContext(QualityDescriptionField, QualityNameField, QualityKeyField, Context):
+    pass
+
+
+class QualityOutput(QualityUpdatedField, QualityCreatedField, QualityFormulaField, QualityDefaultField, QualityMaxExcludedField, QualityMaxField, QualityMinExcludedField, QualityMinField, QualityImperialField, QualitySiField, QualityKindField, QualityScalableField, QualityUriField, QualityDescriptionField, QualityNameField, QualityKeyField, Output):
+    benchmarks: list["BenchmarkOutput"] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+
+
+class Quality(QualityUpdatedField, QualityCreatedField, QualityFormulaField, QualityDefaultField, QualityMaxExcludedField, QualityMaxField, QualityMinExcludedField, QualityMinField, QualityImperialField, QualitySiField, QualityKindField, QualityScalableField, QualityUriField, QualityDescriptionField, QualityNameField, QualityKeyField, TableEntity, table=True):
+    PLURAL = "qualities"
+    __tablename__ = "qualities"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
+    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="qualities")
+
+    benchmarks: list["Benchmark"] = sqlmodel.Relationship(back_populates="quality", cascade_delete=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="quality", cascade_delete=True)
+
+    __table_args__ = (
+        sqlalchemy.CheckConstraint("kind >= 0 AND kind <= 63", name="ck_qualities_kind_range"),
+        sqlalchemy.UniqueConstraint("key", "kit_id", name="uq_qualities_key_kit_id"),
+    )
+
+
+# endregion Quality
+
+# region Benchmark
+
+
+class BenchmarkNameField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class BenchmarkIconField(RealField, abc.ABC):
+    icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
+
+
+class BenchmarkMinField(RealField, abc.ABC):
+    min: typing.Optional[float] = sqlmodel.Field(default=None)
+
+
+class BenchmarkMinExcludedField(RealField, abc.ABC):
+    min_excluded: bool = sqlmodel.Field(default=False)
+
+
+class BenchmarkMaxField(RealField, abc.ABC):
+    max: typing.Optional[float] = sqlmodel.Field(default=None)
+
+
+class BenchmarkMaxExcludedField(RealField, abc.ABC):
+    max_excluded: bool = sqlmodel.Field(default=False)
+
+
+class BenchmarkId(BenchmarkNameField, Id):
+    pass
+
+
+class BenchmarkProps(BenchmarkMaxExcludedField, BenchmarkMaxField, BenchmarkMinExcludedField, BenchmarkMinField, BenchmarkIconField, BenchmarkNameField, Props):
+    pass
+
+
+class BenchmarkInput(BenchmarkMaxExcludedField, BenchmarkMaxField, BenchmarkMinExcludedField, BenchmarkMinField, BenchmarkIconField, BenchmarkNameField, Input):
+    pass
+
+
+class BenchmarkOutput(BenchmarkMaxExcludedField, BenchmarkMaxField, BenchmarkMinExcludedField, BenchmarkMinField, BenchmarkIconField, BenchmarkNameField, Output):
+    pass
+
+
+class Benchmark(BenchmarkMaxExcludedField, BenchmarkMaxField, BenchmarkMinExcludedField, BenchmarkMinField, BenchmarkIconField, BenchmarkNameField, TableEntity, table=True):
+    PLURAL = "benchmarks"
+    __tablename__ = "benchmarks"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    qualityPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("quality_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("qualities.id")), default=None, exclude=True)
+    quality: typing.Optional[Quality] = sqlmodel.Relationship(back_populates="benchmarks")
+
+
+# endregion Benchmark
+
+# region Prop
+
+
+class PropKeyField(RealField, abc.ABC):
+    key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class PropValueField(RealField, abc.ABC):
+    value: str = sqlmodel.Field(max_length=VALUE_LENGTH_LIMIT)
+
+
+class PropUnitField(RealField, abc.ABC):
+    unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+
+
+class PropCreatedField(RealField, abc.ABC):
+    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class PropUpdatedField(RealField, abc.ABC):
+    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class PropId(PropKeyField, Id):
+    pass
+
+
+class PropProps(PropUpdatedField, PropCreatedField, PropUnitField, PropValueField, PropKeyField, Props):
+    pass
+
+
+class PropInput(PropUnitField, PropValueField, PropKeyField, Input):
+    pass
+
+
+class PropOutput(PropUpdatedField, PropCreatedField, PropUnitField, PropValueField, PropKeyField, Output):
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+
+
+class Prop(PropUpdatedField, PropCreatedField, PropUnitField, PropValueField, PropKeyField, TableEntity, table=True):
+    PLURAL = "props"
+    __tablename__ = "props"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    portPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("port_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("ports.id")), default=None, exclude=True)
+    port: typing.Optional["Port"] = sqlmodel.Relationship(back_populates="props")
+
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="prop", cascade_delete=True)
+
+
+# endregion Prop
+
+# region Stat
+
+
+class StatKeyField(RealField, abc.ABC):
+    key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class StatUnitField(RealField, abc.ABC):
+    unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
+
+
+class StatMinField(RealField, abc.ABC):
+    min: typing.Optional[float] = sqlmodel.Field(default=None)
+
+
+class StatMinExcludedField(RealField, abc.ABC):
+    min_excluded: bool = sqlmodel.Field(default=False)
+
+
+class StatMaxField(RealField, abc.ABC):
+    max: typing.Optional[float] = sqlmodel.Field(default=None)
+
+
+class StatMaxExcludedField(RealField, abc.ABC):
+    max_excluded: bool = sqlmodel.Field(default=False)
+
+
+class StatCreatedField(RealField, abc.ABC):
+    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class StatUpdatedField(RealField, abc.ABC):
+    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+
+
+class StatId(StatKeyField, Id):
+    pass
+
+
+class StatProps(StatUpdatedField, StatCreatedField, StatMaxExcludedField, StatMaxField, StatMinExcludedField, StatMinField, StatUnitField, StatKeyField, Props):
+    pass
+
+
+class StatInput(StatMaxExcludedField, StatMaxField, StatMinExcludedField, StatMinField, StatUnitField, StatKeyField, Input):
+    pass
+
+
+class StatOutput(StatUpdatedField, StatCreatedField, StatMaxExcludedField, StatMaxField, StatMinExcludedField, StatMinField, StatUnitField, StatKeyField, Output):
+    pass
+
+
+class Stat(StatUpdatedField, StatCreatedField, StatMaxExcludedField, StatMaxField, StatMinExcludedField, StatMinField, StatUnitField, StatKeyField, TableEntity, table=True):
+    PLURAL = "stats"
+    __tablename__ = "stats"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="stats")
+
+
+# endregion Stat
+
+# region Layer
+
+
+class LayerNameField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class LayerDescriptionField(RealField, abc.ABC):
+    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+
+
+class LayerColorField(RealField, abc.ABC):
+    color: str = sqlmodel.Field(default="", max_length=7)
+
+
+class LayerId(LayerNameField, Id):
+    pass
+
+
+class LayerProps(LayerColorField, LayerDescriptionField, LayerNameField, Props):
+    pass
+
+
+class LayerInput(LayerColorField, LayerDescriptionField, LayerNameField, Input):
+    pass
+
+
+class LayerOutput(LayerColorField, LayerDescriptionField, LayerNameField, Output):
+    pass
+
+
+class Layer(LayerColorField, LayerDescriptionField, LayerNameField, TableEntity, table=True):
+    PLURAL = "layers"
+    __tablename__ = "layers"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="layers")
+
+
+# endregion Layer
+
+# region Group
+
+
+class GroupNameField(RealField, abc.ABC):
+    name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
+
+
+class GroupDescriptionField(RealField, abc.ABC):
+    description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
+
+
+class GroupColorField(RealField, abc.ABC):
+    color: str = sqlmodel.Field(default="", max_length=7)
+
+
+class GroupId(GroupNameField, Id):
+    pass
+
+
+class GroupProps(GroupColorField, GroupDescriptionField, GroupNameField, Props):
+    pass
+
+
+class GroupInput(GroupColorField, GroupDescriptionField, GroupNameField, Input):
+    pass
+
+
+class GroupOutput(GroupColorField, GroupDescriptionField, GroupNameField, Output):
+    pieces: list["PieceOutput"] = sqlmodel.Field(default_factory=list)
+
+
+class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity, table=True):
+    PLURAL = "groups"
+    __tablename__ = "groups"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="groups")
+
+
+# endregion Group
+
 # region Kit
 # https://github.com/usalu/semio-kit-
 
@@ -2413,6 +2837,7 @@ class KitInput(KitLicenseField, KitHomepage, KitRemoteField, KitVersionField, Ki
     types: list[TypeInput] = sqlmodel.Field(default_factory=list)
     designs: list[DesignInput] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
+    topics: list[str] = sqlmodel.Field(default_factory=list)
 
 
 class KitContext(KitDescriptionField, KitNameField, Context):
@@ -2429,6 +2854,7 @@ class KitOutput(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, 
     types: list[TypeOutput] = sqlmodel.Field(default_factory=list)
     designs: list[DesignOutput] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+    topics: list[str] = sqlmodel.Field(default_factory=list)
 
 
 class Kit(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, KitRemoteField, KitVersionField, KitPreviewField, KitImageField, KitIconField, KitDescriptionField, KitNameField, KitUriField, TableEntity, table=True):
@@ -2440,7 +2866,21 @@ class Kit(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, KitRem
 
     designs: list[Design] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
 
+    qualities: list[Quality] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+
+    authors_: list[Author] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+
+    topics_: list[Topic] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+
+    @property
+    def topics(self: "Kit") -> list[str]:
+        return [topic.name for topic in sorted(self.topics_, key=lambda x: x.order)]
+
+    @topics.setter
+    def topics(self: "Kit", topics: list[str]):
+        self.topics_ = [Topic(name=topic, order=i) for i, topic in enumerate(topics)]
 
     __table_args__ = (sqlalchemy.UniqueConstraint("uri", name="uq_kits_uri"),)
 
@@ -2462,6 +2902,11 @@ class Kit(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, KitRem
             entity.designs = designs
         except KeyError:
             pass
+        try:
+            topics = obj["topics"]
+            entity.topics = topics
+        except KeyError:
+            pass
         return entity
 
     def dump(self) -> "KitOutput":
@@ -2469,6 +2914,7 @@ class Kit(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, KitRem
         entity["types"] = [t.dump() for t in self.types]
         entity["designs"] = [d.dump() for d in self.designs]
         entity["attributes"] = [q.dump() for q in self.attributes]
+        entity["topics"] = self.topics
         return KitOutput(**entity)
 
     # TODO: Automatic emptying.

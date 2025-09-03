@@ -107,6 +107,14 @@ entity tags {
     representation_id : int <<FK>>
 }
 
+entity topics {
+    *id : int <<PK,generated>>
+    *name : string
+    *order : int
+    ..
+    kit_id : int <<FK>>
+}
+
 entity representations {
     *id : int <<PK,generated>>
     *url : string
@@ -314,9 +322,10 @@ entity kits {
 
 kits ||--o{ types
 kits ||--o{ designs
-kits ||--o{ attributes
 kits ||--o{ authors
 kits ||--o{ qualities
+kits ||--o{ attributes
+kits ||--o{ topics
 
 designs ||--o{ layers
 designs ||--o{ pieces
@@ -324,7 +333,7 @@ designs ||--o{ groups
 designs ||--o{ connections
 designs ||--o{ stats
 designs ||--o{ attributes
-designs -- authors
+designs -- authors : "has" >
 
 group_pieces -- groups
 group_pieces -- pieces
@@ -333,7 +342,7 @@ types ||--o{ representations
 types ||--o{ ports
 types ||--o{ authors
 types ||--o{ attributes
-types -- authors
+types -- authors : "has" >
 
 pieces ||--o{ planes
 pieces ||--o{ attributes

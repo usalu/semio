@@ -28,6 +28,7 @@ type Kit implements Node {
   license: String!
   created: DateTime!
   updated: DateTime!
+  topics: [String!]!
   types(before: String, after: String, first: Int, last: Int): TypeNodeConnection
   designs(before: String, after: String, first: Int, last: Int): DesignNodeConnection
   attributes(before: String, after: String, first: Int, last: Int): AttributeNodeConnection

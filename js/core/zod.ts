@@ -67,6 +67,7 @@ const Kit = z
     types: z.array(z.any()).describe("🧩 The types of the kit.").optional(),
     designs: z.array(z.any()).describe("🏙️ The designs of the kit.").optional(),
     attributes: z.array(z.any()).describe("🏷️ The attributes of the kit.").optional(),
+    topics: z.array(z.string()).describe("🏷️ The topics of the kit.").optional(),
   })
   .describe("🗃️ A kit is a collection of types and designs.");
 
