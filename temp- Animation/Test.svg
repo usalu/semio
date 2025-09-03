@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 431.47 139.89">
+  <defs>
+    <style>
+      .cls-1 { fill: #b14b9c; }
+      .cls-2 { fill: #010101; }
+      .cls-3 { fill: #231f20; }
+      .cls-4 { fill: #f8961d; }
+      .cls-5 { fill: #00a79e; }
+      .cls-6 { fill: #ef3d53; }
+      .cls-7 { fill: none; stroke: #010101; stroke-miterlimit: 10; }
+    </style>
+  </defs>
+
+  <!-- Keyframe 1: empty -->
+  <rect class="cls-7" x="0.5" y="0.5" width="430.47" height="138.89" />
+
+  <!-- Example of animated paths using animateTransform -->
+  <path d="M206.77,762H167.52l-10-10h49.25Z" class="cls-1" transform="translate(0,0)">
+    <animateTransform attributeName="transform" type="translate" dur="4s" fill="freeze"
+      values="0,0;0,-6;59,-3;59,-3" />
+  </path>
+
+  <path d="M206.77,740H167.51l-10-10h49.25Z" class="cls-1" transform="translate(0,0)">
+    <animateTransform attributeName="transform" type="translate" dur="4s" fill="freeze"
+      values="0,0;11,27;8,10;8,10" />
+  </path>
+
+  <path d="M386.86,750.87l-10-10h-8.28v10Z" class="cls-2" transform="translate(0,0)">
+    <animateTransform attributeName="transform" type="translate" dur="4s" fill="freeze"
+      values="0,0;-124,-11; -121,-0; -121,-0" />
+  </path>
+
+  <path d="M116.77,762H166l-10-10H116.77Z" class="cls-2" transform="translate(0,0)">
+    <animateTransform attributeName="transform" type="translate" dur="4s" fill="freeze"
+      values="0,0;161,-8;150,-32;150,-32" />
+  </path>
+
+  <path d="M396.63,740.87v10h-8.29l-10-10Z" class="cls-1" transform="translate(0,0)">
+    <animateTransform attributeName="transform" type="translate" dur="4s" fill="freeze"
+      values="0,0;19,51; -181,-10; -181,-10" />
+  </path>
+
+  <!-- Continue with paths _6 → _23 similarly, applying translation values based on keyframes -->
+</svg>
