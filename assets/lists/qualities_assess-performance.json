@@ -338,11 +338,11 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_{h,CO₂}",
-      "formula": "Multiply ( semio.energy.heating.gwp semio.cost.energy.CO2-price )",
+      "formula": "Multiply ( semio.gwp.heating semio.cost.energy.CO2-price )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.heating.gwp",
+      "key": "semio.gwp.heating",
       "name": "Heating Global Warming Potential",
       "translation": {
         "de": "Heizung Treibhauspotenzial"
@@ -351,11 +351,11 @@
       "si": "kgCO2e/a",
       "imperial": "lbCO2e/yr",
       "symbol": "GWP_h",
-      "formula": "Multiply ( semio.energy.heating.final.energy-demand semio.energy.heating.gwp-factor )",
+      "formula": "Multiply ( semio.energy.heating.final.energy-demand semio.gwp.heating.factor )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.heating.gwp-factor",
+      "key": "semio.gwp.heating.factor",
       "name": "Heating Global Warming Potential Factor",
       "translation": {
         "de": "Wärme Treibhauspotenzial-Faktor"
@@ -438,11 +438,11 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_{e,CO₂}",
-      "formula": "Multiply ( semio.energy.electricity.gwp semio.cost.energy.CO2-price )",
+      "formula": "Multiply ( semio.gwp.electricity semio.cost.energy.CO2-price )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.electricity.gwp",
+      "key": "semio.gwp.electricity",
       "name": "Electricity Global Warming Potential",
       "translation": {
         "de": "Strom Treibhauspotenzial"
@@ -451,11 +451,11 @@
       "si": "kgCO2e/a",
       "imperial": "lbCO2e/yr",
       "symbol": "GWP_e",
-      "formula": "Multiply ( semio.energy.electricity.energy-demand semio.energy.electricity.gwp-factor )",
+      "formula": "Multiply ( semio.energy.electricity.energy-demand semio.gwp.electricity.factor )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.electricity.gwp-factor",
+      "key": "semio.gwp.electricity.factor",
       "name": "Electricity Global Warming Potential Factor",
       "translation": {
         "de": "Strom Treibhausfaktor"
@@ -539,11 +539,11 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_{v,CO2}",
-      "formula": "Multiply ( semio.energy.ventilation.electricity.gwp semio.cost.energy.CO2-price )",
+      "formula": "Multiply ( semio.gwp.ventilation semio.cost.energy.CO2-price )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.ventilation.gwp",
+      "key": "semio.gwp.ventilation",
       "name": "Ventilation Global Warming Potential",
       "translation": {
         "de": "Lüftungs-Treibhauspotenzial"
@@ -552,12 +552,12 @@
       "si": "kgCO2e/a",
       "imperial": "lbCO2e/yr",
       "symbol": "GWP_v",
-      "formula": "Multiply ( semio.energy.ventilation.final.energy-demand semio.energy.electricity.gwp-factor )",
+      "formula": "Multiply ( semio.energy.ventilation.final.energy-demand semio.gwp.electricity.factor )",
       "format": "#,##0.##"
     },
 
     {
-      "key": "semio.life-cycle.gwp",
+      "key": "semio.gwp.life-cycle",
       "name": "Life Cycle Global Warming Potential",
       "translation": {
         "de": "Treibhauspotenzial des Lebenszyklus"
@@ -566,11 +566,11 @@
       "si": "kgCO2e",
       "imperial": "lbCO2e",
       "symbol": "GWP_{life-cycle}",
-      "formula": "Add ( Multiply ( semio.energy.energy-gwp semio.cost.life-cycle.life-time ) semio.construction.gwp )",
+      "formula": "Add ( Multiply ( semio.gwp.energy semio.cost.life-cycle.life-time ) semio.gwp.construction )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.energy-gwp",
+      "key": "semio.gwp.energy",
       "name": "Energy Global Warming Potential",
       "translation": {
         "de": "Treibhauspotenzial der Energie"
@@ -579,11 +579,11 @@
       "si": "kgCO2e/a",
       "imperial": "lbCO2e/yr",
       "symbol": "GWP_{energy}",
-      "formula": "Add ( semio.energy.heating.gwp semio.energy.electricity.gwp semio.energy.ventilation.gwp )",
+      "formula": "Add ( semio.gwp.heating semio.gwp.electricity semio.gwp.ventilation )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.construction.gwp",
+      "key": "semio.gwp.construction",
       "name": "Construction Global Warming Potential",
       "translation": {
         "de": "Treibhauspotenzial aller Bauteile"
@@ -592,11 +592,11 @@
       "si": "kgCO2e",
       "imperial": "lbCO2e",
       "symbol": "GWP_{construction}",
-      "formula": "Add ( semio.construction.building.gwp semio.construction.technical-equipment.gwp )",
+      "formula": "Add ( semio.gwp.construction.building semio.gwp.construction.technical-equipment )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.construction.building.gwp",
+      "key": "semio.gwp.construction.building",
       "name": "Building Construction Global Warming Potential",
       "translation": {
         "de": "Treibhauspotenzial der Konstruktion"
@@ -608,7 +608,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.construction.technical-equipment.gwp",
+      "key": "semio.gwp.construction.technical-equipment",
       "name": "Technical Equipment Global Warming Potential",
       "translation": {
         "de": "Treibhauspotenzial der technischen Ausstattung"
