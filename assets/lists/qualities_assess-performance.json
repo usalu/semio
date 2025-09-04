@@ -60,11 +60,11 @@
       "si": "€",
       "imperial": "$",
       "symbol": "C₀",
-      "formula": "Add ( semio.cost.investment.initial.construction-costs semio.cost.investment.initial.technical-equipment )",
+      "formula": "Add ( semio.cost.investment.initial.construction semio.cost.investment.initial.technical-equipment )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.investment.initial.construction-costs",
+      "key": "semio.cost.investment.initial.construction",
       "name": "Building Construction Costs",
       "translation": {
         "de": "Konstruktionskosten"
