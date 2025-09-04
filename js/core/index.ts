@@ -20,8 +20,8 @@
 // #endregion
 
 // #region Components
+export { default as GrasshopperCatalogue } from "../docs/src/components/GrasshopperCatalogue";
 export { default as File } from "./components/ui/File";
-export { default as GrasshopperCatalogue } from "./components/ui/grasshopper/GrasshopperCatalogue";
 export { default as Console, commandRegistry as inkCommandRegistry } from "./components/ui/sketchpad/Console";
 export { default as DesignEditor } from "./components/ui/sketchpad/DesignEditor";
 export { default as Diagram } from "./components/ui/sketchpad/Diagram";

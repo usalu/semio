@@ -34,6 +34,10 @@ An ecosystem for designing kit-of-parts architecture together.
 ├── js
 │ ├── ai
 │ ├── core
+│ │ ├── Semio.cs
+│ │ ├── components
+│ │ │ └── ui
+│ │ │ │ └── sketchpad
 │ ├── docs
 │ ├── play
 │ ├── playground
@@ -43,19 +47,32 @@ An ecosystem for designing kit-of-parts architecture together.
 ├── meta
 ├── net
 │ ├── Semio
+│ │ ├── Semio.cs
 │ │ ├── UserObjects
 │ │ │ ├── github
 │ │ │ ├── gitlab
 │ │ │ ├── monoceros
 │ │ │ ├── semio
 │ │ │ └── wasp
+│ ├── Semio.Grasshopper
+│ │ └── Semio.Grasshopper.cs
 │ ├── Semio.Grasshopper.Tests
 │ └── Semio.Tests
 ├── rb
 ├── rdf
 ├── scripts
 ├── sqlite
-└── yak
+├── yak
+├── .gitignore
+├── .gitmodules
+├── .prettierignore
+├── .prettierrc.json
+├── CLAUDE.md
+├── nx.json # Nx targets and plugin configs
+├── package-lock.json # All javascript dependencies
+├── package.json # Monorepo and workspace setup
+├── powershell.ps1 # General Powershell utility
+└── README.md
 
 # Guidelines
 

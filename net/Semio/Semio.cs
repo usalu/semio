@@ -3249,6 +3249,32 @@ public class KitDiff : Model<KitDiff>
     public static implicit operator KitDiff(Kit kit) => new() { Name = kit.Name, Description = kit.Description, Icon = kit.Icon, Image = kit.Image, Preview = kit.Preview, Version = kit.Version, Remote = kit.Remote, Homepage = kit.Homepage, License = kit.License, Attributes = kit.Attributes };
 }
 
+[Model("🗃️", "KId", "KitId", "The local identifier of the kit.")]
+public class KitId : Model<KitId>
+{
+    [Name("📛", "Na", "Nam", "The name of the kit.", PropImportance.ID)]
+    public string Name { get; set; } = "";
+    public string ToIdString() => $"{Name}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"KitId({ToHumanIdString()})";
+
+    public static implicit operator KitId(Kit kit) => new() { Name = kit.Name };
+    public static implicit operator KitId(KitDiff diff) => new() { Name = diff.Name ?? "" };
+}
+
+[Model("📦", "KsD", "KsDf", "A diff for multiple kits.")]
+public class KitsDiff : Model<KitsDiff>
+{
+    [ModelProp("➖", "Rm*", "Rem*", "The optional removed kits.", PropImportance.OPTIONAL)]
+    public List<KitId> Removed { get; set; } = new();
+    [ModelProp("✏️", "Up*", "Upd*", "The optional updated kits.", PropImportance.OPTIONAL)]
+    public List<KitDiff> Updated { get; set; } = new();
+    [ModelProp("➕", "Ad*", "Add*", "The optional added kits.", PropImportance.OPTIONAL)]
+    public List<Kit> Added { get; set; } = new();
+
+    public static implicit operator KitsDiff(List<Kit> kits) => new() { Updated = kits.Select(k => (KitDiff)k).ToList() };
+}
+
 public enum DiffStatus
 {
     Unchanged,

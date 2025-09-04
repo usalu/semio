@@ -529,7 +529,6 @@ public abstract class DiffParam<T, U> : ModelParam<T, U> where T : DiffGoo<U> wh
 {
     internal DiffParam() : base() { }
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
-
 }
 
 public abstract class DiffComponent<T, U, V> : ModelComponent<T, U, V>
@@ -625,6 +624,148 @@ public abstract class DeserializeComponent<T, U, V> : ScriptingComponent
         goo.Value = value;
         DA.SetData(0, goo);
     }
+}
+
+public abstract class SerializeDiffComponent<T, U, V> : SerializeComponent<T, U, V>
+    where T : DiffParam<U, V>, new() where U : DiffGoo<V>, new() where V : Model<V>, new()
+{
+    protected SerializeDiffComponent() : base() { }
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{GetEntityName()}_diff_serialize_24x24");
+    
+    protected virtual string GetEntityName()
+    {
+        var typeName = typeof(V).Name.ToLower();
+        return typeName.EndsWith("diff") ? typeName.Substring(0, typeName.Length - 4) : 
+               typeName.EndsWith("sdiff") ? typeName.Substring(0, typeName.Length - 5) : typeName;
+    }
+}
+
+public abstract class DeserializeDiffComponent<T, U, V> : DeserializeComponent<T, U, V>
+    where T : DiffParam<U, V>, new() where U : DiffGoo<V>, new() where V : Model<V>, new()
+{
+    protected DeserializeDiffComponent() : base() { }
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{GetEntityName()}_diff_deserialize_24x24");
+    
+    protected virtual string GetEntityName()
+    {
+        var typeName = typeof(V).Name.ToLower();
+        return typeName.EndsWith("diff") ? typeName.Substring(0, typeName.Length - 4) : 
+               typeName.EndsWith("sdiff") ? typeName.Substring(0, typeName.Length - 5) : typeName;
+    }
+}
+
+public abstract class SerializeIdComponent<T, U, V> : SerializeComponent<T, U, V>
+    where T : IdParam<U, V>, new() where U : IdGoo<V>, new() where V : Model<V>, new()
+{
+    protected SerializeIdComponent() : base() { }
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{GetEntityName()}_id_serialize_24x24");
+    
+    protected virtual string GetEntityName()
+    {
+        var typeName = typeof(V).Name.ToLower();
+        return typeName.EndsWith("id") ? typeName.Substring(0, typeName.Length - 2) : typeName;
+    }
+}
+
+public abstract class DeserializeIdComponent<T, U, V> : DeserializeComponent<T, U, V>
+    where T : IdParam<U, V>, new() where U : IdGoo<V>, new() where V : Model<V>, new()
+{
+    protected DeserializeIdComponent() : base() { }
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{GetEntityName()}_id_deserialize_24x24");
+    
+    protected virtual string GetEntityName()
+    {
+        var typeName = typeof(V).Name.ToLower();
+        return typeName.EndsWith("id") ? typeName.Substring(0, typeName.Length - 2) : typeName;
+    }
+}
+
+public abstract class EntityGoo<TEntity, TEntityDiff, TEntityId> : ModelGoo<TEntity> 
+    where TEntity : Model<TEntity>, new()
+    where TEntityDiff : Model<TEntityDiff>, new()
+    where TEntityId : Model<TEntityId>, new()
+{
+    public EntityGoo() : base() { }
+    public EntityGoo(TEntity value) : base(value) { }
+}
+
+public abstract class EntityParam<TGoo, TEntity, TEntityDiff, TEntityId> : ModelParam<TGoo, TEntity>
+    where TGoo : EntityGoo<TEntity, TEntityDiff, TEntityId>
+    where TEntity : Model<TEntity>, new()
+    where TEntityDiff : Model<TEntityDiff>, new()
+    where TEntityId : Model<TEntityId>, new()
+{
+    internal EntityParam() : base() { }
+}
+
+public abstract class EntityComponent<TParam, TGoo, TEntity, TEntityDiff, TEntityId> : ModelComponent<TParam, TGoo, TEntity>
+    where TParam : EntityParam<TGoo, TEntity, TEntityDiff, TEntityId>
+    where TGoo : EntityGoo<TEntity, TEntityDiff, TEntityId>
+    where TEntity : Model<TEntity>, new()
+    where TEntityDiff : Model<TEntityDiff>, new()
+    where TEntityId : Model<TEntityId>, new()
+{
+    protected EntityComponent() : base() { }
+}
+
+public abstract class EntityIdGoo<TEntity, TEntityDiff, TEntityId> : IdGoo<TEntityId>
+    where TEntity : Model<TEntity>, new()
+    where TEntityDiff : Model<TEntityDiff>, new()
+    where TEntityId : Model<TEntityId>, new()
+{
+    public EntityIdGoo() : base() { }
+    public EntityIdGoo(TEntityId value) : base(value) { }
+}
+
+public abstract class EntityIdParam<TIdGoo, TEntity, TEntityDiff, TEntityId> : IdParam<TIdGoo, TEntityId>
+    where TIdGoo : EntityIdGoo<TEntity, TEntityDiff, TEntityId>
+    where TEntity : Model<TEntity>, new()
+    where TEntityDiff : Model<TEntityDiff>, new()
+    where TEntityId : Model<TEntityId>, new()
+{
+    internal EntityIdParam() : base() { }
+}
+
+public abstract class EntityIdComponent<TIdParam, TIdGoo, TEntity, TEntityDiff, TEntityId> : IdComponent<TIdParam, TIdGoo, TEntityId>
+    where TIdParam : EntityIdParam<TIdGoo, TEntity, TEntityDiff, TEntityId>
+    where TIdGoo : EntityIdGoo<TEntity, TEntityDiff, TEntityId>
+    where TEntity : Model<TEntity>, new()
+    where TEntityDiff : Model<TEntityDiff>, new()
+    where TEntityId : Model<TEntityId>, new()
+{
+    protected EntityIdComponent() : base() { }
+}
+
+public abstract class EntityDiffGoo<TEntity, TEntityDiff, TEntityId> : DiffGoo<TEntityDiff>
+    where TEntity : Model<TEntity>, new()
+    where TEntityDiff : Model<TEntityDiff>, new()
+    where TEntityId : Model<TEntityId>, new()
+{
+    public EntityDiffGoo() : base() { }
+    public EntityDiffGoo(TEntityDiff value) : base(value) { }
+}
+
+public abstract class EntityDiffParam<TDiffGoo, TEntity, TEntityDiff, TEntityId> : DiffParam<TDiffGoo, TEntityDiff>
+    where TDiffGoo : EntityDiffGoo<TEntity, TEntityDiff, TEntityId>
+    where TEntity : Model<TEntity>, new()
+    where TEntityDiff : Model<TEntityDiff>, new()
+    where TEntityId : Model<TEntityId>, new()
+{
+    internal EntityDiffParam() : base() { }
+}
+
+public abstract class EntityDiffComponent<TDiffParam, TDiffGoo, TEntity, TEntityDiff, TEntityId> : DiffComponent<TDiffParam, TDiffGoo, TEntityDiff>
+    where TDiffParam : EntityDiffParam<TDiffGoo, TEntity, TEntityDiff, TEntityId>
+    where TDiffGoo : EntityDiffGoo<TEntity, TEntityDiff, TEntityId>
+    where TEntity : Model<TEntity>, new()
+    where TEntityDiff : Model<TEntityDiff>, new()
+    where TEntityId : Model<TEntityId>, new()
+{
+    protected EntityDiffComponent() : base() { }
 }
 
 #endregion Bases
@@ -736,6 +877,18 @@ public class AttributeDiffParam : DiffParam<AttributeDiffGoo, AttributeDiff>
 public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, AttributeDiffGoo, AttributeDiff>
 {
     public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B96");
+}
+
+public class SerializeAttributeDiffComponent : SerializeComponent<AttributeDiffParam, AttributeDiffGoo, AttributeDiff>
+{
+    public SerializeAttributeDiffComponent() { }
+    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B97");
+}
+
+public class DeserializeAttributeDiffComponent : DeserializeComponent<AttributeDiffParam, AttributeDiffGoo, AttributeDiff>
+{
+    public DeserializeAttributeDiffComponent() { }
+    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B98");
 }
 
 public class AttributeGoo : ModelGoo<Attribute>
@@ -906,6 +1059,18 @@ public class RepresentationDiffComponent : DiffComponent<RepresentationDiffParam
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AA");
 }
 
+public class SerializeRepresentationDiffComponent : SerializeComponent<RepresentationDiffParam, RepresentationDiffGoo, RepresentationDiff>
+{
+    public SerializeRepresentationDiffComponent() { }
+    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AB");
+}
+
+public class DeserializeRepresentationDiffComponent : DeserializeComponent<RepresentationDiffParam, RepresentationDiffGoo, RepresentationDiff>
+{
+    public DeserializeRepresentationDiffComponent() { }
+    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AC");
+}
+
 public class RepresentationsDiffGoo : DiffGoo<RepresentationsDiff>
 {
     public RepresentationsDiffGoo() { }
@@ -944,7 +1109,19 @@ public class RepresentationsDiffParam : DiffParam<RepresentationsDiffGoo, Repres
 
 public class RepresentationsDiffComponent : DiffComponent<RepresentationsDiffParam, RepresentationsDiffGoo, RepresentationsDiff>
 {
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AC");
+    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AD");
+}
+
+public class SerializeRepresentationsDiffComponent : SerializeComponent<RepresentationsDiffParam, RepresentationsDiffGoo, RepresentationsDiff>
+{
+    public SerializeRepresentationsDiffComponent() { }
+    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AE");
+}
+
+public class DeserializeRepresentationsDiffComponent : DeserializeComponent<RepresentationsDiffParam, RepresentationsDiffGoo, RepresentationsDiff>
+{
+    public DeserializeRepresentationsDiffComponent() { }
+    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AF");
 }
 
 public class RepresentationGoo : ModelGoo<Representation>
@@ -1086,6 +1263,18 @@ public class FileDiffComponent : DiffComponent<FileDiffParam, FileDiffGoo, FileD
     public override Guid ComponentGuid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F1");
 }
 
+public class SerializeFileDiffComponent : SerializeComponent<FileDiffParam, FileDiffGoo, FileDiff>
+{
+    public SerializeFileDiffComponent() { }
+    public override Guid ComponentGuid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F2");
+}
+
+public class DeserializeFileDiffComponent : DeserializeComponent<FileDiffParam, FileDiffGoo, FileDiff>
+{
+    public DeserializeFileDiffComponent() { }
+    public override Guid ComponentGuid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F3");
+}
+
 public class FilesDiffGoo : DiffGoo<FilesDiff>
 {
     public FilesDiffGoo() { }
@@ -1125,6 +1314,18 @@ public class FilesDiffParam : DiffParam<FilesDiffGoo, FilesDiff>
 public class FilesDiffComponent : DiffComponent<FilesDiffParam, FilesDiffGoo, FilesDiff>
 {
     public override Guid ComponentGuid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A2");
+}
+
+public class SerializeFilesDiffComponent : SerializeComponent<FilesDiffParam, FilesDiffGoo, FilesDiff>
+{
+    public SerializeFilesDiffComponent() { }
+    public override Guid ComponentGuid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A3");
+}
+
+public class DeserializeFilesDiffComponent : DeserializeComponent<FilesDiffParam, FilesDiffGoo, FilesDiff>
+{
+    public DeserializeFilesDiffComponent() { }
+    public override Guid ComponentGuid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A4");
 }
 
 public class SemioFileGoo : ModelGoo<SemioFile>
@@ -1352,6 +1553,18 @@ public class PortDiffComponent : DiffComponent<PortDiffParam, PortDiffGoo, PortD
     public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B3");
 }
 
+public class SerializePortDiffComponent : SerializeComponent<PortDiffParam, PortDiffGoo, PortDiff>
+{
+    public SerializePortDiffComponent() { }
+    public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B4");
+}
+
+public class DeserializePortDiffComponent : DeserializeComponent<PortDiffParam, PortDiffGoo, PortDiff>
+{
+    public DeserializePortDiffComponent() { }
+    public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B5");
+}
+
 public class PortGoo : ModelGoo<Port>
 {
     public PortGoo() { }
@@ -1473,6 +1686,18 @@ public class PortsDiffParam : DiffParam<PortsDiffGoo, PortsDiff>
 public class PortsDiffComponent : DiffComponent<PortsDiffParam, PortsDiffGoo, PortsDiff>
 {
     public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1C1");
+}
+
+public class SerializePortsDiffComponent : SerializeComponent<PortsDiffParam, PortsDiffGoo, PortsDiff>
+{
+    public SerializePortsDiffComponent() { }
+    public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1C2");
+}
+
+public class DeserializePortsDiffComponent : DeserializeComponent<PortsDiffParam, PortsDiffGoo, PortsDiff>
+{
+    public DeserializePortsDiffComponent() { }
+    public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1C3");
 }
 
 #endregion Port
@@ -1737,6 +1962,18 @@ public class TypeDiffComponent : DiffComponent<TypeDiffParam, TypeDiffGoo, TypeD
     public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C4");
 }
 
+public class SerializeTypeDiffComponent : SerializeComponent<TypeDiffParam, TypeDiffGoo, TypeDiff>
+{
+    public SerializeTypeDiffComponent() { }
+    public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C5");
+}
+
+public class DeserializeTypeDiffComponent : DeserializeComponent<TypeDiffParam, TypeDiffGoo, TypeDiff>
+{
+    public DeserializeTypeDiffComponent() { }
+    public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C6");
+}
+
 public class TypesDiffGoo : DiffGoo<TypesDiff>
 {
     public TypesDiffGoo() { }
@@ -1776,6 +2013,18 @@ public class TypesDiffParam : DiffParam<TypesDiffGoo, TypesDiff>
 public class TypesDiffComponent : DiffComponent<TypesDiffParam, TypesDiffGoo, TypesDiff>
 {
     public override Guid ComponentGuid => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B7");
+}
+
+public class SerializeTypesDiffComponent : SerializeComponent<TypesDiffParam, TypesDiffGoo, TypesDiff>
+{
+    public SerializeTypesDiffComponent() { }
+    public override Guid ComponentGuid => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B8");
+}
+
+public class DeserializeTypesDiffComponent : DeserializeComponent<TypesDiffParam, TypesDiffGoo, TypesDiff>
+{
+    public DeserializeTypesDiffComponent() { }
+    public override Guid ComponentGuid => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B9");
 }
 
 public class TypeGoo : ModelGoo<Type>
@@ -1995,6 +2244,18 @@ public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, Pi
     public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D5");
 }
 
+public class SerializePieceDiffComponent : SerializeComponent<PieceDiffParam, PieceDiffGoo, PieceDiff>
+{
+    public SerializePieceDiffComponent() { }
+    public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D6");
+}
+
+public class DeserializePieceDiffComponent : DeserializeComponent<PieceDiffParam, PieceDiffGoo, PieceDiff>
+{
+    public DeserializePieceDiffComponent() { }
+    public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D7");
+}
+
 public class PiecesDiffGoo : DiffGoo<PiecesDiff>
 {
     public PiecesDiffGoo() { }
@@ -2034,6 +2295,18 @@ public class PiecesDiffParam : DiffParam<PiecesDiffGoo, PiecesDiff>
 public class PiecesDiffComponent : DiffComponent<PiecesDiffParam, PiecesDiffGoo, PiecesDiff>
 {
     public override Guid ComponentGuid => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6C8");
+}
+
+public class SerializePiecesDiffComponent : SerializeComponent<PiecesDiffParam, PiecesDiffGoo, PiecesDiff>
+{
+    public SerializePiecesDiffComponent() { }
+    public override Guid ComponentGuid => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6C9");
+}
+
+public class DeserializePiecesDiffComponent : DeserializeComponent<PiecesDiffParam, PiecesDiffGoo, PiecesDiff>
+{
+    public DeserializePiecesDiffComponent() { }
+    public override Guid ComponentGuid => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6CA");
 }
 
 public class PieceGoo : ModelGoo<Piece>
@@ -2163,6 +2436,18 @@ public class SideDiffParam : DiffParam<SideDiffGoo, SideDiff>
 public class SideDiffComponent : DiffComponent<SideDiffParam, SideDiffGoo, SideDiff>
 {
     public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E4");
+}
+
+public class SerializeSideDiffComponent : SerializeComponent<SideDiffParam, SideDiffGoo, SideDiff>
+{
+    public SerializeSideDiffComponent() { }
+    public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E5");
+}
+
+public class DeserializeSideDiffComponent : DeserializeComponent<SideDiffParam, SideDiffGoo, SideDiff>
+{
+    public DeserializeSideDiffComponent() { }
+    public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E6");
 }
 
 public class SideGoo : ModelGoo<Side>
@@ -2345,6 +2630,18 @@ public class ConnectionDiffComponent : DiffComponent<ConnectionDiffParam, Connec
     public override Guid ComponentGuid => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F5");
 }
 
+public class SerializeConnectionDiffComponent : SerializeComponent<ConnectionDiffParam, ConnectionDiffGoo, ConnectionDiff>
+{
+    public SerializeConnectionDiffComponent() { }
+    public override Guid ComponentGuid => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F6");
+}
+
+public class DeserializeConnectionDiffComponent : DeserializeComponent<ConnectionDiffParam, ConnectionDiffGoo, ConnectionDiff>
+{
+    public DeserializeConnectionDiffComponent() { }
+    public override Guid ComponentGuid => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F7");
+}
+
 public class ConnectionsDiffGoo : DiffGoo<ConnectionsDiff>
 {
     public ConnectionsDiffGoo() { }
@@ -2384,6 +2681,18 @@ public class ConnectionsDiffParam : DiffParam<ConnectionsDiffGoo, ConnectionsDif
 public class ConnectionsDiffComponent : DiffComponent<ConnectionsDiffParam, ConnectionsDiffGoo, ConnectionsDiff>
 {
     public override Guid ComponentGuid => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7D9");
+}
+
+public class SerializeConnectionsDiffComponent : SerializeComponent<ConnectionsDiffParam, ConnectionsDiffGoo, ConnectionsDiff>
+{
+    public SerializeConnectionsDiffComponent() { }
+    public override Guid ComponentGuid => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7DA");
+}
+
+public class DeserializeConnectionsDiffComponent : DeserializeComponent<ConnectionsDiffParam, ConnectionsDiffGoo, ConnectionsDiff>
+{
+    public DeserializeConnectionsDiffComponent() { }
+    public override Guid ComponentGuid => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7DB");
 }
 
 public class ConnectionGoo : ModelGoo<Connection>
@@ -2586,6 +2895,18 @@ public class DesignDiffComponent : DiffComponent<DesignDiffParam, DesignDiffGoo,
     public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A8");
 }
 
+public class SerializeDesignDiffComponent : SerializeComponent<DesignDiffParam, DesignDiffGoo, DesignDiff>
+{
+    public SerializeDesignDiffComponent() { }
+    public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A9");
+}
+
+public class DeserializeDesignDiffComponent : DeserializeComponent<DesignDiffParam, DesignDiffGoo, DesignDiff>
+{
+    public DeserializeDesignDiffComponent() { }
+    public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4AA");
+}
+
 public class DesignsDiffGoo : DiffGoo<DesignsDiff>
 {
     public DesignsDiffGoo() { }
@@ -2625,6 +2946,18 @@ public class DesignsDiffParam : DiffParam<DesignsDiffGoo, DesignsDiff>
 public class DesignsDiffComponent : DiffComponent<DesignsDiffParam, DesignsDiffGoo, DesignsDiff>
 {
     public override Guid ComponentGuid => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8EA");
+}
+
+public class SerializeDesignsDiffComponent : SerializeComponent<DesignsDiffParam, DesignsDiffGoo, DesignsDiff>
+{
+    public SerializeDesignsDiffComponent() { }
+    public override Guid ComponentGuid => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8EB");
+}
+
+public class DeserializeDesignsDiffComponent : DeserializeComponent<DesignsDiffParam, DesignsDiffGoo, DesignsDiff>
+{
+    public DeserializeDesignsDiffComponent() { }
+    public override Guid ComponentGuid => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8EC");
 }
 
 public class DesignGoo : ModelGoo<Design>
@@ -2760,6 +3093,18 @@ public class KitDiffComponent : DiffComponent<KitDiffParam, KitDiffGoo, KitDiff>
     public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B3");
 }
 
+public class SerializeKitDiffComponent : SerializeComponent<KitDiffParam, KitDiffGoo, KitDiff>
+{
+    public SerializeKitDiffComponent() { }
+    public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B4");
+}
+
+public class DeserializeKitDiffComponent : DeserializeComponent<KitDiffParam, KitDiffGoo, KitDiff>
+{
+    public DeserializeKitDiffComponent() { }
+    public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B5");
+}
+
 public class KitGoo : ModelGoo<Kit>
 {
     public KitGoo() { }
@@ -2824,6 +3169,59 @@ public class DeserializeKitComponent : DeserializeComponent<KitParam, KitGoo, Ki
 {
     public DeserializeKitComponent() { }
     public override Guid ComponentGuid => new("78202ACE-A876-45AF-BA72-D1FC00FE4166");
+}
+
+public class KitsDiffGoo : DiffGoo<KitsDiff>
+{
+    public KitsDiffGoo() { }
+    public KitsDiffGoo(KitsDiff value) : base(value) { }
+
+    internal override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String("KitsDiff");
+            return true;
+        }
+        return false;
+    }
+
+    internal override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+        {
+            try
+            {
+                Value = str.Deserialize<KitsDiff>();
+                return true;
+            }
+            catch { return false; }
+        }
+        return false;
+    }
+}
+
+public class KitsDiffParam : DiffParam<KitsDiffGoo, KitsDiff>
+{
+    public override Guid ComponentGuid => new("50A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C3");
+}
+
+public class KitsDiffComponent : DiffComponent<KitsDiffParam, KitsDiffGoo, KitsDiff>
+{
+    public override Guid ComponentGuid => new("50A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C4");
+}
+
+public class SerializeKitsDiffComponent : SerializeComponent<KitsDiffParam, KitsDiffGoo, KitsDiff>
+{
+    public SerializeKitsDiffComponent() { }
+    public override Guid ComponentGuid => new("50A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C5");
+}
+
+public class DeserializeKitsDiffComponent : DeserializeComponent<KitsDiffParam, KitsDiffGoo, KitsDiff>
+{
+    public DeserializeKitsDiffComponent() { }
+    public override Guid ComponentGuid => new("50A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C6");
 }
 
 #endregion Kit
@@ -2958,6 +3356,18 @@ public class QualityDiffParam : DiffParam<QualityDiffGoo, QualityDiff>
 public class QualityDiffComponent : DiffComponent<QualityDiffParam, QualityDiffGoo, QualityDiff>
 {
     public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4DB");
+}
+
+public class SerializeQualityDiffComponent : SerializeComponent<QualityDiffParam, QualityDiffGoo, QualityDiff>
+{
+    public SerializeQualityDiffComponent() { }
+    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4DC");
+}
+
+public class DeserializeQualityDiffComponent : DeserializeComponent<QualityDiffParam, QualityDiffGoo, QualityDiff>
+{
+    public DeserializeQualityDiffComponent() { }
+    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4DD");
 }
 
 public class QualityGoo : ModelGoo<Quality>
