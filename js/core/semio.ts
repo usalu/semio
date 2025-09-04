@@ -358,7 +358,7 @@ export const KitSchema = z.object({
   designs: z.array(DesignSchema).optional(),
   qualities: z.array(QualitySchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
-  topics: z.array(z.string()).optional(),
+  concepts: z.array(z.string()).optional(),
 });
 export const KitIdSchema = z.object({
   name: z.string(),

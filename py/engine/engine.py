@@ -703,17 +703,21 @@ class Tag(TagOrderField, TagNameField, Table, table=True):
 
 # endregion Tag
 
-# region Topic
+# region Concept
 
 
-class Topic(TagOrderField, TagNameField, Table, table=True):
-    __tablename__ = "topics"
+class Concept(TagOrderField, TagNameField, Table, table=True):
+    __tablename__ = "concepts"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
-    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="topics_")
+    typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
+    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
+    kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="concepts_")
+    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="concepts_")
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="concepts_")
 
 
-# endregion Topic
+# endregion Concept
 
 # region Representation
 # https://github.com/usalu/semio-representation-
@@ -1523,6 +1527,7 @@ class TypeInput(TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantFiel
     ports: list[PortInput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorInput] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
+    concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 
 class TypeOutput(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantField, TypeImageField, TypeIconField, TypeDescriptionField, TypeNameField, Output):
@@ -1531,12 +1536,14 @@ class TypeOutput(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeVirtualF
     ports: list[PortOutput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorOutput] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+    concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 
 class TypeContext(TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantField, TypeDescriptionField, TypeNameField, Context):
     location: typing.Optional[LocationContext] = sqlmodel.Field(default=None)
     ports: list[PortContext] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
+    concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 
 class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeMirrborableField, TypeScalableField, TypeVirtualField, TypeStockField, TypeVariantField, TypeImageField, TypeIconField, TypeDescriptionField, TypeNameField, TableEntity, table=True):
@@ -1566,6 +1573,8 @@ class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeMirrborableFie
     kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="types")
 
     pieces: list["Piece"] = sqlmodel.Relationship(back_populates="type")
+
+    concepts_: list[Concept] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
 
     __table_args__ = (sqlalchemy.UniqueConstraint("name", "variant", "kit_id", name="uq_types_name_variant_kit_id"),)
 
@@ -1600,6 +1609,14 @@ class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeMirrborableFie
         self.authors_ = authors
         for i, author in enumerate(self.authors_):
             author.rank = i
+
+    @property
+    def concepts(self: "Type") -> list[str]:
+        return [concept.name for concept in sorted(self.concepts_, key=lambda x: x.order)]
+
+    @concepts.setter
+    def concepts(self: "Type", concepts: list[str]):
+        self.concepts_ = [Concept(name=concept, order=i) for i, concept in enumerate(concepts)]
 
     def parent(self) -> "Kit":
         if self.kit is None:
@@ -1639,6 +1656,11 @@ class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeMirrborableFie
             entity.authors = authors
         except KeyError:
             pass
+        try:
+            concepts = obj["concepts"]
+            entity.concepts = concepts
+        except KeyError:
+            pass
 
         return entity
 
@@ -1648,6 +1670,7 @@ class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeMirrborableFie
         entity["ports"] = [p.dump() for p in self.ports]
         entity["attributes"] = [q.dump() for q in self.attributes]
         entity["authors"] = [a.dump() for a in self.authors]
+        entity["concepts"] = self.concepts
         return TypeOutput(**entity)
 
     # TODO: Automatic emptying.
@@ -2264,6 +2287,7 @@ class DesignInput(DesignUnitField, DesignViewField, DesignVariantField, DesignIm
     connections: list[ConnectionInput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorInput] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
+    concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 
 class DesignContext(DesignUnitField, DesignViewField, DesignVariantField, DesignDescriptionField, DesignNameField, Context):
@@ -2273,6 +2297,7 @@ class DesignContext(DesignUnitField, DesignViewField, DesignVariantField, Design
     pieces: list[PieceContext] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionContext] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
+    concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 
 class DesignOutput(DesignUpdatedField, DesignCreatedField, DesignUnitField, DesignViewField, DesignVariantField, DesignImageField, DesignIconField, DesignDescriptionField, DesignNameField, Output):
@@ -2283,6 +2308,7 @@ class DesignOutput(DesignUpdatedField, DesignCreatedField, DesignUnitField, Desi
     connections: list[ConnectionOutput] = sqlmodel.Field(default_factory=list)
     authors: list[AuthorOutput] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
+    concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 
 class DesignPrediction(DesignDescriptionField, Prediction):
@@ -2307,6 +2333,7 @@ class Design(DesignUpdatedField, DesignCreatedField, DesignMirrorableField, Desi
     stats: list[Stat] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     authors_: list[Author] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    concepts_: list[Concept] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     kitPk: typing.Optional[int] = sqlmodel.Field(alias="kitId", sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
     kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="designs")
 
@@ -2339,6 +2366,14 @@ class Design(DesignUpdatedField, DesignCreatedField, DesignMirrorableField, Desi
         self.authors_ = authors
         for i, author in enumerate(authors):
             author.rank = i
+
+    @property
+    def concepts(self: "Design") -> list[str]:
+        return [concept.name for concept in sorted(self.concepts_, key=lambda x: x.order)]
+
+    @concepts.setter
+    def concepts(self: "Design", concepts: list[str]):
+        self.concepts_ = [Concept(name=concept, order=i) for i, concept in enumerate(concepts)]
 
     def parent(self) -> "Kit":
         if self.kit is None:
@@ -2384,6 +2419,11 @@ class Design(DesignUpdatedField, DesignCreatedField, DesignMirrorableField, Desi
             entity.authors = authors
         except KeyError:
             pass
+        try:
+            concepts = obj["concepts"]
+            entity.concepts = concepts
+        except KeyError:
+            pass
         return entity
 
     def dump(self) -> "DesignOutput":
@@ -2392,6 +2432,7 @@ class Design(DesignUpdatedField, DesignCreatedField, DesignMirrorableField, Desi
         entity["connections"] = [c.dump() for c in self.connections]
         entity["attributes"] = [q.dump() for q in self.attributes]
         entity["authors"] = [a.dump() for a in self.authors]
+        entity["concepts"] = self.concepts
         return DesignOutput(**entity)
 
     # TODO: Automatic emptying.
@@ -2837,7 +2878,7 @@ class KitInput(KitLicenseField, KitHomepage, KitRemoteField, KitVersionField, Ki
     types: list[TypeInput] = sqlmodel.Field(default_factory=list)
     designs: list[DesignInput] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
-    topics: list[str] = sqlmodel.Field(default_factory=list)
+    concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 
 class KitContext(KitDescriptionField, KitNameField, Context):
@@ -2854,7 +2895,7 @@ class KitOutput(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, 
     types: list[TypeOutput] = sqlmodel.Field(default_factory=list)
     designs: list[DesignOutput] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
-    topics: list[str] = sqlmodel.Field(default_factory=list)
+    concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 
 class Kit(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, KitRemoteField, KitVersionField, KitPreviewField, KitImageField, KitIconField, KitDescriptionField, KitNameField, KitUriField, TableEntity, table=True):
@@ -2872,15 +2913,15 @@ class Kit(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, KitRem
 
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
 
-    topics_: list[Topic] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+    concepts_: list[Concept] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
 
     @property
-    def topics(self: "Kit") -> list[str]:
-        return [topic.name for topic in sorted(self.topics_, key=lambda x: x.order)]
+    def concepts(self: "Kit") -> list[str]:
+        return [concept.name for concept in sorted(self.concepts_, key=lambda x: x.order)]
 
-    @topics.setter
-    def topics(self: "Kit", topics: list[str]):
-        self.topics_ = [Topic(name=topic, order=i) for i, topic in enumerate(topics)]
+    @concepts.setter
+    def concepts(self: "Kit", concepts: list[str]):
+        self.concepts_ = [Concept(name=concept, order=i) for i, concept in enumerate(concepts)]
 
     __table_args__ = (sqlalchemy.UniqueConstraint("uri", name="uq_kits_uri"),)
 
@@ -2903,8 +2944,8 @@ class Kit(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, KitRem
         except KeyError:
             pass
         try:
-            topics = obj["topics"]
-            entity.topics = topics
+            concepts = obj["concepts"]
+            entity.concepts = concepts
         except KeyError:
             pass
         return entity
@@ -2914,7 +2955,7 @@ class Kit(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, KitRem
         entity["types"] = [t.dump() for t in self.types]
         entity["designs"] = [d.dump() for d in self.designs]
         entity["attributes"] = [q.dump() for q in self.attributes]
-        entity["topics"] = self.topics
+        entity["concepts"] = self.concepts
         return KitOutput(**entity)
 
     # TODO: Automatic emptying.

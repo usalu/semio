@@ -632,11 +632,11 @@ public abstract class SerializeDiffComponent<T, U, V> : SerializeComponent<T, U,
     protected SerializeDiffComponent() : base() { }
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
     protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{GetEntityName()}_diff_serialize_24x24");
-    
+
     protected virtual string GetEntityName()
     {
         var typeName = typeof(V).Name.ToLower();
-        return typeName.EndsWith("diff") ? typeName.Substring(0, typeName.Length - 4) : 
+        return typeName.EndsWith("diff") ? typeName.Substring(0, typeName.Length - 4) :
                typeName.EndsWith("sdiff") ? typeName.Substring(0, typeName.Length - 5) : typeName;
     }
 }
@@ -647,11 +647,11 @@ public abstract class DeserializeDiffComponent<T, U, V> : DeserializeComponent<T
     protected DeserializeDiffComponent() : base() { }
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
     protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{GetEntityName()}_diff_deserialize_24x24");
-    
+
     protected virtual string GetEntityName()
     {
         var typeName = typeof(V).Name.ToLower();
-        return typeName.EndsWith("diff") ? typeName.Substring(0, typeName.Length - 4) : 
+        return typeName.EndsWith("diff") ? typeName.Substring(0, typeName.Length - 4) :
                typeName.EndsWith("sdiff") ? typeName.Substring(0, typeName.Length - 5) : typeName;
     }
 }
@@ -662,7 +662,7 @@ public abstract class SerializeIdComponent<T, U, V> : SerializeComponent<T, U, V
     protected SerializeIdComponent() : base() { }
     public override GH_Exposure Exposure => GH_Exposure.secondary;
     protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{GetEntityName()}_id_serialize_24x24");
-    
+
     protected virtual string GetEntityName()
     {
         var typeName = typeof(V).Name.ToLower();
@@ -676,7 +676,7 @@ public abstract class DeserializeIdComponent<T, U, V> : DeserializeComponent<T, 
     protected DeserializeIdComponent() : base() { }
     public override GH_Exposure Exposure => GH_Exposure.secondary;
     protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{GetEntityName()}_id_deserialize_24x24");
-    
+
     protected virtual string GetEntityName()
     {
         var typeName = typeof(V).Name.ToLower();
@@ -684,7 +684,7 @@ public abstract class DeserializeIdComponent<T, U, V> : DeserializeComponent<T, 
     }
 }
 
-public abstract class EntityGoo<TEntity, TEntityDiff, TEntityId> : ModelGoo<TEntity> 
+public abstract class EntityGoo<TEntity, TEntityDiff, TEntityId> : ModelGoo<TEntity>
     where TEntity : Model<TEntity>, new()
     where TEntityDiff : Model<TEntityDiff>, new()
     where TEntityId : Model<TEntityId>, new()
@@ -3290,6 +3290,18 @@ public class QualityIdParam : IdParam<QualityIdGoo, QualityId>
 public class QualityIdComponent : IdComponent<QualityIdParam, QualityIdGoo, QualityId>
 {
     public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+}
+
+public class SerializeQualityIdComponent : SerializeIdComponent<QualityIdParam, QualityIdGoo, QualityId>
+{
+    public SerializeQualityIdComponent() { }
+    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4CA");
+}
+
+public class DeserializeQualityIdComponent : DeserializeIdComponent<QualityIdParam, QualityIdGoo, QualityId>
+{
+    public DeserializeQualityIdComponent() { }
+    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4CB");
 }
 
 public class QualityDiffGoo : DiffGoo<QualityDiff>

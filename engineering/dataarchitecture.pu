@@ -107,12 +107,19 @@ entity tags {
     representation_id : int <<FK>>
 }
 
-entity topics {
+entity concepts {
     *id : int <<PK,generated>>
     *name : string
     *order : int
     ..
     kit_id : int <<FK>>
+    type_id : int <<FK>>
+    design_id : int <<FK>>
+    --
+    CHECK (( (kit_id IS NOT NULL AND type_id IS NULL AND design_id IS NULL)
+        OR (kit_id IS NULL AND type_id IS NOT NULL AND design_id IS NULL)
+        OR (kit_id IS NULL AND type_id IS NULL AND design_id IS NOT NULL)
+        ))
 }
 
 entity representations {
@@ -325,7 +332,7 @@ kits ||--o{ designs
 kits ||--o{ authors
 kits ||--o{ qualities
 kits ||--o{ attributes
-kits ||--o{ topics
+kits ||--o{ concepts
 
 designs ||--o{ layers
 designs ||--o{ pieces
@@ -333,6 +340,7 @@ designs ||--o{ groups
 designs ||--o{ connections
 designs ||--o{ stats
 designs ||--o{ attributes
+designs ||--o{ concepts
 designs -- authors : "has" >
 
 group_pieces -- groups
@@ -342,6 +350,7 @@ types ||--o{ representations
 types ||--o{ ports
 types ||--o{ authors
 types ||--o{ attributes
+types ||--o{ concepts
 types -- authors : "has" >
 
 pieces ||--o{ planes

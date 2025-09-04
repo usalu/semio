@@ -5,6 +5,7 @@ An ecosystem for designing kit-of-parts architecture together.
 # File Structure
 
 ├── .claude
+│ └── settings.json
 ├── .cursor
 ├── .github
 │ ├── chatmodes
@@ -24,6 +25,9 @@ An ecosystem for designing kit-of-parts architecture together.
 │ ├── models
 │ └── semio
 ├── engineering
+│ ├── dataarchitecture.pu # blueprint for sql schemas
+│ ├── interfacearchitecture.txt # blueprint for json-based (rest api, graphql api, copy&paste) schemas
+│ └── softwarearchitecture.txt # blueprint for object-oriented code
 ├── examples
 │ ├── geometry
 │ ├── hello-semio

@@ -163,7 +163,7 @@ CREATE TABLE connection (
 	FOREIGN KEY(connecting_port_id) REFERENCES port (id), 
 	FOREIGN KEY(design_id) REFERENCES design (id)
 );
-CREATE TABLE topic (
+CREATE TABLE concept (
 	name VARCHAR(64) NOT NULL, 
 	"order" INTEGER NOT NULL, 
 	id INTEGER NOT NULL, 

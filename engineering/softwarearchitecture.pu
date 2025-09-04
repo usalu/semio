@@ -25,7 +25,7 @@ class Kit {
   designs: list[Design]
   authors: list[Author]
   attributes: list[Attribute]
-  topics: list[str]
+  concepts: list[str]
   --
   context Kit inv optionalFieldsCanBeEmpty:
     description->notEmpty() or description->isEmpty() and
@@ -58,6 +58,7 @@ class Type {
   ports: list[Port]
   authors: list[Author]
   attributes: list[Attribute]
+  concepts: list[str]
   --
   context Type inv optionalFieldsCanBeEmpty:
     description->notEmpty() or description->isEmpty() and
@@ -87,6 +88,7 @@ class Design {
   layers: list[Layer]
   groups: list[Group]
   attributes: list[Attribute]
+  concepts: list[str]
   --
   context Design inv optionalFieldsCanBeEmpty:
     description->notEmpty() or description->isEmpty() and
