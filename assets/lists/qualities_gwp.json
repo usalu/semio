@@ -10,7 +10,7 @@
       "si": "kgCO2e",
       "imperial": "lbCO2e",
       "symbol": "GWP_{life-cycle}",
-      "formula": "Add ( Multiply ( semio.gwp.energy semio.cost.life-cycle.life-time ) semio.gwp.construction )",
+      "formula": "Add ( Multiply ( semio.gwp.energy semio.time.life ) semio.gwp.construction )",
       "format": "#,##0.##"
     },
     {
@@ -36,11 +36,11 @@
       "si": "kgCO2e/a",
       "imperial": "lbCO2e/yr",
       "symbol": "GWP_h",
-      "formula": "Multiply ( semio.energy.heating.final.energy-demand semio.gwp.heating.factor )",
+      "formula": "Multiply ( semio.energy.demand.final.heating semio.factor.gwp.heating )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.gwp.heating.factor",
+      "key": "semio.factor.gwp.heating",
       "name": "Heating Global Warming Potential Factor",
       "translation": {
         "de": "Wärme Treibhauspotenzial-Faktor"
@@ -61,11 +61,11 @@
       "si": "kgCO2e/a",
       "imperial": "lbCO2e/yr",
       "symbol": "GWP_e",
-      "formula": "Multiply ( semio.energy.electricity.energy-demand semio.gwp.electricity.factor )",
+      "formula": "Multiply ( semio.energy.demand.electricity semio.factor.gwp.electricity )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.gwp.electricity.factor",
+      "key": "semio.factor.gwp.electricity",
       "name": "Electricity Global Warming Potential Factor",
       "translation": {
         "de": "Strom Treibhausfaktor"
@@ -86,7 +86,7 @@
       "si": "kgCO2e/a",
       "imperial": "lbCO2e/yr",
       "symbol": "GWP_v",
-      "formula": "Multiply ( semio.energy.ventilation.final.energy-demand semio.gwp.electricity.factor )",
+      "formula": "Multiply ( semio.energy.demand.final.ventilation semio.factor.gwp.electricity )",
       "format": "#,##0.##"
     },
     {
