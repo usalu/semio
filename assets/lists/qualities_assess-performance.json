@@ -10,7 +10,7 @@
       "si": "%",
       "imperial": "%",
       "symbol": "ROI",
-      "formula": " Divide ( Subtract ( semio.cost.life-cycle.earnings semio.cost.investment.initial ) semio.cost.investment.initial ) ",
+      "formula": " Divide ( Subtract ( semio.cost.life-cycle.earnings semio.cost.investment ) semio.cost.investment ) ",
       "format": "#,##0.#%"
     },
     {
@@ -51,7 +51,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.investment.initial",
+      "key": "semio.cost.investment",
       "name": "Initial Investment",
       "translation": {
         "de": "Startinvestition"
@@ -60,11 +60,11 @@
       "si": "€",
       "imperial": "$",
       "symbol": "C₀",
-      "formula": "Add ( semio.cost.investment.initial.construction semio.cost.investment.initial.technical-equipment )",
+      "formula": "Add ( semio.cost.investment.construction semio.cost.investment.technical-equipment )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.investment.initial.construction",
+      "key": "semio.cost.investment.construction",
       "name": "Building Construction Costs",
       "translation": {
         "de": "Konstruktionskosten"
@@ -76,7 +76,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.investment.initial.technical-equipment",
+      "key": "semio.cost.investment.technical-equipment",
       "name": "Technical Equipment Costs",
       "translation": {
         "de": "Kosten für technische Ausrüstung"
@@ -97,7 +97,7 @@
       "si": "€",
       "imperial": "$",
       "symbol": "LCC",
-      "formula": "Add ( semio.cost.investment.initial semio.cost.life-cycle.operating )",
+      "formula": "Add ( semio.cost.investment semio.cost.life-cycle.operating )",
       "format": "#,##0.##"
     },
 
@@ -635,7 +635,7 @@
       "format": "#,##0.###"
     },
     {
-      "key": "semio.energy.demand.heating.specific",
+      "key": "semio.energy.demand.heating.normalize.area.floor",
       "name": "Specific Heating Energy Demand",
       "translation": {
         "de": "Spezifischer Heizenergiebedarf"
@@ -648,7 +648,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.demand.final.specific",
+      "key": "semio.energy.demand.final.normalize.area.floor",
       "name": "Specific Final Energy Demand",
       "translation": {
         "de": "Spezifischer Endenergiebedarf"
@@ -661,7 +661,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.demand.primary.specific",
+      "key": "semio.energy.demand.primary.normalize.area.floor",
       "name": "Specific Primary Energy Demand",
       "translation": {
         "de": "Spezifischer Primärenergiebedarf"
@@ -674,7 +674,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.investment.initial.specific",
+      "key": "semio.cost.investment.normalize.area.floor",
       "name": "Specific Initial Investment",
       "translation": {
         "de": "Spezifische Startinvestition"
@@ -683,11 +683,11 @@
       "si": "€/m²",
       "imperial": "$/ft²",
       "symbol": "C₀_{area}",
-      "formula": "Divide ( semio.cost.investment.initial semio.area.floor.effective )",
+      "formula": "Divide ( semio.cost.investment semio.area.floor.effective )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.life-cycle.specific",
+      "key": "semio.cost.life-cycle.normalize.area.floor",
       "name": "Specific Life Cycle Costs",
       "translation": {
         "de": "Spezifische Lebenszykluskosten"
@@ -700,7 +700,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.gwp.life-cycle.specific",
+      "key": "semio.gwp.life-cycle.normalize.area.floor",
       "name": "Specific Life Cycle Global Warming Potential",
       "translation": {
         "de": "Spezifisches Treibhauspotenzial des Lebenszyklus"
@@ -713,7 +713,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.gwp.construction.specific",
+      "key": "semio.gwp.construction.normalize.area.floor",
       "name": "Specific Construction Global Warming Potential",
       "translation": {
         "de": "Spezifisches Treibhauspotenzial aller Bauteile"
@@ -753,20 +753,20 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.investment.initial.per-User",
+      "key": "semio.cost.investment.normalize.User",
       "name": "Initial Costs per User",
       "translation": {
-        "de": "Startkosten pro Nutzer"
+        "de": "Investitionskosten pro Nutzer"
       },
       "description": "The initial investment cost per user.",
       "si": "€/user",
       "imperial": "$/user",
       "symbol": "C₀_{user}",
-      "formula": "Divide ( semio.cost.investment.initial semio.users )",
+      "formula": "Divide ( semio.cost.investment semio.users )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.life-cycle.per-user",
+      "key": "semio.cost.life-cycle.normalize.User",
       "name": "Life Cycle Cost per User",
       "translation": {
         "de": "Lebenszykluskosten pro Nutzer"
@@ -779,7 +779,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.gwp.construction.per-user",
+      "key": "semio.gwp.construction.normalize.User",
       "name": "Construction GWP per User",
       "translation": {
         "de": "Konstruktions-Treibhauspotenzial pro Nutzer"
@@ -792,7 +792,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.demand.primary.per-user",
+      "key": "semio.energy.demand.primary.normalize.User",
       "name": "Primary Energy Demand per User",
       "translation": {
         "de": "Primärenergiebedarf pro Nutzer"
@@ -805,7 +805,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.demand.final.per-user",
+      "key": "semio.energy.demand.final.normalize.User",
       "name": "Final Energy Demand per User",
       "translation": {
         "de": "Endenergiebedarf pro Nutzer"
@@ -818,7 +818,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.demand.heating.per-user",
+      "key": "semio.energy.demand.heating.normalize.User",
       "name": "Heating Energy Demand per User",
       "translation": {
         "de": "Heizenergiebedarf pro Nutzer"
@@ -831,7 +831,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.demand.ventilation.specific",
+      "key": "semio.energy.demand.ventilation.normalize.area.floor",
       "name": "Specific Ventilation Energy Demand",
       "translation": {
         "de": "Spezifischer Lüftungsenergiebedarf"
@@ -844,7 +844,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.energy.demand.ventilation.per-user",
+      "key": "semio.energy.demand.ventilation.normalize.User",
       "name": "Ventilation Energy Demand per User",
       "translation": {
         "de": "Lüftungsenergiebedarf pro Nutzer"
@@ -857,7 +857,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.gwp.life-cycle.per-user",
+      "key": "semio.gwp.life-cycle.normalize.User",
       "name": "Life Cycle GWP per User",
       "translation": {
         "de": "Lebenszyklus-Treibhauspotenzial pro Nutzer"
