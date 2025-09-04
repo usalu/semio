@@ -173,14 +173,6 @@ export const LayerSchema = z.object({
   color: z.string().optional(),
 });
 
-// https://github.com/usalu/semio#-group-
-export const GroupSchema = z.object({
-  name: z.string(),
-  description: z.string().optional(),
-  color: z.string().optional(),
-  pieces: z.array(z.object({ id_: z.string() })).optional(),
-});
-
 // https://github.com/usalu/semio#-port-
 export const PortSchema = z.object({
   id_: z.string().optional(),
@@ -247,6 +239,17 @@ export const PieceSchema = z.object({
 });
 export const PieceIdSchema = z.object({ id_: z.string() });
 export const PieceIdLikeSchema = z.union([PieceSchema, PieceIdSchema, z.string()]);
+
+// https://github.com/usalu/semio#-group-
+export const GroupSchema = z.object({
+  name: z.string().optional(),
+  description: z.string().optional(),
+  pieces: z.array(PieceIdSchema),
+  color: z.string().optional(),
+  attributes: z.array(AttributeSchema).optional(),
+});
+export const GroupIdSchema = z.object({ name: z.string() });
+export const GroupIdLikeSchema = z.union([GroupSchema, GroupIdSchema, z.string()]);
 
 // https://github.com/usalu/semio#-side-
 export const SideSchema = z.object({
@@ -458,6 +461,11 @@ export const PieceDiffSchema = z.object({
   type: TypeIdSchema.optional(),
   plane: PlaneSchema.optional(),
   center: DiagramPointSchema.optional(),
+  scale: z.number().optional(),
+  mirrorPlane: PlaneSchema.optional(),
+  hidden: z.boolean().optional(),
+  locked: z.boolean().optional(),
+  color: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
 export const PiecesDiffSchema = z.object({
@@ -1239,6 +1247,11 @@ export const diff = {
       type: diff.type ?? base.type,
       plane: diff.plane ?? base.plane,
       center: diff.center ?? base.center,
+      scale: diff.scale ?? base.scale,
+      mirrorPlane: diff.mirrorPlane ?? base.mirrorPlane,
+      hidden: diff.hidden ?? base.hidden,
+      locked: diff.locked ?? base.locked,
+      color: diff.color ?? base.color,
       attributes: diff.attributes ?? base.attributes,
     }),
     connection: (base: Connection, diff: ConnectionDiff): Connection => ({

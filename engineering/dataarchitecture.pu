@@ -269,15 +269,19 @@ entity layers {
     *color: string
     ..
     design_id : int <<FK>>
+    --
+    CHECK (color = '' OR color ~ '^#[0-9A-Fa-f]{6}$')
 }
 
 entity groups {
     *id : int <<PK,generated>>
-    *name : string
-    *description : string
+    name : string
+    description : string
     *color: string
     ..
     design_id : int <<FK>>
+    --
+    CHECK (color = '' OR color ~ '^#[0-9A-Fa-f]{6}$')
 }
 
 entity group_pieces {

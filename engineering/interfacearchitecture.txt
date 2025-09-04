@@ -185,7 +185,7 @@ kit : !Kit{
             color : ?String // hex color
         ]
         groups : *Group[
-            name : !String
+            name : ?String
             description : ?String
             color : ?String // hex color
             pieces : *PieceId[

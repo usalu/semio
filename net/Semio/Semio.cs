@@ -2109,32 +2109,21 @@ public class Layer : Model<Layer>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-group-"/>
 /// </summary>
-[Model("📁", "Gr", "Grp", "A group for organizing design elements with collapse and expand functionality.")]
+[Model("📁", "Gr", "Grp", "A group for organizing design elements.")]
 public class Group : Model<Group>
 {
-    [Id("🆔", "Id", "Id", "The identifier of the group.", PropImportance.ID)]
-    [JsonProperty("id_")]
-    public string Id { get; set; } = "";
-    [Name("📛", "Nm", "Nam", "The name of the group.", PropImportance.REQUIRED)]
+    [Name("📛", "Nm", "Nam", "The optional name of the group.", PropImportance.OPTIONAL)]
     public string Name { get; set; } = "";
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the group.")]
     public string Description { get; set; } = "";
-    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the group.")]
-    public string Icon { get; set; } = "";
-    [Url("🖼️", "Im?", "Img?", "The optional url to the image of the group.")]
-    public string Image { get; set; } = "";
-    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the group.")]
-    public string Variant { get; set; } = "";
-    [FalseOrTrue("🗂️", "Co?", "Col?", "Whether the group is collapsed.")]
-    public bool Collapsed { get; set; } = false;
+    [ModelProp("⭕", "Pc*", "Pcs*", "The pieces in the group.", PropImportance.REQUIRED)]
+    public List<PieceId> Pieces { get; set; } = new();
     [Color("🎨", "Cl?", "Col?", "The optional hex color of the group.")]
     public string Color { get; set; } = "";
-    [ModelProp("⭕", "Pc*", "Pcs*", "The optional pieces in the group.", PropImportance.OPTIONAL)]
-    public List<PieceId> Pieces { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the group.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
-    public string ToIdString() => $"{Id}";
+    public string ToIdString() => $"{Name}";
     public string ToHumanIdString() => $"{Name}";
     public override string ToString() => $"Grp({ToHumanIdString()})";
 }

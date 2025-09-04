@@ -2800,6 +2800,7 @@ class GroupInput(GroupColorField, GroupDescriptionField, GroupNameField, Input):
 
 class GroupOutput(GroupColorField, GroupDescriptionField, GroupNameField, Output):
     pieces: list["PieceOutput"] = sqlmodel.Field(default_factory=list)
+    attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 
 class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity, table=True):

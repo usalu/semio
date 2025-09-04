@@ -818,6 +818,17 @@ public class AttributeIdGoo : IdGoo<AttributeId>
         return false;
     }
 }
+
+public class AttributeIdParam : IdParam<AttributeIdGoo, AttributeId>
+{
+    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B93");
+}
+
+public class AttributeIdComponent : IdComponent<AttributeIdParam, AttributeIdGoo, AttributeId>
+{
+    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B92");
+}
+
 public class AttributeDiffGoo : DiffGoo<AttributeDiff>
 {
     public AttributeDiffGoo() { }
@@ -3041,6 +3052,53 @@ public class DeserializeDesignComponent : DeserializeComponent<DesignParam, Desi
 #endregion Design
 
 #region Kit
+
+public class KitIdGoo : IdGoo<KitId>
+{
+    public KitIdGoo() { }
+    public KitIdGoo(KitId value) : base(value) { }
+
+    internal override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String(Value.Name);
+            return true;
+        }
+        return false;
+    }
+
+    internal override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+        if (source is KitDiffGoo diffGoo)
+        {
+            Value = diffGoo.Value;
+            return true;
+        }
+        if (source is KitGoo kitGoo)
+        {
+            Value = kitGoo.Value;
+            return true;
+        }
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+        {
+            Value = new KitId { Name = str };
+            return true;
+        }
+        return false;
+    }
+}
+
+public class KitIdParam : IdParam<KitIdGoo, KitId>
+{
+    public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B0");
+}
+
+public class KitIdComponent : IdComponent<KitIdParam, KitIdGoo, KitId>
+{
+    public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B1");
+}
 
 public class KitDiffGoo : DiffGoo<KitDiff>
 {

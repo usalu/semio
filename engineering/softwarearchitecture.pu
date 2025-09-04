@@ -147,6 +147,12 @@ class Group {
   description: str
   color: str
   pieces: list[Piece]
+  attributes: list[Attribute]
+  --
+  context Group inv nameCanBeEmpty:
+    name->notEmpty() or name->isEmpty()
+  context Group inv descriptionCanBeEmpty:
+    description->notEmpty() or description->isEmpty()
 }
 
 class Family {
