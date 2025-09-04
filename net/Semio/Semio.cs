@@ -1557,6 +1557,14 @@ public class UrlAttribute : TextAttribute
     { }
 }
 
+public class ColorAttribute : TextAttribute
+{
+    public ColorAttribute(string emoji, string code, string abbreviation, string description,
+        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
+        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, 7)
+    { }
+}
+
 public class DescriptionAttribute : TextAttribute
 {
     public DescriptionAttribute(string emoji, string code, string abbreviation, string description,
@@ -2087,6 +2095,8 @@ public class Layer : Model<Layer>
     public bool Visible { get; set; } = true;
     [FalseOrTrue("🔒", "Lo?", "Loc?", "Whether the layer is locked.")]
     public bool Locked { get; set; } = false;
+    [Color("🎨", "Cl?", "Col?", "The optional hex color of the layer.")]
+    public string Color { get; set; } = "";
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the layer.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
@@ -2116,6 +2126,10 @@ public class Group : Model<Group>
     public string Variant { get; set; } = "";
     [FalseOrTrue("🗂️", "Co?", "Col?", "Whether the group is collapsed.")]
     public bool Collapsed { get; set; } = false;
+    [Color("🎨", "Cl?", "Col?", "The optional hex color of the group.")]
+    public string Color { get; set; } = "";
+    [ModelProp("⭕", "Pc*", "Pcs*", "The optional pieces in the group.", PropImportance.OPTIONAL)]
+    public List<PieceId> Pieces { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the group.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
@@ -3313,6 +3327,12 @@ public class PieceDiff : Model<PieceDiff>
     public Plane? Plane { get; set; }
     [ModelProp("📍", "Cn?", "Cnt?", "The optional center of the piece for the diagram.", PropImportance.OPTIONAL)]
     public DiagramPoint? Center { get; set; }
+    [Color("🎨", "Cl?", "Col?", "The optional hex color of the piece.")]
+    public string Color { get; set; } = "";
+    [NumberProp("⚖️", "Sc?", "Scl?", "The optional scale factor of the piece.", PropImportance.OPTIONAL)]
+    public float? Scale { get; set; }
+    [ModelProp("🪞", "Mp?", "Mir?", "The optional mirror plane of the piece.", PropImportance.OPTIONAL)]
+    public Plane? MirrorPlane { get; set; }
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the piece.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
@@ -3325,12 +3345,15 @@ public class PieceDiff : Model<PieceDiff>
             Description = string.IsNullOrEmpty(other.Description) ? Description : other.Description,
             Plane = other.Plane ?? Plane,
             Center = other.Center ?? Center,
+            Color = string.IsNullOrEmpty(other.Color) ? Color : other.Color,
+            Scale = other.Scale ?? Scale,
+            MirrorPlane = other.MirrorPlane ?? MirrorPlane,
             Attributes = other.Attributes.Any() ? other.Attributes : Attributes
         };
     }
 
     public static implicit operator PieceDiff(PieceId id) => new() { Id = id.Id };
-    public static implicit operator PieceDiff(Piece piece) => new() { Id = piece.Id, Type = new TypeId { Name = piece.Type.Name, Variant = piece.Type.Variant }, Description = piece.Description, Plane = piece.Plane, Center = piece.Center, Attributes = piece.Attributes };
+    public static implicit operator PieceDiff(Piece piece) => new() { Id = piece.Id, Type = piece.Type, Description = piece.Description, Plane = piece.Plane, Center = piece.Center, Color = piece.Color, Scale = piece.Scale, MirrorPlane = piece.MirrorPlane, Attributes = piece.Attributes };
 }
 
 [Model("📊", "PsD", "PsDf", "A diff for multiple pieces.")]
@@ -3395,6 +3418,12 @@ public class Piece : Model<Piece>
     public bool Hidden { get; set; } = false;
     [FalseOrTrue("🔒", "Lk?", "Lck?", "Whether the piece is locked. A locked piece cannot be edited.")]
     public bool Locked { get; set; } = false;
+    [Color("🎨", "Cl?", "Col?", "The optional hex color of the piece.")]
+    public string Color { get; set; } = "";
+    [NumberProp("⚖️", "Sc?", "Scl?", "The optional scale factor of the piece.", PropImportance.OPTIONAL)]
+    public float Scale { get; set; } = 1.0f;
+    [ModelProp("🪞", "Mp?", "Mir?", "The optional mirror plane of the piece.", PropImportance.OPTIONAL)]
+    public Plane? MirrorPlane { get; set; }
     [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the piece.", PropImportance.OPTIONAL)]
     public List<Prop> Props { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the piece.", PropImportance.OPTIONAL)]
@@ -3404,7 +3433,7 @@ public class Piece : Model<Piece>
     public override string ToString() => $"Pce({ToHumanIdString()})";
 
     public static implicit operator Piece(PieceId id) => new() { Id = id.Id };
-    public static implicit operator Piece(PieceDiff diff) => new() { Id = diff.Id ?? "", Description = diff.Description ?? "", Type = diff.Type, Plane = diff.Plane, Center = diff.Center, Attributes = diff.Attributes ?? new() };
+    public static implicit operator Piece(PieceDiff diff) => new() { Id = diff.Id ?? "", Description = diff.Description ?? "", Type = diff.Type, Plane = diff.Plane, Center = diff.Center, Color = diff.Color ?? "", Scale = diff.Scale ?? 1.0f, MirrorPlane = diff.MirrorPlane, Attributes = diff.Attributes ?? new() };
     public static implicit operator string(Piece piece) => piece.Id;
     public static implicit operator Piece(string id) => new() { Id = id };
 
@@ -3420,6 +3449,9 @@ public class Piece : Model<Piece>
             Center = diff.Center ?? Center,
             Hidden = Hidden,
             Locked = Locked,
+            Color = string.IsNullOrEmpty(diff.Color) ? Color : diff.Color,
+            Scale = diff.Scale ?? Scale,
+            MirrorPlane = diff.MirrorPlane ?? MirrorPlane,
             Props = Props,
             Attributes = diff.Attributes.Any() ? diff.Attributes : Attributes
         };
@@ -3829,10 +3861,18 @@ public class Design : Model<Design>
     public Location? Location { get; set; }
     [Name("Ⓜ️", "Ut", "Unt", "The length unit for all distance-related information of the design.", PropImportance.REQUIRED)]
     public string Unit { get; set; } = "";
+    [FalseOrTrue("⚖️", "Sc?", "Scl?", "Whether the design can be scaled.")]
+    public bool Scalable { get; set; } = true;
+    [FalseOrTrue("🪞", "Mi?", "Mir?", "Whether the design can be mirrored.")]
+    public bool Mirrorable { get; set; } = true;
     [ModelProp("⭕", "Pc*", "Pcs*", "The optional pieces of the design.", PropImportance.OPTIONAL)]
     public List<Piece> Pieces { get; set; } = new();
     [ModelProp("🔗", "Co*", "Cons*", "The optional connections of the design.", PropImportance.OPTIONAL)]
     public List<Connection> Connections { get; set; } = new();
+    [ModelProp("🔗", "Ly*", "Lyr*", "The optional layers of the design.", PropImportance.OPTIONAL)]
+    public List<Layer> Layers { get; set; } = new();
+    [ModelProp("🗂️", "Gr*", "Grp*", "The optional groups of the design.", PropImportance.OPTIONAL)]
+    public List<Group> Groups { get; set; } = new();
     [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the design.", PropImportance.OPTIONAL)]
     public List<Prop> Props { get; set; } = new();
     [ModelProp("🔢", "St*", "Stt*", "The optional stats of the design.", PropImportance.OPTIONAL)]
@@ -4689,6 +4729,8 @@ public class Kit : Model<Kit>
     public List<Type> Types { get; set; } = new();
     [ModelProp("🏙️", "Dn*", "Dsn*", "The optional designs of the kit.", PropImportance.OPTIONAL)]
     public List<Design> Designs { get; set; } = new();
+    [ModelProp("🏷️", "Tp*", "Top*", "The optional topics of the kit.", PropImportance.OPTIONAL)]
+    public List<string> Topics { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the kit.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
