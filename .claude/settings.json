@@ -17,7 +17,6 @@
       "Edit(js/core/semio.ts)",
       "Read(js\\core\\semio.ts)",
       "Edit(js\\core\\semio.ts)",
-      // js/core/components/**/*.*
       "Read(js/core/components/**)",
       "Edit(js/core/components/**)",
       "Read(js\\core\\components/**)",

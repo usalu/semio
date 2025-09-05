@@ -309,7 +309,21 @@ public abstract class ModelParam<TGoo, TModel> : GH_PersistentParam<TGoo> where 
         ((ModelAttribute)System.Attribute.GetCustomAttribute(typeof(TModel), typeof(ModelAttribute))).Description,
         Constants.Category, "Params")
     { }
-    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower()}_24x24");
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{GetIconName()}_24x24");
+    
+    protected virtual string GetIconName()
+    {
+        var typeName = typeof(TModel).Name.ToLower();
+        
+        if (typeName.EndsWith("id"))
+            return typeName.Substring(0, typeName.Length - 2) + "_id";
+        
+        if (typeName.EndsWith("diff"))
+            return typeName.Substring(0, typeName.Length - 4) + "_diff";
+            
+        return typeName;
+    }
+    
     protected override GH_GetterResult Prompt_Singular(ref TGoo value) => throw new NotImplementedException();
     protected override GH_GetterResult Prompt_Plural(ref List<TGoo> values) => throw new NotImplementedException();
 }

@@ -7,7 +7,7 @@
             }
 
             .primary {
-                fill: #ef3d53;
+                fill: #ff344f;
             }
 
             .secondary {

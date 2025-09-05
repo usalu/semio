@@ -35,13 +35,14 @@ An ecosystem for designing kit-of-parts architecture together.
 ├── examples
 │ ├── geometry
 │ ├── hello-semio
+│ ├── metabolism # main example with all features
 │ ├── starters
 │ ├── urban-patterns
 │ └── voxels
 ├── graphql
 ├── js
 │ ├── ai
-│ ├── core
+│ ├── core # all shared js code (ui, domain logic, configs, …)
 │ │ ├── components
 │ │ │ ├── ui
 │ │ │ │ ├── sketchpad
