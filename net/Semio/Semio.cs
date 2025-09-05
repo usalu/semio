@@ -3404,6 +3404,8 @@ public class Piece : Model<Piece>
     [Id("🆔", "Id?", "Id", "The optional local identifier of the piece within the design. No id means the default piece.", isDefaultValid: true)]
     [JsonProperty("id_")]
     public string Id { get; set; } = "";
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the piece.")]
+    public string Description { get; set; } = "";
     [ModelProp("🧩", "Ty?", "Typ?", "The optional type of the piece. Either type or design must be set.", PropImportance.OPTIONAL)]
     public TypeId? Type { get; set; }
     [ModelProp("🏙️", "Dn?", "Dsn?", "The optional design of this piece. Either type or design must be set.", PropImportance.OPTIONAL)]
