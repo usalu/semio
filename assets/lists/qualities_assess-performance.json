@@ -1,7 +1,7 @@
 {
   "qualities": [
     {
-      "key": "semio.cost.life-cycle.earnings.roi",
+      "key": "semio.costs.life-cycle.earnings.roi",
       "name": "Return on Investment",
       "translation": {
         "de": "Rendite"
@@ -10,11 +10,11 @@
       "si": "%",
       "imperial": "%",
       "symbol": "ROI",
-      "formula": " Divide ( Subtract ( semio.cost.life-cycle.earnings semio.cost.investment ) semio.cost.investment ) ",
+      "formula": " Divide ( Subtract ( semio.costs.life-cycle.earnings semio.costs.investment ) semio.costs.investment ) ",
       "format": "#,##0.#%"
     },
     {
-      "key": "semio.cost.life-cycle.earnings",
+      "key": "semio.costs.life-cycle.earnings",
       "name": "Life Cycle earnings",
       "translation": {
         "de": "Lebenszyklus-Einnahmen"
@@ -51,7 +51,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.investment",
+      "key": "semio.costs.investment",
       "name": "Initial Investment",
       "translation": {
         "de": "Startinvestition"
@@ -60,11 +60,11 @@
       "si": "€",
       "imperial": "$",
       "symbol": "C₀",
-      "formula": "Add ( semio.cost.investment.construction semio.cost.investment.technical-equipment )",
+      "formula": "Add ( semio.costs.investment.construction semio.costs.investment.technical-equipment )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.investment.construction",
+      "key": "semio.costs.investment.construction",
       "name": "Building Construction Costs",
       "translation": {
         "de": "Konstruktionskosten"
@@ -76,7 +76,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.investment.technical-equipment",
+      "key": "semio.costs.investment.technical-equipment",
       "name": "Technical Equipment Costs",
       "translation": {
         "de": "Kosten für technische Ausrüstung"
@@ -88,7 +88,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.life-cycle",
+      "key": "semio.costs.life-cycle",
       "name": "Life Cycle Costs",
       "translation": {
         "de": "Lebenszykluskosten"
@@ -97,12 +97,12 @@
       "si": "€",
       "imperial": "$",
       "symbol": "LCC",
-      "formula": "Add ( semio.cost.investment semio.cost.life-cycle.operating )",
+      "formula": "Add ( semio.costs.investment semio.costs.life-cycle.operating )",
       "format": "#,##0.##"
     },
 
     {
-      "key": "semio.cost.life-cycle.operating",
+      "key": "semio.costs.life-cycle.operating",
       "name": "Operating Costs",
       "translation": {
         "de": "Betriebskosten"
@@ -201,7 +201,7 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_{h,cost}",
-      "formula": "Multiply ( semio.energy.demand.final.heating semio.cost.price.energy.heating )",
+      "formula": "Multiply ( semio.energy.demand.final.heating semio.costs.price.energy.heating )",
       "format": "#,##0.##"
     },
     {
@@ -316,7 +316,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.price.energy.heating",
+      "key": "semio.costs.price.energy.heating",
       "name": "Heating Energy Price",
       "translation": {
         "de": "Heizenergie-Preis"
@@ -337,11 +337,11 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_{h,CO₂}",
-      "formula": "Multiply ( semio.gwp.heating semio.cost.CO2-price )",
+      "formula": "Multiply ( semio.gwp.heating semio.costs.CO2-price )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.CO2-price",
+      "key": "semio.costs.CO2-price",
       "name": "CO2 Price",
       "translation": {
         "de": "CO2-Preis"
@@ -363,7 +363,7 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_{e,cost}",
-      "formula": "Multiply ( semio.energy.demand.electricity semio.cost.price.energy.electricity )",
+      "formula": "Multiply ( semio.energy.demand.electricity semio.costs.price.energy.electricity )",
       "format": "#,##0.##"
     },
     {
@@ -392,7 +392,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.price.energy.electricity",
+      "key": "semio.costs.price.energy.electricity",
       "name": "Electricity Energy Price",
       "translation": {
         "de": "Strompreis"
@@ -413,7 +413,7 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_{e,CO₂}",
-      "formula": "Multiply ( semio.gwp.electricity semio.cost.CO2-price )",
+      "formula": "Multiply ( semio.gwp.electricity semio.costs.CO2-price )",
       "format": "#,##0.##"
     },
 
@@ -427,7 +427,7 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_{v,cost}",
-      "formula": "Multiply ( semio.energy.demand.final.ventilation semio.cost.price.energy.electricity )",
+      "formula": "Multiply ( semio.energy.demand.final.ventilation semio.costs.price.energy.electricity )",
       "format": "#,##0.##"
     },
     {
@@ -502,7 +502,7 @@
       "si": "€/a",
       "imperial": "$/yr",
       "symbol": "C_{v,CO2}",
-      "formula": "Multiply ( semio.gwp.ventilation semio.cost.CO2-price )",
+      "formula": "Multiply ( semio.gwp.ventilation semio.costs.CO2-price )",
       "format": "#,##0.##"
     },
 
@@ -674,7 +674,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.investment.normalize.area.floor",
+      "key": "semio.costs.investment.normalize.area.floor",
       "name": "Specific Initial Investment",
       "translation": {
         "de": "Spezifische Startinvestition"
@@ -683,11 +683,11 @@
       "si": "€/m²",
       "imperial": "$/ft²",
       "symbol": "C₀_{area}",
-      "formula": "Divide ( semio.cost.investment semio.area.floor.effective )",
+      "formula": "Divide ( semio.costs.investment semio.area.floor.effective )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.life-cycle.normalize.area.floor",
+      "key": "semio.costs.life-cycle.normalize.area.floor",
       "name": "Specific Life Cycle Costs",
       "translation": {
         "de": "Spezifische Lebenszykluskosten"
@@ -696,7 +696,7 @@
       "si": "€/m²",
       "imperial": "$/ft²",
       "symbol": "LCC_{area}",
-      "formula": "Divide ( semio.cost.life-cycle semio.area.floor.effective )",
+      "formula": "Divide ( semio.costs.life-cycle semio.area.floor.effective )",
       "format": "#,##0.##"
     },
     {
@@ -753,7 +753,7 @@
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.investment.normalize.User",
+      "key": "semio.costs.investment.normalize.User",
       "name": "Initial Costs per User",
       "translation": {
         "de": "Investitionskosten pro Nutzer"
@@ -762,11 +762,11 @@
       "si": "€/user",
       "imperial": "$/user",
       "symbol": "C₀_{user}",
-      "formula": "Divide ( semio.cost.investment semio.users )",
+      "formula": "Divide ( semio.costs.investment semio.users )",
       "format": "#,##0.##"
     },
     {
-      "key": "semio.cost.life-cycle.normalize.User",
+      "key": "semio.costs.life-cycle.normalize.User",
       "name": "Life Cycle Cost per User",
       "translation": {
         "de": "Lebenszykluskosten pro Nutzer"
@@ -775,7 +775,7 @@
       "si": "€/user",
       "imperial": "$/user",
       "symbol": "LCC_{user}",
-      "formula": "Divide ( semio.cost.life-cycle semio.users )",
+      "formula": "Divide ( semio.costs.life-cycle semio.users )",
       "format": "#,##0.##"
     },
     {
