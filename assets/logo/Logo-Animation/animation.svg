@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 431.47 139.89">
+    <title>semio logo animation</title>
+    <defs>
+        <style>
+            .profile {
+                stroke: #f7f3e3;
+            }
+
+            .primary {
+                fill: #ef3d53;
+            }
+
+            .secondary {
+                fill: #fa9500;
+            }
+
+            .tertiary {
+                fill: #00a69d;
+            }
+        </style>
+        <g id="ProfileDouble##2">
+            <path id="_ProfileDouble##2" class="profile tertiary" d="M 38,20 18,0 H 0 v 20 z" />
+        </g>
+        <g id="ProfileDouble##4">
+            <path id="_ProfileDouble##4" class="profile secondary" d="M 0.06,20 H 78 L 58,0 H 0 Z" />
+        </g>
+        <g id="ProfileDouble##5">
+            <path id="_ProfileDouble##5" class="profile primary" d="M 0,20 H 98.52 L 78.52,0 H 0 Z" />
+        </g>
+    </defs>
+    <g id="keyframe_1">
+        <use x="0" y="0" href="#ProfileDouble##5" transform="matrix(1,0,0,-1,0,20)" />
+        <use x="-40" y="40" href="#ProfileDouble##2" transform="matrix(-1,0,0,1,40,0)" />
+    </g>
+</svg>
