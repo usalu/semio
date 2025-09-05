@@ -215,13 +215,13 @@ public static class Utility
         else
         {
             var osAwareUrl = url.Replace("/", Path.DirectorySeparatorChar.ToString());
-            content = File.ReadAllBytes(osAwareUrl);
+            content = System.IO.File.ReadAllBytes(osAwareUrl);
             mime = ParseMimeFromUrl(osAwareUrl);
         }
         return $"data:{mime};base64,{Convert.ToBase64String(content)}";
     }
 
-    public static string ReadAndEncode(string filename) => $"data:{ParseMimeFromUrl(filename)};base64,{Convert.ToBase64String(File.ReadAllBytes(filename))}";
+    public static string ReadAndEncode(string filename) => $"data:{ParseMimeFromUrl(filename)};base64,{Convert.ToBase64String(System.IO.File.ReadAllBytes(filename))}";
     public static string Encode(string text, EncodeMode mode = EncodeMode.Urlsafe,
         Tuple<List<string>, List<string>>? replace = null)
     {
@@ -1474,9 +1474,9 @@ public class Expression
 
 #region Modeling
 
-public abstract class ConceptAttribute : System.Attribute
+public abstract class MetaAttribute : System.Attribute
 {
-    public ConceptAttribute(string emoji, string code, string abbreviation, string description)
+    public MetaAttribute(string emoji, string code, string abbreviation, string description)
     {
         Emoji = emoji;
         Code = code;
@@ -1491,11 +1491,19 @@ public abstract class ConceptAttribute : System.Attribute
 }
 
 [AttributeUsage(AttributeTargets.Class)]
-public class ModelAttribute : ConceptAttribute
+public class ModelAttribute : MetaAttribute
 {
     public ModelAttribute(string emoji, string code, string abbreviation, string description)
         : base(emoji, code,
             abbreviation, description)
+    { }
+}
+
+[AttributeUsage(AttributeTargets.Enum)]
+public class EnumAttribute : MetaAttribute
+{
+    public EnumAttribute(string emoji, string code, string abbreviation, string description)
+        : base(emoji, code, abbreviation, description)
     { }
 }
 
@@ -1507,7 +1515,7 @@ public enum PropImportance
 }
 
 [AttributeUsage(AttributeTargets.Property)]
-public abstract class PropAttribute : ConceptAttribute
+public abstract class PropAttribute : MetaAttribute
 {
     public PropAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance, bool isDefaultValid, bool skipValidation) : base(emoji, code, abbreviation, description)
         => (Importance, IsDefaultValid, SkipValidation) = (importance, isDefaultValid, skipValidation);
@@ -1911,6 +1919,7 @@ public class Benchmark : Model<Benchmark>
 }
 
 [Flags]
+[Enum("🏷️", "QK", "QlK", "The kind of quality indicating its scope and applicability.")]
 public enum QualityKind
 {
     General = 0,
@@ -2076,32 +2085,17 @@ public class Stat : Model<Stat>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-layer-"/>
 /// </summary>
-[Model("📄", "Ly", "Lyr", "A layer for organizing design elements with visibility and locking controls.")]
+[Model("📄", "Ly", "Lyr", "A layer for organizing design elements.")]
 public class Layer : Model<Layer>
 {
-    [Id("🆔", "Id", "Id", "The identifier of the layer.", PropImportance.ID)]
-    [JsonProperty("id_")]
-    public string Id { get; set; } = "";
     [Name("📛", "Nm", "Nam", "The name of the layer.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the layer.")]
     public string Description { get; set; } = "";
-    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the layer.")]
-    public string Icon { get; set; } = "";
-    [Url("🖼️", "Im?", "Img?", "The optional url to the image of the layer.")]
-    public string Image { get; set; } = "";
-    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the layer.")]
-    public string Variant { get; set; } = "";
-    [FalseOrTrue("👁️", "Vi?", "Vis?", "Whether the layer is visible.")]
-    public bool Visible { get; set; } = true;
-    [FalseOrTrue("🔒", "Lo?", "Loc?", "Whether the layer is locked.")]
-    public bool Locked { get; set; } = false;
-    [Color("🎨", "Cl?", "Col?", "The optional hex color of the layer.")]
+    [Color("🎨", "Cl?", "Col?", "The hex color of the layer.")]
     public string Color { get; set; } = "";
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the layer.", PropImportance.OPTIONAL)]
-    public List<Attribute> Attributes { get; set; } = new();
 
-    public string ToIdString() => $"{Id}";
+    public string ToIdString() => $"{Name}";
     public string ToHumanIdString() => $"{Name}";
     public override string ToString() => $"Lyr({ToHumanIdString()})";
 }
@@ -2286,12 +2280,12 @@ public class FileId : Model<FileId>
     public string ToHumanId() => ToHumanIdString();
     public override string ToString() => $"FilId({ToHumanIdString()})";
 
-    public static implicit operator FileId(SemioFile file) => new() { Url = file.Url };
+    public static implicit operator FileId(File file) => new() { Url = file.Url };
     public static implicit operator FileId(FileDiff diff) => new() { Url = diff.Url ?? "" };
 }
 
 [Model("📄", "Fl", "Fil", "A file with content.")]
-public class SemioFile : Model<SemioFile>
+public class File : Model<File>
 {
     [Url("🔗", "Ur", "Url", "The url of the file.", PropImportance.ID)]
     public string Url { get; set; } = "";
@@ -2307,8 +2301,8 @@ public class SemioFile : Model<SemioFile>
     public string ToHumanId() => ToHumanIdString();
     public override string ToString() => $"Fil({ToHumanIdString()})";
 
-    public static implicit operator SemioFile(FileId id) => new() { Url = id.Url };
-    public static implicit operator SemioFile(FileDiff diff) => new() { Url = diff.Url ?? "", Data = diff.Data ?? "", Size = diff.Size, Hash = diff.Hash ?? "" };
+    public static implicit operator File(FileId id) => new() { Url = id.Url };
+    public static implicit operator File(FileDiff diff) => new() { Url = diff.Url ?? "", Data = diff.Data ?? "", Size = diff.Size, Hash = diff.Hash ?? "" };
 }
 
 /// <summary>
@@ -3194,7 +3188,7 @@ public class FileDiff : Model<FileDiff>
     }
 
     public static implicit operator FileDiff(FileId id) => new() { Url = id.Url };
-    public static implicit operator FileDiff(SemioFile file) => new() { Url = file.Url, Data = file.Data, Size = file.Size, Hash = file.Hash };
+    public static implicit operator FileDiff(File file) => new() { Url = file.Url, Data = file.Data, Size = file.Size, Hash = file.Hash };
 }
 
 [Model("📊", "FsD", "FsDf", "A diff for multiple files.")]
@@ -3205,9 +3199,9 @@ public class FilesDiff : Model<FilesDiff>
     [ModelProp("✏️", "Up*", "Upd*", "The optional updated files.", PropImportance.OPTIONAL)]
     public List<FileDiff> Updated { get; set; } = new();
     [ModelProp("➕", "Ad*", "Add*", "The optional added files.", PropImportance.OPTIONAL)]
-    public List<SemioFile> Added { get; set; } = new();
+    public List<File> Added { get; set; } = new();
 
-    public static implicit operator FilesDiff(List<SemioFile> files) => new() { Updated = files.Select(f => (FileDiff)f).ToList() };
+    public static implicit operator FilesDiff(List<File> files) => new() { Updated = files.Select(f => (FileDiff)f).ToList() };
 }
 
 [Model("🗃️", "KD", "KDf", "A diff for kits.")]

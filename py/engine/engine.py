@@ -1411,7 +1411,9 @@ class Author(AuthorRankField, AuthorEmailField, AuthorNameField, TableEntity, ta
     kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="authors_")
 
     __table_args__ = (
-        sqlalchemy.CheckConstraint("(type_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL) OR (type_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL) OR (type_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL)", name="ck_authors_parent_set"),
+        sqlalchemy.CheckConstraint(
+            "(type_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL) OR (type_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL) OR (type_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL)", name="ck_authors_parent_set"
+        ),
         sqlalchemy.UniqueConstraint("email", "type_id", "design_id", "kit_id", name="uq_authors_email_type_id_design_id_kit_id"),
     )
 
@@ -2318,7 +2320,9 @@ class DesignPrediction(DesignDescriptionField, Prediction):
     connections: list[ConnectionPrediction] = sqlmodel.Field(default_factory=list)
 
 
-class Design(DesignUpdatedField, DesignCreatedField, DesignMirrorableField, DesignScalableField, DesignUnitField, DesignViewField, DesignVariantField, DesignImageField, DesignIconField, DesignDescriptionField, DesignNameField, TableEntity, table=True):
+class Design(
+    DesignUpdatedField, DesignCreatedField, DesignMirrorableField, DesignScalableField, DesignUnitField, DesignViewField, DesignVariantField, DesignImageField, DesignIconField, DesignDescriptionField, DesignNameField, TableEntity, table=True
+):
     PLURAL = "designs"
     __tablename__ = "designs"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
@@ -2530,11 +2534,43 @@ class QualityId(QualityKeyField, Id):
     pass
 
 
-class QualityProps(QualityFormulaField, QualityDefaultField, QualityMaxExcludedField, QualityMaxField, QualityMinExcludedField, QualityMinField, QualityImperialField, QualitySiField, QualityKindField, QualityScalableField, QualityUriField, QualityDescriptionField, QualityNameField, QualityKeyField, Props):
+class QualityProps(
+    QualityFormulaField,
+    QualityDefaultField,
+    QualityMaxExcludedField,
+    QualityMaxField,
+    QualityMinExcludedField,
+    QualityMinField,
+    QualityImperialField,
+    QualitySiField,
+    QualityKindField,
+    QualityScalableField,
+    QualityUriField,
+    QualityDescriptionField,
+    QualityNameField,
+    QualityKeyField,
+    Props,
+):
     pass
 
 
-class QualityInput(QualityFormulaField, QualityDefaultField, QualityMaxExcludedField, QualityMaxField, QualityMinExcludedField, QualityMinField, QualityImperialField, QualitySiField, QualityKindField, QualityScalableField, QualityUriField, QualityDescriptionField, QualityNameField, QualityKeyField, Input):
+class QualityInput(
+    QualityFormulaField,
+    QualityDefaultField,
+    QualityMaxExcludedField,
+    QualityMaxField,
+    QualityMinExcludedField,
+    QualityMinField,
+    QualityImperialField,
+    QualitySiField,
+    QualityKindField,
+    QualityScalableField,
+    QualityUriField,
+    QualityDescriptionField,
+    QualityNameField,
+    QualityKeyField,
+    Input,
+):
     pass
 
 
@@ -2542,12 +2578,49 @@ class QualityContext(QualityDescriptionField, QualityNameField, QualityKeyField,
     pass
 
 
-class QualityOutput(QualityUpdatedField, QualityCreatedField, QualityFormulaField, QualityDefaultField, QualityMaxExcludedField, QualityMaxField, QualityMinExcludedField, QualityMinField, QualityImperialField, QualitySiField, QualityKindField, QualityScalableField, QualityUriField, QualityDescriptionField, QualityNameField, QualityKeyField, Output):
+class QualityOutput(
+    QualityUpdatedField,
+    QualityCreatedField,
+    QualityFormulaField,
+    QualityDefaultField,
+    QualityMaxExcludedField,
+    QualityMaxField,
+    QualityMinExcludedField,
+    QualityMinField,
+    QualityImperialField,
+    QualitySiField,
+    QualityKindField,
+    QualityScalableField,
+    QualityUriField,
+    QualityDescriptionField,
+    QualityNameField,
+    QualityKeyField,
+    Output,
+):
     benchmarks: list["BenchmarkOutput"] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 
-class Quality(QualityUpdatedField, QualityCreatedField, QualityFormulaField, QualityDefaultField, QualityMaxExcludedField, QualityMaxField, QualityMinExcludedField, QualityMinField, QualityImperialField, QualitySiField, QualityKindField, QualityScalableField, QualityUriField, QualityDescriptionField, QualityNameField, QualityKeyField, TableEntity, table=True):
+class Quality(
+    QualityUpdatedField,
+    QualityCreatedField,
+    QualityFormulaField,
+    QualityDefaultField,
+    QualityMaxExcludedField,
+    QualityMaxField,
+    QualityMinExcludedField,
+    QualityMinField,
+    QualityImperialField,
+    QualitySiField,
+    QualityKindField,
+    QualityScalableField,
+    QualityUriField,
+    QualityDescriptionField,
+    QualityNameField,
+    QualityKeyField,
+    TableEntity,
+    table=True,
+):
     PLURAL = "qualities"
     __tablename__ = "qualities"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
@@ -4228,7 +4301,7 @@ class PortNode(TableEntityNode):
     localId = graphene.String()
 
     def resolve_localId(self, info):
-        return getattr(self, 'id_', '')
+        return getattr(self, "id_", "")
 
     # attributes = graphene.List(graphene.NonNull(lambda: AttributeNode))
 
@@ -4280,7 +4353,7 @@ class PieceNode(TableEntityNode):
     localId = graphene.String()
 
     def resolve_localId(self, info):
-        return getattr(self, 'id_', '')
+        return getattr(self, "id_", "")
 
 
 class PieceInputNode(InputNode):

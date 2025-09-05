@@ -7,6 +7,10 @@ An ecosystem for designing kit-of-parts architecture together.
 ├── .claude
 │ └── settings.json
 ├── .cursor
+│ ├── rules
+│ │ ├── js-core.mdc # js/core/**/_._
+│ │ ├── js.mdc # js/**/_._
+│ │ └── repo.mdc # \*_/_.\*
 ├── .github
 │ ├── chatmodes
 │ └── workflows

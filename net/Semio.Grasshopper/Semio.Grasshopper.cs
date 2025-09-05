@@ -41,6 +41,7 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -53,6 +54,7 @@ using Grasshopper.Kernel.Types;
 using Humanizer;
 using Rhino;
 using Rhino.Geometry;
+using Semio;
 using System.Text.RegularExpressions;
 
 namespace Semio.Grasshopper;
@@ -252,35 +254,35 @@ public static class RhinoConverter
 
 #region Bases
 
-public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
+public abstract class ModelGoo<TModel> : GH_Goo<TModel> where TModel : Model<TModel>, new()
 {
-    public ModelGoo() { Value = new T(); }
-    public ModelGoo(T value) { Value = value; }
+    public ModelGoo() { Value = new TModel(); }
+    public ModelGoo(TModel value) { Value = value; }
     public override bool IsValid => true;
-    public override string TypeName => typeof(T).Name;
-    public override string TypeDescription => ((ModelAttribute)System.Attribute.GetCustomAttribute(typeof(T), typeof(ModelAttribute))).Description;
+    public override string TypeName => typeof(TModel).Name;
+    public override string TypeDescription => ((ModelAttribute)System.Attribute.GetCustomAttribute(typeof(TModel), typeof(ModelAttribute))).Description;
     public override IGH_Goo Duplicate()
     {
-        var duplicate = (ModelGoo<T>)Activator.CreateInstance(GetType());
+        var duplicate = (ModelGoo<TModel>)Activator.CreateInstance(GetType());
         duplicate.Value = Value.DeepClone();
         return duplicate;
     }
     public override string ToString() => Value.ToString();
     public override bool Write(GH_IWriter writer)
     {
-        writer.SetString(typeof(T).Name, Value.Serialize());
+        writer.SetString(typeof(TModel).Name, Value.Serialize());
         return base.Write(writer);
     }
     public override bool Read(GH_IReader reader)
     {
-        Value = reader.GetString(typeof(T).Name).Deserialize<T>();
+        Value = reader.GetString(typeof(TModel).Name).Deserialize<TModel>();
         return base.Read(reader);
     }
     internal virtual bool CustomCastTo<Q>(ref Q target) => false;
     internal virtual bool CustomCastFrom(object source) => false;
     public override bool CastTo<Q>(ref Q target)
     {
-        if (typeof(Q).IsAssignableFrom(typeof(T)))
+        if (typeof(Q).IsAssignableFrom(typeof(TModel)))
         {
             target = (Q)(object)this;
             return true;
@@ -291,7 +293,7 @@ public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
     public override bool CastFrom(object source)
     {
         if (source == null) return false;
-        if (source is T model)
+        if (source is TModel model)
         {
             Value = model;
             return true;
@@ -300,18 +302,53 @@ public abstract class ModelGoo<T> : GH_Goo<T> where T : Model<T>, new()
     }
 }
 
-public abstract class ModelParam<T, U> : GH_PersistentParam<T> where T : ModelGoo<U> where U : Model<U>, new()
+public abstract class ModelParam<TGoo, TModel> : GH_PersistentParam<TGoo> where TGoo : ModelGoo<TModel> where TModel : Model<TModel>, new()
 {
-    internal ModelParam() : base(typeof(U).Name,
-        ((ModelAttribute)System.Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Code,
-        ((ModelAttribute)System.Attribute.GetCustomAttribute(typeof(U), typeof(ModelAttribute))).Description,
+    internal ModelParam() : base(typeof(TModel).Name,
+        ((ModelAttribute)System.Attribute.GetCustomAttribute(typeof(TModel), typeof(ModelAttribute))).Code,
+        ((ModelAttribute)System.Attribute.GetCustomAttribute(typeof(TModel), typeof(ModelAttribute))).Description,
         Constants.Category, "Params")
     { }
-    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(U).Name.ToLower()}_24x24");
-    protected override GH_GetterResult Prompt_Singular(ref T value) => throw new NotImplementedException();
-    protected override GH_GetterResult Prompt_Plural(ref List<T> values) => throw new NotImplementedException();
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower()}_24x24");
+    protected override GH_GetterResult Prompt_Singular(ref TGoo value) => throw new NotImplementedException();
+    protected override GH_GetterResult Prompt_Plural(ref List<TGoo> values) => throw new NotImplementedException();
 }
 
+public abstract class EnumGoo<TEnum> : GH_Goo<TEnum> where TEnum : struct, Enum
+{
+    public EnumGoo() { }
+    public EnumGoo(TEnum value) => Value = value;
+    public override bool IsValid => true;
+    public override IGH_Goo Duplicate() => (IGH_Goo)(Activator.CreateInstance(GetType(), Value) ?? throw new InvalidOperationException($"Could not create instance of {GetType()}"));
+    public override bool CastFrom(object source)
+    {
+        if (source is TEnum enumValue) { Value = enumValue; return true; }
+        if (source is string str && Enum.TryParse<TEnum>(str, true, out var parsed)) { Value = parsed; return true; }
+        if (source is int intVal && Enum.IsDefined(typeof(TEnum), intVal)) { Value = (TEnum)Enum.ToObject(typeof(TEnum), intVal); return true; }
+        return false;
+    }
+    public override bool CastTo<U>(ref U target)
+    {
+        if (typeof(U) == typeof(TEnum)) { target = (U)(object)Value; return true; }
+        if (typeof(U) == typeof(string)) { target = (U)(object)Value.ToString(); return true; }
+        if (typeof(U) == typeof(int)) { target = (U)(object)Convert.ToInt32(Value); return true; }
+        return false;
+    }
+    public override string ToString() => Value.ToString();
+    public override string TypeName => typeof(TEnum).Name;
+    public override string TypeDescription => typeof(TEnum).Name;
+}
+
+public abstract class EnumParam<TEnumGoo, TEnum> : GH_Param<TEnumGoo>
+    where TEnumGoo : EnumGoo<TEnum>, new()
+    where TEnum : struct, Enum
+{
+    protected EnumParam(Guid guid) : base(typeof(TEnum).Name, typeof(TEnum).Name, typeof(TEnum).Name, "Semio", "Param", GH_ParamAccess.item)
+    {
+        ComponentGuid = guid;
+    }
+    public override Guid ComponentGuid { get; }
+}
 public abstract class Component : GH_Component
 {
     public Component(string name, string nickname, string description, string subcategory) : base(
@@ -319,8 +356,8 @@ public abstract class Component : GH_Component
     { }
 }
 
-public abstract class ModelComponent<T, U, V> : Component
-    where T : ModelParam<U, V> where U : ModelGoo<V> where V : Model<V>, new()
+public abstract class ModelComponent<TParam, TGoo, TModel> : Component
+    where TParam : ModelParam<TGoo, TModel> where TGoo : ModelGoo<TModel> where TModel : Model<TModel>, new()
 {
     public static readonly string NameM;
     public static readonly System.Type TypeM;
@@ -342,7 +379,7 @@ public abstract class ModelComponent<T, U, V> : Component
         // force compiler to run static constructor of the the meta classes first.
         var dummyMetaGrasshopper = Meta.Goo;
 
-        NameM = typeof(V).Name;
+        NameM = typeof(TModel).Name;
         TypeM = Semio.Meta.Type[NameM];
         GooM = Meta.Goo[NameM];
         ParamM = Meta.Param[NameM];
@@ -363,7 +400,7 @@ public abstract class ModelComponent<T, U, V> : Component
     { }
 
     protected override Bitmap Icon =>
-        (Bitmap)Resources.ResourceManager.GetObject($"{typeof(V).Name.ToLower()}_modify_24x24");
+        (Bitmap)Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower()}_modify_24x24");
 
     public override GH_Exposure Exposure => GH_Exposure.primary;
 
@@ -497,48 +534,48 @@ public abstract class ModelComponent<T, U, V> : Component
             else DA.SetData(i + 2, value);
         }
     }
-    protected virtual V ProcessModel(V model) => model;
+    protected virtual TModel ProcessModel(TModel model) => model;
 }
 
-public abstract class IdGoo<T> : ModelGoo<T> where T : Model<T>, new()
+public abstract class IdGoo<TModel> : ModelGoo<TModel> where TModel : Model<TModel>, new()
 {
     public IdGoo() : base() { }
-    public IdGoo(T value) : base(value) { }
+    public IdGoo(TModel value) : base(value) { }
 }
 
-public abstract class IdParam<T, U> : ModelParam<T, U> where T : IdGoo<U> where U : Model<U>, new()
+public abstract class IdParam<TGoo, TModel> : ModelParam<TGoo, TModel> where TGoo : IdGoo<TModel> where TModel : Model<TModel>, new()
 {
     internal IdParam() : base() { }
     public override GH_Exposure Exposure => GH_Exposure.secondary;
 }
 
-public abstract class IdComponent<T, U, V> : ModelComponent<T, U, V>
-    where T : IdParam<U, V> where U : IdGoo<V> where V : Model<V>, new()
+public abstract class IdComponent<TParam, TGoo, TModel> : ModelComponent<TParam, TGoo, TModel>
+    where TParam : IdParam<TGoo, TModel> where TGoo : IdGoo<TModel> where TModel : Model<TModel>, new()
 {
     protected IdComponent() : base() { }
     public override GH_Exposure Exposure => GH_Exposure.secondary;
 }
 
-public abstract class DiffGoo<T> : ModelGoo<T> where T : Model<T>, new()
+public abstract class DiffGoo<TModel> : ModelGoo<TModel> where TModel : Model<TModel>, new()
 {
     public DiffGoo() : base() { }
-    public DiffGoo(T value) : base(value) { }
+    public DiffGoo(TModel value) : base(value) { }
 }
 
-public abstract class DiffParam<T, U> : ModelParam<T, U> where T : DiffGoo<U> where U : Model<U>, new()
+public abstract class DiffParam<TGoo, TModel> : ModelParam<TGoo, TModel> where TGoo : DiffGoo<TModel> where TModel : Model<TModel>, new()
 {
     internal DiffParam() : base() { }
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 }
 
-public abstract class DiffComponent<T, U, V> : ModelComponent<T, U, V>
-    where T : DiffParam<U, V> where U : DiffGoo<V> where V : Model<V>, new()
+public abstract class DiffComponent<TParam, TGoo, TModel> : ModelComponent<TParam, TGoo, TModel>
+    where TParam : DiffParam<TGoo, TModel> where TGoo : DiffGoo<TModel> where TModel : Model<TModel>, new()
 {
     protected DiffComponent() : base() { }
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 }
-public abstract class SerializeComponent<T, U, V> : ScriptingComponent
-    where T : ModelParam<U, V>, new() where U : ModelGoo<V>, new() where V : Model<V>, new()
+public abstract class SerializeComponent<TParam, TGoo, TModel> : ScriptingComponent
+    where TParam : ModelParam<TGoo, TModel>, new() where TGoo : ModelGoo<TModel>, new() where TModel : Model<TModel>, new()
 
 {
     public static readonly string NameM;
@@ -547,7 +584,7 @@ public abstract class SerializeComponent<T, U, V> : ScriptingComponent
     {
         // force compiler to run static constructor of the the meta classes first.
         var dummyMetaGrasshopper = Meta.Goo;
-        NameM = typeof(V).Name;
+        NameM = typeof(TModel).Name;
         ModelM = Semio.Meta.Model[NameM];
     }
 
@@ -557,7 +594,7 @@ public abstract class SerializeComponent<T, U, V> : ScriptingComponent
     public override GH_Exposure Exposure => GH_Exposure.secondary;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddParameter(new T(), NameM, ModelM.Code, $"The {NameM.ToLower()} to serialize.", GH_ParamAccess.item);
+        pManager.AddParameter(new TParam(), NameM, ModelM.Code, $"The {NameM.ToLower()} to serialize.", GH_ParamAccess.item);
         pManager.AddTextParameter("Indent", "In?", $"The optional indent unit for the serialized {NameM.ToLower()}. Empty text for no indent or spaces or tabs", GH_ParamAccess.item, "");
         pManager[1].Optional = true;
     }
@@ -569,7 +606,7 @@ public abstract class SerializeComponent<T, U, V> : ScriptingComponent
 
     protected override void SolveInstance(IGH_DataAccess DA)
     {
-        var goo = new U();
+        var goo = new TGoo();
         var indent = "";
         DA.GetData(0, ref goo);
         DA.GetData(1, ref indent);
@@ -578,8 +615,8 @@ public abstract class SerializeComponent<T, U, V> : ScriptingComponent
     }
 }
 
-public abstract class DeserializeComponent<T, U, V> : ScriptingComponent
-    where T : ModelParam<U, V>, new() where U : ModelGoo<V>, new() where V : Model<V>, new()
+public abstract class DeserializeComponent<TParam, TGoo, TModel> : ScriptingComponent
+    where TParam : ModelParam<TGoo, TModel>, new() where TGoo : ModelGoo<TModel>, new() where TModel : Model<TModel>, new()
 
 {
     public static readonly string NameM;
@@ -590,7 +627,7 @@ public abstract class DeserializeComponent<T, U, V> : ScriptingComponent
         // force compiler to run static constructor of the the meta classes first.
         var dummyMetaGrasshopper = Meta.Goo;
 
-        NameM = typeof(V).Name;
+        NameM = typeof(TModel).Name;
         ModelM = Semio.Meta.Model[NameM];
     }
 
@@ -611,7 +648,7 @@ public abstract class DeserializeComponent<T, U, V> : ScriptingComponent
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddParameter(new T(), NameM, ModelM.Code,
+        pManager.AddParameter(new TParam(), NameM, ModelM.Code,
             $"Deserialized {NameM}.", GH_ParamAccess.item);
     }
 
@@ -619,15 +656,15 @@ public abstract class DeserializeComponent<T, U, V> : ScriptingComponent
     {
         var text = "";
         DA.GetData(0, ref text);
-        var value = text.Deserialize<V>();
-        var goo = new U();
+        var value = text.Deserialize<TModel>();
+        var goo = new TGoo();
         goo.Value = value;
         DA.SetData(0, goo);
     }
 }
 
-public abstract class SerializeDiffComponent<T, U, V> : SerializeComponent<T, U, V>
-    where T : DiffParam<U, V>, new() where U : DiffGoo<V>, new() where V : Model<V>, new()
+public abstract class SerializeDiffComponent<TParam, TGoo, TModel> : SerializeComponent<TParam, TGoo, TModel>
+    where TParam : DiffParam<TGoo, TModel>, new() where TGoo : DiffGoo<TModel>, new() where TModel : Model<TModel>, new()
 {
     protected SerializeDiffComponent() : base() { }
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
@@ -635,14 +672,14 @@ public abstract class SerializeDiffComponent<T, U, V> : SerializeComponent<T, U,
 
     protected virtual string GetEntityName()
     {
-        var typeName = typeof(V).Name.ToLower();
+        var typeName = typeof(TModel).Name.ToLower();
         return typeName.EndsWith("diff") ? typeName.Substring(0, typeName.Length - 4) :
                typeName.EndsWith("sdiff") ? typeName.Substring(0, typeName.Length - 5) : typeName;
     }
 }
 
-public abstract class DeserializeDiffComponent<T, U, V> : DeserializeComponent<T, U, V>
-    where T : DiffParam<U, V>, new() where U : DiffGoo<V>, new() where V : Model<V>, new()
+public abstract class DeserializeDiffComponent<TParam, TGoo, TModel> : DeserializeComponent<TParam, TGoo, TModel>
+    where TParam : DiffParam<TGoo, TModel>, new() where TGoo : DiffGoo<TModel>, new() where TModel : Model<TModel>, new()
 {
     protected DeserializeDiffComponent() : base() { }
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
@@ -650,14 +687,14 @@ public abstract class DeserializeDiffComponent<T, U, V> : DeserializeComponent<T
 
     protected virtual string GetEntityName()
     {
-        var typeName = typeof(V).Name.ToLower();
+        var typeName = typeof(TModel).Name.ToLower();
         return typeName.EndsWith("diff") ? typeName.Substring(0, typeName.Length - 4) :
                typeName.EndsWith("sdiff") ? typeName.Substring(0, typeName.Length - 5) : typeName;
     }
 }
 
-public abstract class SerializeIdComponent<T, U, V> : SerializeComponent<T, U, V>
-    where T : IdParam<U, V>, new() where U : IdGoo<V>, new() where V : Model<V>, new()
+public abstract class SerializeIdComponent<TParam, TGoo, TModel> : SerializeComponent<TParam, TGoo, TModel>
+    where TParam : IdParam<TGoo, TModel>, new() where TGoo : IdGoo<TModel>, new() where TModel : Model<TModel>, new()
 {
     protected SerializeIdComponent() : base() { }
     public override GH_Exposure Exposure => GH_Exposure.secondary;
@@ -665,13 +702,13 @@ public abstract class SerializeIdComponent<T, U, V> : SerializeComponent<T, U, V
 
     protected virtual string GetEntityName()
     {
-        var typeName = typeof(V).Name.ToLower();
+        var typeName = typeof(TModel).Name.ToLower();
         return typeName.EndsWith("id") ? typeName.Substring(0, typeName.Length - 2) : typeName;
     }
 }
 
-public abstract class DeserializeIdComponent<T, U, V> : DeserializeComponent<T, U, V>
-    where T : IdParam<U, V>, new() where U : IdGoo<V>, new() where V : Model<V>, new()
+public abstract class DeserializeIdComponent<TParam, TGoo, TModel> : DeserializeComponent<TParam, TGoo, TModel>
+    where TParam : IdParam<TGoo, TModel>, new() where TGoo : IdGoo<TModel>, new() where TModel : Model<TModel>, new()
 {
     protected DeserializeIdComponent() : base() { }
     public override GH_Exposure Exposure => GH_Exposure.secondary;
@@ -679,7 +716,7 @@ public abstract class DeserializeIdComponent<T, U, V> : DeserializeComponent<T, 
 
     protected virtual string GetEntityName()
     {
-        var typeName = typeof(V).Name.ToLower();
+        var typeName = typeof(TModel).Name.ToLower();
         return typeName.EndsWith("id") ? typeName.Substring(0, typeName.Length - 2) : typeName;
     }
 }
@@ -1339,10 +1376,10 @@ public class DeserializeFilesDiffComponent : DeserializeComponent<FilesDiffParam
     public override Guid ComponentGuid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A4");
 }
 
-public class SemioFileGoo : ModelGoo<SemioFile>
+public class FileGoo : ModelGoo<File>
 {
-    public SemioFileGoo() { }
-    public SemioFileGoo(SemioFile value) : base(value) { }
+    public FileGoo() { }
+    public FileGoo(File value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
@@ -1359,32 +1396,32 @@ public class SemioFileGoo : ModelGoo<SemioFile>
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new SemioFile { Url = str };
+            Value = new File { Url = str };
             return true;
         }
         return false;
     }
 }
 
-public class SemioFileParam : ModelParam<SemioFileGoo, SemioFile>
+public class FileParam : ModelParam<FileGoo, File>
 {
     public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F8");
 }
 
-public class SemioFileComponent : ModelComponent<SemioFileParam, SemioFileGoo, SemioFile>
+public class FileComponent : ModelComponent<FileParam, FileGoo, File>
 {
     public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F9");
 }
 
-public class SerializeSemioFileComponent : SerializeComponent<SemioFileParam, SemioFileGoo, SemioFile>
+public class SerializeFileComponent : SerializeComponent<FileParam, FileGoo, File>
 {
-    public SerializeSemioFileComponent() { }
+    public SerializeFileComponent() { }
     public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7FA");
 }
 
-public class DeserializeSemioFileComponent : DeserializeComponent<SemioFileParam, SemioFileGoo, SemioFile>
+public class DeserializeFileComponent : DeserializeComponent<FileParam, FileGoo, File>
 {
-    public DeserializeSemioFileComponent() { }
+    public DeserializeFileComponent() { }
     public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7FB");
 }
 
@@ -3286,6 +3323,17 @@ public class DeserializeKitsDiffComponent : DeserializeComponent<KitsDiffParam, 
 
 #region Quality
 
+public class QualityKindGoo : EnumGoo<QualityKind>
+{
+    public QualityKindGoo() { }
+    public QualityKindGoo(QualityKind value) : base(value) { }
+}
+
+public class QualityKindParam : EnumParam<QualityKindGoo, QualityKind>
+{
+    public QualityKindParam() : base(new("A1B2C3D4-E5F6-4A5B-9C8D-7E6F5A4B3C2D")) { }
+}
+
 public class QualityIdGoo : IdGoo<QualityId>
 {
     public QualityIdGoo() { }
@@ -4200,8 +4248,24 @@ public static class Meta
             { typeof(float), (typeof(GH_Number), typeof(Param_Number)) },
             { typeof(Point), (typeof(GH_Point), typeof(Param_Point)) },
             { typeof(Vector), (typeof(GH_Vector), typeof(Param_Vector)) },
-            { typeof(Plane), (typeof(GH_Plane), typeof(Param_Plane)) }
+            { typeof(Plane), (typeof(GH_Plane), typeof(Param_Plane)) },
         };
+        var assemblyTypes = Assembly.GetExecutingAssembly().GetTypes();
+        var enumGooTypes = assemblyTypes.Where(t => 
+            t.BaseType?.IsGenericType == true && 
+            t.BaseType.GetGenericTypeDefinition() == typeof(EnumGoo<>)).ToList();
+        var enumParamTypes = assemblyTypes.Where(t => 
+            t.BaseType?.IsGenericType == true && 
+            t.BaseType.GetGenericTypeDefinition() == typeof(EnumParam<,>)).ToList();
+        foreach (var gooType in enumGooTypes)
+        {
+            var enumType = gooType.BaseType!.GetGenericArguments()[0];
+            if (!enumType.IsDefined(typeof(EnumAttribute), false)) continue;
+            var paramType = enumParamTypes.FirstOrDefault(p => 
+                p.BaseType!.GetGenericArguments()[1] == enumType);
+            if (paramType != null) 
+                manualMappedTypes[enumType] = (gooType, paramType);
+        }
         var isPropertyMapped = new Dictionary<string, List<bool>>();
         foreach (var manualMappedTypeKvp in manualMappedTypes)
         {
@@ -4277,6 +4341,7 @@ public static class Meta
         IsPropertyMapped = isPropertyMapped.ToImmutableDictionary(
             kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
     }
+
 }
 
 #endregion Meta
