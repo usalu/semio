@@ -73,157 +73,61 @@
             </path>
         </g>
         <g id="emblem">
-            <g id="emblem#top" transform="translate(0, 20)">
-                <g transform="matrix(1,0,0,-1,0,0)">
-                    <use href="#profile#5#colored" />
-                </g>
-                <!-- <animateTransform attributeName="transform" type="translate" additive="sum" dur="6s"
-                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
-                    values="0 0; 120 0" />
-                <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
-                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
-                    values="0 0 0; 360 0 0" /> -->
+            <use id="emblem#top" href="#profile#5#colored" transform="translate(0,20) matrix(1,0,0,-1,0,0)">
                 <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
                     repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
                     values="2 2; 1 1" />
-            </g>
-            <g id="emblem#right" transform="translate(80, 100)">
-                <g transform="rotate(270, 0, 0)">
-                    <use href="#profile#5#colored" />
-                </g>
+            </use>
+            <use id="emblem#right" href="#profile#5#colored" transform="translate(80,100) rotate(270,0,0)">
                 <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
                     repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
                     values="2 2; 1 1" />
-            </g>
-            <g id="emblem#left">
-                <g transform="translate(10, 11)">
-                    <g transform="rotate(90, 0, 0)">
-                        <use href="#profile#4#colored" />
-                    </g>
-                </g>
+            </use>
+            <use id="emblem#left" href="#profile#4#colored" transform="translate(10,11) rotate(90,0,0)">
                 <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
                     repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
                     values="2 2; 1 1" />
-            </g>
-            <g id="emblem#middle" transform="translate(78, 40)">
-                <g transform="matrix(-1,0,0,1,0,0)">
-                    <use href="#profile#2#colored" />
-                </g>
+            </use>
+            <use id="emblem#middle" href="#profile#2#colored" transform="translate(78,40) matrix(-1,0,0,1,0,0)">
                 <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
                     repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
                     values="2 2; 1 1" />
-            </g>
-            <g id="emblem#bottom" transform="translate(78, 80)">
-                <g transform="matrix(-1,0,0,1,0,0)">
-                    <use href="#profile#2#colored" />
-                </g>
+            </use>
+            <use id="emblem#bottom" href="#profile#2#colored" transform="translate(78,80) matrix(-1,0,0,1,0,0)">
                 <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
                     repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
                     values="2 2; 1 1" />
-            </g>
+            </use>
         </g>
         <g id="text#s">
-            <g id="text#s#top" transform="translate(50, 10)">
-                <g transform="rotate(180, 0, 0)">
-                    <use href="#profile#5" />
-                </g>
-            </g>
-            <g id="text#s#left" transform="translate(10, 20)">
-                <g transform="rotate(90, 0, 0)">
-                    <g transform="matrix(-1,0,0,1,0,0)">
-                        <use href="#profile#2" />
-                    </g>
-                </g>
-            </g>
-            <g id="text#s#middle" transform="translate(0, 31)">
-                <g transform="matrix(1,0,0,-1,0,0)">
-                    <use href="#profile#5" />
-                </g>
-            </g>
-            <g id="text#s#right" transform="translate(40, 41)">
-                <g transform="rotate(270, 0, 0)">
-                    <use href="#profile#2" />
-                </g>
-            </g>
-            <g id="text#s#bottom" transform="translate(50, 53)">
-                <g transform="rotate(180, 0, 0)">
-                    <use href="#profile#5" />
-                </g>
-            </g>
+            <use id="text#s#top" href="#profile#5" transform="translate(50,10) rotate(180,0,0)" />
+            <use id="text#s#left" href="#profile#2" transform="translate(10,20) rotate(90,0,0) matrix(-1,0,0,1,0,0)" />
+            <use id="text#s#middle" href="#profile#5" transform="translate(0,31) matrix(1,0,0,-1,0,0)" />
+            <use id="text#s#right" href="#profile#2" transform="translate(40,40) rotate(270,0,0)" />
+            <use id="text#s#bottom" href="#profile#5" transform="translate(50,41) matrix(-1,0,0,1,0,0)" />
         </g>
         <g id="text#e">
-            <g id="text#e#left" transform="translate(10, 0)">
-                <g transform="rotate(90, 0, 0)">
-                    <use href="#profile#5" />
-                </g>
-            </g>
-            <g id="text#e#top" transform="translate(11, 10)">
-                <g transform="matrix(1,0,0,-1,0,0)">
-                    <use href="#profile#4" />
-                </g>
-            </g>
-            <g id="text#e#middle" transform="translate(11, 30)">
-                <g transform="matrix(1,0,0,-1,0,0)">
-                    <use href="#profile#4" />
-                </g>
-            </g>
-            <g id="text#e#bottom" transform="translate(50, 40)">
-                <g transform="rotate(180, 0, 0)">
-                    <g transform="matrix(1,0,0,-1,0,0)">
-                        <use href="#profile#5" />
-                    </g>
-                </g>
-            </g>
+            <use id="text#e#left" href="#profile#5" transform="translate(10,0) rotate(90,0,0)" />
+            <use id="text#e#top" href="#profile#4" transform="translate(11,10) matrix(1,0,0,-1,0,0)" />
+            <use id="text#e#middle" href="#profile#4" transform="translate(11,30) matrix(1,0,0,-1,0,0)" />
+            <use id="text#e#bottom" href="#profile#5"
+                transform="translate(50,40) rotate(180,0,0) matrix(1,0,0,-1,0,0)" />
         </g>
         <g id="text#i">
-            <g transform="translate(10, 50)">
-                <g transform="rotate(270, 0, 0)">
-                    <g transform="matrix(1,0,0,-1,0,0)">
-                        <use href="#profile#5" />
-                    </g>
-                </g>
-            </g>
+            <use href="#profile#5" transform="translate(10,50) rotate(270,0,0) matrix(1,0,0,-1,0,0)" />
         </g>
         <g id="text#o">
-            <g id="text#o#left" transform="translate(10, 50)">
-                <g transform="rotate(270, 0, 0)">
-                    <g transform="matrix(1,0,0,-1,0,0)">
-                        <use href="#profile#5" />
-                    </g>
-                </g>
-            </g>
-            <g id="text#o#top" transform="translate(40, 10)">
-                <g transform="rotate(180, 0, 0)">
-                    <use href="#profile#4" />
-                </g>
-            </g>
-            <g id="text#o#left" transform="translate(41, 0)">
-                <g transform="rotate(90, 0, 0)">
-                    <g transform="matrix(1,0,0,-1,0,0)">
-                        <use href="#profile#5" />
-                    </g>
-                </g>
-            </g>
-            <g id="text#o#top" transform="translate(11, 40)">
-                <use href="#profile#4" />
-            </g>
+            <use id="text#o#left" href="#profile#5" transform="translate(10,50) rotate(270,0,0) matrix(1,0,0,-1,0,0)" />
+            <use id="text#o#top" href="#profile#4" transform="translate(40,10) rotate(180,0,0)" />
+            <use id="text#o#right" href="#profile#5" transform="translate(41,0) rotate(90,0,0) matrix(1,0,0,-1,0,0)" />
+            <use id="text#o#bottom" href="#profile#4" transform="translate(11,40)" />
         </g>
         <g id="text">
             <use href="#text#s" />
-            <g transform="translate(60, 0)">
-                <use href="#text#e" />
-            </g>
-            <g transform="translate(170, 0)">
-                <g transform="rotate(90, 0, 0)">
-                    <use href="#text#e" />
-                </g>
-            </g>
-            <g transform="translate(180, 0)">
-                <use href="#text#i" />
-            </g>
-            <g transform="translate(200, 0)">
-                <use href="#text#o" />
-            </g>
+            <use href="#text#e" transform="translate(60,0)" />
+            <use href="#text#e" transform="translate(170,0) rotate(90,0,0)" />
+            <use href="#text#i" transform="translate(180,0)" />
+            <use href="#text#o" transform="translate(200,0)" />
         </g>
     </defs>
     <g id="timeline">
