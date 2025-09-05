@@ -1,0 +1,4083 @@
+{
+  "qualities": [
+    {
+      "key": "semio.cost.global-life-cycle",
+      "name": "Global Life-Cycle Costs",
+      "translation": {
+        "de": "Globale Lebenszykluskosten"
+      },
+      "description": "Total costs over the entire life cycle of a building including investment, operation, maintenance and disposal costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{gllc}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle semio.cost.global-life-cycle.financing semio.cost.global-life-cycle.taxes-and-duties ) Subtract ( semio.cost.global-life-cycle.grants-subsidies semio.cost.global-life-cycle.income )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle",
+      "name": "Life-Cycle Costs",
+      "translation": {
+        "de": "Lebenszykluskosten"
+      },
+      "description": "Total costs during the life cycle including investment, operating and maintenance costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{lcc}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase semio.cost.global-life-cycle.life-cycle.operating-ongoing-use semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization semio.cost.global-life-cycle.life-cycle.dismantling-and-disposal )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase",
+      "name": "Investment Costs Construction Phase",
+      "translation": {
+        "de": "Investitionskosten Errichtungsphase"
+      },
+      "description": "All costs incurred during the construction phase of the building.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{inv}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary semio.cost.global-life-cycle.life-cycle.investment-construction-phase.financing semio.cost.global-life-cycle.life-cycle.investment-construction-phase.taxes-and-duties semio.cost.global-life-cycle.life-cycle.investment-construction-phase.grants-subsidies semio.cost.global-life-cycle.life-cycle.investment-construction-phase.income )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land",
+      "name": "Land Costs",
+      "translation": {
+        "de": "Grundstückskosten"
+      },
+      "description": "All costs related to land acquisition and preparation.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{land}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition",
+      "name": "Land Acquisition",
+      "translation": {
+        "de": "Grundstückserwerb"
+      },
+      "description": "Direct land acquisition costs including value and ancillary costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{land-acq}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.value semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.third-party-rights semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.compensations semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.redemption-of-real-rights semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.value",
+      "name": "Land Value",
+      "translation": {
+        "de": "Grundstückswert"
+      },
+      "description": "The purchase price or market value of the land.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{land-val}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary",
+      "name": "Ancillary Land Costs",
+      "translation": {
+        "de": "Grundstücksnebenkosten"
+      },
+      "description": "Additional costs related to land acquisition including fees and investigations.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{land-anc}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary.surveying-fees semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary.court-fees semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary.notary-fees semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary.transfer-tax semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary.investigations semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary.valuations semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary.permit-fees semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary.reorganization semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary.surveying-fees",
+      "name": "Surveying Fees",
+      "translation": {
+        "de": "Vermessungsgebühren"
+      },
+      "description": "Costs for land surveying and boundary determination.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{surv}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary.court-fees",
+      "name": "Court Fees",
+      "translation": {
+        "de": "Gerichtskosten"
+      },
+      "description": "Legal fees and court costs related to land acquisition.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{court}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary.notary-fees",
+      "name": "Notary Fees",
+      "translation": {
+        "de": "Notarkosten"
+      },
+      "description": "Notarization costs for land purchase contracts.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{notary}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary.transfer-tax",
+      "name": "Land Transfer Tax",
+      "translation": {
+        "de": "Grunderwerbsteuer"
+      },
+      "description": "Tax on the transfer of land ownership.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{trans-tax}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary.investigations",
+      "name": "Investigations",
+      "translation": {
+        "de": "Untersuchungen"
+      },
+      "description": "Costs for soil, environmental and technical investigations.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{invest}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary.valuations",
+      "name": "Valuations",
+      "translation": {
+        "de": "Wertgutachten"
+      },
+      "description": "Professional property valuation costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{valuation}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary.permit-fees",
+      "name": "Permit Fees",
+      "translation": {
+        "de": "Genehmigungsgebühren"
+      },
+      "description": "Administrative fees for building permits and approvals.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{permit}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary.reorganization",
+      "name": "Land Reorganization",
+      "translation": {
+        "de": "Grundstücksneuordnung"
+      },
+      "description": "Costs for land consolidation and reorganization procedures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{reorg}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.ancillary.other",
+      "name": "Other Ancillary Land Costs",
+      "translation": {
+        "de": "Sonstige Grundstücksnebenkosten"
+      },
+      "description": "Other miscellaneous costs related to land acquisition.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{land-anc-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.third-party-rights",
+      "name": "Third Party Rights",
+      "translation": {
+        "de": "Rechte Dritter"
+      },
+      "description": "Costs related to third-party rights on the land.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{third-party}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.third-party-rights.compensations semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.third-party-rights.redemption-of-real-rights semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.third-party-rights.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.third-party-rights.compensations",
+      "name": "Third Party Compensations",
+      "translation": {
+        "de": "Entschädigungen Dritter"
+      },
+      "description": "Compensation payments to third parties for rights or damages.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{comp-3rd}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.third-party-rights.redemption-of-real-rights",
+      "name": "Third Party Redemption of Real Rights",
+      "translation": {
+        "de": "Ablösung dinglicher Rechte Dritter"
+      },
+      "description": "Costs for redemption of third-party real rights on the property.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{redemp-3rd}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.third-party-rights.other",
+      "name": "Other Third Party Rights",
+      "translation": {
+        "de": "Sonstige Rechte Dritter"
+      },
+      "description": "Other costs related to third-party rights.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{3rd-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.compensations",
+      "name": "Land Compensations",
+      "translation": {
+        "de": "Grundstücksentschädigungen"
+      },
+      "description": "Direct compensation costs related to land acquisition.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{land-comp}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.redemption-of-real-rights",
+      "name": "Land Redemption of Real Rights",
+      "translation": {
+        "de": "Ablösung dinglicher Rechte"
+      },
+      "description": "Costs for redemption of real rights on the land.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{land-redemp}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.acquisition.other",
+      "name": "Other Land Acquisition Costs",
+      "translation": {
+        "de": "Sonstige Grundstückserwerbskosten"
+      },
+      "description": "Other miscellaneous costs directly related to land acquisition.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{land-acq-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.land.other",
+      "name": "Other Land Related Costs",
+      "translation": {
+        "de": "Sonstige grundstücksbezogene Kosten"
+      },
+      "description": "Additional costs not directly attributable to land acquisition.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{land-rel}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development",
+      "name": "Development Costs",
+      "translation": {
+        "de": "Erschließungskosten"
+      },
+      "description": "Costs for site development and infrastructure preparation.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{dev}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures",
+      "name": "Preparatory Measures",
+      "translation": {
+        "de": "Vorbereitende Maßnahmen"
+      },
+      "description": "Site preparation and infrastructure development measures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{prep}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.site-preparation semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.private-infrastructure-development semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.compensatory-measures-and-levies semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.transitional-measures )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.site-preparation",
+      "name": "Site Preparation",
+      "translation": {
+        "de": "Baustellenvorbereitung"
+      },
+      "description": "Costs for preparing the construction site including safety and demolition measures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{site-prep}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.site-preparation.safety-measures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.site-preparation.demolition-measures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.site-preparation.contaminated-site-remediation semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.site-preparation.surface-preparation semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.site-preparation.explosive-ordnance-clearance semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.site-preparation.cultural-heritage-finds semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.site-preparation.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.site-preparation.safety-measures",
+      "name": "Safety Measures",
+      "translation": {
+        "de": "Sicherheitsmaßnahmen"
+      },
+      "description": "Site safety measures and protective installations.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{safety}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.site-preparation.demolition-measures",
+      "name": "Demolition Measures",
+      "translation": {
+        "de": "Abrissmaßnahmen"
+      },
+      "description": "Costs for demolition of existing structures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{demo}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.site-preparation.contaminated-site-remediation",
+      "name": "Contaminated Site Remediation",
+      "translation": {
+        "de": "Altlastensanierung"
+      },
+      "description": "Remediation of contaminated soil and groundwater.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{contam}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.site-preparation.surface-preparation",
+      "name": "Surface Preparation",
+      "translation": {
+        "de": "Oberflächenvorbereitung"
+      },
+      "description": "Preparation of site surface for construction.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{surf-prep}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.site-preparation.explosive-ordnance-clearance",
+      "name": "Explosive Ordnance Clearance",
+      "translation": {
+        "de": "Kampfmittelräumung"
+      },
+      "description": "Clearance of unexploded ordnance from the site.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{ordnance}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.site-preparation.cultural-heritage-finds",
+      "name": "Cultural Heritage Finds",
+      "translation": {
+        "de": "Kulturdenkmalfunde"
+      },
+      "description": "Costs related to archaeological and cultural heritage discoveries.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{heritage}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.site-preparation.other",
+      "name": "Other Site Preparation",
+      "translation": {
+        "de": "Sonstige Baustellenvorbereitung"
+      },
+      "description": "Other miscellaneous site preparation costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{site-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development",
+      "name": "Public Infrastructure Development",
+      "translation": {
+        "de": "Erschließung öffentliche Infrastruktur"
+      },
+      "description": "Development of public infrastructure connections.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{pub-infra}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development.wastewater-disposal semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development.water-supply semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development.gas-supply semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development.district-heating-supply semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development.power-supply semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development.telecommunications semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development.traffic-development semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development.waste-disposal semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development.wastewater-disposal",
+      "name": "Wastewater Disposal",
+      "translation": {
+        "de": "Abwasserentsorgung"
+      },
+      "description": "Connection to public wastewater disposal systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{wastewater}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development.water-supply",
+      "name": "Water Supply",
+      "translation": {
+        "de": "Wasserversorgung"
+      },
+      "description": "Connection to public water supply systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{water}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development.gas-supply",
+      "name": "Gas Supply",
+      "translation": {
+        "de": "Gasversorgung"
+      },
+      "description": "Connection to public gas supply networks.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{gas}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development.district-heating-supply",
+      "name": "District Heating Supply",
+      "translation": {
+        "de": "Fernwärmeversorgung"
+      },
+      "description": "Connection to district heating networks.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{heating}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development.power-supply",
+      "name": "Power Supply",
+      "translation": {
+        "de": "Stromversorgung"
+      },
+      "description": "Connection to electrical power supply networks.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{power}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development.telecommunications",
+      "name": "Telecommunications",
+      "translation": {
+        "de": "Telekommunikation"
+      },
+      "description": "Connection to telecommunications infrastructure.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{telecom}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development.traffic-development",
+      "name": "Traffic Development",
+      "translation": {
+        "de": "Verkehrserschließung"
+      },
+      "description": "Development of traffic infrastructure and access roads.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{traffic}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development.waste-disposal",
+      "name": "Waste Disposal",
+      "translation": {
+        "de": "Abfallentsorgung"
+      },
+      "description": "Connection to waste disposal systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{waste}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.public-infrastructure-development.other",
+      "name": "Other Public Infrastructure",
+      "translation": {
+        "de": "Sonstige öffentliche Infrastruktur"
+      },
+      "description": "Other public infrastructure development costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{pub-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.private-infrastructure-development",
+      "name": "Private Infrastructure Development",
+      "translation": {
+        "de": "Erschließung private Infrastruktur"
+      },
+      "description": "Development of private infrastructure on the property.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{priv-infra}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.compensatory-measures-and-levies",
+      "name": "Compensatory Measures and Levies",
+      "translation": {
+        "de": "Ausgleichsmaßnahmen und Abgaben"
+      },
+      "description": "Environmental compensation measures and related levies.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{comp}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.compensatory-measures-and-levies.compensatory-measures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.compensatory-measures-and-levies.compensatory-levies semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.compensatory-measures-and-levies.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.compensatory-measures-and-levies.compensatory-measures",
+      "name": "Compensatory Measures",
+      "translation": {
+        "de": "Ausgleichsmaßnahmen"
+      },
+      "description": "Environmental compensation measures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{comp-meas}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.compensatory-measures-and-levies.compensatory-levies",
+      "name": "Compensatory Levies",
+      "translation": {
+        "de": "Ausgleichsabgaben"
+      },
+      "description": "Compensatory levies in lieu of direct measures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{comp-levy}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.compensatory-measures-and-levies.other",
+      "name": "Other Compensatory Costs",
+      "translation": {
+        "de": "Sonstige Ausgleichskosten"
+      },
+      "description": "Other compensatory measures and costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{comp-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.transitional-measures",
+      "name": "Transitional Measures",
+      "translation": {
+        "de": "Übergangsmaßnahmen"
+      },
+      "description": "Temporary measures during construction transition.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{trans}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.transitional-measures.structural-measures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.transitional-measures.organizational-measures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.transitional-measures.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.transitional-measures.structural-measures",
+      "name": "Structural Measures",
+      "translation": {
+        "de": "Bauliche Maßnahmen"
+      },
+      "description": "Structural transitional measures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{struct-trans}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.transitional-measures.organizational-measures",
+      "name": "Organizational Measures",
+      "translation": {
+        "de": "Organisatorische Maßnahmen"
+      },
+      "description": "Organizational transitional measures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{org-trans}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.preparatory-measures.transitional-measures.other",
+      "name": "Other Transitional Measures",
+      "translation": {
+        "de": "Sonstige Übergangsmaßnahmen"
+      },
+      "description": "Other transitional measures and costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{trans-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.development.other",
+      "name": "Other Development Costs",
+      "translation": {
+        "de": "Sonstige Erschließungskosten"
+      },
+      "description": "Other development-related costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{dev-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.financing",
+      "name": "Financing Costs",
+      "translation": {
+        "de": "Finanzierungskosten"
+      },
+      "description": "All costs related to financing the project including interest and fees.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{fin}",
+      "formula": "Add ( semio.cost.global-life-cycle.financing.interest semio.cost.global-life-cycle.financing.fees )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.financing.interest",
+      "name": "Interest",
+      "translation": {
+        "de": "Zinsen"
+      },
+      "description": "Interest costs on loans and financing.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{interest}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.financing.fees",
+      "name": "Financing Fees",
+      "translation": {
+        "de": "Finanzierungsgebühren"
+      },
+      "description": "Fees and charges related to obtaining financing.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{fin-fees}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.taxes-and-duties",
+      "name": "Taxes and Duties",
+      "translation": {
+        "de": "Steuern und Abgaben"
+      },
+      "description": "All taxes and duties related to the project.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{tax}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.grants-subsidies",
+      "name": "Grants and Subsidies",
+      "translation": {
+        "de": "Zuschüsse und Subventionen"
+      },
+      "description": "Financial support received from government or other institutions.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "S_{grants}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.income",
+      "name": "Income",
+      "translation": {
+        "de": "Einnahmen"
+      },
+      "description": "Revenue generated from the property during its lifetime.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "R_{income}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components",
+      "name": "Building Structural Components",
+      "translation": {
+        "de": "Baukonstruktionen"
+      },
+      "description": "Costs for all structural building components including foundations, walls, roofs, and installations.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{struct}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.excavation-earthworks semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.foundation-substructure semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.internal-walls-vertical-structural-components-inside semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.ceilings-horizontal-structural-components semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.roofs semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.structural-installations semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.excavation-earthworks",
+      "name": "Excavation Earthworks",
+      "translation": {
+        "de": "Erdarbeiten"
+      },
+      "description": "Excavation and earthwork costs for building construction.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{excavation}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.excavation-earthworks.construction semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.excavation-earthworks.enclosure semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.excavation-earthworks.water-management semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.excavation-earthworks.conveyance semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.excavation-earthworks.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.excavation-earthworks.construction",
+      "name": "Excavation Construction",
+      "translation": {
+        "de": "Erdarbeiten Konstruktion"
+      },
+      "description": "Construction-related excavation work.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{exc-const}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.excavation-earthworks.enclosure",
+      "name": "Excavation Enclosure",
+      "translation": {
+        "de": "Erdarbeiten Umschließung"
+      },
+      "description": "Enclosure-related excavation work.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{exc-encl}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.excavation-earthworks.water-management",
+      "name": "Excavation Water Management",
+      "translation": {
+        "de": "Erdarbeiten Wasserhaltung"
+      },
+      "description": "Water management during excavation work.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{exc-water}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.excavation-earthworks.conveyance",
+      "name": "Excavation Conveyance",
+      "translation": {
+        "de": "Erdarbeiten Förderung"
+      },
+      "description": "Material conveyance during excavation.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{exc-conv}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.excavation-earthworks.other",
+      "name": "Other Excavation Costs",
+      "translation": {
+        "de": "Sonstige Erdarbeiten"
+      },
+      "description": "Other excavation and earthwork costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{exc-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.foundation-substructure",
+      "name": "Foundation Substructure",
+      "translation": {
+        "de": "Gründung, Unterbau"
+      },
+      "description": "Foundation and substructure construction costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{foundation}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.foundation-substructure.soil-improvement semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.foundation-substructure.shallow-foundations-and-slabs semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.foundation-substructure.deep-foundations semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.foundation-substructure.foundation-layers semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.foundation-substructure.seals-and-linings semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.foundation-substructure.drains semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.foundation-substructure.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.foundation-substructure.soil-improvement",
+      "name": "Soil Improvement",
+      "translation": {
+        "de": "Bodenverbesserung"
+      },
+      "description": "Soil stabilization and improvement measures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{soil-imp}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.foundation-substructure.shallow-foundations-and-slabs",
+      "name": "Shallow Foundations and Slabs",
+      "translation": {
+        "de": "Flachgründungen und Bodenplatten"
+      },
+      "description": "Shallow foundation systems and ground slabs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{shallow-found}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.foundation-substructure.deep-foundations",
+      "name": "Deep Foundations",
+      "translation": {
+        "de": "Tiefgründungen"
+      },
+      "description": "Deep foundation systems including piles and caissons.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{deep-found}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.foundation-substructure.foundation-layers",
+      "name": "Foundation Layers",
+      "translation": {
+        "de": "Gründungsschichten"
+      },
+      "description": "Foundation preparation layers and bedding.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{found-layers}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.foundation-substructure.seals-and-linings",
+      "name": "Seals and Linings",
+      "translation": {
+        "de": "Abdichtungen und Auskleidungen"
+      },
+      "description": "Waterproofing and protective linings for foundations.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{seals}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.foundation-substructure.drains",
+      "name": "Drains",
+      "translation": {
+        "de": "Drainagen"
+      },
+      "description": "Drainage systems for foundation areas.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{drains}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.foundation-substructure.other",
+      "name": "Other Foundation Costs",
+      "translation": {
+        "de": "Sonstige Gründungskosten"
+      },
+      "description": "Other foundation and substructure costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{found-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside",
+      "name": "External Walls Vertical Structural Components Outside",
+      "translation": {
+        "de": "Außenwände, senkrechte Baukonstruktionen, außen"
+      },
+      "description": "External walls and vertical structural components on the building exterior.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{ext-walls}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside.load-bearing-external-walls semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside.non-load-bearing-external-walls semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside.external-columns semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside.external-wall-openings semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside.external-wall-claddings-outside semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside.external-wall-claddings-inside semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside.prefabricated-external-wall-structures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside.light-protection-kg-330 semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside.load-bearing-external-walls",
+      "name": "Load Bearing External Walls",
+      "translation": {
+        "de": "Tragende Außenwände"
+      },
+      "description": "Load-bearing exterior wall systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{load-ext-walls}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside.non-load-bearing-external-walls",
+      "name": "Non Load Bearing External Walls",
+      "translation": {
+        "de": "Nichttragende Außenwände"
+      },
+      "description": "Non-load-bearing exterior wall systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{non-load-ext-walls}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside.external-columns",
+      "name": "External Columns",
+      "translation": {
+        "de": "Außenstützen"
+      },
+      "description": "Exterior structural columns and supports.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{ext-columns}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside.external-wall-openings",
+      "name": "External Wall Openings",
+      "translation": {
+        "de": "Außenwandöffnungen"
+      },
+      "description": "Windows, doors and other openings in external walls.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{ext-openings}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside.external-wall-claddings-outside",
+      "name": "External Wall Claddings Outside",
+      "translation": {
+        "de": "Außenwandbekleidungen außen"
+      },
+      "description": "Exterior cladding and facade systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{ext-clad-out}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside.external-wall-claddings-inside",
+      "name": "External Wall Claddings Inside",
+      "translation": {
+        "de": "Außenwandbekleidungen innen"
+      },
+      "description": "Interior finishes on external walls.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{ext-clad-in}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside.prefabricated-external-wall-structures",
+      "name": "Prefabricated External Wall Structures",
+      "translation": {
+        "de": "Vorgefertigte Außenwandkonstruktionen"
+      },
+      "description": "Prefabricated external wall systems and panels.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{prefab-ext-walls}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside.light-protection-kg-330",
+      "name": "Light Protection KG 330",
+      "translation": {
+        "de": "Lichtschutz KG 330"
+      },
+      "description": "Light protection systems for external walls according to cost group 330.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{light-prot-330}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.external-walls-vertical-structural-components-outside.other",
+      "name": "Other External Wall Costs",
+      "translation": {
+        "de": "Sonstige Außenwandkosten"
+      },
+      "description": "Other external wall and vertical structure costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{ext-walls-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.internal-walls-vertical-structural-components-inside",
+      "name": "Internal Walls Vertical Structural Components Inside",
+      "translation": {
+        "de": "Innenwände, senkrechte Baukonstruktionen, innen"
+      },
+      "description": "Internal walls and vertical structural components inside the building.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{int-walls}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.internal-walls-vertical-structural-components-inside.load-bearing-internal-walls semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.internal-walls-vertical-structural-components-inside.non-load-bearing-internal-walls semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.internal-walls-vertical-structural-components-inside.internal-columns semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.internal-walls-vertical-structural-components-inside.internal-wall-openings semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.internal-walls-vertical-structural-components-inside.internal-wall-claddings semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.internal-walls-vertical-structural-components-inside.prefabricated-internal-wall-structures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.internal-walls-vertical-structural-components-inside.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.internal-walls-vertical-structural-components-inside.load-bearing-internal-walls",
+      "name": "Load Bearing Internal Walls",
+      "translation": {
+        "de": "Tragende Innenwände"
+      },
+      "description": "Load-bearing interior wall systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{load-int-walls}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.internal-walls-vertical-structural-components-inside.non-load-bearing-internal-walls",
+      "name": "Non Load Bearing Internal Walls",
+      "translation": {
+        "de": "Nichttragende Innenwände"
+      },
+      "description": "Non-load-bearing interior wall systems and partitions.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{non-load-int-walls}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.internal-walls-vertical-structural-components-inside.internal-columns",
+      "name": "Internal Columns",
+      "translation": {
+        "de": "Innenstützen"
+      },
+      "description": "Interior structural columns and supports.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{int-columns}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.internal-walls-vertical-structural-components-inside.internal-wall-openings",
+      "name": "Internal Wall Openings",
+      "translation": {
+        "de": "Innenwandöffnungen"
+      },
+      "description": "Interior doors and openings in internal walls.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{int-openings}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.internal-walls-vertical-structural-components-inside.internal-wall-claddings",
+      "name": "Internal Wall Claddings",
+      "translation": {
+        "de": "Innenwandbekleidungen"
+      },
+      "description": "Interior wall finishes and claddings.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{int-clad}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.internal-walls-vertical-structural-components-inside.prefabricated-internal-wall-structures",
+      "name": "Prefabricated Internal Wall Structures",
+      "translation": {
+        "de": "Vorgefertigte Innenwandkonstruktionen"
+      },
+      "description": "Prefabricated internal wall systems and modular partitions.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{prefab-int-walls}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.internal-walls-vertical-structural-components-inside.other",
+      "name": "Other Internal Wall Costs",
+      "translation": {
+        "de": "Sonstige Innenwandkosten"
+      },
+      "description": "Other internal wall and vertical structure costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{int-walls-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.ceilings-horizontal-structural-components",
+      "name": "Ceilings Horizontal Structural Components",
+      "translation": {
+        "de": "Decken, waagerechte Baukonstruktionen"
+      },
+      "description": "Ceiling systems and horizontal structural components.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{ceilings}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.ceilings-horizontal-structural-components.load-bearing-ceilings semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.ceilings-horizontal-structural-components.non-load-bearing-ceilings semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.ceilings-horizontal-structural-components.ceiling-openings semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.ceilings-horizontal-structural-components.ceiling-claddings semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.ceilings-horizontal-structural-components.prefabricated-ceiling-structures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.ceilings-horizontal-structural-components.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.ceilings-horizontal-structural-components.load-bearing-ceilings",
+      "name": "Load Bearing Ceilings",
+      "translation": {
+        "de": "Tragende Decken"
+      },
+      "description": "Load-bearing ceiling and floor slab systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{load-ceilings}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.ceilings-horizontal-structural-components.non-load-bearing-ceilings",
+      "name": "Non Load Bearing Ceilings",
+      "translation": {
+        "de": "Nichttragende Decken"
+      },
+      "description": "Non-load-bearing ceiling systems and suspended ceilings.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{non-load-ceilings}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.ceilings-horizontal-structural-components.ceiling-openings",
+      "name": "Ceiling Openings",
+      "translation": {
+        "de": "Deckenöffnungen"
+      },
+      "description": "Openings in ceilings for stairs, elevators, and services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{ceiling-openings}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.ceilings-horizontal-structural-components.ceiling-claddings",
+      "name": "Ceiling Claddings",
+      "translation": {
+        "de": "Deckenbekleidungen"
+      },
+      "description": "Ceiling finishes and cladding systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{ceiling-clad}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.ceilings-horizontal-structural-components.prefabricated-ceiling-structures",
+      "name": "Prefabricated Ceiling Structures",
+      "translation": {
+        "de": "Vorgefertigte Deckenkonstruktionen"
+      },
+      "description": "Prefabricated ceiling systems and modular components.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{prefab-ceilings}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.ceilings-horizontal-structural-components.other",
+      "name": "Other Ceiling Costs",
+      "translation": {
+        "de": "Sonstige Deckenkosten"
+      },
+      "description": "Other ceiling and horizontal structure costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{ceilings-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.roofs",
+      "name": "Roofs",
+      "translation": {
+        "de": "Dächer"
+      },
+      "description": "Roof systems and weather protection structures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{roofs}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.roofs.roof-structures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.roofs.roof-coverings semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.roofs.roof-openings semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.roofs.roof-claddings semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.roofs.prefabricated-roof-structures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.roofs.light-protection-kg-360 semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.roofs.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.roofs.roof-structures",
+      "name": "Roof Structures",
+      "translation": {
+        "de": "Dachkonstruktionen"
+      },
+      "description": "Structural roof framework and support systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{roof-struct}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.roofs.roof-coverings",
+      "name": "Roof Coverings",
+      "translation": {
+        "de": "Dachbeläge"
+      },
+      "description": "Roof covering materials and waterproofing systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{roof-cover}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.roofs.roof-openings",
+      "name": "Roof Openings",
+      "translation": {
+        "de": "Dachöffnungen"
+      },
+      "description": "Roof openings including skylights, hatches, and penetrations.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{roof-openings}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.roofs.roof-claddings",
+      "name": "Roof Claddings",
+      "translation": {
+        "de": "Dachbekleidungen"
+      },
+      "description": "Roof cladding and finishing systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{roof-clad}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.roofs.prefabricated-roof-structures",
+      "name": "Prefabricated Roof Structures",
+      "translation": {
+        "de": "Vorgefertigte Dachkonstruktionen"
+      },
+      "description": "Prefabricated roof systems and modular components.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{prefab-roofs}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.roofs.light-protection-kg-360",
+      "name": "Light Protection KG 360",
+      "translation": {
+        "de": "Lichtschutz KG 360"
+      },
+      "description": "Light protection systems for roofs according to cost group 360.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{light-prot-360}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.roofs.other",
+      "name": "Other Roof Costs",
+      "translation": {
+        "de": "Sonstige Dachkosten"
+      },
+      "description": "Other roof system costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{roofs-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities",
+      "name": "Infrastructure Facilities",
+      "translation": {
+        "de": "Infrastruktureinrichtungen"
+      },
+      "description": "Infrastructure facilities and utility installations within building structures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{infra-facilities}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities.road-traffic-facilities semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities.rail-traffic-facilities semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities.air-traffic-facilities semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities.water-construction-facilities semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities.wastewater-disposal-facilities semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities.water-supply-facilities semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities.energy-and-information-supply-facilities semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities.waste-disposal-facilities semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities.road-traffic-facilities",
+      "name": "Road Traffic Facilities",
+      "translation": {
+        "de": "Straßenverkehrsanlagen"
+      },
+      "description": "Road traffic infrastructure and associated facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{road-traffic}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities.rail-traffic-facilities",
+      "name": "Rail Traffic Facilities",
+      "translation": {
+        "de": "Schienenverkehrsanlagen"
+      },
+      "description": "Railway and rail traffic infrastructure facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{rail-traffic}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities.air-traffic-facilities",
+      "name": "Air Traffic Facilities",
+      "translation": {
+        "de": "Luftverkehrsanlagen"
+      },
+      "description": "Aviation and air traffic infrastructure facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{air-traffic}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities.water-construction-facilities",
+      "name": "Water Construction Facilities",
+      "translation": {
+        "de": "Wasserbauanlagen"
+      },
+      "description": "Water construction and hydraulic engineering facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{water-construction}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities.wastewater-disposal-facilities",
+      "name": "Wastewater Disposal Facilities",
+      "translation": {
+        "de": "Abwasserentsorgungsanlagen"
+      },
+      "description": "Wastewater treatment and disposal infrastructure facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{wastewater-disposal-fac}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities.water-supply-facilities",
+      "name": "Water Supply Facilities",
+      "translation": {
+        "de": "Wasserversorgungsanlagen"
+      },
+      "description": "Water supply and distribution infrastructure facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{water-supply-fac}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities.energy-and-information-supply-facilities",
+      "name": "Energy and Information Supply Facilities",
+      "translation": {
+        "de": "Energie- und Informationsversorgungsanlagen"
+      },
+      "description": "Energy distribution and information infrastructure facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{energy-info-supply}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities.waste-disposal-facilities",
+      "name": "Waste Disposal Facilities",
+      "translation": {
+        "de": "Abfallentsorgungsanlagen"
+      },
+      "description": "Waste collection and disposal infrastructure facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{waste-disposal-fac}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.infrastructure-facilities.other",
+      "name": "Other Infrastructure Facilities",
+      "translation": {
+        "de": "Sonstige Infrastruktureinrichtungen"
+      },
+      "description": "Other infrastructure facilities and installations.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{infra-fac-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.structural-installations",
+      "name": "Structural Installations",
+      "translation": {
+        "de": "Bauliche Einbauten"
+      },
+      "description": "Fixed structural installations and built-in components.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{struct-inst}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.structural-installations.general-installations semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.structural-installations.special-installations semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.structural-installations.landscape-architectural-installations semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.structural-installations.mechanical-installations semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.structural-installations.installations-in-civil-engineering-structures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.structural-installations.orientation-and-information-systems semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.structural-installations.protective-installations semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.structural-installations.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.structural-installations.general-installations",
+      "name": "General Installations",
+      "translation": {
+        "de": "Allgemeine Einbauten"
+      },
+      "description": "General built-in installations and fixtures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{general-inst}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.structural-installations.special-installations",
+      "name": "Special Installations",
+      "translation": {
+        "de": "Besondere Einbauten"
+      },
+      "description": "Specialized installations for specific functions.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{special-inst}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.structural-installations.landscape-architectural-installations",
+      "name": "Landscape Architectural Installations",
+      "translation": {
+        "de": "Landschaftsarchitektonische Einbauten"
+      },
+      "description": "Landscape architectural installations and features.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{landscape-arch-inst}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.structural-installations.mechanical-installations",
+      "name": "Mechanical Installations",
+      "translation": {
+        "de": "Maschinelle Einbauten"
+      },
+      "description": "Mechanical installations and equipment.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{mechanical-inst}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.structural-installations.installations-in-civil-engineering-structures",
+      "name": "Installations in Civil Engineering Structures",
+      "translation": {
+        "de": "Einbauten in Ingenieurbauwerken"
+      },
+      "description": "Specialized installations within civil engineering structures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{civil-eng-inst}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.structural-installations.orientation-and-information-systems",
+      "name": "Orientation and Information Systems",
+      "translation": {
+        "de": "Orientierungs- und Informationssysteme"
+      },
+      "description": "Wayfinding, signage, and information system installations.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{orientation-info}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.structural-installations.protective-installations",
+      "name": "Protective Installations",
+      "translation": {
+        "de": "Schutzeinrichtungen"
+      },
+      "description": "Protective installations and safety equipment.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{protective-inst}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.structural-installations.other",
+      "name": "Other Structural Installations",
+      "translation": {
+        "de": "Sonstige bauliche Einbauten"
+      },
+      "description": "Other structural installations and built-in components.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{struct-inst-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures",
+      "name": "Other Measures for Structural Components",
+      "translation": {
+        "de": "Sonstige Maßnahmen für Baukonstruktionen"
+      },
+      "description": "Additional measures and miscellaneous costs for structural components.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{struct-other-measures}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures.construction-site-facilities semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures.scaffolding semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures.safety-measures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures.demolition-measures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures.renovations semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures.material-disposal semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures.additional-measures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures.temporary-structural-components semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures.construction-site-facilities",
+      "name": "Construction Site Facilities",
+      "translation": {
+        "de": "Baustelleneinrichtungen"
+      },
+      "description": "Temporary facilities and installations for construction sites.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{construction-site-fac}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures.scaffolding",
+      "name": "Scaffolding",
+      "translation": {
+        "de": "Gerüste"
+      },
+      "description": "Scaffolding and temporary support structures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{scaffolding}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures.safety-measures",
+      "name": "Construction Safety Measures",
+      "translation": {
+        "de": "Sicherheitsmaßnahmen Bau"
+      },
+      "description": "Safety measures and protective installations during construction.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{construction-safety}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures.demolition-measures",
+      "name": "Construction Demolition Measures",
+      "translation": {
+        "de": "Abrissmaßnahmen Bau"
+      },
+      "description": "Demolition measures during construction activities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{construction-demo}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures.renovations",
+      "name": "Construction Renovations",
+      "translation": {
+        "de": "Instandsetzungen Bau"
+      },
+      "description": "Renovation and restoration work during construction.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{construction-renovations}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures.material-disposal",
+      "name": "Construction Material Disposal",
+      "translation": {
+        "de": "Materialentsorgung Bau"
+      },
+      "description": "Material disposal costs during construction activities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{construction-disposal}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures.additional-measures",
+      "name": "Additional Construction Measures",
+      "translation": {
+        "de": "Zusätzliche Baumaßnahmen"
+      },
+      "description": "Additional measures and special requirements during construction.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{construction-additional}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures.temporary-structural-components",
+      "name": "Temporary Structural Components",
+      "translation": {
+        "de": "Provisorische Baukonstruktionen"
+      },
+      "description": "Temporary structural components and provisional structures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{temp-struct}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.building-structural-components.other-measures.other",
+      "name": "Other Construction Measures",
+      "translation": {
+        "de": "Sonstige Baumaßnahmen"
+      },
+      "description": "Other miscellaneous construction measures and costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{construction-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems",
+      "name": "Technical Systems",
+      "translation": {
+        "de": "Technische Anlagen"
+      },
+      "description": "All technical building systems including HVAC, electrical, and communication systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{tech}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.wastewater-water-gas semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.heating-supply semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.room-air-technology semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.electrical semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.conveying semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.usage-specific-and-process-engineering semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.building-and-facility-automation semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.wastewater-water-gas",
+      "name": "Wastewater Water Gas Systems",
+      "translation": {
+        "de": "Abwasser-, Wasser-, Gasanlagen"
+      },
+      "description": "Plumbing and gas supply systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{wwg}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.wastewater-water-gas.wastewater semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.wastewater-water-gas.water semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.wastewater-water-gas.gas semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.wastewater-water-gas.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.wastewater-water-gas.wastewater",
+      "name": "Wastewater Systems",
+      "translation": {
+        "de": "Abwasseranlagen"
+      },
+      "description": "Wastewater disposal and treatment systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{wastewater-sys}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.wastewater-water-gas.water",
+      "name": "Water Systems",
+      "translation": {
+        "de": "Wasseranlagen"
+      },
+      "description": "Water supply and distribution systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{water-sys}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.wastewater-water-gas.gas",
+      "name": "Gas Systems",
+      "translation": {
+        "de": "Gasanlagen"
+      },
+      "description": "Gas supply and distribution systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{gas-sys}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.wastewater-water-gas.other",
+      "name": "Other Utility Systems",
+      "translation": {
+        "de": "Sonstige Versorgungsanlagen"
+      },
+      "description": "Other utility systems and installations.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{util-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.heating-supply",
+      "name": "Heating Supply Systems",
+      "translation": {
+        "de": "Wärmeversorgungsanlagen"
+      },
+      "description": "Systems for heat generation and distribution in buildings.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{heating-supply}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.heating-supply.heat-generation semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.heating-supply.heat-distribution-networks semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.heating-supply.room-heating-surfaces semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.heating-supply.traffic-heating-surfaces semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.heating-supply.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.heating-supply.heat-generation",
+      "name": "Heat Generation Systems",
+      "translation": {
+        "de": "Wärmeerzeugungsanlagen"
+      },
+      "description": "Systems for generating heat energy.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{heat-generation}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.heating-supply.heat-distribution-networks",
+      "name": "Heat Distribution Networks",
+      "translation": {
+        "de": "Wärmeverteilungsnetze"
+      },
+      "description": "Networks for distributing heat throughout buildings.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{heat-distribution}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.heating-supply.room-heating-surfaces",
+      "name": "Room Heating Surfaces",
+      "translation": {
+        "de": "Raumheizflächen"
+      },
+      "description": "Heating surfaces and radiators for room heating.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{room-heating-surfaces}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.heating-supply.traffic-heating-surfaces",
+      "name": "Traffic Heating Surfaces",
+      "translation": {
+        "de": "Verkehrsheizflächen"
+      },
+      "description": "Heating surfaces for traffic areas and walkways.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{traffic-heating-surfaces}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.heating-supply.other",
+      "name": "Other Heating Supply Systems",
+      "translation": {
+        "de": "Sonstige Wärmeversorgungsanlagen"
+      },
+      "description": "Other heating supply systems and components.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{heating-supply-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.room-air-technology",
+      "name": "Room Air Technology Systems",
+      "translation": {
+        "de": "Raumlufttechnische Anlagen"
+      },
+      "description": "Systems for ventilation, air conditioning, and air treatment.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{room-air-tech}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.room-air-technology.ventilation semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.room-air-technology.partial-air-conditioning semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.room-air-technology.air-conditioning semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.room-air-technology.refrigeration semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.room-air-technology.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.room-air-technology.ventilation",
+      "name": "Ventilation Systems",
+      "translation": {
+        "de": "Lüftungsanlagen"
+      },
+      "description": "Systems for mechanical ventilation and air exchange.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{ventilation}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.room-air-technology.partial-air-conditioning",
+      "name": "Partial Air Conditioning Systems",
+      "translation": {
+        "de": "Teilklimaanlagen"
+      },
+      "description": "Systems for partial air conditioning and climate control.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{partial-ac}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.room-air-technology.air-conditioning",
+      "name": "Air Conditioning Systems",
+      "translation": {
+        "de": "Klimaanlagen"
+      },
+      "description": "Complete air conditioning systems for climate control.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{air-conditioning}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.room-air-technology.refrigeration",
+      "name": "Refrigeration Systems",
+      "translation": {
+        "de": "Kälteanlagen"
+      },
+      "description": "Systems for cooling and refrigeration.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{refrigeration}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.room-air-technology.other",
+      "name": "Other Room Air Technology Systems",
+      "translation": {
+        "de": "Sonstige raumlufttechnische Anlagen"
+      },
+      "description": "Other room air technology systems and components.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{room-air-tech-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.electrical",
+      "name": "Electrical Systems",
+      "translation": {
+        "de": "Elektrische Anlagen"
+      },
+      "description": "Electrical systems for power supply, distribution, and lighting.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{electrical}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.electrical.high-and-medium-voltage semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.electrical.emergency-power-supply semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.electrical.low-voltage-switchgear semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.electrical.low-voltage-installation semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.electrical.lighting semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.electrical.lightning-protection-and-grounding semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.electrical.catenary semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.electrical.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.electrical.high-and-medium-voltage",
+      "name": "High and Medium Voltage Systems",
+      "translation": {
+        "de": "Hoch- und Mittelspannungsanlagen"
+      },
+      "description": "High and medium voltage electrical systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{high-medium-voltage}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.electrical.emergency-power-supply",
+      "name": "Emergency Power Supply Systems",
+      "translation": {
+        "de": "Notstromversorgungsanlagen"
+      },
+      "description": "Emergency power supply and backup systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{emergency-power}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.electrical.low-voltage-switchgear",
+      "name": "Low Voltage Switchgear",
+      "translation": {
+        "de": "Niederspannungsschaltanlagen"
+      },
+      "description": "Low voltage switchgear and distribution panels.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{low-voltage-switchgear}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.electrical.low-voltage-installation",
+      "name": "Low Voltage Installation Systems",
+      "translation": {
+        "de": "Niederspannungsinstallationsanlagen"
+      },
+      "description": "Low voltage installation and wiring systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{low-voltage-install}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.electrical.lighting",
+      "name": "Lighting Systems",
+      "translation": {
+        "de": "Beleuchtungsanlagen"
+      },
+      "description": "Interior and exterior lighting systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{lighting}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.electrical.lightning-protection-and-grounding",
+      "name": "Lightning Protection and Grounding Systems",
+      "translation": {
+        "de": "Blitzschutz- und Erdungsanlagen"
+      },
+      "description": "Lightning protection and electrical grounding systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{lightning-protection}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.electrical.catenary",
+      "name": "Catenary Systems",
+      "translation": {
+        "de": "Fahrleitungsanlagen"
+      },
+      "description": "Catenary systems for electric transportation.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{catenary}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.electrical.other",
+      "name": "Other Electrical Systems",
+      "translation": {
+        "de": "Sonstige elektrische Anlagen"
+      },
+      "description": "Other electrical systems and components.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{electrical-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology",
+      "name": "Communication, Safety and Information Technology Systems",
+      "translation": {
+        "de": "Fernmelde- und sicherheitstechnische Anlagen, Gebäudeautomation"
+      },
+      "description": "Systems for communication, safety, and information technology.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{comm-safety-it}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology.telecommunication semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology.search-and-signal semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology.time-service semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology.electroacoustic semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology.audiovisual-media-and-antenna semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology.fire-alarm-and-alert semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology.data-transmission-networks semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology.traffic-control semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology.telecommunication",
+      "name": "Telecommunication Systems",
+      "translation": {
+        "de": "Telekommunikationsanlagen"
+      },
+      "description": "Telecommunication and communication systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{telecommunication}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology.search-and-signal",
+      "name": "Search and Signal Systems",
+      "translation": {
+        "de": "Such- und Signalanlagen"
+      },
+      "description": "Search and signal systems for building safety.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{search-signal}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology.time-service",
+      "name": "Time Service Systems",
+      "translation": {
+        "de": "Zeitdienstanlagen"
+      },
+      "description": "Time service and clock systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{time-service}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology.electroacoustic",
+      "name": "Electroacoustic Systems",
+      "translation": {
+        "de": "Elektroakustische Anlagen"
+      },
+      "description": "Public address and sound systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{electroacoustic}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology.audiovisual-media-and-antenna",
+      "name": "Audiovisual Media and Antenna Systems",
+      "translation": {
+        "de": "Fernseh- und Antennenanlagen"
+      },
+      "description": "Audiovisual media systems and antenna installations.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{audiovisual-antenna}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology.fire-alarm-and-alert",
+      "name": "Fire Alarm and Alert Systems",
+      "translation": {
+        "de": "Gefahrenmelne- und Alarmanlagen"
+      },
+      "description": "Fire detection, alarm, and alert systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{fire-alarm}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology.data-transmission-networks",
+      "name": "Data Transmission Networks",
+      "translation": {
+        "de": "Datenübertragungsnetze"
+      },
+      "description": "Data networks and transmission systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{data-transmission}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology.traffic-control",
+      "name": "Traffic Control Systems",
+      "translation": {
+        "de": "Verkehrsleitsysteme"
+      },
+      "description": "Traffic control and management systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{traffic-control}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.communication-safety-and-information-technology.other",
+      "name": "Other Communication Safety and IT Systems",
+      "translation": {
+        "de": "Sonstige fernmelde- und sicherheitstechnische Anlagen"
+      },
+      "description": "Other communication, safety, and IT systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{comm-safety-it-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.conveying",
+      "name": "Conveying Systems",
+      "translation": {
+        "de": "Förderanlagen"
+      },
+      "description": "Systems for vertical and horizontal transportation of people and goods.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{conveying}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.conveying.elevator semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.conveying.escalators-and-moving-walkways semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.conveying.conveyor semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.conveying.transport semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.conveying.crane semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.conveying.hydraulic semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.conveying.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.conveying.elevator",
+      "name": "Elevator Systems",
+      "translation": {
+        "de": "Aufzugsanlagen"
+      },
+      "description": "Elevator systems for vertical transportation.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{elevator}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.conveying.escalators-and-moving-walkways",
+      "name": "Escalators and Moving Walkways",
+      "translation": {
+        "de": "Fahrtreppen und Fahrsteige"
+      },
+      "description": "Escalators and moving walkway systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{escalators-walkways}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.conveying.conveyor",
+      "name": "Conveyor Systems",
+      "translation": {
+        "de": "Stetigförderanlagen"
+      },
+      "description": "Continuous conveyor and material handling systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{conveyor}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.conveying.transport",
+      "name": "Transport Systems",
+      "translation": {
+        "de": "Transportanlagen"
+      },
+      "description": "General transport and logistics systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{transport}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.conveying.crane",
+      "name": "Crane Systems",
+      "translation": {
+        "de": "Krananlagen"
+      },
+      "description": "Crane systems for heavy lifting and material handling.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{crane}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.conveying.hydraulic",
+      "name": "Hydraulic Systems",
+      "translation": {
+        "de": "Hydraulische Anlagen"
+      },
+      "description": "Hydraulic systems for lifting and transport.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{hydraulic}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.conveying.other",
+      "name": "Other Conveying Systems",
+      "translation": {
+        "de": "Sonstige Förderanlagen"
+      },
+      "description": "Other conveying and transport systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{conveying-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.usage-specific-and-process-engineering",
+      "name": "Usage Specific and Process Engineering Systems",
+      "translation": {
+        "de": "Nutzungsspezifische und verfahrenstechnische Anlagen"
+      },
+      "description": "Specialized systems for specific uses and process engineering.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{usage-process-eng}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.usage-specific-and-process-engineering.kitchen-technology semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.usage-specific-and-process-engineering.laundry-cleaning-and-bathing-technology semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.usage-specific-and-process-engineering.media-supply-medical-and-laboratory-technology semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.usage-specific-and-process-engineering.fire-extinguishing semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.usage-specific-and-process-engineering.process-heat-cold-and-air semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.usage-specific-and-process-engineering.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.usage-specific-and-process-engineering.kitchen-technology",
+      "name": "Kitchen Technology Systems",
+      "translation": {
+        "de": "Küchengeräte"
+      },
+      "description": "Commercial and industrial kitchen technology systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{kitchen-tech}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.usage-specific-and-process-engineering.laundry-cleaning-and-bathing-technology",
+      "name": "Laundry Cleaning and Bathing Technology Systems",
+      "translation": {
+        "de": "Wäscherei-, Reinigungs- und Badeanlagen"
+      },
+      "description": "Systems for laundry, cleaning, and bathing facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{laundry-cleaning-bath}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.usage-specific-and-process-engineering.media-supply-medical-and-laboratory-technology",
+      "name": "Media Supply Medical and Laboratory Technology Systems",
+      "translation": {
+        "de": "Medienversorgung, Medizin- und Labortechnik"
+      },
+      "description": "Media supply systems and medical/laboratory technology.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{media-medical-lab}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.usage-specific-and-process-engineering.fire-extinguishing",
+      "name": "Fire Extinguishing Systems",
+      "translation": {
+        "de": "Löschanlagen"
+      },
+      "description": "Fire suppression and extinguishing systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{fire-extinguishing}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.usage-specific-and-process-engineering.process-heat-cold-and-air",
+      "name": "Process Heat Cold and Air Systems",
+      "translation": {
+        "de": "Prozesswärme-, -kälte- und -luftanlagen"
+      },
+      "description": "Process systems for heat, cooling, and air handling.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{process-heat-cold-air}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.usage-specific-and-process-engineering.other",
+      "name": "Other Usage Specific and Process Engineering Systems",
+      "translation": {
+        "de": "Sonstige nutzungsspezifische und verfahrenstechnische Anlagen"
+      },
+      "description": "Other specialized usage and process engineering systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{usage-process-eng-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.building-and-facility-automation",
+      "name": "Building and Facility Automation",
+      "translation": {
+        "de": "Gebäude- und Anlagenautomation"
+      },
+      "description": "Building automation and facility control systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{building-automation}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.building-and-facility-automation.automation-devices semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.building-and-facility-automation.control-cabinets-automation-hubs semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.building-and-facility-automation.automation-management semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.building-and-facility-automation.cables-lines-and-laying semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.building-and-facility-automation.data-transmission-networks semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.building-and-facility-automation.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.building-and-facility-automation.automation-devices",
+      "name": "Automation Devices",
+      "translation": {
+        "de": "Automationsgeräte"
+      },
+      "description": "Automation devices and control equipment.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{automation-devices}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.building-and-facility-automation.control-cabinets-automation-hubs",
+      "name": "Control Cabinets Automation Hubs",
+      "translation": {
+        "de": "Schaltschränke Automationszentralen"
+      },
+      "description": "Control cabinets and automation hub systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{control-cabinets-hubs}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.building-and-facility-automation.automation-management",
+      "name": "Automation Management",
+      "translation": {
+        "de": "Automationsmanagement"
+      },
+      "description": "Software and management systems for automation.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{automation-management}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.building-and-facility-automation.cables-lines-and-laying",
+      "name": "Cables Lines and Laying Systems",
+      "translation": {
+        "de": "Kabel, Leitungen und Verlegesysteme"
+      },
+      "description": "Cables, lines, and installation systems for automation.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{cables-lines-laying}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.building-and-facility-automation.data-transmission-networks",
+      "name": "Data Transmission Networks",
+      "translation": {
+        "de": "Datenübertragungsnetze"
+      },
+      "description": "Data transmission networks for automation systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{automation-data-networks}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.building-and-facility-automation.other",
+      "name": "Other Building and Facility Automation",
+      "translation": {
+        "de": "Sonstige Gebäude- und Anlagenautomation"
+      },
+      "description": "Other building automation and facility control systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{building-automation-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures",
+      "name": "Other Measures for Technical Systems",
+      "translation": {
+        "de": "Sonstige Maßnahmen für technische Anlagen"
+      },
+      "description": "Additional measures and miscellaneous costs for technical systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{tech-other-measures}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures.construction-site-facilities semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures.scaffolding semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures.safety-measures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures.demolition-measures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures.renovations semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures.material-disposal semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures.additional-measures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures.temporary-technical-systems semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures.construction-site-facilities",
+      "name": "Construction Site Facilities for Technical Systems",
+      "translation": {
+        "de": "Baustelleneinrichtungen für technische Anlagen"
+      },
+      "description": "Temporary facilities for technical systems installation.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{tech-construction-site-fac}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures.scaffolding",
+      "name": "Scaffolding for Technical Systems",
+      "translation": {
+        "de": "Gerüste für technische Anlagen"
+      },
+      "description": "Scaffolding for technical systems installation.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{tech-scaffolding}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures.safety-measures",
+      "name": "Safety Measures for Technical Systems",
+      "translation": {
+        "de": "Sicherheitsmaßnahmen für technische Anlagen"
+      },
+      "description": "Safety measures for technical systems installation.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{tech-safety}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures.demolition-measures",
+      "name": "Demolition Measures for Technical Systems",
+      "translation": {
+        "de": "Abrissmaßnahmen für technische Anlagen"
+      },
+      "description": "Demolition measures for technical systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{tech-demolition}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures.renovations",
+      "name": "Renovations for Technical Systems",
+      "translation": {
+        "de": "Instandsetzungen für technische Anlagen"
+      },
+      "description": "Renovation and restoration of technical systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{tech-renovations}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures.material-disposal",
+      "name": "Material Disposal for Technical Systems",
+      "translation": {
+        "de": "Materialentsorgung für technische Anlagen"
+      },
+      "description": "Material disposal for technical systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{tech-material-disposal}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures.additional-measures",
+      "name": "Additional Measures for Technical Systems",
+      "translation": {
+        "de": "Zusätzliche Maßnahmen für technische Anlagen"
+      },
+      "description": "Additional measures and special requirements for technical systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{tech-additional}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures.temporary-technical-systems",
+      "name": "Temporary Technical Systems",
+      "translation": {
+        "de": "Provisorische technische Anlagen"
+      },
+      "description": "Temporary technical systems and provisional installations.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{temp-tech}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.technical-systems.other-measures.other",
+      "name": "Other Technical Systems Measures",
+      "translation": {
+        "de": "Sonstige Maßnahmen für technische Anlagen"
+      },
+      "description": "Other miscellaneous measures for technical systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{tech-measures-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces",
+      "name": "Outdoor Facilities and Open Spaces",
+      "translation": {
+        "de": "Außenanlagen und Freiräume"
+      },
+      "description": "All costs related to outdoor facilities, landscaping, and open space development.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.earthworks semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.foundation-substructure semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.installations-in-outdoor-facilities-and-open-spaces semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.other-measures-for-outdoor-facilities-and-open-spaces )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.earthworks",
+      "name": "Outdoor Earthworks",
+      "translation": {
+        "de": "Erdarbeiten Außenanlagen"
+      },
+      "description": "Earthworks and site preparation for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-earth}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.earthworks.construction semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.earthworks.enclosure semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.earthworks.water-management semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.earthworks.conveyance semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.earthworks.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.earthworks.construction",
+      "name": "Outdoor Earthworks Construction",
+      "translation": {
+        "de": "Erdarbeiten Konstruktion Außenanlagen"
+      },
+      "description": "Construction-related earthworks for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-earth-const}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.earthworks.enclosure",
+      "name": "Outdoor Earthworks Enclosure",
+      "translation": {
+        "de": "Erdarbeiten Umschließung Außenanlagen"
+      },
+      "description": "Enclosure-related earthworks for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-earth-encl}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.earthworks.water-management",
+      "name": "Outdoor Earthworks Water Management",
+      "translation": {
+        "de": "Erdarbeiten Wasserhaltung Außenanlagen"
+      },
+      "description": "Water management during outdoor earthworks.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-earth-water}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.earthworks.conveyance",
+      "name": "Outdoor Earthworks Conveyance",
+      "translation": {
+        "de": "Erdarbeiten Förderung Außenanlagen"
+      },
+      "description": "Material conveyance during outdoor earthworks.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-earth-conv}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.earthworks.other",
+      "name": "Other Outdoor Earthworks",
+      "translation": {
+        "de": "Sonstige Erdarbeiten Außenanlagen"
+      },
+      "description": "Other outdoor earthwork costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-earth-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.foundation-substructure",
+      "name": "Outdoor Foundation Substructure",
+      "translation": {
+        "de": "Gründung Unterbau Außenanlagen"
+      },
+      "description": "Foundation and substructure for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-found}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.foundation-substructure.soil-improvement semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.foundation-substructure.foundations-and-slabs semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.foundation-substructure.foundation-layers semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.foundation-substructure.seals-and-linings semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.foundation-substructure.drains semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.foundation-substructure.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.foundation-substructure.soil-improvement",
+      "name": "Outdoor Soil Improvement",
+      "translation": {
+        "de": "Bodenverbesserung Außenanlagen"
+      },
+      "description": "Soil improvement for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-soil-imp}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.foundation-substructure.foundations-and-slabs",
+      "name": "Outdoor Foundations and Slabs",
+      "translation": {
+        "de": "Fundamente und Platten Außenanlagen"
+      },
+      "description": "Foundation and slab systems for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-found-slabs}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.foundation-substructure.foundation-layers",
+      "name": "Outdoor Foundation Layers",
+      "translation": {
+        "de": "Gründungsschichten Außenanlagen"
+      },
+      "description": "Foundation layers for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-found-layers}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.foundation-substructure.seals-and-linings",
+      "name": "Outdoor Seals and Linings",
+      "translation": {
+        "de": "Abdichtungen und Auskleidungen Außenanlagen"
+      },
+      "description": "Sealing and lining systems for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-seals}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.foundation-substructure.drains",
+      "name": "Outdoor Drains",
+      "translation": {
+        "de": "Drainagen Außenanlagen"
+      },
+      "description": "Drainage systems for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-drains}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.foundation-substructure.other",
+      "name": "Other Outdoor Foundation Costs",
+      "translation": {
+        "de": "Sonstige Gründungskosten Außenanlagen"
+      },
+      "description": "Other foundation costs for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-found-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses",
+      "name": "Pavement Surface Courses",
+      "translation": {
+        "de": "Beläge Oberbau"
+      },
+      "description": "Pavement and surface course systems for outdoor areas.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{pavement}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses.paths semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses.roads semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses.squares-yards-terraces semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses.parking-spaces semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses.sports-field-areas semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses.playground-areas semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses.track-systems semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses.airfield-areas semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses.paths",
+      "name": "Paths",
+      "translation": {
+        "de": "Wege"
+      },
+      "description": "Walkway and pathway systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{paths}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses.roads",
+      "name": "Roads",
+      "translation": {
+        "de": "Straßen"
+      },
+      "description": "Road and street pavement systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{roads}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses.squares-yards-terraces",
+      "name": "Squares Yards Terraces",
+      "translation": {
+        "de": "Plätze Höfe Terrassen"
+      },
+      "description": "Square, courtyard, and terrace surfaces.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{squares}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses.parking-spaces",
+      "name": "Parking Spaces",
+      "translation": {
+        "de": "Stellplätze"
+      },
+      "description": "Parking area and surface systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{parking}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses.sports-field-areas",
+      "name": "Sports Field Areas",
+      "translation": {
+        "de": "Sportplatzflächen"
+      },
+      "description": "Sports field and recreational area surfaces.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{sports-fields}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses.playground-areas",
+      "name": "Playground Areas",
+      "translation": {
+        "de": "Spielplatzflächen"
+      },
+      "description": "Playground and children's area surfaces.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{playground}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses.track-systems",
+      "name": "Track Systems",
+      "translation": {
+        "de": "Gleisanlagen"
+      },
+      "description": "Railway and track system infrastructure.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{tracks}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses.airfield-areas",
+      "name": "Airfield Areas",
+      "translation": {
+        "de": "Flugplatzflächen"
+      },
+      "description": "Airport and airfield surface systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{airfield}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.pavement-surface-courses.other",
+      "name": "Other Pavement Areas",
+      "translation": {
+        "de": "Sonstige Belagsflächen"
+      },
+      "description": "Other pavement and surface area costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{pavement-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components",
+      "name": "Outdoor Structural Components",
+      "translation": {
+        "de": "Baukonstruktionen Außenanlagen"
+      },
+      "description": "Structural components and constructions for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-struct}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components.fences semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components.protective-structures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components.wall-structures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components.ramps-stairs-stands semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components.roofs semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components.bridges semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components.canal-and-shaft-structures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components.water-basins semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components.fences",
+      "name": "Fences",
+      "translation": {
+        "de": "Zäune"
+      },
+      "description": "Fencing systems and boundary structures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{fences}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components.protective-structures",
+      "name": "Protective Structures",
+      "translation": {
+        "de": "Schutzbauten"
+      },
+      "description": "Protective structures and safety installations.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{protective}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components.wall-structures",
+      "name": "Wall Structures",
+      "translation": {
+        "de": "Wandkonstruktionen"
+      },
+      "description": "Wall structures and retaining systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{walls-outdoor}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components.ramps-stairs-stands",
+      "name": "Ramps Stairs Stands",
+      "translation": {
+        "de": "Rampen Treppen Tribünen"
+      },
+      "description": "Ramps, stairs, and grandstand structures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{ramps-stairs}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components.roofs",
+      "name": "Outdoor Roofs",
+      "translation": {
+        "de": "Dächer Außenanlagen"
+      },
+      "description": "Roof structures for outdoor facilities and shelters.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-roofs}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components.bridges",
+      "name": "Bridges",
+      "translation": {
+        "de": "Brücken"
+      },
+      "description": "Bridge structures and crossings.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{bridges}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components.canal-and-shaft-structures",
+      "name": "Canal and Shaft Structures",
+      "translation": {
+        "de": "Kanal- und Schachtbauwerke"
+      },
+      "description": "Canal, shaft, and underground structures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{canals-shafts}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components.water-basins",
+      "name": "Water Basins",
+      "translation": {
+        "de": "Wasserbecken"
+      },
+      "description": "Water basins, ponds, and water feature structures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{water-basins}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.structural-components.other",
+      "name": "Other Outdoor Structural Components",
+      "translation": {
+        "de": "Sonstige Baukonstruktionen Außenanlagen"
+      },
+      "description": "Other structural components for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-struct-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems",
+      "name": "Outdoor Technical Systems",
+      "translation": {
+        "de": "Technische Anlagen Außenanlagen"
+      },
+      "description": "Technical systems and installations for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-tech}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems.wastewater semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems.water semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems.gas-and-liquid semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems.heating-supply semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems.room-air-technology semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems.electrical semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems.communication-safety-and-information-technology-automation semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems.usage-specific semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems.wastewater",
+      "name": "Outdoor Wastewater Systems",
+      "translation": {
+        "de": "Abwasseranlagen Außenanlagen"
+      },
+      "description": "Wastewater systems and drainage for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-wastewater}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems.water",
+      "name": "Outdoor Water Systems",
+      "translation": {
+        "de": "Wasseranlagen Außenanlagen"
+      },
+      "description": "Water supply and distribution systems for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-water}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems.gas-and-liquid",
+      "name": "Outdoor Gas and Liquid Systems",
+      "translation": {
+        "de": "Gas- und Flüssiganlagen Außenanlagen"
+      },
+      "description": "Gas and liquid supply systems for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-gas-liquid}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems.heating-supply",
+      "name": "Outdoor Heating Supply Systems",
+      "translation": {
+        "de": "Wärmeversorgungsanlagen Außenanlagen"
+      },
+      "description": "Heating and thermal systems for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-heating}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems.room-air-technology",
+      "name": "Outdoor Room Air Technology Systems",
+      "translation": {
+        "de": "Raumlufttechnische Anlagen Außenanlagen"
+      },
+      "description": "Air technology systems for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-air-tech}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems.electrical",
+      "name": "Outdoor Electrical Systems",
+      "translation": {
+        "de": "Elektrische Anlagen Außenanlagen"
+      },
+      "description": "Electrical systems and installations for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-electrical}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems.communication-safety-and-information-technology-automation",
+      "name": "Outdoor Communication Safety and Information Technology Automation",
+      "translation": {
+        "de": "Fernmelde-, sicherheitstechnische und Gebäudeautomationsanlagen Außenanlagen"
+      },
+      "description": "Communication, safety, information technology and automation systems for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-comm-safety-it-automation}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems.usage-specific",
+      "name": "Outdoor Usage Specific Systems",
+      "translation": {
+        "de": "Nutzungsspezifische Anlagen Außenanlagen"
+      },
+      "description": "Usage-specific technical systems for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-usage-specific}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.outdoor-facilities-and-open-spaces.technical-systems.other",
+      "name": "Other Outdoor Technical Systems",
+      "translation": {
+        "de": "Sonstige technische Anlagen Außenanlagen"
+      },
+      "description": "Other technical systems and installations for outdoor facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{outdoor-tech-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks",
+      "name": "Equipment and Artworks",
+      "translation": {
+        "de": "Ausstattung und Kunstwerke"
+      },
+      "description": "Building equipment and artistic installations.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{equip}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks.general-equipment semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks.special-equipment semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks.information-technology-equipment semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks.artistic-equipment semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks.general-equipment",
+      "name": "General Equipment",
+      "translation": {
+        "de": "Allgemeine Ausstattung"
+      },
+      "description": "General building equipment and furnishings.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{gen-equip}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks.special-equipment",
+      "name": "Special Equipment",
+      "translation": {
+        "de": "Besondere Ausstattung"
+      },
+      "description": "Specialized equipment for specific building functions.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{spec-equip}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks.information-technology-equipment",
+      "name": "Information Technology Equipment",
+      "translation": {
+        "de": "Informationstechnische Ausstattung"
+      },
+      "description": "IT equipment and systems.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{it-equip}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks.artistic-equipment",
+      "name": "Artistic Equipment",
+      "translation": {
+        "de": "Künstlerische Ausstattung"
+      },
+      "description": "Artistic installations and decorative elements.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{art}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks.artistic-equipment.art-objects semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks.artistic-equipment.artistic-design-of-the-building semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks.artistic-equipment.artistic-design-of-outdoor-facilities-and-open-spaces semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks.artistic-equipment.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks.artistic-equipment.art-objects",
+      "name": "Art Objects",
+      "translation": {
+        "de": "Kunstobjekte"
+      },
+      "description": "Stand-alone art objects and sculptures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{art-obj}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks.artistic-equipment.artistic-design-of-the-building",
+      "name": "Artistic Design of Building",
+      "translation": {
+        "de": "Künstlerische Gestaltung des Gebäudes"
+      },
+      "description": "Artistic design elements integrated into the building.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{art-build}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks.artistic-equipment.artistic-design-of-outdoor-facilities-and-open-spaces",
+      "name": "Artistic Design of Outdoor Facilities",
+      "translation": {
+        "de": "Künstlerische Gestaltung der Außenanlagen"
+      },
+      "description": "Artistic design elements in outdoor spaces.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{art-outdoor}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks.artistic-equipment.other",
+      "name": "Other Artistic Equipment",
+      "translation": {
+        "de": "Sonstige künstlerische Ausstattung"
+      },
+      "description": "Other artistic installations and equipment.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{art-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.equipment-and-artworks.other",
+      "name": "Other Equipment",
+      "translation": {
+        "de": "Sonstige Ausstattung"
+      },
+      "description": "Other equipment and installations.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{equip-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary",
+      "name": "Construction Ancillary Costs",
+      "translation": {
+        "de": "Baunebenkosten"
+      },
+      "description": "All ancillary costs related to construction including planning and management.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{anc}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.client-tasks semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.preparation-of-object-planning semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.object-planning semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.artistic-services semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.general semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.client-tasks",
+      "name": "Client Tasks",
+      "translation": {
+        "de": "Bauherrschaftsaufgaben"
+      },
+      "description": "Tasks and costs related to client responsibilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{client}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.client-tasks.project-management semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.client-tasks.needs-assessment semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.client-tasks.project-control semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.client-tasks.safety-and-health-protection-coordination semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.client-tasks.award-procedures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.client-tasks.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.client-tasks.project-management",
+      "name": "Project Management",
+      "translation": {
+        "de": "Projektmanagement"
+      },
+      "description": "Project management costs and fees.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{pm}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.client-tasks.needs-assessment",
+      "name": "Needs Assessment",
+      "translation": {
+        "de": "Bedarfsplanung"
+      },
+      "description": "Project needs assessment and feasibility studies.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{needs-assessment}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.client-tasks.project-control",
+      "name": "Project Control",
+      "translation": {
+        "de": "Projektsteuerung"
+      },
+      "description": "Project control and coordination services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{project-control}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.client-tasks.safety-and-health-protection-coordination",
+      "name": "Safety and Health Protection Coordination",
+      "translation": {
+        "de": "Koordination Sicherheit und Gesundheitsschutz"
+      },
+      "description": "Safety and health protection coordination services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{safety-health-coord}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.client-tasks.award-procedures",
+      "name": "Award Procedures",
+      "translation": {
+        "de": "Vergabeverfahren"
+      },
+      "description": "Tender and award procedure costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{award-procedures}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.client-tasks.other",
+      "name": "Other Client Tasks",
+      "translation": {
+        "de": "Sonstige Bauherrenaufgaben"
+      },
+      "description": "Other client tasks and responsibilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{client-tasks-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.preparation-of-object-planning",
+      "name": "Preparation of Object Planning",
+      "translation": {
+        "de": "Vorbereitung der Objektplanung"
+      },
+      "description": "Planning preparation services and preliminary studies.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{prep-planning}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.preparation-of-object-planning.investigations semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.preparation-of-object-planning.valuations semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.preparation-of-object-planning.urban-planning-services semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.preparation-of-object-planning.landscape-planning-services semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.preparation-of-object-planning.competitions semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.preparation-of-object-planning.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.preparation-of-object-planning.investigations",
+      "name": "Investigations",
+      "translation": {
+        "de": "Untersuchungen"
+      },
+      "description": "Site investigations and technical studies.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{investigations}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.preparation-of-object-planning.valuations",
+      "name": "Valuations",
+      "translation": {
+        "de": "Bewertungen"
+      },
+      "description": "Property and asset valuations.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{valuations}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.preparation-of-object-planning.urban-planning-services",
+      "name": "Urban Planning Services",
+      "translation": {
+        "de": "Städtebauliche Leistungen"
+      },
+      "description": "Urban and regional planning services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{urban-planning}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.preparation-of-object-planning.landscape-planning-services",
+      "name": "Landscape Planning Services",
+      "translation": {
+        "de": "Landschaftsplanerische Leistungen"
+      },
+      "description": "Landscape and environmental planning services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{landscape-planning}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.preparation-of-object-planning.competitions",
+      "name": "Planning Competitions",
+      "translation": {
+        "de": "Wettbewerbe"
+      },
+      "description": "Architectural and planning competition costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{competitions}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.preparation-of-object-planning.other",
+      "name": "Other Planning Preparation",
+      "translation": {
+        "de": "Sonstige Vorbereitungen der Objektplanung"
+      },
+      "description": "Other planning preparation services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{prep-planning-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.object-planning",
+      "name": "Object Planning",
+      "translation": {
+        "de": "Objektplanung"
+      },
+      "description": "Object-specific planning and design services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{object-planning}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.object-planning.buildings-and-interiors semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.object-planning.open-spaces semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.object-planning.civil-engineering-structures semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.object-planning.traffic-facilities semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.object-planning.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.object-planning.buildings-and-interiors",
+      "name": "Buildings and Interiors Planning",
+      "translation": {
+        "de": "Gebäude und Innenräume"
+      },
+      "description": "Building and interior design planning services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{buildings-interiors-planning}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.object-planning.open-spaces",
+      "name": "Open Spaces Planning",
+      "translation": {
+        "de": "Freianlagen"
+      },
+      "description": "Open spaces and outdoor area planning services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{open-spaces-planning}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.object-planning.civil-engineering-structures",
+      "name": "Civil Engineering Structures Planning",
+      "translation": {
+        "de": "Ingenieurbauwerke"
+      },
+      "description": "Civil engineering and infrastructure planning services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{civil-eng-planning}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.object-planning.traffic-facilities",
+      "name": "Traffic Facilities Planning",
+      "translation": {
+        "de": "Verkehrsanlagen"
+      },
+      "description": "Traffic and transportation facility planning services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{traffic-facilities-planning}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.object-planning.other",
+      "name": "Other Object Planning",
+      "translation": {
+        "de": "Sonstige Objektplanung"
+      },
+      "description": "Other object-specific planning services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{object-planning-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning",
+      "name": "Specialist Planning",
+      "translation": {
+        "de": "Fachplanung"
+      },
+      "description": "Specialized technical planning and consulting services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{specialist-planning}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning.structural-planning semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning.technical-equipment semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning.building-physics semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning.geotechnics semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning.engineering-surveying semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning.lighting-technology-daylight-technology semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning.fire-protection semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning.contaminated-sites-explosive-ordnance-cultural-heritage-finds semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning.structural-planning",
+      "name": "Structural Planning",
+      "translation": {
+        "de": "Tragwerksplanung"
+      },
+      "description": "Structural engineering and design services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{structural-planning}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning.technical-equipment",
+      "name": "Technical Equipment Planning",
+      "translation": {
+        "de": "Technische Ausrüstung"
+      },
+      "description": "Technical equipment and systems planning services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{tech-equipment-planning}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning.building-physics",
+      "name": "Building Physics",
+      "translation": {
+        "de": "Bauphysik"
+      },
+      "description": "Building physics and performance consulting services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{building-physics}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning.geotechnics",
+      "name": "Geotechnics",
+      "translation": {
+        "de": "Geotechnik"
+      },
+      "description": "Geotechnical engineering and soil analysis services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{geotechnics}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning.engineering-surveying",
+      "name": "Engineering Surveying",
+      "translation": {
+        "de": "Ingenieurvermessung"
+      },
+      "description": "Engineering surveying and measurement services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{eng-surveying}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning.lighting-technology-daylight-technology",
+      "name": "Lighting Technology Daylight Technology",
+      "translation": {
+        "de": "Lichttechnik, Tageslichtunterstand"
+      },
+      "description": "Lighting design and daylight technology services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{lighting-daylight-tech}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning.fire-protection",
+      "name": "Fire Protection Planning",
+      "translation": {
+        "de": "Brandschutz"
+      },
+      "description": "Fire protection and safety planning services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{fire-protection-planning}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning.contaminated-sites-explosive-ordnance-cultural-heritage-finds",
+      "name": "Contaminated Sites Explosive Ordnance Cultural Heritage Finds",
+      "translation": {
+        "de": "Altlasten, Kampfmittel, Kulturdenkmäler"
+      },
+      "description": "Environmental contamination, ordnance, and cultural heritage services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{contam-ordnance-heritage}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.specialist-planning.other",
+      "name": "Other Specialist Planning",
+      "translation": {
+        "de": "Sonstige Fachplanung"
+      },
+      "description": "Other specialized planning and consulting services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{specialist-planning-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.artistic-services",
+      "name": "Artistic Services",
+      "translation": {
+        "de": "Künstlerische Leistungen"
+      },
+      "description": "Artistic and creative services for construction projects.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{artistic-services}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.artistic-services.art-competitions semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.artistic-services.fees semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.artistic-services.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.artistic-services.art-competitions",
+      "name": "Art Competitions",
+      "translation": {
+        "de": "Kunstwettbewerbe"
+      },
+      "description": "Art competitions and artistic concept development costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{art-competitions}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.artistic-services.fees",
+      "name": "Artistic Services Fees",
+      "translation": {
+        "de": "Honorare"
+      },
+      "description": "Fees for artistic services and consultations.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{artistic-fees}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.artistic-services.other",
+      "name": "Other Artistic Services",
+      "translation": {
+        "de": "Sonstige künstlerische Leistungen"
+      },
+      "description": "Other artistic and creative services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{artistic-services-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.general",
+      "name": "General Construction Ancillary Costs",
+      "translation": {
+        "de": "Allgemeine Baunebenkosten"
+      },
+      "description": "General construction ancillary costs and fees.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{general-ancillary}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.general.expertise-and-consulting semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.general.inspections-approvals-acceptance semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.general.operating-costs semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.general.sampling-costs semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.general.operating-costs-after-acceptance semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.general.insurance semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.general.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.general.expertise-and-consulting",
+      "name": "Expertise and Consulting",
+      "translation": {
+        "de": "Sachverständige und Beratung"
+      },
+      "description": "Expert opinions and consulting services.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{expertise-consulting}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.general.inspections-approvals-acceptance",
+      "name": "Inspections Approvals Acceptance",
+      "translation": {
+        "de": "Prüfungen, Genehmigungen, Abnahmen"
+      },
+      "description": "Inspection, approval, and acceptance procedures.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{inspections-approvals}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.general.operating-costs",
+      "name": "Construction Operating Costs",
+      "translation": {
+        "de": "Betriebskosten Bau"
+      },
+      "description": "Operating costs during construction phase.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{construction-operating}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.general.sampling-costs",
+      "name": "Sampling Costs",
+      "translation": {
+        "de": "Probenahmekosten"
+      },
+      "description": "Material and quality testing costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{sampling-costs}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.general.operating-costs-after-acceptance",
+      "name": "Operating Costs After Acceptance",
+      "translation": {
+        "de": "Betriebskosten nach Abnahme"
+      },
+      "description": "Operating costs after project acceptance and handover.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{operating-post-acceptance}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.general.insurance",
+      "name": "Construction Insurance",
+      "translation": {
+        "de": "Versicherungen"
+      },
+      "description": "Construction and project insurance costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{construction-insurance}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.general.other",
+      "name": "Other General Construction Ancillary",
+      "translation": {
+        "de": "Sonstige allgemeine Baunebenkosten"
+      },
+      "description": "Other general construction ancillary costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{general-ancillary-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.other",
+      "name": "Other Construction Ancillary Costs",
+      "translation": {
+        "de": "Sonstige Baunebenkosten"
+      },
+      "description": "Other miscellaneous construction ancillary costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{other-ancillary}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.other.documentation-of-existing-conditions semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.other.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.other.documentation-of-existing-conditions",
+      "name": "Documentation of Existing Conditions",
+      "translation": {
+        "de": "Dokumentation des Bestands"
+      },
+      "description": "Documentation and survey of existing conditions.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{existing-conditions-doc}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.other.other",
+      "name": "Other Miscellaneous Ancillary Costs",
+      "translation": {
+        "de": "Sonstige sonstige Baunebenkosten"
+      },
+      "description": "Other miscellaneous ancillary costs not elsewhere classified.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{misc-ancillary-other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.operating-ongoing-use",
+      "name": "Operating Costs Ongoing Use",
+      "translation": {
+        "de": "Nutzungskosten laufender Betrieb"
+      },
+      "description": "Ongoing operational costs during building use phase.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{op}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.operational-management semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.energy semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.water-wastewater-fees semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.waste-disposal semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.security-and-maintenance semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.common-facilities )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.operational-management",
+      "name": "Operational Management Costs",
+      "translation": {
+        "de": "Betriebsführungskosten"
+      },
+      "description": "Costs for operational management and administration.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{op-mgmt}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.operational-management.property-management semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.operational-management.caretaker semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.operational-management.insurance )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.operational-management.property-management",
+      "name": "Property Management",
+      "translation": {
+        "de": "Hausverwaltung"
+      },
+      "description": "Property management and administration costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{prop-mgmt}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.operational-management.caretaker",
+      "name": "Caretaker",
+      "translation": {
+        "de": "Hausmeister"
+      },
+      "description": "Caretaker and maintenance personnel costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{caretaker}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.operational-management.insurance",
+      "name": "Insurance",
+      "translation": {
+        "de": "Versicherung"
+      },
+      "description": "Building insurance costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{insurance}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.energy",
+      "name": "Energy Costs",
+      "translation": {
+        "de": "Energiekosten"
+      },
+      "description": "All energy-related operating costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{energy}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.energy.electricity semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.energy.heating semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.energy.hot-water )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.energy.electricity",
+      "name": "Electricity",
+      "translation": {
+        "de": "Strom"
+      },
+      "description": "Electrical energy costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{electricity}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.energy.heating",
+      "name": "Heating",
+      "translation": {
+        "de": "Heizung"
+      },
+      "description": "Heating energy costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{heat-energy}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.energy.hot-water",
+      "name": "Hot Water",
+      "translation": {
+        "de": "Warmwasser"
+      },
+      "description": "Hot water heating costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{hot-water}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.water-wastewater-fees",
+      "name": "Water Costs Wastewater Fees",
+      "translation": {
+        "de": "Wasserkosten Abwassergebühren"
+      },
+      "description": "Water supply costs and wastewater disposal fees.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{water-fees}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.waste-disposal",
+      "name": "Waste Disposal",
+      "translation": {
+        "de": "Abfallentsorgung"
+      },
+      "description": "Waste disposal and management costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{waste-op}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.security-and-maintenance",
+      "name": "Security and Maintenance Costs",
+      "translation": {
+        "de": "Sicherheits- und Wartungskosten"
+      },
+      "description": "Security and routine maintenance costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{sec-maint}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.common-facilities",
+      "name": "Costs for Common Facilities",
+      "translation": {
+        "de": "Kosten für Gemeinschaftseinrichtungen"
+      },
+      "description": "Operating costs for shared building facilities.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{common}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.common-facilities.elevators semio.cost.global-life-cycle.life-cycle.investment-construction-phase.construction-ancillary.client-tasks.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.operating-ongoing-use.common-facilities.elevators",
+      "name": "Elevators Operating Costs",
+      "translation": {
+        "de": "Aufzüge Betriebskosten"
+      },
+      "description": "Operating costs for elevators.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{elev-op}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization",
+      "name": "Maintenance and Modernization Costs",
+      "translation": {
+        "de": "Instandhaltungs- und Modernisierungskosten"
+      },
+      "description": "Costs for maintenance, repair, and modernization of building components.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{maint}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.regular-maintenance semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.replacement-of-components semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.modernization )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.regular-maintenance",
+      "name": "Regular Maintenance",
+      "translation": {
+        "de": "Regelmäßige Wartung"
+      },
+      "description": "Regular maintenance and servicing costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{reg-maint}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.regular-maintenance.elevators semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.regular-maintenance.heating-systems )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.regular-maintenance.elevators",
+      "name": "Elevators Maintenance",
+      "translation": {
+        "de": "Aufzüge Wartung"
+      },
+      "description": "Regular elevator maintenance costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{elev-maint}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.regular-maintenance.heating-systems",
+      "name": "Heating Systems Maintenance",
+      "translation": {
+        "de": "Heizungsanlagen Wartung"
+      },
+      "description": "Regular heating system maintenance costs.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{heat-maint}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.replacement-of-components",
+      "name": "Replacement of Components",
+      "translation": {
+        "de": "Austausch von Bauteilen"
+      },
+      "description": "Costs for replacing building components at end of service life.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{replace}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.replacement-of-components.windows semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.replacement-of-components.facade semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.replacement-of-components.roofs )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.replacement-of-components.windows",
+      "name": "Windows Replacement",
+      "translation": {
+        "de": "Fensteraustausch"
+      },
+      "description": "Costs for replacing windows.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{window-replace}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.replacement-of-components.facade",
+      "name": "Facade Replacement",
+      "translation": {
+        "de": "Fassadenaustausch"
+      },
+      "description": "Costs for facade renovation and replacement.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{facade-replace}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.replacement-of-components.roofs",
+      "name": "Roofs Replacement",
+      "translation": {
+        "de": "Dachaustausch"
+      },
+      "description": "Costs for roof renovation and replacement.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{roof-replace}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.modernization",
+      "name": "Modernization",
+      "translation": {
+        "de": "Modernisierung"
+      },
+      "description": "Costs for building modernization and upgrades.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{modern}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.modernization.energy-rehabilitation semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.modernization.barrier-free-conversion )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.modernization.energy-rehabilitation",
+      "name": "Energy Rehabilitation",
+      "translation": {
+        "de": "Energetische Sanierung"
+      },
+      "description": "Costs for energy efficiency improvements and rehabilitation.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{energy-rehab}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.maintenance-and-modernization.modernization.barrier-free-conversion",
+      "name": "Barrier Free Conversion",
+      "translation": {
+        "de": "Barrierefreier Umbau"
+      },
+      "description": "Costs for accessibility improvements and barrier-free conversion.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{barrier-free}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.dismantling-and-disposal",
+      "name": "Dismantling and Disposal Costs",
+      "translation": {
+        "de": "Abbruch- und Entsorgungskosten"
+      },
+      "description": "End-of-life costs for building dismantling and disposal.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{disposal}",
+      "formula": "Add ( semio.cost.global-life-cycle.life-cycle.dismantling-and-disposal.demolition semio.cost.global-life-cycle.life-cycle.dismantling-and-disposal.disposal-of-contaminated-materials semio.cost.global-life-cycle.life-cycle.dismantling-and-disposal.renaturation-or-reuse-of-the-land )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.dismantling-and-disposal.demolition",
+      "name": "Demolition Costs",
+      "translation": {
+        "de": "Abrisskosten"
+      },
+      "description": "Costs for building demolition and dismantling.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{demolition}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.dismantling-and-disposal.disposal-of-contaminated-materials",
+      "name": "Disposal of Contaminated Materials",
+      "translation": {
+        "de": "Entsorgung kontaminierter Materialien"
+      },
+      "description": "Specialized disposal costs for contaminated building materials.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{contam-disposal}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.cost.global-life-cycle.life-cycle.dismantling-and-disposal.renaturation-or-reuse-of-the-land",
+      "name": "Renaturation or Reuse of Land",
+      "translation": {
+        "de": "Renaturierung oder Wiedernutzung des Grundstücks"
+      },
+      "description": "Costs for land restoration or preparation for reuse.",
+      "si": "€",
+      "imperial": "$",
+      "symbol": "C_{renaturation}",
+      "format": "#,##0.##"
+    }
+  ]
+}

@@ -1,0 +1,1645 @@
+{
+  "qualities": [
+    {
+      "key": "semio.area.floor.gross",
+      "name": "Gross Floor Area",
+      "translation": {
+        "de": "Brutto-Grundfläche"
+      },
+      "description": "The gross floor area encompasses all floor areas within the external dimensions of a building.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{gfa}",
+      "formula": "Add ( semio.area.floor.gross.net semio.area.floor.gross.construction )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net",
+      "name": "Net Floor Area",
+      "translation": {
+        "de": "Netto-Raumfläche"
+      },
+      "description": "The net floor area is the usable floor area excluding construction elements.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{nfa}",
+      "formula": "Add ( semio.area.floor.gross.net.usable semio.area.floor.gross.net.technical semio.area.floor.gross.net.circulation )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable",
+      "name": "Usable Floor Area",
+      "translation": {
+        "de": "Nutzungsfläche"
+      },
+      "description": "The usable floor area includes all areas directly used for the building's intended purpose.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{usbl}",
+      "formula": "Add ( semio.area.floor.gross.net.usable.living-staying semio.area.floor.gross.net.usable.office-work semio.area.floor.gross.net.usable.production-experiments semio.area.floor.gross.net.usable.storage-distribution-sales semio.area.floor.gross.net.usable.education-culture semio.area.floor.gross.net.usable.healing-care semio.area.floor.gross.net.usable.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.living-staying",
+      "name": "Living And Staying Floor Area",
+      "translation": {
+        "de": "Wohnen und Aufenthalt"
+      },
+      "description": "Floor area designated for living and staying purposes including residential and common areas.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{liv}",
+      "formula": "Add ( semio.area.floor.gross.net.usable.living-staying.living semio.area.floor.gross.net.usable.living-staying.common-room semio.area.floor.gross.net.usable.living-staying.break-room semio.area.floor.gross.net.usable.living-staying.waiting-room semio.area.floor.gross.net.usable.living-staying.dining-room semio.area.floor.gross.net.usable.living-staying.detention-room )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.living-staying.living-room",
+      "name": "Living Room Floor Area",
+      "translation": {
+        "de": "Wohnzimmerfläche"
+      },
+      "description": "Floor area for actual living rooms and main residential spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{liv-rm}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.living-staying.living",
+      "name": "Living Floor Area",
+      "translation": {
+        "de": "Wohnfläche"
+      },
+      "description": "The main living area floor space including living rooms and associated areas.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{liv}",
+      "formula": "Add ( semio.area.floor.gross.net.usable.living-staying.living-room semio.area.floor.gross.net.usable.living-staying.living.kitchen semio.area.floor.gross.net.usable.living-staying.living.sanitary semio.area.floor.gross.net.usable.living-staying.living.circulation semio.area.floor.gross.net.usable.living-staying.living.outdoor-seating semio.area.floor.gross.net.usable.living-staying.living.storage )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.living-staying.living.kitchen",
+      "name": "Kitchen Floor Area",
+      "translation": {
+        "de": "Küchenfläche"
+      },
+      "description": "Floor area designated for kitchen facilities.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{kit}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.living-staying.living.sanitary",
+      "name": "Sanitary Floor Area",
+      "translation": {
+        "de": "Sanitärfläche"
+      },
+      "description": "Floor area for sanitary facilities including bathrooms and toilets.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{san}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.living-staying.living.circulation",
+      "name": "Circulation Floor Area (Living)",
+      "translation": {
+        "de": "Verkehrsfläche (Wohnen)"
+      },
+      "description": "Circulation areas within living spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{circ}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.living-staying.living.outdoor-seating",
+      "name": "Outdoor Seating Floor Area",
+      "translation": {
+        "de": "Freisitzfläche"
+      },
+      "description": "Floor area for outdoor seating and relaxation areas.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{out-seat}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.living-staying.living.storage",
+      "name": "Storage Floor Area",
+      "translation": {
+        "de": "Abstellraumfläche"
+      },
+      "description": "Floor area designated for storage purposes.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{stor}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.living-staying.common-room",
+      "name": "Common Room Floor Area",
+      "translation": {
+        "de": "Gemeinschaftsraumfläche"
+      },
+      "description": "Floor area for common rooms and shared spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{com-rm}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.living-staying.break-room",
+      "name": "Break Room Floor Area",
+      "translation": {
+        "de": "Pausenraumfläche"
+      },
+      "description": "Floor area designated for break rooms and rest areas.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{brk-rm}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.living-staying.waiting-room",
+      "name": "Waiting Room Floor Area",
+      "translation": {
+        "de": "Warteraumfläche"
+      },
+      "description": "Floor area for waiting rooms and reception areas.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{wait-rm}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.living-staying.dining-room",
+      "name": "Dining Room Floor Area",
+      "translation": {
+        "de": "Speiseraumfläche"
+      },
+      "description": "Floor area designated for dining rooms and eating areas.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{din-rm}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.living-staying.detention-room",
+      "name": "Detention Room Floor Area",
+      "translation": {
+        "de": "Haftraumfläche"
+      },
+      "description": "Floor area for detention rooms and secure spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{det-rm}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.office-work",
+      "name": "Office Work Floor Area",
+      "translation": {
+        "de": "Büroarbeit"
+      },
+      "description": "Floor area designated for office work and administrative functions.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{ofc}",
+      "formula": "Add ( semio.area.floor.gross.net.usable.office-work.office-room semio.area.floor.gross.net.usable.office-work.open-office semio.area.floor.gross.net.usable.office-work.meeting-room semio.area.floor.gross.net.usable.office-work.design-room semio.area.floor.gross.net.usable.office-work.counter-room semio.area.floor.gross.net.usable.office-work.control-room semio.area.floor.gross.net.usable.office-work.supervision-room semio.area.floor.gross.net.usable.office-work.technology-room semio.area.floor.gross.net.usable.office-work.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.office-work.office-room",
+      "name": "Office Room Floor Area",
+      "translation": {
+        "de": "Büroraumfläche"
+      },
+      "description": "Floor area for individual office rooms.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{ofc-rm}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.office-work.open-office",
+      "name": "Open Plan Office Floor Area",
+      "translation": {
+        "de": "Großraumbürofläche"
+      },
+      "description": "Floor area for open plan office spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{open-ofc}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.office-work.meeting-room",
+      "name": "Meeting Room Floor Area",
+      "translation": {
+        "de": "Besprechungsraumfläche"
+      },
+      "description": "Floor area for meeting rooms and conference spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{meet-rm}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.office-work.design-room",
+      "name": "Design Room Floor Area",
+      "translation": {
+        "de": "Konstruktionsraumfläche"
+      },
+      "description": "Floor area for design rooms and drafting spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{des-rm}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.office-work.counter-room",
+      "name": "Counter Room Floor Area",
+      "translation": {
+        "de": "Schalterraumfläche"
+      },
+      "description": "Floor area for counter rooms and service areas.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{cnt-rm}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.office-work.control-room",
+      "name": "Control Room Floor Area",
+      "translation": {
+        "de": "Kontrollraumfläche"
+      },
+      "description": "Floor area for control rooms and monitoring spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{ctrl-rm}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.office-work.supervision-room",
+      "name": "Supervision Room Floor Area",
+      "translation": {
+        "de": "Aufsichtsraumfläche"
+      },
+      "description": "Floor area for supervision rooms and oversight spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{sup-rm}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.office-work.technology-room",
+      "name": "Office Technology Room Floor Area",
+      "translation": {
+        "de": "Bürotechnikraumfläche"
+      },
+      "description": "Floor area for office technology rooms and equipment spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{ofc-tech}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.office-work.other",
+      "name": "Other Office Work Floor Area",
+      "translation": {
+        "de": "Sonstige Büroarbeitsfläche"
+      },
+      "description": "Floor area for other office work spaces not classified elsewhere.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{other-ofc}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.production-experiments",
+      "name": "Production Experiments Work Floor Area",
+      "translation": {
+        "de": "Produktion, Hand- und Maschinenarbeit, Experimente"
+      },
+      "description": "Floor area designated for production work, experiments and manufacturing activities.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{prod}",
+      "formula": "Add ( semio.area.prod-hall semio.area.work semio.area.tech-lab semio.area.phys-elec-lab semio.area.chem-bio-lab semio.area.anim-rm semio.area.plant-rm semio.area.kit-prod semio.area.spec-work-rm )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.production-experiments.production-hall",
+      "name": "Production Hall Floor Area",
+      "translation": {
+        "de": "Produktionshallenfläche"
+      },
+      "description": "Floor area for production halls and manufacturing spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{prod-hall}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.production-experiments.workshop",
+      "name": "Workshop Floor Area",
+      "translation": {
+        "de": "Werkstattfläche"
+      },
+      "description": "Floor area for workshops and manual work spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{work}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.production-experiments.technology-lab",
+      "name": "Technology Lab Floor Area",
+      "translation": {
+        "de": "Techniklaborfläche"
+      },
+      "description": "Floor area for technology laboratories and research spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{tech-lab}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.production-experiments.physics-electrical-lab",
+      "name": "Physics Electrical Lab Floor Area",
+      "translation": {
+        "de": "Physik- und Elektrolaborfläche"
+      },
+      "description": "Floor area for physics and electrical laboratories.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{phys-lab}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.production-experiments.chemistry-biology-lab",
+      "name": "Chemistry Biology Lab Floor Area",
+      "translation": {
+        "de": "Chemie- und Biologielaborfläche"
+      },
+      "description": "Floor area for chemistry and biology laboratories.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{chem-lab}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.production-experiments.animal-room",
+      "name": "Animal Husbandry Room Floor Area",
+      "translation": {
+        "de": "Tierhaltungsraumfläche"
+      },
+      "description": "Floor area for animal husbandry and care facilities.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{anim}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.production-experiments.plant-room",
+      "name": "Plant Cultivation Room Floor Area",
+      "translation": {
+        "de": "Pflanzenzuchtraumfläche"
+      },
+      "description": "Floor area for plant cultivation and greenhouse facilities.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{plant}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.production-experiments.kitchen",
+      "name": "Kitchen Floor Area (Production)",
+      "translation": {
+        "de": "Küchenfläche (Produktion)"
+      },
+      "description": "Floor area for production kitchen facilities and food preparation.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{kit}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.production-experiments.special-work-room",
+      "name": "Special Work Room Floor Area",
+      "translation": {
+        "de": "Sonderarbeitsraumfläche"
+      },
+      "description": "Floor area for special work rooms and specialized activities.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{spec-work}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.storage-distribution-sales",
+      "name": "Storage Distribution Sales Floor Area",
+      "translation": {
+        "de": "Lagern, Verteilen und Verkaufen"
+      },
+      "description": "Floor area for storage, distribution and sales activities.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{stor-sales}",
+      "formula": "Add ( semio.area.stor-rm semio.area.coll-arch semio.area.cold-stor semio.area.recv-disp semio.area.sales-rm semio.area.exh-rm semio.area.other-stor )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.storage-distribution-sales.storage-room",
+      "name": "Storage Room Floor Area",
+      "translation": {
+        "de": "Lagerraumfläche"
+      },
+      "description": "Floor area for storage rooms and warehousing.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{stor-rm}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.storage-distribution-sales.collection-archive",
+      "name": "Collection Archive Floor Area",
+      "translation": {
+        "de": "Sammlungs- und Archivfläche"
+      },
+      "description": "Floor area for collections and archive storage.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{arch}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.storage-distribution-sales.cold-storage",
+      "name": "Cold Storage Room Floor Area",
+      "translation": {
+        "de": "Kühllagerraumfläche"
+      },
+      "description": "Floor area for cold storage and refrigerated spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{cold-stor}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.storage-distribution-sales.receiving-dispatch",
+      "name": "Receiving Dispatch Room Floor Area",
+      "translation": {
+        "de": "Warenannahme- und Versandfläche"
+      },
+      "description": "Floor area for receiving and dispatching goods.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{recv}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.storage-distribution-sales.sales-room",
+      "name": "Sales Room Floor Area",
+      "translation": {
+        "de": "Verkaufsraumfläche"
+      },
+      "description": "Floor area for sales rooms and retail spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{sales}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.storage-distribution-sales.exhibition-room",
+      "name": "Exhibition Room Floor Area",
+      "translation": {
+        "de": "Ausstellungsraumfläche"
+      },
+      "description": "Floor area for exhibition rooms and display spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{exh}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.storage-distribution-sales.other",
+      "name": "Other Storage Distribution Sales Floor Area",
+      "translation": {
+        "de": "Sonstige Lager-, Verteil- und Verkaufsfläche"
+      },
+      "description": "Floor area for other storage, distribution and sales activities not classified elsewhere.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{other-stor}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.education-culture",
+      "name": "Education Culture Instruction Floor Area",
+      "translation": {
+        "de": "Bildung, Unterricht und Kultur"
+      },
+      "description": "Floor area designated for education, instruction and cultural activities.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{edu}",
+      "formula": "Add ( semio.area.class-fix-seat semio.area.teach-prac semio.area.spec-class semio.area.lib semio.area.sport semio.area.assm-rm semio.area.stage-studio semio.area.disp-rm semio.area.sacr-rm )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.education-culture.classroom-fixed-seating",
+      "name": "Class With Fixed Seating Floor Area",
+      "translation": {
+        "de": "Hörsaalfläche"
+      },
+      "description": "Floor area for lecture halls and classrooms with fixed seating.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{class}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.education-culture.teaching-practice",
+      "name": "Teaching Practice Room Floor Area",
+      "translation": {
+        "de": "Unterrichts- und Übungsraumfläche"
+      },
+      "description": "Floor area for teaching and practice rooms.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{teach}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.education-culture.special-classroom",
+      "name": "Special Classroom Floor Area",
+      "translation": {
+        "de": "Sonderunterrichtsraumfläche"
+      },
+      "description": "Floor area for special classrooms and specialized instruction spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{spec-class}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.education-culture.library",
+      "name": "Library Room Floor Area",
+      "translation": {
+        "de": "Bibliotheks- und Lesesaalfläche"
+      },
+      "description": "Floor area for libraries and reading rooms.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{lib}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.education-culture.sports",
+      "name": "Sports Room Floor Area",
+      "translation": {
+        "de": "Sportraumfläche"
+      },
+      "description": "Floor area for sports rooms and athletic facilities.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{sport}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.education-culture.assembly-room",
+      "name": "Assembly Room Floor Area",
+      "translation": {
+        "de": "Versammlungsraumfläche"
+      },
+      "description": "Floor area for assembly rooms and meeting halls.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{assm}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.education-culture.stage-studio",
+      "name": "Stage Studio Room Floor Area",
+      "translation": {
+        "de": "Bühnen- und Studioraumfläche"
+      },
+      "description": "Floor area for stages, studios and performance spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{stage}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.education-culture.display-room",
+      "name": "Display Room Floor Area",
+      "translation": {
+        "de": "Schau- und Vorführraumfläche"
+      },
+      "description": "Floor area for display rooms and demonstration spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{disp}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.education-culture.sacred-room",
+      "name": "Sacred Room Floor Area",
+      "translation": {
+        "de": "Sakralraumfläche"
+      },
+      "description": "Floor area for sacred rooms and religious spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{sacr}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.healing-care",
+      "name": "Healing And Care Floor Area",
+      "translation": {
+        "de": "Heilen und Pflegen"
+      },
+      "description": "Floor area designated for healing, care and medical activities.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{med}",
+      "formula": "Add ( semio.area.gen-med-equip semio.area.spec-med-equip semio.area.surg-rm semio.area.rad-diag semio.area.rad-ther semio.area.rehab-physio semio.area.gen-pat-rm semio.area.spec-pat-rm semio.area.other-med )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.healing-care.general-medical-equipment",
+      "name": "General Medical Equipment Room Floor Area",
+      "translation": {
+        "de": "Raum für allgemeine medizinische Ausstattung"
+      },
+      "description": "Floor area for general medical equipment rooms.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{gen-med}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.healing-care.special-medical-equipment",
+      "name": "Special Medical Equipment Room Floor Area",
+      "translation": {
+        "de": "Raum für spezielle medizinische Ausstattung"
+      },
+      "description": "Floor area for special medical equipment rooms.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{spec-med}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.healing-care.surgical-room",
+      "name": "Surgical Room Floor Area",
+      "translation": {
+        "de": "Operationsraumfläche"
+      },
+      "description": "Floor area for surgical rooms and operating theaters.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{surg}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.healing-care.radiation-diagnostic",
+      "name": "Radiation Diagnostic Room Floor Area",
+      "translation": {
+        "de": "Strahlendiagnostikraumfläche"
+      },
+      "description": "Floor area for radiation diagnostic rooms and imaging facilities.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{rad-diag}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.healing-care.radiation-therapy",
+      "name": "Radiation Therapy Room Floor Area",
+      "translation": {
+        "de": "Strahlentherapieraumfläche"
+      },
+      "description": "Floor area for radiation therapy rooms and treatment facilities.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{rad-ther}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.healing-care.rehabilitation-physiotherapy",
+      "name": "Rehabilitation Physiotherapy Floor Area",
+      "translation": {
+        "de": "Rehabilitations- und Physiotherapiefläche"
+      },
+      "description": "Floor area for rehabilitation and physiotherapy facilities.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{rehab}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.healing-care.general-patient-room",
+      "name": "General Patient Room Floor Area",
+      "translation": {
+        "de": "Allgemeines Patientenzimmerfläche"
+      },
+      "description": "Floor area for general patient rooms.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{gen-pat}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.healing-care.special-patient-room",
+      "name": "Special Patient Room Floor Area",
+      "translation": {
+        "de": "Spezielles Patientenzimmerfläche"
+      },
+      "description": "Floor area for special patient rooms and intensive care units.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{spec-pat}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.healing-care.other",
+      "name": "Other Healing And Care Floor Area",
+      "translation": {
+        "de": "Sonstige Heil- und Pflegefläche"
+      },
+      "description": "Floor area for other healing and care activities not classified elsewhere.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{other-med}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.other",
+      "name": "Other Usable Floor Area",
+      "translation": {
+        "de": "Sonstige Nutzungsfläche"
+      },
+      "description": "Floor area for other usable spaces not classified in main categories.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{other-usbl}",
+      "formula": "Add ( semio.area.san-rm semio.area.cloak semio.area.stor-rm-other semio.area.veh-park semio.area.pass semio.area.cent-tech semio.area.prot-rm semio.area.laund semio.area.other )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.other.sanitary-room",
+      "name": "Sanitary Room Floor Area",
+      "translation": {
+        "de": "Sanitärraumfläche"
+      },
+      "description": "Floor area for sanitary rooms and facilities.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{san-rm}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.other.cloakroom",
+      "name": "Cloakroom Floor Area",
+      "translation": {
+        "de": "Garderobenfläche"
+      },
+      "description": "Floor area for cloakrooms and wardrobe facilities.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{cloak}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.other.storage-room",
+      "name": "Storage Room Floor Area (Other)",
+      "translation": {
+        "de": "Abstellraumfläche (Sonstige)"
+      },
+      "description": "Floor area for general storage rooms and utility spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{stor-rm}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.other.vehicle-parking",
+      "name": "Vehicle Parking Floor Area",
+      "translation": {
+        "de": "Fahrzeugabstellfläche"
+      },
+      "description": "Floor area for vehicle parking and garage spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{park}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.other.passenger",
+      "name": "Passenger Floor Area",
+      "translation": {
+        "de": "Personenverkehrsfläche"
+      },
+      "description": "Floor area for passenger circulation and transit spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{pass}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.other.central-technical",
+      "name": "Central Technical Room Floor Area",
+      "translation": {
+        "de": "Zentraler Technikraum"
+      },
+      "description": "Floor area for central technical rooms and equipment spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{cent-tech}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.other.protective-room",
+      "name": "Protective Room Floor Area",
+      "translation": {
+        "de": "Schutzraumfläche"
+      },
+      "description": "Floor area for protective rooms and secure spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{prot}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.other.laundry",
+      "name": "Laundry Room Floor Area",
+      "translation": {
+        "de": "Wäschereiraumfläche"
+      },
+      "description": "Floor area for laundry rooms and cleaning facilities.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{laund}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.usable.other.miscellaneous",
+      "name": "Other Floor Area",
+      "translation": {
+        "de": "Sonstige Nutzungsfläche"
+      },
+      "description": "Floor area for other miscellaneous usable spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{other}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.technical",
+      "name": "Technical Floor Area",
+      "translation": {
+        "de": "Technikfläche"
+      },
+      "description": "Floor area designated for technical installations and building services.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{tech}",
+      "formula": "Add ( semio.area.waste-gas-water semio.area.heat-hw semio.area.vent-ac semio.area.elec-pwr semio.area.telecom semio.area.elev-conv semio.area.other-tech )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.technical.wastewater-gas-water-supply",
+      "name": "Wastewater Gases Water Supply Floor Area",
+      "translation": {
+        "de": "Abwasser-, Gas- und Wasserversorgung"
+      },
+      "description": "Floor area for wastewater, gas and water supply systems.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{water}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.technical.heating-hot-water",
+      "name": "Heating Hot Water Floor Area",
+      "translation": {
+        "de": "Heizung und Warmwasser"
+      },
+      "description": "Floor area for heating and hot water systems.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{heat}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.technical.ventilation-air-conditioning",
+      "name": "Ventilation Air Conditioning Floor Area",
+      "translation": {
+        "de": "Lüftung und Klimatisierung"
+      },
+      "description": "Floor area for ventilation and air conditioning systems.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{vent}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.technical.electrical-power-supply",
+      "name": "Electrical Power Supply Floor Area",
+      "translation": {
+        "de": "Stromversorgung"
+      },
+      "description": "Floor area for electrical power supply systems.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{elec}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.technical.telecommunications",
+      "name": "Telecommunications Floor Area",
+      "translation": {
+        "de": "Telekommunikation"
+      },
+      "description": "Floor area for telecommunications and IT systems.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{telecom}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.technical.elevator-conveyor-systems",
+      "name": "Elevator Conveyor Systems Floor Area",
+      "translation": {
+        "de": "Aufzugs- und Förderanlagen"
+      },
+      "description": "Floor area for elevator and conveyor systems.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{elev}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.technical.other",
+      "name": "Other Technical Floor Area",
+      "translation": {
+        "de": "Sonstige Technikfläche"
+      },
+      "description": "Floor area for other technical systems not classified elsewhere.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{other-tech}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.circulation",
+      "name": "Circulation Floor Area",
+      "translation": {
+        "de": "Verkehrsfläche"
+      },
+      "description": "Floor area designated for circulation and movement within the building.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{circ}",
+      "formula": "Add ( semio.area.corr-hall semio.area.stair semio.area.shaft-conv semio.area.veh-traf semio.area.other-circ )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.circulation.corridor-hall",
+      "name": "Corridor Hall Floor Area",
+      "translation": {
+        "de": "Flur und Halle"
+      },
+      "description": "Floor area for corridors, hallways and entrance halls.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{corr}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.circulation.stair",
+      "name": "Stair Floor Area",
+      "translation": {
+        "de": "Treppenraum"
+      },
+      "description": "Floor area for stairways and stair landings.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{stair}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.circulation.shaft-conveyor",
+      "name": "Shaft For Conveyor System Floor Area",
+      "translation": {
+        "de": "Schacht für Förderanlage"
+      },
+      "description": "Floor area for shafts and conveyor system spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{shaft}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.circulation.vehicle-traffic",
+      "name": "Vehicle Traffic Floor Area",
+      "translation": {
+        "de": "Fahrzeugverkehr"
+      },
+      "description": "Floor area for vehicle traffic and internal roads.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{veh-traf}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.net.circulation.other",
+      "name": "Other Circulation Floor Area",
+      "translation": {
+        "de": "Sonstige Verkehrsfläche"
+      },
+      "description": "Floor area for other circulation spaces not classified elsewhere.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{other-circ}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.construction",
+      "name": "Construction Floor Area",
+      "translation": {
+        "de": "Konstruktions-Grundfläche"
+      },
+      "description": "Floor area occupied by structural construction elements.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{const}",
+      "formula": "Add ( semio.area.ext-wall-const semio.area.int-wall-const semio.area.part-wall semio.area.col semio.area.shaft semio.area.beam semio.area.other-const )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.construction.exterior-wall",
+      "name": "Exterior Wall Construction Floor Area",
+      "translation": {
+        "de": "Außenwandkonstruktion"
+      },
+      "description": "Floor area occupied by exterior wall construction.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{ext-wall}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.construction.interior-wall",
+      "name": "Interior Wall Construction Floor Area",
+      "translation": {
+        "de": "Innenwandkonstruktion"
+      },
+      "description": "Floor area occupied by interior wall construction.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{int-wall}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.construction.partition-wall",
+      "name": "Partition Wall Floor Area",
+      "translation": {
+        "de": "Trennwandausbildung"
+      },
+      "description": "Floor area occupied by partition walls and dividers.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{part-wall}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.construction.column",
+      "name": "Column Floor Area",
+      "translation": {
+        "de": "Stütze"
+      },
+      "description": "Floor area occupied by columns and supports.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{col}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.construction.shaft",
+      "name": "Shaft Floor Area",
+      "translation": {
+        "de": "Schacht"
+      },
+      "description": "Floor area occupied by structural shafts.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{shaft}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.construction.beam",
+      "name": "Beam Floor Area",
+      "translation": {
+        "de": "Träger"
+      },
+      "description": "Floor area occupied by structural beams.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{beam}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.gross.construction.other",
+      "name": "Other Construction Floor Area",
+      "translation": {
+        "de": "Sonstige Konstruktionsfläche"
+      },
+      "description": "Floor area occupied by other construction elements not classified elsewhere.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{other-const}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property",
+      "name": "Property Area",
+      "translation": {
+        "de": "Grundstücksfläche"
+      },
+      "description": "Total area of the property including built and unbuilt areas.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{prop}",
+      "formula": "Add ( semio.area.floor.property.built semio.area.floor.property.unbuilt )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.built",
+      "name": "Built Up Area",
+      "translation": {
+        "de": "Bebaute Fläche"
+      },
+      "description": "Area of the property that is built up with structures.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{built}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt",
+      "name": "Unbuilt Area",
+      "translation": {
+        "de": "Unbebaute Fläche"
+      },
+      "description": "Area of the property that is not built up with structures.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{unbuilt}",
+      "formula": "Add ( semio.area.out-fac semio.area.green semio.area.paved semio.area.tech-fac semio.area.water semio.area.other-out )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.outdoor-facility",
+      "name": "Outdoor Facility Area",
+      "translation": {
+        "de": "Außenanlagenfläche"
+      },
+      "description": "Area designated for outdoor facilities and infrastructure.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{out-fac}",
+      "formula": "Add ( semio.area.traf semio.area.sidewalk semio.area.drive semio.area.park-sp semio.area.bike-park semio.area.turn semio.area.other-traf )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.outdoor-facility.traffic",
+      "name": "Traffic Area",
+      "translation": {
+        "de": "Verkehrsfläche"
+      },
+      "description": "Area designated for vehicular traffic and transportation.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{traf}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.outdoor-facility.sidewalk",
+      "name": "Sidewalk Area",
+      "translation": {
+        "de": "Gehwegfläche"
+      },
+      "description": "Area designated for sidewalks and pedestrian walkways.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{sidewalk}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.outdoor-facility.driveway",
+      "name": "Driveway Area",
+      "translation": {
+        "de": "Zufahrtsfläche"
+      },
+      "description": "Area designated for driveways and vehicle access roads.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{drive}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.outdoor-facility.parking-space",
+      "name": "Parking Space Area",
+      "translation": {
+        "de": "Stellplatzfläche"
+      },
+      "description": "Area designated for parking spaces and vehicle storage.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{park-sp}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.outdoor-facility.bicycle-parking",
+      "name": "Bicycle Parking Area",
+      "translation": {
+        "de": "Fahrradabstellfläche"
+      },
+      "description": "Area designated for bicycle parking and storage.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{bike-park}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.outdoor-facility.turning",
+      "name": "Turning Area",
+      "translation": {
+        "de": "Wendeplatzfläche"
+      },
+      "description": "Area designated for vehicle turning and maneuvering.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{turn}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.outdoor-facility.other-traffic",
+      "name": "Other Traffic Area",
+      "translation": {
+        "de": "Sonstige Verkehrsfläche"
+      },
+      "description": "Area for other traffic-related facilities not classified elsewhere.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{other-traf}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.green",
+      "name": "Green Area",
+      "translation": {
+        "de": "Grünfläche"
+      },
+      "description": "Area designated for green spaces and vegetation.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{green}",
+      "formula": "Add ( semio.area.lawn semio.area.plant-bed semio.area.hedge semio.area.tree semio.area.roof-green semio.area.fac-green semio.area.other-green )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.green.lawn",
+      "name": "Lawn Area",
+      "translation": {
+        "de": "Rasenfläche"
+      },
+      "description": "Area covered with lawn and grass surfaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{lawn}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.green.plant-bed",
+      "name": "Planted Bed Area",
+      "translation": {
+        "de": "Pflanzbeetfläche"
+      },
+      "description": "Area designated for planted beds and flower gardens.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{plant-bed}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.green.hedge",
+      "name": "Hedge Area",
+      "translation": {
+        "de": "Heckenfläche"
+      },
+      "description": "Area covered with hedges and shrub borders.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{hedge}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.green.tree",
+      "name": "Tree Area",
+      "translation": {
+        "de": "Baumfläche"
+      },
+      "description": "Area designated for trees and tree canopy coverage.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{tree}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.green.roof-greening",
+      "name": "Roof Greening Area",
+      "translation": {
+        "de": "Dachbegrünungsfläche"
+      },
+      "description": "Area of roof surfaces with green vegetation coverage.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{roof-green}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.green.facade-greening",
+      "name": "Facade Greening Area",
+      "translation": {
+        "de": "Fassadenbegrünungsfläche"
+      },
+      "description": "Area of facade surfaces with green vegetation coverage.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{fac-green}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.green.other",
+      "name": "Other Green Area",
+      "translation": {
+        "de": "Sonstige Grünfläche"
+      },
+      "description": "Area for other green spaces not classified elsewhere.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{other-green}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.paved",
+      "name": "Paved Area",
+      "translation": {
+        "de": "Befestigte Fläche"
+      },
+      "description": "Area with paved or hard surface treatments.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{paved}",
+      "formula": "Add ( semio.area.terr semio.area.balc semio.area.court semio.area.stor-util semio.area.play semio.area.other-paved )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.paved.terrace",
+      "name": "Terrace Area",
+      "translation": {
+        "de": "Terrassenfläche"
+      },
+      "description": "Area designated for terraces and outdoor decking.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{terr}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.paved.balcony",
+      "name": "Balcony Area",
+      "translation": {
+        "de": "Balkonfläche"
+      },
+      "description": "Area designated for balconies and elevated outdoor spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{balc}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.paved.courtyard",
+      "name": "Courtyard Area",
+      "translation": {
+        "de": "Hoffläche"
+      },
+      "description": "Area designated for courtyards and enclosed outdoor spaces.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{court}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.paved.storage-utility",
+      "name": "Storage Utility Area",
+      "translation": {
+        "de": "Lager- und Nutzfläche"
+      },
+      "description": "Paved area designated for storage and utility purposes.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{stor-util}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.paved.playground",
+      "name": "Playground Area",
+      "translation": {
+        "de": "Spielplatzfläche"
+      },
+      "description": "Area designated for playgrounds and recreational activities.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{play}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.paved.other",
+      "name": "Other Paved Area",
+      "translation": {
+        "de": "Sonstige befestigte Fläche"
+      },
+      "description": "Area for other paved surfaces not classified elsewhere.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{other-paved}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.technical-facility",
+      "name": "Technical Facility Area",
+      "translation": {
+        "de": "Technische Anlagenfläche"
+      },
+      "description": "Area designated for technical facilities and outdoor installations.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{tech-fac}",
+      "formula": "Add ( semio.area.waste-coll semio.area.util-line semio.area.storm-mgmt semio.area.light-sys semio.area.fence semio.area.other-tech-fac )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.technical-facility.waste-collection",
+      "name": "Waste Collection Point Area",
+      "translation": {
+        "de": "Müllsammelplatzfläche"
+      },
+      "description": "Area designated for waste collection and disposal facilities.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{waste-coll}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.technical-facility.utility-line",
+      "name": "Utility Line Area",
+      "translation": {
+        "de": "Versorgungsleitungsfläche"
+      },
+      "description": "Area occupied by utility lines and service corridors.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{util-line}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.technical-facility.stormwater-management",
+      "name": "Stormwater Management Area",
+      "translation": {
+        "de": "Regenwasserbewirtschaftungsfläche"
+      },
+      "description": "Area designated for stormwater management and drainage systems.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{storm}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.technical-facility.lighting-system",
+      "name": "Lighting System Area",
+      "translation": {
+        "de": "Beleuchtungsanlagenfläche"
+      },
+      "description": "Area occupied by outdoor lighting systems and installations.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{light}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.technical-facility.fence",
+      "name": "Fence Enclosure Area",
+      "translation": {
+        "de": "Zaun- und Einfriedungsfläche"
+      },
+      "description": "Area occupied by fencing and enclosure systems.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{fence}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.technical-facility.other",
+      "name": "Other Technical Facility Area",
+      "translation": {
+        "de": "Sonstige technische Anlagenfläche"
+      },
+      "description": "Area for other technical facilities not classified elsewhere.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{other-tech-fac}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.water",
+      "name": "Water Area",
+      "translation": {
+        "de": "Wasserfläche"
+      },
+      "description": "Area designated for water features and aquatic installations.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{water}",
+      "formula": "Add ( semio.area.pond semio.area.fountain semio.area.storm-ret semio.area.other-water )",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.water.pond",
+      "name": "Pond Area",
+      "translation": {
+        "de": "Teichfläche"
+      },
+      "description": "Area designated for ponds and decorative water bodies.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{pond}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.water.fountain",
+      "name": "Fountain Area",
+      "translation": {
+        "de": "Brunnenfläche"
+      },
+      "description": "Area designated for fountains and water features.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{fountain}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.water.stormwater-retention",
+      "name": "Stormwater Retention Area",
+      "translation": {
+        "de": "Regenwasserrückhaltefläche"
+      },
+      "description": "Area designated for stormwater retention and management.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{storm-ret}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.water.other",
+      "name": "Other Water Area",
+      "translation": {
+        "de": "Sonstige Wasserfläche"
+      },
+      "description": "Area for other water features not classified elsewhere.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{other-water}",
+      "format": "#,##0.##"
+    },
+    {
+      "key": "semio.area.floor.property.unbuilt.other-outdoor",
+      "name": "Other Outdoor Facility Area",
+      "translation": {
+        "de": "Sonstige Außenanlagenfläche"
+      },
+      "description": "Area for other outdoor facilities not classified elsewhere.",
+      "si": "m²",
+      "imperial": "ft²",
+      "symbol": "A_{other-out}",
+      "format": "#,##0.##"
+    }
+  ]
+}
