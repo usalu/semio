@@ -73,65 +73,197 @@
             </path>
         </g>
         <g id="emblem">
-            <use id="emblem#top" href="#profile#5#colored" transform="translate(0,20) matrix(1,0,0,-1,0,0)">
+            <use id="emblem#top" href="#profile#5#colored">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="0 20; 0 0" />
+                <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="2 -2; 1 1" />
+            </use>
+            <use id="emblem#right" href="#profile#5#colored">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="80 100; 0 0" />
+                <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="270 0 0; 0 0 0" />
                 <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
                     repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
                     values="2 2; 1 1" />
             </use>
-            <use id="emblem#right" href="#profile#5#colored" transform="translate(80,100) rotate(270,0,0)">
+            <use id="emblem#left" href="#profile#4#colored">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="20 22; 0 0" />
+                <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="90 0 0; 0 0 0" />
                 <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
                     repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
                     values="2 2; 1 1" />
             </use>
-            <use id="emblem#left" href="#profile#4#colored" transform="translate(10,11) rotate(90,0,0)">
+            <use id="emblem#middle" href="#profile#2#colored">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="78 40; 0 0" />
                 <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
                     repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
-                    values="2 2; 1 1" />
+                    values="-2 2; 1 1" />
             </use>
-            <use id="emblem#middle" href="#profile#2#colored" transform="translate(78,40) matrix(-1,0,0,1,0,0)">
+            <use id="emblem#bottom" href="#profile#2#colored">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="78 80; 0 0" />
                 <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
                     repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
-                    values="2 2; 1 1" />
-            </use>
-            <use id="emblem#bottom" href="#profile#2#colored" transform="translate(78,80) matrix(-1,0,0,1,0,0)">
-                <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
-                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
-                    values="2 2; 1 1" />
+                    values="-2 2; 1 1" />
             </use>
         </g>
         <g id="text#s">
-            <use id="text#s#top" href="#profile#5" transform="translate(50,10) rotate(180,0,0)" />
-            <use id="text#s#left" href="#profile#2" transform="translate(10,20) rotate(90,0,0) matrix(-1,0,0,1,0,0)" />
-            <use id="text#s#middle" href="#profile#5" transform="translate(0,31) matrix(1,0,0,-1,0,0)" />
-            <use id="text#s#right" href="#profile#2" transform="translate(40,40) rotate(270,0,0)" />
-            <use id="text#s#bottom" href="#profile#5" transform="translate(50,41) matrix(-1,0,0,1,0,0)" />
+            <use id="text#s#top" href="#profile#5">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="50 10; 0 0" />
+                <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="180 0 0; 0 0 0" />
+            </use>
+            <use id="text#s#left" href="#profile#2">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="10 20; 0 0" />
+                <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="90 0 0; 0 0 0" />
+                <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="-1 1; 1 1" />
+            </use>
+            <use id="text#s#middle" href="#profile#5">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="0 31; 0 0" />
+                <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="1 -1; 1 1" />
+            </use>
+            <use id="text#s#right" href="#profile#2">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="40 40; 0 0" />
+                <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="270 0 0; 0 0 0" />
+            </use>
+            <use id="text#s#bottom" href="#profile#5">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="50 41; 0 0" />
+                <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="-1 1; 1 1" />
+            </use>
         </g>
         <g id="text#e">
-            <use id="text#e#left" href="#profile#5" transform="translate(10,0) rotate(90,0,0)" />
-            <use id="text#e#top" href="#profile#4" transform="translate(11,10) matrix(1,0,0,-1,0,0)" />
-            <use id="text#e#middle" href="#profile#4" transform="translate(11,30) matrix(1,0,0,-1,0,0)" />
-            <use id="text#e#bottom" href="#profile#5"
-                transform="translate(50,40) rotate(180,0,0) matrix(1,0,0,-1,0,0)" />
+            <use id="text#e#left" href="#profile#5">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="10 0; 0 0" />
+                <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="90 0 0; 0 0 0" />
+            </use>
+            <use id="text#e#top" href="#profile#4">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="11 10; 0 0" />
+                <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="1 -1; 1 1" />
+            </use>
+            <use id="text#e#middle" href="#profile#4">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="11 30; 0 0" />
+                <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="1 -1; 1 1" />
+            </use>
+            <use id="text#e#bottom" href="#profile#5">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="50 40; 0 0" />
+                <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="180 0 0; 0 0 0" />
+                <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="1 -1; 1 1" />
+            </use>
         </g>
         <g id="text#i">
-            <use href="#profile#5" transform="translate(10,50) rotate(270,0,0) matrix(1,0,0,-1,0,0)" />
+            <use href="#profile#5">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="10 50; 0 0" />
+                <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="270 0 0; 0 0 0" />
+                <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="1 -1; 1 1" />
+            </use>
         </g>
         <g id="text#o">
-            <use id="text#o#left" href="#profile#5" transform="translate(10,50) rotate(270,0,0) matrix(1,0,0,-1,0,0)" />
-            <use id="text#o#top" href="#profile#4" transform="translate(40,10) rotate(180,0,0)" />
-            <use id="text#o#right" href="#profile#5" transform="translate(41,0) rotate(90,0,0) matrix(1,0,0,-1,0,0)" />
-            <use id="text#o#bottom" href="#profile#4" transform="translate(11,40)" />
+            <use id="text#o#left" href="#profile#5">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="10 50; 0 0" />
+                <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="270 0 0; 0 0 0" />
+                <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="1 -1; 1 1" />
+            </use>
+            <use id="text#o#top" href="#profile#4">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="40 10; 0 0" />
+                <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="180 0 0; 0 0 0" />
+            </use>
+            <use id="text#o#right" href="#profile#5">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="41 0; 0 0" />
+                <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="90 0 0; 0 0 0" />
+                <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="1 -1; 1 1" />
+            </use>
+            <use id="text#o#bottom" href="#profile#4">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="11 40; 0 0" />
+            </use>
         </g>
         <g id="text">
             <use href="#text#s" />
-            <use href="#text#e" transform="translate(60,0)" />
-            <use href="#text#e" transform="translate(170,0) rotate(90,0,0)" />
-            <use href="#text#i" transform="translate(180,0)" />
-            <use href="#text#o" transform="translate(200,0)" />
+            <use href="#text#e">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="60 0; 0 0" />
+            </use>
+            <use href="#text#e">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="170 0; 0 0" />
+                <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
+                    repeatCount="indefinite" keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1"
+                    values="90 0 0; 0 0 0" />
+            </use>
+            <use href="#text#i">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="180 0; 0 0" />
+            </use>
+            <use href="#text#o">
+                <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                    keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="200 0; 0 0" />
+            </use>
         </g>
     </defs>
     <g id="timeline">
-        <use href="#emblem" transform="translate(20, 20)" />
-        <use href="#text" transform="translate(140, 45)" />
+        <use href="#emblem">
+            <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="20 20; 0 0" />
+        </use>
+        <use href="#text">
+            <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+                keyTimes="0;1" calcMode="spline" keySplines="0.42 0 0.58 1" values="140 45; 0 0" />
+        </use>
     </g>
 </svg>
