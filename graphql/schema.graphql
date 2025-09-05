@@ -28,6 +28,7 @@ type Kit implements Node {
   license: String!
   created: DateTime!
   updated: DateTime!
+  concepts: [String!]!
   types(before: String, after: String, first: Int, last: Int): TypeNodeConnection
   designs(before: String, after: String, first: Int, last: Int): DesignNodeConnection
   attributes(before: String, after: String, first: Int, last: Int): AttributeNodeConnection
@@ -121,6 +122,7 @@ type Type implements Node {
   id: ID!
   location: Location!
   authors: [Author!]!
+  concepts: [String!]!
 }
 
 type RepresentationNodeConnection {
@@ -311,6 +313,7 @@ type Design implements Node {
   id: ID!
   location: Location!
   authors: [Author!]!
+  concepts: [String!]!
 }
 
 type PieceNodeConnection {
@@ -633,6 +636,7 @@ input TypeInputNode {
   ports: [PortInputNode] = null
   authors: [AuthorInputNode] = null
   attributes: [AttributeInputNode] = null
+  concepts: [String] = null
 }
 
 input LocationInputNode {
@@ -824,6 +828,7 @@ input DesignInputNode {
   connections: [ConnectionInputNode] = null
   authors: [AuthorInputNode] = null
   attributes: [AttributeInputNode] = null
+  concepts: [String] = null
 }
 
 input PieceInputNode {

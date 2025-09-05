@@ -8,7 +8,7 @@ public class KitTests
     [InlineData("../../../../../assets/semio/kit_metabolism.json")]
     public void ComplexKit(string kitPath)
     {
-        var kitJson = File.ReadAllText(kitPath);
+        var kitJson = System.IO.File.ReadAllText(kitPath);
         var kit = JsonConvert.DeserializeObject<Kit>(kitJson);
         var kitDeepClone = kit.DeepClone();
         Assert.Equal(kit, kitDeepClone);

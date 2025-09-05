@@ -20,7 +20,7 @@
 // #endregion
 
 import JSZip from "jszip";
-import React, { createContext, useContext, useMemo, useSyncExternalStore } from "react";
+import React, { createContext, useCallback, useContext, useMemo, useRef, useSyncExternalStore } from "react";
 import type { Database, SqlJsStatic } from "sql.js";
 import initSqlJs from "sql.js";
 import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
@@ -35,10 +35,12 @@ import {
   ConnectionDiff,
   ConnectionId,
   connectionIdLikeToConnectionId,
+  connectionIdToString,
   Design,
   DesignDiff,
   DesignId,
   designIdLikeToDesignId,
+  designIdToString,
   DiagramPoint,
   FileDiff,
   fileIdLikeToFileId,
@@ -48,25 +50,29 @@ import {
   KitId,
   KitIdLike,
   kitIdLikeToKitId,
+  kitIdToString,
   Piece,
   PieceDiff,
   PieceId,
   pieceIdLikeToPieceId,
+  pieceIdToString,
   Port,
   PortDiff,
   PortId,
   portIdLikeToPortId,
+  portIdToString,
   Representation,
   RepresentationDiff,
   RepresentationId,
   representationIdLikeToRepresentationId,
+  representationIdToString,
   File as SemioFile,
   Type,
   TypeDiff,
   TypeId,
   typeIdLikeToTypeId,
+  typeIdToString,
 } from "./semio";
-
 
 // #region Constants
 
@@ -96,17 +102,7 @@ export type Disposable = () => void;
 export type Url = string;
 // Simplified merge type
 type Merge<A, B> = {
-  [K in keyof A | keyof B]: K extends keyof A
-  ? K extends keyof B
-  ? A[K] extends object
-  ? B[K] extends object
-  ? Merge<A[K], B[K]>
-  : A[K] | B[K]
-  : A[K] | B[K]
-  : A[K]
-  : K extends keyof B
-  ? B[K]
-  : never;
+  [K in keyof A | keyof B]: K extends keyof A ? (K extends keyof B ? (A[K] extends object ? (B[K] extends object ? Merge<A[K], B[K]> : A[K] | B[K]) : A[K] | B[K]) : A[K]) : K extends keyof B ? B[K] : never;
 };
 
 export interface DesignEditorStep {
@@ -119,7 +115,7 @@ export interface DesignEditorEdit {
   undo: DesignEditorStep;
 }
 
-export interface YStore { }
+export interface YStore {}
 
 export interface FileSnapshot {
   snapshot(): SemioFile;
@@ -132,9 +128,9 @@ export interface FileSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
-export interface FileStore extends FileSnapshot { }
+export interface FileStore extends FileSnapshot {}
 
-export interface FileStoreFull extends FileSnapshot, FileActions, FileSubscriptions { }
+export interface FileStoreFull extends FileSnapshot, FileActions, FileSubscriptions {}
 
 export interface RepresentationSnapshot {
   snapshot(): Representation;
@@ -148,9 +144,9 @@ export interface RepresentationSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
-export interface RepresentationStore extends RepresentationSnapshot { }
+export interface RepresentationStore extends RepresentationSnapshot {}
 
-export interface RepresentationStoreFull extends RepresentationSnapshot, RepresentationActions, RepresentationSubscriptions { }
+export interface RepresentationStoreFull extends RepresentationSnapshot, RepresentationActions, RepresentationSubscriptions {}
 
 export interface PortSnapshot {
   snapshot(): Port;
@@ -161,8 +157,8 @@ export interface PortActions {
 export interface PortSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-export interface PortStore extends PortSnapshot { }
-export interface PortStoreFull extends PortSnapshot, PortActions, PortSubscriptions { }
+export interface PortStore extends PortSnapshot {}
+export interface PortStoreFull extends PortSnapshot, PortActions, PortSubscriptions {}
 
 export interface TypeSnapshot {
   snapshot(): Type;
@@ -174,15 +170,15 @@ export interface TypeSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 export interface TypeChildStores {
-  representations: Map<RepresentationId, RepresentationStore>;
-  ports: Map<PortId, PortStore>;
+  representations: Map<string, RepresentationStore>;
+  ports: Map<string, PortStore>;
 }
 export interface TypeChildStoresFull {
-  representations: Map<RepresentationId, RepresentationStoreFull>;
-  ports: Map<PortId, PortStoreFull>;
+  representations: Map<string, RepresentationStoreFull>;
+  ports: Map<string, PortStoreFull>;
 }
-export interface TypeStore extends TypeSnapshot, TypeChildStores { }
-export interface TypeStoreFull extends TypeSnapshot, TypeChildStoresFull, TypeActions, TypeSubscriptions { }
+export interface TypeStore extends TypeSnapshot, TypeChildStores {}
+export interface TypeStoreFull extends TypeSnapshot, TypeChildStoresFull, TypeActions, TypeSubscriptions {}
 
 export interface PieceSnapshot {
   snapshot(): Piece;
@@ -193,10 +189,10 @@ export interface PieceActions {
 export interface PieceSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-export interface PieceChildStores { }
-export interface PieceChildStoresFull { }
-export interface PieceStore extends PieceSnapshot, PieceChildStores { }
-export interface PieceStoreFull extends PieceSnapshot, PieceChildStoresFull, PieceActions, PieceSubscriptions { }
+export interface PieceChildStores {}
+export interface PieceChildStoresFull {}
+export interface PieceStore extends PieceSnapshot, PieceChildStores {}
+export interface PieceStoreFull extends PieceSnapshot, PieceChildStoresFull, PieceActions, PieceSubscriptions {}
 
 export interface ConnectionSnapshot {
   snapshot(): Connection;
@@ -207,8 +203,8 @@ export interface ConnectionActions {
 export interface ConnectionSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-export interface ConnectionStore extends ConnectionSnapshot { }
-export interface ConnectionStoreFull extends ConnectionSnapshot, ConnectionActions, ConnectionSubscriptions { }
+export interface ConnectionStore extends ConnectionSnapshot {}
+export interface ConnectionStoreFull extends ConnectionSnapshot, ConnectionActions, ConnectionSubscriptions {}
 
 export interface DesignSnapshot {
   snapshot(): Design;
@@ -220,15 +216,15 @@ export interface DesignSubscriptions {
   changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 export interface DesignChildStores {
-  pieces: Map<PieceId, PieceStore>;
-  connections: Map<ConnectionId, ConnectionStore>;
+  pieces: Map<string, PieceStore>;
+  connections: Map<string, ConnectionStore>;
 }
 export interface DesignChildStoresFull {
-  pieces: Map<PieceId, PieceStoreFull>;
-  connections: Map<ConnectionId, ConnectionStoreFull>;
+  pieces: Map<string, PieceStoreFull>;
+  connections: Map<string, ConnectionStoreFull>;
 }
-export interface DesignStore extends DesignSnapshot, DesignChildStores { }
-export interface DesignStoreFull extends DesignSnapshot, DesignActions, DesignSubscriptions, DesignChildStoresFull { }
+export interface DesignStore extends DesignSnapshot, DesignChildStores {}
+export interface DesignStoreFull extends DesignSnapshot, DesignActions, DesignSubscriptions, DesignChildStoresFull {}
 
 export interface KitSnapshot {
   snapshot(): Kit;
@@ -258,17 +254,17 @@ export interface KitCommandsFull {
   register(command: string, callback: (context: KitCommandContext, ...rest: any[]) => KitCommandResult): Disposable;
 }
 export interface KitChildStores {
-  types: Map<TypeId, TypeStore>;
-  designs: Map<DesignId, DesignStore>;
+  types: Map<string, TypeStore>;
+  designs: Map<string, DesignStore>;
   files: Map<Url, FileStore>;
 }
 export interface KitChildStoresFull {
-  types: Map<TypeId, TypeStoreFull>;
-  designs: Map<DesignId, DesignStoreFull>;
+  types: Map<string, TypeStoreFull>;
+  designs: Map<string, DesignStoreFull>;
   files: Map<Url, FileStoreFull>;
 }
-export interface KitStore extends KitSnapshot, KitChildStores, KitFileUrls, KitCommands, KitSubscriptions { }
-export interface KitStoreFull extends KitSnapshot, KitActions, KitSubscriptions, KitCommandsFull, KitChildStoresFull, KitFileUrls { }
+export interface KitStore extends KitSnapshot, KitChildStores, KitFileUrls, KitCommands, KitSubscriptions {}
+export interface KitStoreFull extends KitSnapshot, KitActions, KitSubscriptions, KitCommandsFull, KitChildStoresFull, KitFileUrls {}
 
 export interface DesignEditorId {
   kitId: KitId;
@@ -348,8 +344,8 @@ export interface DesignEditorCommandsFull {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
   register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable;
 }
-export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands { }
-export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, Merge<DesignEditorActions, DesignEditorSubscriptions> { }
+export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands {}
+export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, Merge<DesignEditorActions, DesignEditorSubscriptions> {}
 export interface SketchpadState {
   mode: Mode;
   theme: Theme;
@@ -392,19 +388,19 @@ export interface SketchpadSubscriptions {
   };
 }
 export interface SketchpadChildStores {
-  kits: Map<KitId, KitStore>;
-  designEditors: Map<KitId, Map<DesignId, DesignEditorStore>>;
+  kits: Map<string, KitStore>;
+  designEditors: Map<string, Map<string, DesignEditorStore>>;
 }
 export interface SketchpadChildStoresFull {
-  kits: Map<KitId, KitStoreFull>;
-  designEditors: Map<KitId, Map<DesignId, DesignEditorStoreFull>>;
+  kits: Map<string, KitStoreFull>;
+  designEditors: Map<string, Map<string, DesignEditorStoreFull>>;
 }
 export interface SketchpadCommandContext {
   sketchpad: SketchpadStateFull;
   store: YSketchpadStore;
 }
 export interface SketchpadCommandResult {
-  diff: SketchpadStateDiff;
+  diff?: SketchpadStateDiff;
 }
 export interface SketchpadCommands {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
@@ -413,7 +409,7 @@ export interface SketchpadCommandsFull {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
   register(command: string, callback: (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult): Disposable;
 }
-export interface SketchpadStore extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStores { }
+export interface SketchpadStore extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStores {}
 export interface SketchpadStoreFull extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStoresFull, SketchpadActions {
   on: SketchpadSubscriptions;
 }
@@ -679,6 +675,8 @@ function getPlane(yPlane: Y.Map<any>): { origin: { x: number; y: number; z: numb
 class YFileStore implements FileStoreFull {
   public readonly parent: YKitStore;
   public readonly yFile: Y.Map<string> = new Y.Map<string>();
+  private cachedSnapshot?: SemioFile;
+  private lastSnapshotHash?: string;
 
   constructor(parent: YKitStore, file: SemioFile) {
     this.parent = parent;
@@ -710,10 +708,34 @@ class YFileStore implements FileStoreFull {
     if (diff.remote !== undefined) this.yFile.set("remote", diff.remote);
     if (diff.size !== undefined) this.yFile.set("size", diff.size.toString());
     if (diff.hash !== undefined) this.yFile.set("hash", diff.hash);
+    this.cachedSnapshot = undefined; // Invalidate cache when data changes
+    this.lastSnapshotHash = undefined; // Invalidate hash when data changes
   };
 
   snapshot = (): SemioFile => {
-    return this.file;
+    const currentData = {
+      path: this.yFile.get("path") as string,
+      remote: (this.yFile.get("remote") as string) || undefined,
+      size: this.yFile.get("size") ? parseInt(this.yFile.get("size") as string) : undefined,
+      hash: (this.yFile.get("hash") as string) || undefined,
+      created: this.yFile.get("created") ? new Date(this.yFile.get("created") as string) : undefined,
+      updated: this.yFile.get("updated") ? new Date(this.yFile.get("updated") as string) : undefined,
+    };
+    const currentHash = JSON.stringify({
+      path: currentData.path,
+      remote: currentData.remote,
+      size: currentData.size,
+      hash: currentData.hash,
+      created: currentData.created?.toISOString(),
+      updated: currentData.updated?.toISOString(),
+    });
+
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+
+    return this.cachedSnapshot;
   };
 
   changed = (subscribe: Subscribe, deep?: boolean) => {
@@ -724,6 +746,8 @@ class YFileStore implements FileStoreFull {
 class YRepresentationStore implements RepresentationStoreFull {
   public readonly parent: YKitStore;
   public readonly yRepresentation: YRepresentation = new Y.Map<any>();
+  private cachedSnapshot?: Representation;
+  private lastSnapshotHash?: string;
 
   constructor(parent: YKitStore, representation: Representation) {
     this.parent = parent;
@@ -735,12 +759,32 @@ class YRepresentationStore implements RepresentationStoreFull {
 
   snapshot = (): Representation => {
     const yTags = this.yRepresentation.get("tags") as Y.Array<string>;
-    return {
+    const yAttributes = this.yRepresentation.get("attributes") as YAttributes;
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
+    }
+
+    const currentData = {
       url: this.yRepresentation.get("url") as string,
       description: (this.yRepresentation.get("description") as string) || "",
       tags: yTags ? yTags.toArray() : [],
-      attributes: getAttributes(this.yRepresentation.get("attributes") as YAttributes),
+      attributes: attributes,
     };
+    const currentHash = JSON.stringify(currentData);
+
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+
+    return this.cachedSnapshot;
   };
 
   change = (diff: RepresentationDiff) => {
@@ -762,6 +806,8 @@ class YRepresentationStore implements RepresentationStoreFull {
 class YPortStore implements PortStoreFull {
   public readonly parent: YTypeStore;
   public readonly yPort: YPort = new Y.Map<any>();
+  private cachedSnapshot?: Port;
+  private lastSnapshotHash?: string;
 
   constructor(parent: YTypeStore, port: Port) {
     this.parent = parent;
@@ -780,18 +826,46 @@ class YPortStore implements PortStoreFull {
     const yCompatibleFamilies = this.yPort.get("compatibleFamilies") as Y.Array<string>;
     const yPoint = this.yPort.get("point") as Y.Map<number>;
     const yDirection = this.yPort.get("direction") as Y.Map<number>;
+    const yAttributes = this.yPort.get("attributes") as YAttributes;
 
-    return {
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
+    }
+
+    const currentData = {
       id_: this.yPort.get("id_") as string,
       description: (this.yPort.get("description") as string) || "",
       mandatory: this.yPort.get("mandatory") as boolean,
       family: (this.yPort.get("family") as string) || "",
       compatibleFamilies: yCompatibleFamilies ? yCompatibleFamilies.toArray() : [],
-      point: getVec3(yPoint),
-      direction: getVec3(yDirection),
+      point: {
+        x: yPoint.get("x") as number,
+        y: yPoint.get("y") as number,
+        z: yPoint.get("z") as number,
+      },
+      direction: {
+        x: yDirection.get("x") as number,
+        y: yDirection.get("y") as number,
+        z: yDirection.get("z") as number,
+      },
       t: this.yPort.get("t") as number,
-      attributes: getAttributes(this.yPort.get("attributes") as YAttributes),
+      attributes: attributes,
     };
+    const currentHash = JSON.stringify(currentData);
+
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+
+    return this.cachedSnapshot;
   };
 
   change = (diff: PortDiff) => {
@@ -822,10 +896,12 @@ class YPortStore implements PortStoreFull {
 class YTypeStore implements TypeStoreFull {
   public readonly parent: YKitStore;
   public readonly yType: YType = new Y.Map<any>();
-  public readonly representations: Map<RepresentationId, YRepresentationStore> = new Map();
-  public readonly ports: Map<PortId, YPortStore> = new Map();
-  private readonly representationIds: Map<RepresentationId, string> = new Map();
-  private readonly portIds: Map<PortId, string> = new Map();
+  public readonly representations: Map<string, YRepresentationStore> = new Map();
+  public readonly ports: Map<string, YPortStore> = new Map();
+  private readonly representationIds: Map<string, string> = new Map();
+  private readonly portIds: Map<string, string> = new Map();
+  private cachedSnapshot?: Type;
+  private lastSnapshotHash?: string;
 
   constructor(parent: YKitStore, type: Type) {
     this.parent = parent;
@@ -839,23 +915,12 @@ class YTypeStore implements TypeStoreFull {
     this.yType.set("ports", new Y.Map() as YPortMap);
     this.yType.set("authors", createAuthors(type.authors));
     this.yType.set("attributes", createAttributes(type.attributes));
-    (type.representations || []).forEach((r) => this.representationIds.set(representationIdLikeToRepresentationId(r), uuidv4()));
-    (type.ports || []).forEach((p) => this.portIds.set(portIdLikeToPortId(p), uuidv4()));
+    (type.representations || []).forEach((r) => this.representationIds.set(representationIdToString(representationIdLikeToRepresentationId(r)), uuidv4()));
+    (type.ports || []).forEach((p) => this.portIds.set(portIdToString(portIdLikeToPortId(p)), uuidv4()));
   }
 
   type = (): Type => {
-    return {
-      name: this.yType.get("name") as string,
-      description: (this.yType.get("description") as string) || "",
-      variant: this.yType.get("variant") as string | undefined,
-      unit: (this.yType.get("unit") as string) || "",
-      stock: this.yType.get("stock") as number | undefined,
-      virtual: this.yType.get("virtual") as boolean | undefined,
-      representations: Array.from(this.representations.values()).map((store) => store.snapshot()),
-      ports: Array.from(this.ports.values()).map((store) => store.snapshot()),
-      authors: getAuthors(this.yType.get("authors") as YAuthors),
-      attributes: getAttributes(this.yType.get("attributes") as YAttributes),
-    };
+    return this.snapshot();
   };
 
   change = (diff: TypeDiff) => {
@@ -868,31 +933,76 @@ class YTypeStore implements TypeStoreFull {
     if (diff.representations !== undefined) {
       diff.representations.forEach((rep) => {
         const repId = representationIdLikeToRepresentationId(rep);
-        if (!this.representationIds.get(repId)) {
+        const repIdStr = representationIdToString(repId);
+        if (!this.representationIds.get(repIdStr)) {
           const uuid = uuidv4();
-          this.representationIds.set(repId, uuid);
-          this.representations.set(repId, new YRepresentationStore(this.parent, rep));
+          this.representationIds.set(repIdStr, uuid);
+          this.representations.set(repIdStr, new YRepresentationStore(this.parent, rep));
         } else {
-          this.representations.get(repId)?.change(rep);
+          this.representations.get(repIdStr)?.change(rep);
         }
       });
     }
     if (diff.ports !== undefined) {
       diff.ports.forEach((port) => {
         const portId = portIdLikeToPortId(port);
-        if (!this.portIds.get(portId)) {
+        const portIdStr = portIdToString(portId);
+        if (!this.portIds.get(portIdStr)) {
           const uuid = uuidv4();
-          this.portIds.set(portId, uuid);
-          this.ports.set(portId, new YPortStore(this, port));
+          this.portIds.set(portIdStr, uuid);
+          this.ports.set(portIdStr, new YPortStore(this, port));
         } else {
-          this.ports.get(portId)?.change(port);
+          this.ports.get(portIdStr)?.change(port);
         }
       });
     }
   };
 
   snapshot = (): Type => {
-    return this.type();
+    const yAuthors = this.yType.get("authors") as YAuthors;
+    const yAttributes = this.yType.get("attributes") as YAttributes;
+
+    const authors: Author[] = [];
+    if (yAuthors) {
+      yAuthors.forEach((yAuthor: YAuthor) => {
+        authors.push({
+          name: yAuthor.get("name") as string,
+          email: (yAuthor.get("email") as string) || "",
+        });
+      });
+    }
+
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
+    }
+
+    const currentData = {
+      name: this.yType.get("name") as string,
+      description: (this.yType.get("description") as string) || "",
+      variant: this.yType.get("variant") as string | undefined,
+      unit: (this.yType.get("unit") as string) || "",
+      stock: this.yType.get("stock") as number | undefined,
+      virtual: this.yType.get("virtual") as boolean | undefined,
+      representations: Array.from(this.representations.values()).map((store) => store.snapshot()),
+      ports: Array.from(this.ports.values()).map((store) => store.snapshot()),
+      authors: authors,
+      attributes: attributes,
+    };
+    const currentHash = JSON.stringify(currentData);
+
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+
+    return this.cachedSnapshot;
   };
 
   changed = (subscribe: Subscribe, deep?: boolean) => {
@@ -903,6 +1013,8 @@ class YTypeStore implements TypeStoreFull {
 class YPieceStore implements PieceStoreFull {
   public readonly parent: YDesignStore;
   public readonly yPiece: YPiece = new Y.Map<any>();
+  private cachedSnapshot?: Piece;
+  private lastSnapshotHash?: string;
 
   constructor(parent: YDesignStore, piece: Piece) {
     this.parent = parent;
@@ -925,23 +1037,67 @@ class YPieceStore implements PieceStoreFull {
     const yType = this.yPiece.get("type") as Y.Map<string>;
     const yPlane = this.yPiece.get("plane") as Y.Map<any> | undefined;
     const yCenter = this.yPiece.get("center") as Y.Map<number> | undefined;
+    const yAttributes = this.yPiece.get("attributes") as YAttributes;
 
-    const piece: Piece = {
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
+    }
+
+    const currentData: Piece = {
       id_: this.yPiece.get("id_") as string,
       description: (this.yPiece.get("description") as string) || "",
       type: {
         name: yType.get("name") as string,
         variant: yType.get("variant") as string | undefined,
       },
-      attributes: getAttributes(this.yPiece.get("attributes") as YAttributes),
+      attributes: attributes,
     };
+
     if (yPlane) {
-      piece.plane = getPlane(yPlane);
+      const yOrigin = yPlane.get("origin") as Y.Map<number>;
+      const yXAxis = yPlane.get("xAxis") as Y.Map<number>;
+      const yYAxis = yPlane.get("yAxis") as Y.Map<number>;
+      currentData.plane = {
+        origin: {
+          x: yOrigin.get("x") as number,
+          y: yOrigin.get("y") as number,
+          z: yOrigin.get("z") as number,
+        },
+        xAxis: {
+          x: yXAxis.get("x") as number,
+          y: yXAxis.get("y") as number,
+          z: yXAxis.get("z") as number,
+        },
+        yAxis: {
+          x: yYAxis.get("x") as number,
+          y: yYAxis.get("y") as number,
+          z: yYAxis.get("z") as number,
+        },
+      };
     }
+
     if (yCenter) {
-      piece.center = getVec2(yCenter);
+      currentData.center = {
+        x: yCenter.get("x") as number,
+        y: yCenter.get("y") as number,
+      };
     }
-    return piece;
+
+    const currentHash = JSON.stringify(currentData);
+
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+
+    return this.cachedSnapshot;
   };
 
   change = (diff: PieceDiff) => {
@@ -985,6 +1141,8 @@ class YPieceStore implements PieceStoreFull {
 class YConnectionStore implements ConnectionStoreFull {
   public readonly parent: YDesignStore;
   public readonly yConnection: YConnection = new Y.Map<any>();
+  private cachedSnapshot?: Connection;
+  private lastSnapshotHash?: string;
 
   constructor(parent: YDesignStore, connection: Connection) {
     this.parent = parent;
@@ -1036,7 +1194,19 @@ class YConnectionStore implements ConnectionStoreFull {
     const yConnectingDesignPiece = yConnecting.get("designPiece") as Y.Map<string> | undefined;
     const yConnectingPort = yConnecting.get("port") as Y.Map<string>;
 
-    return {
+    const yAttributes = this.yConnection.get("attributes") as YAttributes;
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
+    }
+
+    const currentData = {
       connected: {
         piece: { id_: yConnectedPiece.get("id_") as string },
         port: { id_: yConnectedPort.get("id_") as string },
@@ -1056,8 +1226,16 @@ class YConnectionStore implements ConnectionStoreFull {
       tilt: this.yConnection.get("tilt") as number,
       x: this.yConnection.get("x") as number,
       y: this.yConnection.get("y") as number,
-      attributes: getAttributes(this.yConnection.get("attributes") as YAttributes),
+      attributes: attributes,
     };
+    const currentHash = JSON.stringify(currentData);
+
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+
+    return this.cachedSnapshot;
   };
 
   change = (diff: ConnectionDiff) => {
@@ -1080,10 +1258,12 @@ class YConnectionStore implements ConnectionStoreFull {
 class YDesignStore implements DesignStoreFull {
   public readonly parent: YKitStore;
   public readonly yDesign: YDesign = new Y.Map<any>();
-  public readonly pieces: Map<PieceId, YPieceStore> = new Map();
-  public readonly connections: Map<ConnectionId, YConnectionStore> = new Map();
-  private readonly pieceIds: Map<PieceId, string> = new Map();
-  private readonly connectionIds: Map<ConnectionId, string> = new Map();
+  public readonly pieces: Map<string, YPieceStore> = new Map();
+  public readonly connections: Map<string, YConnectionStore> = new Map();
+  private readonly pieceIds: Map<string, string> = new Map();
+  private readonly connectionIds: Map<string, string> = new Map();
+  private cachedSnapshot?: Design;
+  private lastSnapshotHash?: string;
 
   constructor(parent: YKitStore, design: Design) {
     this.parent = parent;
@@ -1101,21 +1281,47 @@ class YDesignStore implements DesignStoreFull {
       const uuid = uuidv4();
       const yPieceStore = new YPieceStore(this, piece);
       (this.yDesign.get("pieces") as YPieceMap).set(uuid, yPieceStore.yPiece);
-      this.pieceIds.set(pieceId, uuid);
-      this.pieces.set(pieceId, yPieceStore);
+      const pieceIdStr = pieceIdToString(pieceId);
+      this.pieceIds.set(pieceIdStr, uuid);
+      this.pieces.set(pieceIdStr, yPieceStore);
     });
     (design.connections || []).forEach((connection) => {
       const connectionId = connectionIdLikeToConnectionId(connection);
       const uuid = uuidv4();
       const yConnectionStore = new YConnectionStore(this, connection);
       (this.yDesign.get("connections") as YConnectionMap).set(uuid, yConnectionStore.yConnection);
-      this.connectionIds.set(connectionId, uuid);
-      this.connections.set(connectionId, yConnectionStore);
+      const connectionIdStr = connectionIdToString(connectionId);
+      this.connectionIds.set(connectionIdStr, uuid);
+      this.connections.set(connectionIdStr, yConnectionStore);
     });
   }
 
   snapshot = (): Design => {
-    return {
+    const yAuthors = this.yDesign.get("authors") as YAuthors;
+    const yAttributes = this.yDesign.get("attributes") as YAttributes;
+
+    const authors: Author[] = [];
+    if (yAuthors) {
+      yAuthors.forEach((yAuthor: YAuthor) => {
+        authors.push({
+          name: yAuthor.get("name") as string,
+          email: (yAuthor.get("email") as string) || "",
+        });
+      });
+    }
+
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
+    }
+
+    const currentData = {
       name: this.yDesign.get("name") as string,
       description: this.yDesign.get("description") as string | undefined,
       variant: this.yDesign.get("variant") as string | undefined,
@@ -1123,9 +1329,17 @@ class YDesignStore implements DesignStoreFull {
       unit: this.yDesign.get("unit") as string,
       pieces: Array.from(this.pieces.values()).map((p) => p.snapshot()),
       connections: Array.from(this.connections.values()).map((c) => c.snapshot()),
-      authors: getAuthors(this.yDesign.get("authors") as YAuthors),
-      attributes: getAttributes(this.yDesign.get("attributes") as YAttributes),
+      authors: authors,
+      attributes: attributes,
     };
+    const currentHash = JSON.stringify(currentData);
+
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+
+    return this.cachedSnapshot;
   };
 
   change = (diff: DesignDiff) => {
@@ -1139,23 +1353,25 @@ class YDesignStore implements DesignStoreFull {
       if (diff.pieces.added) {
         diff.pieces.added.forEach((piece) => {
           const pieceId = pieceIdLikeToPieceId(piece);
-          if (!this.pieceIds.get(pieceId)) {
+          const pieceIdStr = pieceIdToString(pieceId);
+          if (!this.pieceIds.get(pieceIdStr)) {
             const uuid = uuidv4();
             const yPieceStore = new YPieceStore(this, piece);
             (this.yDesign.get("pieces") as YPieceMap).set(uuid, yPieceStore.yPiece);
-            this.pieceIds.set(pieceId, uuid);
-            this.pieces.set(pieceId, yPieceStore);
+            this.pieceIds.set(pieceIdStr, uuid);
+            this.pieces.set(pieceIdStr, yPieceStore);
           }
         });
       }
       if (diff.pieces.removed) {
         diff.pieces.removed.forEach((pieceId) => {
           const id = pieceIdLikeToPieceId(pieceId);
-          const uuid = this.pieceIds.get(id);
+          const idStr = pieceIdToString(id);
+          const uuid = this.pieceIds.get(idStr);
           if (uuid) {
             (this.yDesign.get("pieces") as YPieceMap).delete(uuid);
-            this.pieceIds.delete(id);
-            this.pieces.delete(id);
+            this.pieceIds.delete(idStr);
+            this.pieces.delete(idStr);
           }
         });
       }
@@ -1176,23 +1392,25 @@ class YDesignStore implements DesignStoreFull {
       if (diff.connections.added) {
         diff.connections.added.forEach((connection) => {
           const connectionId = connectionIdLikeToConnectionId(connection);
-          if (!this.connectionIds.get(connectionId)) {
+          const connectionIdStr = connectionIdToString(connectionId);
+          if (!this.connectionIds.get(connectionIdStr)) {
             const uuid = uuidv4();
             const yConnectionStore = new YConnectionStore(this, connection);
             (this.yDesign.get("connections") as YConnectionMap).set(uuid, yConnectionStore.yConnection);
-            this.connectionIds.set(connectionId, uuid);
-            this.connections.set(connectionId, yConnectionStore);
+            this.connectionIds.set(connectionIdStr, uuid);
+            this.connections.set(connectionIdStr, yConnectionStore);
           }
         });
       }
       if (diff.connections.removed) {
         diff.connections.removed.forEach((connectionId) => {
           const id = connectionIdLikeToConnectionId(connectionId);
-          const uuid = this.connectionIds.get(id);
+          const idStr = connectionIdToString(id);
+          const uuid = this.connectionIds.get(idStr);
           if (uuid) {
             (this.yDesign.get("connections") as YConnectionMap).delete(uuid);
-            this.connectionIds.delete(id);
-            this.connections.delete(id);
+            this.connectionIds.delete(idStr);
+            this.connections.delete(idStr);
           }
         });
       }
@@ -1224,14 +1442,16 @@ class YDesignStore implements DesignStoreFull {
 
 class YKitStore implements KitStoreFull {
   public readonly yKit: YKit = new Y.Map() as YKit;
-  public readonly types: Map<TypeId, YTypeStore> = new Map();
-  public readonly designs: Map<DesignId, YDesignStore> = new Map();
+  public readonly types: Map<string, YTypeStore> = new Map();
+  public readonly designs: Map<string, YDesignStore> = new Map();
   public readonly files: Map<Url, YFileStore> = new Map();
-  private readonly typeIds: Map<TypeId, string> = new Map();
-  private readonly designIds: Map<DesignId, string> = new Map();
+  private readonly typeIds: Map<string, string> = new Map();
+  private readonly designIds: Map<string, string> = new Map();
   private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult> = new Map();
   private readonly regularFiles: Map<Url, string> = new Map();
   private readonly parent: SketchpadStore;
+  private cachedSnapshot?: Kit;
+  private lastSnapshotHash?: string;
 
   constructor(parent: SketchpadStore, kit: Kit) {
     this.parent = parent;
@@ -1262,30 +1482,44 @@ class YKitStore implements KitStoreFull {
 
   private createType(type: Type): void {
     const typeId = typeIdLikeToTypeId(type);
-    if (this.typeIds.has(typeId)) {
+    const typeIdStr = typeIdToString(typeId);
+    if (this.typeIds.has(typeIdStr)) {
       throw new Error(`Type (${typeId.name}, ${typeId.variant || ""}) already exists.`);
     }
     const uuid = uuidv4();
     const yTypeStore = new YTypeStore(this, type);
     (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
-    this.typeIds.set(typeId, uuid);
-    this.types.set(typeId, yTypeStore);
+    this.typeIds.set(typeIdStr, uuid);
+    this.types.set(typeIdStr, yTypeStore);
   }
 
   private createDesign(design: Design): void {
     const designId = designIdLikeToDesignId(design);
-    if (this.designIds.has(designId)) {
+    const designIdStr = designIdToString(designId);
+    if (this.designIds.has(designIdStr)) {
       throw new Error(`Design (${designId.name}, ${designId.variant || ""}) already exists.`);
     }
     const uuid = uuidv4();
     const yDesignStore = new YDesignStore(this, design);
     (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
-    this.designIds.set(designId, uuid);
-    this.designs.set(designId, yDesignStore);
+    this.designIds.set(designIdStr, uuid);
+    this.designs.set(designIdStr, yDesignStore);
   }
 
   snapshot = (): Kit => {
-    return {
+    const yAttributes = this.yKit.get("attributes") as YAttributes;
+    const attributes: Attribute[] = [];
+    if (yAttributes) {
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
+        });
+      });
+    }
+
+    const currentData = {
       name: this.yKit.get("name") as string,
       version: this.yKit.get("version") as string | undefined,
       description: this.yKit.get("description") as string | undefined,
@@ -1299,8 +1533,16 @@ class YKitStore implements KitStoreFull {
       updated: this.yKit.get("updated") ? new Date(this.yKit.get("updated") as string) : undefined,
       types: Array.from(this.types.values()).map((store) => store.snapshot()),
       designs: Array.from(this.designs.values()).map((store) => store.snapshot()),
-      attributes: getAttributes(this.yKit.get("attributes") as YAttributes),
+      attributes: attributes,
     };
+    const currentHash = JSON.stringify(currentData);
+
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = currentData;
+      this.lastSnapshotHash = currentHash;
+    }
+
+    return this.cachedSnapshot;
   };
 
   change = (diff: KitDiff) => {
@@ -1318,23 +1560,25 @@ class YKitStore implements KitStoreFull {
       if (diff.types.added) {
         diff.types.added.forEach((type) => {
           const typeId = typeIdLikeToTypeId(type);
-          if (!this.typeIds.get(typeId)) {
+          const typeIdStr = typeIdToString(typeId);
+          if (!this.typeIds.get(typeIdStr)) {
             const uuid = uuidv4();
             const yTypeStore = new YTypeStore(this, type);
             (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
-            this.typeIds.set(typeId, uuid);
-            this.types.set(typeId, yTypeStore);
+            this.typeIds.set(typeIdStr, uuid);
+            this.types.set(typeIdStr, yTypeStore);
           }
         });
       }
       if (diff.types.removed) {
         diff.types.removed.forEach((typeId) => {
           const id = typeIdLikeToTypeId(typeId);
-          const uuid = this.typeIds.get(id);
+          const idStr = typeIdToString(id);
+          const uuid = this.typeIds.get(idStr);
           if (uuid) {
             (this.yKit.get("types") as YTypeMap).delete(uuid);
-            this.typeIds.delete(id);
-            this.types.delete(id);
+            this.typeIds.delete(idStr);
+            this.types.delete(idStr);
           }
         });
       }
@@ -1355,23 +1599,25 @@ class YKitStore implements KitStoreFull {
       if (diff.designs.added) {
         diff.designs.added.forEach((design) => {
           const designId = designIdLikeToDesignId(design);
-          if (!this.designIds.get(designId)) {
+          const designIdStr = designIdToString(designId);
+          if (!this.designIds.get(designIdStr)) {
             const uuid = uuidv4();
             const yDesignStore = new YDesignStore(this, design);
             (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
-            this.designIds.set(designId, uuid);
-            this.designs.set(designId, yDesignStore);
+            this.designIds.set(designIdStr, uuid);
+            this.designs.set(designIdStr, yDesignStore);
           }
         });
       }
       if (diff.designs.removed) {
         diff.designs.removed.forEach((designId) => {
           const id = designIdLikeToDesignId(designId);
-          const uuid = this.designIds.get(id);
+          const idStr = designIdToString(id);
+          const uuid = this.designIds.get(idStr);
           if (uuid) {
             (this.yKit.get("designs") as YDesignMap).delete(uuid);
-            this.designIds.delete(id);
-            this.designs.delete(id);
+            this.designIds.delete(idStr);
+            this.designs.delete(idStr);
           }
         });
       }
@@ -1474,6 +1720,8 @@ class YDesignEditorStore implements DesignEditorStoreFull {
   public readonly yDesignEditorStore: YDesignEditorStoreValMap = new Y.Map<YDesignEditorStoreVal>();
   private readonly commandRegistry: Map<string, (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult> = new Map();
   private readonly parent: SketchpadStore;
+  private cachedSnapshot?: DesignEditorStateFull;
+  private lastSnapshotHash?: string;
 
   constructor(parent: SketchpadStore, state: DesignEditorStateFull) {
     this.parent = parent;
@@ -1501,9 +1749,9 @@ class YDesignEditorStore implements DesignEditorStoreFull {
       pieceIds: selectedPieceIds ? selectedPieceIds.toArray().map((id) => ({ id_: id })) : [],
       connectionIds: selectedConnections
         ? selectedConnections.toArray().map((id) => ({
-          connected: { piece: { id_: id.split("->")[0] || "" } },
-          connecting: { piece: { id_: id.split("->")[1] || "" } },
-        }))
+            connected: { piece: { id_: id.split("->")[0] || "" } },
+            connecting: { piece: { id_: id.split("->")[1] || "" } },
+          }))
         : [],
     };
   }
@@ -1537,7 +1785,7 @@ class YDesignEditorStore implements DesignEditorStoreFull {
   }
 
   snapshot = (): DesignEditorStateFull => {
-    return {
+    const currentHash = JSON.stringify({
       fullscreenPanel: this.fullscreenPanel,
       selection: this.selection,
       isTransactionActive: this.isTransactionActive,
@@ -1546,7 +1794,23 @@ class YDesignEditorStore implements DesignEditorStoreFull {
       diff: this.diff,
       currentTransactionStack: this.currentTransactionStack,
       pastTransactionsStack: this.pastTransactionsStack,
-    };
+    });
+
+    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.cachedSnapshot = {
+        fullscreenPanel: this.fullscreenPanel,
+        selection: this.selection,
+        isTransactionActive: this.isTransactionActive,
+        presence: this.presence,
+        others: this.others,
+        diff: this.diff,
+        currentTransactionStack: this.currentTransactionStack,
+        pastTransactionsStack: this.pastTransactionsStack,
+      };
+      this.lastSnapshotHash = currentHash;
+    }
+
+    return this.cachedSnapshot;
   };
 
   change = (diff: DesignEditorStateDiff) => {
@@ -1693,7 +1957,7 @@ class YDesignEditorStore implements DesignEditorStoreFull {
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in design editor store`);
     const parent = this.parent as YSketchpadStore;
-    const kitStore = parent.kits.get(parent.activeDesignEditor!.kitId)!;
+    const kitStore = parent.kits.get(kitIdToString(parent.activeDesignEditor!.kitId))!;
 
     const beforeState = this.snapshot();
 
@@ -1769,11 +2033,13 @@ class YDesignEditorStore implements DesignEditorStoreFull {
 class YSketchpadStore implements SketchpadStoreFull {
   public readonly ySketchpadDoc: Y.Doc;
   public readonly sketchpadIndexeddbProvider?: IndexeddbPersistence;
-  public readonly yKitDocs: Map<KitId, Y.Doc> = new Map();
-  public readonly kitIndexeddbProviders: Map<KitId, IndexeddbPersistence> = new Map();
-  public readonly kits: Map<KitId, YKitStore> = new Map();
-  public readonly designEditors: Map<KitId, Map<DesignId, DesignEditorStoreFull>> = new Map();
+  public readonly yKitDocs: Map<string, Y.Doc> = new Map();
+  public readonly kitIndexeddbProviders: Map<string, IndexeddbPersistence> = new Map();
+  public readonly kits: Map<string, YKitStore> = new Map();
+  public readonly designEditors: Map<string, Map<string, DesignEditorStoreFull>> = new Map();
   private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult> = new Map();
+  private cachedSnapshot?: SketchpadStateFull;
+  private lastSnapshotValues?: { mode: Mode; theme: Theme; layout: Layout; activeDesignEditor?: DesignEditorId };
 
   private getYSketchpad(): YSketchpad {
     return this.ySketchpadDoc.getMap("sketchpad");
@@ -1809,12 +2075,25 @@ class YSketchpadStore implements SketchpadStoreFull {
   }
 
   snapshot = (): SketchpadStateFull => {
-    return {
+    const currentValues = {
       mode: this.mode,
       theme: this.theme,
       layout: this.layout,
       activeDesignEditor: this.activeDesignEditor,
     };
+
+    if (
+      !this.lastSnapshotValues ||
+      this.lastSnapshotValues.mode !== currentValues.mode ||
+      this.lastSnapshotValues.theme !== currentValues.theme ||
+      this.lastSnapshotValues.layout !== currentValues.layout ||
+      this.lastSnapshotValues.activeDesignEditor !== currentValues.activeDesignEditor
+    ) {
+      this.cachedSnapshot = currentValues;
+      this.lastSnapshotValues = currentValues;
+    }
+
+    return this.cachedSnapshot!;
   };
 
   create = {
@@ -1835,12 +2114,14 @@ class YSketchpadStore implements SketchpadStoreFull {
       const editorStore = new YDesignEditorStore(this, initialState);
 
       // Ensure the kitId map exists
-      if (!this.designEditors.has(id.kitId)) {
-        this.designEditors.set(id.kitId, new Map());
+      const kitIdStr = kitIdToString(id.kitId);
+      const designIdStr = designIdToString(id.designId);
+      if (!this.designEditors.has(kitIdStr)) {
+        this.designEditors.set(kitIdStr, new Map());
       }
 
-      const kitEditors = this.designEditors.get(id.kitId)!;
-      kitEditors.set(id.designId, editorStore);
+      const kitEditors = this.designEditors.get(kitIdStr)!;
+      kitEditors.set(designIdStr, editorStore);
     },
   };
 
@@ -1854,19 +2135,22 @@ class YSketchpadStore implements SketchpadStoreFull {
   delete = {
     kit: (id: KitIdLike) => {
       const kitId = kitIdLikeToKitId(id);
-      if (this.kits.has(kitId)) {
-        this.kits.delete(kitId);
+      const kitIdStr = kitIdToString(kitId);
+      if (this.kits.has(kitIdStr)) {
+        this.kits.delete(kitIdStr);
       }
-      if (this.designEditors.has(kitId)) {
-        this.designEditors.delete(kitId);
+      if (this.designEditors.has(kitIdStr)) {
+        this.designEditors.delete(kitIdStr);
       }
     },
     designEditor: (id: DesignEditorId) => {
-      const kitEditors = this.designEditors.get(id.kitId);
+      const kitIdStr = kitIdToString(id.kitId);
+      const designIdStr = designIdToString(id.designId);
+      const kitEditors = this.designEditors.get(kitIdStr);
       if (kitEditors) {
-        kitEditors.delete(id.designId);
+        kitEditors.delete(designIdStr);
         if (kitEditors.size === 0) {
-          this.designEditors.delete(id.kitId);
+          this.designEditors.delete(kitIdStr);
         }
       }
     },
@@ -1879,7 +2163,7 @@ class YSketchpadStore implements SketchpadStoreFull {
       // This is a simplified approach - would need more sophisticated tracking in full implementation
       const observer = () => subscribe();
       // Note: Would need to observe kit document creation across all kit docs
-      return () => { }; // Placeholder unsubscribe
+      return () => {}; // Placeholder unsubscribe
     },
     designEditor: (subscribe: Subscribe): Unsubscribe => {
       // Observe design editor stores map changes
@@ -1893,11 +2177,11 @@ class YSketchpadStore implements SketchpadStoreFull {
   deleted = {
     kit: (subscribe: Subscribe): Unsubscribe => {
       // Would need to observe kit document removal
-      return () => { }; // Placeholder
+      return () => {}; // Placeholder
     },
     designEditor: (subscribe: Subscribe): Unsubscribe => {
       // Would need to observe design editor removal
-      return () => { }; // Placeholder
+      return () => {}; // Placeholder
     },
   };
 
@@ -1938,7 +2222,7 @@ class YSketchpadStore implements SketchpadStoreFull {
     if (command === "semio.sketchpad.importKit") {
       const kitId = rest[0] as KitId;
       const url = rest[1] as string;
-      const kitStore = this.kits.get(kitId);
+      const kitStore = this.kits.get(kitIdToString(kitId));
       if (kitStore) {
         await kitStore.execute("semio.kit.import", url);
       }
@@ -2024,19 +2308,18 @@ const sketchpadCommands = {
     if (!kit.name) throw new Error("Kit name is required to create a kit.");
 
     const kitId = kitIdLikeToKitId(kit);
-    if (context.store.kits.has(kitId)) {
+    const kitIdStr = kitIdToString(kitId);
+    if (context.store.kits.has(kitIdStr)) {
       throw new Error(`Kit (${kitId.name}, ${kitId.version || ""}) already exists.`);
     }
 
     const yKitStore = new YKitStore(context.store, kit);
     const yKitDoc = new Y.Doc();
     yKitDoc.getMap("kit").set("data", yKitStore.yKit);
-    context.store.yKitDocs.set(kitId, yKitDoc);
-    context.store.kits.set(kitId, yKitStore);
+    context.store.yKitDocs.set(kitIdStr, yKitDoc);
+    context.store.kits.set(kitIdStr, yKitStore);
 
-    return {
-      diff: {},
-    };
+    return {};
   },
   "semio.sketchpad.createDesignEditor": (context: SketchpadCommandContext, id: DesignEditorId): SketchpadCommandResult => {
     return {
@@ -2244,6 +2527,7 @@ const kitCommands = {
         CREATE TABLE design ( name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, variant VARCHAR(64) NOT NULL, "view" VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, UNIQUE (name, variant, "view", kit_id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
         CREATE TABLE representation ( url VARCHAR(1024) NOT NULL, description VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, type_id INTEGER, FOREIGN KEY(type_id) REFERENCES type (id) );
         CREATE TABLE tag ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, representation_id INTEGER, FOREIGN KEY(representation_id) REFERENCES representation (id) );
+        CREATE TABLE concept ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, type_id INTEGER, design_id INTEGER, FOREIGN KEY(kit_id) REFERENCES kit (id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(design_id) REFERENCES design (id) );
         CREATE TABLE port ( description VARCHAR(512) NOT NULL, family VARCHAR(64) NOT NULL, t FLOAT NOT NULL, id INTEGER NOT NULL PRIMARY KEY, local_id VARCHAR(128), point_x FLOAT, point_y FLOAT, point_z FLOAT, direction_x FLOAT, direction_y FLOAT, direction_z FLOAT, type_id INTEGER, CONSTRAINT "Unique local_id" UNIQUE (local_id, type_id), FOREIGN KEY(type_id) REFERENCES type (id) );
         CREATE TABLE compatible_family ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, port_id INTEGER, FOREIGN KEY(port_id) REFERENCES port (id) );
         CREATE TABLE plane ( id INTEGER NOT NULL PRIMARY KEY, origin_x FLOAT, origin_y FLOAT, origin_z FLOAT, x_axis_x FLOAT, x_axis_y FLOAT, x_axis_z FLOAT, y_axis_x FLOAT, y_axis_y FLOAT, y_axis_z FLOAT );
@@ -2275,6 +2559,12 @@ const kitCommands = {
         kitStmt.free();
         const kitId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
         insertQualities(kit.attributes, "kit_id", kitId);
+        
+        if (kit.concepts) {
+          const conceptStmt = db.prepare('INSERT INTO concept (name, "order", kit_id) VALUES (?, ?, ?)');
+          kit.concepts.forEach((concept, index) => conceptStmt.run([concept, index, kitId]));
+          conceptStmt.free();
+        }
 
         if (kit.types) {
           const typeStmt = db.prepare("INSERT INTO type (name, description, icon, image, variant, unit, created, updated, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -2750,12 +3040,9 @@ function useSketchpadStore(id?: string): SketchpadStore {
   const storeId = scope?.id ?? id;
   if (!storeId) throw new Error("useSketchpad must be called within a SketchpadScopeProvider or be directly provided with an id");
   if (!stores.has(storeId)) throw new Error(`Sketchpad store was not found for id ${storeId}`);
-  const store = stores.get(storeId)!;
-  const state = useSyncExternalStore(
-    store.changed,
-    () => store.snapshot(),
-    () => store.snapshot(),
-  );
+  const store = useMemo(() => stores.get(storeId)!, [storeId]);
+  const getSnapshot = useMemo(() => () => store.snapshot(), [store]);
+  const state = useSyncExternalStore(store.changed, getSnapshot, getSnapshot);
   return store;
 }
 
@@ -2766,13 +3053,17 @@ export function useSketchpad<T>(selector?: (store: SketchpadStore) => T, id?: st
   const storeId = scope?.id ?? id;
   if (!storeId) throw new Error("useSketchpad must be called within a SketchpadScopeProvider or be directly provided with an id");
   if (!stores.has(storeId)) throw new Error(`Sketchpad store was not found for id ${storeId}`);
-  const store = stores.get(storeId)!;
+  const store = useMemo(() => stores.get(storeId)!, [storeId]);
+  const lastSnapshot = useRef<any>();
+  const getSnapshot = useCallback(() => {
+    const currentSnapshot = store.snapshot();
+    if (!lastSnapshot.current || JSON.stringify(lastSnapshot.current) !== JSON.stringify(currentSnapshot)) {
+      lastSnapshot.current = currentSnapshot;
+    }
+    return lastSnapshot.current;
+  }, [store]);
 
-  const state = useSyncExternalStore(
-    store.changed,
-    () => store.snapshot(),
-    () => store.snapshot(),
-  );
+  const state = useSyncExternalStore(store.changed, getSnapshot, getSnapshot);
 
   return selector ? selector(store) : store;
 }
@@ -2793,16 +3084,15 @@ export function useDesignEditor<T>(selector?: (store: DesignEditorStore) => T, k
   if (!resolvedKitId) throw new Error("useDesignEditor must be called within a KitScopeProvider or be directly provided with a kitId");
   if (!resolvedDesignId) throw new Error("useDesignEditor must be called within a DesignScopeProvider or be directly provided with a designId");
 
-  if (!store.designEditors.has(resolvedKitId)) throw new Error(`Design editor store not found for kit ${resolvedKitId.name}`);
-  const kitEditors = store.designEditors.get(resolvedKitId)!;
-  if (!kitEditors.has(resolvedDesignId)) throw new Error(`Design editor store not found for design ${resolvedDesignId.name}`);
-  const designEditor = kitEditors.get(resolvedDesignId)!;
+  const resolvedKitIdStr = kitIdToString(resolvedKitId);
+  const resolvedDesignIdStr = designIdToString(resolvedDesignId);
+  if (!store.designEditors.has(resolvedKitIdStr)) throw new Error(`Design editor store not found for kit ${resolvedKitId.name}`);
+  const kitEditors = store.designEditors.get(resolvedKitIdStr)!;
+  if (!kitEditors.has(resolvedDesignIdStr)) throw new Error(`Design editor store not found for design ${resolvedDesignId.name}`);
+  const designEditor = useMemo(() => kitEditors.get(resolvedDesignIdStr)!, [kitEditors, resolvedDesignIdStr]);
+  const getSnapshot = useMemo(() => () => designEditor.snapshot(), [designEditor]);
 
-  const state = useSyncExternalStore(
-    designEditor.changed,
-    () => designEditor.snapshot(),
-    () => designEditor.snapshot(),
-  );
+  const state = useSyncExternalStore(designEditor.changed, getSnapshot, getSnapshot);
   return selector ? selector(designEditor) : designEditor;
 }
 
@@ -2816,8 +3106,9 @@ export function useKitStore<T>(selector?: (store: KitStore) => T, id?: KitId): T
   const kitScope = useKitStoreScope();
   const kitId = kitScope?.id ?? id;
   if (!kitId) throw new Error("useKitStore must be called within a KitScopeProvider or be directly provided with an id");
-  if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kitStore = store.kits.get(kitId)!;
+  const kitIdStr = kitIdToString(kitId);
+  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kitStore = store.kits.get(kitIdStr)!;
   return selector ? selector(kitStore) : kitStore;
 }
 
@@ -2826,11 +3117,8 @@ export function useKit<T>(selector: (kit: Kit) => T): T;
 export function useKit<T>(selector: (kit: Kit) => T, id: KitId): T;
 export function useKit<T>(selector?: (kit: Kit) => T, id?: KitId): T | Kit {
   const kitStore = useKitStore();
-  const kit = useSyncExternalStore(
-    kitStore.changed,
-    () => kitStore.snapshot(),
-    () => kitStore.snapshot(),
-  );
+  const getSnapshot = useMemo(() => () => kitStore.snapshot(), [kitStore]);
+  const kit = useSyncExternalStore(kitStore.changed, getSnapshot, getSnapshot);
   return selector ? selector(kit as Kit) : (kit as Kit);
 }
 
@@ -2844,18 +3132,17 @@ export function useDesign<T>(selector?: (design: Design) => T, id?: DesignId): T
   const kitScope = useKitStoreScope();
   if (!kitScope) throw new Error("useDesign must be called within a KitScopeProvider");
   const kitId = kitScope.id;
-  if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kitStore = store.kits.get(kitId)!;
+  const kitIdStr = kitIdToString(kitId);
+  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kitStore = store.kits.get(kitIdStr)!;
   const designScope = useDesignScope();
   const designId = designScope?.id ?? id;
   if (!designId) throw new Error("useDesign must be called within a DesignScopeProvider or be directly provided with an id");
-  if (!kitStore.designs.has(designId)) throw new Error(`Design store not found for design ${designId}`);
-  const designStore = kitStore.designs.get(designId)!;
-  const state = useSyncExternalStore(
-    designStore.changed,
-    () => designStore.snapshot(),
-    () => designStore.snapshot(),
-  );
+  const designIdStr = designIdToString(designId);
+  if (!kitStore.designs.has(designIdStr)) throw new Error(`Design store not found for design ${designId}`);
+  const designStore = useMemo(() => kitStore.designs.get(designIdStr)!, [kitStore, designIdStr]);
+  const getSnapshot = useMemo(() => () => designStore.snapshot(), [designStore]);
+  const state = useSyncExternalStore(designStore.changed, getSnapshot, getSnapshot);
   return selector ? selector(state) : state;
 }
 
@@ -2869,18 +3156,17 @@ export function useType<T>(selector?: (type: Type) => T, id?: TypeId): T | Type 
   const kitScope = useKitStoreScope();
   if (!kitScope) throw new Error("useType must be called within a KitScopeProvider");
   const kitId = kitScope.id;
-  if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kit = store.kits.get(kitId)!;
+  const kitIdStr = kitIdToString(kitId);
+  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kit = store.kits.get(kitIdStr)!;
   const typeScope = useTypeScope();
   const typeId = typeScope?.id ?? id;
   if (!typeId) throw new Error("useType must be called within a TypeScopeProvider or be directly provided with an id");
-  if (!kit.types.has(typeId)) throw new Error(`Type store not found for type ${typeId}`);
-  const typeStore = kit.types.get(typeId)!;
-  const state = useSyncExternalStore(
-    typeStore.changed,
-    () => typeStore.snapshot(),
-    () => typeStore.snapshot(),
-  );
+  const typeIdStr = typeIdToString(typeId);
+  if (!kit.types.has(typeIdStr)) throw new Error(`Type store not found for type ${typeId}`);
+  const typeStore = useMemo(() => kit.types.get(typeIdStr)!, [kit, typeIdStr]);
+  const getSnapshot = useMemo(() => () => typeStore.snapshot(), [typeStore]);
+  const state = useSyncExternalStore(typeStore.changed, getSnapshot, getSnapshot);
   return selector ? selector(state) : state;
 }
 
@@ -2894,23 +3180,23 @@ export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId): T | P
   const kitScope = useKitStoreScope();
   if (!kitScope) throw new Error("usePiece must be called within a KitScopeProvider");
   const kitId = kitScope.id;
-  if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kit = store.kits.get(kitId)!;
+  const kitIdStr = kitIdToString(kitId);
+  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kit = store.kits.get(kitIdStr)!;
   const designScope = useDesignScope();
   if (!designScope) throw new Error("usePiece must be called within a DesignScopeProvider");
   const designId = designScope.id;
-  if (!kit.designs.has(designId)) throw new Error(`Design store not found for design ${designId}`);
-  const design = kit.designs.get(designId)!;
+  const designIdStr = designIdToString(designId);
+  if (!kit.designs.has(designIdStr)) throw new Error(`Design store not found for design ${designId}`);
+  const design = kit.designs.get(designIdStr)!;
   const pieceScope = usePieceScope();
   const pieceId = pieceScope?.id ?? id;
   if (!pieceId) throw new Error("usePiece must be called within a PieceScopeProvider or be directly provided with an id");
-  if (!design.pieces.has(pieceId)) throw new Error(`Piece store not found for piece ${pieceId}`);
-  const pieceStore = design.pieces.get(pieceId)!;
-  const state = useSyncExternalStore(
-    pieceStore.changed,
-    () => pieceStore.snapshot(),
-    () => pieceStore.snapshot(),
-  );
+  const pieceIdStr = pieceIdToString(pieceId);
+  if (!design.pieces.has(pieceIdStr)) throw new Error(`Piece store not found for piece ${pieceId}`);
+  const pieceStore = useMemo(() => design.pieces.get(pieceIdStr)!, [design, pieceIdStr]);
+  const getSnapshot = useMemo(() => () => pieceStore.snapshot(), [pieceStore]);
+  const state = useSyncExternalStore(pieceStore.changed, getSnapshot, getSnapshot);
   return selector ? selector(state) : state;
 }
 
@@ -2924,23 +3210,23 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
   const kitScope = useKitStoreScope();
   if (!kitScope) throw new Error("useConnection must be called within a KitScopeProvider");
   const kitId = kitScope.id;
-  if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kit = store.kits.get(kitId)!;
+  const kitIdStr = kitIdToString(kitId);
+  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kit = store.kits.get(kitIdStr)!;
   const designScope = useDesignScope();
   if (!designScope) throw new Error("useConnection must be called within a DesignScopeProvider");
   const designId = designScope.id;
-  if (!kit.designs.has(designId)) throw new Error(`Design store not found for design ${designId}`);
-  const design = kit.designs.get(designId)!;
+  const designIdStr = designIdToString(designId);
+  if (!kit.designs.has(designIdStr)) throw new Error(`Design store not found for design ${designId}`);
+  const design = kit.designs.get(designIdStr)!;
   const connectionScope = useConnectionScope();
   const connectionId = connectionScope?.id ?? id;
   if (!connectionId) throw new Error("useConnection must be called within a ConnectionScopeProvider or be directly provided with an id");
-  if (!design.connections.has(connectionId)) throw new Error(`Connection store not found for connection ${connectionId}`);
-  const connectionStore = design.connections.get(connectionId)!;
-  const state = useSyncExternalStore(
-    connectionStore.changed,
-    () => connectionStore.snapshot(),
-    () => connectionStore.snapshot(),
-  );
+  const connectionIdStr = connectionIdToString(connectionId);
+  if (!design.connections.has(connectionIdStr)) throw new Error(`Connection store not found for connection ${connectionId}`);
+  const connectionStore = useMemo(() => design.connections.get(connectionIdStr)!, [design, connectionIdStr]);
+  const getSnapshot = useMemo(() => () => connectionStore.snapshot(), [connectionStore]);
+  const state = useSyncExternalStore(connectionStore.changed, getSnapshot, getSnapshot);
   return selector ? selector(state) : state;
 }
 
@@ -2954,23 +3240,23 @@ export function usePort<T>(selector?: (port: Port) => T, id?: PortId): T | Port 
   const kitScope = useKitStoreScope();
   if (!kitScope) throw new Error("usePort must be called within a KitScopeProvider");
   const kitId = kitScope.id;
-  if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kit = store.kits.get(kitId)!;
+  const kitIdStr = kitIdToString(kitId);
+  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kit = store.kits.get(kitIdStr)!;
   const typeScope = useTypeScope();
   if (!typeScope) throw new Error("usePort must be called within a TypeScopeProvider");
   const typeId = typeScope.id;
-  if (!kit.types.has(typeId)) throw new Error(`Type store not found for type ${typeId}`);
-  const type = kit.types.get(typeId)!;
+  const typeIdStr = typeIdToString(typeId);
+  if (!kit.types.has(typeIdStr)) throw new Error(`Type store not found for type ${typeId}`);
+  const type = kit.types.get(typeIdStr)!;
   const portScope = usePortScope();
   const portId = portScope?.id ?? id;
   if (!portId) throw new Error("usePort must be called within a PortScopeProvider or be directly provided with an id");
-  if (!type.ports.has(portId)) throw new Error(`Port store not found for port ${portId}`);
-  const portStore = type.ports.get(portId)!;
-  const state = useSyncExternalStore(
-    portStore.changed,
-    () => portStore.snapshot(),
-    () => portStore.snapshot(),
-  );
+  const portIdStr = portIdToString(portId);
+  if (!type.ports.has(portIdStr)) throw new Error(`Port store not found for port ${portId}`);
+  const portStore = useMemo(() => type.ports.get(portIdStr)!, [type, portIdStr]);
+  const getSnapshot = useMemo(() => () => portStore.snapshot(), [portStore]);
+  const state = useSyncExternalStore(portStore.changed, getSnapshot, getSnapshot);
   return selector ? selector(state) : state;
 }
 
@@ -2984,23 +3270,23 @@ export function useRepresentation<T>(selector?: (representation: Representation)
   const kitScope = useKitStoreScope();
   if (!kitScope) throw new Error("useRepresentation must be called within a KitScopeProvider");
   const kitId = kitScope.id;
-  if (!store.kits.has(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kit = store.kits.get(kitId)!;
+  const kitIdStr = kitIdToString(kitId);
+  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kit = store.kits.get(kitIdStr)!;
   const typeScope = useTypeScope();
   if (!typeScope) throw new Error("useRepresentation must be called within a TypeScopeProvider");
   const typeId = typeScope.id;
-  if (!kit.types.has(typeId)) throw new Error(`Type store not found for type ${typeId}`);
-  const typeStore = kit.types.get(typeId)!;
+  const typeIdStr = typeIdToString(typeId);
+  if (!kit.types.has(typeIdStr)) throw new Error(`Type store not found for type ${typeId}`);
+  const typeStore = kit.types.get(typeIdStr)!;
   const representationScope = useRepresentationScope();
   const representationId = representationScope?.id ?? id;
   if (!representationId) throw new Error("useRepresentation must be called within a RepresentationScopeProvider or be directly provided with an id");
-  if (!typeStore.representations.has(representationId)) throw new Error(`Representation store not found for representation ${representationId}`);
-  const representationStore = typeStore.representations.get(representationId)!;
-  const state = useSyncExternalStore(
-    representationStore.changed,
-    () => representationStore.snapshot(),
-    () => representationStore.snapshot(),
-  );
+  const representationIdStr = representationIdToString(representationId);
+  if (!typeStore.representations.has(representationIdStr)) throw new Error(`Representation store not found for representation ${representationId}`);
+  const representationStore = useMemo(() => typeStore.representations.get(representationIdStr)!, [typeStore, representationIdStr]);
+  const getSnapshot = useMemo(() => () => representationStore.snapshot(), [representationStore]);
+  const state = useSyncExternalStore(representationStore.changed, getSnapshot, getSnapshot);
   return selector ? selector(state) : state;
 }
 
@@ -3027,23 +3313,33 @@ export function useDesigns(): DesignId[] {
   const kit = useKit();
   return kit.designs
     ? kit.designs.map((design) => ({
-      name: design.name,
-      variant: design.variant,
-      view: design.view,
-    }))
+        name: design.name,
+        variant: design.variant,
+        view: design.view,
+      }))
     : [];
 }
 
-export function useCommands() {
-  // return the commands of the active editor
+export function useSketchpadCommands() {
   const designEditor = useDesignEditor();
-  const kitStore = useKitStore();
   return {
-    // State management commands
     setMode: (mode: Mode) => designEditor.execute("semio.designEditor.setMode", mode),
     setTheme: (theme: Theme) => designEditor.execute("semio.designEditor.setTheme", theme),
     setLayout: (layout: Layout) => designEditor.execute("semio.designEditor.setLayout", layout),
+  };
+}
 
+export function useKitCommands() {
+  const kitStore = useKitStore();
+  return {
+    importKit: (url: string) => kitStore.execute("semio.kit.import", url),
+    exportKit: () => kitStore.execute("semio.kit.export"),
+  };
+}
+
+export function useDesignEditorCommands() {
+  const designEditor = useDesignEditor();
+  return {
     // Transaction commands
     startTransaction: () => designEditor.execute("semio.designEditor.startTransaction"),
     finalizeTransaction: () => designEditor.execute("semio.designEditor.finalizeTransaction"),
@@ -3084,15 +3380,10 @@ export function useCommands() {
     toggleDiagramFullscreen: () => designEditor.execute("semio.designEditor.toggleDiagramFullscreen"),
     toggleModelFullscreen: () => designEditor.execute("semio.designEditor.toggleModelFullscreen"),
 
-    // Kit operations
-    importKit: (url: string) => kitStore.execute("semio.kit.import", url),
-    exportKit: () => kitStore.execute("semio.kit.export"),
-
     // Complex operations
     executeCommand: (command: string, ...args: any[]) => designEditor.execute(command, ...args),
   };
 }
-
 // Design editor state hooks
 export function useSelection(): DesignEditorSelection {
   return useDesignEditor((store) => store.snapshot().selection);

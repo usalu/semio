@@ -5,7 +5,12 @@ An ecosystem for designing kit-of-parts architecture together.
 # File Structure
 
 ├── .claude
+│ └── settings.json
 ├── .cursor
+│ ├── rules
+│ │ ├── js-core.mdc # js/core/**/_._
+│ │ ├── js.mdc # js/**/_._
+│ │ └── repo.mdc # \*_/_.\*
 ├── .github
 │ ├── chatmodes
 │ └── workflows
@@ -24,6 +29,9 @@ An ecosystem for designing kit-of-parts architecture together.
 │ ├── models
 │ └── semio
 ├── engineering
+│ ├── dataarchitecture.pu # blueprint for sql schemas
+│ ├── interfacearchitecture.txt # blueprint for json-based (rest api, graphql api, copy&paste) schemas
+│ └── softwarearchitecture.txt # blueprint for object-oriented code
 ├── examples
 │ ├── geometry
 │ ├── hello-semio
@@ -34,6 +42,10 @@ An ecosystem for designing kit-of-parts architecture together.
 ├── js
 │ ├── ai
 │ ├── core
+│ │ ├── Semio.cs
+│ │ ├── components
+│ │ │ └── ui
+│ │ │ │ └── sketchpad
 │ ├── docs
 │ ├── play
 │ ├── playground
@@ -43,19 +55,32 @@ An ecosystem for designing kit-of-parts architecture together.
 ├── meta
 ├── net
 │ ├── Semio
+│ │ ├── Semio.cs
 │ │ ├── UserObjects
 │ │ │ ├── github
 │ │ │ ├── gitlab
 │ │ │ ├── monoceros
 │ │ │ ├── semio
 │ │ │ └── wasp
+│ ├── Semio.Grasshopper
+│ │ └── Semio.Grasshopper.cs
 │ ├── Semio.Grasshopper.Tests
 │ └── Semio.Tests
 ├── rb
 ├── rdf
 ├── scripts
 ├── sqlite
-└── yak
+├── yak
+├── .gitignore
+├── .gitmodules
+├── .prettierignore
+├── .prettierrc.json
+├── CLAUDE.md
+├── nx.json # Nx targets and plugin configs
+├── package-lock.json # All javascript dependencies
+├── package.json # Monorepo and workspace setup
+├── powershell.ps1 # General Powershell utility
+└── README.md
 
 # Guidelines
 

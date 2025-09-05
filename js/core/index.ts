@@ -20,13 +20,13 @@
 // #endregion
 
 // #region Components
-export { default as Console, commandRegistry as inkCommandRegistry } from "./components/ui/Console";
-export { default as DesignEditor } from "./components/ui/DesignEditor";
-export { default as Diagram } from "./components/ui/Diagram";
+export { default as GrasshopperCatalogue } from "../docs/src/components/GrasshopperCatalogue";
 export { default as File } from "./components/ui/File";
-export { default as GrasshopperCatalogue } from "./components/ui/GrasshopperCatalogue";
-export { default as Model } from "./components/ui/Model";
-export { default as Sketchpad } from "./components/ui/Sketchpad";
+export { default as Console, commandRegistry as inkCommandRegistry } from "./components/ui/sketchpad/Console";
+export { default as DesignEditor } from "./components/ui/sketchpad/DesignEditor";
+export { default as Diagram } from "./components/ui/sketchpad/Diagram";
+export { default as Model } from "./components/ui/sketchpad/Model";
+export { default as Sketchpad } from "./components/ui/sketchpad/Sketchpad";
 // #endregion
 
 // #region Utils
@@ -148,13 +148,13 @@ export type {
 export {
   ConnectionScopeProvider, DesignEditorScopeProvider, DesignScopeProvider, KitScopeProvider, PieceScopeProvider, PortypeScopeProvider, RepresentationScopeProvider,
   // Context providers
-  SketchpadScopeProvider, TypeScopeProvider, useCommands, useConnection, useDesign, useDesignEditor, useDesignId, useDesigns,
+  SketchpadScopeProvider, TypeScopeProvider, useConnection, useDesign, useDesignEditor, useDesignEditorCommands, useDesignId, useDesigns,
   // Design Editor hooks
-  useDiff, useFileUrls, useFullscreen, useKit, useLayout,
+  useDiff, useFileUrls, useFullscreen, useKit, useKitCommands, useLayout,
   // Concise hooks
   useMode, useOthers, usePiece, usePort, useRepresentation, useSelection,
   // Scope hooks
-  useSketchpad,
+  useSketchpad, useSketchpadCommands,
   // Core hooks
   useTheme, useType
 } from "./store";

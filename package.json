@@ -29,9 +29,8 @@
     "docs": "npx nx dev @semio/docs"
   },
   "devDependencies": {
-    "@nx/eslint": "^20.8.2",
-    "@nxlv/python": "^20.15.1",
-    "nx": "20.6.2"
+    "@nxlv/python": "^21.2.0",
+    "nx": "^21.4.1"
   },
   "keywords": [
     "kit-of-parts",

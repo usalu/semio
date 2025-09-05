@@ -19,7 +19,7 @@
 
 // #endregion
 
-import { DesignId, Layout, Theme, useCommands, useDesignId, useDesigns, useLayout, useTheme } from "@semio/js";
+import { DesignId, Layout, Theme, useSketchpadCommands, useDesignId, useDesigns, useLayout, useTheme } from "@semio/js";
 import { AppWindow, Fingerprint, Home, Minus, Moon, Share2, Square, Sun, X } from "lucide-react";
 import { FC, ReactNode } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./Avatar";
@@ -39,7 +39,7 @@ interface NavbarProps {
 }
 
 const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
-  const { setTheme, setLayout } = useCommands();
+  const { setTheme, setLayout } = useSketchpadCommands();
   const layout = useLayout();
   const theme = useTheme();
   const designId = useDesignId();

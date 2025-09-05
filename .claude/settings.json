@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(net/Semio.Grasshopper/Semio.Grasshopper.cs)",
+      "Edit(net/Semio.Grasshopper/Semio.Grasshopper.cs)",
+      "Read(net\\Semio.Grasshopper\\Semio.Grasshopper.cs)",
+      "Edit(net\\Semio.Grasshopper\\Semio.Grasshopper.cs)",
+      "Read(net/Semio/Semio.cs)",
+      "Edit(net/Semio/Semio.cs)",
+      "Read(net\\Semio\\Semio.cs)",
+      "Edit(net\\Semio\\Semio.cs)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)"
+    ],
+    "ask": []
+  }
+}

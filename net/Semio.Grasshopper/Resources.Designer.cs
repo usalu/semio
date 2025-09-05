@@ -51,8 +51,8 @@ namespace Semio.Grasshopper
         internal static System.Drawing.Bitmap author_deserialize_24x24 =>
             (System.Drawing.Bitmap)ResourceManager.GetObject("author_deserialize_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap author_modfiy_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("author_modfiy_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap author_modify_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("author_modify_24x24", resourceCulture);
 
         internal static System.Drawing.Bitmap author_serialize_24x24 =>
             (System.Drawing.Bitmap)ResourceManager.GetObject("author_serialize_24x24", resourceCulture);
@@ -251,5 +251,242 @@ namespace Semio.Grasshopper
 
         internal static System.Drawing.Bitmap unit_convert_24x24 =>
             (System.Drawing.Bitmap)ResourceManager.GetObject("unit_convert_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap file_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("file_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap file_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("file_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap file_modify_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("file_modify_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap file_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("file_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap file_diff_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("file_diff_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap file_diff_modify_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("file_diff_modify_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap file_id_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("file_id_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap file_id_modify_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("file_id_modify_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap files_diff_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("files_diff_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap files_diff_modify_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("files_diff_modify_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap attribute_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("attribute_diff_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap attribute_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("attribute_diff_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap attribute_id_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("attribute_id_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap attribute_id_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("attribute_id_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap representation_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("representation_diff_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap representation_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("representation_diff_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap representations_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("representations_diff_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap representations_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("representations_diff_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap representation_id_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("representation_id_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap representation_id_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("representation_id_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap file_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("file_diff_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap file_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("file_diff_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap files_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("files_diff_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap files_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("files_diff_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap file_id_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("file_id_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap file_id_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("file_id_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap port_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("port_diff_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap port_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("port_diff_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap ports_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("ports_diff_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap ports_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("ports_diff_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap port_id_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("port_id_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap port_id_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("port_id_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap author_id_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("author_id_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap author_id_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("author_id_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap type_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("type_diff_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap type_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("type_diff_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap type_id_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("type_id_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap type_id_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("type_id_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap quality_id_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("quality_id_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap quality_id_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("quality_id_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap kit_id_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("kit_id_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap kit_id_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("kit_id_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap piece_id_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("piece_id_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap piece_id_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("piece_id_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap connection_id_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connection_id_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap connection_id_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connection_id_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap design_id_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("design_id_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap design_id_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("design_id_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap quality_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("quality_diff_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap quality_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("quality_diff_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap types_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("types_diff_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap types_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("types_diff_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap connection_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connection_diff_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap connection_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connection_diff_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap connections_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connections_diff_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap connections_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("connections_diff_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap design_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("design_diff_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap design_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("design_diff_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap designs_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("designs_diff_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap designs_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("designs_diff_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap kit_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("kit_diff_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap kit_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("kit_diff_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap kits_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("kits_diff_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap kits_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("kits_diff_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap piece_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("piece_diff_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap piece_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("piece_diff_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap pieces_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("pieces_diff_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap pieces_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("pieces_diff_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap side_diff_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("side_diff_serialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap side_diff_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("side_diff_deserialize_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap benchmark_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("benchmark_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap prop_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("prop_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap stat_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("stat_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap quality_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("quality_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap layer_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("layer_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap group_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("group_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap point_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("point_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap vector_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("vector_24x24", resourceCulture);
+
+        internal static System.Drawing.Bitmap plane_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("plane_24x24", resourceCulture);
     }
 }

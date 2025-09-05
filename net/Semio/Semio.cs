@@ -114,19 +114,19 @@ public enum EncodeMode
 public static class Utility
 {
     public static string Normalize(string val) => string.IsNullOrEmpty(val) ? "" : val;
-    
+
     public static float Jaccard(IEnumerable<string> a, IEnumerable<string> b)
     {
         var listA = a?.ToList() ?? new List<string>();
         var listB = b?.ToList() ?? new List<string>();
-        
+
         if (listA.Count == 0 && listB.Count == 0) return 1f;
-        
+
         var setA = new HashSet<string>(listA);
         var setB = new HashSet<string>(listB);
         var intersection = setA.Intersect(setB).Count();
         var union = setA.Union(setB).Count();
-        
+
         if (union == 0) return 0f;
         return (float)intersection / union;
     }
@@ -215,13 +215,13 @@ public static class Utility
         else
         {
             var osAwareUrl = url.Replace("/", Path.DirectorySeparatorChar.ToString());
-            content = File.ReadAllBytes(osAwareUrl);
+            content = System.IO.File.ReadAllBytes(osAwareUrl);
             mime = ParseMimeFromUrl(osAwareUrl);
         }
         return $"data:{mime};base64,{Convert.ToBase64String(content)}";
     }
 
-    public static string ReadAndEncode(string filename) => $"data:{ParseMimeFromUrl(filename)};base64,{Convert.ToBase64String(File.ReadAllBytes(filename))}";
+    public static string ReadAndEncode(string filename) => $"data:{ParseMimeFromUrl(filename)};base64,{Convert.ToBase64String(System.IO.File.ReadAllBytes(filename))}";
     public static string Encode(string text, EncodeMode mode = EncodeMode.Urlsafe,
         Tuple<List<string>, List<string>>? replace = null)
     {
@@ -1474,9 +1474,9 @@ public class Expression
 
 #region Modeling
 
-public abstract class ConceptAttribute : System.Attribute
+public abstract class MetaAttribute : System.Attribute
 {
-    public ConceptAttribute(string emoji, string code, string abbreviation, string description)
+    public MetaAttribute(string emoji, string code, string abbreviation, string description)
     {
         Emoji = emoji;
         Code = code;
@@ -1491,11 +1491,19 @@ public abstract class ConceptAttribute : System.Attribute
 }
 
 [AttributeUsage(AttributeTargets.Class)]
-public class ModelAttribute : ConceptAttribute
+public class ModelAttribute : MetaAttribute
 {
     public ModelAttribute(string emoji, string code, string abbreviation, string description)
         : base(emoji, code,
             abbreviation, description)
+    { }
+}
+
+[AttributeUsage(AttributeTargets.Enum)]
+public class EnumAttribute : MetaAttribute
+{
+    public EnumAttribute(string emoji, string code, string abbreviation, string description)
+        : base(emoji, code, abbreviation, description)
     { }
 }
 
@@ -1507,7 +1515,7 @@ public enum PropImportance
 }
 
 [AttributeUsage(AttributeTargets.Property)]
-public abstract class PropAttribute : ConceptAttribute
+public abstract class PropAttribute : MetaAttribute
 {
     public PropAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance, bool isDefaultValid, bool skipValidation) : base(emoji, code, abbreviation, description)
         => (Importance, IsDefaultValid, SkipValidation) = (importance, isDefaultValid, skipValidation);
@@ -1554,6 +1562,14 @@ public class UrlAttribute : TextAttribute
     public UrlAttribute(string emoji, string code, string abbreviation, string description,
         PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = false, bool skipValidation = false) :
         base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, Constants.UrlLengthLimit)
+    { }
+}
+
+public class ColorAttribute : TextAttribute
+{
+    public ColorAttribute(string emoji, string code, string abbreviation, string description,
+        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
+        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, 7)
     { }
 }
 
@@ -1796,6 +1812,41 @@ public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
 
 #region Models
 
+
+[Model("🔐", "AI", "AtI", "The ID of the attribute.")]
+public class AttributeId : Model<AttributeId>
+{
+    [Name("🔑", "Ke?", "Key?", "The optional key of the attribute.")]
+    public string Key { get; set; } = "";
+
+    public static implicit operator AttributeId(Attribute attribute) => new() { Key = attribute.Key };
+    public static implicit operator AttributeId(AttributeDiff diff) => new() { Key = diff.Key };
+}
+
+[Model("🔐", "AD", "ADf", "A diff for attributes.")]
+public class AttributeDiff : Model<AttributeDiff>
+{
+    [Name("🔑", "Ke?", "Key?", "The optional key of the attribute.")]
+    public string Key { get; set; } = "";
+    [Description("🔢", "Vl?", "Val?", "The optional value of the attribute.")]
+    public string Value { get; set; } = "";
+    [Description("📖", "Df?", "Def?", "The optional definition of the attribute.")]
+    public string Definition { get; set; } = "";
+
+    public static implicit operator AttributeDiff(AttributeId id) => new() { Key = id.Key };
+    public static implicit operator AttributeDiff(Attribute attribute) => new() { Key = attribute.Key, Value = attribute.Value, Definition = attribute.Definition };
+
+    public AttributeDiff MergeDiff(AttributeDiff other)
+    {
+        return new AttributeDiff
+        {
+            Key = string.IsNullOrEmpty(other.Key) ? Key : other.Key,
+            Value = string.IsNullOrEmpty(other.Value) ? Value : other.Value,
+            Definition = string.IsNullOrEmpty(other.Definition) ? Definition : other.Definition
+        };
+    }
+}
+
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-attribute-"/>
 /// </summary>
@@ -1811,6 +1862,9 @@ public class Attribute : Model<Attribute>
     [Description("📖", "Df?", "Def?", "The optional definition [ text | uri ] of the attribute.")]
     public string Definition { get; set; } = "";
 
+    public static implicit operator Attribute(AttributeId id) => new() { Key = id.Key };
+    public static implicit operator Attribute(AttributeDiff diff) => new() { Key = diff.Key, Value = diff.Value, Definition = diff.Definition };
+
     public Attribute ApplyDiff(AttributeDiff diff)
     {
         return new Attribute
@@ -1820,7 +1874,6 @@ public class Attribute : Model<Attribute>
             Definition = !string.IsNullOrEmpty(diff.Definition) ? diff.Definition : Definition
         };
     }
-
     public AttributeDiff CreateDiff()
     {
         return new AttributeDiff
@@ -1830,9 +1883,6 @@ public class Attribute : Model<Attribute>
             Definition = Definition
         };
     }
-
-
-
     public AttributeDiff InverseDiff(AttributeDiff appliedDiff)
     {
         return new AttributeDiff
@@ -1845,32 +1895,8 @@ public class Attribute : Model<Attribute>
 
     public string ToIdString() => $"{Key}";
     public string ToHumanIdString() => $"{ToIdString()}";
-    public string ToId() => ToIdString();
-    public string ToHumanId() => ToHumanIdString();
     public override string ToString() => $"Atr({ToHumanIdString()})";
 }
-
-[Model("🔐", "AD", "ADf", "A diff for attributes.")]
-public class AttributeDiff : Model<AttributeDiff>
-{
-    [Name("🔑", "Ke?", "Key?", "The optional key of the attribute.")]
-    public string Key { get; set; } = "";
-    [Description("🔢", "Vl?", "Val?", "The optional value of the attribute.")]
-    public string Value { get; set; } = "";
-    [Description("📖", "Df?", "Def?", "The optional definition of the attribute.")]
-    public string Definition { get; set; } = "";
-
-    public AttributeDiff MergeDiff(AttributeDiff other)
-    {
-        return new AttributeDiff
-        {
-            Key = string.IsNullOrEmpty(other.Key) ? Key : other.Key,
-            Value = string.IsNullOrEmpty(other.Value) ? Value : other.Value,
-            Definition = string.IsNullOrEmpty(other.Definition) ? Definition : other.Definition
-        };
-    }
-}
-
 
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-benchmark-"/>
@@ -1893,6 +1919,7 @@ public class Benchmark : Model<Benchmark>
 }
 
 [Flags]
+[Enum("🏷️", "QK", "QlK", "The kind of quality indicating its scope and applicability.")]
 public enum QualityKind
 {
     General = 0,
@@ -1911,8 +1938,50 @@ public class QualityId : Model<QualityId>
 {
     [Id("🔑", "Ke", "Key", "The key of the quality.")]
     public string Key { get; set; } = "";
-    
+
     public static implicit operator QualityId(Quality quality) => new() { Key = quality.Key };
+    public static implicit operator QualityId(QualityDiff diff) => new() { Key = diff.Key };
+}
+
+[Model("📊", "QD", "QDf", "A diff for qualities.")]
+public class QualityDiff : Model<QualityDiff>
+{
+    [Id("🔑", "Ke", "Key", "The key of the quality.")]
+    public string Key { get; set; } = "";
+    [Name("📛", "Nm", "Name", "The name of the quality.", PropImportance.REQUIRED)]
+    public string Name { get; set; } = "";
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the quality.")]
+    public string Description { get; set; } = "";
+    [Url("🔗", "Ur?", "Uri?", "The Unique Resource Identifier (URI) of the quality.")]
+    public string Uri { get; set; } = "";
+    [FalseOrTrue("🔢", "Sc?", "Sc?", "Whether the quality is scalable.")]
+    public bool Scalable { get; set; } = false;
+    [Name("🔢", "Kd", "Kn", "The kind of the quality.")]
+    public QualityKind Kind { get; set; } = QualityKind.General;
+    [Name("Ⓜ️", "SI?", "SI?", "The optional default SI unit of the quality.")]
+    public string SI { get; set; } = "";
+    [Name("🦶", "Im?", "Imp?", "The optional default imperial unit of the quality.")]
+    public string Imperial { get; set; } = "";
+    [NumberProp("⬇️", "Mi?", "Min?", "The optional minimum value of the quality.")]
+    public float Min { get; set; } = 0;
+    [FalseOrTrue("⬇️", "MiE?", "MiE?", "Whether the minimum value is excluded from the range.")]
+    public bool MinExcluded { get; set; } = true;
+    [NumberProp("⬆️", "Mx?", "Max?", "The optional maximum value of the quality.")]
+    public float Max { get; set; } = 0;
+    [FalseOrTrue("⬆️", "MxE?", "MxE?", "Whether the maximum value is excluded from the range.")]
+    public bool MaxExcluded { get; set; } = true;
+    [NumberProp("Ⓜ️", "Dl?", "Dfl?", "The optional default value of the quality. Either a default value or a formula can be set.")]
+    public float Default { get; set; } = 0;
+    [ModelProp("🟰", "Fo?", "For?", "The optional formula of the quality.")]
+    public string Formula { get; set; } = "";
+    [ModelProp("🔢", "Bm*", "Bmk*", "The optional benchmarks of the quality.", PropImportance.OPTIONAL)]
+    public List<Benchmark> Benchmarks { get; set; } = new();
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the quality.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
+
+    public static implicit operator QualityDiff(QualityId quality) => new() { Key = quality.Key };
+
+    public static implicit operator QualityDiff(Quality quality) => new() { Key = quality.Key, Name = quality.Name, Description = quality.Description, Uri = quality.Uri, Scalable = quality.Scalable, Kind = quality.Kind, SI = quality.SI, Imperial = quality.Imperial, Min = quality.Min, MinExcluded = quality.MinExcluded, Max = quality.Max, MaxExcluded = quality.MaxExcluded, Default = quality.Default, Formula = quality.Formula, Benchmarks = quality.Benchmarks, Attributes = quality.Attributes };
 }
 
 /// <summary>
@@ -1953,8 +2022,28 @@ public class Quality : Model<Quality>
     public List<Benchmark> Benchmarks { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the quality.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
-    
+
     public static implicit operator Quality(QualityId id) => new() { Key = id.Key };
+    public static implicit operator Quality(QualityDiff diff) => new()
+    {
+        Key = diff.Key,
+        Name = diff.Name,
+        Description = diff.Description,
+        Uri = diff.Uri,
+        Scalable = diff.Scalable,
+        Kind = diff.Kind,
+        SI = diff.SI,
+        Imperial = diff.Imperial,
+        Min = diff.Min,
+        MinExcluded = diff.MinExcluded,
+        Max = diff.Max,
+        MaxExcluded = diff.MaxExcluded,
+        Default = diff.Default,
+        Formula = diff.Formula,
+        Benchmarks = diff.Benchmarks,
+        Attributes = diff.Attributes
+    };
+
 }
 
 /// <summary>
@@ -1991,6 +2080,46 @@ public class Stat : Model<Stat>
     public float Max { get; set; } = 0;
     [FalseOrTrue("⬆️", "MxE?", "MxE?", "Whether the maximum value is excluded from the range.")]
     public bool MaxExcluded { get; set; } = false;
+}
+
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-layer-"/>
+/// </summary>
+[Model("📄", "Ly", "Lyr", "A layer for organizing design elements.")]
+public class Layer : Model<Layer>
+{
+    [Name("📛", "Nm", "Nam", "The name of the layer.", PropImportance.REQUIRED)]
+    public string Name { get; set; } = "";
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the layer.")]
+    public string Description { get; set; } = "";
+    [Color("🎨", "Cl?", "Col?", "The hex color of the layer.")]
+    public string Color { get; set; } = "";
+
+    public string ToIdString() => $"{Name}";
+    public string ToHumanIdString() => $"{Name}";
+    public override string ToString() => $"Lyr({ToHumanIdString()})";
+}
+
+/// <summary>
+/// <see href="https://github.com/usalu/semio#-group-"/>
+/// </summary>
+[Model("📁", "Gr", "Grp", "A group for organizing design elements.")]
+public class Group : Model<Group>
+{
+    [Name("📛", "Nm", "Nam", "The optional name of the group.", PropImportance.OPTIONAL)]
+    public string Name { get; set; } = "";
+    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the group.")]
+    public string Description { get; set; } = "";
+    [ModelProp("⭕", "Pc*", "Pcs*", "The pieces in the group.", PropImportance.REQUIRED)]
+    public List<PieceId> Pieces { get; set; } = new();
+    [Color("🎨", "Cl?", "Col?", "The optional hex color of the group.")]
+    public string Color { get; set; } = "";
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the group.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
+
+    public string ToIdString() => $"{Name}";
+    public string ToHumanIdString() => $"{Name}";
+    public override string ToString() => $"Grp({ToHumanIdString()})";
 }
 
 [Model("💾", "Rp", "Rep", "The identifier of a representation.")]
@@ -2133,7 +2262,7 @@ public class Representation : Model<Representation>
     public string ToIdString() => $"{string.Join(",", Tags.Select(t => Utility.Encode(t)))}";
 
     public string ToHumanIdString() => string.Join(", ", Tags);
-    
+
     public string ToId() => ToIdString();
     public string ToHumanId() => ToHumanIdString();
 
@@ -2150,13 +2279,13 @@ public class FileId : Model<FileId>
     public string ToId() => ToIdString();
     public string ToHumanId() => ToHumanIdString();
     public override string ToString() => $"FilId({ToHumanIdString()})";
-    
-    public static implicit operator FileId(SemioFile file) => new() { Url = file.Url };
+
+    public static implicit operator FileId(File file) => new() { Url = file.Url };
     public static implicit operator FileId(FileDiff diff) => new() { Url = diff.Url ?? "" };
 }
 
 [Model("📄", "Fl", "Fil", "A file with content.")]
-public class SemioFile : Model<SemioFile>
+public class File : Model<File>
 {
     [Url("🔗", "Ur", "Url", "The url of the file.", PropImportance.ID)]
     public string Url { get; set; } = "";
@@ -2171,9 +2300,9 @@ public class SemioFile : Model<SemioFile>
     public string ToId() => ToIdString();
     public string ToHumanId() => ToHumanIdString();
     public override string ToString() => $"Fil({ToHumanIdString()})";
-    
-    public static implicit operator SemioFile(FileId id) => new() { Url = id.Url };
-    public static implicit operator SemioFile(FileDiff diff) => new() { Url = diff.Url ?? "", Data = diff.Data ?? "", Size = diff.Size, Hash = diff.Hash ?? "" };
+
+    public static implicit operator File(FileId id) => new() { Url = id.Url };
+    public static implicit operator File(FileDiff diff) => new() { Url = diff.Url ?? "", Data = diff.Data ?? "", Size = diff.Size, Hash = diff.Hash ?? "" };
 }
 
 /// <summary>
@@ -2319,11 +2448,13 @@ public class PortDiff : Model<PortDiff>
     public Point? Point { get; set; }
     [ModelProp("➡️", "Dr?", "Drn?", "The optional direction of the port.", PropImportance.OPTIONAL)]
     public Vector? Direction { get; set; }
+    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the port.", PropImportance.OPTIONAL)]
+    public List<Prop> Props { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator PortDiff(PortId id) => new() { Id = id.Id };
-    public static implicit operator PortDiff(Port port) => new() { Id = port.Id, Description = port.Description, Family = port.Family, Mandatory = port.Mandatory, T = port.T, CompatibleFamilies = port.CompatibleFamilies, Point = port.Point, Direction = port.Direction, Attributes = port.Attributes };
+    public static implicit operator PortDiff(Port port) => new() { Id = port.Id, Description = port.Description, Family = port.Family, Mandatory = port.Mandatory, T = port.T, CompatibleFamilies = port.CompatibleFamilies, Point = port.Point, Direction = port.Direction, Props = port.Props, Attributes = port.Attributes };
 
     public PortDiff MergeDiff(PortDiff other)
     {
@@ -2337,6 +2468,7 @@ public class PortDiff : Model<PortDiff>
             CompatibleFamilies = other.CompatibleFamilies.Any() ? other.CompatibleFamilies : CompatibleFamilies,
             Point = other.Point ?? Point,
             Direction = other.Direction ?? Direction,
+            Props = other.Props.Any() ? other.Props : Props,
             Attributes = other.Attributes.Any() ? other.Attributes : Attributes
         };
     }
@@ -2403,7 +2535,7 @@ public class Port : Model<Port>
             CompatibleFamilies = diff.CompatibleFamilies.Any() ? diff.CompatibleFamilies : CompatibleFamilies,
             Point = diff.Point ?? Point,
             Direction = diff.Direction ?? Direction,
-            Props = Props,
+            Props = diff.Props.Any() ? diff.Props : Props,
             Attributes = diff.Attributes.Any() ? diff.Attributes : Attributes
         };
     }
@@ -2420,6 +2552,7 @@ public class Port : Model<Port>
             CompatibleFamilies = CompatibleFamilies,
             Point = Point,
             Direction = Direction,
+            Props = Props,
             Attributes = Attributes
         };
     }
@@ -2436,6 +2569,7 @@ public class Port : Model<Port>
             CompatibleFamilies = appliedDiff.CompatibleFamilies.Any() ? CompatibleFamilies : new List<string>(),
             Point = appliedDiff.Point != null ? Point : null,
             Direction = appliedDiff.Direction != null ? Direction : null,
+            Props = appliedDiff.Props.Any() ? Props : new List<Prop>(),
             Attributes = appliedDiff.Attributes.Any() ? Attributes : new List<Attribute>()
         };
     }
@@ -2480,7 +2614,7 @@ public class Port : Model<Port>
         var normalizedPortFamily = Utility.Normalize(Family);
         var normalizedOtherPortFamily = Utility.Normalize(otherPort.Family);
         if (normalizedPortFamily == "" || normalizedOtherPortFamily == "") return true;
-        return (CompatibleFamilies ?? new List<string>()).Contains(normalizedOtherPortFamily) || 
+        return (CompatibleFamilies ?? new List<string>()).Contains(normalizedOtherPortFamily) ||
                (otherPort.CompatibleFamilies ?? new List<string>()).Contains(normalizedPortFamily);
     }
 
@@ -2492,7 +2626,7 @@ public class Port : Model<Port>
     public string FindAttributeValue(string name, string defaultValue = "")
     {
         var attribute = Attributes?.FirstOrDefault(a => a.Key == name);
-        if (attribute == null && defaultValue == null) 
+        if (attribute == null && defaultValue == null)
             throw new InvalidOperationException($"Attribute {name} not found in port {Id}");
         return attribute?.Value ?? defaultValue;
     }
@@ -2501,7 +2635,7 @@ public class Port : Model<Port>
     {
         var attributes = new List<Attribute>(Attributes ?? new List<Attribute>());
         var existingIndex = attributes.FindIndex(a => a.Key == attribute.Key);
-        
+
         if (existingIndex >= 0)
             attributes[existingIndex] = attribute;
         else
@@ -2600,6 +2734,12 @@ public class TypeDiff : Model<TypeDiff>
     public int? Stock { get; set; }
     [FalseOrTrue("👻", "Vi?", "Vir?", "Whether the type is virtual.")]
     public bool? Virtual { get; set; }
+    [FalseOrTrue("📏", "Sc?", "Sca?", "Whether the type is scalable.")]
+    public bool? Scalable { get; set; }
+    [FalseOrTrue("🪞", "Mi?", "Mir?", "Whether the type is mirrorable.")]
+    public bool? Mirrorable { get; set; }
+    [Url("🔗", "Ur?", "Uri?", "The optional Unique Resource Identifier (URI) of the type.")]
+    public string Uri { get; set; } = "";
     [Name("Ⓜ️", "Ut?", "Unt?", "The optional length unit of the type.")]
     public string Unit { get; set; } = "";
     [ModelProp("📍", "Lo?", "Loc?", "The optional location of the type.", PropImportance.OPTIONAL)]
@@ -2612,6 +2752,8 @@ public class TypeDiff : Model<TypeDiff>
     public List<Author> Authors { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the type.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
+    [ModelProp("💡", "Co*", "Con*", "The optional concepts of the type.", PropImportance.OPTIONAL)]
+    public List<string> Concepts { get; set; } = new();
 
     public TypeDiff MergeDiff(TypeDiff other)
     {
@@ -2624,17 +2766,21 @@ public class TypeDiff : Model<TypeDiff>
             Variant = string.IsNullOrEmpty(other.Variant) ? Variant : other.Variant,
             Stock = other.Stock ?? Stock,
             Virtual = other.Virtual ?? Virtual,
+            Scalable = other.Scalable ?? Scalable,
+            Mirrorable = other.Mirrorable ?? Mirrorable,
+            Uri = string.IsNullOrEmpty(other.Uri) ? Uri : other.Uri,
             Unit = string.IsNullOrEmpty(other.Unit) ? Unit : other.Unit,
             Location = other.Location ?? Location,
             Representations = other.Representations.Any() ? other.Representations : Representations,
             Ports = other.Ports.Any() ? other.Ports : Ports,
             Authors = other.Authors.Any() ? other.Authors : Authors,
-            Attributes = other.Attributes.Any() ? other.Attributes : Attributes
+            Attributes = other.Attributes.Any() ? other.Attributes : Attributes,
+            Concepts = other.Concepts.Any() ? other.Concepts : Concepts
         };
     }
-    
+
     public static implicit operator TypeDiff(TypeId id) => new() { Name = id.Name, Variant = id.Variant };
-    public static implicit operator TypeDiff(Type type) => new() { Name = type.Name, Description = type.Description, Icon = type.Icon, Image = type.Image, Variant = type.Variant, Stock = type.Stock, Virtual = type.Virtual, Unit = type.Unit, Location = type.Location, Representations = type.Representations, Ports = type.Ports, Authors = type.Authors.Select(a => (Author)a).ToList(), Attributes = type.Attributes };
+    public static implicit operator TypeDiff(Type type) => new() { Name = type.Name, Description = type.Description, Icon = type.Icon, Image = type.Image, Variant = type.Variant, Stock = type.Stock, Virtual = type.Virtual, Scalable = type.Scalable, Mirrorable = type.Mirrorable, Uri = type.Uri, Unit = type.Unit, Location = type.Location, Representations = type.Representations, Ports = type.Ports, Authors = type.Authors.Select(a => (Author)a).ToList(), Attributes = type.Attributes, Concepts = type.Concepts };
 }
 
 [Model("📊", "TsD", "TsDf", "A diff for multiple types.")]
@@ -2670,6 +2816,12 @@ public class Type : Model<Type>
     public int Stock { get; set; } = 2147483647;
     [FalseOrTrue("👻", "Vi?", "Vir?", "Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.")]
     public bool Virtual { get; set; } = false;
+    [FalseOrTrue("📏", "Sc?", "Sca?", "Whether the type is scalable.")]
+    public bool Scalable { get; set; } = false;
+    [FalseOrTrue("🪞", "Mi?", "Mir?", "Whether the type is mirrorable.")]
+    public bool Mirrorable { get; set; } = false;
+    [Url("🔗", "Ur?", "Uri?", "The optional Unique Resource Identifier (URI) of the type.")]
+    public string Uri { get; set; } = "";
     [ModelProp("📍", "Lo?", "Loc?", "The optional location of the type.", PropImportance.OPTIONAL)]
     public Location? Location { get; set; }
     [Name("Ⓜ️", "Ut", "Unt", "The length unit of the point and the direction of the ports of the type.", PropImportance.REQUIRED)]
@@ -2684,6 +2836,8 @@ public class Type : Model<Type>
     public List<AuthorId> Authors { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the type.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
+    [ModelProp("💡", "Co*", "Con*", "The optional concepts of the type.", PropImportance.OPTIONAL)]
+    public List<string> Concepts { get; set; } = new();
 
     public string ToIdString() => $"{Name}#{Variant}";
 
@@ -2692,7 +2846,7 @@ public class Type : Model<Type>
     public override string ToString() => $"Typ({ToHumanIdString()})";
 
     public static implicit operator Type(TypeId id) => new() { Name = id.Name, Variant = id.Variant };
-    public static implicit operator Type(TypeDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Variant = diff.Variant ?? "", Stock = diff.Stock ?? 2147483647, Virtual = diff.Virtual ?? false, Unit = diff.Unit ?? "", Location = diff.Location, Representations = diff.Representations ?? new(), Ports = diff.Ports ?? new(), Authors = diff.Authors?.Select(a => (AuthorId)a).ToList() ?? new(), Attributes = diff.Attributes ?? new() };
+    public static implicit operator Type(TypeDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Variant = diff.Variant ?? "", Stock = diff.Stock ?? 2147483647, Virtual = diff.Virtual ?? false, Scalable = diff.Scalable ?? false, Mirrorable = diff.Mirrorable ?? false, Uri = diff.Uri ?? "", Unit = diff.Unit ?? "", Location = diff.Location, Representations = diff.Representations ?? new(), Ports = diff.Ports ?? new(), Authors = diff.Authors?.Select(a => (AuthorId)a).ToList() ?? new(), Attributes = diff.Attributes ?? new(), Concepts = diff.Concepts ?? new() };
     public static implicit operator string(Type type) => type.Name;
     public static implicit operator Type(string name) => new() { Name = name };
 
@@ -2707,12 +2861,16 @@ public class Type : Model<Type>
             Variant = string.IsNullOrEmpty(diff.Variant) ? Variant : diff.Variant,
             Stock = diff.Stock ?? Stock,
             Virtual = diff.Virtual ?? Virtual,
+            Scalable = diff.Scalable ?? Scalable,
+            Mirrorable = diff.Mirrorable ?? Mirrorable,
+            Uri = string.IsNullOrEmpty(diff.Uri) ? Uri : diff.Uri,
             Unit = string.IsNullOrEmpty(diff.Unit) ? Unit : diff.Unit,
             Location = diff.Location ?? Location,
             Representations = diff.Representations.Any() ? diff.Representations : Representations,
             Ports = diff.Ports.Any() ? diff.Ports : Ports,
             Authors = diff.Authors.Any() ? diff.Authors.Select(a => new AuthorId { Email = a.Email }).ToList() : Authors,
             Attributes = diff.Attributes.Any() ? diff.Attributes : Attributes,
+            Concepts = diff.Concepts.Any() ? diff.Concepts : Concepts,
             Props = Props
         };
     }
@@ -2728,12 +2886,16 @@ public class Type : Model<Type>
             Variant = Variant,
             Stock = Stock,
             Virtual = Virtual,
+            Scalable = Scalable,
+            Mirrorable = Mirrorable,
+            Uri = Uri,
             Unit = Unit,
             Location = Location,
             Representations = Representations,
             Ports = Ports,
             Authors = Authors.Select(a => new Author { Email = a.Email }).ToList(),
-            Attributes = Attributes
+            Attributes = Attributes,
+            Concepts = Concepts
         };
     }
 
@@ -2748,6 +2910,9 @@ public class Type : Model<Type>
             Variant = !string.IsNullOrEmpty(appliedDiff.Variant) ? Variant : "",
             Stock = appliedDiff.Stock.HasValue ? Stock : null,
             Virtual = appliedDiff.Virtual.HasValue ? Virtual : null,
+            Scalable = appliedDiff.Scalable.HasValue ? Scalable : null,
+            Mirrorable = appliedDiff.Mirrorable.HasValue ? Mirrorable : null,
+            Uri = !string.IsNullOrEmpty(appliedDiff.Uri) ? Uri : "",
             Unit = !string.IsNullOrEmpty(appliedDiff.Unit) ? Unit : "",
             Location = appliedDiff.Location != null ? Location : null,
             Representations = appliedDiff.Representations.Any() ? Representations : new List<Representation>(),
@@ -2831,7 +2996,7 @@ public class Type : Model<Type>
     public string FindAttributeValue(string name, string defaultValue = "")
     {
         var attribute = Attributes?.FirstOrDefault(a => a.Key == name);
-        if (attribute == null && defaultValue == null) 
+        if (attribute == null && defaultValue == null)
             throw new InvalidOperationException($"Attribute {name} not found in type {Name}");
         return attribute?.Value ?? defaultValue;
     }
@@ -2840,7 +3005,7 @@ public class Type : Model<Type>
     {
         var attributes = new List<Attribute>(Attributes ?? new List<Attribute>());
         var existingIndex = attributes.FindIndex(a => a.Key == attribute.Key);
-        
+
         if (existingIndex >= 0)
             attributes[existingIndex] = attribute;
         else
@@ -2911,7 +3076,7 @@ public class ConnectionDiff : Model<ConnectionDiff>
             Y = other.Y ?? Y
         };
     }
-    
+
     public static implicit operator ConnectionDiff(ConnectionId id) => new() { Connected = new SideDiff { Piece = new PieceDiff { Id = id.Connected.Piece.Id }, Port = new PortDiff { Id = id.Connected.Port.Id } }, Connecting = new SideDiff { Piece = new PieceDiff { Id = id.Connecting.Piece.Id }, Port = new PortDiff { Id = id.Connecting.Port.Id } } };
     public static implicit operator ConnectionDiff(Connection connection) => new() { Connected = new SideDiff { Piece = new PieceDiff { Id = connection.Connected.Piece.Id }, Port = new PortDiff { Id = connection.Connected.Port.Id } }, Connecting = new SideDiff { Piece = new PieceDiff { Id = connection.Connecting.Piece.Id }, Port = new PortDiff { Id = connection.Connecting.Port.Id } }, Description = connection.Description, Gap = connection.Gap, Shift = connection.Shift, Rise = connection.Rise, Rotation = connection.Rotation, Turn = connection.Turn, Tilt = connection.Tilt, X = connection.X, Y = connection.Y };
 }
@@ -2952,10 +3117,14 @@ public class DesignDiff : Model<DesignDiff>
     public PiecesDiff? Pieces { get; set; }
     [ModelProp("🔗", "Co*", "Cons*", "The optional connections diff for the design.", PropImportance.OPTIONAL)]
     public ConnectionsDiff? Connections { get; set; }
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
+    [ModelProp("�", "St*", "Stt*", "The optional stats of the design.", PropImportance.OPTIONAL)]
+    public List<Stat> Stats { get; set; } = new();
+    [ModelProp("�🔐", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
     [ModelProp("👥", "Au*", "Aut*", "The optional authors of the design.", PropImportance.OPTIONAL)]
     public List<Author> Authors { get; set; } = new();
+    [ModelProp("💡", "Co*", "Con*", "The optional concepts of the design.", PropImportance.OPTIONAL)]
+    public List<string> Concepts { get; set; } = new();
 
     public DesignDiff MergeDiff(DesignDiff other)
     {
@@ -2971,13 +3140,15 @@ public class DesignDiff : Model<DesignDiff>
             Unit = string.IsNullOrEmpty(other.Unit) ? Unit : other.Unit,
             Pieces = other.Pieces ?? Pieces,
             Connections = other.Connections ?? Connections,
+            Stats = other.Stats.Any() ? other.Stats : Stats,
             Attributes = other.Attributes.Any() ? other.Attributes : Attributes,
-            Authors = other.Authors.Any() ? other.Authors : Authors
+            Authors = other.Authors.Any() ? other.Authors : Authors,
+            Concepts = other.Concepts.Any() ? other.Concepts : Concepts
         };
     }
-    
+
     public static implicit operator DesignDiff(DesignId id) => new() { Name = id.Name, Variant = id.Variant, View = id.View };
-    public static implicit operator DesignDiff(Design design) => new() { Name = design.Name, Description = design.Description, Icon = design.Icon, Image = design.Image, Variant = design.Variant, View = design.View, Location = design.Location, Unit = design.Unit, Attributes = design.Attributes, Authors = design.Authors.Select(a => (Author)a).ToList() };
+    public static implicit operator DesignDiff(Design design) => new() { Name = design.Name, Description = design.Description, Icon = design.Icon, Image = design.Image, Variant = design.Variant, View = design.View, Location = design.Location, Unit = design.Unit, Stats = design.Stats, Attributes = design.Attributes, Authors = design.Authors.Select(a => (Author)a).ToList(), Concepts = design.Concepts };
 }
 
 [Model("📊", "DsD", "DsDf", "A diff for multiple designs.")]
@@ -3015,9 +3186,9 @@ public class FileDiff : Model<FileDiff>
             Hash = string.IsNullOrEmpty(other.Hash) ? Hash : other.Hash
         };
     }
-    
+
     public static implicit operator FileDiff(FileId id) => new() { Url = id.Url };
-    public static implicit operator FileDiff(SemioFile file) => new() { Url = file.Url, Data = file.Data, Size = file.Size, Hash = file.Hash };
+    public static implicit operator FileDiff(File file) => new() { Url = file.Url, Data = file.Data, Size = file.Size, Hash = file.Hash };
 }
 
 [Model("📊", "FsD", "FsDf", "A diff for multiple files.")]
@@ -3028,9 +3199,9 @@ public class FilesDiff : Model<FilesDiff>
     [ModelProp("✏️", "Up*", "Upd*", "The optional updated files.", PropImportance.OPTIONAL)]
     public List<FileDiff> Updated { get; set; } = new();
     [ModelProp("➕", "Ad*", "Add*", "The optional added files.", PropImportance.OPTIONAL)]
-    public List<SemioFile> Added { get; set; } = new();
+    public List<File> Added { get; set; } = new();
 
-    public static implicit operator FilesDiff(List<SemioFile> files) => new() { Updated = files.Select(f => (FileDiff)f).ToList() };
+    public static implicit operator FilesDiff(List<File> files) => new() { Updated = files.Select(f => (FileDiff)f).ToList() };
 }
 
 [Model("🗃️", "KD", "KDf", "A diff for kits.")]
@@ -3082,8 +3253,34 @@ public class KitDiff : Model<KitDiff>
             Attributes = other.Attributes.Any() ? other.Attributes : Attributes
         };
     }
-    
+
     public static implicit operator KitDiff(Kit kit) => new() { Name = kit.Name, Description = kit.Description, Icon = kit.Icon, Image = kit.Image, Preview = kit.Preview, Version = kit.Version, Remote = kit.Remote, Homepage = kit.Homepage, License = kit.License, Attributes = kit.Attributes };
+}
+
+[Model("🗃️", "KId", "KitId", "The local identifier of the kit.")]
+public class KitId : Model<KitId>
+{
+    [Name("📛", "Na", "Nam", "The name of the kit.", PropImportance.ID)]
+    public string Name { get; set; } = "";
+    public string ToIdString() => $"{Name}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"KitId({ToHumanIdString()})";
+
+    public static implicit operator KitId(Kit kit) => new() { Name = kit.Name };
+    public static implicit operator KitId(KitDiff diff) => new() { Name = diff.Name ?? "" };
+}
+
+[Model("📦", "KsD", "KsDf", "A diff for multiple kits.")]
+public class KitsDiff : Model<KitsDiff>
+{
+    [ModelProp("➖", "Rm*", "Rem*", "The optional removed kits.", PropImportance.OPTIONAL)]
+    public List<KitId> Removed { get; set; } = new();
+    [ModelProp("✏️", "Up*", "Upd*", "The optional updated kits.", PropImportance.OPTIONAL)]
+    public List<KitDiff> Updated { get; set; } = new();
+    [ModelProp("➕", "Ad*", "Add*", "The optional added kits.", PropImportance.OPTIONAL)]
+    public List<Kit> Added { get; set; } = new();
+
+    public static implicit operator KitsDiff(List<Kit> kits) => new() { Updated = kits.Select(k => (KitDiff)k).ToList() };
 }
 
 public enum DiffStatus
@@ -3105,7 +3302,7 @@ public class PieceId : Model<PieceId>
     public string ToIdString() => $"{Id}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Pce({ToHumanIdString()})";
-    
+
     public static implicit operator PieceId(PieceDiff diff) => new() { Id = diff.Id ?? "" };
     public static implicit operator PieceId(Piece piece) => new() { Id = piece.Id };
 }
@@ -3124,6 +3321,12 @@ public class PieceDiff : Model<PieceDiff>
     public Plane? Plane { get; set; }
     [ModelProp("📍", "Cn?", "Cnt?", "The optional center of the piece for the diagram.", PropImportance.OPTIONAL)]
     public DiagramPoint? Center { get; set; }
+    [Color("🎨", "Cl?", "Col?", "The optional hex color of the piece.")]
+    public string Color { get; set; } = "";
+    [NumberProp("⚖️", "Sc?", "Scl?", "The optional scale factor of the piece.", PropImportance.OPTIONAL)]
+    public float? Scale { get; set; }
+    [ModelProp("🪞", "Mp?", "Mir?", "The optional mirror plane of the piece.", PropImportance.OPTIONAL)]
+    public Plane? MirrorPlane { get; set; }
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the piece.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
@@ -3136,12 +3339,15 @@ public class PieceDiff : Model<PieceDiff>
             Description = string.IsNullOrEmpty(other.Description) ? Description : other.Description,
             Plane = other.Plane ?? Plane,
             Center = other.Center ?? Center,
+            Color = string.IsNullOrEmpty(other.Color) ? Color : other.Color,
+            Scale = other.Scale ?? Scale,
+            MirrorPlane = other.MirrorPlane ?? MirrorPlane,
             Attributes = other.Attributes.Any() ? other.Attributes : Attributes
         };
     }
-    
+
     public static implicit operator PieceDiff(PieceId id) => new() { Id = id.Id };
-    public static implicit operator PieceDiff(Piece piece) => new() { Id = piece.Id, Type = new TypeId { Name = piece.Type.Name, Variant = piece.Type.Variant }, Description = piece.Description, Plane = piece.Plane, Center = piece.Center, Attributes = piece.Attributes };
+    public static implicit operator PieceDiff(Piece piece) => new() { Id = piece.Id, Type = piece.Type, Description = piece.Description, Plane = piece.Plane, Center = piece.Center, Color = piece.Color, Scale = piece.Scale, MirrorPlane = piece.MirrorPlane, Attributes = piece.Attributes };
 }
 
 [Model("📊", "PsD", "PsDf", "A diff for multiple pieces.")]
@@ -3168,6 +3374,8 @@ public class SideDiff : Model<SideDiff>
     public PortId? Port { get; set; }
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the side.")]
     public string Description { get; set; } = "";
+
+    public static implicit operator SideDiff(Side side) => new() { Piece = side.Piece, DesignPiece = side.DesignPiece, Port = side.Port };
 
     public SideDiff MergeDiff(SideDiff other)
     {
@@ -3204,6 +3412,12 @@ public class Piece : Model<Piece>
     public bool Hidden { get; set; } = false;
     [FalseOrTrue("🔒", "Lk?", "Lck?", "Whether the piece is locked. A locked piece cannot be edited.")]
     public bool Locked { get; set; } = false;
+    [Color("🎨", "Cl?", "Col?", "The optional hex color of the piece.")]
+    public string Color { get; set; } = "";
+    [NumberProp("⚖️", "Sc?", "Scl?", "The optional scale factor of the piece.", PropImportance.OPTIONAL)]
+    public float Scale { get; set; } = 1.0f;
+    [ModelProp("🪞", "Mp?", "Mir?", "The optional mirror plane of the piece.", PropImportance.OPTIONAL)]
+    public Plane? MirrorPlane { get; set; }
     [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the piece.", PropImportance.OPTIONAL)]
     public List<Prop> Props { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the piece.", PropImportance.OPTIONAL)]
@@ -3213,7 +3427,7 @@ public class Piece : Model<Piece>
     public override string ToString() => $"Pce({ToHumanIdString()})";
 
     public static implicit operator Piece(PieceId id) => new() { Id = id.Id };
-    public static implicit operator Piece(PieceDiff diff) => new() { Id = diff.Id ?? "", Description = diff.Description ?? "", Type = diff.Type, Plane = diff.Plane, Center = diff.Center, Attributes = diff.Attributes ?? new() };
+    public static implicit operator Piece(PieceDiff diff) => new() { Id = diff.Id ?? "", Description = diff.Description ?? "", Type = diff.Type, Plane = diff.Plane, Center = diff.Center, Color = diff.Color ?? "", Scale = diff.Scale ?? 1.0f, MirrorPlane = diff.MirrorPlane, Attributes = diff.Attributes ?? new() };
     public static implicit operator string(Piece piece) => piece.Id;
     public static implicit operator Piece(string id) => new() { Id = id };
 
@@ -3229,6 +3443,9 @@ public class Piece : Model<Piece>
             Center = diff.Center ?? Center,
             Hidden = Hidden,
             Locked = Locked,
+            Color = string.IsNullOrEmpty(diff.Color) ? Color : diff.Color,
+            Scale = diff.Scale ?? Scale,
+            MirrorPlane = diff.MirrorPlane ?? MirrorPlane,
             Props = Props,
             Attributes = diff.Attributes.Any() ? diff.Attributes : Attributes
         };
@@ -3300,7 +3517,7 @@ public class Piece : Model<Piece>
     {
         var isPlaneSet = Plane != null;
         var isCenterSet = Center != null;
-        if (isPlaneSet != isCenterSet) 
+        if (isPlaneSet != isCenterSet)
             throw new InvalidOperationException($"Piece {Id} has inconsistent plane and center");
         return isPlaneSet;
     }
@@ -3308,7 +3525,7 @@ public class Piece : Model<Piece>
     public string FindAttributeValue(string name, string defaultValue = "")
     {
         var attribute = Attributes?.FirstOrDefault(a => a.Key == name);
-        if (attribute == null && defaultValue == null) 
+        if (attribute == null && defaultValue == null)
             throw new InvalidOperationException($"Attribute {name} not found in piece {Id}");
         return attribute?.Value ?? defaultValue;
     }
@@ -3317,7 +3534,7 @@ public class Piece : Model<Piece>
     {
         var attributes = new List<Attribute>(Attributes ?? new List<Attribute>());
         var existingIndex = attributes.FindIndex(a => a.Key == attribute.Key);
-        
+
         if (existingIndex >= 0)
             attributes[existingIndex] = attribute;
         else
@@ -3348,6 +3565,8 @@ public class Side : Model<Side>
     public PieceId? DesignPiece { get; set; } = null;
     [ModelProp("🔌", "Po", "Por", "The local identifier of the port within the type.")]
     public PortId Port { get; set; } = new();
+
+    public static implicit operator Side(SideDiff diff) => new() { Piece = diff.Piece ?? new(), DesignPiece = diff.DesignPiece, Port = diff.Port ?? new() };
 
     public Side ApplyDiff(SideDiff diff)
     {
@@ -3561,7 +3780,7 @@ public class Connection : Model<Connection>
     public string FindAttributeValue(string name, string defaultValue = "")
     {
         var attribute = Attributes?.FirstOrDefault(a => a.Key == name);
-        if (attribute == null && defaultValue == null) 
+        if (attribute == null && defaultValue == null)
             throw new InvalidOperationException($"Attribute {name} not found in connection");
         return attribute?.Value ?? defaultValue;
     }
@@ -3570,7 +3789,7 @@ public class Connection : Model<Connection>
     {
         var attributes = new List<Attribute>(Attributes ?? new List<Attribute>());
         var existingIndex = attributes.FindIndex(a => a.Key == attribute.Key);
-        
+
         if (existingIndex >= 0)
             attributes[existingIndex] = attribute;
         else
@@ -3607,7 +3826,11 @@ public class DesignId : Model<DesignId>
     public static implicit operator DesignId(Design design) => new() { Name = design.Name, Variant = design.Variant, View = design.View };
     public static implicit operator DesignId(DesignDiff diff) => new() { Name = diff.Name ?? "", Variant = diff.Variant ?? "", View = diff.View ?? "" };
 
+    public string ToIdString() => $"{Name}#{Variant}#{View}";
     public string ToHumanIdString() => $"{Name}{(Variant == "" ? "" : ", " + Variant)}{(View == "" ? "" : ", " + View)}";
+    public string ToId() => ToIdString();
+    public string ToHumanId() => ToHumanIdString();
+    public override string ToString() => $"DsnId({ToHumanIdString()})";
 }
 
 /// <summary>
@@ -3632,10 +3855,18 @@ public class Design : Model<Design>
     public Location? Location { get; set; }
     [Name("Ⓜ️", "Ut", "Unt", "The length unit for all distance-related information of the design.", PropImportance.REQUIRED)]
     public string Unit { get; set; } = "";
+    [FalseOrTrue("⚖️", "Sc?", "Scl?", "Whether the design can be scaled.")]
+    public bool Scalable { get; set; } = true;
+    [FalseOrTrue("🪞", "Mi?", "Mir?", "Whether the design can be mirrored.")]
+    public bool Mirrorable { get; set; } = true;
     [ModelProp("⭕", "Pc*", "Pcs*", "The optional pieces of the design.", PropImportance.OPTIONAL)]
     public List<Piece> Pieces { get; set; } = new();
     [ModelProp("🔗", "Co*", "Cons*", "The optional connections of the design.", PropImportance.OPTIONAL)]
     public List<Connection> Connections { get; set; } = new();
+    [ModelProp("🔗", "Ly*", "Lyr*", "The optional layers of the design.", PropImportance.OPTIONAL)]
+    public List<Layer> Layers { get; set; } = new();
+    [ModelProp("🗂️", "Gr*", "Grp*", "The optional groups of the design.", PropImportance.OPTIONAL)]
+    public List<Group> Groups { get; set; } = new();
     [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the design.", PropImportance.OPTIONAL)]
     public List<Prop> Props { get; set; } = new();
     [ModelProp("🔢", "St*", "Stt*", "The optional stats of the design.", PropImportance.OPTIONAL)]
@@ -3644,13 +3875,15 @@ public class Design : Model<Design>
     public List<AuthorId> Authors { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
+    [ModelProp("💡", "Co*", "Con*", "The optional concepts of the design.", PropImportance.OPTIONAL)]
+    public List<string> Concepts { get; set; } = new();
 
     public string ToIdString() => $"{Name}#{Variant}#{View}";
     public string ToHumanIdString() => $"{Name}" + (Variant.Length == 0 ? "" : $", {Variant}") + (View.Length == 0 ? "" : $", {View}");
     public override string ToString() => $"Dsn({ToHumanIdString()})";
 
     public static implicit operator Design(DesignId id) => new() { Name = id.Name, Variant = id.Variant, View = id.View };
-    public static implicit operator Design(DesignDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Variant = diff.Variant ?? "", View = diff.View ?? "", Location = diff.Location, Unit = diff.Unit ?? "", Attributes = diff.Attributes ?? new(), Authors = diff.Authors?.Select(a => (AuthorId)a).ToList() ?? new() };
+    public static implicit operator Design(DesignDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Variant = diff.Variant ?? "", View = diff.View ?? "", Location = diff.Location, Unit = diff.Unit ?? "", Attributes = diff.Attributes ?? new(), Authors = diff.Authors?.Select(a => (AuthorId)a).ToList() ?? new(), Concepts = diff.Concepts ?? new() };
     public static implicit operator string(Design design) => design.Name;
     public static implicit operator Design(string name) => new() { Name = name };
 
@@ -3681,9 +3914,10 @@ public class Design : Model<Design>
             Pieces = pieces,
             Connections = connections,
             Props = Props,
-            Stats = Stats,
+            Stats = diff.Stats.Any() ? diff.Stats : Stats,
             Authors = diff.Authors.Any() ? diff.Authors.Select(a => new AuthorId { Email = a.Email }).ToList() : Authors,
-            Attributes = diff.Attributes.Any() ? diff.Attributes : Attributes
+            Attributes = diff.Attributes.Any() ? diff.Attributes : Attributes,
+            Concepts = diff.Concepts.Any() ? diff.Concepts : Concepts
         };
     }
 
@@ -3711,8 +3945,10 @@ public class Design : Model<Design>
                 Updated = Connections.Select(c => c.CreateDiff()).ToList(),
                 Added = new List<Connection>()
             },
+            Stats = Stats,
             Authors = Authors.Select(a => new Author { Name = "", Email = a.Email }).ToList(),
-            Attributes = Attributes
+            Attributes = Attributes,
+            Concepts = Concepts
         };
     }
 
@@ -3741,12 +3977,13 @@ public class Design : Model<Design>
     {
         var originalIds = original.Select(p => p.Id).ToHashSet();
         var modifiedIds = modified.Select(p => p.Id).ToHashSet();
-        
+
         return new PiecesDiff
         {
             Removed = original.Where(p => !modifiedIds.Contains(p.Id)).Select(p => new PieceId { Id = p.Id }).ToList(),
             Modified = original.Where(p => modifiedIds.Contains(p.Id))
-                .SelectMany(p => {
+                .SelectMany(p =>
+                {
                     var modifiedPiece = modified.First(m => m.Id == p.Id);
                     var diff = p.CreateDiff();
                     return !Equals(p, modifiedPiece) ? new[] { diff } : new PieceDiff[] { };
@@ -3766,13 +4003,13 @@ public class Design : Model<Design>
 
     private List<Connection> ApplyConnectionsDiff(List<Connection> original, ConnectionsDiff diff)
     {
-        var result = original.Where(c => !diff.Removed.Any(r => 
-            r.Connected.Piece.Id == c.Connected.Piece.Id && 
+        var result = original.Where(c => !diff.Removed.Any(r =>
+            r.Connected.Piece.Id == c.Connected.Piece.Id &&
             r.Connecting.Piece.Id == c.Connecting.Piece.Id)).ToList();
-        
+
         foreach (var updated in diff.Updated)
         {
-            var index = result.FindIndex(c => 
+            var index = result.FindIndex(c =>
                 c.Connected.Piece.Id == (updated.Connected?.Piece?.Id ?? c.Connected.Piece.Id) &&
                 c.Connecting.Piece.Id == (updated.Connecting?.Piece?.Id ?? c.Connecting.Piece.Id));
             if (index >= 0)
@@ -3786,13 +4023,14 @@ public class Design : Model<Design>
     {
         var originalKeys = original.Select(c => (c.Connected.Piece.Id, c.Connecting.Piece.Id)).ToHashSet();
         var modifiedKeys = modified.Select(c => (c.Connected.Piece.Id, c.Connecting.Piece.Id)).ToHashSet();
-        
+
         return new ConnectionsDiff
         {
             Removed = original.Where(c => !modifiedKeys.Contains((c.Connected.Piece.Id, c.Connecting.Piece.Id)))
                 .Select(c => new ConnectionId { Connected = c.Connected, Connecting = c.Connecting }).ToList(),
             Updated = original.Where(c => modifiedKeys.Contains((c.Connected.Piece.Id, c.Connecting.Piece.Id)))
-                .SelectMany(c => {
+                .SelectMany(c =>
+                {
                     var modifiedConnection = modified.First(m => m.Connected.Piece.Id == c.Connected.Piece.Id && m.Connecting.Piece.Id == c.Connecting.Piece.Id);
                     var diff = c.CreateDiff();
                     return !Equals(c, modifiedConnection) ? new[] { diff } : new ConnectionDiff[] { };
@@ -4309,8 +4547,8 @@ text {
     public bool IsSameAs(Design other)
     {
         if (other == null) return false;
-        return Name == other.Name && 
-               Utility.Normalize(Variant) == Utility.Normalize(other.Variant) && 
+        return Name == other.Name &&
+               Utility.Normalize(Variant) == Utility.Normalize(other.Variant) &&
                Utility.Normalize(View) == Utility.Normalize(other.View);
     }
 
@@ -4324,15 +4562,15 @@ text {
     public Connection FindConnection(Connection connectionToFind, bool strict = false)
     {
         var connection = Connections.FirstOrDefault(c => c.IsSameAs(connectionToFind, strict));
-        if (connection == null) 
+        if (connection == null)
             throw new ArgumentException($"Connection {connectionToFind.Connected.Piece.Id} -> {connectionToFind.Connecting.Piece.Id} not found in design");
         return connection;
     }
 
     public List<Connection> FindPieceConnections(string pieceId)
     {
-        return Connections.Where(c => 
-            c.Connected.Piece.Id == pieceId || 
+        return Connections.Where(c =>
+            c.Connected.Piece.Id == pieceId ||
             c.Connecting.Piece.Id == pieceId).ToList();
     }
 
@@ -4361,8 +4599,8 @@ text {
     public Design RemovePiece(string pieceId)
     {
         var newPieces = Pieces.Where(p => p.Id != pieceId).ToList();
-        var newConnections = Connections.Where(c => 
-            c.Connected.Piece.Id != pieceId && 
+        var newConnections = Connections.Where(c =>
+            c.Connected.Piece.Id != pieceId &&
             c.Connecting.Piece.Id != pieceId).ToList();
         return new Design
         {
@@ -4489,6 +4727,8 @@ public class Kit : Model<Kit>
     public List<Type> Types { get; set; } = new();
     [ModelProp("🏙️", "Dn*", "Dsn*", "The optional designs of the kit.", PropImportance.OPTIONAL)]
     public List<Design> Designs { get; set; } = new();
+    [ModelProp("🏷️", "Cp*", "Cnp*", "The optional concepts of the kit.", PropImportance.OPTIONAL)]
+    public List<string> Concepts { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the kit.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
@@ -4590,13 +4830,14 @@ public class Kit : Model<Kit>
     {
         var originalKeys = original.Select(t => (t.Name, t.Variant)).ToHashSet();
         var modifiedKeys = modified.Select(t => (t.Name, t.Variant)).ToHashSet();
-        
+
         return new TypesDiff
         {
             Removed = original.Where(t => !modifiedKeys.Contains((t.Name, t.Variant)))
                 .Select(t => new TypeId { Name = t.Name, Variant = t.Variant }).ToList(),
             Modified = original.Where(t => modifiedKeys.Contains((t.Name, t.Variant)))
-                .SelectMany(t => {
+                .SelectMany(t =>
+                {
                     var modifiedType = modified.First(m => m.Name == t.Name && m.Variant == t.Variant);
                     var diff = t.CreateDiff();
                     return !Equals(t, modifiedType) ? new[] { diff } : new TypeDiff[] { };
@@ -4638,13 +4879,14 @@ public class Kit : Model<Kit>
     {
         var originalKeys = original.Select(d => (d.Name, d.Variant, d.View)).ToHashSet();
         var modifiedKeys = modified.Select(d => (d.Name, d.Variant, d.View)).ToHashSet();
-        
+
         return new DesignsDiff
         {
             Removed = original.Where(d => !modifiedKeys.Contains((d.Name, d.Variant, d.View)))
                 .Select(d => new DesignId { Name = d.Name, Variant = d.Variant, View = d.View }).ToList(),
             Updated = original.Where(d => modifiedKeys.Contains((d.Name, d.Variant, d.View)))
-                .SelectMany(d => {
+                .SelectMany(d =>
+                {
                     var modifiedDesign = modified.First(m => m.Name == d.Name && m.Variant == d.Variant && m.View == d.View);
                     var diff = d.CreateDiff();
                     return !Equals(d, modifiedDesign) ? new[] { diff } : new DesignDiff[] { };
@@ -4736,8 +4978,8 @@ public class Kit : Model<Kit>
     public Type FindType(string typeName, string variant = "")
     {
         var normalizedVariant = Utility.Normalize(variant);
-        var type = Types.FirstOrDefault(t => 
-            t.Name == typeName && 
+        var type = Types.FirstOrDefault(t =>
+            t.Name == typeName &&
             Utility.Normalize(t.Variant) == normalizedVariant);
         if (type == null) throw new ArgumentException($"Type {typeName} not found in kit {Name}");
         return type;
@@ -4747,9 +4989,9 @@ public class Kit : Model<Kit>
     {
         var normalizedVariant = Utility.Normalize(variant);
         var normalizedView = Utility.Normalize(view);
-        var design = Designs.FirstOrDefault(d => 
-            d.Name == designName && 
-            Utility.Normalize(d.Variant) == normalizedVariant && 
+        var design = Designs.FirstOrDefault(d =>
+            d.Name == designName &&
+            Utility.Normalize(d.Variant) == normalizedVariant &&
             Utility.Normalize(d.View) == normalizedView);
         if (design == null) throw new ArgumentException($"Design {designName} not found in kit {Name}");
         return design;
@@ -4780,7 +5022,7 @@ public class Kit : Model<Kit>
     public Kit RemoveType(string typeName, string variant = "")
     {
         var normalizedVariant = Utility.Normalize(variant);
-        var newTypes = Types.Where(t => 
+        var newTypes = Types.Where(t =>
             !(t.Name == typeName && Utility.Normalize(t.Variant) == normalizedVariant)).ToList();
         return new Kit
         {
@@ -4827,9 +5069,9 @@ public class Kit : Model<Kit>
     {
         var normalizedVariant = Utility.Normalize(variant);
         var normalizedView = Utility.Normalize(view);
-        var newDesigns = Designs.Where(d => 
-            !(d.Name == designName && 
-              Utility.Normalize(d.Variant) == normalizedVariant && 
+        var newDesigns = Designs.Where(d =>
+            !(d.Name == designName &&
+              Utility.Normalize(d.Variant) == normalizedVariant &&
               Utility.Normalize(d.View) == normalizedView)).ToList();
         return new Kit
         {

@@ -119,6 +119,60 @@ export const PlaneSchema = z.object({
   yAxis: VectorSchema,
 });
 
+// https://github.com/usalu/semio#-quality-
+export const QualityKindSchema = z.enum(["General", "Design", "Type", "Piece", "Connection", "Port"]);
+export const BenchmarkSchema = z.object({
+  name: z.string(),
+  icon: z.string().optional(),
+  min: z.number().optional(),
+  minExcluded: z.boolean().optional(),
+  max: z.number().optional(),
+  maxExcluded: z.boolean().optional(),
+});
+export const QualitySchema = z.object({
+  key: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  uri: z.string().optional(),
+  scalable: z.boolean().optional(),
+  kind: QualityKindSchema,
+  si: z.string().optional(),
+  imperial: z.string().optional(),
+  min: z.number().optional(),
+  minExcluded: z.boolean().optional(),
+  max: z.number().optional(),
+  maxExcluded: z.boolean().optional(),
+  default: z.number().optional(),
+  formula: z.string().optional(),
+  benchmarks: z.array(BenchmarkSchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
+});
+
+// https://github.com/usalu/semio#-prop-
+export const PropSchema = z.object({
+  key: z.string(),
+  value: z.string(),
+  unit: z.string().optional(),
+  attributes: z.array(AttributeSchema).optional(),
+});
+
+// https://github.com/usalu/semio#-stat-
+export const StatSchema = z.object({
+  key: z.string(),
+  unit: z.string().optional(),
+  min: z.number().optional(),
+  minExcluded: z.boolean().optional(),
+  max: z.number().optional(),
+  maxExcluded: z.boolean().optional(),
+});
+
+// https://github.com/usalu/semio#-layer-
+export const LayerSchema = z.object({
+  name: z.string(),
+  description: z.string().optional(),
+  color: z.string().optional(),
+});
+
 // https://github.com/usalu/semio#-port-
 export const PortSchema = z.object({
   id_: z.string().optional(),
@@ -129,6 +183,7 @@ export const PortSchema = z.object({
   compatibleFamilies: z.array(z.string()).optional(),
   point: PointSchema,
   direction: VectorSchema,
+  props: z.array(PropSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
 export const PortIdSchema = z.object({ id_: z.string().optional() });
@@ -143,6 +198,8 @@ export const TypeSchema = z.object({
   variant: z.string().optional(),
   stock: z.number().optional(),
   virtual: z.boolean().optional(),
+  scalable: z.boolean().optional(),
+  mirrorable: z.boolean().optional(),
   unit: z.string(),
   created: z
     .string()
@@ -173,10 +230,26 @@ export const PieceSchema = z.object({
   type: TypeIdSchema,
   plane: PlaneSchema.optional(),
   center: DiagramPointSchema.optional(),
+  scale: z.number().optional(),
+  mirrorPlane: PlaneSchema.optional(),
+  hidden: z.boolean().optional(),
+  locked: z.boolean().optional(),
+  color: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
 export const PieceIdSchema = z.object({ id_: z.string() });
 export const PieceIdLikeSchema = z.union([PieceSchema, PieceIdSchema, z.string()]);
+
+// https://github.com/usalu/semio#-group-
+export const GroupSchema = z.object({
+  name: z.string().optional(),
+  description: z.string().optional(),
+  pieces: z.array(PieceIdSchema),
+  color: z.string().optional(),
+  attributes: z.array(AttributeSchema).optional(),
+});
+export const GroupIdSchema = z.object({ name: z.string() });
+export const GroupIdLikeSchema = z.union([GroupSchema, GroupIdSchema, z.string()]);
 
 // https://github.com/usalu/semio#-side-
 export const SideSchema = z.object({
@@ -217,6 +290,8 @@ export const DesignSchema = z.object({
   image: z.string().optional(),
   variant: z.string().optional(),
   view: z.string().optional(),
+  scalable: z.boolean().optional(),
+  mirrorable: z.boolean().optional(),
   location: LocationSchema.optional(),
   unit: z.string(),
   created: z
@@ -231,6 +306,8 @@ export const DesignSchema = z.object({
     .optional(),
   pieces: z.array(PieceSchema).optional(),
   connections: z.array(ConnectionSchema).optional(),
+  layers: z.array(LayerSchema).optional(),
+  groups: z.array(GroupSchema).optional(),
   fixedDesigns: z
     .array(
       z.object({
@@ -241,6 +318,7 @@ export const DesignSchema = z.object({
     )
     .optional(),
   authors: z.array(AuthorSchema).optional(),
+  stats: z.array(StatSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
 export const DesignIdSchema = z.object({
@@ -257,6 +335,7 @@ export const DesignPieceSchema = z.object({
 
 // https://github.com/usalu/semio#-kit-
 export const KitSchema = z.object({
+  uri: z.string(),
   name: z.string(),
   description: z.string().optional(),
   icon: z.string().optional(),
@@ -276,10 +355,13 @@ export const KitSchema = z.object({
     .transform((val) => new Date(val))
     .or(z.date())
     .optional(),
+  authors: z.array(AuthorSchema).optional(),
   files: z.array(FileSchema).optional(),
   types: z.array(TypeSchema).optional(),
   designs: z.array(DesignSchema).optional(),
+  qualities: z.array(QualitySchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
+  concepts: z.array(z.string()).optional(),
 });
 export const KitIdSchema = z.object({
   name: z.string(),
@@ -331,6 +413,7 @@ export const PortDiffSchema = z.object({
   compatibleFamilies: z.array(z.string()).optional(),
   point: PointSchema.optional(),
   direction: VectorSchema.optional(),
+  props: z.array(PropSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
 export const PortsDiffSchema = z.object({
@@ -346,6 +429,9 @@ export const TypeDiffSchema = z.object({
   variant: z.string().optional(),
   stock: z.number().optional(),
   virtual: z.boolean().optional(),
+  scalable: z.boolean().optional(),
+  mirrorable: z.boolean().optional(),
+  uri: z.string().optional(),
   unit: z.string().optional(),
   created: z
     .string()
@@ -375,6 +461,11 @@ export const PieceDiffSchema = z.object({
   type: TypeIdSchema.optional(),
   plane: PlaneSchema.optional(),
   center: DiagramPointSchema.optional(),
+  scale: z.number().optional(),
+  mirrorPlane: PlaneSchema.optional(),
+  hidden: z.boolean().optional(),
+  locked: z.boolean().optional(),
+  color: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
 export const PiecesDiffSchema = z.object({
@@ -416,6 +507,7 @@ export const DesignDiffSchema = z.object({
   unit: z.string().optional(),
   pieces: PiecesDiffSchema.optional(),
   connections: ConnectionsDiffSchema.optional(),
+  stats: z.array(StatSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
   authors: z.array(AuthorSchema).optional(),
 });
@@ -425,6 +517,7 @@ export const DesignsDiffSchema = z.object({
   added: z.array(DesignSchema).optional(),
 });
 export const KitDiffSchema = z.object({
+  uri: z.string().optional(),
   name: z.string().optional(),
   description: z.string().optional(),
   icon: z.string().optional(),
@@ -434,9 +527,70 @@ export const KitDiffSchema = z.object({
   remote: z.string().optional(),
   homepage: z.string().optional(),
   license: z.string().optional(),
+  authors: z.array(AuthorSchema).optional(),
   types: TypesDiffSchema.optional(),
   designs: DesignsDiffSchema.optional(),
   files: FilesDiffSchema.optional(),
+  qualities: z.array(QualitySchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
+});
+
+export const QualityDiffSchema = z.object({
+  id_: z.string().optional(),
+  name: z.string().optional(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  image: z.string().optional(),
+  variant: z.string().optional(),
+  unit: z.string().optional(),
+  benchmarks: z.array(BenchmarkSchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
+});
+
+export const BenchmarkDiffSchema = z.object({
+  id_: z.string().optional(),
+  name: z.string().optional(),
+  value: z.string().optional(),
+  description: z.string().optional(),
+  uri: z.string().optional(),
+});
+
+export const PropDiffSchema = z.object({
+  id_: z.string().optional(),
+  name: z.string().optional(),
+  value: z.string().optional(),
+  description: z.string().optional(),
+  uri: z.string().optional(),
+});
+
+export const StatDiffSchema = z.object({
+  id_: z.string().optional(),
+  name: z.string().optional(),
+  value: z.string().optional(),
+  description: z.string().optional(),
+  uri: z.string().optional(),
+});
+
+export const LayerDiffSchema = z.object({
+  id_: z.string().optional(),
+  name: z.string().optional(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  image: z.string().optional(),
+  variant: z.string().optional(),
+  visible: z.boolean().optional(),
+  locked: z.boolean().optional(),
+  attributes: z.array(AttributeSchema).optional(),
+});
+
+export const GroupDiffSchema = z.object({
+  id_: z.string().optional(),
+  name: z.string().optional(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  image: z.string().optional(),
+  variant: z.string().optional(),
+  collapsed: z.boolean().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
 
@@ -467,6 +621,13 @@ export const schemas = {
   Point: PointSchema,
   Vector: VectorSchema,
   Plane: PlaneSchema,
+  QualityKind: QualityKindSchema,
+  Benchmark: BenchmarkSchema,
+  Quality: QualitySchema,
+  Prop: PropSchema,
+  Stat: StatSchema,
+  Layer: LayerSchema,
+  Group: GroupSchema,
   PortId: PortIdSchema,
   Port: PortSchema,
   PortIdLike: PortIdLikeSchema,
@@ -500,6 +661,12 @@ export const schemas = {
   Kit: KitSchema,
   KitIdLike: KitIdLikeSchema,
   KitDiff: KitDiffSchema,
+  QualityDiff: QualityDiffSchema,
+  BenchmarkDiff: BenchmarkDiffSchema,
+  PropDiff: PropDiffSchema,
+  StatDiff: StatDiffSchema,
+  LayerDiff: LayerDiffSchema,
+  GroupDiff: GroupDiffSchema,
 };
 
 export type AuthorId = z.infer<typeof AuthorIdSchema>;
@@ -524,6 +691,13 @@ export type DiagramVector = z.infer<typeof DiagramVectorSchema>;
 export type Point = z.infer<typeof PointSchema>;
 export type Vector = z.infer<typeof VectorSchema>;
 export type Plane = z.infer<typeof PlaneSchema>;
+export type QualityKind = z.infer<typeof QualityKindSchema>;
+export type Benchmark = z.infer<typeof BenchmarkSchema>;
+export type Quality = z.infer<typeof QualitySchema>;
+export type Prop = z.infer<typeof PropSchema>;
+export type Stat = z.infer<typeof StatSchema>;
+export type Layer = z.infer<typeof LayerSchema>;
+export type Group = z.infer<typeof GroupSchema>;
 export type PortId = z.infer<typeof PortIdSchema>;
 export type Port = z.infer<typeof PortSchema>;
 export type PortIdLike = z.infer<typeof PortIdLikeSchema>;
@@ -555,6 +729,12 @@ export type Kit = z.infer<typeof KitSchema>;
 export type KitId = z.infer<typeof KitIdSchema>;
 export type KitDiff = z.infer<typeof KitDiffSchema>;
 export type KitIdLike = z.infer<typeof KitIdLikeSchema>;
+export type QualityDiff = z.infer<typeof QualityDiffSchema>;
+export type BenchmarkDiff = z.infer<typeof BenchmarkDiffSchema>;
+export type PropDiff = z.infer<typeof PropDiffSchema>;
+export type StatDiff = z.infer<typeof StatDiffSchema>;
+export type LayerDiff = z.infer<typeof LayerDiffSchema>;
+export type GroupDiff = z.infer<typeof GroupDiffSchema>;
 export type ConnectionsDiff = z.infer<typeof ConnectionsDiffSchema>;
 export type TypesDiff = z.infer<typeof TypesDiffSchema>;
 export type Camera = z.infer<typeof CameraSchema>;
@@ -954,6 +1134,7 @@ export const diff = {
     },
     kit: (before: Kit, after: Kit): KitDiff => {
       const diff: any = {};
+      if (before.uri !== after.uri) diff.uri = after.uri;
       if (before.name !== after.name) diff.name = after.name;
       if (before.description !== after.description) diff.description = after.description;
       if (before.icon !== after.icon) diff.icon = after.icon;
@@ -963,6 +1144,8 @@ export const diff = {
       if (before.remote !== after.remote) diff.remote = after.remote;
       if (before.homepage !== after.homepage) diff.homepage = after.homepage;
       if (before.license !== after.license) diff.license = after.license;
+      if (JSON.stringify(before.authors) !== JSON.stringify(after.authors)) diff.authors = after.authors;
+      if (JSON.stringify(before.qualities) !== JSON.stringify(after.qualities)) diff.qualities = after.qualities;
 
       // Handle types diff  
       const beforeTypes = before.types || [];
@@ -1064,6 +1247,11 @@ export const diff = {
       type: diff.type ?? base.type,
       plane: diff.plane ?? base.plane,
       center: diff.center ?? base.center,
+      scale: diff.scale ?? base.scale,
+      mirrorPlane: diff.mirrorPlane ?? base.mirrorPlane,
+      hidden: diff.hidden ?? base.hidden,
+      locked: diff.locked ?? base.locked,
+      color: diff.color ?? base.color,
       attributes: diff.attributes ?? base.attributes,
     }),
     connection: (base: Connection, diff: ConnectionDiff): Connection => ({
@@ -1253,6 +1441,7 @@ export const diff = {
       }
 
       return {
+        uri: diff.uri ?? base.uri,
         name: diff.name ?? base.name,
         description: diff.description ?? base.description,
         icon: diff.icon ?? base.icon,
@@ -1264,9 +1453,11 @@ export const diff = {
         license: diff.license ?? base.license,
         created: base.created,
         updated: base.updated,
+        authors: diff.authors ?? base.authors,
         types,
         designs,
         files,
+        qualities: diff.qualities ?? base.qualities,
         attributes: base.attributes,
       };
     },

@@ -95,7 +95,7 @@ Let me walk you through 🚶
    - [🛍️ @semio/assets](#%EF%B8%8F-semioassets-)
      - [🏷️ Badges](#%EF%B8%8F-badges-)
      - [📄 Fonts](#-fonts-)
-     - [👁️ Icons](#-icons-)
+     - [👁️ Icons](#%EF%B8%8F-icons-)
 1. [🏘️ Examples](#%EF%B8%8F-examples-)
    - [🚀 Starter](#-starter-)
    - [👋 Hello semio](#-hello-semio-)
