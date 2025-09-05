@@ -626,28 +626,40 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
     quality: typing.Optional["Quality"] = sqlmodel.Relationship(back_populates="attributes")
     propPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("prop_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("props.id")), default=None, exclude=True)
     prop: typing.Optional["Prop"] = sqlmodel.Relationship(back_populates="attributes")
+    authorPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("author_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("authors.id")), default=None, exclude=True)
+    author: typing.Optional["Author"] = sqlmodel.Relationship(back_populates="attributes")
+    locationPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("location_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("locations.id")), default=None, exclude=True)
+    location: typing.Optional["Location"] = sqlmodel.Relationship(back_populates="attributes")
+    benchmarkPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("benchmark_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("benchmarks.id")), default=None, exclude=True)
+    benchmark: typing.Optional["Benchmark"] = sqlmodel.Relationship(back_populates="attributes")
 
     __table_args__ = (
         sqlalchemy.CheckConstraint(
             """
         (
-            (representation_id IS NOT NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL)
+            (representation_id IS NOT NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL)
+            (representation_id IS NULL AND port_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL AND quality_id IS NULL AND prop_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NOT NULL AND prop_id IS NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NOT NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
         OR
-            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NOT NULL)
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NOT NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NULL)
+        OR
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NOT NULL AND location_id IS NULL AND benchmark_id IS NULL)
+        OR
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NOT NULL AND benchmark_id IS NULL)
+        OR
+            (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NULL AND quality_id IS NULL AND prop_id IS NULL AND author_id IS NULL AND location_id IS NULL AND benchmark_id IS NOT NULL)
         )
         """,
             name="ck_attributes_parent_set",
@@ -655,7 +667,7 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
         sqlalchemy.UniqueConstraint("name", "type_id", "design_id", name="uq_attributes_name_type_id_design_id"),
     )
 
-    def parent(self) -> typing.Union["Representation", "Port", "Type", "Piece", "Connection", "Design", "Kit", "Quality", "Prop", None]:
+    def parent(self) -> typing.Union["Representation", "Port", "Type", "Piece", "Connection", "Design", "Kit", "Quality", "Prop", "Author", "Location", "Benchmark", None]:
         if self.representation is not None:
             return self.representation
         if self.port is not None:
@@ -674,6 +686,12 @@ class Attribute(AttributeDefinitionField, AttributeValueField, AttributeKeyField
             return self.quality
         if self.prop is not None:
             return self.prop
+        if self.author is not None:
+            return self.author
+        if self.location is not None:
+            return self.location
+        if self.benchmark is not None:
+            return self.benchmark
         raise NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned()
 
     def idMembers(self) -> RecursiveAnyList:
@@ -1409,6 +1427,7 @@ class Author(AuthorRankField, AuthorEmailField, AuthorNameField, TableEntity, ta
     design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="authors_")
     kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
     kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="authors_")
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="author", cascade_delete=True)
 
     __table_args__ = (
         sqlalchemy.CheckConstraint(
@@ -1436,9 +1455,19 @@ class Author(AuthorRankField, AuthorEmailField, AuthorNameField, TableEntity, ta
 # https://github.com/usalu/semio-location-
 
 
-class Location(Model):
+class LocationLongitudeField(RealField, abc.ABC):
     longitude: float = sqlmodel.Field()
+
+
+class LocationLatitudeField(RealField, abc.ABC):
     latitude: float = sqlmodel.Field()
+
+
+class Location(LocationLatitudeField, LocationLongitudeField, TableEntity, table=True):
+    PLURAL = "locations"
+    __tablename__ = "locations"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="location", cascade_delete=True)
 
 
 class LocationInput(Location, Input):
@@ -1786,7 +1815,7 @@ class PiecePrediction(PieceDesignField, PieceTypeField, PieceDescriptionField, P
     # """📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."""
 
 
-class Piece(PieceColorField, PieceLockedField, PieceHiddenField, PieceMirrorPlaneField, PieceScaleField, PieceDescriptionField, TableEntity, table=True):
+class Piece(PieceIdField, PieceTypeField, PieceDesignField, PiecePlaneField, PieceCenterField, PieceHiddenField, PieceLockedField, PieceColorField, PieceScaleField, PieceMirrorPlaneField, TableEntity, table=True):
     PLURAL = "pieces"
     __tablename__ = "pieces"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
@@ -1795,13 +1824,13 @@ class Piece(PieceColorField, PieceLockedField, PieceHiddenField, PieceMirrorPlan
     type: typing.Optional[Type] = sqlmodel.Relationship(back_populates="pieces")
     designPiecePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_piece_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id"), nullable=True), default=None, exclude=True)
     designPiece: typing.Optional["Design"] = sqlmodel.Relationship(sa_relationship=sqlalchemy.orm.relationship("Design", foreign_keys="[Piece.designPiecePk]"))
+    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="pieces")
     planePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("plane_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("planes.id"), nullable=True), default=None, exclude=True)
     plane: typing.Optional[Plane] = sqlmodel.Relationship(back_populates="piece")
     centerX: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("center_x", sqlalchemy.Float()), exclude=True)
     centerY: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("center_y", sqlalchemy.Float()), exclude=True)
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="piece", cascade_delete=True)
-    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
-    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="pieces")
     connecteds: list["Connection"] = sqlmodel.Relationship(back_populates="connectedPiece", sa_relationship_kwargs={"foreign_keys": "Connection.connectedPiecePk"})
     connectings: list["Connection"] = sqlmodel.Relationship(back_populates="connectingPiece", sa_relationship_kwargs={"foreign_keys": "Connection.connectingPiecePk"})
 
@@ -2321,23 +2350,21 @@ class DesignPrediction(DesignDescriptionField, Prediction):
 
 
 class Design(
-    DesignUpdatedField, DesignCreatedField, DesignMirrorableField, DesignScalableField, DesignUnitField, DesignViewField, DesignVariantField, DesignImageField, DesignIconField, DesignDescriptionField, DesignNameField, TableEntity, table=True
+    DesignNameField, DesignVariantField, DesignViewField, DesignDescriptionField, DesignIconField, DesignImageField, DesignUnitField, DesignScalableField, DesignMirrorableField, DesignUpdatedField, DesignCreatedField, TableEntity, table=True
 ):
     PLURAL = "designs"
     __tablename__ = "designs"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-    locationLongitude: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("location_longitude", sqlalchemy.Float()), exclude=True, default=None)
-
-    locationLatitude: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("location_latitude", sqlalchemy.Float()), exclude=True, default=None)
-
-    pieces: list[Piece] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
-    connections: list[Connection] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
-    layers: list[Layer] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
-    groups: list[Group] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
-    stats: list[Stat] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
-    authors_: list[Author] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     concepts_: list[Concept] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    authors_: list[Author] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    locationLongitude: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("location_longitude", sqlalchemy.Float()), exclude=True, default=None)
+    locationLatitude: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("location_latitude", sqlalchemy.Float()), exclude=True, default=None)
+    layers: list[Layer] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    pieces: list[Piece] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    groups: list[Group] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    connections: list[Connection] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    stats: list[Stat] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     kitPk: typing.Optional[int] = sqlmodel.Field(alias="kitId", sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
     kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="designs")
 
@@ -2687,6 +2714,7 @@ class Benchmark(BenchmarkMaxExcludedField, BenchmarkMaxField, BenchmarkMinExclud
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     qualityPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("quality_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("qualities.id")), default=None, exclude=True)
     quality: typing.Optional[Quality] = sqlmodel.Relationship(back_populates="benchmarks")
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="benchmark", cascade_delete=True)
 
 
 # endregion Benchmark
@@ -2972,22 +3000,16 @@ class KitOutput(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, 
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
 
-class Kit(KitUpdatedField, KitCreatedField, KitLicenseField, KitHomepage, KitRemoteField, KitVersionField, KitPreviewField, KitImageField, KitIconField, KitDescriptionField, KitNameField, KitUriField, TableEntity, table=True):
+class Kit(KitNameField, KitVersionField, KitDescriptionField, KitIconField, KitImageField, KitRemoteField, KitHomepage, KitLicenseField, KitPreviewField, KitUriField, KitUpdatedField, KitCreatedField, TableEntity, table=True):
     PLURAL = "kits"
     __tablename__ = "kits"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-
-    types: list[Type] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
-
-    designs: list[Design] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
-
-    qualities: list[Quality] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
-
-    authors_: list[Author] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
-
-    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
-
     concepts_: list[Concept] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+    authors_: list[Author] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+    types: list[Type] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+    designs: list[Design] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+    qualities: list[Quality] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
+    attributes: list[Attribute] = sqlmodel.Relationship(back_populates="kit", cascade_delete=True)
 
     @property
     def concepts(self: "Kit") -> list[str]:

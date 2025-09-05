@@ -8,7 +8,20 @@
       "Read(net/Semio/Semio.cs)",
       "Edit(net/Semio/Semio.cs)",
       "Read(net\\Semio\\Semio.cs)",
-      "Edit(net\\Semio\\Semio.cs)"
+      "Edit(net\\Semio\\Semio.cs)",
+      "Read(py/engine.py)",
+      "Edit(py/engine.py)",
+      "Read(py\\engine.py)",
+      "Edit(py\\engine.py)",
+      "Read(js/core/semio.ts)",
+      "Edit(js/core/semio.ts)",
+      "Read(js\\core\\semio.ts)",
+      "Edit(js\\core\\semio.ts)",
+      // js/core/components/**/*.*
+      "Read(js/core/components/**)",
+      "Edit(js/core/components/**)",
+      "Read(js\\core\\components/**)",
+      "Edit(js\\core\\components/**)"
     ],
     "deny": [
       "Read(./.env)",

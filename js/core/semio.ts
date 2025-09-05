@@ -44,7 +44,7 @@ export const TOLERANCE = 1e-5;
 
 // https://github.com/usalu/semio#-author-
 export const AuthorIdSchema = z.object({ email: z.string() });
-export const AuthorSchema = z.object({ name: z.string(), email: z.string() });
+export const AuthorSchema = z.object({ name: z.string(), email: z.string(), attributes: z.array(AttributeSchema).optional() });
 export const AuthorIdLikeSchema = z.union([AuthorSchema, AuthorIdSchema, z.string()]);
 
 // https://github.com/usalu/semio#-file-
@@ -84,6 +84,7 @@ export const AttributeIdLikeSchema = z.union([AttributeSchema, AttributeIdSchema
 export const LocationSchema = z.object({
   longitude: z.number(),
   latitude: z.number(),
+  attributes: z.array(AttributeSchema).optional(),
 });
 
 // https://github.com/usalu/semio#-representation-
@@ -128,6 +129,7 @@ export const BenchmarkSchema = z.object({
   minExcluded: z.boolean().optional(),
   max: z.number().optional(),
   maxExcluded: z.boolean().optional(),
+  attributes: z.array(AttributeSchema).optional(),
 });
 export const QualitySchema = z.object({
   key: z.string(),
@@ -226,16 +228,18 @@ export const TypeIdLikeSchema = z.union([TypeSchema, TypeIdSchema, z.tuple([z.st
 // https://github.com/usalu/semio#-piece-
 export const PieceSchema = z.object({
   id_: z.string(),
-  description: z.string().optional(),
-  type: TypeIdSchema,
+  type: TypeIdSchema.optional(),
+  design: z.lazy(() => DesignIdSchema).optional(),
   plane: PlaneSchema.optional(),
   center: DiagramPointSchema.optional(),
-  scale: z.number().optional(),
-  mirrorPlane: PlaneSchema.optional(),
   hidden: z.boolean().optional(),
   locked: z.boolean().optional(),
   color: z.string().optional(),
+  scale: z.number().optional(),
+  mirrorPlane: PlaneSchema.optional(),
+  props: z.array(PropSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
+  description: z.string().optional(),
 });
 export const PieceIdSchema = z.object({ id_: z.string() });
 export const PieceIdLikeSchema = z.union([PieceSchema, PieceIdSchema, z.string()]);
@@ -285,15 +289,33 @@ export const ConnectionIdLikeSchema = z.union([ConnectionSchema, ConnectionIdSch
 // https://github.com/usalu/semio#-design-
 export const DesignSchema = z.object({
   name: z.string(),
+  variant: z.string().optional(),
+  view: z.string().optional(),
   description: z.string().optional(),
   icon: z.string().optional(),
   image: z.string().optional(),
-  variant: z.string().optional(),
-  view: z.string().optional(),
-  scalable: z.boolean().optional(),
-  mirrorable: z.boolean().optional(),
+  concepts: z.array(z.string()).optional(),
+  authors: z.array(AuthorSchema).optional(),
   location: LocationSchema.optional(),
   unit: z.string(),
+  scalable: z.boolean().optional(),
+  mirrorable: z.boolean().optional(),
+  layers: z.array(LayerSchema).optional(),
+  pieces: z.array(PieceSchema).optional(),
+  groups: z.array(GroupSchema).optional(),
+  connections: z.array(ConnectionSchema).optional(),
+  fixedDesigns: z
+    .array(
+      z.object({
+        designId: z.lazy(() => DesignIdSchema),
+        plane: PlaneSchema.optional(),
+        center: DiagramPointSchema.optional(),
+      }),
+    )
+    .optional(),
+  props: z.array(PropSchema).optional(),
+  stats: z.array(StatSchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
   created: z
     .string()
     .transform((val) => new Date(val))
@@ -304,22 +326,6 @@ export const DesignSchema = z.object({
     .transform((val) => new Date(val))
     .or(z.date())
     .optional(),
-  pieces: z.array(PieceSchema).optional(),
-  connections: z.array(ConnectionSchema).optional(),
-  layers: z.array(LayerSchema).optional(),
-  groups: z.array(GroupSchema).optional(),
-  fixedDesigns: z
-    .array(
-      z.object({
-        designId: z.lazy(() => DesignIdSchema),
-        plane: PlaneSchema.optional(),
-        center: DiagramPointSchema.optional(),
-      }),
-    )
-    .optional(),
-  authors: z.array(AuthorSchema).optional(),
-  stats: z.array(StatSchema).optional(),
-  attributes: z.array(AttributeSchema).optional(),
 });
 export const DesignIdSchema = z.object({
   name: z.string(),
@@ -337,14 +343,26 @@ export const DesignPieceSchema = z.object({
 export const KitSchema = z.object({
   uri: z.string(),
   name: z.string(),
+  version: z.string().optional(),
   description: z.string().optional(),
   icon: z.string().optional(),
   image: z.string().optional(),
-  preview: z.string().optional(),
-  version: z.string().optional(),
+  concepts: z.array(z.string()).optional(),
   remote: z.string().optional(),
   homepage: z.string().optional(),
   license: z.string().optional(),
+  authors: z.array(AuthorSchema).optional(),
+  pieces: z.array(PieceSchema).optional(),
+  groups: z.array(GroupSchema).optional(),
+  connections: z.array(ConnectionSchema).optional(),
+  props: z.array(PropSchema).optional(),
+  stats: z.array(StatSchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
+  preview: z.string().optional(),
+  files: z.array(FileSchema).optional(),
+  types: z.array(TypeSchema).optional(),
+  designs: z.array(DesignSchema).optional(),
+  qualities: z.array(QualitySchema).optional(),
   created: z
     .string()
     .transform((val) => new Date(val))
@@ -355,13 +373,6 @@ export const KitSchema = z.object({
     .transform((val) => new Date(val))
     .or(z.date())
     .optional(),
-  authors: z.array(AuthorSchema).optional(),
-  files: z.array(FileSchema).optional(),
-  types: z.array(TypeSchema).optional(),
-  designs: z.array(DesignSchema).optional(),
-  qualities: z.array(QualitySchema).optional(),
-  attributes: z.array(AttributeSchema).optional(),
-  concepts: z.array(z.string()).optional(),
 });
 export const KitIdSchema = z.object({
   name: z.string(),

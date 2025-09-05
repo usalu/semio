@@ -42,10 +42,50 @@ An ecosystem for designing kit-of-parts architecture together.
 ├── js
 │ ├── ai
 │ ├── core
-│ │ ├── Semio.cs
 │ │ ├── components
-│ │ │ └── ui
-│ │ │ │ └── sketchpad
+│ │ │ ├── ui
+│ │ │ │ ├── sketchpad
+│ │ │ │ │ │ ├── Chat.tsx
+│ │ │ │ │ │ ├── Commands.tsx
+│ │ │ │ │ │ ├── Console.tsx
+│ │ │ │ │ │ ├── DesignEditor.tsx
+│ │ │ │ │ │ ├── Diagram.tsx
+│ │ │ │ │ │ ├── Model.tsx
+│ │ │ │ │ │ ├── Navbar.tsx
+│ │ │ │ │ │ ├── Workbench.tsx
+│ │ │ │ │ │ ├── Sketchpad.stories.tsx
+│ │ │ │ │ │ ├── Sketchpad.tsx
+│ │ │ │ │ │ ├── TypeEditor.tsx
+│ │ │ │ │ │ └── Workbench.tsx
+│ │ │ │ │ ├── Accordion.tsx
+│ │ │ │ │ ├── Avatar.tsx
+│ │ │ │ │ ├── Breadcrumb.tsx
+│ │ │ │ │ ├── Button.tsx
+│ │ │ │ │ ├── Collapsible.tsx
+│ │ │ │ │ ├── Combobox.tsx
+│ │ │ │ │ ├── Dialog.tsx
+│ │ │ │ │ ├── File.tsx
+│ │ │ │ │ ├── HoverCard.tsx
+│ │ │ │ │ ├── Icons.tsx
+│ │ │ │ │ ├── Input.tsx
+│ │ │ │ │ ├── Navbar.tsx
+│ │ │ │ │ ├── Popover.tsx
+│ │ │ │ │ ├── Resizable.tsx
+│ │ │ │ │ ├── ScrollArea.tsx
+│ │ │ │ │ ├── Select.tsx
+│ │ │ │ │ ├── Slider.tsx
+│ │ │ │ │ ├── Stepper.tsx
+│ │ │ │ │ ├── Tabs.tsx
+│ │ │ │ │ ├── Textarea.tsx
+│ │ │ │ │ ├── Toggle.tsx
+│ │ │ │ │ ├── ToggleGroup.tsx
+│ │ │ │ │ ├── Tooltip.tsx
+│ │ │ │ │ └── Tree.tsx
+│ │ ├── lib
+│ │ │ └── utils.ts
+│ │ ├── semio.ts # all domain logic
+│ │ ├── store.ts # react hooks for state (uses yjs)
+│ │ └── package.json
 │ ├── docs
 │ ├── play
 │ ├── playground

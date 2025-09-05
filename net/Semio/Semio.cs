@@ -1916,6 +1916,8 @@ public class Benchmark : Model<Benchmark>
     public float Max { get; set; } = 0;
     [FalseOrTrue("⬆️", "MxE?", "MxE?", "Whether the maximum value is excluded from the range.")]
     public bool MaxExcluded { get; set; } = false;
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the benchmark.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
 }
 
 [Flags]
@@ -2664,6 +2666,8 @@ public class Author : Model<Author>
     public string Name { get; set; } = "";
     [Email("📧", "Em", "Eml", "The email of the author.", PropImportance.ID)]
     public string Email { get; set; } = "";
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the author.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
     public string ToIdString() => $"{Email}";
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Aut({ToHumanIdString()})";
@@ -2701,6 +2705,8 @@ public class Location : Model<Location>
     public float Longitude { get; set; }
     [NumberProp("↕️", "La", "Lat", "The latitude of the location in degrees.", PropImportance.REQUIRED)]
     public float Latitude { get; set; }
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the location.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
 }
 
 [Model("🧩", "Ty", "Typ", "The identifier of the type within the kit.")]
@@ -3398,8 +3404,6 @@ public class Piece : Model<Piece>
     [Id("🆔", "Id?", "Id", "The optional local identifier of the piece within the design. No id means the default piece.", isDefaultValid: true)]
     [JsonProperty("id_")]
     public string Id { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the piece.")]
-    public string Description { get; set; } = "";
     [ModelProp("🧩", "Ty?", "Typ?", "The optional type of the piece. Either type or design must be set.", PropImportance.OPTIONAL)]
     public TypeId? Type { get; set; }
     [ModelProp("🏙️", "Dn?", "Dsn?", "The optional design of this piece. Either type or design must be set.", PropImportance.OPTIONAL)]
@@ -3427,7 +3431,7 @@ public class Piece : Model<Piece>
     public override string ToString() => $"Pce({ToHumanIdString()})";
 
     public static implicit operator Piece(PieceId id) => new() { Id = id.Id };
-    public static implicit operator Piece(PieceDiff diff) => new() { Id = diff.Id ?? "", Description = diff.Description ?? "", Type = diff.Type, Plane = diff.Plane, Center = diff.Center, Color = diff.Color ?? "", Scale = diff.Scale ?? 1.0f, MirrorPlane = diff.MirrorPlane, Attributes = diff.Attributes ?? new() };
+    public static implicit operator Piece(PieceDiff diff) => new() { Id = diff.Id ?? "", Type = diff.Type, Design = null, Plane = diff.Plane, Center = diff.Center, Hidden = false, Locked = false, Color = diff.Color ?? "", Scale = diff.Scale ?? 1.0f, MirrorPlane = diff.MirrorPlane, Props = new(), Attributes = diff.Attributes ?? new() };
     public static implicit operator string(Piece piece) => piece.Id;
     public static implicit operator Piece(string id) => new() { Id = id };
 
@@ -3436,7 +3440,6 @@ public class Piece : Model<Piece>
         return new Piece
         {
             Id = Id,
-            Description = string.IsNullOrEmpty(diff.Description) ? Description : diff.Description,
             Type = diff.Type ?? Type,
             Design = Design,
             Plane = diff.Plane ?? Plane,
@@ -3456,10 +3459,12 @@ public class Piece : Model<Piece>
         return new PieceDiff
         {
             Id = Id,
-            Description = Description,
             Type = Type,
             Plane = Plane,
             Center = Center,
+            Color = Color,
+            Scale = Scale,
+            MirrorPlane = MirrorPlane,
             Attributes = Attributes
         };
     }
@@ -3841,16 +3846,20 @@ public class Design : Model<Design>
 {
     [Name("📛", "Na", "Nam", "The name of the design.", PropImportance.ID)]
     public string Name { get; set; } = "";
+    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the design. No variant means the default variant.", PropImportance.ID, true)]
+    public string Variant { get; set; } = "";
+    [Name("🥽", "Vw?", "Vew?", "The optional view of the design. No view means the default view.", PropImportance.ID, true)]
+    public string View { get; set; } = "";
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the design.")]
     public string Description { get; set; } = "";
     [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.")]
     public string Icon { get; set; } = "";
     [Url("🖼️", "Im?", "Img?", "The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.")]
     public string Image { get; set; } = "";
-    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the design. No variant means the default variant.", PropImportance.ID, true)]
-    public string Variant { get; set; } = "";
-    [Name("🥽", "Vw?", "Vew?", "The optional view of the design. No view means the default view.", PropImportance.ID, true)]
-    public string View { get; set; } = "";
+    [ModelProp("💡", "Co*", "Con*", "The optional concepts of the design.", PropImportance.OPTIONAL)]
+    public List<string> Concepts { get; set; } = new();
+    [ModelProp("👥", "Au*", "Aut*", "The optional authors of the design.", PropImportance.OPTIONAL)]
+    public List<AuthorId> Authors { get; set; } = new();
     [ModelProp("📍", "Lo?", "Loc?", "The optional location of the design.", PropImportance.OPTIONAL)]
     public Location? Location { get; set; }
     [Name("Ⓜ️", "Ut", "Unt", "The length unit for all distance-related information of the design.", PropImportance.REQUIRED)]
@@ -3859,24 +3868,20 @@ public class Design : Model<Design>
     public bool Scalable { get; set; } = true;
     [FalseOrTrue("🪞", "Mi?", "Mir?", "Whether the design can be mirrored.")]
     public bool Mirrorable { get; set; } = true;
-    [ModelProp("⭕", "Pc*", "Pcs*", "The optional pieces of the design.", PropImportance.OPTIONAL)]
-    public List<Piece> Pieces { get; set; } = new();
-    [ModelProp("🔗", "Co*", "Cons*", "The optional connections of the design.", PropImportance.OPTIONAL)]
-    public List<Connection> Connections { get; set; } = new();
     [ModelProp("🔗", "Ly*", "Lyr*", "The optional layers of the design.", PropImportance.OPTIONAL)]
     public List<Layer> Layers { get; set; } = new();
+    [ModelProp("⭕", "Pc*", "Pcs*", "The optional pieces of the design.", PropImportance.OPTIONAL)]
+    public List<Piece> Pieces { get; set; } = new();
     [ModelProp("🗂️", "Gr*", "Grp*", "The optional groups of the design.", PropImportance.OPTIONAL)]
     public List<Group> Groups { get; set; } = new();
+    [ModelProp("🔗", "Co*", "Cons*", "The optional connections of the design.", PropImportance.OPTIONAL)]
+    public List<Connection> Connections { get; set; } = new();
     [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the design.", PropImportance.OPTIONAL)]
     public List<Prop> Props { get; set; } = new();
     [ModelProp("🔢", "St*", "Stt*", "The optional stats of the design.", PropImportance.OPTIONAL)]
     public List<Stat> Stats { get; set; } = new();
-    [ModelProp("👥", "Au*", "Aut*", "The optional authors of the design.", PropImportance.OPTIONAL)]
-    public List<AuthorId> Authors { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
-    [ModelProp("💡", "Co*", "Con*", "The optional concepts of the design.", PropImportance.OPTIONAL)]
-    public List<string> Concepts { get; set; } = new();
 
     public string ToIdString() => $"{Name}#{Variant}#{View}";
     public string ToHumanIdString() => $"{Name}" + (Variant.Length == 0 ? "" : $", {Variant}") + (View.Length == 0 ? "" : $", {View}");
@@ -4703,16 +4708,16 @@ public class Kit : Model<Kit>
 {
     [Name("📛", "Na", "Nam", "The name of the kit.", PropImportance.ID)]
     public string Name { get; set; } = "";
+    [Name("🔀", "Vr?", "Ver?", "The optional version of the kit. No version means the latest version.", PropImportance.ID, true)]
+    public string Version { get; set; } = "";
     [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the kit.")]
     public string Description { get; set; } = "";
     [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.")]
     public string Icon { get; set; } = "";
     [Url("🖼️", "Im?", "Img?", "The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.")]
     public string Image { get; set; } = "";
-    [Url("🔮", "Pv?", "Prv?", "The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.")]
-    public string Preview { get; set; } = "";
-    [Name("🔀", "Vr?", "Ver?", "The optional version of the kit. No version means the latest version.", PropImportance.ID, true)]
-    public string Version { get; set; } = "";
+    [ModelProp("🏷️", "Cp*", "Cnp*", "The optional concepts of the kit.", PropImportance.OPTIONAL)]
+    public List<string> Concepts { get; set; } = new();
     [Url("☁️", "Rm?", "Rmt?", "The optional Unique Resource Locator (URL) where to fetch the kit remotely.")]
     public string Remote { get; set; } = "";
     [Url("🏠", "Hp?", "Hmp?", "The optional Unique Resource Locator (URL) of the homepage of the kit.")]
@@ -4721,16 +4726,26 @@ public class Kit : Model<Kit>
     public string License { get; set; } = "";
     [ModelProp("👥", "Au*", "Aut*", "The optional authors of the kit.", PropImportance.OPTIONAL)]
     public List<Author> Authors { get; set; } = new();
+    [ModelProp("⭕", "Pc*", "Pcs*", "The optional pieces of the kit.", PropImportance.OPTIONAL)]
+    public List<Piece> Pieces { get; set; } = new();
+    [ModelProp("🗂️", "Gr*", "Grp*", "The optional groups of the kit.", PropImportance.OPTIONAL)]
+    public List<Group> Groups { get; set; } = new();
+    [ModelProp("🔗", "Co*", "Cons*", "The optional connections of the kit.", PropImportance.OPTIONAL)]
+    public List<Connection> Connections { get; set; } = new();
+    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the kit.", PropImportance.OPTIONAL)]
+    public List<Prop> Props { get; set; } = new();
+    [ModelProp("🔢", "St*", "Stt*", "The optional stats of the kit.", PropImportance.OPTIONAL)]
+    public List<Stat> Stats { get; set; } = new();
+    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the kit.", PropImportance.OPTIONAL)]
+    public List<Attribute> Attributes { get; set; } = new();
+    [Url("🔮", "Pv?", "Prv?", "The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.")]
+    public string Preview { get; set; } = "";
     [ModelProp("📃", "Ql*", "Qal*", "The optional qualities of the kit.", PropImportance.OPTIONAL)]
     public List<Quality> Qualities { get; set; } = new();
     [ModelProp("🧩", "Ty*", "Typ*", "The optional types of the kit.", PropImportance.OPTIONAL)]
     public List<Type> Types { get; set; } = new();
     [ModelProp("🏙️", "Dn*", "Dsn*", "The optional designs of the kit.", PropImportance.OPTIONAL)]
     public List<Design> Designs { get; set; } = new();
-    [ModelProp("🏷️", "Cp*", "Cnp*", "The optional concepts of the kit.", PropImportance.OPTIONAL)]
-    public List<string> Concepts { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the kit.", PropImportance.OPTIONAL)]
-    public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator Kit(KitDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Preview = diff.Preview ?? "", Version = diff.Version ?? "", Remote = diff.Remote ?? "", Homepage = diff.Homepage ?? "", License = diff.License ?? "", Attributes = diff.Attributes ?? new() };
     public static implicit operator string(Kit kit) => kit.Name;
