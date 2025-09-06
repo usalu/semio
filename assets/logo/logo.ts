@@ -26,6 +26,57 @@ interface KeyframeData {
 }
 
 /**
+ * Convert transform values to a 2D matrix
+ */
+function transformToMatrix(translate: { x: number, y: number }, rotate: { angle: number, cx: number, cy: number }, scale: { x: number, y: number }): string {
+    const tx = translate.x;
+    const ty = translate.y;
+    const angle = rotate.angle * Math.PI / 180; // Convert to radians
+    const cx = rotate.cx;
+    const cy = rotate.cy;
+    const sx = scale.x === 0 ? 1 : scale.x;
+    const sy = scale.y === 0 ? 1 : scale.y;
+
+    // Start with identity matrix
+    let a = 1, b = 0, c = 0, d = 1, e = 0, f = 0;
+
+    // Apply translation
+    e += tx;
+    f += ty;
+
+    // Apply rotation around point (cx, cy)
+    if (angle !== 0) {
+        // Translate to rotation center
+        e -= cx;
+        f -= cy;
+
+        // Apply rotation
+        const cos_a = Math.cos(angle);
+        const sin_a = Math.sin(angle);
+        const new_a = a * cos_a - b * sin_a;
+        const new_b = a * sin_a + b * cos_a;
+        const new_c = c * cos_a - d * sin_a;
+        const new_d = c * sin_a + d * cos_a;
+        const new_e = e * cos_a - f * sin_a;
+        const new_f = e * sin_a + f * cos_a;
+
+        a = new_a; b = new_b; c = new_c; d = new_d; e = new_e; f = new_f;
+
+        // Translate back from rotation center
+        e += cx;
+        f += cy;
+    }
+
+    // Apply scale
+    a *= sx;
+    b *= sx;
+    c *= sy;
+    d *= sy;
+
+    return `${a} ${b} ${c} ${d} ${e} ${f}`;
+}
+
+/**
  * Parse transform string (matrix or individual transforms) into structured data
  */
 function parseTransform(transformStr: string): TransformData {
@@ -70,8 +121,8 @@ function parseTransform(transformStr: string): TransformData {
                 const bSign = Math.sign(b);
                 const cSign = Math.sign(c);
                 const scaleValueB = Math.abs(b);
-                const scaleValueC = Math.abs(c); 
-                
+                const scaleValueC = Math.abs(c);
+
                 // matrix(0,b,c,0) where b and c can be positive or negative
                 if (bSign === -1 && cSign === -1) {
                     // matrix(0,-scale,-scale,0,tx,ty) = 90° rotation + reflection
@@ -129,7 +180,7 @@ function parseTransform(transformStr: string): TransformData {
         result.rotate.angle = values[0] || 0;
         result.rotate.cx = values[1] || 0;
         result.rotate.cy = values[2] || 0;
-        
+
         // If rotation center is specified and is not at origin, we need to preserve this info
         // SVG animation can handle rotation centers directly, so don't convert to translate
         // The animation engine will handle this properly
@@ -176,7 +227,7 @@ function parseSVGFile(filePath: string): KeyframeData {
                     strokeWidth: pathElement.getAttribute('stroke-width') || '0'
                 }
             };
-            
+
             groups.push(groupData);
         }
     });
@@ -223,7 +274,7 @@ function createAnimatedSVG(keyframes: KeyframeData[], outputPath: string): void 
     const keyTimes: string[] = [];
     let currentTime = 0;
     const timeStep = 1 / (totalFrames - 1);
-    
+
     for (let i = 0; i < totalFrames; i++) {
         keyTimes.push((i * timeStep).toFixed(3));
     }
@@ -237,7 +288,7 @@ function createAnimatedSVG(keyframes: KeyframeData[], outputPath: string): void 
         const currentFrame = sequence[i];
         const nextFrame = sequence[i + 1];
         const isSameFrame = JSON.stringify(currentFrame) === JSON.stringify(nextFrame);
-        
+
         if (isSameFrame) {
             // Hold frame - linear (no easing)
             keySplines.push('0 0 1 1');
