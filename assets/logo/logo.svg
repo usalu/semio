@@ -1,171 +1,357 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 410 140" style="background: #001117;">
-    <title>semio logo animation</title>
-    <defs>
-        <style>
-            :root {
-                --color-primary: #ff344f;
-                --color-secondary: #00a69d;
-                --color-tertiary: #fa9500;
-                --color-dark: #001117;
-                --color-light: #f7f3e3;
-            }
-
-            .profile {
-                fill: var(--color-light);
-                stroke: none;
-            }
-
-            .light {
-                fill: var(--color-light);
-            }
-
-            .dark {
-                fill: var(--color-dark);
-            }
-
-            .primary {
-                fill: var(--color-primary);
-                stroke: var(--color-light);
-            }
-
-            .secondary {
-                fill: var(--color-secondary);
-                stroke: var(--color-light);
-            }
-
-            .tertiary {
-                fill: var(--color-tertiary);
-                stroke: var(--color-light);
-            }
-        </style>
-
-        <path id="profile-2" class="profile" d="M 19,10 9,0 H 0 v 10 z" />
-        <path id="profile-4" class="profile" d="M 0,10 H 39 L 29,0 H 0 Z" />
-        <path id="profile-5" class="profile" d="M 0,10 H 49 L 39,0 H 0 Z" />
-        <path id="profile-5-emblem-primary" d="M 0,10 H 49 L 39,0 H 0 Z">
+    <title>semio</title>
+    <rect width="100%" height="100%" fill="#001117" />
+    <g id="profile-5-emblem-top">
+        <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="20 40;20 40;20 40" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="2 -2;2 -2;2 -2" />
+        <path d="M 0,10 H 49 L 39,0 H 0 Z">
             <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
                 keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#ff344f;#ff344f;#ff344f" />
             <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
                 keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
         </path>
-        <path id="profile-2-emblem-secondary" d="M 19,10 9,0 H 0 v 10 z">
+    </g>
+    <g id="profile-5-emblem-right">
+        <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="100 120;100 120;100 120" />
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="270 0 0;270 0 0;270 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="2 2;2 2;2 2" />
+        <path d="M 0,10 H 49 L 39,0 H 0 Z">
             <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#34d1bf;#34d1bf;#34d1bf" />
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#ff344f;#ff344f;#ff344f" />
             <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
                 keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
         </path>
-        <path id="profile-4-emblem-tertiary" d="M 0,10 H 39 L 29,0 H 0 Z">
+    </g>
+    <g id="profile-4-emblem-left">
+        <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="40 42;40 42;40 42" />
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="90 0 0;90 0 0;90 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="2 2;2 2;2 2" />
+        <path d="M 0,10 H 39 L 29,0 H 0 Z">
             <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
                 keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#fa9500;#fa9500;#fa9500" />
             <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
                 keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
         </path>
-    </defs>
-    <use href="#profile-5-emblem-primary">
+    </g>
+    <g id="profile-2-emblem-middle">
         <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
-            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
-            values="20 40;20 40;20 40" />
-        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
-            repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-            keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="2 -2;2 -2;2 -2" />
-    </use>
-    <use href="#profile-5-emblem-primary">
-        <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
-            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
-            values="100 120;100 120;100 120" />
-        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
-            repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-            keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="270 0 0;270 0 0;270 0 0" />
-        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
-            repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-            keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="2 2;2 2;2 2" />
-    </use>
-    <use href="#profile-4-emblem-tertiary">
-        <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
-            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
-            values="40 42;40 42;40 42" />
-        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
-            repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-            keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="90 0 0;90 0 0;90 0 0" />
-        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
-            repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-            keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="2 2;2 2;2 2" />
-    </use>
-    <use href="#profile-2-emblem-secondary">
-        <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
-            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
-            values="98 60;98 60;98 60" />
-        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
-            repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-            keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="0 0 0;0 0 0;0 0 0" />
-        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
-            repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-            keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="-2 2;-2 2;-2 2" />
-    </use>
-    <use href="#profile-2-emblem-secondary">
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="98 60;98 60;98 60" />
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="0 0 0;0 0 0;0 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="-2 2;-2 2;-2 2" />
+        <path d="M 19,10 9,0 H 0 v 10 z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#00a69d;#00a69d;#00a69d" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+        </path>
+    </g>
+    <g id="profile-2-emblem-bottom">
         <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
             keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
             values="98 100;98 100;98 100" />
-        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
-            repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-            keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="0 0 0;0 0 0;0 0 0" />
-        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
-            repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-            keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="-2 2;-2 2;-2 2" />
-    </use>
-    <use href="#profile-5">
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="0 0 0;0 0 0;0 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="-2 2;-2 2;-2 2" />
+        <path d="M 19,10 9,0 H 0 v 10 z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#00a69d;#00a69d;#00a69d" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+        </path>
+    </g>
+    <g id="profile-5-text-s-top">
         <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
             keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
             values="190 55;190 55;190 55" />
-        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
-            repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-            keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="180 0 0;180 0 0;180 0 0" />
-        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
-            repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-            keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="1 1;1 1;1 1" />
-    </use>
-    <use href="#profile-2">
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="180 0 0;180 0 0;180 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="1 1;1 1;1 1" />
+        <path d="M 0,10 H 49 L 39,0 H 0 Z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="none;none;none" />
+        </path>
+    </g>
+    <g id="profile-2-text-s-left">
         <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
             keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
             values="150 65;150 65;150 65" />
-        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
-            repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-            keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="90 0 0;90 0 0;90 0 0" />
-        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
-            repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-            keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="-1 1;-1 1;-1 1" />
-    </use>
-    <use href="#profile-5">
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="90 0 0;90 0 0;90 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="-1 1;-1 1;-1 1" />
+        <path d="M 19,10 9,0 H 0 v 10 z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="none;none;none" />
+        </path>
+    </g>
+    <g id="profile-5-text-s-middle">
         <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
             keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
             values="140 76;140 76;140 76" />
-        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
-            repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-            keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="0 0 0;0 0 0;0 0 0" />
-        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
-            repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-            keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="1 -1;1 -1;1 -1" />
-    </use>
-    <use href="#profile-2">
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="0 0 0;0 0 0;0 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="1 -1;1 -1;1 -1" />
+        <path d="M 0,10 H 49 L 39,0 H 0 Z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="none;none;none" />
+        </path>
+    </g>
+    <g id="profile-2-text-s-right">
         <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
             keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
             values="180 85;180 85;180 85" />
-        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
-            repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-            keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="270 0 0;270 0 0;270 0 0" />
-        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
-            repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-            keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="1 1;1 1;1 1" />
-    </use>
-    <use href="#profile-5">
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="270 0 0;270 0 0;270 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="1 1;1 1;1 1" />
+        <path d="M 19,10 9,0 H 0 v 10 z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="none;none;none" />
+        </path>
+    </g>
+    <g id="profile-5-text-s-bottom">
         <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
             keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
             values="190 86;190 86;190 86" />
-        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s"
-            repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-            keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="0 0 0;0 0 0;0 0 0" />
-        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s"
-            repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
-            keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="-1 1;-1 1;-1 1" />
-    </use>
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="0 0 0;0 0 0;0 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="-1 1;-1 1;-1 1" />
+        <path d="M 0,10 H 49 L 39,0 H 0 Z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="none;none;none" />
+        </path>
+    </g>
+    <g id="profile-5-text-e-left">
+        <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="210 45;210 45;210 45" />
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="90 0 0;90 0 0;90 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="1 1;1 1;1 1" />
+        <path d="M 0,10 H 49 L 39,0 H 0 Z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="none;none;none" />
+        </path>
+    </g>
+    <g id="profile-4-text-e-top">
+        <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="211 55;211 55;211 55" />
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="0 0 0;0 0 0;0 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="1 -1;1 -1;1 -1" />
+        <path d="M 0,10 H 39 L 29,0 H 0 Z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="none;none;none" />
+        </path>
+    </g>
+    <g id="profile-4-text-e-middle">
+        <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="211 75;211 75;211 75" />
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="0 0 0;0 0 0;0 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="1 -1;1 -1;1 -1" />
+        <path d="M 0,10 H 39 L 29,0 H 0 Z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="none;none;none" />
+        </path>
+    </g>
+    <g id="profile-5-text-e-bottom">
+        <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="250 85;250 85;250 85" />
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="180 0 0;180 0 0;180 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="1 -1;1 -1;1 -1" />
+        <path d="M 0,10 H 49 L 39,0 H 0 Z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="none;none;none" />
+        </path>
+    </g>
+    <g id="profile-5-text-m-left">
+        <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="320 45;320 45;320 45" />
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="90 0 0;90 0 0;90 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="1 1;1 1;1 1" />
+        <path d="M 0,10 H 49 L 39,0 H 0 Z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="none;none;none" />
+        </path>
+    </g>
+    <g id="profile-4-text-right-m-right">
+        <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="321 55;321 55;321 55" />
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="0 0 0;0 0 0;0 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="1 -1;1 -1;1 -1" />
+        <path d="M 0,10 H 39 L 29,0 H 0 Z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="none;none;none" />
+        </path>
+    </g>
+    <g id="profile-4-text-right-m-middle">
+        <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="321 75;321 75;321 75" />
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="0 0 0;0 0 0;0 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="1 -1;1 -1;1 -1" />
+        <path d="M 0,10 H 39 L 29,0 H 0 Z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="none;none;none" />
+        </path>
+    </g>
+    <g id="profile-5-text-right-m-left">
+        <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="360 85;360 85;360 85" />
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="180 0 0;180 0 0;180 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="1 -1;1 -1;1 -1" />
+        <path d="M 0,10 H 49 L 39,0 H 0 Z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="none;none;none" />
+        </path>
+    </g>
+    <g id="profile-5-text-i">
+        <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="320 45;320 45;320 45" />
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="90 0 0;90 0 0;90 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="1 1;1 1;1 1" />
+        <path d="M 0,10 H 49 L 39,0 H 0 Z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="none;none;none" />
+        </path>
+    </g>
+    <g id="profile-5-text-o-left">
+        <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="270 45;270 45;270 45" />
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="90 0 0;90 0 0;90 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="1 1;1 1;1 1" />
+        <path d="M 0,10 H 49 L 39,0 H 0 Z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="none;none;none" />
+        </path>
+    </g>
+    <g id="profile-4-text-right-o-right">
+        <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="270 55;270 55;270 55" />
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="0 0 0;0 0 0;0 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="1 -1;1 -1;1 -1" />
+        <path d="M 0,10 H 39 L 29,0 H 0 Z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="none;none;none" />
+        </path>
+    </g>
+    <g id="profile-4-text-right-o-middle">
+        <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="270 75;270 75;270 75" />
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="0 0 0;0 0 0;0 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="1 -1;1 -1;1 -1" />
+        <path d="M 0,10 H 39 L 29,0 H 0 Z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="none;none;none" />
+        </path>
+    </g>
+    <g id="profile-5-text-right-o-left">
+        <animateTransform attributeName="transform" type="translate" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="310 85;310 85;310 85" />
+        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1"
+            values="180 0 0;180 0 0;180 0 0" />
+        <animateTransform attributeName="transform" type="scale" additive="sum" dur="6s" repeatCount="indefinite"
+            keyTimes="0;0.3;1" calcMode="spline" keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="1 -1;1 -1;1 -1" />
+        <path d="M 0,10 H 49 L 39,0 H 0 Z">
+            <animate attributeName="fill" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="#f7f3e3;#f7f3e3;#f7f3e3" />
+            <animate attributeName="stroke" dur="6s" repeatCount="indefinite" keyTimes="0;0.3;1" calcMode="spline"
+                keySplines="0.42 0 0.58 1;0.42 0 0.58 1" values="none;none;none" />
+        </path>
+    </g>
+
 </svg>
