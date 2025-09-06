@@ -1,53 +1,97 @@
-<svg width="410pt" height="140pt" viewBox="0 0 410 140" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    .part {
-      fill: black;
-    }
-    .red {
-      fill: #ff344f;
-    }
-
-    .animated {
-      animation-duration: 8.5s;
-      animation-timing-function: ease-in-out;
-      animation-iteration-count: infinite;
-    }
-
-    @keyframes morph-logogram-1 {
-      0%,
-      100% {
-        transform: translate(0, 0) rotate(0deg) scale(1, 1);
-      }
-      25% {
-        transform: translate(5px, 10px) rotate(5deg) scale(1.05, 0.95);
-      }
-      50% {
-        transform: translate(-5px, -10px) rotate(-5deg) scale(0.95, 1.05);
-      }
-      75% {
-        transform: translate(10px, -5px) rotate(10deg) scale(1, 1);
-      }
-    }
-    .anim-logogram-1 {
-      animation-name: morph-logogram-1;
-    }
-
-    @keyframes morph-logogram-2 {
-      0%,
-      100% {
-        transform: translate(0, 0) rotate(0deg) scale(1, 1);
-      }
-      25% {
-        transform: translate(-5px, -10px) rotate(-5deg) scale(0.95, 1.05);
-      }
-      50% {
-        transform: translate(5px, 10px) rotate(5deg) scale(1.05, 0.95);
-      }
-      75% {
-        transform: translate(-10px, 5px) rotate(-10deg) scale(1, 1);
-      }
-    }
-    .anim-logogram-2 {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semio Logo Animation Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #001117;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .logo-container {
+            margin: 20px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            background: #001117;
+        }
+        
+        .logo-container h2 {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #f7f3e3;
+        }
+        
+        svg {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+        }
+        
+        .info {
+            margin: 20px;
+            text-align: center;
+            max-width: 800px;
+        }
+        
+        .keyframes-info {
+            margin: 20px;
+            background: #222;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Semio Logo Animation Test</h1>
+    
+    <div class="info">
+        <p>This animated logo was generated from 6 keyframes (logo-1.svg to logo-6.svg) creating an infinite loop animation with 11 steps total.</p>
+        <p>The animation sequence: 1 → 2 → 3 → 4 → 5 → 6 → 5 → 4 → 3 → 2 → (loop back to 1)</p>
+    </div>
+    
+    <div class="logo-container">
+        <h2>Generated Animated Logo</h2>
+        <object data="logo.svg" type="image/svg+xml" style="width: 100%; height: 200px;">
+            <p>Your browser does not support SVG animations. Please try opening logo.svg directly.</p>
+        </object>
+    </div>
+    
+    <div class="keyframes-info">
+        <h3>Animation Details:</h3>
+        <ul>
+            <li><strong>Duration:</strong> 5 seconds per cycle (0.5s per keyframe)</li>
+            <li><strong>Repeat:</strong> Infinite loop</li>
+            <li><strong>Keyframes:</strong> 10 animation frames (6 forward + 4 reverse)</li>
+            <li><strong>Easing:</strong> Smooth ease-in-out transitions (cubic-bezier)</li>
+            <li><strong>Properties animated:</strong> Transform (translate, rotate, scale), fill, stroke</li>
+            <li><strong>Generated from:</strong> logo-1.svg through logo-6.svg</li>
+        </ul>
+    </div>
+    
+    <div class="info">
+        <p><strong>Note:</strong> Each group element animates independently based on its transform matrix and styling in the original keyframe files.</p>
+    </div>
+    
+    <script>
+        // Log animation info
+        console.log('Semio Logo Animation loaded');
+        console.log('Generated with Node.js logo animation generator');
+    </script>
+</body>
+</html>
       animation-name: morph-logogram-2;
     }
 

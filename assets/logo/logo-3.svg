@@ -11,19 +11,19 @@
         inkscape:window-y="1077" inkscape:window-maximized="1" inkscape:current-layer="svg23" />
     <title id="title1">semio</title>
     <rect id="background" width="100%" height="100%" fill="#001117" />
-    <g id="profile-5-emblem-top" transform="matrix(-1,0,0,1,95.411177,36.122031)" style="stroke-width:0.5">
+    <g id="profile-5-emblem-top" transform="matrix(-1,0,0,1,95.411177,36.122031)">
         <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path1" style="stroke-width:0.5" />
     </g>
-    <g id="profile-5-emblem-right" transform="matrix(-1,0,0,1,93.634117,58.756643)" style="stroke-width:0.5">
+    <g id="profile-5-emblem-right" transform="matrix(-1,0,0,1,93.634117,58.756643)">
         <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path2" style="stroke-width:0.5" />
     </g>
-    <g id="profile-4-emblem-left" transform="matrix(-1,0,0,1,232.23154,92.484741)" style="stroke-width:0.5">
+    <g id="profile-4-emblem-left" transform="matrix(-1,0,0,1,232.23154,92.484741)">
         <path d="M 0,10 H 39 L 29,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path3" style="stroke-width:0.5" />
     </g>
-    <g id="profile-2-emblem-middle" transform="matrix(-1,0,0,1,344.90607,83.265475)" style="stroke-width:0.5">
+    <g id="profile-2-emblem-middle" transform="matrix(-1,0,0,1,344.90607,83.265475)">
         <path d="M 19,10 9,0 H 0 v 10 z" fill="#f7f3e3" stroke="none" id="path4" style="stroke-width:0.5" />
     </g>
-    <g id="profile-2-emblem-bottom" transform="matrix(-1,0,0,1,365.81789,133.72138)" style="stroke-width:0.5">
+    <g id="profile-2-emblem-bottom" transform="matrix(-1,0,0,1,365.81789,133.72138)">
         <path d="m 1.4365455,-40.515316 10.0000005,-10 h 9 v 10 z" fill="#f7f3e3" stroke="none" id="path5"
             style="stroke-width:0.5" />
     </g>
