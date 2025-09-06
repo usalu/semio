@@ -379,11 +379,17 @@ function createAnimatedSVG(keyframes: KeyframeData[], outputPath: string): void 
       return gf ? gf.path.stroke : firstGroup.path.stroke;
     }).join(';');
 
+    const strokeWidthValues = groupFrames.map(gf => {
+      return gf ? gf.path.strokeWidth : firstGroup.path.strokeWidth;
+    }).join(';');
+
     svgContent += `        <path d="${firstGroup.path.d}">
             <animate attributeName="fill" dur="${totalDuration}s" repeatCount="indefinite" keyTimes="${keyTimesStr}"
                 values="${fillValues}" calcMode="spline" keySplines="${keySplinesStr}" />
             <animate attributeName="stroke" dur="${totalDuration}s" repeatCount="indefinite" keyTimes="${keyTimesStr}"
                 values="${strokeValues}" calcMode="spline" keySplines="${keySplinesStr}" />
+            <animate attributeName="stroke-width" dur="${totalDuration}s" repeatCount="indefinite" keyTimes="${keyTimesStr}"
+                values="${strokeWidthValues}" calcMode="spline" keySplines="${keySplinesStr}" />
         </path>
     </g>
 `;
@@ -404,7 +410,7 @@ function main(): void {
   // Parse input keyframes
   const keyframes: KeyframeData[] = [];
   for (let i = 1; i <= 6; i++) {
-    const filePath = path.join(logoDir, `logo-${i}.svg`);
+    const filePath = path.join(logoDir, `logo_${i}.svg`);
     if (fs.existsSync(filePath)) {
       console.log(`Parsing ${filePath}...`);
       keyframes.push(parseSVGFile(filePath));
@@ -422,7 +428,7 @@ function main(): void {
   console.log(`Will generate ${generateKeyframeSequence(keyframes).length} animation frames`);
 
   // Create animated SVG
-  const outputPath = path.join(logoDir, 'logo-generated.svg');
+  const outputPath = path.join(logoDir, 'logo_generated.svg');
   createAnimatedSVG(keyframes, outputPath);
 }
 

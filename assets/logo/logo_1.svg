@@ -12,72 +12,72 @@
    <title id="title1">semio</title>
    <rect id="background" width="100%" height="100%" fill="#001117" />
    <g id="profile-5-emblem-top" transform="translate(20 40) scale(2 -2)">
-      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#ff344f" stroke="#f7f3e3" id="path1" style="stroke-width:0.5" />
+      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#ff344f" stroke="#f7f3e3" id="path1" stroke-width="0.5" />
    </g>
    <g id="profile-5-emblem-right" transform="translate(100 120) rotate(270 0 0) scale(2 2)">
-      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#ff344f" stroke="#f7f3e3" id="path2" style="stroke-width:0.5" />
+      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#ff344f" stroke="#f7f3e3" id="path2" stroke-width="0.5" />
    </g>
    <g id="profile-4-emblem-left" transform="translate(40 42) rotate(90 0 0) scale(2 2)">
-      <path d="M 0,10 H 39 L 29,0 H 0 Z" fill="#fa9500" stroke="#f7f3e3" id="path3" style="stroke-width:0.5" />
+      <path d="M 0,10 H 39 L 29,0 H 0 Z" fill="#00a69d" stroke="#f7f3e3" id="path3" stroke-width="0.5" />
    </g>
    <g id="profile-2-emblem-middle" transform="translate(98 60) scale(-2 2)">
-      <path d="M 19,10 9,0 H 0 v 10 z" fill="#00a69d" stroke="#f7f3e3" id="path4" style="stroke-width:0.5" />
+      <path d="M 19,10 9,0 H 0 V 10 Z" fill="#fa9500" stroke="#f7f3e3" id="path4" stroke-width="0.5" />
    </g>
    <g id="profile-2-emblem-bottom" transform="translate(98 100) scale(-2 2)">
-      <path d="M 19,10 9,0 H 0 v 10 z" fill="#00a69d" stroke="#f7f3e3" id="path5" style="stroke-width:0.5" />
+      <path d="M 19,10 9,0 H 0 V 10 Z" fill="#fa9500" stroke="#f7f3e3" id="path5" stroke-width="0.5" />
    </g>
    <g id="profile-5-text-s-top" transform="rotate(180,94.915984,27.584016)">
-      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path6" />
+      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path6" stroke-width="0" />
    </g>
    <g id="profile-2-text-s-left" transform="translate(150 65) rotate(90 0 0) scale(-1 1)">
-      <path d="M 19,10 9,0 H 0 v 10 z" fill="#f7f3e3" stroke="none" id="path7" />
+      <path d="M 19,10 9,0 H 0 V 10 Z" fill="#f7f3e3" stroke="none" stroke-width="0" id="path7" />
    </g>
    <g id="profile-5-text-s-middle" transform="matrix(1,0,0,-1,140,76.168033)">
-      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path8" />
+      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" stroke-width="0" id="path8" />
    </g>
    <g id="profile-2-text-s-right" transform="rotate(-90,132.66803,-46.995902)">
-      <path d="M 19,10 9,0 H 0 v 10 z" fill="#f7f3e3" stroke="none" id="path9" />
+      <path d="M 19,10 9,0 H 0 V 10 Z" fill="#f7f3e3" stroke="none" stroke-width="0" id="path9" />
    </g>
    <g id="profile-5-text-s-bottom" transform="matrix(-1,0,0,1,189.66393,86.672131)">
-      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path10" />
+      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" stroke-width="0" id="path10" />
    </g>
    <g id="profile-5-text-e-left" transform="translate(210 45) rotate(90 0 0) scale(1 1)">
-      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path11" />
+      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" stroke-width="0" id="path11" />
    </g>
    <g id="profile-4-text-e-top" transform="translate(211 55) rotate(0 0 0) scale(1 -1)">
-      <path d="M 0,10 H 39 L 29,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path12" />
+      <path d="M 0,10 H 39 L 29,0 H 0 Z" fill="#f7f3e3" stroke="none" stroke-width="0" id="path12" />
    </g>
    <g id="profile-4-text-e-middle" transform="translate(211 75) rotate(0 0 0) scale(1 -1)">
-      <path d="M 0,10 H 39 L 29,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path13" />
+      <path d="M 0,10 H 39 L 29,0 H 0 Z" fill="#f7f3e3" stroke="none" stroke-width="0" id="path13" />
    </g>
    <g id="profile-5-text-e-bottom" transform="matrix(-1,0,0,1,249.4959,85)">
-      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path14" />
+      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" stroke-width="0" id="path14" />
    </g>
    <g id="profile-4-text-right-m-right" transform="matrix(0,1,1,0,300,56)">
-      <path d="M 0,10 H 39 L 29,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path16" />
+      <path d="M 0,10 H 39 L 29,0 H 0 Z" fill="#f7f3e3" stroke="none" stroke-width="0" id="path16" />
    </g>
    <g id="profile-4-text-right-m-middle" transform="matrix(0,1,1,0,280,56)">
-      <path d="M 0,10 H 39 L 29,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path17" />
+      <path d="M 0,10 H 39 L 29,0 H 0 Z" fill="#f7f3e3" stroke="none" stroke-width="0" id="path17" />
    </g>
    <g id="profile-5-text-right-m-left" transform="matrix(0,-1,-1,0,270,95)">
-      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path18" />
+      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" stroke-width="0" id="path18" />
    </g>
    <g id="profile-5-text-m-top" transform="rotate(180,155,27.5)">
-      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path19" />
+      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" stroke-width="0" id="path19" />
    </g>
    <g id="profile-5-text-i" transform="matrix(0,-1,-1,0,329.74589,92.991803)">
-      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path15" />
+      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" stroke-width="0" id="path15" />
    </g>
    <g id="profile-5-text-o-left" transform="matrix(0,-1,-1,0,351.13115,92.655737)">
-      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path20" />
+      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" stroke-width="0" id="path20" />
    </g>
    <g id="profile-4-text-right-o-top" transform="rotate(180,190.60994,26.649643)">
-      <path d="M 0,10 H 39 L 29,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path21" />
+      <path d="M 0,10 H 39 L 29,0 H 0 Z" fill="#f7f3e3" stroke="none" stroke-width="0" id="path21" />
    </g>
    <g id="profile-4-text-right-o-bottom" transform="translate(352.20049,82.428841)">
-      <path d="M 0,10 H 39 L 29,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path22" />
+      <path d="M 0,10 H 39 L 29,0 H 0 Z" fill="#f7f3e3" stroke="none" stroke-width="0" id="path22" />
    </g>
    <g id="profile-5-text-right-o-right" transform="matrix(0,1,1,0,381.94358,43.214245)">
-      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path23" />
+      <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" stroke-width="0" id="path23" />
    </g>
 </svg>

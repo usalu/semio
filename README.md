@@ -1,9 +1,9 @@
 <p align="center">
     <a href="https://docs.semio-tech.com">
       <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="assets/logo/semio_horizontal_dark.svg">
-          <source media="(prefers-color-scheme: light)" srcset="assets/logo/semio_horizontal.svg">
-          <img alt="semio" href="https://github.com/usalu/semio/" src="assets/logo/semio_horizontal.svg">
+          <source media="(prefers-color-scheme: dark)" srcset="assets/logo/logo_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="assets/logo/logo.svg">
+          <img alt="semio" href="https://github.com/usalu/semio/" src="assets/logo/logo.svg">
       </picture>
     </a>
     <br/>
