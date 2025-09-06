@@ -20,10 +20,10 @@
    <g id="profile-4-emblem-left" transform="translate(40 42) rotate(90 0 0) scale(2 2)">
       <path d="M 0,10 H 39 L 29,0 H 0 Z" fill="#fa9500" stroke="#f7f3e3" id="path3" style="stroke-width:0.5" />
    </g>
-   <g id="profile-2-emblem-middle" transform="translate(98 60) rotate(0 0 0) scale(-2 2)">
+   <g id="profile-2-emblem-middle" transform="translate(98 60) scale(-2 2)">
       <path d="M 19,10 9,0 H 0 v 10 z" fill="#00a69d" stroke="#f7f3e3" id="path4" style="stroke-width:0.5" />
    </g>
-   <g id="profile-2-emblem-bottom" transform="translate(98 100) rotate(0 0 0) scale(-2 2)">
+   <g id="profile-2-emblem-bottom" transform="translate(98 100) scale(-2 2)">
       <path d="M 19,10 9,0 H 0 v 10 z" fill="#00a69d" stroke="#f7f3e3" id="path5" style="stroke-width:0.5" />
    </g>
    <g id="profile-5-text-s-top" transform="rotate(180,94.915984,27.584016)">

@@ -255,6 +255,9 @@ function generateKeyframeSequence(keyframes: KeyframeData[]): KeyframeData[] {
         sequence.push(keyframes[i]); // Hold frame 2
     }
 
+    // Add the first keyframe at the end to complete the loop smoothly
+    sequence.push(keyframes[0]);
+
     return sequence;
 }
 
