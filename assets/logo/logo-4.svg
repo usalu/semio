@@ -6,7 +6,7 @@
    <defs id="defs23" />
    <sodipodi:namedview id="namedview23" pagecolor="#ffffff" bordercolor="#000000" borderopacity="0.25"
       inkscape:showpageshadow="2" inkscape:pageopacity="0.0" inkscape:pagecheckerboard="0" inkscape:deskcolor="#d1d1d1"
-      showgrid="false" inkscape:zoom="1.052037" inkscape:cx="292.76538" inkscape:cy="140.67947"
+      showgrid="false" inkscape:zoom="1.487805" inkscape:cx="224.49179" inkscape:cy="79.9836"
       inkscape:window-width="1920" inkscape:window-height="1010" inkscape:window-x="-6" inkscape:window-y="1077"
       inkscape:window-maximized="1" inkscape:current-layer="svg23" />
    <title id="title1">semio</title>
@@ -23,9 +23,8 @@
    <g id="profile-2-emblem-middle" transform="matrix(0,-1,-1,0,324.0695,94.742155)">
       <path d="M 19,10 9,0 H 0 v 10 z" fill="#f7f3e3" stroke="none" id="path4" style="stroke-width:0.5" />
    </g>
-   <g id="profile-2-emblem-bottom" transform="rotate(90,106.19901,179.43701)">
-      <path d="m 1.4365455,-40.515316 10.0000005,-10 h 9 v 10 z" fill="#f7f3e3" stroke="none" id="path5"
-         style="stroke-width:0.5" />
+   <g id="profile-2-emblem-bottom" transform="matrix(0,-1,-1,0,335.75774,94.903539)">
+      <path d="M 19,10 9,0 H 0 v 10" fill="#f7f3e3" stroke="none" id="path5" style="stroke-width:0.5" />
    </g>
    <g id="profile-5-text-s-top" transform="matrix(0,-1,-1,0,150.74475,94.502547)">
       <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path6" />
@@ -36,9 +35,8 @@
    <g id="profile-5-text-s-middle" transform="matrix(0,-1,-1,0,174.10953,95.178775)">
       <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path8" />
    </g>
-   <g id="profile-2-text-s-right" transform="matrix(0,-1,-1,0,352.85859,93.880591)">
-      <path d="M 18.836074,13.688527 8.8360739,3.6885267 H -0.16392608 V 13.688527 Z" fill="#f7f3e3" stroke="none"
-         id="path9" />
+   <g id="profile-2-text-s-right" transform="matrix(0,-1,-1,0,347.31351,95.224853)">
+      <path d="M 19,10 9,0 H 0 v 10" fill="#f7f3e3" stroke="none" id="path9" />
    </g>
    <g id="profile-5-text-s-bottom" transform="matrix(0,-1,-1,0,126.8841,94.252541)">
       <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path10" />

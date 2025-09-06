@@ -6,8 +6,8 @@
     <defs id="defs23" />
     <sodipodi:namedview id="namedview23" pagecolor="#ffffff" bordercolor="#000000" borderopacity="0.25"
         inkscape:showpageshadow="2" inkscape:pageopacity="0.0" inkscape:pagecheckerboard="0"
-        inkscape:deskcolor="#d1d1d1" showgrid="false" inkscape:zoom="2.1040739" inkscape:cx="181.55256"
-        inkscape:cy="62.260172" inkscape:window-width="1920" inkscape:window-height="1010" inkscape:window-x="-6"
+        inkscape:deskcolor="#d1d1d1" showgrid="false" inkscape:zoom="1.052037" inkscape:cx="290.86431"
+        inkscape:cy="158.73967" inkscape:window-width="1920" inkscape:window-height="1010" inkscape:window-x="-6"
         inkscape:window-y="1077" inkscape:window-maximized="1" inkscape:current-layer="svg23" />
     <title id="title1">semio</title>
     <rect id="background" width="100%" height="100%" fill="#001117" />
@@ -23,9 +23,8 @@
     <g id="profile-2-emblem-middle" transform="matrix(-1,0,0,1,47.859174,48.83119)">
         <path d="M 19,10 9,0 H 0 v 10 z" fill="#f7f3e3" stroke="none" id="path4" style="stroke-width:0.5" />
     </g>
-    <g id="profile-2-emblem-bottom" transform="matrix(-1,0,0,1,68.770988,99.287101)">
-        <path d="m 1.4365455,-40.515316 10.0000005,-10 h 9 v 10 z" fill="#f7f3e3" stroke="none" id="path5"
-            style="stroke-width:0.5" />
+    <g id="profile-2-emblem-bottom" transform="translate(48.701633,48.789826)">
+        <path d="M 19,10 9,0 H 0 v 10" fill="#f7f3e3" stroke="none" id="path5" style="stroke-width:0.5" />
     </g>
     <g id="profile-5-text-s-top" transform="translate(88.413224,60.771628)">
         <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path6" />
@@ -36,9 +35,8 @@
     <g id="profile-5-text-s-middle" transform="translate(87.581264,81.947851)">
         <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path8" />
     </g>
-    <g id="profile-2-text-s-right" transform="translate(108.63044,46.365882)">
-        <path d="M 18.836074,13.688527 8.8360739,3.6885267 H -0.16392608 V 13.688527 Z" fill="#f7f3e3" stroke="none"
-            id="path9" />
+    <g id="profile-2-text-s-right" transform="translate(108.39281,49.930396)">
+        <path d="M 19,10 9,0 H 0 v 10" fill="#f7f3e3" stroke="none" id="path9" />
     </g>
     <g id="profile-5-text-s-bottom" transform="matrix(-1,0,0,1,136.40503,71.27572)">
         <path d="M 0,10 H 49 L 39,0 H 0 Z" fill="#f7f3e3" stroke="none" id="path10" />
