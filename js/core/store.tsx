@@ -3361,11 +3361,20 @@ export function useDesignEditorCommands() {
     selectPieces: (pieceIds: PieceId[]) => designEditor.execute("semio.designEditor.selectPieces", pieceIds),
     addPieceToSelection: (pieceId: PieceId) => designEditor.execute("semio.designEditor.addPieceToSelection", pieceId),
     removePieceFromSelection: (pieceId: PieceId) => designEditor.execute("semio.designEditor.removePieceFromSelection", pieceId),
+    selectConnection: (connection: Connection) => designEditor.execute("semio.designEditor.selectConnection", connection),
+    addConnectionToSelection: (connection: Connection) => designEditor.execute("semio.designEditor.addConnectionToSelection", connection),
+    removeConnectionFromSelection: (connection: Connection) => designEditor.execute("semio.designEditor.removeConnectionFromSelection", connection),
     selectPiecePort: (pieceId: PieceId, portId: PortId) => designEditor.execute("semio.designEditor.selectPiecePort", pieceId, portId),
     deselectPiecePort: () => designEditor.execute("semio.designEditor.deselectPiecePort"),
+    addConnection: (connection: Connection) => designEditor.execute("semio.designEditor.addConnection", connection),
+    addConnections: (connections: Connection[]) => designEditor.execute("semio.designEditor.addConnections", connections),
+    setConnections: (connections: Connection[]) => designEditor.execute("semio.designEditor.setConnections", connections),
+    setPieces: (pieces: Piece[]) => designEditor.execute("semio.designEditor.setPieces", pieces),
+    setDesign: (design: Design) => designEditor.execute("semio.designEditor.setDesign", design),
     deleteSelected: () => designEditor.execute("semio.designEditor.deleteSelected"),
     toggleDiagramFullscreen: () => designEditor.execute("semio.designEditor.toggleDiagramFullscreen"),
     toggleModelFullscreen: () => designEditor.execute("semio.designEditor.toggleModelFullscreen"),
+    executeCommand: (command: string, ...args: any[]) => designEditor.execute(command, ...args),
     execute: (command: string, ...args: any[]) => designEditor.execute(command, ...args),
   };
 }
@@ -3374,11 +3383,23 @@ export function useSelection(): DesignEditorSelection {
   return useDesignEditor((store) => store.snapshot().selection);
 }
 
+export function useDesignEditorSelection(): DesignEditorSelection {
+  return useDesignEditor((store) => store.snapshot().selection);
+}
+
 export function useFullscreen(): DesignEditorFullscreenPanel {
   return useDesignEditor((store) => store.snapshot().fullscreenPanel);
 }
 
+export function useDesignEditorFullscreen(): DesignEditorFullscreenPanel {
+  return useDesignEditor((store) => store.snapshot().fullscreenPanel);
+}
+
 export function useDiff(): KitDiff {
+  return useDesignEditor((store) => store.snapshot().diff);
+}
+
+export function useDesignEditorDesignDiff(): KitDiff {
   return useDesignEditor((store) => store.snapshot().diff);
 }
 
@@ -3396,5 +3417,10 @@ export function useFileUrls(): Map<Url, Url> {
 export function useOthers(): DesignEditorPresenceOther[] {
   return useDesignEditor((store) => store.snapshot().others);
 }
+
+export function useDesignEditorOthers(): DesignEditorPresenceOther[] {
+  return useDesignEditor((store) => store.snapshot().others);
+}
+
 
 // #endregion Hooks
