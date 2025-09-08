@@ -2049,7 +2049,12 @@ export const piecesMetadata = (
   }
 > => {
   const normalizedDesignId = designIdLikeToDesignId(designId);
-  const flatDesign = flattenDesign(kit, normalizedDesignId);
+  const design = findDesignInKit(kit, normalizedDesignId);
+  if (!design) {
+    throw new Error(`Design ${normalizedDesignId.name} not found in kit ${kit.name}`);
+  }
+  const flattenDiff = flattenDesign(kit, normalizedDesignId);
+  const flatDesign = applyDesignDiff(design, flattenDiff, true);
   const fixedPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.fixedPieceId") || p.id_);
   const parentPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.parentPieceId", null));
   const depths = flatDesign.pieces?.map((p) => parseInt(findAttributeValue(p, "semio.depth", "0")!));
@@ -2702,7 +2707,7 @@ const computeChildPlane = (parentPlane: Plane, parentPort: Port, childPort: Port
 
   return matrixToPlane(finalMatrix);
 };
-export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
+export const flattenDesign = (kit: Kit, designId: DesignIdLike): DesignDiff => {
   const normalizedDesignId = designIdLikeToDesignId(designId);
   const design = findDesignInKit(kit, normalizedDesignId);
   if (!design) {
@@ -2712,7 +2717,7 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
 
   let expandedDesign = expandDesignPieces(design, kit);
 
-  if (!expandedDesign.pieces || expandedDesign.pieces.length === 0) return expandedDesign;
+  if (!expandedDesign.pieces || expandedDesign.pieces.length === 0) return {};
 
   const typesDict: { [key: string]: { [key: string]: Type } } = {};
   types.forEach((t) => {
@@ -2863,7 +2868,36 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): Design => {
   });
   flatDesign.pieces = flatDesign.pieces?.map((p) => pieceMap[p.id_ ?? ""]);
   flatDesign.connections = [];
-  return flatDesign;
+  
+  // Return the diff between original expanded design and flattened design
+  const updatedPieces = flatDesign.pieces?.map(flatPiece => {
+    const originalPiece = expandedDesign.pieces?.find(p => p.id_ === flatPiece.id_);
+    if (!originalPiece) return null;
+    
+    // Build piece diff for pieces that changed
+    const pieceDiff: PieceDiff = {};
+    if (flatPiece.plane !== originalPiece.plane) pieceDiff.plane = flatPiece.plane;
+    if (flatPiece.center !== originalPiece.center) pieceDiff.center = flatPiece.center;
+    if (JSON.stringify(flatPiece.attributes) !== JSON.stringify(originalPiece.attributes)) pieceDiff.attributes = flatPiece.attributes;
+    
+    // Only return diff if there are changes
+    if (Object.keys(pieceDiff).length === 0) return null;
+    
+    return {
+      id: { id_: flatPiece.id_ },
+      diff: pieceDiff
+    };
+  }).filter(update => update !== null) as Array<{ id: PieceId; diff: PieceDiff }>;
+
+  const removedConnections = expandedDesign.connections?.map(c => ({
+    connected: { piece: { id_: c.connected.piece.id_ } },
+    connecting: { piece: { id_: c.connecting.piece.id_ } }
+  })) || [];
+
+  return {
+    pieces: updatedPieces.length > 0 ? { updated: updatedPieces } : undefined,
+    connections: removedConnections.length > 0 ? { removed: removedConnections } : undefined
+  };
 };
 
 //#endregion Design

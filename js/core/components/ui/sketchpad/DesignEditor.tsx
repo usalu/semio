@@ -26,7 +26,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 
 import { ReactFlowProvider } from "@xyflow/react";
 import { DesignId, TypeId } from "../../../semio";
-import { DesignScopeProvider, useDesign, useDesignEditorCommands, useDesignId, useFullscreen, useKit } from "../../../store";
+import { useDesign, useDesignEditorCommands, useFullscreen, useKit } from "../../../store";
 import Navbar from "../Navbar";
 import Chat from "./Chat";
 import Console from "./Console";
@@ -53,9 +53,8 @@ interface VisiblePanels {
 const DesignEditor: FC<DesignEditorProps> = () => {
   const kit = useKit();
   const design = useDesign();
-  const designId = useDesignId();
   const fullscreenPanel = useFullscreen();
-  const commands = useDesignEditorCommands();
+  const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen } = useDesignEditorCommands();
 
   // Panel visibility and sizing state
   const [visiblePanels, setVisiblePanels] = useState<VisiblePanels>({
@@ -75,12 +74,12 @@ const DesignEditor: FC<DesignEditorProps> = () => {
   const [activeDraggedDesignId, setActiveDraggedDesignId] = useState<DesignId | null>(null);
 
   // Hotkeys for common actions
-  useHotkeys("ctrl+a", () => commands.selectAll());
-  useHotkeys("ctrl+d", () => commands.deselectAll());
-  useHotkeys("delete", () => commands.deleteSelected());
-  useHotkeys("ctrl+z", () => commands.undo());
-  useHotkeys("ctrl+y", () => commands.redo());
-  useHotkeys("ctrl+shift+z", () => commands.redo());
+  useHotkeys("ctrl+a", () => selectAll());
+  useHotkeys("ctrl+d", () => deselectAll());
+  useHotkeys("delete", () => deleteSelected());
+  useHotkeys("ctrl+z", () => undo());
+  useHotkeys("ctrl+y", () => redo());
+  useHotkeys("ctrl+shift+z", () => redo());
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -133,7 +132,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
     );
   }
 
-  if (!kit || !design || !designId) {
+  if (!kit || !design) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
@@ -157,7 +156,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
               <button onClick={() => togglePanel("chat")} className={`px-3 py-1 rounded text-sm ${visiblePanels.chat ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
                 Chat
               </button>
-              <button onClick={() => commands.toggleDiagramFullscreen()} className="px-3 py-1 rounded text-sm bg-muted">
+              <button onClick={() => toggleDiagramFullscreen()} className="px-3 py-1 rounded text-sm bg-muted">
                 Fullscreen
               </button>
             </div>
@@ -165,18 +164,16 @@ const DesignEditor: FC<DesignEditorProps> = () => {
         />
         <div className="flex-1 flex overflow-hidden relative">
           <ReactFlowProvider>
-            <DesignScopeProvider id={designId}>
-              <div className="flex-1 flex flex-col">
-                <div className="flex-1 flex">
-                  <div className="flex-1 relative">
-                    <Diagram visible={true} width={400} />
-                  </div>
-                  <div className="flex-1 relative">
-                    <Model />
-                  </div>
+            <div className="flex-1 flex flex-col">
+              <div className="flex-1 flex">
+                <div className="flex-1 relative">
+                  <Diagram visible={true} width={400} />
+                </div>
+                <div className="flex-1 relative">
+                  <Model />
                 </div>
               </div>
-            </DesignScopeProvider>
+            </div>
           </ReactFlowProvider>
         </div>
         <Workbench visible={visiblePanels.workbench} onWidthChange={setWorkbenchWidth} width={workbenchWidth} />

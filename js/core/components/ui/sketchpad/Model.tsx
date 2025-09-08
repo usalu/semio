@@ -24,7 +24,7 @@ import { GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, OrthographicCame
 import { Canvas, ThreeEvent } from "@react-three/fiber";
 import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { applyDesignDiff, DiffStatus, flattenDesign, getPieceRepresentationUrls, Piece, planeToMatrix, toSemioRotation, updateDesignInKit } from "../../../semio";
+import { DiffStatus, getPieceRepresentationUrls, Piece, planeToMatrix, toSemioRotation } from "../../../semio";
 import { DesignEditorFullscreenPanel, DesignEditorPresenceOther, PieceScopeProvider, useDesign, useDesignEditorCommands, useDiff, useFileUrls, useFullscreen, useKit, useOthers, useSelection } from "../../../store";
 
 const getComputedColor = (variable: string): string => {
@@ -213,11 +213,10 @@ const ModelDesign: FC = () => {
   const storeKit = useKit();
   const baseDesign = useDesign();
   if (!storeKit || !baseDesign) return null;
-  const design = applyDesignDiff(baseDesign, designDiff, true);
-  const kit = useMemo(() => updateDesignInKit(storeKit, design), [storeKit, design]);
+  const kit = useDiffedKit();
   const types = kit?.types ?? [];
 
-  const flatDesign = useMemo(() => flattenDesign(kit, designId), [kit, designId]);
+  const flatDesign = useFlatDesign();
   const piecePlanes = useMemo(() => flatDesign.pieces?.map((p: Piece) => p.plane!) || [], [flatDesign]);
 
   const pieceRepresentationUrls = useMemo(() => getPieceRepresentationUrls(flatDesign, types), [flatDesign, types]);

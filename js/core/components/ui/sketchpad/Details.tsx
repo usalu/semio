@@ -22,10 +22,9 @@ import {
   parseDesignIdFromVariant,
   Piece,
   PieceId,
-  piecesMetadata,
   PortId,
 } from "../../../semio";
-import { useDesign, useDesignEditorCommands, useDesignId, useKit, useSelection } from "../../../store";
+import { useDesign, useDesignEditorCommands, useDesignId, useKit, usePiecesMetadata, useSelection } from "../../../store";
 import Combobox from "../Combobox";
 import { ResizablePanelProps } from "./DesignEditor";
 
@@ -408,6 +407,7 @@ const DesignSection: FC = () => {
 const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
   const { setDesign, setPiece, setPieces, setConnection, startTransaction, finalizeTransaction, abortTransaction, executeCommand } = useDesignEditorCommands();
   const design = useDesign();
+  const metadata = usePiecesMetadata();
 
   // Handle both regular pieces and synthetic design pieces (fixed and connected)
   const includedDesigns = getIncludedDesigns(design);
@@ -421,9 +421,6 @@ const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
     }
 
     // For connected designs, find the actual parent connection using BFS metadata
-    const kit = useKit();
-    const designId = useDesignId();
-    const metadata = piecesMetadata(kit, designId);
     const pieceMetadata = metadata.get(pieceId);
 
     if (!pieceMetadata?.parentPieceId) {
@@ -487,10 +484,6 @@ const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
       };
     }
   });
-
-  const kit = useKit();
-  const designId = useDesignId();
-  const metadata = piecesMetadata(kit, designId);
 
   const isSingle = pieceIds.length === 1;
   const piece = isSingle ? pieces[0] : null;

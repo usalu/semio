@@ -28,6 +28,8 @@ import { v4 as uuidv4 } from "uuid";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 import {
+  applyDesignDiff,
+  applyKitDiff,
   Attribute,
   Author,
   Camera,
@@ -45,6 +47,7 @@ import {
   FileDiff,
   fileIdLikeToFileId,
   findDesignInKit,
+  flattenDesign,
   Kit,
   KitDiff,
   KitId,
@@ -115,7 +118,7 @@ export interface DesignEditorEdit {
   undo: DesignEditorStep;
 }
 
-export interface YStore { }
+export interface YStore {}
 
 export interface FileSnapshot {
   snapshot(): SemioFile;
@@ -128,9 +131,9 @@ export interface FileSubscriptions {
   onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
-export interface FileStore extends FileSnapshot { }
+export interface FileStore extends FileSnapshot {}
 
-export interface FileStoreFull extends FileSnapshot, FileActions, FileSubscriptions { }
+export interface FileStoreFull extends FileSnapshot, FileActions, FileSubscriptions {}
 
 export interface RepresentationSnapshot {
   snapshot(): Representation;
@@ -144,9 +147,9 @@ export interface RepresentationSubscriptions {
   onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
-export interface RepresentationStore extends RepresentationSnapshot { }
+export interface RepresentationStore extends RepresentationSnapshot {}
 
-export interface RepresentationStoreFull extends RepresentationSnapshot, RepresentationActions, RepresentationSubscriptions { }
+export interface RepresentationStoreFull extends RepresentationSnapshot, RepresentationActions, RepresentationSubscriptions {}
 
 export interface PortSnapshot {
   snapshot(): Port;
@@ -157,8 +160,8 @@ export interface PortActions {
 export interface PortSubscriptions {
   onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-export interface PortStore extends PortSnapshot { }
-export interface PortStoreFull extends PortSnapshot, PortActions, PortSubscriptions { }
+export interface PortStore extends PortSnapshot {}
+export interface PortStoreFull extends PortSnapshot, PortActions, PortSubscriptions {}
 
 export interface TypeSnapshot {
   snapshot(): Type;
@@ -177,8 +180,8 @@ export interface TypeChildStoresFull {
   representations: Map<string, RepresentationStoreFull>;
   ports: Map<string, PortStoreFull>;
 }
-export interface TypeStore extends TypeSnapshot, TypeChildStores { }
-export interface TypeStoreFull extends TypeSnapshot, TypeChildStoresFull, TypeActions, TypeSubscriptions { }
+export interface TypeStore extends TypeSnapshot, TypeChildStores {}
+export interface TypeStoreFull extends TypeSnapshot, TypeChildStoresFull, TypeActions, TypeSubscriptions {}
 
 export interface PieceSnapshot {
   snapshot(): Piece;
@@ -189,10 +192,10 @@ export interface PieceActions {
 export interface PieceSubscriptions {
   onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-export interface PieceChildStores { }
-export interface PieceChildStoresFull { }
-export interface PieceStore extends PieceSnapshot, PieceChildStores { }
-export interface PieceStoreFull extends PieceSnapshot, PieceChildStoresFull, PieceActions, PieceSubscriptions { }
+export interface PieceChildStores {}
+export interface PieceChildStoresFull {}
+export interface PieceStore extends PieceSnapshot, PieceChildStores {}
+export interface PieceStoreFull extends PieceSnapshot, PieceChildStoresFull, PieceActions, PieceSubscriptions {}
 
 export interface ConnectionSnapshot {
   snapshot(): Connection;
@@ -203,8 +206,8 @@ export interface ConnectionActions {
 export interface ConnectionSubscriptions {
   onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-export interface ConnectionStore extends ConnectionSnapshot { }
-export interface ConnectionStoreFull extends ConnectionSnapshot, ConnectionActions, ConnectionSubscriptions { }
+export interface ConnectionStore extends ConnectionSnapshot {}
+export interface ConnectionStoreFull extends ConnectionSnapshot, ConnectionActions, ConnectionSubscriptions {}
 
 export interface DesignSnapshot {
   snapshot(): Design;
@@ -223,8 +226,8 @@ export interface DesignChildStoresFull {
   pieces: Map<string, PieceStoreFull>;
   connections: Map<string, ConnectionStoreFull>;
 }
-export interface DesignStore extends DesignSnapshot, DesignChildStores { }
-export interface DesignStoreFull extends DesignSnapshot, DesignActions, DesignSubscriptions, DesignChildStoresFull { }
+export interface DesignStore extends DesignSnapshot, DesignChildStores {}
+export interface DesignStoreFull extends DesignSnapshot, DesignActions, DesignSubscriptions, DesignChildStoresFull {}
 
 export interface KitSnapshot {
   snapshot(): Kit;
@@ -263,8 +266,8 @@ export interface KitChildStoresFull {
   designs: Map<string, DesignStoreFull>;
   files: Map<Url, FileStoreFull>;
 }
-export interface KitStore extends KitSnapshot, KitChildStores, KitFileUrls, KitCommands, KitSubscriptions { }
-export interface KitStoreFull extends KitSnapshot, KitActions, KitSubscriptions, KitCommandsFull, KitChildStoresFull, KitFileUrls { }
+export interface KitStore extends KitSnapshot, KitChildStores, KitFileUrls, KitCommands, KitSubscriptions {}
+export interface KitStoreFull extends KitSnapshot, KitActions, KitSubscriptions, KitCommandsFull, KitChildStoresFull, KitFileUrls {}
 
 export interface DesignEditorId {
   kit: KitId;
@@ -340,8 +343,8 @@ export interface DesignEditorCommandsFull {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
   register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable;
 }
-export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands { }
-export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, Merge<DesignEditorActions, DesignEditorSubscriptions> { }
+export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands {}
+export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, Merge<DesignEditorActions, DesignEditorSubscriptions> {}
 export interface SketchpadState {
   mode: Mode;
   theme: Theme;
@@ -397,7 +400,7 @@ export interface SketchpadCommandsFull {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
   register(command: string, callback: (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult): Disposable;
 }
-export interface SketchpadStore extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStores { }
+export interface SketchpadStore extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStores {}
 export interface SketchpadStoreFull extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStoresFull, SketchpadActions {
   on: SketchpadSubscriptions;
 }
@@ -1008,10 +1011,18 @@ class YPieceStore implements PieceStoreFull {
     this.parent = parent;
     this.yPiece.set("id_", piece.id_);
     this.yPiece.set("description", piece.description || "");
-    const yType = new Y.Map<string>();
-    yType.set("name", piece.type.name);
-    if (piece.type.variant) yType.set("variant", piece.type.variant);
-    this.yPiece.set("type", yType);
+    if (piece.type) {
+      const yType = new Y.Map<string>();
+      yType.set("name", piece.type.name);
+      if (piece.type.variant) yType.set("variant", piece.type.variant);
+      this.yPiece.set("type", yType);
+    } else {
+      const yDesign = new Y.Map<string>();
+      yDesign.set("name", piece.design?.name || "");
+      if (piece.design?.variant) yDesign.set("variant", piece.design.variant);
+      if (piece.design?.view) yDesign.set("view", piece.design.view);
+      this.yPiece.set("design", yDesign);
+    }
     if (piece.plane) {
       this.yPiece.set("plane", createPlane(piece.plane));
     }
@@ -1750,9 +1761,9 @@ class YDesignEditorStore implements DesignEditorStoreFull {
       pieces: selectedPieceIds ? selectedPieceIds.toArray().map((id) => ({ id_: id })) : [],
       connections: selectedConnections
         ? selectedConnections.toArray().map((id) => ({
-          connected: { piece: { id_: id.split("->")[0] || "" } },
-          connecting: { piece: { id_: id.split("->")[1] || "" } },
-        }))
+            connected: { piece: { id_: id.split("->")[0] || "" } },
+            connecting: { piece: { id_: id.split("->")[1] || "" } },
+          }))
         : [],
     };
   }
@@ -2151,7 +2162,7 @@ class YSketchpadStore implements SketchpadStoreFull {
     // This is a simplified approach - would need more sophisticated tracking in full implementation
     const observer = () => subscribe();
     // Note: Would need to observe kit document creation across all kit docs
-    return () => { }; // Placeholder unsubscribe
+    return () => {}; // Placeholder unsubscribe
   };
 
   onDesignEditorCreated = (subscribe: Subscribe): Unsubscribe => {
@@ -2164,12 +2175,12 @@ class YSketchpadStore implements SketchpadStoreFull {
 
   onKitDeleted = (subscribe: Subscribe): Unsubscribe => {
     // Would need to observe kit document removal
-    return () => { }; // Placeholder
+    return () => {}; // Placeholder
   };
 
   onDesignEditorDeleted = (subscribe: Subscribe): Unsubscribe => {
     // Would need to observe design editor removal
-    return () => { }; // Placeholder
+    return () => {}; // Placeholder
   };
 
   onChanged = (subscribe: Subscribe): Unsubscribe => {
@@ -3109,6 +3120,39 @@ export function useDesign<T>(selector?: (design: Design) => T, id?: DesignId): T
   return selector ? selector(state) : state;
 }
 
+export function useFlattenDiff(): DesignDiff {
+  const design = useDesign();
+  const kit = useKit();
+  return useMemo(() => flattenDesign(kit, design), [kit, design]);
+}
+
+export function useFlatDesign(): Design {
+  const design = useDesign();
+  const diff = useFlattenDiff();
+  return useMemo(() => applyDesignDiff(design, diff, true), [design, diff]);
+}
+
+export function useFlatPieces(): Piece[] {
+  const design = useFlatDesign();
+  return design.pieces ?? [];
+}
+
+export function usePiecesMetadata(): Map<
+  string,
+  {
+    plane: Plane;
+    center: DiagramPoint;
+    fixedPieceId: string;
+    parentPieceId: string | null;
+    depth: number;
+  }
+> {
+  const kit = useKit();
+  const designScope = useDesignScope();
+  if (!designScope) throw new Error("usePiecesMetadata must be called within a DesignScopeProvider");
+  return useMemo(() => piecesMetadata(kit, designScope.id), [kit, designScope.id]);
+}
+
 export function useType(): Type;
 export function useType<T>(selector: (type: Type) => T): T;
 export function useType<T>(selector: (type: Type) => T, id: TypeId): T;
@@ -3266,20 +3310,19 @@ export function useLayout(): Layout {
   return useSketchpad((store) => store.snapshot().layout);
 }
 
-export function useDesignId(): DesignId {
-  const designScope = useDesignScope();
-  if (!designScope) throw new Error("useDesignId must be called within a DesignScopeProvider");
-  return designScope.id;
+export function useDesignId(): DesignId | undefined {
+  const sketchpad = useSketchpad();
+  return sketchpad.snapshot().activeDesignEditor?.design;
 }
 
 export function useDesigns(): DesignId[] {
   const kit = useKit();
   return kit.designs
     ? kit.designs.map((design) => ({
-      name: design.name,
-      variant: design.variant,
-      view: design.view,
-    }))
+        name: design.name,
+        variant: design.variant,
+        view: design.view,
+      }))
     : [];
 }
 
@@ -3337,6 +3380,12 @@ export function useFullscreen(): DesignEditorFullscreenPanel {
 
 export function useDiff(): KitDiff {
   return useDesignEditor((store) => store.snapshot().diff);
+}
+
+export function useDiffedKit(): Kit {
+  const kit = useKit();
+  const diff = useDiff();
+  return useMemo(() => applyKitDiff(kit, diff), [kit, diff]);
 }
 
 export function useFileUrls(): Map<Url, Url> {
