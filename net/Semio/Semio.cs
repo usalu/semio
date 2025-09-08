@@ -1478,21 +1478,7 @@ public abstract class Model<T> where T : Model<T>
 {
     public override string ToString()
     {
-        var modelAttribute = GetType().GetCustomAttribute<ModelAttribute>();
-        var nonEmptyIdProperties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => p.GetCustomAttribute<PropAttribute>()?.Importance == PropImportance.ID &&
-                        (string)p.GetValue(this) != "")
-            .Select(p => p.Name);
-        var nonEmptyIdPropertiesValues = nonEmptyIdProperties.Select(p => GetType().GetProperty(p)?.GetValue(this))
-            .Cast<string>().ToList();
-        if (nonEmptyIdPropertiesValues.Count != 0)
-            return $"{modelAttribute.Abbreviation}({string.Join(",", nonEmptyIdPropertiesValues)})";
-        var requiredProperties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => p.GetCustomAttribute<PropAttribute>()?.Importance == PropImportance.REQUIRED)
-            .Select(p => p.Name);
-        var requiredPropertiesValues = requiredProperties.Select(p => GetType().GetProperty(p)?.GetValue(this))
-            .Select(v => v.ToString()).ToList();
-        return $"{modelAttribute.Abbreviation}({string.Join(",", requiredPropertiesValues)})";
+        return GetType().Name;
     }
 
     public override bool Equals(object obj)
@@ -1614,27 +1600,18 @@ public class Attribute : Model<Attribute>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-benchmark-"/>
 /// </summary>
-[Model("🔢", "Bm", "Bmk", "A benchmark is a value with an optional unit for a quality.")]
 public class Benchmark : Model<Benchmark>
 {
-    [Name("📛", "Nm", "Name", "The name of the benchmark.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
-    [Url("🖼️", "Ic", "Ico", "The icon [ emoji | url ] of the benchmark.")]
     public string Icon { get; set; } = "";
-    [NumberProp("⬇️", "Mi?", "Min?", "The optional minimum value of the benchmark.")]
     public float Min { get; set; } = 0;
-    [FalseOrTrue("⬇️", "MiE?", "MiE?", "Whether the minimum value is excluded from the range.")]
     public bool MinExcluded { get; set; } = false;
-    [NumberProp("⬆️", "Mx?", "Max?", "The optional maximum value of the benchmark.")]
     public float Max { get; set; } = 0;
-    [FalseOrTrue("⬆️", "MxE?", "MxE?", "Whether the maximum value is excluded from the range.")]
     public bool MaxExcluded { get; set; } = false;
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the benchmark.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 }
 
 [Flags]
-[Enum("🏷️", "QK", "QlK", "The kind of quality indicating its scope and applicability.")]
 public enum QualityKind
 {
     General = 0,
@@ -1648,50 +1625,31 @@ public enum QualityKind
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-quality-"/>
 /// </summary>
-[Model("🔑", "Ql", "Qal", "A quality id is a key for a quality.")]
 public class QualityId : Model<QualityId>
 {
-    [Id("🔑", "Ke", "Key", "The key of the quality.")]
     public string Key { get; set; } = "";
 
     public static implicit operator QualityId(Quality quality) => new() { Key = quality.Key };
     public static implicit operator QualityId(QualityDiff diff) => new() { Key = diff.Key };
 }
 
-[Model("📊", "QD", "QDf", "A diff for qualities.")]
 public class QualityDiff : Model<QualityDiff>
 {
-    [Id("🔑", "Ke", "Key", "The key of the quality.")]
     public string Key { get; set; } = "";
-    [Name("📛", "Nm", "Name", "The name of the quality.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the quality.")]
     public string Description { get; set; } = "";
-    [Url("🔗", "Ur?", "Uri?", "The Unique Resource Identifier (URI) of the quality.")]
     public string Uri { get; set; } = "";
-    [FalseOrTrue("🔢", "Sc?", "Sc?", "Whether the quality is scalable.")]
     public bool Scalable { get; set; } = false;
-    [Name("🔢", "Kd", "Kn", "The kind of the quality.")]
     public QualityKind Kind { get; set; } = QualityKind.General;
-    [Name("Ⓜ️", "SI?", "SI?", "The optional default SI unit of the quality.")]
     public string SI { get; set; } = "";
-    [Name("🦶", "Im?", "Imp?", "The optional default imperial unit of the quality.")]
     public string Imperial { get; set; } = "";
-    [NumberProp("⬇️", "Mi?", "Min?", "The optional minimum value of the quality.")]
     public float Min { get; set; } = 0;
-    [FalseOrTrue("⬇️", "MiE?", "MiE?", "Whether the minimum value is excluded from the range.")]
     public bool MinExcluded { get; set; } = true;
-    [NumberProp("⬆️", "Mx?", "Max?", "The optional maximum value of the quality.")]
     public float Max { get; set; } = 0;
-    [FalseOrTrue("⬆️", "MxE?", "MxE?", "Whether the maximum value is excluded from the range.")]
     public bool MaxExcluded { get; set; } = true;
-    [NumberProp("Ⓜ️", "Dl?", "Dfl?", "The optional default value of the quality. Either a default value or a formula can be set.")]
     public float Default { get; set; } = 0;
-    [ModelProp("🟰", "Fo?", "For?", "The optional formula of the quality.")]
     public string Formula { get; set; } = "";
-    [ModelProp("🔢", "Bm*", "Bmk*", "The optional benchmarks of the quality.", PropImportance.OPTIONAL)]
     public List<Benchmark> Benchmarks { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the quality.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator QualityDiff(QualityId quality) => new() { Key = quality.Key };
@@ -1702,40 +1660,23 @@ public class QualityDiff : Model<QualityDiff>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-quality-"/>
 /// </summary>
-[Model("📃", "Ql", "Qal", "A quality is numeric metadata used for stats and benchmarks.")]
 public class Quality : Model<Quality>
 {
-    [Id("🔑", "Ke", "Key", "The key of the quality.")]
     public string Key { get; set; } = "";
-    [Name("📛", "Nm", "Name", "The name of the quality.", PropImportance.REQUIRED)]
     public string Name { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the quality.")]
     public string Description { get; set; } = "";
-    [Url("🔗", "Ur?", "Uri?", "The Unique Resource Identifier (URI) of the quality.")]
     public string Uri { get; set; } = "";
-    [FalseOrTrue("🔢", "Sc?", "Sc?", "Whether the quality is scalable.")]
     public bool Scalable { get; set; } = false;
-    [Name("🔢", "Kd", "Kn", "The kind of the quality.")]
     public QualityKind Kind { get; set; } = QualityKind.General;
-    [Name("Ⓜ️", "SI?", "SI?", "The optional default SI unit of the quality.")]
     public string SI { get; set; } = "";
-    [Name("🦶", "Im?", "Imp?", "The optional default imperial unit of the quality.")]
     public string Imperial { get; set; } = "";
-    [NumberProp("⬇️", "Mi?", "Min?", "The optional minimum value of the quality.")]
     public float Min { get; set; } = 0;
-    [FalseOrTrue("⬇️", "MiE?", "MiE?", "Whether the minimum value is excluded from the range.")]
     public bool MinExcluded { get; set; } = true;
-    [NumberProp("⬆️", "Mx?", "Max?", "The optional maximum value of the quality.")]
     public float Max { get; set; } = 0;
-    [FalseOrTrue("⬆️", "MxE?", "MxE?", "Whether the maximum value is excluded from the range.")]
     public bool MaxExcluded { get; set; } = true;
-    [NumberProp("Ⓜ️", "Dl?", "Dfl?", "The optional default value of the quality. Either a default value or a formula can be set.")]
     public float Default { get; set; } = 0;
-    [ModelProp("🟰", "Fo?", "For?", "The optional formula of the quality.")]
     public string Formula { get; set; } = "";
-    [ModelProp("🔢", "Bm*", "Bmk*", "The optional benchmarks of the quality.", PropImportance.OPTIONAL)]
     public List<Benchmark> Benchmarks { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the quality.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator Quality(QualityId id) => new() { Key = id.Key };
@@ -1764,50 +1705,38 @@ public class Quality : Model<Quality>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-property-"/>
 /// </summary>
-[Model("🏷️", "Pp", "Prp", "A property is a value with an optional unit for a quality.")]
 public class Prop : Model<Prop>
 {
-    [Id("🔑", "Ke", "Key", "The key of the quality of the property.")]
     public string Key { get; set; } = "";
-    [Value("🔢", "Vl", "Val", "The value [ number | text ] of the property.")]
     public string Value { get; set; } = "";
-    [Name("Ⓜ️", "Ut?", "Unt?", "The optional unit of the property.")]
     public string Unit { get; set; } = "";
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the property.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
 }
 
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-stat-"/>
 /// </summary>
-[Model("🔢", "St", "Stt", "A stat about a quality on a design which is optionally bounded.")]
 public class Stat : Model<Stat>
 {
-    [Id("🔑", "Ke", "Key", "The key of the stat.")]
     public string Key { get; set; } = "";
-    [Name("Ⓜ️", "Ut?", "Unt?", "The optional unit of the stat.")]
     public string Unit { get; set; } = "";
-    [NumberProp("⬇️", "Mi?", "Min?", "The optional minimum value of the stat.")]
     public float Min { get; set; } = 0;
-    [FalseOrTrue("⬇️", "MiE?", "MiE?", "Whether the minimum value is excluded from the range.")]
     public bool MinExcluded { get; set; } = false;
-    [NumberProp("⬆️", "Mx?", "Max?", "The optional maximum value of the stat.")]
     public float Max { get; set; } = 0;
-    [FalseOrTrue("⬆️", "MxE?", "MxE?", "Whether the maximum value is excluded from the range.")]
     public bool MaxExcluded { get; set; } = false;
 }
 
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-layer-"/>
 /// </summary>
-[Model("📄", "Ly", "Lyr", "A layer for organizing design elements.")]
+
 public class Layer : Model<Layer>
 {
-    [Name("📛", "Nm", "Nam", "The name of the layer.", PropImportance.REQUIRED)]
+
     public string Name { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the layer.")]
+
     public string Description { get; set; } = "";
-    [Color("🎨", "Cl?", "Col?", "The hex color of the layer.")]
+
     public string Color { get; set; } = "";
 
     public string ToIdString() => $"{Name}";
@@ -1818,18 +1747,18 @@ public class Layer : Model<Layer>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-group-"/>
 /// </summary>
-[Model("📁", "Gr", "Grp", "A group for organizing design elements.")]
+
 public class Group : Model<Group>
 {
-    [Name("📛", "Nm", "Nam", "The optional name of the group.", PropImportance.OPTIONAL)]
+
     public string Name { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the group.")]
+
     public string Description { get; set; } = "";
-    [ModelProp("⭕", "Pc*", "Pcs*", "The pieces in the group.", PropImportance.REQUIRED)]
+
     public List<PieceId> Pieces { get; set; } = new();
-    [Color("🎨", "Cl?", "Col?", "The optional hex color of the group.")]
+
     public string Color { get; set; } = "";
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the group.", PropImportance.OPTIONAL)]
+
     public List<Attribute> Attributes { get; set; } = new();
 
     public string ToIdString() => $"{Name}";
@@ -1837,10 +1766,10 @@ public class Group : Model<Group>
     public override string ToString() => $"Grp({ToHumanIdString()})";
 }
 
-[Model("💾", "Rp", "Rep", "The identifier of a representation.")]
+
 public class RepresentationId : Model<RepresentationId>
 {
-    [Name("🏷️", "Tg*", "Tags*", "The optional tags to group representations. No tags means default.", PropImportance.ID, skipValidation: true)]
+
     public List<string> Tags { get; set; } = new();
     public static implicit operator RepresentationId(Representation representation) => new() { Tags = representation.Tags };
     public static implicit operator RepresentationId(RepresentationDiff diff) => new() { Tags = diff.Tags };
@@ -1849,16 +1778,16 @@ public class RepresentationId : Model<RepresentationId>
     public override string ToString() => $"Rep({ToHumanIdString()})";
 }
 
-[Model("📊", "RD", "RDf", "A diff for representations.")]
+
 public class RepresentationDiff : Model<RepresentationDiff>
 {
-    [Url("🔗", "Ur?", "Url?", "The optional Unique Resource Locator (URL) to the resource of the representation.")]
+
     public string Url { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the representation.")]
+
     public string Description { get; set; } = "";
-    [Name("🏷️", "Tg*", "Tags*", "The optional tags to group representations.", PropImportance.OPTIONAL)]
+
     public List<string> Tags { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the representation.", PropImportance.OPTIONAL)]
+
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator RepresentationDiff(RepresentationId id) => new() { Tags = id.Tags };
@@ -1876,14 +1805,14 @@ public class RepresentationDiff : Model<RepresentationDiff>
     }
 }
 
-[Model("📊", "RsD", "RsDf", "A diff for multiple representations.")]
+
 public class RepresentationsDiff : Model<RepresentationsDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed representations.", PropImportance.OPTIONAL)]
+
     public List<RepresentationId> Removed { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added representations.", PropImportance.OPTIONAL)]
+
     public List<RepresentationDiff> Added { get; set; } = new();
-    [ModelProp("✏️", "Md*", "Mod*", "The optional modified representations.", PropImportance.OPTIONAL)]
+
     public List<RepresentationDiff> Modified { get; set; } = new();
 
     public static implicit operator RepresentationsDiff(List<Representation> representations) => new() { Modified = representations.Select(r => (RepresentationDiff)r).ToList() };
@@ -1892,20 +1821,18 @@ public class RepresentationsDiff : Model<RepresentationsDiff>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-representation-"/>
 /// </summary>
-[Model("💾", "Rp", "Rep",
-    "A representation is a link to a resource that describes a type for a certain level of detail and tags.")]
 public class Representation : Model<Representation>
 {
-    [Url("🔗", "Ur", "Url", "The Unique Resource Locator (URL) to the resource of the representation.", PropImportance.REQUIRED)]
+
     public string Url { get; set; } = "";
 
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the representation.")]
+
     public string Description { get; set; } = "";
 
-    [Name("🏷️", "Tg*", "Tags*", "The optional tags to group representations. No tags means default.", PropImportance.ID, skipValidation: true)]
+
     public List<string> Tags { get; set; } = new();
 
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the representation.", PropImportance.OPTIONAL)]
+
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator Representation(RepresentationId id) => new() { Tags = id.Tags };
@@ -1984,10 +1911,10 @@ public class Representation : Model<Representation>
     public override string ToString() => $"Rep({ToHumanIdString()})";
 }
 
-[Model("📄", "Fl", "Fil", "The identifier of a file.")]
+
 public class FileId : Model<FileId>
 {
-    [Url("🔗", "Ur", "Url", "The url of the file.", PropImportance.ID)]
+
     public string Url { get; set; } = "";
     public string ToIdString() => $"{Url}";
     public string ToHumanIdString() => $"{ToIdString()}";
@@ -1999,16 +1926,16 @@ public class FileId : Model<FileId>
     public static implicit operator FileId(FileDiff diff) => new() { Url = diff.Url ?? "" };
 }
 
-[Model("📄", "Fl", "Fil", "A file with content.")]
+
 public class File : Model<File>
 {
-    [Url("🔗", "Ur", "Url", "The url of the file.", PropImportance.ID)]
+
     public string Url { get; set; } = "";
-    [Url("💾", "Da", "Dat", "The data URI of the file.", PropImportance.REQUIRED)]
+
     public string Data { get; set; } = "";
-    [NumberProp("📏", "Sz?", "Siz?", "The optional size of the file in bytes.")]
+
     public int? Size { get; set; }
-    [Name("🔐", "Hs?", "Has?", "The optional hash of the file.")]
+
     public string Hash { get; set; } = "";
     public string ToIdString() => $"{Url}";
     public string ToHumanIdString() => $"{ToIdString()}";
@@ -2023,13 +1950,13 @@ public class File : Model<File>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-diagram-point-"/>
 /// </summary>
-[Model("📺", "DP", "DPt", "A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.")]
+
 public class DiagramPoint : Model<DiagramPoint>
 {
-    [NumberProp("🎚️", "X", "X", "The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.", PropImportance.REQUIRED)]
+
     public float X { get; set; }
 
-    [NumberProp("🎚️", "Y", "Y", "The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.", PropImportance.REQUIRED)]
+
     public float Y { get; set; }
 
     public DiagramPoint Normalize()
@@ -2042,29 +1969,29 @@ public class DiagramPoint : Model<DiagramPoint>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-point-"/>
 /// </summary>
-[Model("✖️", "Pt", "Pnt", "A 3-point (xyz) of floating point numbers.")]
+
 public class Point : Model<Point>
 {
-    [NumberProp("🎚️", "X", "X", "The x-coordinate of the point.", PropImportance.REQUIRED)]
+
     public float X { get; set; } = 0;
-    [NumberProp("🎚️", "Y", "Y", "The y-coordinate of the point.", PropImportance.REQUIRED)]
+
     public float Y { get; set; } = 0;
-    [NumberProp("🎚️", "Z", "Z", "The z-coordinate of the point.", PropImportance.REQUIRED)]
+
     public float Z { get; set; } = 0;
 }
 
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-vector-"/>
 /// </summary>
-[Model("➡️", "Vc", "Vec", "A 3d-vector (xyz) of floating point numbers.")]
+
 public class Vector : Model<Vector>
 {
-    [NumberProp("🎚️", "X", "X", "The x-coordinate of the vector.", PropImportance.REQUIRED)]
+
     public float X { get; set; } = 1;
-    [NumberProp("🎚️", "Y", "Y", "The y-coordinate of the vector.", PropImportance.REQUIRED)]
+
     public float Y { get; set; }
 
-    [NumberProp("🎚️", "Z", "Z", "The z-coordinate of the vector.", PropImportance.REQUIRED)]
+
     public float Z { get; set; } = 0;
 
     public static float DotProduct(Vector a, Vector b) => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
@@ -2093,16 +2020,16 @@ public class Vector : Model<Vector>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-plane-"/>
 /// </summary>
-[Model("◳", "Pn", "Pln", "A plane is an origin (point) and an orientation (x-axis and y-axis).")]
+
 public class Plane : Model<Plane>
 {
-    [ModelProp("⌱", "Og", "Org", "The origin of the plane.")]
+
     public Point Origin { get; set; } = new();
 
-    [ModelProp("➡️", "XA", "XAx", "The x-axis of the plane.")]
+
     public Vector XAxis { get; set; } = new();
 
-    [ModelProp("➡️", "YA", "YAx", "The y-axis of the plane.")]
+
     public Vector YAxis { get; set; } = new() { Y = 1 };
 
     // TODO: Implement reflexive validation for model properties.
@@ -2128,10 +2055,10 @@ public class Plane : Model<Plane>
     }
 }
 
-[Model("🔌", "Po", "Por", "The optional local identifier of the port within the type. No id means the default port.")]
+
 public class PortId : Model<PortId>
 {
-    [Id("🆔", "Id?", "Id?", "The local identifier of the port within the type.", isDefaultValid: true)]
+
     [JsonProperty("id_")]
     public string Id { get; set; } = "";
     public static implicit operator PortId(Port port) => new() { Id = port.Id };
@@ -2143,29 +2070,29 @@ public class PortId : Model<PortId>
     public override string ToString() => $"Por({ToHumanIdString()})";
 }
 
-[Model("📊", "PD", "PDf", "A diff for ports.")]
+
 public class PortDiff : Model<PortDiff>
 {
-    [Id("🆔", "Id?", "Idn?", "The optional local identifier of the port.", isDefaultValid: true)]
+
     [JsonProperty("id_")]
     public string Id { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the port.")]
+
     public string Description { get; set; } = "";
-    [Name("👨‍👩‍👧‍👦", "Fa?", "Fam?", "The optional family of the port.")]
+
     public string Family { get; set; } = "";
-    [FalseOrTrue("💯", "Ma?", "Man?", "Whether the port is mandatory.")]
+
     public bool? Mandatory { get; set; }
-    [NumberProp("💍", "T?", "T?", "The optional parameter t [0,1[.")]
+
     public float? T { get; set; }
-    [Name("✅", "CF*", "CFas*", "The optional other compatible families of the port.", PropImportance.OPTIONAL)]
+
     public List<string> CompatibleFamilies { get; set; } = new();
-    [ModelProp("✖️", "Pt?", "Pnt?", "The optional connection point of the port.", PropImportance.OPTIONAL)]
+
     public Point? Point { get; set; }
-    [ModelProp("➡️", "Dr?", "Drn?", "The optional direction of the port.", PropImportance.OPTIONAL)]
+
     public Vector? Direction { get; set; }
-    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the port.", PropImportance.OPTIONAL)]
+
     public List<Prop> Props { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
+
     public List<Attribute> Attributes { get; set; } = new();
 
     public static implicit operator PortDiff(PortId id) => new() { Id = id.Id };
@@ -2189,14 +2116,14 @@ public class PortDiff : Model<PortDiff>
     }
 }
 
-[Model("📊", "PsD", "PsDf", "A diff for multiple ports.")]
+
 public class PortsDiff : Model<PortsDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed ports.", PropImportance.OPTIONAL)]
+
     public List<PortId> Removed { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added ports.", PropImportance.OPTIONAL)]
+
     public List<PortDiff> Added { get; set; } = new();
-    [ModelProp("✏️", "Md*", "Mod*", "The optional modified ports.", PropImportance.OPTIONAL)]
+
     public List<PortDiff> Modified { get; set; } = new();
 
     public static implicit operator PortsDiff(List<Port> ports) => new() { Modified = ports.Select(p => (PortDiff)p).ToList() };
@@ -2205,29 +2132,29 @@ public class PortsDiff : Model<PortsDiff>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-port-"/>
 /// </summary>
-[Model("🔌", "Po", "Por", "A port is a connection point (with a direction) of a type.")]
+
 public class Port : Model<Port>
 {
-    [Id("🆔", "Id?", "Idn?", "The optional local identifier of the port within the type. No id means the default port.", isDefaultValid: true)]
+
     [JsonProperty("id_")]
     public string Id { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the port.")]
+
     public string Description { get; set; } = "";
-    [FalseOrTrue("💯", "Ma?", "Man?", "Whether the port is mandatory. A mandatory port must be connected in a design.")]
+
     public bool Mandatory { get; set; } = false;
-    [Name("👨‍👩‍👧‍👦", "Fa?", "Fam?", "The optional family of the port. This allows to define explicit compatibility with other ports.")]
+
     public string Family { get; set; } = "";
-    [Name("✅", "CF*", "CFas*", "The optional other compatible families of the port. An empty list means this port is compatible with all other ports.")]
+
     public List<string> CompatibleFamilies { get; set; } = new();
-    [ModelProp("✖️", "Pt", "Pnt", "The connection point of the port that is attracted to another connection point.")]
+
     public Point? Point { get; set; } = null;
-    [ModelProp("➡️", "Dr", "Drn", "The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.")]
+
     public Vector? Direction { get; set; } = null;
-    [NumberProp("💍", "T", "T", "The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.", PropImportance.REQUIRED)]
+
     public float T { get; set; } = 0;
-    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the port.", PropImportance.OPTIONAL)]
+
     public List<Prop> Props { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the port.", PropImportance.OPTIONAL)]
+
     public List<Attribute> Attributes { get; set; } = new();
     public string ToIdString() => $"{Id}";
     public string ToHumanIdString() => $"{ToIdString()}";
@@ -2372,14 +2299,14 @@ public class Port : Model<Port>
     }
 }
 
-[Model("", "Au", "Aut", "The information about the author.")]
+
 public class Author : Model<Author>
 {
-    [Name("📛", "Na", "Nam", "The name of the author.", PropImportance.REQUIRED)]
+
     public string Name { get; set; } = "";
-    [Email("📧", "Em", "Eml", "The email of the author.", PropImportance.ID)]
+
     public string Email { get; set; } = "";
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the author.", PropImportance.OPTIONAL)]
+
     public List<Attribute> Attributes { get; set; } = new();
     public string ToIdString() => $"{Email}";
     public string ToHumanIdString() => $"{ToIdString()}";
@@ -2400,10 +2327,10 @@ public class Author : Model<Author>
         return (isValid, errors);
     }
 }
-[Model("👤", "Au", "Aut", "The id of the author.")]
+
 public class AuthorId : Model<AuthorId>
 {
-    [Email("📧", "Em", "Eml", "The email of the author.", PropImportance.ID)]
+
     public string Email { get; set; } = "";
     public static implicit operator AuthorId(Author author) => new() { Email = author.Email };
     public string ToIdString() => $"{Email}";
@@ -2411,23 +2338,23 @@ public class AuthorId : Model<AuthorId>
     public override string ToString() => $"Aut({ToHumanIdString()})";
 }
 
-[Model("📍", "Lc", "Loc", "A location on the earth surface (longitude, latitude).")]
+
 public class Location : Model<Location>
 {
-    [NumberProp("↔️", "Lo", "Lon", "The longitude of the location in degrees.", PropImportance.REQUIRED)]
+
     public float Longitude { get; set; }
-    [NumberProp("↕️", "La", "Lat", "The latitude of the location in degrees.", PropImportance.REQUIRED)]
+
     public float Latitude { get; set; }
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the location.", PropImportance.OPTIONAL)]
+
     public List<Attribute> Attributes { get; set; } = new();
 }
 
-[Model("🧩", "Ty", "Typ", "The identifier of the type within the kit.")]
+
 public class TypeId : Model<TypeId>
 {
-    [Name("📛", "Na", "Nam", "The name of the type.", PropImportance.ID)]
+
     public string Name { get; set; } = "";
-    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the type. No variant means the default variant.", PropImportance.ID, true)]
+
     public string Variant { get; set; } = "";
     public string ToIdString() => $"{Name}#{Variant}";
     public string ToHumanIdString() => $"{Name}" + (Variant.Length == 0 ? "" : $", {Variant}");
@@ -2436,42 +2363,42 @@ public class TypeId : Model<TypeId>
     public static implicit operator TypeId(TypeDiff diff) => new() { Name = diff.Name ?? "", Variant = diff.Variant ?? "" };
 }
 
-[Model("🧩", "TD", "TDf", "A diff for types.")]
+
 public class TypeDiff : Model<TypeDiff>
 {
-    [Name("📛", "Na?", "Nam?", "The optional name of the type.")]
+
     public string Name { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the type.")]
+
     public string Description { get; set; } = "";
-    [Url("🪙", "Ic?", "Ico?", "The optional icon of the type.")]
+
     public string Icon { get; set; } = "";
-    [Url("🖼️", "Im?", "Img?", "The optional url to the image of the type.")]
+
     public string Image { get; set; } = "";
-    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the type.")]
+
     public string Variant { get; set; } = "";
-    [IntProp("📦", "St?", "Stk?", "The optional number of items in stock.")]
+
     public int? Stock { get; set; }
-    [FalseOrTrue("👻", "Vi?", "Vir?", "Whether the type is virtual.")]
+
     public bool? Virtual { get; set; }
-    [FalseOrTrue("📏", "Sc?", "Sca?", "Whether the type is scalable.")]
+
     public bool? Scalable { get; set; }
-    [FalseOrTrue("🪞", "Mi?", "Mir?", "Whether the type is mirrorable.")]
+
     public bool? Mirrorable { get; set; }
-    [Url("🔗", "Ur?", "Uri?", "The optional Unique Resource Identifier (URI) of the type.")]
+
     public string Uri { get; set; } = "";
-    [Name("Ⓜ️", "Ut?", "Unt?", "The optional length unit of the type.")]
+
     public string Unit { get; set; } = "";
-    [ModelProp("📍", "Lo?", "Loc?", "The optional location of the type.", PropImportance.OPTIONAL)]
+
     public Location? Location { get; set; }
-    [ModelProp("💾", "Rp*", "Reps*", "The optional representations of the type.", PropImportance.OPTIONAL)]
+
     public List<Representation> Representations { get; set; } = new();
-    [ModelProp("🔌", "Po*", "Pors*", "The optional ports of the type.", PropImportance.OPTIONAL)]
+
     public List<Port> Ports { get; set; } = new();
-    [ModelProp("👥", "Au*", "Aut*", "The optional authors of the type.", PropImportance.OPTIONAL)]
+
     public List<Author> Authors { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the type.", PropImportance.OPTIONAL)]
+
     public List<Attribute> Attributes { get; set; } = new();
-    [ModelProp("💡", "Co*", "Con*", "The optional concepts of the type.", PropImportance.OPTIONAL)]
+
     public List<string> Concepts { get; set; } = new();
 
     public TypeDiff MergeDiff(TypeDiff other)
@@ -2502,14 +2429,14 @@ public class TypeDiff : Model<TypeDiff>
     public static implicit operator TypeDiff(Type type) => new() { Name = type.Name, Description = type.Description, Icon = type.Icon, Image = type.Image, Variant = type.Variant, Stock = type.Stock, Virtual = type.Virtual, Scalable = type.Scalable, Mirrorable = type.Mirrorable, Uri = type.Uri, Unit = type.Unit, Location = type.Location, Representations = type.Representations, Ports = type.Ports, Authors = type.Authors.Select(a => (Author)a).ToList(), Attributes = type.Attributes, Concepts = type.Concepts };
 }
 
-[Model("📊", "TsD", "TsDf", "A diff for multiple types.")]
+
 public class TypesDiff : Model<TypesDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed types.", PropImportance.OPTIONAL)]
+
     public List<TypeId> Removed { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added types.", PropImportance.OPTIONAL)]
+
     public List<TypeDiff> Added { get; set; } = new();
-    [ModelProp("✏️", "Md*", "Mod*", "The optional modified types.", PropImportance.OPTIONAL)]
+
     public List<TypeDiff> Modified { get; set; } = new();
 
     public static implicit operator TypesDiff(List<Type> types) => new() { Modified = types.Select(t => (TypeDiff)t).ToList() };
@@ -2518,44 +2445,42 @@ public class TypesDiff : Model<TypesDiff>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-type-"/>
 /// </summary>
-[Model("🧩", "Ty", "Typ", "A type is a reusable element that can be connected with other types over ports.")]
+
 public class Type : Model<Type>
 {
-    [Name("📛", "Na", "Nam", "The name of the type.", PropImportance.ID)]
+
     public string Name { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the type.")]
+
     public string Description { get; set; } = "";
-    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.")]
     public string Icon { get; set; } = "";
-    [Url("🖼️", "Im?", "Img?", "The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.")]
     public string Image { get; set; } = "";
-    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the type. No variant means the default variant. ", PropImportance.ID, true)]
+
     public string Variant { get; set; } = "";
-    [IntProp("📦", "St?", "Stk?", "The optional number of items in stock. 2147483647 (=2^31-1) means infinite stock.")]
+
     public int Stock { get; set; } = 2147483647;
-    [FalseOrTrue("👻", "Vi?", "Vir?", "Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.")]
+
     public bool Virtual { get; set; } = false;
-    [FalseOrTrue("📏", "Sc?", "Sca?", "Whether the type is scalable.")]
+
     public bool Scalable { get; set; } = false;
-    [FalseOrTrue("🪞", "Mi?", "Mir?", "Whether the type is mirrorable.")]
+
     public bool Mirrorable { get; set; } = false;
-    [Url("🔗", "Ur?", "Uri?", "The optional Unique Resource Identifier (URI) of the type.")]
+
     public string Uri { get; set; } = "";
-    [ModelProp("📍", "Lo?", "Loc?", "The optional location of the type.", PropImportance.OPTIONAL)]
+
     public Location? Location { get; set; }
-    [Name("Ⓜ️", "Ut", "Unt", "The length unit of the point and the direction of the ports of the type.", PropImportance.REQUIRED)]
+
     public string Unit { get; set; } = "";
-    [ModelProp("💾", "Rp*", "Reps*", "The optional representations of the type.", PropImportance.OPTIONAL)]
+
     public List<Representation> Representations { get; set; } = new();
-    [ModelProp("🔌", "Po*", "Pors*", "The optional ports of the type.", PropImportance.OPTIONAL)]
+
     public List<Port> Ports { get; set; } = new();
-    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the type.", PropImportance.OPTIONAL)]
+
     public List<Prop> Props { get; set; } = new();
-    [ModelProp("👥", "Au*", "Aut*", "The optional authors of the type.", PropImportance.OPTIONAL)]
+
     public List<AuthorId> Authors { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the type.", PropImportance.OPTIONAL)]
+
     public List<Attribute> Attributes { get; set; } = new();
-    [ModelProp("💡", "Co*", "Con*", "The optional concepts of the type.", PropImportance.OPTIONAL)]
+
     public List<string> Concepts { get; set; } = new();
 
     public string ToIdString() => $"{Name}#{Variant}";
@@ -2752,30 +2677,30 @@ public class Type : Model<Type>
 
 #region Diff Classes
 
-[Model("🔗", "CD", "CDf", "A diff for connections.")]
+
 public class ConnectionDiff : Model<ConnectionDiff>
 {
-    [ModelProp("🧲", "Cd?", "Cnd?", "The optional connected side of the piece.", PropImportance.OPTIONAL)]
+
     public SideDiff? Connected { get; set; }
-    [ModelProp("🧲", "Cg?", "Cng?", "The optional connecting side of the piece.", PropImportance.OPTIONAL)]
+
     public SideDiff? Connecting { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the connection.")]
+
     public string Description { get; set; } = "";
-    [NumberProp("↕️", "Gp?", "Gap?", "The optional longitudinal gap.")]
+
     public float? Gap { get; set; }
-    [NumberProp("↔️", "Sf?", "Sft?", "The optional lateral shift.")]
+
     public float? Shift { get; set; }
-    [NumberProp("🪜", "Rs?", "Ris?", "The optional vertical rise.")]
+
     public float? Rise { get; set; }
-    [AnglePropAttribute("🔄", "Rt?", "Rot?", "The optional horizontal rotation.")]
+
     public float? Rotation { get; set; }
-    [AnglePropAttribute("🛞", "Tu?", "Tur?", "The optional turn perpendicular.")]
+
     public float? Turn { get; set; }
-    [AnglePropAttribute("∡", "Tl?", "Tlt?", "The optional horizontal tilt.")]
+
     public float? Tilt { get; set; }
-    [NumberProp("➡️", "X?", "X?", "The optional offset in x direction.")]
+
     public float? X { get; set; }
-    [NumberProp("⬆️", "Y?", "Y?", "The optional offset in y direction.")]
+
     public float? Y { get; set; }
 
     public ConnectionDiff MergeDiff(ConnectionDiff other)
@@ -2800,49 +2725,49 @@ public class ConnectionDiff : Model<ConnectionDiff>
     public static implicit operator ConnectionDiff(Connection connection) => new() { Connected = new SideDiff { Piece = new PieceDiff { Id = connection.Connected.Piece.Id }, Port = new PortDiff { Id = connection.Connected.Port.Id } }, Connecting = new SideDiff { Piece = new PieceDiff { Id = connection.Connecting.Piece.Id }, Port = new PortDiff { Id = connection.Connecting.Port.Id } }, Description = connection.Description, Gap = connection.Gap, Shift = connection.Shift, Rise = connection.Rise, Rotation = connection.Rotation, Turn = connection.Turn, Tilt = connection.Tilt, X = connection.X, Y = connection.Y };
 }
 
-[Model("📊", "CsD", "CsDf", "A diff for multiple connections.")]
+
 public class ConnectionsDiff : Model<ConnectionsDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed connections.", PropImportance.OPTIONAL)]
+
     public List<ConnectionId> Removed { get; set; } = new();
-    [ModelProp("✏️", "Up*", "Upd*", "The optional updated connections.", PropImportance.OPTIONAL)]
+
     public List<ConnectionDiff> Updated { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added connections.", PropImportance.OPTIONAL)]
+
     public List<Connection> Added { get; set; } = new();
 
     public static implicit operator ConnectionsDiff(List<Connection> connections) => new() { Updated = connections.Select(c => (ConnectionDiff)c).ToList() };
 }
 
-[Model("🏙️", "DD", "DDf", "A diff for designs.")]
+
 public class DesignDiff : Model<DesignDiff>
 {
-    [Name("📛", "Na?", "Nam?", "The optional name of the design.")]
+
     public string Name { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the design.")]
+
     public string Description { get; set; } = "";
-    [Url("🪙", "Ic?", "Ico?", "The optional icon of the design.")]
+
     public string Icon { get; set; } = "";
-    [Url("🖼️", "Im?", "Img?", "The optional url to the image of the design.")]
+
     public string Image { get; set; } = "";
-    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the design.")]
+
     public string Variant { get; set; } = "";
-    [Name("🥽", "Vw?", "Vew?", "The optional view of the design.")]
+
     public string View { get; set; } = "";
-    [ModelProp("📍", "Lo?", "Loc?", "The optional location of the design.", PropImportance.OPTIONAL)]
+
     public Location? Location { get; set; }
-    [Name("Ⓜ️", "Ut?", "Unt?", "The optional length unit for the design.")]
+
     public string Unit { get; set; } = "";
-    [ModelProp("⭕", "Pc*", "Pcs*", "The optional pieces diff for the design.", PropImportance.OPTIONAL)]
+
     public PiecesDiff? Pieces { get; set; }
-    [ModelProp("🔗", "Co*", "Cons*", "The optional connections diff for the design.", PropImportance.OPTIONAL)]
+
     public ConnectionsDiff? Connections { get; set; }
-    [ModelProp("�", "St*", "Stt*", "The optional stats of the design.", PropImportance.OPTIONAL)]
+
     public List<Stat> Stats { get; set; } = new();
-    [ModelProp("�🔐", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
+
     public List<Attribute> Attributes { get; set; } = new();
-    [ModelProp("👥", "Au*", "Aut*", "The optional authors of the design.", PropImportance.OPTIONAL)]
+
     public List<Author> Authors { get; set; } = new();
-    [ModelProp("💡", "Co*", "Con*", "The optional concepts of the design.", PropImportance.OPTIONAL)]
+
     public List<string> Concepts { get; set; } = new();
 
     public DesignDiff MergeDiff(DesignDiff other)
@@ -2870,29 +2795,29 @@ public class DesignDiff : Model<DesignDiff>
     public static implicit operator DesignDiff(Design design) => new() { Name = design.Name, Description = design.Description, Icon = design.Icon, Image = design.Image, Variant = design.Variant, View = design.View, Location = design.Location, Unit = design.Unit, Stats = design.Stats, Attributes = design.Attributes, Authors = design.Authors.Select(a => (Author)a).ToList(), Concepts = design.Concepts };
 }
 
-[Model("📊", "DsD", "DsDf", "A diff for multiple designs.")]
+
 public class DesignsDiff : Model<DesignsDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed designs.", PropImportance.OPTIONAL)]
+
     public List<DesignId> Removed { get; set; } = new();
-    [ModelProp("✏️", "Up*", "Upd*", "The optional updated designs.", PropImportance.OPTIONAL)]
+
     public List<DesignDiff> Updated { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added designs.", PropImportance.OPTIONAL)]
+
     public List<Design> Added { get; set; } = new();
 
     public static implicit operator DesignsDiff(List<Design> designs) => new() { Updated = designs.Select(d => (DesignDiff)d).ToList() };
 }
 
-[Model("📄", "FD", "FDf", "A diff for files.")]
+
 public class FileDiff : Model<FileDiff>
 {
-    [Url("🔗", "Ur?", "Url?", "The optional url of the file.")]
+
     public string Url { get; set; } = "";
-    [Url("💾", "Da?", "Dat?", "The optional data URI of the file.")]
+
     public string Data { get; set; } = "";
-    [NumberProp("📏", "Sz?", "Siz?", "The optional size of the file in bytes.")]
+
     public int? Size { get; set; }
-    [Name("🔐", "Hs?", "Has?", "The optional hash of the file.")]
+
     public string Hash { get; set; } = "";
 
     public FileDiff MergeDiff(FileDiff other)
@@ -2910,47 +2835,47 @@ public class FileDiff : Model<FileDiff>
     public static implicit operator FileDiff(File file) => new() { Url = file.Url, Data = file.Data, Size = file.Size, Hash = file.Hash };
 }
 
-[Model("📊", "FsD", "FsDf", "A diff for multiple files.")]
+
 public class FilesDiff : Model<FilesDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed files.", PropImportance.OPTIONAL)]
+
     public List<FileId> Removed { get; set; } = new();
-    [ModelProp("✏️", "Up*", "Upd*", "The optional updated files.", PropImportance.OPTIONAL)]
+
     public List<FileDiff> Updated { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added files.", PropImportance.OPTIONAL)]
+
     public List<File> Added { get; set; } = new();
 
     public static implicit operator FilesDiff(List<File> files) => new() { Updated = files.Select(f => (FileDiff)f).ToList() };
 }
 
-[Model("🗃️", "KD", "KDf", "A diff for kits.")]
+
 public class KitDiff : Model<KitDiff>
 {
-    [Name("📛", "Na?", "Nam?", "The optional name of the kit.")]
+
     public string Name { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the kit.")]
+
     public string Description { get; set; } = "";
-    [Url("🪙", "Ic?", "Ico?", "The optional icon of the kit.")]
+
     public string Icon { get; set; } = "";
-    [Url("🖼️", "Im?", "Img?", "The optional url to the image of the kit.")]
+
     public string Image { get; set; } = "";
-    [Url("🔮", "Pv?", "Prv?", "The optional url of the preview image of the kit.")]
+
     public string Preview { get; set; } = "";
-    [Name("🔀", "Vr?", "Ver?", "The optional version of the kit.")]
+
     public string Version { get; set; } = "";
-    [Url("☁️", "Rm?", "Rmt?", "The optional URL where to fetch the kit remotely.")]
+
     public string Remote { get; set; } = "";
-    [Url("🏠", "Hp?", "Hmp?", "The optional URL of the homepage of the kit.")]
+
     public string Homepage { get; set; } = "";
-    [Url("⚖️", "Li?", "Lic?", "The optional license of the kit.")]
+
     public string License { get; set; } = "";
-    [ModelProp("🧩", "Ty*", "Typ*", "The optional types diff for the kit.", PropImportance.OPTIONAL)]
+
     public TypesDiff? Types { get; set; }
-    [ModelProp("🏙️", "Dn*", "Dsn*", "The optional designs diff for the kit.", PropImportance.OPTIONAL)]
+
     public DesignsDiff? Designs { get; set; }
-    [ModelProp("📄", "Fl*", "Fil*", "The optional files diff for the kit.", PropImportance.OPTIONAL)]
+
     public FilesDiff? Files { get; set; }
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the kit.", PropImportance.OPTIONAL)]
+
     public List<Attribute> Attributes { get; set; } = new();
 
     public KitDiff MergeDiff(KitDiff other)
@@ -2976,10 +2901,10 @@ public class KitDiff : Model<KitDiff>
     public static implicit operator KitDiff(Kit kit) => new() { Name = kit.Name, Description = kit.Description, Icon = kit.Icon, Image = kit.Image, Preview = kit.Preview, Version = kit.Version, Remote = kit.Remote, Homepage = kit.Homepage, License = kit.License, Attributes = kit.Attributes };
 }
 
-[Model("🗃️", "KId", "KitId", "The local identifier of the kit.")]
+
 public class KitId : Model<KitId>
 {
-    [Name("📛", "Na", "Nam", "The name of the kit.", PropImportance.ID)]
+
     public string Name { get; set; } = "";
     public string ToIdString() => $"{Name}";
     public string ToHumanIdString() => $"{ToIdString()}";
@@ -2989,14 +2914,14 @@ public class KitId : Model<KitId>
     public static implicit operator KitId(KitDiff diff) => new() { Name = diff.Name ?? "" };
 }
 
-[Model("📦", "KsD", "KsDf", "A diff for multiple kits.")]
+
 public class KitsDiff : Model<KitsDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed kits.", PropImportance.OPTIONAL)]
+
     public List<KitId> Removed { get; set; } = new();
-    [ModelProp("✏️", "Up*", "Upd*", "The optional updated kits.", PropImportance.OPTIONAL)]
+
     public List<KitDiff> Updated { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added kits.", PropImportance.OPTIONAL)]
+
     public List<Kit> Added { get; set; } = new();
 
     public static implicit operator KitsDiff(List<Kit> kits) => new() { Updated = kits.Select(k => (KitDiff)k).ToList() };
@@ -3012,10 +2937,10 @@ public enum DiffStatus
 
 #endregion
 
-[Model("⭕", "Pc", "Pce", "The optional local identifier of the piece within the design. No id means the default piece.")]
+
 public class PieceId : Model<PieceId>
 {
-    [Id("🆔", "Id?", "Id?", "The optional local identifier of the piece within the design. No id means the default piece.", isDefaultValid: true)]
+
     [JsonProperty("id_")]
     public string Id { get; set; } = "";
     public string ToIdString() => $"{Id}";
@@ -3026,27 +2951,27 @@ public class PieceId : Model<PieceId>
     public static implicit operator PieceId(Piece piece) => new() { Id = piece.Id };
 }
 
-[Model("⭕", "PD", "PDf", "A diff for pieces.")]
+
 public class PieceDiff : Model<PieceDiff>
 {
-    [Id("🆔", "Id?", "Id?", "The optional local identifier of the piece within the design.", isDefaultValid: true)]
+
     [JsonProperty("id_")]
     public string Id { get; set; } = "";
-    [ModelProp("🧩", "Ty?", "Typ?", "The optional type of the piece.", PropImportance.OPTIONAL)]
+
     public TypeId? Type { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the piece.")]
+
     public string Description { get; set; } = "";
-    [ModelProp("📐", "Pl?", "Pln?", "The optional plane of the piece.", PropImportance.OPTIONAL)]
+
     public Plane? Plane { get; set; }
-    [ModelProp("📍", "Cn?", "Cnt?", "The optional center of the piece for the diagram.", PropImportance.OPTIONAL)]
+
     public DiagramPoint? Center { get; set; }
-    [Color("🎨", "Cl?", "Col?", "The optional hex color of the piece.")]
+
     public string Color { get; set; } = "";
-    [NumberProp("⚖️", "Sc?", "Scl?", "The optional scale factor of the piece.", PropImportance.OPTIONAL)]
+
     public float? Scale { get; set; }
-    [ModelProp("🪞", "Mp?", "Mir?", "The optional mirror plane of the piece.", PropImportance.OPTIONAL)]
+
     public Plane? MirrorPlane { get; set; }
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the piece.", PropImportance.OPTIONAL)]
+
     public List<Attribute> Attributes { get; set; } = new();
 
     public PieceDiff MergeDiff(PieceDiff other)
@@ -3069,29 +2994,29 @@ public class PieceDiff : Model<PieceDiff>
     public static implicit operator PieceDiff(Piece piece) => new() { Id = piece.Id, Type = piece.Type, Description = piece.Description, Plane = piece.Plane, Center = piece.Center, Color = piece.Color, Scale = piece.Scale, MirrorPlane = piece.MirrorPlane, Attributes = piece.Attributes };
 }
 
-[Model("📊", "PsD", "PsDf", "A diff for multiple pieces.")]
+
 public class PiecesDiff : Model<PiecesDiff>
 {
-    [ModelProp("➖", "Rm*", "Rem*", "The optional removed pieces.", PropImportance.OPTIONAL)]
+
     public List<PieceId> Removed { get; set; } = new();
-    [ModelProp("➕", "Ad*", "Add*", "The optional added pieces.", PropImportance.OPTIONAL)]
+
     public List<PieceDiff> Added { get; set; } = new();
-    [ModelProp("✏️", "Md*", "Mod*", "The optional modified pieces.", PropImportance.OPTIONAL)]
+
     public List<PieceDiff> Modified { get; set; } = new();
 
     public static implicit operator PiecesDiff(List<Piece> pieces) => new() { Modified = pieces.Select(p => (PieceDiff)p).ToList() };
 }
 
-[Model("📊", "SD", "SDf", "A diff for sides.")]
+
 public class SideDiff : Model<SideDiff>
 {
-    [ModelProp("⭕", "Pc?", "Pce?", "The optional piece of the side.", PropImportance.OPTIONAL)]
+
     public PieceId? Piece { get; set; }
-    [ModelProp("🏙️", "DP?", "DPc?", "The optional id of the piece inside the referenced design piece.", PropImportance.OPTIONAL)]
+
     public PieceId? DesignPiece { get; set; } = null;
-    [ModelProp("🔌", "Po?", "Por?", "The optional port of the side.", PropImportance.OPTIONAL)]
+
     public PortId? Port { get; set; }
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the side.")]
+
     public string Description { get; set; } = "";
 
     public static implicit operator SideDiff(Side side) => new() { Piece = side.Piece, DesignPiece = side.DesignPiece, Port = side.Port };
@@ -3111,35 +3036,35 @@ public class SideDiff : Model<SideDiff>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-piece-"/>
 /// </summary>
-[Model("⭕", "Pc", "Pce", "A piece is a 3d-instance of a type in a design.")]
+
 public class Piece : Model<Piece>
 {
-    [Id("🆔", "Id?", "Id", "The optional local identifier of the piece within the design. No id means the default piece.", isDefaultValid: true)]
+
     [JsonProperty("id_")]
     public string Id { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the piece.")]
+
     public string Description { get; set; } = "";
-    [ModelProp("🧩", "Ty?", "Typ?", "The optional type of the piece. Either type or design must be set.", PropImportance.OPTIONAL)]
+
     public TypeId? Type { get; set; }
-    [ModelProp("🏙️", "Dn?", "Dsn?", "The optional design of this piece. Either type or design must be set.", PropImportance.OPTIONAL)]
+
     public DesignId? Design { get; set; }
-    [ModelProp("◳", "Pn?", "Pln?", "The optional plane of the piece. When pieces are connected only one piece can have a plane.", PropImportance.OPTIONAL)]
+
     public Plane? Plane { get; set; }
-    [ModelProp("⌖", "Ce?", "Cen?", "The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.", PropImportance.OPTIONAL)]
+
     public DiagramPoint? Center { get; set; }
-    [FalseOrTrue("👻", "Hi?", "Hid?", "Whether the piece is hidden. A hidden piece is not visible in the model.")]
+
     public bool Hidden { get; set; } = false;
-    [FalseOrTrue("🔒", "Lk?", "Lck?", "Whether the piece is locked. A locked piece cannot be edited.")]
+
     public bool Locked { get; set; } = false;
-    [Color("🎨", "Cl?", "Col?", "The optional hex color of the piece.")]
+
     public string Color { get; set; } = "";
-    [NumberProp("⚖️", "Sc?", "Scl?", "The optional scale factor of the piece.", PropImportance.OPTIONAL)]
+
     public float Scale { get; set; } = 1.0f;
-    [ModelProp("🪞", "Mp?", "Mir?", "The optional mirror plane of the piece.", PropImportance.OPTIONAL)]
+
     public Plane? MirrorPlane { get; set; }
-    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the piece.", PropImportance.OPTIONAL)]
+
     public List<Prop> Props { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the piece.", PropImportance.OPTIONAL)]
+
     public List<Attribute> Attributes { get; set; } = new();
     public string ToIdString() => $"{Id}";
     public string ToHumanIdString() => $"{ToIdString()}";
@@ -3276,14 +3201,14 @@ public class Piece : Model<Piece>
     }
 }
 
-[Model("🧱", "Sd", "Sde", "A side of a piece in a connection.")]
+
 public class Side : Model<Side>
 {
-    [ModelProp("⭕", "Pc", "Pce", "The piece-related information of the side.")]
+
     public PieceId Piece { get; set; } = new();
-    [ModelProp("🏙️", "DP?", "DPc?", "The optional id of the piece inside the referenced design piece.", PropImportance.OPTIONAL)]
+
     public PieceId? DesignPiece { get; set; } = null;
-    [ModelProp("🔌", "Po", "Por", "The local identifier of the port within the type.")]
+
     public PortId Port { get; set; } = new();
 
     public static implicit operator Side(SideDiff diff) => new() { Piece = diff.Piece ?? new(), DesignPiece = diff.DesignPiece, Port = diff.Port ?? new() };
@@ -3326,12 +3251,12 @@ public class Side : Model<Side>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-connection-"/>
 /// </summary>
-[Model("🧲", "Cn", "ConId", "The local identifier of the connection within the design.")]
+
 public class ConnectionId : Model<ConnectionId>
 {
-    [ModelProp("🧲", "Cd", "Cnd", "The connected side of the piece of the connection.")]
+
     public Side Connected { get; set; } = new();
-    [ModelProp("🧲", "Cg", "Cng", "The connecting side of the piece of the connection.")]
+
     public Side Connecting { get; set; } = new();
     public static implicit operator ConnectionId(Connection connection) => new() { Connected = connection.Connected, Connecting = connection.Connecting };
     public static implicit operator ConnectionId(ConnectionDiff diff) => new() { Connected = new Side { Piece = diff.Connected?.Piece ?? new(), DesignPiece = diff.Connected?.DesignPiece, Port = diff.Connected?.Port ?? new() }, Connecting = new Side { Piece = diff.Connecting?.Piece ?? new(), DesignPiece = diff.Connecting?.DesignPiece, Port = diff.Connecting?.Port ?? new() } };
@@ -3343,52 +3268,50 @@ public class ConnectionId : Model<ConnectionId>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-connection-"/>
 /// </summary>
-[Model("🔗", "Co", "Con", "A bidirectional connection between two pieces of a design.")]
+
 public class Connection : Model<Connection>
 {
     private float _rotation;
     private float _tilt;
     private float _turn;
 
-    [ModelProp("🧲", "Cd", "Cnd", "The connected side of the piece of the connection.")]
+
     public Side Connected { get; set; } = new();
-    [ModelProp("🧲", "Cg", "Cng", "The connected side of the piece of the connection.")]
+
     public Side Connecting { get; set; } = new();
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the connection.")]
+
     public string Description { get; set; } = "";
-    [NumberProp("↕️", "Gp?", "Gap?", "The optional longitudinal gap (applied after rotation and tilt in port direction) between the connected and the connecting piece.")]
+
     public float Gap { get; set; } = 0;
-    [NumberProp("↔️", "Sf?", "Sft?", "The optional lateral shift (applied after the rotation, the turn and the tilt in the plane) between the connected and the connecting piece.")]
+
     public float Shift { get; set; } = 0;
-    [NumberProp("🪜", "Rs", "Ris", "The optional vertical rise in port direction between the connected and the connecting piece. Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.")]
+
     public float Rise { get; set; } = 0;
-    [AngleProp("🔄", "Rt?", "Rot?", "The optional horizontal rotation in port direction between the connected and the connecting piece in degrees.")]
+
     public float Rotation
     {
         get => _rotation;
         set => _rotation = (value % 360 + 360) % 360;
     }
-    [AngleProp("🛞", "Tu", "Tur", "The optional turn perpendicular to the port direction(applied after rotation and the turn) between the connected and the connecting piece in degrees.Set this only when necessary as it is not a symmetric property which means that when the parent piece and child piece are flipped it yields a different result.")]
+
     public float Turn
     {
         get => _turn;
         set => _turn = (value % 360 + 360) % 360;
     }
-    [AngleProp("∡", "Tl?", "Tlt?",
-        "The optional horizontal tilt perpendicular to the port direction (applied after rotation and the turn) between the connected and the connecting piece in degrees.")]
     public float Tilt
     {
         get => _tilt;
         set => _tilt = (value % 360 + 360) % 360;
     }
 
-    [NumberProp("➡️", "X?", "X?", "The optional offset in x direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.")]
+
     public float X { get; set; }
-    [NumberProp("⬆️", "Y?", "Y?", "The optional offset in y direction between the icons of the child and the parent piece in the diagram. One unit is equal the width of a piece icon.")]
+
     public float Y { get; set; } = 1;
-    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the connection.", PropImportance.OPTIONAL)]
+
     public List<Prop> Props { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the connection.", PropImportance.OPTIONAL)]
+
     public List<Attribute> Attributes { get; set; } = new();
 
     public string ToIdString() => $"{Connected.Piece.Id + (Connected.Port.Id != "" ? ":" + Connected.Port.Id : "")}--{(Connecting.Port.Id != "" ? Connecting.Port.Id + ":" : "") + Connecting.Piece.Id}";
@@ -3534,14 +3457,14 @@ public class Connection : Model<Connection>
     }
 }
 
-[Model("🏙️", "Dn", "Dsn", "The local identifier of the design within the kit.")]
+
 public class DesignId : Model<DesignId>
 {
-    [Name("📛", "Na", "Nam", "The name of the design.", PropImportance.ID)]
+
     public string Name { get; set; } = "";
-    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the design. No variant means the default variant.", PropImportance.ID, true)]
+
     public string Variant { get; set; } = "";
-    [Name("🥽", "Vw?", "Vew?", "The optional view of the design. No view means the default view.", PropImportance.ID, true)]
+
     public string View { get; set; } = "";
     public static implicit operator DesignId(Design design) => new() { Name = design.Name, Variant = design.Variant, View = design.View };
     public static implicit operator DesignId(DesignDiff diff) => new() { Name = diff.Name ?? "", Variant = diff.Variant ?? "", View = diff.View ?? "" };
@@ -3556,46 +3479,44 @@ public class DesignId : Model<DesignId>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-design-"/>
 /// </summary>
-[Model("🏙️", "Dn", "Dsn", "A design is a collection of pieces that are connected.")]
+
 public class Design : Model<Design>
 {
-    [Name("📛", "Na", "Nam", "The name of the design.", PropImportance.ID)]
+
     public string Name { get; set; } = "";
-    [Name("🔀", "Vn?", "Vnt?", "The optional variant of the design. No variant means the default variant.", PropImportance.ID, true)]
+
     public string Variant { get; set; } = "";
-    [Name("🥽", "Vw?", "Vew?", "The optional view of the design. No view means the default view.", PropImportance.ID, true)]
+
     public string View { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the design.")]
+
     public string Description { get; set; } = "";
-    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.")]
     public string Icon { get; set; } = "";
-    [Url("🖼️", "Im?", "Img?", "The optional url to the image of the design. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.")]
     public string Image { get; set; } = "";
-    [ModelProp("💡", "Co*", "Con*", "The optional concepts of the design.", PropImportance.OPTIONAL)]
+
     public List<string> Concepts { get; set; } = new();
-    [ModelProp("👥", "Au*", "Aut*", "The optional authors of the design.", PropImportance.OPTIONAL)]
+
     public List<AuthorId> Authors { get; set; } = new();
-    [ModelProp("📍", "Lo?", "Loc?", "The optional location of the design.", PropImportance.OPTIONAL)]
+
     public Location? Location { get; set; }
-    [Name("Ⓜ️", "Ut", "Unt", "The length unit for all distance-related information of the design.", PropImportance.REQUIRED)]
+
     public string Unit { get; set; } = "";
-    [FalseOrTrue("⚖️", "Sc?", "Scl?", "Whether the design can be scaled.")]
+
     public bool Scalable { get; set; } = true;
-    [FalseOrTrue("🪞", "Mi?", "Mir?", "Whether the design can be mirrored.")]
+
     public bool Mirrorable { get; set; } = true;
-    [ModelProp("🔗", "Ly*", "Lyr*", "The optional layers of the design.", PropImportance.OPTIONAL)]
+
     public List<Layer> Layers { get; set; } = new();
-    [ModelProp("⭕", "Pc*", "Pcs*", "The optional pieces of the design.", PropImportance.OPTIONAL)]
+
     public List<Piece> Pieces { get; set; } = new();
-    [ModelProp("🗂️", "Gr*", "Grp*", "The optional groups of the design.", PropImportance.OPTIONAL)]
+
     public List<Group> Groups { get; set; } = new();
-    [ModelProp("🔗", "Co*", "Cons*", "The optional connections of the design.", PropImportance.OPTIONAL)]
+
     public List<Connection> Connections { get; set; } = new();
-    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the design.", PropImportance.OPTIONAL)]
+
     public List<Prop> Props { get; set; } = new();
-    [ModelProp("🔢", "St*", "Stt*", "The optional stats of the design.", PropImportance.OPTIONAL)]
+
     public List<Stat> Stats { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
+
     public List<Attribute> Attributes { get; set; } = new();
 
     public string ToIdString() => $"{Name}#{Variant}#{View}";
@@ -4418,48 +4339,44 @@ text {
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-kit-"/>
 /// </summary>
-[Model("🗃️", "Kt", "Kit", "A kit is a collection of types and designs.")]
+
 public class Kit : Model<Kit>
 {
-    [Name("📛", "Na", "Nam", "The name of the kit.", PropImportance.ID)]
+
     public string Name { get; set; } = "";
-    [Name("🔀", "Vr?", "Ver?", "The optional version of the kit. No version means the latest version.", PropImportance.ID, true)]
+
     public string Version { get; set; } = "";
-    [Description("💬", "Dc?", "Dsc?", "The optional human-readable description of the kit.")]
+
     public string Description { get; set; } = "";
-    [Url("🪙", "Ic?", "Ico?", "The optional icon [ emoji | logogram | url ] of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.")]
     public string Icon { get; set; } = "";
-    [Url("🖼️", "Im?", "Img?", "The optional url to the image of the kit. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.")]
     public string Image { get; set; } = "";
-    [ModelProp("🏷️", "Cp*", "Cnp*", "The optional concepts of the kit.", PropImportance.OPTIONAL)]
+
     public List<string> Concepts { get; set; } = new();
-    [Url("☁️", "Rm?", "Rmt?", "The optional Unique Resource Locator (URL) where to fetch the kit remotely.")]
+
     public string Remote { get; set; } = "";
-    [Url("🏠", "Hp?", "Hmp?", "The optional Unique Resource Locator (URL) of the homepage of the kit.")]
+
     public string Homepage { get; set; } = "";
-    [Url("⚖️", "Li?", "Lic?", "The optional license [ spdx id | url ] of the kit.")]
     public string License { get; set; } = "";
-    [ModelProp("👥", "Au*", "Aut*", "The optional authors of the kit.", PropImportance.OPTIONAL)]
+
     public List<Author> Authors { get; set; } = new();
-    [ModelProp("⭕", "Pc*", "Pcs*", "The optional pieces of the kit.", PropImportance.OPTIONAL)]
+
     public List<Piece> Pieces { get; set; } = new();
-    [ModelProp("🗂️", "Gr*", "Grp*", "The optional groups of the kit.", PropImportance.OPTIONAL)]
+
     public List<Group> Groups { get; set; } = new();
-    [ModelProp("🔗", "Co*", "Cons*", "The optional connections of the kit.", PropImportance.OPTIONAL)]
+
     public List<Connection> Connections { get; set; } = new();
-    [ModelProp("🏷️", "Pp*", "Prp*", "The optional properties of the kit.", PropImportance.OPTIONAL)]
+
     public List<Prop> Props { get; set; } = new();
-    [ModelProp("🔢", "St*", "Stt*", "The optional stats of the kit.", PropImportance.OPTIONAL)]
+
     public List<Stat> Stats { get; set; } = new();
-    [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the kit.", PropImportance.OPTIONAL)]
+
     public List<Attribute> Attributes { get; set; } = new();
-    [Url("🔮", "Pv?", "Prv?", "The optional url of the preview image of the kit. The url must point to a landscape image [ png | jpg | svg ] which will be cropped by a 2x1 rectangle. The image must be at least 1920x960 pixels and smaller than 15 MB.")]
     public string Preview { get; set; } = "";
-    [ModelProp("📃", "Ql*", "Qal*", "The optional qualities of the kit.", PropImportance.OPTIONAL)]
+
     public List<Quality> Qualities { get; set; } = new();
-    [ModelProp("🧩", "Ty*", "Typ*", "The optional types of the kit.", PropImportance.OPTIONAL)]
+
     public List<Type> Types { get; set; } = new();
-    [ModelProp("🏙️", "Dn*", "Dsn*", "The optional designs of the kit.", PropImportance.OPTIONAL)]
+
     public List<Design> Designs { get; set; } = new();
 
     public static implicit operator Kit(KitDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Preview = diff.Preview ?? "", Version = diff.Version ?? "", Remote = diff.Remote ?? "", Homepage = diff.Homepage ?? "", License = diff.License ?? "", Attributes = diff.Attributes ?? new() };

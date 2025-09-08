@@ -259,8 +259,8 @@ public abstract class ModelGoo<TModel> : GH_Goo<TModel> where TModel : Model<TMo
     public ModelGoo() { Value = new TModel(); }
     public ModelGoo(TModel value) { Value = value; }
     public override bool IsValid => true;
-    public override string TypeName => typeof(TModel).Name;
-    public override string TypeDescription => typeof(TModel).Name;
+    public override abstract string TypeName { get; }
+    public override abstract string TypeDescription { get; }
     public override IGH_Goo Duplicate()
     {
         var duplicate = (ModelGoo<TModel>)Activator.CreateInstance(GetType());
@@ -270,12 +270,12 @@ public abstract class ModelGoo<TModel> : GH_Goo<TModel> where TModel : Model<TMo
     public override string ToString() => Value.ToString();
     public override bool Write(GH_IWriter writer)
     {
-        writer.SetString(typeof(TModel).Name, Value.Serialize());
+        writer.SetString("Value", Value.Serialize());
         return base.Write(writer);
     }
     public override bool Read(GH_IReader reader)
     {
-        Value = reader.GetString(typeof(TModel).Name).Deserialize<TModel>();
+        Value = reader.GetString("Value").Deserialize<TModel>();
         return base.Read(reader);
     }
     internal virtual bool CustomCastTo<Q>(ref Q target) => false;
@@ -304,9 +304,9 @@ public abstract class ModelGoo<TModel> : GH_Goo<TModel> where TModel : Model<TMo
 
 public abstract class ModelParam<TGoo, TModel> : GH_PersistentParam<TGoo> where TGoo : ModelGoo<TModel> where TModel : Model<TModel>, new()
 {
-    internal ModelParam() : base(typeof(TModel).Name, typeof(TModel).Name, typeof(TModel).Name, Constants.Category, "Params")
+    protected ModelParam(string name, string nickname, string description) : base(name, nickname, description, Constants.Category, "Params")
     { }
-    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower()}_24x24");
+    protected abstract override Bitmap Icon { get; }
 
     protected override GH_GetterResult Prompt_Singular(ref TGoo value) => throw new NotImplementedException();
     protected override GH_GetterResult Prompt_Plural(ref List<TGoo> values) => throw new NotImplementedException();
@@ -355,12 +355,37 @@ public abstract class Component : GH_Component
 }
 
 public abstract class ModelComponent<TParam, TGoo, TModel> : Component
-    where TParam : ModelParam<TGoo, TModel> where TGoo : ModelGoo<TModel> where TModel : Model<TModel>, new()
+    where TParam : ModelParam<TGoo, TModel>, new() where TGoo : ModelGoo<TModel>, new() where TModel : Model<TModel>, new()
 {
     protected ModelComponent(string name, string nickname, string description) : base(name, nickname, description, "Modeling") { }
     protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower()}_modify_24x24");
     public override GH_Exposure Exposure => GH_Exposure.primary;
     protected virtual TModel ProcessModel(TModel model) => model;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new TParam(), typeof(TModel).Name, typeof(TModel).Name.Substring(0, 2), $"The optional {typeof(TModel).Name} to deconstruct or modify.", GH_ParamAccess.item);
+        pManager[0].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new TParam(), typeof(TModel).Name, typeof(TModel).Name.Substring(0, 2), $"The constructed or modified {typeof(TModel).Name}.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var model = new TModel();
+
+        // Get optional existing model from first input
+        if (DA.GetData(0, ref model))
+        {
+            model = ProcessModel(model);
+        }
+
+        // Set output
+        DA.SetData(0, new TGoo() { Value = model });
+    }
 }
 
 public abstract class IdGoo<TModel> : ModelGoo<TModel> where TModel : Model<TModel>, new()
@@ -377,10 +402,39 @@ public abstract class IdParam<TGoo, TModel> : ModelParam<TGoo, TModel> where TGo
 }
 
 public abstract class IdComponent<TParam, TGoo, TModel> : ModelComponent<TParam, TGoo, TModel>
-    where TParam : IdParam<TGoo, TModel> where TGoo : IdGoo<TModel> where TModel : Model<TModel>, new()
+    where TParam : IdParam<TGoo, TModel>, new() where TGoo : IdGoo<TModel>, new() where TModel : Model<TModel>, new()
 {
-    protected IdComponent() : base() { }
+    protected IdComponent(string name, string nickname, string description) : base(name, nickname, description) { }
     public override GH_Exposure Exposure => GH_Exposure.secondary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Text", "T", $"The text to convert to {typeof(TModel).Name}.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new TParam(), typeof(TModel).Name, typeof(TModel).Name.Substring(0, 2), $"The {typeof(TModel).Name}.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        string text = "";
+        if (!DA.GetData(0, ref text)) return;
+
+        try
+        {
+            var model = new TModel();
+            // For Id types, we typically just set the text as a property
+            // This is a basic implementation - specific components can override
+            var result = Newtonsoft.Json.JsonConvert.DeserializeObject<TModel>(text);
+            DA.SetData(0, new TGoo() { Value = result ?? model });
+        }
+        catch
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, $"Failed to parse {typeof(TModel).Name}");
+        }
+    }
 }
 
 public abstract class DiffGoo<TModel> : ModelGoo<TModel> where TModel : Model<TModel>, new()
@@ -397,10 +451,36 @@ public abstract class DiffParam<TGoo, TModel> : ModelParam<TGoo, TModel> where T
 }
 
 public abstract class DiffComponent<TParam, TGoo, TModel> : ModelComponent<TParam, TGoo, TModel>
-    where TParam : DiffParam<TGoo, TModel> where TGoo : DiffGoo<TModel> where TModel : Model<TModel>, new()
+    where TParam : DiffParam<TGoo, TModel>, new() where TGoo : DiffGoo<TModel>, new() where TModel : Model<TModel>, new()
 {
-    protected DiffComponent() : base() { }
+    protected DiffComponent(string name, string nickname, string description) : base(name, nickname, description) { }
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("JSON", "J", $"The JSON text to convert to {typeof(TModel).Name}.", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new TParam(), typeof(TModel).Name, typeof(TModel).Name.Substring(0, 2), $"The {typeof(TModel).Name}.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        string json = "";
+        if (!DA.GetData(0, ref json)) return;
+
+        try
+        {
+            var result = Newtonsoft.Json.JsonConvert.DeserializeObject<TModel>(json);
+            DA.SetData(0, new TGoo() { Value = result ?? new TModel() });
+        }
+        catch
+        {
+            AddRuntimeMessage(GH_RuntimeMessageLevel.Error, $"Failed to parse {typeof(TModel).Name}");
+        }
+    }
 }
 public abstract class SerializeComponent<TParam, TGoo, TModel> : ScriptingComponent
     where TParam : ModelParam<TGoo, TModel>, new() where TGoo : ModelGoo<TModel>, new() where TModel : Model<TModel>, new()
@@ -531,13 +611,13 @@ public abstract class EntityParam<TGoo, TEntity, TEntityDiff, TEntityId> : Model
 }
 
 public abstract class EntityComponent<TParam, TGoo, TEntity, TEntityDiff, TEntityId> : ModelComponent<TParam, TGoo, TEntity>
-    where TParam : EntityParam<TGoo, TEntity, TEntityDiff, TEntityId>
-    where TGoo : EntityGoo<TEntity, TEntityDiff, TEntityId>
+    where TParam : EntityParam<TGoo, TEntity, TEntityDiff, TEntityId>, new()
+    where TGoo : EntityGoo<TEntity, TEntityDiff, TEntityId>, new()
     where TEntity : Model<TEntity>, new()
     where TEntityDiff : Model<TEntityDiff>, new()
     where TEntityId : Model<TEntityId>, new()
 {
-    protected EntityComponent() : base() { }
+    protected EntityComponent(string name, string nickname, string description) : base(name, nickname, description) { }
 }
 
 public abstract class EntityIdGoo<TEntity, TEntityDiff, TEntityId> : IdGoo<TEntityId>
@@ -559,13 +639,13 @@ public abstract class EntityIdParam<TIdGoo, TEntity, TEntityDiff, TEntityId> : I
 }
 
 public abstract class EntityIdComponent<TIdParam, TIdGoo, TEntity, TEntityDiff, TEntityId> : IdComponent<TIdParam, TIdGoo, TEntityId>
-    where TIdParam : EntityIdParam<TIdGoo, TEntity, TEntityDiff, TEntityId>
-    where TIdGoo : EntityIdGoo<TEntity, TEntityDiff, TEntityId>
+    where TIdParam : EntityIdParam<TIdGoo, TEntity, TEntityDiff, TEntityId>, new()
+    where TIdGoo : EntityIdGoo<TEntity, TEntityDiff, TEntityId>, new()
     where TEntity : Model<TEntity>, new()
     where TEntityDiff : Model<TEntityDiff>, new()
     where TEntityId : Model<TEntityId>, new()
 {
-    protected EntityIdComponent() : base() { }
+    protected EntityIdComponent(string name, string nickname, string description) : base(name, nickname, description) { }
 }
 
 public abstract class EntityDiffGoo<TEntity, TEntityDiff, TEntityId> : DiffGoo<TEntityDiff>
@@ -587,13 +667,13 @@ public abstract class EntityDiffParam<TDiffGoo, TEntity, TEntityDiff, TEntityId>
 }
 
 public abstract class EntityDiffComponent<TDiffParam, TDiffGoo, TEntity, TEntityDiff, TEntityId> : DiffComponent<TDiffParam, TDiffGoo, TEntityDiff>
-    where TDiffParam : EntityDiffParam<TDiffGoo, TEntity, TEntityDiff, TEntityId>
-    where TDiffGoo : EntityDiffGoo<TEntity, TEntityDiff, TEntityId>
+    where TDiffParam : EntityDiffParam<TDiffGoo, TEntity, TEntityDiff, TEntityId>, new()
+    where TDiffGoo : EntityDiffGoo<TEntity, TEntityDiff, TEntityId>, new()
     where TEntity : Model<TEntity>, new()
     where TEntityDiff : Model<TEntityDiff>, new()
     where TEntityId : Model<TEntityId>, new()
 {
-    protected EntityDiffComponent() : base() { }
+    protected EntityDiffComponent(string name, string nickname, string description) : base(name, nickname, description) { }
 }
 
 #endregion Bases
@@ -654,6 +734,7 @@ public class AttributeIdParam : IdParam<AttributeIdGoo, AttributeId>
 
 public class AttributeIdComponent : IdComponent<AttributeIdParam, AttributeIdGoo, AttributeId>
 {
+    public AttributeIdComponent() : base("Attribute Id", "AtId", "Create or parse an attribute identifier.") { }
     public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B92");
 }
 
@@ -720,13 +801,13 @@ public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, Attribut
 
 public class SerializeAttributeDiffComponent : SerializeComponent<AttributeDiffParam, AttributeDiffGoo, AttributeDiff>
 {
-    public SerializeAttributeDiffComponent() { }
+    public SerializeAttributeDiffComponent() : base("Serialize Attribute Diff", "SAD", "Serialize an attribute diff to JSON.") { }
     public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B97");
 }
 
 public class DeserializeAttributeDiffComponent : DeserializeComponent<AttributeDiffParam, AttributeDiffGoo, AttributeDiff>
 {
-    public DeserializeAttributeDiffComponent() { }
+    public DeserializeAttributeDiffComponent() : base("Deserialize Attribute Diff", "DAD", "Deserialize an attribute diff from JSON.") { }
     public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B98");
 }
 
@@ -944,13 +1025,13 @@ public class RepresentationDiffComponent : DiffComponent<RepresentationDiffParam
 
 public class SerializeRepresentationDiffComponent : SerializeComponent<RepresentationDiffParam, RepresentationDiffGoo, RepresentationDiff>
 {
-    public SerializeRepresentationDiffComponent() { }
+    public SerializeRepresentationDiffComponent() : base("Serialize Representation Diff", "SRD", "Serialize a representation diff to JSON.") { }
     public override Guid ComponentGuid => new("71E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AB");
 }
 
 public class DeserializeRepresentationDiffComponent : DeserializeComponent<RepresentationDiffParam, RepresentationDiffGoo, RepresentationDiff>
 {
-    public DeserializeRepresentationDiffComponent() { }
+    public DeserializeRepresentationDiffComponent() : base("Deserialize Representation Diff", "DRD", "Deserialize a representation diff from JSON.") { }
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AC");
 }
 
@@ -997,13 +1078,13 @@ public class RepresentationsDiffComponent : DiffComponent<RepresentationsDiffPar
 
 public class SerializeRepresentationsDiffComponent : SerializeComponent<RepresentationsDiffParam, RepresentationsDiffGoo, RepresentationsDiff>
 {
-    public SerializeRepresentationsDiffComponent() { }
+    public SerializeRepresentationsDiffComponent() : base("Serialize Representations Diff", "SRsD", "Serialize a representations diff to JSON.") { }
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AE");
 }
 
 public class DeserializeRepresentationsDiffComponent : DeserializeComponent<RepresentationsDiffParam, RepresentationsDiffGoo, RepresentationsDiff>
 {
-    public DeserializeRepresentationsDiffComponent() { }
+    public DeserializeRepresentationsDiffComponent() : base("Deserialize Representations Diff", "DRsD", "Deserialize a representations diff from JSON.") { }
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AF");
 }
 
@@ -1166,13 +1247,13 @@ public class FileDiffComponent : DiffComponent<FileDiffParam, FileDiffGoo, FileD
 
 public class SerializeFileDiffComponent : SerializeComponent<FileDiffParam, FileDiffGoo, FileDiff>
 {
-    public SerializeFileDiffComponent() { }
+    public SerializeFileDiffComponent() : base("Serialize File Diff", "SFD", "Serialize a file diff to JSON.") { }
     public override Guid ComponentGuid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F2");
 }
 
 public class DeserializeFileDiffComponent : DeserializeComponent<FileDiffParam, FileDiffGoo, FileDiff>
 {
-    public DeserializeFileDiffComponent() { }
+    public DeserializeFileDiffComponent() : base("Deserialize File Diff", "DFD", "Deserialize a file diff from JSON.") { }
     public override Guid ComponentGuid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F3");
 }
 
@@ -1219,13 +1300,13 @@ public class FilesDiffComponent : DiffComponent<FilesDiffParam, FilesDiffGoo, Fi
 
 public class SerializeFilesDiffComponent : SerializeComponent<FilesDiffParam, FilesDiffGoo, FilesDiff>
 {
-    public SerializeFilesDiffComponent() { }
+    public SerializeFilesDiffComponent() : base("Serialize Files Diff", "SFsD", "Serialize a files diff to JSON.") { }
     public override Guid ComponentGuid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A3");
 }
 
 public class DeserializeFilesDiffComponent : DeserializeComponent<FilesDiffParam, FilesDiffGoo, FilesDiff>
 {
-    public DeserializeFilesDiffComponent() { }
+    public DeserializeFilesDiffComponent() : base("Deserialize Files Diff", "DFsD", "Deserialize a files diff from JSON.") { }
     public override Guid ComponentGuid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A4");
 }
 
@@ -1487,13 +1568,13 @@ public class PortDiffComponent : DiffComponent<PortDiffParam, PortDiffGoo, PortD
 
 public class SerializePortDiffComponent : SerializeComponent<PortDiffParam, PortDiffGoo, PortDiff>
 {
-    public SerializePortDiffComponent() { }
+    public SerializePortDiffComponent() : base("Serialize Port Diff", "SPD", "Serialize a port diff to JSON.") { }
     public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B4");
 }
 
 public class DeserializePortDiffComponent : DeserializeComponent<PortDiffParam, PortDiffGoo, PortDiff>
 {
-    public DeserializePortDiffComponent() { }
+    public DeserializePortDiffComponent() : base("Deserialize Port Diff", "DPD", "Deserialize a port diff from JSON.") { }
     public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B5");
 }
 
@@ -1640,13 +1721,13 @@ public class PortsDiffComponent : DiffComponent<PortsDiffParam, PortsDiffGoo, Po
 
 public class SerializePortsDiffComponent : SerializeComponent<PortsDiffParam, PortsDiffGoo, PortsDiff>
 {
-    public SerializePortsDiffComponent() { }
+    public SerializePortsDiffComponent() : base("Serialize Ports Diff", "SPsD", "Serialize a ports diff to JSON.") { }
     public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1C2");
 }
 
 public class DeserializePortsDiffComponent : DeserializeComponent<PortsDiffParam, PortsDiffGoo, PortsDiff>
 {
-    public DeserializePortsDiffComponent() { }
+    public DeserializePortsDiffComponent() : base("Deserialize Ports Diff", "DPsD", "Deserialize a ports diff from JSON.") { }
     public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1C3");
 }
 
@@ -1945,13 +2026,13 @@ public class TypeDiffComponent : DiffComponent<TypeDiffParam, TypeDiffGoo, TypeD
 
 public class SerializeTypeDiffComponent : SerializeComponent<TypeDiffParam, TypeDiffGoo, TypeDiff>
 {
-    public SerializeTypeDiffComponent() { }
+    public SerializeTypeDiffComponent() : base("Serialize Type Diff", "STD", "Serialize a type diff to JSON.") { }
     public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C5");
 }
 
 public class DeserializeTypeDiffComponent : DeserializeComponent<TypeDiffParam, TypeDiffGoo, TypeDiff>
 {
-    public DeserializeTypeDiffComponent() { }
+    public DeserializeTypeDiffComponent() : base("Deserialize Type Diff", "DTD", "Deserialize a type diff from JSON.") { }
     public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C6");
 }
 
@@ -1998,13 +2079,13 @@ public class TypesDiffComponent : DiffComponent<TypesDiffParam, TypesDiffGoo, Ty
 
 public class SerializeTypesDiffComponent : SerializeComponent<TypesDiffParam, TypesDiffGoo, TypesDiff>
 {
-    public SerializeTypesDiffComponent() { }
+    public SerializeTypesDiffComponent() : base("Serialize Types Diff", "STsD", "Serialize a types diff to JSON.") { }
     public override Guid ComponentGuid => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B8");
 }
 
 public class DeserializeTypesDiffComponent : DeserializeComponent<TypesDiffParam, TypesDiffGoo, TypesDiff>
 {
-    public DeserializeTypesDiffComponent() { }
+    public DeserializeTypesDiffComponent() : base("Deserialize Types Diff", "DTsD", "Deserialize a types diff from JSON.") { }
     public override Guid ComponentGuid => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B9");
 }
 
@@ -2267,13 +2348,13 @@ public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, Pi
 
 public class SerializePieceDiffComponent : SerializeComponent<PieceDiffParam, PieceDiffGoo, PieceDiff>
 {
-    public SerializePieceDiffComponent() { }
+    public SerializePieceDiffComponent() : base("Serialize Piece Diff", "SPiD", "Serialize a piece diff to JSON.") { }
     public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D6");
 }
 
 public class DeserializePieceDiffComponent : DeserializeComponent<PieceDiffParam, PieceDiffGoo, PieceDiff>
 {
-    public DeserializePieceDiffComponent() { }
+    public DeserializePieceDiffComponent() : base("Deserialize Piece Diff", "DPiD", "Deserialize a piece diff from JSON.") { }
     public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D7");
 }
 
@@ -2320,13 +2401,13 @@ public class PiecesDiffComponent : DiffComponent<PiecesDiffParam, PiecesDiffGoo,
 
 public class SerializePiecesDiffComponent : SerializeComponent<PiecesDiffParam, PiecesDiffGoo, PiecesDiff>
 {
-    public SerializePiecesDiffComponent() { }
+    public SerializePiecesDiffComponent() : base("Serialize Pieces Diff", "SPisD", "Serialize a pieces diff to JSON.") { }
     public override Guid ComponentGuid => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6C9");
 }
 
 public class DeserializePiecesDiffComponent : DeserializeComponent<PiecesDiffParam, PiecesDiffGoo, PiecesDiff>
 {
-    public DeserializePiecesDiffComponent() { }
+    public DeserializePiecesDiffComponent() : base("Deserialize Pieces Diff", "DPisD", "Deserialize a pieces diff from JSON.") { }
     public override Guid ComponentGuid => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6CA");
 }
 
@@ -2478,13 +2559,13 @@ public class SideDiffComponent : DiffComponent<SideDiffParam, SideDiffGoo, SideD
 
 public class SerializeSideDiffComponent : SerializeComponent<SideDiffParam, SideDiffGoo, SideDiff>
 {
-    public SerializeSideDiffComponent() { }
+    public SerializeSideDiffComponent() : base("Serialize Side Diff", "SSD", "Serialize a side diff to JSON.") { }
     public override Guid ComponentGuid => new("B1C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E5");
 }
 
 public class DeserializeSideDiffComponent : DeserializeComponent<SideDiffParam, SideDiffGoo, SideDiff>
 {
-    public DeserializeSideDiffComponent() { }
+    public DeserializeSideDiffComponent() : base("Deserialize Side Diff", "DSD", "Deserialize a side diff from JSON.") { }
     public override Guid ComponentGuid => new("B2C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E6");
 }
 
@@ -2686,13 +2767,13 @@ public class ConnectionDiffComponent : DiffComponent<ConnectionDiffParam, Connec
 
 public class SerializeConnectionDiffComponent : SerializeComponent<ConnectionDiffParam, ConnectionDiffGoo, ConnectionDiff>
 {
-    public SerializeConnectionDiffComponent() { }
+    public SerializeConnectionDiffComponent() : base("Serialize Connection Diff", "SCD", "Serialize a connection diff to JSON.") { }
     public override Guid ComponentGuid => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F6");
 }
 
 public class DeserializeConnectionDiffComponent : DeserializeComponent<ConnectionDiffParam, ConnectionDiffGoo, ConnectionDiff>
 {
-    public DeserializeConnectionDiffComponent() { }
+    public DeserializeConnectionDiffComponent() : base("Deserialize Connection Diff", "DCD", "Deserialize a connection diff from JSON.") { }
     public override Guid ComponentGuid => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F7");
 }
 
@@ -2739,13 +2820,13 @@ public class ConnectionsDiffComponent : DiffComponent<ConnectionsDiffParam, Conn
 
 public class SerializeConnectionsDiffComponent : SerializeComponent<ConnectionsDiffParam, ConnectionsDiffGoo, ConnectionsDiff>
 {
-    public SerializeConnectionsDiffComponent() { }
+    public SerializeConnectionsDiffComponent() : base("Serialize Connections Diff", "SCsD", "Serialize a connections diff to JSON.") { }
     public override Guid ComponentGuid => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7DA");
 }
 
 public class DeserializeConnectionsDiffComponent : DeserializeComponent<ConnectionsDiffParam, ConnectionsDiffGoo, ConnectionsDiff>
 {
-    public DeserializeConnectionsDiffComponent() { }
+    public DeserializeConnectionsDiffComponent() : base("Deserialize Connections Diff", "DCsD", "Deserialize a connections diff from JSON.") { }
     public override Guid ComponentGuid => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7DB");
 }
 
@@ -2979,13 +3060,13 @@ public class DesignDiffComponent : DiffComponent<DesignDiffParam, DesignDiffGoo,
 
 public class SerializeDesignDiffComponent : SerializeComponent<DesignDiffParam, DesignDiffGoo, DesignDiff>
 {
-    public SerializeDesignDiffComponent() { }
+    public SerializeDesignDiffComponent() : base("Serialize Design Diff", "SDD", "Serialize a design diff to JSON.") { }
     public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A9");
 }
 
 public class DeserializeDesignDiffComponent : DeserializeComponent<DesignDiffParam, DesignDiffGoo, DesignDiff>
 {
-    public DeserializeDesignDiffComponent() { }
+    public DeserializeDesignDiffComponent() : base("Deserialize Design Diff", "DDD", "Deserialize a design diff from JSON.") { }
     public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4AA");
 }
 
@@ -3032,13 +3113,13 @@ public class DesignsDiffComponent : DiffComponent<DesignsDiffParam, DesignsDiffG
 
 public class SerializeDesignsDiffComponent : SerializeComponent<DesignsDiffParam, DesignsDiffGoo, DesignsDiff>
 {
-    public SerializeDesignsDiffComponent() { }
+    public SerializeDesignsDiffComponent() : base("Serialize Designs Diff", "SDsD", "Serialize a designs diff to JSON.") { }
     public override Guid ComponentGuid => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8EB");
 }
 
 public class DeserializeDesignsDiffComponent : DeserializeComponent<DesignsDiffParam, DesignsDiffGoo, DesignsDiff>
 {
-    public DeserializeDesignsDiffComponent() { }
+    public DeserializeDesignsDiffComponent() : base("Deserialize Designs Diff", "DDsD", "Deserialize a designs diff from JSON.") { }
     public override Guid ComponentGuid => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8EC");
 }
 
@@ -3161,13 +3242,13 @@ public class DesignComponent : ModelComponent<DesignParam, DesignGoo, Design>
 
 public class SerializeDesignComponent : SerializeComponent<DesignParam, DesignGoo, Design>
 {
-    public SerializeDesignComponent() { }
+    public SerializeDesignComponent() : base("Serialize Design", "SDn", "Serialize a design to JSON.") { }
     public override Guid ComponentGuid => new("D755D6F1-27C4-441A-8856-6BA20E87DB58");
 }
 
 public class DeserializeDesignComponent : DeserializeComponent<DesignParam, DesignGoo, Design>
 {
-    public DeserializeDesignComponent() { }
+    public DeserializeDesignComponent() : base("Deserialize Design", "DDn", "Deserialize a design from JSON.") { }
     public override Guid ComponentGuid => new("D755D6F1-27C4-441A-8856-6BA20E87DB59");
 }
 
@@ -3275,13 +3356,13 @@ public class KitDiffComponent : DiffComponent<KitDiffParam, KitDiffGoo, KitDiff>
 
 public class SerializeKitDiffComponent : SerializeComponent<KitDiffParam, KitDiffGoo, KitDiff>
 {
-    public SerializeKitDiffComponent() { }
+    public SerializeKitDiffComponent() : base("Serialize Kit Diff", "SKD", "Serialize a kit diff to JSON.") { }
     public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B4");
 }
 
 public class DeserializeKitDiffComponent : DeserializeComponent<KitDiffParam, KitDiffGoo, KitDiff>
 {
-    public DeserializeKitDiffComponent() { }
+    public DeserializeKitDiffComponent() : base("Deserialize Kit Diff", "DKD", "Deserialize a kit diff from JSON.") { }
     public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B5");
 }
 
@@ -3395,13 +3476,13 @@ public class KitComponent : ModelComponent<KitParam, KitGoo, Kit>
 
 public class SerializeKitComponent : SerializeComponent<KitParam, KitGoo, Kit>
 {
-    public SerializeKitComponent() { }
+    public SerializeKitComponent() : base("Serialize Kit", "SKt", "Serialize a kit to JSON.") { }
     public override Guid ComponentGuid => new("78202ACE-A876-45AF-BA72-D1FC00FE4165");
 }
 
 public class DeserializeKitComponent : DeserializeComponent<KitParam, KitGoo, Kit>
 {
-    public DeserializeKitComponent() { }
+    public DeserializeKitComponent() : base("Deserialize Kit", "DKt", "Deserialize a kit from JSON.") { }
     public override Guid ComponentGuid => new("78202ACE-A876-45AF-BA72-D1FC00FE4166");
 }
 
@@ -3448,13 +3529,13 @@ public class KitsDiffComponent : DiffComponent<KitsDiffParam, KitsDiffGoo, KitsD
 
 public class SerializeKitsDiffComponent : SerializeComponent<KitsDiffParam, KitsDiffGoo, KitsDiff>
 {
-    public SerializeKitsDiffComponent() { }
+    public SerializeKitsDiffComponent() : base("Serialize Kits Diff", "SKsD", "Serialize a kits diff to JSON.") { }
     public override Guid ComponentGuid => new("50A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C5");
 }
 
 public class DeserializeKitsDiffComponent : DeserializeComponent<KitsDiffParam, KitsDiffGoo, KitsDiff>
 {
-    public DeserializeKitsDiffComponent() { }
+    public DeserializeKitsDiffComponent() : base("Deserialize Kits Diff", "DKsD", "Deserialize a kits diff from JSON.") { }
     public override Guid ComponentGuid => new("50A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C6");
 }
 
@@ -3539,13 +3620,13 @@ public class QualityIdComponent : IdComponent<QualityIdParam, QualityIdGoo, Qual
 
 public class SerializeQualityIdComponent : SerializeIdComponent<QualityIdParam, QualityIdGoo, QualityId>
 {
-    public SerializeQualityIdComponent() { }
+    public SerializeQualityIdComponent() : base("Serialize Quality ID", "SQI", "Serialize a quality ID to JSON.") { }
     public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4CA");
 }
 
 public class DeserializeQualityIdComponent : DeserializeIdComponent<QualityIdParam, QualityIdGoo, QualityId>
 {
-    public DeserializeQualityIdComponent() { }
+    public DeserializeQualityIdComponent() : base("Deserialize Quality ID", "DQI", "Deserialize a quality ID from JSON.") { }
     public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4CB");
 }
 
@@ -3617,13 +3698,13 @@ public class QualityDiffComponent : DiffComponent<QualityDiffParam, QualityDiffG
 
 public class SerializeQualityDiffComponent : SerializeComponent<QualityDiffParam, QualityDiffGoo, QualityDiff>
 {
-    public SerializeQualityDiffComponent() { }
+    public SerializeQualityDiffComponent() : base("Serialize Quality Diff", "SQD", "Serialize a quality diff to JSON.") { }
     public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4DC");
 }
 
 public class DeserializeQualityDiffComponent : DeserializeComponent<QualityDiffParam, QualityDiffGoo, QualityDiff>
 {
-    public DeserializeQualityDiffComponent() { }
+    public DeserializeQualityDiffComponent() : base("Deserialize Quality Diff", "DQD", "Deserialize a quality diff from JSON.") { }
     public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4DD");
 }
 
@@ -3736,13 +3817,13 @@ public class QualityComponent : ModelComponent<QualityParam, QualityGoo, Quality
 
 public class SerializeQualityComponent : SerializeComponent<QualityParam, QualityGoo, Quality>
 {
-    public SerializeQualityComponent() { }
+    public SerializeQualityComponent() : base("Serialize Quality", "SQl", "Serialize a quality to JSON.") { }
     public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C8");
 }
 
 public class DeserializeQualityComponent : DeserializeComponent<QualityParam, QualityGoo, Quality>
 {
-    public DeserializeQualityComponent() { }
+    public DeserializeQualityComponent() : base("Deserialize Quality", "DQl", "Deserialize a quality from JSON.") { }
     public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C9");
 }
 
@@ -3815,13 +3896,13 @@ public class BenchmarkComponent : ModelComponent<BenchmarkParam, BenchmarkGoo, B
 
 public class SerializeBenchmarkComponent : SerializeComponent<BenchmarkParam, BenchmarkGoo, Benchmark>
 {
-    public SerializeBenchmarkComponent() { }
+    public SerializeBenchmarkComponent() : base("Serialize Benchmark", "SBm", "Serialize a benchmark to JSON.") { }
     public override Guid ComponentGuid => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
 }
 
 public class DeserializeBenchmarkComponent : DeserializeComponent<BenchmarkParam, BenchmarkGoo, Benchmark>
 {
-    public DeserializeBenchmarkComponent() { }
+    public DeserializeBenchmarkComponent() : base("Deserialize Benchmark", "DBm", "Deserialize a benchmark from JSON.") { }
     public override Guid ComponentGuid => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
 }
 
@@ -3892,13 +3973,13 @@ public class PropComponent : ModelComponent<PropParam, PropGoo, Prop>
 
 public class SerializePropComponent : SerializeComponent<PropParam, PropGoo, Prop>
 {
-    public SerializePropComponent() { }
+    public SerializePropComponent() : base("Serialize Prop", "SPp", "Serialize a prop to JSON.") { }
     public override Guid ComponentGuid => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
 }
 
 public class DeserializePropComponent : DeserializeComponent<PropParam, PropGoo, Prop>
 {
-    public DeserializePropComponent() { }
+    public DeserializePropComponent() : base("Deserialize Prop", "DPp", "Deserialize a prop from JSON.") { }
     public override Guid ComponentGuid => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
 }
 
@@ -3974,13 +4055,13 @@ public class StatComponent : ModelComponent<StatParam, StatGoo, Stat>
 
 public class SerializeStatComponent : SerializeComponent<StatParam, StatGoo, Stat>
 {
-    public SerializeStatComponent() { }
+    public SerializeStatComponent() : base("Serialize Stat", "SSt", "Serialize a stat to JSON.") { }
     public override Guid ComponentGuid => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
 }
 
 public class DeserializeStatComponent : DeserializeComponent<StatParam, StatGoo, Stat>
 {
-    public DeserializeStatComponent() { }
+    public DeserializeStatComponent() : base("Deserialize Stat", "DSt", "Deserialize a stat from JSON.") { }
     public override Guid ComponentGuid => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
 }
 
@@ -4031,13 +4112,13 @@ public class LayerComponent : ModelComponent<LayerParam, LayerGoo, Layer>
 
 public class SerializeLayerComponent : SerializeComponent<LayerParam, LayerGoo, Layer>
 {
-    public SerializeLayerComponent() { }
+    public SerializeLayerComponent() : base("Serialize Layer", "SLy", "Serialize a layer to JSON.") { }
     public override Guid ComponentGuid => new("90A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
 }
 
 public class DeserializeLayerComponent : DeserializeComponent<LayerParam, LayerGoo, Layer>
 {
-    public DeserializeLayerComponent() { }
+    public DeserializeLayerComponent() : base("Deserialize Layer", "DLy", "Deserialize a layer from JSON.") { }
     public override Guid ComponentGuid => new("90A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
 }
 
@@ -4088,13 +4169,13 @@ public class GroupComponent : ModelComponent<GroupParam, GroupGoo, Group>
 
 public class SerializeGroupComponent : SerializeComponent<GroupParam, GroupGoo, Group>
 {
-    public SerializeGroupComponent() { }
+    public SerializeGroupComponent() : base("Serialize Group", "SGr", "Serialize a group to JSON.") { }
     public override Guid ComponentGuid => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
 }
 
 public class DeserializeGroupComponent : DeserializeComponent<GroupParam, GroupGoo, Group>
 {
-    public DeserializeGroupComponent() { }
+    public DeserializeGroupComponent() : base("Deserialize Group", "DGr", "Deserialize a group from JSON.") { }
     public override Guid ComponentGuid => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
 }
 

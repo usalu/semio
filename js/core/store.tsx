@@ -125,7 +125,7 @@ export interface FileActions {
 }
 
 export interface FileSubscriptions {
-  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
 export interface FileStore extends FileSnapshot {}
@@ -141,7 +141,7 @@ export interface RepresentationActions {
 }
 
 export interface RepresentationSubscriptions {
-  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
 export interface RepresentationStore extends RepresentationSnapshot {}
@@ -155,7 +155,7 @@ export interface PortActions {
   change: (diff: PortDiff) => void;
 }
 export interface PortSubscriptions {
-  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 export interface PortStore extends PortSnapshot {}
 export interface PortStoreFull extends PortSnapshot, PortActions, PortSubscriptions {}
@@ -167,7 +167,7 @@ export interface TypeActions {
   change: (diff: TypeDiff) => void;
 }
 export interface TypeSubscriptions {
-  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 export interface TypeChildStores {
   representations: Map<string, RepresentationStore>;
@@ -187,7 +187,7 @@ export interface PieceActions {
   change: (diff: PieceDiff) => void;
 }
 export interface PieceSubscriptions {
-  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 export interface PieceChildStores {}
 export interface PieceChildStoresFull {}
@@ -201,7 +201,7 @@ export interface ConnectionActions {
   change: (diff: ConnectionDiff) => void;
 }
 export interface ConnectionSubscriptions {
-  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 export interface ConnectionStore extends ConnectionSnapshot {}
 export interface ConnectionStoreFull extends ConnectionSnapshot, ConnectionActions, ConnectionSubscriptions {}
@@ -213,7 +213,7 @@ export interface DesignActions {
   change: (diff: DesignDiff) => void;
 }
 export interface DesignSubscriptions {
-  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 export interface DesignChildStores {
   pieces: Map<string, PieceStore>;
@@ -236,7 +236,7 @@ export interface KitFileUrls {
   fileUrls(): Map<Url, Url>;
 }
 export interface KitSubscriptions {
-  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 export interface KitCommandContext {
   kit: Kit;
@@ -313,21 +313,17 @@ export interface DesignEditorActions {
   change: (diff: DesignEditorStateDiff) => void;
   undo: () => void;
   redo: () => void;
-  transaction: {
-    start: () => void;
-    abort: () => void;
-    finalize: () => void;
-  };
+  startTransaction: () => void;
+  abortTransaction: () => void;
+  finalizeTransaction: () => void;
 }
 export interface DesignEditorSubscriptions {
-  undone: (subscribe: Subscribe) => Unsubscribe;
-  redone: (subscribe: Subscribe) => Unsubscribe;
-  changed: (subscribe: Subscribe) => Unsubscribe;
-  transaction: {
-    started: (subscribe: Subscribe) => Unsubscribe;
-    aborted: (subscribe: Subscribe) => Unsubscribe;
-    finalized: (subscribe: Subscribe) => Unsubscribe;
-  };
+  onUndone: (subscribe: Subscribe) => Unsubscribe;
+  onRedone: (subscribe: Subscribe) => Unsubscribe;
+  onChanged: (subscribe: Subscribe) => Unsubscribe;
+  onTransactionStarted: (subscribe: Subscribe) => Unsubscribe;
+  onTransactionAborted: (subscribe: Subscribe) => Unsubscribe;
+  onTransactionFinalized: (subscribe: Subscribe) => Unsubscribe;
 }
 export interface DesignEditorCommandContext extends KitCommandContext {
   designEditor: DesignEditorStateFull;
@@ -366,26 +362,18 @@ export interface SketchpadStateDiff {
   activeDesignEditor?: DesignEditorId;
 }
 export interface SketchpadActions {
-  create: {
-    kit: (kit: Kit) => void;
-    designEditor: (id: DesignEditorId) => void;
-  };
+  createKit: (kit: Kit) => void;
+  createDesignEditor: (id: DesignEditorId) => void;
   change: (diff: SketchpadStateDiff) => void;
-  delete: {
-    kit: (id: KitIdLike) => void;
-    designEditor: (id: DesignEditorId) => void;
-  };
+  deleteKit: (id: KitIdLike) => void;
+  deleteDesignEditor: (id: DesignEditorId) => void;
 }
 export interface SketchpadSubscriptions {
-  created: {
-    kit: (subscribe: Subscribe) => Unsubscribe;
-    designEditor: (subscribe: Subscribe) => Unsubscribe;
-  };
-  changed: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
-  deleted: {
-    kit: (subscribe: Subscribe) => Unsubscribe;
-    designEditor: (subscribe: Subscribe) => Unsubscribe;
-  };
+  onKitCreated: (subscribe: Subscribe) => Unsubscribe;
+  onDesignEditorCreated: (subscribe: Subscribe) => Unsubscribe;
+  onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  onKitDeleted: (subscribe: Subscribe) => Unsubscribe;
+  onDesignEditorDeleted: (subscribe: Subscribe) => Unsubscribe;
 }
 export interface SketchpadChildStores {
   kits: Map<string, KitStore>;
@@ -738,7 +726,7 @@ class YFileStore implements FileStoreFull {
     return this.cachedSnapshot;
   };
 
-  changed = (subscribe: Subscribe, deep?: boolean) => {
+  onChanged = (subscribe: Subscribe, deep?: boolean) => {
     return createObserver(this.yFile, subscribe, deep);
   };
 }
@@ -798,7 +786,7 @@ class YRepresentationStore implements RepresentationStoreFull {
     }
   };
 
-  changed = (subscribe: Subscribe, deep?: boolean) => {
+  onChanged = (subscribe: Subscribe, deep?: boolean) => {
     return createObserver(this.yRepresentation, subscribe, deep);
   };
 }
@@ -888,7 +876,7 @@ class YPortStore implements PortStoreFull {
     }
   };
 
-  changed = (subscribe: Subscribe, deep?: boolean) => {
+  onChanged = (subscribe: Subscribe, deep?: boolean) => {
     return createObserver(this.yPort, subscribe, deep);
   };
 }
@@ -1005,7 +993,7 @@ class YTypeStore implements TypeStoreFull {
     return this.cachedSnapshot;
   };
 
-  changed = (subscribe: Subscribe, deep?: boolean) => {
+  onChanged = (subscribe: Subscribe, deep?: boolean) => {
     return createObserver(this.yType, subscribe, deep);
   };
 }
@@ -1133,7 +1121,7 @@ class YPieceStore implements PieceStoreFull {
     }
   };
 
-  changed = (subscribe: Subscribe, deep?: boolean) => {
+  onChanged = (subscribe: Subscribe, deep?: boolean) => {
     return createObserver(this.yPiece, subscribe, deep);
   };
 }
@@ -1250,7 +1238,7 @@ class YConnectionStore implements ConnectionStoreFull {
     if (diff.y !== undefined) this.yConnection.set("y", diff.y);
   };
 
-  changed = (subscribe: Subscribe, deep?: boolean) => {
+  onChanged = (subscribe: Subscribe, deep?: boolean) => {
     return createObserver(this.yConnection, subscribe, deep);
   };
 }
@@ -1428,7 +1416,7 @@ class YDesignStore implements DesignStoreFull {
     }
   };
 
-  changed = (subscribe: Subscribe, deep?: boolean) => {
+  onChanged = (subscribe: Subscribe, deep?: boolean) => {
     const observer = () => subscribe();
     if (deep) {
       this.yDesign.observeDeep(observer);
@@ -1667,7 +1655,7 @@ class YKitStore implements KitStoreFull {
     return this.regularFiles;
   };
 
-  changed = (subscribe: Subscribe, deep?: boolean) => {
+  onChanged = (subscribe: Subscribe, deep?: boolean) => {
     const observer = () => subscribe();
     deep ? (this.yKit as unknown as Y.Map<any>).observeDeep(observer) : (this.yKit as unknown as Y.Map<any>).observe(observer);
     return () => (deep ? (this.yKit as unknown as Y.Map<any>).unobserveDeep(observer) : (this.yKit as unknown as Y.Map<any>).unobserve(observer));
@@ -1750,8 +1738,8 @@ class YDesignEditorStore implements DesignEditorStoreFull {
     const selectedPieceIds = this.yDesignEditorStore.get("selectedPieceIds") as Y.Array<string>;
     const selectedConnections = this.yDesignEditorStore.get("selectedConnections") as Y.Array<string>;
     return {
-      pieceIds: selectedPieceIds ? selectedPieceIds.toArray().map((id) => ({ id_: id })) : [],
-      connectionIds: selectedConnections
+      pieces: selectedPieceIds ? selectedPieceIds.toArray().map((id) => ({ id_: id })) : [],
+      connections: selectedConnections
         ? selectedConnections.toArray().map((id) => ({
             connected: { piece: { id_: id.split("->")[0] || "" } },
             connecting: { piece: { id_: id.split("->")[1] || "" } },
@@ -1820,16 +1808,16 @@ class YDesignEditorStore implements DesignEditorStoreFull {
   change = (diff: DesignEditorStateDiff) => {
     if (diff.fullscreenPanel) this.yDesignEditorStore.set("fullscreenPanel", diff.fullscreenPanel);
     if (diff.selection) {
-      if (diff.selection.pieceIds) {
+      if (diff.selection.pieces) {
         const yPieceIds = this.yDesignEditorStore.get("selectedPieceIds") as Y.Array<string>;
         yPieceIds.delete(0, yPieceIds.length);
-        const pieceIdStrings = diff.selection.pieceIds.map((piece) => piece.id_);
+        const pieceIdStrings = diff.selection.pieces.map((piece) => piece.id_);
         yPieceIds.insert(0, pieceIdStrings);
       }
-      if (diff.selection.connectionIds) {
+      if (diff.selection.connections) {
         const yConnectionIds = this.yDesignEditorStore.get("selectedConnections") as Y.Array<string>;
         yConnectionIds.delete(0, yConnectionIds.length);
-        const connectionIdStrings = diff.selection.connectionIds.map((conn) => `${conn.connected.piece.id_}->${conn.connecting.piece.id_}`);
+        const connectionIdStrings = diff.selection.connections.map((conn) => `${conn.connected.piece.id_}->${conn.connecting.piece.id_}`);
         yConnectionIds.insert(0, connectionIdStrings);
       }
     }
@@ -1844,51 +1832,54 @@ class YDesignEditorStore implements DesignEditorStoreFull {
     }
   };
 
-  changed = (subscribe: Subscribe, deep?: boolean) => {
+  onChanged = (subscribe: Subscribe, deep?: boolean) => {
     const observer = () => subscribe();
     deep ? (this.yDesignEditorStore as unknown as Y.Map<any>).observeDeep(observer) : (this.yDesignEditorStore as unknown as Y.Map<any>).observe(observer);
     return () => (deep ? (this.yDesignEditorStore as unknown as Y.Map<any>).unobserveDeep(observer) : (this.yDesignEditorStore as unknown as Y.Map<any>).unobserve(observer));
   };
 
-  transaction = {
-    start: () => {
-      this.yDesignEditorStore.set("isTransactionActive", true);
-    },
-    started: (subscribe: Subscribe) => {
-      const observer = () => subscribe();
-      this.yDesignEditorStore.observe(observer);
-      return () => this.yDesignEditorStore.unobserve(observer);
-    },
-    abort: () => {
-      if (this.isTransactionActive) {
-        const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
-        if (currentStack) {
-          currentStack.delete(0, currentStack.length);
-        }
-        this.yDesignEditorStore.set("isTransactionActive", false);
+  startTransaction = () => {
+    this.yDesignEditorStore.set("isTransactionActive", true);
+  };
+
+  onTransactionStarted = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    this.yDesignEditorStore.observe(observer);
+    return () => this.yDesignEditorStore.unobserve(observer);
+  };
+
+  abortTransaction = () => {
+    if (this.isTransactionActive) {
+      const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
+      if (currentStack) {
+        currentStack.delete(0, currentStack.length);
       }
-    },
-    aborted: (subscribe: Subscribe) => {
-      const observer = () => subscribe();
-      this.yDesignEditorStore.observe(observer);
-      return () => this.yDesignEditorStore.unobserve(observer);
-    },
-    finalize: () => {
-      if (this.isTransactionActive) {
-        const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
-        const pastStack = this.yDesignEditorStore.get("pastTransactionsStack") as Y.Array<any>;
-        if (currentStack && currentStack.length > 0) {
-          pastStack.push(currentStack.toArray());
-          currentStack.delete(0, currentStack.length);
-        }
-        this.yDesignEditorStore.set("isTransactionActive", false);
+      this.yDesignEditorStore.set("isTransactionActive", false);
+    }
+  };
+
+  onTransactionAborted = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    this.yDesignEditorStore.observe(observer);
+    return () => this.yDesignEditorStore.unobserve(observer);
+  };
+
+  finalizeTransaction = () => {
+    if (this.isTransactionActive) {
+      const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
+      const pastStack = this.yDesignEditorStore.get("pastTransactionsStack") as Y.Array<any>;
+      if (currentStack && currentStack.length > 0) {
+        pastStack.push(currentStack.toArray());
+        currentStack.delete(0, currentStack.length);
       }
-    },
-    finalized: (subscribe: Subscribe) => {
-      const observer = () => subscribe();
-      this.yDesignEditorStore.observe(observer);
-      return () => this.yDesignEditorStore.unobserve(observer);
-    },
+      this.yDesignEditorStore.set("isTransactionActive", false);
+    }
+  };
+
+  onTransactionFinalized = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    this.yDesignEditorStore.observe(observer);
+    return () => this.yDesignEditorStore.unobserve(observer);
   };
 
   undo = () => {
@@ -1912,7 +1903,7 @@ class YDesignEditorStore implements DesignEditorStoreFull {
       }
     }
   };
-  undone = (subscribe: Subscribe) => {
+  onUndone = (subscribe: Subscribe) => {
     const observer = () => subscribe();
     this.yDesignEditorStore.observe(observer);
     return () => this.yDesignEditorStore.unobserve(observer);
@@ -1938,7 +1929,7 @@ class YDesignEditorStore implements DesignEditorStoreFull {
       }
     }
   };
-  redone = (subscribe: Subscribe) => {
+  onRedone = (subscribe: Subscribe) => {
     const observer = () => subscribe();
     this.yDesignEditorStore.observe(observer);
     return () => this.yDesignEditorStore.unobserve(observer);
@@ -1946,29 +1937,29 @@ class YDesignEditorStore implements DesignEditorStoreFull {
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
     if (command === "semio.designEditor.startTransaction") {
-      this.transaction.start();
+      this.startTransaction();
       return {} as T;
     }
     if (command === "semio.designEditor.finalizeTransaction") {
-      this.transaction.finalize();
+      this.finalizeTransaction();
       return {} as T;
     }
     if (command === "semio.designEditor.abortTransaction") {
-      this.transaction.abort();
+      this.abortTransaction();
       return {} as T;
     }
 
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in design editor store`);
     const parent = this.parent as YSketchpadStore;
-    const kitStore = parent.kits.get(kitIdToString(parent.activeDesignEditor!.kitId))!;
+    const kitStore = parent.kits.get(kitIdToString(parent.activeDesignEditor!.kit))!;
 
     const beforeState = this.snapshot();
 
     const context: DesignEditorCommandContext = {
       designEditor: this.snapshot(),
       kit: kitStore.snapshot(),
-      designId: parent.activeDesignEditor!.designId,
+      designId: parent.activeDesignEditor!.design,
       fileUrls: kitStore.fileUrls(),
     };
     const result = callback(context, ...rest);
@@ -2015,14 +2006,12 @@ class YDesignEditorStore implements DesignEditorStoreFull {
 
   get on(): DesignEditorSubscriptions {
     return {
-      undone: this.undone,
-      redone: this.redone,
-      changed: this.changed,
-      transaction: {
-        started: this.transaction.started,
-        aborted: this.transaction.aborted,
-        finalized: this.transaction.finalized,
-      },
+      onUndone: this.onUndone,
+      onRedone: this.onRedone,
+      onChanged: this.onChanged,
+      onTransactionStarted: this.onTransactionStarted,
+      onTransactionAborted: this.onTransactionAborted,
+      onTransactionFinalized: this.onTransactionFinalized,
     };
   }
 
@@ -2100,24 +2089,23 @@ class YSketchpadStore implements SketchpadStoreFull {
     return this.cachedSnapshot!;
   };
 
-  create = {
-    kit: (kit: Kit) => {
-      const store = new YKitStore(this, kit);
-      this.kits.set(kitIdToString(kit), store);
-    },
-    designEditor: (id: DesignEditorId) => {
-      const store = new YDesignEditorStore(this);
+  createKit = (kit: Kit) => {
+    const store = new YKitStore(this, kit);
+    this.kits.set(kitIdToString(kit), store);
+  };
 
-      // Ensure the kitId map exists
-      const kitIdStr = kitIdToString(id.kitId);
-      const designIdStr = designIdToString(id.designId);
-      if (!this.designEditors.has(kitIdStr)) {
-        this.designEditors.set(kitIdStr, new Map());
-      }
+  createDesignEditor = (id: DesignEditorId) => {
+    const store = new YDesignEditorStore(this);
 
-      const kitEditors = this.designEditors.get(kitIdStr)!;
-      kitEditors.set(designIdStr, store);
-    },
+    // Ensure the kitId map exists
+    const kitIdStr = kitIdToString(id.kit);
+    const designIdStr = designIdToString(id.design);
+    if (!this.designEditors.has(kitIdStr)) {
+      this.designEditors.set(kitIdStr, new Map());
+    }
+
+    const kitEditors = this.designEditors.get(kitIdStr)!;
+    kitEditors.set(designIdStr, store);
   };
 
   change(diff: SketchpadStateDiff) {
@@ -2127,60 +2115,57 @@ class YSketchpadStore implements SketchpadStoreFull {
     if (diff.activeDesignEditor) this.getYSketchpad().set("activeDesignEditor", JSON.stringify(diff.activeDesignEditor));
   }
 
-  delete = {
-    kit: (id: KitIdLike) => {
-      const kitId = kitIdLikeToKitId(id);
-      const kitIdStr = kitIdToString(kitId);
-      if (this.kits.has(kitIdStr)) {
-        this.kits.delete(kitIdStr);
-      }
-      if (this.designEditors.has(kitIdStr)) {
+  deleteKit = (id: KitIdLike) => {
+    const kitId = kitIdLikeToKitId(id);
+    const kitIdStr = kitIdToString(kitId);
+    if (this.kits.has(kitIdStr)) {
+      this.kits.delete(kitIdStr);
+    }
+    if (this.designEditors.has(kitIdStr)) {
+      this.designEditors.delete(kitIdStr);
+    }
+  };
+
+  deleteDesignEditor = (id: DesignEditorId) => {
+    const kitIdStr = kitIdToString(id.kit);
+    const designIdStr = designIdToString(id.design);
+    const kitEditors = this.designEditors.get(kitIdStr);
+    if (kitEditors) {
+      kitEditors.delete(designIdStr);
+      if (kitEditors.size === 0) {
         this.designEditors.delete(kitIdStr);
       }
-    },
-    designEditor: (id: DesignEditorId) => {
-      const kitIdStr = kitIdToString(id.kitId);
-      const designIdStr = designIdToString(id.designId);
-      const kitEditors = this.designEditors.get(kitIdStr);
-      if (kitEditors) {
-        kitEditors.delete(designIdStr);
-        if (kitEditors.size === 0) {
-          this.designEditors.delete(kitIdStr);
-        }
-      }
-    },
+    }
   };
 
   // Subscriptions using Yjs observers
-  created = {
-    kit: (subscribe: Subscribe): Unsubscribe => {
-      // For kit creation, we can observe all kit documents being added
-      // This is a simplified approach - would need more sophisticated tracking in full implementation
-      const observer = () => subscribe();
-      // Note: Would need to observe kit document creation across all kit docs
-      return () => {}; // Placeholder unsubscribe
-    },
-    designEditor: (subscribe: Subscribe): Unsubscribe => {
-      // Observe design editor stores map changes
-      const yDesignEditorStores = this.ySketchpadDoc.getMap("designEditorStores") as YDesignEditorStoreMap;
-      const observer = () => subscribe();
-      yDesignEditorStores.observe(observer);
-      return () => yDesignEditorStores.unobserve(observer);
-    },
+  onKitCreated = (subscribe: Subscribe): Unsubscribe => {
+    // For kit creation, we can observe all kit documents being added
+    // This is a simplified approach - would need more sophisticated tracking in full implementation
+    const observer = () => subscribe();
+    // Note: Would need to observe kit document creation across all kit docs
+    return () => {}; // Placeholder unsubscribe
   };
 
-  deleted = {
-    kit: (subscribe: Subscribe): Unsubscribe => {
-      // Would need to observe kit document removal
-      return () => {}; // Placeholder
-    },
-    designEditor: (subscribe: Subscribe): Unsubscribe => {
-      // Would need to observe design editor removal
-      return () => {}; // Placeholder
-    },
+  onDesignEditorCreated = (subscribe: Subscribe): Unsubscribe => {
+    // Observe design editor stores map changes
+    const yDesignEditorStores = this.ySketchpadDoc.getMap("designEditorStores") as YDesignEditorStoreMap;
+    const observer = () => subscribe();
+    yDesignEditorStores.observe(observer);
+    return () => yDesignEditorStores.unobserve(observer);
   };
 
-  changed = (subscribe: Subscribe): Unsubscribe => {
+  onKitDeleted = (subscribe: Subscribe): Unsubscribe => {
+    // Would need to observe kit document removal
+    return () => {}; // Placeholder
+  };
+
+  onDesignEditorDeleted = (subscribe: Subscribe): Unsubscribe => {
+    // Would need to observe design editor removal
+    return () => {}; // Placeholder
+  };
+
+  onChanged = (subscribe: Subscribe): Unsubscribe => {
     const observer = () => subscribe();
     this.getYSketchpad().observe(observer);
     return () => this.getYSketchpad().unobserve(observer);
@@ -2188,9 +2173,11 @@ class YSketchpadStore implements SketchpadStoreFull {
 
   get on(): SketchpadSubscriptions {
     return {
-      created: this.created,
-      changed: this.changed,
-      deleted: this.deleted,
+      onKitCreated: this.onKitCreated,
+      onDesignEditorCreated: this.onDesignEditorCreated,
+      onChanged: this.onChanged,
+      onKitDeleted: this.onKitDeleted,
+      onDesignEditorDeleted: this.onDesignEditorDeleted,
     };
   }
 
@@ -2199,12 +2186,12 @@ class YSketchpadStore implements SketchpadStoreFull {
     if (!callback) throw new Error(`Command "${command}" not found in sketchpad store`);
     if (command === "semio.sketchpad.createKit") {
       const kit = rest[0] as Kit;
-      this.create.kit(kit);
+      this.createKit(kit);
       return {} as T;
     }
     if (command === "semio.sketchpad.createDesignEditor") {
       const id = rest[0] as DesignEditorId;
-      this.create.designEditor(id);
+      this.createDesignEditor(id);
       return {} as T;
     }
     if (command === "semio.sketchpad.importKit") {
@@ -2438,6 +2425,7 @@ const kitCommands = {
               const kitRow = kitResult[0];
               const kitData = Object.fromEntries(kitRow.columns.map((col, i) => [col, kitRow.values[0][i]]));
               kit = {
+                uri: (kitData.uri as string) || (kitData.name as string),
                 name: kitData.name as string,
                 description: kitData.description as string,
                 version: kitData.version as string,
@@ -2836,60 +2824,60 @@ const designEditorCommands = {
     const design = findDesignInKit(context.kit, context.designId)!;
     return {
       diff: {
-        selection: { pieceIds: design.pieces ?? [], connectionIds: design.connections ?? [] },
+        selection: { pieces: design.pieces ?? [], connections: design.connections ?? [] },
       },
     };
   },
   "semio.designEditor.deselectAll": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
     return {
       diff: {
-        selection: { pieceIds: [], connectionIds: [] },
+        selection: { pieces: [], connections: [] },
       },
     };
   },
   "semio.designEditor.selectPiece": (context: DesignEditorCommandContext, pieceId: PieceId): DesignEditorCommandResult => {
     return {
       diff: {
-        selection: { pieceIds: [pieceId], connectionIds: [] },
+        selection: { pieces: [pieceId], connections: [] },
       },
     };
   },
   "semio.designEditor.selectPieces": (context: DesignEditorCommandContext, pieceIds: PieceId[]): DesignEditorCommandResult => {
     return {
       diff: {
-        selection: { pieceIds, connectionIds: [] },
+        selection: { pieces: pieceIds, connections: [] },
       },
     };
   },
   "semio.designEditor.addPieceToSelection": (context: DesignEditorCommandContext, pieceId: PieceId): DesignEditorCommandResult => {
     const currentSelection = context.designEditor.selection;
-    const newPieceIds = [...(currentSelection.pieceIds ?? []), pieceId];
+    const newPieceIds = [...(currentSelection.pieces ?? []), pieceId];
     return {
       diff: {
-        selection: { pieceIds: newPieceIds, connectionIds: currentSelection.connectionIds ?? [] },
+        selection: { pieces: newPieceIds, connections: currentSelection.connections ?? [] },
       },
     };
   },
   "semio.designEditor.removePieceFromSelection": (context: DesignEditorCommandContext, pieceId: PieceId): DesignEditorCommandResult => {
     const currentSelection = context.designEditor.selection;
-    const newPieceIds = (currentSelection.pieceIds ?? []).filter((id) => id.id_ !== pieceId.id_);
+    const newPieceIds = (currentSelection.pieces ?? []).filter((id) => id.id_ !== pieceId.id_);
     return {
       diff: {
-        selection: { pieceIds: newPieceIds, connectionIds: currentSelection.connectionIds ?? [] },
+        selection: { pieces: newPieceIds, connections: currentSelection.connections ?? [] },
       },
     };
   },
   "semio.designEditor.selectPiecePort": (context: DesignEditorCommandContext, pieceId: PieceId, portId: PortId): DesignEditorCommandResult => {
     return {
       diff: {
-        selection: { portId: { pieceId, portId } },
+        selection: { port: { piece: pieceId, port: portId } },
       },
     };
   },
   "semio.designEditor.deselectPiecePort": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
     return {
       diff: {
-        selection: { portId: undefined },
+        selection: { port: undefined },
       },
     };
   },
@@ -2897,14 +2885,14 @@ const designEditorCommands = {
     const selection = context.designEditor.selection;
     return {
       diff: {
-        selection: { pieceIds: [], connectionIds: [] },
+        selection: { pieces: [], connections: [] },
       },
       kitDiff: {
         designs: {
           updated: [
             {
               id: context.designId,
-              diff: { pieces: { removed: selection.pieceIds }, connections: { removed: selection.connectionIds } },
+              diff: { pieces: { removed: selection.pieces }, connections: { removed: selection.connections } },
             },
           ],
         },
@@ -3026,7 +3014,7 @@ function useSketchpadStore(id?: string): SketchpadStore {
   if (!stores.has(storeId)) throw new Error(`Sketchpad store was not found for id ${storeId}`);
   const store = useMemo(() => stores.get(storeId)!, [storeId]);
   const getSnapshot = useMemo(() => () => store.snapshot(), [store]);
-  const state = useSyncExternalStore(store.changed, getSnapshot, getSnapshot);
+  const state = useSyncExternalStore(store.onChanged, getSnapshot, getSnapshot);
   return store;
 }
 
@@ -3038,7 +3026,7 @@ export function useSketchpad<T>(selector?: (store: SketchpadStore) => T, id?: st
   if (!storeId) throw new Error("useSketchpad must be called within a SketchpadScopeProvider or be directly provided with an id");
   if (!stores.has(storeId)) throw new Error(`Sketchpad store was not found for id ${storeId}`);
   const store = useMemo(() => stores.get(storeId)!, [storeId]);
-  const lastSnapshot = useRef<any>();
+  const lastSnapshot = useRef<any>(null);
   const getSnapshot = useCallback(() => {
     const currentSnapshot = store.snapshot();
     if (!lastSnapshot.current || JSON.stringify(lastSnapshot.current) !== JSON.stringify(currentSnapshot)) {
@@ -3047,7 +3035,7 @@ export function useSketchpad<T>(selector?: (store: SketchpadStore) => T, id?: st
     return lastSnapshot.current;
   }, [store]);
 
-  const state = useSyncExternalStore(store.changed, getSnapshot, getSnapshot);
+  const state = useSyncExternalStore(store.onChanged, getSnapshot, getSnapshot);
 
   return selector ? selector(store) : store;
 }
@@ -3076,7 +3064,7 @@ export function useDesignEditor<T>(selector?: (store: DesignEditorStore) => T, k
   const designEditor = useMemo(() => kitEditors.get(resolvedDesignIdStr)!, [kitEditors, resolvedDesignIdStr]);
   const getSnapshot = useMemo(() => () => designEditor.snapshot(), [designEditor]);
 
-  const state = useSyncExternalStore(designEditor.changed, getSnapshot, getSnapshot);
+  const state = useSyncExternalStore(designEditor.onChanged, getSnapshot, getSnapshot);
   return selector ? selector(designEditor) : designEditor;
 }
 
@@ -3102,7 +3090,7 @@ export function useKit<T>(selector: (kit: Kit) => T, id: KitId): T;
 export function useKit<T>(selector?: (kit: Kit) => T, id?: KitId): T | Kit {
   const kitStore = useKitStore();
   const getSnapshot = useMemo(() => () => kitStore.snapshot(), [kitStore]);
-  const kit = useSyncExternalStore(kitStore.changed, getSnapshot, getSnapshot);
+  const kit = useSyncExternalStore(kitStore.onChanged, getSnapshot, getSnapshot);
   return selector ? selector(kit as Kit) : (kit as Kit);
 }
 
@@ -3126,7 +3114,7 @@ export function useDesign<T>(selector?: (design: Design) => T, id?: DesignId): T
   if (!kitStore.designs.has(designIdStr)) throw new Error(`Design store not found for design ${designId}`);
   const designStore = useMemo(() => kitStore.designs.get(designIdStr)!, [kitStore, designIdStr]);
   const getSnapshot = useMemo(() => () => designStore.snapshot(), [designStore]);
-  const state = useSyncExternalStore(designStore.changed, getSnapshot, getSnapshot);
+  const state = useSyncExternalStore(designStore.onChanged, getSnapshot, getSnapshot);
   return selector ? selector(state) : state;
 }
 
@@ -3150,7 +3138,7 @@ export function useType<T>(selector?: (type: Type) => T, id?: TypeId): T | Type 
   if (!kit.types.has(typeIdStr)) throw new Error(`Type store not found for type ${typeId}`);
   const typeStore = useMemo(() => kit.types.get(typeIdStr)!, [kit, typeIdStr]);
   const getSnapshot = useMemo(() => () => typeStore.snapshot(), [typeStore]);
-  const state = useSyncExternalStore(typeStore.changed, getSnapshot, getSnapshot);
+  const state = useSyncExternalStore(typeStore.onChanged, getSnapshot, getSnapshot);
   return selector ? selector(state) : state;
 }
 
@@ -3180,7 +3168,7 @@ export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId): T | P
   if (!design.pieces.has(pieceIdStr)) throw new Error(`Piece store not found for piece ${pieceId}`);
   const pieceStore = useMemo(() => design.pieces.get(pieceIdStr)!, [design, pieceIdStr]);
   const getSnapshot = useMemo(() => () => pieceStore.snapshot(), [pieceStore]);
-  const state = useSyncExternalStore(pieceStore.changed, getSnapshot, getSnapshot);
+  const state = useSyncExternalStore(pieceStore.onChanged, getSnapshot, getSnapshot);
   return selector ? selector(state) : state;
 }
 
@@ -3210,7 +3198,7 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
   if (!design.connections.has(connectionIdStr)) throw new Error(`Connection store not found for connection ${connectionId}`);
   const connectionStore = useMemo(() => design.connections.get(connectionIdStr)!, [design, connectionIdStr]);
   const getSnapshot = useMemo(() => () => connectionStore.snapshot(), [connectionStore]);
-  const state = useSyncExternalStore(connectionStore.changed, getSnapshot, getSnapshot);
+  const state = useSyncExternalStore(connectionStore.onChanged, getSnapshot, getSnapshot);
   return selector ? selector(state) : state;
 }
 
@@ -3240,7 +3228,7 @@ export function usePort<T>(selector?: (port: Port) => T, id?: PortId): T | Port 
   if (!type.ports.has(portIdStr)) throw new Error(`Port store not found for port ${portId}`);
   const portStore = useMemo(() => type.ports.get(portIdStr)!, [type, portIdStr]);
   const getSnapshot = useMemo(() => () => portStore.snapshot(), [portStore]);
-  const state = useSyncExternalStore(portStore.changed, getSnapshot, getSnapshot);
+  const state = useSyncExternalStore(portStore.onChanged, getSnapshot, getSnapshot);
   return selector ? selector(state) : state;
 }
 
@@ -3270,7 +3258,7 @@ export function useRepresentation<T>(selector?: (representation: Representation)
   if (!typeStore.representations.has(representationIdStr)) throw new Error(`Representation store not found for representation ${representationId}`);
   const representationStore = useMemo(() => typeStore.representations.get(representationIdStr)!, [typeStore, representationIdStr]);
   const getSnapshot = useMemo(() => () => representationStore.snapshot(), [representationStore]);
-  const state = useSyncExternalStore(representationStore.changed, getSnapshot, getSnapshot);
+  const state = useSyncExternalStore(representationStore.onChanged, getSnapshot, getSnapshot);
   return selector ? selector(state) : state;
 }
 

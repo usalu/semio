@@ -895,77 +895,69 @@ export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vec
 
 // #region Serializing
 
-export const serialize = {
-  attribute: (attribute: Attribute): string => JSON.stringify(AttributeSchema.parse(attribute), null, 2),
-  author: (author: Author): string => JSON.stringify(AuthorSchema.parse(author), null, 2),
-  diagramPoint: (diagramPoint: DiagramPoint): string => JSON.stringify(DiagramPointSchema.parse(diagramPoint), null, 2),
-  diagramVector: (diagramVector: DiagramVector): string => JSON.stringify(DiagramVectorSchema.parse(diagramVector), null, 2),
-  plane: (plane: Plane): string => JSON.stringify(PlaneSchema.parse(plane), null, 2),
-  point: (point: Point): string => JSON.stringify(PointSchema.parse(point), null, 2),
-  vector: (vector: Vector): string => JSON.stringify(VectorSchema.parse(vector), null, 2),
-  location: (location: Location): string => JSON.stringify(LocationSchema.parse(location), null, 2),
-  representation: (representation: Representation): string => JSON.stringify(RepresentationSchema.parse(representation), null, 2),
-  port: (port: Port): string => JSON.stringify(PortSchema.parse(port), null, 2),
-  piece: (piece: Piece): string => JSON.stringify(PieceSchema.parse(piece), null, 2),
-  connection: (connection: Connection): string => JSON.stringify(ConnectionSchema.parse(connection), null, 2),
-  type: (type: Type): string => JSON.stringify(TypeSchema.parse(type), null, 2),
-  design: (design: Design): string => JSON.stringify(DesignSchema.parse(design), null, 2),
-  file: (file: File): string => JSON.stringify(FileSchema.parse(file), null, 2),
-  kit: (kit: Kit): string => JSON.stringify(KitSchema.parse(kit), null, 2),
-};
-export const deserialize = {
-  attribute: (json: string): Attribute => AttributeSchema.parse(JSON.parse(json)),
-  author: (json: string): Author => AuthorSchema.parse(JSON.parse(json)),
-  diagramPoint: (json: string): DiagramPoint => DiagramPointSchema.parse(JSON.parse(json)),
-  diagramVector: (json: string): DiagramVector => DiagramVectorSchema.parse(JSON.parse(json)),
-  plane: (json: string): Plane => PlaneSchema.parse(JSON.parse(json)),
-  point: (json: string): Point => PointSchema.parse(JSON.parse(json)),
-  vector: (json: string): Vector => VectorSchema.parse(JSON.parse(json)),
-  location: (json: string): Location => LocationSchema.parse(JSON.parse(json)),
-  representation: (json: string): Representation => RepresentationSchema.parse(JSON.parse(json)),
-  port: (json: string): Port => PortSchema.parse(JSON.parse(json)),
-  piece: (json: string): Piece => PieceSchema.parse(JSON.parse(json)),
-  connection: (json: string): Connection => ConnectionSchema.parse(JSON.parse(json)),
-  type: (json: string): Type => TypeSchema.parse(JSON.parse(json)),
-  design: (json: string): Design => DesignSchema.parse(JSON.parse(json)),
-  kit: (json: string): Kit => KitSchema.parse(JSON.parse(json)),
-};
-export const parse = {
-  attribute: (json: string): Attribute => AttributeSchema.parse(JSON.parse(json)),
-  author: (json: string): Author => AuthorSchema.parse(JSON.parse(json)),
-  diagramPoint: (json: string): DiagramPoint => DiagramPointSchema.parse(JSON.parse(json)),
-  diagramVector: (json: string): DiagramVector => DiagramVectorSchema.parse(JSON.parse(json)),
-  plane: (json: string): Plane => PlaneSchema.parse(JSON.parse(json)),
-  point: (json: string): Point => PointSchema.parse(JSON.parse(json)),
-  vector: (json: string): Vector => VectorSchema.parse(JSON.parse(json)),
-  location: (json: string): Location => LocationSchema.parse(JSON.parse(json)),
-  representation: (json: string): Representation => RepresentationSchema.parse(JSON.parse(json)),
-  port: (json: string): Port => PortSchema.parse(JSON.parse(json)),
-  piece: (json: string): Piece => PieceSchema.parse(JSON.parse(json)),
-  connection: (json: string): Connection => ConnectionSchema.parse(JSON.parse(json)),
-  type: (json: string): Type => TypeSchema.parse(JSON.parse(json)),
-  design: (json: string): Design => DesignSchema.parse(JSON.parse(json)),
-  file: (json: string): File => FileSchema.parse(JSON.parse(json)),
-  kit: (json: string): Kit => KitSchema.parse(JSON.parse(json)),
-};
-export const safeParse = {
-  attribute: (data: unknown) => AttributeSchema.safeParse(data),
-  author: (data: unknown) => AuthorSchema.safeParse(data),
-  diagramPoint: (data: unknown) => DiagramPointSchema.safeParse(data),
-  diagramVector: (data: unknown) => DiagramVectorSchema.safeParse(data),
-  plane: (data: unknown) => PlaneSchema.safeParse(data),
-  point: (data: unknown) => PointSchema.safeParse(data),
-  vector: (data: unknown) => VectorSchema.safeParse(data),
-  location: (data: unknown) => LocationSchema.safeParse(data),
-  representation: (data: unknown) => RepresentationSchema.safeParse(data),
-  port: (data: unknown) => PortSchema.safeParse(data),
-  piece: (data: unknown) => PieceSchema.safeParse(data),
-  connection: (data: unknown) => ConnectionSchema.safeParse(data),
-  type: (data: unknown) => TypeSchema.safeParse(data),
-  design: (data: unknown) => DesignSchema.safeParse(data),
-  file: (data: unknown) => FileSchema.safeParse(data),
-  kit: (data: unknown) => KitSchema.safeParse(data),
-};
+export const serializeAttribute = (attribute: Attribute): string => JSON.stringify(AttributeSchema.parse(attribute), null, 2);
+export const serializeAuthor = (author: Author): string => JSON.stringify(AuthorSchema.parse(author), null, 2);
+export const serializeDiagramPoint = (diagramPoint: DiagramPoint): string => JSON.stringify(DiagramPointSchema.parse(diagramPoint), null, 2);
+export const serializeDiagramVector = (diagramVector: DiagramVector): string => JSON.stringify(DiagramVectorSchema.parse(diagramVector), null, 2);
+export const serializePlane = (plane: Plane): string => JSON.stringify(PlaneSchema.parse(plane), null, 2);
+export const serializePoint = (point: Point): string => JSON.stringify(PointSchema.parse(point), null, 2);
+export const serializeVector = (vector: Vector): string => JSON.stringify(VectorSchema.parse(vector), null, 2);
+export const serializeLocation = (location: Location): string => JSON.stringify(LocationSchema.parse(location), null, 2);
+export const serializeRepresentation = (representation: Representation): string => JSON.stringify(RepresentationSchema.parse(representation), null, 2);
+export const serializePort = (port: Port): string => JSON.stringify(PortSchema.parse(port), null, 2);
+export const serializePiece = (piece: Piece): string => JSON.stringify(PieceSchema.parse(piece), null, 2);
+export const serializeConnection = (connection: Connection): string => JSON.stringify(ConnectionSchema.parse(connection), null, 2);
+export const serializeType = (type: Type): string => JSON.stringify(TypeSchema.parse(type), null, 2);
+export const serializeDesign = (design: Design): string => JSON.stringify(DesignSchema.parse(design), null, 2);
+export const serializeFile = (file: File): string => JSON.stringify(FileSchema.parse(file), null, 2);
+export const serializeKit = (kit: Kit): string => JSON.stringify(KitSchema.parse(kit), null, 2);
+export const deserializeAttribute = (json: string): Attribute => AttributeSchema.parse(JSON.parse(json));
+export const deserializeAuthor = (json: string): Author => AuthorSchema.parse(JSON.parse(json));
+export const deserializeDiagramPoint = (json: string): DiagramPoint => DiagramPointSchema.parse(JSON.parse(json));
+export const deserializeDiagramVector = (json: string): DiagramVector => DiagramVectorSchema.parse(JSON.parse(json));
+export const deserializePlane = (json: string): Plane => PlaneSchema.parse(JSON.parse(json));
+export const deserializePoint = (json: string): Point => PointSchema.parse(JSON.parse(json));
+export const deserializeVector = (json: string): Vector => VectorSchema.parse(JSON.parse(json));
+export const deserializeLocation = (json: string): Location => LocationSchema.parse(JSON.parse(json));
+export const deserializeRepresentation = (json: string): Representation => RepresentationSchema.parse(JSON.parse(json));
+export const deserializePort = (json: string): Port => PortSchema.parse(JSON.parse(json));
+export const deserializePiece = (json: string): Piece => PieceSchema.parse(JSON.parse(json));
+export const deserializeConnection = (json: string): Connection => ConnectionSchema.parse(JSON.parse(json));
+export const deserializeType = (json: string): Type => TypeSchema.parse(JSON.parse(json));
+export const deserializeDesign = (json: string): Design => DesignSchema.parse(JSON.parse(json));
+export const deserializeKit = (json: string): Kit => KitSchema.parse(JSON.parse(json));
+export const parseAttribute = (json: string): Attribute => AttributeSchema.parse(JSON.parse(json));
+export const parseAuthor = (json: string): Author => AuthorSchema.parse(JSON.parse(json));
+export const parseDiagramPoint = (json: string): DiagramPoint => DiagramPointSchema.parse(JSON.parse(json));
+export const parseDiagramVector = (json: string): DiagramVector => DiagramVectorSchema.parse(JSON.parse(json));
+export const parsePlane = (json: string): Plane => PlaneSchema.parse(JSON.parse(json));
+export const parsePoint = (json: string): Point => PointSchema.parse(JSON.parse(json));
+export const parseVector = (json: string): Vector => VectorSchema.parse(JSON.parse(json));
+export const parseLocation = (json: string): Location => LocationSchema.parse(JSON.parse(json));
+export const parseRepresentation = (json: string): Representation => RepresentationSchema.parse(JSON.parse(json));
+export const parsePort = (json: string): Port => PortSchema.parse(JSON.parse(json));
+export const parsePiece = (json: string): Piece => PieceSchema.parse(JSON.parse(json));
+export const parseConnection = (json: string): Connection => ConnectionSchema.parse(JSON.parse(json));
+export const parseType = (json: string): Type => TypeSchema.parse(JSON.parse(json));
+export const parseDesign = (json: string): Design => DesignSchema.parse(JSON.parse(json));
+export const parseFile = (json: string): File => FileSchema.parse(JSON.parse(json));
+export const parseKit = (json: string): Kit => KitSchema.parse(JSON.parse(json));
+export const safeParseAttribute = (data: unknown) => AttributeSchema.safeParse(data);
+export const safeParseAuthor = (data: unknown) => AuthorSchema.safeParse(data);
+export const safeParseDiagramPoint = (data: unknown) => DiagramPointSchema.safeParse(data);
+export const safeParseDiagramVector = (data: unknown) => DiagramVectorSchema.safeParse(data);
+export const safeParsePlane = (data: unknown) => PlaneSchema.safeParse(data);
+export const safeParsePoint = (data: unknown) => PointSchema.safeParse(data);
+export const safeParseVector = (data: unknown) => VectorSchema.safeParse(data);
+export const safeParseLocation = (data: unknown) => LocationSchema.safeParse(data);
+export const safeParseRepresentation = (data: unknown) => RepresentationSchema.safeParse(data);
+export const safeParsePort = (data: unknown) => PortSchema.safeParse(data);
+export const safeParsePiece = (data: unknown) => PieceSchema.safeParse(data);
+export const safeParseConnection = (data: unknown) => ConnectionSchema.safeParse(data);
+export const safeParseType = (data: unknown) => TypeSchema.safeParse(data);
+export const safeParseDesign = (data: unknown) => DesignSchema.safeParse(data);
+export const safeParseFile = (data: unknown) => FileSchema.safeParse(data);
+export const safeParseKit = (data: unknown) => KitSchema.safeParse(data);
 
 //#endregion Serializing
 
@@ -1001,840 +993,791 @@ const arraysEqual = <T>(a: T[] | undefined, b: T[] | undefined): boolean => {
 
 //#region Diffing
 
-export const diff = {
-  get: {
-    representation: (before: Representation, after: Representation): RepresentationDiff => {
-      const diffResult: Partial<RepresentationDiff> = {};
-      if (before.url !== after.url) diffResult.url = after.url;
-      if (before.description !== after.description) diffResult.description = after.description;
-      if (!arraysEqual(before.tags, after.tags)) diffResult.tags = after.tags;
-      if (!arraysEqual(before.attributes, after.attributes)) diffResult.attributes = after.attributes;
-      return diffResult;
-    },
-    port: (before: Port, after: Port): PortDiff => {
-      const diffResult: Partial<PortDiff> = {};
-      if (before.id_ !== after.id_) diffResult.id_ = after.id_;
-      if (before.description !== after.description) diffResult.description = after.description;
-      if (before.family !== after.family) diffResult.family = after.family;
-      if (before.mandatory !== after.mandatory) diffResult.mandatory = after.mandatory;
-      if (before.t !== after.t) diffResult.t = after.t;
-      if (!arraysEqual(before.compatibleFamilies, after.compatibleFamilies)) diffResult.compatibleFamilies = after.compatibleFamilies;
-      if (!deepEqual(before.point, after.point)) diffResult.point = after.point;
-      if (!deepEqual(before.direction, after.direction)) diffResult.direction = after.direction;
-      if (!arraysEqual(before.attributes, after.attributes)) diffResult.attributes = after.attributes;
-      return diffResult;
-    },
-    piece: (before: Piece, after: Piece): PieceDiff => {
-      const diffResult: Partial<PieceDiff> = { id_: after.id_ };
-      if (before.description !== after.description) diffResult.description = after.description;
-      if (!deepEqual(before.type, after.type)) diffResult.type = after.type;
-      if (!deepEqual(before.plane, after.plane)) diffResult.plane = after.plane;
-      if (!deepEqual(before.center, after.center)) diffResult.center = after.center;
-      if (!arraysEqual(before.attributes, after.attributes)) diffResult.attributes = after.attributes;
-      return diffResult;
-    },
-    connection: (before: Connection, after: Connection): ConnectionDiff => {
-      const diffResult: any = {
-        connected: { piece: after.connected.piece },
-        connecting: { piece: after.connecting.piece }
-      };
-      if (!deepEqual(before.connected.port, after.connected.port)) {
-        diffResult.connected.port = after.connected.port;
-      }
-      if (!deepEqual(before.connecting.port, after.connecting.port)) {
-        diffResult.connecting.port = after.connecting.port;
-      }
-      if (before.description !== after.description) diffResult.description = after.description;
-      if (before.gap !== after.gap) diffResult.gap = after.gap;
-      if (before.shift !== after.shift) diffResult.shift = after.shift;
-      if (before.rise !== after.rise) diffResult.rise = after.rise;
-      if (before.rotation !== after.rotation) diffResult.rotation = after.rotation;
-      if (before.turn !== after.turn) diffResult.turn = after.turn;
-      if (before.tilt !== after.tilt) diffResult.tilt = after.tilt;
-      if (before.x !== after.x) diffResult.x = after.x;
-      if (before.y !== after.y) diffResult.y = after.y;
-      return diffResult;
-    },
-    type: (before: Type, after: Type): TypeDiff => {
-      const diffResult: any = {};
-      if (before.name !== after.name) diffResult.name = after.name;
-      if (before.description !== after.description) diffResult.description = after.description;
-      if (before.icon !== after.icon) diffResult.icon = after.icon;
-      if (before.image !== after.image) diffResult.image = after.image;
-      if (before.variant !== after.variant) diffResult.variant = after.variant;
-      if (before.stock !== after.stock) diffResult.stock = after.stock;
-      if (before.virtual !== after.virtual) diffResult.virtual = after.virtual;
-      if (before.unit !== after.unit) diffResult.unit = after.unit;
-      if (before.created !== after.created) diffResult.created = after.created;
-      if (before.updated !== after.updated) diffResult.updated = after.updated;
-      if (!deepEqual(before.location, after.location)) diffResult.location = after.location;
-      if (!arraysEqual(before.representations, after.representations)) diffResult.representations = after.representations;
-      if (!arraysEqual(before.ports, after.ports)) diffResult.ports = after.ports;
-      if (!arraysEqual(before.authors, after.authors)) diffResult.authors = after.authors;
-      if (!arraysEqual(before.attributes, after.attributes)) diffResult.attributes = after.attributes;
-      return diffResult;
-    },
-    design: (before: Design, after: Design): DesignDiff => {
-      const diff: any = {};
-      if (before.name !== after.name) diff.name = after.name;
-      if (before.description !== after.description) diff.description = after.description;
-      if (before.icon !== after.icon) diff.icon = after.icon;
-      if (before.image !== after.image) diff.image = after.image;
-      if (before.variant !== after.variant) diff.variant = after.variant;
-      if (before.view !== after.view) diff.view = after.view;
-      if (JSON.stringify(before.location) !== JSON.stringify(after.location)) diff.location = after.location;
-      if (before.unit !== after.unit) diff.unit = after.unit;
-
-      // Handle pieces diff
-      const beforePieces = before.pieces || [];
-      const afterPieces = after.pieces || [];
-      const piecesDiff: PiecesDiff = {};
-
-      const removedPieces = beforePieces.filter(bp => !afterPieces.find(ap => ap.id_ === bp.id_));
-      const addedPieces = afterPieces.filter(ap => !beforePieces.find(bp => bp.id_ === ap.id_));
-      const updatedPieces = afterPieces.filter(ap => {
-        const bp = beforePieces.find(bp => bp.id_ === ap.id_);
-        return bp && JSON.stringify(bp) !== JSON.stringify(ap);
-      }).map(ap => {
-        const bp = beforePieces.find(bp => bp.id_ === ap.id_)!;
-        return diff.get.piece(bp, ap);
-      });
-
-      if (removedPieces.length > 0) piecesDiff.removed = removedPieces.map(p => ({ id_: p.id_ }));
-      if (addedPieces.length > 0) piecesDiff.added = addedPieces;
-      if (updatedPieces.length > 0) piecesDiff.updated = updatedPieces;
-
-      if (Object.keys(piecesDiff).length > 0) diff.pieces = piecesDiff;
-
-      // Handle connections diff
-      const beforeConnections = before.connections || [];
-      const afterConnections = after.connections || [];
-      const connectionsDiff: ConnectionsDiff = {};
-
-      const removedConnections = beforeConnections.filter(bc => !afterConnections.find(ac =>
-        ac.connected.piece.id_ === bc.connected.piece.id_ &&
-        ac.connecting.piece.id_ === bc.connecting.piece.id_
-      ));
-      const addedConnections = afterConnections.filter(ac => !beforeConnections.find(bc =>
-        bc.connected.piece.id_ === ac.connected.piece.id_ &&
-        bc.connecting.piece.id_ === ac.connecting.piece.id_
-      ));
-      const updatedConnections = afterConnections.filter(ac => {
-        const bc = beforeConnections.find(bc =>
-          bc.connected.piece.id_ === ac.connected.piece.id_ &&
-          bc.connecting.piece.id_ === ac.connecting.piece.id_
-        );
-        return bc && JSON.stringify(bc) !== JSON.stringify(ac);
-      }).map(ac => {
-        const bc = beforeConnections.find(bc =>
-          bc.connected.piece.id_ === ac.connected.piece.id_ &&
-          bc.connecting.piece.id_ === ac.connecting.piece.id_
-        )!;
-        return diff.get.connection(bc, ac);
-      });
-
-      if (removedConnections.length > 0) connectionsDiff.removed = removedConnections.map(c => ({
-        connected: { piece: { id_: c.connected.piece.id_ } },
-        connecting: { piece: { id_: c.connecting.piece.id_ } }
-      }));
-      if (addedConnections.length > 0) connectionsDiff.added = addedConnections;
-      if (updatedConnections.length > 0) connectionsDiff.updated = updatedConnections;
-
-      if (Object.keys(connectionsDiff).length > 0) diff.connections = connectionsDiff;
-
-      return diff;
-    },
-    kit: (before: Kit, after: Kit): KitDiff => {
-      const diff: any = {};
-      if (before.uri !== after.uri) diff.uri = after.uri;
-      if (before.name !== after.name) diff.name = after.name;
-      if (before.description !== after.description) diff.description = after.description;
-      if (before.icon !== after.icon) diff.icon = after.icon;
-      if (before.image !== after.image) diff.image = after.image;
-      if (before.preview !== after.preview) diff.preview = after.preview;
-      if (before.version !== after.version) diff.version = after.version;
-      if (before.remote !== after.remote) diff.remote = after.remote;
-      if (before.homepage !== after.homepage) diff.homepage = after.homepage;
-      if (before.license !== after.license) diff.license = after.license;
-      if (JSON.stringify(before.authors) !== JSON.stringify(after.authors)) diff.authors = after.authors;
-      if (JSON.stringify(before.qualities) !== JSON.stringify(after.qualities)) diff.qualities = after.qualities;
-
-      // Handle types diff  
-      const beforeTypes = before.types || [];
-      const afterTypes = after.types || [];
-      const typesDiff: TypesDiff = {};
-
-      const removedTypes = beforeTypes.filter(bt => !afterTypes.find(at => at.name === bt.name && at.variant === bt.variant));
-      const addedTypes = afterTypes.filter(at => !beforeTypes.find(bt => bt.name === at.name && bt.variant === at.variant));
-      const updatedTypes = afterTypes.filter(at => {
-        const bt = beforeTypes.find(bt => bt.name === at.name && bt.variant === at.variant);
-        return bt && JSON.stringify(bt) !== JSON.stringify(at);
-      }).map(at => {
-        const bt = beforeTypes.find(bt => bt.name === at.name && bt.variant === at.variant)!;
-        return diff.get.type(bt, at);
-      });
-
-      if (removedTypes.length > 0) typesDiff.removed = removedTypes.map(t => ({ name: t.name, variant: t.variant }));
-      if (addedTypes.length > 0) typesDiff.added = addedTypes;
-      if (updatedTypes.length > 0) typesDiff.updated = updatedTypes;
-
-      if (Object.keys(typesDiff).length > 0) diff.types = typesDiff;
-
-      // Handle designs diff
-      const beforeDesigns = before.designs || [];
-      const afterDesigns = after.designs || [];
-      const designsDiff: DesignsDiff = {};
-
-      const removedDesigns = beforeDesigns.filter(bd => !afterDesigns.find(ad => ad.name === bd.name && ad.variant === bd.variant && ad.view === bd.view));
-      const addedDesigns = afterDesigns.filter(ad => !beforeDesigns.find(bd => bd.name === ad.name && bd.variant === ad.variant && bd.view === ad.view));
-      const updatedDesigns = afterDesigns.filter(ad => {
-        const bd = beforeDesigns.find(bd => bd.name === ad.name && bd.variant === ad.variant && bd.view === ad.view);
-        return bd && JSON.stringify(bd) !== JSON.stringify(ad);
-      }).map(ad => {
-        const bd = beforeDesigns.find(bd => bd.name === ad.name && bd.variant === ad.variant && bd.view === ad.view)!;
-        return diff.get.design(bd, ad);
-      });
-
-      if (removedDesigns.length > 0) designsDiff.removed = removedDesigns.map(d => ({ name: d.name, variant: d.variant, view: d.view }));
-      if (addedDesigns.length > 0) designsDiff.added = addedDesigns;
-      if (updatedDesigns.length > 0) designsDiff.updated = updatedDesigns;
-
-      if (Object.keys(designsDiff).length > 0) diff.designs = designsDiff;
-
-      // Handle files diff
-      const beforeFiles = before.files || [];
-      const afterFiles = after.files || [];
-      const filesDiff: FilesDiff = {};
-
-      const removedFiles = beforeFiles.filter(bf => !afterFiles.find(af => af.path === bf.path));
-      const addedFiles = afterFiles.filter(af => !beforeFiles.find(bf => bf.path === af.path));
-      const updatedFiles = afterFiles.filter(af => {
-        const bf = beforeFiles.find(bf => bf.path === af.path);
-        return bf && JSON.stringify(bf) !== JSON.stringify(af);
-      }).map(af => {
-        const bf = beforeFiles.find(bf => bf.path === af.path)!;
-        return diff.get.file(bf, af);
-      });
-
-      if (removedFiles.length > 0) filesDiff.removed = removedFiles.map(f => ({ path: f.path }));
-      if (addedFiles.length > 0) filesDiff.added = addedFiles;
-      if (updatedFiles.length > 0) filesDiff.updated = updatedFiles;
-
-      if (Object.keys(filesDiff).length > 0) diff.files = filesDiff;
-
-      if (JSON.stringify(before.attributes) !== JSON.stringify(after.attributes)) diff.attributes = after.attributes;
-
-      return diff;
-    },
-    file: (before: File, after: File): FileDiff => {
-      const diff: any = {};
-      if (before.path !== after.path) diff.path = after.path;
-      if (before.remote !== after.remote) diff.remote = after.remote;
-      if (before.size !== after.size) diff.size = after.size;
-      if (before.hash !== after.hash) diff.hash = after.hash;
-      return diff;
-    }
-  },
-  apply: {
-    representation: (base: Representation, diff: RepresentationDiff): Representation => ({
-      url: diff.url ?? base.url,
-      description: diff.description ?? base.description,
-      tags: diff.tags ?? base.tags,
-      attributes: diff.attributes ?? base.attributes,
-    }),
-    port: (base: Port, diff: PortDiff): Port => ({
-      id_: diff.id_ ?? base.id_,
-      description: diff.description ?? base.description,
-      family: diff.family ?? base.family,
-      mandatory: diff.mandatory ?? base.mandatory,
-      t: diff.t ?? base.t,
-      compatibleFamilies: diff.compatibleFamilies ?? base.compatibleFamilies,
-      point: diff.point ?? base.point,
-      direction: diff.direction ?? base.direction,
-      attributes: diff.attributes ?? base.attributes,
-    }),
-    piece: (base: Piece, diff: PieceDiff): Piece => ({
-      id_: base.id_,
-      description: diff.description ?? base.description,
-      type: diff.type ?? base.type,
-      plane: diff.plane ?? base.plane,
-      center: diff.center ?? base.center,
-      scale: diff.scale ?? base.scale,
-      mirrorPlane: diff.mirrorPlane ?? base.mirrorPlane,
-      hidden: diff.hidden ?? base.hidden,
-      locked: diff.locked ?? base.locked,
-      color: diff.color ?? base.color,
-      attributes: diff.attributes ?? base.attributes,
-    }),
-    connection: (base: Connection, diff: ConnectionDiff): Connection => ({
-      connected: {
-        piece: diff.connected?.piece ?? base.connected.piece,
-        port: diff.connected?.port ?? base.connected.port,
-        designPiece: diff.connected?.designPiece ?? base.connected.designPiece
-      },
-      connecting: {
-        piece: diff.connecting?.piece ?? base.connecting.piece,
-        port: diff.connecting?.port ?? base.connecting.port,
-        designPiece: diff.connecting?.designPiece ?? base.connecting.designPiece
-      },
-      description: diff.description ?? base.description,
-      gap: diff.gap ?? base.gap,
-      shift: diff.shift ?? base.shift,
-      rise: diff.rise ?? base.rise,
-      rotation: diff.rotation ?? base.rotation,
-      turn: diff.turn ?? base.turn,
-      tilt: diff.tilt ?? base.tilt,
-      x: diff.x ?? base.x,
-      y: diff.y ?? base.y,
-      attributes: base.attributes,
-    }),
-    type: (base: Type, diff: TypeDiff): Type => ({
-      name: diff.name ?? base.name,
-      description: diff.description ?? base.description,
-      icon: diff.icon ?? base.icon,
-      image: diff.image ?? base.image,
-      variant: diff.variant ?? base.variant,
-      stock: diff.stock ?? base.stock,
-      virtual: diff.virtual ?? base.virtual,
-      unit: diff.unit ?? base.unit,
-      created: diff.created ?? base.created,
-      updated: diff.updated ?? base.updated,
-      location: diff.location ?? base.location,
-      representations: diff.representations ?? base.representations,
-      ports: diff.ports ?? base.ports,
-      authors: diff.authors ?? base.authors,
-      attributes: diff.attributes ?? base.attributes,
-    }),
-    design: (base: Design, diff: DesignDiff): Design => {
-      let pieces = base.pieces;
-      let connections = base.connections;
-
-      if (diff.pieces) {
-        const basePieces = base.pieces || [];
-        pieces = basePieces
-          .map(p => {
-            const updateDiff = diff.pieces?.updated?.find((up) => up.id.id_ === p.id_);
-            return updateDiff ? ({ ...p, ...updateDiff.diff, id_: p.id_ }) : p;
-          })
-          .filter(p => !diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_))
-          .concat(diff.pieces?.added || []);
-      }
-      if (diff.connections) {
-        const baseConnections = base.connections || [];
-        connections = baseConnections
-          .map(c => {
-            const updateDiff = diff.connections?.updated?.find((uc) =>
-              uc.id.connected.piece.id_ === c.connected.piece.id_ &&
-              uc.id.connecting.piece.id_ === c.connecting.piece.id_
-            );
-            return updateDiff ? ({
-              ...c,
-              ...updateDiff.diff,
-              connected: updateDiff.diff.connected ? { ...c.connected, ...updateDiff.diff.connected } : c.connected,
-              connecting: updateDiff.diff.connecting ? { ...c.connecting, ...updateDiff.diff.connecting } : c.connecting
-            }) : c;
-          })
-          .filter(c => !diff.connections?.removed?.some((rc: ConnectionId) =>
-            rc.connected.piece.id_ === c.connected.piece.id_ &&
-            rc.connecting.piece.id_ === c.connecting.piece.id_
-          ))
-          .concat(diff.connections?.added || []);
-      }
-      return {
-        name: diff.name ?? base.name,
-        description: diff.description ?? base.description,
-        icon: diff.icon ?? base.icon,
-        image: diff.image ?? base.image,
-        variant: diff.variant ?? base.variant,
-        view: diff.view ?? base.view,
-        location: diff.location ?? base.location,
-        unit: diff.unit ?? base.unit,
-        created: base.created,
-        updated: base.updated,
-        pieces,
-        connections,
-        fixedDesigns: base.fixedDesigns,
-        authors: base.authors,
-        attributes: base.attributes,
-      };
-    },
-    kit: (base: Kit, diff: KitDiff): Kit => {
-      let types = base.types;
-      let designs = base.designs;
-      let files = base.files;
-      if (diff.types) {
-        const baseTypes = base.types || [];
-        types = baseTypes
-          .map(t => {
-            const updateDiff = diff.types?.updated?.find((ut) => ut.id.name === t.name && ut.id.variant === t.variant);
-            return updateDiff ? ({ ...t, ...updateDiff.diff }) : t;
-          })
-          .filter(t => !diff.types?.removed?.some((rt: TypeId) => rt.name === t.name && rt.variant === t.variant))
-          .concat(diff.types?.added || []);
-      }
-      if (diff.files) {
-        const baseFiles = base.files || [];
-        files = baseFiles
-          .map(f => {
-            const updateDiff = diff.files?.updated?.find((uf) => uf.id.path === f.path);
-            if (!updateDiff) return f;
-            return {
-              ...f,
-              path: updateDiff.diff.path ?? f.path,
-              remote: updateDiff.diff.remote ?? f.remote,
-              size: updateDiff.diff.size ?? f.size,
-              hash: updateDiff.diff.hash ?? f.hash,
-              created: updateDiff.diff.created ?? f.created,
-              createdBy: updateDiff.diff.createdBy ? { email: updateDiff.diff.createdBy } : f.createdBy,
-              updated: updateDiff.diff.updated ?? f.updated,
-              updatedBy: updateDiff.diff.updatedBy ? { email: updateDiff.diff.updatedBy } : f.updatedBy,
-            };
-          })
-          .filter(f => !diff.files?.removed?.some((rf: FileId) => rf.path === f.path))
-          .concat(diff.files?.added || []);
-      }
-      if (diff.designs) {
-        const baseDesigns = base.designs || [];
-        designs = baseDesigns
-          .map(d => {
-            const updateDiff = diff.designs?.updated?.find((ud) => ud.id.name === d.name && ud.id.variant === d.variant && ud.id.view === d.view);
-            if (!updateDiff) return d;
-            // Apply the design diff properly by using the apply function logic
-            let pieces = d.pieces;
-            let connections = d.connections;
-
-            if (updateDiff.diff.pieces) {
-              const basePieces = d.pieces || [];
-              pieces = basePieces
-                .map(p => {
-                  const pieceDiff = updateDiff.diff.pieces?.updated?.find((up) => up.id.id_ === p.id_);
-                  return pieceDiff ? ({ ...p, ...pieceDiff.diff, id_: p.id_ }) : p;
-                })
-                .filter(p => !updateDiff.diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_))
-                .concat(updateDiff.diff.pieces?.added || []);
-            }
-            if (updateDiff.diff.connections) {
-              const baseConnections = d.connections || [];
-              connections = baseConnections
-                .map(c => {
-                  const connDiff = updateDiff.diff.connections?.updated?.find((uc) =>
-                    uc.id.connected.piece.id_ === c.connected.piece.id_ &&
-                    uc.id.connecting.piece.id_ === c.connecting.piece.id_
-                  );
-                  return connDiff ? ({
-                    ...c,
-                    ...connDiff.diff,
-                    connected: connDiff.diff.connected ? { ...c.connected, ...connDiff.diff.connected } : c.connected,
-                    connecting: connDiff.diff.connecting ? { ...c.connecting, ...connDiff.diff.connecting } : c.connecting
-                  }) : c;
-                })
-                .filter(c => !updateDiff.diff.connections?.removed?.some((rc: ConnectionId) =>
-                  rc.connected.piece.id_ === c.connected.piece.id_ &&
-                  rc.connecting.piece.id_ === c.connecting.piece.id_
-                ))
-                .concat(updateDiff.diff.connections?.added || []);
-            }
-            return {
-              ...d,
-              name: updateDiff.diff.name ?? d.name,
-              description: updateDiff.diff.description ?? d.description,
-              icon: updateDiff.diff.icon ?? d.icon,
-              image: updateDiff.diff.image ?? d.image,
-              variant: updateDiff.diff.variant ?? d.variant,
-              view: updateDiff.diff.view ?? d.view,
-              location: updateDiff.diff.location ?? d.location,
-              unit: updateDiff.diff.unit ?? d.unit,
-              pieces,
-              connections
-            };
-          })
-          .filter(d => !diff.designs?.removed?.some((rd: DesignId) => rd.name === d.name && rd.variant === d.variant && rd.view === d.view))
-          .concat(diff.designs?.added || []);
-      }
-
-      return {
-        uri: diff.uri ?? base.uri,
-        name: diff.name ?? base.name,
-        description: diff.description ?? base.description,
-        icon: diff.icon ?? base.icon,
-        image: diff.image ?? base.image,
-        preview: diff.preview ?? base.preview,
-        version: diff.version ?? base.version,
-        remote: diff.remote ?? base.remote,
-        homepage: diff.homepage ?? base.homepage,
-        license: diff.license ?? base.license,
-        created: base.created,
-        updated: base.updated,
-        authors: diff.authors ?? base.authors,
-        types,
-        designs,
-        files,
-        qualities: diff.qualities ?? base.qualities,
-        attributes: base.attributes,
-      };
-    },
-    file: (base: File, diff: FileDiff): File => ({
-      path: diff.path ?? base.path,
-      remote: diff.remote ?? base.remote,
-      size: diff.size ?? base.size,
-      hash: diff.hash ?? base.hash,
-      created: base.created,
-      createdBy: base.createdBy,
-      updated: base.updated,
-      updatedBy: base.updatedBy,
-    })
-  },
-  merge: {
-    representation: (diff1: RepresentationDiff, diff2: RepresentationDiff): RepresentationDiff => ({
-      url: diff2.url ?? diff1.url,
-      description: diff2.description ?? diff1.description,
-      tags: diff2.tags ?? diff1.tags,
-      attributes: diff2.attributes ?? diff1.attributes,
-    }),
-
-    port: (diff1: PortDiff, diff2: PortDiff): PortDiff => ({
-      id_: diff2.id_ ?? diff1.id_,
-      description: diff2.description ?? diff1.description,
-      family: diff2.family ?? diff1.family,
-      mandatory: diff2.mandatory ?? diff1.mandatory,
-      t: diff2.t ?? diff1.t,
-      compatibleFamilies: diff2.compatibleFamilies ?? diff1.compatibleFamilies,
-      point: diff2.point ?? diff1.point,
-      direction: diff2.direction ?? diff1.direction,
-      attributes: diff2.attributes ?? diff1.attributes,
-    }),
-
-    piece: (diff1: PieceDiff, diff2: PieceDiff): PieceDiff => ({
-      id_: diff2.id_ ?? diff1.id_,
-      description: diff2.description ?? diff1.description,
-      type: diff2.type ?? diff1.type,
-      plane: diff2.plane ?? diff1.plane,
-      center: diff2.center ?? diff1.center,
-      attributes: diff2.attributes ?? diff1.attributes,
-    }),
-
-    connection: (diff1: ConnectionDiff, diff2: ConnectionDiff): ConnectionDiff => ({
-      connected: {
-        piece: diff2.connected?.piece ?? diff1.connected?.piece,
-        port: diff2.connected?.port ?? diff1.connected?.port,
-        designPiece: diff2.connected?.designPiece ?? diff1.connected?.designPiece
-      },
-      connecting: {
-        piece: diff2.connecting?.piece ?? diff1.connecting?.piece,
-        port: diff2.connecting?.port ?? diff1.connecting?.port,
-        designPiece: diff2.connecting?.designPiece ?? diff1.connecting?.designPiece
-      },
-      description: diff2.description ?? diff1.description,
-      gap: diff2.gap ?? diff1.gap,
-      shift: diff2.shift ?? diff1.shift,
-      rise: diff2.rise ?? diff1.rise,
-      rotation: diff2.rotation ?? diff1.rotation,
-      turn: diff2.turn ?? diff1.turn,
-      tilt: diff2.tilt ?? diff1.tilt,
-      x: diff2.x ?? diff1.x,
-      y: diff2.y ?? diff1.y,
-    }),
-
-    type: (diff1: TypeDiff, diff2: TypeDiff): TypeDiff => ({
-      name: diff2.name ?? diff1.name,
-      description: diff2.description ?? diff1.description,
-      icon: diff2.icon ?? diff1.icon,
-      image: diff2.image ?? diff1.image,
-      variant: diff2.variant ?? diff1.variant,
-      stock: diff2.stock ?? diff1.stock,
-      virtual: diff2.virtual ?? diff1.virtual,
-      unit: diff2.unit ?? diff1.unit,
-      created: diff2.created ?? diff1.created,
-      updated: diff2.updated ?? diff1.updated,
-      location: diff2.location ?? diff1.location,
-      representations: diff2.representations ?? diff1.representations,
-      ports: diff2.ports ?? diff1.ports,
-      authors: diff2.authors ?? diff1.authors,
-      attributes: diff2.attributes ?? diff1.attributes,
-    }),
-
-    design: (diff1: DesignDiff, diff2: DesignDiff): DesignDiff => ({
-      name: diff2.name ?? diff1.name,
-      description: diff2.description ?? diff1.description,
-      icon: diff2.icon ?? diff1.icon,
-      image: diff2.image ?? diff1.image,
-      variant: diff2.variant ?? diff1.variant,
-      view: diff2.view ?? diff1.view,
-      location: diff2.location ?? diff1.location,
-      unit: diff2.unit ?? diff1.unit,
-      pieces: diff2.pieces ?? diff1.pieces,
-      connections: diff2.connections ?? diff1.connections,
-      attributes: diff2.attributes ?? diff1.attributes,
-    }),
-
-    kit: (diff1: KitDiff, diff2: KitDiff): KitDiff => ({
-      name: diff2.name ?? diff1.name,
-      description: diff2.description ?? diff1.description,
-      icon: diff2.icon ?? diff1.icon,
-      image: diff2.image ?? diff1.image,
-      preview: diff2.preview ?? diff1.preview,
-      version: diff2.version ?? diff1.version,
-      remote: diff2.remote ?? diff1.remote,
-      homepage: diff2.homepage ?? diff1.homepage,
-      license: diff2.license ?? diff1.license,
-      types: diff2.types ?? diff1.types,
-      designs: diff2.designs ?? diff1.designs,
-      files: diff2.files ?? diff1.files,
-      attributes: diff2.attributes ?? diff1.attributes,
-    }),
-
-    file: (diff1: FileDiff, diff2: FileDiff): FileDiff => ({
-      path: diff2.path ?? diff1.path,
-      remote: diff2.remote ?? diff1.remote,
-      size: diff2.size ?? diff1.size,
-      hash: diff2.hash ?? diff1.hash,
-      created: diff2.created ?? diff1.created,
-      createdBy: diff2.createdBy ?? diff1.createdBy,
-      updated: diff2.updated ?? diff1.updated,
-      updatedBy: diff2.updatedBy ?? diff1.updatedBy,
-    }),
-  },
-  inverse: {
-    representation: (original: Representation, appliedDiff: RepresentationDiff): RepresentationDiff => {
-      const inverseDiff: any = {};
-      if (appliedDiff.url !== undefined) inverseDiff.url = original.url;
-      if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
-      if (appliedDiff.tags !== undefined) inverseDiff.tags = original.tags;
-      if (appliedDiff.attributes !== undefined) inverseDiff.attributes = original.attributes;
-      return inverseDiff;
-    },
-    port: (original: Port, appliedDiff: PortDiff): PortDiff => {
-      const inverseDiff: any = {};
-      if (appliedDiff.id_ !== undefined) inverseDiff.id_ = original.id_;
-      if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
-      if (appliedDiff.family !== undefined) inverseDiff.family = original.family;
-      if (appliedDiff.mandatory !== undefined) inverseDiff.mandatory = original.mandatory;
-      if (appliedDiff.t !== undefined) inverseDiff.t = original.t;
-      if (appliedDiff.compatibleFamilies !== undefined) inverseDiff.compatibleFamilies = original.compatibleFamilies;
-      if (appliedDiff.point !== undefined) inverseDiff.point = original.point;
-      if (appliedDiff.direction !== undefined) inverseDiff.direction = original.direction;
-      if (appliedDiff.attributes !== undefined) inverseDiff.attributes = original.attributes;
-      return inverseDiff;
-    },
-    piece: (original: Piece, appliedDiff: PieceDiff): PieceDiff => {
-      const inverseDiff: any = { id_: original.id_ };
-      if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
-      if (appliedDiff.type !== undefined) inverseDiff.type = original.type;
-      if (appliedDiff.plane !== undefined) inverseDiff.plane = original.plane;
-      if (appliedDiff.center !== undefined) inverseDiff.center = original.center;
-      if (appliedDiff.attributes !== undefined) inverseDiff.attributes = original.attributes;
-      return inverseDiff;
-    },
-    connection: (original: Connection, appliedDiff: ConnectionDiff): ConnectionDiff => {
-      const inverseDiff: any = {
-        connected: { piece: original.connected.piece },
-        connecting: { piece: original.connecting.piece }
-      };
-      if (appliedDiff.connected?.port !== undefined) inverseDiff.connected.port = original.connected.port;
-      if (appliedDiff.connecting?.port !== undefined) inverseDiff.connecting.port = original.connecting.port;
-      if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
-      if (appliedDiff.gap !== undefined) inverseDiff.gap = original.gap;
-      if (appliedDiff.shift !== undefined) inverseDiff.shift = original.shift;
-      if (appliedDiff.rise !== undefined) inverseDiff.rise = original.rise;
-      if (appliedDiff.rotation !== undefined) inverseDiff.rotation = original.rotation;
-      if (appliedDiff.turn !== undefined) inverseDiff.turn = original.turn;
-      if (appliedDiff.tilt !== undefined) inverseDiff.tilt = original.tilt;
-      if (appliedDiff.x !== undefined) inverseDiff.x = original.x;
-      if (appliedDiff.y !== undefined) inverseDiff.y = original.y;
-      return inverseDiff;
-    },
-    type: (original: Type, appliedDiff: TypeDiff): TypeDiff => {
-      const inverseDiff: any = {};
-      if (appliedDiff.name !== undefined) inverseDiff.name = original.name;
-      if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
-      if (appliedDiff.icon !== undefined) inverseDiff.icon = original.icon;
-      if (appliedDiff.image !== undefined) inverseDiff.image = original.image;
-      if (appliedDiff.variant !== undefined) inverseDiff.variant = original.variant;
-      if (appliedDiff.stock !== undefined) inverseDiff.stock = original.stock;
-      if (appliedDiff.virtual !== undefined) inverseDiff.virtual = original.virtual;
-      if (appliedDiff.unit !== undefined) inverseDiff.unit = original.unit;
-      if (appliedDiff.created !== undefined) inverseDiff.created = original.created;
-      if (appliedDiff.updated !== undefined) inverseDiff.updated = original.updated;
-      if (appliedDiff.location !== undefined) inverseDiff.location = original.location;
-      if (appliedDiff.representations !== undefined) inverseDiff.representations = original.representations;
-      if (appliedDiff.ports !== undefined) inverseDiff.ports = original.ports;
-      if (appliedDiff.authors !== undefined) inverseDiff.authors = original.authors;
-      if (appliedDiff.attributes !== undefined) inverseDiff.attributes = original.attributes;
-      return inverseDiff;
-    },
-    design: (original: Design, appliedDiff: DesignDiff): DesignDiff => {
-      const inverseDiff: any = {};
-      if (appliedDiff.name !== undefined) inverseDiff.name = original.name;
-      if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
-      if (appliedDiff.icon !== undefined) inverseDiff.icon = original.icon;
-      if (appliedDiff.image !== undefined) inverseDiff.image = original.image;
-      if (appliedDiff.variant !== undefined) inverseDiff.variant = original.variant;
-      if (appliedDiff.view !== undefined) inverseDiff.view = original.view;
-      if (appliedDiff.location !== undefined) inverseDiff.location = original.location;
-      if (appliedDiff.unit !== undefined) inverseDiff.unit = original.unit;
-
-      // Handle pieces diff inverse
-      if (appliedDiff.pieces) {
-        const originalPieces = original.pieces || [];
-        const piecesDiff: PiecesDiff = {};
-
-        // Swap added and removed
-        if (appliedDiff.pieces.added) piecesDiff.removed = appliedDiff.pieces.added.map(p => ({ id_: p.id_ }));
-        if (appliedDiff.pieces.removed) piecesDiff.added = appliedDiff.pieces.removed.map(rp => {
-          return originalPieces.find(p => p.id_ === rp.id_)!;
-        });
-
-        // Inverse updated pieces
-        if (appliedDiff.pieces.updated) {
-          piecesDiff.updated = appliedDiff.pieces.updated.map(updatedPiece => {
-            const originalPiece = originalPieces.find(p => p.id_ === updatedPiece.id.id_)!;
-            return {
-              id: updatedPiece.id,
-              diff: diff.inverse.piece(originalPiece, updatedPiece.diff)
-            };
-          });
-        }
-
-        if (Object.keys(piecesDiff).length > 0) inverseDiff.pieces = piecesDiff;
-      }
-
-      // Handle connections diff inverse
-      if (appliedDiff.connections) {
-        const originalConnections = original.connections || [];
-        const connectionsDiff: ConnectionsDiff = {};
-
-        // Swap added and removed
-        if (appliedDiff.connections.added) connectionsDiff.removed = appliedDiff.connections.added.map(c => ({
-          connected: { piece: { id_: c.connected.piece.id_ } },
-          connecting: { piece: { id_: c.connecting.piece.id_ } }
-        }));
-        if (appliedDiff.connections.removed) connectionsDiff.added = appliedDiff.connections.removed.map(rc => {
-          return originalConnections.find(c =>
-            c.connected.piece.id_ === rc.connected.piece.id_ &&
-            c.connecting.piece.id_ === rc.connecting.piece.id_
-          )!;
-        });
-
-        // Inverse updated connections
-        if (appliedDiff.connections.updated) {
-          connectionsDiff.updated = appliedDiff.connections.updated.map(updatedConnection => {
-            const originalConnection = originalConnections.find(c =>
-              c.connected.piece.id_ === updatedConnection.id.connected.piece.id_ &&
-              c.connecting.piece.id_ === updatedConnection.id.connecting.piece.id_
-            )!;
-            return {
-              id: updatedConnection.id,
-              diff: diff.inverse.connection(originalConnection, updatedConnection.diff)
-            };
-          });
-        }
-
-        if (Object.keys(connectionsDiff).length > 0) inverseDiff.connections = connectionsDiff;
-      }
-
-      return inverseDiff;
-    },
-    kit: (original: Kit, appliedDiff: KitDiff): KitDiff => {
-      const inverseDiff: any = {};
-      if (appliedDiff.name !== undefined) inverseDiff.name = original.name;
-      if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
-      if (appliedDiff.icon !== undefined) inverseDiff.icon = original.icon;
-      if (appliedDiff.image !== undefined) inverseDiff.image = original.image;
-      if (appliedDiff.preview !== undefined) inverseDiff.preview = original.preview;
-      if (appliedDiff.version !== undefined) inverseDiff.version = original.version;
-      if (appliedDiff.remote !== undefined) inverseDiff.remote = original.remote;
-      if (appliedDiff.homepage !== undefined) inverseDiff.homepage = original.homepage;
-      if (appliedDiff.license !== undefined) inverseDiff.license = original.license;
-
-      // Handle types diff inverse
-      if (appliedDiff.types) {
-        const originalTypes = original.types || [];
-        const typesDiff: TypesDiff = {};
-
-        // Swap added and removed
-        if (appliedDiff.types.added) typesDiff.removed = appliedDiff.types.added.map(t => ({ name: t.name, variant: t.variant }));
-        if (appliedDiff.types.removed) typesDiff.added = appliedDiff.types.removed.map(rt => {
-          return originalTypes.find(t => t.name === rt.name && t.variant === rt.variant)!;
-        });
-
-        // Inverse updated types
-        if (appliedDiff.types.updated) {
-          typesDiff.updated = appliedDiff.types.updated.map(updatedType => {
-            const originalType = originalTypes.find(t => t.name === updatedType.id.name && t.variant === updatedType.id.variant)!;
-            return {
-              id: updatedType.id,
-              diff: diff.inverse.type(originalType, updatedType.diff)
-            };
-          });
-        }
-
-        if (Object.keys(typesDiff).length > 0) inverseDiff.types = typesDiff;
-      }
-
-      // Handle designs diff inverse
-      if (appliedDiff.designs) {
-        const originalDesigns = original.designs || [];
-        const designsDiff: DesignsDiff = {};
-
-        // Swap added and removed
-        if (appliedDiff.designs.added) designsDiff.removed = appliedDiff.designs.added.map(d => ({ name: d.name, variant: d.variant, view: d.view }));
-        if (appliedDiff.designs.removed) designsDiff.added = appliedDiff.designs.removed.map(rd => {
-          return originalDesigns.find(d => d.name === rd.name && d.variant === rd.variant && d.view === rd.view)!;
-        });
-
-        // Inverse updated designs
-        if (appliedDiff.designs.updated) {
-          designsDiff.updated = appliedDiff.designs.updated.map(updatedDesign => {
-            const originalDesign = originalDesigns.find(d => d.name === updatedDesign.id.name && d.variant === updatedDesign.id.variant && d.view === updatedDesign.id.view)!;
-            return {
-              id: updatedDesign.id,
-              diff: diff.inverse.design(originalDesign, updatedDesign.diff)
-            };
-          });
-        }
-
-        if (Object.keys(designsDiff).length > 0) inverseDiff.designs = designsDiff;
-      }
-
-      // Handle files diff inverse
-      if (appliedDiff.files) {
-        const originalFiles = original.files || [];
-        const filesDiff: FilesDiff = {};
-
-        // Swap added and removed
-        if (appliedDiff.files.added) filesDiff.removed = appliedDiff.files.added.map(f => ({ path: f.path }));
-        if (appliedDiff.files.removed) filesDiff.added = appliedDiff.files.removed.map(rf => {
-          return originalFiles.find(f => f.path === rf.path)!;
-        });
-
-        // Inverse updated files
-        if (appliedDiff.files.updated) {
-          filesDiff.updated = appliedDiff.files.updated.map(updatedFile => {
-            const originalFile = originalFiles.find(f => f.path === updatedFile.id.path)!;
-            return {
-              id: updatedFile.id,
-              diff: diff.inverse.file(originalFile, updatedFile.diff)
-            };
-          });
-        }
-
-        if (Object.keys(filesDiff).length > 0) inverseDiff.files = filesDiff;
-      }
-
-      if (appliedDiff.attributes !== undefined) inverseDiff.attributes = original.attributes;
-
-      return inverseDiff;
-    },
-    file: (original: File, appliedDiff: FileDiff): FileDiff => {
-      const inverseDiff: any = {};
-      if (appliedDiff.path !== undefined) inverseDiff.path = original.path;
-      if (appliedDiff.remote !== undefined) inverseDiff.remote = original.remote;
-      if (appliedDiff.size !== undefined) inverseDiff.size = original.size;
-      if (appliedDiff.hash !== undefined) inverseDiff.hash = original.hash;
-      return inverseDiff;
-    }
-  }
+export const getRepresentationDiff = (before: Representation, after: Representation): RepresentationDiff => {
+  const diffResult: Partial<RepresentationDiff> = {};
+  if (before.url !== after.url) diffResult.url = after.url;
+  if (before.description !== after.description) diffResult.description = after.description;
+  if (!arraysEqual(before.tags, after.tags)) diffResult.tags = after.tags;
+  if (!arraysEqual(before.attributes, after.attributes)) diffResult.attributes = after.attributes;
+  return diffResult;
 };
+export const getPortDiff = (before: Port, after: Port): PortDiff => {
+  const diffResult: Partial<PortDiff> = {};
+  if (before.id_ !== after.id_) diffResult.id_ = after.id_;
+  if (before.description !== after.description) diffResult.description = after.description;
+  if (before.family !== after.family) diffResult.family = after.family;
+  if (before.mandatory !== after.mandatory) diffResult.mandatory = after.mandatory;
+  if (before.t !== after.t) diffResult.t = after.t;
+  if (!arraysEqual(before.compatibleFamilies, after.compatibleFamilies)) diffResult.compatibleFamilies = after.compatibleFamilies;
+  if (!deepEqual(before.point, after.point)) diffResult.point = after.point;
+  if (!deepEqual(before.direction, after.direction)) diffResult.direction = after.direction;
+  if (!arraysEqual(before.attributes, after.attributes)) diffResult.attributes = after.attributes;
+  return diffResult;
+};
+export const getPieceDiff = (before: Piece, after: Piece): PieceDiff => {
+  const diffResult: Partial<PieceDiff> = { id_: after.id_ };
+  if (before.description !== after.description) diffResult.description = after.description;
+  if (!deepEqual(before.type, after.type)) diffResult.type = after.type;
+  if (!deepEqual(before.plane, after.plane)) diffResult.plane = after.plane;
+  if (!deepEqual(before.center, after.center)) diffResult.center = after.center;
+  if (!arraysEqual(before.attributes, after.attributes)) diffResult.attributes = after.attributes;
+  return diffResult;
+};
+export const getConnectionDiff = (before: Connection, after: Connection): ConnectionDiff => {
+  const diffResult: any = {
+    connected: { piece: after.connected.piece },
+    connecting: { piece: after.connecting.piece }
+  };
+  if (!deepEqual(before.connected.port, after.connected.port)) {
+    diffResult.connected.port = after.connected.port;
+  }
+  if (!deepEqual(before.connecting.port, after.connecting.port)) {
+    diffResult.connecting.port = after.connecting.port;
+  }
+  if (before.description !== after.description) diffResult.description = after.description;
+  if (before.gap !== after.gap) diffResult.gap = after.gap;
+  if (before.shift !== after.shift) diffResult.shift = after.shift;
+  if (before.rise !== after.rise) diffResult.rise = after.rise;
+  if (before.rotation !== after.rotation) diffResult.rotation = after.rotation;
+  if (before.turn !== after.turn) diffResult.turn = after.turn;
+  if (before.tilt !== after.tilt) diffResult.tilt = after.tilt;
+  if (before.x !== after.x) diffResult.x = after.x;
+  if (before.y !== after.y) diffResult.y = after.y;
+  return diffResult;
+};
+export const getTypeDiff = (before: Type, after: Type): TypeDiff => {
+  const diffResult: any = {};
+  if (before.name !== after.name) diffResult.name = after.name;
+  if (before.description !== after.description) diffResult.description = after.description;
+  if (before.icon !== after.icon) diffResult.icon = after.icon;
+  if (before.image !== after.image) diffResult.image = after.image;
+  if (before.variant !== after.variant) diffResult.variant = after.variant;
+  if (before.stock !== after.stock) diffResult.stock = after.stock;
+  if (before.virtual !== after.virtual) diffResult.virtual = after.virtual;
+  if (before.unit !== after.unit) diffResult.unit = after.unit;
+  if (before.created !== after.created) diffResult.created = after.created;
+  if (before.updated !== after.updated) diffResult.updated = after.updated;
+  if (!deepEqual(before.location, after.location)) diffResult.location = after.location;
+  if (!arraysEqual(before.representations, after.representations)) diffResult.representations = after.representations;
+  if (!arraysEqual(before.ports, after.ports)) diffResult.ports = after.ports;
+  if (!arraysEqual(before.authors, after.authors)) diffResult.authors = after.authors;
+  if (!arraysEqual(before.attributes, after.attributes)) diffResult.attributes = after.attributes;
+  return diffResult;
+};
+export const getDesignDiff = (before: Design, after: Design): DesignDiff => {
+  const diff: any = {};
+  if (before.name !== after.name) diff.name = after.name;
+  if (before.description !== after.description) diff.description = after.description;
+  if (before.icon !== after.icon) diff.icon = after.icon;
+  if (before.image !== after.image) diff.image = after.image;
+  if (before.variant !== after.variant) diff.variant = after.variant;
+  if (before.view !== after.view) diff.view = after.view;
+  if (JSON.stringify(before.location) !== JSON.stringify(after.location)) diff.location = after.location;
+  if (before.unit !== after.unit) diff.unit = after.unit;
+
+  // Handle pieces diff
+  const beforePieces = before.pieces || [];
+  const afterPieces = after.pieces || [];
+  const piecesDiff: PiecesDiff = {};
+
+  const removedPieces = beforePieces.filter(bp => !afterPieces.find(ap => ap.id_ === bp.id_));
+  const addedPieces = afterPieces.filter(ap => !beforePieces.find(bp => bp.id_ === ap.id_));
+  const updatedPieces = afterPieces.filter(ap => {
+    const bp = beforePieces.find(bp => bp.id_ === ap.id_);
+    return bp && JSON.stringify(bp) !== JSON.stringify(ap);
+  }).map(ap => {
+    const bp = beforePieces.find(bp => bp.id_ === ap.id_)!;
+    return getPieceDiff(bp, ap);
+  });
+
+  if (removedPieces.length > 0) piecesDiff.removed = removedPieces.map(p => ({ id_: p.id_ }));
+  if (addedPieces.length > 0) piecesDiff.added = addedPieces;
+  if (updatedPieces.length > 0) piecesDiff.updated = updatedPieces;
+
+  if (Object.keys(piecesDiff).length > 0) diff.pieces = piecesDiff;
+
+  // Handle connections diff
+  const beforeConnections = before.connections || [];
+  const afterConnections = after.connections || [];
+  const connectionsDiff: ConnectionsDiff = {};
+
+  const removedConnections = beforeConnections.filter(bc => !afterConnections.find(ac =>
+    ac.connected.piece.id_ === bc.connected.piece.id_ &&
+    ac.connecting.piece.id_ === bc.connecting.piece.id_
+  ));
+  const addedConnections = afterConnections.filter(ac => !beforeConnections.find(bc =>
+    bc.connected.piece.id_ === ac.connected.piece.id_ &&
+    bc.connecting.piece.id_ === ac.connecting.piece.id_
+  ));
+  const updatedConnections = afterConnections.filter(ac => {
+    const bc = beforeConnections.find(bc =>
+      bc.connected.piece.id_ === ac.connected.piece.id_ &&
+      bc.connecting.piece.id_ === ac.connecting.piece.id_
+    );
+    return bc && JSON.stringify(bc) !== JSON.stringify(ac);
+  }).map(ac => {
+    const bc = beforeConnections.find(bc =>
+      bc.connected.piece.id_ === ac.connected.piece.id_ &&
+      bc.connecting.piece.id_ === ac.connecting.piece.id_
+    )!;
+    return getConnectionDiff(bc, ac);
+  });
+
+  if (removedConnections.length > 0) connectionsDiff.removed = removedConnections.map(c => ({
+    connected: { piece: { id_: c.connected.piece.id_ } },
+    connecting: { piece: { id_: c.connecting.piece.id_ } }
+  }));
+  if (addedConnections.length > 0) connectionsDiff.added = addedConnections;
+  if (updatedConnections.length > 0) connectionsDiff.updated = updatedConnections;
+
+  if (Object.keys(connectionsDiff).length > 0) diff.connections = connectionsDiff;
+
+  return diff;
+};
+export const getKitDiff = (before: Kit, after: Kit): KitDiff => {
+  const diff: any = {};
+  if (before.uri !== after.uri) diff.uri = after.uri;
+  if (before.name !== after.name) diff.name = after.name;
+  if (before.description !== after.description) diff.description = after.description;
+  if (before.icon !== after.icon) diff.icon = after.icon;
+  if (before.image !== after.image) diff.image = after.image;
+  if (before.preview !== after.preview) diff.preview = after.preview;
+  if (before.version !== after.version) diff.version = after.version;
+  if (before.remote !== after.remote) diff.remote = after.remote;
+  if (before.homepage !== after.homepage) diff.homepage = after.homepage;
+  if (before.license !== after.license) diff.license = after.license;
+  if (JSON.stringify(before.authors) !== JSON.stringify(after.authors)) diff.authors = after.authors;
+  if (JSON.stringify(before.qualities) !== JSON.stringify(after.qualities)) diff.qualities = after.qualities;
+
+  // Handle types diff  
+  const beforeTypes = before.types || [];
+  const afterTypes = after.types || [];
+  const typesDiff: TypesDiff = {};
+
+  const removedTypes = beforeTypes.filter(bt => !afterTypes.find(at => at.name === bt.name && at.variant === bt.variant));
+  const addedTypes = afterTypes.filter(at => !beforeTypes.find(bt => bt.name === at.name && bt.variant === at.variant));
+  const updatedTypes = afterTypes.filter(at => {
+    const bt = beforeTypes.find(bt => bt.name === at.name && bt.variant === at.variant);
+    return bt && JSON.stringify(bt) !== JSON.stringify(at);
+  }).map(at => {
+    const bt = beforeTypes.find(bt => bt.name === at.name && bt.variant === at.variant)!;
+    return getTypeDiff(bt, at);
+  });
+
+  if (removedTypes.length > 0) typesDiff.removed = removedTypes.map(t => ({ name: t.name, variant: t.variant }));
+  if (addedTypes.length > 0) typesDiff.added = addedTypes;
+  if (updatedTypes.length > 0) typesDiff.updated = updatedTypes;
+
+  if (Object.keys(typesDiff).length > 0) diff.types = typesDiff;
+
+  // Handle designs diff
+  const beforeDesigns = before.designs || [];
+  const afterDesigns = after.designs || [];
+  const designsDiff: DesignsDiff = {};
+
+  const removedDesigns = beforeDesigns.filter(bd => !afterDesigns.find(ad => ad.name === bd.name && ad.variant === bd.variant && ad.view === bd.view));
+  const addedDesigns = afterDesigns.filter(ad => !beforeDesigns.find(bd => bd.name === ad.name && bd.variant === ad.variant && bd.view === ad.view));
+  const updatedDesigns = afterDesigns.filter(ad => {
+    const bd = beforeDesigns.find(bd => bd.name === ad.name && bd.variant === ad.variant && bd.view === ad.view);
+    return bd && JSON.stringify(bd) !== JSON.stringify(ad);
+  }).map(ad => {
+    const bd = beforeDesigns.find(bd => bd.name === ad.name && bd.variant === ad.variant && bd.view === ad.view)!;
+    return getDesignDiff(bd, ad);
+  });
+
+  if (removedDesigns.length > 0) designsDiff.removed = removedDesigns.map(d => ({ name: d.name, variant: d.variant, view: d.view }));
+  if (addedDesigns.length > 0) designsDiff.added = addedDesigns;
+  if (updatedDesigns.length > 0) designsDiff.updated = updatedDesigns;
+
+  if (Object.keys(designsDiff).length > 0) diff.designs = designsDiff;
+
+  // Handle files diff
+  const beforeFiles = before.files || [];
+  const afterFiles = after.files || [];
+  const filesDiff: FilesDiff = {};
+
+  const removedFiles = beforeFiles.filter(bf => !afterFiles.find(af => af.path === bf.path));
+  const addedFiles = afterFiles.filter(af => !beforeFiles.find(bf => bf.path === af.path));
+  const updatedFiles = afterFiles.filter(af => {
+    const bf = beforeFiles.find(bf => bf.path === af.path);
+    return bf && JSON.stringify(bf) !== JSON.stringify(af);
+  }).map(af => {
+    const bf = beforeFiles.find(bf => bf.path === af.path)!;
+    return getFileDiff(bf, af);
+  });
+
+  if (removedFiles.length > 0) filesDiff.removed = removedFiles.map(f => ({ path: f.path }));
+  if (addedFiles.length > 0) filesDiff.added = addedFiles;
+  if (updatedFiles.length > 0) filesDiff.updated = updatedFiles;
+
+  if (Object.keys(filesDiff).length > 0) diff.files = filesDiff;
+
+  if (JSON.stringify(before.attributes) !== JSON.stringify(after.attributes)) diff.attributes = after.attributes;
+
+  return diff;
+};
+export const getFileDiff = (before: File, after: File): FileDiff => {
+  const diff: any = {};
+  if (before.path !== after.path) diff.path = after.path;
+  if (before.remote !== after.remote) diff.remote = after.remote;
+  if (before.size !== after.size) diff.size = after.size;
+  if (before.hash !== after.hash) diff.hash = after.hash;
+  return diff;
+};
+
+export const applyRepresentationDiff = (base: Representation, diff: RepresentationDiff): Representation => ({
+  url: diff.url ?? base.url,
+  description: diff.description ?? base.description,
+  tags: diff.tags ?? base.tags,
+  attributes: diff.attributes ?? base.attributes,
+});
+export const applyPortDiff = (base: Port, diff: PortDiff): Port => ({
+  id_: diff.id_ ?? base.id_,
+  description: diff.description ?? base.description,
+  family: diff.family ?? base.family,
+  mandatory: diff.mandatory ?? base.mandatory,
+  t: diff.t ?? base.t,
+  compatibleFamilies: diff.compatibleFamilies ?? base.compatibleFamilies,
+  point: diff.point ?? base.point,
+  direction: diff.direction ?? base.direction,
+  attributes: diff.attributes ?? base.attributes,
+});
+export const applyPieceDiff = (base: Piece, diff: PieceDiff): Piece => ({
+  id_: base.id_,
+  description: diff.description ?? base.description,
+  type: diff.type ?? base.type,
+  plane: diff.plane ?? base.plane,
+  center: diff.center ?? base.center,
+  scale: diff.scale ?? base.scale,
+  mirrorPlane: diff.mirrorPlane ?? base.mirrorPlane,
+  hidden: diff.hidden ?? base.hidden,
+  locked: diff.locked ?? base.locked,
+  color: diff.color ?? base.color,
+  attributes: diff.attributes ?? base.attributes,
+});
+
+export const applyConnectionDiff = (base: Connection, diff: ConnectionDiff): Connection => ({
+  connected: {
+    piece: diff.connected?.piece ?? base.connected.piece,
+    port: diff.connected?.port ?? base.connected.port,
+    designPiece: diff.connected?.designPiece ?? base.connected.designPiece
+  },
+  connecting: {
+    piece: diff.connecting?.piece ?? base.connecting.piece,
+    port: diff.connecting?.port ?? base.connecting.port,
+    designPiece: diff.connecting?.designPiece ?? base.connecting.designPiece
+  },
+  description: diff.description ?? base.description,
+  gap: diff.gap ?? base.gap,
+  shift: diff.shift ?? base.shift,
+  rise: diff.rise ?? base.rise,
+  rotation: diff.rotation ?? base.rotation,
+  turn: diff.turn ?? base.turn,
+  tilt: diff.tilt ?? base.tilt,
+  x: diff.x ?? base.x,
+  y: diff.y ?? base.y,
+  attributes: base.attributes,
+});
+export const applyTypeDiff = (base: Type, diff: TypeDiff): Type => ({
+  name: diff.name ?? base.name,
+  description: diff.description ?? base.description,
+  icon: diff.icon ?? base.icon,
+  image: diff.image ?? base.image,
+  variant: diff.variant ?? base.variant,
+  stock: diff.stock ?? base.stock,
+  virtual: diff.virtual ?? base.virtual,
+  unit: diff.unit ?? base.unit,
+  created: diff.created ?? base.created,
+  updated: diff.updated ?? base.updated,
+  location: diff.location ?? base.location,
+  representations: diff.representations ?? base.representations,
+  ports: diff.ports ?? base.ports,
+  authors: diff.authors ?? base.authors,
+  attributes: diff.attributes ?? base.attributes,
+});
+
+export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
+  let types = base.types;
+  let designs = base.designs;
+  let files = base.files;
+  if (diff.types) {
+    const baseTypes = base.types || [];
+    types = baseTypes
+      .map(t => {
+        const updateDiff = diff.types?.updated?.find((ut) => ut.id.name === t.name && ut.id.variant === t.variant);
+        return updateDiff ? ({ ...t, ...updateDiff.diff }) : t;
+      })
+      .filter(t => !diff.types?.removed?.some((rt: TypeId) => rt.name === t.name && rt.variant === t.variant))
+      .concat(diff.types?.added || []);
+  }
+  if (diff.files) {
+    const baseFiles = base.files || [];
+    files = baseFiles
+      .map(f => {
+        const updateDiff = diff.files?.updated?.find((uf) => uf.id.path === f.path);
+        if (!updateDiff) return f;
+        return {
+          ...f,
+          path: updateDiff.diff.path ?? f.path,
+          remote: updateDiff.diff.remote ?? f.remote,
+          size: updateDiff.diff.size ?? f.size,
+          hash: updateDiff.diff.hash ?? f.hash,
+          created: updateDiff.diff.created ?? f.created,
+          createdBy: updateDiff.diff.createdBy ? { email: updateDiff.diff.createdBy } : f.createdBy,
+          updated: updateDiff.diff.updated ?? f.updated,
+          updatedBy: updateDiff.diff.updatedBy ? { email: updateDiff.diff.updatedBy } : f.updatedBy,
+        };
+      })
+      .filter(f => !diff.files?.removed?.some((rf: FileId) => rf.path === f.path))
+      .concat(diff.files?.added || []);
+  }
+  if (diff.designs) {
+    const baseDesigns = base.designs || [];
+    designs = baseDesigns
+      .map(d => {
+        const updateDiff = diff.designs?.updated?.find((ud) => ud.id.name === d.name && ud.id.variant === d.variant && ud.id.view === d.view);
+        if (!updateDiff) return d;
+        // Apply the design diff properly by using the apply function logic
+        let pieces = d.pieces;
+        let connections = d.connections;
+
+        if (updateDiff.diff.pieces) {
+          const basePieces = d.pieces || [];
+          pieces = basePieces
+            .map(p => {
+              const pieceDiff = updateDiff.diff.pieces?.updated?.find((up) => up.id.id_ === p.id_);
+              return pieceDiff ? ({ ...p, ...pieceDiff.diff, id_: p.id_ }) : p;
+            })
+            .filter(p => !updateDiff.diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_))
+            .concat(updateDiff.diff.pieces?.added || []);
+        }
+        if (updateDiff.diff.connections) {
+          const baseConnections = d.connections || [];
+          connections = baseConnections
+            .map(c => {
+              const connDiff = updateDiff.diff.connections?.updated?.find((uc) =>
+                uc.id.connected.piece.id_ === c.connected.piece.id_ &&
+                uc.id.connecting.piece.id_ === c.connecting.piece.id_
+              );
+              return connDiff ? ({
+                ...c,
+                ...connDiff.diff,
+                connected: connDiff.diff.connected ? { ...c.connected, ...connDiff.diff.connected } : c.connected,
+                connecting: connDiff.diff.connecting ? { ...c.connecting, ...connDiff.diff.connecting } : c.connecting
+              }) : c;
+            })
+            .filter(c => !updateDiff.diff.connections?.removed?.some((rc: ConnectionId) =>
+              rc.connected.piece.id_ === c.connected.piece.id_ &&
+              rc.connecting.piece.id_ === c.connecting.piece.id_
+            ))
+            .concat(updateDiff.diff.connections?.added || []);
+        }
+        return {
+          ...d,
+          name: updateDiff.diff.name ?? d.name,
+          description: updateDiff.diff.description ?? d.description,
+          icon: updateDiff.diff.icon ?? d.icon,
+          image: updateDiff.diff.image ?? d.image,
+          variant: updateDiff.diff.variant ?? d.variant,
+          view: updateDiff.diff.view ?? d.view,
+          location: updateDiff.diff.location ?? d.location,
+          unit: updateDiff.diff.unit ?? d.unit,
+          pieces,
+          connections
+        };
+      })
+      .filter(d => !diff.designs?.removed?.some((rd: DesignId) => rd.name === d.name && rd.variant === d.variant && rd.view === d.view))
+      .concat(diff.designs?.added || []);
+  }
+
+  return {
+    uri: diff.uri ?? base.uri,
+    name: diff.name ?? base.name,
+    description: diff.description ?? base.description,
+    icon: diff.icon ?? base.icon,
+    image: diff.image ?? base.image,
+    preview: diff.preview ?? base.preview,
+    version: diff.version ?? base.version,
+    remote: diff.remote ?? base.remote,
+    homepage: diff.homepage ?? base.homepage,
+    license: diff.license ?? base.license,
+    created: base.created,
+    updated: base.updated,
+    authors: diff.authors ?? base.authors,
+    types,
+    designs,
+    files,
+    qualities: diff.qualities ?? base.qualities,
+    attributes: base.attributes,
+  };
+}
+
+export const applyFileDiff = (base: File, diff: FileDiff): File => ({
+  path: diff.path ?? base.path,
+  remote: diff.remote ?? base.remote,
+  size: diff.size ?? base.size,
+  hash: diff.hash ?? base.hash,
+  created: base.created,
+  createdBy: base.createdBy,
+  updated: base.updated,
+  updatedBy: base.updatedBy,
+});
+
+export const mergeRepresentationDiff = (diff1: RepresentationDiff, diff2: RepresentationDiff): RepresentationDiff => ({
+  url: diff2.url ?? diff1.url,
+  description: diff2.description ?? diff1.description,
+  tags: diff2.tags ?? diff1.tags,
+  attributes: diff2.attributes ?? diff1.attributes,
+});
+
+export const mergePortDiff = (diff1: PortDiff, diff2: PortDiff): PortDiff => ({
+  id_: diff2.id_ ?? diff1.id_,
+  description: diff2.description ?? diff1.description,
+  family: diff2.family ?? diff1.family,
+  mandatory: diff2.mandatory ?? diff1.mandatory,
+  t: diff2.t ?? diff1.t,
+  compatibleFamilies: diff2.compatibleFamilies ?? diff1.compatibleFamilies,
+  point: diff2.point ?? diff1.point,
+  direction: diff2.direction ?? diff1.direction,
+  attributes: diff2.attributes ?? diff1.attributes,
+});
+
+export const mergePieceDiff = (diff1: PieceDiff, diff2: PieceDiff): PieceDiff => ({
+  id_: diff2.id_ ?? diff1.id_,
+  description: diff2.description ?? diff1.description,
+  type: diff2.type ?? diff1.type,
+  plane: diff2.plane ?? diff1.plane,
+  center: diff2.center ?? diff1.center,
+  attributes: diff2.attributes ?? diff1.attributes,
+});
+
+export const mergeConnectionDiff = (diff1: ConnectionDiff, diff2: ConnectionDiff): ConnectionDiff => ({
+  connected: {
+    piece: diff2.connected?.piece ?? diff1.connected?.piece,
+    port: diff2.connected?.port ?? diff1.connected?.port,
+    designPiece: diff2.connected?.designPiece ?? diff1.connected?.designPiece
+  },
+  connecting: {
+    piece: diff2.connecting?.piece ?? diff1.connecting?.piece,
+    port: diff2.connecting?.port ?? diff1.connecting?.port,
+    designPiece: diff2.connecting?.designPiece ?? diff1.connecting?.designPiece
+  },
+  description: diff2.description ?? diff1.description,
+  gap: diff2.gap ?? diff1.gap,
+  shift: diff2.shift ?? diff1.shift,
+  rise: diff2.rise ?? diff1.rise,
+  rotation: diff2.rotation ?? diff1.rotation,
+  turn: diff2.turn ?? diff1.turn,
+  tilt: diff2.tilt ?? diff1.tilt,
+  x: diff2.x ?? diff1.x,
+  y: diff2.y ?? diff1.y,
+});
+
+export const mergeTypeDiff = (diff1: TypeDiff, diff2: TypeDiff): TypeDiff => ({
+  name: diff2.name ?? diff1.name,
+  description: diff2.description ?? diff1.description,
+  icon: diff2.icon ?? diff1.icon,
+  image: diff2.image ?? diff1.image,
+  variant: diff2.variant ?? diff1.variant,
+  stock: diff2.stock ?? diff1.stock,
+  virtual: diff2.virtual ?? diff1.virtual,
+  unit: diff2.unit ?? diff1.unit,
+  created: diff2.created ?? diff1.created,
+  updated: diff2.updated ?? diff1.updated,
+  location: diff2.location ?? diff1.location,
+  representations: diff2.representations ?? diff1.representations,
+  ports: diff2.ports ?? diff1.ports,
+  authors: diff2.authors ?? diff1.authors,
+  attributes: diff2.attributes ?? diff1.attributes,
+});
+
+export const mergeDesignDiff = (diff1: DesignDiff, diff2: DesignDiff): DesignDiff => ({
+  name: diff2.name ?? diff1.name,
+  description: diff2.description ?? diff1.description,
+  icon: diff2.icon ?? diff1.icon,
+  image: diff2.image ?? diff1.image,
+  variant: diff2.variant ?? diff1.variant,
+  view: diff2.view ?? diff1.view,
+  location: diff2.location ?? diff1.location,
+  unit: diff2.unit ?? diff1.unit,
+  pieces: diff2.pieces ?? diff1.pieces,
+  connections: diff2.connections ?? diff1.connections,
+  attributes: diff2.attributes ?? diff1.attributes,
+});
+
+export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => ({
+  name: diff2.name ?? diff1.name,
+  description: diff2.description ?? diff1.description,
+  icon: diff2.icon ?? diff1.icon,
+  image: diff2.image ?? diff1.image,
+  preview: diff2.preview ?? diff1.preview,
+  version: diff2.version ?? diff1.version,
+  remote: diff2.remote ?? diff1.remote,
+  homepage: diff2.homepage ?? diff1.homepage,
+  license: diff2.license ?? diff1.license,
+  types: diff2.types ?? diff1.types,
+  designs: diff2.designs ?? diff1.designs,
+  files: diff2.files ?? diff1.files,
+  attributes: diff2.attributes ?? diff1.attributes,
+});
+
+export const mergeFileDiff = (diff1: FileDiff, diff2: FileDiff): FileDiff => ({
+  path: diff2.path ?? diff1.path,
+  remote: diff2.remote ?? diff1.remote,
+  size: diff2.size ?? diff1.size,
+  hash: diff2.hash ?? diff1.hash,
+  created: diff2.created ?? diff1.created,
+  createdBy: diff2.createdBy ?? diff1.createdBy,
+  updated: diff2.updated ?? diff1.updated,
+  updatedBy: diff2.updatedBy ?? diff1.updatedBy,
+});
+
+export const inverseRepresentationDiff = (original: Representation, appliedDiff: RepresentationDiff): RepresentationDiff => {
+  const inverseDiff: any = {};
+  if (appliedDiff.url !== undefined) inverseDiff.url = original.url;
+  if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
+  if (appliedDiff.tags !== undefined) inverseDiff.tags = original.tags;
+  if (appliedDiff.attributes !== undefined) inverseDiff.attributes = original.attributes;
+  return inverseDiff;
+};
+
+export const inversePortDiff = (original: Port, appliedDiff: PortDiff): PortDiff => {
+  const inverseDiff: any = {};
+  if (appliedDiff.id_ !== undefined) inverseDiff.id_ = original.id_;
+  if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
+  if (appliedDiff.family !== undefined) inverseDiff.family = original.family;
+  if (appliedDiff.mandatory !== undefined) inverseDiff.mandatory = original.mandatory;
+  if (appliedDiff.t !== undefined) inverseDiff.t = original.t;
+  if (appliedDiff.compatibleFamilies !== undefined) inverseDiff.compatibleFamilies = original.compatibleFamilies;
+  if (appliedDiff.point !== undefined) inverseDiff.point = original.point;
+  if (appliedDiff.direction !== undefined) inverseDiff.direction = original.direction;
+  if (appliedDiff.attributes !== undefined) inverseDiff.attributes = original.attributes;
+  return inverseDiff;
+};
+
+export const inversePieceDiff = (original: Piece, appliedDiff: PieceDiff): PieceDiff => {
+  const inverseDiff: any = { id_: original.id_ };
+  if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
+  if (appliedDiff.type !== undefined) inverseDiff.type = original.type;
+  if (appliedDiff.plane !== undefined) inverseDiff.plane = original.plane;
+  if (appliedDiff.center !== undefined) inverseDiff.center = original.center;
+  if (appliedDiff.attributes !== undefined) inverseDiff.attributes = original.attributes;
+  return inverseDiff;
+};
+
+export const inverseConnectionDiff = (original: Connection, appliedDiff: ConnectionDiff): ConnectionDiff => {
+  const inverseDiff: any = {
+    connected: { piece: original.connected.piece },
+    connecting: { piece: original.connecting.piece }
+  };
+  if (appliedDiff.connected?.port !== undefined) inverseDiff.connected.port = original.connected.port;
+  if (appliedDiff.connecting?.port !== undefined) inverseDiff.connecting.port = original.connecting.port;
+  if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
+  if (appliedDiff.gap !== undefined) inverseDiff.gap = original.gap;
+  if (appliedDiff.shift !== undefined) inverseDiff.shift = original.shift;
+  if (appliedDiff.rise !== undefined) inverseDiff.rise = original.rise;
+  if (appliedDiff.rotation !== undefined) inverseDiff.rotation = original.rotation;
+  if (appliedDiff.turn !== undefined) inverseDiff.turn = original.turn;
+  if (appliedDiff.tilt !== undefined) inverseDiff.tilt = original.tilt;
+  if (appliedDiff.x !== undefined) inverseDiff.x = original.x;
+  if (appliedDiff.y !== undefined) inverseDiff.y = original.y;
+  return inverseDiff;
+};
+
+export const inverseTypeDiff = (original: Type, appliedDiff: TypeDiff): TypeDiff => {
+  const inverseDiff: any = {};
+  if (appliedDiff.name !== undefined) inverseDiff.name = original.name;
+  if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
+  if (appliedDiff.icon !== undefined) inverseDiff.icon = original.icon;
+  if (appliedDiff.image !== undefined) inverseDiff.image = original.image;
+  if (appliedDiff.variant !== undefined) inverseDiff.variant = original.variant;
+  if (appliedDiff.stock !== undefined) inverseDiff.stock = original.stock;
+  if (appliedDiff.virtual !== undefined) inverseDiff.virtual = original.virtual;
+  if (appliedDiff.unit !== undefined) inverseDiff.unit = original.unit;
+  if (appliedDiff.created !== undefined) inverseDiff.created = original.created;
+  if (appliedDiff.updated !== undefined) inverseDiff.updated = original.updated;
+  if (appliedDiff.location !== undefined) inverseDiff.location = original.location;
+  if (appliedDiff.representations !== undefined) inverseDiff.representations = original.representations;
+  if (appliedDiff.ports !== undefined) inverseDiff.ports = original.ports;
+  if (appliedDiff.authors !== undefined) inverseDiff.authors = original.authors;
+  if (appliedDiff.attributes !== undefined) inverseDiff.attributes = original.attributes;
+  return inverseDiff;
+};
+
+export const inverseDesignDiff = (original: Design, appliedDiff: DesignDiff): DesignDiff => {
+  const inverseDiff: any = {};
+  if (appliedDiff.name !== undefined) inverseDiff.name = original.name;
+  if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
+  if (appliedDiff.icon !== undefined) inverseDiff.icon = original.icon;
+  if (appliedDiff.image !== undefined) inverseDiff.image = original.image;
+  if (appliedDiff.variant !== undefined) inverseDiff.variant = original.variant;
+  if (appliedDiff.view !== undefined) inverseDiff.view = original.view;
+  if (appliedDiff.location !== undefined) inverseDiff.location = original.location;
+  if (appliedDiff.unit !== undefined) inverseDiff.unit = original.unit;
+
+  // Handle pieces diff inverse
+  if (appliedDiff.pieces) {
+    const originalPieces = original.pieces || [];
+    const piecesDiff: PiecesDiff = {};
+
+    // Swap added and removed
+    if (appliedDiff.pieces.added) piecesDiff.removed = appliedDiff.pieces.added.map(p => ({ id_: p.id_ }));
+    if (appliedDiff.pieces.removed) piecesDiff.added = appliedDiff.pieces.removed.map(rp => {
+      return originalPieces.find(p => p.id_ === rp.id_)!;
+    });
+
+    // Inverse updated pieces
+    if (appliedDiff.pieces.updated) {
+      piecesDiff.updated = appliedDiff.pieces.updated.map(updatedPiece => {
+        const originalPiece = originalPieces.find(p => p.id_ === updatedPiece.id.id_)!;
+        return {
+          id: updatedPiece.id,
+          diff: inversePieceDiff(originalPiece, updatedPiece.diff)
+        };
+      });
+    }
+
+    if (Object.keys(piecesDiff).length > 0) inverseDiff.pieces = piecesDiff;
+  }
+
+  // Handle connections diff inverse
+  if (appliedDiff.connections) {
+    const originalConnections = original.connections || [];
+    const connectionsDiff: ConnectionsDiff = {};
+
+    // Swap added and removed
+    if (appliedDiff.connections.added) connectionsDiff.removed = appliedDiff.connections.added.map(c => ({
+      connected: { piece: { id_: c.connected.piece.id_ } },
+      connecting: { piece: { id_: c.connecting.piece.id_ } }
+    }));
+    if (appliedDiff.connections.removed) connectionsDiff.added = appliedDiff.connections.removed.map(rc => {
+      return originalConnections.find(c =>
+        c.connected.piece.id_ === rc.connected.piece.id_ &&
+        c.connecting.piece.id_ === rc.connecting.piece.id_
+      )!;
+    });
+
+    // Inverse updated connections
+    if (appliedDiff.connections.updated) {
+      connectionsDiff.updated = appliedDiff.connections.updated.map(updatedConnection => {
+        const originalConnection = originalConnections.find(c =>
+          c.connected.piece.id_ === updatedConnection.id.connected.piece.id_ &&
+          c.connecting.piece.id_ === updatedConnection.id.connecting.piece.id_
+        )!;
+        return {
+          id: updatedConnection.id,
+          diff: inverseConnectionDiff(originalConnection, updatedConnection.diff)
+        };
+      });
+    }
+
+    if (Object.keys(connectionsDiff).length > 0) inverseDiff.connections = connectionsDiff;
+  }
+
+  return inverseDiff;
+};
+
+export const inverseKitDiff = (original: Kit, appliedDiff: KitDiff): KitDiff => {
+  const inverseDiff: any = {};
+  if (appliedDiff.name !== undefined) inverseDiff.name = original.name;
+  if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
+  if (appliedDiff.icon !== undefined) inverseDiff.icon = original.icon;
+  if (appliedDiff.image !== undefined) inverseDiff.image = original.image;
+  if (appliedDiff.preview !== undefined) inverseDiff.preview = original.preview;
+  if (appliedDiff.version !== undefined) inverseDiff.version = original.version;
+  if (appliedDiff.remote !== undefined) inverseDiff.remote = original.remote;
+  if (appliedDiff.homepage !== undefined) inverseDiff.homepage = original.homepage;
+  if (appliedDiff.license !== undefined) inverseDiff.license = original.license;
+
+  // Handle types diff inverse
+  if (appliedDiff.types) {
+    const originalTypes = original.types || [];
+    const typesDiff: TypesDiff = {};
+
+    // Swap added and removed
+    if (appliedDiff.types.added) typesDiff.removed = appliedDiff.types.added.map(t => ({ name: t.name, variant: t.variant }));
+    if (appliedDiff.types.removed) typesDiff.added = appliedDiff.types.removed.map(rt => {
+      return originalTypes.find(t => t.name === rt.name && t.variant === rt.variant)!;
+    });
+
+    // Inverse updated types
+    if (appliedDiff.types.updated) {
+      typesDiff.updated = appliedDiff.types.updated.map(updatedType => {
+        const originalType = originalTypes.find(t => t.name === updatedType.id.name && t.variant === updatedType.id.variant)!;
+        return {
+          id: updatedType.id,
+          diff: inverseTypeDiff(originalType, updatedType.diff)
+        };
+      });
+    }
+
+    if (Object.keys(typesDiff).length > 0) inverseDiff.types = typesDiff;
+  }
+
+  // Handle designs diff inverse
+  if (appliedDiff.designs) {
+    const originalDesigns = original.designs || [];
+    const designsDiff: DesignsDiff = {};
+
+    // Swap added and removed
+    if (appliedDiff.designs.added) designsDiff.removed = appliedDiff.designs.added.map(d => ({ name: d.name, variant: d.variant, view: d.view }));
+    if (appliedDiff.designs.removed) designsDiff.added = appliedDiff.designs.removed.map(rd => {
+      return originalDesigns.find(d => d.name === rd.name && d.variant === rd.variant && d.view === rd.view)!;
+    });
+
+    // Inverse updated designs
+    if (appliedDiff.designs.updated) {
+      designsDiff.updated = appliedDiff.designs.updated.map(updatedDesign => {
+        const originalDesign = originalDesigns.find(d => d.name === updatedDesign.id.name && d.variant === updatedDesign.id.variant && d.view === updatedDesign.id.view)!;
+        return {
+          id: updatedDesign.id,
+          diff: inverseDesignDiff(originalDesign, updatedDesign.diff)
+        };
+      });
+    }
+
+    if (Object.keys(designsDiff).length > 0) inverseDiff.designs = designsDiff;
+  }
+
+  // Handle files diff inverse
+  if (appliedDiff.files) {
+    const originalFiles = original.files || [];
+    const filesDiff: FilesDiff = {};
+
+    // Swap added and removed
+    if (appliedDiff.files.added) filesDiff.removed = appliedDiff.files.added.map(f => ({ path: f.path }));
+    if (appliedDiff.files.removed) filesDiff.added = appliedDiff.files.removed.map(rf => {
+      return originalFiles.find(f => f.path === rf.path)!;
+    });
+
+    // Inverse updated files
+    if (appliedDiff.files.updated) {
+      filesDiff.updated = appliedDiff.files.updated.map(updatedFile => {
+        const originalFile = originalFiles.find(f => f.path === updatedFile.id.path)!;
+        return {
+          id: updatedFile.id,
+          diff: inverseFileDiff(originalFile, updatedFile.diff)
+        };
+      });
+    }
+
+    if (Object.keys(filesDiff).length > 0) inverseDiff.files = filesDiff;
+  }
+
+  if (appliedDiff.attributes !== undefined) inverseDiff.attributes = original.attributes;
+
+  return inverseDiff;
+};
+
+export const inverseFileDiff = (original: File, appliedDiff: FileDiff): FileDiff => {
+  const inverseDiff: any = {};
+  if (appliedDiff.path !== undefined) inverseDiff.path = original.path;
+  if (appliedDiff.remote !== undefined) inverseDiff.remote = original.remote;
+  if (appliedDiff.size !== undefined) inverseDiff.size = original.size;
+  if (appliedDiff.hash !== undefined) inverseDiff.hash = original.hash;
+  return inverseDiff;
+};
+
 //#endregion Diffing
 
 //#region Querying
