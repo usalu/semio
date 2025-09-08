@@ -2307,14 +2307,9 @@ const sketchpadCommands = {
 };
 
 const kitCommands = {
-  "semio.kit.addType": (context: KitCommandContext, type: Type): KitCommandResult => {
+  "semio.kit.createType": (context: KitCommandContext, type: Type): KitCommandResult => {
     return {
       diff: { types: { added: [type] } },
-    };
-  },
-  "semio.kit.removeType": (context: KitCommandContext, typeId: TypeId): KitCommandResult => {
-    return {
-      diff: { types: { removed: [typeId] } },
     };
   },
   "semio.kit.updateType": (context: KitCommandContext, typeId: TypeId, typeDiff: TypeDiff): KitCommandResult => {
@@ -2322,19 +2317,24 @@ const kitCommands = {
       diff: { types: { updated: [{ id: typeId, diff: typeDiff }] } },
     };
   },
-  "semio.kit.addDesign": (context: KitCommandContext, design: Design): KitCommandResult => {
+  "semio.kit.deleteType": (context: KitCommandContext, typeId: TypeId): KitCommandResult => {
     return {
-      diff: { designs: { added: [design] } },
+      diff: { types: { removed: [typeId] } },
     };
   },
-  "semio.kit.removeDesign": (context: KitCommandContext, designId: DesignId): KitCommandResult => {
+  "semio.kit.createDesign": (context: KitCommandContext, design: Design): KitCommandResult => {
     return {
-      diff: { designs: { removed: [designId] } },
+      diff: { designs: { added: [design] } },
     };
   },
   "semio.kit.updateDesign": (context: KitCommandContext, designId: DesignId, designDiff: DesignDiff): KitCommandResult => {
     return {
       diff: { designs: { updated: [{ id: designId, diff: designDiff }] } },
+    };
+  },
+  "semio.kit.deleteDesign": (context: KitCommandContext, designId: DesignId): KitCommandResult => {
+    return {
+      diff: { designs: { removed: [designId] } },
     };
   },
   "semio.kit.addFile": (context: KitCommandContext, file: SemioFile, blob?: Blob): KitCommandResult => {
@@ -2344,16 +2344,16 @@ const kitCommands = {
       files,
     };
   },
-  "semio.kit.removeFile": (context: KitCommandContext, url: Url): KitCommandResult => {
-    return {
-      diff: { files: { removed: [{ path: url }] } },
-    };
-  },
   "semio.kit.updateFile": (context: KitCommandContext, url: Url, fileDiff: FileDiff, blob?: Blob): KitCommandResult => {
     const files: File[] = blob ? [new File([blob], url.split("/").pop() || url)] : [];
     return {
       diff: { files: { updated: [{ id: { path: url }, diff: fileDiff }] } },
       files,
+    };
+  },
+  "semio.kit.removeFile": (context: KitCommandContext, url: Url): KitCommandResult => {
+    return {
+      diff: { files: { removed: [{ path: url }] } },
     };
   },
   "semio.kit.import": (context: KitCommandContext, url: string): KitCommandResult => {

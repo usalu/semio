@@ -20,10 +20,10 @@
 // #endregion
 import { FC, ReactNode, createContext, useContext, useEffect, useState } from "react";
 import { TooltipProvider } from "../Tooltip";
-import DesignEditor from "./DesignEditor";
 
-import { Design, DesignId, Kit, KitId } from "../../../semio";
-import { DesignEditorId, DesignScopeProvider, KitScopeProvider, Layout, Mode, SketchpadScopeProvider, Theme, useKitCommands, useLayout, useMode, useSketchpadCommands, useTheme } from "../../../store";
+import { Kit, KitId } from "../../../semio";
+import { KitScopeProvider, Layout, Mode, SketchpadScopeProvider, Theme, useLayout, useMode, useSketchpadCommands, useTheme } from "../../../store";
+import KitEditor from "./KitEditor";
 
 interface NavbarContextType {
   navbarToolbar: ReactNode | null;
@@ -40,44 +40,31 @@ export const useNavbar = () => {
   return context;
 };
 
-interface SketchpadProps {
-  userId?: string;
-  onWindowEvents?: {
-    minimize: () => void;
-    maximize: () => void;
-    close: () => void;
-  };
-}
-
-// Component that uses basic store hooks (no kit context needed)
 const SketchpadInner: FC = () => {
   const [isImporting, setIsImporting] = useState<boolean>(true);
   const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
 
   const { createKit, createDesignEditor, setActiveDesignEditor, setMode, setTheme, setLayout } = useSketchpadCommands();
-  const { createDesign } = useKitCommands();
 
   const theme = useTheme();
   const layout = useLayout();
   const mode = useMode();
 
   const defaultKitId: KitId = { name: "Metabolism", version: "r25.07-1" };
-  const defaultDesignId: DesignId = { name: "Nakagin Capsule Tower", variant: "", view: "" };
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       await createKit(defaultKitId as Kit);
-      await createDesign(defaultDesignId as Design);
       // await store.execute("semio.sketchpad.importKit", defaultKitId, "/metabolism.zip");
-      await createDesignEditor({ kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
-      await setActiveDesignEditor({ kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
+      // await createDesignEditor({ kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
+      // await setActiveDesignEditor({ kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
       setIsImporting(false);
     })();
     return () => {
       mounted = false;
     };
-  }, [defaultKitId, defaultDesignId]); // TODO add store to dependencies after debugging
+  }, []); // TODO add store to dependencies after debugging
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -108,22 +95,29 @@ const SketchpadInner: FC = () => {
   if (isImporting) return null;
 
   return (
-    <KitScopeProvider id={defaultKitId}>
-      <DesignScopeProvider id={defaultDesignId}>
-        <NavbarContext.Provider
-          value={{
-            navbarToolbar: navbarToolbar,
-            setNavbarToolbar: setNavbarToolbar,
-          }}
-        >
-          <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
-            <DesignEditor />
-          </div>
-        </NavbarContext.Provider>
-      </DesignScopeProvider>
-    </KitScopeProvider>
+    <NavbarContext.Provider
+      value={{
+        navbarToolbar: navbarToolbar,
+        setNavbarToolbar: setNavbarToolbar,
+      }}
+    >
+      <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
+        <KitScopeProvider id={defaultKitId}>
+          <KitEditor />
+        </KitScopeProvider>
+      </div>
+    </NavbarContext.Provider>
   );
 };
+
+interface SketchpadProps {
+  userId?: string;
+  onWindowEvents?: {
+    minimize: () => void;
+    maximize: () => void;
+    close: () => void;
+  };
+}
 
 const Sketchpad: FC<SketchpadProps> = ({ userId, onWindowEvents }) => {
   return (
