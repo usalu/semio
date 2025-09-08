@@ -22,8 +22,8 @@ import { FC, ReactNode, createContext, useContext, useEffect, useState } from "r
 import { TooltipProvider } from "../Tooltip";
 import DesignEditor from "./DesignEditor";
 
-import { DesignId, DesignScopeProvider, KitId, KitScopeProvider, Layout, Mode, SketchpadScopeProvider, Theme, useLayout, useMode, useSketchpadCommands, useSketchpad as useSketchpadStore, useTheme } from "@semio/js";
-import { DesignEditorId } from "../../../store";
+import { Design, DesignId, Kit, KitId } from "../../../semio";
+import { DesignEditorId, DesignScopeProvider, KitScopeProvider, Layout, Mode, SketchpadScopeProvider, Theme, useKitCommands, useLayout, useMode, useSketchpadCommands, useTheme } from "../../../store";
 
 interface NavbarContextType {
   navbarToolbar: ReactNode | null;
@@ -40,40 +40,6 @@ export const useNavbar = () => {
   return context;
 };
 
-// Component that uses hooks requiring kit context
-const SketchpadWithCommands: FC<{
-  mode: Mode;
-  theme: Theme;
-  layout: Layout;
-  navbarToolbar: ReactNode;
-  setNavbarToolbar: (toolbar: ReactNode) => void;
-}> = ({ mode, theme, layout, navbarToolbar, setNavbarToolbar }) => {
-  const { setMode, setTheme, setLayout } = useSketchpadCommands();
-
-  useEffect(() => {
-    if (mode !== Mode.USER) setMode(mode);
-    if (layout !== Layout.NORMAL) setLayout(layout);
-    if (theme && theme !== Theme.SYSTEM) setTheme(theme);
-    if (!theme && theme === Theme.SYSTEM && typeof window !== "undefined") {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      setTheme(prefersDark ? Theme.DARK : Theme.LIGHT);
-    }
-  }, [mode, theme, layout, setMode, setTheme, setLayout]);
-
-  return (
-    <NavbarContext.Provider
-      value={{
-        navbarToolbar: navbarToolbar,
-        setNavbarToolbar: setNavbarToolbar,
-      }}
-    >
-      <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
-        <DesignEditor />
-      </div>
-    </NavbarContext.Provider>
-  );
-};
-
 interface SketchpadProps {
   userId?: string;
   onWindowEvents?: {
@@ -88,10 +54,12 @@ const SketchpadInner: FC = () => {
   const [isImporting, setIsImporting] = useState<boolean>(true);
   const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
 
-  const store = useSketchpadStore();
-  const mode = useMode();
+  const { createKit, createDesignEditor, setActiveDesignEditor, setMode, setTheme, setLayout } = useSketchpadCommands();
+  const { createDesign } = useKitCommands();
+
   const theme = useTheme();
   const layout = useLayout();
+  const mode = useMode();
 
   const defaultKitId: KitId = { name: "Metabolism", version: "r25.07-1" };
   const defaultDesignId: DesignId = { name: "Nakagin Capsule Tower", variant: "", view: "" };
@@ -99,22 +67,12 @@ const SketchpadInner: FC = () => {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      await store.execute("semio.sketchpad.createKit", defaultKitId);
-      // try {
-      //   await store.execute("semio.sketchpad.importKit", defaultKitId, "/metabolism.zip");
-      // } catch (importError) {
-      //   console.warn("Failed to import metabolism.zip, continuing with empty kit:", importError);
-      // }
-
-      try {
-        await store.execute("semio.sketchpad.createDesignEditor", { kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
-        await store.execute("semio.sketchpad.setActiveDesignEditor", { kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
-      } catch (e) {
-        console.error("Failed to initialize default kit:", e);
-      } finally {
-        // if (mounted) setIsImporting(false);
-        setIsImporting(false);
-      }
+      await createKit(defaultKitId as Kit);
+      await createDesign(defaultDesignId as Design);
+      // await store.execute("semio.sketchpad.importKit", defaultKitId, "/metabolism.zip");
+      await createDesignEditor({ kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
+      await setActiveDesignEditor({ kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
+      setIsImporting(false);
     })();
     return () => {
       mounted = false;
@@ -137,12 +95,31 @@ const SketchpadInner: FC = () => {
     }
   }, [layout]);
 
+  useEffect(() => {
+    if (mode !== Mode.USER) setMode(mode);
+    if (layout !== Layout.NORMAL) setLayout(layout);
+    if (theme && theme !== Theme.SYSTEM) setTheme(theme);
+    if (!theme && theme === Theme.SYSTEM && typeof window !== "undefined") {
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      setTheme(prefersDark ? Theme.DARK : Theme.LIGHT);
+    }
+  }, [mode, theme, layout, setMode, setTheme, setLayout]);
+
   if (isImporting) return null;
 
   return (
     <KitScopeProvider id={defaultKitId}>
       <DesignScopeProvider id={defaultDesignId}>
-        <SketchpadWithCommands mode={mode} theme={theme} layout={layout} navbarToolbar={navbarToolbar} setNavbarToolbar={setNavbarToolbar} />
+        <NavbarContext.Provider
+          value={{
+            navbarToolbar: navbarToolbar,
+            setNavbarToolbar: setNavbarToolbar,
+          }}
+        >
+          <div key={`layout-${layout}`} className="h-full w-full flex flex-col bg-background text-foreground">
+            <DesignEditor />
+          </div>
+        </NavbarContext.Provider>
       </DesignScopeProvider>
     </KitScopeProvider>
   );

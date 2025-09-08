@@ -1,11 +1,11 @@
 import { useDraggable } from "@dnd-kit/core";
 import { FC, useState } from "react";
 
-import { Design, DesignId, Type, TypeId } from "@semio/js";
 import { Avatar, AvatarFallback } from "@semio/js/components/ui/Avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/components/ui/HoverCard";
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
 import { Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
+import { Design, DesignId, Type, TypeId } from "../../../semio";
 import { useDesignId, useKit } from "../../../store";
 import { ResizablePanelProps } from "./DesignEditor";
 

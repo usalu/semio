@@ -22,9 +22,9 @@
 
 import { GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, OrthographicCamera, Select, TransformControls, useGLTF } from "@react-three/drei";
 import { Canvas, ThreeEvent } from "@react-three/fiber";
-import { applyDesignDiff, DiffStatus, flattenDesign, getPieceRepresentationUrls, Piece, Plane, planeToMatrix, toSemioRotation, updateDesignInKit } from "@semio/js";
 import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import { applyDesignDiff, DiffStatus, flattenDesign, getPieceRepresentationUrls, Piece, planeToMatrix, toSemioRotation, updateDesignInKit } from "../../../semio";
 import { DesignEditorFullscreenPanel, DesignEditorPresenceOther, PieceScopeProvider, useDesign, useDesignEditorCommands, useDiff, useFileUrls, useFullscreen, useKit, useOthers, useSelection } from "../../../store";
 
 const getComputedColor = (variable: string): string => {
@@ -46,7 +46,7 @@ const PresenceThree: FC<DesignEditorPresenceOther> = React.memo(({ name, cursor,
 });
 
 interface PlaneThreeProps {
-  plane: Plane;
+  plane: THREE.Plane;
 }
 
 const PlaneThree: FC<PlaneThreeProps> = ({ plane }) => {
@@ -66,7 +66,7 @@ const PlaneThree: FC<PlaneThreeProps> = ({ plane }) => {
 
 interface ModelPieceProps {
   piece: Piece;
-  plane: Plane;
+  plane: THREE.Plane;
   fileUrl: string;
   selected?: boolean;
   updating?: boolean;

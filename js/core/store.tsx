@@ -3003,18 +3003,6 @@ const usePortScope = () => useContext(PortypeScopeContext);
 const useDesignEditorScope = () => useContext(DesignEditorScopeContext);
 
 // #endregion Scoping
-
-function useSketchpadStore(id?: string): SketchpadStore {
-  const scope = useSketchpadScope();
-  const storeId = scope?.id ?? id;
-  if (!storeId) throw new Error("useSketchpad must be called within a SketchpadScopeProvider or be directly provided with an id");
-  if (!stores.has(storeId)) throw new Error(`Sketchpad store was not found for id ${storeId}`);
-  const store = useMemo(() => stores.get(storeId)!, [storeId]);
-  const getSnapshot = useMemo(() => () => store.snapshot(), [store]);
-  const state = useSyncExternalStore(store.onChanged, getSnapshot, getSnapshot);
-  return store;
-}
-
 export function useSketchpad(): SketchpadStore;
 export function useSketchpad<T>(selector: (store: SketchpadStore) => T, id?: string): T;
 export function useSketchpad<T>(selector?: (store: SketchpadStore) => T, id?: string): T | SketchpadStore {
@@ -3290,11 +3278,14 @@ export function useDesigns(): DesignId[] {
 }
 
 export function useSketchpadCommands() {
-  const designEditor = useDesignEditor();
+  const sketchpad = useSketchpad();
   return {
-    setMode: (mode: Mode) => designEditor.execute("semio.designEditor.setMode", mode),
-    setTheme: (theme: Theme) => designEditor.execute("semio.designEditor.setTheme", theme),
-    setLayout: (layout: Layout) => designEditor.execute("semio.designEditor.setLayout", layout),
+    setMode: (mode: Mode) => sketchpad.execute("semio.sketchpad.setMode", mode),
+    setTheme: (theme: Theme) => sketchpad.execute("semio.sketchpad.setTheme", theme),
+    setLayout: (layout: Layout) => sketchpad.execute("semio.sketchpad.setLayout", layout),
+    createKit: (kit: Kit) => sketchpad.execute("semio.sketchpad.createKit", kit),
+    createDesignEditor: (designEditorId: DesignEditorId) => sketchpad.execute("semio.sketchpad.createDesignEditor", designEditorId),
+    setActiveDesignEditor: (designEditorId: DesignEditorId) => sketchpad.execute("semio.sketchpad.setActiveDesignEditor", designEditorId),
   };
 }
 
@@ -3303,35 +3294,18 @@ export function useKitCommands() {
   return {
     importKit: (url: string) => kitStore.execute("semio.kit.import", url),
     exportKit: () => kitStore.execute("semio.kit.export"),
+    createDesign: (design: Design) => kitStore.execute("semio.kit.createDesign", design),
   };
 }
 
 export function useDesignEditorCommands() {
   const designEditor = useDesignEditor();
   return {
-    // Transaction commands
     startTransaction: () => designEditor.execute("semio.designEditor.startTransaction"),
     finalizeTransaction: () => designEditor.execute("semio.designEditor.finalizeTransaction"),
     abortTransaction: () => designEditor.execute("semio.designEditor.abortTransaction"),
-
-    // History commands
     undo: () => designEditor.execute("semio.designEditor.undo"),
     redo: () => designEditor.execute("semio.designEditor.redo"),
-
-    // Design editing commands
-    setDesign: (design: Design) => designEditor.execute("semio.designEditor.setDesign", design),
-    setPiece: (piece: Piece) => designEditor.execute("semio.designEditor.setPiece", piece),
-    setPieces: (pieces: Piece[]) => designEditor.execute("semio.designEditor.setPieces", pieces),
-    setConnection: (connection: Connection) => designEditor.execute("semio.designEditor.setConnection", connection),
-    setConnections: (connections: Connection[]) => designEditor.execute("semio.designEditor.setConnections", connections),
-    addPiece: (piece: Piece) => designEditor.execute("semio.designEditor.addPiece", piece),
-    addPieces: (pieces: Piece[]) => designEditor.execute("semio.designEditor.addPieces", pieces),
-    removePiece: (pieceId: PieceId) => designEditor.execute("semio.designEditor.removePiece", pieceId),
-    removePieces: (pieceIds: PieceId[]) => designEditor.execute("semio.designEditor.removePieces", pieceIds),
-    removeConnection: (connectionId: ConnectionId) => designEditor.execute("semio.designEditor.removeConnection", connectionId),
-    removeConnections: (connectionIds: ConnectionId[]) => designEditor.execute("semio.designEditor.removeConnections", connectionIds),
-
-    // Selection commands
     selectAll: () => designEditor.execute("semio.designEditor.selectAll"),
     deselectAll: () => designEditor.execute("semio.designEditor.deselectAll"),
     selectPiece: (pieceId: PieceId) => designEditor.execute("semio.designEditor.selectPiece", pieceId),
@@ -3340,17 +3314,10 @@ export function useDesignEditorCommands() {
     removePieceFromSelection: (pieceId: PieceId) => designEditor.execute("semio.designEditor.removePieceFromSelection", pieceId),
     selectPiecePort: (pieceId: PieceId, portId: PortId) => designEditor.execute("semio.designEditor.selectPiecePort", pieceId, portId),
     deselectPiecePort: () => designEditor.execute("semio.designEditor.deselectPiecePort"),
-
-    // Connection commands
-    addConnection: (connection: Connection) => designEditor.execute("semio.designEditor.addConnection", connection),
     deleteSelected: () => designEditor.execute("semio.designEditor.deleteSelected"),
-
-    // UI state commands
     toggleDiagramFullscreen: () => designEditor.execute("semio.designEditor.toggleDiagramFullscreen"),
     toggleModelFullscreen: () => designEditor.execute("semio.designEditor.toggleModelFullscreen"),
-
-    // Complex operations
-    executeCommand: (command: string, ...args: any[]) => designEditor.execute(command, ...args),
+    execute: (command: string, ...args: any[]) => designEditor.execute(command, ...args),
   };
 }
 // Design editor state hooks

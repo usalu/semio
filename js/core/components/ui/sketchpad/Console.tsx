@@ -24,7 +24,7 @@ import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import React, { FC, useEffect, useRef, useState } from "react";
 
-import { Design, DesignId, Kit } from "@semio/js";
+import { Design } from "../../../semio";
 import { DesignEditorSelection, useDesignId, useKit, useSelection } from "../../../store";
 
 export interface CommandParameter {

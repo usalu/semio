@@ -19,9 +19,10 @@
 
 // #endregion
 
-import { DesignId, Layout, Theme, useSketchpadCommands, useDesignId, useDesigns, useLayout, useTheme } from "@semio/js";
-import { AppWindow, Fingerprint, Home, Minus, Moon, Share2, Square, Sun, X } from "lucide-react";
+import { AppWindow, Fingerprint, Home, Layout, Minus, Moon, Share2, Square, Sun, X } from "lucide-react";
 import { FC, ReactNode } from "react";
+import { DesignId } from "../../semio";
+import { Theme, useDesignId, useDesigns, useLayout, useSketchpadCommands, useTheme } from "../../store";
 import { Avatar, AvatarFallback, AvatarImage } from "./Avatar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "./Breadcrumb";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./Select";

@@ -24,8 +24,8 @@ import { FC, useState } from "react";
 import { createPortal } from "react-dom";
 import { useHotkeys } from "react-hotkeys-hook";
 
-import { DesignId, TypeId } from "@semio/js";
 import { ReactFlowProvider } from "@xyflow/react";
+import { DesignId, TypeId } from "../../../semio";
 import { DesignScopeProvider, useDesign, useDesignEditorCommands, useDesignId, useFullscreen, useKit } from "../../../store";
 import Navbar from "../Navbar";
 import Chat from "./Chat";
