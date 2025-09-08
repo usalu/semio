@@ -72,7 +72,7 @@ const PlaneThree: FC<PlaneThreeProps> = ({ plane }) => {
 
 interface ModelPieceProps {
   piece: Piece;
-  plane: THREE.Plane;
+  plane: Plane;
   fileUrl: string;
   selected?: boolean;
   updating?: boolean;
@@ -226,7 +226,11 @@ const ModelDesign: FC = () => {
 
   useEffect(() => {
     flatDesign.pieces?.forEach((p: Piece) => {
-      const type = types.find((t) => t.name === p.type.name && (t.variant || "") === (p.type.variant || ""));
+      if (!p.type) {
+        console.warn(`No type defined for piece ${p.id_}`);
+        return;
+      }
+      const type = types.find((t) => t.name === p.type?.name && (t.variant || "") === (p.type?.variant || ""));
       if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`);
     });
   }, [flatDesign.pieces, types]);
@@ -249,7 +253,7 @@ const ModelDesign: FC = () => {
   const onChange = useCallback(
     (selected: THREE.Object3D[]) => {
       // const newSelectedPieceIds = selected.map((item) => item.parent?.userData.pieceId).filter(Boolean);
-      // if (newSelectedPieceIds.length !== selection.selectedPieceIds.length || newSelectedPieceIds.some((id, index) => id !== selection.selectedPieceIds[index])) {
+      // if (newSelectedPieceIds.length !== selection.pieces?.length || newSelectedPieceIds.some((id, index) => id !== selection.pieces?.[index]?.id_)) {
       //   selectPieces(newSelectedPieceIds.map((id) => ({ id_: id })));
       // }
     },
@@ -280,7 +284,7 @@ const ModelDesign: FC = () => {
             piece={piece}
             plane={piecePlanes[index!]}
             fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_)!)!}
-            selected={selection.pieceIds.some((id) => id.id_ === piece.id_)}
+            selected={selection.pieces?.some((id) => id.id_ === piece.id_) ?? false}
             diffStatus={pieceDiffStatuses[index]}
             onSelect={onSelect}
             onPieceUpdate={onPieceUpdate}

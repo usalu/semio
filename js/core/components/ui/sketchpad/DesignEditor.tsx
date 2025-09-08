@@ -126,7 +126,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
   if (fullscreenPanel && fullscreenPanel !== "none") {
     return (
       <div className="h-screen w-screen bg-background">
-        {fullscreenPanel === "diagram" && <Diagram visible={true} width={800} />}
+        {fullscreenPanel === "diagram" && <Diagram />}
         {fullscreenPanel === "model" && <Model />}
       </div>
     );
@@ -163,23 +163,37 @@ const DesignEditor: FC<DesignEditorProps> = () => {
           }
         />
         <div className="flex-1 flex overflow-hidden relative">
+          {visiblePanels.workbench && (
+            <Workbench visible={visiblePanels.workbench} onWidthChange={setWorkbenchWidth} width={workbenchWidth} />
+          )}
           <ReactFlowProvider>
             <div className="flex-1 flex flex-col">
               <div className="flex-1 flex">
                 <div className="flex-1 relative">
-                  <Diagram visible={true} width={400} />
+                  <Diagram />
                 </div>
                 <div className="flex-1 relative">
                   <Model />
                 </div>
               </div>
+              {visiblePanels.console && (
+                <div className="h-48 border-t border-border">
+                  <Console />
+                </div>
+              )}
             </div>
           </ReactFlowProvider>
+          {rightPanelVisible && (
+            <div className="flex">
+              {visiblePanels.details && (
+                <Details visible={visiblePanels.details} onWidthChange={setDetailsWidth} width={detailsWidth} />
+              )}
+              {visiblePanels.chat && (
+                <Chat visible={visiblePanels.chat} onWidthChange={setChatWidth} width={chatWidth} />
+              )}
+            </div>
+          )}
         </div>
-        <Workbench visible={visiblePanels.workbench} onWidthChange={setWorkbenchWidth} width={workbenchWidth} />
-        <Details visible={visiblePanels.details} onWidthChange={setDetailsWidth} width={detailsWidth} />
-        <Console />
-        <Chat visible={visiblePanels.chat} onWidthChange={setChatWidth} width={chatWidth} />
         {createPortal(
           <DragOverlay>
             {activeDraggedTypeId && <TypeAvatar typeId={activeDraggedTypeId} />}

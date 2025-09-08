@@ -32,7 +32,7 @@ import {
   findConnectionInDesign,
   findDesignInKit,
   findPortInType,
-  findQualityValue,
+  findAttributeValue,
   findTypeInKit,
   flattenDesign,
   getClusterableGroups,
@@ -63,7 +63,7 @@ import {
   useDesignEditorOthers,
   useDesignEditorDesignDiff,
   useKit,
-  useTypes,
+  useDiffedKit,
 } from "../../../store";
 
 type ClusterMenuProps = {
@@ -82,9 +82,9 @@ const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, selection, onCluster 
     if (!design) return [];
     return getClusterableGroups(
       design,
-      selection.selectedPieceIds.map((p: any) => p.id_),
+      selection.pieces.map((p: any) => p.id_),
     );
-  }, [design, selection.selectedPieceIds]);
+  }, [design, selection.pieces]);
 
   const getBoundingBoxForGroup = useCallback(
     (groupPieceIds: string[]) => {
@@ -168,13 +168,13 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, selection, onExpand }) 
     return nodes.filter((node) => {
       if (node.type !== "design") return false;
       const pieceId = getPieceIdFromNode(node);
-      if (!selection.selectedPieceIds.some((p: any) => p.id_ === pieceId)) return false;
-      const designName = (node.data.piece as Piece).type.variant;
+      if (!selection.pieces?.some((p: any) => p.id_ === pieceId)) return false;
+      const designName = (node.data.piece as Piece).type?.variant;
       if (!designName) return false;
       if (!kit?.designs?.find((d) => d.name === designName)) return false;
       return true;
     });
-  }, [nodes, selection.selectedPieceIds, kit]);
+  }, [nodes, selection.pieces, kit]);
 
   const getBoundingBoxForNode = useCallback((node: DiagramNode) => {
     const x = node.position.x;
@@ -199,7 +199,7 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, selection, onExpand }) 
     <ViewportPortal>
       {expandableDesignNodes.map((node) => {
         const boundingBox = getBoundingBoxForNode(node);
-        const designName = (node.data.piece as Piece).type.variant!;
+        const designName = (node.data.piece as Piece).type?.variant!
 
         return (
           <div
@@ -297,7 +297,7 @@ const getPortPositionStyle = (port: Port): { x: number; y: number } => {
 
 const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false, onPortClick }) => {
   const { x, y } = getPortPositionStyle(port);
-  const portColor = findQualityValue(port, "semio.color", "var(--color-foreground)")!;
+  const portColor = findAttributeValue(port, "semio.color", "var(--color-foreground)")!;
 
   const onClick = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -325,7 +325,7 @@ const PortHandle: React.FC<PortHandleProps> = ({ port, pieceId, selected = false
 const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, data, selected }) => {
   const {
     piece,
-    piece: { id_, qualities },
+    piece: { id_, attributes },
     type: { ports },
   } = data as PieceNodeProps & { diffStatus: DiffStatus };
 
@@ -333,28 +333,28 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
   const selection = useDesignEditorSelection();
 
   const onPortClick = (port: Port) => {
-    const currentSelectedPort = selection.selectedPiecePortId;
+    const currentSelectedPort = selection.port;
 
-    if (currentSelectedPort && (currentSelectedPort.pieceId.id_ !== piece.id_ || currentSelectedPort.portId.id_ !== port.id_)) {
+    if (currentSelectedPort && (currentSelectedPort.piece.id_ !== piece.id_ || currentSelectedPort.port.id_ !== port.id_)) {
       const connection: Connection = {
         connecting: {
-          piece: { id_: currentSelectedPort.pieceId.id_ },
-          port: { id_: currentSelectedPort.portId.id_ },
+          piece: { id_: currentSelectedPort.piece.id_ },
+          port: { id_: currentSelectedPort.port.id_ },
         },
         connected: { piece: { id_: piece.id_ }, port: { id_: port.id_ } },
       };
       addConnection(connection);
       deselectPiecePort();
-    } else if (currentSelectedPort && currentSelectedPort.pieceId.id_ === piece.id_ && currentSelectedPort.portId.id_ === port.id_) {
+    } else if (currentSelectedPort && currentSelectedPort.piece.id_ === piece.id_ && currentSelectedPort.port.id_ === port.id_) {
       deselectPiecePort();
-    } else if (port.id_) selectPiecePort(piece.id_, port.id_);
+    } else if (port.id_) selectPiecePort({ id_: piece.id_ }, { id_: port.id_ });
   };
 
   let fillClass = "";
   let strokeClass = "stroke-dark stroke-2";
   let opacity = 1;
 
-  const diff = (qualities?.find((q) => q.name === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
+  const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
 
   if (diff === DiffStatus.Added) {
     fillClass = selected ? "fill-[color-mix(in_srgb,theme(colors.success)_50%,theme(colors.primary)_50%)]" : "fill-success";
@@ -380,7 +380,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
           </text>
         </svg>
         {ports?.map((port: Port, portIndex: number) => (
-          <PortHandle key={`${id}-port-${portIndex}-${port.id_}`} port={port} pieceId={id_} selected={selection.selectedPiecePortId?.pieceId.id_ === id_ && selection.selectedPiecePortId?.portId.id_ === port.id_} onPortClick={onPortClick} />
+          <PortHandle key={`${id}-port-${portIndex}-${port.id_}`} port={port} pieceId={id_} selected={selection.port?.piece.id_ === id_ && selection.port?.port.id_ === port.id_} onPortClick={onPortClick} />
         ))}
       </div>
     </PieceScopeProvider>
@@ -390,7 +390,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
 const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, data, selected }) => {
   const {
     piece,
-    piece: { id_, qualities },
+    piece: { id_, attributes },
     externalConnections,
   } = data as DesignNodeProps & { diffStatus: DiffStatus };
 
@@ -398,8 +398,8 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
   const selection = useDesignEditorSelection();
 
   const ports: Port[] = externalConnections.map((connection, portIndex) => {
-    const connectedIsDesignPiece = connection.connected.piece.id_ === piece.id_ || connection.connected.designId === piece.type.variant;
-    const connectingIsDesignPiece = connection.connecting.piece.id_ === piece.id_ || connection.connecting.designId === piece.type.variant;
+    const connectedIsDesignPiece = connection.connected.piece.id_ === piece.id_ || connection.connected.designPiece?.id_ === piece.id_;
+    const connectingIsDesignPiece = connection.connecting.piece.id_ === piece.id_ || connection.connecting.designPiece?.id_ === piece.id_;
 
     const designSide = connectedIsDesignPiece ? connection.connected : connection.connecting;
     const originalSide = connectedIsDesignPiece ? connection.connecting : connection.connected;
@@ -426,21 +426,21 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
       t: t,
       point: { x: portX, y: portY, z: portZ },
       direction: { x: directionX, y: directionY, z: directionZ },
-      qualities: [
+      attributes: [
         {
-          name: "semio.originalPieceId",
+          key: "semio.originalPieceId",
           value: designSide.piece.id_ || "",
         },
         {
-          name: "semio.originalPortId",
+          key: "semio.originalPortId",
           value: designSide.port.id_ || "",
         },
         {
-          name: "semio.externalPieceId",
+          key: "semio.externalPieceId",
           value: originalSide.piece.id_ || "",
         },
         {
-          name: "semio.externalPortId",
+          key: "semio.externalPortId",
           value: originalSide.port.id_ || "",
         },
       ],
@@ -448,28 +448,28 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
   });
 
   const onPortClick = (port: Port) => {
-    const currentSelectedPort = selection.selectedPiecePortId;
+    const currentSelectedPort = selection.port;
 
-    if (currentSelectedPort && (currentSelectedPort.pieceId.id_ !== piece.id_ || currentSelectedPort.portId.id_ !== port.id_)) {
+    if (currentSelectedPort && (currentSelectedPort.piece.id_ !== piece.id_ || currentSelectedPort.port.id_ !== port.id_)) {
       const connection: Connection = {
         connecting: {
-          piece: { id_: currentSelectedPort.pieceId.id_ },
-          port: { id_: currentSelectedPort.portId.id_ },
+          piece: { id_: currentSelectedPort.piece.id_ },
+          port: { id_: currentSelectedPort.port.id_ },
         },
         connected: { piece: { id_: piece.id_ }, port: { id_: port.id_ } },
       };
       addConnection(connection);
       deselectPiecePort();
-    } else if (currentSelectedPort && currentSelectedPort.pieceId.id_ === piece.id_ && currentSelectedPort.portId.id_ === port.id_) {
+    } else if (currentSelectedPort && currentSelectedPort.piece.id_ === piece.id_ && currentSelectedPort.port.id_ === port.id_) {
       deselectPiecePort();
-    } else if (port.id_) selectPiecePort(piece.id_, port.id_);
+    } else if (port.id_) selectPiecePort({ id_: piece.id_ }, { id_: port.id_ });
   };
 
   let fillClass = "";
   let strokeClass = "stroke-dark stroke-2";
   let opacity = 1;
 
-  const diff = (qualities?.find((q) => q.name === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
+  const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
 
   if (diff === DiffStatus.Added) {
     fillClass = selected ? "fill-[color-mix(in_srgb,theme(colors.success)_50%,theme(colors.primary)_50%)]" : "fill-success";
@@ -494,7 +494,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
         </text>
       </svg>
       {ports?.map((port: Port, portIndex: number) => (
-        <PortHandle key={`${id}-port-${portIndex}-${port.id_}`} port={port} pieceId={id_} selected={selection.selectedPiecePortId?.pieceId.id_ === id_ && selection.selectedPiecePortId?.portId.id_ === port.id_} onPortClick={onPortClick} />
+        <PortHandle key={`${id}-port-${portIndex}-${port.id_}`} port={port} pieceId={id_} selected={selection.port?.piece.id_ === id_ && selection.port?.port.id_ === port.id_} onPortClick={onPortClick} />
       ))}
     </div>
   );
@@ -504,7 +504,7 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({ id, sour
   const HANDLE_HEIGHT = 5;
   const path = `M ${sourceX} ${sourceY + HANDLE_HEIGHT / 2} L ${targetX} ${targetY + HANDLE_HEIGHT / 2}`;
 
-  const diff = (data?.connection?.qualities?.find((q) => q.name === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
+  const diff = (data?.connection?.attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
   const isParentConnection = data?.isParentConnection ?? false;
 
   let stroke = "var(--color-dark)";
@@ -633,13 +633,13 @@ const connectionToEdge = (connection: Connection, selected: boolean, isParentCon
   let sourcePortId = connection.connecting.port.id_ ?? "undefined";
   let targetPortId = connection.connected.port.id_ ?? "undefined";
 
-  if (connection.connecting.designId && allConnections) {
-    const designPieceId = `design-${connection.connecting.designId}`;
+  if (connection.connecting.designPiece && allConnections) {
+    const designPieceId = connection.connecting.designPiece.id_;
     sourcePieceId = designPieceId;
 
     const externalConnections = allConnections.filter((conn) => {
-      const connectedToDesign = conn.connected.designId === connection.connecting.designId;
-      const connectingToDesign = conn.connecting.designId === connection.connecting.designId;
+      const connectedToDesign = conn.connected.designPiece?.id_ === connection.connecting.designPiece?.id_;
+      const connectingToDesign = conn.connecting.designPiece?.id_ === connection.connecting.designPiece?.id_;
       return connectedToDesign || connectingToDesign;
     });
 
@@ -653,13 +653,13 @@ const connectionToEdge = (connection: Connection, selected: boolean, isParentCon
     sourcePortId = portIndex >= 0 ? `port-${portIndex}` : "port-0";
   }
 
-  if (connection.connected.designId && allConnections) {
-    const designPieceId = `design-${connection.connected.designId}`;
+  if (connection.connected.designPiece && allConnections) {
+    const designPieceId = connection.connected.designPiece.id_;
     targetPieceId = designPieceId;
 
     const externalConnections = allConnections.filter((conn) => {
-      const connectedToDesign = conn.connected.designId === connection.connected.designId;
-      const connectingToDesign = conn.connecting.designId === connection.connected.designId;
+      const connectedToDesign = conn.connected.designPiece?.id_ === connection.connected.designPiece?.id_;
+      const connectingToDesign = conn.connecting.designPiece?.id_ === connection.connected.designPiece?.id_;
       return connectedToDesign || connectingToDesign;
     });
 
@@ -694,7 +694,8 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: any) => 
   const design = findDesignInKit(kit, designId);
   if (!design) return null;
 
-  const flattenedDesign = flattenDesign(kit, designId);
+  const flattenDiff = flattenDesign(kit, designId);
+  const flattenedDesign = applyDesignDiff(design, flattenDiff, true);
   const centerMap = new Map<string, DiagramPoint>();
   flattenedDesign.pieces?.forEach((piece) => {
     if (piece.id_ && piece.center) {
@@ -706,12 +707,17 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: any) => 
 
   const pieceNodes =
     design.pieces?.map((piece, i) => {
-      const isSelected = selection?.selectedPieceIds.some((p: any) => p.id_ === piece.id_) ?? false;
+      const isSelected = selection?.pieces?.some((p: any) => p.id_ === piece.id_) ?? false;
       const center = centerMap.get(piece.id_) || piece.center || { x: 0, y: 0 };
 
+      if (!piece.type) {
+        console.warn(`No type defined for piece ${piece.id_}`);
+        return null;
+      }
+      
       const type = findTypeInKit(kit, piece.type);
       if (!type) {
-        console.warn(`Type not found for piece ${piece.id_}: ${piece.type.name}/${piece.type.variant}`);
+        console.warn(`Type not found for piece ${piece.id_}: ${piece.type.name}/${piece.type.variant || 'no-variant'}`);
         const fallbackType: Type = {
           name: piece.type.name,
           variant: piece.type.variant,
@@ -723,21 +729,21 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: any) => 
         return pieceToNode(piece, fallbackType, center, isSelected, i);
       }
       return pieceToNode(piece, type, center, isSelected, i);
-    }) ?? [];
+    }).filter((node): node is PieceNode => node !== null) ?? [];
 
   const includedDesigns = getIncludedDesigns(design);
 
   const designNodes = includedDesigns.map((includedDesign, i) => {
-    const isSelected = selection?.selectedPieceIds.some((p: any) => p.id_ === includedDesign.id) ?? false;
+    const isSelected = selection?.pieces.some((p: any) => p.id_ === includedDesign.id) ?? false;
 
     if (includedDesign.type === "connected") {
       let calculatedCenter = { x: 0, y: 0 };
       if (includedDesign.externalConnections && includedDesign.externalConnections.length > 0) {
         const connectedPieceIds = new Set<string>();
         includedDesign.externalConnections.forEach((conn) => {
-          if (conn.connected.designId === includedDesign.designId.name) {
+          if (conn.connected.designPiece?.id_ === includedDesign.designId.name) {
             connectedPieceIds.add(conn.connecting.piece.id_);
-          } else if (conn.connecting.designId === includedDesign.designId.name) {
+          } else if (conn.connecting.designPiece?.id_ === includedDesign.designId.name) {
             connectedPieceIds.add(conn.connected.piece.id_);
           }
         });
@@ -807,9 +813,9 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: any) => 
   });
 
   const parentConnectionId =
-    selection?.selectedPieceIds.length === 1 && selection.selectedConnections.length === 0
+    selection?.pieces?.length === 1 && (selection?.connections?.length === 0 || !selection?.connections)
       ? (() => {
-          const selectedPieceId = selection.selectedPieceIds[0].id_;
+          const selectedPieceId = selection.pieces[0].id_;
           const pieceMetadata = metadata.get(selectedPieceId);
           if (pieceMetadata?.parentPieceId) {
             return `${pieceMetadata.parentPieceId} -- ${selectedPieceId}`;
@@ -820,7 +826,7 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: any) => 
 
   const connectionEdges =
     design.connections?.map((connection, connectionIndex) => {
-      const isSelected = selection?.selectedConnections.some((c: any) => c.connecting.piece.id_ === connection.connecting.piece.id_ && c.connected.piece.id_ === connection.connected.piece.id_) ?? false;
+      const isSelected = selection?.connections.some((c: any) => c.connecting.piece.id_ === connection.connecting.piece.id_ && c.connected.piece.id_ === connection.connected.piece.id_) ?? false;
 
       const connectionId = `${connection.connecting.piece.id_} -- ${connection.connected.piece.id_}`;
       const isParentConnection = parentConnectionId === connectionId || parentConnectionId === `${connection.connected.piece.id_} -- ${connection.connecting.piece.id_}`;
@@ -862,10 +868,16 @@ const Diagram: FC = () => {
 
   const designId = { name: design.name, variant: design.variant, view: design.view };
 
-  const types = useTypes();
-  const typesWithColoredPorts = useMemo(() => colorPortsForTypes(types || []), [types]);
-  const kitWithTypes = useMemo(() => ({ ...kit, types: typesWithColoredPorts }), [kit, typesWithColoredPorts]);
-  const unified = useMemo(() => updateDesignInKit(kitWithTypes, design), [kitWithTypes, design]);
+  const diffedKit = useDiffedKit();
+  const typesWithColoredPorts = useMemo(() => {
+    if (!diffedKit.types) return [];
+    const colorDiff = colorPortsForTypes(diffedKit.types);
+    return colorDiff.updated ? diffedKit.types.map(type => {
+      const update = colorDiff.updated?.find(u => u.id.name === type.name && u.id.variant === type.variant);
+      return update ? { ...type, ports: update.diff.ports } : type;
+    }) : diffedKit.types;
+  }, [diffedKit.types]);
+  const unified = useMemo(() => ({ ...diffedKit, types: typesWithColoredPorts }), [diffedKit, typesWithColoredPorts]);
 
   if (!design) return null;
   const { nodes, edges } = designToNodesAndEdges(unified, designId, selection) ?? {
@@ -931,7 +943,7 @@ const Diagram: FC = () => {
 
   const onNodeDragStart = useCallback(
     (event: any, node: Node) => {
-      const currentSelectedIds = selection?.selectedPieceIds ?? [];
+      const currentSelectedIds = selection?.pieces ?? [];
       const pieceId = getPieceIdFromNode(node as DiagramNode);
       const isNodeSelected = currentSelectedIds.some((p: any) => p.id_ === pieceId);
       const ctrlKey = event.ctrlKey || event.metaKey;
@@ -961,7 +973,7 @@ const Diagram: FC = () => {
       const altPressed = event.altKey;
 
       const currentHelperLines: HelperLine[] = [];
-      const nonSelectedNodes = nodes.filter((n) => !(selection?.selectedPieceIds ?? []).some((p: any) => p.id_ === getPieceIdFromNode(n)));
+      const nonSelectedNodes = nodes.filter((n) => !(selection?.pieces ?? []).some((p: any) => p.id_ === getPieceIdFromNode(n)));
       const draggedCenterX = node.position.x + ICON_WIDTH / 2;
       const draggedCenterY = node.position.y + ICON_WIDTH / 2;
 
@@ -969,7 +981,7 @@ const Diagram: FC = () => {
       let updatedPieces: PieceDiff[] = [];
       let updatedConnections: ConnectionDiff[] = [];
 
-      for (const selectedNode of nodes.filter((n) => selection?.selectedPieceIds.some((p: any) => p.id_ === getPieceIdFromNode(n)))) {
+      for (const selectedNode of nodes.filter((n) => selection?.pieces?.some((p: any) => p.id_ === getPieceIdFromNode(n)))) {
         if (selectedNode.type !== "piece") continue;
         const piece = (selectedNode as PieceNode).data.piece;
         const type = (selectedNode as PieceNode).data.type;
@@ -1390,7 +1402,7 @@ const Diagram: FC = () => {
         }
 
         if (!altPressed) {
-          for (const otherNode of nodes.filter((n) => !(selection.selectedPieceIds ?? []).some((p: any) => p.id_ === getPieceIdFromNode(n)))) {
+          for (const otherNode of nodes.filter((n) => !(selection.pieces ?? []).some((p: any) => p.id_ === getPieceIdFromNode(n)))) {
             if (otherNode.type !== "piece") continue;
             const existingConnection = design.connections?.find((c) =>
               isSameConnection(c, {
