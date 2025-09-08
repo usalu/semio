@@ -1474,169 +1474,6 @@ public class Expression
 
 #region Modeling
 
-public abstract class MetaAttribute : System.Attribute
-{
-    public MetaAttribute(string emoji, string code, string abbreviation, string description)
-    {
-        Emoji = emoji;
-        Code = code;
-        Abbreviation = abbreviation;
-        Description = description;
-    }
-
-    public string Emoji { get; set; }
-    public string Code { get; set; }
-    public string Abbreviation { get; set; }
-    public string Description { get; set; }
-}
-
-[AttributeUsage(AttributeTargets.Class)]
-public class ModelAttribute : MetaAttribute
-{
-    public ModelAttribute(string emoji, string code, string abbreviation, string description)
-        : base(emoji, code,
-            abbreviation, description)
-    { }
-}
-
-[AttributeUsage(AttributeTargets.Enum)]
-public class EnumAttribute : MetaAttribute
-{
-    public EnumAttribute(string emoji, string code, string abbreviation, string description)
-        : base(emoji, code, abbreviation, description)
-    { }
-}
-
-public enum PropImportance
-{
-    OPTIONAL,
-    REQUIRED,
-    ID
-}
-
-[AttributeUsage(AttributeTargets.Property)]
-public abstract class PropAttribute : MetaAttribute
-{
-    public PropAttribute(string emoji, string code, string abbreviation, string description, PropImportance importance, bool isDefaultValid, bool skipValidation) : base(emoji, code, abbreviation, description)
-        => (Importance, IsDefaultValid, SkipValidation) = (importance, isDefaultValid, skipValidation);
-    public PropImportance Importance { get; set; }
-    public bool IsDefaultValid { get; set; }
-    public bool SkipValidation { get; set; }
-}
-
-public abstract class TextAttribute : PropAttribute
-{
-    public TextAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance, bool isDefaultValid, bool skipValidation, int lengthLimit) : base(emoji, code,
-        abbreviation, description, importance, isDefaultValid, skipValidation)
-        => LengthLimit = lengthLimit;
-    public int LengthLimit { get; set; }
-}
-
-public class NameAttribute : TextAttribute
-{
-    public NameAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = false, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, Constants.NameLengthLimit)
-    { }
-}
-
-public class IdAttribute : TextAttribute
-{
-    public IdAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.ID, bool isDefaultValid = false, bool skipValidation = false) : base(
-        emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, Constants.IdLengthLimit)
-    { }
-}
-
-public class EmailAttribute : TextAttribute
-{
-    public EmailAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = false, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, Constants.IdLengthLimit)
-    { }
-}
-
-public class UrlAttribute : TextAttribute
-{
-    public UrlAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = false, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, Constants.UrlLengthLimit)
-    { }
-}
-
-public class ColorAttribute : TextAttribute
-{
-    public ColorAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, 7)
-    { }
-}
-
-public class DescriptionAttribute : TextAttribute
-{
-    public DescriptionAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, Constants.DescriptionLengthLimit)
-    { }
-}
-
-public class ValueAttribute : TextAttribute
-{
-    public ValueAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, Constants.ValueLengthLimit)
-    { }
-}
-
-public class ExpressionAttribute : TextAttribute
-{
-    public ExpressionAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = false, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation, Constants.ExpressionLengthLimit)
-    { }
-}
-
-public class FalseOrTrueAttribute : PropAttribute
-{
-    public FalseOrTrueAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation)
-    { }
-}
-
-public class IntPropAttribute : PropAttribute
-{
-    public IntPropAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation)
-    { }
-}
-
-public class NumberPropAttribute : PropAttribute
-{
-    public NumberPropAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation)
-    { }
-}
-
-public class AnglePropAttribute : NumberPropAttribute
-{
-    public AnglePropAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.OPTIONAL, bool isDefaultValid = true, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation)
-    { }
-}
-
-public class ModelPropAttribute : PropAttribute
-{
-    public ModelPropAttribute(string emoji, string code, string abbreviation, string description,
-        PropImportance importance = PropImportance.REQUIRED, bool isDefaultValid = true, bool skipValidation = false) :
-        base(emoji, code, abbreviation, description, importance, isDefaultValid, skipValidation)
-    { }
-}
-
 public abstract class Model<T> where T : Model<T>
 {
     public override string ToString()
@@ -1694,143 +1531,25 @@ public abstract class Model<T> where T : Model<T>
 
     public virtual (bool, List<string>) Validate()
     {
-        var result = new ModelValidator<T>().Validate((T)this);
-        return (result.IsValid, result.Errors.Select(e => e.ToString()).ToList());
-    }
-}
-
-public class ModelValidator<T> : AbstractValidator<T> where T : Model<T>
-{
-    public ModelValidator()
-    {
-        var modelTypeName = typeof(T).Name;
-        var properties = Meta.Property[modelTypeName];
-        for (var i = 0; i < properties.Length; i++)
-        {
-            var property = properties[i];
-            var isPropertyList = Meta.IsPropertyList[modelTypeName][i];
-            var isPropertyModel = Meta.IsPropertyModel[modelTypeName][i];
-            ValidateProperty(property, isPropertyList, isPropertyModel);
-        }
-    }
-
-    private void ValidateProperty(PropertyInfo property, bool isPropertyList, bool isPropertyModel)
-    {
-        var propAttribute = property.GetCustomAttribute<PropAttribute>();
-        if (propAttribute.SkipValidation) return;
-        if (isPropertyList)
-            RuleFor(model => property.GetValue(model))
-                .NotEmpty()
-                .WithMessage($"The {property.Name.ToLower()} must have at least one.")
-                .When(m => propAttribute.Importance != PropImportance.OPTIONAL);
-        if (property.PropertyType == typeof(float))
-        {
-            var numberAttribute = property.GetCustomAttribute<NumberPropAttribute>();
-            var isAngle = property.GetCustomAttribute<AnglePropAttribute>() != null;
-            if (isAngle)
-                RuleFor(model => property.GetValue(model) as float?)
-                    .GreaterThanOrEqualTo(0)
-                    .WithMessage($"The {property.Name.ToLower()} must be at least 0 degrees.")
-                    .LessThan(360)
-                    .WithMessage($"The {property.Name.ToLower()} must be less than 360 degrees.");
-        }
-        else if (property.PropertyType == typeof(string))
-        {
-            var textAttribute = property.GetCustomAttribute<TextAttribute>();
-            RuleFor(model => property.GetValue(model) as string)
-                .NotEmpty()
-                .When(m => !(textAttribute.Importance == PropImportance.OPTIONAL || textAttribute.IsDefaultValid))
-                .WithMessage($"The {property.Name.ToLower()} must not be empty.")
-                .MaximumLength(textAttribute.LengthLimit)
-                .WithMessage(model =>
-                {
-                    var value = property.GetValue(model) as string;
-                    var preview = value?.Length > 10 ? value.Substring(0, 10) + "..." : value;
-                    return
-                        $"The {property.Name.ToLower()} must be at most {textAttribute.LengthLimit} characters long. The provided text ({preview}) has {value?.Length} characters.";
-                });
-            // All non-description text
-            if (property.GetCustomAttribute<DescriptionAttribute>() == null)
-                RuleFor(model => property.GetValue(model) as string)
-                    .Matches(@"^\S.*$")
-                    .When(m => property.GetValue(m) != "")
-                    .WithMessage($"The {property.Name.ToLower()} must not start with a space.")
-                    .Matches(@"^.*\S$")
-                    .When(m => property.GetValue(m) != "")
-                    .WithMessage($"The {property.Name.ToLower()} must not end with a space.")
-                    .Matches(@"^[^\r\n]*$")
-                    .When(m => property.GetValue(m) != "")
-                    .WithMessage($"The {property.Name.ToLower()} must not contain newlines.");
-
-            if (property.GetCustomAttribute<NameAttribute>() != null)
-            { }
-            else if (property.GetCustomAttribute<IdAttribute>() != null)
-            { }
-            else if (property.GetCustomAttribute<EmailAttribute>() != null)
-            {
-                RuleFor(model => property.GetValue(model) as string)
-                    .EmailAddress().WithMessage($"The {property.Name.ToLower()} is not a valid email address.");
-            }
-            else if (property.GetCustomAttribute<UrlAttribute>() != null)
-            { }
-        }
-        else if (property.PropertyType == typeof(List<string>))
-        {
-            // TODO: Fix bug where multiple items fail for the same rule
-            // On ["","","toooLonnngg","alsoToooLong"], only the first notEmtpy and the firstMaxLength are shown.
-            var textAttribute = property.GetCustomAttribute<TextAttribute>();
-            RuleForEach(list => property.GetValue(list) as List<string>)
-                .NotEmpty()
-                .When(m => !textAttribute.IsDefaultValid)
-                .WithMessage(item =>
-                {
-                    var singularPropertyName = property.Name.ToLower().TrimEnd('s');
-                    return $"A {singularPropertyName} must not be empty.";
-                })
-                .MaximumLength(textAttribute.LengthLimit)
-                .WithMessage((list, item) =>
-                {
-                    var preview = item?.Length > 10 ? item.Substring(0, 10) + "..." : item;
-                    var singularPropertyName = property.Name.ToLower().TrimEnd('s');
-                    return
-                        $"A {singularPropertyName} must be at most {textAttribute.LengthLimit} characters long. The provided {singularPropertyName} ({preview}) has {item?.Length} characters.";
-                })
-                .OverridePropertyName(property.Name);
-        }
-        else if (isPropertyModel && !isPropertyList)
-        {
-            // TODO: Implement reflexive validation for model properties.
-            //var validatorType = typeof(ModelValidator<>).MakeGenericType(property.PropertyType);
-            //RuleFor(model => property.GetValue(model)).SetValidator((dynamic)Activator.CreateInstance(validatorType));
-        }
-        else if (isPropertyModel && isPropertyList)
-        {
-            // TODO: Implement reflexive validation for model properties.
-        }
+        return (true, new List<string>());
     }
 }
 
 #region Models
 
 
-[Model("🔐", "AI", "AtI", "The ID of the attribute.")]
 public class AttributeId : Model<AttributeId>
 {
-    [Name("🔑", "Ke?", "Key?", "The optional key of the attribute.")]
     public string Key { get; set; } = "";
 
     public static implicit operator AttributeId(Attribute attribute) => new() { Key = attribute.Key };
     public static implicit operator AttributeId(AttributeDiff diff) => new() { Key = diff.Key };
 }
 
-[Model("🔐", "AD", "ADf", "A diff for attributes.")]
 public class AttributeDiff : Model<AttributeDiff>
 {
-    [Name("🔑", "Ke?", "Key?", "The optional key of the attribute.")]
     public string Key { get; set; } = "";
-    [Description("🔢", "Vl?", "Val?", "The optional value of the attribute.")]
     public string Value { get; set; } = "";
-    [Description("📖", "Df?", "Def?", "The optional definition of the attribute.")]
     public string Definition { get; set; } = "";
 
     public static implicit operator AttributeDiff(AttributeId id) => new() { Key = id.Key };
@@ -1850,16 +1569,10 @@ public class AttributeDiff : Model<AttributeDiff>
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-attribute-"/>
 /// </summary>
-[Model("🏷️", "At", "Atr", "A attribute is a key value pair with an an optional definition.")]
 public class Attribute : Model<Attribute>
 {
-    [Name("🔑", "Ke", "Key", "The key of the attribute.", PropImportance.ID)]
     public string Key { get; set; } = "";
-
-    [Description("🔢", "Vl?", "Val?", "The optional value [ text | url ] of the attribute. No value is equivalent to true.")]
     public string Value { get; set; } = "";
-
-    [Description("📖", "Df?", "Def?", "The optional definition [ text | uri ] of the attribute.")]
     public string Definition { get; set; } = "";
 
     public static implicit operator Attribute(AttributeId id) => new() { Key = id.Key };
@@ -5259,120 +4972,5 @@ public static class Api
 
 #region Meta
 
-public static class Meta
-{
-    /// <summary>
-    ///     Name of the model : Type
-    /// </summary>
-    public static readonly ImmutableDictionary<string, System.Type> Type;
-
-    /// <summary>
-    ///     Name of the model : ModelAttribute
-    /// </summary>
-    public static readonly ImmutableDictionary<string, ModelAttribute> Model;
-
-    /// <summary>
-    ///     Name of the model : Index of the property : PropertyInfo
-    /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableArray<PropertyInfo>> Property;
-
-    /// <summary>
-    ///     Name of the model : Index of the property : PropAttribute
-    /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableArray<PropAttribute>> Prop;
-
-    /// <summary>
-    ///     Name of the model : Index of the property : IsList
-    /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyList;
-
-    /// <summary>
-    ///     Name of the model : Index of the property : Type
-    /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyItemType;
-
-    /// <summary>
-    ///     Name of the model : Index of the property : IsModel
-    /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyModel;
-
-    static Meta()
-    {
-        var type = new Dictionary<string, System.Type>();
-        var model = new Dictionary<string, ModelAttribute>();
-        var property = new Dictionary<string, List<PropertyInfo>>();
-        var prop = new Dictionary<string, List<PropAttribute>>();
-        var isPropertyList = new Dictionary<string, List<bool>>();
-        var propertyItemType = new Dictionary<string, List<System.Type>>();
-        var isPropertyModel = new Dictionary<string, List<bool>>();
-
-        var modelTypes = Assembly.GetExecutingAssembly()
-            .GetTypes()
-            .Where(t => t.GetCustomAttribute<ModelAttribute>() != null);
-        foreach (var mt in modelTypes)
-        {
-            type[mt.Name] = mt;
-            model[mt.Name] = mt.GetCustomAttribute<ModelAttribute>();
-            property[mt.Name] = new List<PropertyInfo>();
-            prop[mt.Name] = new List<PropAttribute>();
-            isPropertyList[mt.Name] = new List<bool>();
-            propertyItemType[mt.Name] = new List<System.Type>();
-            isPropertyModel[mt.Name] = new List<bool>();
-
-            // TODO: Add index to prop and add to list based on index not on source code order.
-            // GetProperties() returns parent last
-            var propertyParents = new List<PropertyInfo>();
-            var propParents = new List<PropAttribute>();
-            var isPropertyListParents = new List<bool>();
-            var propertyItemTypeParents = new List<System.Type>();
-            var isPropertyModelParents = new List<bool>();
-            foreach (var mtp in mt.GetProperties()
-                         .Where(mtp => mtp.GetCustomAttribute<PropAttribute>() != null))
-            {
-                var mtpProp = mtp.GetCustomAttribute<PropAttribute>();
-                var imtpl = mtp.PropertyType.IsGenericType &&
-                            mtp.PropertyType.GetGenericTypeDefinition() == typeof(List<>);
-                var mtpPropertyItemType = imtpl ? mtp.PropertyType.GetGenericArguments()[0] : mtp.PropertyType;
-                var mtpIsPropertyModel = mtp.GetCustomAttribute<ModelPropAttribute>() != null;
-
-                if (mtp.DeclaringType.FullName != mt.FullName)
-                {
-                    propertyParents.Add(mtp);
-                    propParents.Add(mtpProp);
-                    isPropertyListParents.Add(imtpl);
-                    propertyItemTypeParents.Add(mtpPropertyItemType);
-                    isPropertyModelParents.Add(mtpIsPropertyModel);
-                }
-                else
-                {
-                    property[mt.Name].Add(mtp);
-                    prop[mt.Name].Add(mtpProp);
-                    isPropertyList[mt.Name].Add(imtpl);
-                    propertyItemType[mt.Name].Add(mtpPropertyItemType);
-                    isPropertyModel[mt.Name].Add(mtpIsPropertyModel);
-                }
-            }
-
-            property[mt.Name].InsertRange(0, propertyParents);
-            prop[mt.Name].InsertRange(0, propParents);
-            isPropertyList[mt.Name].InsertRange(0, isPropertyListParents);
-            propertyItemType[mt.Name].InsertRange(0, propertyItemTypeParents);
-            isPropertyModel[mt.Name].InsertRange(0, isPropertyModelParents);
-        }
-
-        Type = type.ToImmutableDictionary();
-        Model = model.ToImmutableDictionary();
-        Property = property.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-        Prop = prop.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-        IsPropertyList = isPropertyList.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-        PropertyItemType = propertyItemType.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-        IsPropertyModel = isPropertyModel.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-    }
-}
 
 #endregion

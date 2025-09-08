@@ -267,13 +267,13 @@ export interface KitStore extends KitSnapshot, KitChildStores, KitFileUrls, KitC
 export interface KitStoreFull extends KitSnapshot, KitActions, KitSubscriptions, KitCommandsFull, KitChildStoresFull, KitFileUrls {}
 
 export interface DesignEditorId {
-  kitId: KitId;
-  designId: DesignId;
+  kit: KitId;
+  design: DesignId;
 }
 export interface DesignEditorSelection {
-  pieceIds?: PieceId[];
-  connectionIds?: ConnectionId[];
-  portId?: { pieceId: PieceId; designPieceId?: PieceId; portId: PortId };
+  pieces?: PieceId[];
+  connections?: ConnectionId[];
+  port?: { piece: PieceId; designPiece?: PieceId; port: PortId };
 }
 export enum DesignEditorFullscreenPanel {
   None = "none",
@@ -1723,14 +1723,18 @@ class YDesignEditorStore implements DesignEditorStoreFull {
   private cachedSnapshot?: DesignEditorStateFull;
   private lastSnapshotHash?: string;
 
-  constructor(parent: SketchpadStore, state: DesignEditorStateFull) {
+  constructor(parent: SketchpadStore, state?: DesignEditorState) {
     this.parent = parent;
-    this.yDesignEditorStore.set("fullscreenPanel", state.fullscreenPanel);
-    this.yDesignEditorStore.set("selectedPieceIds", new Y.Array<string>());
-    this.yDesignEditorStore.set("selectedConnections", new Y.Array<string>());
-    this.yDesignEditorStore.set("isTransactionActive", state.isTransactionActive);
-    this.yDesignEditorStore.set("presenceCursorX", state.presence.cursor?.x || 0);
-    this.yDesignEditorStore.set("presenceCursorY", state.presence.cursor?.y || 0);
+    this.yDesignEditorStore.set("fullscreenPanel", state?.fullscreenPanel || DesignEditorFullscreenPanel.None);
+    this.yDesignEditorStore.set("selection", new Y.Map<any>());
+    const piecesSelection = new Y.Map<any>();
+    this.yDesignEditorStore.set("pieces", piecesSelection);
+    const connectionsSelection = new Y.Map<any>();
+    this.yDesignEditorStore.set("connections", connectionsSelection);
+    this.yDesignEditorStore.set("isTransactionActive", false);
+    this.yDesignEditorStore.set("presence", new Y.Map<any>());
+    this.yDesignEditorStore.set("others", new Y.Array<any>());
+    this.yDesignEditorStore.set("diff", new Y.Map<any>());
     this.yDesignEditorStore.set("currentTransactionStack", new Y.Array<any>());
     this.yDesignEditorStore.set("pastTransactionsStack", new Y.Array<any>());
 
@@ -2098,20 +2102,11 @@ class YSketchpadStore implements SketchpadStoreFull {
 
   create = {
     kit: (kit: Kit) => {
-      throw new Error("Use semio.sketchpad.createKit command instead of directly calling create.kit");
+      const store = new YKitStore(this, kit);
+      this.kits.set(kitIdToString(kit), store);
     },
     designEditor: (id: DesignEditorId) => {
-      const initialState: DesignEditorStateFull = {
-        fullscreenPanel: DesignEditorFullscreenPanel.None,
-        selection: {},
-        isTransactionActive: false,
-        presence: {},
-        others: [],
-        diff: {},
-        currentTransactionStack: [],
-        pastTransactionsStack: [],
-      };
-      const editorStore = new YDesignEditorStore(this, initialState);
+      const store = new YDesignEditorStore(this);
 
       // Ensure the kitId map exists
       const kitIdStr = kitIdToString(id.kitId);
@@ -2121,7 +2116,7 @@ class YSketchpadStore implements SketchpadStoreFull {
       }
 
       const kitEditors = this.designEditors.get(kitIdStr)!;
-      kitEditors.set(designIdStr, editorStore);
+      kitEditors.set(designIdStr, store);
     },
   };
 
@@ -2200,19 +2195,12 @@ class YSketchpadStore implements SketchpadStoreFull {
   }
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
+    const callback = this.commandRegistry.get(command);
+    if (!callback) throw new Error(`Command "${command}" not found in sketchpad store`);
     if (command === "semio.sketchpad.createKit") {
       const kit = rest[0] as Kit;
-      const callback = this.commandRegistry.get(command);
-      if (!callback) throw new Error(`Command "${command}" not found in sketchpad store`);
-      const context: SketchpadCommandContext = {
-        sketchpad: this.snapshot(),
-        store: this,
-      };
-      const result = callback(context, kit);
-      if (result.diff) {
-        this.change(result.diff);
-      }
-      return result as T;
+      this.create.kit(kit);
+      return {} as T;
     }
     if (command === "semio.sketchpad.createDesignEditor") {
       const id = rest[0] as DesignEditorId;
@@ -2228,15 +2216,11 @@ class YSketchpadStore implements SketchpadStoreFull {
       }
       return {} as T;
     }
-
-    const callback = this.commandRegistry.get(command);
-    if (!callback) throw new Error(`Command "${command}" not found in sketchpad store`);
     const context: SketchpadCommandContext = {
       sketchpad: this.snapshot(),
       store: this,
     };
     const result = callback(context, ...rest);
-    // Apply diff changes
     if (result.diff) {
       this.change(result.diff);
     }
@@ -2559,7 +2543,7 @@ const kitCommands = {
         kitStmt.free();
         const kitId = db.exec("SELECT last_insert_rowid()")[0].values[0][0] as number;
         insertQualities(kit.attributes, "kit_id", kitId);
-        
+
         if (kit.concepts) {
           const conceptStmt = db.prepare('INSERT INTO concept (name, "order", kit_id) VALUES (?, ?, ?)');
           kit.concepts.forEach((concept, index) => conceptStmt.run([concept, index, kitId]));

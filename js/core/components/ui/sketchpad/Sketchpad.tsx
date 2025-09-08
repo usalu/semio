@@ -118,7 +118,7 @@ const SketchpadInner: FC = () => {
     return () => {
       mounted = false;
     };
-  }, [store, defaultKitId, defaultDesignId]);
+  }, [defaultKitId, defaultDesignId]); // TODO add store to dependencies after debugging
 
   useEffect(() => {
     const root = window.document.documentElement;

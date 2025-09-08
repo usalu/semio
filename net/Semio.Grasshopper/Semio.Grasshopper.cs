@@ -260,7 +260,7 @@ public abstract class ModelGoo<TModel> : GH_Goo<TModel> where TModel : Model<TMo
     public ModelGoo(TModel value) { Value = value; }
     public override bool IsValid => true;
     public override string TypeName => typeof(TModel).Name;
-    public override string TypeDescription => ((ModelAttribute)System.Attribute.GetCustomAttribute(typeof(TModel), typeof(ModelAttribute))).Description;
+    public override string TypeDescription => typeof(TModel).Name;
     public override IGH_Goo Duplicate()
     {
         var duplicate = (ModelGoo<TModel>)Activator.CreateInstance(GetType());
@@ -304,10 +304,7 @@ public abstract class ModelGoo<TModel> : GH_Goo<TModel> where TModel : Model<TMo
 
 public abstract class ModelParam<TGoo, TModel> : GH_PersistentParam<TGoo> where TGoo : ModelGoo<TModel> where TModel : Model<TModel>, new()
 {
-    internal ModelParam() : base(typeof(TModel).Name,
-        ((ModelAttribute)System.Attribute.GetCustomAttribute(typeof(TModel), typeof(ModelAttribute))).Code,
-        ((ModelAttribute)System.Attribute.GetCustomAttribute(typeof(TModel), typeof(ModelAttribute))).Description,
-        Constants.Category, "Params")
+    internal ModelParam() : base(typeof(TModel).Name, typeof(TModel).Name, typeof(TModel).Name, Constants.Category, "Params")
     { }
     protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower()}_24x24");
 
@@ -360,181 +357,9 @@ public abstract class Component : GH_Component
 public abstract class ModelComponent<TParam, TGoo, TModel> : Component
     where TParam : ModelParam<TGoo, TModel> where TGoo : ModelGoo<TModel> where TModel : Model<TModel>, new()
 {
-    public static readonly string NameM;
-    public static readonly System.Type TypeM;
-    public static readonly System.Type GooM;
-    public static readonly System.Type ParamM;
-    public static readonly ModelAttribute ModelM;
-    public static readonly ImmutableArray<PropertyInfo> PropertyM;
-    public static readonly ImmutableArray<PropAttribute> PropM;
-    public static readonly ImmutableArray<bool> IsPropertyList;
-    public static readonly ImmutableArray<bool> IsPropertyMapped;
-    public static readonly ImmutableArray<System.Type> PropertyItemType;
-    public static readonly ImmutableArray<bool> IsPropertyModel;
-    public static readonly ImmutableArray<System.Type> PropertyGooM;
-    public static readonly ImmutableArray<System.Type> PropertyParamM;
-    public static readonly ImmutableArray<System.Type> PropertyItemGoo;
-
-    static ModelComponent()
-    {
-        // force compiler to run static constructor of the the meta classes first.
-        var dummyMetaGrasshopper = Meta.Goo;
-
-        NameM = typeof(TModel).Name;
-        TypeM = Semio.Meta.Type[NameM];
-        GooM = Meta.Goo[NameM];
-        ParamM = Meta.Param[NameM];
-        ModelM = Semio.Meta.Model[NameM];
-        PropertyM = Semio.Meta.Property[NameM];
-        PropM = Semio.Meta.Prop[NameM];
-        IsPropertyList = Semio.Meta.IsPropertyList[NameM];
-        IsPropertyMapped = Meta.IsPropertyMapped[NameM];
-        PropertyItemType = Semio.Meta.PropertyItemType[NameM];
-        PropertyItemGoo = Meta.PropertyItemGoo[NameM];
-        IsPropertyModel = Semio.Meta.IsPropertyModel[NameM];
-        PropertyGooM = Meta.PropertyGoo[NameM];
-        PropertyParamM = Meta.PropertyParam[NameM];
-    }
-
-    protected ModelComponent() : base($"Model {NameM}", $"~{ModelM.Abbreviation}",
-        $"Construct, deconstruct or modify {Semio.Utility.Grammar.GetArticle(NameM)} {NameM.ToLower()}", "Modeling")
-    { }
-
-    protected override Bitmap Icon =>
-        (Bitmap)Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower()}_modify_24x24");
-
+    protected ModelComponent(string name, string nickname, string description) : base(name, nickname, description, "Modeling") { }
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower()}_modify_24x24");
     public override GH_Exposure Exposure => GH_Exposure.primary;
-
-    protected virtual void AddModelProps(dynamic pManager)
-    {
-        for (var i = 0; i < PropertyM.Length; i++)
-        {
-            var property = PropertyM[i];
-            var propAttribute = PropM[i];
-            var param = (IGH_Param)Activator.CreateInstance(PropertyParamM[i]);
-            pManager.AddParameter(param, property.Name, propAttribute.Code, propAttribute.Description,
-                IsPropertyList[i] ? GH_ParamAccess.list : GH_ParamAccess.item);
-        }
-    }
-
-    protected void AddModelParameters(dynamic pManager, bool isOutput = false)
-    {
-        var modelParam = (IGH_Param)Activator.CreateInstance(ParamM);
-        var description = isOutput
-            ? $"The constructed or modified {NameM.ToLower()}."
-            : $"The optional {NameM.ToLower()} to deconstruct or modify.";
-        pManager.AddParameter(modelParam, NameM, isOutput ? ModelM.Code : ModelM.Code + "?",
-            description, GH_ParamAccess.item);
-        pManager.AddBooleanParameter(isOutput ? "Valid" : "Validate", "Vd?",
-            isOutput
-                ? $"True if the {NameM.ToLower()} is valid. Null if no validation was performed."
-                : $"Whether the {NameM.ToLower()} should be validated.", GH_ParamAccess.item);
-
-        AddModelProps(pManager);
-
-        if (!isOutput)
-            for (var i = 0; i < pManager.ParamCount; i++)
-                ((GH_InputParamManager)pManager)[i].Optional = true;
-    }
-
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        AddModelParameters(pManager);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        AddModelParameters(pManager, true);
-    }
-
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        dynamic modelGoo = Activator.CreateInstance(GooM);
-        var validate = false;
-        if (DA.GetData(0, ref modelGoo))
-            modelGoo = modelGoo.Duplicate();
-        DA.GetData(1, ref validate);
-        GetProps(DA, modelGoo);
-
-        modelGoo.Value = ProcessModel(modelGoo.Value);
-
-        if (validate)
-        {
-            var (isValid, errors) = ((bool, List<string>))modelGoo.Value.Validate();
-            foreach (var error in errors)
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, error);
-            DA.SetData(1, isValid);
-        }
-
-        DA.SetData(0, modelGoo.Duplicate());
-        SetData(DA, modelGoo);
-    }
-
-    protected virtual void GetProps(IGH_DataAccess DA, dynamic modelGoo)
-    {
-        for (var i = 0; i < PropertyM.Length; i++)
-        {
-            var property = PropertyM[i];
-            var isList = IsPropertyList[i];
-            var itemType = PropertyItemType[i];
-            dynamic gooValue = Activator.CreateInstance(PropertyGooM[i]);
-            var value = gooValue;
-            bool hasInput = isList ? DA.GetDataList(i + 2, value) : DA.GetData(i + 2, ref value);
-            if (hasInput)
-            {
-                if (isList)
-                {
-                    var listType = typeof(List<>).MakeGenericType(itemType);
-                    dynamic list = Activator.CreateInstance(listType);
-                    foreach (var item in gooValue)
-                        list.Add(itemType == typeof(string) || itemType == typeof(int) || itemType == typeof(float)
-                            ? item.Value
-                            : item.Value.DeepClone());
-
-                    value = list;
-                    property.SetValue(modelGoo.Value, value);
-                }
-                else property.SetValue(modelGoo.Value, RhinoConverter.Convert(value.Value));
-            }
-        }
-    }
-
-    protected virtual void SetData(IGH_DataAccess DA, dynamic modelGoo) // TODO: Check if dynamic is necessary
-    {
-        for (var i = 0; i < PropertyM.Length; i++)
-        {
-            var property = PropertyM[i];
-            var isList = IsPropertyList[i];
-            var isPropertyModel = IsPropertyModel[i];
-            var isPropertyMapped = IsPropertyMapped[i];
-            var value = property.GetValue(modelGoo.Value);
-            if (value == null) continue;
-            if (isList)
-            {
-                if (isPropertyModel)
-                {
-                    dynamic list = Activator.CreateInstance(PropertyGooM[i]);
-                    foreach (var item in value)
-                    {
-                        var itemGoo = Activator.CreateInstance(PropertyItemGoo[i], item.DeepClone());
-                        list.Add(itemGoo);
-                    }
-                    value = list;
-                }
-            }
-            else if (isPropertyModel)
-            {
-                if (isPropertyMapped)
-                {
-                    var convertMethod = typeof(RhinoConverter).GetMethod("Convert", new System.Type[] { value.GetType() });
-                    value = convertMethod.Invoke(null, new[] { value });
-                }
-                else value = Activator.CreateInstance(PropertyItemGoo[i], value.DeepClone());
-            }
-            if (isList) DA.SetDataList(i + 2, value);
-            else DA.SetData(i + 2, value);
-        }
-    }
     protected virtual TModel ProcessModel(TModel model) => model;
 }
 
@@ -579,34 +404,20 @@ public abstract class DiffComponent<TParam, TGoo, TModel> : ModelComponent<TPara
 }
 public abstract class SerializeComponent<TParam, TGoo, TModel> : ScriptingComponent
     where TParam : ModelParam<TGoo, TModel>, new() where TGoo : ModelGoo<TModel>, new() where TModel : Model<TModel>, new()
-
 {
-    public static readonly string NameM;
-    public static readonly ModelAttribute ModelM;
-    static SerializeComponent()
-    {
-        // force compiler to run static constructor of the the meta classes first.
-        var dummyMetaGrasshopper = Meta.Goo;
-        NameM = typeof(TModel).Name;
-        ModelM = Semio.Meta.Model[NameM];
-    }
-
-    protected SerializeComponent() : base($"Serialize {NameM}", $">{ModelM.Abbreviation}", $"Serialize a {NameM.ToLower()}.") { }
-
-    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_serialize_24x24");
+    protected SerializeComponent(string name, string nickname, string description) : base(name, nickname, description) { }
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower()}_serialize_24x24");
     public override GH_Exposure Exposure => GH_Exposure.secondary;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddParameter(new TParam(), NameM, ModelM.Code, $"The {NameM.ToLower()} to serialize.", GH_ParamAccess.item);
-        pManager.AddTextParameter("Indent", "In?", $"The optional indent unit for the serialized {NameM.ToLower()}. Empty text for no indent or spaces or tabs", GH_ParamAccess.item, "");
+        pManager.AddParameter(new TParam(), typeof(TModel).Name, typeof(TModel).Name, $"The {typeof(TModel).Name.ToLower()} to serialize.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Indent", "In?", $"The optional indent unit for the serialized {typeof(TModel).Name.ToLower()}. Empty text for no indent or spaces or tabs", GH_ParamAccess.item, "");
         pManager[1].Optional = true;
     }
-
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Text", "Tx", "Text of serialized " + NameM + ".", GH_ParamAccess.item);
+        pManager.AddTextParameter("Text", "Tx", "Text of serialized " + typeof(TModel).Name + ".", GH_ParamAccess.item);
     }
-
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var goo = new TGoo();
@@ -620,41 +431,18 @@ public abstract class SerializeComponent<TParam, TGoo, TModel> : ScriptingCompon
 
 public abstract class DeserializeComponent<TParam, TGoo, TModel> : ScriptingComponent
     where TParam : ModelParam<TGoo, TModel>, new() where TGoo : ModelGoo<TModel>, new() where TModel : Model<TModel>, new()
-
 {
-    public static readonly string NameM;
-    public static readonly ModelAttribute ModelM;
-
-    static DeserializeComponent()
-    {
-        // force compiler to run static constructor of the the meta classes first.
-        var dummyMetaGrasshopper = Meta.Goo;
-
-        NameM = typeof(TModel).Name;
-        ModelM = Semio.Meta.Model[NameM];
-    }
-
-    protected DeserializeComponent() : base($"Deserialize {NameM}", $"<{ModelM.Abbreviation}",
-        $"Deserialize a {NameM.ToLower()}.")
-    {
-    }
-
-    protected override Bitmap Icon =>
-        (Bitmap)Resources.ResourceManager.GetObject($"{NameM.ToLower()}_deserialize_24x24");
-
+    protected DeserializeComponent(string name, string nickname, string description) : base(name, nickname, description) { }
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower()}_deserialize_24x24");
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
-
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Text", "Tx", $"Text of serialized {NameM}.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Text", "Tx", $"Text of serialized {typeof(TModel).Name}.", GH_ParamAccess.item);
     }
-
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddParameter(new TParam(), NameM, ModelM.Code,
-            $"Deserialized {NameM}.", GH_ParamAccess.item);
+        pManager.AddParameter(new TParam(), typeof(TModel).Name, typeof(TModel).Name, $"Deserialized {typeof(TModel).Name}.", GH_ParamAccess.item);
     }
-
     protected override void SolveInstance(IGH_DataAccess DA)
     {
         var text = "";
@@ -995,16 +783,60 @@ public class AttributeParam : ModelParam<AttributeGoo, Attribute>
 
 public class AttributeComponent : ModelComponent<AttributeParam, AttributeGoo, Attribute>
 {
+    public AttributeComponent() : base("Model Attribute", "~Atr", "Construct, deconstruct or modify an attribute") { }
     public override Guid ComponentGuid => new("51146B05-ACEB-4810-AD75-10AC3E029D39");
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new AttributeParam(), "Attribute", "At?", "The optional attribute to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the attribute should be validated.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Key", "Ke", "The key of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Value", "Vl?", "The optional value of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Definition", "Df?", "The optional definition of the attribute.", GH_ParamAccess.item);
+        for (var i = 0; i < pManager.ParamCount; i++) pManager[i].Optional = true;
+    }
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new AttributeParam(), "Attribute", "At", "The constructed or modified attribute.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Valid", "Vd?", "True if the attribute is valid. Null if no validation was performed.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Key", "Ke", "The key of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Value", "Vl?", "The optional value of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Definition", "Df?", "The optional definition of the attribute.", GH_ParamAccess.item);
+    }
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var goo = new AttributeGoo();
+        var validate = false;
+        if (DA.GetData(0, ref goo)) goo = (AttributeGoo)goo.Duplicate();
+        DA.GetData(1, ref validate);
+        var key = "";
+        var value = "";
+        var definition = "";
+        if (DA.GetData(2, ref key)) goo.Value.Key = key;
+        if (DA.GetData(3, ref value)) goo.Value.Value = value;
+        if (DA.GetData(4, ref definition)) goo.Value.Definition = definition;
+        goo.Value = ProcessModel(goo.Value);
+        if (validate)
+        {
+            var (isValid, errors) = goo.Value.Validate();
+            foreach (var error in errors) AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, error);
+            DA.SetData(1, isValid);
+        }
+        DA.SetData(0, goo.Duplicate());
+        DA.SetData(2, goo.Value.Key);
+        DA.SetData(3, goo.Value.Value);
+        DA.SetData(4, goo.Value.Definition);
+    }
 }
 
 public class SerializeAttributeComponent : SerializeComponent<AttributeParam, AttributeGoo, Attribute>
 {
+    public SerializeAttributeComponent() : base("Serialize Attribute", ">Atr", "Serialize an attribute.") { }
     public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8974-8588BCA75250");
 }
 
 public class DeserializeAttributeComponent : DeserializeComponent<AttributeParam, AttributeGoo, Attribute>
 {
+    public DeserializeAttributeComponent() : base("Deserialize Attribute", "<Atr", "Deserialize an attribute.") { }
     public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8975-8588BCA75250");
 }
 
@@ -1207,7 +1039,25 @@ public class RepresentationParam : ModelParam<RepresentationGoo, Representation>
 
 public class RepresentationComponent : ModelComponent<RepresentationParam, RepresentationGoo, Representation>
 {
+    public RepresentationComponent() : base("Representation", "Re", "A representation with tags, url and description.") { }
     public override Guid ComponentGuid => new("37228B2F-70DF-44B7-A3B6-781D5AFCE122");
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new RepresentationParam(), "Representation", "Re?", "The optional representation to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the representation should be validated.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Tags", "Tg", "The tags of the representation.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Url", "Ur", "The url of the representation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "De?", "The optional description of the representation.", GH_ParamAccess.item);
+        pManager[0].Optional = true;
+        pManager[1].Optional = true;
+        pManager[4].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new RepresentationParam(), "Representation", "Re", "The constructed or modified representation.", GH_ParamAccess.item);
+    }
 
     protected override Representation ProcessModel(Representation model)
     {
@@ -1222,13 +1072,13 @@ public class RepresentationComponent : ModelComponent<RepresentationParam, Repre
 
 public class SerializeRepresentationComponent : SerializeComponent<RepresentationParam, RepresentationGoo, Representation>
 {
-    public SerializeRepresentationComponent() { }
+    public SerializeRepresentationComponent() : base("Serialize Representation", "SRe", "Serialize a representation to JSON.") { }
     public override Guid ComponentGuid => new("AC6E381C-23EE-4A81-BE0F-3523AEE32046");
 }
 
 public class DeserializeRepresentationComponent : DeserializeComponent<RepresentationParam, RepresentationGoo, Representation>
 {
-    public DeserializeRepresentationComponent() { }
+    public DeserializeRepresentationComponent() : base("Deserialize Representation", "DRe", "Deserialize a representation from JSON.") { }
     public override Guid ComponentGuid => new("AC6E381C-23EE-4A81-BE0F-3523AEE32047");
 }
 
@@ -1413,18 +1263,33 @@ public class FileParam : ModelParam<FileGoo, File>
 
 public class FileComponent : ModelComponent<FileParam, FileGoo, File>
 {
+    public FileComponent() : base("File", "Fi", "A file with url.") { }
     public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F9");
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new FileParam(), "File", "Fi?", "The optional file to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the file should be validated.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Url", "Ur", "The url of the file.", GH_ParamAccess.item);
+        pManager[0].Optional = true;
+        pManager[1].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new FileParam(), "File", "Fi", "The constructed or modified file.", GH_ParamAccess.item);
+    }
 }
 
 public class SerializeFileComponent : SerializeComponent<FileParam, FileGoo, File>
 {
-    public SerializeFileComponent() { }
+    public SerializeFileComponent() : base("Serialize File", "SFi", "Serialize a file to JSON.") { }
     public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7FA");
 }
 
 public class DeserializeFileComponent : DeserializeComponent<FileParam, FileGoo, File>
 {
-    public DeserializeFileComponent() { }
+    public DeserializeFileComponent() : base("Deserialize File", "DFi", "Deserialize a file from JSON.") { }
     public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7FB");
 }
 
@@ -1467,18 +1332,34 @@ public class DiagramPointParam : ModelParam<DiagramPointGoo, DiagramPoint>
 
 public class DiagramPointComponent : ModelComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
 {
+    public DiagramPointComponent() : base("Diagram Point", "DP", "A diagram point with X and Y coordinates.") { }
     public override Guid ComponentGuid => new("61FB9BBE-64DE-42B2-B7EF-69CD97FDD9E3");
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new DiagramPointParam(), "Diagram Point", "DP?", "The optional diagram point to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the diagram point should be validated.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("X", "X", "The X coordinate of the diagram point.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Y", "Y", "The Y coordinate of the diagram point.", GH_ParamAccess.item);
+        pManager[0].Optional = true;
+        pManager[1].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new DiagramPointParam(), "Diagram Point", "DP", "The constructed or modified diagram point.", GH_ParamAccess.item);
+    }
 }
 
 public class SerializeDiagramPointComponent : SerializeComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
 {
-    public SerializeDiagramPointComponent() { }
+    public SerializeDiagramPointComponent() : base("Serialize Diagram Point", "SDP", "Serialize a diagram point to JSON.") { }
     public override Guid ComponentGuid => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A99");
 }
 
 public class DeserializeDiagramPointComponent : DeserializeComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
 {
-    public DeserializeDiagramPointComponent() { }
+    public DeserializeDiagramPointComponent() : base("Deserialize Diagram Point", "DDP", "Deserialize a diagram point from JSON.") { }
     public override Guid ComponentGuid => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A9A");
 }
 
@@ -1683,18 +1564,36 @@ public class PortParam : ModelParam<PortGoo, Port>
 
 public class PortComponent : ModelComponent<PortParam, PortGoo, Port>
 {
+    public PortComponent() : base("Port", "Po", "A port with direction, origin and family.") { }
     public override Guid ComponentGuid => new("E505C90C-71F4-413F-82FE-65559D9FFAB5");
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new PortParam(), "Port", "Po?", "The optional port to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the port should be validated.", GH_ParamAccess.item);
+        pManager.AddVectorParameter("Direction", "Di", "The direction vector of the port.", GH_ParamAccess.item);
+        pManager.AddPlaneParameter("Origin", "Or", "The origin plane of the port.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Family", "Fa?", "The optional family of the port.", GH_ParamAccess.item);
+        pManager[0].Optional = true;
+        pManager[1].Optional = true;
+        pManager[4].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new PortParam(), "Port", "Po", "The constructed or modified port.", GH_ParamAccess.item);
+    }
 }
 
 public class SerializePortComponent : SerializeComponent<PortParam, PortGoo, Port>
 {
-    public SerializePortComponent() { }
+    public SerializePortComponent() : base("Serialize Port", "SPo", "Serialize a port to JSON.") { }
     public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1B5");
 }
 
 public class DeserializePortComponent : DeserializeComponent<PortParam, PortGoo, Port>
 {
-    public DeserializePortComponent() { }
+    public DeserializePortComponent() : base("Deserialize Port", "DPo", "Deserialize a port from JSON.") { }
     public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1B6");
 }
 
@@ -1824,18 +1723,33 @@ public class AuthorParam : ModelParam<AuthorGoo, Author>
 
 public class AuthorComponent : ModelComponent<AuthorParam, AuthorGoo, Author>
 {
+    public AuthorComponent() : base("Author", "Au", "An author with email.") { }
     public override Guid ComponentGuid => new("5143ED92-0A2C-4D0C-84ED-F90CC8450894");
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new AuthorParam(), "Author", "Au?", "The optional author to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the author should be validated.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Email", "Em", "The email of the author.", GH_ParamAccess.item);
+        pManager[0].Optional = true;
+        pManager[1].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new AuthorParam(), "Author", "Au", "The constructed or modified author.", GH_ParamAccess.item);
+    }
 }
 
 public class SerializeAuthorComponent : SerializeComponent<AuthorParam, AuthorGoo, Author>
 {
-    public SerializeAuthorComponent() { }
+    public SerializeAuthorComponent() : base("Serialize Author", "SAu", "Serialize an author to JSON.") { }
     public override Guid ComponentGuid => new("99130A53-4FC1-4E64-9A46-2ACEC4634878");
 }
 
 public class DeserializeAuthorComponent : DeserializeComponent<AuthorParam, AuthorGoo, Author>
 {
-    public DeserializeAuthorComponent() { }
+    public DeserializeAuthorComponent() : base("Deserialize Author", "DAu", "Deserialize an author from JSON.") { }
     public override Guid ComponentGuid => new("99130A53-4FC1-4E64-9A46-2ACEC4634879");
 }
 
@@ -1876,18 +1790,34 @@ public class LocationParam : ModelParam<LocationGoo, Location>
 
 public class LocationComponent : ModelComponent<LocationParam, LocationGoo, Location>
 {
+    public LocationComponent() : base("Location", "Lo", "A location with longitude and latitude.") { }
     public override Guid ComponentGuid => new("6F2EDF42-6E10-4944-8B05-4D41F4876ED0");
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new LocationParam(), "Location", "Lo?", "The optional location to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the location should be validated.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Longitude", "Ln", "The longitude of the location.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Latitude", "Lt", "The latitude of the location.", GH_ParamAccess.item);
+        pManager[0].Optional = true;
+        pManager[1].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new LocationParam(), "Location", "Lo", "The constructed or modified location.", GH_ParamAccess.item);
+    }
 }
 
 public class SerializeLocationComponent : SerializeComponent<LocationParam, LocationGoo, Location>
 {
-    public SerializeLocationComponent() { }
+    public SerializeLocationComponent() : base("Serialize Location", "SLo", "Serialize a location to JSON.") { }
     public override Guid ComponentGuid => new("DB94C7FC-3F0F-4FB4-992E-7E069C17D466");
 }
 
 public class DeserializeLocationComponent : DeserializeComponent<LocationParam, LocationGoo, Location>
 {
-    public DeserializeLocationComponent() { }
+    public DeserializeLocationComponent() : base("Deserialize Location", "DLo", "Deserialize a location from JSON.") { }
     public override Guid ComponentGuid => new("DB94C7FC-3F0F-4FB4-992E-7E069C17D467");
 }
 
@@ -2147,7 +2077,47 @@ public class TypeParam : ModelParam<TypeGoo, Type>
 
 public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
 {
+    public TypeComponent() : base("Type", "Ty", "A type with name, descriptions, representations and ports.") { }
     public override Guid ComponentGuid => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7");
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new TypeParam(), "Type", "Ty?", "The optional type to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the type should be validated.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na", "The name of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional human-readable description of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "The optional icon of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Image", "Im?", "The optional image url of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Variant", "Vn?", "The optional variant of the type.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Stock", "St?", "The optional number of items in stock.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Virtual", "Vi?", "Whether the type is virtual.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Scalable", "Sc?", "Whether the type is scalable.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Mirrorable", "Mi?", "Whether the type is mirrorable.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Uri", "Ur?", "The optional URI of the type.", GH_ParamAccess.item);
+        pManager.AddParameter(new LocationParam(), "Location", "Lo?", "The optional location of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "Ut", "The length unit of the type.", GH_ParamAccess.item);
+        pManager.AddParameter(new RepresentationParam(), "Representations", "Rp*", "The optional representations of the type.", GH_ParamAccess.list);
+        pManager.AddParameter(new PortParam(), "Ports", "Po*", "The optional ports of the type.", GH_ParamAccess.list);
+        pManager[0].Optional = true;
+        pManager[1].Optional = true;
+        pManager[3].Optional = true;
+        pManager[4].Optional = true;
+        pManager[5].Optional = true;
+        pManager[6].Optional = true;
+        pManager[7].Optional = true;
+        pManager[8].Optional = true;
+        pManager[9].Optional = true;
+        pManager[10].Optional = true;
+        pManager[11].Optional = true;
+        pManager[12].Optional = true;
+        pManager[14].Optional = true;
+        pManager[15].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new TypeParam(), "Type", "Ty", "The constructed or modified type.", GH_ParamAccess.item);
+    }
 
     protected override Type ProcessModel(Type type)
     {
@@ -2163,13 +2133,13 @@ public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
 
 public class SerializeTypeComponent : SerializeComponent<TypeParam, TypeGoo, Type>
 {
-    public SerializeTypeComponent() { }
+    public SerializeTypeComponent() : base("Serialize Type", "STy", "Serialize a type to JSON.") { }
     public override Guid ComponentGuid => new("BD184BB8-8124-4604-835C-E7B7C199673A");
 }
 
 public class DeserializeTypeComponent : DeserializeComponent<TypeParam, TypeGoo, Type>
 {
-    public DeserializeTypeComponent() { }
+    public DeserializeTypeComponent() : base("Deserialize Type", "DTy", "Deserialize a type from JSON.") { }
     public override Guid ComponentGuid => new("BD184BB8-8124-4604-835C-E7B7C199673B");
 }
 
@@ -2429,18 +2399,35 @@ public class PieceParam : ModelParam<PieceGoo, Piece>
 
 public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
 {
+    public PieceComponent() : base("Piece", "Pi", "A piece with type and plane.") { }
     public override Guid ComponentGuid => new("49CD29FC-F6EB-43D2-8C7D-E88F8520BA48");
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new PieceParam(), "Piece", "Pi?", "The optional piece to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the piece should be validated.", GH_ParamAccess.item);
+        pManager.AddParameter(new TypeParam(), "Type", "Ty", "The type of the piece.", GH_ParamAccess.item);
+        pManager.AddPlaneParameter("Plane", "Pl?", "The optional plane of the piece.", GH_ParamAccess.item);
+        pManager[0].Optional = true;
+        pManager[1].Optional = true;
+        pManager[3].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new PieceParam(), "Piece", "Pi", "The constructed or modified piece.", GH_ParamAccess.item);
+    }
 }
 
 public class SerializePieceComponent : SerializeComponent<PieceParam, PieceGoo, Piece>
 {
-    public SerializePieceComponent() { }
+    public SerializePieceComponent() : base("Serialize Piece", "SPi", "Serialize a piece to JSON.") { }
     public override Guid ComponentGuid => new("A4EDA838-2246-4617-8298-9585ECFE00D9");
 }
 
 public class DeserializePieceComponent : DeserializeComponent<PieceParam, PieceGoo, Piece>
 {
-    public DeserializePieceComponent() { }
+    public DeserializePieceComponent() : base("Deserialize Piece", "DPi", "Deserialize a piece from JSON.") { }
     public override Guid ComponentGuid => new("A4EDA838-2246-4617-8298-9585ECFE00DA");
 }
 
@@ -2535,18 +2522,34 @@ public class SideParam : ModelParam<SideGoo, Side>
 
 public class SideComponent : ModelComponent<SideParam, SideGoo, Side>
 {
+    public SideComponent() : base("Side", "Si", "A side with piece and port indices.") { }
     public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E6");
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new SideParam(), "Side", "Si?", "The optional side to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the side should be validated.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Piece", "Pi", "The piece index of the side.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Port", "Po", "The port index of the side.", GH_ParamAccess.item);
+        pManager[0].Optional = true;
+        pManager[1].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new SideParam(), "Side", "Si", "The constructed or modified side.", GH_ParamAccess.item);
+    }
 }
 
 public class SerializeSideComponent : SerializeComponent<SideParam, SideGoo, Side>
 {
-    public SerializeSideComponent() { }
+    public SerializeSideComponent() : base("Serialize Side", "SSi", "Serialize a side to JSON.") { }
     public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E7");
 }
 
 public class DeserializeSideComponent : DeserializeComponent<SideParam, SideGoo, Side>
 {
-    public DeserializeSideComponent() { }
+    public DeserializeSideComponent() : base("Deserialize Side", "DSi", "Deserialize a side from JSON.") { }
     public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E8");
 }
 
@@ -2809,18 +2812,46 @@ public class ConnectionParam : ModelParam<ConnectionGoo, Connection>
 
 public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo, Connection>
 {
+    public ConnectionComponent() : base("Connection", "Co", "A connection between two sides with translation and rotation parameters.") { }
     public override Guid ComponentGuid => new("AB212F90-124C-4985-B3EE-1C13D7827560");
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectionParam(), "Connection", "Co?", "The optional connection to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the connection should be validated.", GH_ParamAccess.item);
+        pManager.AddParameter(new SideParam(), "Side A", "SA", "The first side of the connection.", GH_ParamAccess.item);
+        pManager.AddParameter(new SideParam(), "Side B", "SB", "The second side of the connection.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Gap", "Ga?", "The optional gap of the connection.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Shift", "Sh?", "The optional shift of the connection.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rise", "Ri?", "The optional rise of the connection.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rotation", "Ro?", "The optional rotation of the connection.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Turn", "Tu?", "The optional turn of the connection.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Tilt", "Ti?", "The optional tilt of the connection.", GH_ParamAccess.item);
+        pManager[0].Optional = true;
+        pManager[1].Optional = true;
+        pManager[4].Optional = true;
+        pManager[5].Optional = true;
+        pManager[6].Optional = true;
+        pManager[7].Optional = true;
+        pManager[8].Optional = true;
+        pManager[9].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new ConnectionParam(), "Connection", "Co", "The constructed or modified connection.", GH_ParamAccess.item);
+    }
 }
 
 public class SerializeConnectionComponent : SerializeComponent<ConnectionParam, ConnectionGoo, Connection>
 {
-    public SerializeConnectionComponent() { }
+    public SerializeConnectionComponent() : base("Serialize Connection", "SCo", "Serialize a connection to JSON.") { }
     public override Guid ComponentGuid => new("93FBA84E-79A1-4E32-BE61-A925F476DD60");
 }
 
 public class DeserializeConnectionComponent : DeserializeComponent<ConnectionParam, ConnectionGoo, Connection>
 {
-    public DeserializeConnectionComponent() { }
+    public DeserializeConnectionComponent() : base("Deserialize Connection", "DCo", "Deserialize a connection from JSON.") { }
     public override Guid ComponentGuid => new("93FBA84E-79A1-4E32-BE61-A925F476DD61");
 }
 
@@ -3065,7 +3096,58 @@ public class DesignParam : ModelParam<DesignGoo, Design>
 
 public class DesignComponent : ModelComponent<DesignParam, DesignGoo, Design>
 {
+    public DesignComponent() : base("Design", "Dn", "A design with pieces, connections, and metadata.") { }
     public override Guid ComponentGuid => new("AAD8D144-2EEE-48F1-A8A9-52977E86CB54");
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam(), "Design", "Dn?", "The optional design to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the design should be validated.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na", "The name of the design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Variant", "Vn?", "The optional variant of the design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("View", "Vw?", "The optional view of the design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description of the design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "The optional icon of the design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Image", "Im?", "The optional image url of the design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Concepts", "Co*", "The optional concepts of the design.", GH_ParamAccess.list);
+        pManager.AddParameter(new AuthorParam(), "Authors", "Au*", "The optional authors of the design.", GH_ParamAccess.list);
+        pManager.AddParameter(new LocationParam(), "Location", "Lo?", "The optional location of the design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "Ut", "The length unit of the design.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Scalable", "Sc?", "Whether the design can be scaled.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Mirrorable", "Mi?", "Whether the design can be mirrored.", GH_ParamAccess.item);
+        pManager.AddParameter(new LayerParam(), "Layers", "Ly*", "The optional layers of the design.", GH_ParamAccess.list);
+        pManager.AddParameter(new PieceParam(), "Pieces", "Pc*", "The optional pieces of the design.", GH_ParamAccess.list);
+        pManager.AddParameter(new GroupParam(), "Groups", "Gr*", "The optional groups of the design.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConnectionParam(), "Connections", "Co*", "The optional connections of the design.", GH_ParamAccess.list);
+        pManager.AddParameter(new PropParam(), "Props", "Pp*", "The optional properties of the design.", GH_ParamAccess.list);
+        pManager.AddParameter(new StatParam(), "Stats", "St*", "The optional stats of the design.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes of the design.", GH_ParamAccess.list);
+        pManager[0].Optional = true;
+        pManager[1].Optional = true;
+        pManager[3].Optional = true;
+        pManager[4].Optional = true;
+        pManager[5].Optional = true;
+        pManager[6].Optional = true;
+        pManager[7].Optional = true;
+        pManager[8].Optional = true;
+        pManager[9].Optional = true;
+        pManager[10].Optional = true;
+        pManager[12].Optional = true;
+        pManager[13].Optional = true;
+        pManager[14].Optional = true;
+        pManager[15].Optional = true;
+        pManager[16].Optional = true;
+        pManager[17].Optional = true;
+        pManager[18].Optional = true;
+        pManager[19].Optional = true;
+        pManager[20].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new DesignParam(), "Design", "Dn", "The constructed or modified design.", GH_ParamAccess.item);
+    }
+
     protected override Design ProcessModel(Design design)
     {
         if (design.Unit == "")
@@ -3247,7 +3329,61 @@ public class KitParam : ModelParam<KitGoo, Kit>
 
 public class KitComponent : ModelComponent<KitParam, KitGoo, Kit>
 {
+    public KitComponent() : base("Kit", "Kt", "A kit with types, designs, and metadata.") { }
     public override Guid ComponentGuid => new("987560A8-10D4-43F6-BEBE-D71DC2FD86AF");
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "Kt?", "The optional kit to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the kit should be validated.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Na", "The name of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Version", "Vr?", "The optional version of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic?", "The optional icon of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Image", "Im?", "The optional image url of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Concepts", "Cp*", "The optional concepts of the kit.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Remote", "Rm?", "The optional remote URL of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Homepage", "Hp?", "The optional homepage URL of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("License", "Li?", "The optional license of the kit.", GH_ParamAccess.item);
+        pManager.AddParameter(new AuthorParam(), "Authors", "Au*", "The optional authors of the kit.", GH_ParamAccess.list);
+        pManager.AddParameter(new PieceParam(), "Pieces", "Pc*", "The optional pieces of the kit.", GH_ParamAccess.list);
+        pManager.AddParameter(new GroupParam(), "Groups", "Gr*", "The optional groups of the kit.", GH_ParamAccess.list);
+        pManager.AddParameter(new ConnectionParam(), "Connections", "Co*", "The optional connections of the kit.", GH_ParamAccess.list);
+        pManager.AddParameter(new PropParam(), "Props", "Pp*", "The optional properties of the kit.", GH_ParamAccess.list);
+        pManager.AddParameter(new StatParam(), "Stats", "St*", "The optional stats of the kit.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes of the kit.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Preview", "Pv?", "The optional preview image url of the kit.", GH_ParamAccess.item);
+        pManager.AddParameter(new QualityParam(), "Qualities", "Ql*", "The optional qualities of the kit.", GH_ParamAccess.list);
+        pManager.AddParameter(new TypeParam(), "Types", "Ty*", "The optional types of the kit.", GH_ParamAccess.list);
+        pManager.AddParameter(new DesignParam(), "Designs", "Dn*", "The optional designs of the kit.", GH_ParamAccess.list);
+        pManager[0].Optional = true;
+        pManager[1].Optional = true;
+        pManager[3].Optional = true;
+        pManager[4].Optional = true;
+        pManager[5].Optional = true;
+        pManager[6].Optional = true;
+        pManager[7].Optional = true;
+        pManager[8].Optional = true;
+        pManager[9].Optional = true;
+        pManager[10].Optional = true;
+        pManager[11].Optional = true;
+        pManager[12].Optional = true;
+        pManager[13].Optional = true;
+        pManager[14].Optional = true;
+        pManager[15].Optional = true;
+        pManager[16].Optional = true;
+        pManager[17].Optional = true;
+        pManager[18].Optional = true;
+        pManager[19].Optional = true;
+        pManager[20].Optional = true;
+        pManager[21].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new KitParam(), "Kit", "Kt", "The constructed or modified kit.", GH_ParamAccess.item);
+    }
+
     protected override Kit ProcessModel(Kit kit)
     {
         kit.Icon = kit.Icon.Replace('\\', '/');
@@ -3552,7 +3688,50 @@ public class QualityParam : ModelParam<QualityGoo, Quality>
 
 public class QualityComponent : ModelComponent<QualityParam, QualityGoo, Quality>
 {
+    public QualityComponent() : base("Quality", "Ql", "A quality with key, name, and numeric properties.") { }
     public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new QualityParam(), "Quality", "Ql?", "The optional quality to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the quality should be validated.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Key", "Ke", "The key of the quality.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Nm", "The name of the quality.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The optional description of the quality.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Uri", "Ur?", "The optional URI of the quality.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Scalable", "Sc?", "Whether the quality is scalable.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Kind", "Kd", "The kind of the quality.", GH_ParamAccess.item);
+        pManager.AddTextParameter("SI", "SI?", "The optional SI unit of the quality.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Imperial", "Im?", "The optional imperial unit of the quality.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Min", "Mi?", "The optional minimum value of the quality.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MinExcluded", "MiE?", "Whether the minimum value is excluded.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Max", "Mx?", "The optional maximum value of the quality.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MaxExcluded", "MxE?", "Whether the maximum value is excluded.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Default", "Dl?", "The optional default value of the quality.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Formula", "Fo?", "The optional formula of the quality.", GH_ParamAccess.item);
+        pManager.AddParameter(new BenchmarkParam(), "Benchmarks", "Bm*", "The optional benchmarks of the quality.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes of the quality.", GH_ParamAccess.list);
+        pManager[0].Optional = true;
+        pManager[1].Optional = true;
+        pManager[4].Optional = true;
+        pManager[5].Optional = true;
+        pManager[6].Optional = true;
+        pManager[8].Optional = true;
+        pManager[9].Optional = true;
+        pManager[10].Optional = true;
+        pManager[11].Optional = true;
+        pManager[12].Optional = true;
+        pManager[13].Optional = true;
+        pManager[14].Optional = true;
+        pManager[15].Optional = true;
+        pManager[16].Optional = true;
+        pManager[17].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new QualityParam(), "Quality", "Ql", "The constructed or modified quality.", GH_ParamAccess.item);
+    }
 }
 
 public class SerializeQualityComponent : SerializeComponent<QualityParam, QualityGoo, Quality>
@@ -3605,7 +3784,33 @@ public class BenchmarkParam : ModelParam<BenchmarkGoo, Benchmark>
 
 public class BenchmarkComponent : ModelComponent<BenchmarkParam, BenchmarkGoo, Benchmark>
 {
+    public BenchmarkComponent() : base("Benchmark", "Bm", "A benchmark with name, icon, and range.") { }
     public override Guid ComponentGuid => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new BenchmarkParam(), "Benchmark", "Bm?", "The optional benchmark to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the benchmark should be validated.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Nm", "The name of the benchmark.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic", "The icon of the benchmark.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Min", "Mi?", "The optional minimum value.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MinExcluded", "MiE?", "Whether the minimum value is excluded.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Max", "Mx?", "The optional maximum value.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MaxExcluded", "MxE?", "Whether the maximum value is excluded.", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
+        pManager[0].Optional = true;
+        pManager[1].Optional = true;
+        pManager[4].Optional = true;
+        pManager[5].Optional = true;
+        pManager[6].Optional = true;
+        pManager[7].Optional = true;
+        pManager[8].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new BenchmarkParam(), "Benchmark", "Bm", "The constructed or modified benchmark.", GH_ParamAccess.item);
+    }
 }
 
 public class SerializeBenchmarkComponent : SerializeComponent<BenchmarkParam, BenchmarkGoo, Benchmark>
@@ -3662,7 +3867,27 @@ public class PropParam : ModelParam<PropGoo, Prop>
 
 public class PropComponent : ModelComponent<PropParam, PropGoo, Prop>
 {
+    public PropComponent() : base("Prop", "Pp", "A property with key, value, and unit.") { }
     public override Guid ComponentGuid => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new PropParam(), "Prop", "Pp?", "The optional prop to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the prop should be validated.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Key", "Ke", "The key of the quality of the property.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Value", "Vl", "The value of the property.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "Ut?", "The optional unit of the property.", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes of the property.", GH_ParamAccess.list);
+        pManager[0].Optional = true;
+        pManager[1].Optional = true;
+        pManager[4].Optional = true;
+        pManager[5].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new PropParam(), "Prop", "Pp", "The constructed or modified prop.", GH_ParamAccess.item);
+    }
 }
 
 public class SerializePropComponent : SerializeComponent<PropParam, PropGoo, Prop>
@@ -3719,7 +3944,32 @@ public class StatParam : ModelParam<StatGoo, Stat>
 
 public class StatComponent : ModelComponent<StatParam, StatGoo, Stat>
 {
+    public StatComponent() : base("Stat", "St", "A stat with key, unit, and range.") { }
     public override Guid ComponentGuid => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new StatParam(), "Stat", "St?", "The optional stat to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the stat should be validated.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Key", "Ke", "The key of the stat.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "Ut?", "The optional unit of the stat.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Min", "Mi?", "The optional minimum value.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MinExcluded", "MiE?", "Whether the minimum value is excluded.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Max", "Mx?", "The optional maximum value.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MaxExcluded", "MxE?", "Whether the maximum value is excluded.", GH_ParamAccess.item);
+        pManager[0].Optional = true;
+        pManager[1].Optional = true;
+        pManager[3].Optional = true;
+        pManager[4].Optional = true;
+        pManager[5].Optional = true;
+        pManager[6].Optional = true;
+        pManager[7].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new StatParam(), "Stat", "St", "The constructed or modified stat.", GH_ParamAccess.item);
+    }
 }
 
 public class SerializeStatComponent : SerializeComponent<StatParam, StatGoo, Stat>
@@ -4203,129 +4453,5 @@ public class LoadKitComponent : PersistenceComponent
 
 #region Meta
 
-public static class Meta
-{
-    /// <summary>
-    ///     Name of the model : Type
-    /// </summary>
-    public static readonly ImmutableDictionary<string, System.Type> Goo;
-
-    /// <summary>
-    ///     Name of the model : Index of the property : Type
-    /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyGoo;
-
-    /// <summary>
-    ///     Name of the model : Index of the property : Type
-    /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyItemGoo;
-
-    /// <summary>
-    ///     Name of the model : Param
-    /// </summary>
-    public static readonly ImmutableDictionary<string, System.Type> Param;
-
-    /// <summary>
-    ///     Name of the model : Index of the property : Param
-    /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableArray<System.Type>> PropertyParam;
-
-    /// <summary>
-    ///     Name of the model : Index of the property : IsMapped
-    /// </summary>
-    public static readonly ImmutableDictionary<string, ImmutableArray<bool>> IsPropertyMapped;
-
-    static Meta()
-    {
-        var dummyMeta = Semio.Meta.Model;
-        var goo = new Dictionary<string, System.Type>();
-        var propertyGoo = new Dictionary<string, List<System.Type>>();
-        var propertyItemGoo = new Dictionary<string, List<System.Type>>();
-        var param = new Dictionary<string, System.Type>();
-        var propertyParam = new Dictionary<string, List<System.Type>>();
-        var manualMappedTypes = new Dictionary<System.Type, (System.Type, System.Type)>
-        {
-            { typeof(string), (typeof(GH_String), typeof(Param_String)) },
-            { typeof(bool), (typeof(GH_Boolean), typeof(Param_Boolean)) },
-            { typeof(int), (typeof(GH_Integer), typeof(Param_Integer)) },
-            { typeof(float), (typeof(GH_Number), typeof(Param_Number)) },
-            { typeof(Point), (typeof(GH_Point), typeof(Param_Point)) },
-            { typeof(Vector), (typeof(GH_Vector), typeof(Param_Vector)) },
-            { typeof(Plane), (typeof(GH_Plane), typeof(Param_Plane)) },
-        };
-        var assemblyTypes = Assembly.GetExecutingAssembly().GetTypes();
-        var enumGooTypes = assemblyTypes.Where(t =>
-            t.BaseType?.IsGenericType == true &&
-            t.BaseType.GetGenericTypeDefinition() == typeof(EnumGoo<>)).ToList();
-        var enumParamTypes = assemblyTypes.Where(t =>
-            t.BaseType?.IsGenericType == true &&
-            t.BaseType.GetGenericTypeDefinition() == typeof(EnumParam<,>)).ToList();
-        foreach (var gooType in enumGooTypes)
-        {
-            var enumType = gooType.BaseType!.GetGenericArguments()[0];
-            if (!enumType.IsDefined(typeof(EnumAttribute), false)) continue;
-            var paramType = enumParamTypes.FirstOrDefault(p =>
-                p.BaseType!.GetGenericArguments()[1] == enumType);
-            if (paramType != null)
-                manualMappedTypes[enumType] = (gooType, paramType);
-        }
-        var isPropertyMapped = new Dictionary<string, List<bool>>();
-        foreach (var manualMappedTypeKvp in manualMappedTypes)
-        {
-            var name = manualMappedTypeKvp.Key.Name;
-            goo[name] = manualMappedTypeKvp.Value.Item1;
-            goo[name + "List"] = typeof(List<>).MakeGenericType(goo[name]);
-            param[name] = manualMappedTypeKvp.Value.Item2;
-        }
-        foreach (var kvp in Semio.Meta.Type)
-        {
-            var baseName = typeof(Meta).Namespace + "." + kvp.Key;
-            if (!goo.ContainsKey(kvp.Key))
-            {
-                var equivalentGooType = Assembly.GetExecutingAssembly().GetType(baseName + "Goo");
-                if (equivalentGooType != null)
-                {
-                    goo[kvp.Key] = equivalentGooType;
-                    goo[kvp.Key + "List"] = typeof(List<>).MakeGenericType(goo[kvp.Key]);
-                }
-                var equivalentParamType = Assembly.GetExecutingAssembly().GetType(baseName + "Param");
-                if (equivalentParamType != null)
-                    param[kvp.Key] = equivalentParamType;
-            }
-            propertyGoo[kvp.Key] = new List<System.Type>();
-            propertyItemGoo[kvp.Key] = new List<System.Type>();
-            propertyParam[kvp.Key] = new List<System.Type>();
-            isPropertyMapped[kvp.Key] = new List<bool>();
-        }
-        foreach (var modelKvp in Semio.Meta.Property)
-            for (var i = 0; i < modelKvp.Value.Length; i++)
-            {
-                var property = modelKvp.Value[i];
-                var isPropertyList = Semio.Meta.IsPropertyList[modelKvp.Key][i];
-                var propertyTypeName = isPropertyList
-                    ? property.PropertyType.GetGenericArguments()[0].Name
-                    : property.PropertyType.Name;
-                bool isPropertyMappedValue;
-                isPropertyMappedValue = manualMappedTypes.ContainsKey(Semio.Meta.Type[propertyTypeName]);
-                isPropertyMapped[modelKvp.Key].Add(isPropertyMappedValue);
-                propertyGoo[modelKvp.Key].Add(goo[isPropertyList ? propertyTypeName + "List" : propertyTypeName]);
-                propertyItemGoo[modelKvp.Key].Add(goo[propertyTypeName]);
-                propertyParam[modelKvp.Key].Add(param[propertyTypeName]);
-                System.IO.File.WriteAllText("C:\\git\\semio.tech\\semio\\temp\\properties\\" + propertyTypeName + ".txt", propertyTypeName + " " + isPropertyMapped[modelKvp.Key] + " " + propertyGoo[modelKvp.Key] + " " + propertyItemGoo[modelKvp.Key] + " " + propertyParam[modelKvp.Key]);
-
-            }
-        Goo = goo.ToImmutableDictionary();
-        PropertyGoo = propertyGoo.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-        PropertyItemGoo = propertyItemGoo.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-        Param = param.ToImmutableDictionary();
-        PropertyParam = propertyParam.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-        IsPropertyMapped = isPropertyMapped.ToImmutableDictionary(
-            kvp => kvp.Key, kvp => kvp.Value.ToImmutableArray());
-    }
-
-}
 
 #endregion Meta
