@@ -309,21 +309,8 @@ public abstract class ModelParam<TGoo, TModel> : GH_PersistentParam<TGoo> where 
         ((ModelAttribute)System.Attribute.GetCustomAttribute(typeof(TModel), typeof(ModelAttribute))).Description,
         Constants.Category, "Params")
     { }
-    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{GetIconName()}_24x24");
-    
-    protected virtual string GetIconName()
-    {
-        var typeName = typeof(TModel).Name.ToLower();
-        
-        if (typeName.EndsWith("id"))
-            return typeName.Substring(0, typeName.Length - 2) + "_id";
-        
-        if (typeName.EndsWith("diff"))
-            return typeName.Substring(0, typeName.Length - 4) + "_diff";
-            
-        return typeName;
-    }
-    
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower()}_24x24");
+
     protected override GH_GetterResult Prompt_Singular(ref TGoo value) => throw new NotImplementedException();
     protected override GH_GetterResult Prompt_Plural(ref List<TGoo> values) => throw new NotImplementedException();
 }
@@ -560,6 +547,7 @@ public abstract class IdGoo<TModel> : ModelGoo<TModel> where TModel : Model<TMod
 public abstract class IdParam<TGoo, TModel> : ModelParam<TGoo, TModel> where TGoo : IdGoo<TModel> where TModel : Model<TModel>, new()
 {
     internal IdParam() : base() { }
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower().Substring(0, typeof(TModel).Name.Length - 2)}_id_24x24");
     public override GH_Exposure Exposure => GH_Exposure.secondary;
 }
 
@@ -579,6 +567,7 @@ public abstract class DiffGoo<TModel> : ModelGoo<TModel> where TModel : Model<TM
 public abstract class DiffParam<TGoo, TModel> : ModelParam<TGoo, TModel> where TGoo : DiffGoo<TModel> where TModel : Model<TModel>, new()
 {
     internal DiffParam() : base() { }
+    protected override Bitmap Icon => (Bitmap)Resources.ResourceManager.GetObject($"{typeof(TModel).Name.ToLower().Substring(0, typeof(TModel).Name.Length - 5)}_diff_24x24");
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 }
 
@@ -4265,19 +4254,19 @@ public static class Meta
             { typeof(Plane), (typeof(GH_Plane), typeof(Param_Plane)) },
         };
         var assemblyTypes = Assembly.GetExecutingAssembly().GetTypes();
-        var enumGooTypes = assemblyTypes.Where(t => 
-            t.BaseType?.IsGenericType == true && 
+        var enumGooTypes = assemblyTypes.Where(t =>
+            t.BaseType?.IsGenericType == true &&
             t.BaseType.GetGenericTypeDefinition() == typeof(EnumGoo<>)).ToList();
-        var enumParamTypes = assemblyTypes.Where(t => 
-            t.BaseType?.IsGenericType == true && 
+        var enumParamTypes = assemblyTypes.Where(t =>
+            t.BaseType?.IsGenericType == true &&
             t.BaseType.GetGenericTypeDefinition() == typeof(EnumParam<,>)).ToList();
         foreach (var gooType in enumGooTypes)
         {
             var enumType = gooType.BaseType!.GetGenericArguments()[0];
             if (!enumType.IsDefined(typeof(EnumAttribute), false)) continue;
-            var paramType = enumParamTypes.FirstOrDefault(p => 
+            var paramType = enumParamTypes.FirstOrDefault(p =>
                 p.BaseType!.GetGenericArguments()[1] == enumType);
-            if (paramType != null) 
+            if (paramType != null)
                 manualMappedTypes[enumType] = (gooType, paramType);
         }
         var isPropertyMapped = new Dictionary<string, List<bool>>();
@@ -4317,32 +4306,13 @@ public static class Meta
                     ? property.PropertyType.GetGenericArguments()[0].Name
                     : property.PropertyType.Name;
                 bool isPropertyMappedValue;
-                try
-                {
-                    isPropertyMappedValue = manualMappedTypes.ContainsKey(Semio.Meta.Type[propertyTypeName]);
-                }
-                catch
-                {
-                    isPropertyMappedValue = false;
-                }
+                isPropertyMappedValue = manualMappedTypes.ContainsKey(Semio.Meta.Type[propertyTypeName]);
                 isPropertyMapped[modelKvp.Key].Add(isPropertyMappedValue);
-                try
-                {
-                    propertyGoo[modelKvp.Key].Add(goo[isPropertyList ? propertyTypeName + "List" : propertyTypeName]);
-                    propertyItemGoo[modelKvp.Key].Add(goo[propertyTypeName]);
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-                try
-                {
-                    propertyParam[modelKvp.Key].Add(param[propertyTypeName]);
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
+                propertyGoo[modelKvp.Key].Add(goo[isPropertyList ? propertyTypeName + "List" : propertyTypeName]);
+                propertyItemGoo[modelKvp.Key].Add(goo[propertyTypeName]);
+                propertyParam[modelKvp.Key].Add(param[propertyTypeName]);
+                System.IO.File.WriteAllText("C:\\git\\semio.tech\\semio\\temp\\properties\\" + propertyTypeName + ".txt", propertyTypeName + " " + isPropertyMapped[modelKvp.Key] + " " + propertyGoo[modelKvp.Key] + " " + propertyItemGoo[modelKvp.Key] + " " + propertyParam[modelKvp.Key]);
+
             }
         Goo = goo.ToImmutableDictionary();
         PropertyGoo = propertyGoo.ToImmutableDictionary(

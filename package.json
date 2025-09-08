@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@nxlv/python": "^21.2.0",
+    "@nx/eslint-plugin": "^21.2.0",
     "nx": "^21.4.1"
   },
   "keywords": [

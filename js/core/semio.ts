@@ -42,6 +42,16 @@ export const TOLERANCE = 1e-5;
 
 //#region Persistence
 
+// https://github.com/usalu/semio#-attribute-
+export const AttributeSchema = z.object({
+  key: z.string(),
+  value: z.string().optional(),
+  definition: z.string().optional(),
+});
+export const AttributeIdSchema = z.object({ key: z.string() });
+export const AttributeIdLikeSchema = z.union([AttributeSchema, AttributeIdSchema, z.string()]);
+
+
 // https://github.com/usalu/semio#-author-
 export const AuthorIdSchema = z.object({ email: z.string() });
 export const AuthorSchema = z.object({ name: z.string(), email: z.string(), attributes: z.array(AttributeSchema).optional() });
@@ -70,15 +80,6 @@ export const FileSchema = z.object({
   updatedBy: AuthorIdSchema.optional(),
 });
 export const FileIdLikeSchema = z.union([FileSchema, FileIdSchema, z.string()]);
-
-// https://github.com/usalu/semio#-attribute-
-export const AttributeSchema = z.object({
-  key: z.string(),
-  value: z.string().optional(),
-  definition: z.string().optional(),
-});
-export const AttributeIdSchema = z.object({ key: z.string() });
-export const AttributeIdLikeSchema = z.union([AttributeSchema, AttributeIdSchema, z.string()]);
 
 // https://github.com/usalu/semio#-location-
 export const LocationSchema = z.object({

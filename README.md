@@ -656,14 +656,14 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [JavaScript](https://developer.mozilla.org/docs/Web/JavaScript)
-- [Node](https://nodejs.org/en/learn/getting-started/introduction-to-nodejs)
-- [TypeScript](https://www.npmjs.com/package/typescript)
-  - [Docs](https://www.typescriptlang.org/docs)
-  - [Issues](https://github.com/microsoft/TypeScript/issues)
-- [Wasm](https://developer.mozilla.org/docs/WebAssembly)
-  - [C/C++](https://developer.mozilla.org/docs/WebAssembly/Guides/C_to_Wasm)
-  - [Rust](https://developer.mozilla.org/docs/WebAssembly/Rust_to_Wasm)
+- [JavaScript](https://developer.mozilla.org/docs/Web/JavaScript) - `mdn`
+- [Node](https://nodejs.org/en/learn/getting-started/introduction-to-nodejs) - `intro`
+- [TypeScript](https://www.npmjs.com/package/typescript) - `npm`
+  - [Docs](https://www.typescriptlang.org/docs) - `official`
+  - [Issues](https://github.com/microsoft/TypeScript/issues) - `github`
+- [Wasm](https://developer.mozilla.org/docs/WebAssembly) - `mdn`
+  - [C/C++](https://developer.mozilla.org/docs/WebAssembly/Guides/C_to_Wasm) - `guide`
+  - [Rust](https://developer.mozilla.org/docs/WebAssembly/Rust_to_Wasm) - `guide`
 
 </details>
 
@@ -684,9 +684,9 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [.NET](https://dotnet.microsoft.com)
-- [C#](https://learn.microsoft.com/dotnet/csharp)
-- [NuGet](https://www.nuget.org)
+- [.NET](https://dotnet.microsoft.com) - `official`
+- [C#](https://learn.microsoft.com/dotnet/csharp) - `official`
+- [NuGet](https://www.nuget.org) - `official`
 
 </details>
 
@@ -708,8 +708,8 @@ A .NET core for semio 🥜
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [Python](https://www.python.org)
-- [Poetry](https://python-poetry.org)
+- [Python](https://www.python.org) - `official`
+- [Poetry](https://python-poetry.org) - `official`
 
 </details>
 
@@ -736,61 +736,61 @@ A component is a piece of software which is packaged independently 🏝️
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [React](https://www.npmjs.com/package/react)
-  - [Docs](https://react.dev)
-  - [Issues](https://github.com/facebook/react/issues)
-- [Vite](https://www.npmjs.com/package/vite)
-  - [Docs](https://vitejs.dev/guide)
-  - [Config](https://vitejs.dev/config)
-  - [Issues](https://github.com/vitejs/vite/issues)
-- [Tailwind CSS](https://tailwindcss.com)
-  - [Docs](https://tailwindcss.com/docs)
-  - [Issues](https://github.com/tailwindlabs/tailwindcss/issues)
-- [Shadcn](https://ui.shadcn.com)
-  - [Docs](https://ui.shadcn.com/docs)
-  - [Issues](https://github.com/shadcn-ui/ui/issues)
-- [Radix UI](https://www.radix-ui.com/)
-  - [Docs](https://www.radix-ui.com/primitives/docs/overview/introduction)
-  - [Issues](https://github.com/radix-ui/primitives/issues)
-- [Lucide](https://www.npmjs.com/package/lucide-react)
-  - [Docs](https://lucide.dev/docs/lucide-react)
-  - [Icons](https://lucide.dev/icons/)
-- [Storybook](https://www.npmjs.com/package/@storybook/react)
-  - [Docs](https://storybook.js.org/docs)
-  - [Issues](https://github.com/storybookjs/storybook/issues)
-- [Three.js](https://www.npmjs.com/package/three)
-  - [Docs](https://threejs.org/docs/)
-  - [Examples](https://threejs.org/examples/)
-- [React Three Fiber](https://www.npmjs.com/package/@react-three/fiber)
-  - [Docs](https://docs.pmnd.rs/react-three-fiber)
-  - [Issues](https://github.com/pmndrs/react-three-fiber/issues)
-- [React Three Drei](https://www.npmjs.com/package/@react-three/drei)
-  - [Docs](https://github.com/pmndrs/drei)
-  - [Examples](https://drei.pmnd.rs/)
-- [React Flow](https://www.npmjs.com/package/@xyflow/react)
-  - [Docs](https://reactflow.dev/docs)
-  - [Examples](https://reactflow.dev/examples)
-- [Yjs](https://www.npmjs.com/package/yjs)
-  - [Docs](https://docs.yjs.dev)
-  - [API](https://github.com/yjs/yjs)
-  - [Issues](https://github.com/yjs/yjs/issues)
-- [sql.js](https://www.npmjs.com/package/sql.js)
-  - [Docs](https://sql.js.org)
-  - [API](https://sql.js.org/documentation)
-  - [Issues](https://github.com/sql-js/sql.js/issues)
-  - [Playground](https://sql.js.org/examples/GUI)
-- [dnd kit](https://www.npmjs.com/package/@dnd-kit/core)
-  - [Docs](https://docs.dndkit.com/)
-  - [Examples](https://master--5fc05e08a4a65d0021ae0bf2.chromatic.com/)
-- [Cytoscape](https://www.npmjs.com/package/cytoscape)
-  - [Docs](https://js.cytoscape.org/)
-  - [API](https://js.cytoscape.org/#core)
-- [Markdoc](https://www.npmjs.com/package/@markdoc/markdoc)
-  - [Docs](https://markdoc.dev/docs/getting-started)
-  - [Issues](https://github.com/markdoc/markdoc/issues)
-- [Motion](https://www.npmjs.com/package/motion)
-  - [Docs](https://motion.dev/docs)
-  - [Examples](https://motion.dev/examples)
+- [React](https://www.npmjs.com/package/react) - `npm`
+  - [Docs](https://react.dev) - `official`
+  - [Issues](https://github.com/facebook/react/issues) - `github`
+- [Vite](https://www.npmjs.com/package/vite) - `npm`
+  - [Docs](https://vitejs.dev/guide) - `official`
+  - [Config](https://vitejs.dev/config) - `config`
+  - [Issues](https://github.com/vitejs/vite/issues) - `github`
+- [Tailwind CSS](https://tailwindcss.com) - `official`
+  - [Docs](https://tailwindcss.com/docs) - `docs`
+  - [Issues](https://github.com/tailwindlabs/tailwindcss/issues) - `github`
+- [Shadcn](https://ui.shadcn.com) - `official`
+  - [Docs](https://ui.shadcn.com/docs) - `docs`
+  - [Issues](https://github.com/shadcn-ui/ui/issues) - `github`
+- [Radix UI](https://www.radix-ui.com/) - `official`
+  - [Docs](https://www.radix-ui.com/primitives/docs/overview/introduction) - `docs`
+  - [Issues](https://github.com/radix-ui/primitives/issues) - `github`
+- [Lucide](https://www.npmjs.com/package/lucide-react) - `npm`
+  - [Docs](https://lucide.dev/docs/lucide-react) - `docs`
+  - [Icons](https://lucide.dev/icons/) - `gallery`
+- [Storybook](https://www.npmjs.com/package/@storybook/react) - `npm`
+  - [Docs](https://storybook.js.org/docs) - `official`
+  - [Issues](https://github.com/storybookjs/storybook/issues) - `github`
+- [Three.js](https://www.npmjs.com/package/three) - `npm`
+  - [Docs](https://threejs.org/docs/) - `official`
+  - [Examples](https://threejs.org/examples/) - `gallery`
+- [React Three Fiber](https://www.npmjs.com/package/@react-three/fiber) - `npm`
+  - [Docs](https://docs.pmnd.rs/react-three-fiber) - `official`
+  - [Issues](https://github.com/pmndrs/react-three-fiber/issues) - `github`
+- [React Three Drei](https://www.npmjs.com/package/@react-three/drei) - `npm`
+  - [Docs](https://github.com/pmndrs/drei) - `github`
+  - [Examples](https://drei.pmnd.rs/) - `storybook`
+- [React Flow](https://www.npmjs.com/package/@xyflow/react) - `npm`
+  - [Docs](https://reactflow.dev/docs) - `official`
+  - [Examples](https://reactflow.dev/examples) - `gallery`
+- [Yjs](https://www.npmjs.com/package/yjs) - `npm`
+  - [Docs](https://docs.yjs.dev) - `official`
+  - [API](https://github.com/yjs/yjs) - `github`
+  - [Issues](https://github.com/yjs/yjs/issues) - `github`
+- [sql.js](https://www.npmjs.com/package/sql.js) - `npm`
+  - [Docs](https://sql.js.org) - `official`
+  - [API](https://sql.js.org/documentation) - `docs`
+  - [Issues](https://github.com/sql-js/sql.js/issues) - `github`
+  - [Playground](https://sql.js.org/examples/GUI) - `demo`
+- [dnd kit](https://www.npmjs.com/package/@dnd-kit/core) - `npm`
+  - [Docs](https://docs.dndkit.com/) - `official`
+  - [Examples](https://master--5fc05e08a4a65d0021ae0bf2.chromatic.com/) - `storybook`
+- [Cytoscape](https://www.npmjs.com/package/cytoscape) - `npm`
+  - [Docs](https://js.cytoscape.org/) - `official`
+  - [API](https://js.cytoscape.org/#core) - `reference`
+- [Markdoc](https://www.npmjs.com/package/@markdoc/markdoc) - `npm`
+  - [Docs](https://markdoc.dev/docs/getting-started) - `official`
+  - [Issues](https://github.com/markdoc/markdoc/issues) - `github`
+- [Motion](https://www.npmjs.com/package/motion) - `npm`
+  - [Docs](https://motion.dev/docs) - `official`
+  - [Examples](https://motion.dev/examples) - `gallery`
 
 </details>
 
@@ -808,13 +808,13 @@ The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [Electron](https://www.npmjs.com/package/electron)
-  - [Docs](https://www.electronjs.org/docs)
-  - [API](https://www.electronjs.org/docs/latest/api/app)
-  - [Issues](https://github.com/electron/electron/issues)
-- [Electron Forge](https://www.npmjs.com/package/electron-forge)
-  - [Docs](https://www.electronforge.io/docs)
-  - [Issues](https://github.com/jclab/electron-forge/issues)
+- [Electron](https://www.npmjs.com/package/electron) - `npm`
+  - [Docs](https://www.electronjs.org/docs) - `official`
+  - [API](https://www.electronjs.org/docs/latest/api/app) - `reference`
+  - [Issues](https://github.com/electron/electron/issues) - `github`
+- [Electron Forge](https://www.npmjs.com/package/electron-forge) - `npm`
+  - [Docs](https://www.electronforge.io/docs) - `official`
+  - [Issues](https://github.com/jclab/electron-forge/issues) - `github`
 
 </details>
 An electron-based desktop app primarly working for with local kits 💾
@@ -824,11 +824,11 @@ An electron-based desktop app primarly working for with local kits 💾
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [Model Context Protocol](https://modelcontextprotocol.io)
-- [OpenAI](https://platform.openai.com/docs)
-- [Claude](https://docs.anthropic.com)
-- [Gemini](https://ai.google.dev)
-- [Groq](https://console.groq.com/docs)
+- [Model Context Protocol](https://modelcontextprotocol.io) - `official`
+- [OpenAI](https://platform.openai.com/docs) - `official`
+- [Claude](https://docs.anthropic.com) - `official`
+- [Gemini](https://ai.google.dev) - `official`
+- [Groq](https://console.groq.com/docs) - `official`
 
 </details>
 
@@ -839,10 +839,10 @@ Mostly a [Large Language Model](https://en.wikipedia.org/wiki/Large_language_mod
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [Markdown](https://www.markdownguide.org)
-- [MDX](https://mdxjs.com/docs)
-- [Astro](https://astro.build/docs)
-- [Starlight](https://starlight.astro.build)
+- [Markdown](https://www.markdownguide.org) - `guide`
+- [MDX](https://mdxjs.com/docs) - `official`
+- [Astro](https://astro.build/docs) - `official`
+- [Starlight](https://starlight.astro.build) - `official`
 
 </details>
 
@@ -862,32 +862,32 @@ A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [Fluent Validation](https://www.nuget.org/packages/FluentValidation)
-  - [Docs](https://docs.fluentvalidation.net)
-  - [Issues](https://github.com/FluentValidation/FluentValidation/issues)
-- [Refit](https://www.nuget.org/packages/Refit)
-  - [Docs](https://github.com/reactiveui/refit)
-  - [Issues](https://github.com/reactiveui/refit/issues)
-- [QuickGraph](https://www.nuget.org/packages/QuickGraph)
-  - [Docs](https://github.com/YaccConstructor/QuickGraph)
-  - [Issues](https://github.com/YaccConstructor/QuickGraph/issues)
-- [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json)
-  - [Docs](https://www.newtonsoft.com/json/help)
-  - [Issues](https://github.com/JamesNK/Newtonsoft.Json/issues)
-- [UnitsNet](https://www.nuget.org/packages/UnitsNet)
-  - [Docs](https://github.com/angularsen/UnitsNet)
-  - [Issues](https://github.com/angularsen/UnitsNet/issues)
-- [Humanizer](https://www.nuget.org/packages/Humanizer)
-  - [Docs](https://github.com/Humanizr/Humanizer)
-  - [Issues](https://github.com/Humanizr/Humanizer/issues)
-- [SVG](https://www.nuget.org/packages/Svg)
-  - [Docs](https://svg-net.github.io/SVG)
-  - [API](https://svg-net.github.io/SVG/api)
-  - [Issues](https://github.com/svg-net/svg/issues)
-- [GrGen.NET](https://grgen.de)
-  - [Docs](https://grgen.de/GrGenNET-Manual.pdf)
-  - [API](https://grgen.de/doc/API_7.1)
-  - [Issues](https://github.com/grgen-net/grgen-net/issues)
+- [Fluent Validation](https://www.nuget.org/packages/FluentValidation) - `nuget`
+  - [Docs](https://docs.fluentvalidation.net) - `official`
+  - [Issues](https://github.com/FluentValidation/FluentValidation/issues) - `github`
+- [Refit](https://www.nuget.org/packages/Refit) - `nuget`
+  - [Docs](https://github.com/reactiveui/refit) - `github`
+  - [Issues](https://github.com/reactiveui/refit/issues) - `github`
+- [QuickGraph](https://www.nuget.org/packages/QuickGraph) - `nuget`
+  - [Docs](https://github.com/YaccConstructor/QuickGraph) - `github`
+  - [Issues](https://github.com/YaccConstructor/QuickGraph/issues) - `github`
+- [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json) - `nuget`
+  - [Docs](https://www.newtonsoft.com/json/help) - `official`
+  - [Issues](https://github.com/JamesNK/Newtonsoft.Json/issues) - `github`
+- [UnitsNet](https://www.nuget.org/packages/UnitsNet) - `nuget`
+  - [Docs](https://github.com/angularsen/UnitsNet) - `github`
+  - [Issues](https://github.com/angularsen/UnitsNet/issues) - `github`
+- [Humanizer](https://www.nuget.org/packages/Humanizer) - `nuget`
+  - [Docs](https://github.com/Humanizr/Humanizer) - `github`
+  - [Issues](https://github.com/Humanizr/Humanizer/issues) - `github`
+- [SVG](https://www.nuget.org/packages/Svg) - `nuget`
+  - [Docs](https://svg-net.github.io/SVG) - `official`
+  - [API](https://svg-net.github.io/SVG/api) - `reference`
+  - [Issues](https://github.com/svg-net/svg/issues) - `github`
+- [GrGen.NET](https://grgen.de) - `official`
+  - [Docs](https://grgen.de/GrGenNET-Manual.pdf) - `manual`
+  - [API](https://grgen.de/doc/API_7.1) - `reference`
+  - [Issues](https://github.com/grgen-net/grgen-net/issues) - `github`
 
 </details>
 
@@ -898,13 +898,13 @@ The core which is shared in the [semio .NET ecosystem](#-net-) 🥜
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [Rhino](https://www.rhino3d.com)
-  - [Rhino Developer](https://developer.rhino3d.com)
-    - [Rhino Developer API](https://developer.rhino3d.com/api)
-    - [RhinoCommon API](https://developer.rhino3d.com/api/rhinocommon)
-  - [Grasshopper](https://www.grasshopper3d.com)
-    - [Grasshopper SDK](https://mcneel.github.io/grasshopper-api-docs/api/grasshopper)
-  - [Forum](https://discourse.mcneel.com)
+- [Rhino](https://www.rhino3d.com) - `official`
+  - [Rhino Developer](https://developer.rhino3d.com) - `dev`
+    - [Rhino Developer API](https://developer.rhino3d.com/api) - `reference`
+    - [RhinoCommon API](https://developer.rhino3d.com/api/rhinocommon) - `reference`
+  - [Grasshopper](https://www.grasshopper3d.com) - `official`
+    - [Grasshopper SDK](https://mcneel.github.io/grasshopper-api-docs/api/grasshopper) - `reference`
+  - [Forum](https://discourse.mcneel.com) - `forum`
   </details>
 
   <details>
@@ -982,54 +982,54 @@ Grasshopper is an amazing tool if you know the system that you want to create bu
 <details>
 <summary><strong>📚 Resources:</strong></summary>
 
-- [Pydantic](https://pypi.org/project/pydantic)
-  - [Docs](https://docs.pydantic.dev)
-  - [Issues](https://github.com/pydantic/pydantic/issues)
-- [SQLAlchemy](https://pypi.org/project/sqlalchemy)
-  - [Docs](https://docs.sqlalchemy.org)
-  - [Issues](https://github.com/sqlalchemy/sqlalchemy/issues)
-- [SQLModel](https://pypi.org/project/sqlmodel)
-  - [Docs](https://sqlmodel.tiangolo.com)
-  - [Issues](https://github.com/tiangolo/sqlmodel/issues)
-- [Uvicorn](https://pypi.org/project/uvicorn)
-  - [Docs](https://www.uvicorn.org)
-  - [Issues](https://github.com/encode/uvicorn/issues)
-- [Starlette](https://pypi.org/project/starlette)
-  - [Docs](https://www.starlette.io)
-  - [Issues](https://github.com/encode/starlette/issues)
-- [FastAPI](https://pypi.org/project/fastapi)
-  - [Docs](https://fastapi.tiangolo.com)
-  - [Issues](https://github.com/tiangolo/fastapi/issues)
-- [Graphene](https://pypi.org/project/graphene)
-  - [Docs](https://docs.graphene-python.org)
-  - [Issues](https://github.com/graphql-python/graphene/issues)
-- [starlette-graphene3](https://pypi.org/project/starlette-graphene3)
-  - [Docs](https://github.com/ciscorn/starlette-graphene3)
-  - [Issues](https://github.com/ciscorn/starlette-graphene3/issues)
-- [Graphene Pydantic](https://pypi.org/project/graphene-pydantic)
-  - [Docs](https://docs.graphene-python.org/projects/pydantic)
-  - [Issues](https://github.com/graphql-python/graphene-pydantic/issues)
-- [Graphene SQLAlchemy](https://pypi.org/project/graphene-sqlalchemy)
-  - [Docs](https://docs.graphene-python.org/projects/sqlalchemy)
-  - [Issues](https://github.com/graphql-python/graphene-sqlalchemy/issues)
-- [NetworkX](https://pypi.org/project/networkx)
-  - [Docs](https://networkx.org)
-  - [Issues](https://github.com/networkx/networkx/issues)
-- [Lark](https://pypi.org/project/lark-parser)
-  - [Docs](https://lark-parser.readthedocs.io)
-  - [Issues](https://github.com/lark-parser/lark/issues)
-- [Numpy](https://pypi.org/project/numpy)
-  - [Docs](https://numpy.org)
-  - [Issues](https://github.com/numpy/numpy/issues)
-- [Pint](https://pypi.org/project/Pint)
-  - [Docs](https://pint.readthedocs.io)
-  - [Issues](https://github.com/hgrecco/pint/issues)
-- [pytransform3d](https://pypi.org/project/pytransform3d)
-  - [Docs](https://dfki-ric.github.io/pytransform3d)
-  - [Issues](https://github.com/dfki-ric/pytransform3d/issues)
-- [Loguru](https://pypi.org/project/loguru)
-  - [Docs](https://loguru.readthedocs.io)
-  - [Issues](https://github.com/Delgan/loguru/issues)
+- [Pydantic](https://pypi.org/project/pydantic) - `pypi`
+  - [Docs](https://docs.pydantic.dev) - `official`
+  - [Issues](https://github.com/pydantic/pydantic/issues) - `github`
+- [SQLAlchemy](https://pypi.org/project/sqlalchemy) - `pypi`
+  - [Docs](https://docs.sqlalchemy.org) - `official`
+  - [Issues](https://github.com/sqlalchemy/sqlalchemy/issues) - `github`
+- [SQLModel](https://pypi.org/project/sqlmodel) - `pypi`
+  - [Docs](https://sqlmodel.tiangolo.com) - `official`
+  - [Issues](https://github.com/tiangolo/sqlmodel/issues) - `github`
+- [Uvicorn](https://pypi.org/project/uvicorn) - `pypi`
+  - [Docs](https://www.uvicorn.org) - `official`
+  - [Issues](https://github.com/encode/uvicorn/issues) - `github`
+- [Starlette](https://pypi.org/project/starlette) - `pypi`
+  - [Docs](https://www.starlette.io) - `official`
+  - [Issues](https://github.com/encode/starlette/issues) - `github`
+- [FastAPI](https://pypi.org/project/fastapi) - `pypi`
+  - [Docs](https://fastapi.tiangolo.com) - `official`
+  - [Issues](https://github.com/tiangolo/fastapi/issues) - `github`
+- [Graphene](https://pypi.org/project/graphene) - `pypi`
+  - [Docs](https://docs.graphene-python.org) - `official`
+  - [Issues](https://github.com/graphql-python/graphene/issues) - `github`
+- [starlette-graphene3](https://pypi.org/project/starlette-graphene3) - `pypi`
+  - [Docs](https://github.com/ciscorn/starlette-graphene3) - `github`
+  - [Issues](https://github.com/ciscorn/starlette-graphene3/issues) - `github`
+- [Graphene Pydantic](https://pypi.org/project/graphene-pydantic) - `pypi`
+  - [Docs](https://docs.graphene-python.org/projects/pydantic) - `official`
+  - [Issues](https://github.com/graphql-python/graphene-pydantic/issues) - `github`
+- [Graphene SQLAlchemy](https://pypi.org/project/graphene-sqlalchemy) - `pypi`
+  - [Docs](https://docs.graphene-python.org/projects/sqlalchemy) - `official`
+  - [Issues](https://github.com/graphql-python/graphene-sqlalchemy/issues) - `github`
+- [NetworkX](https://pypi.org/project/networkx) - `pypi`
+  - [Docs](https://networkx.org) - `official`
+  - [Issues](https://github.com/networkx/networkx/issues) - `github`
+- [Lark](https://pypi.org/project/lark-parser) - `pypi`
+  - [Docs](https://lark-parser.readthedocs.io) - `official`
+  - [Issues](https://github.com/lark-parser/lark/issues) - `github`
+- [Numpy](https://pypi.org/project/numpy) - `pypi`
+  - [Docs](https://numpy.org) - `official`
+  - [Issues](https://github.com/numpy/numpy/issues) - `github`
+- [Pint](https://pypi.org/project/Pint) - `pypi`
+  - [Docs](https://pint.readthedocs.io) - `official`
+  - [Issues](https://github.com/hgrecco/pint/issues) - `github`
+- [pytransform3d](https://pypi.org/project/pytransform3d) - `pypi`
+  - [Docs](https://dfki-ric.github.io/pytransform3d) - `official`
+  - [Issues](https://github.com/dfki-ric/pytransform3d/issues) - `github`
+- [Loguru](https://pypi.org/project/loguru) - `pypi`
+  - [Docs](https://loguru.readthedocs.io) - `official`
+  - [Issues](https://github.com/Delgan/loguru/issues) - `github`
 
 </details>
 
