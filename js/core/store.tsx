@@ -2096,14 +2096,11 @@ class YSketchpadStore implements SketchpadStoreFull {
 
   createDesignEditor = (id: DesignEditorId) => {
     const store = new YDesignEditorStore(this);
-
-    // Ensure the kitId map exists
     const kitIdStr = kitIdToString(id.kit);
     const designIdStr = designIdToString(id.design);
     if (!this.designEditors.has(kitIdStr)) {
       this.designEditors.set(kitIdStr, new Map());
     }
-
     const kitEditors = this.designEditors.get(kitIdStr)!;
     kitEditors.set(designIdStr, store);
   };

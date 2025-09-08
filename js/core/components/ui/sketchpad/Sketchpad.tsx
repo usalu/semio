@@ -23,6 +23,7 @@ import { TooltipProvider } from "../Tooltip";
 import DesignEditor from "./DesignEditor";
 
 import { DesignId, DesignScopeProvider, KitId, KitScopeProvider, Layout, Mode, SketchpadScopeProvider, Theme, useLayout, useMode, useSketchpadCommands, useSketchpad as useSketchpadStore, useTheme } from "@semio/js";
+import { DesignEditorId } from "../../../store";
 
 interface NavbarContextType {
   navbarToolbar: ReactNode | null;
@@ -106,8 +107,8 @@ const SketchpadInner: FC = () => {
       // }
 
       try {
-        await store.execute("semio.sketchpad.createDesignEditor", { kitId: defaultKitId, designId: defaultDesignId });
-        await store.execute("semio.sketchpad.setActiveDesignEditor", { kitId: defaultKitId, designId: defaultDesignId });
+        await store.execute("semio.sketchpad.createDesignEditor", { kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
+        await store.execute("semio.sketchpad.setActiveDesignEditor", { kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
       } catch (e) {
         console.error("Failed to initialize default kit:", e);
       } finally {

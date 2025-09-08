@@ -23,7 +23,7 @@ The following rules MUST alwaysbe followed unless explicitly asked to do otherwi
 - NEVER remove code that is commented out.
 - NEVER add comments to the code.
 - NEVER ask to run a command where you are not using the output. All dev servers, debugging and testing processes are running.
-- NEVER run modifying `git` commands. Only read-only `git`commands are allowed. If you messed up, ALWAYS fix the file.
+- NEVER run modifying `git` commands such as `git checkout`. Only read-only `git`commands are allowed. If you messed up, ALWAYS fix the file.
 - NEVER add comments to the code.
 - NEVER create tests unless you are explicitly asked to.
 - ALWAYS use inline syntax if possible.
