@@ -50,7 +50,7 @@
     "react-hotkeys-hook": "^5.1.0",
     "react-resizable-panels": "^3.0.4",
     "sql.js": "^1.13.0",
-    "three": "^0.179.1",
+    "three": "^0.180.0",
     "uuid": "^11.1.0",
     "y-indexeddb": "^9.0.12",
     "yjs": "^13.6.27",
