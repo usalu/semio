@@ -1365,9 +1365,9 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
 
   const selection = useSelection();
 
-  const hasPieces = (selection.pieceIds || []).length > 0;
-  const hasConnections = (selection.connectionIds || []).length > 0;
-  const hasPortSelected = selection.portId !== undefined;
+  const hasPieces = (selection.pieces || []).length > 0;
+  const hasConnections = (selection.connections || []).length > 0;
+  const hasPortSelected = selection.port !== undefined;
   const hasSelection = hasPieces || hasConnections || hasPortSelected;
 
   return (
@@ -1380,9 +1380,9 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
         <div className="p-1 overflow-hidden min-w-0">
           <Tree className="min-w-0 overflow-hidden">
             {!hasSelection && <DesignSection />}
-            {hasPortSelected && <PortSection pieceId={selection.portId!.pieceId} portId={selection.portId!.portId} />}
-            {hasPieces && !hasPortSelected && <PiecesSection pieceIds={selection.pieceIds || []} />}
-            {hasConnections && !hasPortSelected && <ConnectionsSection connections={selection.connectionIds || []} />}
+            {hasPortSelected && <PortSection pieceId={selection.port!.piece.id_} portId={selection.port!.port.id_} />}
+            {hasPieces && !hasPortSelected && <PiecesSection pieceIds={selection.pieces || []} />}
+            {hasConnections && !hasPortSelected && <ConnectionsSection connections={selection.connections || []} />}
             {hasPieces && hasConnections && !hasPortSelected && (
               <TreeSection label="Mixed Selection" defaultOpen={true}>
                 <TreeItem>

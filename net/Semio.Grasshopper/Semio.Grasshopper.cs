@@ -913,19 +913,19 @@ public class AttributeGoo : ModelGoo<Attribute>
 }
 public class AttributeParam : ModelParam<AttributeGoo, Attribute>
 {
-    public AttributeParam() : base("Attribute", "A", "Attribute parameter") { }
+    public AttributeParam() : base("Atr", "At", "A attribute is a key value pair with an an optional definition.") { }
     public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B94");
     protected override Bitmap GetParamIcon() => Resources.semio_24x24;
 }
 
 public class AttributeComponent : ModelComponent<AttributeParam, AttributeGoo, Attribute>
 {
-    public AttributeComponent() : base("Attribute", "A", "Construct, deconstruct or modify an attribute") { }
+    public AttributeComponent() : base("Atr", "At", "Construct, deconstruct or modify an attribute") { }
     public override Guid ComponentGuid => new("51146B05-ACEB-4810-AD75-10AC3E029D39");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "A";
-    protected override string GetModelName() => "Attribute";
+    protected override string GetModelCode() => "At";
+    protected override string GetModelName() => "Atr";
 
     protected override void RegisterModelInputs(GH_InputParamManager pManager)
     {
@@ -1035,14 +1035,14 @@ public class RepresentationIdGoo : IdGoo<RepresentationId>
 
 public class RepresentationIdParam : IdParam<RepresentationIdGoo, RepresentationId>
 {
-    public RepresentationIdParam() : base("RepresentationId", "RI", "RepresentationId parameter") { }
+    public RepresentationIdParam() : base("Rep", "Rp", "The identifier of a representation.") { }
     public override Guid ComponentGuid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
     protected override Bitmap GetParamIcon() => Resources.semio_24x24;
 }
 
 public class RepresentationIdComponent : IdComponent<RepresentationIdParam, RepresentationIdGoo, RepresentationId>
 {
-    public RepresentationIdComponent() : base("RepresentationId", "RI", "RepresentationId component") { }
+    public RepresentationIdComponent() : base("Rep", "Rp", "The identifier of a representation.") { }
     public override Guid ComponentGuid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -1092,14 +1092,14 @@ public class RepresentationDiffGoo : DiffGoo<RepresentationDiff>
 
 public class RepresentationDiffParam : DiffParam<RepresentationDiffGoo, RepresentationDiff>
 {
-    public RepresentationDiffParam() : base("RepresentationDiff", "RD", "RepresentationDiff parameter") { }
+    public RepresentationDiffParam() : base("RDf", "RD", "A diff for representations.") { }
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A9");
     protected override Bitmap GetParamIcon() => Resources.semio_24x24;
 }
 
 public class RepresentationDiffComponent : DiffComponent<RepresentationDiffParam, RepresentationDiffGoo, RepresentationDiff>
 {
-    public RepresentationDiffComponent() : base("RepresentationDiff", "RD", "RepresentationDiff component") { }
+    public RepresentationDiffComponent() : base("RDf", "RD", "A diff for representations.") { }
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AA");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -1241,14 +1241,14 @@ public class RepresentationGoo : ModelGoo<Representation>
 
 public class RepresentationParam : ModelParam<RepresentationGoo, Representation>
 {
-    public RepresentationParam() : base("Representation", "R", "Representation parameter") { }
+    public RepresentationParam() : base("Rep", "Rp", "A representation is a link to a resource that describes a type for a certain level of detail and tags.") { }
     public override Guid ComponentGuid => new("895BBC91-851A-4DFC-9C83-92DFE90029E8");
     protected override Bitmap GetParamIcon() => Resources.semio_24x24;
 }
 
 public class RepresentationComponent : ModelComponent<RepresentationParam, RepresentationGoo, Representation>
 {
-    public RepresentationComponent() : base("Representation", "R", "Construct, deconstruct or modify a representation") { }
+    public RepresentationComponent() : base("Rep", "Rp", "A representation is a link to a resource that describes a type for a certain level of detail and tags.") { }
     public override Guid ComponentGuid => new("37228B2F-70DF-44B7-A3B6-781D5AFCE122");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -1257,18 +1257,18 @@ public class RepresentationComponent : ModelComponent<RepresentationParam, Repre
 
     protected override void RegisterModelInputs(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Url", "U", "The URL of the representation", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "D", "The description of the representation", GH_ParamAccess.item);
-        pManager.AddTextParameter("Tags", "T", "The tags of the representation", GH_ParamAccess.list);
-        pManager.AddParameter(new AttributeParam(), "Atr", "At", "A attribute is a key value pair with an an optional definition.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Url", "Ur", "The Unique Resource Locator (URL) to the resource of the representation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the representation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Tags*", "Tg*", "The optional tags to group representations. No tags means default.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Atr*", "At*", "The optional attributes of the representation.", GH_ParamAccess.list);
     }
 
     protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Url", "U", "The URL of the representation", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "D", "The description of the representation", GH_ParamAccess.item);
-        pManager.AddTextParameter("Tags", "T", "The tags of the representation", GH_ParamAccess.list);
-        pManager.AddParameter(new AttributeParam(), "Atr", "At", "A attribute is a key value pair with an an optional definition.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Url", "Ur", "The Unique Resource Locator (URL) to the resource of the representation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the representation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Tags*", "Tg*", "The optional tags to group representations. No tags means default.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Atr*", "At*", "The optional attributes of the representation.", GH_ParamAccess.list);
     }
 
     protected override void ProcessModelInputs(IGH_DataAccess DA, Representation model)
@@ -1352,7 +1352,7 @@ public class FileIdGoo : IdGoo<FileId>
 
 public class FileIdParam : IdParam<FileIdGoo, FileId>
 {
-    public FileIdParam() : base("FileId", "FI", "FileId parameter") { }
+    public FileIdParam() : base("Fil", "Fl", "The identifier of a file.") { }
     public override Guid ComponentGuid => new("50C3D4E5-F6A7-B8C9-D0E1-F2A3B4C5D6E7");
 
     protected override Bitmap GetParamIcon() => Resources.semio_24x24;
@@ -1360,7 +1360,7 @@ public class FileIdParam : IdParam<FileIdGoo, FileId>
 
 public class FileIdComponent : IdComponent<FileIdParam, FileIdGoo, FileId>
 {
-    public FileIdComponent() : base("FileId", "FI", "FileId component") { }
+    public FileIdComponent() : base("Fil", "Fl", "The identifier of a file.") { }
     public override Guid ComponentGuid => new("50C3D4E5-F6A7-B8C9-D0E1-F2A3B4C5D6E8");
 
     protected override Guid GetComponentGuid() => ComponentGuid;
@@ -1408,7 +1408,7 @@ public class FileDiffGoo : DiffGoo<FileDiff>
 
 public class FileDiffParam : DiffParam<FileDiffGoo, FileDiff>
 {
-    public FileDiffParam() : base("FileDiff", "FD", "FileDiff parameter") { }
+    public FileDiffParam() : base("FDf", "FD", "A diff for files.") { }
     public override Guid ComponentGuid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F0");
 
     protected override Bitmap GetParamIcon() => Resources.semio_24x24;
@@ -1416,7 +1416,7 @@ public class FileDiffParam : DiffParam<FileDiffGoo, FileDiff>
 
 public class FileDiffComponent : DiffComponent<FileDiffParam, FileDiffGoo, FileDiff>
 {
-    public FileDiffComponent() : base("FileDiff", "FD", "FileDiff component") { }
+    public FileDiffComponent() : base("FDf", "FD", "A diff for files.") { }
     public override Guid ComponentGuid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F1");
 
     protected override Guid GetComponentGuid() => ComponentGuid;
@@ -1560,7 +1560,7 @@ public class FileGoo : ModelGoo<File>
 
 public class FileParam : ModelParam<FileGoo, File>
 {
-    public FileParam() : base("File", "F", "File parameter") { }
+    public FileParam() : base("Fil", "Fl", "A file with content.") { }
     public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F8");
 
     protected override Bitmap GetParamIcon() => Resources.semio_24x24;
@@ -1568,7 +1568,7 @@ public class FileParam : ModelParam<FileGoo, File>
 
 public class FileComponent : ModelComponent<FileParam, FileGoo, File>
 {
-    public FileComponent() : base("File", "F", "Construct, deconstruct or modify a file") { }
+    public FileComponent() : base("Fil", "Fl", "A file with content.") { }
     public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F9");
 
     protected override Guid GetComponentGuid() => ComponentGuid;
@@ -1578,18 +1578,18 @@ public class FileComponent : ModelComponent<FileParam, FileGoo, File>
 
     protected override void RegisterModelInputs(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Url", "U", "The URL of the file", GH_ParamAccess.item);
-        pManager.AddTextParameter("Data", "D", "The data of the file", GH_ParamAccess.item);
-        pManager.AddIntegerParameter("Size", "S", "The size of the file", GH_ParamAccess.item);
-        pManager.AddTextParameter("Hash", "H", "The hash of the file", GH_ParamAccess.item);
+        pManager.AddTextParameter("Url", "Ur", "The url of the file.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Dat", "Da", "The data URI of the file.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Siz?", "Sz?", "The optional size of the file in bytes.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Has?", "Hs?", "The optional hash of the file.", GH_ParamAccess.item);
     }
 
     protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Url", "U", "The URL of the file", GH_ParamAccess.item);
-        pManager.AddTextParameter("Data", "D", "The data of the file", GH_ParamAccess.item);
-        pManager.AddIntegerParameter("Size", "S", "The size of the file", GH_ParamAccess.item);
-        pManager.AddTextParameter("Hash", "H", "The hash of the file", GH_ParamAccess.item);
+        pManager.AddTextParameter("Url", "Ur", "The url of the file.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Dat", "Da", "The data URI of the file.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Siz?", "Sz?", "The optional size of the file in bytes.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Has?", "Hs?", "The optional hash of the file.", GH_ParamAccess.item);
     }
 
     protected override void ProcessModelInputs(IGH_DataAccess DA, File model)
@@ -1795,7 +1795,7 @@ public class PortIdGoo : IdGoo<PortId>
 
 public class PortIdParam : IdParam<PortIdGoo, PortId>
 {
-    public PortIdParam() : base("PortId", "PI", "PortId parameter") { }
+    public PortIdParam() : base("Por", "Po", "The optional local identifier of the port within the type. No id means the default port.") { }
     public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B1");
 
     protected override Bitmap GetParamIcon() => Resources.semio_24x24;
@@ -1803,7 +1803,7 @@ public class PortIdParam : IdParam<PortIdGoo, PortId>
 
 public class PortIdComponent : IdComponent<PortIdParam, PortIdGoo, PortId>
 {
-    public PortIdComponent() : base("PortId", "PI", "PortId component") { }
+    public PortIdComponent() : base("Por", "Po", "The optional local identifier of the port within the type. No id means the default port.") { }
     public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B2");
 
     protected override Guid GetComponentGuid() => ComponentGuid;
@@ -1978,14 +1978,14 @@ public class PortGoo : ModelGoo<Port>
 
 public class PortParam : ModelParam<PortGoo, Port>
 {
-    public PortParam() : base("Port", "P", "Port parameter") { }
+    public PortParam() : base("Por", "Po", "A port is a connection point (with a direction) of a type.") { }
     public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1B");
     protected override Bitmap GetParamIcon() => Resources.semio_24x24;
 }
 
 public class PortComponent : ModelComponent<PortParam, PortGoo, Port>
 {
-    public PortComponent() : base("Port", "P", "Construct, deconstruct or modify a port") { }
+    public PortComponent() : base("Por", "Po", "A port is a connection point (with a direction) of a type.") { }
     public override Guid ComponentGuid => new("E505C90C-71F4-413F-82FE-65559D9FFAB5");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -1994,30 +1994,30 @@ public class PortComponent : ModelComponent<PortParam, PortGoo, Port>
 
     protected override void RegisterModelInputs(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Id", "I", "The ID of the port", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "D", "The description of the port", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Mandatory", "M", "Whether the port is mandatory", GH_ParamAccess.item);
-        pManager.AddTextParameter("Family", "F", "The family of the port", GH_ParamAccess.item);
-        pManager.AddTextParameter("CompatibleFamilies", "CF", "The compatible families of the port", GH_ParamAccess.list);
-        pManager.AddPointParameter("Point", "Pt", "The point of the port", GH_ParamAccess.item);
-        pManager.AddVectorParameter("Direction", "Dir", "The direction of the port", GH_ParamAccess.item);
-        pManager.AddNumberParameter("T", "T", "The T parameter of the port", GH_ParamAccess.item);
-        pManager.AddParameter(new PropParam(), "Prp", "Pp", "A property is a value with an optional unit for a quality.", GH_ParamAccess.list);
-        pManager.AddParameter(new AttributeParam(), "Atr", "At", "A attribute is a key value pair with an an optional definition.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Idn?", "Id?", "The optional local identifier of the port within the type. No id means the default port.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the port.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Man?", "Ma?", "Whether the port is mandatory. A mandatory port must be connected in a design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Fam?", "Fa?", "The optional family of the port. This allows to define explicit compatibility with other ports.", GH_ParamAccess.item);
+        pManager.AddTextParameter("CFas*", "CF*", "The optional other compatible families of the port. An empty list means this port is compatible with all other ports.", GH_ParamAccess.list);
+        pManager.AddPointParameter("Pnt", "Pt", "The connection point of the port that is attracted to another connection point.", GH_ParamAccess.item);
+        pManager.AddVectorParameter("Drn", "Dr", "The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("T", "T", "The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.", GH_ParamAccess.item);
+        pManager.AddParameter(new PropParam(), "Prp*", "Pp*", "The optional properties of the port.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Atr*", "At*", "The optional attributes of the port.", GH_ParamAccess.list);
     }
 
     protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Id", "I", "The ID of the port", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "D", "The description of the port", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Mandatory", "M", "Whether the port is mandatory", GH_ParamAccess.item);
-        pManager.AddTextParameter("Family", "F", "The family of the port", GH_ParamAccess.item);
-        pManager.AddTextParameter("CompatibleFamilies", "CF", "The compatible families of the port", GH_ParamAccess.list);
-        pManager.AddPointParameter("Point", "Pt", "The point of the port", GH_ParamAccess.item);
-        pManager.AddVectorParameter("Direction", "Dir", "The direction of the port", GH_ParamAccess.item);
-        pManager.AddNumberParameter("T", "T", "The T parameter of the port", GH_ParamAccess.item);
-        pManager.AddParameter(new PropParam(), "Prp", "Pp", "A property is a value with an optional unit for a quality.", GH_ParamAccess.list);
-        pManager.AddParameter(new AttributeParam(), "Atr", "At", "A attribute is a key value pair with an an optional definition.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Idn?", "Id?", "The optional local identifier of the port within the type. No id means the default port.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the port.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Man?", "Ma?", "Whether the port is mandatory. A mandatory port must be connected in a design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Fam?", "Fa?", "The optional family of the port. This allows to define explicit compatibility with other ports.", GH_ParamAccess.item);
+        pManager.AddTextParameter("CFas*", "CF*", "The optional other compatible families of the port. An empty list means this port is compatible with all other ports.", GH_ParamAccess.list);
+        pManager.AddPointParameter("Pnt", "Pt", "The connection point of the port that is attracted to another connection point.", GH_ParamAccess.item);
+        pManager.AddVectorParameter("Drn", "Dr", "The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("T", "T", "The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.", GH_ParamAccess.item);
+        pManager.AddParameter(new PropParam(), "Prp*", "Pp*", "The optional properties of the port.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Atr*", "At*", "The optional attributes of the port.", GH_ParamAccess.list);
     }
 
     protected override void ProcessModelInputs(IGH_DataAccess DA, Port model)
@@ -2190,14 +2190,14 @@ public class AuthorIdGoo : IdGoo<AuthorId>
 
 public class AuthorIdParam : IdParam<AuthorIdGoo, AuthorId>
 {
-    public AuthorIdParam() : base("AuthorId", "AI", "AuthorId parameter") { }
+    public AuthorIdParam() : base("Aut", "Au", "The id of the author.") { }
     public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1C");
     protected override Bitmap GetParamIcon() => Resources.semio_24x24;
 }
 
 public class AuthorIdComponent : IdComponent<AuthorIdParam, AuthorIdGoo, AuthorId>
 {
-    public AuthorIdComponent() : base("AuthorId", "AI", "AuthorId component") { }
+    public AuthorIdComponent() : base("Aut", "Au", "The id of the author.") { }
     public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1D");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -2467,14 +2467,14 @@ public class TypeIdGoo : IdGoo<TypeId>
 
 public class TypeIdParam : IdParam<TypeIdGoo, TypeId>
 {
-    public TypeIdParam() : base("TypeId", "TI", "TypeId parameter") { }
+    public TypeIdParam() : base("Typ", "Ty", "The identifier of the type within the kit.") { }
     public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C2");
     protected override Bitmap GetParamIcon() => Resources.semio_24x24;
 }
 
 public class TypeIdComponent : IdComponent<TypeIdParam, TypeIdGoo, TypeId>
 {
-    public TypeIdComponent() : base("TypeId", "TI", "TypeId component") { }
+    public TypeIdComponent() : base("Typ", "Ty", "The identifier of the type within the kit.") { }
     public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C3");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -2720,14 +2720,14 @@ public class TypeGoo : ModelGoo<Type>
 
 public class TypeParam : ModelParam<TypeGoo, Type>
 {
-    public TypeParam() : base("Type", "T", "Type parameter") { }
+    public TypeParam() : base("Typ", "Ty", "A type is a reusable element that can be connected with other types over ports.") { }
     public override Guid ComponentGuid => new("301FCFFA-2160-4ACA-994F-E067C4673D45");
     protected override Bitmap GetParamIcon() => Resources.semio_24x24;
 }
 
 public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
 {
-    public TypeComponent() : base("Type", "T", "Construct, deconstruct or modify a type") { }
+    public TypeComponent() : base("Typ", "Ty", "A type is a reusable element that can be connected with other types over ports.") { }
     public override Guid ComponentGuid => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -2736,46 +2736,46 @@ public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
 
     protected override void RegisterModelInputs(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Name", "N", "The name of the type", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "D", "The description of the type", GH_ParamAccess.item);
-        pManager.AddTextParameter("Icon", "I", "The icon of the type", GH_ParamAccess.item);
-        pManager.AddTextParameter("Image", "Im", "The image of the type", GH_ParamAccess.item);
-        pManager.AddTextParameter("Variant", "V", "The variant of the type", GH_ParamAccess.item);
-        pManager.AddIntegerParameter("Stock", "S", "The stock of the type", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Virtual", "Vi", "Whether the type is virtual", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Scalable", "Sc", "Whether the type is scalable", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Mirrorable", "M", "Whether the type is mirrorable", GH_ParamAccess.item);
-        pManager.AddTextParameter("Uri", "U", "The URI of the type", GH_ParamAccess.item);
-        pManager.AddParameter(new LocationParam(), "Location", "L", "The location of the type", GH_ParamAccess.item);
-        pManager.AddTextParameter("Unit", "Un", "The unit of the type", GH_ParamAccess.item);
-        pManager.AddParameter(new RepresentationParam(), "Representations", "R", "The representations of the type", GH_ParamAccess.list);
-        pManager.AddParameter(new PortParam(), "Ports", "P", "The ports of the type", GH_ParamAccess.list);
-        pManager.AddParameter(new PropParam(), "Prp", "Pp", "A property is a value with an optional unit for a quality.", GH_ParamAccess.list);
-        pManager.AddParameter(new AuthorIdParam(), "Authors", "A", "The authors of the type", GH_ParamAccess.list);
-        pManager.AddParameter(new AttributeParam(), "Attributes", "At", "The attributes of the type", GH_ParamAccess.list);
-        pManager.AddTextParameter("Concepts", "C", "The concepts of the type", GH_ParamAccess.list);
+        pManager.AddTextParameter("Nam", "Na", "The name of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Ico?", "Ic?", "The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Img?", "Im?", "The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Vnt?", "Vn?", "The optional variant of the type. No variant means the default variant.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Stk?", "St?", "The optional number of items in stock. 2147483647 (=2^31-1) means infinite stock.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Vir?", "Vi?", "Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Sca?", "Sc?", "Whether the type is scalable.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Mir?", "Mi?", "Whether the type is mirrorable.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Uri?", "Ur?", "The optional Unique Resource Identifier (URI) of the type.", GH_ParamAccess.item);
+        pManager.AddParameter(new LocationParam(), "Loc?", "Lo?", "The optional location of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unt", "Ut", "The length unit of the point and the direction of the ports of the type.", GH_ParamAccess.item);
+        pManager.AddParameter(new RepresentationParam(), "Reps*", "Rp*", "The optional representations of the type.", GH_ParamAccess.list);
+        pManager.AddParameter(new PortParam(), "Pors*", "Po*", "The optional ports of the type.", GH_ParamAccess.list);
+        pManager.AddParameter(new PropParam(), "Prp*", "Pp*", "The optional properties of the type.", GH_ParamAccess.list);
+        pManager.AddParameter(new AuthorIdParam(), "Aut*", "Au*", "The optional authors of the type.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Atr*", "At*", "The optional attributes of the type.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Con*", "Co*", "The optional concepts of the type.", GH_ParamAccess.list);
     }
 
     protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Name", "N", "The name of the type", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "D", "The description of the type", GH_ParamAccess.item);
-        pManager.AddTextParameter("Icon", "I", "The icon of the type", GH_ParamAccess.item);
-        pManager.AddTextParameter("Image", "Im", "The image of the type", GH_ParamAccess.item);
-        pManager.AddTextParameter("Variant", "V", "The variant of the type", GH_ParamAccess.item);
-        pManager.AddIntegerParameter("Stock", "S", "The stock of the type", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Virtual", "Vi", "Whether the type is virtual", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Scalable", "Sc", "Whether the type is scalable", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Mirrorable", "M", "Whether the type is mirrorable", GH_ParamAccess.item);
-        pManager.AddTextParameter("Uri", "U", "The URI of the type", GH_ParamAccess.item);
-        pManager.AddParameter(new LocationParam(), "Location", "L", "The location of the type", GH_ParamAccess.item);
-        pManager.AddTextParameter("Unit", "Un", "The unit of the type", GH_ParamAccess.item);
-        pManager.AddParameter(new RepresentationParam(), "Representations", "R", "The representations of the type", GH_ParamAccess.list);
-        pManager.AddParameter(new PortParam(), "Ports", "P", "The ports of the type", GH_ParamAccess.list);
-        pManager.AddParameter(new PropParam(), "Prp", "Pp", "A property is a value with an optional unit for a quality.", GH_ParamAccess.list);
-        pManager.AddParameter(new AuthorIdParam(), "Authors", "A", "The authors of the type", GH_ParamAccess.list);
-        pManager.AddParameter(new AttributeParam(), "Attributes", "At", "The attributes of the type", GH_ParamAccess.list);
-        pManager.AddTextParameter("Concepts", "C", "The concepts of the type", GH_ParamAccess.list);
+        pManager.AddTextParameter("Nam", "Na", "The name of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Ico?", "Ic?", "The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Img?", "Im?", "The optional url to the image of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Vnt?", "Vn?", "The optional variant of the type. No variant means the default variant.", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Stk?", "St?", "The optional number of items in stock. 2147483647 (=2^31-1) means infinite stock.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Vir?", "Vi?", "Whether the type is virtual. A virtual type is not physically present but is used in conjunction with other virtual types to form a larger physical type.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Sca?", "Sc?", "Whether the type is scalable.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Mir?", "Mi?", "Whether the type is mirrorable.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Uri?", "Ur?", "The optional Unique Resource Identifier (URI) of the type.", GH_ParamAccess.item);
+        pManager.AddParameter(new LocationParam(), "Loc?", "Lo?", "The optional location of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unt", "Ut", "The length unit of the point and the direction of the ports of the type.", GH_ParamAccess.item);
+        pManager.AddParameter(new RepresentationParam(), "Reps*", "Rp*", "The optional representations of the type.", GH_ParamAccess.list);
+        pManager.AddParameter(new PortParam(), "Pors*", "Po*", "The optional ports of the type.", GH_ParamAccess.list);
+        pManager.AddParameter(new PropParam(), "Prp*", "Pp*", "The optional properties of the type.", GH_ParamAccess.list);
+        pManager.AddParameter(new AuthorIdParam(), "Aut*", "Au*", "The optional authors of the type.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Atr*", "At*", "The optional attributes of the type.", GH_ParamAccess.list);
+        pManager.AddTextParameter("Con*", "Co*", "The optional concepts of the type.", GH_ParamAccess.list);
     }
 
     protected override void ProcessModelInputs(IGH_DataAccess DA, Type model)
@@ -2913,14 +2913,14 @@ public class PieceIdGoo : IdGoo<PieceId>
 
 public class PieceIdParam : IdParam<PieceIdGoo, PieceId>
 {
-    public PieceIdParam() : base("PieceId", "PI", "PieceId parameter") { }
+    public PieceIdParam() : base("Pce", "Pc", "The optional local identifier of the piece within the design. No id means the default piece.") { }
     public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D3");
     protected override Bitmap GetParamIcon() => Resources.semio_24x24;
 }
 
 public class PieceIdComponent : IdComponent<PieceIdParam, PieceIdGoo, PieceId>
 {
-    public PieceIdComponent() : base("PieceId", "PI", "PieceId component") { }
+    public PieceIdComponent() : base("Pce", "Pc", "The optional local identifier of the piece within the design. No id means the default piece.") { }
     public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D4");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -3166,14 +3166,14 @@ public class PieceGoo : ModelGoo<Piece>
 
 public class PieceParam : ModelParam<PieceGoo, Piece>
 {
-    public PieceParam() : base("Piece", "P", "Piece parameter") { }
+    public PieceParam() : base("Pce", "Pc", "A piece is a 3d-instance of a type in a design.") { }
     public override Guid ComponentGuid => new("76F583DC-4142-4346-B1E1-6C241AF26086");
     protected override Bitmap GetParamIcon() => Resources.semio_24x24;
 }
 
 public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
 {
-    public PieceComponent() : base("Piece", "Pce", "Construct, deconstruct or modify a piece") { }
+    public PieceComponent() : base("Pce", "Pc", "A piece is a 3d-instance of a type in a design.") { }
     public override Guid ComponentGuid => new("49CD29FC-F6EB-43D2-8C7D-E88F8520BA48");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -3182,39 +3182,39 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
 
     protected override void RegisterModelInputs(GH_InputParamManager pManager)
     {
-        pManager.AddParameter(new PieceParam(), "Piece", "Pce", "Piece to modify", GH_ParamAccess.item);
-        pManager.AddTextParameter("Id", "I", "The ID of the piece", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "D", "The description of the piece", GH_ParamAccess.item);
-        pManager.AddParameter(new TypeIdParam(), "Type", "T", "The type ID of the piece", GH_ParamAccess.item);
-        pManager.AddParameter(new DesignIdParam(), "Design", "Des", "The design ID of the piece", GH_ParamAccess.item);
-        pManager.AddPlaneParameter("Plane", "Pl", "The plane of the piece", GH_ParamAccess.item);
-        pManager.AddParameter(new DiagramPointParam(), "Center", "C", "The center diagram point of the piece", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Hidden", "H", "Whether the piece is hidden", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Locked", "L", "Whether the piece is locked", GH_ParamAccess.item);
-        pManager.AddTextParameter("Color", "Col", "The color of the piece", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Scale", "S", "The scale of the piece", GH_ParamAccess.item);
-        pManager.AddPlaneParameter("MirrorPlane", "MP", "The mirror plane of the piece", GH_ParamAccess.item);
-        pManager.AddParameter(new PropParam(), "Prp", "Pp", "A property is a value with an optional unit for a quality.", GH_ParamAccess.list);
-        pManager.AddParameter(new AttributeParam(), "Atr", "At", "A attribute is a key value pair with an an optional definition.", GH_ParamAccess.list);
+        pManager.AddParameter(new PieceParam(), "Pce", "Pc", "Piece to modify", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Id?", "The optional local identifier of the piece within the design. No id means the default piece.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the piece.", GH_ParamAccess.item);
+        pManager.AddParameter(new TypeIdParam(), "Typ?", "Ty?", "The optional type of the piece. Either type or design must be set.", GH_ParamAccess.item);
+        pManager.AddParameter(new DesignIdParam(), "Dsn?", "Dn?", "The optional design of this piece. Either type or design must be set.", GH_ParamAccess.item);
+        pManager.AddPlaneParameter("Pln?", "Pn?", "The optional plane of the piece. When pieces are connected only one piece can have a plane.", GH_ParamAccess.item);
+        pManager.AddParameter(new DiagramPointParam(), "Cen?", "Ce?", "The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Hid?", "Hi?", "Whether the piece is hidden. A hidden piece is not visible in the model.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Lck?", "Lk?", "Whether the piece is locked. A locked piece cannot be edited.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Col?", "Cl?", "The optional hex color of the piece.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Scl?", "Sc?", "The optional scale factor of the piece.", GH_ParamAccess.item);
+        pManager.AddPlaneParameter("Mir?", "Mp?", "The optional mirror plane of the piece.", GH_ParamAccess.item);
+        pManager.AddParameter(new PropParam(), "Prp*", "Pp*", "The optional properties of the piece.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Atr*", "At*", "The optional attributes of the piece.", GH_ParamAccess.list);
         for (int i = 1; i < pManager.ParamCount; i++) pManager[i].Optional = true;
     }
 
     protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
     {
-        pManager.AddParameter(new PieceParam(), "Piece", "Pce", "The piece", GH_ParamAccess.item);
-        pManager.AddTextParameter("Id", "I", "The ID of the piece", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "D", "The description of the piece", GH_ParamAccess.item);
-        pManager.AddParameter(new TypeIdParam(), "Type", "T", "The type ID of the piece", GH_ParamAccess.item);
-        pManager.AddParameter(new DesignIdParam(), "Design", "Des", "The design ID of the piece", GH_ParamAccess.item);
-        pManager.AddPlaneParameter("Plane", "Pl", "The plane of the piece", GH_ParamAccess.item);
-        pManager.AddParameter(new DiagramPointParam(), "Center", "C", "The center diagram point of the piece", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Hidden", "H", "Whether the piece is hidden", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Locked", "L", "Whether the piece is locked", GH_ParamAccess.item);
-        pManager.AddTextParameter("Color", "Col", "The color of the piece", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Scale", "S", "The scale of the piece", GH_ParamAccess.item);
-        pManager.AddPlaneParameter("MirrorPlane", "MP", "The mirror plane of the piece", GH_ParamAccess.item);
-        pManager.AddParameter(new PropParam(), "Prp", "Pp", "A property is a value with an optional unit for a quality.", GH_ParamAccess.list);
-        pManager.AddParameter(new AttributeParam(), "Atr", "At", "A attribute is a key value pair with an an optional definition.", GH_ParamAccess.list);
+        pManager.AddParameter(new PieceParam(), "Pce", "Pc", "The piece", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Id?", "The optional local identifier of the piece within the design. No id means the default piece.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the piece.", GH_ParamAccess.item);
+        pManager.AddParameter(new TypeIdParam(), "Typ?", "Ty?", "The optional type of the piece. Either type or design must be set.", GH_ParamAccess.item);
+        pManager.AddParameter(new DesignIdParam(), "Dsn?", "Dn?", "The optional design of this piece. Either type or design must be set.", GH_ParamAccess.item);
+        pManager.AddPlaneParameter("Pln?", "Pn?", "The optional plane of the piece. When pieces are connected only one piece can have a plane.", GH_ParamAccess.item);
+        pManager.AddParameter(new DiagramPointParam(), "Cen?", "Ce?", "The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Hid?", "Hi?", "Whether the piece is hidden. A hidden piece is not visible in the model.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Lck?", "Lk?", "Whether the piece is locked. A locked piece cannot be edited.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Col?", "Cl?", "The optional hex color of the piece.", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Scl?", "Sc?", "The optional scale factor of the piece.", GH_ParamAccess.item);
+        pManager.AddPlaneParameter("Mir?", "Mp?", "The optional mirror plane of the piece.", GH_ParamAccess.item);
+        pManager.AddParameter(new PropParam(), "Prp*", "Pp*", "The optional properties of the piece.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Atr*", "At*", "The optional attributes of the piece.", GH_ParamAccess.list);
     }
 
     protected override void ProcessModelInputs(IGH_DataAccess DA, Piece piece)
@@ -3401,10 +3401,10 @@ public class SideComponent : ModelComponent<SideParam, SideGoo, Side>
 
     protected override void RegisterModelInputs(GH_InputParamManager pManager)
     {
-        pManager.AddParameter(new SideParam(), "Side", "Sid", "Side to modify", GH_ParamAccess.item);
-        pManager.AddParameter(new PieceIdParam(), "Piece", "P", "The piece ID of the side", GH_ParamAccess.item);
+        pManager.AddParameter(new SideParam(), "Sde", "Sd", "Side to modify", GH_ParamAccess.item);
+        pManager.AddParameter(new PieceIdParam(), "Pce", "Pc", "The piece ID of the side", GH_ParamAccess.item);
         pManager.AddParameter(new PieceIdParam(), "DesignPiece", "DP", "The design piece ID of the side", GH_ParamAccess.item);
-        pManager.AddParameter(new PortIdParam(), "Port", "Po", "The port ID of the side", GH_ParamAccess.item);
+        pManager.AddParameter(new PortIdParam(), "Por", "Po", "The port ID of the side", GH_ParamAccess.item);
         for (int i = 1; i < pManager.ParamCount; i++) pManager[i].Optional = true;
     }
 
@@ -3518,14 +3518,14 @@ public class ConnectionIdGoo : IdGoo<ConnectionId>
 
 public class ConnectionIdParam : IdParam<ConnectionIdGoo, ConnectionId>
 {
-    public ConnectionIdParam() : base("ConnectionId", "CI", "ConnectionId parameter") { }
+    public ConnectionIdParam() : base("ConId", "Cn", "The local identifier of the connection within the design.") { }
     public override Guid ComponentGuid => new("40B2C3D4-E5F6-A7B8-C9D0-E1F2A3B4C5D6");
     protected override Bitmap GetParamIcon() => Resources.semio_24x24;
 }
 
 public class ConnectionIdComponent : IdComponent<ConnectionIdParam, ConnectionIdGoo, ConnectionId>
 {
-    public ConnectionIdComponent() : base("ConnectionId", "CI", "ConnectionId component") { }
+    public ConnectionIdComponent() : base("ConId", "Cn", "The local identifier of the connection within the design.") { }
     public override Guid ComponentGuid => new("40B2C3D4-E5F6-A7B8-C9D0-E1F2A3B4C5D7");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -3926,14 +3926,14 @@ public class DesignIdGoo : IdGoo<DesignId>
 
 public class DesignIdParam : IdParam<DesignIdGoo, DesignId>
 {
-    public DesignIdParam() : base("DesignId", "DI", "DesignId parameter") { }
+    public DesignIdParam() : base("Dsn", "Dn", "The local identifier of the design within the kit.") { }
     public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A6");
     protected override Bitmap GetParamIcon() => Resources.semio_24x24;
 }
 
 public class DesignIdComponent : IdComponent<DesignIdParam, DesignIdGoo, DesignId>
 {
-    public DesignIdComponent() : base("DesignId", "DI", "DesignId component") { }
+    public DesignIdComponent() : base("Dsn", "Dn", "The local identifier of the design within the kit.") { }
     public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A7");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -4344,14 +4344,14 @@ public class KitIdGoo : IdGoo<KitId>
 
 public class KitIdParam : IdParam<KitIdGoo, KitId>
 {
-    public KitIdParam() : base("KitId", "KI", "KitId parameter") { }
+    public KitIdParam() : base("KitId", "KId", "The local identifier of the kit.") { }
     public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B0");
     protected override Bitmap GetParamIcon() => Resources.semio_24x24;
 }
 
 public class KitIdComponent : IdComponent<KitIdParam, KitIdGoo, KitId>
 {
-    public KitIdComponent() : base("KitId", "KI", "KitId component") { }
+    public KitIdComponent() : base("KitId", "KId", "The local identifier of the kit.") { }
     public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B1");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;

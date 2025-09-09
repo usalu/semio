@@ -276,6 +276,24 @@ export interface DesignEditorSelection {
   connections?: ConnectionId[];
   port?: { piece: PieceId; designPiece?: PieceId; port: PortId };
 }
+export interface DesignEditorSelectionPiecesDiff {
+  added?: PieceId[];
+  removed?: PieceId[];
+}
+export interface DesignEditorSelectionConnectionsDiff {
+  added?: ConnectionId[];
+  removed?: ConnectionId[];
+}
+export interface DesignEditorSelectionPortDiff {
+  piece?: PieceId;
+  designPiece?: PieceId;
+  port?: PortId;
+}
+export interface DesignEditorSelectionDiff {
+  pieces?: DesignEditorSelectionPiecesDiff;
+  connections?: DesignEditorSelectionConnectionsDiff;
+  port?: DesignEditorSelectionPortDiff;
+}
 export enum DesignEditorFullscreenPanel {
   None = "none",
   Diagram = "diagram",
@@ -342,7 +360,7 @@ export interface DesignEditorCommandsFull {
   register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable;
 }
 export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands {}
-export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, Merge<DesignEditorActions, DesignEditorSubscriptions> {}
+export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, DesignEditorActions, DesignEditorSubscriptions {}
 export interface SketchpadState {
   mode: Mode;
   theme: Theme;

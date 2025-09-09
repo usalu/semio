@@ -1167,9 +1167,9 @@ class TerminalConsole {
         kit: useKit(),
         designId: useDesignId() || "",
         selection: useSelection() || {
-          pieceIds: [],
-          connectionIds: [],
-          portId: undefined,
+          pieces: [],
+          connections: [],
+          port: undefined,
         },
       };
 
