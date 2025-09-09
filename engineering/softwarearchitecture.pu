@@ -1,11 +1,22 @@
 @startuml "software architecture"
 skinparam linetype ortho
 
-class Semio {
-  release: str
-  engine: str
-  sketchpad: str
-  created: datetime
+
+interface Id {
+
+}
+
+interface Diff {
+  Merge(Diff other): Diff
+}
+
+interface Model {
+  ApplyDiff(Diff diff): Model
+  InversedDiff(Diff diff): Diff
+}
+
+interface Validator {
+  Validate(Model model): ValidationResult
 }
 
 class Kit {
@@ -40,6 +51,11 @@ class Kit {
     version->isEmpty() implies version = 'latest'
   context Kit inv validUri:
     uri->matches('^https?://.*') or uri->matches('^file://.*')
+}
+
+class KitDiff {
+  name?: str
+
 }
 
 class Type {
@@ -89,6 +105,8 @@ class Design {
   groups: list[Group]
   attributes: list[Attribute]
   concepts: list[str]
+  ..
+  Flatten()
   --
   context Design inv optionalFieldsCanBeEmpty:
     description->notEmpty() or description->isEmpty() and
