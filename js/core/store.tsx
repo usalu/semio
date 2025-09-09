@@ -105,10 +105,6 @@ export type Subscribe = () => void;
 export type Unsubscribe = () => void;
 export type Disposable = () => void;
 export type Url = string;
-// Simplified merge type
-type Merge<A, B> = {
-  [K in keyof A | keyof B]: K extends keyof A ? (K extends keyof B ? (A[K] extends object ? (B[K] extends object ? Merge<A[K], B[K]> : A[K] | B[K]) : A[K] | B[K]) : A[K]) : K extends keyof B ? B[K] : never;
-};
 
 export interface DesignEditorStep {
   diff?: KitDiff;
@@ -120,7 +116,7 @@ export interface DesignEditorEdit {
   undo: DesignEditorStep;
 }
 
-export interface YStore { }
+export interface YStore {}
 
 export interface FileSnapshot {
   snapshot(): SemioFile;
@@ -133,9 +129,9 @@ export interface FileSubscriptions {
   onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
-export interface FileStore extends FileSnapshot { }
+export interface FileStore extends FileSnapshot {}
 
-export interface FileStoreFull extends FileSnapshot, FileActions, FileSubscriptions { }
+export interface FileStoreFull extends FileSnapshot, FileActions, FileSubscriptions {}
 
 export interface RepresentationSnapshot {
   snapshot(): Representation;
@@ -149,9 +145,9 @@ export interface RepresentationSubscriptions {
   onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
-export interface RepresentationStore extends RepresentationSnapshot { }
+export interface RepresentationStore extends RepresentationSnapshot {}
 
-export interface RepresentationStoreFull extends RepresentationSnapshot, RepresentationActions, RepresentationSubscriptions { }
+export interface RepresentationStoreFull extends RepresentationSnapshot, RepresentationActions, RepresentationSubscriptions {}
 
 export interface PortSnapshot {
   snapshot(): Port;
@@ -162,8 +158,8 @@ export interface PortActions {
 export interface PortSubscriptions {
   onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-export interface PortStore extends PortSnapshot { }
-export interface PortStoreFull extends PortSnapshot, PortActions, PortSubscriptions { }
+export interface PortStore extends PortSnapshot {}
+export interface PortStoreFull extends PortSnapshot, PortActions, PortSubscriptions {}
 
 export interface TypeSnapshot {
   snapshot(): Type;
@@ -182,8 +178,8 @@ export interface TypeChildStoresFull {
   representations: Map<string, RepresentationStoreFull>;
   ports: Map<string, PortStoreFull>;
 }
-export interface TypeStore extends TypeSnapshot, TypeChildStores { }
-export interface TypeStoreFull extends TypeSnapshot, TypeChildStoresFull, TypeActions, TypeSubscriptions { }
+export interface TypeStore extends TypeSnapshot, TypeChildStores {}
+export interface TypeStoreFull extends TypeSnapshot, TypeChildStoresFull, TypeActions, TypeSubscriptions {}
 
 export interface PieceSnapshot {
   snapshot(): Piece;
@@ -194,10 +190,10 @@ export interface PieceActions {
 export interface PieceSubscriptions {
   onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-export interface PieceChildStores { }
-export interface PieceChildStoresFull { }
-export interface PieceStore extends PieceSnapshot, PieceChildStores { }
-export interface PieceStoreFull extends PieceSnapshot, PieceChildStoresFull, PieceActions, PieceSubscriptions { }
+export interface PieceChildStores {}
+export interface PieceChildStoresFull {}
+export interface PieceStore extends PieceSnapshot, PieceChildStores {}
+export interface PieceStoreFull extends PieceSnapshot, PieceChildStoresFull, PieceActions, PieceSubscriptions {}
 
 export interface ConnectionSnapshot {
   snapshot(): Connection;
@@ -208,8 +204,8 @@ export interface ConnectionActions {
 export interface ConnectionSubscriptions {
   onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-export interface ConnectionStore extends ConnectionSnapshot { }
-export interface ConnectionStoreFull extends ConnectionSnapshot, ConnectionActions, ConnectionSubscriptions { }
+export interface ConnectionStore extends ConnectionSnapshot {}
+export interface ConnectionStoreFull extends ConnectionSnapshot, ConnectionActions, ConnectionSubscriptions {}
 
 export interface DesignSnapshot {
   snapshot(): Design;
@@ -228,8 +224,8 @@ export interface DesignChildStoresFull {
   pieces: Map<string, PieceStoreFull>;
   connections: Map<string, ConnectionStoreFull>;
 }
-export interface DesignStore extends DesignSnapshot, DesignChildStores { }
-export interface DesignStoreFull extends DesignSnapshot, DesignActions, DesignSubscriptions, DesignChildStoresFull { }
+export interface DesignStore extends DesignSnapshot, DesignChildStores {}
+export interface DesignStoreFull extends DesignSnapshot, DesignActions, DesignSubscriptions, DesignChildStoresFull {}
 
 export interface KitSnapshot {
   snapshot(): Kit;
@@ -268,8 +264,8 @@ export interface KitChildStoresFull {
   designs: Map<string, DesignStoreFull>;
   files: Map<Url, FileStoreFull>;
 }
-export interface KitStore extends KitSnapshot, KitChildStores, KitFileUrls, KitCommands, KitSubscriptions { }
-export interface KitStoreFull extends KitSnapshot, KitActions, KitSubscriptions, KitCommandsFull, KitChildStoresFull, KitFileUrls { }
+export interface KitStore extends KitSnapshot, KitChildStores, KitFileUrls, KitCommands, KitSubscriptions {}
+export interface KitStoreFull extends KitSnapshot, KitActions, KitSubscriptions, KitCommandsFull, KitChildStoresFull, KitFileUrls {}
 
 export interface DesignEditorId {
   kit: KitId;
@@ -345,8 +341,8 @@ export interface DesignEditorCommandsFull {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
   register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable;
 }
-export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands { }
-export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, Merge<DesignEditorActions, DesignEditorSubscriptions> { }
+export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands {}
+export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, Merge<DesignEditorActions, DesignEditorSubscriptions> {}
 export interface SketchpadState {
   mode: Mode;
   theme: Theme;
@@ -402,7 +398,7 @@ export interface SketchpadCommandsFull {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
   register(command: string, callback: (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult): Disposable;
 }
-export interface SketchpadStore extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStores { }
+export interface SketchpadStore extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStores {}
 export interface SketchpadStoreFull extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStoresFull, SketchpadActions {
   on: SketchpadSubscriptions;
 }
@@ -891,8 +887,8 @@ class YTypeStore implements TypeStoreFull {
   public readonly yType: YType = new Y.Map<any>();
   public readonly representations: Map<string, YRepresentationStore> = new Map();
   public readonly ports: Map<string, YPortStore> = new Map();
-  private readonly representationIds: Map<string, string> = new Map();
-  private readonly portIds: Map<string, string> = new Map();
+  public readonly representationIds: Map<string, string> = new Map();
+  public readonly portIds: Map<string, string> = new Map();
   private cachedSnapshot?: Type;
   private lastSnapshotHash?: string;
 
@@ -908,8 +904,6 @@ class YTypeStore implements TypeStoreFull {
     this.yType.set("ports", new Y.Map() as YPortMap);
     this.yType.set("authors", createAuthors(type.authors));
     this.yType.set("attributes", createAttributes(type.attributes));
-    (type.representations || []).forEach((r) => this.representationIds.set(representationIdToString(representationIdLikeToRepresentationId(r)), uuidv4()));
-    (type.ports || []).forEach((p) => this.portIds.set(portIdToString(portIdLikeToPortId(p)), uuidv4()));
   }
 
   type = (): Type => {
@@ -931,6 +925,7 @@ class YTypeStore implements TypeStoreFull {
           const uuid = uuidv4();
           this.representationIds.set(repIdStr, uuid);
           this.representations.set(repIdStr, new YRepresentationStore(this.parent, rep));
+          (this.yType.get("representations") as YRepresentationMap).set(uuid, this.representations.get(repIdStr)!.yRepresentation);
         } else {
           this.representations.get(repIdStr)?.change(rep);
         }
@@ -944,6 +939,7 @@ class YTypeStore implements TypeStoreFull {
           const uuid = uuidv4();
           this.portIds.set(portIdStr, uuid);
           this.ports.set(portIdStr, new YPortStore(this, port));
+          (this.yType.get("ports") as YPortMap).set(uuid, this.ports.get(portIdStr)!.yPort);
         } else {
           this.ports.get(portIdStr)?.change(port);
         }
@@ -1261,8 +1257,8 @@ class YDesignStore implements DesignStoreFull {
   public readonly yDesign: YDesign = new Y.Map<any>();
   public readonly pieces: Map<string, YPieceStore> = new Map();
   public readonly connections: Map<string, YConnectionStore> = new Map();
-  private readonly pieceIds: Map<string, string> = new Map();
-  private readonly connectionIds: Map<string, string> = new Map();
+  public readonly pieceIds: Map<string, string> = new Map();
+  public readonly connectionIds: Map<string, string> = new Map();
   private cachedSnapshot?: Design;
   private lastSnapshotHash?: string;
 
@@ -1277,30 +1273,6 @@ class YDesignStore implements DesignStoreFull {
     this.yDesign.set("connections", new Y.Map() as YConnectionMap);
     this.yDesign.set("authors", createAuthors(design.authors));
     this.yDesign.set("attributes", createAttributes(design.attributes));
-  }
-
-  initializePiecesAndConnections(design: Design): void {
-    const piecesMap = this.yDesign.get("pieces") as YPieceMap;
-    const connectionsMap = this.yDesign.get("connections") as YConnectionMap;
-    
-    (design.pieces || []).forEach((piece) => {
-      const pieceId = pieceIdLikeToPieceId(piece);
-      const uuid = uuidv4();
-      const yPieceStore = new YPieceStore(this, piece);
-      piecesMap.set(uuid, yPieceStore.yPiece);
-      const pieceIdStr = pieceIdToString(pieceId);
-      this.pieceIds.set(pieceIdStr, uuid);
-      this.pieces.set(pieceIdStr, yPieceStore);
-    });
-    (design.connections || []).forEach((connection) => {
-      const connectionId = connectionIdLikeToConnectionId(connection);
-      const uuid = uuidv4();
-      const yConnectionStore = new YConnectionStore(this, connection);
-      connectionsMap.set(uuid, yConnectionStore.yConnection);
-      const connectionIdStr = connectionIdToString(connectionId);
-      this.connectionIds.set(connectionIdStr, uuid);
-      this.connections.set(connectionIdStr, yConnectionStore);
-    });
   }
 
   snapshot = (): Design => {
@@ -1484,39 +1456,72 @@ class YKitStore implements KitStoreFull {
     this.yKit.set("created", new Date().toISOString());
     this.yKit.set("updated", new Date().toISOString());
 
-    kit.types?.forEach((type) => this.createType(type));
-    kit.designs?.forEach((design) => this.createDesign(design));
+    kit.types?.forEach((type) => {
+      const typeId = typeIdLikeToTypeId(type);
+      const typeIdStr = typeIdToString(typeId);
+      if (this.typeIds.has(typeIdStr)) {
+        throw new Error(`Type (${typeId.name}, ${typeId.variant || ""}) already exists.`);
+      }
+      const uuid = uuidv4();
+      const yTypeStore = new YTypeStore(this, type);
+      (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
+      const representationsMap = yTypeStore.yType.get("representations") as YRepresentationMap;
+      const portsMap = yTypeStore.yType.get("ports") as YPortMap;
+      (type.representations || []).forEach((r) => {
+        const repId = representationIdLikeToRepresentationId(r);
+        const repIdStr = representationIdToString(repId);
+        const repUuid = uuidv4();
+        yTypeStore.representationIds.set(repIdStr, repUuid);
+        yTypeStore.representations.set(repIdStr, new YRepresentationStore(this, r));
+        representationsMap.set(repUuid, yTypeStore.representations.get(repIdStr)!.yRepresentation);
+      });
+      (type.ports || []).forEach((p) => {
+        const portId = portIdLikeToPortId(p);
+        const portIdStr = portIdToString(portId);
+        const portUuid = uuidv4();
+        yTypeStore.portIds.set(portIdStr, portUuid);
+        yTypeStore.ports.set(portIdStr, new YPortStore(yTypeStore, p));
+        portsMap.set(portUuid, yTypeStore.ports.get(portIdStr)!.yPort);
+      });
+      this.typeIds.set(typeIdStr, uuid);
+      this.types.set(typeIdStr, yTypeStore);
+    });
+    kit.designs?.forEach((design) => {
+      const designId = designIdLikeToDesignId(design);
+      const designIdStr = designIdToString(designId);
+      if (this.designIds.has(designIdStr)) {
+        throw new Error(`Design (${designId.name}, ${designId.variant || ""}) already exists.`);
+      }
+      const uuid = uuidv4();
+      const yDesignStore = new YDesignStore(this, design);
+      (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
+      const piecesMap = yDesignStore.yDesign.get("pieces") as YPieceMap;
+      const connectionsMap = yDesignStore.yDesign.get("connections") as YConnectionMap;
+      (design.pieces || []).forEach((piece) => {
+        const pieceId = pieceIdLikeToPieceId(piece);
+        const pieceUuid = uuidv4();
+        const yPieceStore = new YPieceStore(yDesignStore, piece);
+        piecesMap.set(pieceUuid, yPieceStore.yPiece);
+        const pieceIdStr = pieceIdToString(pieceId);
+        yDesignStore.pieceIds.set(pieceIdStr, pieceUuid);
+        yDesignStore.pieces.set(pieceIdStr, yPieceStore);
+      });
+      (design.connections || []).forEach((connection) => {
+        const connectionId = connectionIdLikeToConnectionId(connection);
+        const connectionUuid = uuidv4();
+        const yConnectionStore = new YConnectionStore(yDesignStore, connection);
+        connectionsMap.set(connectionUuid, yConnectionStore.yConnection);
+        const connectionIdStr = connectionIdToString(connectionId);
+        yDesignStore.connectionIds.set(connectionIdStr, connectionUuid);
+        yDesignStore.connections.set(connectionIdStr, yConnectionStore);
+      });
+      this.designIds.set(designIdStr, uuid);
+      this.designs.set(designIdStr, yDesignStore);
+    });
 
     Object.entries(kitCommands).forEach(([commandId, command]) => {
       this.registerCommand(commandId, command);
     });
-  }
-
-  private createType(type: Type): void {
-    const typeId = typeIdLikeToTypeId(type);
-    const typeIdStr = typeIdToString(typeId);
-    if (this.typeIds.has(typeIdStr)) {
-      throw new Error(`Type (${typeId.name}, ${typeId.variant || ""}) already exists.`);
-    }
-    const uuid = uuidv4();
-    const yTypeStore = new YTypeStore(this, type);
-    (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
-    this.typeIds.set(typeIdStr, uuid);
-    this.types.set(typeIdStr, yTypeStore);
-  }
-
-  private createDesign(design: Design): void {
-    const designId = designIdLikeToDesignId(design);
-    const designIdStr = designIdToString(designId);
-    if (this.designIds.has(designIdStr)) {
-      throw new Error(`Design (${designId.name}, ${designId.variant || ""}) already exists.`);
-    }
-    const uuid = uuidv4();
-    const yDesignStore = new YDesignStore(this, design);
-    (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
-    yDesignStore.initializePiecesAndConnections(design);
-    this.designIds.set(designIdStr, uuid);
-    this.designs.set(designIdStr, yDesignStore);
   }
 
   snapshot = (): Kit => {
@@ -1580,6 +1585,24 @@ class YKitStore implements KitStoreFull {
             const uuid = uuidv4();
             const yTypeStore = new YTypeStore(this, type);
             (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
+            const representationsMap = yTypeStore.yType.get("representations") as YRepresentationMap;
+            const portsMap = yTypeStore.yType.get("ports") as YPortMap;
+            (type.representations || []).forEach((r) => {
+              const repId = representationIdLikeToRepresentationId(r);
+              const repIdStr = representationIdToString(repId);
+              const repUuid = uuidv4();
+              yTypeStore.representationIds.set(repIdStr, repUuid);
+              yTypeStore.representations.set(repIdStr, new YRepresentationStore(this, r));
+              representationsMap.set(repUuid, yTypeStore.representations.get(repIdStr)!.yRepresentation);
+            });
+            (type.ports || []).forEach((p) => {
+              const portId = portIdLikeToPortId(p);
+              const portIdStr = portIdToString(portId);
+              const portUuid = uuidv4();
+              yTypeStore.portIds.set(portIdStr, portUuid);
+              yTypeStore.ports.set(portIdStr, new YPortStore(yTypeStore, p));
+              portsMap.set(portUuid, yTypeStore.ports.get(portIdStr)!.yPort);
+            });
             this.typeIds.set(typeIdStr, uuid);
             this.types.set(typeIdStr, yTypeStore);
           }
@@ -1619,7 +1642,26 @@ class YKitStore implements KitStoreFull {
             const uuid = uuidv4();
             const yDesignStore = new YDesignStore(this, design);
             (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
-            yDesignStore.initializePiecesAndConnections(design);
+            const piecesMap = yDesignStore.yDesign.get("pieces") as YPieceMap;
+            const connectionsMap = yDesignStore.yDesign.get("connections") as YConnectionMap;
+            (design.pieces || []).forEach((piece) => {
+              const pieceId = pieceIdLikeToPieceId(piece);
+              const pieceUuid = uuidv4();
+              const yPieceStore = new YPieceStore(yDesignStore, piece);
+              piecesMap.set(pieceUuid, yPieceStore.yPiece);
+              const pieceIdStr = pieceIdToString(pieceId);
+              yDesignStore.pieceIds.set(pieceIdStr, pieceUuid);
+              yDesignStore.pieces.set(pieceIdStr, yPieceStore);
+            });
+            (design.connections || []).forEach((connection) => {
+              const connectionId = connectionIdLikeToConnectionId(connection);
+              const connectionUuid = uuidv4();
+              const yConnectionStore = new YConnectionStore(yDesignStore, connection);
+              connectionsMap.set(connectionUuid, yConnectionStore.yConnection);
+              const connectionIdStr = connectionIdToString(connectionId);
+              yDesignStore.connectionIds.set(connectionIdStr, connectionUuid);
+              yDesignStore.connections.set(connectionIdStr, yConnectionStore);
+            });
             this.designIds.set(designIdStr, uuid);
             this.designs.set(designIdStr, yDesignStore);
           }
@@ -1769,9 +1811,9 @@ class YDesignEditorStore implements DesignEditorStoreFull {
       pieces: selectedPieceIds ? selectedPieceIds.toArray().map((id) => ({ id_: id })) : [],
       connections: selectedConnections
         ? selectedConnections.toArray().map((id) => ({
-          connected: { piece: { id_: id.split("->")[0] || "" } },
-          connecting: { piece: { id_: id.split("->")[1] || "" } },
-        }))
+            connected: { piece: { id_: id.split("->")[0] || "" } },
+            connecting: { piece: { id_: id.split("->")[1] || "" } },
+          }))
         : [],
     };
   }
@@ -2170,7 +2212,7 @@ class YSketchpadStore implements SketchpadStoreFull {
     // This is a simplified approach - would need more sophisticated tracking in full implementation
     const observer = () => subscribe();
     // Note: Would need to observe kit document creation across all kit docs
-    return () => { }; // Placeholder unsubscribe
+    return () => {}; // Placeholder unsubscribe
   };
 
   onDesignEditorCreated = (subscribe: Subscribe): Unsubscribe => {
@@ -2183,12 +2225,12 @@ class YSketchpadStore implements SketchpadStoreFull {
 
   onKitDeleted = (subscribe: Subscribe): Unsubscribe => {
     // Would need to observe kit document removal
-    return () => { }; // Placeholder
+    return () => {}; // Placeholder
   };
 
   onDesignEditorDeleted = (subscribe: Subscribe): Unsubscribe => {
     // Would need to observe design editor removal
-    return () => { }; // Placeholder
+    return () => {}; // Placeholder
   };
 
   onChanged = (subscribe: Subscribe): Unsubscribe => {
@@ -3454,10 +3496,10 @@ export function useDesigns(): DesignId[] {
   const kit = useKit();
   return kit.designs
     ? kit.designs.map((design) => ({
-      name: design.name,
-      variant: design.variant,
-      view: design.view,
-    }))
+        name: design.name,
+        variant: design.variant,
+        view: design.view,
+      }))
     : [];
 }
 
@@ -3567,6 +3609,5 @@ export function useOthers(): DesignEditorPresenceOther[] {
 export function useDesignEditorOthers(): DesignEditorPresenceOther[] {
   return useDesignEditor((store) => store.snapshot().others);
 }
-
 
 // #endregion Hooks
