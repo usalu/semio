@@ -63,7 +63,7 @@ Let me walk you through 🚶
    - [⭕ Piece](#-piece-)
    - [⚓ Port](#-port-)
    - [💾 Representation](#-representation-)
-   - [🏷️ Attribute](#-attribute-)
+   - [🏷️ Attribute](#%EF%B8%8F-attribute-)
    - [🏷️ Tag](#%EF%B8%8F-tag-)
    - [◳ Plane](#-plane-)
    - [🔗 Url](#-url-)
@@ -233,7 +233,7 @@ The similarity of [`representations`](#-representation-) is determined by the [j
 
 ## 🏷️ Attribute [↑](#-specs-)
 
-A [`attribute`](#-attribute-) is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
+A [`attribute`](#%EF%B8%8F-attribute-) is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
 
 The **name** is[kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) and with `.`-separated string similar to [toml keys](https://toml.io/en/v1.0.0#keys) 🔑
 
@@ -254,7 +254,7 @@ The **unit** is a [unit identifier](https://en.wikipedia.org/wiki/Unit_of_measur
 - `Pa` for pascal, `kPa` for kilopascal, `MPa` for megapascal
 - …
 
-A list of [attributes](#-attribute-) is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value** ↔️
+A list of [attributes](#%EF%B8%8F-attribute-) is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value** ↔️
 
 ## 🏷️ Tag [↑](#-specs-)
 

@@ -36,6 +36,7 @@
 
 using System.Collections;
 using System.Collections.Immutable;
+using System.ComponentModel.DataAnnotations;
 using System.Drawing;
 using System.Globalization;
 using System.Net;
@@ -51,6 +52,8 @@ using Refit;
 using Svg;
 using Svg.Transforms;
 using UnitsNet;
+using FluentValidation;
+using FluentValidation.Results;
 using Formatting = Newtonsoft.Json.Formatting;
 
 namespace Semio;
@@ -1476,34 +1479,81 @@ public class Expression
 
 #endregion Utility
 
-#region Modeling
+#region Bases
 
-public abstract class Model
+public abstract class Base<TValidator> : where TValidator : new()
 {
-    public abstract (bool, List<string>) Validate();
+    public virtual FluentValidation.Results.ValidationResult Validate() => new TValidator().Validate(this);
 }
 
-#region Models
-
-
-public class AttributeId : Model<AttributeId>
+public abstract class Validator<TBase> : AbstractValidator<TBase> where TBase : Base<TValidator>
 {
+}
+
+public abstract class Id : Base<IdValidator>
+{
+
+}
+
+public abstract class IdValidator : Validator<Id>
+{
+}
+
+public abstract class Diff<TDiff> : Base<DiffValidator>
+{
+    public abstract TDiff Merge(TDiff other);
+}
+
+public abstract class DiffValidator : Validator<Diff>
+{
+}
+
+public abstract class Model<TModel, TDiff> : Base<ModelValidator<TModel, TDiff>>
+{
+    public abstract TModel ApplyDiff(TDiff diff);
+    public abstract TModel InverseDiff(TDiff diff);
+}
+
+public abstract class ModelValidator : Validator<Model<TModel, TDiff>>
+{
+}
+
+
+#region Bases
+
+
+#region Attributes
+// https://github.com/usalu/semio#-attribute-
+
+public class AttributeId : Id
+{
+    [JsonProperty("key_")]
     public string Key { get; set; } = "";
 
     public static implicit operator AttributeId(Attribute attribute) => new() { Key = attribute.Key };
-    public static implicit operator AttributeId(AttributeDiff diff) => new() { Key = diff.Key };
+    public static implicit operator AttributeId(AttributeDiff diff) => new() { Key = diff.Key ?? "" };
+
 }
 
-public class AttributeDiff : Model<AttributeDiff>
+public class AttributeIdValidator : AbstractValidator<AttributeId>
 {
-    public string Key { get; set; } = "";
-    public string Value { get; set; } = "";
-    public string Definition { get; set; } = "";
+    public AttributeIdValidator()
+    {
+        RuleFor(x => x.Key).NotEmpty().WithMessage("The key is required.");
+    }
+}
+
+public class AttributeDiff : Diff<AttributeDiff>
+{
+    [JsonProperty("key_")]
+    public string? Key { get; set; } = "";
+    public string? Value { get; set; } = "";
+    public string? Definition { get; set; } = "";
 
     public static implicit operator AttributeDiff(AttributeId id) => new() { Key = id.Key };
     public static implicit operator AttributeDiff(Attribute attribute) => new() { Key = attribute.Key, Value = attribute.Value, Definition = attribute.Definition };
 
-    public AttributeDiff MergeDiff(AttributeDiff other)
+    public override AttributeDiff Merge(AttributeDiff other)
     {
         return new AttributeDiff
         {
@@ -1514,50 +1564,43 @@ public class AttributeDiff : Model<AttributeDiff>
     }
 }
 
-/// <summary>
-/// <see href="https://github.com/usalu/semio#-attribute-"/>
-/// </summary>
-public class Attribute : Model<Attribute>
+public class AttributeDiffValidator : AbstractValidator<AttributeDiff>
+{
+    public AttributeDiffValidator()
+    {
+        RuleFor(x => x.Key).NotEmpty().WithMessage("The key is required.");
+    }
+}
+public class Attribute : Model
 {
     public string Key { get; set; } = "";
     public string Value { get; set; } = "";
     public string Definition { get; set; } = "";
 
     public static implicit operator Attribute(AttributeId id) => new() { Key = id.Key };
-    public static implicit operator Attribute(AttributeDiff diff) => new() { Key = diff.Key, Value = diff.Value, Definition = diff.Definition };
+    public static implicit operator Attribute(AttributeDiff diff) => new() { Key = diff.Key ?? "", Value = diff.Value ?? "", Definition = diff.Definition ?? "" };
 
     public Attribute ApplyDiff(AttributeDiff diff)
     {
-        return new Attribute
-        {
-            Key = !string.IsNullOrEmpty(diff.Key) ? diff.Key : Key,
-            Value = !string.IsNullOrEmpty(diff.Value) ? diff.Value : Value,
-            Definition = !string.IsNullOrEmpty(diff.Definition) ? diff.Definition : Definition
-        };
-    }
-    public AttributeDiff CreateDiff()
-    {
-        return new AttributeDiff
-        {
-            Key = Key,
-            Value = Value,
-            Definition = Definition
-        };
+        if (diff.Key is not null) Key = diff.Key;
+        if (diff.Value is not null) Value = diff.Value;
+        if (diff.Definition is not null) Definition = diff.Definition;
+        return this;
     }
     public AttributeDiff InverseDiff(AttributeDiff appliedDiff)
     {
         return new AttributeDiff
         {
-            Key = !string.IsNullOrEmpty(appliedDiff.Key) ? Key : "",
-            Value = !string.IsNullOrEmpty(appliedDiff.Value) ? Value : "",
-            Definition = !string.IsNullOrEmpty(appliedDiff.Definition) ? Definition : ""
-        };
+            Key = appliedDiff.Key is not null ? Key : null,
+            Value = appliedDiff.Value is not null ? Value : null,
+            Definition = appliedDiff.Definition is not null ? Definition : null
+        }
+        ;
     }
 
-    public string ToIdString() => $"{Key}";
-    public string ToHumanIdString() => $"{ToIdString()}";
-    public override string ToString() => $"Atr({ToHumanIdString()})";
 }
+
+#endregion Attributes
 
 /// <summary>
 /// <see href="https://github.com/usalu/semio#-benchmark-"/>

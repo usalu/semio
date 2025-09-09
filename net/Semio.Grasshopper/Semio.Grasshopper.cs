@@ -314,7 +314,6 @@ public abstract class EnumGoo<TEnum> : GH_Goo<TEnum> where TEnum : struct, Enum
     }
     public override string ToString() => Value.ToString();
 }
-
 public abstract class EnumParam<TEnumGoo, TEnum> : GH_Param<TEnumGoo>
     where TEnumGoo : EnumGoo<TEnum>, new()
     where TEnum : struct, Enum
@@ -326,18 +325,27 @@ public abstract class EnumParam<TEnumGoo, TEnum> : GH_Param<TEnumGoo>
     public override Guid Guid { get; }
 }
 
+public abstract class IdGoo<TId> : Goo<TId>
+{
+
+}
+public abstract class DiffGoo<TDiff> : Goo<TDiff>
+{
+}
 
 #endregion Bases
 
 #region Attribute
 
-public class AttributeIdGoo : Goo<AttributeId>
+public class AttributeIdGoo : IdGoo<AttributeId>
 {
     public override string TypeName => "Attribute Id";
 
     public override string TypeDescription => "The identifier of an attribute.";
 
-    protected override bool CustomCastTo<Q>(ref Q target)
+    public override bool IsValid => Value.Validate().IsValid;
+
+    public override bool CastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(AttributeGoo)))
         {
@@ -357,7 +365,7 @@ public class AttributeIdGoo : Goo<AttributeId>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is AttributeDiffGoo diffGoo)
@@ -377,20 +385,25 @@ public class AttributeIdGoo : Goo<AttributeId>
         }
         return false;
     }
+
+    public override string ToString()
+    {
+        throw new NotImplementedException();
+    }
 }
 
 public class AttributeIdParam : Param<AttributeIdGoo, AttributeId>
 {
     public AttributeIdParam() : base("AttributeId", "AI", "AttributeId parameter") { }
-    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B93");
+    public override Guid Guid => new("431125C0-B98C-4122-9598-F72714AC9B93");
     protected override Bitmap Icon => Resources.attributeid_id;
     public override GH_Exposure Exposure => GH_Exposure.secondary;
 }
 
-public class AttributeIdModelComponent : GH_Component
+public class AttributeIdModelComponent : Component
 {
     public AttributeIdModelComponent() : base("The ID of the attribute.", "AtI", "AttributeId component", Constants.Category, "Modeling") { }
-    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B92");
+    public override Guid Guid => new("431125C0-B98C-4122-9598-F72714AC9B92");
     protected override Bitmap Icon => Resources.attributeid_id_modify;
     public override GH_Exposure Exposure => GH_Exposure.secondary;
 
@@ -454,7 +467,7 @@ public class AttributeDiffGoo : Goo<AttributeDiff>
         }
         return false;
     }
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is AttributeIdGoo idGoo)
@@ -483,15 +496,15 @@ public class AttributeDiffGoo : Goo<AttributeDiff>
 public class AttributeDiffParam : Param<AttributeDiffGoo, AttributeDiff>
 {
     public AttributeDiffParam() : base("AttributeDiff", "AD", "AttributeDiff parameter") { }
-    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B95");
+    public override Guid Guid => new("431125C0-B98C-4122-9598-F72714AC9B95");
     protected override Bitmap Icon => Resources.ResourceManager.GetObject("attributediff_diff") as Bitmap;
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 }
 
-public class AttributeDiffComponent : GH_Component
+public class AttributeDiffComponent : Component
 {
     public AttributeDiffComponent() : base("A diff for attributes.", "ADf", "AttributeDiff component", Constants.Category, "Modeling") { }
-    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B96");
+    public override Guid Guid => new("431125C0-B98C-4122-9598-F72714AC9B96");
     protected override Bitmap Icon => Resources.ResourceManager.GetObject("attributediff_diff_modify") as Bitmap;
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
@@ -533,10 +546,10 @@ public class AttributeDiffComponent : GH_Component
     }
 }
 
-public class SerializeAttributeDiffComponent : GH_Component
+public class SerializeAttributeDiffComponent : Component
 {
     public SerializeAttributeDiffComponent() : base("Serialize AttributeDiff", "SAD", "Serialize AttributeDiff to JSON", Constants.Category, "Serialize") { }
-    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B97");
+    public override Guid Guid => new("431125C0-B98C-4122-9598-F72714AC9B97");
     protected override Bitmap Icon => Resources.ResourceManager.GetObject("attributediff_diff_serialize") as Bitmap;
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
@@ -560,10 +573,10 @@ public class SerializeAttributeDiffComponent : GH_Component
     }
 }
 
-public class DeserializeAttributeDiffComponent : GH_Component
+public class DeserializeAttributeDiffComponent : Component
 {
     public DeserializeAttributeDiffComponent() : base("Deserialize AttributeDiff", "DAD", "Deserialize JSON to AttributeDiff", Constants.Category, "Deserialize") { }
-    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B98");
+    public override Guid Guid => new("431125C0-B98C-4122-9598-F72714AC9B98");
     protected override Bitmap Icon => Resources.ResourceManager.GetObject("attributediff_diff_deserialize") as Bitmap;
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
@@ -617,7 +630,7 @@ public class AttributeGoo : Goo<Semio.Attribute>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is AttributeIdGoo idGoo)
@@ -642,13 +655,13 @@ public class AttributeGoo : Goo<Semio.Attribute>
 public class AttributeParam : Param<AttributeGoo, Semio.Attribute>
 {
     public AttributeParam() : base("Atr", "At", "A attribute is a key value pair with an an optional definition.") { }
-    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B94");
+    public override Guid Guid => new("431125C0-B98C-4122-9598-F72714AC9B94");
 }
 
-public class AttributeComponent : GH_Component
+public class AttributeComponent : Component
 {
     public AttributeComponent() : base("Attribute", "Atr", "Construct, deconstruct or modify an attribute", Constants.Category, "Modeling") { }
-    public override Guid ComponentGuid => new("51146B05-ACEB-4810-AD75-10AC3E029D39");
+    public override Guid Guid => new("51146B05-ACEB-4810-AD75-10AC3E029D39");
     protected override Bitmap Icon => Resources.ResourceManager.GetObject("attribute_modify") as Bitmap;
     public override GH_Exposure Exposure => GH_Exposure.primary;
 
@@ -704,10 +717,10 @@ public class AttributeComponent : GH_Component
     }
 }
 
-public class SerializeAttributeComponent : GH_Component
+public class SerializeAttributeComponent : Component
 {
     public SerializeAttributeComponent() : base("Serialize Attribute", ">>A", "Serialize Attribute to JSON", Constants.Category, "Serialize") { }
-    public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8974-8588BCA75250");
+    public override Guid Guid => new("C651F24C-BFF8-4821-8974-8588BCA75250");
     protected override Bitmap Icon => Resources.ResourceManager.GetObject("attribute_serialize") as Bitmap;
     public override GH_Exposure Exposure => GH_Exposure.secondary;
 
@@ -731,10 +744,10 @@ public class SerializeAttributeComponent : GH_Component
     }
 }
 
-public class DeserializeAttributeComponent : GH_Component
+public class DeserializeAttributeComponent : Component
 {
     public DeserializeAttributeComponent() : base("Deserialize Attribute", "<<A", "Deserialize JSON to Attribute", Constants.Category, "Deserialize") { }
-    public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8975-8588BCA75250");
+    public override Guid Guid => new("C651F24C-BFF8-4821-8975-8588BCA75250");
     protected override Bitmap Icon => Resources.ResourceManager.GetObject("attribute_deserialize") as Bitmap;
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
@@ -792,7 +805,7 @@ public class RepresentationIdGoo : Goo<RepresentationId>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is RepresentationDiffGoo diffGoo)
@@ -817,15 +830,15 @@ public class RepresentationIdGoo : Goo<RepresentationId>
 public class RepresentationIdParam : Param<RepresentationIdGoo, RepresentationId>
 {
     public RepresentationIdParam() : base("Rep", "Rp", "The identifier of a representation.") { }
-    public override Guid ComponentGuid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+    public override Guid Guid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
     protected override Bitmap Icon => Resources.ResourceManager.GetObject("representationid_id") as Bitmap;
     public override GH_Exposure Exposure => GH_Exposure.secondary;
 }
 
-public class RepresentationIdComponent : GH_Component
+public class RepresentationIdComponent : Component
 {
     public RepresentationIdComponent() : base("The identifier of a representation.", "Rep", "RepresentationId component", Constants.Category, "Modeling") { }
-    public override Guid ComponentGuid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
+    public override Guid Guid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
     protected override Bitmap Icon => Resources.ResourceManager.GetObject("representationid_id_modify") as Bitmap;
     public override GH_Exposure Exposure => GH_Exposure.secondary;
 
@@ -881,7 +894,7 @@ public class RepresentationDiffGoo : Goo<RepresentationDiff>
         }
         return false;
     }
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -900,15 +913,15 @@ public class RepresentationDiffGoo : Goo<RepresentationDiff>
 public class RepresentationDiffParam : Param<RepresentationDiffGoo, RepresentationDiff>
 {
     public RepresentationDiffParam() : base("RDf", "RD", "A diff for representations.") { }
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A9");
+    public override Guid Guid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A9");
     protected override Bitmap Icon => Resources.ResourceManager.GetObject("representationdiff_diff") as Bitmap;
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 }
 
-public class RepresentationDiffComponent : GH_Component
+public class RepresentationDiffComponent : Component
 {
     public RepresentationDiffComponent() : base("A diff for representations.", "RDf", "RepresentationDiff component", Constants.Category, "Modeling") { }
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AA");
+    public override Guid Guid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AA");
     protected override Bitmap Icon => Resources.ResourceManager.GetObject("representationdiff_diff_modify") as Bitmap;
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
@@ -950,10 +963,10 @@ public class RepresentationDiffComponent : GH_Component
     }
 }
 
-public class SerializeRepresentationDiffComponent : GH_Component
+public class SerializeRepresentationDiffComponent : Component
 {
     public SerializeRepresentationDiffComponent() : base("Serialize RepresentationDiff", "SRD", "Serialize RepresentationDiff to JSON", Constants.Category, "Serialize") { }
-    public override Guid ComponentGuid => new("71E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AB");
+    public override Guid Guid => new("71E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AB");
     protected override Bitmap Icon => Resources.ResourceManager.GetObject("representationdiff_diff_serialize") as Bitmap;
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
@@ -977,10 +990,10 @@ public class SerializeRepresentationDiffComponent : GH_Component
     }
 }
 
-public class DeserializeRepresentationDiffComponent : GH_Component
+public class DeserializeRepresentationDiffComponent : Component
 {
     public DeserializeRepresentationDiffComponent() : base("Deserialize RepresentationDiff", "DRD", "Deserialize JSON to RepresentationDiff", Constants.Category, "Deserialize") { }
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AC");
+    public override Guid Guid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AC");
     protected override Bitmap Icon => Resources.ResourceManager.GetObject("representationdiff_diff_deserialize") as Bitmap;
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 
@@ -1023,7 +1036,7 @@ public class RepresentationsDiffGoo : Goo<RepresentationsDiff>
         }
         return false;
     }
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -1085,7 +1098,7 @@ public class RepresentationGoo : Goo<Representation>
         }
         return false;
     }
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -1150,7 +1163,7 @@ public class DeserializeRepresentationComponent : DeserializeComponent<Represent
             }
             return false;
         }
-        protected override bool CustomCastFrom(object source)
+        public override bool CastFrom(object source)
         {
             if (source == null) return false;
             if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -1187,7 +1200,7 @@ public class DeserializeRepresentationComponent : DeserializeComponent<Represent
             return false;
         }
 
-        protected override bool CustomCastFrom(object source)
+        public override bool CastFrom(object source)
         {
             if (source == null) return false;
             if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -1248,7 +1261,7 @@ public class DeserializeRepresentationComponent : DeserializeComponent<Represent
             return false;
         }
 
-        protected override bool CustomCastFrom(object source)
+        public override bool CastFrom(object source)
         {
             if (source == null) return false;
             if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -1308,7 +1321,7 @@ public class DeserializeRepresentationComponent : DeserializeComponent<Represent
             return false;
         }
 
-        protected override bool CustomCastFrom(object source)
+        public override bool CastFrom(object source)
         {
             if (source == null) return false;
             if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -1370,7 +1383,7 @@ public class DeserializeRepresentationComponent : DeserializeComponent<Represent
             return false;
         }
 
-        protected override bool CustomCastFrom(object source)
+        public override bool CastFrom(object source)
         {
             if (source == null) return false;
             Point3d point = new Point3d();
@@ -1441,7 +1454,7 @@ public class DeserializeRepresentationComponent : DeserializeComponent<Represent
             return false;
         }
 
-        protected override bool CustomCastFrom(object source)
+        public override bool CastFrom(object source)
         {
             if (source == null) return false;
             if (source is PortGoo portGoo)
@@ -1499,7 +1512,7 @@ public class DeserializeRepresentationComponent : DeserializeComponent<Represent
             return false;
         }
 
-        protected override bool CustomCastFrom(object source)
+        public override bool CastFrom(object source)
         {
             if (source == null) return false;
             if (source is PortIdGoo idGoo)
@@ -1586,7 +1599,7 @@ public class DeserializeRepresentationComponent : DeserializeComponent<Represent
             return false;
         }
 
-        protected override bool CustomCastFrom(object source)
+        public override bool CastFrom(object source)
         {
             if (source == null) return false;
             if (source is PortIdGoo idGoo)
@@ -1705,7 +1718,7 @@ public class DeserializeRepresentationComponent : DeserializeComponent<Represent
             return false;
         }
 
-        protected override bool CustomCastFrom(object source)
+        public override bool CastFrom(object source)
         {
             if (source == null) return false;
             if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -1769,7 +1782,7 @@ public class DeserializeRepresentationComponent : DeserializeComponent<Represent
             return false;
         }
 
-        protected override bool CustomCastFrom(object source)
+        public override bool CastFrom(object source)
         {
             if (source == null) return false;
             if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -1810,7 +1823,7 @@ public class DeserializeRepresentationComponent : DeserializeComponent<Represent
             }
             return false;
         }
-        protected override bool CustomCastFrom(object source)
+        public override bool CastFrom(object source)
         {
             if (source == null) return false;
             if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -1897,7 +1910,7 @@ public class LocationGoo : Goo<Location>
         }
         return false;
     }
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         var point = new Point3d();
@@ -1996,7 +2009,7 @@ public class TypeIdGoo : IdGoo<TypeId>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is TypeGoo typeGoo)
@@ -2058,7 +2071,7 @@ public class TypeDiffGoo : DiffGoo<TypeDiff>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is TypeGoo typeGoo)
@@ -2128,7 +2141,7 @@ public class TypesDiffGoo : DiffGoo<TypesDiff>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -2207,7 +2220,7 @@ public class TypeGoo : Goo<Type>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is TypeDiffGoo diffGoo)
@@ -2370,7 +2383,7 @@ public class PieceIdGoo : IdGoo<PieceId>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is PieceGoo pieceGoo)
@@ -2432,7 +2445,7 @@ public class PieceDiffGoo : DiffGoo<PieceDiff>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is PieceGoo pieceGoo)
@@ -2502,7 +2515,7 @@ public class PiecesDiffGoo : DiffGoo<PiecesDiff>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -2578,7 +2591,7 @@ public class PieceGoo : Goo<Piece>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is PieceDiffGoo diffGoo)
@@ -2726,7 +2739,7 @@ public class SideDiffGoo : DiffGoo<SideDiff>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -2783,7 +2796,7 @@ public class SideGoo : Goo<Side>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -2881,7 +2894,7 @@ public class ConnectionIdGoo : IdGoo<ConnectionId>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is ConnectionGoo connectionGoo)
@@ -2950,7 +2963,7 @@ public class ConnectionDiffGoo : DiffGoo<ConnectionDiff>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is ConnectionGoo connectionGoo)
@@ -3020,7 +3033,7 @@ public class ConnectionsDiffGoo : DiffGoo<ConnectionsDiff>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -3090,7 +3103,7 @@ public class ConnectionGoo : Goo<Connection>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is ConnectionDiffGoo diffGoo)
@@ -3247,7 +3260,7 @@ public class DesignIdGoo : IdGoo<DesignId>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is DesignGoo designGoo)
@@ -3309,7 +3322,7 @@ public class DesignDiffGoo : DiffGoo<DesignDiff>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is DesignGoo designGoo)
@@ -3379,7 +3392,7 @@ public class DesignsDiffGoo : DiffGoo<DesignsDiff>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -3450,7 +3463,7 @@ public class DesignGoo : Goo<Design>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is DesignDiffGoo diffGoo)
@@ -3590,7 +3603,7 @@ public class KitIdGoo : IdGoo<KitId>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is KitDiffGoo diffGoo)
@@ -3648,7 +3661,7 @@ public class KitDiffGoo : DiffGoo<KitDiff>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is KitGoo kitGoo)
@@ -3719,7 +3732,7 @@ public class KitGoo : Goo<Kit>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is KitDiffGoo diffGoo)
@@ -3850,7 +3863,7 @@ public class KitsDiffGoo : DiffGoo<KitsDiff>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -3935,7 +3948,7 @@ public class QualityIdGoo : IdGoo<QualityId>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is QualityGoo qualityGoo)
@@ -4017,7 +4030,7 @@ public class QualityDiffGoo : DiffGoo<QualityDiff>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is QualityGoo qualityGoo)
@@ -4101,7 +4114,7 @@ public class QualityGoo : Goo<Quality>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (source is QualityDiffGoo diffGoo)
@@ -4236,7 +4249,7 @@ public class BenchmarkGoo : Goo<Benchmark>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -4327,7 +4340,7 @@ public class PropGoo : Goo<Prop>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -4413,7 +4426,7 @@ public class StatGoo : Goo<Stat>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -4502,7 +4515,7 @@ public class LayerGoo : Goo<Layer>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -4587,7 +4600,7 @@ public class GroupGoo : Goo<Group>
         return false;
     }
 
-    protected override bool CustomCastFrom(object source)
+    public override bool CastFrom(object source)
     {
         if (source == null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
