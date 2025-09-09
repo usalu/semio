@@ -1040,7 +1040,7 @@ public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, Attribut
         public class FileIdComponent : IdComponent<FileIdParam, FileIdGoo, FileId>
         {
             public FileIdComponent() : base("The identifier of a file.", "Fil", "FileId component") { }
-            public override Guid Guid => new("50C3D4E5-F6A7-B8C9-D0E1-F2A3B4C5D6E8");protected override void RegisterParams(dynamic pManager)
+            public override Guid Guid => new("50C3D4E5-F6A7-B8C9-D0E1-F2A3B4C5D6E8"); protected override void RegisterParams(dynamic pManager)
             {
             }
         }
@@ -1493,7 +1493,7 @@ public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, Attribut
         public class PortComponent : ModelComponent<PortParam, PortGoo, Port>
         {
             public PortComponent() : base("Port", "Por", "Construct, deconstruct or modify a port") { }
-            public override Guid Guid => new("E505C90C-71F4-413F-82FE-65559D9FFAB5");protected override void RegisterParams(dynamic pManager)
+            public override Guid Guid => new("E505C90C-71F4-413F-82FE-65559D9FFAB5"); protected override void RegisterParams(dynamic pManager)
             {
                 pManager.AddTextParameter("Idn?", "Id?", "The optional local identifier of the port within the type. No id means the default port.", GH_ParamAccess.item);
                 pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the port.", GH_ParamAccess.item);
@@ -1700,7 +1700,7 @@ public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, Attribut
         public class AuthorComponent : ModelComponent<AuthorParam, AuthorGoo, Author>
         {
             public AuthorComponent() : base("Author", "Au", "Construct, deconstruct or modify an author") { }
-            public override Guid Guid => new("5143ED92-0A2C-4D0C-84ED-F90CC8450894");protected override void RegisterParams(dynamic pManager)
+            public override Guid Guid => new("5143ED92-0A2C-4D0C-84ED-F90CC8450894"); protected override void RegisterParams(dynamic pManager)
 
             {
 
@@ -1963,9 +1963,6 @@ public class TypeDiffComponent : DiffComponent<TypeDiffParam, TypeDiffGoo, TypeD
 {
     public TypeDiffComponent() : base("TypeDiff", "TD", "TypeDiff component") { }
     public override Guid Guid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C4");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "TD";
     protected override void RegisterParams(dynamic pManager) => pManager.AddParameter(new TypeDiffParam(), "TDf", "TD", "A diff for types.", GH_ParamAccess.item);
 }
 
@@ -2026,9 +2023,6 @@ public class TypesDiffComponent : DiffComponent<TypesDiffParam, TypesDiffGoo, Ty
 {
     public TypesDiffComponent() : base("TypesDiff", "TSD", "TypesDiff component") { }
     public override Guid Guid => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B7");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "TsD";
     protected override void RegisterParams(dynamic pManager) => pManager.AddParameter(new TypesDiffParam(), "TsDf", "TsD", "A diff for multiple types.", GH_ParamAccess.item);
 }
 
@@ -2119,13 +2113,7 @@ public class TypeParam : Param<TypeGoo, Type>
 public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
 {
     public TypeComponent() : base("Type", "Typ", "Construct, deconstruct or modify a type") { }
-    public override Guid Guid => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "T";
-    protected override string GetModelName() => "Type";
-
-    protected override void RegisterParams(dynamic pManager)
+    public override Guid Guid => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7"); protected override void RegisterParams(dynamic pManager)
 
     {
 
@@ -2283,9 +2271,6 @@ public class PieceIdComponent : IdComponent<PieceIdParam, PieceIdGoo, PieceId>
 {
     public PieceIdComponent() : base("The optional local identifier of the piece within the design. No id means the default piece.", "Pce", "PieceId component") { }
     public override Guid Guid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D4");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "PiI";
     protected override void RegisterParams(dynamic pManager) => pManager.AddParameter(new PieceIdParam(), "Pce", "Pc", "The optional local identifier of the piece within the design. No id means the default piece.", GH_ParamAccess.item);
 }
 
@@ -2352,9 +2337,6 @@ public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, Pi
 {
     public PieceDiffComponent() : base("PieceDiff", "PD", "PieceDiff component") { }
     public override Guid Guid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D5");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "PiD";
     protected override void RegisterParams(dynamic pManager) => pManager.AddParameter(new PieceDiffParam(), "PDf", "PD", "A diff for pieces.", GH_ParamAccess.item);
 }
 
@@ -2415,9 +2397,6 @@ public class PiecesDiffComponent : DiffComponent<PiecesDiffParam, PiecesDiffGoo,
 {
     public PiecesDiffComponent() : base("PiecesDiff", "PsD", "PiecesDiff component") { }
     public override Guid Guid => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6C8");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "PsD";
     protected override void RegisterParams(dynamic pManager) => pManager.AddParameter(new PiecesDiffParam(), "PsDf", "PsD", "A diff for multiple pieces.", GH_ParamAccess.item);
 }
 
@@ -2508,13 +2487,7 @@ public class PieceParam : Param<PieceGoo, Piece>
 public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
 {
     public PieceComponent() : base("Piece", "Pce", "Construct, deconstruct or modify a piece") { }
-    public override Guid Guid => new("49CD29FC-F6EB-43D2-8C7D-E88F8520BA48");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "Pce";
-    protected override string GetModelName() => "Piece";
-
-    protected override void RegisterParams(dynamic pManager)
+    public override Guid Guid => new("49CD29FC-F6EB-43D2-8C7D-E88F8520BA48"); protected override void RegisterParams(dynamic pManager)
 
     {
 
@@ -2648,9 +2621,6 @@ public class SideDiffComponent : DiffComponent<SideDiffParam, SideDiffGoo, SideD
 {
     public SideDiffComponent() : base("SideDiff", "SD", "SideDiff component") { }
     public override Guid Guid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E4");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "SD";
     protected override void RegisterParams(dynamic pManager) => pManager.AddParameter(new SideDiffParam(), "SDf", "SD", "A diff for sides.", GH_ParamAccess.item);
 
 }
@@ -2706,13 +2676,7 @@ public class SideParam : Param<SideGoo, Side>
 public class SideComponent : ModelComponent<SideParam, SideGoo, Side>
 {
     public SideComponent() : base("Side", "Sde", "Construct, deconstruct or modify a side") { }
-    public override Guid Guid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E6");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "Sid";
-    protected override string GetModelName() => "Side";
-
-    protected override void RegisterParams(dynamic pManager)
+    public override Guid Guid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E6"); protected override void RegisterParams(dynamic pManager)
 
     {
 
@@ -2830,9 +2794,6 @@ public class ConnectionIdComponent : IdComponent<ConnectionIdParam, ConnectionId
 {
     public ConnectionIdComponent() : base("The local identifier of the connection within the design.", "ConId", "ConnectionId component") { }
     public override Guid Guid => new("40B2C3D4-E5F6-A7B8-C9D0-E1F2A3B4C5D7");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "CI";
 }
 
 public class ConnectionDiffGoo : DiffGoo<ConnectionDiff>
@@ -2897,9 +2858,6 @@ public class ConnectionDiffComponent : DiffComponent<ConnectionDiffParam, Connec
 {
     public ConnectionDiffComponent() : base("ConnectionDiff", "CD", "ConnectionDiff component") { }
     public override Guid Guid => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F5");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "CD";
     protected override void RegisterParams(dynamic pManager) { } => pManager.AddParameter(new ConnectionDiffParam(), "CDf", "CD", "A diff for connections.", GH_ParamAccess.item);
 
 }
@@ -2960,9 +2918,6 @@ public class ConnectionsDiffComponent : DiffComponent<ConnectionsDiffParam, Conn
 {
     public ConnectionsDiffComponent() : base("ConnectionsDiff", "CsD", "ConnectionsDiff component") { }
     public override Guid Guid => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7D9");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "CsD";
     protected override void RegisterParams(dynamic pManager) { } => pManager.AddParameter(new ConnectionsDiffParam(), "CsDf", "CsD", "A diff for multiple connections.", GH_ParamAccess.item);
 
 }
@@ -3047,13 +3002,7 @@ public class ConnectionParam : Param<ConnectionGoo, Connection>
 public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo, Connection>
 {
     public ConnectionComponent() : base("Connection", "Con", "Construct, deconstruct or modify a connection") { }
-    public override Guid Guid => new("AB212F90-124C-4985-B3EE-1C13D7827560");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "Con";
-    protected override string GetModelName() => "Connection";
-
-    protected override void RegisterParams(dynamic pManager)
+    public override Guid Guid => new("AB212F90-124C-4985-B3EE-1C13D7827560"); protected override void RegisterParams(dynamic pManager)
 
     {
 
@@ -3202,9 +3151,6 @@ public class DesignIdComponent : IdComponent<DesignIdParam, DesignIdGoo, DesignI
 {
     public DesignIdComponent() : base("The local identifier of the design within the kit.", "Dsn", "DesignId component") { }
     public override Guid Guid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A7");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "DI";
     protected override void RegisterParams(dynamic pManager) { } => pManager.AddParameter(new DesignIdParam(), "Dsn", "Dn", "The local identifier of the design within the kit.", GH_ParamAccess.item);
 
 }
@@ -3271,9 +3217,6 @@ public class DesignDiffComponent : DiffComponent<DesignDiffParam, DesignDiffGoo,
 {
     public DesignDiffComponent() : base("DesignDiff", "DD", "DesignDiff component") { }
     public override Guid Guid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A8");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "DD";
     protected override void RegisterParams(dynamic pManager) { } => pManager.AddParameter(new DesignDiffParam(), "DDf", "DD", "A diff for designs.", GH_ParamAccess.item);
 
 }
@@ -3335,9 +3278,6 @@ public class DesignsDiffComponent : DiffComponent<DesignsDiffParam, DesignsDiffG
 {
     public DesignsDiffComponent() : base("DesignsDiff", "DsD", "DesignsDiff component") { }
     public override Guid Guid => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8EA");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "DsD";
     protected override void RegisterParams(dynamic pManager) { } => pManager.AddParameter(new DesignsDiffParam(), "DsDf", "DsD", "A diff for multiple designs.", GH_ParamAccess.item);
 
 }
@@ -3414,12 +3354,7 @@ public class DesignParam : Param<DesignGoo, Design>
 public class DesignComponent : ModelComponent<DesignParam, DesignGoo, Design>
 {
     public DesignComponent() : base("Design", "Dsn", "Design component") { }
-    public override Guid Guid => new("AAD8D144-2EEE-48F1-A8A9-52977E86CB54");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "D";
-    protected override string GetModelName() => "Design";
-    protected override void RegisterParams(dynamic pManager)
+    public override Guid Guid => new("AAD8D144-2EEE-48F1-A8A9-52977E86CB54"); protected override void RegisterParams(dynamic pManager)
     {
         pManager.AddParameter(new DesignParam(), "Design", "D", "Design", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "N", "Name", GH_ParamAccess.item);
@@ -3560,9 +3495,6 @@ public class KitIdComponent : IdComponent<KitIdParam, KitIdGoo, KitId>
 {
     public KitIdComponent() : base("The local identifier of the kit.", "KitId", "KitId component") { }
     public override Guid Guid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B1");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "KI";
     protected override void RegisterParams(dynamic pManager) { } => pManager.AddParameter(new KitIdParam(), "KitId", "KId", "Kit identifier", GH_ParamAccess.item);
 
 }
@@ -3620,9 +3552,6 @@ public class KitDiffComponent : DiffComponent<KitDiffParam, KitDiffGoo, KitDiff>
 {
     public KitDiffComponent() : base("KitDiff", "KD", "KitDiff component") { }
     public override Guid Guid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B3");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "KD";
     protected override void RegisterParams(dynamic pManager) { } => pManager.AddParameter(new KitDiffParam(), "KitDiff", "KDiff", "Kit difference", GH_ParamAccess.item);
 
 }
@@ -3689,12 +3618,7 @@ public class KitParam : Param<KitGoo, Kit>
 public class KitComponent : ModelComponent<KitParam, KitGoo, Kit>
 {
     public KitComponent() : base("Kit", "Kit", "Kit component") { }
-    public override Guid Guid => new("987560A8-10D4-43F6-BEBE-D71DC2FD86AF");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "K";
-    protected override string GetModelName() => "Kit";
-    protected override void RegisterParams(dynamic pManager)
+    public override Guid Guid => new("987560A8-10D4-43F6-BEBE-D71DC2FD86AF"); protected override void RegisterParams(dynamic pManager)
     {
         pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "N", "Name", GH_ParamAccess.item);
@@ -3825,9 +3749,6 @@ public class KitsDiffComponent : DiffComponent<KitsDiffParam, KitsDiffGoo, KitsD
 {
     public KitsDiffComponent() : base("KitsDiff", "KsD", "KitsDiff component") { }
     public override Guid Guid => new("50A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C4");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "KsD";
 }
 
 public class SerializeKitsDiffComponent : SerializeComponent<KitsDiffParam, KitsDiffGoo, KitsDiff>
@@ -3926,9 +3847,6 @@ public class QualityIdComponent : IdComponent<QualityIdParam, QualityIdGoo, Qual
 {
     public QualityIdComponent() : base("A quality id is a key for a quality.", "Qal", "QualityId component") { }
     public override Guid Guid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "QI";
 }
 
 public class SerializeQualityIdComponent : SerializeIdComponent<QualityIdParam, QualityIdGoo, QualityId>
@@ -4013,9 +3931,6 @@ public class QualityDiffComponent : DiffComponent<QualityDiffParam, QualityDiffG
 {
     public QualityDiffComponent() : base("QualityDiff", "QD", "QualityDiff component") { }
     public override Guid Guid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4DB");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "QD";
 }
 
 public class SerializeQualityDiffComponent : SerializeComponent<QualityDiffParam, QualityDiffGoo, QualityDiff>
@@ -4097,12 +4012,7 @@ public class QualityParam : Param<QualityGoo, Quality>
 public class QualityComponent : ModelComponent<QualityParam, QualityGoo, Quality>
 {
     public QualityComponent() : base("Quality", "Qal", "Quality component") { }
-    public override Guid Guid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "Q";
-    protected override string GetModelName() => "Quality";
-    protected override void RegisterParams(dynamic pManager)
+    public override Guid Guid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7"); protected override void RegisterParams(dynamic pManager)
     {
         pManager.AddParameter(new QualityParam(), "Quality", "Q", "Quality", GH_ParamAccess.item);
         pManager.AddTextParameter("Key", "K", "Key", GH_ParamAccess.item);
@@ -4220,12 +4130,7 @@ public class BenchmarkParam : Param<BenchmarkGoo, Benchmark>
 public class BenchmarkComponent : ModelComponent<BenchmarkParam, BenchmarkGoo, Benchmark>
 {
     public BenchmarkComponent() : base("Benchmark", "Bmk", "Benchmark component") { }
-    public override Guid Guid => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "B";
-    protected override string GetModelName() => "Benchmark";
-    protected override void RegisterParams(dynamic pManager)
+    public override Guid Guid => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5"); protected override void RegisterParams(dynamic pManager)
     {
         pManager.AddParameter(new BenchmarkParam(), "Benchmark", "B", "Benchmark", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "Name", GH_ParamAccess.item);
@@ -4320,12 +4225,7 @@ public class PropParam : Param<PropGoo, Prop>
 public class PropComponent : ModelComponent<PropParam, PropGoo, Prop>
 {
     public PropComponent() : base("Prop", "Prp", "Prop component") { }
-    public override Guid Guid => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "P";
-    protected override string GetModelName() => "Prop";
-    protected override void RegisterParams(dynamic pManager)
+    public override Guid Guid => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5"); protected override void RegisterParams(dynamic pManager)
     {
         pManager.AddParameter(new PropParam(), "Prop", "P", "Property", GH_ParamAccess.item);
         pManager.AddTextParameter("Key", "K", "Key", GH_ParamAccess.item);
@@ -4408,12 +4308,7 @@ public class StatParam : Param<StatGoo, Stat>
 public class StatComponent : ModelComponent<StatParam, StatGoo, Stat>
 {
     public StatComponent() : base("Stat", "Stt", "Stat component") { }
-    public override Guid Guid => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "S";
-    protected override string GetModelName() => "Stat";
-    protected override void RegisterParams(dynamic pManager)
+    public override Guid Guid => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5"); protected override void RegisterParams(dynamic pManager)
     {
         pManager.AddParameter(new StatParam(), "Stat", "S", "Statistic", GH_ParamAccess.item);
         pManager.AddTextParameter("Key", "K", "Key", GH_ParamAccess.item);
@@ -4587,12 +4482,7 @@ public class GroupParam : Param<GroupGoo, Group>
 public class GroupComponent : ModelComponent<GroupParam, GroupGoo, Group>
 {
     public GroupComponent() : base("Group", "Grp", "Group component") { }
-    public override Guid Guid => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
-
-    protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "G";
-    protected override string GetModelName() => "Group";
-    protected override void RegisterParams(dynamic pManager)
+    public override Guid Guid => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5"); protected override void RegisterParams(dynamic pManager)
     {
         pManager.AddParameter(new GroupParam(), "Group", "G", "Group", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "Name", GH_ParamAccess.item);
