@@ -7,7 +7,10 @@ An ecosystem for designing kit-of-parts architecture together.
 The following rules MUST alwaysbe followed unless explicitly asked to do otherwise.
 
 - NEVER remove functionality! Not even to get the code to work quickly.
-- ALWAYS be thorough! NEVER stop halfways and ask if you should continue. ALWAYS finish the task.
+- ALWAYS be thorough.
+- NEVER create scripts to automate manual tasks. If a task is long
+- NEVER stop halfways and ask if you should continue.
+- ALWAYS finish the task.
 - ALWAYS make the choice directly! If you have several options, don't ask in between, be opionionated and just go for it. Try to do as much as you can.
 - ALWAYS toolfriendly over intuitive.
 - NEVER create new files unless for temporary purposes.
@@ -21,10 +24,10 @@ The following rules MUST alwaysbe followed unless explicitly asked to do otherwi
 - NEVER add comments to the code.
 - NEVER create tests unless you are explicitly asked to.
 - ALWAYS use inline syntax if possible.
+- NEVER add two statements into the same line.
 - ALWAYS inline code.
 - NEVER create a variable, function, … class, that is only used once and inline it.
 - NEVER add extra new lines inside of code.
-- NEVER delete files, you can tell me when once you are 100% done with everything and I will do it manually.
 
 # Styling
 

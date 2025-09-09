@@ -1478,43 +1478,9 @@ public class Expression
 
 #region Modeling
 
-public abstract class Model<T> where T : Model<T>
+public abstract class Model
 {
-    public override string ToString()
-    {
-        return typeof(T).Name;
-    }
-
-    public override bool Equals(object? obj)
-    {
-        return obj is T other && Equals(other);
-    }
-
-    protected virtual bool Equals(T other)
-    {
-        return ReferenceEquals(this, other);
-    }
-
-    public override int GetHashCode()
-    {
-        return typeof(T).GetHashCode();
-    }
-
-    public static bool operator ==(Model<T> left, Model<T> right)
-    {
-        if (ReferenceEquals(left, right)) return true;
-        if (left is null || right is null) return false;
-        return left.Equals(right);
-    }
-
-    public static bool operator !=(Model<T> left, Model<T> right) => !(left == right);
-
-    public T DeepClone() => this.Serialize().Deserialize<T>() ?? throw new InvalidOperationException("Failed to deserialize cloned object");
-
-    public virtual (bool, List<string>) Validate()
-    {
-        return (true, new List<string>());
-    }
+    public abstract (bool, List<string>) Validate();
 }
 
 #region Models

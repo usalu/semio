@@ -266,66 +266,30 @@ public static class RhinoConverter
 
 #region Bases
 
-public abstract class ModelGoo<TModel> : GH_Goo<TModel> where TModel : Model<TModel>, new()
+public abstract class Component : GH_Component
 {
-    public ModelGoo() { Value = new TModel(); }
-    public ModelGoo(TModel value) { Value = value; }
-    public override bool IsValid => Value is not null;
+    public Component(string name, string nickname, string description, string subcategory, string category = "") : base(
+        name, nickname, description, category.IsNullOrEmpty() ? Constants.Category : category, subcategory)
+    { }
+}
+public abstract class Goo<TModel> : GH_Goo<TModel>
+{
+    public Goo() { Value = new TModel(); }
+    public Goo(TModel value) { Value = value; }
     public override IGH_Goo Duplicate()
     {
-        var duplicate = (ModelGoo<TModel>)Activator.CreateInstance(GetType());
+        var duplicate = (Goo<TModel>)Activator.CreateInstance(GetType());
         if (Value is not null)
             duplicate.Value = Value.DeepClone();
         return duplicate;
     }
-    public override string ToString() => Value?.ToString() ?? string.Empty;
-    public override bool Write(GH_IWriter writer)
-    {
-        if (Value is not null)
-            writer.SetString("model", Value.Serialize());
-        return base.Write(writer);
-    }
-    public override bool Read(GH_IReader reader)
-    {
-        var serialized = reader.GetString("model");
-        if (!string.IsNullOrEmpty(serialized))
-        {
-            var deserialized = serialized.Deserialize<TModel>();
-            if (deserialized is not null)
-                Value = deserialized;
-        }
-        return base.Read(reader);
-    }
-    protected virtual bool CustomCastTo<Q>(ref Q target) => false;
-    protected virtual bool CustomCastFrom(object source) => false;
-    public override bool CastTo<Q>(ref Q target)
-    {
-        if (typeof(Q).IsAssignableFrom(typeof(TModel)) && Value is not null)
-        {
-            target = (Q)(object)Value;
-            return true;
-        }
-        return CustomCastTo(ref target);
-    }
 
-    public override bool CastFrom(object source)
-    {
-        if (source == null) return false;
-        if (source is TModel model)
-        {
-            Value = model;
-            return true;
-        }
-        return CustomCastFrom(source);
-    }
 }
-
-public abstract class Param<TGoo, TModel> : GH_PersistentParam<TGoo> where TGoo : ModelGoo<TModel> where TModel : Model<TModel>, new()
+public abstract class Param<TGoo, TModel> : GH_PersistentParam<TGoo> where TGoo : Goo<TModel>
 {
-    protected Param(string name, string nickname, string description) : base(name, nickname, description, Constants.Category, "Params") { }
-    protected override Bitmap Icon => Resources.ResourceManager.GetObject(typeof(TModel).Name.ToLower()) as Bitmap;
-    protected override GH_GetterResult Prompt_Singular(ref TGoo value) => GH_GetterResult.cancel;
-    protected override GH_GetterResult Prompt_Plural(ref List<TGoo> values) => GH_GetterResult.cancel;
+    protected Param(string name, string nickname, string description, string subcategory = "", string category = "") :
+    base(name, nickname, description, category, subcategory.IsNullOrEmpty() ? "Params" : subcategory)
+    { }
 }
 
 public abstract class EnumGoo<TEnum> : GH_Goo<TEnum> where TEnum : struct, Enum
@@ -361,196 +325,18 @@ public abstract class EnumParam<TEnumGoo, TEnum> : GH_Param<TEnumGoo>
     }
     public override Guid Guid { get; }
 }
-public abstract class Component : GH_Component
-{
-    public Component(string name, string nickname, string description, string subcategory) : base(
-        name, nickname, description, Constants.Category, subcategory)
-    { }
-}
 
-public abstract class ModelComponent<TParam, TGoo, TModel> : Component
-    where TParam : Param<TGoo, TModel>, new() where TGoo : ModelGoo<TModel>, new() where TModel : Model<TModel>, new()
-{
-    protected ModelComponent(string name, string nickname, string description) : base(name, nickname, description, "Modeling") { }
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new TParam(), typeof(TModel).Name, typeof(TModel).Name + "?",
-            $"The optional {GetModelName().ToLower()} to deconstruct or modify.", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Validate", "Vd?",
-            $"Whether the {GetModelName().ToLower()} should be validated.", GH_ParamAccess.item);
-        RegisterParams(pManager);
-        for (var i = 0; i < pManager.ParamCount; i++)
-            pManager[i].Optional = true;
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddParameter(new TParam(), typeof(TModel).Name, typeof(TModel).Name,
-            $"The constructed or modified {GetModelName().ToLower()}.", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Valid", "Vd?",
-            $"True if the {GetModelName().ToLower()} is valid. Null if no validation was performed.", GH_ParamAccess.item);
-        RegisterParams(pManager);
-    }
-    protected abstract void RegisterParams(dynamic pManager);
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        TGoo? modelGoo = null;
-        var validate = false;
-
-        if (DA.GetData(0, ref modelGoo))
-            modelGoo = (TGoo?)modelGoo?.Duplicate();
-        DA.GetData(1, ref validate);
-
-        var model = modelGoo?.Value ?? new TModel();
-        ProcessModelInputs(DA, model);
-
-        model = ProcessModel(model);
-
-        if (validate)
-        {
-            var (isValid, errors) = model.Validate();
-            foreach (var error in errors)
-                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, error);
-            DA.SetData(1, isValid);
-        }
-
-        var outputGoo = new TGoo { Value = model };
-        DA.SetData(0, outputGoo);
-        ProcessModelOutputs(DA, model);
-    }
-    protected abstract void ProcessModelInputs(IGH_DataAccess DA, TModel model);
-    protected abstract void ProcessModelOutputs(IGH_DataAccess DA, TModel model);
-    protected virtual TModel ProcessModel(TModel model) => model;
-    public override GH_Exposure Exposure => GH_Exposure.primary;
-    protected override Bitmap Icon => Resources.ResourceManager.GetObject(typeof(TModel).Name.ToLower() + "_modify") as Bitmap;
-
-}
-public abstract class SerializeComponent<TParam, TGoo, TModel> : Component
-    where TParam : Param<TGoo, TModel>, new() where TGoo : ModelGoo<TModel>, new() where TModel : Model<TModel>, new()
-{
-    protected SerializeComponent(string name, string nickname, string description) : base(name, nickname, description, "Serialize") { }
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new TParam());
-    }
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "T", "Serialized text", GH_ParamAccess.item);
-    }
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var goo = default(TGoo);
-        if (!DA.GetData(0, ref goo) || goo?.Value is null) return;
-
-        var serialized = goo.Value.Serialize();
-        DA.SetData(0, serialized);
-    }
-    protected override Bitmap Icon => Resources.ResourceManager.GetObject(typeof(TModel).Name.ToLower() + "_serialize") as Bitmap;
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
-}
-public abstract class DeserializeComponent<TParam, TGoo, TModel> : Component
-    where TParam : Param<TGoo, TModel>, new() where TGoo : ModelGoo<TModel>, new() where TModel : Model<TModel>, new()
-{
-    protected DeserializeComponent(string name, string nickname, string description) : base(name, nickname, description, "Deserialize") { }
-    protected override void RegisterInputParams(GH_InputParamManager pManager)
-    {
-        pManager.AddTextParameter("Text", "T", "Serialized text", GH_ParamAccess.item);
-    }
-
-    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
-    {
-        pManager.AddParameter(new TParam());
-    }
-    protected override void SolveInstance(IGH_DataAccess DA)
-    {
-        var text = "";
-        if (!DA.GetData(0, ref text) || string.IsNullOrEmpty(text)) return;
-
-        var model = text.Deserialize<TModel>();
-        if (model is not null)
-        {
-            var goo = new TGoo();
-            goo.Value = model;
-            DA.SetData(0, goo);
-        }
-    }
-    protected override Bitmap Icon => Resources.ResourceManager.GetObject(typeof(TModel).Name.ToLower() + "_deserialize") as Bitmap;
-    public override GH_Exposure Exposure => GH_Exposure.tertiary;
-}
-public abstract class IdGoo<TModel> : ModelGoo<TModel> where TModel : Model<TModel>, new()
-{
-}
-
-public abstract class IdParam<TGoo, TModel> : Param<TGoo, TModel> where TGoo : IdGoo<TModel> where TModel : Model<TModel>, new()
-{
-    protected IdParam(string name, string nickname, string description) : base(name, nickname, description) { }
-    protected override Bitmap Icon => Resources.ResourceManager.GetObject(typeof(TModel).Name.ToLower() + "_id") as Bitmap;
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
-}
-
-public abstract class IdComponent<TParam, TGoo, TModel> : ModelComponent<TParam, TGoo, TModel>
-    where TParam : IdParam<TGoo, TModel>, new() where TGoo : IdGoo<TModel>, new() where TModel : Model<TModel>, new()
-{
-    protected IdComponent(string name, string nickname, string description) : base(name, nickname, description) { }
-    protected override Bitmap Icon => Resources.ResourceManager.GetObject(typeof(TModel).Name.ToLower() + "_id_modify") as Bitmap;
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
-}
-public abstract class SerializeIdComponent<TParam, TGoo, TModel> : SerializeComponent<TParam, TGoo, TModel>
-    where TParam : IdParam<TGoo, TModel>, new() where TGoo : IdGoo<TModel>, new() where TModel : Model<TModel>, new()
-{
-    protected SerializeIdComponent(string name, string nickname, string description) : base(name, nickname, description) { }
-    protected override Bitmap Icon => Resources.ResourceManager.GetObject(typeof(TModel).Name.ToLower() + "_id_serialize") as Bitmap;
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
-}
-
-public abstract class DeserializeIdComponent<TParam, TGoo, TModel> : DeserializeComponent<TParam, TGoo, TModel>
-    where TParam : IdParam<TGoo, TModel>, new() where TGoo : IdGoo<TModel>, new() where TModel : Model<TModel>, new()
-{
-    protected DeserializeIdComponent(string name, string nickname, string description) : base(name, nickname, description) { }
-    protected override Bitmap Icon => Resources.ResourceManager.GetObject(typeof(TModel).Name.ToLower() + "_id_deserialize") as Bitmap;
-    public override GH_Exposure Exposure => GH_Exposure.secondary;
-}
-
-public abstract class DiffGoo<TModel> : ModelGoo<TModel> where TModel : Model<TModel>, new()
-{
-}
-
-public abstract class DiffParam<TGoo, TModel> : Param<TGoo, TModel> where TGoo : DiffGoo<TModel> where TModel : Model<TModel>, new()
-{
-    protected DiffParam(string name, string nickname, string description) : base(name, nickname, description) { }
-    protected override Bitmap Icon => Resources.ResourceManager.GetObject(typeof(TModel).Name.ToLower() + "_diff") as Bitmap;
-    public override GH_Exposure Exposure => GH_Exposure.tertiary;
-}
-
-public abstract class DiffComponent<TParam, TGoo, TModel> : ModelComponent<TParam, TGoo, TModel>
-    where TParam : DiffParam<TGoo, TModel>, new() where TGoo : DiffGoo<TModel>, new() where TModel : Model<TModel>, new()
-{
-    protected DiffComponent(string name, string nickname, string description) : base(name, nickname, description) { }
-    protected override Bitmap Icon => Resources.ResourceManager.GetObject(typeof(TModel).Name.ToLower() + "_diff_modify") as Bitmap;
-    public override GH_Exposure Exposure => GH_Exposure.tertiary;
-}
-public abstract class SerializeDiffComponent<TParam, TGoo, TModel> : SerializeComponent<TParam, TGoo, TModel>
-    where TParam : DiffParam<TGoo, TModel>, new() where TGoo : DiffGoo<TModel>, new() where TModel : Model<TModel>, new()
-{
-    protected SerializeDiffComponent(string name, string nickname, string description) : base(name, nickname, description) { }
-    protected override Bitmap Icon => Resources.ResourceManager.GetObject(typeof(TModel).Name.ToLower() + "_diff_serialize") as Bitmap;
-    public override GH_Exposure Exposure => GH_Exposure.tertiary;
-}
-
-public abstract class DeserializeDiffComponent<TParam, TGoo, TModel> : DeserializeComponent<TParam, TGoo, TModel>
-    where TParam : DiffParam<TGoo, TModel>, new() where TGoo : DiffGoo<TModel>, new() where TModel : Model<TModel>, new()
-{
-    protected DeserializeDiffComponent(string name, string nickname, string description) : base(name, nickname, description) { }
-    protected override Bitmap Icon => Resources.ResourceManager.GetObject(typeof(TModel).Name.ToLower() + "_diff_deserialize") as Bitmap;
-    public override GH_Exposure Exposure => GH_Exposure.tertiary;
-}
 
 #endregion Bases
 
 #region Attribute
 
-public class AttributeIdGoo : IdGoo<AttributeId>
+public class AttributeIdGoo : Goo<AttributeId>
 {
+    public override string TypeName => "Attribute Id";
+
+    public override string TypeDescription => "The identifier of an attribute.";
+
     protected override bool CustomCastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(AttributeGoo)))
@@ -593,22 +379,62 @@ public class AttributeIdGoo : IdGoo<AttributeId>
     }
 }
 
-public class AttributeIdParam : IdParam<AttributeIdGoo, AttributeId>
+public class AttributeIdParam : Param<AttributeIdGoo, AttributeId>
 {
     public AttributeIdParam() : base("AttributeId", "AI", "AttributeId parameter") { }
-    public override Guid Guid => new("431125C0-B98C-4122-9598-F72714AC9B93");
+    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B93");
+    protected override Bitmap Icon => Resources.attributeid_id;
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
 }
 
-public class AttributeIdComponent : IdComponent<AttributeIdParam, AttributeIdGoo, AttributeId>
+public class AttributeIdModelComponent : GH_Component
 {
-    public AttributeIdComponent() : base("The ID of the attribute.", "AtI", "AttributeId component") { }
-    public override Guid Guid => new("431125C0-B98C-4122-9598-F72714AC9B92");
-    protected override void RegisterParams(dynamic pManager)
+    public AttributeIdModelComponent() : base("The ID of the attribute.", "AtI", "AttributeId component", Constants.Category, "Modeling") { }
+    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B92");
+    protected override Bitmap Icon => Resources.attributeid_id_modify;
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
+        pManager.AddParameter(new AttributeIdParam(), "AttributeId", "AttributeId?", "The optional attributeid to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the attributeid should be validated.", GH_ParamAccess.item);
+        for (var i = 0; i < pManager.ParamCount; i++)
+            pManager[i].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new AttributeIdParam(), "AttributeId", "AttributeId", "The constructed or modified attributeid.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Valid", "Vd?", "True if the attributeid is valid. Null if no validation was performed.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        AttributeIdGoo? modelGoo = null;
+        var validate = false;
+
+        if (DA.GetData(0, ref modelGoo)) modelGoo = (AttributeIdGoo?)modelGoo?.Duplicate();
+        DA.GetData(1, ref validate);
+
+        var model = modelGoo?.Value ?? new AttributeId();
+
+        if (validate)
+        {
+            var (isValid, errors) = model.Validate();
+            foreach (var error in errors)
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, error);
+            DA.SetData(1, isValid);
+        }
+
+        var outputGoo = new AttributeIdGoo { Value = model };
+        DA.SetData(0, outputGoo);
     }
 }
-public class AttributeDiffGoo : DiffGoo<AttributeDiff>
+public class AttributeDiffGoo : Goo<AttributeDiff>
 {
+    public override string TypeName => "AttributeDiff";
+    public override string TypeDescription => "A Semio AttributeDiff";
+
     protected override bool CustomCastTo<Q>(ref Q target)
     {
         if (typeof(Q).IsAssignableFrom(typeof(AttributeIdGoo)))
@@ -654,186 +480,713 @@ public class AttributeDiffGoo : DiffGoo<AttributeDiff>
     }
 }
 
-public class AttributeDiffParam : DiffParam<AttributeDiffGoo, AttributeDiff>
+public class AttributeDiffParam : Param<AttributeDiffGoo, AttributeDiff>
 {
     public AttributeDiffParam() : base("AttributeDiff", "AD", "AttributeDiff parameter") { }
-    public override Guid Guid => new("431125C0-B98C-4122-9598-F72714AC9B95");
+    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B95");
+    protected override Bitmap Icon => Resources.ResourceManager.GetObject("attributediff_diff") as Bitmap;
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
 }
 
-public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, AttributeDiffGoo, AttributeDiff>
+public class AttributeDiffComponent : GH_Component
 {
-    public AttributeDiffComponent() : base("A diff for attributes.", "ADf", "AttributeDiff component") { }
-    public override Guid Guid => new("431125C0-B98C-4122-9598-F72714AC9B96");
+    public AttributeDiffComponent() : base("A diff for attributes.", "ADf", "AttributeDiff component", Constants.Category, "Modeling") { }
+    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B96");
+    protected override Bitmap Icon => Resources.ResourceManager.GetObject("attributediff_diff_modify") as Bitmap;
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new AttributeDiffParam(), "AttributeDiff", "AttributeDiff?", "The optional attributediff to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the attributediff should be validated.", GH_ParamAccess.item);
+        for (var i = 0; i < pManager.ParamCount; i++)
+            pManager[i].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new AttributeDiffParam(), "AttributeDiff", "AttributeDiff", "The constructed or modified attributediff.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Valid", "Vd?", "True if the attributediff is valid. Null if no validation was performed.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        AttributeDiffGoo? modelGoo = null;
+        var validate = false;
+
+        if (DA.GetData(0, ref modelGoo))
+            modelGoo = (AttributeDiffGoo?)modelGoo?.Duplicate();
+        DA.GetData(1, ref validate);
+
+        var model = modelGoo?.Value ?? new AttributeDiff();
+
+        if (validate)
+        {
+            var (isValid, errors) = model.Validate();
+            foreach (var error in errors)
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, error);
+            DA.SetData(1, isValid);
+        }
+
+        var outputGoo = new AttributeDiffGoo { Value = model };
+        DA.SetData(0, outputGoo);
+    }
+}
+
+public class SerializeAttributeDiffComponent : GH_Component
+{
+    public SerializeAttributeDiffComponent() : base("Serialize AttributeDiff", "SAD", "Serialize AttributeDiff to JSON", Constants.Category, "Serialize") { }
+    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B97");
+    protected override Bitmap Icon => Resources.ResourceManager.GetObject("attributediff_diff_serialize") as Bitmap;
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new AttributeDiffParam());
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Text", "T", "Serialized text", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var goo = default(AttributeDiffGoo);
+        if (!DA.GetData(0, ref goo) || goo?.Value is null) return;
+
+        var serialized = goo.Value.Serialize();
+        DA.SetData(0, serialized);
+    }
+}
+
+public class DeserializeAttributeDiffComponent : GH_Component
+{
+    public DeserializeAttributeDiffComponent() : base("Deserialize AttributeDiff", "DAD", "Deserialize JSON to AttributeDiff", Constants.Category, "Deserialize") { }
+    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B98");
+    protected override Bitmap Icon => Resources.ResourceManager.GetObject("attributediff_diff_deserialize") as Bitmap;
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Text", "T", "Serialized text", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new AttributeDiffParam());
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var text = "";
+        if (!DA.GetData(0, ref text) || string.IsNullOrEmpty(text)) return;
+
+        var model = text.Deserialize<AttributeDiff>();
+        if (model is not null)
+        {
+            var goo = new AttributeDiffGoo();
+            goo.Value = model;
+            DA.SetData(0, goo);
+        }
+    }
+}
+
+public class AttributeGoo : Goo<Semio.Attribute>
+{
+    public override string TypeName => "Attribute";
+    public override string TypeDescription => "A Semio Attribute";
+
+    protected override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(AttributeIdGoo)))
+        {
+            target = (Q)(object)new AttributeIdGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(AttributeDiffGoo)))
+        {
+            target = (Q)(object)new AttributeDiffGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String(Value.Key);
+            return true;
+        }
+        return false;
+    }
+
+    protected override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+        if (source is AttributeIdGoo idGoo)
+        {
+            Value = idGoo.Value;
+            return true;
+        }
+        if (source is AttributeDiffGoo diffGoo)
+        {
+            Value = diffGoo.Value;
+            return true;
+        }
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+        {
+            Value = new Attribute { Key = str };
+            return true;
+        }
+        return false;
+    }
+}
+
+public class AttributeParam : Param<AttributeGoo, Semio.Attribute>
+{
+    public AttributeParam() : base("Atr", "At", "A attribute is a key value pair with an an optional definition.") { }
+    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B94");
+}
+
+public class AttributeComponent : GH_Component
+{
+    public AttributeComponent() : base("Attribute", "Atr", "Construct, deconstruct or modify an attribute", Constants.Category, "Modeling") { }
+    public override Guid ComponentGuid => new("51146B05-ACEB-4810-AD75-10AC3E029D39");
+    protected override Bitmap Icon => Resources.ResourceManager.GetObject("attribute_modify") as Bitmap;
+    public override GH_Exposure Exposure => GH_Exposure.primary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new AttributeParam(), "Attribute", "Attribute?", "The optional attribute to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the attribute should be validated.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Key", "K", "The key of the attribute", GH_ParamAccess.item);
+        pManager.AddTextParameter("Value", "V", "The value of the attribute", GH_ParamAccess.item);
+        pManager.AddTextParameter("Definition", "D", "The definition of the attribute", GH_ParamAccess.item);
+        for (var i = 0; i < pManager.ParamCount; i++)
+            pManager[i].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new AttributeParam(), "Attribute", "Attribute", "The constructed or modified attribute.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Valid", "Vd?", "True if the attribute is valid. Null if no validation was performed.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Key", "K", "The key of the attribute", GH_ParamAccess.item);
+        pManager.AddTextParameter("Value", "V", "The value of the attribute", GH_ParamAccess.item);
+        pManager.AddTextParameter("Definition", "D", "The definition of the attribute", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        AttributeGoo? modelGoo = null;
+        var validate = false;
+        string? key = null, value = null, definition = null;
+
+        if (DA.GetData(0, ref modelGoo))
+            modelGoo = (AttributeGoo?)modelGoo?.Duplicate();
+        DA.GetData(1, ref validate);
+
+        var model = modelGoo?.Value ?? new Semio.Attribute();
+
+        if (DA.GetData(2, ref key) && key != null) model.Key = key;
+        if (DA.GetData(3, ref value) && value != null) model.Value = value;
+        if (DA.GetData(4, ref definition) && definition != null) model.Definition = definition;
+
+        if (validate)
+        {
+            var (isValid, errors) = model.Validate();
+            foreach (var error in errors)
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, error);
+            DA.SetData(1, isValid);
+        }
+
+        var outputGoo = new AttributeGoo { Value = model };
+        DA.SetData(0, outputGoo);
+        DA.SetData(2, model.Key);
+        DA.SetData(3, model.Value);
+        DA.SetData(4, model.Definition);
+    }
+}
+
+public class SerializeAttributeComponent : GH_Component
+{
+    public SerializeAttributeComponent() : base("Serialize Attribute", ">>A", "Serialize Attribute to JSON", Constants.Category, "Serialize") { }
+    public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8974-8588BCA75250");
+    protected override Bitmap Icon => Resources.ResourceManager.GetObject("attribute_serialize") as Bitmap;
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new AttributeParam());
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Text", "T", "Serialized text", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var goo = default(AttributeGoo);
+        if (!DA.GetData(0, ref goo) || goo?.Value is null) return;
+
+        var serialized = goo.Value.Serialize();
+        DA.SetData(0, serialized);
+    }
+}
+
+public class DeserializeAttributeComponent : GH_Component
+{
+    public DeserializeAttributeComponent() : base("Deserialize Attribute", "<<A", "Deserialize JSON to Attribute", Constants.Category, "Deserialize") { }
+    public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8975-8588BCA75250");
+    protected override Bitmap Icon => Resources.ResourceManager.GetObject("attribute_deserialize") as Bitmap;
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Text", "T", "Serialized text", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new AttributeParam());
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var text = "";
+        if (!DA.GetData(0, ref text) || string.IsNullOrEmpty(text)) return;
+
+        var model = text.Deserialize<Semio.Attribute>();
+        if (model is not null)
+        {
+            var goo = new AttributeGoo();
+            goo.Value = model;
+            DA.SetData(0, goo);
+        }
+    }
+}
+
+#endregion
+
+#region Representation
+
+public class RepresentationIdGoo : Goo<RepresentationId>
+{
+    public override string TypeName => "RepresentationId";
+    public override string TypeDescription => "A Semio RepresentationId";
+
+    protected override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(RepresentationDiffGoo)))
+        {
+            target = (Q)(object)new RepresentationDiffGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(RepresentationGoo)))
+        {
+            target = (Q)(object)new RepresentationGoo(Value);
+            return true;
+        }
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String(Value.ToIdString());
+            return true;
+        }
+        return false;
+    }
+
+    protected override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+        if (source is RepresentationDiffGoo diffGoo)
+        {
+            Value = diffGoo.Value;
+            return true;
+        }
+        if (source is RepresentationGoo reprGoo)
+        {
+            Value = reprGoo.Value;
+            return true;
+        }
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+        {
+            Value = new RepresentationId { Tags = new List<string> { str } };
+            return true;
+        }
+        return false;
+    }
+}
+
+public class RepresentationIdParam : Param<RepresentationIdGoo, RepresentationId>
+{
+    public RepresentationIdParam() : base("Rep", "Rp", "The identifier of a representation.") { }
+    public override Guid ComponentGuid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+    protected override Bitmap Icon => Resources.ResourceManager.GetObject("representationid_id") as Bitmap;
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
+}
+
+public class RepresentationIdComponent : GH_Component
+{
+    public RepresentationIdComponent() : base("The identifier of a representation.", "Rep", "RepresentationId component", Constants.Category, "Modeling") { }
+    public override Guid ComponentGuid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
+    protected override Bitmap Icon => Resources.ResourceManager.GetObject("representationid_id_modify") as Bitmap;
+    public override GH_Exposure Exposure => GH_Exposure.secondary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new RepresentationIdParam(), "RepresentationId", "RepresentationId?", "The optional representationid to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the representationid should be validated.", GH_ParamAccess.item);
+        for (var i = 0; i < pManager.ParamCount; i++)
+            pManager[i].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new RepresentationIdParam(), "RepresentationId", "RepresentationId", "The constructed or modified representationid.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Valid", "Vd?", "True if the representationid is valid. Null if no validation was performed.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        RepresentationIdGoo? modelGoo = null;
+        var validate = false;
+
+        if (DA.GetData(0, ref modelGoo))
+            modelGoo = (RepresentationIdGoo?)modelGoo?.Duplicate();
+        DA.GetData(1, ref validate);
+
+        var model = modelGoo?.Value ?? new RepresentationId();
+
+        if (validate)
+        {
+            var (isValid, errors) = model.Validate();
+            foreach (var error in errors)
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, error);
+            DA.SetData(1, isValid);
+        }
+
+        var outputGoo = new RepresentationIdGoo { Value = model };
+        DA.SetData(0, outputGoo);
+    }
+}
+
+public class RepresentationDiffGoo : Goo<RepresentationDiff>
+{
+    public override string TypeName => "RepresentationDiff";
+    public override string TypeDescription => "A Semio RepresentationDiff";
+
+    protected override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String(string.Join(",", Value.Tags));
+            return true;
+        }
+        return false;
+    }
+    protected override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+        {
+            try
+            {
+                Value = str.Deserialize<RepresentationDiff>() ?? new RepresentationDiff();
+                return true;
+            }
+            catch { return false; }
+        }
+        return false;
+    }
+}
+
+public class RepresentationDiffParam : Param<RepresentationDiffGoo, RepresentationDiff>
+{
+    public RepresentationDiffParam() : base("RDf", "RD", "A diff for representations.") { }
+    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A9");
+    protected override Bitmap Icon => Resources.ResourceManager.GetObject("representationdiff_diff") as Bitmap;
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+}
+
+public class RepresentationDiffComponent : GH_Component
+{
+    public RepresentationDiffComponent() : base("A diff for representations.", "RDf", "RepresentationDiff component", Constants.Category, "Modeling") { }
+    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AA");
+    protected override Bitmap Icon => Resources.ResourceManager.GetObject("representationdiff_diff_modify") as Bitmap;
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new RepresentationDiffParam(), "RepresentationDiff", "RepresentationDiff?", "The optional representationdiff to deconstruct or modify.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Validate", "Vd?", "Whether the representationdiff should be validated.", GH_ParamAccess.item);
+        for (var i = 0; i < pManager.ParamCount; i++)
+            pManager[i].Optional = true;
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new RepresentationDiffParam(), "RepresentationDiff", "RepresentationDiff", "The constructed or modified representationdiff.", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Valid", "Vd?", "True if the representationdiff is valid. Null if no validation was performed.", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        RepresentationDiffGoo? modelGoo = null;
+        var validate = false;
+
+        if (DA.GetData(0, ref modelGoo))
+            modelGoo = (RepresentationDiffGoo?)modelGoo?.Duplicate();
+        DA.GetData(1, ref validate);
+
+        var model = modelGoo?.Value ?? new RepresentationDiff();
+
+        if (validate)
+        {
+            var (isValid, errors) = model.Validate();
+            foreach (var error in errors)
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, error);
+            DA.SetData(1, isValid);
+        }
+
+        var outputGoo = new RepresentationDiffGoo { Value = model };
+        DA.SetData(0, outputGoo);
+    }
+}
+
+public class SerializeRepresentationDiffComponent : GH_Component
+{
+    public SerializeRepresentationDiffComponent() : base("Serialize RepresentationDiff", "SRD", "Serialize RepresentationDiff to JSON", Constants.Category, "Serialize") { }
+    public override Guid ComponentGuid => new("71E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AB");
+    protected override Bitmap Icon => Resources.ResourceManager.GetObject("representationdiff_diff_serialize") as Bitmap;
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddParameter(new RepresentationDiffParam());
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddTextParameter("Text", "T", "Serialized text", GH_ParamAccess.item);
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var goo = default(RepresentationDiffGoo);
+        if (!DA.GetData(0, ref goo) || goo?.Value is null) return;
+
+        var serialized = goo.Value.Serialize();
+        DA.SetData(0, serialized);
+    }
+}
+
+public class DeserializeRepresentationDiffComponent : GH_Component
+{
+    public DeserializeRepresentationDiffComponent() : base("Deserialize RepresentationDiff", "DRD", "Deserialize JSON to RepresentationDiff", Constants.Category, "Deserialize") { }
+    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AC");
+    protected override Bitmap Icon => Resources.ResourceManager.GetObject("representationdiff_diff_deserialize") as Bitmap;
+    public override GH_Exposure Exposure => GH_Exposure.tertiary;
+
+    protected override void RegisterInputParams(GH_InputParamManager pManager)
+    {
+        pManager.AddTextParameter("Text", "T", "Serialized text", GH_ParamAccess.item);
+    }
+
+    protected override void RegisterOutputParams(GH_OutputParamManager pManager)
+    {
+        pManager.AddParameter(new RepresentationDiffParam());
+    }
+
+    protected override void SolveInstance(IGH_DataAccess DA)
+    {
+        var text = "";
+        if (!DA.GetData(0, ref text) || string.IsNullOrEmpty(text)) return;
+
+        var model = text.Deserialize<RepresentationDiff>();
+        if (model is not null)
+        {
+            var goo = new RepresentationDiffGoo();
+            goo.Value = model;
+            DA.SetData(0, goo);
+        }
+    }
+}
+
+public class RepresentationsDiffGoo : Goo<RepresentationsDiff>
+{
+    public override string TypeName => "RepresentationsDiff";
+    public override string TypeDescription => "A Semio RepresentationsDiff";
+
+    protected override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+        {
+            target = (Q)(object)new GH_String("RepresentationsDiff");
+            return true;
+        }
+        return false;
+    }
+    protected override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+        {
+            try
+            {
+                Value = str.Deserialize<RepresentationsDiff>() ?? new RepresentationsDiff();
+                return true;
+            }
+            catch { return false; }
+        }
+        return false;
+    }
+}
+
+public class RepresentationsDiffParam : DiffParam<RepresentationsDiffGoo, RepresentationsDiff>
+{
+    public RepresentationsDiffParam() : base("RepresentationsDiff", "RsD", "RepresentationsDiff parameter") { }
+    public override Guid Guid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AB");
+}
+
+public class RepresentationsDiffComponent : DiffComponent<RepresentationsDiffParam, RepresentationsDiffGoo, RepresentationsDiff>
+{
+    public RepresentationsDiffComponent() : base("RepresentationsDiff", "RsD", "RepresentationsDiff component") { }
+    public override Guid Guid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AD");
+    protected override void RegisterParams(dynamic pManager)
+    {
+    }
+}
+
+public class SerializeRepresentationsDiffComponent : SerializeComponent<RepresentationsDiffParam, RepresentationsDiffGoo, RepresentationsDiff>
+{
+    public SerializeRepresentationsDiffComponent() : base("Serialize RepresentationsDiff", "SRsD", "Serialize RepresentationsDiff to JSON") { }
+    public override Guid Guid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AE");
     protected override void RegisterParams(dynamic pManager)
     {
     }
 
-    public class SerializeAttributeDiffComponent : SerializeComponent<AttributeDiffParam, AttributeDiffGoo, AttributeDiff>
+}
+
+public class DeserializeRepresentationsDiffComponent : DeserializeComponent<RepresentationsDiffParam, RepresentationsDiffGoo, RepresentationsDiff>
+{
+    public DeserializeRepresentationsDiffComponent() : base("Deserialize RepresentationsDiff", "DRsD", "Deserialize JSON to RepresentationsDiff") { }
+    public override Guid Guid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AF");
+    protected override void RegisterParams(dynamic pManager)
     {
-        public SerializeAttributeDiffComponent() : base("Serialize AttributeDiff", "SAD", "Serialize AttributeDiff to JSON") { }
-        public override Guid Guid => new("431125C0-B98C-4122-9598-F72714AC9B97");
     }
 
-    public class DeserializeAttributeDiffComponent : DeserializeComponent<AttributeDiffParam, AttributeDiffGoo, AttributeDiff>
+}
+
+public class RepresentationGoo : Goo<Representation>
+{
+    protected override bool CustomCastTo<Q>(ref Q target)
     {
-        public DeserializeAttributeDiffComponent() : base("Deserialize AttributeDiff", "DAD", "Deserialize JSON to AttributeDiff") { }
-        public override Guid Guid => new("431125C0-B98C-4122-9598-F72714AC9B98");
-        protected override void RegisterParams(dynamic pManager)
+        if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
+            target = (Q)(object)new GH_String(Value.ToIdString());
+            return true;
         }
+        return false;
+    }
+    protected override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+        if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+        {
+            Value = new Representation { Tags = new List<string> { str } };
+            return true;
+        }
+        return false;
+    }
+}
+
+public class RepresentationParam : Param<RepresentationGoo, Representation>
+{
+    public RepresentationParam() : base("Rep", "Rp", "A representation is a link to a resource that describes a type for a certain level of detail and tags.") { }
+    public override Guid Guid => new("895BBC91-851A-4DFC-9C83-92DFE90029E8");
+}
+
+public class RepresentationComponent : ModelComponent<RepresentationParam, RepresentationGoo, Representation>
+{
+    public RepresentationComponent() : base("Representation", "Rep", "Construct, deconstruct or modify a representation") { }
+    public override Guid Guid => new("37228B2F-70DF-44B7-A3B6-781D5AFCE122");
+
+    protected override void RegisterParams(dynamic pManager)
+    {
+        pManager.AddTextParameter("Url", "Ur", "The Unique Resource Locator (URL) to the resource of the representation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the representation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Tags*", "Tg*", "The optional tags to group representations. No tags means default.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Atr*", "At*", "The optional attributes of the representation.", GH_ParamAccess.list);
+    }
+}
+
+public class SerializeRepresentationComponent : SerializeComponent<RepresentationParam, RepresentationGoo, Representation>
+{
+    public SerializeRepresentationComponent() : base("Serialize Representation", "SR", "Serialize Representation to JSON") { }
+    public override Guid Guid => new("AC6E381C-23EE-4A81-BE0F-3523AEE32046");
+    protected override void RegisterParams(dynamic pManager)
+    {
+    }
+}
+
+public class DeserializeRepresentationComponent : DeserializeComponent<RepresentationParam, RepresentationGoo, Representation>
+{
+    public DeserializeRepresentationComponent() : base("Deserialize Representation", "DR", "Deserialize JSON to Representation") { }
+    public override Guid Guid => new("AC6E381C-23EE-4A81-BE0F-3523AEE32047");
+    protected override void RegisterParams(dynamic pManager)
+    {
     }
 
-    public class AttributeGoo : ModelGoo<Semio.Attribute>
+
+    #endregion Representation
+
+    #region File
+
+    public class FileIdGoo : IdGoo<FileId>
     {
         protected override bool CustomCastTo<Q>(ref Q target)
         {
-            if (typeof(Q).IsAssignableFrom(typeof(AttributeIdGoo)))
-            {
-                target = (Q)(object)new AttributeIdGoo(Value);
-                return true;
-            }
-            if (typeof(Q).IsAssignableFrom(typeof(AttributeDiffGoo)))
-            {
-                target = (Q)(object)new AttributeDiffGoo(Value);
-                return true;
-            }
             if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
             {
-                target = (Q)(object)new GH_String(Value.Key);
+                target = (Q)(object)new GH_String(Value.Url);
                 return true;
             }
             return false;
         }
-
         protected override bool CustomCastFrom(object source)
         {
             if (source == null) return false;
-            if (source is AttributeIdGoo idGoo)
-            {
-                Value = idGoo.Value;
-                return true;
-            }
-            if (source is AttributeDiffGoo diffGoo)
-            {
-                Value = diffGoo.Value;
-                return true;
-            }
             if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
             {
-                Value = new Attribute { Key = str };
-                return true;
-            }
-            return false;
-        }
-    }
-    public class AttributeParam : Param<AttributeGoo, Semio.Attribute>
-    {
-        public AttributeParam() : base("Atr", "At", "A attribute is a key value pair with an an optional definition.") { }
-        public override Guid Guid => new("431125C0-B98C-4122-9598-F72714AC9B94");
-    }
-
-    public class AttributeComponent : ModelComponent<AttributeParam, AttributeGoo, Semio.Attribute>
-    {
-        public AttributeComponent() : base("Attribute", "Atr", "Construct, deconstruct or modify an attribute") { }
-        public override Guid Guid => new("51146B05-ACEB-4810-AD75-10AC3E029D39");
-        protected override void RegisterParams(dynamic pManager)
-        {
-            pManager.AddTextParameter("Key", "K", "The key of the attribute", GH_ParamAccess.item);
-            pManager.AddTextParameter("Value", "V", "The value of the attribute", GH_ParamAccess.item);
-            pManager.AddTextParameter("Definition", "D", "The definition of the attribute", GH_ParamAccess.item);
-        }
-    }
-
-    public class SerializeAttributeComponent : SerializeComponent<AttributeParam, AttributeGoo, Semio.Attribute>
-    {
-        public SerializeAttributeComponent() : base("Serialize Attribute", ">>A", "Serialize Attribute to JSON") { }
-        public override Guid Guid => new("C651F24C-BFF8-4821-8974-8588BCA75250");
-
-    }
-
-    public class DeserializeAttributeComponent : DeserializeComponent<AttributeParam, AttributeGoo, Semio.Attribute>
-    {
-        public DeserializeAttributeComponent() : base("Deserialize Attribute", "<<A", "Deserialize JSON to Attribute") { }
-        public override Guid Guid => new("C651F24C-BFF8-4821-8975-8588BCA75250");
-        protected override void RegisterParams(dynamic pManager)
-        {
-        }
-    }
-
-    #endregion
-
-    #region Representation
-
-    public class RepresentationIdGoo : IdGoo<RepresentationId>
-    {
-        protected override bool CustomCastTo<Q>(ref Q target)
-        {
-            if (typeof(Q).IsAssignableFrom(typeof(RepresentationDiffGoo)))
-            {
-                target = (Q)(object)new RepresentationDiffGoo(Value);
-                return true;
-            }
-            if (typeof(Q).IsAssignableFrom(typeof(RepresentationGoo)))
-            {
-                target = (Q)(object)new RepresentationGoo(Value);
-                return true;
-            }
-            if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-            {
-                target = (Q)(object)new GH_String(Value.ToIdString());
-                return true;
-            }
-            return false;
-        }
-
-        protected override bool CustomCastFrom(object source)
-        {
-            if (source == null) return false;
-            if (source is RepresentationDiffGoo diffGoo)
-            {
-                Value = diffGoo.Value;
-                return true;
-            }
-            if (source is RepresentationGoo reprGoo)
-            {
-                Value = reprGoo.Value;
-                return true;
-            }
-            if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-            {
-                Value = new RepresentationId { Tags = new List<string> { str } };
+                Value = new FileId { Url = str };
                 return true;
             }
             return false;
         }
     }
 
-    public class RepresentationIdParam : IdParam<RepresentationIdGoo, RepresentationId>
+    public class FileIdParam : IdParam<FileIdGoo, FileId>
     {
-        public RepresentationIdParam() : base("Rep", "Rp", "The identifier of a representation.") { }
-        public override Guid Guid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
-    }
+        public FileIdParam() : base("Fil", "Fl", "The identifier of a file.") { }
+        public override Guid Guid => new("50C3D4E5-F6A7-B8C9-D0E1-F2A3B4C5D6E7");
 
-    public class RepresentationIdComponent : IdComponent<RepresentationIdParam, RepresentationIdGoo, RepresentationId>
+    }
+    public class FileIdComponent : IdComponent<FileIdParam, FileIdGoo, FileId>
     {
-        public RepresentationIdComponent() : base("The identifier of a representation.", "Rep", "RepresentationId component") { }
-        public override Guid Guid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
-        protected override void RegisterParams(dynamic pManager)
+        public FileIdComponent() : base("The identifier of a file.", "Fil", "FileId component") { }
+        public override Guid Guid => new("50C3D4E5-F6A7-B8C9-D0E1-F2A3B4C5D6E8"); protected override void RegisterParams(dynamic pManager)
         {
         }
     }
-
-    public class RepresentationDiffGoo : DiffGoo<RepresentationDiff>
+    public class FileDiffGoo : DiffGoo<FileDiff>
     {
         protected override bool CustomCastTo<Q>(ref Q target)
         {
             if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
             {
-                target = (Q)(object)new GH_String(string.Join(",", Value.Tags));
+                target = (Q)(object)new GH_String(Value.Url);
                 return true;
             }
             return false;
         }
+
         protected override bool CustomCastFrom(object source)
         {
             if (source == null) return false;
@@ -841,7 +1194,7 @@ public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, Attribut
             {
                 try
                 {
-                    Value = str.Deserialize<RepresentationDiff>() ?? new RepresentationDiff();
+                    Value = str.Deserialize<FileDiff>() ?? new FileDiff();
                     return true;
                 }
                 catch { return false; }
@@ -850,48 +1203,51 @@ public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, Attribut
         }
     }
 
-    public class RepresentationDiffParam : DiffParam<RepresentationDiffGoo, RepresentationDiff>
+    public class FileDiffParam : DiffParam<FileDiffGoo, FileDiff>
     {
-        public RepresentationDiffParam() : base("RDf", "RD", "A diff for representations.") { }
-        public override Guid Guid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A9");
-    }
+        public FileDiffParam() : base("FDf", "FD", "A diff for files.") { }
+        public override Guid Guid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F0");
 
-    public class RepresentationDiffComponent : DiffComponent<RepresentationDiffParam, RepresentationDiffGoo, RepresentationDiff>
+    }
+    public class FileDiffComponent : DiffComponent<FileDiffParam, FileDiffGoo, FileDiff>
     {
-        public RepresentationDiffComponent() : base("A diff for representations.", "RDf", "RepresentationDiff component") { }
-        public override Guid Guid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AA");
+        public FileDiffComponent() : base("A diff for files.", "FDf", "FileDiff component") { }
+        public override Guid Guid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F1");
+        protected override void RegisterParams(dynamic pManager)
+        {
+        }
+    }
+    public class SerializeFileDiffComponent : SerializeComponent<FileDiffParam, FileDiffGoo, FileDiff>
+    {
+        public SerializeFileDiffComponent() : base("Serialize FileDiff", "SFD", "Serialize FileDiff to JSON") { }
+        public override Guid Guid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F2");
+
         protected override void RegisterParams(dynamic pManager)
         {
         }
     }
 
-    public class SerializeRepresentationDiffComponent : SerializeComponent<RepresentationDiffParam, RepresentationDiffGoo, RepresentationDiff>
+    public class DeserializeFileDiffComponent : DeserializeComponent<FileDiffParam, FileDiffGoo, FileDiff>
     {
-        public SerializeRepresentationDiffComponent() : base("Serialize RepresentationDiff", "SRD", "Serialize RepresentationDiff to JSON") { }
-        public override Guid Guid => new("71E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AB");
-
-    }
-
-    public class DeserializeRepresentationDiffComponent : DeserializeComponent<RepresentationDiffParam, RepresentationDiffGoo, RepresentationDiff>
-    {
-        public DeserializeRepresentationDiffComponent() : base("Deserialize RepresentationDiff", "DRD", "Deserialize JSON to RepresentationDiff") { }
-        public override Guid Guid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AC");
+        public DeserializeFileDiffComponent() : base("Deserialize FileDiff", "DFD", "Deserialize JSON to FileDiff") { }
+        public override Guid Guid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F3");
         protected override void RegisterParams(dynamic pManager)
         {
         }
     }
 
-    public class RepresentationsDiffGoo : DiffGoo<RepresentationsDiff>
+    public class FilesDiffGoo : DiffGoo<FilesDiff>
     {
         protected override bool CustomCastTo<Q>(ref Q target)
         {
             if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
             {
-                target = (Q)(object)new GH_String("RepresentationsDiff");
+                target = (Q)(object)new GH_String("FilesDiff");
                 return true;
             }
             return false;
         }
+
         protected override bool CustomCastFrom(object source)
         {
             if (source == null) return false;
@@ -899,7 +1255,7 @@ public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, Attribut
             {
                 try
                 {
-                    Value = str.Deserialize<RepresentationsDiff>() ?? new RepresentationsDiff();
+                    Value = str.Deserialize<FilesDiff>() ?? new FilesDiff();
                     return true;
                 }
                 catch { return false; }
@@ -908,860 +1264,548 @@ public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, Attribut
         }
     }
 
-    public class RepresentationsDiffParam : DiffParam<RepresentationsDiffGoo, RepresentationsDiff>
+    public class FilesDiffParam : DiffParam<FilesDiffGoo, FilesDiff>
     {
-        public RepresentationsDiffParam() : base("RepresentationsDiff", "RsD", "RepresentationsDiff parameter") { }
-        public override Guid Guid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AB");
+        public FilesDiffParam() : base("FilesDiff", "FsD", "FilesDiff parameter") { }
+        public override Guid Guid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A1");
     }
 
-    public class RepresentationsDiffComponent : DiffComponent<RepresentationsDiffParam, RepresentationsDiffGoo, RepresentationsDiff>
+    public class FilesDiffComponent : DiffComponent<FilesDiffParam, FilesDiffGoo, FilesDiff>
     {
-        public RepresentationsDiffComponent() : base("RepresentationsDiff", "RsD", "RepresentationsDiff component") { }
-        public override Guid Guid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AD");
+        public FilesDiffComponent() : base("FilesDiff", "FsD", "FilesDiff component") { }
+        public override Guid Guid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A2");
         protected override void RegisterParams(dynamic pManager)
         {
         }
     }
 
-    public class SerializeRepresentationsDiffComponent : SerializeComponent<RepresentationsDiffParam, RepresentationsDiffGoo, RepresentationsDiff>
+    public class SerializeFilesDiffComponent : SerializeComponent<FilesDiffParam, FilesDiffGoo, FilesDiff>
     {
-        public SerializeRepresentationsDiffComponent() : base("Serialize RepresentationsDiff", "SRsD", "Serialize RepresentationsDiff to JSON") { }
-        public override Guid Guid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AE");
+        public SerializeFilesDiffComponent() : base("Serialize FilesDiff", "SFsD", "Serialize FilesDiff to JSON") { }
+        public override Guid Guid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A3");
         protected override void RegisterParams(dynamic pManager)
         {
         }
-
     }
 
-    public class DeserializeRepresentationsDiffComponent : DeserializeComponent<RepresentationsDiffParam, RepresentationsDiffGoo, RepresentationsDiff>
+    public class DeserializeFilesDiffComponent : DeserializeComponent<FilesDiffParam, FilesDiffGoo, FilesDiff>
     {
-        public DeserializeRepresentationsDiffComponent() : base("Deserialize RepresentationsDiff", "DRsD", "Deserialize JSON to RepresentationsDiff") { }
-        public override Guid Guid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AF");
-        protected override void RegisterParams(dynamic pManager)
-        {
-        }
-
+        public DeserializeFilesDiffComponent() : base("Deserialize FilesDiff", "DFsD", "Deserialize JSON to FilesDiff") { }
+        public override Guid Guid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A4");
     }
 
-    public class RepresentationGoo : ModelGoo<Representation>
+    public class FileGoo : Goo<Semio.File>
     {
+
+
         protected override bool CustomCastTo<Q>(ref Q target)
         {
             if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
             {
-                target = (Q)(object)new GH_String(Value.ToIdString());
+                target = (Q)(object)new GH_String(Value.Url);
                 return true;
             }
             return false;
         }
+
         protected override bool CustomCastFrom(object source)
         {
             if (source == null) return false;
             if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
             {
-                Value = new Representation { Tags = new List<string> { str } };
+                Value = new File { Url = str };
                 return true;
             }
             return false;
         }
     }
 
-    public class RepresentationParam : Param<RepresentationGoo, Representation>
+    public class FileParam : Param<FileGoo, Semio.File>
     {
-        public RepresentationParam() : base("Rep", "Rp", "A representation is a link to a resource that describes a type for a certain level of detail and tags.") { }
-        public override Guid Guid => new("895BBC91-851A-4DFC-9C83-92DFE90029E8");
+        public FileParam() : base("Fil", "Fl", "A file with content.") { }
+        public override Guid Guid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F8");
+
     }
 
-    public class RepresentationComponent : ModelComponent<RepresentationParam, RepresentationGoo, Representation>
+    public class FileComponent : ModelComponent<FileParam, FileGoo, Semio.File>
     {
-        public RepresentationComponent() : base("Representation", "Rep", "Construct, deconstruct or modify a representation") { }
-        public override Guid Guid => new("37228B2F-70DF-44B7-A3B6-781D5AFCE122");
-
+        public FileComponent() : base("File", "Fil", "Construct, deconstruct or modify a file") { }
+        public override Guid Guid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F9");
         protected override void RegisterParams(dynamic pManager)
         {
-            pManager.AddTextParameter("Url", "Ur", "The Unique Resource Locator (URL) to the resource of the representation.", GH_ParamAccess.item);
-            pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the representation.", GH_ParamAccess.item);
-            pManager.AddTextParameter("Tags*", "Tg*", "The optional tags to group representations. No tags means default.", GH_ParamAccess.list);
-            pManager.AddParameter(new AttributeParam(), "Atr*", "At*", "The optional attributes of the representation.", GH_ParamAccess.list);
+            pManager.AddTextParameter("Url", "Ur", "The url of the file.", GH_ParamAccess.item);
+            pManager.AddTextParameter("Dat", "Da", "The data URI of the file.", GH_ParamAccess.item);
+            pManager.AddIntegerParameter("Siz?", "Sz?", "The optional size of the file in bytes.", GH_ParamAccess.item);
+            pManager.AddTextParameter("Has?", "Hs?", "The optional hash of the file.", GH_ParamAccess.item);
+
         }
     }
 
-    public class SerializeRepresentationComponent : SerializeComponent<RepresentationParam, RepresentationGoo, Representation>
+    public class SerializeFileComponent : SerializeComponent<FileParam, FileGoo, Semio.File>
     {
-        public SerializeRepresentationComponent() : base("Serialize Representation", "SR", "Serialize Representation to JSON") { }
-        public override Guid Guid => new("AC6E381C-23EE-4A81-BE0F-3523AEE32046");
-        protected override void RegisterParams(dynamic pManager)
-        {
-        }
+        public SerializeFileComponent() : base("Serialize File", ">>F", "Serialize File") { }
+        public override Guid Guid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7FA");
     }
 
-    public class DeserializeRepresentationComponent : DeserializeComponent<RepresentationParam, RepresentationGoo, Representation>
+    public class DeserializeFileComponent : DeserializeComponent<FileParam, FileGoo, Semio.File>
     {
-        public DeserializeRepresentationComponent() : base("Deserialize Representation", "DR", "Deserialize JSON to Representation") { }
-        public override Guid Guid => new("AC6E381C-23EE-4A81-BE0F-3523AEE32047");
-        protected override void RegisterParams(dynamic pManager)
-        {
-        }
+        public DeserializeFileComponent() : base("Deserialize File", "<<F", "Deserialize File") { }
+        public override Guid Guid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7FB");
 
-
-        #endregion Representation
-
-        #region File
-
-        public class FileIdGoo : IdGoo<FileId>
-        {
-            protected override bool CustomCastTo<Q>(ref Q target)
-            {
-                if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-                {
-                    target = (Q)(object)new GH_String(Value.Url);
-                    return true;
-                }
-                return false;
-            }
-            protected override bool CustomCastFrom(object source)
-            {
-                if (source == null) return false;
-                if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-                {
-                    Value = new FileId { Url = str };
-                    return true;
-                }
-                return false;
-            }
-        }
-
-        public class FileIdParam : IdParam<FileIdGoo, FileId>
-        {
-            public FileIdParam() : base("Fil", "Fl", "The identifier of a file.") { }
-            public override Guid Guid => new("50C3D4E5-F6A7-B8C9-D0E1-F2A3B4C5D6E7");
-
-        }
-        public class FileIdComponent : IdComponent<FileIdParam, FileIdGoo, FileId>
-        {
-            public FileIdComponent() : base("The identifier of a file.", "Fil", "FileId component") { }
-            public override Guid Guid => new("50C3D4E5-F6A7-B8C9-D0E1-F2A3B4C5D6E8"); protected override void RegisterParams(dynamic pManager)
-            {
-            }
-        }
-        public class FileDiffGoo : DiffGoo<FileDiff>
-        {
-            protected override bool CustomCastTo<Q>(ref Q target)
-            {
-                if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-                {
-                    target = (Q)(object)new GH_String(Value.Url);
-                    return true;
-                }
-                return false;
-            }
-
-            protected override bool CustomCastFrom(object source)
-            {
-                if (source == null) return false;
-                if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-                {
-                    try
-                    {
-                        Value = str.Deserialize<FileDiff>() ?? new FileDiff();
-                        return true;
-                    }
-                    catch { return false; }
-                }
-                return false;
-            }
-        }
-
-        public class FileDiffParam : DiffParam<FileDiffGoo, FileDiff>
-        {
-            public FileDiffParam() : base("FDf", "FD", "A diff for files.") { }
-            public override Guid Guid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F0");
-
-        }
-        public class FileDiffComponent : DiffComponent<FileDiffParam, FileDiffGoo, FileDiff>
-        {
-            public FileDiffComponent() : base("A diff for files.", "FDf", "FileDiff component") { }
-            public override Guid Guid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F1");
-            protected override void RegisterParams(dynamic pManager)
-            {
-            }
-        }
-        public class SerializeFileDiffComponent : SerializeComponent<FileDiffParam, FileDiffGoo, FileDiff>
-        {
-            public SerializeFileDiffComponent() : base("Serialize FileDiff", "SFD", "Serialize FileDiff to JSON") { }
-            public override Guid Guid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F2");
-
-            protected override void RegisterParams(dynamic pManager)
-            {
-            }
-        }
-
-        public class DeserializeFileDiffComponent : DeserializeComponent<FileDiffParam, FileDiffGoo, FileDiff>
-        {
-            public DeserializeFileDiffComponent() : base("Deserialize FileDiff", "DFD", "Deserialize JSON to FileDiff") { }
-            public override Guid Guid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F3");
-            protected override void RegisterParams(dynamic pManager)
-            {
-            }
-        }
-
-        public class FilesDiffGoo : DiffGoo<FilesDiff>
-        {
-            protected override bool CustomCastTo<Q>(ref Q target)
-            {
-                if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-                {
-                    target = (Q)(object)new GH_String("FilesDiff");
-                    return true;
-                }
-                return false;
-            }
-
-            protected override bool CustomCastFrom(object source)
-            {
-                if (source == null) return false;
-                if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-                {
-                    try
-                    {
-                        Value = str.Deserialize<FilesDiff>() ?? new FilesDiff();
-                        return true;
-                    }
-                    catch { return false; }
-                }
-                return false;
-            }
-        }
-
-        public class FilesDiffParam : DiffParam<FilesDiffGoo, FilesDiff>
-        {
-            public FilesDiffParam() : base("FilesDiff", "FsD", "FilesDiff parameter") { }
-            public override Guid Guid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A1");
-        }
-
-        public class FilesDiffComponent : DiffComponent<FilesDiffParam, FilesDiffGoo, FilesDiff>
-        {
-            public FilesDiffComponent() : base("FilesDiff", "FsD", "FilesDiff component") { }
-            public override Guid Guid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A2");
-            protected override void RegisterParams(dynamic pManager)
-            {
-            }
-        }
-
-        public class SerializeFilesDiffComponent : SerializeComponent<FilesDiffParam, FilesDiffGoo, FilesDiff>
-        {
-            public SerializeFilesDiffComponent() : base("Serialize FilesDiff", "SFsD", "Serialize FilesDiff to JSON") { }
-            public override Guid Guid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A3");
-            protected override void RegisterParams(dynamic pManager)
-            {
-            }
-        }
-
-        public class DeserializeFilesDiffComponent : DeserializeComponent<FilesDiffParam, FilesDiffGoo, FilesDiff>
-        {
-            public DeserializeFilesDiffComponent() : base("Deserialize FilesDiff", "DFsD", "Deserialize JSON to FilesDiff") { }
-            public override Guid Guid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A4");
-        }
-
-        public class FileGoo : ModelGoo<Semio.File>
-        {
-
-
-            protected override bool CustomCastTo<Q>(ref Q target)
-            {
-                if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-                {
-                    target = (Q)(object)new GH_String(Value.Url);
-                    return true;
-                }
-                return false;
-            }
-
-            protected override bool CustomCastFrom(object source)
-            {
-                if (source == null) return false;
-                if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-                {
-                    Value = new File { Url = str };
-                    return true;
-                }
-                return false;
-            }
-        }
-
-        public class FileParam : Param<FileGoo, Semio.File>
-        {
-            public FileParam() : base("Fil", "Fl", "A file with content.") { }
-            public override Guid Guid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F8");
-
-        }
-
-        public class FileComponent : ModelComponent<FileParam, FileGoo, Semio.File>
-        {
-            public FileComponent() : base("File", "Fil", "Construct, deconstruct or modify a file") { }
-            public override Guid Guid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F9");
-            protected override void RegisterParams(dynamic pManager)
-            {
-                pManager.AddTextParameter("Url", "Ur", "The url of the file.", GH_ParamAccess.item);
-                pManager.AddTextParameter("Dat", "Da", "The data URI of the file.", GH_ParamAccess.item);
-                pManager.AddIntegerParameter("Siz?", "Sz?", "The optional size of the file in bytes.", GH_ParamAccess.item);
-                pManager.AddTextParameter("Has?", "Hs?", "The optional hash of the file.", GH_ParamAccess.item);
-
-            }
-        }
-
-        public class SerializeFileComponent : SerializeComponent<FileParam, FileGoo, Semio.File>
-        {
-            public SerializeFileComponent() : base("Serialize File", ">>F", "Serialize File") { }
-            public override Guid Guid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7FA");
-        }
-
-        public class DeserializeFileComponent : DeserializeComponent<FileParam, FileGoo, Semio.File>
-        {
-            public DeserializeFileComponent() : base("Deserialize File", "<<F", "Deserialize File") { }
-            public override Guid Guid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7FB");
-
-        }
-
-        #endregion File
-
-        #region DiagramPoint
-
-        public class DiagramPointGoo : ModelGoo<DiagramPoint>
-        {
-            protected override bool CustomCastTo<Q>(ref Q target)
-            {
-                if (typeof(Q).IsAssignableFrom(typeof(GH_Point)))
-                {
-                    target = (Q)(object)new GH_Point(new Point3d(Value.X, Value.Y, 0));
-                    return true;
-                }
-                return false;
-            }
-
-            protected override bool CustomCastFrom(object source)
-            {
-                if (source == null) return false;
-                Point3d point = new Point3d();
-                if (GH_Convert.ToPoint3d(source, ref point, GH_Conversion.Both))
-                {
-                    Value = new DiagramPoint { X = (float)point.X, Y = (float)point.Y };
-                    return true;
-                }
-                return false;
-            }
-        }
-
-        public class DiagramPointParam : Param<DiagramPointGoo, DiagramPoint>
-        {
-            public DiagramPointParam() : base("DiagramPoint", "DP", "DiagramPoint parameter") { }
-            public override Guid Guid => new("4685CCE8-C629-4638-8DF6-F76A17571841");
-
-        }
-
-        public class DiagramPointComponent : ModelComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
-        {
-            public DiagramPointComponent() : base("DiagramPoint", "DPt", "Construct, deconstruct or modify a diagram point") { }
-            public override Guid Guid => new("61FB9BBE-64DE-42B2-B7EF-69CD97FDD9E3");
-            protected override void RegisterParams(dynamic pManager)
-            {
-            }
-        }
-
-        public class SerializeDiagramPointComponent : SerializeComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
-        {
-            public SerializeDiagramPointComponent() : base("Serialize DiagramPoint", "SDP", "Serialize DiagramPoint to JSON") { }
-            public override Guid Guid => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A99");
-        }
-
-        public class DeserializeDiagramPointComponent : DeserializeComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
-        {
-            public DeserializeDiagramPointComponent() : base("Deserialize DiagramPoint", "DDP", "Deserialize JSON to DiagramPoint") { }
-            public override Guid Guid => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A9A");
-
-
-
-        }
-
-        #endregion DiagramPoint
-
-        #region Port
-
-        public class PortIdGoo : IdGoo<PortId>
-        {
-
-            protected override bool CustomCastTo<Q>(ref Q target)
-            {
-                if (typeof(Q).IsAssignableFrom(typeof(PortDiffGoo)))
-                {
-                    target = (Q)(object)new PortDiffGoo(Value);
-                    return true;
-                }
-                if (typeof(Q).IsAssignableFrom(typeof(PortGoo)))
-                {
-                    target = (Q)(object)new PortGoo(Value);
-                    return true;
-                }
-                if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-                {
-                    target = (Q)(object)new GH_String(Value.Id);
-                    return true;
-                }
-                return false;
-            }
-
-            protected override bool CustomCastFrom(object source)
-            {
-                if (source == null) return false;
-                if (source is PortGoo portGoo)
-                {
-                    Value = portGoo.Value;
-                    return true;
-                }
-                if (source is PortDiffGoo diffGoo)
-                {
-                    Value = diffGoo.Value;
-                    return true;
-                }
-                if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-                {
-                    Value = new PortId { Id = str };
-                    return true;
-                }
-                return false;
-            }
-        }
-
-        public class PortIdParam : IdParam<PortIdGoo, PortId>
-        {
-            public PortIdParam() : base("Por", "Po", "The optional local identifier of the port within the type. No id means the default port.") { }
-            public override Guid Guid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B1");
-
-        }
-
-        public class PortIdComponent : IdComponent<PortIdParam, PortIdGoo, PortId>
-        {
-            public PortIdComponent() : base("The optional local identifier of the port within the type. No id means the default port.", "Por", "PortId component") { }
-            public override Guid Guid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B2");
-            protected override void RegisterParams(dynamic pManager) => pManager.AddParameter(new PortIdParam(), "Por", "Po", "The optional local identifier of the port within the type. No id means the default port.", GH_ParamAccess.item);
-        }
-
-        public class PortDiffGoo : DiffGoo<PortDiff>
-        {
-            protected override bool CustomCastTo<Q>(ref Q target)
-            {
-                if (typeof(Q).IsAssignableFrom(typeof(PortIdGoo)))
-                {
-                    target = (Q)(object)new PortIdGoo(Value);
-                    return true;
-                }
-                if (typeof(Q).IsAssignableFrom(typeof(PortGoo)))
-                {
-                    target = (Q)(object)new PortGoo(Value);
-                    return true;
-                }
-                if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-                {
-                    target = (Q)(object)new GH_String(Value.Id);
-                    return true;
-                }
-                return false;
-            }
-
-            protected override bool CustomCastFrom(object source)
-            {
-                if (source == null) return false;
-                if (source is PortIdGoo idGoo)
-                {
-                    Value = idGoo.Value;
-                    return true;
-                }
-                if (source is PortGoo portGoo)
-                {
-                    Value = portGoo.Value;
-                    return true;
-                }
-                if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-                {
-                    try
-                    {
-                        Value = str.Deserialize<PortDiff>() ?? new PortDiff();
-                        return true;
-                    }
-                    catch { return false; }
-                }
-                return false;
-            }
-        }
-
-        public class PortDiffParam : DiffParam<PortDiffGoo, PortDiff>
-        {
-            public PortDiffParam() : base("PortDiff", "PD", "PortDiff parameter") { }
-            public override Guid Guid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B0");
-
-        }
-
-        public class PortDiffComponent : DiffComponent<PortDiffParam, PortDiffGoo, PortDiff>
-        {
-            public PortDiffComponent() : base("A diff for ports.", "PDf", "PortDiff component") { }
-            public override Guid Guid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B3");
-            protected override void RegisterParams(dynamic pManager) => pManager.AddParameter(new PortDiffParam(), "PDf", "PD", "A diff for ports.", GH_ParamAccess.item);
-        }
-
-        public class SerializePortDiffComponent : SerializeComponent<PortDiffParam, PortDiffGoo, PortDiff>
-        {
-            public SerializePortDiffComponent() : base("Serialize PortDiff", "SPD", "Serialize PortDiff to JSON") { }
-            public override Guid Guid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B4");
-
-
-
-        }
-
-        public class DeserializePortDiffComponent : DeserializeComponent<PortDiffParam, PortDiffGoo, PortDiff>
-        {
-            public DeserializePortDiffComponent() : base("Deserialize PortDiff", "DPD", "Deserialize JSON to PortDiff") { }
-            public override Guid Guid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B5");
-
-
-
-        }
-
-        public class PortGoo : ModelGoo<Port>
-        {
-
-            protected override bool CustomCastTo<Q>(ref Q target)
-            {
-                if (typeof(Q).IsAssignableFrom(typeof(GH_Plane)))
-                {
-                    if (Value.Direction is null || Value.Point is null) return false;
-                    target = (Q)(object)new GH_Plane(Utility.GetPlaneFromYAxis(Value.Direction.Convert(), 0, Value.Point.Convert()));
-                    return true;
-                }
-                if (typeof(Q).IsAssignableFrom(typeof(PortIdGoo)))
-                {
-                    target = (Q)(object)new PortIdGoo(Value);
-                    return true;
-                }
-                if (typeof(Q).IsAssignableFrom(typeof(PortDiffGoo)))
-                {
-                    target = (Q)(object)new PortDiffGoo(Value);
-                    return true;
-                }
-                if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-                {
-                    target = (Q)(object)new GH_String(Value.Id);
-                    return true;
-                }
-                return false;
-            }
-
-            protected override bool CustomCastFrom(object source)
-            {
-                if (source == null) return false;
-                if (source is PortIdGoo idGoo)
-                {
-                    Value = idGoo.Value;
-                    return true;
-                }
-                if (source is PortDiffGoo diffGoo)
-                {
-                    Value = diffGoo.Value;
-                    return true;
-                }
-                var plane = new Rhino.Geometry.Plane();
-                if (GH_Convert.ToPlane(source, ref plane, GH_Conversion.Both))
-                {
-                    Value.Point = plane.Origin.Convert();
-                    Value.Direction = plane.YAxis.Convert();
-                    return true;
-                }
-                if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-                {
-                    Value = str.Deserialize<Port>() ?? new Port();
-                    return true;
-                }
-                return false;
-            }
-        }
-
-        public class PortParam : Param<PortGoo, Port>
-        {
-            public PortParam() : base("Por", "Po", "A port is a connection point (with a direction) of a type.") { }
-            public override Guid Guid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1B");
-        }
-
-        public class PortComponent : ModelComponent<PortParam, PortGoo, Port>
-        {
-            public PortComponent() : base("Port", "Por", "Construct, deconstruct or modify a port") { }
-            public override Guid Guid => new("E505C90C-71F4-413F-82FE-65559D9FFAB5"); protected override void RegisterParams(dynamic pManager)
-            {
-                pManager.AddTextParameter("Idn?", "Id?", "The optional local identifier of the port within the type. No id means the default port.", GH_ParamAccess.item);
-                pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the port.", GH_ParamAccess.item);
-                pManager.AddBooleanParameter("Man?", "Ma?", "Whether the port is mandatory. A mandatory port must be connected in a design.", GH_ParamAccess.item);
-                pManager.AddTextParameter("Fam?", "Fa?", "The optional family of the port. This allows to define explicit compatibility with other ports.", GH_ParamAccess.item);
-                pManager.AddTextParameter("CFas*", "CF*", "The optional other compatible families of the port. An empty list means this port is compatible with all other ports.", GH_ParamAccess.list);
-                pManager.AddPointParameter("Pnt", "Pt", "The connection point of the port that is attracted to another connection point.", GH_ParamAccess.item);
-                pManager.AddVectorParameter("Drn", "Dr", "The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.", GH_ParamAccess.item);
-                pManager.AddNumberParameter("T", "T", "The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.", GH_ParamAccess.item);
-                pManager.AddParameter(new PropParam(), "Prp*", "Pp*", "The optional properties of the port.", GH_ParamAccess.list);
-                pManager.AddParameter(new AttributeParam(), "Atr*", "At*", "The optional attributes of the port.", GH_ParamAccess.list);
-            }
-
-            protected override void ProcessModelInputs(IGH_DataAccess DA, Port model)
-            {
-                string? id = null, description = null, family = null;
-                bool mandatory = false;
-                var compatibleFamilies = new List<string>();
-                Point3d point = Point3d.Unset;
-                Vector3d direction = Vector3d.Unset;
-                double t = 0;
-                var props = new List<PropGoo>();
-                var attributes = new List<AttributeGoo>();
-
-                if (DA.GetData(2, ref id) && id != null) model.Id = id;
-                if (DA.GetData(3, ref description) && description != null) model.Description = description;
-                if (DA.GetData(4, ref mandatory)) model.Mandatory = mandatory;
-                if (DA.GetData(5, ref family) && family != null) model.Family = family;
-                if (DA.GetDataList(6, compatibleFamilies)) model.CompatibleFamilies = compatibleFamilies;
-                if (DA.GetData(7, ref point) && point.IsValid) model.Point = new Point { X = (float)point.X, Y = (float)point.Y, Z = (float)point.Z };
-                if (DA.GetData(8, ref direction) && direction.IsValid) model.Direction = new Vector { X = (float)direction.X, Y = (float)direction.Y, Z = (float)direction.Z };
-                if (DA.GetData(9, ref t)) model.T = (float)t;
-                if (DA.GetDataList(10, props)) model.Props = props.ConvertAll(p => p.Value);
-                if (DA.GetDataList(11, attributes)) model.Attributes = attributes.ConvertAll(a => a.Value);
-            }
-
-            protected override void ProcessModelOutputs(IGH_DataAccess DA, Port model)
-            {
-                DA.SetData(2, model.Id);
-                DA.SetData(3, model.Description);
-                DA.SetData(4, model.Mandatory);
-                DA.SetData(5, model.Family);
-                DA.SetDataList(6, model.CompatibleFamilies);
-                DA.SetData(7, model.Point != null ? new Point3d(model.Point.X, model.Point.Y, model.Point.Z) : Point3d.Unset);
-                DA.SetData(8, model.Direction != null ? new Vector3d(model.Direction.X, model.Direction.Y, model.Direction.Z) : Vector3d.Unset);
-                DA.SetData(9, model.T);
-                DA.SetDataList(10, model.Props.ConvertAll(p => new PropGoo(p)));
-                DA.SetDataList(11, model.Attributes.ConvertAll(a => new AttributeGoo(a)));
-            }
-        }
-
-        public class SerializePortComponent : SerializeComponent<PortParam, PortGoo, Port>
-        {
-            public SerializePortComponent() : base("Serialize Port", "SP", "Serialize Port to JSON") { }
-            public override Guid Guid => new("1A29F6ED-464D-490F-B072-3412B467F1B5");
-
-
-        }
-
-        public class DeserializePortComponent : DeserializeComponent<PortParam, PortGoo, Port>
-        {
-            public DeserializePortComponent() : base("Deserialize Port", "DP", "Deserialize JSON to Port") { }
-            public override Guid Guid => new("1A29F6ED-464D-490F-B072-3412B467F1B6");
-
-
-        }
-
-        public class PortsDiffGoo : DiffGoo<PortsDiff>
-        {
-
-            protected override bool CustomCastTo<Q>(ref Q target)
-            {
-                if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-                {
-                    target = (Q)(object)new GH_String("PortsDiff");
-                    return true;
-                }
-                return false;
-            }
-
-            protected override bool CustomCastFrom(object source)
-            {
-                if (source == null) return false;
-                if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-                {
-                    try
-                    {
-                        Value = str.Deserialize<PortsDiff>() ?? new PortsDiff();
-                        return true;
-                    }
-                    catch { return false; }
-                }
-                return false;
-            }
-        }
-
-        public class PortsDiffParam : DiffParam<PortsDiffGoo, PortsDiff>
-        {
-            public PortsDiffParam() : base("PortsDiff", "PSD", "PortsDiff parameter") { }
-            public override Guid Guid => new("1A29F6ED-464D-490F-B072-3412B467F1C0");
-        }
-
-        public class PortsDiffComponent : DiffComponent<PortsDiffParam, PortsDiffGoo, PortsDiff>
-        {
-            public PortsDiffComponent() : base("PortsDiff", "PSD", "PortsDiff component") { }
-            public override Guid Guid => new("1A29F6ED-464D-490F-B072-3412B467F1C1");
-            protected override void RegisterParams(dynamic pManager) => pManager.AddParameter(new PortsDiffParam(), "PsDf", "PsD", "A diff for multiple ports.", GH_ParamAccess.item);
-        }
-
-        public class SerializePortsDiffComponent : SerializeComponent<PortsDiffParam, PortsDiffGoo, PortsDiff>
-        {
-            public SerializePortsDiffComponent() : base("Serialize PortsDiff", "SPSD", "Serialize PortsDiff to JSON") { }
-            public override Guid Guid => new("1A29F6ED-464D-490F-B072-3412B467F1C2");
-
-        }
-
-        public class DeserializePortsDiffComponent : DeserializeComponent<PortsDiffParam, PortsDiffGoo, PortsDiff>
-        {
-            public DeserializePortsDiffComponent() : base("Deserialize PortsDiff", "DPSD", "Deserialize JSON to PortsDiff") { }
-            public override Guid Guid => new("1A29F6ED-464D-490F-B072-3412B467F1C3");
-
-        }
-
-        #endregion Port
-
-        #region Author
-
-        public class AuthorIdGoo : IdGoo<AuthorId>
-        {
-
-
-
-
-
-            protected override bool CustomCastTo<Q>(ref Q target)
-            {
-                if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-                {
-                    target = (Q)(object)new GH_String(Value.Email);
-                    return true;
-                }
-                return false;
-            }
-
-            protected override bool CustomCastFrom(object source)
-            {
-                if (source == null) return false;
-                if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-                {
-                    Value = new AuthorId { Email = str };
-                    return true;
-                }
-                return false;
-            }
-        }
-
-        public class AuthorIdParam : IdParam<AuthorIdGoo, AuthorId>
-        {
-            public AuthorIdParam() : base("Aut", "Au", "The id of the author.") { }
-            public override Guid Guid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1C");
-        }
-
-        public class AuthorIdComponent : IdComponent<AuthorIdParam, AuthorIdGoo, AuthorId>
-        {
-            public AuthorIdComponent() : base("The id of the author.", "Aut", "AuthorId component") { }
-            public override Guid Guid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1D");
-            protected override void RegisterParams(dynamic pManager) => pManager.AddParameter(new AuthorIdParam(), "Aut", "Au", "The id of the author.", GH_ParamAccess.item);
-        }
-
-        public class AuthorGoo : ModelGoo<Author>
-        {
-
-
-
-
-
-            protected override bool CustomCastTo<Q>(ref Q target)
-            {
-                if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
-                {
-                    target = (Q)(object)new GH_String(Value.Email);
-                    return true;
-                }
-                return false;
-            }
-            protected override bool CustomCastFrom(object source)
-            {
-                if (source == null) return false;
-                if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
-                {
-                    Value = new Author { Email = str };
-                    return true;
-                }
-                return false;
-            }
-        }
-
-        public class AuthorParam : Param<AuthorGoo, Author>
-        {
-            public AuthorParam() : base("Author", "A", "Author parameter") { }
-            public override Guid Guid => new("9F52380B-1812-42F7-9DAD-952C2F7A635A");
-        }
-
-        public class AuthorComponent : ModelComponent<AuthorParam, AuthorGoo, Author>
-        {
-            public AuthorComponent() : base("Author", "Au", "Construct, deconstruct or modify an author") { }
-            public override Guid Guid => new("5143ED92-0A2C-4D0C-84ED-F90CC8450894"); protected override void RegisterParams(dynamic pManager)
-
-            {
-
-                pManager.AddTextParameter("Name", "N", "The name of the author", GH_ParamAccess.item);
-                pManager.AddTextParameter("Email", "E", "The email of the author", GH_ParamAccess.item);
-                pManager.AddParameter(new AttributeParam(), "Atr", "At", "A attribute is a key value pair with an an optional definition.", GH_ParamAccess.list);
-
-            }
-            pManager.AddTextParameter("Name", "N", "The name of the author", GH_ParamAccess.item);
-        pManager.AddTextParameter("Email", "E", "The email of the author", GH_ParamAccess.item);
-        pManager.AddParameter(new AttributeParam(), "Atr", "At", "A attribute is a key value pair with an an optional definition.", GH_ParamAccess.list);
     }
 
-        protected override void ProcessModelInputs(IGH_DataAccess DA, Author model)
-        {
-            string? name = null, email = null;
-            var attributes = new List<AttributeGoo>();
+    #endregion File
 
-            if (DA.GetData(2, ref name) && name != null) model.Name = name;
-            if (DA.GetData(3, ref email) && email != null) model.Email = email;
-            if (DA.GetDataList(4, attributes)) model.Attributes = attributes.ConvertAll(a => a.Value);
-        }
+    #region DiagramPoint
 
-        protected override void ProcessModelOutputs(IGH_DataAccess DA, Author model)
-        {
-            DA.SetData(2, model.Name);
-            DA.SetData(3, model.Email);
-            DA.SetDataList(4, model.Attributes.ConvertAll(a => new AttributeGoo(a)));
-        }
-    }
-
-    public class SerializeAuthorComponent : SerializeComponent<AuthorParam, AuthorGoo, Author>
+    public class DiagramPointGoo : Goo<DiagramPoint>
     {
-        public SerializeAuthorComponent() : base("Serialize Author", "SA", "Serialize Author to JSON") { }
-        public override Guid Guid => new("99130A53-4FC1-4E64-9A46-2ACEC4634878");
-
-    }
-
-    public class DeserializeAuthorComponent : DeserializeComponent<AuthorParam, AuthorGoo, Author>
-    {
-        public DeserializeAuthorComponent() : base("Deserialize Author", "DA", "Deserialize JSON to Author") { }
-        public override Guid Guid => new("99130A53-4FC1-4E64-9A46-2ACEC4634879");
-
-    }
-
-    #endregion Author
-
-    #region Location
-
-    public class LocationGoo : ModelGoo<Location>
-    {
-
-
-
-
-
         protected override bool CustomCastTo<Q>(ref Q target)
         {
             if (typeof(Q).IsAssignableFrom(typeof(GH_Point)))
             {
-                target = (Q)(object)new GH_Point(new Point3d(Value.Longitude, Value.Latitude, 0));
+                target = (Q)(object)new GH_Point(new Point3d(Value.X, Value.Y, 0));
+                return true;
+            }
+            return false;
+        }
+
+        protected override bool CustomCastFrom(object source)
+        {
+            if (source == null) return false;
+            Point3d point = new Point3d();
+            if (GH_Convert.ToPoint3d(source, ref point, GH_Conversion.Both))
+            {
+                Value = new DiagramPoint { X = (float)point.X, Y = (float)point.Y };
+                return true;
+            }
+            return false;
+        }
+    }
+
+    public class DiagramPointParam : Param<DiagramPointGoo, DiagramPoint>
+    {
+        public DiagramPointParam() : base("DiagramPoint", "DP", "DiagramPoint parameter") { }
+        public override Guid Guid => new("4685CCE8-C629-4638-8DF6-F76A17571841");
+
+    }
+
+    public class DiagramPointComponent : ModelComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
+    {
+        public DiagramPointComponent() : base("DiagramPoint", "DPt", "Construct, deconstruct or modify a diagram point") { }
+        public override Guid Guid => new("61FB9BBE-64DE-42B2-B7EF-69CD97FDD9E3");
+        protected override void RegisterParams(dynamic pManager)
+        {
+        }
+    }
+
+    public class SerializeDiagramPointComponent : SerializeComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
+    {
+        public SerializeDiagramPointComponent() : base("Serialize DiagramPoint", "SDP", "Serialize DiagramPoint to JSON") { }
+        public override Guid Guid => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A99");
+    }
+
+    public class DeserializeDiagramPointComponent : DeserializeComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
+    {
+        public DeserializeDiagramPointComponent() : base("Deserialize DiagramPoint", "DDP", "Deserialize JSON to DiagramPoint") { }
+        public override Guid Guid => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A9A");
+
+
+
+    }
+
+    #endregion DiagramPoint
+
+    #region Port
+
+    public class PortIdGoo : IdGoo<PortId>
+    {
+
+        protected override bool CustomCastTo<Q>(ref Q target)
+        {
+            if (typeof(Q).IsAssignableFrom(typeof(PortDiffGoo)))
+            {
+                target = (Q)(object)new PortDiffGoo(Value);
+                return true;
+            }
+            if (typeof(Q).IsAssignableFrom(typeof(PortGoo)))
+            {
+                target = (Q)(object)new PortGoo(Value);
+                return true;
+            }
+            if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+            {
+                target = (Q)(object)new GH_String(Value.Id);
+                return true;
+            }
+            return false;
+        }
+
+        protected override bool CustomCastFrom(object source)
+        {
+            if (source == null) return false;
+            if (source is PortGoo portGoo)
+            {
+                Value = portGoo.Value;
+                return true;
+            }
+            if (source is PortDiffGoo diffGoo)
+            {
+                Value = diffGoo.Value;
+                return true;
+            }
+            if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+            {
+                Value = new PortId { Id = str };
+                return true;
+            }
+            return false;
+        }
+    }
+
+    public class PortIdParam : IdParam<PortIdGoo, PortId>
+    {
+        public PortIdParam() : base("Por", "Po", "The optional local identifier of the port within the type. No id means the default port.") { }
+        public override Guid Guid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B1");
+
+    }
+
+    public class PortIdComponent : IdComponent<PortIdParam, PortIdGoo, PortId>
+    {
+        public PortIdComponent() : base("The optional local identifier of the port within the type. No id means the default port.", "Por", "PortId component") { }
+        public override Guid Guid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B2");
+        protected override void RegisterParams(dynamic pManager) => pManager.AddParameter(new PortIdParam(), "Por", "Po", "The optional local identifier of the port within the type. No id means the default port.", GH_ParamAccess.item);
+    }
+
+    public class PortDiffGoo : DiffGoo<PortDiff>
+    {
+        protected override bool CustomCastTo<Q>(ref Q target)
+        {
+            if (typeof(Q).IsAssignableFrom(typeof(PortIdGoo)))
+            {
+                target = (Q)(object)new PortIdGoo(Value);
+                return true;
+            }
+            if (typeof(Q).IsAssignableFrom(typeof(PortGoo)))
+            {
+                target = (Q)(object)new PortGoo(Value);
+                return true;
+            }
+            if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+            {
+                target = (Q)(object)new GH_String(Value.Id);
+                return true;
+            }
+            return false;
+        }
+
+        protected override bool CustomCastFrom(object source)
+        {
+            if (source == null) return false;
+            if (source is PortIdGoo idGoo)
+            {
+                Value = idGoo.Value;
+                return true;
+            }
+            if (source is PortGoo portGoo)
+            {
+                Value = portGoo.Value;
+                return true;
+            }
+            if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+            {
+                try
+                {
+                    Value = str.Deserialize<PortDiff>() ?? new PortDiff();
+                    return true;
+                }
+                catch { return false; }
+            }
+            return false;
+        }
+    }
+
+    public class PortDiffParam : DiffParam<PortDiffGoo, PortDiff>
+    {
+        public PortDiffParam() : base("PortDiff", "PD", "PortDiff parameter") { }
+        public override Guid Guid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B0");
+
+    }
+
+    public class PortDiffComponent : DiffComponent<PortDiffParam, PortDiffGoo, PortDiff>
+    {
+        public PortDiffComponent() : base("A diff for ports.", "PDf", "PortDiff component") { }
+        public override Guid Guid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B3");
+        protected override void RegisterParams(dynamic pManager) => pManager.AddParameter(new PortDiffParam(), "PDf", "PD", "A diff for ports.", GH_ParamAccess.item);
+    }
+
+    public class SerializePortDiffComponent : SerializeComponent<PortDiffParam, PortDiffGoo, PortDiff>
+    {
+        public SerializePortDiffComponent() : base("Serialize PortDiff", "SPD", "Serialize PortDiff to JSON") { }
+        public override Guid Guid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B4");
+
+
+
+    }
+
+    public class DeserializePortDiffComponent : DeserializeComponent<PortDiffParam, PortDiffGoo, PortDiff>
+    {
+        public DeserializePortDiffComponent() : base("Deserialize PortDiff", "DPD", "Deserialize JSON to PortDiff") { }
+        public override Guid Guid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B5");
+
+
+
+    }
+
+    public class PortGoo : Goo<Port>
+    {
+
+        protected override bool CustomCastTo<Q>(ref Q target)
+        {
+            if (typeof(Q).IsAssignableFrom(typeof(GH_Plane)))
+            {
+                if (Value.Direction is null || Value.Point is null) return false;
+                target = (Q)(object)new GH_Plane(Utility.GetPlaneFromYAxis(Value.Direction.Convert(), 0, Value.Point.Convert()));
+                return true;
+            }
+            if (typeof(Q).IsAssignableFrom(typeof(PortIdGoo)))
+            {
+                target = (Q)(object)new PortIdGoo(Value);
+                return true;
+            }
+            if (typeof(Q).IsAssignableFrom(typeof(PortDiffGoo)))
+            {
+                target = (Q)(object)new PortDiffGoo(Value);
+                return true;
+            }
+            if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+            {
+                target = (Q)(object)new GH_String(Value.Id);
+                return true;
+            }
+            return false;
+        }
+
+        protected override bool CustomCastFrom(object source)
+        {
+            if (source == null) return false;
+            if (source is PortIdGoo idGoo)
+            {
+                Value = idGoo.Value;
+                return true;
+            }
+            if (source is PortDiffGoo diffGoo)
+            {
+                Value = diffGoo.Value;
+                return true;
+            }
+            var plane = new Rhino.Geometry.Plane();
+            if (GH_Convert.ToPlane(source, ref plane, GH_Conversion.Both))
+            {
+                Value.Point = plane.Origin.Convert();
+                Value.Direction = plane.YAxis.Convert();
+                return true;
+            }
+            if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+            {
+                Value = str.Deserialize<Port>() ?? new Port();
+                return true;
+            }
+            return false;
+        }
+    }
+
+    public class PortParam : Param<PortGoo, Port>
+    {
+        public PortParam() : base("Por", "Po", "A port is a connection point (with a direction) of a type.") { }
+        public override Guid Guid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1B");
+    }
+
+    public class PortComponent : ModelComponent<PortParam, PortGoo, Port>
+    {
+        public PortComponent() : base("Port", "Por", "Construct, deconstruct or modify a port") { }
+        public override Guid Guid => new("E505C90C-71F4-413F-82FE-65559D9FFAB5"); protected override void RegisterParams(dynamic pManager)
+        {
+            pManager.AddTextParameter("Idn?", "Id?", "The optional local identifier of the port within the type. No id means the default port.", GH_ParamAccess.item);
+            pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the port.", GH_ParamAccess.item);
+            pManager.AddBooleanParameter("Man?", "Ma?", "Whether the port is mandatory. A mandatory port must be connected in a design.", GH_ParamAccess.item);
+            pManager.AddTextParameter("Fam?", "Fa?", "The optional family of the port. This allows to define explicit compatibility with other ports.", GH_ParamAccess.item);
+            pManager.AddTextParameter("CFas*", "CF*", "The optional other compatible families of the port. An empty list means this port is compatible with all other ports.", GH_ParamAccess.list);
+            pManager.AddPointParameter("Pnt", "Pt", "The connection point of the port that is attracted to another connection point.", GH_ParamAccess.item);
+            pManager.AddVectorParameter("Drn", "Dr", "The direction of the port. When another piece connects the direction of the other port is flipped and then the pieces are aligned.", GH_ParamAccess.item);
+            pManager.AddNumberParameter("T", "T", "The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.", GH_ParamAccess.item);
+            pManager.AddParameter(new PropParam(), "Prp*", "Pp*", "The optional properties of the port.", GH_ParamAccess.list);
+            pManager.AddParameter(new AttributeParam(), "Atr*", "At*", "The optional attributes of the port.", GH_ParamAccess.list);
+        }
+
+        protected override void ProcessModelInputs(IGH_DataAccess DA, Port model)
+        {
+            string? id = null, description = null, family = null;
+            bool mandatory = false;
+            var compatibleFamilies = new List<string>();
+            Point3d point = Point3d.Unset;
+            Vector3d direction = Vector3d.Unset;
+            double t = 0;
+            var props = new List<PropGoo>();
+            var attributes = new List<AttributeGoo>();
+
+            if (DA.GetData(2, ref id) && id != null) model.Id = id;
+            if (DA.GetData(3, ref description) && description != null) model.Description = description;
+            if (DA.GetData(4, ref mandatory)) model.Mandatory = mandatory;
+            if (DA.GetData(5, ref family) && family != null) model.Family = family;
+            if (DA.GetDataList(6, compatibleFamilies)) model.CompatibleFamilies = compatibleFamilies;
+            if (DA.GetData(7, ref point) && point.IsValid) model.Point = new Point { X = (float)point.X, Y = (float)point.Y, Z = (float)point.Z };
+            if (DA.GetData(8, ref direction) && direction.IsValid) model.Direction = new Vector { X = (float)direction.X, Y = (float)direction.Y, Z = (float)direction.Z };
+            if (DA.GetData(9, ref t)) model.T = (float)t;
+            if (DA.GetDataList(10, props)) model.Props = props.ConvertAll(p => p.Value);
+            if (DA.GetDataList(11, attributes)) model.Attributes = attributes.ConvertAll(a => a.Value);
+        }
+
+        protected override void ProcessModelOutputs(IGH_DataAccess DA, Port model)
+        {
+            DA.SetData(2, model.Id);
+            DA.SetData(3, model.Description);
+            DA.SetData(4, model.Mandatory);
+            DA.SetData(5, model.Family);
+            DA.SetDataList(6, model.CompatibleFamilies);
+            DA.SetData(7, model.Point != null ? new Point3d(model.Point.X, model.Point.Y, model.Point.Z) : Point3d.Unset);
+            DA.SetData(8, model.Direction != null ? new Vector3d(model.Direction.X, model.Direction.Y, model.Direction.Z) : Vector3d.Unset);
+            DA.SetData(9, model.T);
+            DA.SetDataList(10, model.Props.ConvertAll(p => new PropGoo(p)));
+            DA.SetDataList(11, model.Attributes.ConvertAll(a => new AttributeGoo(a)));
+        }
+    }
+
+    public class SerializePortComponent : SerializeComponent<PortParam, PortGoo, Port>
+    {
+        public SerializePortComponent() : base("Serialize Port", "SP", "Serialize Port to JSON") { }
+        public override Guid Guid => new("1A29F6ED-464D-490F-B072-3412B467F1B5");
+
+
+    }
+
+    public class DeserializePortComponent : DeserializeComponent<PortParam, PortGoo, Port>
+    {
+        public DeserializePortComponent() : base("Deserialize Port", "DP", "Deserialize JSON to Port") { }
+        public override Guid Guid => new("1A29F6ED-464D-490F-B072-3412B467F1B6");
+
+
+    }
+
+    public class PortsDiffGoo : DiffGoo<PortsDiff>
+    {
+
+        protected override bool CustomCastTo<Q>(ref Q target)
+        {
+            if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+            {
+                target = (Q)(object)new GH_String("PortsDiff");
+                return true;
+            }
+            return false;
+        }
+
+        protected override bool CustomCastFrom(object source)
+        {
+            if (source == null) return false;
+            if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+            {
+                try
+                {
+                    Value = str.Deserialize<PortsDiff>() ?? new PortsDiff();
+                    return true;
+                }
+                catch { return false; }
+            }
+            return false;
+        }
+    }
+
+    public class PortsDiffParam : DiffParam<PortsDiffGoo, PortsDiff>
+    {
+        public PortsDiffParam() : base("PortsDiff", "PSD", "PortsDiff parameter") { }
+        public override Guid Guid => new("1A29F6ED-464D-490F-B072-3412B467F1C0");
+    }
+
+    public class PortsDiffComponent : DiffComponent<PortsDiffParam, PortsDiffGoo, PortsDiff>
+    {
+        public PortsDiffComponent() : base("PortsDiff", "PSD", "PortsDiff component") { }
+        public override Guid Guid => new("1A29F6ED-464D-490F-B072-3412B467F1C1");
+        protected override void RegisterParams(dynamic pManager) => pManager.AddParameter(new PortsDiffParam(), "PsDf", "PsD", "A diff for multiple ports.", GH_ParamAccess.item);
+    }
+
+    public class SerializePortsDiffComponent : SerializeComponent<PortsDiffParam, PortsDiffGoo, PortsDiff>
+    {
+        public SerializePortsDiffComponent() : base("Serialize PortsDiff", "SPSD", "Serialize PortsDiff to JSON") { }
+        public override Guid Guid => new("1A29F6ED-464D-490F-B072-3412B467F1C2");
+
+    }
+
+    public class DeserializePortsDiffComponent : DeserializeComponent<PortsDiffParam, PortsDiffGoo, PortsDiff>
+    {
+        public DeserializePortsDiffComponent() : base("Deserialize PortsDiff", "DPSD", "Deserialize JSON to PortsDiff") { }
+        public override Guid Guid => new("1A29F6ED-464D-490F-B072-3412B467F1C3");
+
+    }
+
+    #endregion Port
+
+    #region Author
+
+    public class AuthorIdGoo : IdGoo<AuthorId>
+    {
+
+
+
+
+
+        protected override bool CustomCastTo<Q>(ref Q target)
+        {
+            if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+            {
+                target = (Q)(object)new GH_String(Value.Email);
+                return true;
+            }
+            return false;
+        }
+
+        protected override bool CustomCastFrom(object source)
+        {
+            if (source == null) return false;
+            if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
+            {
+                Value = new AuthorId { Email = str };
+                return true;
+            }
+            return false;
+        }
+    }
+
+    public class AuthorIdParam : IdParam<AuthorIdGoo, AuthorId>
+    {
+        public AuthorIdParam() : base("Aut", "Au", "The id of the author.") { }
+        public override Guid Guid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1C");
+    }
+
+    public class AuthorIdComponent : IdComponent<AuthorIdParam, AuthorIdGoo, AuthorId>
+    {
+        public AuthorIdComponent() : base("The id of the author.", "Aut", "AuthorId component") { }
+        public override Guid Guid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1D");
+        protected override void RegisterParams(dynamic pManager) => pManager.AddParameter(new AuthorIdParam(), "Aut", "Au", "The id of the author.", GH_ParamAccess.item);
+    }
+
+    public class AuthorGoo : Goo<Author>
+    {
+
+
+
+
+
+        protected override bool CustomCastTo<Q>(ref Q target)
+        {
+            if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
+            {
+                target = (Q)(object)new GH_String(Value.Email);
                 return true;
             }
             return false;
@@ -1769,35 +1813,122 @@ public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, Attribut
         protected override bool CustomCastFrom(object source)
         {
             if (source == null) return false;
-            var point = new Point3d();
-            if (GH_Convert.ToPoint3d(source, ref point, GH_Conversion.Both))
+            if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
             {
-                Value = new Location { Longitude = (float)point.X, Latitude = (float)point.Y };
+                Value = new Author { Email = str };
                 return true;
             }
             return false;
         }
     }
 
-    public class LocationParam : Param<LocationGoo, Location>
+    public class AuthorParam : Param<AuthorGoo, Author>
     {
-        public LocationParam() : base("Location", "L", "Location parameter") { }
-        public override Guid Guid => new("CA9DA889-398E-469B-BF1B-AD2BDFCA7957");
+        public AuthorParam() : base("Author", "A", "Author parameter") { }
+        public override Guid Guid => new("9F52380B-1812-42F7-9DAD-952C2F7A635A");
     }
 
-    public class LocationComponent : ModelComponent<LocationParam, LocationGoo, Location>
+    public class AuthorComponent : ModelComponent<AuthorParam, AuthorGoo, Author>
     {
-        public LocationComponent() : base("Location", "L", "Construct, deconstruct or modify a location") { }
-        public override Guid Guid => new("6F2EDF42-6E10-4944-8B05-4D41F4876ED0");protected override void RegisterParams(dynamic pManager)
+        public AuthorComponent() : base("Author", "Au", "Construct, deconstruct or modify an author") { }
+        public override Guid Guid => new("5143ED92-0A2C-4D0C-84ED-F90CC8450894"); protected override void RegisterParams(dynamic pManager)
 
         {
 
-            pManager.AddNumberParameter("Longitude", "Lng", "The longitude of the location", GH_ParamAccess.item);
-            pManager.AddNumberParameter("Latitude", "Lat", "The latitude of the location", GH_ParamAccess.item);
+            pManager.AddTextParameter("Name", "N", "The name of the author", GH_ParamAccess.item);
+            pManager.AddTextParameter("Email", "E", "The email of the author", GH_ParamAccess.item);
             pManager.AddParameter(new AttributeParam(), "Atr", "At", "A attribute is a key value pair with an an optional definition.", GH_ParamAccess.list);
 
         }
+        pManager.AddTextParameter("Name", "N", "The name of the author", GH_ParamAccess.item);
+        pManager.AddTextParameter("Email", "E", "The email of the author", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Atr", "At", "A attribute is a key value pair with an an optional definition.", GH_ParamAccess.list);
+    }
+
+    protected override void ProcessModelInputs(IGH_DataAccess DA, Author model)
+    {
+        string? name = null, email = null;
+        var attributes = new List<AttributeGoo>();
+
+        if (DA.GetData(2, ref name) && name != null) model.Name = name;
+        if (DA.GetData(3, ref email) && email != null) model.Email = email;
+        if (DA.GetDataList(4, attributes)) model.Attributes = attributes.ConvertAll(a => a.Value);
+    }
+
+    protected override void ProcessModelOutputs(IGH_DataAccess DA, Author model)
+    {
+        DA.SetData(2, model.Name);
+        DA.SetData(3, model.Email);
+        DA.SetDataList(4, model.Attributes.ConvertAll(a => new AttributeGoo(a)));
+    }
+}
+
+public class SerializeAuthorComponent : SerializeComponent<AuthorParam, AuthorGoo, Author>
+{
+    public SerializeAuthorComponent() : base("Serialize Author", "SA", "Serialize Author to JSON") { }
+    public override Guid Guid => new("99130A53-4FC1-4E64-9A46-2ACEC4634878");
+
+}
+
+public class DeserializeAuthorComponent : DeserializeComponent<AuthorParam, AuthorGoo, Author>
+{
+    public DeserializeAuthorComponent() : base("Deserialize Author", "DA", "Deserialize JSON to Author") { }
+    public override Guid Guid => new("99130A53-4FC1-4E64-9A46-2ACEC4634879");
+
+}
+
+#endregion Author
+
+#region Location
+
+public class LocationGoo : Goo<Location>
+{
+
+
+
+
+
+    protected override bool CustomCastTo<Q>(ref Q target)
+    {
+        if (typeof(Q).IsAssignableFrom(typeof(GH_Point)))
+        {
+            target = (Q)(object)new GH_Point(new Point3d(Value.Longitude, Value.Latitude, 0));
+            return true;
+        }
+        return false;
+    }
+    protected override bool CustomCastFrom(object source)
+    {
+        if (source == null) return false;
+        var point = new Point3d();
+        if (GH_Convert.ToPoint3d(source, ref point, GH_Conversion.Both))
+        {
+            Value = new Location { Longitude = (float)point.X, Latitude = (float)point.Y };
+            return true;
+        }
+        return false;
+    }
+}
+
+public class LocationParam : Param<LocationGoo, Location>
+{
+    public LocationParam() : base("Location", "L", "Location parameter") { }
+    public override Guid Guid => new("CA9DA889-398E-469B-BF1B-AD2BDFCA7957");
+}
+
+public class LocationComponent : ModelComponent<LocationParam, LocationGoo, Location>
+{
+    public LocationComponent() : base("Location", "L", "Construct, deconstruct or modify a location") { }
+    public override Guid Guid => new("6F2EDF42-6E10-4944-8B05-4D41F4876ED0"); protected override void RegisterParams(dynamic pManager)
+
+    {
+
         pManager.AddNumberParameter("Longitude", "Lng", "The longitude of the location", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Latitude", "Lat", "The latitude of the location", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Atr", "At", "A attribute is a key value pair with an an optional definition.", GH_ParamAccess.list);
+
+    }
+    pManager.AddNumberParameter("Longitude", "Lng", "The longitude of the location", GH_ParamAccess.item);
         pManager.AddNumberParameter("Latitude", "Lat", "The latitude of the location", GH_ParamAccess.item);
         pManager.AddParameter(new AttributeParam(), "Atr", "At", "A attribute is a key value pair with an an optional definition.", GH_ParamAccess.list);
     }
@@ -2040,7 +2171,7 @@ public class DeserializeTypesDiffComponent : DeserializeComponent<TypesDiffParam
 
 }
 
-public class TypeGoo : ModelGoo<Type>
+public class TypeGoo : Goo<Type>
 {
 
 
@@ -2414,7 +2545,7 @@ public class DeserializePiecesDiffComponent : DeserializeComponent<PiecesDiffPar
 
 }
 
-public class PieceGoo : ModelGoo<Piece>
+public class PieceGoo : Goo<Piece>
 {
 
 
@@ -2639,7 +2770,7 @@ public class DeserializeSideDiffComponent : DeserializeComponent<SideDiffParam, 
 
 }
 
-public class SideGoo : ModelGoo<Side>
+public class SideGoo : Goo<Side>
 {
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -2936,7 +3067,7 @@ public class DeserializeConnectionsDiffComponent : DeserializeComponent<Connecti
 
 }
 
-public class ConnectionGoo : ModelGoo<Connection>
+public class ConnectionGoo : Goo<Connection>
 {
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -3296,7 +3427,7 @@ public class DeserializeDesignsDiffComponent : DeserializeComponent<DesignsDiffP
 
 }
 
-public class DesignGoo : ModelGoo<Design>
+public class DesignGoo : Goo<Design>
 {
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -3570,7 +3701,7 @@ public class DeserializeKitDiffComponent : DeserializeComponent<KitDiffParam, Ki
 
 }
 
-public class KitGoo : ModelGoo<Kit>
+public class KitGoo : Goo<Kit>
 {
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -3947,7 +4078,7 @@ public class DeserializeQualityDiffComponent : DeserializeComponent<QualityDiffP
 
 }
 
-public class QualityGoo : ModelGoo<Quality>
+public class QualityGoo : Goo<Quality>
 {
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -4092,7 +4223,7 @@ public class DeserializeQualityComponent : DeserializeComponent<QualityParam, Qu
 
 #region Benchmark
 
-public class BenchmarkGoo : ModelGoo<Benchmark>
+public class BenchmarkGoo : Goo<Benchmark>
 {
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -4183,7 +4314,7 @@ public class DeserializeBenchmarkComponent : DeserializeComponent<BenchmarkParam
 
 #region Prop
 
-public class PropGoo : ModelGoo<Prop>
+public class PropGoo : Goo<Prop>
 {
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -4269,7 +4400,7 @@ public class DeserializePropComponent : DeserializeComponent<PropParam, PropGoo,
 
 #region Stat
 
-public class StatGoo : ModelGoo<Stat>
+public class StatGoo : Goo<Stat>
 {
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -4358,7 +4489,7 @@ public class DeserializeStatComponent : DeserializeComponent<StatParam, StatGoo,
 
 #region Layer
 
-public class LayerGoo : ModelGoo<Layer>
+public class LayerGoo : Goo<Layer>
 {
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -4443,7 +4574,7 @@ public class DeserializeLayerComponent : DeserializeComponent<LayerParam, LayerG
 
 #region Group
 
-public class GroupGoo : ModelGoo<Group>
+public class GroupGoo : Goo<Group>
 {
 
     protected override bool CustomCastTo<Q>(ref Q target)
