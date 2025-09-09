@@ -396,7 +396,7 @@ public abstract class ModelComponent<TParam, TGoo, TModel> : Component
             $"The optional {GetModelName().ToLower()} to deconstruct or modify.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("Validate", "Vd?",
             $"Whether the {GetModelName().ToLower()} should be validated.", GH_ParamAccess.item);
-        RegisterModelInputs(pManager);
+        RegisterModelParams(pManager);
         for (var i = 0; i < pManager.ParamCount; i++)
             pManager[i].Optional = true;
     }
@@ -407,11 +407,10 @@ public abstract class ModelComponent<TParam, TGoo, TModel> : Component
             $"The constructed or modified {GetModelName().ToLower()}.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("Valid", "Vd?",
             $"True if the {GetModelName().ToLower()} is valid. Null if no validation was performed.", GH_ParamAccess.item);
-        RegisterModelOutputs(pManager);
+        RegisterModelParams(pManager);
     }
 
-    protected abstract void RegisterModelInputs(GH_InputParamManager pManager);
-    protected abstract void RegisterModelOutputs(GH_OutputParamManager pManager);
+    protected abstract void RegisterModelParams(dynamic pManager);
     protected abstract string GetModelCode();
     protected abstract string GetModelName();
 
@@ -464,8 +463,7 @@ public abstract class IdComponent<TParam, TGoo, TModel> : ModelComponent<TParam,
 {
     protected IdComponent(string name, string nickname, string description) : base(name, nickname, description) { }
     public override GH_Exposure Exposure => GH_Exposure.secondary;
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) { }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) { }
+    protected override void RegisterModelParams(dynamic pManager) { }
     protected override void ProcessModelInputs(IGH_DataAccess DA, TModel model) { }
     protected override void ProcessModelOutputs(IGH_DataAccess DA, TModel model) { }
     protected override string GetModelName() => GetModelCode().Replace("Id", "").Replace("ID", "") + "Id";
@@ -488,8 +486,7 @@ public abstract class DiffComponent<TParam, TGoo, TModel> : ModelComponent<TPara
 {
     protected DiffComponent(string name, string nickname, string description) : base(name, nickname, description) { }
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) { }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) { }
+    protected override void RegisterModelParams(dynamic pManager) { }
     protected override void ProcessModelInputs(IGH_DataAccess DA, TModel model) { }
     protected override void ProcessModelOutputs(IGH_DataAccess DA, TModel model) { }
     protected override string GetModelName() => GetModelCode().Replace("Diff", "").Replace("sDiff", "s") + "Diff";
@@ -748,8 +745,7 @@ public class AttributeIdComponent : IdComponent<AttributeIdParam, AttributeIdGoo
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "AI";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) { }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
     {
         pManager.AddParameter(new AttributeIdParam(), "AtI", "AI", "The ID of the attribute.", GH_ParamAccess.item);
     }
@@ -822,8 +818,7 @@ public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, Attribut
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "AD";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) { }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
     {
         pManager.AddParameter(new AttributeDiffParam(), "ADf", "AD", "A diff for attributes.", GH_ParamAccess.item);
     }
@@ -916,15 +911,15 @@ public class AttributeComponent : ModelComponent<AttributeParam, AttributeGoo, A
     protected override string GetModelCode() => "At";
     protected override string GetModelName() => "Atr";
 
-    protected override void RegisterModelInputs(GH_InputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
+
     {
+
         pManager.AddTextParameter("Key", "K", "The key of the attribute", GH_ParamAccess.item);
         pManager.AddTextParameter("Value", "V", "The value of the attribute", GH_ParamAccess.item);
         pManager.AddTextParameter("Definition", "D", "The definition of the attribute", GH_ParamAccess.item);
-    }
 
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
+    }
         pManager.AddTextParameter("Key", "K", "The key of the attribute", GH_ParamAccess.item);
         pManager.AddTextParameter("Value", "V", "The value of the attribute", GH_ParamAccess.item);
         pManager.AddTextParameter("Definition", "D", "The definition of the attribute", GH_ParamAccess.item);
@@ -1036,8 +1031,7 @@ public class RepresentationIdComponent : IdComponent<RepresentationIdParam, Repr
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "RI";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) { }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
     {
         pManager.AddParameter(new RepresentationIdParam(), "Rep", "Rp", "The identifier of a representation.", GH_ParamAccess.item);
     }
@@ -1092,12 +1086,10 @@ public class RepresentationDiffComponent : DiffComponent<RepresentationDiffParam
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AA");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "RD";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) { }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
-        pManager.AddParameter(new RepresentationDiffParam(), "RDf", "RD", "A diff for representations.", GH_ParamAccess.item);
-    }
+    protected override string GetModelCode() => "RD";        protected override void RegisterModelParams(dynamic pManager)
+        {
+            pManager.AddParameter(new RepresentationDiffParam(), "RDf", "RD", "A diff for representations.", GH_ParamAccess.item);
+        }
 }
 
 public class SerializeRepresentationDiffComponent : SerializeComponent<RepresentationDiffParam, RepresentationDiffGoo, RepresentationDiff>
@@ -1169,12 +1161,10 @@ public class RepresentationsDiffComponent : DiffComponent<RepresentationsDiffPar
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AD");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
-    protected override string GetModelCode() => "RsD";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) { }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
-        pManager.AddParameter(new RepresentationsDiffParam(), "RsDf", "RsD", "A diff for multiple representations.", GH_ParamAccess.item);
-    }
+    protected override string GetModelCode() => "RsD";        protected override void RegisterModelParams(dynamic pManager)
+        {
+            pManager.AddParameter(new RepresentationsDiffParam(), "RsDf", "RsD", "A diff for multiple representations.", GH_ParamAccess.item);
+        }
 }
 
 public class SerializeRepresentationsDiffComponent : SerializeComponent<RepresentationsDiffParam, RepresentationsDiffGoo, RepresentationsDiff>
@@ -1244,16 +1234,16 @@ public class RepresentationComponent : ModelComponent<RepresentationParam, Repre
     protected override string GetModelCode() => "R";
     protected override string GetModelName() => "Representation";
 
-    protected override void RegisterModelInputs(GH_InputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
+
     {
+
         pManager.AddTextParameter("Url", "Ur", "The Unique Resource Locator (URL) to the resource of the representation.", GH_ParamAccess.item);
         pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the representation.", GH_ParamAccess.item);
         pManager.AddTextParameter("Tags*", "Tg*", "The optional tags to group representations. No tags means default.", GH_ParamAccess.list);
         pManager.AddParameter(new AttributeParam(), "Atr*", "At*", "The optional attributes of the representation.", GH_ParamAccess.list);
-    }
 
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
+    }
         pManager.AddTextParameter("Url", "Ur", "The Unique Resource Locator (URL) to the resource of the representation.", GH_ParamAccess.item);
         pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the representation.", GH_ParamAccess.item);
         pManager.AddTextParameter("Tags*", "Tg*", "The optional tags to group representations. No tags means default.", GH_ParamAccess.list);
@@ -1355,8 +1345,7 @@ public class FileIdComponent : IdComponent<FileIdParam, FileIdGoo, FileId>
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "FI";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) => pManager.AddParameter(new FileIdParam(), "Fil", "Fl", "The identifier of a file.", GH_ParamAccess.item);
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new FileIdParam(), "Fil", "Fl", "The identifier of a file.", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) =>  pManager.AddParameter(new FileIdParam(), "Fil", "Fl", "The identifier of a file.", GH_ParamAccess.item);=> pManager.AddParameter(new FileIdParam(), "Fil", "Fl", "The identifier of a file.", GH_ParamAccess.item);
 }
 
 public class FileDiffGoo : DiffGoo<FileDiff>
@@ -1411,8 +1400,7 @@ public class FileDiffComponent : DiffComponent<FileDiffParam, FileDiffGoo, FileD
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "FD";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) => pManager.AddParameter(new FileDiffParam(), "FDf", "FD", "A diff for files.", GH_ParamAccess.item);
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new FileDiffParam(), "FDf", "FD", "A diff for files.", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) =>  pManager.AddParameter(new FileDiffParam(), "FDf", "FD", "A diff for files.", GH_ParamAccess.item);=> pManager.AddParameter(new FileDiffParam(), "FDf", "FD", "A diff for files.", GH_ParamAccess.item);
 }
 
 public class SerializeFileDiffComponent : SerializeComponent<FileDiffParam, FileDiffGoo, FileDiff>
@@ -1489,8 +1477,7 @@ public class FilesDiffComponent : DiffComponent<FilesDiffParam, FilesDiffGoo, Fi
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "FsD";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) => pManager.AddParameter(new FilesDiffParam(), "FsDf", "FsD", "A diff for multiple files.", GH_ParamAccess.item);
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new FilesDiffParam(), "FsDf", "FsD", "A diff for multiple files.", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) =>  pManager.AddParameter(new FilesDiffParam(), "FsDf", "FsD", "A diff for multiple files.", GH_ParamAccess.item);=> pManager.AddParameter(new FilesDiffParam(), "FsDf", "FsD", "A diff for multiple files.", GH_ParamAccess.item);
 }
 
 public class SerializeFilesDiffComponent : SerializeComponent<FilesDiffParam, FilesDiffGoo, FilesDiff>
@@ -1565,16 +1552,16 @@ public class FileComponent : ModelComponent<FileParam, FileGoo, File>
     protected override string GetModelCode() => "F";
     protected override string GetModelName() => "File";
 
-    protected override void RegisterModelInputs(GH_InputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
+
     {
+
         pManager.AddTextParameter("Url", "Ur", "The url of the file.", GH_ParamAccess.item);
         pManager.AddTextParameter("Dat", "Da", "The data URI of the file.", GH_ParamAccess.item);
         pManager.AddIntegerParameter("Siz?", "Sz?", "The optional size of the file in bytes.", GH_ParamAccess.item);
         pManager.AddTextParameter("Has?", "Hs?", "The optional hash of the file.", GH_ParamAccess.item);
-    }
 
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
+    }
         pManager.AddTextParameter("Url", "Ur", "The url of the file.", GH_ParamAccess.item);
         pManager.AddTextParameter("Dat", "Da", "The data URI of the file.", GH_ParamAccess.item);
         pManager.AddIntegerParameter("Siz?", "Sz?", "The optional size of the file in bytes.", GH_ParamAccess.item);
@@ -1678,14 +1665,14 @@ public class DiagramPointComponent : ModelComponent<DiagramPointParam, DiagramPo
     protected override string GetModelCode() => "DP";
     protected override string GetModelName() => "DiagramPoint";
 
-    protected override void RegisterModelInputs(GH_InputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
+
     {
+
         pManager.AddNumberParameter("X", "X", "The X coordinate", GH_ParamAccess.item);
         pManager.AddNumberParameter("Y", "Y", "The Y coordinate", GH_ParamAccess.item);
-    }
 
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
+    }
         pManager.AddNumberParameter("X", "X", "The X coordinate", GH_ParamAccess.item);
         pManager.AddNumberParameter("Y", "Y", "The Y coordinate", GH_ParamAccess.item);
     }
@@ -1798,8 +1785,7 @@ public class PortIdComponent : IdComponent<PortIdParam, PortIdGoo, PortId>
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "PI";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) => pManager.AddParameter(new PortIdParam(), "Por", "Po", "The optional local identifier of the port within the type. No id means the default port.", GH_ParamAccess.item);
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new PortIdParam(), "Por", "Po", "The optional local identifier of the port within the type. No id means the default port.", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) =>  pManager.AddParameter(new PortIdParam(), "Por", "Po", "The optional local identifier of the port within the type. No id means the default port.", GH_ParamAccess.item);=> pManager.AddParameter(new PortIdParam(), "Por", "Po", "The optional local identifier of the port within the type. No id means the default port.", GH_ParamAccess.item);
 }
 
 public class PortDiffGoo : DiffGoo<PortDiff>
@@ -1874,8 +1860,7 @@ public class PortDiffComponent : DiffComponent<PortDiffParam, PortDiffGoo, PortD
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "PD";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) => pManager.AddParameter(new PortDiffParam(), "PDf", "PD", "A diff for ports.", GH_ParamAccess.item);
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new PortDiffParam(), "PDf", "PD", "A diff for ports.", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) =>  pManager.AddParameter(new PortDiffParam(), "PDf", "PD", "A diff for ports.", GH_ParamAccess.item);=> pManager.AddParameter(new PortDiffParam(), "PDf", "PD", "A diff for ports.", GH_ParamAccess.item);
 }
 
 public class SerializePortDiffComponent : SerializeComponent<PortDiffParam, PortDiffGoo, PortDiff>
@@ -1981,8 +1966,10 @@ public class PortComponent : ModelComponent<PortParam, PortGoo, Port>
     protected override string GetModelCode() => "P";
     protected override string GetModelName() => "Port";
 
-    protected override void RegisterModelInputs(GH_InputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
+
     {
+
         pManager.AddTextParameter("Idn?", "Id?", "The optional local identifier of the port within the type. No id means the default port.", GH_ParamAccess.item);
         pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the port.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("Man?", "Ma?", "Whether the port is mandatory. A mandatory port must be connected in a design.", GH_ParamAccess.item);
@@ -1993,10 +1980,8 @@ public class PortComponent : ModelComponent<PortParam, PortGoo, Port>
         pManager.AddNumberParameter("T", "T", "The parameter t [0,1[ where the port will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.", GH_ParamAccess.item);
         pManager.AddParameter(new PropParam(), "Prp*", "Pp*", "The optional properties of the port.", GH_ParamAccess.list);
         pManager.AddParameter(new AttributeParam(), "Atr*", "At*", "The optional attributes of the port.", GH_ParamAccess.list);
-    }
 
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
+    }
         pManager.AddTextParameter("Idn?", "Id?", "The optional local identifier of the port within the type. No id means the default port.", GH_ParamAccess.item);
         pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the port.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("Man?", "Ma?", "Whether the port is mandatory. A mandatory port must be connected in a design.", GH_ParamAccess.item);
@@ -2117,8 +2102,7 @@ public class PortsDiffComponent : DiffComponent<PortsDiffParam, PortsDiffGoo, Po
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "PsD";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) => pManager.AddParameter(new PortsDiffParam(), "PsDf", "PsD", "A diff for multiple ports.", GH_ParamAccess.item);
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new PortsDiffParam(), "PsDf", "PsD", "A diff for multiple ports.", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) =>  pManager.AddParameter(new PortsDiffParam(), "PsDf", "PsD", "A diff for multiple ports.", GH_ParamAccess.item);=> pManager.AddParameter(new PortsDiffParam(), "PsDf", "PsD", "A diff for multiple ports.", GH_ParamAccess.item);
 }
 
 public class SerializePortsDiffComponent : SerializeComponent<PortsDiffParam, PortsDiffGoo, PortsDiff>
@@ -2191,8 +2175,7 @@ public class AuthorIdComponent : IdComponent<AuthorIdParam, AuthorIdGoo, AuthorI
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "AuI";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) => pManager.AddParameter(new AuthorIdParam(), "Aut", "Au", "The id of the author.", GH_ParamAccess.item);
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new AuthorIdParam(), "Aut", "Au", "The id of the author.", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) =>  pManager.AddParameter(new AuthorIdParam(), "Aut", "Au", "The id of the author.", GH_ParamAccess.item);=> pManager.AddParameter(new AuthorIdParam(), "Aut", "Au", "The id of the author.", GH_ParamAccess.item);
 }
 
 public class AuthorGoo : ModelGoo<Author>
@@ -2242,15 +2225,15 @@ public class AuthorComponent : ModelComponent<AuthorParam, AuthorGoo, Author>
     protected override string GetModelCode() => "Au";
     protected override string GetModelName() => "Author";
 
-    protected override void RegisterModelInputs(GH_InputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
+
     {
+
         pManager.AddTextParameter("Name", "N", "The name of the author", GH_ParamAccess.item);
         pManager.AddTextParameter("Email", "E", "The email of the author", GH_ParamAccess.item);
         pManager.AddParameter(new AttributeParam(), "Atr", "At", "A attribute is a key value pair with an an optional definition.", GH_ParamAccess.list);
-    }
 
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
+    }
         pManager.AddTextParameter("Name", "N", "The name of the author", GH_ParamAccess.item);
         pManager.AddTextParameter("Email", "E", "The email of the author", GH_ParamAccess.item);
         pManager.AddParameter(new AttributeParam(), "Atr", "At", "A attribute is a key value pair with an an optional definition.", GH_ParamAccess.list);
@@ -2346,15 +2329,15 @@ public class LocationComponent : ModelComponent<LocationParam, LocationGoo, Loca
     protected override string GetModelCode() => "L";
     protected override string GetModelName() => "Location";
 
-    protected override void RegisterModelInputs(GH_InputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
+
     {
+
         pManager.AddNumberParameter("Longitude", "Lng", "The longitude of the location", GH_ParamAccess.item);
         pManager.AddNumberParameter("Latitude", "Lat", "The latitude of the location", GH_ParamAccess.item);
         pManager.AddParameter(new AttributeParam(), "Atr", "At", "A attribute is a key value pair with an an optional definition.", GH_ParamAccess.list);
-    }
 
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
+    }
         pManager.AddNumberParameter("Longitude", "Lng", "The longitude of the location", GH_ParamAccess.item);
         pManager.AddNumberParameter("Latitude", "Lat", "The latitude of the location", GH_ParamAccess.item);
         pManager.AddParameter(new AttributeParam(), "Atr", "At", "A attribute is a key value pair with an an optional definition.", GH_ParamAccess.list);
@@ -2468,8 +2451,7 @@ public class TypeIdComponent : IdComponent<TypeIdParam, TypeIdGoo, TypeId>
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "TI";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) => pManager.AddParameter(new TypeIdParam(), "Typ", "Ty", "The identifier of the type within the kit.", GH_ParamAccess.item);
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new TypeIdParam(), "Typ", "Ty", "The identifier of the type within the kit.", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) =>  pManager.AddParameter(new TypeIdParam(), "Typ", "Ty", "The identifier of the type within the kit.", GH_ParamAccess.item);=> pManager.AddParameter(new TypeIdParam(), "Typ", "Ty", "The identifier of the type within the kit.", GH_ParamAccess.item);
 }
 
 public class TypeDiffGoo : DiffGoo<TypeDiff>
@@ -2542,8 +2524,7 @@ public class TypeDiffComponent : DiffComponent<TypeDiffParam, TypeDiffGoo, TypeD
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "TD";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) => pManager.AddParameter(new TypeDiffParam(), "TDf", "TD", "A diff for types.", GH_ParamAccess.item);
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new TypeDiffParam(), "TDf", "TD", "A diff for types.", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) =>  pManager.AddParameter(new TypeDiffParam(), "TDf", "TD", "A diff for types.", GH_ParamAccess.item);=> pManager.AddParameter(new TypeDiffParam(), "TDf", "TD", "A diff for types.", GH_ParamAccess.item);
 }
 
 public class SerializeTypeDiffComponent : SerializeComponent<TypeDiffParam, TypeDiffGoo, TypeDiff>
@@ -2616,8 +2597,7 @@ public class TypesDiffComponent : DiffComponent<TypesDiffParam, TypesDiffGoo, Ty
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "TsD";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) => pManager.AddParameter(new TypesDiffParam(), "TsDf", "TsD", "A diff for multiple types.", GH_ParamAccess.item);
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new TypesDiffParam(), "TsDf", "TsD", "A diff for multiple types.", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) =>  pManager.AddParameter(new TypesDiffParam(), "TsDf", "TsD", "A diff for multiple types.", GH_ParamAccess.item);=> pManager.AddParameter(new TypesDiffParam(), "TsDf", "TsD", "A diff for multiple types.", GH_ParamAccess.item);
 }
 
 public class SerializeTypesDiffComponent : SerializeComponent<TypesDiffParam, TypesDiffGoo, TypesDiff>
@@ -2723,8 +2703,10 @@ public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
     protected override string GetModelCode() => "T";
     protected override string GetModelName() => "Type";
 
-    protected override void RegisterModelInputs(GH_InputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
+
     {
+
         pManager.AddTextParameter("Nam", "Na", "The name of the type.", GH_ParamAccess.item);
         pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the type.", GH_ParamAccess.item);
         pManager.AddTextParameter("Ico?", "Ic?", "The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.", GH_ParamAccess.item);
@@ -2743,10 +2725,8 @@ public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
         pManager.AddParameter(new AuthorIdParam(), "Aut*", "Au*", "The optional authors of the type.", GH_ParamAccess.list);
         pManager.AddParameter(new AttributeParam(), "Atr*", "At*", "The optional attributes of the type.", GH_ParamAccess.list);
         pManager.AddTextParameter("Con*", "Co*", "The optional concepts of the type.", GH_ParamAccess.list);
-    }
 
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
+    }
         pManager.AddTextParameter("Nam", "Na", "The name of the type.", GH_ParamAccess.item);
         pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the type.", GH_ParamAccess.item);
         pManager.AddTextParameter("Ico?", "Ic?", "The optional icon [ emoji | logogram | url ] of the type. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 256x256 pixels and smaller than 1 MB.", GH_ParamAccess.item);
@@ -2914,8 +2894,7 @@ public class PieceIdComponent : IdComponent<PieceIdParam, PieceIdGoo, PieceId>
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "PiI";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) => pManager.AddParameter(new PieceIdParam(), "Pce", "Pc", "The optional local identifier of the piece within the design. No id means the default piece.", GH_ParamAccess.item);
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new PieceIdParam(), "Pce", "Pc", "The optional local identifier of the piece within the design. No id means the default piece.", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) =>  pManager.AddParameter(new PieceIdParam(), "Pce", "Pc", "The optional local identifier of the piece within the design. No id means the default piece.", GH_ParamAccess.item);=> pManager.AddParameter(new PieceIdParam(), "Pce", "Pc", "The optional local identifier of the piece within the design. No id means the default piece.", GH_ParamAccess.item);
 }
 
 public class PieceDiffGoo : DiffGoo<PieceDiff>
@@ -2988,8 +2967,7 @@ public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, Pi
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "PiD";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) => pManager.AddParameter(new PieceDiffParam(), "PDf", "PD", "A diff for pieces.", GH_ParamAccess.item);
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new PieceDiffParam(), "PDf", "PD", "A diff for pieces.", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) =>  pManager.AddParameter(new PieceDiffParam(), "PDf", "PD", "A diff for pieces.", GH_ParamAccess.item);=> pManager.AddParameter(new PieceDiffParam(), "PDf", "PD", "A diff for pieces.", GH_ParamAccess.item);
 }
 
 public class SerializePieceDiffComponent : SerializeComponent<PieceDiffParam, PieceDiffGoo, PieceDiff>
@@ -3062,8 +3040,7 @@ public class PiecesDiffComponent : DiffComponent<PiecesDiffParam, PiecesDiffGoo,
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "PsD";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) => pManager.AddParameter(new PiecesDiffParam(), "PsDf", "PsD", "A diff for multiple pieces.", GH_ParamAccess.item);
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new PiecesDiffParam(), "PsDf", "PsD", "A diff for multiple pieces.", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) =>  pManager.AddParameter(new PiecesDiffParam(), "PsDf", "PsD", "A diff for multiple pieces.", GH_ParamAccess.item);=> pManager.AddParameter(new PiecesDiffParam(), "PsDf", "PsD", "A diff for multiple pieces.", GH_ParamAccess.item);
 }
 
 public class SerializePiecesDiffComponent : SerializeComponent<PiecesDiffParam, PiecesDiffGoo, PiecesDiff>
@@ -3169,8 +3146,10 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
     protected override string GetModelCode() => "Pce";
     protected override string GetModelName() => "Piece";
 
-    protected override void RegisterModelInputs(GH_InputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
+
     {
+
         pManager.AddParameter(new PieceParam(), "Pce", "Pc", "Piece to modify", GH_ParamAccess.item);
         pManager.AddTextParameter("Id", "Id?", "The optional local identifier of the piece within the design. No id means the default piece.", GH_ParamAccess.item);
         pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the piece.", GH_ParamAccess.item);
@@ -3186,10 +3165,8 @@ public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
         pManager.AddParameter(new PropParam(), "Prp*", "Pp*", "The optional properties of the piece.", GH_ParamAccess.list);
         pManager.AddParameter(new AttributeParam(), "Atr*", "At*", "The optional attributes of the piece.", GH_ParamAccess.list);
         for (int i = 1; i < pManager.ParamCount; i++) pManager[i].Optional = true;
-    }
 
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
+    }
         pManager.AddParameter(new PieceParam(), "Pce", "Pc", "The piece", GH_ParamAccess.item);
         pManager.AddTextParameter("Id", "Id?", "The optional local identifier of the piece within the design. No id means the default piece.", GH_ParamAccess.item);
         pManager.AddTextParameter("Dsc?", "Dc?", "The optional human-readable description of the piece.", GH_ParamAccess.item);
@@ -3316,8 +3293,7 @@ public class SideDiffComponent : DiffComponent<SideDiffParam, SideDiffGoo, SideD
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "SD";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) => pManager.AddParameter(new SideDiffParam(), "SDf", "SD", "A diff for sides.", GH_ParamAccess.item);
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new SideDiffParam(), "SDf", "SD", "A diff for sides.", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) =>  pManager.AddParameter(new SideDiffParam(), "SDf", "SD", "A diff for sides.", GH_ParamAccess.item);=> pManager.AddParameter(new SideDiffParam(), "SDf", "SD", "A diff for sides.", GH_ParamAccess.item);
 
 }
 
@@ -3388,17 +3364,17 @@ public class SideComponent : ModelComponent<SideParam, SideGoo, Side>
     protected override string GetModelCode() => "Sid";
     protected override string GetModelName() => "Side";
 
-    protected override void RegisterModelInputs(GH_InputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
+
     {
+
         pManager.AddParameter(new SideParam(), "Sde", "Sd", "Side to modify", GH_ParamAccess.item);
         pManager.AddParameter(new PieceIdParam(), "Pce", "Pc", "The piece ID of the side", GH_ParamAccess.item);
         pManager.AddParameter(new PieceIdParam(), "DesignPiece", "DP", "The design piece ID of the side", GH_ParamAccess.item);
         pManager.AddParameter(new PortIdParam(), "Por", "Po", "The port ID of the side", GH_ParamAccess.item);
         for (int i = 1; i < pManager.ParamCount; i++) pManager[i].Optional = true;
-    }
 
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
+    }
         pManager.AddParameter(new SideParam(), "Sde", "Sd", "The side", GH_ParamAccess.item);
         pManager.AddParameter(new PieceIdParam(), "Pce", "Pc", "The piece ID of the side", GH_ParamAccess.item);
         pManager.AddParameter(new PieceIdParam(), "DesignPiece", "DP", "The design piece ID of the side", GH_ParamAccess.item);
@@ -3590,8 +3566,7 @@ public class ConnectionDiffComponent : DiffComponent<ConnectionDiffParam, Connec
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "CD";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) { }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new ConnectionDiffParam(), "CDf", "CD", "A diff for connections.", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) { }=> pManager.AddParameter(new ConnectionDiffParam(), "CDf", "CD", "A diff for connections.", GH_ParamAccess.item);
 
 }
 
@@ -3664,8 +3639,7 @@ public class ConnectionsDiffComponent : DiffComponent<ConnectionsDiffParam, Conn
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "CsD";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) { }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new ConnectionsDiffParam(), "CsDf", "CsD", "A diff for multiple connections.", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) { }=> pManager.AddParameter(new ConnectionsDiffParam(), "CsDf", "CsD", "A diff for multiple connections.", GH_ParamAccess.item);
 
 }
 
@@ -3765,39 +3739,39 @@ public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo
     protected override string GetModelCode() => "Con";
     protected override string GetModelName() => "Connection";
 
-    protected override void RegisterModelInputs(GH_InputParamManager pManager)
-    {
-        pManager.AddParameter(new ConnectionParam(), "Connection", "Con", "Connection to modify", GH_ParamAccess.item);
-        pManager.AddParameter(new SideParam(), "Connected", "Co", "The connected side", GH_ParamAccess.item);
-        pManager.AddParameter(new SideParam(), "Connecting", "Cn", "The connecting side", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "D", "The description of the connection", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Gap", "G", "The gap of the connection", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Shift", "S", "The shift of the connection", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Rise", "R", "The rise of the connection", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Rotation", "Ro", "The rotation of the connection", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Turn", "T", "The turn of the connection", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Tilt", "Ti", "The tilt of the connection", GH_ParamAccess.item);
-        pManager.AddNumberParameter("X", "X", "The X coordinate of the connection", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Y", "Y", "The Y coordinate of the connection", GH_ParamAccess.item);
-        pManager.AddParameter(new PropParam(), "Prp", "Pp", "A property is a value with an optional unit for a quality.", GH_ParamAccess.list);
-        pManager.AddParameter(new AttributeParam(), "Atr", "At", "A attribute is a key value pair with an an optional definition.", GH_ParamAccess.list);
-        for (int i = 1; i < pManager.ParamCount; i++) pManager[i].Optional = true;
-    }
+    protected override void RegisterModelParams(dynamic pManager)
 
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
     {
+
+        pManager.AddParameter(new ConnectionParam(), "Connection", "Con", "Connection to modify", GH_ParamAccess.item);
+        pManager.AddParameter(new SideParam(), "Connected", "Cd", "The connected side", GH_ParamAccess.item);
+        pManager.AddParameter(new SideParam(), "Connecting", "Cg", "The connecting side", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The description of the connection", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Gap", "Gp?", "The gap of the connection", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Shift", "Sf?", "The shift of the connection", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rise", "Rs", "The rise of the connection", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rotation", "Rt?", "The rotation of the connection", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Turn", "Tu", "The turn of the connection", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Tilt", "Tl?", "The tilt of the connection", GH_ParamAccess.item);
+        pManager.AddNumberParameter("X", "X?", "The X coordinate of the connection", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Y", "Y?", "The Y coordinate of the connection", GH_ParamAccess.item);
+        pManager.AddParameter(new PropParam(), "Prp", "Pp*", "A property is a value with an optional unit for a quality.", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Atr", "At*", "A attribute is a key value pair with an an optional definition.", GH_ParamAccess.list);
+        for (int i = 1; i < pManager.ParamCount; i++) pManager[i].Optional = true;
+
+    }
         pManager.AddParameter(new ConnectionParam(), "Connection", "Con", "The connection", GH_ParamAccess.item);
-        pManager.AddParameter(new SideParam(), "Connected", "Co", "The connected side", GH_ParamAccess.item);
-        pManager.AddParameter(new SideParam(), "Connecting", "Cn", "The connecting side", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "D", "The description of the connection", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Gap", "G", "The gap of the connection", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Shift", "S", "The shift of the connection", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Rise", "R", "The rise of the connection", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Rotation", "Ro", "The rotation of the connection", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Turn", "T", "The turn of the connection", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Tilt", "Ti", "The tilt of the connection", GH_ParamAccess.item);
-        pManager.AddNumberParameter("X", "X", "The X coordinate of the connection", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Y", "Y", "The Y coordinate of the connection", GH_ParamAccess.item);
+        pManager.AddParameter(new SideParam(), "Connected", "Cd", "The connected side", GH_ParamAccess.item);
+        pManager.AddParameter(new SideParam(), "Connecting", "Cg", "The connecting side", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "The description of the connection", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Gap", "Gp?", "The gap of the connection", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Shift", "Sf?", "The shift of the connection", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rise", "Rs", "The rise of the connection", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Rotation", "Rt?", "The rotation of the connection", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Turn", "Tu", "The turn of the connection", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Tilt", "Tl?", "The tilt of the connection", GH_ParamAccess.item);
+        pManager.AddNumberParameter("X", "X?", "The X coordinate of the connection", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Y", "Y?", "The Y coordinate of the connection", GH_ParamAccess.item);
         pManager.AddParameter(new PropParam(), "Prp", "Pp", "A property is a value with an optional unit for a quality.", GH_ParamAccess.list);
         pManager.AddParameter(new AttributeParam(), "Atr", "At", "A attribute is a key value pair with an an optional definition.", GH_ParamAccess.list);
     }
@@ -3927,8 +3901,7 @@ public class DesignIdComponent : IdComponent<DesignIdParam, DesignIdGoo, DesignI
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "DI";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) { }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new DesignIdParam(), "Dsn", "Dn", "The local identifier of the design within the kit.", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) { }=> pManager.AddParameter(new DesignIdParam(), "Dsn", "Dn", "The local identifier of the design within the kit.", GH_ParamAccess.item);
 
 }
 
@@ -4001,8 +3974,7 @@ public class DesignDiffComponent : DiffComponent<DesignDiffParam, DesignDiffGoo,
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "DD";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) { }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new DesignDiffParam(), "DDf", "DD", "A diff for designs.", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) { }=> pManager.AddParameter(new DesignDiffParam(), "DDf", "DD", "A diff for designs.", GH_ParamAccess.item);
 
 }
 
@@ -4076,8 +4048,7 @@ public class DesignsDiffComponent : DiffComponent<DesignsDiffParam, DesignsDiffG
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "DsD";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) { }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new DesignsDiffParam(), "DsDf", "DsD", "A diff for multiple designs.", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) { }=> pManager.AddParameter(new DesignsDiffParam(), "DsDf", "DsD", "A diff for multiple designs.", GH_ParamAccess.item);
 
 }
 
@@ -4168,52 +4139,50 @@ public class DesignComponent : ModelComponent<DesignParam, DesignGoo, Design>
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "D";
     protected override string GetModelName() => "Design";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
     {
         pManager.AddParameter(new DesignParam(), "Design", "D", "Design", GH_ParamAccess.item);
-        pManager.AddTextParameter("Name", "Name", "Name", GH_ParamAccess.item);
-        pManager.AddTextParameter("Variant", "Variant", "Variant", GH_ParamAccess.item);
-        pManager.AddTextParameter("View", "View", "View", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Description", "Description", GH_ParamAccess.item);
-        pManager.AddTextParameter("Icon", "Icon", "Icon", GH_ParamAccess.item);
-        pManager.AddTextParameter("Image", "Image", "Image", GH_ParamAccess.item);
-        pManager.AddTextParameter("Concepts", "Concepts", "Concepts", GH_ParamAccess.list);
-        pManager.AddParameter(new AuthorIdParam(), "Authors", "Authors", "Authors", GH_ParamAccess.list);
-        pManager.AddParameter(new LocationParam(), "Location", "Location", "Location", GH_ParamAccess.item);
-        pManager.AddTextParameter("Unit", "Unit", "Unit", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Scalable", "Scalable", "Scalable", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Mirrorable", "Mirrorable", "Mirrorable", GH_ParamAccess.item);
-        pManager.AddParameter(new LayerParam(), "Layers", "Layers", "Layers", GH_ParamAccess.list);
-        pManager.AddParameter(new PieceParam(), "Pieces", "Pieces", "Pieces", GH_ParamAccess.list);
-        pManager.AddParameter(new GroupParam(), "Groups", "Groups", "Groups", GH_ParamAccess.list);
-        pManager.AddParameter(new ConnectionParam(), "Connections", "Connections", "Connections", GH_ParamAccess.list);
-        pManager.AddParameter(new PropParam(), "Props", "Props", "Props", GH_ParamAccess.list);
-        pManager.AddParameter(new StatParam(), "Stats", "Stats", "Stats", GH_ParamAccess.list);
-        pManager.AddParameter(new AttributeParam(), "Attributes", "Attributes", "Attributes", GH_ParamAccess.list);
+        pManager.AddTextParameter("Name", "N", "Name", GH_ParamAccess.item);
+        pManager.AddTextParameter("Variant", "V", "Variant", GH_ParamAccess.item);
+        pManager.AddTextParameter("View", "Vw", "View", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "De", "Description", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "I", "Icon", GH_ParamAccess.item);
+        pManager.AddTextParameter("Image", "Im", "Image", GH_ParamAccess.item);
+        pManager.AddTextParameter("Concepts", "C", "Concepts", GH_ParamAccess.list);
+        pManager.AddParameter(new AuthorIdParam(), "Authors", "A", "Authors", GH_ParamAccess.list);
+        pManager.AddParameter(new LocationParam(), "Location", "L", "Location", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "U", "Unit", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Scalable", "S", "Scalable", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Mirrorable", "M", "Mirrorable", GH_ParamAccess.item);
+        pManager.AddParameter(new LayerParam(), "Layers", "La", "Layers", GH_ParamAccess.list);
+        pManager.AddParameter(new PieceParam(), "Pieces", "P", "Pieces", GH_ParamAccess.list);
+        pManager.AddParameter(new GroupParam(), "Groups", "G", "Groups", GH_ParamAccess.list);
+        pManager.AddParameter(new ConnectionParam(), "Connections", "Co", "Connections", GH_ParamAccess.list);
+        pManager.AddParameter(new PropParam(), "Props", "Pr", "Props", GH_ParamAccess.list);
+        pManager.AddParameter(new StatParam(), "Stats", "St", "Stats", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At", "Attributes", GH_ParamAccess.list);
         for (int i = 1; i < pManager.ParamCount; i++) pManager[i].Optional = true;
     }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
         pManager.AddParameter(new DesignParam(), "Design", "D", "Design", GH_ParamAccess.item);
-        pManager.AddTextParameter("Name", "Name", "Name", GH_ParamAccess.item);
-        pManager.AddTextParameter("Variant", "Variant", "Variant", GH_ParamAccess.item);
-        pManager.AddTextParameter("View", "View", "View", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Description", "Description", GH_ParamAccess.item);
-        pManager.AddTextParameter("Icon", "Icon", "Icon", GH_ParamAccess.item);
-        pManager.AddTextParameter("Image", "Image", "Image", GH_ParamAccess.item);
-        pManager.AddTextParameter("Concepts", "Concepts", "Concepts", GH_ParamAccess.list);
-        pManager.AddParameter(new AuthorIdParam(), "Authors", "Authors", "Authors", GH_ParamAccess.list);
-        pManager.AddParameter(new LocationParam(), "Location", "Location", "Location", GH_ParamAccess.item);
-        pManager.AddTextParameter("Unit", "Unit", "Unit", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Scalable", "Scalable", "Scalable", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Mirrorable", "Mirrorable", "Mirrorable", GH_ParamAccess.item);
-        pManager.AddParameter(new LayerParam(), "Layers", "Layers", "Layers", GH_ParamAccess.list);
-        pManager.AddParameter(new PieceParam(), "Pieces", "Pieces", "Pieces", GH_ParamAccess.list);
-        pManager.AddParameter(new GroupParam(), "Groups", "Groups", "Groups", GH_ParamAccess.list);
-        pManager.AddParameter(new ConnectionParam(), "Connections", "Connections", "Connections", GH_ParamAccess.list);
-        pManager.AddParameter(new PropParam(), "Props", "Props", "Props", GH_ParamAccess.list);
-        pManager.AddParameter(new StatParam(), "Stats", "Stats", "Stats", GH_ParamAccess.list);
-        pManager.AddParameter(new AttributeParam(), "Attributes", "Attributes", "Attributes", GH_ParamAccess.list);
+        pManager.AddTextParameter("Name", "N", "Name", GH_ParamAccess.item);
+        pManager.AddTextParameter("Variant", "V", "Variant", GH_ParamAccess.item);
+        pManager.AddTextParameter("View", "Vw", "View", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "De", "Description", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "I", "Icon", GH_ParamAccess.item);
+        pManager.AddTextParameter("Image", "Im", "Image", GH_ParamAccess.item);
+        pManager.AddTextParameter("Concepts", "C", "Concepts", GH_ParamAccess.list);
+        pManager.AddParameter(new AuthorIdParam(), "Authors", "A", "Authors", GH_ParamAccess.list);
+        pManager.AddParameter(new LocationParam(), "Location", "L", "Location", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "U", "Unit", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Scalable", "S", "Scalable", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Mirrorable", "M", "Mirrorable", GH_ParamAccess.item);
+        pManager.AddParameter(new LayerParam(), "Layers", "La", "Layers", GH_ParamAccess.list);
+        pManager.AddParameter(new PieceParam(), "Pieces", "P", "Pieces", GH_ParamAccess.list);
+        pManager.AddParameter(new GroupParam(), "Groups", "G", "Groups", GH_ParamAccess.list);
+        pManager.AddParameter(new ConnectionParam(), "Connections", "Co", "Connections", GH_ParamAccess.list);
+        pManager.AddParameter(new PropParam(), "Props", "Pr", "Props", GH_ParamAccess.list);
+        pManager.AddParameter(new StatParam(), "Stats", "St", "Stats", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At", "Attributes", GH_ParamAccess.list);
     }
     protected override void ProcessModelInputs(IGH_DataAccess DA, Design model)
     {
@@ -4345,8 +4314,7 @@ public class KitIdComponent : IdComponent<KitIdParam, KitIdGoo, KitId>
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "KI";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) { }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new KitIdParam(), "KitId", "KId", "Kit identifier", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) { }=> pManager.AddParameter(new KitIdParam(), "KitId", "KId", "Kit identifier", GH_ParamAccess.item);
 
 }
 
@@ -4410,8 +4378,7 @@ public class KitDiffComponent : DiffComponent<KitDiffParam, KitDiffGoo, KitDiff>
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "KD";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager) { }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager) => pManager.AddParameter(new KitDiffParam(), "KitDiff", "KDiff", "Kit difference", GH_ParamAccess.item);
+    protected override void RegisterModelParams(dynamic pManager) { }=> pManager.AddParameter(new KitDiffParam(), "KitDiff", "KDiff", "Kit difference", GH_ParamAccess.item);
 
 }
 
@@ -4492,54 +4459,52 @@ public class KitComponent : ModelComponent<KitParam, KitGoo, Kit>
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "K";
     protected override string GetModelName() => "Kit";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
     {
         pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("Name", "Name", "Name", GH_ParamAccess.item);
-        pManager.AddTextParameter("Version", "Version", "Version", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Description", "Description", GH_ParamAccess.item);
-        pManager.AddTextParameter("Icon", "Icon", "Icon", GH_ParamAccess.item);
-        pManager.AddTextParameter("Image", "Image", "Image", GH_ParamAccess.item);
-        pManager.AddTextParameter("Concepts", "Concepts", "Concepts", GH_ParamAccess.list);
-        pManager.AddTextParameter("Remote", "Remote", "Remote", GH_ParamAccess.item);
-        pManager.AddTextParameter("Homepage", "Homepage", "Homepage", GH_ParamAccess.item);
-        pManager.AddTextParameter("License", "License", "License", GH_ParamAccess.item);
-        pManager.AddParameter(new AuthorParam(), "Authors", "Authors", "Authors", GH_ParamAccess.list);
-        pManager.AddParameter(new PieceParam(), "Pieces", "Pieces", "Pieces", GH_ParamAccess.list);
-        pManager.AddParameter(new GroupParam(), "Groups", "Groups", "Groups", GH_ParamAccess.list);
-        pManager.AddParameter(new ConnectionParam(), "Connections", "Connections", "Connections", GH_ParamAccess.list);
-        pManager.AddParameter(new PropParam(), "Props", "Props", "Props", GH_ParamAccess.list);
-        pManager.AddParameter(new StatParam(), "Stats", "Stats", "Stats", GH_ParamAccess.list);
-        pManager.AddParameter(new AttributeParam(), "Attributes", "Attributes", "Attributes", GH_ParamAccess.list);
-        pManager.AddTextParameter("Preview", "Preview", "Preview", GH_ParamAccess.item);
-        pManager.AddParameter(new QualityParam(), "Qualities", "Qualities", "Qualities", GH_ParamAccess.list);
-        pManager.AddParameter(new TypeParam(), "Types", "Types", "Types", GH_ParamAccess.list);
-        pManager.AddParameter(new DesignParam(), "Designs", "Designs", "Designs", GH_ParamAccess.list);
+        pManager.AddTextParameter("Name", "N", "Name", GH_ParamAccess.item);
+        pManager.AddTextParameter("Version", "V", "Version", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "D", "Description", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "I", "Icon", GH_ParamAccess.item);
+        pManager.AddTextParameter("Image", "Im", "Image", GH_ParamAccess.item);
+        pManager.AddTextParameter("Concepts", "C", "Concepts", GH_ParamAccess.list);
+        pManager.AddTextParameter("Remote", "R", "Remote", GH_ParamAccess.item);
+        pManager.AddTextParameter("Homepage", "H", "Homepage", GH_ParamAccess.item);
+        pManager.AddTextParameter("License", "L", "License", GH_ParamAccess.item);
+        pManager.AddParameter(new AuthorParam(), "Authors", "A", "Authors", GH_ParamAccess.list);
+        pManager.AddParameter(new PieceParam(), "Pieces", "P", "Pieces", GH_ParamAccess.list);
+        pManager.AddParameter(new GroupParam(), "Groups", "G", "Groups", GH_ParamAccess.list);
+        pManager.AddParameter(new ConnectionParam(), "Connections", "Co", "Connections", GH_ParamAccess.list);
+        pManager.AddParameter(new PropParam(), "Props", "Pr", "Props", GH_ParamAccess.list);
+        pManager.AddParameter(new StatParam(), "Stats", "S", "Stats", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At", "Attributes", GH_ParamAccess.list);
+        pManager.AddTextParameter("Preview", "Pv", "Preview", GH_ParamAccess.item);
+        pManager.AddParameter(new QualityParam(), "Qualities", "Q", "Qualities", GH_ParamAccess.list);
+        pManager.AddParameter(new TypeParam(), "Types", "T", "Types", GH_ParamAccess.list);
+        pManager.AddParameter(new DesignParam(), "Designs", "De", "Designs", GH_ParamAccess.list);
         for (int i = 1; i < pManager.ParamCount; i++) pManager[i].Optional = true;
     }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
         pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("Name", "Name", "Name", GH_ParamAccess.item);
-        pManager.AddTextParameter("Version", "Version", "Version", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Description", "Description", GH_ParamAccess.item);
-        pManager.AddTextParameter("Icon", "Icon", "Icon", GH_ParamAccess.item);
-        pManager.AddTextParameter("Image", "Image", "Image", GH_ParamAccess.item);
-        pManager.AddTextParameter("Concepts", "Concepts", "Concepts", GH_ParamAccess.list);
-        pManager.AddTextParameter("Remote", "Remote", "Remote", GH_ParamAccess.item);
-        pManager.AddTextParameter("Homepage", "Homepage", "Homepage", GH_ParamAccess.item);
-        pManager.AddTextParameter("License", "License", "License", GH_ParamAccess.item);
-        pManager.AddParameter(new AuthorParam(), "Authors", "Authors", "Authors", GH_ParamAccess.list);
-        pManager.AddParameter(new PieceParam(), "Pieces", "Pieces", "Pieces", GH_ParamAccess.list);
-        pManager.AddParameter(new GroupParam(), "Groups", "Groups", "Groups", GH_ParamAccess.list);
-        pManager.AddParameter(new ConnectionParam(), "Connections", "Connections", "Connections", GH_ParamAccess.list);
-        pManager.AddParameter(new PropParam(), "Props", "Props", "Props", GH_ParamAccess.list);
-        pManager.AddParameter(new StatParam(), "Stats", "Stats", "Stats", GH_ParamAccess.list);
-        pManager.AddParameter(new AttributeParam(), "Attributes", "Attributes", "Attributes", GH_ParamAccess.list);
-        pManager.AddTextParameter("Preview", "Preview", "Preview", GH_ParamAccess.item);
-        pManager.AddParameter(new QualityParam(), "Qualities", "Qualities", "Qualities", GH_ParamAccess.list);
-        pManager.AddParameter(new TypeParam(), "Types", "Types", "Types", GH_ParamAccess.list);
-        pManager.AddParameter(new DesignParam(), "Designs", "Designs", "Designs", GH_ParamAccess.list);
+        pManager.AddTextParameter("Name", "N", "Name", GH_ParamAccess.item);
+        pManager.AddTextParameter("Version", "V", "Version", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "D", "Description", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "I", "Icon", GH_ParamAccess.item);
+        pManager.AddTextParameter("Image", "Im", "Image", GH_ParamAccess.item);
+        pManager.AddTextParameter("Concepts", "C", "Concepts", GH_ParamAccess.list);
+        pManager.AddTextParameter("Remote", "R", "Remote", GH_ParamAccess.item);
+        pManager.AddTextParameter("Homepage", "H", "Homepage", GH_ParamAccess.item);
+        pManager.AddTextParameter("License", "L", "License", GH_ParamAccess.item);
+        pManager.AddParameter(new AuthorParam(), "Authors", "A", "Authors", GH_ParamAccess.list);
+        pManager.AddParameter(new PieceParam(), "Pieces", "P", "Pieces", GH_ParamAccess.list);
+        pManager.AddParameter(new GroupParam(), "Groups", "G", "Groups", GH_ParamAccess.list);
+        pManager.AddParameter(new ConnectionParam(), "Connections", "Co", "Connections", GH_ParamAccess.list);
+        pManager.AddParameter(new PropParam(), "Props", "Pr", "Props", GH_ParamAccess.list);
+        pManager.AddParameter(new StatParam(), "Stats", "S", "Stats", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At", "Attributes", GH_ParamAccess.list);
+        pManager.AddTextParameter("Preview", "Pv", "Preview", GH_ParamAccess.item);
+        pManager.AddParameter(new QualityParam(), "Qualities", "Q", "Qualities", GH_ParamAccess.list);
+        pManager.AddParameter(new TypeParam(), "Types", "T", "Types", GH_ParamAccess.list);
+        pManager.AddParameter(new DesignParam(), "Designs", "De", "Designs", GH_ParamAccess.list);
     }
     protected override void ProcessModelInputs(IGH_DataAccess DA, Kit model)
     {
@@ -4967,46 +4932,44 @@ public class QualityComponent : ModelComponent<QualityParam, QualityGoo, Quality
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "Q";
     protected override string GetModelName() => "Quality";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
     {
         pManager.AddParameter(new QualityParam(), "Quality", "Q", "Quality", GH_ParamAccess.item);
-        pManager.AddTextParameter("Key", "Key", "Key", GH_ParamAccess.item);
-        pManager.AddTextParameter("Name", "Name", "Name", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Description", "Description", GH_ParamAccess.item);
-        pManager.AddTextParameter("Uri", "Uri", "Uri", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Scalable", "Scalable", "Scalable", GH_ParamAccess.item);
-        pManager.AddIntegerParameter("Kind", "Kind", "Kind", GH_ParamAccess.item);
-        pManager.AddTextParameter("SI", "SI", "SI", GH_ParamAccess.item);
-        pManager.AddTextParameter("Imperial", "Imperial", "Imperial", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Min", "Min", "Min", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("MinExcluded", "MinExcluded", "MinExcluded", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Max", "Max", "Max", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("MaxExcluded", "MaxExcluded", "MaxExcluded", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Default", "Default", "Default", GH_ParamAccess.item);
-        pManager.AddTextParameter("Formula", "Formula", "Formula", GH_ParamAccess.item);
-        pManager.AddParameter(new BenchmarkParam(), "Benchmarks", "Benchmarks", "Benchmarks", GH_ParamAccess.list);
-        pManager.AddParameter(new AttributeParam(), "Attributes", "Attributes", "Attributes", GH_ParamAccess.list);
+        pManager.AddTextParameter("Key", "K", "Key", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "N", "Name", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "D", "Description", GH_ParamAccess.item);
+        pManager.AddTextParameter("Uri", "U", "Uri", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Scalable", "S", "Scalable", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Kind", "Ki", "Kind", GH_ParamAccess.item);
+        pManager.AddTextParameter("SI", "SI?", "SI", GH_ParamAccess.item);
+        pManager.AddTextParameter("Imperial", "Im", "Imperial", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Min", "Mi", "Min", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MinExcluded", "Mx", "MinExcluded", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Max", "Ma", "Max", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MaxExcluded", "My", "MaxExcluded", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Default", "De", "Default", GH_ParamAccess.item);
+        pManager.AddTextParameter("Formula", "F", "Formula", GH_ParamAccess.item);
+        pManager.AddParameter(new BenchmarkParam(), "Benchmarks", "B", "Benchmarks", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "A", "Attributes", GH_ParamAccess.list);
         for (int i = 1; i < pManager.ParamCount; i++) pManager[i].Optional = true;
     }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
         pManager.AddParameter(new QualityParam(), "Quality", "Q", "Quality", GH_ParamAccess.item);
-        pManager.AddTextParameter("Key", "Key", "Key", GH_ParamAccess.item);
-        pManager.AddTextParameter("Name", "Name", "Name", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Description", "Description", GH_ParamAccess.item);
-        pManager.AddTextParameter("Uri", "Uri", "Uri", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("Scalable", "Scalable", "Scalable", GH_ParamAccess.item);
-        pManager.AddIntegerParameter("Kind", "Kind", "Kind", GH_ParamAccess.item);
-        pManager.AddTextParameter("SI", "SI", "SI", GH_ParamAccess.item);
-        pManager.AddTextParameter("Imperial", "Imperial", "Imperial", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Min", "Min", "Min", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("MinExcluded", "MinExcluded", "MinExcluded", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Max", "Max", "Max", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("MaxExcluded", "MaxExcluded", "MaxExcluded", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Default", "Default", "Default", GH_ParamAccess.item);
-        pManager.AddTextParameter("Formula", "Formula", "Formula", GH_ParamAccess.item);
-        pManager.AddParameter(new BenchmarkParam(), "Benchmarks", "Benchmarks", "Benchmarks", GH_ParamAccess.list);
-        pManager.AddParameter(new AttributeParam(), "Attributes", "Attributes", "Attributes", GH_ParamAccess.list);
+        pManager.AddTextParameter("Key", "K", "Key", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "N", "Name", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "D", "Description", GH_ParamAccess.item);
+        pManager.AddTextParameter("Uri", "U", "Uri", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("Scalable", "S", "Scalable", GH_ParamAccess.item);
+        pManager.AddIntegerParameter("Kind", "Ki", "Kind", GH_ParamAccess.item);
+        pManager.AddTextParameter("SI", "SI?", "SI", GH_ParamAccess.item);
+        pManager.AddTextParameter("Imperial", "Im", "Imperial", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Min", "Mi", "Min", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MinExcluded", "Mx", "MinExcluded", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Max", "Ma", "Max", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MaxExcluded", "My", "MaxExcluded", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Default", "De", "Default", GH_ParamAccess.item);
+        pManager.AddTextParameter("Formula", "F", "Formula", GH_ParamAccess.item);
+        pManager.AddParameter(new BenchmarkParam(), "Benchmarks", "B", "Benchmarks", GH_ParamAccess.list);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "A", "Attributes", GH_ParamAccess.list);
     }
     protected override void ProcessModelInputs(IGH_DataAccess DA, Quality model)
     {
@@ -5120,28 +5083,26 @@ public class BenchmarkComponent : ModelComponent<BenchmarkParam, BenchmarkGoo, B
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "B";
     protected override string GetModelName() => "Benchmark";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
     {
         pManager.AddParameter(new BenchmarkParam(), "Benchmark", "B", "Benchmark", GH_ParamAccess.item);
-        pManager.AddTextParameter("Name", "Name", "Name", GH_ParamAccess.item);
-        pManager.AddTextParameter("Icon", "Icon", "Icon", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Min", "Min", "Min", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("MinExcluded", "MinExcluded", "MinExcluded", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Max", "Max", "Max", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("MaxExcluded", "MaxExcluded", "MaxExcluded", GH_ParamAccess.item);
-        pManager.AddParameter(new AttributeParam(), "Attributes", "Attributes", "Attributes", GH_ParamAccess.list);
+        pManager.AddTextParameter("Name", "Nm", "Name", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic", "Icon", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Min", "Mi?", "Min", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MinExcluded", "MiE?", "MinExcluded", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Max", "Mx?", "Max", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MaxExcluded", "MxE?", "MaxExcluded", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "Attributes", GH_ParamAccess.list);
         for (int i = 1; i < pManager.ParamCount; i++) pManager[i].Optional = true;
     }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
         pManager.AddParameter(new BenchmarkParam(), "Benchmark", "B", "Benchmark", GH_ParamAccess.item);
-        pManager.AddTextParameter("Name", "Name", "Name", GH_ParamAccess.item);
-        pManager.AddTextParameter("Icon", "Icon", "Icon", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Min", "Min", "Min", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("MinExcluded", "MinExcluded", "MinExcluded", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Max", "Max", "Max", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("MaxExcluded", "MaxExcluded", "MaxExcluded", GH_ParamAccess.item);
-        pManager.AddParameter(new AttributeParam(), "Attributes", "Attributes", "Attributes", GH_ParamAccess.list);
+        pManager.AddTextParameter("Name", "Nm", "Name", GH_ParamAccess.item);
+        pManager.AddTextParameter("Icon", "Ic", "Icon", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Min", "Mi?", "Min", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MinExcluded", "MiE?", "MinExcluded", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Max", "Mx?", "Max", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MaxExcluded", "MxE?", "MaxExcluded", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "Attributes", GH_ParamAccess.list);
     }
     protected override void ProcessModelInputs(IGH_DataAccess DA, Benchmark model)
     {
@@ -5241,22 +5202,20 @@ public class PropComponent : ModelComponent<PropParam, PropGoo, Prop>
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "P";
     protected override string GetModelName() => "Prop";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
     {
         pManager.AddParameter(new PropParam(), "Prop", "P", "Property", GH_ParamAccess.item);
-        pManager.AddTextParameter("Key", "Key", "Key", GH_ParamAccess.item);
-        pManager.AddTextParameter("Value", "Value", "Value", GH_ParamAccess.item);
-        pManager.AddTextParameter("Unit", "Unit", "Unit", GH_ParamAccess.item);
-        pManager.AddParameter(new AttributeParam(), "Attributes", "Attributes", "Attributes", GH_ParamAccess.list);
+        pManager.AddTextParameter("Key", "K", "Key", GH_ParamAccess.item);
+        pManager.AddTextParameter("Value", "V", "Value", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "U", "Unit", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "A", "Attributes", GH_ParamAccess.list);
         for (int i = 1; i < pManager.ParamCount; i++) pManager[i].Optional = true;
     }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
         pManager.AddParameter(new PropParam(), "Prop", "P", "Property", GH_ParamAccess.item);
-        pManager.AddTextParameter("Key", "Key", "Key", GH_ParamAccess.item);
-        pManager.AddTextParameter("Value", "Value", "Value", GH_ParamAccess.item);
-        pManager.AddTextParameter("Unit", "Unit", "Unit", GH_ParamAccess.item);
-        pManager.AddParameter(new AttributeParam(), "Attributes", "Attributes", "Attributes", GH_ParamAccess.list);
+        pManager.AddTextParameter("Key", "K", "Key", GH_ParamAccess.item);
+        pManager.AddTextParameter("Value", "V", "Value", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "U", "Unit", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "A", "Attributes", GH_ParamAccess.list);
     }
     protected override void ProcessModelInputs(IGH_DataAccess DA, Prop model)
     {
@@ -5347,26 +5306,24 @@ public class StatComponent : ModelComponent<StatParam, StatGoo, Stat>
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "S";
     protected override string GetModelName() => "Stat";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
     {
         pManager.AddParameter(new StatParam(), "Stat", "S", "Statistic", GH_ParamAccess.item);
-        pManager.AddTextParameter("Key", "Key", "Key", GH_ParamAccess.item);
-        pManager.AddTextParameter("Unit", "Unit", "Unit", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Min", "Min", "Min", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("MinExcluded", "MinExcluded", "MinExcluded", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Max", "Max", "Max", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("MaxExcluded", "MaxExcluded", "MaxExcluded", GH_ParamAccess.item);
+        pManager.AddTextParameter("Key", "K", "Key", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "U", "Unit", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Min", "Mi", "Min", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MinExcluded", "Mx", "MinExcluded", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Max", "Ma", "Max", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MaxExcluded", "My", "MaxExcluded", GH_ParamAccess.item);
         for (int i = 1; i < pManager.ParamCount; i++) pManager[i].Optional = true;
     }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
         pManager.AddParameter(new StatParam(), "Stat", "S", "Statistic", GH_ParamAccess.item);
-        pManager.AddTextParameter("Key", "Key", "Key", GH_ParamAccess.item);
-        pManager.AddTextParameter("Unit", "Unit", "Unit", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Min", "Min", "Min", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("MinExcluded", "MinExcluded", "MinExcluded", GH_ParamAccess.item);
-        pManager.AddNumberParameter("Max", "Max", "Max", GH_ParamAccess.item);
-        pManager.AddBooleanParameter("MaxExcluded", "MaxExcluded", "MaxExcluded", GH_ParamAccess.item);
+        pManager.AddTextParameter("Key", "K", "Key", GH_ParamAccess.item);
+        pManager.AddTextParameter("Unit", "U", "Unit", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Min", "Mi", "Min", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MinExcluded", "Mx", "MinExcluded", GH_ParamAccess.item);
+        pManager.AddNumberParameter("Max", "Ma", "Max", GH_ParamAccess.item);
+        pManager.AddBooleanParameter("MaxExcluded", "My", "MaxExcluded", GH_ParamAccess.item);
     }
     protected override void ProcessModelInputs(IGH_DataAccess DA, Stat model)
     {
@@ -5461,20 +5418,18 @@ public class LayerComponent : ModelComponent<LayerParam, LayerGoo, Layer>
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "L";
     protected override string GetModelName() => "Layer";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
     {
         pManager.AddParameter(new LayerParam(), "Layer", "L", "Layer", GH_ParamAccess.item);
-        pManager.AddTextParameter("Name", "Name", "Name", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Description", "Description", GH_ParamAccess.item);
-        pManager.AddTextParameter("Color", "Color", "Color", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Nm", "Name", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "Description", GH_ParamAccess.item);
+        pManager.AddTextParameter("Color", "Cl?", "Color", GH_ParamAccess.item);
         for (int i = 1; i < pManager.ParamCount; i++) pManager[i].Optional = true;
     }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
         pManager.AddParameter(new LayerParam(), "Layer", "L", "Layer", GH_ParamAccess.item);
-        pManager.AddTextParameter("Name", "Name", "Name", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Description", "Description", GH_ParamAccess.item);
-        pManager.AddTextParameter("Color", "Color", "Color", GH_ParamAccess.item);
+        pManager.AddTextParameter("Name", "Nm", "Name", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "Description", GH_ParamAccess.item);
+        pManager.AddTextParameter("Color", "Cl?", "Color", GH_ParamAccess.item);
     }
     protected override void ProcessModelInputs(IGH_DataAccess DA, Layer model)
     {
@@ -5563,24 +5518,22 @@ public class GroupComponent : ModelComponent<GroupParam, GroupGoo, Group>
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
     protected override string GetModelCode() => "G";
     protected override string GetModelName() => "Group";
-    protected override void RegisterModelInputs(GH_InputParamManager pManager)
+    protected override void RegisterModelParams(dynamic pManager)
     {
         pManager.AddParameter(new GroupParam(), "Group", "G", "Group", GH_ParamAccess.item);
-        pManager.AddTextParameter("Name", "Name", "Name", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Description", "Description", GH_ParamAccess.item);
-        pManager.AddParameter(new PieceIdParam(), "Pieces", "Pieces", "Pieces", GH_ParamAccess.list);
-        pManager.AddTextParameter("Color", "Color", "Color", GH_ParamAccess.item);
-        pManager.AddParameter(new AttributeParam(), "Attributes", "Attributes", "Attributes", GH_ParamAccess.list);
+        pManager.AddTextParameter("Name", "Nm", "Name", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "Description", GH_ParamAccess.item);
+        pManager.AddParameter(new PieceIdParam(), "Pieces", "Pc*", "Pieces", GH_ParamAccess.list);
+        pManager.AddTextParameter("Color", "Cl?", "Color", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "Attributes", GH_ParamAccess.list);
         for (int i = 1; i < pManager.ParamCount; i++) pManager[i].Optional = true;
     }
-    protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
-    {
         pManager.AddParameter(new GroupParam(), "Group", "G", "Group", GH_ParamAccess.item);
-        pManager.AddTextParameter("Name", "Name", "Name", GH_ParamAccess.item);
-        pManager.AddTextParameter("Description", "Description", "Description", GH_ParamAccess.item);
-        pManager.AddParameter(new PieceIdParam(), "Pieces", "Pieces", "Pieces", GH_ParamAccess.list);
-        pManager.AddTextParameter("Color", "Color", "Color", GH_ParamAccess.item);
-        pManager.AddParameter(new AttributeParam(), "Attributes", "Attributes", "Attributes", GH_ParamAccess.list);
+        pManager.AddTextParameter("Name", "Nm", "Name", GH_ParamAccess.item);
+        pManager.AddTextParameter("Description", "Dc?", "Description", GH_ParamAccess.item);
+        pManager.AddParameter(new PieceIdParam(), "Pieces", "Pc*", "Pieces", GH_ParamAccess.list);
+        pManager.AddTextParameter("Color", "Cl?", "Color", GH_ParamAccess.item);
+        pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "Attributes", GH_ParamAccess.list);
     }
     protected override void ProcessModelInputs(IGH_DataAccess DA, Group model)
     {

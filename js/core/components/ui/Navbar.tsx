@@ -23,6 +23,7 @@ import { AppWindow, Fingerprint, Home, Layout, Minus, Moon, Share2, Square, Sun,
 import { FC, ReactNode } from "react";
 import { DesignId } from "../../semio";
 import { Theme, useDesignId, useDesigns, useLayout, useSketchpadCommands, useTheme } from "../../store";
+import { useNavbar } from "./sketchpad/Sketchpad";
 import { Avatar, AvatarFallback, AvatarImage } from "./Avatar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "./Breadcrumb";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./Select";
@@ -41,6 +42,7 @@ interface NavbarProps {
 
 const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
   const { setTheme, setLayout } = useSketchpadCommands();
+  const { navbarToolbar } = useNavbar();
   const layout = useLayout();
   const theme = useTheme();
   const designId = useDesignId();
@@ -150,7 +152,7 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
         </Breadcrumb>
       </div>
       <div className="flex items-center gap-4">
-        {toolbarContent}
+        {navbarToolbar || toolbarContent}
         <ToggleCycle
           value={theme}
           onValueChange={setTheme}
