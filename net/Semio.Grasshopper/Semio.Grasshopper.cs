@@ -214,7 +214,6 @@ public static class Utility
         var moveToParent = Transform.Translation(parentPointR);
         var transform = orientationT * centerChild;
 
-
         var gapTransform = Transform.Translation(gapDirection * gap);
         var shiftTransform = Transform.Translation(shiftDirection * shift);
         var raiseTransform = Transform.Translation(raiseDirection * raise);
@@ -272,12 +271,8 @@ public abstract class ModelGoo<TModel> : GH_Goo<TModel> where TModel : Model<TMo
     public ModelGoo() { Value = new TModel(); }
     public ModelGoo(TModel value) { Value = value; }
     public override bool IsValid => Value is not null;
-    public override string TypeName => GetModelTypeName();
-    public override string TypeDescription => GetModelDescription();
-
-    protected abstract string GetModelTypeName();
-    protected abstract string GetModelDescription();
-    protected abstract string GetSerializationKey();
+    public override string TypeName => typeof(TModel).Name;
+    public override string TypeDescription => typeof(TModel).Name;
 
     public override IGH_Goo Duplicate()
     {
@@ -293,12 +288,12 @@ public abstract class ModelGoo<TModel> : GH_Goo<TModel> where TModel : Model<TMo
     public override bool Write(GH_IWriter writer)
     {
         if (Value is not null)
-            writer.SetString(GetSerializationKey(), Value.Serialize());
+            writer.SetString("model", Value.Serialize());
         return base.Write(writer);
     }
     public override bool Read(GH_IReader reader)
     {
-        var serialized = reader.GetString(GetSerializationKey());
+        var serialized = reader.GetString("model");
         if (!string.IsNullOrEmpty(serialized))
         {
             var deserialized = serialized.Deserialize<TModel>();
@@ -362,8 +357,8 @@ public abstract class EnumGoo<TEnum> : GH_Goo<TEnum> where TEnum : struct, Enum
         return false;
     }
     public override string ToString() => Value.ToString();
-    public abstract override string TypeName { get; }
-    public abstract override string TypeDescription { get; }
+    public override string TypeName => typeof(TEnum).Name;
+    public override string TypeDescription => typeof(TEnum).Name;
 }
 
 public abstract class EnumParam<TEnumGoo, TEnum> : GH_Param<TEnumGoo>
@@ -695,9 +690,6 @@ public class AttributeIdGoo : IdGoo<AttributeId>
     public AttributeIdGoo() { }
     public AttributeIdGoo(AttributeId value) : base(value) { }
 
-    protected override string GetModelTypeName() => "AttributeId";
-    protected override string GetModelDescription() => "The ID of the attribute.";
-    protected override string GetSerializationKey() => "AttributeId";
     protected override ModelGoo<AttributeId> CreateDuplicate() => new AttributeIdGoo();
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -768,9 +760,6 @@ public class AttributeDiffGoo : DiffGoo<AttributeDiff>
     public AttributeDiffGoo() { }
     public AttributeDiffGoo(AttributeDiff value) : base(value) { }
 
-    protected override string GetModelTypeName() => "AttributeDiff";
-    protected override string GetModelDescription() => "Difference between two Attributes";
-    protected override string GetSerializationKey() => "attribute_diff";
     protected override ModelGoo<AttributeDiff> CreateDuplicate() => new AttributeDiffGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -865,9 +854,9 @@ public class AttributeGoo : ModelGoo<Attribute>
     public AttributeGoo() { }
     public AttributeGoo(Attribute value) : base(value) { }
 
-    protected override string GetModelTypeName() => "Attribute";
-    protected override string GetModelDescription() => "A Semio Attribute";
-    protected override string GetSerializationKey() => "attribute";
+    
+    
+    
     protected override ModelGoo<Attribute> CreateDuplicate() => new AttributeGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -920,7 +909,7 @@ public class AttributeParam : ModelParam<AttributeGoo, Attribute>
 
 public class AttributeComponent : ModelComponent<AttributeParam, AttributeGoo, Attribute>
 {
-    public AttributeComponent() : base("A attribute is a key value pair with an an optional definition.", "Atr", "Construct, deconstruct or modify an attribute") { }
+    public AttributeComponent() : base("Attribute", "Atr", "Construct, deconstruct or modify an attribute") { }
     public override Guid ComponentGuid => new("51146B05-ACEB-4810-AD75-10AC3E029D39");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -986,9 +975,9 @@ public class RepresentationIdGoo : IdGoo<RepresentationId>
     public RepresentationIdGoo() { }
     public RepresentationIdGoo(RepresentationId value) : base(value) { }
 
-    protected override string GetModelTypeName() => "RepresentationId";
-    protected override string GetModelDescription() => "Identifier for a Representation";
-    protected override string GetSerializationKey() => "representation_id";
+    
+    
+    
     protected override ModelGoo<RepresentationId> CreateDuplicate() => new RepresentationIdGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -1059,9 +1048,9 @@ public class RepresentationDiffGoo : DiffGoo<RepresentationDiff>
     public RepresentationDiffGoo() { }
     public RepresentationDiffGoo(RepresentationDiff value) : base(value) { }
 
-    protected override string GetModelTypeName() => "RepresentationDiff";
-    protected override string GetModelDescription() => "Difference between two Representations";
-    protected override string GetSerializationKey() => "representation_diff";
+    
+    
+    
     protected override ModelGoo<RepresentationDiff> CreateDuplicate() => new RepresentationDiffGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -1136,9 +1125,9 @@ public class RepresentationsDiffGoo : DiffGoo<RepresentationsDiff>
     public RepresentationsDiffGoo() { }
     public RepresentationsDiffGoo(RepresentationsDiff value) : base(value) { }
 
-    protected override string GetModelTypeName() => "RepresentationsDiff";
-    protected override string GetModelDescription() => "Difference between two Representations collections";
-    protected override string GetSerializationKey() => "representations_diff";
+    
+    
+    
     protected override ModelGoo<RepresentationsDiff> CreateDuplicate() => new RepresentationsDiffGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -1213,9 +1202,9 @@ public class RepresentationGoo : ModelGoo<Representation>
     public RepresentationGoo() { }
     public RepresentationGoo(Representation value) : base(value) { }
 
-    protected override string GetModelTypeName() => "Representation";
-    protected override string GetModelDescription() => "A Semio Representation";
-    protected override string GetSerializationKey() => "representation";
+    
+    
+    
     protected override ModelGoo<Representation> CreateDuplicate() => new RepresentationGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -1248,7 +1237,7 @@ public class RepresentationParam : ModelParam<RepresentationGoo, Representation>
 
 public class RepresentationComponent : ModelComponent<RepresentationParam, RepresentationGoo, Representation>
 {
-    public RepresentationComponent() : base("A representation is a link to a resource that describes a type for a certain level of detail and tags.", "Rep", "Construct, deconstruct or modify a representation") { }
+    public RepresentationComponent() : base("Representation", "Rep", "Construct, deconstruct or modify a representation") { }
     public override Guid ComponentGuid => new("37228B2F-70DF-44B7-A3B6-781D5AFCE122");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -1323,9 +1312,9 @@ public class FileIdGoo : IdGoo<FileId>
     public FileIdGoo() { }
     public FileIdGoo(FileId value) : base(value) { }
 
-    protected override string GetModelTypeName() => "FileId";
-    protected override string GetModelDescription() => "Identifier for a File";
-    protected override string GetSerializationKey() => "file_id";
+    
+    
+    
     protected override ModelGoo<FileId> CreateDuplicate() => new FileIdGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -1375,9 +1364,9 @@ public class FileDiffGoo : DiffGoo<FileDiff>
     public FileDiffGoo() { }
     public FileDiffGoo(FileDiff value) : base(value) { }
 
-    protected override string GetModelTypeName() => "FileDiff";
-    protected override string GetModelDescription() => "File difference";
-    protected override string GetSerializationKey() => "file_diff";
+    
+    
+    
     protected override ModelGoo<FileDiff> CreateDuplicate() => new FileDiffGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -1453,9 +1442,9 @@ public class FilesDiffGoo : DiffGoo<FilesDiff>
     public FilesDiffGoo() { }
     public FilesDiffGoo(FilesDiff value) : base(value) { }
 
-    protected override string GetModelTypeName() => "FilesDiff";
-    protected override string GetModelDescription() => "Files difference";
-    protected override string GetSerializationKey() => "files_diff";
+    
+    
+    
     protected override ModelGoo<FilesDiff> CreateDuplicate() => new FilesDiffGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -1531,9 +1520,9 @@ public class FileGoo : ModelGoo<File>
     public FileGoo() { }
     public FileGoo(File value) : base(value) { }
 
-    protected override string GetModelTypeName() => "File";
-    protected override string GetModelDescription() => "A file";
-    protected override string GetSerializationKey() => "file";
+    
+    
+    
     protected override ModelGoo<File> CreateDuplicate() => new FileGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -1568,7 +1557,7 @@ public class FileParam : ModelParam<FileGoo, File>
 
 public class FileComponent : ModelComponent<FileParam, FileGoo, File>
 {
-    public FileComponent() : base("A file with content.", "Fil", "Construct, deconstruct or modify a file") { }
+    public FileComponent() : base("File", "Fil", "Construct, deconstruct or modify a file") { }
     public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F9");
 
     protected override Guid GetComponentGuid() => ComponentGuid;
@@ -1643,9 +1632,9 @@ public class DiagramPointGoo : ModelGoo<DiagramPoint>
     public DiagramPointGoo() { }
     public DiagramPointGoo(DiagramPoint value) : base(value) { }
 
-    protected override string GetModelTypeName() => "DiagramPoint";
-    protected override string GetModelDescription() => "A point in the diagram";
-    protected override string GetSerializationKey() => "diagram_point";
+    
+    
+    
     protected override ModelGoo<DiagramPoint> CreateDuplicate() => new DiagramPointGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -1681,7 +1670,7 @@ public class DiagramPointParam : ModelParam<DiagramPointGoo, DiagramPoint>
 
 public class DiagramPointComponent : ModelComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
 {
-    public DiagramPointComponent() : base("A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.", "DPt", "Construct, deconstruct or modify a diagram point") { }
+    public DiagramPointComponent() : base("DiagramPoint", "DPt", "Construct, deconstruct or modify a diagram point") { }
     public override Guid ComponentGuid => new("61FB9BBE-64DE-42B2-B7EF-69CD97FDD9E3");
 
     protected override Guid GetComponentGuid() => ComponentGuid;
@@ -1746,9 +1735,9 @@ public class PortIdGoo : IdGoo<PortId>
     public PortIdGoo() { }
     public PortIdGoo(PortId value) : base(value) { }
 
-    protected override string GetModelTypeName() => "PortId";
-    protected override string GetModelDescription() => "Identifier for a Port";
-    protected override string GetSerializationKey() => "port_id";
+    
+    
+    
     protected override ModelGoo<PortId> CreateDuplicate() => new PortIdGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -1818,9 +1807,9 @@ public class PortDiffGoo : DiffGoo<PortDiff>
     public PortDiffGoo() { }
     public PortDiffGoo(PortDiff value) : base(value) { }
 
-    protected override string GetModelTypeName() => "PortDiff";
-    protected override string GetModelDescription() => "Port difference";
-    protected override string GetSerializationKey() => "port_diff";
+    
+    
+    
     protected override ModelGoo<PortDiff> CreateDuplicate() => new PortDiffGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -1916,9 +1905,9 @@ public class PortGoo : ModelGoo<Port>
     public PortGoo() { }
     public PortGoo(Port value) : base(value) { }
 
-    protected override string GetModelTypeName() => "Port";
-    protected override string GetModelDescription() => "A port";
-    protected override string GetSerializationKey() => "port";
+    
+    
+    
     protected override ModelGoo<Port> CreateDuplicate() => new PortGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -1985,7 +1974,7 @@ public class PortParam : ModelParam<PortGoo, Port>
 
 public class PortComponent : ModelComponent<PortParam, PortGoo, Port>
 {
-    public PortComponent() : base("A port is a connection point (with a direction) of a type.", "Por", "Construct, deconstruct or modify a port") { }
+    public PortComponent() : base("Port", "Por", "Construct, deconstruct or modify a port") { }
     public override Guid ComponentGuid => new("E505C90C-71F4-413F-82FE-65559D9FFAB5");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -2083,9 +2072,9 @@ public class PortsDiffGoo : DiffGoo<PortsDiff>
     public PortsDiffGoo() { }
     public PortsDiffGoo(PortsDiff value) : base(value) { }
 
-    protected override string GetModelTypeName() => "PortsDiff";
-    protected override string GetModelDescription() => "Ports difference";
-    protected override string GetSerializationKey() => "ports_diff";
+    
+    
+    
     protected override ModelGoo<PortsDiff> CreateDuplicate() => new PortsDiffGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -2161,9 +2150,9 @@ public class AuthorIdGoo : IdGoo<AuthorId>
     public AuthorIdGoo() { }
     public AuthorIdGoo(AuthorId value) : base(value) { }
 
-    protected override string GetModelTypeName() => "AuthorId";
-    protected override string GetModelDescription() => "Author identifier";
-    protected override string GetSerializationKey() => "author_id";
+    
+    
+    
     protected override ModelGoo<AuthorId> CreateDuplicate() => new AuthorIdGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -2211,9 +2200,9 @@ public class AuthorGoo : ModelGoo<Author>
     public AuthorGoo() { }
     public AuthorGoo(Author value) : base(value) { }
 
-    protected override string GetModelTypeName() => "Author";
-    protected override string GetModelDescription() => "An author";
-    protected override string GetSerializationKey() => "author";
+    
+    
+    
     protected override ModelGoo<Author> CreateDuplicate() => new AuthorGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -2314,9 +2303,9 @@ public class LocationGoo : ModelGoo<Location>
     public LocationGoo() { }
     public LocationGoo(Location value) : base(value) { }
 
-    protected override string GetModelTypeName() => "Location";
-    protected override string GetModelDescription() => "A location";
-    protected override string GetSerializationKey() => "location";
+    
+    
+    
     protected override ModelGoo<Location> CreateDuplicate() => new LocationGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -2418,9 +2407,9 @@ public class TypeIdGoo : IdGoo<TypeId>
     public TypeIdGoo() { }
     public TypeIdGoo(TypeId value) : base(value) { }
 
-    protected override string GetModelTypeName() => "TypeId";
-    protected override string GetModelDescription() => "Type identifier";
-    protected override string GetSerializationKey() => "type_id";
+    
+    
+    
     protected override ModelGoo<TypeId> CreateDuplicate() => new TypeIdGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -2488,9 +2477,9 @@ public class TypeDiffGoo : DiffGoo<TypeDiff>
     public TypeDiffGoo() { }
     public TypeDiffGoo(TypeDiff value) : base(value) { }
 
-    protected override string GetModelTypeName() => "TypeDiff";
-    protected override string GetModelDescription() => "Type difference";
-    protected override string GetSerializationKey() => "type_diff";
+    
+    
+    
     protected override ModelGoo<TypeDiff> CreateDuplicate() => new TypeDiffGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -2582,9 +2571,9 @@ public class TypesDiffGoo : DiffGoo<TypesDiff>
     public TypesDiffGoo() { }
     public TypesDiffGoo(TypesDiff value) : base(value) { }
 
-    protected override string GetModelTypeName() => "TypesDiff";
-    protected override string GetModelDescription() => "Types difference";
-    protected override string GetSerializationKey() => "types_diff";
+    
+    
+    
     protected override ModelGoo<TypesDiff> CreateDuplicate() => new TypesDiffGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -2656,9 +2645,9 @@ public class TypeGoo : ModelGoo<Type>
     public TypeGoo() { }
     public TypeGoo(Type value) : base(value) { }
 
-    protected override string GetModelTypeName() => "Type";
-    protected override string GetModelDescription() => "Type";
-    protected override string GetSerializationKey() => "type";
+    
+    
+    
     protected override ModelGoo<Type> CreateDuplicate() => new TypeGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -2727,7 +2716,7 @@ public class TypeParam : ModelParam<TypeGoo, Type>
 
 public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
 {
-    public TypeComponent() : base("A type is a reusable element that can be connected with other types over ports.", "Typ", "Construct, deconstruct or modify a type") { }
+    public TypeComponent() : base("Type", "Typ", "Construct, deconstruct or modify a type") { }
     public override Guid ComponentGuid => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -2864,9 +2853,9 @@ public class PieceIdGoo : IdGoo<PieceId>
     public PieceIdGoo() { }
     public PieceIdGoo(PieceId value) : base(value) { }
 
-    protected override string GetModelTypeName() => "PieceId";
-    protected override string GetModelDescription() => "Piece identifier";
-    protected override string GetSerializationKey() => "piece_id";
+    
+    
+    
     protected override ModelGoo<PieceId> CreateDuplicate() => new PieceIdGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -2934,9 +2923,9 @@ public class PieceDiffGoo : DiffGoo<PieceDiff>
     public PieceDiffGoo() { }
     public PieceDiffGoo(PieceDiff value) : base(value) { }
 
-    protected override string GetModelTypeName() => "PieceDiff";
-    protected override string GetModelDescription() => "Piece difference";
-    protected override string GetSerializationKey() => "piece_diff";
+    
+    
+    
     protected override ModelGoo<PieceDiff> CreateDuplicate() => new PieceDiffGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -3028,9 +3017,9 @@ public class PiecesDiffGoo : DiffGoo<PiecesDiff>
     public PiecesDiffGoo() { }
     public PiecesDiffGoo(PiecesDiff value) : base(value) { }
 
-    protected override string GetModelTypeName() => "PiecesDiff";
-    protected override string GetModelDescription() => "Pieces difference";
-    protected override string GetSerializationKey() => "pieces_diff";
+    
+    
+    
     protected override ModelGoo<PiecesDiff> CreateDuplicate() => new PiecesDiffGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -3102,9 +3091,9 @@ public class PieceGoo : ModelGoo<Piece>
     public PieceGoo() { }
     public PieceGoo(Piece value) : base(value) { }
 
-    protected override string GetModelTypeName() => "Piece";
-    protected override string GetModelDescription() => "Piece";
-    protected override string GetSerializationKey() => "piece";
+    
+    
+    
     protected override ModelGoo<Piece> CreateDuplicate() => new PieceGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -3173,7 +3162,7 @@ public class PieceParam : ModelParam<PieceGoo, Piece>
 
 public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
 {
-    public PieceComponent() : base("A piece is a 3d-instance of a type in a design.", "Pce", "Construct, deconstruct or modify a piece") { }
+    public PieceComponent() : base("Piece", "Pce", "Construct, deconstruct or modify a piece") { }
     public override Guid ComponentGuid => new("49CD29FC-F6EB-43D2-8C7D-E88F8520BA48");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -3282,9 +3271,9 @@ public class SideDiffGoo : DiffGoo<SideDiff>
     public SideDiffGoo() { }
     public SideDiffGoo(SideDiff value) : base(value) { }
 
-    protected override string GetModelTypeName() => "SideDiff";
-    protected override string GetModelDescription() => "Side difference";
-    protected override string GetSerializationKey() => "side_diff";
+    
+    
+    
     protected override ModelGoo<SideDiff> CreateDuplicate() => new SideDiffGoo(Value);
 
     protected override bool CustomCastTo<Q>(ref Q target)
@@ -3377,9 +3366,9 @@ public class SideGoo : ModelGoo<Side>
         }
         return false;
     }
-    protected override string GetModelTypeName() => "Side";
-    protected override string GetModelDescription() => "Side of a piece";
-    protected override string GetSerializationKey() => "side";
+    
+    
+    
     protected override ModelGoo<Side> CreateDuplicate() => new SideGoo(Value);
 }
 
@@ -3392,7 +3381,7 @@ public class SideParam : ModelParam<SideGoo, Side>
 
 public class SideComponent : ModelComponent<SideParam, SideGoo, Side>
 {
-    public SideComponent() : base("A side of a piece in a connection.", "Sde", "Construct, deconstruct or modify a side") { }
+    public SideComponent() : base("Side", "Sde", "Construct, deconstruct or modify a side") { }
     public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E6");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -3510,9 +3499,9 @@ public class ConnectionIdGoo : IdGoo<ConnectionId>
     public static implicit operator ConnectionDiffGoo(ConnectionIdGoo idGoo) => new(idGoo.Value);
     public static implicit operator ConnectionIdGoo(ConnectionGoo goo) => new((ConnectionId)goo.Value);
     public static implicit operator ConnectionIdGoo(ConnectionDiffGoo diffGoo) => new((ConnectionId)diffGoo.Value);
-    protected override string GetModelTypeName() => "ConnectionId";
-    protected override string GetModelDescription() => "Connection identifier";
-    protected override string GetSerializationKey() => "connection_id";
+    
+    
+    
     protected override ModelGoo<ConnectionId> CreateDuplicate() => new ConnectionIdGoo(Value);
 }
 
@@ -3581,9 +3570,9 @@ public class ConnectionDiffGoo : DiffGoo<ConnectionDiff>
         }
         return false;
     }
-    protected override string GetModelTypeName() => "ConnectionDiff";
-    protected override string GetModelDescription() => "Connection difference";
-    protected override string GetSerializationKey() => "connection_diff";
+    
+    
+    
     protected override ModelGoo<ConnectionDiff> CreateDuplicate() => new ConnectionDiffGoo(Value);
 }
 
@@ -3655,9 +3644,9 @@ public class ConnectionsDiffGoo : DiffGoo<ConnectionsDiff>
         }
         return false;
     }
-    protected override string GetModelTypeName() => "ConnectionsDiff";
-    protected override string GetModelDescription() => "Connections difference";
-    protected override string GetSerializationKey() => "connections_diff";
+    
+    
+    
     protected override ModelGoo<ConnectionsDiff> CreateDuplicate() => new ConnectionsDiffGoo(Value);
 }
 
@@ -3754,9 +3743,9 @@ public class ConnectionGoo : ModelGoo<Connection>
     public static implicit operator ConnectionDiffGoo(ConnectionGoo goo) => new((ConnectionDiff)goo.Value);
     public static implicit operator ConnectionGoo(ConnectionIdGoo idGoo) => new((Connection)idGoo.Value);
     public static implicit operator ConnectionGoo(ConnectionDiffGoo diffGoo) => new((Connection)diffGoo.Value);
-    protected override string GetModelTypeName() => "Connection";
-    protected override string GetModelDescription() => "Connection between pieces";
-    protected override string GetSerializationKey() => "connection";
+    
+    
+    
     protected override ModelGoo<Connection> CreateDuplicate() => new ConnectionGoo(Value);
 }
 
@@ -3769,7 +3758,7 @@ public class ConnectionParam : ModelParam<ConnectionGoo, Connection>
 
 public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo, Connection>
 {
-    public ConnectionComponent() : base("A bidirectional connection between two pieces of a design.", "Con", "Construct, deconstruct or modify a connection") { }
+    public ConnectionComponent() : base("Connection", "Con", "Construct, deconstruct or modify a connection") { }
     public override Guid ComponentGuid => new("AB212F90-124C-4985-B3EE-1C13D7827560");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -3918,9 +3907,9 @@ public class DesignIdGoo : IdGoo<DesignId>
         }
         return false;
     }
-    protected override string GetModelTypeName() => "DesignId";
-    protected override string GetModelDescription() => "Design identifier";
-    protected override string GetSerializationKey() => "design_id";
+    
+    
+    
     protected override ModelGoo<DesignId> CreateDuplicate() => new DesignIdGoo(Value);
 }
 
@@ -3992,9 +3981,9 @@ public class DesignDiffGoo : DiffGoo<DesignDiff>
         }
         return false;
     }
-    protected override string GetModelTypeName() => "DesignDiff";
-    protected override string GetModelDescription() => "Design difference";
-    protected override string GetSerializationKey() => "design_diff";
+    
+    
+    
     protected override ModelGoo<DesignDiff> CreateDuplicate() => new DesignDiffGoo(Value);
 }
 
@@ -4067,9 +4056,9 @@ public class DesignsDiffGoo : DiffGoo<DesignsDiff>
         return false;
     }
 
-    protected override string GetModelTypeName() => "DesignsDiff";
-    protected override string GetModelDescription() => "Designs difference";
-    protected override string GetSerializationKey() => "designs_diff";
+    
+    
+    
     protected override ModelGoo<DesignsDiff> CreateDuplicate() => new DesignsDiffGoo(Value);
 }
 
@@ -4158,9 +4147,9 @@ public class DesignGoo : ModelGoo<Design>
         return false;
     }
 
-    protected override string GetModelTypeName() => "Design";
-    protected override string GetModelDescription() => "Design";
-    protected override string GetSerializationKey() => "design";
+    
+    
+    
     protected override ModelGoo<Design> CreateDuplicate() => new DesignGoo(Value);
 }
 
@@ -4173,7 +4162,7 @@ public class DesignParam : ModelParam<DesignGoo, Design>
 
 public class DesignComponent : ModelComponent<DesignParam, DesignGoo, Design>
 {
-    public DesignComponent() : base("A design is a collection of pieces that are connected.", "Dsn", "Design component") { }
+    public DesignComponent() : base("Design", "Dsn", "Design component") { }
     public override Guid ComponentGuid => new("AAD8D144-2EEE-48F1-A8A9-52977E86CB54");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -4336,9 +4325,9 @@ public class KitIdGoo : IdGoo<KitId>
         return false;
     }
 
-    protected override string GetModelTypeName() => "KitId";
-    protected override string GetModelDescription() => "Kit identifier";
-    protected override string GetSerializationKey() => "kit_id";
+    
+    
+    
     protected override ModelGoo<KitId> CreateDuplicate() => new KitIdGoo(Value);
 }
 
@@ -4401,9 +4390,9 @@ public class KitDiffGoo : DiffGoo<KitDiff>
         return false;
     }
 
-    protected override string GetModelTypeName() => "KitDiff";
-    protected override string GetModelDescription() => "Kit difference";
-    protected override string GetSerializationKey() => "kit_diff";
+    
+    
+    
     protected override ModelGoo<KitDiff> CreateDuplicate() => new KitDiffGoo(Value);
 }
 
@@ -4482,9 +4471,9 @@ public class KitGoo : ModelGoo<Kit>
         return false;
     }
 
-    protected override string GetModelTypeName() => "Kit";
-    protected override string GetModelDescription() => "Kit";
-    protected override string GetSerializationKey() => "kit";
+    
+    
+    
     protected override ModelGoo<Kit> CreateDuplicate() => new KitGoo(Value);
 }
 
@@ -4497,7 +4486,7 @@ public class KitParam : ModelParam<KitGoo, Kit>
 
 public class KitComponent : ModelComponent<KitParam, KitGoo, Kit>
 {
-    public KitComponent() : base("A kit is a collection of types and designs.", "Kit", "Kit component") { }
+    public KitComponent() : base("Kit", "Kit", "Kit component") { }
     public override Guid ComponentGuid => new("987560A8-10D4-43F6-BEBE-D71DC2FD86AF");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -4651,9 +4640,9 @@ public class KitsDiffGoo : DiffGoo<KitsDiff>
         return false;
     }
 
-    protected override string GetModelTypeName() => "KitsDiff";
-    protected override string GetModelDescription() => "Kits difference";
-    protected override string GetSerializationKey() => "kits_diff";
+    
+    
+    
     protected override ModelGoo<KitsDiff> CreateDuplicate() => new KitsDiffGoo(Value);
 }
 
@@ -4703,8 +4692,8 @@ public class QualityKindGoo : EnumGoo<QualityKind>
     public QualityKindGoo(QualityKind value) : base(value) { }
 
     protected override EnumGoo<QualityKind> CreateDuplicate() => new QualityKindGoo(Value);
-    public override string TypeName => "QualityKind";
-    public override string TypeDescription => "QualityKind enumeration";
+    
+    
 }
 
 public class QualityKindParam : EnumParam<QualityKindGoo, QualityKind>
@@ -4765,9 +4754,9 @@ public class QualityIdGoo : IdGoo<QualityId>
     public static implicit operator QualityGoo(QualityIdGoo idGoo) => new(idGoo.Value);
     public static implicit operator QualityIdGoo(QualityGoo goo) => new((QualityId)goo.Value);
 
-    protected override string GetModelTypeName() => "QualityId";
-    protected override string GetModelDescription() => "Quality identifier";
-    protected override string GetSerializationKey() => "quality_id";
+    
+    
+    
     protected override ModelGoo<QualityId> CreateDuplicate() => new QualityIdGoo(Value);
 }
 
@@ -4862,9 +4851,9 @@ public class QualityDiffGoo : DiffGoo<QualityDiff>
     public static implicit operator QualityDiffGoo(QualityIdGoo idGoo) => new((QualityDiff)idGoo.Value);
     public static implicit operator QualityDiffGoo(QualityGoo goo) => new((QualityDiff)goo.Value);
 
-    protected override string GetModelTypeName() => "QualityDiff";
-    protected override string GetModelDescription() => "Quality difference";
-    protected override string GetSerializationKey() => "quality_diff";
+    
+    
+    
     protected override ModelGoo<QualityDiff> CreateDuplicate() => new QualityDiffGoo(Value);
 }
 
@@ -4957,9 +4946,9 @@ public class QualityGoo : ModelGoo<Quality>
     public static implicit operator QualityIdGoo(QualityGoo goo) => new((QualityId)goo.Value);
     public static implicit operator QualityGoo(QualityIdGoo idGoo) => new((Quality)idGoo.Value);
 
-    protected override string GetModelTypeName() => "Quality";
-    protected override string GetModelDescription() => "Quality";
-    protected override string GetSerializationKey() => "quality";
+    
+    
+    
     protected override ModelGoo<Quality> CreateDuplicate() => new QualityGoo(Value);
 }
 
@@ -4972,7 +4961,7 @@ public class QualityParam : ModelParam<QualityGoo, Quality>
 
 public class QualityComponent : ModelComponent<QualityParam, QualityGoo, Quality>
 {
-    public QualityComponent() : base("A quality is numeric metadata used for stats and benchmarks.", "Qal", "Quality component") { }
+    public QualityComponent() : base("Quality", "Qal", "Quality component") { }
     public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -5110,9 +5099,9 @@ public class BenchmarkGoo : ModelGoo<Benchmark>
         return false;
     }
 
-    protected override string GetModelTypeName() => "Benchmark";
-    protected override string GetModelDescription() => "Benchmark";
-    protected override string GetSerializationKey() => "benchmark";
+    
+    
+    
     protected override ModelGoo<Benchmark> CreateDuplicate() => new BenchmarkGoo(Value);
 }
 
@@ -5125,7 +5114,7 @@ public class BenchmarkParam : ModelParam<BenchmarkGoo, Benchmark>
 
 public class BenchmarkComponent : ModelComponent<BenchmarkParam, BenchmarkGoo, Benchmark>
 {
-    public BenchmarkComponent() : base("A benchmark is a value with an optional unit for a quality.", "Bmk", "Benchmark component") { }
+    public BenchmarkComponent() : base("Benchmark", "Bmk", "Benchmark component") { }
     public override Guid ComponentGuid => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -5231,9 +5220,9 @@ public class PropGoo : ModelGoo<Prop>
         return false;
     }
 
-    protected override string GetModelTypeName() => "Prop";
-    protected override string GetModelDescription() => "Property";
-    protected override string GetSerializationKey() => "prop";
+    
+    
+    
     protected override ModelGoo<Prop> CreateDuplicate() => new PropGoo(Value);
 }
 
@@ -5246,7 +5235,7 @@ public class PropParam : ModelParam<PropGoo, Prop>
 
 public class PropComponent : ModelComponent<PropParam, PropGoo, Prop>
 {
-    public PropComponent() : base("A property is a value with an optional unit for a quality.", "Prp", "Prop component") { }
+    public PropComponent() : base("Prop", "Prp", "Prop component") { }
     public override Guid ComponentGuid => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -5340,9 +5329,6 @@ public class StatGoo : ModelGoo<Stat>
         return false;
     }
 
-    protected override string GetModelTypeName() => "Stat";
-    protected override string GetModelDescription() => "Statistic";
-    protected override string GetSerializationKey() => "stat";
     protected override ModelGoo<Stat> CreateDuplicate() => new StatGoo(Value);
 }
 
@@ -5355,7 +5341,7 @@ public class StatParam : ModelParam<StatGoo, Stat>
 
 public class StatComponent : ModelComponent<StatParam, StatGoo, Stat>
 {
-    public StatComponent() : base("A stat about a quality on a design which is optionally bounded.", "Stt", "Stat component") { }
+    public StatComponent() : base("Stat", "Stt", "Stat component") { }
     public override Guid ComponentGuid => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -5457,9 +5443,6 @@ public class LayerGoo : ModelGoo<Layer>
         return false;
     }
 
-    protected override string GetModelTypeName() => "Layer";
-    protected override string GetModelDescription() => "Layer";
-    protected override string GetSerializationKey() => "layer";
     protected override ModelGoo<Layer> CreateDuplicate() => new LayerGoo(Value);
 }
 
@@ -5472,7 +5455,7 @@ public class LayerParam : ModelParam<LayerGoo, Layer>
 
 public class LayerComponent : ModelComponent<LayerParam, LayerGoo, Layer>
 {
-    public LayerComponent() : base("A layer for organizing design elements.", "Lyr", "Layer component") { }
+    public LayerComponent() : base("Layer", "Lyr", "Layer component") { }
     public override Guid ComponentGuid => new("90A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -5562,9 +5545,6 @@ public class GroupGoo : ModelGoo<Group>
         return false;
     }
 
-    protected override string GetModelTypeName() => "Group";
-    protected override string GetModelDescription() => "Group";
-    protected override string GetSerializationKey() => "group";
     protected override ModelGoo<Group> CreateDuplicate() => new GroupGoo(Value);
 }
 
@@ -5577,7 +5557,7 @@ public class GroupParam : ModelParam<GroupGoo, Group>
 
 public class GroupComponent : ModelComponent<GroupParam, GroupGoo, Group>
 {
-    public GroupComponent() : base("A group for organizing design elements.", "Grp", "Group component") { }
+    public GroupComponent() : base("Group", "Grp", "Group component") { }
     public override Guid ComponentGuid => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -5822,7 +5802,6 @@ public class TruncateTextComponent : ScriptingComponent
     }
 }
 
-
 #endregion Scripting
 
 #region Engine
@@ -5996,6 +5975,6 @@ public class LoadKitComponent : PersistenceComponent
 
 #region Meta
 
-
 #endregion Meta
+
 

@@ -681,12 +681,13 @@ function getPlane(yPlane: Y.Map<any>): { origin: { x: number; y: number; z: numb
 
 class YFileStore implements FileStoreFull {
   public readonly parent: YKitStore;
-  public readonly yFile: Y.Map<string> = new Y.Map<string>();
+  public readonly yFile: Y.Map<string>;
   private cachedSnapshot?: SemioFile;
   private lastSnapshotHash?: string;
 
   constructor(parent: YKitStore, file: SemioFile) {
     this.parent = parent;
+    this.yFile = new Y.Map<string>();
     this.yFile.set("path", file.path);
     this.yFile.set("remote", file.remote || "");
     this.yFile.set("size", file.size?.toString() || "");
@@ -752,12 +753,13 @@ class YFileStore implements FileStoreFull {
 
 class YRepresentationStore implements RepresentationStoreFull {
   public readonly parent: YKitStore;
-  public readonly yRepresentation: YRepresentation = new Y.Map<any>();
+  public readonly yRepresentation: YRepresentation;
   private cachedSnapshot?: Representation;
   private lastSnapshotHash?: string;
 
   constructor(parent: YKitStore, representation: Representation) {
     this.parent = parent;
+    this.yRepresentation = new Y.Map<any>();
     this.yRepresentation.set("url", representation.url);
     this.yRepresentation.set("description", representation.description || "");
     this.yRepresentation.set("tags", createStringArray(representation.tags || []));
@@ -765,23 +767,49 @@ class YRepresentationStore implements RepresentationStoreFull {
   }
 
   snapshot = (): Representation => {
-    const yTags = this.yRepresentation.get("tags") as Y.Array<string>;
-    const yAttributes = this.yRepresentation.get("attributes") as YAttributes;
+    let yTags: Y.Array<string> | undefined;
+    let yAttributes: YAttributes | undefined;
+    
+    try {
+      yTags = this.yRepresentation.get("tags") as Y.Array<string>;
+      yAttributes = this.yRepresentation.get("attributes") as YAttributes;
+    } catch (e) {
+      // Y object not yet attached to document, use empty defaults
+      yTags = undefined;
+      yAttributes = undefined;
+    }
+    
     const attributes: Attribute[] = [];
     if (yAttributes) {
-      yAttributes.forEach((yMap: YAttribute) => {
-        attributes.push({
-          key: yMap.get("key") as string,
-          value: yMap.get("value") as string | undefined,
-          definition: yMap.get("definition") as string | undefined,
+      try {
+        yAttributes.forEach((yMap: YAttribute) => {
+          attributes.push({
+            key: yMap.get("key") as string,
+            value: yMap.get("value") as string | undefined,
+            definition: yMap.get("definition") as string | undefined,
+          });
         });
-      });
+      } catch (e) {
+        // Y object not properly attached, skip
+      }
+    }
+
+    let url = "";
+    let description = "";
+    let tags: string[] = [];
+    
+    try {
+      url = this.yRepresentation.get("url") as string;
+      description = (this.yRepresentation.get("description") as string) || "";
+      tags = yTags ? yTags.toArray() : [];
+    } catch (e) {
+      // Y object not properly attached, use defaults
     }
 
     const currentData = {
-      url: this.yRepresentation.get("url") as string,
-      description: (this.yRepresentation.get("description") as string) || "",
-      tags: yTags ? yTags.toArray() : [],
+      url: url,
+      description: description,
+      tags: tags,
       attributes: attributes,
     };
     const currentHash = JSON.stringify(currentData);
@@ -812,12 +840,13 @@ class YRepresentationStore implements RepresentationStoreFull {
 
 class YPortStore implements PortStoreFull {
   public readonly parent: YTypeStore;
-  public readonly yPort: YPort = new Y.Map<any>();
+  public readonly yPort: YPort;
   private cachedSnapshot?: Port;
   private lastSnapshotHash?: string;
 
   constructor(parent: YTypeStore, port: Port) {
     this.parent = parent;
+    this.yPort = new Y.Map<any>();
     this.yPort.set("id_", port.id_ || "");
     this.yPort.set("description", port.description || "");
     this.yPort.set("mandatory", port.mandatory || false);
@@ -837,13 +866,17 @@ class YPortStore implements PortStoreFull {
 
     const attributes: Attribute[] = [];
     if (yAttributes) {
-      yAttributes.forEach((yMap: YAttribute) => {
-        attributes.push({
-          key: yMap.get("key") as string,
-          value: yMap.get("value") as string | undefined,
-          definition: yMap.get("definition") as string | undefined,
+      try {
+        yAttributes.forEach((yMap: YAttribute) => {
+          attributes.push({
+            key: yMap.get("key") as string,
+            value: yMap.get("value") as string | undefined,
+            definition: yMap.get("definition") as string | undefined,
+          });
         });
-      });
+      } catch (e) {
+        // Y object not properly attached, skip
+      }
     }
 
     const currentData = {
@@ -902,7 +935,7 @@ class YPortStore implements PortStoreFull {
 
 class YTypeStore implements TypeStoreFull {
   public readonly parent: YKitStore;
-  public readonly yType: YType = new Y.Map<any>();
+  public readonly yType: YType;
   public readonly representations: Map<string, YRepresentationStore> = new Map();
   public readonly ports: Map<string, YPortStore> = new Map();
   public readonly representationIds: Map<string, string> = new Map();
@@ -912,6 +945,7 @@ class YTypeStore implements TypeStoreFull {
 
   constructor(parent: YKitStore, type: Type) {
     this.parent = parent;
+    this.yType = new Y.Map<any>();
     this.yType.set("name", type.name);
     this.yType.set("description", type.description || "");
     this.yType.set("variant", type.variant || "");
@@ -966,37 +1000,72 @@ class YTypeStore implements TypeStoreFull {
   };
 
   snapshot = (): Type => {
-    const yAuthors = this.yType.get("authors") as YAuthors;
-    const yAttributes = this.yType.get("attributes") as YAttributes;
+    let yAuthors: YAuthors | undefined;
+    let yAttributes: YAttributes | undefined;
+    
+    try {
+      yAuthors = this.yType.get("authors") as YAuthors;
+      yAttributes = this.yType.get("attributes") as YAttributes;
+    } catch (e) {
+      // Y object not yet attached to document, use empty defaults
+      yAuthors = undefined;
+      yAttributes = undefined;
+    }
 
     const authors: Author[] = [];
     if (yAuthors) {
-      yAuthors.forEach((yAuthor: YAuthor) => {
-        authors.push({
-          name: yAuthor.get("name") as string,
-          email: (yAuthor.get("email") as string) || "",
+      try {
+        yAuthors.forEach((yAuthor: YAuthor) => {
+          authors.push({
+            name: yAuthor.get("name") as string,
+            email: (yAuthor.get("email") as string) || "",
+          });
         });
-      });
+      } catch (e) {
+        // Y object not properly attached, skip
+      }
     }
 
     const attributes: Attribute[] = [];
     if (yAttributes) {
-      yAttributes.forEach((yMap: YAttribute) => {
-        attributes.push({
-          key: yMap.get("key") as string,
-          value: yMap.get("value") as string | undefined,
-          definition: yMap.get("definition") as string | undefined,
+      try {
+        yAttributes.forEach((yMap: YAttribute) => {
+          attributes.push({
+            key: yMap.get("key") as string,
+            value: yMap.get("value") as string | undefined,
+            definition: yMap.get("definition") as string | undefined,
+          });
         });
-      });
+      } catch (e) {
+        // Y object not properly attached, skip
+      }
+    }
+
+    let name = "";
+    let description = "";
+    let variant: string | undefined;
+    let unit = "";
+    let stock: number | undefined;
+    let virtual: boolean | undefined;
+    
+    try {
+      name = this.yType.get("name") as string;
+      description = (this.yType.get("description") as string) || "";
+      variant = this.yType.get("variant") as string | undefined;
+      unit = (this.yType.get("unit") as string) || "";
+      stock = this.yType.get("stock") as number | undefined;
+      virtual = this.yType.get("virtual") as boolean | undefined;
+    } catch (e) {
+      // Y object not properly attached, use defaults
     }
 
     const currentData = {
-      name: this.yType.get("name") as string,
-      description: (this.yType.get("description") as string) || "",
-      variant: this.yType.get("variant") as string | undefined,
-      unit: (this.yType.get("unit") as string) || "",
-      stock: this.yType.get("stock") as number | undefined,
-      virtual: this.yType.get("virtual") as boolean | undefined,
+      name: name,
+      description: description,
+      variant: variant,
+      unit: unit,
+      stock: stock,
+      virtual: virtual,
       representations: Array.from(this.representations.values()).map((store) => store.snapshot()),
       ports: Array.from(this.ports.values()).map((store) => store.snapshot()),
       authors: authors,
@@ -1019,12 +1088,13 @@ class YTypeStore implements TypeStoreFull {
 
 class YPieceStore implements PieceStoreFull {
   public readonly parent: YDesignStore;
-  public readonly yPiece: YPiece = new Y.Map<any>();
+  public readonly yPiece: YPiece;
   private cachedSnapshot?: Piece;
   private lastSnapshotHash?: string;
 
   constructor(parent: YDesignStore, piece: Piece) {
     this.parent = parent;
+    this.yPiece = new Y.Map<any>();
     this.yPiece.set("id_", piece.id_);
     this.yPiece.set("description", piece.description || "");
     if (piece.type) {
@@ -1056,13 +1126,17 @@ class YPieceStore implements PieceStoreFull {
 
     const attributes: Attribute[] = [];
     if (yAttributes) {
-      yAttributes.forEach((yMap: YAttribute) => {
-        attributes.push({
-          key: yMap.get("key") as string,
-          value: yMap.get("value") as string | undefined,
-          definition: yMap.get("definition") as string | undefined,
+      try {
+        yAttributes.forEach((yMap: YAttribute) => {
+          attributes.push({
+            key: yMap.get("key") as string,
+            value: yMap.get("value") as string | undefined,
+            definition: yMap.get("definition") as string | undefined,
+          });
         });
-      });
+      } catch (e) {
+        // Y object not properly attached, skip
+      }
     }
 
     const currentData: Piece = {
@@ -1155,12 +1229,13 @@ class YPieceStore implements PieceStoreFull {
 
 class YConnectionStore implements ConnectionStoreFull {
   public readonly parent: YDesignStore;
-  public readonly yConnection: YConnection = new Y.Map<any>();
+  public readonly yConnection: YConnection;
   private cachedSnapshot?: Connection;
   private lastSnapshotHash?: string;
 
   constructor(parent: YDesignStore, connection: Connection) {
     this.parent = parent;
+    this.yConnection = new Y.Map<any>();
     const yConnected = new Y.Map<any>();
     const yConnectedPiece = new Y.Map<string>();
     yConnectedPiece.set("id_", connection.connected.piece.id_);
@@ -1212,13 +1287,17 @@ class YConnectionStore implements ConnectionStoreFull {
     const yAttributes = this.yConnection.get("attributes") as YAttributes;
     const attributes: Attribute[] = [];
     if (yAttributes) {
-      yAttributes.forEach((yMap: YAttribute) => {
-        attributes.push({
-          key: yMap.get("key") as string,
-          value: yMap.get("value") as string | undefined,
-          definition: yMap.get("definition") as string | undefined,
+      try {
+        yAttributes.forEach((yMap: YAttribute) => {
+          attributes.push({
+            key: yMap.get("key") as string,
+            value: yMap.get("value") as string | undefined,
+            definition: yMap.get("definition") as string | undefined,
+          });
         });
-      });
+      } catch (e) {
+        // Y object not properly attached, skip
+      }
     }
 
     const currentData = {
@@ -1272,7 +1351,7 @@ class YConnectionStore implements ConnectionStoreFull {
 
 class YDesignStore implements DesignStoreFull {
   public readonly parent: YKitStore;
-  public readonly yDesign: YDesign = new Y.Map<any>();
+  public readonly yDesign: YDesign;
   public readonly pieces: Map<string, YPieceStore> = new Map();
   public readonly connections: Map<string, YConnectionStore> = new Map();
   public readonly pieceIds: Map<string, string> = new Map();
@@ -1282,6 +1361,7 @@ class YDesignStore implements DesignStoreFull {
 
   constructor(parent: YKitStore, design: Design) {
     this.parent = parent;
+    this.yDesign = new Y.Map<any>();
     this.yDesign.set("name", design.name);
     this.yDesign.set("description", design.description || "");
     this.yDesign.set("variant", design.variant || "");
@@ -1294,36 +1374,69 @@ class YDesignStore implements DesignStoreFull {
   }
 
   snapshot = (): Design => {
-    const yAuthors = this.yDesign.get("authors") as YAuthors;
-    const yAttributes = this.yDesign.get("attributes") as YAttributes;
+    let yAuthors: YAuthors | undefined;
+    let yAttributes: YAttributes | undefined;
+    
+    try {
+      yAuthors = this.yDesign.get("authors") as YAuthors;
+      yAttributes = this.yDesign.get("attributes") as YAttributes;
+    } catch (e) {
+      // Y object not yet attached to document, use empty defaults
+      yAuthors = undefined;
+      yAttributes = undefined;
+    }
 
     const authors: Author[] = [];
     if (yAuthors) {
-      yAuthors.forEach((yAuthor: YAuthor) => {
-        authors.push({
-          name: yAuthor.get("name") as string,
-          email: (yAuthor.get("email") as string) || "",
+      try {
+        yAuthors.forEach((yAuthor: YAuthor) => {
+          authors.push({
+            name: yAuthor.get("name") as string,
+            email: (yAuthor.get("email") as string) || "",
+          });
         });
-      });
+      } catch (e) {
+        // Y object not properly attached, skip
+      }
     }
 
     const attributes: Attribute[] = [];
     if (yAttributes) {
-      yAttributes.forEach((yMap: YAttribute) => {
-        attributes.push({
-          key: yMap.get("key") as string,
-          value: yMap.get("value") as string | undefined,
-          definition: yMap.get("definition") as string | undefined,
+      try {
+        yAttributes.forEach((yMap: YAttribute) => {
+          attributes.push({
+            key: yMap.get("key") as string,
+            value: yMap.get("value") as string | undefined,
+            definition: yMap.get("definition") as string | undefined,
+          });
         });
-      });
+      } catch (e) {
+        // Y object not properly attached, skip
+      }
+    }
+
+    let name = "";
+    let description: string | undefined;
+    let variant: string | undefined;
+    let view: string | undefined;
+    let unit = "";
+    
+    try {
+      name = this.yDesign.get("name") as string;
+      description = this.yDesign.get("description") as string | undefined;
+      variant = this.yDesign.get("variant") as string | undefined;
+      view = this.yDesign.get("view") as string | undefined;
+      unit = this.yDesign.get("unit") as string;
+    } catch (e) {
+      // Y object not properly attached, use defaults
     }
 
     const currentData = {
-      name: this.yDesign.get("name") as string,
-      description: this.yDesign.get("description") as string | undefined,
-      variant: this.yDesign.get("variant") as string | undefined,
-      view: this.yDesign.get("view") as string | undefined,
-      unit: this.yDesign.get("unit") as string,
+      name: name,
+      description: description,
+      variant: variant,
+      view: view,
+      unit: unit,
       pieces: Array.from(this.pieces.values()).map((p) => p.snapshot()),
       connections: Array.from(this.connections.values()).map((c) => c.snapshot()),
       authors: authors,
@@ -1546,13 +1659,17 @@ class YKitStore implements KitStoreFull {
     const yAttributes = this.yKit.get("attributes") as YAttributes;
     const attributes: Attribute[] = [];
     if (yAttributes) {
-      yAttributes.forEach((yMap: YAttribute) => {
-        attributes.push({
-          key: yMap.get("key") as string,
-          value: yMap.get("value") as string | undefined,
-          definition: yMap.get("definition") as string | undefined,
+      try {
+        yAttributes.forEach((yMap: YAttribute) => {
+          attributes.push({
+            key: yMap.get("key") as string,
+            value: yMap.get("value") as string | undefined,
+            definition: yMap.get("definition") as string | undefined,
+          });
         });
-      });
+      } catch (e) {
+        // Y object not properly attached, skip
+      }
     }
 
     const currentData = {
@@ -1793,7 +1910,7 @@ class YKitStore implements KitStoreFull {
 }
 
 class YDesignEditorStore implements DesignEditorStoreFull {
-  public readonly yDesignEditorStore: YDesignEditorStoreValMap = new Y.Map<YDesignEditorStoreVal>();
+  public readonly yDesignEditorStore: YDesignEditorStoreValMap;
   private readonly commandRegistry: Map<string, (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult> = new Map();
   private readonly parent: SketchpadStore;
   private cachedSnapshot?: DesignEditorStateFull;
@@ -1801,6 +1918,7 @@ class YDesignEditorStore implements DesignEditorStoreFull {
 
   constructor(parent: SketchpadStore, state?: DesignEditorState) {
     this.parent = parent;
+    this.yDesignEditorStore = new Y.Map<YDesignEditorStoreVal>();
     this.yDesignEditorStore.set("fullscreenPanel", state?.fullscreenPanel || DesignEditorFullscreenPanel.None);
     this.yDesignEditorStore.set("selectedPieceIds", new Y.Array<string>());
     this.yDesignEditorStore.set("selectedConnections", new Y.Array<string>());

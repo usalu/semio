@@ -20,7 +20,8 @@
 // #endregion
 
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
-import { FC, useState } from "react";
+import { Info, MessageCircle, Terminal, Wrench } from "lucide-react";
+import { FC, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useHotkeys } from "react-hotkeys-hook";
 
@@ -28,14 +29,16 @@ import { ReactFlowProvider } from "@xyflow/react";
 import { DesignId, TypeId } from "../../../semio";
 import { useDesign, useDesignEditorCommands, useFullscreen, useKit } from "../../../store";
 import Navbar from "../Navbar";
+import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
 import Chat from "./Chat";
 import Console from "./Console";
 import Details from "./Details";
 import Diagram from "./Diagram";
 import Model from "./Model";
+import { useNavbar } from "./Sketchpad";
 import Workbench, { DesignAvatar, TypeAvatar } from "./Workbench";
 
-export interface DesignEditorProps { }
+export interface DesignEditorProps {}
 
 export interface ResizablePanelProps {
   visible: boolean;
@@ -52,6 +55,7 @@ interface VisiblePanels {
 
 const DesignEditor: FC<DesignEditorProps> = () => {
   console.log("DesignEditor: Starting render");
+  const { setNavbarToolbar } = useNavbar();
   const kit = useKit();
   const design = useDesign();
   const fullscreenPanel = useFullscreen();
@@ -60,15 +64,15 @@ const DesignEditor: FC<DesignEditorProps> = () => {
 
   // Panel visibility and sizing state
   const [visiblePanels, setVisiblePanels] = useState<VisiblePanels>({
-    workbench: true,
-    details: true,
+    workbench: false,
+    details: false,
     console: false,
     chat: false,
   });
 
-  const [workbenchWidth, setWorkbenchWidth] = useState(320);
-  const [detailsWidth, setDetailsWidth] = useState(320);
-  const [chatWidth, setChatWidth] = useState(320);
+  const [workbenchWidth, setWorkbenchWidth] = useState(230);
+  const [detailsWidth, setDetailsWidth] = useState(230);
+  const [chatWidth, setChatWidth] = useState(230);
   const [consoleHeight, setConsoleHeight] = useState(200);
 
   // Drag and drop state
@@ -82,6 +86,27 @@ const DesignEditor: FC<DesignEditorProps> = () => {
   useHotkeys("ctrl+z", () => undo());
   useHotkeys("ctrl+y", () => redo());
   useHotkeys("ctrl+shift+z", () => redo());
+
+  useHotkeys("mod+j", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    togglePanel("workbench");
+  });
+  useHotkeys("mod+k", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    togglePanel("console");
+  });
+  useHotkeys("mod+l", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    togglePanel("details");
+  });
+  useHotkeys(["mod+[", "mod+semicolon", "mod+ö"], (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    togglePanel("chat");
+  });
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -118,10 +143,17 @@ const DesignEditor: FC<DesignEditorProps> = () => {
   };
 
   const togglePanel = (panel: keyof VisiblePanels) => {
-    setVisiblePanels((prev) => ({
-      ...prev,
-      [panel]: !prev[panel],
-    }));
+    setVisiblePanels((prev) => {
+      const newState = { ...prev };
+      if (panel === "chat" && !prev.chat) {
+        newState.details = false;
+      }
+      if (panel === "details" && !prev.details) {
+        newState.chat = false;
+      }
+      newState[panel] = !prev[panel];
+      return newState;
+    });
   };
 
   // Check for fullscreen mode
@@ -138,36 +170,50 @@ const DesignEditor: FC<DesignEditorProps> = () => {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
+  const designEditorToolbar = (
+    <ToggleGroup
+      type="multiple"
+      value={Object.entries(visiblePanels)
+        .filter(([_, isVisible]) => isVisible)
+        .map(([key]) => key)}
+      onValueChange={(values) => {
+        Object.keys(visiblePanels).forEach((key) => {
+          const isCurrentlyVisible = visiblePanels[key as keyof VisiblePanels];
+          const shouldBeVisible = values.includes(key);
+          if (isCurrentlyVisible !== shouldBeVisible) {
+            togglePanel(key as keyof VisiblePanels);
+          }
+        });
+      }}
+    >
+      <ToggleGroupItem value="workbench" tooltip="Workbench" hotkey="⌘J">
+        <Wrench />
+      </ToggleGroupItem>
+      <ToggleGroupItem value="console" tooltip="Console" hotkey="⌘K">
+        <Terminal />
+      </ToggleGroupItem>
+      <ToggleGroupItem value="details" tooltip="Details" hotkey="⌘L">
+        <Info />
+      </ToggleGroupItem>
+      <ToggleGroupItem value="chat" tooltip="Chat" hotkey="⌘[">
+        <MessageCircle />
+      </ToggleGroupItem>
+    </ToggleGroup>
+  );
+
+  useEffect(() => {
+    setNavbarToolbar(designEditorToolbar);
+    return () => setNavbarToolbar(null);
+  }, [visiblePanels, setNavbarToolbar]);
+
   const rightPanelVisible = visiblePanels.details || visiblePanels.chat;
 
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="h-screen flex flex-col overflow-hidden bg-background">
-        <Navbar
-          toolbarContent={
-            <div className="flex items-center gap-2">
-              <button onClick={() => togglePanel("workbench")} className={`px-3 py-1 rounded text-sm ${visiblePanels.workbench ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                Workbench
-              </button>
-              <button onClick={() => togglePanel("console")} className={`px-3 py-1 rounded text-sm ${visiblePanels.console ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                Console
-              </button>
-              <button onClick={() => togglePanel("details")} className={`px-3 py-1 rounded text-sm ${visiblePanels.details ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                Details
-              </button>
-              <button onClick={() => togglePanel("chat")} className={`px-3 py-1 rounded text-sm ${visiblePanels.chat ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                Chat
-              </button>
-              <button onClick={() => toggleDiagramFullscreen()} className="px-3 py-1 rounded text-sm bg-muted">
-                Fullscreen
-              </button>
-            </div>
-          }
-        />
+        <Navbar />
         <div className="flex-1 flex overflow-hidden relative">
-          {visiblePanels.workbench && (
-            <Workbench visible={visiblePanels.workbench} onWidthChange={setWorkbenchWidth} width={workbenchWidth} />
-          )}
+          {visiblePanels.workbench && <Workbench visible={visiblePanels.workbench} onWidthChange={setWorkbenchWidth} width={workbenchWidth} />}
           <ReactFlowProvider>
             <div className="flex-1 flex flex-col">
               <div className="flex-1 flex">
@@ -187,12 +233,8 @@ const DesignEditor: FC<DesignEditorProps> = () => {
           </ReactFlowProvider>
           {rightPanelVisible && (
             <div className="flex">
-              {visiblePanels.details && (
-                <Details visible={visiblePanels.details} onWidthChange={setDetailsWidth} width={detailsWidth} />
-              )}
-              {visiblePanels.chat && (
-                <Chat visible={visiblePanels.chat} onWidthChange={setChatWidth} width={chatWidth} />
-              )}
+              {visiblePanels.details && <Details visible={visiblePanels.details} onWidthChange={setDetailsWidth} width={detailsWidth} />}
+              {visiblePanels.chat && <Chat visible={visiblePanels.chat} onWidthChange={setChatWidth} width={chatWidth} />}
             </div>
           )}
         </div>
