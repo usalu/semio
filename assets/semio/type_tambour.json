@@ -6,7 +6,6 @@
   "variant": "",
   "stock": 2147483647,
   "virtual": false,
-  "location": null,
   "unit": "m",
   "representations": [
     {
@@ -85,13 +84,13 @@
       "t": 0.5,
       "attributes": [
         {
-          "name": "bottom",
+          "key": "bottom",
           "value": "",
           "unit": "",
           "definition": ""
         },
         {
-          "name": "wasp rotation",
+          "key": "wasp rotation",
           "value": "180",
           "unit": "",
           "definition": ""
@@ -119,7 +118,7 @@
       "t": 0.0,
       "attributes": [
         {
-          "name": "top",
+          "key": "top",
           "value": "",
           "unit": "",
           "definition": ""
@@ -311,85 +310,85 @@
   ],
   "attributes": [
     {
-      "name": "width",
+      "key": "width",
       "value": "5.5",
       "unit": "m",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width "
     },
     {
-      "name": "storeys",
+      "key": "storeys",
       "value": "1",
       "unit": "",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/IfcBuildingStorey"
     },
     {
-      "name": "floor height",
+      "key": "floor height",
       "value": "2.75",
       "unit": "m",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight"
     },
     {
-      "name": "platform",
+      "key": "platform",
       "value": "north",
       "unit": "",
       "definition": ""
     },
     {
-      "name": "door width",
+      "key": "door width",
       "value": "0.8",
       "unit": "m",
       "definition": ""
     },
     {
-      "name": "door height",
+      "key": "door height",
       "value": "2",
       "unit": "m",
       "definition": ""
     },
     {
-      "name": "door offset",
+      "key": "door offset",
       "value": "1.15",
       "unit": "m",
       "definition": ""
     },
     {
-      "name": "effective floor area",
+      "key": "effective floor area",
       "value": "24.21",
       "unit": "m²",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
     },
     {
-      "name": "construction cost",
+      "key": "construction cost",
       "value": "217800",
       "unit": "€",
       "definition": ""
     },
     {
-      "name": "heating energy demand",
+      "key": "heating energy demand",
       "value": "484",
       "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
-      "name": "cooling energy demand",
+      "key": "cooling energy demand",
       "value": "242",
       "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
-      "name": "technical equipment energy demand",
+      "key": "technical equipment energy demand",
       "value": "484",
       "unit": "kWh/a",
       "definition": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
-      "name": "maintenance expenses",
+      "key": "maintenance expenses",
       "value": "1016",
       "unit": "€/a",
       "definition": ""
     },
     {
-      "name": "construction global warming potential",
+      "key": "construction global warming potential",
       "value": "1500",
       "unit": "kgCO2e",
       "definition": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"

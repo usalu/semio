@@ -59,6 +59,8 @@ import {
   PieceId,
   pieceIdLikeToPieceId,
   pieceIdToString,
+  piecesMetadata,
+  Plane,
   Port,
   PortDiff,
   PortId,
@@ -118,7 +120,7 @@ export interface DesignEditorEdit {
   undo: DesignEditorStep;
 }
 
-export interface YStore {}
+export interface YStore { }
 
 export interface FileSnapshot {
   snapshot(): SemioFile;
@@ -131,9 +133,9 @@ export interface FileSubscriptions {
   onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
-export interface FileStore extends FileSnapshot {}
+export interface FileStore extends FileSnapshot { }
 
-export interface FileStoreFull extends FileSnapshot, FileActions, FileSubscriptions {}
+export interface FileStoreFull extends FileSnapshot, FileActions, FileSubscriptions { }
 
 export interface RepresentationSnapshot {
   snapshot(): Representation;
@@ -147,9 +149,9 @@ export interface RepresentationSubscriptions {
   onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
 
-export interface RepresentationStore extends RepresentationSnapshot {}
+export interface RepresentationStore extends RepresentationSnapshot { }
 
-export interface RepresentationStoreFull extends RepresentationSnapshot, RepresentationActions, RepresentationSubscriptions {}
+export interface RepresentationStoreFull extends RepresentationSnapshot, RepresentationActions, RepresentationSubscriptions { }
 
 export interface PortSnapshot {
   snapshot(): Port;
@@ -160,8 +162,8 @@ export interface PortActions {
 export interface PortSubscriptions {
   onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-export interface PortStore extends PortSnapshot {}
-export interface PortStoreFull extends PortSnapshot, PortActions, PortSubscriptions {}
+export interface PortStore extends PortSnapshot { }
+export interface PortStoreFull extends PortSnapshot, PortActions, PortSubscriptions { }
 
 export interface TypeSnapshot {
   snapshot(): Type;
@@ -180,8 +182,8 @@ export interface TypeChildStoresFull {
   representations: Map<string, RepresentationStoreFull>;
   ports: Map<string, PortStoreFull>;
 }
-export interface TypeStore extends TypeSnapshot, TypeChildStores {}
-export interface TypeStoreFull extends TypeSnapshot, TypeChildStoresFull, TypeActions, TypeSubscriptions {}
+export interface TypeStore extends TypeSnapshot, TypeChildStores { }
+export interface TypeStoreFull extends TypeSnapshot, TypeChildStoresFull, TypeActions, TypeSubscriptions { }
 
 export interface PieceSnapshot {
   snapshot(): Piece;
@@ -192,10 +194,10 @@ export interface PieceActions {
 export interface PieceSubscriptions {
   onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-export interface PieceChildStores {}
-export interface PieceChildStoresFull {}
-export interface PieceStore extends PieceSnapshot, PieceChildStores {}
-export interface PieceStoreFull extends PieceSnapshot, PieceChildStoresFull, PieceActions, PieceSubscriptions {}
+export interface PieceChildStores { }
+export interface PieceChildStoresFull { }
+export interface PieceStore extends PieceSnapshot, PieceChildStores { }
+export interface PieceStoreFull extends PieceSnapshot, PieceChildStoresFull, PieceActions, PieceSubscriptions { }
 
 export interface ConnectionSnapshot {
   snapshot(): Connection;
@@ -206,8 +208,8 @@ export interface ConnectionActions {
 export interface ConnectionSubscriptions {
   onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
 }
-export interface ConnectionStore extends ConnectionSnapshot {}
-export interface ConnectionStoreFull extends ConnectionSnapshot, ConnectionActions, ConnectionSubscriptions {}
+export interface ConnectionStore extends ConnectionSnapshot { }
+export interface ConnectionStoreFull extends ConnectionSnapshot, ConnectionActions, ConnectionSubscriptions { }
 
 export interface DesignSnapshot {
   snapshot(): Design;
@@ -226,8 +228,8 @@ export interface DesignChildStoresFull {
   pieces: Map<string, PieceStoreFull>;
   connections: Map<string, ConnectionStoreFull>;
 }
-export interface DesignStore extends DesignSnapshot, DesignChildStores {}
-export interface DesignStoreFull extends DesignSnapshot, DesignActions, DesignSubscriptions, DesignChildStoresFull {}
+export interface DesignStore extends DesignSnapshot, DesignChildStores { }
+export interface DesignStoreFull extends DesignSnapshot, DesignActions, DesignSubscriptions, DesignChildStoresFull { }
 
 export interface KitSnapshot {
   snapshot(): Kit;
@@ -266,8 +268,8 @@ export interface KitChildStoresFull {
   designs: Map<string, DesignStoreFull>;
   files: Map<Url, FileStoreFull>;
 }
-export interface KitStore extends KitSnapshot, KitChildStores, KitFileUrls, KitCommands, KitSubscriptions {}
-export interface KitStoreFull extends KitSnapshot, KitActions, KitSubscriptions, KitCommandsFull, KitChildStoresFull, KitFileUrls {}
+export interface KitStore extends KitSnapshot, KitChildStores, KitFileUrls, KitCommands, KitSubscriptions { }
+export interface KitStoreFull extends KitSnapshot, KitActions, KitSubscriptions, KitCommandsFull, KitChildStoresFull, KitFileUrls { }
 
 export interface DesignEditorId {
   kit: KitId;
@@ -343,8 +345,8 @@ export interface DesignEditorCommandsFull {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
   register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable;
 }
-export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands {}
-export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, Merge<DesignEditorActions, DesignEditorSubscriptions> {}
+export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands { }
+export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, Merge<DesignEditorActions, DesignEditorSubscriptions> { }
 export interface SketchpadState {
   mode: Mode;
   theme: Theme;
@@ -400,7 +402,7 @@ export interface SketchpadCommandsFull {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
   register(command: string, callback: (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult): Disposable;
 }
-export interface SketchpadStore extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStores {}
+export interface SketchpadStore extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStores { }
 export interface SketchpadStoreFull extends SketchpadSnapshot, SketchpadCommands, SketchpadChildStoresFull, SketchpadActions {
   on: SketchpadSubscriptions;
 }
@@ -1476,8 +1478,6 @@ class YKitStore implements KitStoreFull {
     this.yKit.set("created", new Date().toISOString());
     this.yKit.set("updated", new Date().toISOString());
 
-    // Document is managed internally by this store
-
     kit.types?.forEach((type) => this.createType(type));
     kit.designs?.forEach((design) => this.createDesign(design));
 
@@ -1761,9 +1761,9 @@ class YDesignEditorStore implements DesignEditorStoreFull {
       pieces: selectedPieceIds ? selectedPieceIds.toArray().map((id) => ({ id_: id })) : [],
       connections: selectedConnections
         ? selectedConnections.toArray().map((id) => ({
-            connected: { piece: { id_: id.split("->")[0] || "" } },
-            connecting: { piece: { id_: id.split("->")[1] || "" } },
-          }))
+          connected: { piece: { id_: id.split("->")[0] || "" } },
+          connecting: { piece: { id_: id.split("->")[1] || "" } },
+        }))
         : [],
     };
   }
@@ -2162,7 +2162,7 @@ class YSketchpadStore implements SketchpadStoreFull {
     // This is a simplified approach - would need more sophisticated tracking in full implementation
     const observer = () => subscribe();
     // Note: Would need to observe kit document creation across all kit docs
-    return () => {}; // Placeholder unsubscribe
+    return () => { }; // Placeholder unsubscribe
   };
 
   onDesignEditorCreated = (subscribe: Subscribe): Unsubscribe => {
@@ -2175,12 +2175,12 @@ class YSketchpadStore implements SketchpadStoreFull {
 
   onKitDeleted = (subscribe: Subscribe): Unsubscribe => {
     // Would need to observe kit document removal
-    return () => {}; // Placeholder
+    return () => { }; // Placeholder
   };
 
   onDesignEditorDeleted = (subscribe: Subscribe): Unsubscribe => {
     // Would need to observe design editor removal
-    return () => {}; // Placeholder
+    return () => { }; // Placeholder
   };
 
   onChanged = (subscribe: Subscribe): Unsubscribe => {
@@ -2635,6 +2635,132 @@ const kitCommands = {
       }
     })();
     return { diff: {} };
+  },
+  "semio.kit.addPiece": (context: KitCommandContext, designId: DesignId, piece: Piece): KitCommandResult => {
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              id: designId,
+              diff: { pieces: { added: [piece] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.kit.addPieces": (context: KitCommandContext, designId: DesignId, pieces: Piece[]): KitCommandResult => {
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              id: designId,
+              diff: { pieces: { added: pieces } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.kit.removePiece": (context: KitCommandContext, designId: DesignId, pieceId: PieceId): KitCommandResult => {
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              id: designId,
+              diff: { pieces: { removed: [pieceId] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.kit.removePieces": (context: KitCommandContext, designId: DesignId, pieceIds: PieceId[]): KitCommandResult => {
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              id: designId,
+              diff: { pieces: { removed: pieceIds } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.kit.addConnection": (context: KitCommandContext, designId: DesignId, connection: Connection): KitCommandResult => {
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              id: designId,
+              diff: { connections: { added: [connection] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.kit.addConnections": (context: KitCommandContext, designId: DesignId, connections: Connection[]): KitCommandResult => {
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              id: designId,
+              diff: { connections: { added: connections } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.kit.removeConnection": (context: KitCommandContext, designId: DesignId, connectionId: ConnectionId): KitCommandResult => {
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              id: designId,
+              diff: { connections: { removed: [connectionId] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.kit.removeConnections": (context: KitCommandContext, designId: DesignId, connectionIds: ConnectionId[]): KitCommandResult => {
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              id: designId,
+              diff: { connections: { removed: connectionIds } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.kit.deleteSelected": (context: KitCommandContext, designId: DesignId, selectedPieces: PieceId[], selectedConnections: ConnectionId[]): KitCommandResult => {
+    return {
+      diff: {
+        designs: {
+          updated: [
+            {
+              id: designId,
+              diff: { pieces: { removed: selectedPieces }, connections: { removed: selectedConnections } },
+            },
+          ],
+        },
+      },
+    };
   },
 };
 
@@ -3121,9 +3247,10 @@ export function useDesign<T>(selector?: (design: Design) => T, id?: DesignId): T
 }
 
 export function useFlattenDiff(): DesignDiff {
-  const design = useDesign();
+  const designScope = useDesignScope();
   const kit = useKit();
-  return useMemo(() => flattenDesign(kit, design), [kit, design]);
+  if (!designScope) throw new Error("useFlattenDiff must be called within a DesignScopeProvider");
+  return useMemo(() => flattenDesign(kit, designScope.id), [kit, designScope.id]);
 }
 
 export function useFlatDesign(): Design {
@@ -3319,10 +3446,10 @@ export function useDesigns(): DesignId[] {
   const kit = useKit();
   return kit.designs
     ? kit.designs.map((design) => ({
-        name: design.name,
-        variant: design.variant,
-        view: design.view,
-      }))
+      name: design.name,
+      variant: design.variant,
+      view: design.view,
+    }))
     : [];
 }
 
@@ -3343,7 +3470,24 @@ export function useKitCommands() {
   return {
     importKit: (url: string) => kitStore.execute("semio.kit.import", url),
     exportKit: () => kitStore.execute("semio.kit.export"),
+    createType: (type: Type) => kitStore.execute("semio.kit.createType", type),
+    updateType: (typeId: TypeId, typeDiff: TypeDiff) => kitStore.execute("semio.kit.updateType", typeId, typeDiff),
+    deleteType: (typeId: TypeId) => kitStore.execute("semio.kit.deleteType", typeId),
     createDesign: (design: Design) => kitStore.execute("semio.kit.createDesign", design),
+    updateDesign: (designId: DesignId, designDiff: DesignDiff) => kitStore.execute("semio.kit.updateDesign", designId, designDiff),
+    deleteDesign: (designId: DesignId) => kitStore.execute("semio.kit.deleteDesign", designId),
+    addFile: (file: SemioFile, blob?: Blob) => kitStore.execute("semio.kit.addFile", file, blob),
+    updateFile: (url: Url, fileDiff: FileDiff, blob?: Blob) => kitStore.execute("semio.kit.updateFile", url, fileDiff, blob),
+    removeFile: (url: Url) => kitStore.execute("semio.kit.removeFile", url),
+    addPiece: (designId: DesignId, piece: Piece) => kitStore.execute("semio.kit.addPiece", designId, piece),
+    addPieces: (designId: DesignId, pieces: Piece[]) => kitStore.execute("semio.kit.addPieces", designId, pieces),
+    removePiece: (designId: DesignId, pieceId: PieceId) => kitStore.execute("semio.kit.removePiece", designId, pieceId),
+    removePieces: (designId: DesignId, pieceIds: PieceId[]) => kitStore.execute("semio.kit.removePieces", designId, pieceIds),
+    addConnection: (designId: DesignId, connection: Connection) => kitStore.execute("semio.kit.addConnection", designId, connection),
+    addConnections: (designId: DesignId, connections: Connection[]) => kitStore.execute("semio.kit.addConnections", designId, connections),
+    removeConnection: (designId: DesignId, connectionId: ConnectionId) => kitStore.execute("semio.kit.removeConnection", designId, connectionId),
+    removeConnections: (designId: DesignId, connectionIds: ConnectionId[]) => kitStore.execute("semio.kit.removeConnections", designId, connectionIds),
+    deleteSelected: (designId: DesignId, selectedPieces: PieceId[], selectedConnections: ConnectionId[]) => kitStore.execute("semio.kit.deleteSelected", designId, selectedPieces, selectedConnections),
   };
 }
 
@@ -3366,14 +3510,6 @@ export function useDesignEditorCommands() {
     removeConnectionFromSelection: (connection: Connection) => designEditor.execute("semio.designEditor.removeConnectionFromSelection", connection),
     selectPiecePort: (pieceId: PieceId, portId: PortId) => designEditor.execute("semio.designEditor.selectPiecePort", pieceId, portId),
     deselectPiecePort: () => designEditor.execute("semio.designEditor.deselectPiecePort"),
-    addConnection: (connection: Connection) => designEditor.execute("semio.designEditor.addConnection", connection),
-    addConnections: (connections: Connection[]) => designEditor.execute("semio.designEditor.addConnections", connections),
-    setConnections: (connections: Connection[]) => designEditor.execute("semio.designEditor.setConnections", connections),
-    setPiece: (piece: Piece) => designEditor.execute("semio.designEditor.setPiece", piece),
-    setPieces: (pieces: Piece[]) => designEditor.execute("semio.designEditor.setPieces", pieces),
-    setConnection: (connection: Connection) => designEditor.execute("semio.designEditor.setConnection", connection),
-    setDesign: (design: Design) => designEditor.execute("semio.designEditor.setDesign", design),
-    deleteSelected: () => designEditor.execute("semio.designEditor.deleteSelected"),
     toggleDiagramFullscreen: () => designEditor.execute("semio.designEditor.toggleDiagramFullscreen"),
     toggleModelFullscreen: () => designEditor.execute("semio.designEditor.toggleModelFullscreen"),
     executeCommand: (command: string, ...args: any[]) => designEditor.execute(command, ...args),

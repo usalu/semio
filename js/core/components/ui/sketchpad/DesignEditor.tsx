@@ -35,7 +35,7 @@ import Diagram from "./Diagram";
 import Model from "./Model";
 import Workbench, { DesignAvatar, TypeAvatar } from "./Workbench";
 
-export interface DesignEditorProps {}
+export interface DesignEditorProps { }
 
 export interface ResizablePanelProps {
   visible: boolean;
@@ -51,10 +51,12 @@ interface VisiblePanels {
 }
 
 const DesignEditor: FC<DesignEditorProps> = () => {
+  console.log("DesignEditor: Starting render");
   const kit = useKit();
   const design = useDesign();
   const fullscreenPanel = useFullscreen();
   const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen } = useDesignEditorCommands();
+  console.log("DesignEditor: kit:", kit ? `${kit.name} v${kit.version}` : "null", "design:", design ? `${design.name}` : "null");
 
   // Panel visibility and sizing state
   const [visiblePanels, setVisiblePanels] = useState<VisiblePanels>({
@@ -172,7 +174,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
                 <div className="flex-1 relative">
                   <Diagram />
                 </div>
-                <div className="flex-1 relative">
+                <div className="flex-1 relative" style={{ border: "2px solid red" }}>
                   <Model />
                 </div>
               </div>

@@ -205,13 +205,53 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(({ piece, plane, fileUrl, sel
 });
 
 const ModelDesign: FC = () => {
-  const { removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = useDesignEditorCommands();
-  const selection = useDesignEditorSelection();
-  const fileUrls = useFileUrls();
-  const others = useDesignEditorOthers();
-  const kit = useKit();
-  const flatDesign = useFlatDesign();
-  if (!kit || !flatDesign) return null;
+  const [debugInfo, setDebugInfo] = useState<string>("");
+
+  console.log("ModelDesign: Starting render");
+
+  let commands, selection, fileUrls, others, kit, flatDesign;
+
+  try {
+    commands = useDesignEditorCommands();
+    console.log("ModelDesign: Got commands");
+
+    selection = useDesignEditorSelection();
+    console.log("ModelDesign: Got selection");
+
+    fileUrls = useFileUrls();
+    console.log("ModelDesign: Got fileUrls");
+
+    others = useDesignEditorOthers();
+    console.log("ModelDesign: Got others");
+
+    kit = useKit();
+    console.log("ModelDesign: Got kit", kit ? `${kit.name} v${kit.version}` : "null");
+
+    flatDesign = useFlatDesign();
+    console.log("ModelDesign: Got flatDesign", flatDesign ? { pieces: flatDesign.pieces?.length || 0 } : "null");
+
+    setDebugInfo(`Kit: ${kit ? `${kit.name} v${kit.version}` : "null"}, FlatDesign: ${flatDesign ? `${flatDesign.pieces?.length || 0} pieces` : "null"}`);
+  } catch (error) {
+    console.error("ModelDesign: Error in hooks:", error);
+    return (
+      <mesh>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshBasicMaterial color="red" />
+      </mesh>
+    );
+  }
+
+  const { removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = commands;
+
+  if (!kit || !flatDesign) {
+    console.log("ModelDesign: Returning null because kit or flatDesign is null");
+    return (
+      <mesh>
+        <boxGeometry args={[2, 0.5, 0.5]} />
+        <meshBasicMaterial color="yellow" />
+      </mesh>
+    );
+  }
   const types = kit?.types ?? [];
 
   const piecePlanes = useMemo(() => flatDesign.pieces?.map((p: Piece) => p.plane!) || [], [flatDesign]);
@@ -298,6 +338,23 @@ const ModelDesign: FC = () => {
   );
 };
 
+const SimpleModelCore: FC = () => {
+  console.log("SimpleModelCore: Starting render");
+
+  return (
+    <>
+      <OrthographicCamera />
+      <OrbitControls makeDefault />
+      <ambientLight intensity={1} />
+      <mesh>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshBasicMaterial color="purple" />
+      </mesh>
+      <Grid infiniteGrid={true} sectionColor="#888888" cellColor="#444444" />
+    </>
+  );
+};
+
 const Gizmo: FC = () => {
   const colors = useMemo(() => [getComputedColor("--color-primary"), getComputedColor("--color-tertiary"), getComputedColor("--color-secondary")] as [string, string, string], []);
   const labels = useMemo(() => ["X", "Z", "-Y"] as [string, string, string], []);
@@ -311,11 +368,13 @@ const Gizmo: FC = () => {
 };
 
 const ModelCore: FC = () => {
+  console.log("ModelCore: Starting render");
   const fullscreen = useDesignEditorFullscreen() === DesignEditorFullscreenPanel.Model;
   const [gridColors, setGridColors] = useState({
     sectionColor: getComputedColor("--foreground"),
     cellColor: getComputedColor("--accent-foreground"),
   });
+  console.log("ModelCore: fullscreen:", fullscreen, "gridColors:", gridColors);
 
   useEffect(() => {
     const updateColors = () =>
@@ -344,6 +403,11 @@ const ModelCore: FC = () => {
         }}
       />
       <ambientLight intensity={1} />
+      {/* Debug cube to show ModelCore is rendering */}
+      <mesh position={[0, 0, 5]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshBasicMaterial color="blue" />
+      </mesh>
       {/* <Stage center={{ disable: true }} environment={null}> */}
       <ModelDesign />
       {/* </Stage> */}
@@ -354,6 +418,7 @@ const ModelCore: FC = () => {
 };
 
 const Model: FC = () => {
+  console.log("Model: Starting render");
   const { deselectAll, toggleModelFullscreen } = useDesignEditorCommands();
   const onDoubleClickCapture = useCallback(
     (e: React.MouseEvent) => {
@@ -372,7 +437,7 @@ const Model: FC = () => {
   return (
     <div id="model" className="h-full w-full">
       <Canvas onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed}>
-        <ModelCore />
+        <SimpleModelCore />
       </Canvas>
     </div>
   );

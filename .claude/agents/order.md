@@ -32,8 +32,12 @@ First hierarchy:
 Second hierarchy:
 
 1. Id
+1. Input
+1. Output
 1. Diff
 1. Diffs
+1. Context
+1. Prediction
 1. Model
 
 1. Representation Editor
