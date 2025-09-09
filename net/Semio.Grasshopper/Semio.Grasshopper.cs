@@ -751,7 +751,7 @@ public class AttributeIdParam : IdParam<AttributeIdGoo, AttributeId>
 
 public class AttributeIdComponent : IdComponent<AttributeIdParam, AttributeIdGoo, AttributeId>
 {
-    public AttributeIdComponent() : base("AttributeId", "AI", "AttributeId component") { }
+    public AttributeIdComponent() : base("The ID of the attribute.", "AtI", "AttributeId component") { }
     public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B92");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -828,7 +828,7 @@ public class AttributeDiffParam : DiffParam<AttributeDiffGoo, AttributeDiff>
 
 public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, AttributeDiffGoo, AttributeDiff>
 {
-    public AttributeDiffComponent() : base("AttributeDiff", "AD", "AttributeDiff component") { }
+    public AttributeDiffComponent() : base("A diff for attributes.", "ADf", "AttributeDiff component") { }
     public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B96");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -920,7 +920,7 @@ public class AttributeParam : ModelParam<AttributeGoo, Attribute>
 
 public class AttributeComponent : ModelComponent<AttributeParam, AttributeGoo, Attribute>
 {
-    public AttributeComponent() : base("Atr", "At", "Construct, deconstruct or modify an attribute") { }
+    public AttributeComponent() : base("A attribute is a key value pair with an an optional definition.", "Atr", "Construct, deconstruct or modify an attribute") { }
     public override Guid ComponentGuid => new("51146B05-ACEB-4810-AD75-10AC3E029D39");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -1042,7 +1042,7 @@ public class RepresentationIdParam : IdParam<RepresentationIdGoo, Representation
 
 public class RepresentationIdComponent : IdComponent<RepresentationIdParam, RepresentationIdGoo, RepresentationId>
 {
-    public RepresentationIdComponent() : base("Rep", "Rp", "The identifier of a representation.") { }
+    public RepresentationIdComponent() : base("The identifier of a representation.", "Rep", "RepresentationId component") { }
     public override Guid ComponentGuid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -1099,7 +1099,7 @@ public class RepresentationDiffParam : DiffParam<RepresentationDiffGoo, Represen
 
 public class RepresentationDiffComponent : DiffComponent<RepresentationDiffParam, RepresentationDiffGoo, RepresentationDiff>
 {
-    public RepresentationDiffComponent() : base("RDf", "RD", "A diff for representations.") { }
+    public RepresentationDiffComponent() : base("A diff for representations.", "RDf", "RepresentationDiff component") { }
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AA");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -1248,7 +1248,7 @@ public class RepresentationParam : ModelParam<RepresentationGoo, Representation>
 
 public class RepresentationComponent : ModelComponent<RepresentationParam, RepresentationGoo, Representation>
 {
-    public RepresentationComponent() : base("Rep", "Rp", "A representation is a link to a resource that describes a type for a certain level of detail and tags.") { }
+    public RepresentationComponent() : base("A representation is a link to a resource that describes a type for a certain level of detail and tags.", "Rep", "Construct, deconstruct or modify a representation") { }
     public override Guid ComponentGuid => new("37228B2F-70DF-44B7-A3B6-781D5AFCE122");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -1360,7 +1360,7 @@ public class FileIdParam : IdParam<FileIdGoo, FileId>
 
 public class FileIdComponent : IdComponent<FileIdParam, FileIdGoo, FileId>
 {
-    public FileIdComponent() : base("Fil", "Fl", "The identifier of a file.") { }
+    public FileIdComponent() : base("The identifier of a file.", "Fil", "FileId component") { }
     public override Guid ComponentGuid => new("50C3D4E5-F6A7-B8C9-D0E1-F2A3B4C5D6E8");
 
     protected override Guid GetComponentGuid() => ComponentGuid;
@@ -1416,7 +1416,7 @@ public class FileDiffParam : DiffParam<FileDiffGoo, FileDiff>
 
 public class FileDiffComponent : DiffComponent<FileDiffParam, FileDiffGoo, FileDiff>
 {
-    public FileDiffComponent() : base("FDf", "FD", "A diff for files.") { }
+    public FileDiffComponent() : base("A diff for files.", "FDf", "FileDiff component") { }
     public override Guid ComponentGuid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F1");
 
     protected override Guid GetComponentGuid() => ComponentGuid;
@@ -1568,7 +1568,7 @@ public class FileParam : ModelParam<FileGoo, File>
 
 public class FileComponent : ModelComponent<FileParam, FileGoo, File>
 {
-    public FileComponent() : base("Fil", "Fl", "A file with content.") { }
+    public FileComponent() : base("A file with content.", "Fil", "Construct, deconstruct or modify a file") { }
     public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F9");
 
     protected override Guid GetComponentGuid() => ComponentGuid;
@@ -1681,7 +1681,7 @@ public class DiagramPointParam : ModelParam<DiagramPointGoo, DiagramPoint>
 
 public class DiagramPointComponent : ModelComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
 {
-    public DiagramPointComponent() : base("DiagramPoint", "DP", "Construct, deconstruct or modify a diagram point") { }
+    public DiagramPointComponent() : base("A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.", "DPt", "Construct, deconstruct or modify a diagram point") { }
     public override Guid ComponentGuid => new("61FB9BBE-64DE-42B2-B7EF-69CD97FDD9E3");
 
     protected override Guid GetComponentGuid() => ComponentGuid;
@@ -1803,7 +1803,7 @@ public class PortIdParam : IdParam<PortIdGoo, PortId>
 
 public class PortIdComponent : IdComponent<PortIdParam, PortIdGoo, PortId>
 {
-    public PortIdComponent() : base("Por", "Po", "The optional local identifier of the port within the type. No id means the default port.") { }
+    public PortIdComponent() : base("The optional local identifier of the port within the type. No id means the default port.", "Por", "PortId component") { }
     public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B2");
 
     protected override Guid GetComponentGuid() => ComponentGuid;
@@ -1879,7 +1879,7 @@ public class PortDiffParam : DiffParam<PortDiffGoo, PortDiff>
 
 public class PortDiffComponent : DiffComponent<PortDiffParam, PortDiffGoo, PortDiff>
 {
-    public PortDiffComponent() : base("PortDiff", "PD", "PortDiff component") { }
+    public PortDiffComponent() : base("A diff for ports.", "PDf", "PortDiff component") { }
     public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B3");
 
     protected override Guid GetComponentGuid() => ComponentGuid;
@@ -1985,7 +1985,7 @@ public class PortParam : ModelParam<PortGoo, Port>
 
 public class PortComponent : ModelComponent<PortParam, PortGoo, Port>
 {
-    public PortComponent() : base("Por", "Po", "A port is a connection point (with a direction) of a type.") { }
+    public PortComponent() : base("A port is a connection point (with a direction) of a type.", "Por", "Construct, deconstruct or modify a port") { }
     public override Guid ComponentGuid => new("E505C90C-71F4-413F-82FE-65559D9FFAB5");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -2197,7 +2197,7 @@ public class AuthorIdParam : IdParam<AuthorIdGoo, AuthorId>
 
 public class AuthorIdComponent : IdComponent<AuthorIdParam, AuthorIdGoo, AuthorId>
 {
-    public AuthorIdComponent() : base("Aut", "Au", "The id of the author.") { }
+    public AuthorIdComponent() : base("The id of the author.", "Aut", "AuthorId component") { }
     public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1D");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -2474,7 +2474,7 @@ public class TypeIdParam : IdParam<TypeIdGoo, TypeId>
 
 public class TypeIdComponent : IdComponent<TypeIdParam, TypeIdGoo, TypeId>
 {
-    public TypeIdComponent() : base("Typ", "Ty", "The identifier of the type within the kit.") { }
+    public TypeIdComponent() : base("The identifier of the type within the kit.", "Typ", "TypeId component") { }
     public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C3");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -2727,7 +2727,7 @@ public class TypeParam : ModelParam<TypeGoo, Type>
 
 public class TypeComponent : ModelComponent<TypeParam, TypeGoo, Type>
 {
-    public TypeComponent() : base("Typ", "Ty", "A type is a reusable element that can be connected with other types over ports.") { }
+    public TypeComponent() : base("A type is a reusable element that can be connected with other types over ports.", "Typ", "Construct, deconstruct or modify a type") { }
     public override Guid ComponentGuid => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -2920,7 +2920,7 @@ public class PieceIdParam : IdParam<PieceIdGoo, PieceId>
 
 public class PieceIdComponent : IdComponent<PieceIdParam, PieceIdGoo, PieceId>
 {
-    public PieceIdComponent() : base("Pce", "Pc", "The optional local identifier of the piece within the design. No id means the default piece.") { }
+    public PieceIdComponent() : base("The optional local identifier of the piece within the design. No id means the default piece.", "Pce", "PieceId component") { }
     public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D4");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -3173,7 +3173,7 @@ public class PieceParam : ModelParam<PieceGoo, Piece>
 
 public class PieceComponent : ModelComponent<PieceParam, PieceGoo, Piece>
 {
-    public PieceComponent() : base("Pce", "Pc", "A piece is a 3d-instance of a type in a design.") { }
+    public PieceComponent() : base("A piece is a 3d-instance of a type in a design.", "Pce", "Construct, deconstruct or modify a piece") { }
     public override Guid ComponentGuid => new("49CD29FC-F6EB-43D2-8C7D-E88F8520BA48");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -3392,7 +3392,7 @@ public class SideParam : ModelParam<SideGoo, Side>
 
 public class SideComponent : ModelComponent<SideParam, SideGoo, Side>
 {
-    public SideComponent() : base("Side", "Sid", "Construct, deconstruct or modify a side") { }
+    public SideComponent() : base("A side of a piece in a connection.", "Sde", "Construct, deconstruct or modify a side") { }
     public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E6");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -3410,10 +3410,10 @@ public class SideComponent : ModelComponent<SideParam, SideGoo, Side>
 
     protected override void RegisterModelOutputs(GH_OutputParamManager pManager)
     {
-        pManager.AddParameter(new SideParam(), "Side", "Sid", "The side", GH_ParamAccess.item);
-        pManager.AddParameter(new PieceIdParam(), "Piece", "P", "The piece ID of the side", GH_ParamAccess.item);
+        pManager.AddParameter(new SideParam(), "Sde", "Sd", "The side", GH_ParamAccess.item);
+        pManager.AddParameter(new PieceIdParam(), "Pce", "Pc", "The piece ID of the side", GH_ParamAccess.item);
         pManager.AddParameter(new PieceIdParam(), "DesignPiece", "DP", "The design piece ID of the side", GH_ParamAccess.item);
-        pManager.AddParameter(new PortIdParam(), "Port", "Po", "The port ID of the side", GH_ParamAccess.item);
+        pManager.AddParameter(new PortIdParam(), "Por", "Po", "The port ID of the side", GH_ParamAccess.item);
     }
 
     protected override void ProcessModelInputs(IGH_DataAccess DA, Side side)
@@ -3525,7 +3525,7 @@ public class ConnectionIdParam : IdParam<ConnectionIdGoo, ConnectionId>
 
 public class ConnectionIdComponent : IdComponent<ConnectionIdParam, ConnectionIdGoo, ConnectionId>
 {
-    public ConnectionIdComponent() : base("ConId", "Cn", "The local identifier of the connection within the design.") { }
+    public ConnectionIdComponent() : base("The local identifier of the connection within the design.", "ConId", "ConnectionId component") { }
     public override Guid ComponentGuid => new("40B2C3D4-E5F6-A7B8-C9D0-E1F2A3B4C5D7");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -3769,7 +3769,7 @@ public class ConnectionParam : ModelParam<ConnectionGoo, Connection>
 
 public class ConnectionComponent : ModelComponent<ConnectionParam, ConnectionGoo, Connection>
 {
-    public ConnectionComponent() : base("Connection", "Con", "Construct, deconstruct or modify a connection") { }
+    public ConnectionComponent() : base("A bidirectional connection between two pieces of a design.", "Con", "Construct, deconstruct or modify a connection") { }
     public override Guid ComponentGuid => new("AB212F90-124C-4985-B3EE-1C13D7827560");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -3933,7 +3933,7 @@ public class DesignIdParam : IdParam<DesignIdGoo, DesignId>
 
 public class DesignIdComponent : IdComponent<DesignIdParam, DesignIdGoo, DesignId>
 {
-    public DesignIdComponent() : base("Dsn", "Dn", "The local identifier of the design within the kit.") { }
+    public DesignIdComponent() : base("The local identifier of the design within the kit.", "Dsn", "DesignId component") { }
     public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A7");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -4173,7 +4173,7 @@ public class DesignParam : ModelParam<DesignGoo, Design>
 
 public class DesignComponent : ModelComponent<DesignParam, DesignGoo, Design>
 {
-    public DesignComponent() : base("Design", "D", "Design component") { }
+    public DesignComponent() : base("A design is a collection of pieces that are connected.", "Dsn", "Design component") { }
     public override Guid ComponentGuid => new("AAD8D144-2EEE-48F1-A8A9-52977E86CB54");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -4351,7 +4351,7 @@ public class KitIdParam : IdParam<KitIdGoo, KitId>
 
 public class KitIdComponent : IdComponent<KitIdParam, KitIdGoo, KitId>
 {
-    public KitIdComponent() : base("KitId", "KId", "The local identifier of the kit.") { }
+    public KitIdComponent() : base("The local identifier of the kit.", "KitId", "KitId component") { }
     public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B1");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -4497,7 +4497,7 @@ public class KitParam : ModelParam<KitGoo, Kit>
 
 public class KitComponent : ModelComponent<KitParam, KitGoo, Kit>
 {
-    public KitComponent() : base("Kit", "K", "Kit component") { }
+    public KitComponent() : base("A kit is a collection of types and designs.", "Kit", "Kit component") { }
     public override Guid ComponentGuid => new("987560A8-10D4-43F6-BEBE-D71DC2FD86AF");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -4780,7 +4780,7 @@ public class QualityIdParam : IdParam<QualityIdGoo, QualityId>
 
 public class QualityIdComponent : IdComponent<QualityIdParam, QualityIdGoo, QualityId>
 {
-    public QualityIdComponent() : base("QualityId", "QI", "QualityId component") { }
+    public QualityIdComponent() : base("A quality id is a key for a quality.", "Qal", "QualityId component") { }
     public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -4972,7 +4972,7 @@ public class QualityParam : ModelParam<QualityGoo, Quality>
 
 public class QualityComponent : ModelComponent<QualityParam, QualityGoo, Quality>
 {
-    public QualityComponent() : base("Quality", "Q", "Quality component") { }
+    public QualityComponent() : base("A quality is numeric metadata used for stats and benchmarks.", "Qal", "Quality component") { }
     public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -5125,7 +5125,7 @@ public class BenchmarkParam : ModelParam<BenchmarkGoo, Benchmark>
 
 public class BenchmarkComponent : ModelComponent<BenchmarkParam, BenchmarkGoo, Benchmark>
 {
-    public BenchmarkComponent() : base("Benchmark", "B", "Benchmark component") { }
+    public BenchmarkComponent() : base("A benchmark is a value with an optional unit for a quality.", "Bmk", "Benchmark component") { }
     public override Guid ComponentGuid => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -5246,7 +5246,7 @@ public class PropParam : ModelParam<PropGoo, Prop>
 
 public class PropComponent : ModelComponent<PropParam, PropGoo, Prop>
 {
-    public PropComponent() : base("Prop", "P", "Prop component") { }
+    public PropComponent() : base("A property is a value with an optional unit for a quality.", "Prp", "Prop component") { }
     public override Guid ComponentGuid => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -5355,7 +5355,7 @@ public class StatParam : ModelParam<StatGoo, Stat>
 
 public class StatComponent : ModelComponent<StatParam, StatGoo, Stat>
 {
-    public StatComponent() : base("Stat", "S", "Stat component") { }
+    public StatComponent() : base("A stat about a quality on a design which is optionally bounded.", "Stt", "Stat component") { }
     public override Guid ComponentGuid => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -5472,7 +5472,7 @@ public class LayerParam : ModelParam<LayerGoo, Layer>
 
 public class LayerComponent : ModelComponent<LayerParam, LayerGoo, Layer>
 {
-    public LayerComponent() : base("Layer", "L", "Layer component") { }
+    public LayerComponent() : base("A layer for organizing design elements.", "Lyr", "Layer component") { }
     public override Guid ComponentGuid => new("90A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;
@@ -5577,7 +5577,7 @@ public class GroupParam : ModelParam<GroupGoo, Group>
 
 public class GroupComponent : ModelComponent<GroupParam, GroupGoo, Group>
 {
-    public GroupComponent() : base("Group", "G", "Group component") { }
+    public GroupComponent() : base("A group for organizing design elements.", "Grp", "Group component") { }
     public override Guid ComponentGuid => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
     protected override Guid GetComponentGuid() => ComponentGuid;
     protected override Bitmap GetComponentIcon() => Resources.semio_24x24;

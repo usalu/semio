@@ -324,7 +324,7 @@ export interface DesignEditorSnapshot {
 }
 export interface DesignEditorStateDiff {
   fullscreenPanel?: DesignEditorFullscreenPanel;
-  selection?: DesignEditorSelection;
+  selection?: DesignEditorSelectionDiff;
   presence?: DesignEditorPresence;
   others?: DesignEditorPresenceOther[];
 }
@@ -1802,11 +1802,11 @@ class YDesignEditorStore implements DesignEditorStoreFull {
   constructor(parent: SketchpadStore, state?: DesignEditorState) {
     this.parent = parent;
     this.yDesignEditorStore.set("fullscreenPanel", state?.fullscreenPanel || DesignEditorFullscreenPanel.None);
-    this.yDesignEditorStore.set("selection", new Y.Map<any>());
-    const piecesSelection = new Y.Map<any>();
-    this.yDesignEditorStore.set("pieces", piecesSelection);
-    const connectionsSelection = new Y.Map<any>();
-    this.yDesignEditorStore.set("connections", connectionsSelection);
+    this.yDesignEditorStore.set("selectedPieceIds", new Y.Array<string>());
+    this.yDesignEditorStore.set("selectedConnections", new Y.Array<string>());
+    this.yDesignEditorStore.set("selectedPiecePortPieceId", "");
+    this.yDesignEditorStore.set("selectedPiecePortPortId", "");
+    this.yDesignEditorStore.set("selectedPiecePortDesignPieceId", "");
     this.yDesignEditorStore.set("isTransactionActive", false);
     this.yDesignEditorStore.set("presence", new Y.Map<any>());
     this.yDesignEditorStore.set("others", new Y.Array<any>());
@@ -1825,14 +1825,27 @@ class YDesignEditorStore implements DesignEditorStoreFull {
   get selection(): DesignEditorSelection {
     const selectedPieceIds = this.yDesignEditorStore.get("selectedPieceIds") as Y.Array<string>;
     const selectedConnections = this.yDesignEditorStore.get("selectedConnections") as Y.Array<string>;
+    const selectedPiecePortPieceId = this.yDesignEditorStore.get("selectedPiecePortPieceId") as string;
+    const selectedPiecePortPortId = this.yDesignEditorStore.get("selectedPiecePortPortId") as string;
+    const selectedPiecePortDesignPieceId = this.yDesignEditorStore.get("selectedPiecePortDesignPieceId") as string;
+    
+    const port = selectedPiecePortPieceId && selectedPiecePortPortId 
+      ? {
+          piece: { id_: selectedPiecePortPieceId },
+          port: { id_: selectedPiecePortPortId },
+          ...(selectedPiecePortDesignPieceId && { designPiece: { id_: selectedPiecePortDesignPieceId } }),
+        }
+      : undefined;
+    
     return {
-      pieces: selectedPieceIds ? selectedPieceIds.toArray().map((id) => ({ id_: id })) : [],
-      connections: selectedConnections
+      pieces: selectedPieceIds && selectedPieceIds.toArray ? selectedPieceIds.toArray().map((id) => ({ id_: id })) : [],
+      connections: selectedConnections && selectedConnections.toArray
         ? selectedConnections.toArray().map((id) => ({
             connected: { piece: { id_: id.split("->")[0] || "" } },
             connecting: { piece: { id_: id.split("->")[1] || "" } },
           }))
         : [],
+      port,
     };
   }
   get designDiff(): DesignDiff {
@@ -1897,16 +1910,79 @@ class YDesignEditorStore implements DesignEditorStoreFull {
     if (diff.fullscreenPanel) this.yDesignEditorStore.set("fullscreenPanel", diff.fullscreenPanel);
     if (diff.selection) {
       if (diff.selection.pieces) {
-        const yPieceIds = this.yDesignEditorStore.get("selectedPieceIds") as Y.Array<string>;
-        yPieceIds.delete(0, yPieceIds.length);
-        const pieceIdStrings = diff.selection.pieces.map((piece) => piece.id_);
-        yPieceIds.insert(0, pieceIdStrings);
+        let yPieceIds = this.yDesignEditorStore.get("selectedPieceIds") as Y.Array<string>;
+        if (!yPieceIds) {
+          yPieceIds = new Y.Array<string>();
+          this.yDesignEditorStore.set("selectedPieceIds", yPieceIds);
+        }
+        
+        const currentIds = new Set(yPieceIds.toArray());
+        
+        if (diff.selection.pieces.removed) {
+          diff.selection.pieces.removed.forEach((piece) => {
+            const currentArray = yPieceIds.toArray();
+            const index = currentArray.indexOf(piece.id_);
+            if (index >= 0) {
+              yPieceIds.delete(index, 1);
+            }
+          });
+        }
+        
+        if (diff.selection.pieces.added) {
+          const newIds = diff.selection.pieces.added
+            .filter((piece) => !currentIds.has(piece.id_))
+            .map((piece) => piece.id_);
+          if (newIds.length > 0) {
+            yPieceIds.insert(yPieceIds.length, newIds);
+          }
+        }
       }
+      
       if (diff.selection.connections) {
-        const yConnectionIds = this.yDesignEditorStore.get("selectedConnections") as Y.Array<string>;
-        yConnectionIds.delete(0, yConnectionIds.length);
-        const connectionIdStrings = diff.selection.connections.map((conn) => `${conn.connected.piece.id_}->${conn.connecting.piece.id_}`);
-        yConnectionIds.insert(0, connectionIdStrings);
+        let yConnectionIds = this.yDesignEditorStore.get("selectedConnections") as Y.Array<string>;
+        if (!yConnectionIds) {
+          yConnectionIds = new Y.Array<string>();
+          this.yDesignEditorStore.set("selectedConnections", yConnectionIds);
+        }
+        
+        const currentIds = new Set(yConnectionIds.toArray());
+        
+        if (diff.selection.connections.removed) {
+          diff.selection.connections.removed.forEach((conn) => {
+            const connStr = `${conn.connected.piece.id_}->${conn.connecting.piece.id_}`;
+            const currentArray = yConnectionIds.toArray();
+            const index = currentArray.indexOf(connStr);
+            if (index >= 0) {
+              yConnectionIds.delete(index, 1);
+            }
+          });
+        }
+        
+        if (diff.selection.connections.added) {
+          const newIds = diff.selection.connections.added
+            .filter((conn) => {
+              const connStr = `${conn.connected.piece.id_}->${conn.connecting.piece.id_}`;
+              return !currentIds.has(connStr);
+            })
+            .map((conn) => `${conn.connected.piece.id_}->${conn.connecting.piece.id_}`);
+          if (newIds.length > 0) {
+            yConnectionIds.insert(yConnectionIds.length, newIds);
+          }
+        }
+      }
+      
+      if (diff.selection.port) {
+        if (diff.selection.port.piece && diff.selection.port.port) {
+          this.yDesignEditorStore.set("selectedPiecePortPieceId", diff.selection.port.piece.id_);
+          this.yDesignEditorStore.set("selectedPiecePortPortId", diff.selection.port.port.id_ || "");
+          if (diff.selection.port.designPiece) {
+            this.yDesignEditorStore.set("selectedPiecePortDesignPieceId", diff.selection.port.designPiece.id_);
+          }
+        } else {
+          this.yDesignEditorStore.set("selectedPiecePortPieceId", "");
+          this.yDesignEditorStore.set("selectedPiecePortPortId", "");
+          this.yDesignEditorStore.set("selectedPiecePortDesignPieceId", "");
+        }
       }
     }
     if (diff.presence) {
@@ -3030,48 +3106,76 @@ const designEditorCommands = {
   },
   "semio.designEditor.selectAll": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
     const design = findDesignInKit(context.kit, context.designId)!;
+    const currentSelection = context.designEditor.selection;
     return {
       diff: {
-        selection: { pieces: design.pieces ?? [], connections: design.connections ?? [] },
+        selection: {
+          pieces: {
+            removed: currentSelection.pieces ?? [],
+            added: design.pieces ?? [],
+          },
+          connections: {
+            removed: currentSelection.connections ?? [],
+            added: design.connections ?? [],
+          },
+        },
       },
     };
   },
   "semio.designEditor.deselectAll": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    const currentSelection = context.designEditor.selection;
     return {
       diff: {
-        selection: { pieces: [], connections: [] },
+        selection: {
+          pieces: { removed: currentSelection.pieces ?? [] },
+          connections: { removed: currentSelection.connections ?? [] },
+        },
       },
     };
   },
   "semio.designEditor.selectPiece": (context: DesignEditorCommandContext, pieceId: PieceId): DesignEditorCommandResult => {
+    const currentSelection = context.designEditor.selection;
     return {
       diff: {
-        selection: { pieces: [pieceId], connections: [] },
+        selection: {
+          pieces: {
+            removed: currentSelection.pieces ?? [],
+            added: [pieceId],
+          },
+          connections: { removed: currentSelection.connections ?? [] },
+        },
       },
     };
   },
   "semio.designEditor.selectPieces": (context: DesignEditorCommandContext, pieceIds: PieceId[]): DesignEditorCommandResult => {
+    const currentSelection = context.designEditor.selection;
     return {
       diff: {
-        selection: { pieces: pieceIds, connections: [] },
+        selection: {
+          pieces: {
+            removed: currentSelection.pieces ?? [],
+            added: pieceIds,
+          },
+          connections: { removed: currentSelection.connections ?? [] },
+        },
       },
     };
   },
   "semio.designEditor.addPieceToSelection": (context: DesignEditorCommandContext, pieceId: PieceId): DesignEditorCommandResult => {
-    const currentSelection = context.designEditor.selection;
-    const newPieceIds = [...(currentSelection.pieces ?? []), pieceId];
     return {
       diff: {
-        selection: { pieces: newPieceIds, connections: currentSelection.connections ?? [] },
+        selection: {
+          pieces: { added: [pieceId] },
+        },
       },
     };
   },
   "semio.designEditor.removePieceFromSelection": (context: DesignEditorCommandContext, pieceId: PieceId): DesignEditorCommandResult => {
-    const currentSelection = context.designEditor.selection;
-    const newPieceIds = (currentSelection.pieces ?? []).filter((id) => id.id_ !== pieceId.id_);
     return {
       diff: {
-        selection: { pieces: newPieceIds, connections: currentSelection.connections ?? [] },
+        selection: {
+          pieces: { removed: [pieceId] },
+        },
       },
     };
   },
@@ -3093,7 +3197,10 @@ const designEditorCommands = {
     const selection = context.designEditor.selection;
     return {
       diff: {
-        selection: { pieces: [], connections: [] },
+        selection: {
+          pieces: { removed: selection.pieces ?? [] },
+          connections: { removed: selection.connections ?? [] },
+        },
       },
       kitDiff: {
         designs: {
@@ -3578,6 +3685,7 @@ export function useDesignEditorCommands() {
     removeConnectionFromSelection: (connection: Connection) => designEditor.execute("semio.designEditor.removeConnectionFromSelection", connection),
     selectPiecePort: (pieceId: PieceId, portId: PortId) => designEditor.execute("semio.designEditor.selectPiecePort", pieceId, portId),
     deselectPiecePort: () => designEditor.execute("semio.designEditor.deselectPiecePort"),
+    deleteSelected: () => designEditor.execute("semio.designEditor.deleteSelected"),
     toggleDiagramFullscreen: () => designEditor.execute("semio.designEditor.toggleDiagramFullscreen"),
     toggleModelFullscreen: () => designEditor.execute("semio.designEditor.toggleModelFullscreen"),
     executeCommand: (command: string, ...args: any[]) => designEditor.execute(command, ...args),
