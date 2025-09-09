@@ -1277,11 +1277,17 @@ class YDesignStore implements DesignStoreFull {
     this.yDesign.set("connections", new Y.Map() as YConnectionMap);
     this.yDesign.set("authors", createAuthors(design.authors));
     this.yDesign.set("attributes", createAttributes(design.attributes));
+  }
+
+  initializePiecesAndConnections(design: Design): void {
+    const piecesMap = this.yDesign.get("pieces") as YPieceMap;
+    const connectionsMap = this.yDesign.get("connections") as YConnectionMap;
+    
     (design.pieces || []).forEach((piece) => {
       const pieceId = pieceIdLikeToPieceId(piece);
       const uuid = uuidv4();
       const yPieceStore = new YPieceStore(this, piece);
-      (this.yDesign.get("pieces") as YPieceMap).set(uuid, yPieceStore.yPiece);
+      piecesMap.set(uuid, yPieceStore.yPiece);
       const pieceIdStr = pieceIdToString(pieceId);
       this.pieceIds.set(pieceIdStr, uuid);
       this.pieces.set(pieceIdStr, yPieceStore);
@@ -1290,7 +1296,7 @@ class YDesignStore implements DesignStoreFull {
       const connectionId = connectionIdLikeToConnectionId(connection);
       const uuid = uuidv4();
       const yConnectionStore = new YConnectionStore(this, connection);
-      (this.yDesign.get("connections") as YConnectionMap).set(uuid, yConnectionStore.yConnection);
+      connectionsMap.set(uuid, yConnectionStore.yConnection);
       const connectionIdStr = connectionIdToString(connectionId);
       this.connectionIds.set(connectionIdStr, uuid);
       this.connections.set(connectionIdStr, yConnectionStore);
@@ -1508,6 +1514,7 @@ class YKitStore implements KitStoreFull {
     const uuid = uuidv4();
     const yDesignStore = new YDesignStore(this, design);
     (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
+    yDesignStore.initializePiecesAndConnections(design);
     this.designIds.set(designIdStr, uuid);
     this.designs.set(designIdStr, yDesignStore);
   }
@@ -1612,6 +1619,7 @@ class YKitStore implements KitStoreFull {
             const uuid = uuidv4();
             const yDesignStore = new YDesignStore(this, design);
             (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
+            yDesignStore.initializePiecesAndConnections(design);
             this.designIds.set(designIdStr, uuid);
             this.designs.set(designIdStr, yDesignStore);
           }
