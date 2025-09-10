@@ -123,16 +123,16 @@ export interface EditorSelection<TSelection> {
 export interface EditorPresence<TPresence> {
   presence: TPresence;
 }
-export interface EditorState<TSelection, TPresence> extends EditorSelection<TSelection>, EditorPresence<TPresence> {}
-export interface EditorStep<TDiff, TSelection> {
+export interface EditorChangableState<TSelection, TPresence> extends EditorSelection<TSelection>, EditorPresence<TPresence> {}
+export interface EditorStep<TDiff, TSelectionDiff> {
   diff?: TDiff;
-  selection?: TSelection;
+  selectionDiff?: TSelectionDiff;
 }
-export interface EditorEdit<TDiff, TSelection> {
-  do: EditorStep<TDiff, TSelection>;
-  undo: EditorStep<TDiff, TSelection>;
+export interface EditorEdit<TDiff, TSelectionDiff> {
+  do: EditorStep<TDiff, TSelectionDiff>;
+  undo: EditorStep<TDiff, TSelectionDiff>;
 }
-export interface EditorStateFull<TDiff, TPresenceOther, TSelection, TPresence, TEdit> extends EditorState<TSelection, TPresence> {
+export interface EditorState<TDiff, TPresenceOther, TSelection, TPresence, TEdit> extends EditorChangableState<TSelection, TPresence> {
   isTransactionActive: boolean;
   canUndo: boolean;
   canRedo: boolean;
@@ -167,39 +167,37 @@ export interface EditorSubscriptions extends Subscriptions {
   onTransactionAborted: (subscribe: Subscribe) => Unsubscribe;
   onTransactionFinalized: (subscribe: Subscribe) => Unsubscribe;
 }
-export interface Store<TModel> extends Snapshot<TModel>, Actions<TModel>, Subscriptions {}
-export interface ExecuteCommands<TResult> {
+export interface Store<TModel, TDiff> extends Snapshot<TModel>, Actions<TDiff>, Subscriptions {}
+export interface Commands<TContext, TResult> {
   execute(command: string, ...rest: any[]): Promise<TResult>;
-}
-export interface RegisterCommands<TContext, TResult> {
   register(command: string, callback: (context: TContext, ...rest: any[]) => TResult): Disposable;
 }
-export interface StoreWithExecuteCommands<TModel, TResult> extends Store<TModel>, ExecuteCommands<TResult> {}
-export interface StoreWithCommands<TModel, TContext, TResult> extends StoreWithExecuteCommands<TModel, TResult>, RegisterCommands<TContext, TResult> {}
-export interface Editor<TModel, TDiff, TSelection, TSelectionDiff, TPresence>
-  extends StoreWithCommands<TModel, TContext, TResult>,
+export interface StoreWithCommands<TModel, TDiff, TContext, TResult> extends Store<TModel, TDiff>, Commands<TContext, TResult> {}
+export interface Editor<TModel, TDiff, TSelection, TSelectionDiff, TPresence, TContext, TResult>
+  extends Commands<TContext, TResult>,
     EditorActions<TDiff, TSelectionDiff, TPresence>,
     EditorSelection<TSelection>,
     EditorPresence<TPresence>,
     EditorSelectionActions<TSelectionDiff> {}
 
-export interface FileStore extends Snapshot<SemioFile>, Actions<FileDiff>, Subscriptions {}
-export interface RepresentationStore extends Snapshot<Representation>, Actions<RepresentationDiff>, Subscriptions {}
-export interface PortStore extends Snapshot<Port>, Actions<PortDiff>, Subscriptions {}
-export interface TypeStore extends Snapshot<Type>, Actions<TypeDiff>, Subscriptions {
+export interface FileStore extends Store<SemioFile, FileDiff> {}
+export interface RepresentationStore extends Store<Representation, RepresentationDiff> {}
+export interface PortStore extends Store<Port, PortDiff> {}
+export interface TypeStore extends Store<Type, TypeDiff> {
   representations: Map<string, RepresentationStore>;
   ports: Map<string, PortStore>;
 }
-export interface PieceStore extends Snapshot<Piece>, Actions<PieceDiff>, Subscriptions {}
-export interface ConnectionStore extends Snapshot<Connection>, Actions<ConnectionDiff>, Subscriptions {}
-export interface DesignStore extends Snapshot<Design>, Actions<DesignDiff>, Subscriptions {
+export interface PieceStore extends Store<Piece, PieceDiff> {}
+export interface ConnectionStore extends Store<Connection, ConnectionDiff> {}
+export interface DesignStore extends Store<Design, DesignDiff> {
   pieces: Map<string, PieceStore>;
   connections: Map<string, ConnectionStore>;
 }
-export interface KitStore extends Snapshot<Kit>, Actions<KitDiff>, Subscriptions {
+export interface KitStore extends StoreWithCommands<Kit, KitDiff, KitCommandContext, KitCommandResult> {
   types: Map<string, TypeStore>;
   designs: Map<string, DesignStore>;
   files: Map<Url, FileStore>;
+  fileUrls: Map<Url, Url>;
 }
 export interface KitCommandContext {
   kit: Kit;
@@ -208,10 +206,6 @@ export interface KitCommandContext {
 export interface KitCommandResult {
   diff?: KitDiff;
   files?: File[];
-}
-export interface KitStoreWithExecuteCommands extends KitStore, ExecuteCommands<KitCommandResult> {}
-export interface KitStoreWithCommands extends KitStoreWithExecuteCommands, RegisterCommands<KitCommandContext, KitCommandResult> {
-  fileUrls(): Map<Url, Url>;
 }
 export interface DesignEditorId {
   kit: KitId;
@@ -250,53 +244,53 @@ export interface DesignEditorPresence {
   camera?: Camera;
 }
 export interface DesignEditorPresenceOther extends DesignEditorPresence {}
-export interface DesignEditorState extends EditorState<DesignEditorSelection, DesignEditorPresence> {
+export interface DesignEditorChangableState extends EditorChangableState<DesignEditorSelection, DesignEditorPresence> {
   fullscreenPanel: DesignEditorFullscreenPanel;
 }
-
-export interface DesignEditorStateFull extends EditorStateFull<KitDiff, DesignEditorPresenceOther, DesignEditorSelection, DesignEditorPresence, DesignEditorStep> {
+export interface DesignEditorDiff extends DesignEditorPresence {
+  selection?: DesignEditorSelectionDiff;
+}
+export interface DesignEditorStep extends EditorStep<DesignEditorDiff, DesignEditorSelectionDiff> {}
+export interface DesignEditorEdit extends EditorEdit<DesignEditorDiff, DesignEditorSelectionDiff> {}
+export interface DesignEditorState extends EditorState<DesignEditorDiff, DesignEditorPresenceOther, DesignEditorSelection, DesignEditorPresence, DesignEditorStep> {
   designId: DesignId;
 }
 
 export interface DesignEditorSnapshot {
-  snapshot(): DesignEditorStateFull;
+  snapshot(): DesignEditorState;
 }
-export interface DesignEditorStateDiff extends Partial<DesignEditorState> {}
-export interface DesignEditorActions extends EditorActions<DesignEditorStateDiff, DesignEditorSelectionDiff, DesignEditorPresence> {}
+export interface DesignEditorActions extends EditorActions<DesignEditorDiff, DesignEditorSelectionDiff, DesignEditorPresence> {}
 export interface DesignEditorSubscriptions extends EditorSubscriptions {}
 export interface DesignEditorCommandContext extends KitCommandContext {
-  designEditor: DesignEditorStateFull;
+  designEditor: DesignEditorState;
   designId: DesignId;
 }
 export interface DesignEditorCommandResult {
-  diff?: DesignEditorStateDiff;
+  diff?: DesignEditorDiff;
   kitDiff?: KitDiff;
 }
-export interface DesignEditorExecuteCommands extends ExecuteCommands<DesignEditorCommandResult> {}
-export interface DesignEditorCommands extends DesignEditorExecuteCommands {}
-export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands, DesignEditorSubscriptions {}
-export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommands, DesignEditorActions, DesignEditorSubscriptions {}
+export interface DesignEditorStore extends StoreWithCommands<DesignEditorState, DesignEditorDiff, DesignEditorCommandContext, DesignEditorCommandResult> {}
 
-export interface SketchpadState {
+export interface SketchpadChangableState {
   mode: Mode;
   theme: Theme;
   layout: Layout;
   activeDesignEditor?: DesignEditorId;
 }
-export interface SketchpadStateFull extends SketchpadState {
+export interface SketchpadState extends SketchpadChangableState {
   persistantId?: string;
 }
 
 export interface SketchpadSnapshot {
-  snapshot(): SketchpadStateFull;
+  snapshot(): SketchpadState;
 }
-export interface SketchpadStateDiff {
+export interface SketchpadDiff {
   mode?: Mode;
   theme?: Theme;
   layout?: Layout;
   activeDesignEditor?: DesignEditorId;
 }
-export interface SketchpadActions extends Actions<SketchpadStateDiff> {
+export interface SketchpadActions extends Actions<SketchpadDiff> {
   createKit: (kit: Kit) => void;
   deleteKit: (id: KitIdLike) => void;
   createDesignEditor: (id: DesignEditorId) => void;
@@ -309,19 +303,14 @@ export interface SketchpadSubscriptions extends Subscriptions {
   onDesignEditorDeleted: (subscribe: Subscribe) => Unsubscribe;
 }
 export interface SketchpadCommandContext {
-  sketchpad: SketchpadStateFull;
-  store: SketchpadStore;
+  sketchpad: SketchpadState;
 }
 export interface SketchpadCommandResult {
-  diff?: SketchpadStateDiff;
+  diff?: SketchpadDiff;
 }
-export interface SketchpadStore extends SketchpadSnapshot, SketchpadActions, SketchpadSubscriptions {
+export interface SketchpadStore extends StoreWithCommands<SketchpadState, SketchpadDiff, SketchpadCommandContext, SketchpadCommandResult> {
   kits: Map<string, KitStore>;
   designEditors: Map<string, Map<string, DesignEditorStore>>;
-}
-export interface SketchpadStoreFull extends SketchpadSnapshot, SketchpadActions, SketchpadSubscriptions {
-  kits: Map<string, KitStoreFull>;
-  designEditors: Map<string, Map<string, DesignEditorStoreFull>>;
 }
 
 // #endregion Api
@@ -586,7 +575,7 @@ function getPlane(yPlane: Y.Map<any>): { origin: { x: number; y: number; z: numb
   };
 }
 
-class YFileStore implements FileStoreFull {
+class YFileStore implements FileStore {
   public readonly parent: YKitStore;
   public readonly yFile: Y.Map<string>;
   private lastSnapshot?: SemioFile;
@@ -660,7 +649,7 @@ class YFileStore implements FileStoreFull {
   };
 }
 
-class YRepresentationStore implements RepresentationStoreFull {
+class YRepresentationStore implements RepresentationStore {
   public readonly parent: YKitStore;
   public readonly yRepresentation: YRepresentation;
   private lastSnapshot?: Representation;
@@ -725,7 +714,7 @@ class YRepresentationStore implements RepresentationStoreFull {
   };
 }
 
-class YPortStore implements PortStoreFull {
+class YPortStore implements PortStore {
   public readonly parent: YTypeStore;
   public readonly yPort: YPort;
   private lastSnapshot?: Port;
@@ -816,7 +805,7 @@ class YPortStore implements PortStoreFull {
   };
 }
 
-class YTypeStore implements TypeStoreFull {
+class YTypeStore implements TypeStore {
   public readonly parent: YKitStore;
   public readonly yType: YType;
   public readonly representations: Map<string, YRepresentationStore> = new Map();
@@ -934,7 +923,7 @@ class YTypeStore implements TypeStoreFull {
   };
 }
 
-class YPieceStore implements PieceStoreFull {
+class YPieceStore implements PieceStore {
   public readonly parent: YDesignStore;
   public readonly yPiece: YPiece;
   private lastSnapshot?: Piece;
@@ -1080,7 +1069,7 @@ class YPieceStore implements PieceStoreFull {
   };
 }
 
-class YConnectionStore implements ConnectionStoreFull {
+class YConnectionStore implements ConnectionStore {
   public readonly parent: YDesignStore;
   public readonly yConnection: YConnection;
   private lastSnapshot?: Connection;
@@ -1207,7 +1196,7 @@ class YConnectionStore implements ConnectionStoreFull {
   };
 }
 
-class YDesignStore implements DesignStoreFull {
+class YDesignStore implements DesignStore {
   public readonly parent: YKitStore;
   public readonly yDesign: YDesign;
   public readonly pieces: Map<string, YPieceStore> = new Map();
@@ -1395,7 +1384,7 @@ class YDesignStore implements DesignStoreFull {
   };
 }
 
-class YKitStore implements KitStoreFull {
+class YKitStore implements KitStore {
   public readonly yKit: YKit;
   public readonly types: Map<string, YTypeStore> = new Map();
   public readonly designs: Map<string, YDesignStore> = new Map();
@@ -1761,14 +1750,14 @@ class YKitStore implements KitStoreFull {
   }
 }
 
-class YDesignEditorStore implements DesignEditorStoreFull {
+class YDesignEditorStore implements DesignEditorStore {
   public readonly yDesignEditorStore: YDesignEditorStoreValMap;
   private readonly commandRegistry: Map<string, (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult> = new Map();
   private readonly parent: SketchpadStore;
-  private lastSnapshot?: DesignEditorStateFull;
+  private lastSnapshot?: DesignEditorState;
   private lastSnapshotHash?: string;
 
-  private hash(state: DesignEditorStateFull): string {
+  private hash(state: DesignEditorState): string {
     // TODO: Implement hash calculation
     return "";
   }
@@ -1854,7 +1843,7 @@ class YDesignEditorStore implements DesignEditorStoreFull {
     return yStack ? yStack.toArray() : [];
   }
 
-  snapshot = (): DesignEditorStateFull => {
+  snapshot = (): DesignEditorState => {
     const currentData = {
       fullscreenPanel: this.fullscreenPanel,
       selection: this.selection,
@@ -1875,7 +1864,7 @@ class YDesignEditorStore implements DesignEditorStoreFull {
     return this.lastSnapshot;
   };
 
-  change = (diff: DesignEditorStateDiff) => {
+  change = (diff: DesignEditorDiff) => {
     if (diff.fullscreenPanel) this.yDesignEditorStore.set("fullscreenPanel", diff.fullscreenPanel);
     if (diff.selection) {
       if (diff.selection.pieces) {
@@ -2166,18 +2155,18 @@ class YDesignEditorStore implements DesignEditorStoreFull {
   }
 }
 
-class YSketchpadStore implements SketchpadStoreFull {
+class YSketchpadStore implements SketchpadStore {
   public readonly ySketchpadDoc: Y.Doc;
   public readonly sketchpadIndexeddbProvider?: IndexeddbPersistence;
   public readonly yKitDocs: Map<string, Y.Doc> = new Map();
   public readonly kitIndexeddbProviders: Map<string, IndexeddbPersistence> = new Map();
   public readonly kits: Map<string, YKitStore> = new Map();
-  public readonly designEditors: Map<string, Map<string, DesignEditorStoreFull>> = new Map();
+  public readonly designEditors: Map<string, Map<string, DesignEditorStore>> = new Map();
   private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult> = new Map();
-  private lastSnapshot?: SketchpadStateFull;
+  private lastSnapshot?: SketchpadState;
   private lastSnapshotHash?: string;
 
-  private hash(state: SketchpadStateFull): string {
+  private hash(state: SketchpadState): string {
     // TODO: Implement hash calculation
     return this.theme.toString();
   }
@@ -2186,7 +2175,7 @@ class YSketchpadStore implements SketchpadStoreFull {
     return this.ySketchpadDoc.getMap("sketchpad");
   }
 
-  constructor(state: SketchpadStateFull) {
+  constructor(state: SketchpadState) {
     this.ySketchpadDoc = new Y.Doc();
 
     // Initialize the sketchpad map immediately and ensure it's properly integrated
@@ -2221,7 +2210,7 @@ class YSketchpadStore implements SketchpadStoreFull {
     return JSON.parse(designEditorIdStr) as DesignEditorId;
   }
 
-  snapshot = (): SketchpadStateFull => {
+  snapshot = (): SketchpadState => {
     const currentValues = {
       mode: this.mode,
       theme: this.theme,
@@ -2255,7 +2244,7 @@ class YSketchpadStore implements SketchpadStoreFull {
     kitEditors.set(designIdStr, store);
   };
 
-  change(diff: SketchpadStateDiff) {
+  change(diff: SketchpadDiff) {
     if (diff.mode) this.getYSketchpad().set("mode", diff.mode);
     if (diff.theme) this.getYSketchpad().set("theme", diff.theme);
     if (diff.layout) this.getYSketchpad().set("layout", diff.layout);
@@ -2387,7 +2376,7 @@ const stores: Map<string, YSketchpadStore> = new Map();
 // Factory function to create or get a store
 export function getOrCreateSketchpadStore(id: string, persisted: boolean = true): SketchpadStore {
   if (!stores.has(id)) {
-    const initialState: SketchpadStateFull = {
+    const initialState: SketchpadState = {
       mode: Mode.GUEST,
       theme: Theme.SYSTEM,
       layout: Layout.NORMAL,
@@ -3365,30 +3354,30 @@ function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?
   if (!store.designEditors.has(resolvedKitIdStr)) throw new Error(`Design editor not found for kit ${resolvedKitId.name}`);
   const kitEditors = store.designEditors.get(resolvedKitIdStr)!;
   if (!kitEditors.has(resolvedDesignIdStr)) throw new Error(`Design editor not found for design ${resolvedDesignId.name}`);
-  const designEditorStore = kitEditors.get(resolvedDesignIdStr)! as DesignEditorStoreFull;
+  const designEditorStore = kitEditors.get(resolvedDesignIdStr)! as DesignEditorStore;
   return selector ? selector(designEditorStore) : designEditorStore;
 }
 
-export function useDesignEditor<T>(selector?: (state: DesignEditorStateFull) => T, id?: DesignEditorId): T | DesignEditorStateFull {
-  return useSync<DesignEditorStateFull, T>(useDesignEditorStore(identitySelector, id) as DesignEditorStore, selector ? selector : identitySelector);
+export function useDesignEditor<T>(selector?: (state: DesignEditorState) => T, id?: DesignEditorId): T | DesignEditorState {
+  return useSync<DesignEditorState, T>(useDesignEditorStore(identitySelector, id) as DesignEditorStore, selector ? selector : identitySelector);
 }
 
-function useDesignStore<T>(selector?: (store: DesignStoreFull) => T, id?: DesignId): T | DesignStoreFull {
+function useDesignStore<T>(selector?: (store: DesignStore) => T, id?: DesignId): T | DesignStore {
   const kitStore = useKitStore() as KitStore;
   const designScope = useDesignScope();
   const designId = designScope?.id ?? id;
   if (!designId) throw new Error("useDesignStore must be called within a DesignScopeProvider or be directly provided with an id");
   const designIdStr = designIdToString(designId);
   if (!kitStore.designs.has(designIdStr)) throw new Error(`Design store not found for design ${designId}`);
-  const designStore = kitStore.designs.get(designIdStr)! as DesignStoreFull;
+  const designStore = kitStore.designs.get(designIdStr)! as DesignStore;
   return selector ? selector(designStore) : designStore;
 }
 
 export function useDesign<T>(selector?: (design: DesignShallow | Design) => T, id?: DesignId, deep: boolean = false): T | DesignShallow | Design {
   if (deep) {
-    return useSyncDeep<Design, T>(useDesignStore(identitySelector, id) as DesignStoreFull, selector ? selector : identitySelector);
+    return useSyncDeep<Design, T>(useDesignStore(identitySelector, id) as DesignStore, selector ? selector : identitySelector);
   }
-  return useSync<DesignShallow, T>(useDesignStore(identitySelector, id) as DesignStoreFull, selector ? selector : identitySelector, deep);
+  return useSync<DesignShallow, T>(useDesignStore(identitySelector, id) as DesignStore, selector ? selector : identitySelector, deep);
 }
 
 export function useFlattenDiff(): DesignDiff {
@@ -3425,79 +3414,79 @@ export function usePiecesMetadata(): Map<
   return piecesMetadata(kit, designScope.id);
 }
 
-function useTypeStore<T>(selector?: (store: TypeStoreFull) => T, id?: TypeId): T | TypeStoreFull {
+function useTypeStore<T>(selector?: (store: TypeStore) => T, id?: TypeId): T | TypeStore {
   const kitStore = useKitStore() as KitStore;
   const typeScope = useTypeScope();
   const typeId = typeScope?.id ?? id;
   if (!typeId) throw new Error("useTypeStore must be called within a TypeScopeProvider or be directly provided with an id");
   const typeIdStr = typeIdToString(typeId);
   if (!kitStore.types.has(typeIdStr)) throw new Error(`Type store not found for type ${typeId}`);
-  const typeStore = kitStore.types.get(typeIdStr)! as TypeStoreFull;
+  const typeStore = kitStore.types.get(typeIdStr)! as TypeStore;
   return selector ? selector(typeStore) : typeStore;
 }
 
 export function useType<T>(selector?: (type: Type) => T, id?: TypeId, deep: boolean = false): T | Type {
-  return useSync<Type, T>(useTypeStore(identitySelector, id) as TypeStoreFull, selector ? selector : identitySelector, deep);
+  return useSync<Type, T>(useTypeStore(identitySelector, id) as TypeStore, selector ? selector : identitySelector, deep);
 }
 
-function usePieceStore<T>(selector?: (store: PieceStoreFull) => T, id?: PieceId): T | PieceStoreFull {
-  const designStore = useDesignStore() as DesignStoreFull;
+function usePieceStore<T>(selector?: (store: PieceStore) => T, id?: PieceId): T | PieceStore {
+  const designStore = useDesignStore() as DesignStore;
   const pieceScope = usePieceScope();
   const pieceId = pieceScope?.id ?? id;
   if (!pieceId) throw new Error("usePieceStore must be called within a PieceScopeProvider or be directly provided with an id");
   const pieceIdStr = pieceIdToString(pieceId);
   if (!designStore.pieces.has(pieceIdStr)) throw new Error(`Piece store not found for piece ${pieceId}`);
-  const pieceStore = designStore.pieces.get(pieceIdStr)! as PieceStoreFull;
+  const pieceStore = designStore.pieces.get(pieceIdStr)! as PieceStore;
   return selector ? selector(pieceStore) : pieceStore;
 }
 
 export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId, deep: boolean = false): T | Piece {
-  return useSync<Piece, T>(usePieceStore(identitySelector, id) as PieceStoreFull, selector ? selector : identitySelector, deep);
+  return useSync<Piece, T>(usePieceStore(identitySelector, id) as PieceStore, selector ? selector : identitySelector, deep);
 }
 
-function useConnectionStore<T>(selector?: (store: ConnectionStoreFull) => T, id?: ConnectionId): T | ConnectionStoreFull {
-  const designStore = useDesignStore() as DesignStoreFull;
+function useConnectionStore<T>(selector?: (store: ConnectionStore) => T, id?: ConnectionId): T | ConnectionStore {
+  const designStore = useDesignStore() as DesignStore;
   const connectionScope = useConnectionScope();
   const connectionId = connectionScope?.id ?? id;
   if (!connectionId) throw new Error("useConnectionStore must be called within a ConnectionScopeProvider or be directly provided with an id");
   const connectionIdStr = connectionIdToString(connectionId);
   if (!designStore.connections.has(connectionIdStr)) throw new Error(`Connection store not found for connection ${connectionId}`);
-  const connectionStore = designStore.connections.get(connectionIdStr)! as ConnectionStoreFull;
+  const connectionStore = designStore.connections.get(connectionIdStr)! as ConnectionStore;
   return selector ? selector(connectionStore) : connectionStore;
 }
 
 export function useConnection<T>(selector?: (connection: Connection) => T, id?: ConnectionId, deep: boolean = false): T | Connection {
-  return useSync<Connection, T>(useConnectionStore(identitySelector, id) as ConnectionStoreFull, selector ? selector : identitySelector, deep);
+  return useSync<Connection, T>(useConnectionStore(identitySelector, id) as ConnectionStore, selector ? selector : identitySelector, deep);
 }
 
-function usePortStore<T>(selector?: (store: PortStoreFull) => T, id?: PortId): T | PortStoreFull {
-  const typeStore = useTypeStore() as TypeStoreFull;
+function usePortStore<T>(selector?: (store: PortStore) => T, id?: PortId): T | PortStore {
+  const typeStore = useTypeStore() as TypeStore;
   const portScope = usePortScope();
   const portId = portScope?.id ?? id;
   if (!portId) throw new Error("usePortStore must be called within a PortScopeProvider or be directly provided with an id");
   const portIdStr = portIdToString(portId);
   if (!typeStore.ports.has(portIdStr)) throw new Error(`Port store not found for port ${portId}`);
-  const portStore = typeStore.ports.get(portIdStr)! as PortStoreFull;
+  const portStore = typeStore.ports.get(portIdStr)! as PortStore;
   return selector ? selector(portStore) : portStore;
 }
 
 export function usePort<T>(selector?: (port: Port) => T, id?: PortId, deep: boolean = false): T | Port {
-  return useSync<Port, T>(usePortStore(identitySelector, id) as PortStoreFull, selector ? selector : identitySelector, deep);
+  return useSync<Port, T>(usePortStore(identitySelector, id) as PortStore, selector ? selector : identitySelector, deep);
 }
 
-function useRepresentationStore<T>(selector?: (store: RepresentationStoreFull) => T, id?: RepresentationId): T | RepresentationStoreFull {
-  const typeStore = useTypeStore() as TypeStoreFull;
+function useRepresentationStore<T>(selector?: (store: RepresentationStore) => T, id?: RepresentationId): T | RepresentationStore {
+  const typeStore = useTypeStore() as TypeStore;
   const representationScope = useRepresentationScope();
   const representationId = representationScope?.id ?? id;
   if (!representationId) throw new Error("useRepresentationStore must be called within a RepresentationScopeProvider or be directly provided with an id");
   const representationIdStr = representationIdToString(representationId);
   if (!typeStore.representations.has(representationIdStr)) throw new Error(`Representation store not found for representation ${representationId}`);
-  const representationStore = typeStore.representations.get(representationIdStr)! as RepresentationStoreFull;
+  const representationStore = typeStore.representations.get(representationIdStr)! as RepresentationStore;
   return selector ? selector(representationStore) : representationStore;
 }
 
 export function useRepresentation<T>(selector?: (representation: Representation) => T, id?: RepresentationId, deep: boolean = false): T | Representation {
-  return useSync<Representation, T>(useRepresentationStore(identitySelector, id) as RepresentationStoreFull, selector ? selector : identitySelector, deep);
+  return useSync<Representation, T>(useRepresentationStore(identitySelector, id) as RepresentationStore, selector ? selector : identitySelector, deep);
 }
 
 // Additional utility hooks for the new store architecture
@@ -3586,8 +3575,8 @@ export function useDesignEditorCommands() {
   };
 }
 // Design editor state hooks
-const selectionSelector = (s: DesignEditorStateFull) => s.selection;
-const fullscreenSelector = (s: DesignEditorStateFull) => s.fullscreenPanel;
+const selectionSelector = (s: DesignEditorState) => s.selection;
+const fullscreenSelector = (s: DesignEditorState) => s.fullscreenPanel;
 
 export function useSelection(): DesignEditorSelection {
   return useDesignEditor(selectionSelector) as DesignEditorSelection;
@@ -3605,7 +3594,7 @@ export function useDesignEditorFullscreen(): DesignEditorFullscreenPanel {
   return useDesignEditor(fullscreenSelector) as DesignEditorFullscreenPanel;
 }
 
-const diffSelector = (s: DesignEditorStateFull) => s.diff;
+const diffSelector = (s: DesignEditorState) => s.diff;
 export function useDiff(): KitDiff {
   return useDesignEditor(diffSelector) as KitDiff;
 }
@@ -3621,11 +3610,10 @@ export function useDiffedKit(): Kit {
 }
 
 export function useFileUrls(): Map<Url, Url> {
-  const kitStore = useKitStore() as KitStore;
-  return kitStore.fileUrls();
+  return (useKitStore() as KitStore).fileUrls;
 }
 
-const othersSelector = (s: DesignEditorStateFull) => s.others;
+const othersSelector = (s: DesignEditorState) => s.others;
 
 export function useOthers(): DesignEditorPresenceOther[] {
   return useDesignEditor(othersSelector) as DesignEditorPresenceOther[];
