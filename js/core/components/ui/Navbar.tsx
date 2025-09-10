@@ -20,16 +20,30 @@
 // #endregion
 
 import { AppWindow, Fingerprint, Home, Layout, Minus, Moon, Share2, Square, Sun, X } from "lucide-react";
-import { FC, ReactNode } from "react";
+import { createContext, FC, ReactNode, useContext } from "react";
 import { DesignId } from "../../semio";
 import { Theme, useDesignId, useDesigns, useLayout, useSketchpadCommands, useTheme } from "../../store";
-import { useNavbar } from "./sketchpad/Sketchpad";
 import { Avatar, AvatarFallback, AvatarImage } from "./Avatar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "./Breadcrumb";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./Select";
 import { Toggle } from "./Toggle";
 import { ToggleCycle } from "./ToggleCycle";
 import { ToggleGroup, ToggleGroupItem } from "./ToggleGroup";
+
+interface NavbarContextType {
+  navbarToolbar: ReactNode | null;
+  setNavbarToolbar: (toolbar: ReactNode) => void;
+}
+
+export const NavbarContext = createContext<NavbarContextType | null>(null);
+
+export const useNavbar = () => {
+  const context = useContext(NavbarContext);
+  if (!context) {
+    throw new Error("useNavbar must be used within a NavbarProvider");
+  }
+  return context;
+};
 
 interface NavbarProps {
   toolbarContent?: ReactNode;

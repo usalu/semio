@@ -58,18 +58,6 @@ const Chat: FC<ChatProps> = ({ visible, onWidthChange, width }) => {
               <TreeItem label="Connect all pieces" />
               <TreeItem label="Generate layout suggestions" />
             </TreeSection>
-            <TreeSection label="Templates">
-              <TreeSection label="Common Questions" defaultOpen={true}>
-                <TreeItem label="How do I create a connection?" />
-                <TreeItem label="How do I delete a piece?" />
-                <TreeItem label="How do I change piece properties?" />
-              </TreeSection>
-              <TreeSection label="Advanced Workflows">
-                <TreeItem label="Batch operations" />
-                <TreeItem label="Complex layouts" />
-                <TreeItem label="Export/Import" />
-              </TreeSection>
-            </TreeSection>
           </Tree>
         </div>
         <div className="p-4 border-t">

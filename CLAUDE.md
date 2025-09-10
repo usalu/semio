@@ -122,7 +122,6 @@ The following rules MUST alwaysbe followed unless explicitly asked to do otherwi
 │ │ │ ├── ui
 │ │ │ │ ├── sketchpad
 │ │ │ │ │ │ ├── Chat.tsx
-│ │ │ │ │ │ ├── Commands.tsx
 │ │ │ │ │ │ ├── Console.tsx
 │ │ │ │ │ │ ├── DesignEditor.tsx
 │ │ │ │ │ │ ├── Diagram.tsx
@@ -138,6 +137,7 @@ The following rules MUST alwaysbe followed unless explicitly asked to do otherwi
 │ │ │ │ │ ├── Breadcrumb.tsx
 │ │ │ │ │ ├── Button.tsx
 │ │ │ │ │ ├── Collapsible.tsx
+│ │ │ │ │ ├── Commands.tsx
 │ │ │ │ │ ├── Combobox.tsx
 │ │ │ │ │ ├── Dialog.tsx
 │ │ │ │ │ ├── File.tsx

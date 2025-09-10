@@ -18,33 +18,19 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion
-import { FC, ReactNode, createContext, useContext, useEffect, useState } from "react";
+import { FC, ReactNode, useEffect, useState } from "react";
 import { TooltipProvider } from "../Tooltip";
 
 import { Kit, KitId } from "../../../semio";
 import { KitScopeProvider, Layout, Mode, SketchpadScopeProvider, Theme, useLayout, useMode, useSketchpadCommands, useTheme } from "../../../store";
+import { NavbarContext } from "../Navbar";
 import KitEditor from "./KitEditor";
-
-interface NavbarContextType {
-  navbarToolbar: ReactNode | null;
-  setNavbarToolbar: (toolbar: ReactNode) => void;
-}
-
-const NavbarContext = createContext<NavbarContextType | null>(null);
-
-export const useNavbar = () => {
-  const context = useContext(NavbarContext);
-  if (!context) {
-    throw new Error("useNavbar must be used within a NavbarProvider");
-  }
-  return context;
-};
 
 const SketchpadInner: FC = () => {
   const [isImporting, setIsImporting] = useState<boolean>(true);
   const [navbarToolbar, setNavbarToolbar] = useState<ReactNode>(null);
 
-  const { createKit, createDesignEditor, setActiveDesignEditor, setMode, setTheme, setLayout } = useSketchpadCommands();
+  const { createKit, setMode, setTheme, setLayout } = useSketchpadCommands();
 
   const theme = useTheme();
   const layout = useLayout();
@@ -57,8 +43,6 @@ const SketchpadInner: FC = () => {
     (async () => {
       await createKit(defaultKitId as Kit);
       // await store.execute("semio.sketchpad.importKit", defaultKitId, "/metabolism.zip");
-      // await createDesignEditor({ kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
-      // await setActiveDesignEditor({ kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
       setIsImporting(false);
     })();
     return () => {
