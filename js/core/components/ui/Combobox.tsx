@@ -2,8 +2,8 @@ import { cn } from "@semio/js/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { FC, useState } from "react";
 import { Button } from "./Button";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./Command";
 import { Popover, PopoverContent, PopoverTrigger } from "./Popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./sketchpad/Command";
 
 interface ComboboxOption {
   value: string;

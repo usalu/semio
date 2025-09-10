@@ -20,7 +20,7 @@
 // #endregion
 
 import JSZip from "jszip";
-import React, { createContext, useCallback, useContext, useMemo, useRef, useSyncExternalStore } from "react";
+import React, { createContext, useCallback, useContext, useMemo, useReducer, useRef, useSyncExternalStore } from "react";
 import type { Database, SqlJsStatic } from "sql.js";
 import initSqlJs from "sql.js";
 import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
@@ -618,20 +618,12 @@ function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscribe, deep
   if (deep) {
     yObject.observeDeep(observer);
     return () => {
-      try {
-        yObject.unobserveDeep(observer);
-      } catch (e) {
-        // Y object no longer attached, ignore unobserve error
-      }
+      yObject.unobserveDeep(observer);
     };
   } else {
     yObject.observe(observer);
     return () => {
-      try {
-        yObject.unobserve(observer);
-      } catch (e) {
-        // Y object no longer attached, ignore unobserve error
-      }
+      yObject.unobserve(observer);
     };
   }
 }
@@ -1489,20 +1481,12 @@ class YDesignStore implements DesignStoreFull {
       if (deep) {
         this.yDesign.observeDeep(observer);
         return () => {
-          try {
-            this.yDesign.unobserveDeep(observer);
-          } catch (e) {
-            // Y object not available during unobserve
-          }
+          this.yDesign.unobserveDeep(observer);
         };
       } else {
         this.yDesign.observe(observer);
         return () => {
-          try {
-            this.yDesign.unobserve(observer);
-          } catch (e) {
-            // Y object not available during unobserve
-          }
+          this.yDesign.unobserve(observer);
         };
       }
     } catch (e) {
@@ -1874,11 +1858,7 @@ class YKitStore implements KitStoreFull {
     try {
       deep ? (this.yKit as unknown as Y.Map<any>).observeDeep(observer) : (this.yKit as unknown as Y.Map<any>).observe(observer);
       return () => {
-        try {
-          deep ? (this.yKit as unknown as Y.Map<any>).unobserveDeep(observer) : (this.yKit as unknown as Y.Map<any>).unobserve(observer);
-        } catch (e) {
-          // Y object not available during unobserve
-        }
+        deep ? (this.yKit as unknown as Y.Map<any>).unobserveDeep(observer) : (this.yKit as unknown as Y.Map<any>).unobserve(observer);
       };
     } catch (e) {
       // Y object not available during observe
@@ -2202,11 +2182,7 @@ class YDesignEditorStore implements DesignEditorStoreFull {
     try {
       deep ? (this.yDesignEditorStore as unknown as Y.Map<any>).observeDeep(observer) : (this.yDesignEditorStore as unknown as Y.Map<any>).observe(observer);
       return () => {
-        try {
-          deep ? (this.yDesignEditorStore as unknown as Y.Map<any>).unobserveDeep(observer) : (this.yDesignEditorStore as unknown as Y.Map<any>).unobserve(observer);
-        } catch (e) {
-          // Y object not available during unobserve
-        }
+        deep ? (this.yDesignEditorStore as unknown as Y.Map<any>).unobserveDeep(observer) : (this.yDesignEditorStore as unknown as Y.Map<any>).unobserve(observer);
       };
     } catch (e) {
       // Y object not available during observe
@@ -2223,11 +2199,7 @@ class YDesignEditorStore implements DesignEditorStoreFull {
     try {
       this.yDesignEditorStore.observe(observer);
       return () => {
-        try {
-          this.yDesignEditorStore.unobserve(observer);
-        } catch (e) {
-          // Y object not available during unobserve
-        }
+        this.yDesignEditorStore.unobserve(observer);
       };
     } catch (e) {
       // Y object not available during observe
@@ -2250,11 +2222,7 @@ class YDesignEditorStore implements DesignEditorStoreFull {
     try {
       this.yDesignEditorStore.observe(observer);
       return () => {
-        try {
-          this.yDesignEditorStore.unobserve(observer);
-        } catch (e) {
-          // Y object not available during unobserve
-        }
+        this.yDesignEditorStore.unobserve(observer);
       };
     } catch (e) {
       // Y object not available during observe
@@ -2288,11 +2256,7 @@ class YDesignEditorStore implements DesignEditorStoreFull {
     try {
       this.yDesignEditorStore.observe(observer);
       return () => {
-        try {
-          this.yDesignEditorStore.unobserve(observer);
-        } catch (e) {
-          // Y object not available during unobserve
-        }
+        this.yDesignEditorStore.unobserve(observer);
       };
     } catch (e) {
       // Y object not available during observe
@@ -2330,11 +2294,7 @@ class YDesignEditorStore implements DesignEditorStoreFull {
     try {
       this.yDesignEditorStore.observe(observer);
       return () => {
-        try {
-          this.yDesignEditorStore.unobserve(observer);
-        } catch (e) {
-          // Y object not available during unobserve
-        }
+        this.yDesignEditorStore.unobserve(observer);
       };
     } catch (e) {
       // Y object not available during observe
@@ -2371,11 +2331,7 @@ class YDesignEditorStore implements DesignEditorStoreFull {
     try {
       this.yDesignEditorStore.observe(observer);
       return () => {
-        try {
-          this.yDesignEditorStore.unobserve(observer);
-        } catch (e) {
-          // Y object not available during unobserve
-        }
+        this.yDesignEditorStore.unobserve(observer);
       };
     } catch (e) {
       // Y object not available during observe
@@ -2620,11 +2576,7 @@ class YSketchpadStore implements SketchpadStoreFull {
       const observer = () => subscribe();
       yDesignEditorStores.observe(observer);
       return () => {
-        try {
-          yDesignEditorStores.unobserve(observer);
-        } catch (e) {
-          // Y.Map not available during unobserve
-        }
+        yDesignEditorStores.unobserve(observer);
       };
     } catch (e) {
       // Y.Map not available during observe
@@ -2647,27 +2599,13 @@ class YSketchpadStore implements SketchpadStoreFull {
       const observer = () => subscribe();
       this.getYSketchpad().observe(observer);
       return () => {
-        try {
-          this.getYSketchpad().unobserve(observer);
-        } catch (e) {
-          // Y.Map not available during unobserve
-        }
+        this.getYSketchpad().unobserve(observer);
       };
     } catch (e) {
       // Y.Map not available during observe
       return () => {};
     }
   };
-
-  get on(): SketchpadSubscriptions {
-    return {
-      onKitCreated: this.onKitCreated,
-      onDesignEditorCreated: this.onDesignEditorCreated,
-      onChanged: this.onChanged,
-      onKitDeleted: this.onKitDeleted,
-      onDesignEditorDeleted: this.onDesignEditorDeleted,
-    };
-  }
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
     const callback = this.commandRegistry.get(command);
@@ -2871,9 +2809,7 @@ const kitCommands = {
               const fileResponse = await fetch(file.url);
               const fileBlob = await fileResponse.blob();
               files.push(new File([fileBlob], file.path));
-            } catch (error) {
-              console.warn(`Failed to fetch file ${file.path}:`, error);
-            }
+            } catch (error) {}
           }
           return {
             diff: {
@@ -3049,9 +2985,7 @@ const kitCommands = {
                     const fileBlob = await response.blob();
                     const fileData = await fileBlob.arrayBuffer();
                     zip.file(rep.url, fileData);
-                  } catch (error) {
-                    console.warn(`Failed to fetch file ${rep.url}:`, error);
-                  }
+                  } catch (error) {}
                 }
               }
             }
@@ -3647,14 +3581,24 @@ const usePortScope = () => useContext(PortypeScopeContext);
 const useDesignEditorScope = () => useContext(DesignEditorScopeContext);
 
 // #endregion Scoping
-export function useSketchpad(): SketchpadStore;
-export function useSketchpad<T>(selector: (store: SketchpadStore) => T, id?: string): T;
-export function useSketchpad<T>(selector?: (store: SketchpadStore) => T, id?: string): T | SketchpadStore {
+
+function useRerender() {
+  return useReducer((x) => x + 1, 0)[1];
+}
+
+function useSketchpadStore(id?: string) {
   const scope = useSketchpadScope();
   const storeId = scope?.id ?? id;
   if (!storeId) throw new Error("useSketchpad must be called within a SketchpadScopeProvider or be directly provided with an id");
   if (!stores.has(storeId)) throw new Error(`Sketchpad store was not found for id ${storeId}`);
-  const store = useMemo(() => stores.get(storeId)!, [storeId]);
+  return stores.get(storeId)!;
+}
+
+export function useSketchpad(): SketchpadState;
+export function useSketchpad<T>(selector: (state: SketchpadState) => T): T;
+export function useSketchpad<T>(selector: (state: SketchpadState) => T, id?: string): T;
+export function useSketchpad<T>(selector?: (state: SketchpadState) => T, id?: string): T | SketchpadState {
+  const store = useSketchpadStore(id);
   const lastSnapshot = useRef<any>(null);
   const getSnapshot = useCallback(() => {
     const currentSnapshot = store.snapshot();
@@ -3663,19 +3607,15 @@ export function useSketchpad<T>(selector?: (store: SketchpadStore) => T, id?: st
     }
     return lastSnapshot.current;
   }, [store]);
-
   const state = useSyncExternalStore(store.onChanged, getSnapshot, getSnapshot);
-
-  return selector ? selector(store) : store;
+  return selector ? selector(state) : state;
 }
 
 export function useDesignEditor(): DesignEditorStore;
 export function useDesignEditor<T>(selector: (store: DesignEditorStore) => T): T;
 export function useDesignEditor<T>(selector: (store: DesignEditorStore) => T, kitId: KitId, designId: DesignId): T;
 export function useDesignEditor<T>(selector?: (store: DesignEditorStore) => T, kitId?: KitId, designId?: DesignId): T | DesignEditorStore {
-  const sketchpadScope = useSketchpadScope();
-  if (!sketchpadScope) throw new Error("useDesignEditor must be called within a SketchpadScopeProvider");
-  const store = stores.get(sketchpadScope.id)!;
+  const store = useSketchpadStore();
 
   const kitScope = useKitStoreScope();
   const resolvedKitId = kitScope?.id ?? kitId;
@@ -3692,18 +3632,15 @@ export function useDesignEditor<T>(selector?: (store: DesignEditorStore) => T, k
   if (!kitEditors.has(resolvedDesignIdStr)) throw new Error(`Design editor store not found for design ${resolvedDesignId.name}`);
   const designEditor = useMemo(() => kitEditors.get(resolvedDesignIdStr)!, [kitEditors, resolvedDesignIdStr]);
   const getSnapshot = useMemo(() => () => designEditor.snapshot(), [designEditor]);
-
   const state = useSyncExternalStore(designEditor.onChanged, getSnapshot, getSnapshot);
   return selector ? selector(designEditor) : designEditor;
 }
 
-export function useKitStore(): KitStore;
-export function useKitStore<T>(selector: (store: KitStore) => T): T;
-export function useKitStore<T>(selector: (store: KitStore) => T, id: KitId): T;
-export function useKitStore<T>(selector?: (store: KitStore) => T, id?: KitId): T | KitStore {
-  const sketchpadScope = useSketchpadScope();
-  if (!sketchpadScope) throw new Error("useKitStore must be called within a SketchpadScopeProvider");
-  const store = stores.get(sketchpadScope.id)!;
+function useKitStore(): KitStore;
+function useKitStore<T>(selector: (store: KitStore) => T): T;
+function useKitStore<T>(selector: (store: KitStore) => T, id: KitId): T;
+function useKitStore<T>(selector?: (store: KitStore) => T, id?: KitId): T | KitStore {
+  const store = useSketchpadStore();
   const kitScope = useKitStoreScope();
   const kitId = kitScope?.id ?? id;
   if (!kitId) throw new Error("useKitStore must be called within a KitScopeProvider or be directly provided with an id");
@@ -3733,9 +3670,7 @@ export function useDesign(): Design;
 export function useDesign<T>(selector: (design: Design) => T): T;
 export function useDesign<T>(selector: (design: Design) => T, id: DesignId): T;
 export function useDesign<T>(selector?: (design: Design) => T, id?: DesignId): T | Design {
-  const sketchpadScope = useSketchpadScope();
-  if (!sketchpadScope) throw new Error("useDesign must be called within a SketchpadScopeProvider");
-  const store = stores.get(sketchpadScope.id)!;
+  const store = useSketchpadStore();
   const kitScope = useKitStoreScope();
   if (!kitScope) throw new Error("useDesign must be called within a KitScopeProvider");
   const kitId = kitScope.id;
@@ -3791,9 +3726,7 @@ export function useType(): Type;
 export function useType<T>(selector: (type: Type) => T): T;
 export function useType<T>(selector: (type: Type) => T, id: TypeId): T;
 export function useType<T>(selector?: (type: Type) => T, id?: TypeId): T | Type {
-  const sketchpadScope = useSketchpadScope();
-  if (!sketchpadScope) throw new Error("useType must be called within a SketchpadScopeProvider");
-  const store = stores.get(sketchpadScope.id)!;
+  const store = useSketchpadStore();
   const kitScope = useKitStoreScope();
   if (!kitScope) throw new Error("useType must be called within a KitScopeProvider");
   const kitId = kitScope.id;

@@ -28,14 +28,13 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { ReactFlowProvider } from "@xyflow/react";
 import { DesignId, TypeId } from "../../../semio";
 import { useDesign, useDesignEditorCommands, useFullscreen, useKit } from "../../../store";
-import Navbar from "../Navbar";
+import Navbar, { useNavbar } from "../Navbar";
 import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
 import Chat from "./Chat";
 import Console from "./Console";
 import Details from "./Details";
 import Diagram from "./Diagram";
 import Model from "./Model";
-import { useNavbar } from "./Sketchpad";
 import Workbench, { DesignAvatar, TypeAvatar } from "./Workbench";
 
 export interface DesignEditorProps {}
