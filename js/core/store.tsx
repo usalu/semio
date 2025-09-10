@@ -3586,11 +3586,18 @@ function useRerender() {
   return useReducer((x) => x + 1, 0)[1];
 }
 
-// const useStoreState = <T>(store: Store<T>, selector?: (state: T) => T) => {
-//   const getSnapshot = useMemo(() => () => store.snapshot(), [store]);
-//   const state = useSyncExternalStore(store.onChanged, getSnapshot, getSnapshot);
-//   return selector ? selector(state) : state;
-// };
+function useStoreState<TSnapshot, TSelected = TSnapshot>(
+  store: { snapshot: () => TSnapshot; onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe },
+  selector?: (state: TSnapshot) => TSelected
+): TSelected {
+  const getSnapshot = useCallback(() => store.snapshot(), [store]);
+  const state = useSyncExternalStore(
+    useCallback((callback) => store.onChanged(callback), [store]),
+    getSnapshot,
+    getSnapshot
+  );
+  return selector ? selector(state) : (state as any);
+}
 
 function useSketchpadStore(id?: string) {
   const scope = useSketchpadScope();
@@ -3605,16 +3612,7 @@ export function useSketchpad<T>(selector: (state: SketchpadState) => T): T;
 export function useSketchpad<T>(selector: (state: SketchpadState) => T, id?: string): T;
 export function useSketchpad<T>(selector?: (state: SketchpadState) => T, id?: string): T | SketchpadState {
   const store = useSketchpadStore(id);
-  const lastSnapshot = useRef<any>(null);
-  const getSnapshot = useCallback(() => {
-    const currentSnapshot = store.snapshot();
-    if (!lastSnapshot.current || JSON.stringify(lastSnapshot.current) !== JSON.stringify(currentSnapshot)) {
-      lastSnapshot.current = currentSnapshot;
-    }
-    return lastSnapshot.current;
-  }, [store]);
-  const state = useSyncExternalStore(store.onChanged, getSnapshot, getSnapshot);
-  return selector ? selector(state) : state;
+  return useStoreState(store, selector);
 }
 
 function useKitStore(): KitStore;
@@ -3635,10 +3633,8 @@ export function useKit(): Kit;
 export function useKit<T>(selector: (kit: Kit) => T): T;
 export function useKit<T>(selector: (kit: Kit) => T, id: KitId): T;
 export function useKit<T>(selector?: (kit: Kit) => T, id?: KitId): T | Kit {
-  const store = useKitStore();
-  const getSnapshot = useMemo(() => () => store.snapshot(), [store]);
-  const kit = useSyncExternalStore(store.onChanged, getSnapshot, getSnapshot);
-  return selector ? selector(kit) : kit;
+  const store = id ? useKitStore((s) => s, id) : useKitStore();
+  return useStoreState(store, selector);
 }
 
 function useDesignEditorStore(): DesignEditorStore;
@@ -3648,47 +3644,47 @@ function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?
   const store = useSketchpadStore();
   const kitScope = useKitStoreScope();
   const resolvedKitId = kitScope?.id ?? id?.kit;
-  if (!resolvedKitId) throw new Error("useDesignEditor must be called within a KitScopeProvider or be directly provided with an id");
+  if (!resolvedKitId) throw new Error("useDesignEditorStore must be called within a KitScopeProvider or be directly provided with an id");
   const resolvedKitIdStr = kitIdToString(resolvedKitId);
   const designScope = useDesignScope();
   const resolvedDesignId = designScope?.id ?? id?.design;
-  if (!resolvedDesignId) throw new Error("useDesignEditor must be called within a DesignScopeProvider or be directly provided with an id");
+  if (!resolvedDesignId) throw new Error("useDesignEditorStore must be called within a DesignScopeProvider or be directly provided with an id");
   const resolvedDesignIdStr = designIdToString(resolvedDesignId);
   if (!store.designEditors.has(resolvedKitIdStr)) throw new Error(`Design editor not found for kit ${resolvedKitId.name}`);
   const kitEditors = store.designEditors.get(resolvedKitIdStr)!;
   if (!kitEditors.has(resolvedDesignIdStr)) throw new Error(`Design editor not found for design ${resolvedDesignId.name}`);
+  const designEditorStore = kitEditors.get(resolvedDesignIdStr)! as DesignEditorStoreFull;
+  return selector ? selector(designEditorStore) : designEditorStore;
 }
 
-export function useDesignEditor(): DesignEditorState;
-export function useDesignEditor<T>(selector: (state: DesignEditorState) => T): T;
-export function useDesignEditor<T>(selector: (state: DesignEditorState) => T, id: DesignEditorId): T;
-export function useDesignEditor<T>(selector?: (state: DesignEditorState) => T, id?: DesignEditorId): T | DesignEditorState {
-  const store = useDesignEditorStore(id);
-  const getSnapshot = useMemo(() => () => store.snapshot(), [store]);
-  const state = useSyncExternalStore(store.onChanged, getSnapshot, getSnapshot);
-  return selector ? selector(state) : state;
+export function useDesignEditor(): DesignEditorStateFull;
+export function useDesignEditor<T>(selector: (state: DesignEditorStateFull) => T): T;
+export function useDesignEditor<T>(selector: (state: DesignEditorStateFull) => T, id: DesignEditorId): T;
+export function useDesignEditor<T>(selector?: (state: DesignEditorStateFull) => T, id?: DesignEditorId): T | DesignEditorStateFull {
+  const store = id ? useDesignEditorStore((s) => s, id) : useDesignEditorStore();
+  return useStoreState(store, selector);
+}
+
+function useDesignStore(): DesignStoreFull;
+function useDesignStore<T>(selector: (store: DesignStoreFull) => T): T;
+function useDesignStore<T>(selector: (store: DesignStoreFull) => T, id: DesignId): T;
+function useDesignStore<T>(selector?: (store: DesignStoreFull) => T, id?: DesignId): T | DesignStoreFull {
+  const kitStore = useKitStore();
+  const designScope = useDesignScope();
+  const designId = designScope?.id ?? id;
+  if (!designId) throw new Error("useDesignStore must be called within a DesignScopeProvider or be directly provided with an id");
+  const designIdStr = designIdToString(designId);
+  if (!kitStore.designs.has(designIdStr)) throw new Error(`Design store not found for design ${designId}`);
+  const designStore = kitStore.designs.get(designIdStr)! as DesignStoreFull;
+  return selector ? selector(designStore) : designStore;
 }
 
 export function useDesign(): Design;
 export function useDesign<T>(selector: (design: Design) => T): T;
 export function useDesign<T>(selector: (design: Design) => T, id: DesignId): T;
 export function useDesign<T>(selector?: (design: Design) => T, id?: DesignId): T | Design {
-  const store = useSketchpadStore();
-  const kitScope = useKitStoreScope();
-  if (!kitScope) throw new Error("useDesign must be called within a KitScopeProvider");
-  const kitId = kitScope.id;
-  const kitIdStr = kitIdToString(kitId);
-  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kitStore = store.kits.get(kitIdStr)!;
-  const designScope = useDesignScope();
-  const designId = designScope?.id ?? id;
-  if (!designId) throw new Error("useDesign must be called within a DesignScopeProvider or be directly provided with an id");
-  const designIdStr = designIdToString(designId);
-  if (!kitStore.designs.has(designIdStr)) throw new Error(`Design store not found for design ${designId}`);
-  const designStore = useMemo(() => kitStore.designs.get(designIdStr)!, [kitStore, designIdStr]);
-  const getSnapshot = useMemo(() => () => designStore.snapshot(), [designStore]);
-  const state = useSyncExternalStore(designStore.onChanged, getSnapshot, getSnapshot);
-  return selector ? selector(state) : state;
+  const store = id ? useDesignStore((s) => s, id) : useDesignStore();
+  return useStoreState(store, selector);
 }
 
 export function useFlattenDiff(): DesignDiff {
@@ -3725,186 +3721,146 @@ export function usePiecesMetadata(): Map<
   return useMemo(() => piecesMetadata(kit, designScope.id), [kit, designScope.id]);
 }
 
+function useTypeStore(): TypeStoreFull;
+function useTypeStore<T>(selector: (store: TypeStoreFull) => T): T;
+function useTypeStore<T>(selector: (store: TypeStoreFull) => T, id: TypeId): T;
+function useTypeStore<T>(selector?: (store: TypeStoreFull) => T, id?: TypeId): T | TypeStoreFull {
+  const kitStore = useKitStore();
+  const typeScope = useTypeScope();
+  const typeId = typeScope?.id ?? id;
+  if (!typeId) throw new Error("useTypeStore must be called within a TypeScopeProvider or be directly provided with an id");
+  const typeIdStr = typeIdToString(typeId);
+  if (!kitStore.types.has(typeIdStr)) throw new Error(`Type store not found for type ${typeId}`);
+  const typeStore = kitStore.types.get(typeIdStr)! as TypeStoreFull;
+  return selector ? selector(typeStore) : typeStore;
+}
+
 export function useType(): Type;
 export function useType<T>(selector: (type: Type) => T): T;
 export function useType<T>(selector: (type: Type) => T, id: TypeId): T;
 export function useType<T>(selector?: (type: Type) => T, id?: TypeId): T | Type {
-  const store = useSketchpadStore();
-  const kitScope = useKitStoreScope();
-  if (!kitScope) throw new Error("useType must be called within a KitScopeProvider");
-  const kitId = kitScope.id;
-  const kitIdStr = kitIdToString(kitId);
-  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kit = store.kits.get(kitIdStr)!;
-  const typeScope = useTypeScope();
-  const typeId = typeScope?.id ?? id;
-  if (!typeId) throw new Error("useType must be called within a TypeScopeProvider or be directly provided with an id");
-  const typeIdStr = typeIdToString(typeId);
-  if (!kit.types.has(typeIdStr)) throw new Error(`Type store not found for type ${typeId}`);
-  const typeStore = useMemo(() => kit.types.get(typeIdStr)!, [kit, typeIdStr]);
-  const getSnapshot = useMemo(() => () => typeStore.snapshot(), [typeStore]);
-  const state = useSyncExternalStore(typeStore.onChanged, getSnapshot, getSnapshot);
-  return selector ? selector(state) : state;
+  const store = id ? useTypeStore((s) => s, id) : useTypeStore();
+  return useStoreState(store, selector);
+}
+
+function usePieceStore(): PieceStoreFull;
+function usePieceStore<T>(selector: (store: PieceStoreFull) => T): T;
+function usePieceStore<T>(selector: (store: PieceStoreFull) => T, id: PieceId): T;
+function usePieceStore<T>(selector?: (store: PieceStoreFull) => T, id?: PieceId): T | PieceStoreFull {
+  const designStore = useDesignStore();
+  const pieceScope = usePieceScope();
+  const pieceId = pieceScope?.id ?? id;
+  if (!pieceId) throw new Error("usePieceStore must be called within a PieceScopeProvider or be directly provided with an id");
+  const pieceIdStr = pieceIdToString(pieceId);
+  if (!designStore.pieces.has(pieceIdStr)) throw new Error(`Piece store not found for piece ${pieceId}`);
+  const pieceStore = designStore.pieces.get(pieceIdStr)! as PieceStoreFull;
+  return selector ? selector(pieceStore) : pieceStore;
 }
 
 export function usePiece(): Piece;
 export function usePiece<T>(selector: (piece: Piece) => T): T;
 export function usePiece<T>(selector: (piece: Piece) => T, id: PieceId): T;
 export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId): T | Piece {
-  const sketchpadScope = useSketchpadScope();
-  if (!sketchpadScope) throw new Error("usePiece must be called within a SketchpadScopeProvider");
-  const store = stores.get(sketchpadScope.id)!;
-  const kitScope = useKitStoreScope();
-  if (!kitScope) throw new Error("usePiece must be called within a KitScopeProvider");
-  const kitId = kitScope.id;
-  const kitIdStr = kitIdToString(kitId);
-  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kit = store.kits.get(kitIdStr)!;
-  const designScope = useDesignScope();
-  if (!designScope) throw new Error("usePiece must be called within a DesignScopeProvider");
-  const designId = designScope.id;
-  const designIdStr = designIdToString(designId);
-  if (!kit.designs.has(designIdStr)) throw new Error(`Design store not found for design ${designId}`);
-  const design = kit.designs.get(designIdStr)!;
-  const pieceScope = usePieceScope();
-  const pieceId = pieceScope?.id ?? id;
-  if (!pieceId) throw new Error("usePiece must be called within a PieceScopeProvider or be directly provided with an id");
-  const pieceIdStr = pieceIdToString(pieceId);
-  if (!design.pieces.has(pieceIdStr)) throw new Error(`Piece store not found for piece ${pieceId}`);
-  const pieceStore = useMemo(() => design.pieces.get(pieceIdStr)!, [design, pieceIdStr]);
-  const getSnapshot = useMemo(() => () => pieceStore.snapshot(), [pieceStore]);
-  const state = useSyncExternalStore(pieceStore.onChanged, getSnapshot, getSnapshot);
-  return selector ? selector(state) : state;
+  const store = id ? usePieceStore((s) => s, id) : usePieceStore();
+  return useStoreState(store, selector);
+}
+
+function useConnectionStore(): ConnectionStoreFull;
+function useConnectionStore<T>(selector: (store: ConnectionStoreFull) => T): T;
+function useConnectionStore<T>(selector: (store: ConnectionStoreFull) => T, id: ConnectionId): T;
+function useConnectionStore<T>(selector?: (store: ConnectionStoreFull) => T, id?: ConnectionId): T | ConnectionStoreFull {
+  const designStore = useDesignStore();
+  const connectionScope = useConnectionScope();
+  const connectionId = connectionScope?.id ?? id;
+  if (!connectionId) throw new Error("useConnectionStore must be called within a ConnectionScopeProvider or be directly provided with an id");
+  const connectionIdStr = connectionIdToString(connectionId);
+  if (!designStore.connections.has(connectionIdStr)) throw new Error(`Connection store not found for connection ${connectionId}`);
+  const connectionStore = designStore.connections.get(connectionIdStr)! as ConnectionStoreFull;
+  return selector ? selector(connectionStore) : connectionStore;
 }
 
 export function useConnection(): Connection;
 export function useConnection<T>(selector: (connection: Connection) => T): T;
 export function useConnection<T>(selector: (connection: Connection) => T, id: ConnectionId): T;
 export function useConnection<T>(selector?: (connection: Connection) => T, id?: ConnectionId): T | Connection {
-  const sketchpadScope = useSketchpadScope();
-  if (!sketchpadScope) throw new Error("useConnection must be called within a SketchpadScopeProvider");
-  const store = stores.get(sketchpadScope.id)!;
-  const kitScope = useKitStoreScope();
-  if (!kitScope) throw new Error("useConnection must be called within a KitScopeProvider");
-  const kitId = kitScope.id;
-  const kitIdStr = kitIdToString(kitId);
-  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kit = store.kits.get(kitIdStr)!;
-  const designScope = useDesignScope();
-  if (!designScope) throw new Error("useConnection must be called within a DesignScopeProvider");
-  const designId = designScope.id;
-  const designIdStr = designIdToString(designId);
-  if (!kit.designs.has(designIdStr)) throw new Error(`Design store not found for design ${designId}`);
-  const design = kit.designs.get(designIdStr)!;
-  const connectionScope = useConnectionScope();
-  const connectionId = connectionScope?.id ?? id;
-  if (!connectionId) throw new Error("useConnection must be called within a ConnectionScopeProvider or be directly provided with an id");
-  const connectionIdStr = connectionIdToString(connectionId);
-  if (!design.connections.has(connectionIdStr)) throw new Error(`Connection store not found for connection ${connectionId}`);
-  const connectionStore = useMemo(() => design.connections.get(connectionIdStr)!, [design, connectionIdStr]);
-  const getSnapshot = useMemo(() => () => connectionStore.snapshot(), [connectionStore]);
-  const state = useSyncExternalStore(connectionStore.onChanged, getSnapshot, getSnapshot);
-  return selector ? selector(state) : state;
+  const store = id ? useConnectionStore((s) => s, id) : useConnectionStore();
+  return useStoreState(store, selector);
+}
+
+function usePortStore(): PortStoreFull;
+function usePortStore<T>(selector: (store: PortStoreFull) => T): T;
+function usePortStore<T>(selector: (store: PortStoreFull) => T, id: PortId): T;
+function usePortStore<T>(selector?: (store: PortStoreFull) => T, id?: PortId): T | PortStoreFull {
+  const typeStore = useTypeStore();
+  const portScope = usePortScope();
+  const portId = portScope?.id ?? id;
+  if (!portId) throw new Error("usePortStore must be called within a PortScopeProvider or be directly provided with an id");
+  const portIdStr = portIdToString(portId);
+  if (!typeStore.ports.has(portIdStr)) throw new Error(`Port store not found for port ${portId}`);
+  const portStore = typeStore.ports.get(portIdStr)! as PortStoreFull;
+  return selector ? selector(portStore) : portStore;
 }
 
 export function usePort(): Port;
 export function usePort<T>(selector: (port: Port) => T): T;
 export function usePort<T>(selector: (port: Port) => T, id: PortId): T;
 export function usePort<T>(selector?: (port: Port) => T, id?: PortId): T | Port {
-  const sketchpadScope = useSketchpadScope();
-  if (!sketchpadScope) throw new Error("usePort must be called within a SketchpadScopeProvider");
-  const store = stores.get(sketchpadScope.id)!;
-  const kitScope = useKitStoreScope();
-  if (!kitScope) throw new Error("usePort must be called within a KitScopeProvider");
-  const kitId = kitScope.id;
-  const kitIdStr = kitIdToString(kitId);
-  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kit = store.kits.get(kitIdStr)!;
-  const typeScope = useTypeScope();
-  if (!typeScope) throw new Error("usePort must be called within a TypeScopeProvider");
-  const typeId = typeScope.id;
-  const typeIdStr = typeIdToString(typeId);
-  if (!kit.types.has(typeIdStr)) throw new Error(`Type store not found for type ${typeId}`);
-  const type = kit.types.get(typeIdStr)!;
-  const portScope = usePortScope();
-  const portId = portScope?.id ?? id;
-  if (!portId) throw new Error("usePort must be called within a PortScopeProvider or be directly provided with an id");
-  const portIdStr = portIdToString(portId);
-  if (!type.ports.has(portIdStr)) throw new Error(`Port store not found for port ${portId}`);
-  const portStore = useMemo(() => type.ports.get(portIdStr)!, [type, portIdStr]);
-  const getSnapshot = useMemo(() => () => portStore.snapshot(), [portStore]);
-  const state = useSyncExternalStore(portStore.onChanged, getSnapshot, getSnapshot);
-  return selector ? selector(state) : state;
+  const store = id ? usePortStore((s) => s, id) : usePortStore();
+  return useStoreState(store, selector);
+}
+
+function useRepresentationStore(): RepresentationStoreFull;
+function useRepresentationStore<T>(selector: (store: RepresentationStoreFull) => T): T;
+function useRepresentationStore<T>(selector: (store: RepresentationStoreFull) => T, id: RepresentationId): T;
+function useRepresentationStore<T>(selector?: (store: RepresentationStoreFull) => T, id?: RepresentationId): T | RepresentationStoreFull {
+  const typeStore = useTypeStore();
+  const representationScope = useRepresentationScope();
+  const representationId = representationScope?.id ?? id;
+  if (!representationId) throw new Error("useRepresentationStore must be called within a RepresentationScopeProvider or be directly provided with an id");
+  const representationIdStr = representationIdToString(representationId);
+  if (!typeStore.representations.has(representationIdStr)) throw new Error(`Representation store not found for representation ${representationId}`);
+  const representationStore = typeStore.representations.get(representationIdStr)! as RepresentationStoreFull;
+  return selector ? selector(representationStore) : representationStore;
 }
 
 export function useRepresentation(): Representation;
 export function useRepresentation<T>(selector: (representation: Representation) => T): T;
 export function useRepresentation<T>(selector: (representation: Representation) => T, id: RepresentationId): T;
 export function useRepresentation<T>(selector?: (representation: Representation) => T, id?: RepresentationId): T | Representation {
-  const sketchpadScope = useSketchpadScope();
-  if (!sketchpadScope) throw new Error("useRepresentation must be called within a SketchpadScopeProvider");
-  const store = stores.get(sketchpadScope.id)!;
-  const kitScope = useKitStoreScope();
-  if (!kitScope) throw new Error("useRepresentation must be called within a KitScopeProvider");
-  const kitId = kitScope.id;
-  const kitIdStr = kitIdToString(kitId);
-  if (!store.kits.has(kitIdStr)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kit = store.kits.get(kitIdStr)!;
-  const typeScope = useTypeScope();
-  if (!typeScope) throw new Error("useRepresentation must be called within a TypeScopeProvider");
-  const typeId = typeScope.id;
-  const typeIdStr = typeIdToString(typeId);
-  if (!kit.types.has(typeIdStr)) throw new Error(`Type store not found for type ${typeId}`);
-  const typeStore = kit.types.get(typeIdStr)!;
-  const representationScope = useRepresentationScope();
-  const representationId = representationScope?.id ?? id;
-  if (!representationId) throw new Error("useRepresentation must be called within a RepresentationScopeProvider or be directly provided with an id");
-  const representationIdStr = representationIdToString(representationId);
-  if (!typeStore.representations.has(representationIdStr)) throw new Error(`Representation store not found for representation ${representationId}`);
-  const representationStore = useMemo(() => typeStore.representations.get(representationIdStr)!, [typeStore, representationIdStr]);
-  const getSnapshot = useMemo(() => () => representationStore.snapshot(), [representationStore]);
-  const state = useSyncExternalStore(representationStore.onChanged, getSnapshot, getSnapshot);
-  return selector ? selector(state) : state;
+  const store = id ? useRepresentationStore((s) => s, id) : useRepresentationStore();
+  return useStoreState(store, selector);
 }
 
 // Additional utility hooks for the new store architecture
 export function useMode(): Mode {
-  return useSketchpad((store) => store.snapshot().mode);
+  return useSketchpad((s) => s.mode);
 }
 
 export function useTheme(): Theme {
-  return useSketchpad((store) => store.snapshot().theme);
+  return useSketchpad((s) => s.theme);
 }
 
 export function useLayout(): Layout {
-  return useSketchpad((store) => store.snapshot().layout);
+  return useSketchpad((s) => s.layout);
 }
 
 export function useDesignId(): DesignId | undefined {
-  const sketchpad = useSketchpad();
-  return sketchpad.snapshot().activeDesignEditor?.design;
+  return useSketchpad((s) => s.activeDesignEditor?.design);
 }
 
-export function useDesigns(): DesignId[] {
-  const kit = useKit();
-  return kit.designs
-    ? kit.designs.map((design) => ({
-        name: design.name,
-        variant: design.variant,
-        view: design.view,
-      }))
-    : [];
+export function useDesigns(): Design[] {
+  return useKit((k) => k.designs ?? []);
 }
 
 export function useSketchpadCommands() {
-  const sketchpad = useSketchpad();
+  const store = useSketchpadStore();
   return {
-    setMode: (mode: Mode) => sketchpad.execute("semio.sketchpad.setMode", mode),
-    setTheme: (theme: Theme) => sketchpad.execute("semio.sketchpad.setTheme", theme),
-    setLayout: (layout: Layout) => sketchpad.execute("semio.sketchpad.setLayout", layout),
-    createKit: (kit: Kit) => sketchpad.execute("semio.sketchpad.createKit", kit),
-    createDesignEditor: (designEditorId: DesignEditorId) => sketchpad.execute("semio.sketchpad.createDesignEditor", designEditorId),
-    setActiveDesignEditor: (designEditorId: DesignEditorId) => sketchpad.execute("semio.sketchpad.setActiveDesignEditor", designEditorId),
+    setMode: (mode: Mode) => store.execute("semio.sketchpad.setMode", mode),
+    setTheme: (theme: Theme) => store.execute("semio.sketchpad.setTheme", theme),
+    setLayout: (layout: Layout) => store.execute("semio.sketchpad.setLayout", layout),
+    createKit: (kit: Kit) => store.execute("semio.sketchpad.createKit", kit),
+    createDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.createDesignEditor", designEditorId),
+    setActiveDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.setActiveDesignEditor", designEditorId),
   };
 }
 
@@ -3935,54 +3891,53 @@ export function useKitCommands() {
 }
 
 export function useDesignEditorCommands() {
-  const designEditor = useDesignEditor();
+  const store = useDesignEditorStore();
   return {
-    startTransaction: () => designEditor.execute("semio.designEditor.startTransaction"),
-    finalizeTransaction: () => designEditor.execute("semio.designEditor.finalizeTransaction"),
-    abortTransaction: () => designEditor.execute("semio.designEditor.abortTransaction"),
-    undo: () => designEditor.execute("semio.designEditor.undo"),
-    redo: () => designEditor.execute("semio.designEditor.redo"),
-    selectAll: () => designEditor.execute("semio.designEditor.selectAll"),
-    deselectAll: () => designEditor.execute("semio.designEditor.deselectAll"),
-    selectPiece: (pieceId: PieceId) => designEditor.execute("semio.designEditor.selectPiece", pieceId),
-    selectPieces: (pieceIds: PieceId[]) => designEditor.execute("semio.designEditor.selectPieces", pieceIds),
-    addPieceToSelection: (pieceId: PieceId) => designEditor.execute("semio.designEditor.addPieceToSelection", pieceId),
-    removePieceFromSelection: (pieceId: PieceId) => designEditor.execute("semio.designEditor.removePieceFromSelection", pieceId),
-    selectConnection: (connection: Connection) => designEditor.execute("semio.designEditor.selectConnection", connection),
-    addConnectionToSelection: (connection: Connection) => designEditor.execute("semio.designEditor.addConnectionToSelection", connection),
-    removeConnectionFromSelection: (connection: Connection) => designEditor.execute("semio.designEditor.removeConnectionFromSelection", connection),
-    selectPiecePort: (pieceId: PieceId, portId: PortId) => designEditor.execute("semio.designEditor.selectPiecePort", pieceId, portId),
-    deselectPiecePort: () => designEditor.execute("semio.designEditor.deselectPiecePort"),
-    deleteSelected: () => designEditor.execute("semio.designEditor.deleteSelected"),
-    toggleDiagramFullscreen: () => designEditor.execute("semio.designEditor.toggleDiagramFullscreen"),
-    toggleModelFullscreen: () => designEditor.execute("semio.designEditor.toggleModelFullscreen"),
-    executeCommand: (command: string, ...args: any[]) => designEditor.execute(command, ...args),
-    execute: (command: string, ...args: any[]) => designEditor.execute(command, ...args),
+    startTransaction: () => store.execute("semio.designEditor.startTransaction"),
+    finalizeTransaction: () => store.execute("semio.designEditor.finalizeTransaction"),
+    abortTransaction: () => store.execute("semio.designEditor.abortTransaction"),
+    undo: () => store.execute("semio.designEditor.undo"),
+    redo: () => store.execute("semio.designEditor.redo"),
+    selectAll: () => store.execute("semio.designEditor.selectAll"),
+    deselectAll: () => store.execute("semio.designEditor.deselectAll"),
+    selectPiece: (pieceId: PieceId) => store.execute("semio.designEditor.selectPiece", pieceId),
+    selectPieces: (pieceIds: PieceId[]) => store.execute("semio.designEditor.selectPieces", pieceIds),
+    addPieceToSelection: (pieceId: PieceId) => store.execute("semio.designEditor.addPieceToSelection", pieceId),
+    removePieceFromSelection: (pieceId: PieceId) => store.execute("semio.designEditor.removePieceFromSelection", pieceId),
+    selectConnection: (connection: Connection) => store.execute("semio.designEditor.selectConnection", connection),
+    addConnectionToSelection: (connection: Connection) => store.execute("semio.designEditor.addConnectionToSelection", connection),
+    removeConnectionFromSelection: (connection: Connection) => store.execute("semio.designEditor.removeConnectionFromSelection", connection),
+    selectPiecePort: (pieceId: PieceId, portId: PortId) => store.execute("semio.designEditor.selectPiecePort", pieceId, portId),
+    deselectPiecePort: () => store.execute("semio.designEditor.deselectPiecePort"),
+    deleteSelected: () => store.execute("semio.designEditor.deleteSelected"),
+    toggleDiagramFullscreen: () => store.execute("semio.designEditor.toggleDiagramFullscreen"),
+    toggleModelFullscreen: () => store.execute("semio.designEditor.toggleModelFullscreen"),
+    execute: (command: string, ...args: any[]) => store.execute(command, ...args),
   };
 }
 // Design editor state hooks
 export function useSelection(): DesignEditorSelection {
-  return useDesignEditor((store) => store.snapshot().selection);
+  return useDesignEditor((s) => s.selection);
 }
 
 export function useDesignEditorSelection(): DesignEditorSelection {
-  return useDesignEditor((store) => store.snapshot().selection);
+  return useDesignEditor((s) => s.selection);
 }
 
 export function useFullscreen(): DesignEditorFullscreenPanel {
-  return useDesignEditor((store) => store.snapshot().fullscreenPanel);
+  return useDesignEditor((s) => s.fullscreenPanel);
 }
 
 export function useDesignEditorFullscreen(): DesignEditorFullscreenPanel {
-  return useDesignEditor((store) => store.snapshot().fullscreenPanel);
+  return useDesignEditor((s) => s.fullscreenPanel);
 }
 
 export function useDiff(): KitDiff {
-  return useDesignEditor((store) => store.snapshot().diff);
+  return useDesignEditor((s) => s.diff);
 }
 
 export function useDesignEditorDesignDiff(): KitDiff {
-  return useDesignEditor((store) => store.snapshot().diff);
+  return useDesignEditor((s) => s.diff);
 }
 
 export function useDiffedKit(): Kit {
@@ -3997,11 +3952,11 @@ export function useFileUrls(): Map<Url, Url> {
 }
 
 export function useOthers(): DesignEditorPresenceOther[] {
-  return useDesignEditor((store) => store.snapshot().others);
+  return useDesignEditor((s) => s.others);
 }
 
 export function useDesignEditorOthers(): DesignEditorPresenceOther[] {
-  return useDesignEditor((store) => store.snapshot().others);
+  return useDesignEditor((s) => s.others);
 }
 
 // #endregion Hooks
