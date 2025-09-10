@@ -353,17 +353,14 @@ export const KitSchema = z.object({
   homepage: z.string().optional(),
   license: z.string().optional(),
   authors: z.array(AuthorSchema).optional(),
-  pieces: z.array(PieceSchema).optional(),
-  groups: z.array(GroupSchema).optional(),
-  connections: z.array(ConnectionSchema).optional(),
   props: z.array(PropSchema).optional(),
   stats: z.array(StatSchema).optional(),
-  attributes: z.array(AttributeSchema).optional(),
   preview: z.string().optional(),
   files: z.array(FileSchema).optional(),
+  qualities: z.array(QualitySchema).optional(),
   types: z.array(TypeSchema).optional(),
   designs: z.array(DesignSchema).optional(),
-  qualities: z.array(QualitySchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
   created: z
     .string()
     .transform((val) => new Date(val))
@@ -2868,21 +2865,21 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): DesignDiff => {
   });
   flatDesign.pieces = flatDesign.pieces?.map((p) => pieceMap[p.id_ ?? ""]);
   flatDesign.connections = [];
-  
+
   // Return the diff between original expanded design and flattened design
   const updatedPieces = flatDesign.pieces?.map(flatPiece => {
     const originalPiece = expandedDesign.pieces?.find(p => p.id_ === flatPiece.id_);
     if (!originalPiece) return null;
-    
+
     // Build piece diff for pieces that changed
     const pieceDiff: PieceDiff = {};
     if (flatPiece.plane !== originalPiece.plane) pieceDiff.plane = flatPiece.plane;
     if (flatPiece.center !== originalPiece.center) pieceDiff.center = flatPiece.center;
     if (JSON.stringify(flatPiece.attributes) !== JSON.stringify(originalPiece.attributes)) pieceDiff.attributes = flatPiece.attributes;
-    
+
     // Only return diff if there are changes
     if (Object.keys(pieceDiff).length === 0) return null;
-    
+
     return {
       id: { id_: flatPiece.id_ },
       diff: pieceDiff

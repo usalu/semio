@@ -684,8 +684,13 @@ function getPlane(yPlane: Y.Map<any>): { origin: { x: number; y: number; z: numb
 class YFileStore implements FileStoreFull {
   public readonly parent: YKitStore;
   public readonly yFile: Y.Map<string>;
-  private cachedSnapshot?: SemioFile;
+  private lastSnapshot?: SemioFile;
   private lastSnapshotHash?: string;
+
+  private hash(file: SemioFile): string {
+    // TODO: Implement hash calculation
+    return "";
+  }
 
   constructor(parent: YKitStore, file: SemioFile) {
     this.parent = parent;
@@ -718,7 +723,7 @@ class YFileStore implements FileStoreFull {
     if (diff.remote !== undefined) this.yFile.set("remote", diff.remote);
     if (diff.size !== undefined) this.yFile.set("size", diff.size.toString());
     if (diff.hash !== undefined) this.yFile.set("hash", diff.hash);
-    this.cachedSnapshot = undefined; // Invalidate cache when data changes
+    this.lastSnapshot = undefined; // Invalidate cache when data changes
     this.lastSnapshotHash = undefined; // Invalidate hash when data changes
   };
 
@@ -731,21 +736,14 @@ class YFileStore implements FileStoreFull {
       created: this.yFile.get("created") ? new Date(this.yFile.get("created") as string) : undefined,
       updated: this.yFile.get("updated") ? new Date(this.yFile.get("updated") as string) : undefined,
     };
-    const currentHash = JSON.stringify({
-      path: currentData.path,
-      remote: currentData.remote,
-      size: currentData.size,
-      hash: currentData.hash,
-      created: currentData.created?.toISOString(),
-      updated: currentData.updated?.toISOString(),
-    });
+    const currentHash = this.hash(currentData);
 
-    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.cachedSnapshot = currentData;
+    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.lastSnapshot = currentData;
       this.lastSnapshotHash = currentHash;
     }
 
-    return this.cachedSnapshot;
+    return this.lastSnapshot;
   };
 
   onChanged = (subscribe: Subscribe, deep?: boolean) => {
@@ -756,8 +754,13 @@ class YFileStore implements FileStoreFull {
 class YRepresentationStore implements RepresentationStoreFull {
   public readonly parent: YKitStore;
   public readonly yRepresentation: YRepresentation;
-  private cachedSnapshot?: Representation;
+  private lastSnapshot?: Representation;
   private lastSnapshotHash?: string;
+
+  private hash(representation: Representation): string {
+    // TODO: Implement hash calculation
+    return "";
+  }
 
   constructor(parent: YKitStore, representation: Representation) {
     this.parent = parent;
@@ -783,14 +786,14 @@ class YRepresentationStore implements RepresentationStoreFull {
       tags: tags,
       attributes: attributes,
     };
-    const currentHash = JSON.stringify(currentData);
+    const currentHash = this.hash(currentData);
 
-    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.cachedSnapshot = currentData;
+    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.lastSnapshot = currentData;
       this.lastSnapshotHash = currentHash;
     }
 
-    return this.cachedSnapshot;
+    return this.lastSnapshot;
   };
 
   change = (diff: RepresentationDiff) => {
@@ -812,8 +815,13 @@ class YRepresentationStore implements RepresentationStoreFull {
 class YPortStore implements PortStoreFull {
   public readonly parent: YTypeStore;
   public readonly yPort: YPort;
-  private cachedSnapshot?: Port;
+  private lastSnapshot?: Port;
   private lastSnapshotHash?: string;
+
+  private hash(port: Port): string {
+    // TODO: Implement hash calculation
+    return "";
+  }
 
   constructor(parent: YTypeStore, port: Port) {
     this.parent = parent;
@@ -835,16 +843,7 @@ class YPortStore implements PortStoreFull {
     const yDirection = this.yPort.get("direction") as Y.Map<number>;
     const yAttributes = this.yPort.get("attributes") as YAttributes;
 
-    const attributes: Attribute[] = [];
-    if (yAttributes) {
-      yAttributes.forEach((yMap: YAttribute) => {
-        attributes.push({
-          key: yMap.get("key") as string,
-          value: yMap.get("value") as string | undefined,
-          definition: yMap.get("definition") as string | undefined,
-        });
-      });
-    }
+    const attributes = getAttributes(yAttributes);
 
     const currentData = {
       id_: this.yPort.get("id_") as string,
@@ -865,14 +864,14 @@ class YPortStore implements PortStoreFull {
       t: this.yPort.get("t") as number,
       attributes: attributes,
     };
-    const currentHash = JSON.stringify(currentData);
+    const currentHash = this.hash(currentData);
 
-    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.cachedSnapshot = currentData;
+    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.lastSnapshot = currentData;
       this.lastSnapshotHash = currentHash;
     }
 
-    return this.cachedSnapshot;
+    return this.lastSnapshot;
   };
 
   change = (diff: PortDiff) => {
@@ -907,8 +906,13 @@ class YTypeStore implements TypeStoreFull {
   public readonly ports: Map<string, YPortStore> = new Map();
   public readonly representationIds: Map<string, string> = new Map();
   public readonly portIds: Map<string, string> = new Map();
-  private cachedSnapshot?: Type;
+  private lastSnapshot?: Type;
   private lastSnapshotHash?: string;
+
+  private hash(type: Type): string {
+    // TODO: Implement hash calculation
+    return "";
+  }
 
   constructor(parent: YKitStore, type: Type) {
     this.parent = parent;
@@ -964,7 +968,7 @@ class YTypeStore implements TypeStoreFull {
         }
       });
     }
-    this.cachedSnapshot = undefined;
+    this.lastSnapshot = undefined;
     this.lastSnapshotHash = undefined;
   };
 
@@ -982,36 +986,26 @@ class YTypeStore implements TypeStoreFull {
     const stock = this.yType.get("stock") as number | undefined;
     const virtual = this.yType.get("virtual") as boolean | undefined;
 
-    const currentHash = JSON.stringify({
+    const currentData = {
       name: name,
       description: description,
       variant: variant,
       unit: unit,
       stock: stock,
       virtual: virtual,
-      representationCount: this.representations.size,
-      portCount: this.ports.size,
+      representations: Array.from(this.representations.values()).map((store) => store.snapshot()),
+      ports: Array.from(this.ports.values()).map((store) => store.snapshot()),
       authors: authors,
       attributes: attributes,
-    });
+    };
+    const currentHash = this.hash(currentData);
 
-    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.cachedSnapshot = {
-        name: name,
-        description: description,
-        variant: variant,
-        unit: unit,
-        stock: stock,
-        virtual: virtual,
-        representations: Array.from(this.representations.values()).map((store) => store.snapshot()),
-        ports: Array.from(this.ports.values()).map((store) => store.snapshot()),
-        authors: authors,
-        attributes: attributes,
-      };
+    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.lastSnapshot = currentData;
       this.lastSnapshotHash = currentHash;
     }
 
-    return this.cachedSnapshot;
+    return this.lastSnapshot;
   };
 
   onChanged = (subscribe: Subscribe, deep?: boolean) => {
@@ -1022,8 +1016,13 @@ class YTypeStore implements TypeStoreFull {
 class YPieceStore implements PieceStoreFull {
   public readonly parent: YDesignStore;
   public readonly yPiece: YPiece;
-  private cachedSnapshot?: Piece;
+  private lastSnapshot?: Piece;
   private lastSnapshotHash?: string;
+
+  private hash(piece: Piece): string {
+    // TODO: Implement hash calculation
+    return "";
+  }
 
   constructor(parent: YDesignStore, piece: Piece) {
     this.parent = parent;
@@ -1108,14 +1107,14 @@ class YPieceStore implements PieceStoreFull {
       };
     }
 
-    const currentHash = JSON.stringify(currentData);
+    const currentHash = this.hash(currentData);
 
-    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.cachedSnapshot = currentData;
+    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.lastSnapshot = currentData;
       this.lastSnapshotHash = currentHash;
     }
 
-    return this.cachedSnapshot;
+    return this.lastSnapshot;
   };
 
   change = (diff: PieceDiff) => {
@@ -1159,8 +1158,13 @@ class YPieceStore implements PieceStoreFull {
 class YConnectionStore implements ConnectionStoreFull {
   public readonly parent: YDesignStore;
   public readonly yConnection: YConnection;
-  private cachedSnapshot?: Connection;
+  private lastSnapshot?: Connection;
   private lastSnapshotHash?: string;
+
+  private hash(connection: Connection): string {
+    // TODO: Implement hash calculation
+    return "";
+  }
 
   constructor(parent: YDesignStore, connection: Connection) {
     this.parent = parent;
@@ -1247,14 +1251,14 @@ class YConnectionStore implements ConnectionStoreFull {
       y: this.yConnection.get("y") as number,
       attributes: attributes,
     };
-    const currentHash = JSON.stringify(currentData);
+    const currentHash = this.hash(currentData);
 
-    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.cachedSnapshot = currentData;
+    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.lastSnapshot = currentData;
       this.lastSnapshotHash = currentHash;
     }
 
-    return this.cachedSnapshot;
+    return this.lastSnapshot;
   };
 
   change = (diff: ConnectionDiff) => {
@@ -1281,8 +1285,13 @@ class YDesignStore implements DesignStoreFull {
   public readonly connections: Map<string, YConnectionStore> = new Map();
   public readonly pieceIds: Map<string, string> = new Map();
   public readonly connectionIds: Map<string, string> = new Map();
-  private cachedSnapshot?: Design;
+  private lastSnapshot?: Design;
   private lastSnapshotHash?: string;
+
+  private hash(design: Design): string {
+    // TODO: Implement hash calculation
+    return "";
+  }
 
   constructor(parent: YKitStore, design: Design) {
     this.parent = parent;
@@ -1329,34 +1338,25 @@ class YDesignStore implements DesignStoreFull {
     const view = this.yDesign.get("view") as string | undefined;
     const unit = this.yDesign.get("unit") as string;
 
-    const currentHash = JSON.stringify({
+    const currentData = {
       name: name,
       description: description,
       variant: variant,
       view: view,
       unit: unit,
-      pieceCount: this.pieces.size,
-      connectionCount: this.connections.size,
+      pieces: Array.from(this.pieces.values()).map((p) => p.snapshot()),
+      connections: Array.from(this.connections.values()).map((c) => c.snapshot()),
       authors: authors,
       attributes: attributes,
-    });
+    };
+    const currentHash = this.hash(currentData);
 
-    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.cachedSnapshot = {
-        name: name,
-        description: description,
-        variant: variant,
-        view: view,
-        unit: unit,
-        pieces: Array.from(this.pieces.values()).map((p) => p.snapshot()),
-        connections: Array.from(this.connections.values()).map((c) => c.snapshot()),
-        authors: authors,
-        attributes: attributes,
-      };
+    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.lastSnapshot = currentData;
       this.lastSnapshotHash = currentHash;
     }
 
-    return this.cachedSnapshot;
+    return this.lastSnapshot;
   };
 
   change = (diff: DesignDiff) => {
@@ -1445,27 +1445,22 @@ class YDesignStore implements DesignStoreFull {
         });
       }
     }
-    this.cachedSnapshot = undefined;
+    this.lastSnapshot = undefined;
     this.lastSnapshotHash = undefined;
   };
 
   onChanged = (subscribe: Subscribe, deep?: boolean) => {
     const observer = () => subscribe();
-    try {
-      if (deep) {
-        this.yDesign.observeDeep(observer);
-        return () => {
-          this.yDesign.unobserveDeep(observer);
-        };
-      } else {
-        this.yDesign.observe(observer);
-        return () => {
-          this.yDesign.unobserve(observer);
-        };
-      }
-    } catch (e) {
-      // Y object not available during observe
-      return () => {};
+    if (deep) {
+      this.yDesign.observeDeep(observer);
+      return () => {
+        this.yDesign.unobserveDeep(observer);
+      };
+    } else {
+      this.yDesign.observe(observer);
+      return () => {
+        this.yDesign.unobserve(observer);
+      };
     }
   };
 }
@@ -1480,8 +1475,13 @@ class YKitStore implements KitStoreFull {
   private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult> = new Map();
   private readonly regularFiles: Map<Url, string> = new Map();
   private readonly parent: SketchpadStore;
-  private cachedSnapshot?: Kit;
+  private lastSnapshot?: Kit;
   private lastSnapshotHash?: string;
+
+  private hash(kit: Kit): string {
+    // TODO: Implement hash calculation
+    return "";
+  }
 
   constructor(parent: SketchpadStore, kit: Kit) {
     this.parent = parent;
@@ -1508,76 +1508,68 @@ class YKitStore implements KitStoreFull {
     this.yKit.set("created", new Date().toISOString());
     this.yKit.set("updated", new Date().toISOString());
 
-    try {
-      kit.types?.forEach((type) => {
-        const typeId = typeIdLikeToTypeId(type);
-        const typeIdStr = typeIdToString(typeId);
-        if (this.typeIds.has(typeIdStr)) {
-          throw new Error(`Type (${typeId.name}, ${typeId.variant || ""}) already exists.`);
-        }
-        const uuid = uuidv4();
-        const yTypeStore = new YTypeStore(this, type);
-        (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
-        const representationsMap = yTypeStore.yType.get("representations") as YRepresentationMap;
-        const portsMap = yTypeStore.yType.get("ports") as YPortMap;
-        (type.representations || []).forEach((r) => {
-          const repId = representationIdLikeToRepresentationId(r);
-          const repIdStr = representationIdToString(repId);
-          const repUuid = uuidv4();
-          yTypeStore.representationIds.set(repIdStr, repUuid);
-          yTypeStore.representations.set(repIdStr, new YRepresentationStore(this, r));
-          representationsMap.set(repUuid, yTypeStore.representations.get(repIdStr)!.yRepresentation);
-        });
-        (type.ports || []).forEach((p) => {
-          const portId = portIdLikeToPortId(p);
-          const portIdStr = portIdToString(portId);
-          const portUuid = uuidv4();
-          yTypeStore.portIds.set(portIdStr, portUuid);
-          yTypeStore.ports.set(portIdStr, new YPortStore(yTypeStore, p));
-          portsMap.set(portUuid, yTypeStore.ports.get(portIdStr)!.yPort);
-        });
-        this.typeIds.set(typeIdStr, uuid);
-        this.types.set(typeIdStr, yTypeStore);
+    kit.types?.forEach((type) => {
+      const typeId = typeIdLikeToTypeId(type);
+      const typeIdStr = typeIdToString(typeId);
+      if (this.typeIds.has(typeIdStr)) {
+        throw new Error(`Type (${typeId.name}, ${typeId.variant || ""}) already exists.`);
+      }
+      const uuid = uuidv4();
+      const yTypeStore = new YTypeStore(this, type);
+      (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
+      const representationsMap = yTypeStore.yType.get("representations") as YRepresentationMap;
+      const portsMap = yTypeStore.yType.get("ports") as YPortMap;
+      (type.representations || []).forEach((r) => {
+        const repId = representationIdLikeToRepresentationId(r);
+        const repIdStr = representationIdToString(repId);
+        const repUuid = uuidv4();
+        yTypeStore.representationIds.set(repIdStr, repUuid);
+        yTypeStore.representations.set(repIdStr, new YRepresentationStore(this, r));
+        representationsMap.set(repUuid, yTypeStore.representations.get(repIdStr)!.yRepresentation);
       });
-    } catch (e) {
-      // Y.Map operations during type processing
-    }
-    try {
-      kit.designs?.forEach((design) => {
-        const designId = designIdLikeToDesignId(design);
-        const designIdStr = designIdToString(designId);
-        if (this.designIds.has(designIdStr)) {
-          throw new Error(`Design (${designId.name}, ${designId.variant || ""}) already exists.`);
-        }
-        const uuid = uuidv4();
-        const yDesignStore = new YDesignStore(this, design);
-        (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
-        const piecesMap = yDesignStore.yDesign.get("pieces") as YPieceMap;
-        const connectionsMap = yDesignStore.yDesign.get("connections") as YConnectionMap;
-        (design.pieces || []).forEach((piece) => {
-          const pieceId = pieceIdLikeToPieceId(piece);
-          const pieceUuid = uuidv4();
-          const yPieceStore = new YPieceStore(yDesignStore, piece);
-          piecesMap.set(pieceUuid, yPieceStore.yPiece);
-          const pieceIdStr = pieceIdToString(pieceId);
-          yDesignStore.pieceIds.set(pieceIdStr, pieceUuid);
-          yDesignStore.pieces.set(pieceIdStr, yPieceStore);
-        });
-        (design.connections || []).forEach((connection) => {
-          const connectionId = connectionIdLikeToConnectionId(connection);
-          const connectionUuid = uuidv4();
-          const yConnectionStore = new YConnectionStore(yDesignStore, connection);
-          connectionsMap.set(connectionUuid, yConnectionStore.yConnection);
-          const connectionIdStr = connectionIdToString(connectionId);
-          yDesignStore.connectionIds.set(connectionIdStr, connectionUuid);
-          yDesignStore.connections.set(connectionIdStr, yConnectionStore);
-        });
-        this.designIds.set(designIdStr, uuid);
-        this.designs.set(designIdStr, yDesignStore);
+      (type.ports || []).forEach((p) => {
+        const portId = portIdLikeToPortId(p);
+        const portIdStr = portIdToString(portId);
+        const portUuid = uuidv4();
+        yTypeStore.portIds.set(portIdStr, portUuid);
+        yTypeStore.ports.set(portIdStr, new YPortStore(yTypeStore, p));
+        portsMap.set(portUuid, yTypeStore.ports.get(portIdStr)!.yPort);
       });
-    } catch (e) {
-      // Y.Map operations during design processing
-    }
+      this.typeIds.set(typeIdStr, uuid);
+      this.types.set(typeIdStr, yTypeStore);
+    });
+    kit.designs?.forEach((design) => {
+      const designId = designIdLikeToDesignId(design);
+      const designIdStr = designIdToString(designId);
+      if (this.designIds.has(designIdStr)) {
+        throw new Error(`Design (${designId.name}, ${designId.variant || ""}) already exists.`);
+      }
+      const uuid = uuidv4();
+      const yDesignStore = new YDesignStore(this, design);
+      (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
+      const piecesMap = yDesignStore.yDesign.get("pieces") as YPieceMap;
+      const connectionsMap = yDesignStore.yDesign.get("connections") as YConnectionMap;
+      (design.pieces || []).forEach((piece) => {
+        const pieceId = pieceIdLikeToPieceId(piece);
+        const pieceUuid = uuidv4();
+        const yPieceStore = new YPieceStore(yDesignStore, piece);
+        piecesMap.set(pieceUuid, yPieceStore.yPiece);
+        const pieceIdStr = pieceIdToString(pieceId);
+        yDesignStore.pieceIds.set(pieceIdStr, pieceUuid);
+        yDesignStore.pieces.set(pieceIdStr, yPieceStore);
+      });
+      (design.connections || []).forEach((connection) => {
+        const connectionId = connectionIdLikeToConnectionId(connection);
+        const connectionUuid = uuidv4();
+        const yConnectionStore = new YConnectionStore(yDesignStore, connection);
+        connectionsMap.set(connectionUuid, yConnectionStore.yConnection);
+        const connectionIdStr = connectionIdToString(connectionId);
+        yDesignStore.connectionIds.set(connectionIdStr, connectionUuid);
+        yDesignStore.connections.set(connectionIdStr, yConnectionStore);
+      });
+      this.designIds.set(designIdStr, uuid);
+      this.designs.set(designIdStr, yDesignStore);
+    });
 
     Object.entries(kitCommands).forEach(([commandId, command]) => {
       this.registerCommand(commandId, command);
@@ -1586,244 +1578,162 @@ class YKitStore implements KitStoreFull {
 
   snapshot = (): Kit => {
     const yAttributes = this.yKit.get("attributes") as YAttributes;
-    const attributes: Attribute[] = [];
-    if (yAttributes) {
-      try {
-        yAttributes.forEach((yMap: YAttribute) => {
-          attributes.push({
-            key: yMap.get("key") as string,
-            value: yMap.get("value") as string | undefined,
-            definition: yMap.get("definition") as string | undefined,
-          });
-        });
-      } catch (e) {
-        // Y object not properly attached, skip
-      }
-    }
+    const attributes = getAttributes(yAttributes);
 
-    let hashData;
-    let currentData;
-    try {
-      hashData = {
-        uri: this.yKit.get("uri") as string,
-        name: this.yKit.get("name") as string,
-        version: this.yKit.get("version") as string | undefined,
-        description: this.yKit.get("description") as string | undefined,
-        icon: this.yKit.get("icon") as string | undefined,
-        image: this.yKit.get("image") as string | undefined,
-        preview: this.yKit.get("preview") as string | undefined,
-        remote: this.yKit.get("remote") as string | undefined,
-        homepage: this.yKit.get("homepage") as string | undefined,
-        license: this.yKit.get("license") as string | undefined,
-        created: this.yKit.get("created") ? new Date(this.yKit.get("created") as string) : undefined,
-        updated: this.yKit.get("updated") ? new Date(this.yKit.get("updated") as string) : undefined,
-        typeCount: this.types.size,
-        designCount: this.designs.size,
-        attributes: attributes,
-      };
-      currentData = {
-        uri: this.yKit.get("uri") as string,
-        name: this.yKit.get("name") as string,
-        version: this.yKit.get("version") as string | undefined,
-        description: this.yKit.get("description") as string | undefined,
-        icon: this.yKit.get("icon") as string | undefined,
-        image: this.yKit.get("image") as string | undefined,
-        preview: this.yKit.get("preview") as string | undefined,
-        remote: this.yKit.get("remote") as string | undefined,
-        homepage: this.yKit.get("homepage") as string | undefined,
-        license: this.yKit.get("license") as string | undefined,
-        created: this.yKit.get("created") ? new Date(this.yKit.get("created") as string) : undefined,
-        updated: this.yKit.get("updated") ? new Date(this.yKit.get("updated") as string) : undefined,
-        types: Array.from(this.types.values()).map((store) => store.snapshot()),
-        designs: Array.from(this.designs.values()).map((store) => store.snapshot()),
-        attributes: attributes,
-      };
-    } catch (e) {
-      // Y.Map not available, use fallback data
-      hashData = {
-        uri: "",
-        name: "",
-        version: undefined,
-        description: undefined,
-        icon: undefined,
-        image: undefined,
-        preview: undefined,
-        remote: undefined,
-        homepage: undefined,
-        license: undefined,
-        created: undefined,
-        updated: undefined,
-        typeCount: 0,
-        designCount: 0,
-        attributes: attributes,
-      };
-      currentData = {
-        uri: "",
-        name: "",
-        version: undefined,
-        description: undefined,
-        icon: undefined,
-        image: undefined,
-        preview: undefined,
-        remote: undefined,
-        homepage: undefined,
-        license: undefined,
-        created: undefined,
-        updated: undefined,
-        types: [],
-        designs: [],
-        attributes: attributes,
-      };
-    }
-    const currentHash = JSON.stringify(hashData);
+    const currentData = {
+      uri: this.yKit.get("uri") as string,
+      name: this.yKit.get("name") as string,
+      version: this.yKit.get("version") as string | undefined,
+      description: this.yKit.get("description") as string | undefined,
+      icon: this.yKit.get("icon") as string | undefined,
+      image: this.yKit.get("image") as string | undefined,
+      preview: this.yKit.get("preview") as string | undefined,
+      remote: this.yKit.get("remote") as string | undefined,
+      homepage: this.yKit.get("homepage") as string | undefined,
+      license: this.yKit.get("license") as string | undefined,
+      created: this.yKit.get("created") ? new Date(this.yKit.get("created") as string) : undefined,
+      updated: this.yKit.get("updated") ? new Date(this.yKit.get("updated") as string) : undefined,
+      types: Array.from(this.types.values()).map((store) => store.snapshot()),
+      designs: Array.from(this.designs.values()).map((store) => store.snapshot()),
+      attributes: attributes,
+    };
+    const currentHash = this.hash(currentData);
 
-    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.cachedSnapshot = currentData;
+    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.lastSnapshot = currentData;
       this.lastSnapshotHash = currentHash;
     }
 
-    return this.cachedSnapshot;
+    return this.lastSnapshot;
   };
 
   change = (diff: KitDiff) => {
-    try {
-      if (diff.uri) this.yKit.set("uri", diff.uri);
-      if (diff.name) this.yKit.set("name", diff.name);
-      if (diff.description) this.yKit.set("description", diff.description);
-      if (diff.version) this.yKit.set("version", diff.version);
-      if (diff.icon) this.yKit.set("icon", diff.icon);
-      if (diff.image) this.yKit.set("image", diff.image);
-      if (diff.preview) this.yKit.set("preview", diff.preview);
-      if (diff.remote) this.yKit.set("remote", diff.remote);
-      if (diff.homepage) this.yKit.set("homepage", diff.homepage);
-      if (diff.license) this.yKit.set("license", diff.license);
-    } catch (e) {
-      // Y.Map operations for basic properties not available
-    }
+    if (diff.uri) this.yKit.set("uri", diff.uri);
+    if (diff.name) this.yKit.set("name", diff.name);
+    if (diff.description) this.yKit.set("description", diff.description);
+    if (diff.version) this.yKit.set("version", diff.version);
+    if (diff.icon) this.yKit.set("icon", diff.icon);
+    if (diff.image) this.yKit.set("image", diff.image);
+    if (diff.preview) this.yKit.set("preview", diff.preview);
+    if (diff.remote) this.yKit.set("remote", diff.remote);
+    if (diff.homepage) this.yKit.set("homepage", diff.homepage);
+    if (diff.license) this.yKit.set("license", diff.license);
 
     if (diff.types) {
-      try {
-        if (diff.types.added) {
-          diff.types.added.forEach((type) => {
-            const typeId = typeIdLikeToTypeId(type);
-            const typeIdStr = typeIdToString(typeId);
-            if (!this.typeIds.get(typeIdStr)) {
-              const uuid = uuidv4();
-              const yTypeStore = new YTypeStore(this, type);
-              (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
-              const representationsMap = yTypeStore.yType.get("representations") as YRepresentationMap;
-              const portsMap = yTypeStore.yType.get("ports") as YPortMap;
-              (type.representations || []).forEach((r) => {
-                const repId = representationIdLikeToRepresentationId(r);
-                const repIdStr = representationIdToString(repId);
-                const repUuid = uuidv4();
-                yTypeStore.representationIds.set(repIdStr, repUuid);
-                yTypeStore.representations.set(repIdStr, new YRepresentationStore(this, r));
-                representationsMap.set(repUuid, yTypeStore.representations.get(repIdStr)!.yRepresentation);
-              });
-              (type.ports || []).forEach((p) => {
-                const portId = portIdLikeToPortId(p);
-                const portIdStr = portIdToString(portId);
-                const portUuid = uuidv4();
-                yTypeStore.portIds.set(portIdStr, portUuid);
-                yTypeStore.ports.set(portIdStr, new YPortStore(yTypeStore, p));
-                portsMap.set(portUuid, yTypeStore.ports.get(portIdStr)!.yPort);
-              });
-              this.typeIds.set(typeIdStr, uuid);
-              this.types.set(typeIdStr, yTypeStore);
-            }
-          });
-        }
-        if (diff.types.removed) {
-          diff.types.removed.forEach((typeId) => {
-            const id = typeIdLikeToTypeId(typeId);
-            const idStr = typeIdToString(id);
-            const uuid = this.typeIds.get(idStr);
-            if (uuid) {
-              (this.yKit.get("types") as YTypeMap).delete(uuid);
-              this.typeIds.delete(idStr);
-              this.types.delete(idStr);
-            }
-          });
-        }
-        if (diff.types.updated) {
-          diff.types.updated.forEach((updatedItem) => {
-            const matchingType = Array.from(this.types.entries()).find(([_, store]) => {
-              return (!updatedItem.diff.name || store.yType.get("name") === updatedItem.id.name) && (!updatedItem.diff.variant || store.yType.get("variant") === updatedItem.id.variant);
+      if (diff.types.added) {
+        diff.types.added.forEach((type) => {
+          const typeId = typeIdLikeToTypeId(type);
+          const typeIdStr = typeIdToString(typeId);
+          if (!this.typeIds.get(typeIdStr)) {
+            const uuid = uuidv4();
+            const yTypeStore = new YTypeStore(this, type);
+            (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
+            const representationsMap = yTypeStore.yType.get("representations") as YRepresentationMap;
+            const portsMap = yTypeStore.yType.get("ports") as YPortMap;
+            (type.representations || []).forEach((r) => {
+              const repId = representationIdLikeToRepresentationId(r);
+              const repIdStr = representationIdToString(repId);
+              const repUuid = uuidv4();
+              yTypeStore.representationIds.set(repIdStr, repUuid);
+              yTypeStore.representations.set(repIdStr, new YRepresentationStore(this, r));
+              representationsMap.set(repUuid, yTypeStore.representations.get(repIdStr)!.yRepresentation);
             });
-            if (matchingType) {
-              matchingType[1].change(updatedItem.diff);
-            }
+            (type.ports || []).forEach((p) => {
+              const portId = portIdLikeToPortId(p);
+              const portIdStr = portIdToString(portId);
+              const portUuid = uuidv4();
+              yTypeStore.portIds.set(portIdStr, portUuid);
+              yTypeStore.ports.set(portIdStr, new YPortStore(yTypeStore, p));
+              portsMap.set(portUuid, yTypeStore.ports.get(portIdStr)!.yPort);
+            });
+            this.typeIds.set(typeIdStr, uuid);
+            this.types.set(typeIdStr, yTypeStore);
+          }
+        });
+      }
+      if (diff.types.removed) {
+        diff.types.removed.forEach((typeId) => {
+          const id = typeIdLikeToTypeId(typeId);
+          const idStr = typeIdToString(id);
+          const uuid = this.typeIds.get(idStr);
+          if (uuid) {
+            (this.yKit.get("types") as YTypeMap).delete(uuid);
+            this.typeIds.delete(idStr);
+            this.types.delete(idStr);
+          }
+        });
+      }
+      if (diff.types.updated) {
+        diff.types.updated.forEach((updatedItem) => {
+          const matchingType = Array.from(this.types.entries()).find(([_, store]) => {
+            return (!updatedItem.diff.name || store.yType.get("name") === updatedItem.id.name) && (!updatedItem.diff.variant || store.yType.get("variant") === updatedItem.id.variant);
           });
-        }
-      } catch (e) {
-        // Y.Map operations for types processing not available
+          if (matchingType) {
+            matchingType[1].change(updatedItem.diff);
+          }
+        });
       }
     }
 
     if (diff.designs) {
-      try {
-        if (diff.designs.added) {
-          diff.designs.added.forEach((design) => {
-            const designId = designIdLikeToDesignId(design);
-            const designIdStr = designIdToString(designId);
-            if (!this.designIds.get(designIdStr)) {
-              const uuid = uuidv4();
-              const yDesignStore = new YDesignStore(this, design);
-              (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
-              const piecesMap = yDesignStore.yDesign.get("pieces") as YPieceMap;
-              const connectionsMap = yDesignStore.yDesign.get("connections") as YConnectionMap;
-              (design.pieces || []).forEach((piece) => {
-                const pieceId = pieceIdLikeToPieceId(piece);
-                const pieceUuid = uuidv4();
-                const yPieceStore = new YPieceStore(yDesignStore, piece);
-                piecesMap.set(pieceUuid, yPieceStore.yPiece);
-                const pieceIdStr = pieceIdToString(pieceId);
-                yDesignStore.pieceIds.set(pieceIdStr, pieceUuid);
-                yDesignStore.pieces.set(pieceIdStr, yPieceStore);
-              });
-              (design.connections || []).forEach((connection) => {
-                const connectionId = connectionIdLikeToConnectionId(connection);
-                const connectionUuid = uuidv4();
-                const yConnectionStore = new YConnectionStore(yDesignStore, connection);
-                connectionsMap.set(connectionUuid, yConnectionStore.yConnection);
-                const connectionIdStr = connectionIdToString(connectionId);
-                yDesignStore.connectionIds.set(connectionIdStr, connectionUuid);
-                yDesignStore.connections.set(connectionIdStr, yConnectionStore);
-              });
-              this.designIds.set(designIdStr, uuid);
-              this.designs.set(designIdStr, yDesignStore);
-            }
-          });
-        }
-        if (diff.designs.removed) {
-          diff.designs.removed.forEach((designId) => {
-            const id = designIdLikeToDesignId(designId);
-            const idStr = designIdToString(id);
-            const uuid = this.designIds.get(idStr);
-            if (uuid) {
-              (this.yKit.get("designs") as YDesignMap).delete(uuid);
-              this.designIds.delete(idStr);
-              this.designs.delete(idStr);
-            }
-          });
-        }
-        if (diff.designs.updated) {
-          diff.designs.updated.forEach((updatedItem) => {
-            const matchingDesign = Array.from(this.designs.entries()).find(([_, store]) => {
-              return (
-                (!updatedItem.diff.name || store.yDesign.get("name") === updatedItem.id.name) &&
-                (!updatedItem.diff.variant || store.yDesign.get("variant") === updatedItem.id.variant) &&
-                (!updatedItem.diff.view || store.yDesign.get("view") === updatedItem.id.view)
-              );
+      if (diff.designs.added) {
+        diff.designs.added.forEach((design) => {
+          const designId = designIdLikeToDesignId(design);
+          const designIdStr = designIdToString(designId);
+          if (!this.designIds.get(designIdStr)) {
+            const uuid = uuidv4();
+            const yDesignStore = new YDesignStore(this, design);
+            (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
+            const piecesMap = yDesignStore.yDesign.get("pieces") as YPieceMap;
+            const connectionsMap = yDesignStore.yDesign.get("connections") as YConnectionMap;
+            (design.pieces || []).forEach((piece) => {
+              const pieceId = pieceIdLikeToPieceId(piece);
+              const pieceUuid = uuidv4();
+              const yPieceStore = new YPieceStore(yDesignStore, piece);
+              piecesMap.set(pieceUuid, yPieceStore.yPiece);
+              const pieceIdStr = pieceIdToString(pieceId);
+              yDesignStore.pieceIds.set(pieceIdStr, pieceUuid);
+              yDesignStore.pieces.set(pieceIdStr, yPieceStore);
             });
-            if (matchingDesign) {
-              matchingDesign[1].change(updatedItem.diff);
-            }
+            (design.connections || []).forEach((connection) => {
+              const connectionId = connectionIdLikeToConnectionId(connection);
+              const connectionUuid = uuidv4();
+              const yConnectionStore = new YConnectionStore(yDesignStore, connection);
+              connectionsMap.set(connectionUuid, yConnectionStore.yConnection);
+              const connectionIdStr = connectionIdToString(connectionId);
+              yDesignStore.connectionIds.set(connectionIdStr, connectionUuid);
+              yDesignStore.connections.set(connectionIdStr, yConnectionStore);
+            });
+            this.designIds.set(designIdStr, uuid);
+            this.designs.set(designIdStr, yDesignStore);
+          }
+        });
+      }
+      if (diff.designs.removed) {
+        diff.designs.removed.forEach((designId) => {
+          const id = designIdLikeToDesignId(designId);
+          const idStr = designIdToString(id);
+          const uuid = this.designIds.get(idStr);
+          if (uuid) {
+            (this.yKit.get("designs") as YDesignMap).delete(uuid);
+            this.designIds.delete(idStr);
+            this.designs.delete(idStr);
+          }
+        });
+      }
+      if (diff.designs.updated) {
+        diff.designs.updated.forEach((updatedItem) => {
+          const matchingDesign = Array.from(this.designs.entries()).find(([_, store]) => {
+            return (
+              (!updatedItem.diff.name || store.yDesign.get("name") === updatedItem.id.name) &&
+              (!updatedItem.diff.variant || store.yDesign.get("variant") === updatedItem.id.variant) &&
+              (!updatedItem.diff.view || store.yDesign.get("view") === updatedItem.id.view)
+            );
           });
-        }
-      } catch (e) {
-        // Y.Map operations for designs processing not available
+          if (matchingDesign) {
+            matchingDesign[1].change(updatedItem.diff);
+          }
+        });
       }
     }
 
@@ -1853,12 +1763,8 @@ class YKitStore implements KitStoreFull {
       }
     }
 
-    try {
-      this.yKit.set("updated", new Date().toISOString());
-    } catch (e) {
-      // Y.Map operation for updated timestamp not available
-    }
-    this.cachedSnapshot = undefined;
+    this.yKit.set("updated", new Date().toISOString());
+    this.lastSnapshot = undefined;
     this.lastSnapshotHash = undefined;
   };
 
@@ -1868,15 +1774,10 @@ class YKitStore implements KitStoreFull {
 
   onChanged = (subscribe: Subscribe, deep?: boolean) => {
     const observer = () => subscribe();
-    try {
-      deep ? (this.yKit as unknown as Y.Map<any>).observeDeep(observer) : (this.yKit as unknown as Y.Map<any>).observe(observer);
-      return () => {
-        deep ? (this.yKit as unknown as Y.Map<any>).unobserveDeep(observer) : (this.yKit as unknown as Y.Map<any>).unobserve(observer);
-      };
-    } catch (e) {
-      // Y object not available during observe
-      return () => {};
-    }
+    deep ? (this.yKit as unknown as Y.Map<any>).observeDeep(observer) : (this.yKit as unknown as Y.Map<any>).observe(observer);
+    return () => {
+      deep ? (this.yKit as unknown as Y.Map<any>).unobserveDeep(observer) : (this.yKit as unknown as Y.Map<any>).unobserve(observer);
+    };
   };
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
@@ -1926,28 +1827,29 @@ class YDesignEditorStore implements DesignEditorStoreFull {
   public readonly yDesignEditorStore: YDesignEditorStoreValMap;
   private readonly commandRegistry: Map<string, (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult> = new Map();
   private readonly parent: SketchpadStore;
-  private cachedSnapshot?: DesignEditorStateFull;
+  private lastSnapshot?: DesignEditorStateFull;
   private lastSnapshotHash?: string;
+
+  private hash(state: DesignEditorStateFull): string {
+    // TODO: Implement hash calculation
+    return "";
+  }
 
   constructor(parent: SketchpadStore, state?: DesignEditorState) {
     this.parent = parent;
     this.yDesignEditorStore = new Y.Map<YDesignEditorStoreVal>();
-    try {
-      this.yDesignEditorStore.set("fullscreenPanel", state?.fullscreenPanel || DesignEditorFullscreenPanel.None);
-      this.yDesignEditorStore.set("selectedPieceIds", new Y.Array<string>());
-      this.yDesignEditorStore.set("selectedConnections", new Y.Array<string>());
-      this.yDesignEditorStore.set("selectedPiecePortPieceId", "");
-      this.yDesignEditorStore.set("selectedPiecePortPortId", "");
-      this.yDesignEditorStore.set("selectedPiecePortDesignPieceId", "");
-      this.yDesignEditorStore.set("isTransactionActive", false);
-      this.yDesignEditorStore.set("presence", new Y.Map<any>());
-      this.yDesignEditorStore.set("others", new Y.Array<any>());
-      this.yDesignEditorStore.set("diff", new Y.Map<any>());
-      this.yDesignEditorStore.set("currentTransactionStack", new Y.Array<any>());
-      this.yDesignEditorStore.set("pastTransactionsStack", new Y.Array<any>());
-    } catch (e) {
-      // Y object not attached to document during construction, but this is expected
-    }
+    this.yDesignEditorStore.set("fullscreenPanel", state?.fullscreenPanel || DesignEditorFullscreenPanel.None);
+    this.yDesignEditorStore.set("selectedPieceIds", new Y.Array<string>());
+    this.yDesignEditorStore.set("selectedConnections", new Y.Array<string>());
+    this.yDesignEditorStore.set("selectedPiecePortPieceId", "");
+    this.yDesignEditorStore.set("selectedPiecePortPortId", "");
+    this.yDesignEditorStore.set("selectedPiecePortDesignPieceId", "");
+    this.yDesignEditorStore.set("isTransactionActive", false);
+    this.yDesignEditorStore.set("presence", new Y.Map<any>());
+    this.yDesignEditorStore.set("others", new Y.Array<any>());
+    this.yDesignEditorStore.set("diff", new Y.Map<any>());
+    this.yDesignEditorStore.set("currentTransactionStack", new Y.Array<any>());
+    this.yDesignEditorStore.set("pastTransactionsStack", new Y.Array<any>());
 
     Object.entries(designEditorCommands).forEach(([commandId, command]) => {
       this.registerCommand(commandId, command);
@@ -1955,72 +1857,49 @@ class YDesignEditorStore implements DesignEditorStoreFull {
   }
 
   get fullscreenPanel(): DesignEditorFullscreenPanel {
-    try {
-      return (this.yDesignEditorStore.get("fullscreenPanel") as DesignEditorFullscreenPanel) || DesignEditorFullscreenPanel.None;
-    } catch (e) {
-      return DesignEditorFullscreenPanel.None;
-    }
+    return (this.yDesignEditorStore.get("fullscreenPanel") as DesignEditorFullscreenPanel) || DesignEditorFullscreenPanel.None;
   }
   get selection(): DesignEditorSelection {
-    try {
-      const selectedPieceIds = this.yDesignEditorStore.get("selectedPieceIds") as Y.Array<string>;
-      const selectedConnections = this.yDesignEditorStore.get("selectedConnections") as Y.Array<string>;
-      const selectedPiecePortPieceId = this.yDesignEditorStore.get("selectedPiecePortPieceId") as string;
-      const selectedPiecePortPortId = this.yDesignEditorStore.get("selectedPiecePortPortId") as string;
-      const selectedPiecePortDesignPieceId = this.yDesignEditorStore.get("selectedPiecePortDesignPieceId") as string;
+    const selectedPieceIds = this.yDesignEditorStore.get("selectedPieceIds") as Y.Array<string>;
+    const selectedConnections = this.yDesignEditorStore.get("selectedConnections") as Y.Array<string>;
+    const selectedPiecePortPieceId = this.yDesignEditorStore.get("selectedPiecePortPieceId") as string;
+    const selectedPiecePortPortId = this.yDesignEditorStore.get("selectedPiecePortPortId") as string;
+    const selectedPiecePortDesignPieceId = this.yDesignEditorStore.get("selectedPiecePortDesignPieceId") as string;
 
-      const port =
-        selectedPiecePortPieceId && selectedPiecePortPortId
-          ? {
-              piece: { id_: selectedPiecePortPieceId },
-              port: { id_: selectedPiecePortPortId },
-              ...(selectedPiecePortDesignPieceId && { designPiece: { id_: selectedPiecePortDesignPieceId } }),
-            }
-          : undefined;
+    const port =
+      selectedPiecePortPieceId && selectedPiecePortPortId
+        ? {
+            piece: { id_: selectedPiecePortPieceId },
+            port: { id_: selectedPiecePortPortId },
+            ...(selectedPiecePortDesignPieceId && { designPiece: { id_: selectedPiecePortDesignPieceId } }),
+          }
+        : undefined;
 
-      return {
-        pieces: selectedPieceIds && selectedPieceIds.toArray ? selectedPieceIds.toArray().map((id) => ({ id_: id })) : [],
-        connections:
-          selectedConnections && selectedConnections.toArray
-            ? selectedConnections.toArray().map((id) => ({
-                connected: { piece: { id_: id.split("->")[0] || "" } },
-                connecting: { piece: { id_: id.split("->")[1] || "" } },
-              }))
-            : [],
-        port,
-      };
-    } catch (e) {
-      // Y object not properly attached, return empty selection
-      return {
-        pieces: [],
-        connections: [],
-        port: undefined,
-      };
-    }
+    return {
+      pieces: selectedPieceIds && selectedPieceIds.toArray ? selectedPieceIds.toArray().map((id) => ({ id_: id })) : [],
+      connections:
+        selectedConnections && selectedConnections.toArray
+          ? selectedConnections.toArray().map((id) => ({
+              connected: { piece: { id_: id.split("->")[0] || "" } },
+              connecting: { piece: { id_: id.split("->")[1] || "" } },
+            }))
+          : [],
+      port,
+    };
   }
   get designDiff(): DesignDiff {
     return {};
   }
   get isTransactionActive(): boolean {
-    try {
-      return (this.yDesignEditorStore.get("isTransactionActive") as boolean) || false;
-    } catch (e) {
-      return false;
-    }
+    return (this.yDesignEditorStore.get("isTransactionActive") as boolean) || false;
   }
   get presence(): DesignEditorPresence {
-    try {
-      return {
-        cursor: {
-          x: (this.yDesignEditorStore.get("presenceCursorX") as number) || 0,
-          y: (this.yDesignEditorStore.get("presenceCursorY") as number) || 0,
-        },
-      };
-    } catch (e) {
-      return {
-        cursor: { x: 0, y: 0 },
-      };
-    }
+    return {
+      cursor: {
+        x: (this.yDesignEditorStore.get("presenceCursorX") as number) || 0,
+        y: (this.yDesignEditorStore.get("presenceCursorY") as number) || 0,
+      },
+    };
   }
   get others(): DesignEditorPresenceOther[] {
     return [];
@@ -2029,26 +1908,16 @@ class YDesignEditorStore implements DesignEditorStoreFull {
     return {};
   }
   get currentTransactionStack(): DesignEditorEdit[] {
-    try {
-      const yStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
-      return yStack ? yStack.toArray() : [];
-    } catch (e) {
-      // Y object not properly attached, return empty array
-      return [];
-    }
+    const yStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
+    return yStack ? yStack.toArray() : [];
   }
   get pastTransactionsStack(): DesignEditorEdit[] {
-    try {
-      const yStack = this.yDesignEditorStore.get("pastTransactionsStack") as Y.Array<any>;
-      return yStack ? yStack.toArray() : [];
-    } catch (e) {
-      // Y object not properly attached, return empty array
-      return [];
-    }
+    const yStack = this.yDesignEditorStore.get("pastTransactionsStack") as Y.Array<any>;
+    return yStack ? yStack.toArray() : [];
   }
 
   snapshot = (): DesignEditorStateFull => {
-    const currentHash = JSON.stringify({
+    const currentData = {
       fullscreenPanel: this.fullscreenPanel,
       selection: this.selection,
       isTransactionActive: this.isTransactionActive,
@@ -2057,23 +1926,15 @@ class YDesignEditorStore implements DesignEditorStoreFull {
       diff: this.diff,
       currentTransactionStack: this.currentTransactionStack,
       pastTransactionsStack: this.pastTransactionsStack,
-    });
+    };
+    const currentHash = this.hash(currentData);
 
-    if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.cachedSnapshot = {
-        fullscreenPanel: this.fullscreenPanel,
-        selection: this.selection,
-        isTransactionActive: this.isTransactionActive,
-        presence: this.presence,
-        others: this.others,
-        diff: this.diff,
-        currentTransactionStack: this.currentTransactionStack,
-        pastTransactionsStack: this.pastTransactionsStack,
-      };
+    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.lastSnapshot = currentData;
       this.lastSnapshotHash = currentHash;
     }
 
-    return this.cachedSnapshot;
+    return this.lastSnapshot;
   };
 
   change = (diff: DesignEditorStateDiff) => {
@@ -2087,22 +1948,14 @@ class YDesignEditorStore implements DesignEditorStoreFull {
         }
 
         let currentIds: Set<string>;
-        try {
-          currentIds = new Set(yPieceIds.toArray());
-        } catch (e) {
-          currentIds = new Set();
-        }
+        currentIds = new Set(yPieceIds.toArray());
 
         if (diff.selection.pieces.removed) {
           diff.selection.pieces.removed.forEach((piece) => {
-            try {
-              const currentArray = yPieceIds.toArray();
-              const index = currentArray.indexOf(piece.id_);
-              if (index >= 0) {
-                yPieceIds.delete(index, 1);
-              }
-            } catch (e) {
-              // Y object not properly attached, skip
+            const currentArray = yPieceIds.toArray();
+            const index = currentArray.indexOf(piece.id_);
+            if (index >= 0) {
+              yPieceIds.delete(index, 1);
             }
           });
         }
@@ -2110,11 +1963,7 @@ class YDesignEditorStore implements DesignEditorStoreFull {
         if (diff.selection.pieces.added) {
           const newIds = diff.selection.pieces.added.filter((piece) => !currentIds.has(piece.id_)).map((piece) => piece.id_);
           if (newIds.length > 0) {
-            try {
-              yPieceIds.insert(yPieceIds.length, newIds);
-            } catch (e) {
-              // Y object not properly attached, skip insertion
-            }
+            yPieceIds.insert(yPieceIds.length, newIds);
           }
         }
       }
@@ -2127,23 +1976,15 @@ class YDesignEditorStore implements DesignEditorStoreFull {
         }
 
         let currentIds: Set<string>;
-        try {
-          currentIds = new Set(yConnectionIds.toArray());
-        } catch (e) {
-          currentIds = new Set();
-        }
+        currentIds = new Set(yConnectionIds.toArray());
 
         if (diff.selection.connections.removed) {
           diff.selection.connections.removed.forEach((conn) => {
             const connStr = `${conn.connected.piece.id_}->${conn.connecting.piece.id_}`;
-            try {
-              const currentArray = yConnectionIds.toArray();
-              const index = currentArray.indexOf(connStr);
-              if (index >= 0) {
-                yConnectionIds.delete(index, 1);
-              }
-            } catch (e) {
-              // Y object not properly attached, skip
+            const currentArray = yConnectionIds.toArray();
+            const index = currentArray.indexOf(connStr);
+            if (index >= 0) {
+              yConnectionIds.delete(index, 1);
             }
           });
         }
@@ -2156,11 +1997,7 @@ class YDesignEditorStore implements DesignEditorStoreFull {
             })
             .map((conn) => `${conn.connected.piece.id_}->${conn.connecting.piece.id_}`);
           if (newIds.length > 0) {
-            try {
-              yConnectionIds.insert(yConnectionIds.length, newIds);
-            } catch (e) {
-              // Y object not properly attached, skip insertion
-            }
+            yConnectionIds.insert(yConnectionIds.length, newIds);
           }
         }
       }
@@ -2192,15 +2029,10 @@ class YDesignEditorStore implements DesignEditorStoreFull {
 
   onChanged = (subscribe: Subscribe, deep?: boolean) => {
     const observer = () => subscribe();
-    try {
-      deep ? (this.yDesignEditorStore as unknown as Y.Map<any>).observeDeep(observer) : (this.yDesignEditorStore as unknown as Y.Map<any>).observe(observer);
-      return () => {
-        deep ? (this.yDesignEditorStore as unknown as Y.Map<any>).unobserveDeep(observer) : (this.yDesignEditorStore as unknown as Y.Map<any>).unobserve(observer);
-      };
-    } catch (e) {
-      // Y object not available during observe
-      return () => {};
-    }
+    deep ? (this.yDesignEditorStore as unknown as Y.Map<any>).observeDeep(observer) : (this.yDesignEditorStore as unknown as Y.Map<any>).observe(observer);
+    return () => {
+      deep ? (this.yDesignEditorStore as unknown as Y.Map<any>).unobserveDeep(observer) : (this.yDesignEditorStore as unknown as Y.Map<any>).unobserve(observer);
+    };
   };
 
   startTransaction = () => {
@@ -2209,15 +2041,10 @@ class YDesignEditorStore implements DesignEditorStoreFull {
 
   onTransactionStarted = (subscribe: Subscribe) => {
     const observer = () => subscribe();
-    try {
-      this.yDesignEditorStore.observe(observer);
-      return () => {
-        this.yDesignEditorStore.unobserve(observer);
-      };
-    } catch (e) {
-      // Y object not available during observe
-      return () => {};
-    }
+    this.yDesignEditorStore.observe(observer);
+    return () => {
+      this.yDesignEditorStore.unobserve(observer);
+    };
   };
 
   abortTransaction = () => {
@@ -2232,124 +2059,88 @@ class YDesignEditorStore implements DesignEditorStoreFull {
 
   onTransactionAborted = (subscribe: Subscribe) => {
     const observer = () => subscribe();
-    try {
-      this.yDesignEditorStore.observe(observer);
-      return () => {
-        this.yDesignEditorStore.unobserve(observer);
-      };
-    } catch (e) {
-      // Y object not available during observe
-      return () => {};
-    }
+    this.yDesignEditorStore.observe(observer);
+    return () => {
+      this.yDesignEditorStore.unobserve(observer);
+    };
   };
 
   finalizeTransaction = () => {
     if (this.isTransactionActive) {
-      try {
-        const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
-        const pastStack = this.yDesignEditorStore.get("pastTransactionsStack") as Y.Array<any>;
-        if (currentStack && pastStack && currentStack.length > 0) {
-          pastStack.push(currentStack.toArray());
-          currentStack.delete(0, currentStack.length);
-        }
-        this.yDesignEditorStore.set("isTransactionActive", false);
-      } catch (e) {
-        // Y object not properly attached, just set transaction as inactive
-        try {
-          this.yDesignEditorStore.set("isTransactionActive", false);
-        } catch (e2) {
-          // Even setting the flag failed, Y object completely unattached
-        }
+      const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
+      const pastStack = this.yDesignEditorStore.get("pastTransactionsStack") as Y.Array<any>;
+      if (currentStack && pastStack && currentStack.length > 0) {
+        pastStack.push(currentStack.toArray());
+        currentStack.delete(0, currentStack.length);
       }
+      this.yDesignEditorStore.set("isTransactionActive", false);
+      this.yDesignEditorStore.set("isTransactionActive", false);
     }
   };
 
   onTransactionFinalized = (subscribe: Subscribe) => {
     const observer = () => subscribe();
-    try {
-      this.yDesignEditorStore.observe(observer);
-      return () => {
-        this.yDesignEditorStore.unobserve(observer);
-      };
-    } catch (e) {
-      // Y object not available during observe
-      return () => {};
-    }
+    this.yDesignEditorStore.observe(observer);
+    return () => {
+      this.yDesignEditorStore.unobserve(observer);
+    };
   };
 
   undo = () => {
-    try {
-      if (this.isTransactionActive) {
-        const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
-        if (currentStack && currentStack.length > 0) {
-          const edit = currentStack.get(currentStack.length - 1);
-          currentStack.delete(currentStack.length - 1, 1);
-          if (edit && edit.undo) {
-            edit.undo.diff && this.change(edit.undo.diff);
-          }
-        }
-      } else {
-        const pastStack = this.yDesignEditorStore.get("pastTransactionsStack") as Y.Array<any>;
-        if (pastStack && pastStack.length > 0) {
-          const edit = pastStack.get(pastStack.length - 1);
-          pastStack.delete(pastStack.length - 1, 1);
-          if (edit && edit.undo) {
-            edit.undo.diff && this.change(edit.undo.diff);
-          }
+    if (this.isTransactionActive) {
+      const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
+      if (currentStack && currentStack.length > 0) {
+        const edit = currentStack.get(currentStack.length - 1);
+        currentStack.delete(currentStack.length - 1, 1);
+        if (edit && edit.undo) {
+          edit.undo.diff && this.change(edit.undo.diff);
         }
       }
-    } catch (e) {
-      // Y object not properly attached, skip undo operation
+    } else {
+      const pastStack = this.yDesignEditorStore.get("pastTransactionsStack") as Y.Array<any>;
+      if (pastStack && pastStack.length > 0) {
+        const edit = pastStack.get(pastStack.length - 1);
+        pastStack.delete(pastStack.length - 1, 1);
+        if (edit && edit.undo) {
+          edit.undo.diff && this.change(edit.undo.diff);
+        }
+      }
     }
   };
   onUndone = (subscribe: Subscribe) => {
     const observer = () => subscribe();
-    try {
-      this.yDesignEditorStore.observe(observer);
-      return () => {
-        this.yDesignEditorStore.unobserve(observer);
-      };
-    } catch (e) {
-      // Y object not available during observe
-      return () => {};
-    }
+    this.yDesignEditorStore.observe(observer);
+    return () => {
+      this.yDesignEditorStore.unobserve(observer);
+    };
   };
   redo = () => {
-    try {
-      if (this.isTransactionActive) {
-        const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
-        if (currentStack && currentStack.length > 0) {
-          const edit = currentStack.get(0);
-          currentStack.delete(0, 1);
-          if (edit && edit.do) {
-            edit.do.diff && this.change(edit.do.diff);
-          }
-        }
-      } else {
-        const pastStack = this.yDesignEditorStore.get("pastTransactionsStack") as Y.Array<any>;
-        if (pastStack && pastStack.length > 0) {
-          const edit = pastStack.get(0);
-          pastStack.delete(0, 1);
-          if (edit && edit.do) {
-            edit.do.diff && this.change(edit.do.diff);
-          }
+    if (this.isTransactionActive) {
+      const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
+      if (currentStack && currentStack.length > 0) {
+        const edit = currentStack.get(0);
+        currentStack.delete(0, 1);
+        if (edit && edit.do) {
+          edit.do.diff && this.change(edit.do.diff);
         }
       }
-    } catch (e) {
-      // Y object not properly attached, skip redo operation
+    } else {
+      const pastStack = this.yDesignEditorStore.get("pastTransactionsStack") as Y.Array<any>;
+      if (pastStack && pastStack.length > 0) {
+        const edit = pastStack.get(0);
+        pastStack.delete(0, 1);
+        if (edit && edit.do) {
+          edit.do.diff && this.change(edit.do.diff);
+        }
+      }
     }
   };
   onRedone = (subscribe: Subscribe) => {
     const observer = () => subscribe();
-    try {
-      this.yDesignEditorStore.observe(observer);
-      return () => {
-        this.yDesignEditorStore.unobserve(observer);
-      };
-    } catch (e) {
-      // Y object not available during observe
-      return () => {};
-    }
+    this.yDesignEditorStore.observe(observer);
+    return () => {
+      this.yDesignEditorStore.unobserve(observer);
+    };
   };
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
@@ -2437,8 +2228,13 @@ class YSketchpadStore implements SketchpadStoreFull {
   public readonly kits: Map<string, YKitStore> = new Map();
   public readonly designEditors: Map<string, Map<string, DesignEditorStoreFull>> = new Map();
   private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult> = new Map();
-  private cachedSnapshot?: SketchpadStateFull;
-  private lastSnapshotValues?: { mode: Mode; theme: Theme; layout: Layout; activeDesignEditor?: DesignEditorId };
+  private lastSnapshot?: SketchpadStateFull;
+  private lastSnapshotHash?: string;
+
+  private hash(state: SketchpadStateFull): string {
+    // TODO: Implement hash calculation
+    return this.theme.toString();
+  }
 
   private getYSketchpad(): YSketchpad {
     return this.ySketchpadDoc.getMap("sketchpad");
@@ -2460,44 +2256,23 @@ class YSketchpadStore implements SketchpadStoreFull {
 
     // Initialize IndexedDB persistence AFTER the document structure is set up
     if (state.persistantId && state.persistantId !== "") {
-      try {
-        this.sketchpadIndexeddbProvider = new IndexeddbPersistence(`semio-sketchpad-${state.persistantId}`, this.ySketchpadDoc);
-      } catch (error) {
-        console.error("🚨 Error initializing IndexedDB persistence:", error);
-        throw error;
-      }
+      this.sketchpadIndexeddbProvider = new IndexeddbPersistence(`semio-sketchpad-${state.persistantId}`, this.ySketchpadDoc);
     }
   }
 
   get mode(): Mode {
-    try {
-      return (this.getYSketchpad().get("mode") as Mode) || Mode.GUEST;
-    } catch (e) {
-      return Mode.GUEST;
-    }
+    return (this.getYSketchpad().get("mode") as Mode) || Mode.GUEST;
   }
   get theme(): Theme {
-    try {
-      return (this.getYSketchpad().get("theme") as Theme) || Theme.SYSTEM;
-    } catch (e) {
-      return Theme.SYSTEM;
-    }
+    return (this.getYSketchpad().get("theme") as Theme) || Theme.SYSTEM;
   }
   get layout(): Layout {
-    try {
-      return (this.getYSketchpad().get("layout") as Layout) || Layout.NORMAL;
-    } catch (e) {
-      return Layout.NORMAL;
-    }
+    return (this.getYSketchpad().get("layout") as Layout) || Layout.NORMAL;
   }
   get activeDesignEditor(): DesignEditorId | undefined {
-    try {
-      const designEditorIdStr = this.getYSketchpad().get("activeDesignEditor");
-      if (!designEditorIdStr || typeof designEditorIdStr !== "string") return undefined;
-      return JSON.parse(designEditorIdStr) as DesignEditorId;
-    } catch (e) {
-      return undefined;
-    }
+    const designEditorIdStr = this.getYSketchpad().get("activeDesignEditor");
+    if (!designEditorIdStr || typeof designEditorIdStr !== "string") return undefined;
+    return JSON.parse(designEditorIdStr) as DesignEditorId;
   }
 
   snapshot = (): SketchpadStateFull => {
@@ -2507,19 +2282,14 @@ class YSketchpadStore implements SketchpadStoreFull {
       layout: this.layout,
       activeDesignEditor: this.activeDesignEditor,
     };
+    const currentHash = this.hash(currentValues);
 
-    if (
-      !this.lastSnapshotValues ||
-      this.lastSnapshotValues.mode !== currentValues.mode ||
-      this.lastSnapshotValues.theme !== currentValues.theme ||
-      this.lastSnapshotValues.layout !== currentValues.layout ||
-      this.lastSnapshotValues.activeDesignEditor !== currentValues.activeDesignEditor
-    ) {
-      this.cachedSnapshot = currentValues;
-      this.lastSnapshotValues = currentValues;
+    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
+      this.lastSnapshot = currentValues;
+      this.lastSnapshotHash = currentHash;
     }
 
-    return this.cachedSnapshot!;
+    return this.lastSnapshot;
   };
 
   createKit = (kit: Kit) => {
@@ -2540,14 +2310,10 @@ class YSketchpadStore implements SketchpadStoreFull {
   };
 
   change(diff: SketchpadStateDiff) {
-    try {
-      if (diff.mode) this.getYSketchpad().set("mode", diff.mode);
-      if (diff.theme) this.getYSketchpad().set("theme", diff.theme);
-      if (diff.layout) this.getYSketchpad().set("layout", diff.layout);
-      if (diff.activeDesignEditor) this.getYSketchpad().set("activeDesignEditor", JSON.stringify(diff.activeDesignEditor));
-    } catch (e) {
-      // Y.Map not available during operation
-    }
+    if (diff.mode) this.getYSketchpad().set("mode", diff.mode);
+    if (diff.theme) this.getYSketchpad().set("theme", diff.theme);
+    if (diff.layout) this.getYSketchpad().set("layout", diff.layout);
+    if (diff.activeDesignEditor) this.getYSketchpad().set("activeDesignEditor", JSON.stringify(diff.activeDesignEditor));
   }
 
   deleteKit = (id: KitIdLike) => {
@@ -2583,18 +2349,13 @@ class YSketchpadStore implements SketchpadStoreFull {
   };
 
   onDesignEditorCreated = (subscribe: Subscribe): Unsubscribe => {
-    try {
-      // Observe design editor stores map changes
-      const yDesignEditorStores = this.ySketchpadDoc.getMap("designEditorStores") as YDesignEditorStoreMap;
-      const observer = () => subscribe();
-      yDesignEditorStores.observe(observer);
-      return () => {
-        yDesignEditorStores.unobserve(observer);
-      };
-    } catch (e) {
-      // Y.Map not available during observe
-      return () => {};
-    }
+    // Observe design editor stores map changes
+    const yDesignEditorStores = this.ySketchpadDoc.getMap("designEditorStores") as YDesignEditorStoreMap;
+    const observer = () => subscribe();
+    yDesignEditorStores.observe(observer);
+    return () => {
+      yDesignEditorStores.unobserve(observer);
+    };
   };
 
   onKitDeleted = (subscribe: Subscribe): Unsubscribe => {
@@ -2608,16 +2369,11 @@ class YSketchpadStore implements SketchpadStoreFull {
   };
 
   onChanged = (subscribe: Subscribe): Unsubscribe => {
-    try {
-      const observer = () => subscribe();
-      this.getYSketchpad().observe(observer);
-      return () => {
-        this.getYSketchpad().unobserve(observer);
-      };
-    } catch (e) {
-      // Y.Map not available during observe
-      return () => {};
-    }
+    const observer = () => subscribe();
+    this.getYSketchpad().observe(observer);
+    return () => {
+      this.getYSketchpad().unobserve(observer);
+    };
   };
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
@@ -3631,7 +3387,7 @@ function useKitStore<T>(selector?: (store: KitStore) => T, id?: KitId): T | KitS
 }
 
 export function useKit<T>(selector?: (kit: Kit) => T, id?: KitId): T | Kit {
-  return useSync<Kit, T>(useKitStore(identitySelector, id), selector ? selector : identitySelector);
+  return useSync<Kit, T>(useKitStore(identitySelector, id) as KitStore, selector ? selector : identitySelector);
 }
 
 function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?: DesignEditorId): T | DesignEditorStore {
@@ -3652,11 +3408,11 @@ function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?
 }
 
 export function useDesignEditor<T>(selector?: (state: DesignEditorStateFull) => T, id?: DesignEditorId): T | DesignEditorStateFull {
-  return useSync<DesignEditorStateFull, T>(useDesignEditorStore(identitySelector, id), selector ? selector : identitySelector);
+  return useSync<DesignEditorStateFull, T>(useDesignEditorStore(identitySelector, id) as DesignEditorStore, selector ? selector : identitySelector);
 }
 
 function useDesignStore<T>(selector?: (store: DesignStoreFull) => T, id?: DesignId): T | DesignStoreFull {
-  const kitStore = useKitStore();
+  const kitStore = useKitStore() as KitStore;
   const designScope = useDesignScope();
   const designId = designScope?.id ?? id;
   if (!designId) throw new Error("useDesignStore must be called within a DesignScopeProvider or be directly provided with an id");
@@ -3667,18 +3423,18 @@ function useDesignStore<T>(selector?: (store: DesignStoreFull) => T, id?: Design
 }
 
 export function useDesign<T>(selector?: (design: Design) => T, id?: DesignId): T | Design {
-  return useSync<Design, T>(useDesignStore(identitySelector, id), selector ? selector : identitySelector);
+  return useSync<Design, T>(useDesignStore(identitySelector, id) as DesignStoreFull, selector ? selector : identitySelector);
 }
 
 export function useFlattenDiff(): DesignDiff {
   const designScope = useDesignScope();
-  const kit = useKit();
+  const kit = useKit() as Kit;
   if (!designScope) throw new Error("useFlattenDiff must be called within a DesignScopeProvider");
   return flattenDesign(kit, designScope.id);
 }
 
 export function useFlatDesign(): Design {
-  const design = useDesign();
+  const design = useDesign() as Design;
   const diff = useFlattenDiff();
   return applyDesignDiff(design, diff, true);
 }
@@ -3698,14 +3454,14 @@ export function usePiecesMetadata(): Map<
     depth: number;
   }
 > {
-  const kit = useKit();
+  const kit = useKit() as Kit;
   const designScope = useDesignScope();
   if (!designScope) throw new Error("usePiecesMetadata must be called within a DesignScopeProvider");
   return piecesMetadata(kit, designScope.id);
 }
 
 function useTypeStore<T>(selector?: (store: TypeStoreFull) => T, id?: TypeId): T | TypeStoreFull {
-  const kitStore = useKitStore();
+  const kitStore = useKitStore() as KitStore;
   const typeScope = useTypeScope();
   const typeId = typeScope?.id ?? id;
   if (!typeId) throw new Error("useTypeStore must be called within a TypeScopeProvider or be directly provided with an id");
@@ -3716,11 +3472,11 @@ function useTypeStore<T>(selector?: (store: TypeStoreFull) => T, id?: TypeId): T
 }
 
 export function useType<T>(selector?: (type: Type) => T, id?: TypeId): T | Type {
-  return useSync<Type, T>(useTypeStore(identitySelector, id), selector ? selector : identitySelector);
+  return useSync<Type, T>(useTypeStore(identitySelector, id) as TypeStoreFull, selector ? selector : identitySelector);
 }
 
 function usePieceStore<T>(selector?: (store: PieceStoreFull) => T, id?: PieceId): T | PieceStoreFull {
-  const designStore = useDesignStore();
+  const designStore = useDesignStore() as DesignStoreFull;
   const pieceScope = usePieceScope();
   const pieceId = pieceScope?.id ?? id;
   if (!pieceId) throw new Error("usePieceStore must be called within a PieceScopeProvider or be directly provided with an id");
@@ -3731,11 +3487,11 @@ function usePieceStore<T>(selector?: (store: PieceStoreFull) => T, id?: PieceId)
 }
 
 export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId): T | Piece {
-  return useSync<Piece, T>(usePieceStore(identitySelector, id), selector ? selector : identitySelector);
+  return useSync<Piece, T>(usePieceStore(identitySelector, id) as PieceStoreFull, selector ? selector : identitySelector);
 }
 
 function useConnectionStore<T>(selector?: (store: ConnectionStoreFull) => T, id?: ConnectionId): T | ConnectionStoreFull {
-  const designStore = useDesignStore();
+  const designStore = useDesignStore() as DesignStoreFull;
   const connectionScope = useConnectionScope();
   const connectionId = connectionScope?.id ?? id;
   if (!connectionId) throw new Error("useConnectionStore must be called within a ConnectionScopeProvider or be directly provided with an id");
@@ -3746,11 +3502,11 @@ function useConnectionStore<T>(selector?: (store: ConnectionStoreFull) => T, id?
 }
 
 export function useConnection<T>(selector?: (connection: Connection) => T, id?: ConnectionId): T | Connection {
-  return useSync<Connection, T>(useConnectionStore(identitySelector, id), selector ? selector : identitySelector);
+  return useSync<Connection, T>(useConnectionStore(identitySelector, id) as ConnectionStoreFull, selector ? selector : identitySelector);
 }
 
 function usePortStore<T>(selector?: (store: PortStoreFull) => T, id?: PortId): T | PortStoreFull {
-  const typeStore = useTypeStore();
+  const typeStore = useTypeStore() as TypeStoreFull;
   const portScope = usePortScope();
   const portId = portScope?.id ?? id;
   if (!portId) throw new Error("usePortStore must be called within a PortScopeProvider or be directly provided with an id");
@@ -3761,11 +3517,11 @@ function usePortStore<T>(selector?: (store: PortStoreFull) => T, id?: PortId): T
 }
 
 export function usePort<T>(selector?: (port: Port) => T, id?: PortId): T | Port {
-  return useSync<Port, T>(usePortStore(identitySelector, id), selector ? selector : identitySelector);
+  return useSync<Port, T>(usePortStore(identitySelector, id) as PortStoreFull, selector ? selector : identitySelector);
 }
 
 function useRepresentationStore<T>(selector?: (store: RepresentationStoreFull) => T, id?: RepresentationId): T | RepresentationStoreFull {
-  const typeStore = useTypeStore();
+  const typeStore = useTypeStore() as TypeStoreFull;
   const representationScope = useRepresentationScope();
   const representationId = representationScope?.id ?? id;
   if (!representationId) throw new Error("useRepresentationStore must be called within a RepresentationScopeProvider or be directly provided with an id");
@@ -3776,29 +3532,29 @@ function useRepresentationStore<T>(selector?: (store: RepresentationStoreFull) =
 }
 
 export function useRepresentation<T>(selector?: (representation: Representation) => T, id?: RepresentationId): T | Representation {
-  return useSync<Representation, T>(useRepresentationStore(identitySelector, id), selector ? selector : identitySelector);
+  return useSync<Representation, T>(useRepresentationStore(identitySelector, id) as RepresentationStoreFull, selector ? selector : identitySelector);
 }
 
 // Additional utility hooks for the new store architecture
 
 export function useMode(): Mode {
-  return useSketchpad((s) => s.mode);
+  return useSketchpad((s) => s.mode) as Mode;
 }
 
 export function useTheme(): Theme {
-  return useSketchpad((s) => s.theme);
+  return useSketchpad((s) => s.theme) as Theme;
 }
 
 export function useLayout(): Layout {
-  return useSketchpad((s) => s.layout);
+  return useSketchpad((s) => s.layout) as Layout;
 }
 
 export function useDesignId(): DesignId | undefined {
-  return useSketchpad((s) => s.activeDesignEditor?.design);
+  return useSketchpad((s) => s.activeDesignEditor?.design) as DesignId | undefined;
 }
 
 export function useDesigns(): Design[] {
-  return useKit((k) => k.designs ?? []);
+  return useKit((k) => k.designs ?? []) as Design[];
 }
 
 export function useSketchpadCommands() {
@@ -3814,7 +3570,7 @@ export function useSketchpadCommands() {
 }
 
 export function useKitCommands() {
-  const store = useKitStore();
+  const store = useKitStore() as KitStore;
   return {
     importKit: (url: string) => store.execute("semio.kit.import", url),
     exportKit: () => store.execute("semio.kit.export"),
@@ -3840,7 +3596,7 @@ export function useKitCommands() {
 }
 
 export function useDesignEditorCommands() {
-  const store = useDesignEditorStore();
+  const store = useDesignEditorStore() as DesignEditorStore;
   return {
     startTransaction: () => store.execute("semio.designEditor.startTransaction"),
     finalizeTransaction: () => store.execute("semio.designEditor.finalizeTransaction"),
@@ -3869,49 +3625,49 @@ const selectionSelector = (s: DesignEditorStateFull) => s.selection;
 const fullscreenSelector = (s: DesignEditorStateFull) => s.fullscreenPanel;
 
 export function useSelection(): DesignEditorSelection {
-  return useDesignEditor(selectionSelector);
+  return useDesignEditor(selectionSelector) as DesignEditorSelection;
 }
 
 export function useDesignEditorSelection(): DesignEditorSelection {
-  return useDesignEditor(selectionSelector);
+  return useDesignEditor(selectionSelector) as DesignEditorSelection;
 }
 
 export function useFullscreen(): DesignEditorFullscreenPanel {
-  return useDesignEditor(fullscreenSelector);
+  return useDesignEditor(fullscreenSelector) as DesignEditorFullscreenPanel;
 }
 
 export function useDesignEditorFullscreen(): DesignEditorFullscreenPanel {
-  return useDesignEditor(fullscreenSelector);
+  return useDesignEditor(fullscreenSelector) as DesignEditorFullscreenPanel;
 }
 
 const diffSelector = (s: DesignEditorStateFull) => s.diff;
 export function useDiff(): KitDiff {
-  return useDesignEditor(diffSelector);
+  return useDesignEditor(diffSelector) as KitDiff;
 }
 
 export function useDesignEditorDesignDiff(): KitDiff {
-  return useDesignEditor(diffSelector);
+  return useDesignEditor(diffSelector) as KitDiff;
 }
 
 export function useDiffedKit(): Kit {
-  const kit = useKit();
+  const kit = useKit() as Kit;
   const diff = useDiff();
   return applyKitDiff(kit, diff);
 }
 
 export function useFileUrls(): Map<Url, Url> {
-  const kitStore = useKitStore();
+  const kitStore = useKitStore() as KitStore;
   return kitStore.fileUrls();
 }
 
 const othersSelector = (s: DesignEditorStateFull) => s.others;
 
 export function useOthers(): DesignEditorPresenceOther[] {
-  return useDesignEditor(othersSelector);
+  return useDesignEditor(othersSelector) as DesignEditorPresenceOther[];
 }
 
 export function useDesignEditorOthers(): DesignEditorPresenceOther[] {
-  return useDesignEditor(othersSelector);
+  return useDesignEditor(othersSelector) as DesignEditorPresenceOther[];
 }
 
 // #endregion Hooks

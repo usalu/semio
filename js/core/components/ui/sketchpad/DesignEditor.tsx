@@ -31,6 +31,7 @@ import { useDesignEditorCommands, useFullscreen } from "../../../store";
 import Navbar, { useNavbar } from "../Navbar";
 import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
 import Chat from "./Chat";
+import Console from "./Console";
 import Details from "./Details";
 import Diagram from "./Diagram";
 import Model from "./Model";
@@ -205,12 +206,18 @@ const DesignEditor: FC<DesignEditorProps> = () => {
           <ReactFlowProvider>
             <div className="flex-1 flex flex-col">
               <div className="flex-1 flex">
-                <div className="flex-1 relative">{/* <Diagram /> */}</div>
-                <div className="flex-1 relative" style={{ border: "2px solid red" }}>
-                  {/* <Model /> */}
+                <div className="flex-1 relative">
+                  <Diagram />
+                </div>
+                <div className="flex-1 relative">
+                  <Model />
                 </div>
               </div>
-              {visiblePanels.console && <div className="h-48 border-t border-border">{/* <Console /> */}</div>}
+              {visiblePanels.console && (
+                <div className="h-48 border-t border-border">
+                  <Console />
+                </div>
+              )}
             </div>
           </ReactFlowProvider>
           {rightPanelVisible && (

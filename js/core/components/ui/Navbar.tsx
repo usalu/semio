@@ -21,7 +21,8 @@
 
 import { AppWindow, Fingerprint, Home, Minus, Moon, Share2, Square, Sun, X } from "lucide-react";
 import { createContext, FC, ReactNode, useContext } from "react";
-import { Layout, Theme, useLayout, useSketchpadCommands, useTheme } from "../../store";
+import { DesignId } from "../../semio";
+import { Layout, Theme, useDesignId, useDesigns, useLayout, useSketchpadCommands, useTheme } from "../../store";
 import { Avatar, AvatarFallback, AvatarImage } from "./Avatar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "./Breadcrumb";
 import { Toggle } from "./Toggle";
@@ -57,49 +58,49 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
   const { navbarToolbar } = useNavbar();
   const layout = useLayout();
   const theme = useTheme();
-  // const designId = useDesignId();
-  // const availableDesigns = useDesigns();
-  // // Create a unique key for each design
-  // const getDesignKey = (design: DesignId): string => {
-  //   const parts = [design.name];
-  //   if (design.variant && design.variant !== "default") parts.push(design.variant);
-  //   if (design.view && design.view !== "default") parts.push(design.view);
-  //   return parts.join("|"); // Use | as separator to avoid conflicts
-  // };
+  const designId = useDesignId();
+  const availableDesigns = useDesigns();
+  // Create a unique key for each design
+  const getDesignKey = (design: DesignId): string => {
+    const parts = [design.name];
+    if (design.variant && design.variant !== "default") parts.push(design.variant);
+    if (design.view && design.view !== "default") parts.push(design.view);
+    return parts.join("|"); // Use | as separator to avoid conflicts
+  };
 
-  // // Create display text for each design
-  // const getDesignDisplayText = (design: DesignId): string => {
-  //   if (!availableDesigns) return design.name;
+  // Create display text for each design
+  const getDesignDisplayText = (design: DesignId): string => {
+    if (!availableDesigns) return design.name;
 
-  //   // Check if there are multiple designs with the same name
-  //   const sameNameDesigns = availableDesigns.filter((d) => d.name === design.name);
+    // Check if there are multiple designs with the same name
+    const sameNameDesigns = availableDesigns.filter((d) => d.name === design.name);
 
-  //   if (sameNameDesigns.length === 1) {
-  //     // Only one design with this name, show just the name
-  //     return design.name;
-  //   } else {
-  //     // Multiple designs with same name, include variant/view for disambiguation
-  //     const parts = [design.name];
-  //     if (design.variant && design.variant !== "default") {
-  //       parts.push(design.variant);
-  //     }
-  //     if (design.view && design.view !== "default") {
-  //       parts.push(design.view);
-  //     }
-  //     return parts.join(" - ");
-  //   }
-  // };
+    if (sameNameDesigns.length === 1) {
+      // Only one design with this name, show just the name
+      return design.name;
+    } else {
+      // Multiple designs with same name, include variant/view for disambiguation
+      const parts = [design.name];
+      if (design.variant && design.variant !== "default") {
+        parts.push(design.variant);
+      }
+      if (design.view && design.view !== "default") {
+        parts.push(design.view);
+      }
+      return parts.join(" - ");
+    }
+  };
 
-  // // Handle design selection using the compound key
-  // const handleDesignChange = (designKey: string) => {
-  //   // if (!availableDesigns || !onDesignIdChange) return;
-  //   // const selectedDesign = availableDesigns.find((design) => getDesignKey(design) === designKey);
-  //   // if (selectedDesign) {
-  //   //   onDesignIdChange(selectedDesign);
-  //   // }
-  // };
+  // Handle design selection using the compound key
+  const handleDesignChange = (designKey: string) => {
+    // if (!availableDesigns || !onDesignIdChange) return;
+    // const selectedDesign = availableDesigns.find((design) => getDesignKey(design) === designKey);
+    // if (selectedDesign) {
+    //   onDesignIdChange(selectedDesign);
+    // }
+  };
 
-  // // Get current design key for the selected value
+  // Get current design key for the selected value
   // const currentDesignKey = getDesignKey(designId);
 
   return (
