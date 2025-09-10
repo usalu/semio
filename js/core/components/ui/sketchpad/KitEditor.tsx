@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from "react";
-import { Design, DesignId } from "../../../semio";
-import { DesignEditorId, DesignScopeProvider, useKit, useKitCommands, useSketchpadCommands } from "../../../store";
+import { Design, DesignId, KitId } from "../../../semio";
+import { DesignEditorId, DesignScopeProvider, useKitCommands, useSketchpadCommands } from "../../../store";
 import DesignEditor from "./DesignEditor";
 
 import { default as Tambour } from "../../../../../assets/semio/type_tambour.json";
@@ -9,8 +9,8 @@ const KitEditor: FC = () => {
   const [isImporting, setIsImporting] = useState<boolean>(true);
   const { createDesign, createType } = useKitCommands();
   const { createDesignEditor, setActiveDesignEditor } = useSketchpadCommands();
-  const kit = useKit();
 
+  const defaultKitId: KitId = { name: "Metabolism", version: "r25.07-1" };
   const defaultDesignId: DesignId = { name: "Nakagin Capsule Tower", variant: "", view: "" };
   const design: Design = {
     name: "Nakagin Capsule Tower",
@@ -35,8 +35,8 @@ const KitEditor: FC = () => {
     (async () => {
       await createType(Tambour);
       await createDesign(design);
-      await createDesignEditor({ kit, design: defaultDesignId } as DesignEditorId);
-      await setActiveDesignEditor({ kit, design: defaultDesignId } as DesignEditorId);
+      await createDesignEditor({ kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
+      await setActiveDesignEditor({ kit: defaultKitId, design: defaultDesignId } as DesignEditorId);
       setIsImporting(false);
     })();
     return () => {

@@ -1862,7 +1862,11 @@ class YKitStore implements KitStoreFull {
         if (diff.designs.updated) {
           diff.designs.updated.forEach((updatedItem) => {
             const matchingDesign = Array.from(this.designs.entries()).find(([_, store]) => {
-              return (!updatedItem.diff.name || store.yDesign.get("name") === updatedItem.id.name) && (!updatedItem.diff.variant || store.yDesign.get("variant") === updatedItem.id.variant) && (!updatedItem.diff.view || store.yDesign.get("view") === updatedItem.id.view);
+              return (
+                (!updatedItem.diff.name || store.yDesign.get("name") === updatedItem.id.name) &&
+                (!updatedItem.diff.variant || store.yDesign.get("variant") === updatedItem.id.variant) &&
+                (!updatedItem.diff.view || store.yDesign.get("view") === updatedItem.id.view)
+              );
             });
             if (matchingDesign) {
               matchingDesign[1].change(updatedItem.diff);
@@ -3646,21 +3650,20 @@ function useRerender() {
   return useReducer((x) => x + 1, 0)[1];
 }
 
-function useStoreState<TSnapshot, TSelected = TSnapshot>(
-  store: { snapshot: () => TSnapshot; onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe },
-  selector?: (state: TSnapshot) => TSelected
-): TSelected {
-  const storeRef = useRef(store);
-  storeRef.current = store;
-  
+function useStoreState<TSnapshot, TSelected = TSnapshot>(store: { snapshot: () => TSnapshot; onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe }, selector?: (state: TSnapshot) => TSelected): TSelected {
   const selectorRef = useRef(selector);
   selectorRef.current = selector;
+
+  const getSnapshot = useMemo(() => {
+    return () => store.snapshot();
+  }, [store]);
   
-  const getSnapshot = useCallback(() => storeRef.current.snapshot(), []);
-  const subscribe = useCallback((callback: () => void) => storeRef.current.onChanged(callback), []);
-  
-  const state = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-  
+  const subscribe = useMemo(() => {
+    return (callback: () => void) => store.onChanged(callback);
+  }, [store]);
+
+  const state = useSyncExternalStore(subscribe, getSnapshot);
+
   return useMemo(() => {
     return selectorRef.current ? selectorRef.current(state) : (state as any);
   }, [state]);
@@ -3932,66 +3935,75 @@ export function useDesigns(): Design[] {
 
 export function useSketchpadCommands() {
   const store = useSketchpadStore();
-  return useMemo(() => ({
-    setMode: (mode: Mode) => store.execute("semio.sketchpad.setMode", mode),
-    setTheme: (theme: Theme) => store.execute("semio.sketchpad.setTheme", theme),
-    setLayout: (layout: Layout) => store.execute("semio.sketchpad.setLayout", layout),
-    createKit: (kit: Kit) => store.execute("semio.sketchpad.createKit", kit),
-    createDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.createDesignEditor", designEditorId),
-    setActiveDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.setActiveDesignEditor", designEditorId),
-  }), [store]);
+  return useMemo(
+    () => ({
+      setMode: (mode: Mode) => store.execute("semio.sketchpad.setMode", mode),
+      setTheme: (theme: Theme) => store.execute("semio.sketchpad.setTheme", theme),
+      setLayout: (layout: Layout) => store.execute("semio.sketchpad.setLayout", layout),
+      createKit: (kit: Kit) => store.execute("semio.sketchpad.createKit", kit),
+      createDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.createDesignEditor", designEditorId),
+      setActiveDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.setActiveDesignEditor", designEditorId),
+    }),
+    [store],
+  );
 }
 
 export function useKitCommands() {
   const kitStore = useKitStore();
-  return useMemo(() => ({
-    importKit: (url: string) => kitStore.execute("semio.kit.import", url),
-    exportKit: () => kitStore.execute("semio.kit.export"),
-    createType: (type: Type) => kitStore.execute("semio.kit.createType", type),
-    updateType: (typeId: TypeId, typeDiff: TypeDiff) => kitStore.execute("semio.kit.updateType", typeId, typeDiff),
-    deleteType: (typeId: TypeId) => kitStore.execute("semio.kit.deleteType", typeId),
-    createDesign: (design: Design) => kitStore.execute("semio.kit.createDesign", design),
-    updateDesign: (designId: DesignId, designDiff: DesignDiff) => kitStore.execute("semio.kit.updateDesign", designId, designDiff),
-    deleteDesign: (designId: DesignId) => kitStore.execute("semio.kit.deleteDesign", designId),
-    addFile: (file: SemioFile, blob?: Blob) => kitStore.execute("semio.kit.addFile", file, blob),
-    updateFile: (url: Url, fileDiff: FileDiff, blob?: Blob) => kitStore.execute("semio.kit.updateFile", url, fileDiff, blob),
-    removeFile: (url: Url) => kitStore.execute("semio.kit.removeFile", url),
-    addPiece: (designId: DesignId, piece: Piece) => kitStore.execute("semio.kit.addPiece", designId, piece),
-    addPieces: (designId: DesignId, pieces: Piece[]) => kitStore.execute("semio.kit.addPieces", designId, pieces),
-    removePiece: (designId: DesignId, pieceId: PieceId) => kitStore.execute("semio.kit.removePiece", designId, pieceId),
-    removePieces: (designId: DesignId, pieceIds: PieceId[]) => kitStore.execute("semio.kit.removePieces", designId, pieceIds),
-    addConnection: (designId: DesignId, connection: Connection) => kitStore.execute("semio.kit.addConnection", designId, connection),
-    addConnections: (designId: DesignId, connections: Connection[]) => kitStore.execute("semio.kit.addConnections", designId, connections),
-    removeConnection: (designId: DesignId, connectionId: ConnectionId) => kitStore.execute("semio.kit.removeConnection", designId, connectionId),
-    removeConnections: (designId: DesignId, connectionIds: ConnectionId[]) => kitStore.execute("semio.kit.removeConnections", designId, connectionIds),
-    deleteSelected: (designId: DesignId, selectedPieces: PieceId[], selectedConnections: ConnectionId[]) => kitStore.execute("semio.kit.deleteSelected", designId, selectedPieces, selectedConnections),
-  }), [kitStore]);
+  return useMemo(
+    () => ({
+      importKit: (url: string) => kitStore.execute("semio.kit.import", url),
+      exportKit: () => kitStore.execute("semio.kit.export"),
+      createType: (type: Type) => kitStore.execute("semio.kit.createType", type),
+      updateType: (typeId: TypeId, typeDiff: TypeDiff) => kitStore.execute("semio.kit.updateType", typeId, typeDiff),
+      deleteType: (typeId: TypeId) => kitStore.execute("semio.kit.deleteType", typeId),
+      createDesign: (design: Design) => kitStore.execute("semio.kit.createDesign", design),
+      updateDesign: (designId: DesignId, designDiff: DesignDiff) => kitStore.execute("semio.kit.updateDesign", designId, designDiff),
+      deleteDesign: (designId: DesignId) => kitStore.execute("semio.kit.deleteDesign", designId),
+      addFile: (file: SemioFile, blob?: Blob) => kitStore.execute("semio.kit.addFile", file, blob),
+      updateFile: (url: Url, fileDiff: FileDiff, blob?: Blob) => kitStore.execute("semio.kit.updateFile", url, fileDiff, blob),
+      removeFile: (url: Url) => kitStore.execute("semio.kit.removeFile", url),
+      addPiece: (designId: DesignId, piece: Piece) => kitStore.execute("semio.kit.addPiece", designId, piece),
+      addPieces: (designId: DesignId, pieces: Piece[]) => kitStore.execute("semio.kit.addPieces", designId, pieces),
+      removePiece: (designId: DesignId, pieceId: PieceId) => kitStore.execute("semio.kit.removePiece", designId, pieceId),
+      removePieces: (designId: DesignId, pieceIds: PieceId[]) => kitStore.execute("semio.kit.removePieces", designId, pieceIds),
+      addConnection: (designId: DesignId, connection: Connection) => kitStore.execute("semio.kit.addConnection", designId, connection),
+      addConnections: (designId: DesignId, connections: Connection[]) => kitStore.execute("semio.kit.addConnections", designId, connections),
+      removeConnection: (designId: DesignId, connectionId: ConnectionId) => kitStore.execute("semio.kit.removeConnection", designId, connectionId),
+      removeConnections: (designId: DesignId, connectionIds: ConnectionId[]) => kitStore.execute("semio.kit.removeConnections", designId, connectionIds),
+      deleteSelected: (designId: DesignId, selectedPieces: PieceId[], selectedConnections: ConnectionId[]) => kitStore.execute("semio.kit.deleteSelected", designId, selectedPieces, selectedConnections),
+    }),
+    [kitStore],
+  );
 }
 
 export function useDesignEditorCommands() {
   const store = useDesignEditorStore();
-  return useMemo(() => ({
-    startTransaction: () => store.execute("semio.designEditor.startTransaction"),
-    finalizeTransaction: () => store.execute("semio.designEditor.finalizeTransaction"),
-    abortTransaction: () => store.execute("semio.designEditor.abortTransaction"),
-    undo: () => store.execute("semio.designEditor.undo"),
-    redo: () => store.execute("semio.designEditor.redo"),
-    selectAll: () => store.execute("semio.designEditor.selectAll"),
-    deselectAll: () => store.execute("semio.designEditor.deselectAll"),
-    selectPiece: (pieceId: PieceId) => store.execute("semio.designEditor.selectPiece", pieceId),
-    selectPieces: (pieceIds: PieceId[]) => store.execute("semio.designEditor.selectPieces", pieceIds),
-    addPieceToSelection: (pieceId: PieceId) => store.execute("semio.designEditor.addPieceToSelection", pieceId),
-    removePieceFromSelection: (pieceId: PieceId) => store.execute("semio.designEditor.removePieceFromSelection", pieceId),
-    selectConnection: (connection: Connection) => store.execute("semio.designEditor.selectConnection", connection),
-    addConnectionToSelection: (connection: Connection) => store.execute("semio.designEditor.addConnectionToSelection", connection),
-    removeConnectionFromSelection: (connection: Connection) => store.execute("semio.designEditor.removeConnectionFromSelection", connection),
-    selectPiecePort: (pieceId: PieceId, portId: PortId) => store.execute("semio.designEditor.selectPiecePort", pieceId, portId),
-    deselectPiecePort: () => store.execute("semio.designEditor.deselectPiecePort"),
-    deleteSelected: () => store.execute("semio.designEditor.deleteSelected"),
-    toggleDiagramFullscreen: () => store.execute("semio.designEditor.toggleDiagramFullscreen"),
-    toggleModelFullscreen: () => store.execute("semio.designEditor.toggleModelFullscreen"),
-    execute: (command: string, ...args: any[]) => store.execute(command, ...args),
-  }), [store]);
+  return useMemo(
+    () => ({
+      startTransaction: () => store.execute("semio.designEditor.startTransaction"),
+      finalizeTransaction: () => store.execute("semio.designEditor.finalizeTransaction"),
+      abortTransaction: () => store.execute("semio.designEditor.abortTransaction"),
+      undo: () => store.execute("semio.designEditor.undo"),
+      redo: () => store.execute("semio.designEditor.redo"),
+      selectAll: () => store.execute("semio.designEditor.selectAll"),
+      deselectAll: () => store.execute("semio.designEditor.deselectAll"),
+      selectPiece: (pieceId: PieceId) => store.execute("semio.designEditor.selectPiece", pieceId),
+      selectPieces: (pieceIds: PieceId[]) => store.execute("semio.designEditor.selectPieces", pieceIds),
+      addPieceToSelection: (pieceId: PieceId) => store.execute("semio.designEditor.addPieceToSelection", pieceId),
+      removePieceFromSelection: (pieceId: PieceId) => store.execute("semio.designEditor.removePieceFromSelection", pieceId),
+      selectConnection: (connection: Connection) => store.execute("semio.designEditor.selectConnection", connection),
+      addConnectionToSelection: (connection: Connection) => store.execute("semio.designEditor.addConnectionToSelection", connection),
+      removeConnectionFromSelection: (connection: Connection) => store.execute("semio.designEditor.removeConnectionFromSelection", connection),
+      selectPiecePort: (pieceId: PieceId, portId: PortId) => store.execute("semio.designEditor.selectPiecePort", pieceId, portId),
+      deselectPiecePort: () => store.execute("semio.designEditor.deselectPiecePort"),
+      deleteSelected: () => store.execute("semio.designEditor.deleteSelected"),
+      toggleDiagramFullscreen: () => store.execute("semio.designEditor.toggleDiagramFullscreen"),
+      toggleModelFullscreen: () => store.execute("semio.designEditor.toggleModelFullscreen"),
+      execute: (command: string, ...args: any[]) => store.execute(command, ...args),
+    }),
+    [store],
+  );
 }
 // Design editor state hooks
 const selectionSelector = (s: DesignEditorStateFull) => s.selection;

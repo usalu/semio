@@ -27,11 +27,10 @@ import { useHotkeys } from "react-hotkeys-hook";
 
 import { ReactFlowProvider } from "@xyflow/react";
 import { DesignId, TypeId } from "../../../semio";
-import { useDesign, useDesignEditorCommands, useFullscreen, useKit } from "../../../store";
+import { useDesignEditorCommands, useFullscreen } from "../../../store";
 import Navbar, { useNavbar } from "../Navbar";
 import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
 import Chat from "./Chat";
-import Console from "./Console";
 import Details from "./Details";
 import Diagram from "./Diagram";
 import Model from "./Model";
@@ -54,8 +53,6 @@ interface VisiblePanels {
 
 const DesignEditor: FC<DesignEditorProps> = () => {
   const { setNavbarToolbar } = useNavbar();
-  const kit = useKit();
-  const design = useDesign();
   const fullscreenPanel = useFullscreen();
   const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen } = useDesignEditorCommands();
 
@@ -161,10 +158,6 @@ const DesignEditor: FC<DesignEditorProps> = () => {
     );
   }
 
-  if (!kit || !design) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  }
-
   const designEditorToolbar = (
     <ToggleGroup
       type="multiple"
@@ -212,18 +205,12 @@ const DesignEditor: FC<DesignEditorProps> = () => {
           <ReactFlowProvider>
             <div className="flex-1 flex flex-col">
               <div className="flex-1 flex">
-                <div className="flex-1 relative">
-                  <Diagram />
-                </div>
+                <div className="flex-1 relative">{/* <Diagram /> */}</div>
                 <div className="flex-1 relative" style={{ border: "2px solid red" }}>
-                  <Model />
+                  {/* <Model /> */}
                 </div>
               </div>
-              {visiblePanels.console && (
-                <div className="h-48 border-t border-border">
-                  <Console />
-                </div>
-              )}
+              {visiblePanels.console && <div className="h-48 border-t border-border">{/* <Console /> */}</div>}
             </div>
           </ReactFlowProvider>
           {rightPanelVisible && (
