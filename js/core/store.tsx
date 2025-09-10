@@ -20,7 +20,7 @@
 // #endregion
 
 import JSZip from "jszip";
-import React, { createContext, useCallback, useContext, useMemo, useReducer, useRef, useSyncExternalStore } from "react";
+import React, { createContext, useContext, useSyncExternalStore } from "react";
 import type { Database, SqlJsStatic } from "sql.js";
 import initSqlJs from "sql.js";
 import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
@@ -359,7 +359,7 @@ export interface DesignEditorCommandsFull {
   execute<T>(command: string, ...rest: any[]): Promise<T>;
   register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable;
 }
-export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands {}
+export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands, DesignEditorSubscriptions {}
 export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, DesignEditorActions, DesignEditorSubscriptions {}
 export interface SketchpadState {
   mode: Mode;
@@ -837,17 +837,13 @@ class YPortStore implements PortStoreFull {
 
     const attributes: Attribute[] = [];
     if (yAttributes) {
-      try {
-        yAttributes.forEach((yMap: YAttribute) => {
-          attributes.push({
-            key: yMap.get("key") as string,
-            value: yMap.get("value") as string | undefined,
-            definition: yMap.get("definition") as string | undefined,
-          });
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
         });
-      } catch (e) {
-        // Y object not properly attached, skip
-      }
+      });
     }
 
     const currentData = {
@@ -1032,31 +1028,27 @@ class YPieceStore implements PieceStoreFull {
   constructor(parent: YDesignStore, piece: Piece) {
     this.parent = parent;
     this.yPiece = new Y.Map<any>();
-    try {
-      this.yPiece.set("id_", piece.id_);
-      this.yPiece.set("description", piece.description || "");
-      if (piece.type) {
-        const yType = new Y.Map<string>();
-        yType.set("name", piece.type.name);
-        if (piece.type.variant) yType.set("variant", piece.type.variant);
-        this.yPiece.set("type", yType);
-      } else {
-        const yDesign = new Y.Map<string>();
-        yDesign.set("name", piece.design?.name || "");
-        if (piece.design?.variant) yDesign.set("variant", piece.design.variant);
-        if (piece.design?.view) yDesign.set("view", piece.design.view);
-        this.yPiece.set("design", yDesign);
-      }
-      if (piece.plane) {
-        this.yPiece.set("plane", createPlane(piece.plane));
-      }
-      if (piece.center) {
-        this.yPiece.set("center", createVec2(piece.center));
-      }
-      this.yPiece.set("attributes", createAttributes(piece.attributes));
-    } catch (e) {
-      // Y object not attached to document during construction, but this is expected
+    this.yPiece.set("id_", piece.id_);
+    this.yPiece.set("description", piece.description || "");
+    if (piece.type) {
+      const yType = new Y.Map<string>();
+      yType.set("name", piece.type.name);
+      if (piece.type.variant) yType.set("variant", piece.type.variant);
+      this.yPiece.set("type", yType);
+    } else {
+      const yDesign = new Y.Map<string>();
+      yDesign.set("name", piece.design?.name || "");
+      if (piece.design?.variant) yDesign.set("variant", piece.design.variant);
+      if (piece.design?.view) yDesign.set("view", piece.design.view);
+      this.yPiece.set("design", yDesign);
     }
+    if (piece.plane) {
+      this.yPiece.set("plane", createPlane(piece.plane));
+    }
+    if (piece.center) {
+      this.yPiece.set("center", createVec2(piece.center));
+    }
+    this.yPiece.set("attributes", createAttributes(piece.attributes));
   }
 
   snapshot = (): Piece => {
@@ -1067,17 +1059,13 @@ class YPieceStore implements PieceStoreFull {
 
     const attributes: Attribute[] = [];
     if (yAttributes) {
-      try {
-        yAttributes.forEach((yMap: YAttribute) => {
-          attributes.push({
-            key: yMap.get("key") as string,
-            value: yMap.get("value") as string | undefined,
-            definition: yMap.get("definition") as string | undefined,
-          });
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
         });
-      } catch (e) {
-        // Y object not properly attached, skip
-      }
+      });
     }
 
     const currentData: Piece = {
@@ -1177,46 +1165,42 @@ class YConnectionStore implements ConnectionStoreFull {
   constructor(parent: YDesignStore, connection: Connection) {
     this.parent = parent;
     this.yConnection = new Y.Map<any>();
-    try {
-      const yConnected = new Y.Map<any>();
-      const yConnectedPiece = new Y.Map<string>();
-      yConnectedPiece.set("id_", connection.connected.piece.id_);
-      yConnected.set("piece", yConnectedPiece);
-      const yConnectedPort = new Y.Map<string>();
-      yConnectedPort.set("id_", connection.connected.port.id_ || "");
-      yConnected.set("port", yConnectedPort);
-      if (connection.connected.designPiece) {
-        const yConnectedDesignPiece = new Y.Map<string>();
-        yConnectedDesignPiece.set("id_", connection.connected.designPiece.id_);
-        yConnected.set("designPiece", yConnectedDesignPiece);
-      }
-      this.yConnection.set("connected", yConnected);
-      const yConnecting = new Y.Map<any>();
-      const yConnectingPiece = new Y.Map<string>();
-      yConnectingPiece.set("id_", connection.connecting.piece.id_);
-      yConnecting.set("piece", yConnectingPiece);
-      const yConnectingPort = new Y.Map<string>();
-      yConnectingPort.set("id_", connection.connecting.port.id_ || "");
-      yConnecting.set("port", yConnectingPort);
-      if (connection.connecting.designPiece) {
-        const yConnectingDesignPiece = new Y.Map<string>();
-        yConnectingDesignPiece.set("id_", connection.connecting.designPiece.id_);
-        yConnecting.set("designPiece", yConnectingDesignPiece);
-      }
-      this.yConnection.set("connecting", yConnecting);
-      this.yConnection.set("description", connection.description || "");
-      this.yConnection.set("gap", connection.gap || 0);
-      this.yConnection.set("shift", connection.shift || 0);
-      this.yConnection.set("rise", connection.rise || 0);
-      this.yConnection.set("rotation", connection.rotation || 0);
-      this.yConnection.set("turn", connection.turn || 0);
-      this.yConnection.set("tilt", connection.tilt || 0);
-      this.yConnection.set("x", connection.x || 0);
-      this.yConnection.set("y", connection.y || 0);
-      this.yConnection.set("attributes", createAttributes(connection.attributes));
-    } catch (e) {
-      // Y object not attached to document during construction, but this is expected
+    const yConnected = new Y.Map<any>();
+    const yConnectedPiece = new Y.Map<string>();
+    yConnectedPiece.set("id_", connection.connected.piece.id_);
+    yConnected.set("piece", yConnectedPiece);
+    const yConnectedPort = new Y.Map<string>();
+    yConnectedPort.set("id_", connection.connected.port.id_ || "");
+    yConnected.set("port", yConnectedPort);
+    if (connection.connected.designPiece) {
+      const yConnectedDesignPiece = new Y.Map<string>();
+      yConnectedDesignPiece.set("id_", connection.connected.designPiece.id_);
+      yConnected.set("designPiece", yConnectedDesignPiece);
     }
+    this.yConnection.set("connected", yConnected);
+    const yConnecting = new Y.Map<any>();
+    const yConnectingPiece = new Y.Map<string>();
+    yConnectingPiece.set("id_", connection.connecting.piece.id_);
+    yConnecting.set("piece", yConnectingPiece);
+    const yConnectingPort = new Y.Map<string>();
+    yConnectingPort.set("id_", connection.connecting.port.id_ || "");
+    yConnecting.set("port", yConnectingPort);
+    if (connection.connecting.designPiece) {
+      const yConnectingDesignPiece = new Y.Map<string>();
+      yConnectingDesignPiece.set("id_", connection.connecting.designPiece.id_);
+      yConnecting.set("designPiece", yConnectingDesignPiece);
+    }
+    this.yConnection.set("connecting", yConnecting);
+    this.yConnection.set("description", connection.description || "");
+    this.yConnection.set("gap", connection.gap || 0);
+    this.yConnection.set("shift", connection.shift || 0);
+    this.yConnection.set("rise", connection.rise || 0);
+    this.yConnection.set("rotation", connection.rotation || 0);
+    this.yConnection.set("turn", connection.turn || 0);
+    this.yConnection.set("tilt", connection.tilt || 0);
+    this.yConnection.set("x", connection.x || 0);
+    this.yConnection.set("y", connection.y || 0);
+    this.yConnection.set("attributes", createAttributes(connection.attributes));
   }
 
   snapshot = (): Connection => {
@@ -1232,17 +1216,13 @@ class YConnectionStore implements ConnectionStoreFull {
     const yAttributes = this.yConnection.get("attributes") as YAttributes;
     const attributes: Attribute[] = [];
     if (yAttributes) {
-      try {
-        yAttributes.forEach((yMap: YAttribute) => {
-          attributes.push({
-            key: yMap.get("key") as string,
-            value: yMap.get("value") as string | undefined,
-            definition: yMap.get("definition") as string | undefined,
-          });
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
         });
-      } catch (e) {
-        // Y object not properly attached, skip
-      }
+      });
     }
 
     const currentData = {
@@ -1307,78 +1287,47 @@ class YDesignStore implements DesignStoreFull {
   constructor(parent: YKitStore, design: Design) {
     this.parent = parent;
     this.yDesign = new Y.Map<any>();
-    try {
-      this.yDesign.set("name", design.name);
-      this.yDesign.set("description", design.description || "");
-      this.yDesign.set("variant", design.variant || "");
-      this.yDesign.set("view", design.view || "");
-      this.yDesign.set("unit", design.unit);
-      this.yDesign.set("pieces", new Y.Map() as YPieceMap);
-      this.yDesign.set("connections", new Y.Map() as YConnectionMap);
-      this.yDesign.set("authors", createAuthors(design.authors));
-      this.yDesign.set("attributes", createAttributes(design.attributes));
-    } catch (e) {
-      // Y object not attached to document during construction, but this is expected
-    }
+    this.yDesign.set("name", design.name);
+    this.yDesign.set("description", design.description || "");
+    this.yDesign.set("variant", design.variant || "");
+    this.yDesign.set("view", design.view || "");
+    this.yDesign.set("unit", design.unit);
+    this.yDesign.set("pieces", new Y.Map() as YPieceMap);
+    this.yDesign.set("connections", new Y.Map() as YConnectionMap);
+    this.yDesign.set("authors", createAuthors(design.authors));
+    this.yDesign.set("attributes", createAttributes(design.attributes));
   }
 
   snapshot = (): Design => {
-    let yAuthors: YAuthors | undefined;
-    let yAttributes: YAttributes | undefined;
-
-    try {
-      yAuthors = this.yDesign.get("authors") as YAuthors;
-      yAttributes = this.yDesign.get("attributes") as YAttributes;
-    } catch (e) {
-      // Y object not yet attached to document, use empty defaults
-      yAuthors = undefined;
-      yAttributes = undefined;
-    }
+    const yAuthors = this.yDesign.get("authors") as YAuthors;
+    const yAttributes = this.yDesign.get("attributes") as YAttributes;
 
     const authors: Author[] = [];
     if (yAuthors) {
-      try {
-        yAuthors.forEach((yAuthor: YAuthor) => {
-          authors.push({
-            name: yAuthor.get("name") as string,
-            email: (yAuthor.get("email") as string) || "",
-          });
+      yAuthors.forEach((yAuthor: YAuthor) => {
+        authors.push({
+          name: yAuthor.get("name") as string,
+          email: (yAuthor.get("email") as string) || "",
         });
-      } catch (e) {
-        // Y object not properly attached, skip
-      }
+      });
     }
 
     const attributes: Attribute[] = [];
     if (yAttributes) {
-      try {
-        yAttributes.forEach((yMap: YAttribute) => {
-          attributes.push({
-            key: yMap.get("key") as string,
-            value: yMap.get("value") as string | undefined,
-            definition: yMap.get("definition") as string | undefined,
-          });
+      yAttributes.forEach((yMap: YAttribute) => {
+        attributes.push({
+          key: yMap.get("key") as string,
+          value: yMap.get("value") as string | undefined,
+          definition: yMap.get("definition") as string | undefined,
         });
-      } catch (e) {
-        // Y object not properly attached, skip
-      }
+      });
     }
 
-    let name = "";
-    let description: string | undefined;
-    let variant: string | undefined;
-    let view: string | undefined;
-    let unit = "";
-
-    try {
-      name = this.yDesign.get("name") as string;
-      description = this.yDesign.get("description") as string | undefined;
-      variant = this.yDesign.get("variant") as string | undefined;
-      view = this.yDesign.get("view") as string | undefined;
-      unit = this.yDesign.get("unit") as string;
-    } catch (e) {
-      // Y object not properly attached, use defaults
-    }
+    const name = this.yDesign.get("name") as string;
+    const description = this.yDesign.get("description") as string | undefined;
+    const variant = this.yDesign.get("variant") as string | undefined;
+    const view = this.yDesign.get("view") as string | undefined;
+    const unit = this.yDesign.get("unit") as string;
 
     const currentHash = JSON.stringify({
       name: name,
@@ -3565,72 +3514,76 @@ const designEditorCommands = {
 // #region Scoping
 
 type SketchpadScope = { id: string; persisted: boolean };
-type KitScope = { id: KitId };
-type DesignScope = { id: DesignId };
-type TypeScope = { id: TypeId };
-type PieceScope = { id: PieceId };
-type ConnectionScope = { id: ConnectionId };
-type RepresentationScope = { id: RepresentationId };
-type PortypeScope = { id: PortId };
-type DesignEditorScope = { id: string };
-
 const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
-const KitScopeContext = createContext<KitScope | null>(null);
-const DesignScopeContext = createContext<DesignScope | null>(null);
-const TypeScopeContext = createContext<TypeScope | null>(null);
-const PieceScopeContext = createContext<PieceScope | null>(null);
-const ConnectionScopeContext = createContext<ConnectionScope | null>(null);
-const RepresentationScopeContext = createContext<RepresentationScope | null>(null);
-const PortypeScopeContext = createContext<PortypeScope | null>(null);
-const DesignEditorScopeContext = createContext<DesignEditorScope | null>(null);
-
 export const SketchpadScopeProvider = (props: { id: string; persisted: boolean; children: React.ReactNode }) => {
-  const value = useMemo(() => {
-    const scope = { id: props.id, persisted: props.persisted };
-    // Ensure store is created/initialized
-    getOrCreateSketchpadStore(props.id, props.persisted);
-    return scope;
-  }, [props.id, props.persisted]);
+  const scope = { id: props.id, persisted: props.persisted };
+  // Ensure store is created/initialized
+  getOrCreateSketchpadStore(props.id, props.persisted);
+  const value = scope;
   return React.createElement(SketchpadScopeContext.Provider, { value }, props.children as any);
 };
 
+type KitScope = { id: KitId };
+const KitScopeContext = createContext<KitScope | null>(null);
+
+type DesignScope = { id: DesignId };
+const DesignScopeContext = createContext<DesignScope | null>(null);
+
+type TypeScope = { id: TypeId };
+const TypeScopeContext = createContext<TypeScope | null>(null);
+
+type PieceScope = { id: PieceId };
+const PieceScopeContext = createContext<PieceScope | null>(null);
+
+const ConnectionScopeContext = createContext<ConnectionScope | null>(null);
+type ConnectionScope = { id: ConnectionId };
+
+const RepresentationScopeContext = createContext<RepresentationScope | null>(null);
+type RepresentationScope = { id: RepresentationId };
+
+type PortScope = { id: PortId };
+const PortScopeContext = createContext<PortScope | null>(null);
+
+type DesignEditorScope = { id: string };
+const DesignEditorScopeContext = createContext<DesignEditorScope | null>(null);
+
 export const KitScopeProvider = (props: { id: KitId; children: React.ReactNode }) => {
-  const value = useMemo(() => ({ id: props.id }), [props.id]);
+  const value = { id: props.id };
   return React.createElement(KitScopeContext.Provider, { value }, props.children as any);
 };
 
 export const DesignScopeProvider = (props: { id: DesignId; children: React.ReactNode }) => {
-  const value = useMemo(() => ({ id: props.id }), [props.id]);
+  const value = { id: props.id };
   return React.createElement(DesignScopeContext.Provider, { value }, props.children as any);
 };
 
 export const TypeScopeProvider = (props: { id: TypeId; children: React.ReactNode }) => {
-  const value = useMemo(() => ({ id: props.id }), [props.id]);
+  const value = { id: props.id };
   return React.createElement(TypeScopeContext.Provider, { value }, props.children as any);
 };
 
 export const PieceScopeProvider = (props: { id: PieceId; children: React.ReactNode }) => {
-  const value = useMemo(() => ({ id: props.id }), [props.id]);
+  const value = { id: props.id };
   return React.createElement(PieceScopeContext.Provider, { value }, props.children as any);
 };
 
 export const ConnectionScopeProvider = (props: { id: ConnectionId; children: React.ReactNode }) => {
-  const value = useMemo(() => ({ id: props.id }), [props.id]);
+  const value = { id: props.id };
   return React.createElement(ConnectionScopeContext.Provider, { value }, props.children as any);
 };
 
 export const RepresentationScopeProvider = (props: { id: RepresentationId; children: React.ReactNode }) => {
-  const value = useMemo(() => ({ id: props.id }), [props.id]);
+  const value = { id: props.id };
   return React.createElement(RepresentationScopeContext.Provider, { value }, props.children as any);
 };
 
-export const PortypeScopeProvider = (props: { id: PortId; children: React.ReactNode }) => {
-  const value = useMemo(() => ({ id: props.id }), [props.id]);
-  return React.createElement(PortypeScopeContext.Provider, { value }, props.children as any);
+export const PortScopeProvider = (props: { id: PortId; children: React.ReactNode }) => {
+  const value = { id: props.id };
+  return React.createElement(PortScopeContext.Provider, { value }, props.children as any);
 };
 
 export const DesignEditorScopeProvider = (props: { id: string; children: React.ReactNode }) => {
-  const value = useMemo(() => ({ id: props.id }), [props.id]);
+  const value = { id: props.id };
   return React.createElement(DesignEditorScopeContext.Provider, { value }, props.children as any);
 };
 
@@ -3641,56 +3594,31 @@ const useTypeScope = () => useContext(TypeScopeContext);
 const usePieceScope = () => useContext(PieceScopeContext);
 const useConnectionScope = () => useContext(ConnectionScopeContext);
 const useRepresentationScope = () => useContext(RepresentationScopeContext);
-const usePortScope = () => useContext(PortypeScopeContext);
+const usePortScope = () => useContext(PortScopeContext);
 const useDesignEditorScope = () => useContext(DesignEditorScopeContext);
 
 // #endregion Scoping
 
-function useRerender() {
-  return useReducer((x) => x + 1, 0)[1];
-}
+const identitySelector = (state: any) => state;
 
-function useStoreState<TSnapshot, TSelected = TSnapshot>(store: { snapshot: () => TSnapshot; onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe }, selector?: (state: TSnapshot) => TSelected): TSelected {
-  const selectorRef = useRef(selector);
-  selectorRef.current = selector;
-
-  const getSnapshot = useMemo(() => {
-    return () => store.snapshot();
-  }, [store]);
-  
-  const subscribe = useMemo(() => {
-    return (callback: () => void) => store.onChanged(callback);
-  }, [store]);
-
-  const state = useSyncExternalStore(subscribe, getSnapshot);
-
-  return useMemo(() => {
-    return selectorRef.current ? selectorRef.current(state) : (state as any);
-  }, [state]);
+function useSync<TSnapshot, TSelected = TSnapshot>(store: { snapshot: () => TSnapshot; onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe }, selector?: (state: TSnapshot) => TSelected): TSelected {
+  const state = useSyncExternalStore(store.onChanged, store.snapshot);
+  return selector ? selector(state) : (state as unknown as TSelected);
 }
 
 function useSketchpadStore(id?: string) {
   const scope = useSketchpadScope();
-  const storeId = useMemo(() => scope?.id ?? id, [scope?.id, id]);
-  const store = useMemo(() => {
-    if (!storeId) throw new Error("useSketchpad must be called within a SketchpadScopeProvider or be directly provided with an id");
-    if (!stores.has(storeId)) throw new Error(`Sketchpad store was not found for id ${storeId}`);
-    return stores.get(storeId)!;
-  }, [storeId]);
+  const storeId = scope?.id ?? id;
+  if (!storeId) throw new Error("useSketchpadStore must be called within a SketchpadScopeProvider or be directly provided with an id");
+  if (!stores.has(storeId)) throw new Error(`Sketchpad store was not found for id ${storeId}`);
+  const store = stores.get(storeId)!;
   return store;
 }
 
-export function useSketchpad(): SketchpadState;
-export function useSketchpad<T>(selector: (state: SketchpadState) => T): T;
-export function useSketchpad<T>(selector: (state: SketchpadState) => T, id?: string): T;
 export function useSketchpad<T>(selector?: (state: SketchpadState) => T, id?: string): T | SketchpadState {
-  const store = useSketchpadStore(id);
-  return useStoreState(store, selector);
+  return useSync<SketchpadState, T>(useSketchpadStore(id), selector ? selector : identitySelector);
 }
 
-function useKitStore(): KitStore;
-function useKitStore<T>(selector: (store: KitStore) => T): T;
-function useKitStore<T>(selector: (store: KitStore) => T, id: KitId): T;
 function useKitStore<T>(selector?: (store: KitStore) => T, id?: KitId): T | KitStore {
   const store = useSketchpadStore();
   const kitScope = useKitStoreScope();
@@ -3702,17 +3630,10 @@ function useKitStore<T>(selector?: (store: KitStore) => T, id?: KitId): T | KitS
   return selector ? selector(kitStore) : kitStore;
 }
 
-export function useKit(): Kit;
-export function useKit<T>(selector: (kit: Kit) => T): T;
-export function useKit<T>(selector: (kit: Kit) => T, id: KitId): T;
 export function useKit<T>(selector?: (kit: Kit) => T, id?: KitId): T | Kit {
-  const store = id ? useKitStore(identitySelector, id) : useKitStore();
-  return useStoreState(store, selector);
+  return useSync<Kit, T>(useKitStore(identitySelector, id), selector ? selector : identitySelector);
 }
 
-function useDesignEditorStore(): DesignEditorStore;
-function useDesignEditorStore<T>(selector: (store: DesignEditorStore) => T): T;
-function useDesignEditorStore<T>(selector: (store: DesignEditorStore) => T, id: DesignEditorId): T;
 function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?: DesignEditorId): T | DesignEditorStore {
   const store = useSketchpadStore();
   const kitScope = useKitStoreScope();
@@ -3730,19 +3651,10 @@ function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?
   return selector ? selector(designEditorStore) : designEditorStore;
 }
 
-const identitySelector = <T,>(s: T) => s;
-
-export function useDesignEditor(): DesignEditorStateFull;
-export function useDesignEditor<T>(selector: (state: DesignEditorStateFull) => T): T;
-export function useDesignEditor<T>(selector: (state: DesignEditorStateFull) => T, id: DesignEditorId): T;
 export function useDesignEditor<T>(selector?: (state: DesignEditorStateFull) => T, id?: DesignEditorId): T | DesignEditorStateFull {
-  const store = id ? useDesignEditorStore(identitySelector, id) : useDesignEditorStore();
-  return useStoreState(store, selector);
+  return useSync<DesignEditorStateFull, T>(useDesignEditorStore(identitySelector, id), selector ? selector : identitySelector);
 }
 
-function useDesignStore(): DesignStoreFull;
-function useDesignStore<T>(selector: (store: DesignStoreFull) => T): T;
-function useDesignStore<T>(selector: (store: DesignStoreFull) => T, id: DesignId): T;
 function useDesignStore<T>(selector?: (store: DesignStoreFull) => T, id?: DesignId): T | DesignStoreFull {
   const kitStore = useKitStore();
   const designScope = useDesignScope();
@@ -3754,25 +3666,21 @@ function useDesignStore<T>(selector?: (store: DesignStoreFull) => T, id?: Design
   return selector ? selector(designStore) : designStore;
 }
 
-export function useDesign(): Design;
-export function useDesign<T>(selector: (design: Design) => T): T;
-export function useDesign<T>(selector: (design: Design) => T, id: DesignId): T;
 export function useDesign<T>(selector?: (design: Design) => T, id?: DesignId): T | Design {
-  const store = id ? useDesignStore(identitySelector, id) : useDesignStore();
-  return useStoreState(store, selector);
+  return useSync<Design, T>(useDesignStore(identitySelector, id), selector ? selector : identitySelector);
 }
 
 export function useFlattenDiff(): DesignDiff {
   const designScope = useDesignScope();
   const kit = useKit();
   if (!designScope) throw new Error("useFlattenDiff must be called within a DesignScopeProvider");
-  return useMemo(() => flattenDesign(kit, designScope.id), [kit, designScope.id]);
+  return flattenDesign(kit, designScope.id);
 }
 
 export function useFlatDesign(): Design {
   const design = useDesign();
   const diff = useFlattenDiff();
-  return useMemo(() => applyDesignDiff(design, diff, true), [design, diff]);
+  return applyDesignDiff(design, diff, true);
 }
 
 export function useFlatPieces(): Piece[] {
@@ -3793,12 +3701,9 @@ export function usePiecesMetadata(): Map<
   const kit = useKit();
   const designScope = useDesignScope();
   if (!designScope) throw new Error("usePiecesMetadata must be called within a DesignScopeProvider");
-  return useMemo(() => piecesMetadata(kit, designScope.id), [kit, designScope.id]);
+  return piecesMetadata(kit, designScope.id);
 }
 
-function useTypeStore(): TypeStoreFull;
-function useTypeStore<T>(selector: (store: TypeStoreFull) => T): T;
-function useTypeStore<T>(selector: (store: TypeStoreFull) => T, id: TypeId): T;
 function useTypeStore<T>(selector?: (store: TypeStoreFull) => T, id?: TypeId): T | TypeStoreFull {
   const kitStore = useKitStore();
   const typeScope = useTypeScope();
@@ -3810,17 +3715,10 @@ function useTypeStore<T>(selector?: (store: TypeStoreFull) => T, id?: TypeId): T
   return selector ? selector(typeStore) : typeStore;
 }
 
-export function useType(): Type;
-export function useType<T>(selector: (type: Type) => T): T;
-export function useType<T>(selector: (type: Type) => T, id: TypeId): T;
 export function useType<T>(selector?: (type: Type) => T, id?: TypeId): T | Type {
-  const store = id ? useTypeStore(identitySelector, id) : useTypeStore();
-  return useStoreState(store, selector);
+  return useSync<Type, T>(useTypeStore(identitySelector, id), selector ? selector : identitySelector);
 }
 
-function usePieceStore(): PieceStoreFull;
-function usePieceStore<T>(selector: (store: PieceStoreFull) => T): T;
-function usePieceStore<T>(selector: (store: PieceStoreFull) => T, id: PieceId): T;
 function usePieceStore<T>(selector?: (store: PieceStoreFull) => T, id?: PieceId): T | PieceStoreFull {
   const designStore = useDesignStore();
   const pieceScope = usePieceScope();
@@ -3832,17 +3730,10 @@ function usePieceStore<T>(selector?: (store: PieceStoreFull) => T, id?: PieceId)
   return selector ? selector(pieceStore) : pieceStore;
 }
 
-export function usePiece(): Piece;
-export function usePiece<T>(selector: (piece: Piece) => T): T;
-export function usePiece<T>(selector: (piece: Piece) => T, id: PieceId): T;
 export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId): T | Piece {
-  const store = id ? usePieceStore(identitySelector, id) : usePieceStore();
-  return useStoreState(store, selector);
+  return useSync<Piece, T>(usePieceStore(identitySelector, id), selector ? selector : identitySelector);
 }
 
-function useConnectionStore(): ConnectionStoreFull;
-function useConnectionStore<T>(selector: (store: ConnectionStoreFull) => T): T;
-function useConnectionStore<T>(selector: (store: ConnectionStoreFull) => T, id: ConnectionId): T;
 function useConnectionStore<T>(selector?: (store: ConnectionStoreFull) => T, id?: ConnectionId): T | ConnectionStoreFull {
   const designStore = useDesignStore();
   const connectionScope = useConnectionScope();
@@ -3854,17 +3745,10 @@ function useConnectionStore<T>(selector?: (store: ConnectionStoreFull) => T, id?
   return selector ? selector(connectionStore) : connectionStore;
 }
 
-export function useConnection(): Connection;
-export function useConnection<T>(selector: (connection: Connection) => T): T;
-export function useConnection<T>(selector: (connection: Connection) => T, id: ConnectionId): T;
 export function useConnection<T>(selector?: (connection: Connection) => T, id?: ConnectionId): T | Connection {
-  const store = id ? useConnectionStore(identitySelector, id) : useConnectionStore();
-  return useStoreState(store, selector);
+  return useSync<Connection, T>(useConnectionStore(identitySelector, id), selector ? selector : identitySelector);
 }
 
-function usePortStore(): PortStoreFull;
-function usePortStore<T>(selector: (store: PortStoreFull) => T): T;
-function usePortStore<T>(selector: (store: PortStoreFull) => T, id: PortId): T;
 function usePortStore<T>(selector?: (store: PortStoreFull) => T, id?: PortId): T | PortStoreFull {
   const typeStore = useTypeStore();
   const portScope = usePortScope();
@@ -3876,17 +3760,10 @@ function usePortStore<T>(selector?: (store: PortStoreFull) => T, id?: PortId): T
   return selector ? selector(portStore) : portStore;
 }
 
-export function usePort(): Port;
-export function usePort<T>(selector: (port: Port) => T): T;
-export function usePort<T>(selector: (port: Port) => T, id: PortId): T;
 export function usePort<T>(selector?: (port: Port) => T, id?: PortId): T | Port {
-  const store = id ? usePortStore(identitySelector, id) : usePortStore();
-  return useStoreState(store, selector);
+  return useSync<Port, T>(usePortStore(identitySelector, id), selector ? selector : identitySelector);
 }
 
-function useRepresentationStore(): RepresentationStoreFull;
-function useRepresentationStore<T>(selector: (store: RepresentationStoreFull) => T): T;
-function useRepresentationStore<T>(selector: (store: RepresentationStoreFull) => T, id: RepresentationId): T;
 function useRepresentationStore<T>(selector?: (store: RepresentationStoreFull) => T, id?: RepresentationId): T | RepresentationStoreFull {
   const typeStore = useTypeStore();
   const representationScope = useRepresentationScope();
@@ -3898,112 +3775,94 @@ function useRepresentationStore<T>(selector?: (store: RepresentationStoreFull) =
   return selector ? selector(representationStore) : representationStore;
 }
 
-export function useRepresentation(): Representation;
-export function useRepresentation<T>(selector: (representation: Representation) => T): T;
-export function useRepresentation<T>(selector: (representation: Representation) => T, id: RepresentationId): T;
 export function useRepresentation<T>(selector?: (representation: Representation) => T, id?: RepresentationId): T | Representation {
-  const store = id ? useRepresentationStore(identitySelector, id) : useRepresentationStore();
-  return useStoreState(store, selector);
+  return useSync<Representation, T>(useRepresentationStore(identitySelector, id), selector ? selector : identitySelector);
 }
 
 // Additional utility hooks for the new store architecture
-const modeSelector = (s: SketchpadState) => s.mode;
-const themeSelector = (s: SketchpadState) => s.theme;
-const layoutSelector = (s: SketchpadState) => s.layout;
-const designIdSelector = (s: SketchpadState) => s.activeDesignEditor?.design;
-const designsSelector = (k: Kit) => k.designs ?? [];
 
 export function useMode(): Mode {
-  return useSketchpad(modeSelector);
+  return useSketchpad((s) => s.mode);
 }
 
 export function useTheme(): Theme {
-  return useSketchpad(themeSelector);
+  return useSketchpad((s) => s.theme);
 }
 
 export function useLayout(): Layout {
-  return useSketchpad(layoutSelector);
+  return useSketchpad((s) => s.layout);
 }
 
 export function useDesignId(): DesignId | undefined {
-  return useSketchpad(designIdSelector);
+  return useSketchpad((s) => s.activeDesignEditor?.design);
 }
 
 export function useDesigns(): Design[] {
-  return useKit(designsSelector);
+  return useKit((k) => k.designs ?? []);
 }
 
 export function useSketchpadCommands() {
   const store = useSketchpadStore();
-  return useMemo(
-    () => ({
-      setMode: (mode: Mode) => store.execute("semio.sketchpad.setMode", mode),
-      setTheme: (theme: Theme) => store.execute("semio.sketchpad.setTheme", theme),
-      setLayout: (layout: Layout) => store.execute("semio.sketchpad.setLayout", layout),
-      createKit: (kit: Kit) => store.execute("semio.sketchpad.createKit", kit),
-      createDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.createDesignEditor", designEditorId),
-      setActiveDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.setActiveDesignEditor", designEditorId),
-    }),
-    [store],
-  );
+  return {
+    setMode: (mode: Mode) => store.execute("semio.sketchpad.setMode", mode),
+    setTheme: (theme: Theme) => store.execute("semio.sketchpad.setTheme", theme),
+    setLayout: (layout: Layout) => store.execute("semio.sketchpad.setLayout", layout),
+    createKit: (kit: Kit) => store.execute("semio.sketchpad.createKit", kit),
+    createDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.createDesignEditor", designEditorId),
+    setActiveDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.setActiveDesignEditor", designEditorId),
+  };
 }
 
 export function useKitCommands() {
-  const kitStore = useKitStore();
-  return useMemo(
-    () => ({
-      importKit: (url: string) => kitStore.execute("semio.kit.import", url),
-      exportKit: () => kitStore.execute("semio.kit.export"),
-      createType: (type: Type) => kitStore.execute("semio.kit.createType", type),
-      updateType: (typeId: TypeId, typeDiff: TypeDiff) => kitStore.execute("semio.kit.updateType", typeId, typeDiff),
-      deleteType: (typeId: TypeId) => kitStore.execute("semio.kit.deleteType", typeId),
-      createDesign: (design: Design) => kitStore.execute("semio.kit.createDesign", design),
-      updateDesign: (designId: DesignId, designDiff: DesignDiff) => kitStore.execute("semio.kit.updateDesign", designId, designDiff),
-      deleteDesign: (designId: DesignId) => kitStore.execute("semio.kit.deleteDesign", designId),
-      addFile: (file: SemioFile, blob?: Blob) => kitStore.execute("semio.kit.addFile", file, blob),
-      updateFile: (url: Url, fileDiff: FileDiff, blob?: Blob) => kitStore.execute("semio.kit.updateFile", url, fileDiff, blob),
-      removeFile: (url: Url) => kitStore.execute("semio.kit.removeFile", url),
-      addPiece: (designId: DesignId, piece: Piece) => kitStore.execute("semio.kit.addPiece", designId, piece),
-      addPieces: (designId: DesignId, pieces: Piece[]) => kitStore.execute("semio.kit.addPieces", designId, pieces),
-      removePiece: (designId: DesignId, pieceId: PieceId) => kitStore.execute("semio.kit.removePiece", designId, pieceId),
-      removePieces: (designId: DesignId, pieceIds: PieceId[]) => kitStore.execute("semio.kit.removePieces", designId, pieceIds),
-      addConnection: (designId: DesignId, connection: Connection) => kitStore.execute("semio.kit.addConnection", designId, connection),
-      addConnections: (designId: DesignId, connections: Connection[]) => kitStore.execute("semio.kit.addConnections", designId, connections),
-      removeConnection: (designId: DesignId, connectionId: ConnectionId) => kitStore.execute("semio.kit.removeConnection", designId, connectionId),
-      removeConnections: (designId: DesignId, connectionIds: ConnectionId[]) => kitStore.execute("semio.kit.removeConnections", designId, connectionIds),
-      deleteSelected: (designId: DesignId, selectedPieces: PieceId[], selectedConnections: ConnectionId[]) => kitStore.execute("semio.kit.deleteSelected", designId, selectedPieces, selectedConnections),
-    }),
-    [kitStore],
-  );
+  const store = useKitStore();
+  return {
+    importKit: (url: string) => store.execute("semio.kit.import", url),
+    exportKit: () => store.execute("semio.kit.export"),
+    createType: (type: Type) => store.execute("semio.kit.createType", type),
+    updateType: (typeId: TypeId, typeDiff: TypeDiff) => store.execute("semio.kit.updateType", typeId, typeDiff),
+    deleteType: (typeId: TypeId) => store.execute("semio.kit.deleteType", typeId),
+    createDesign: (design: Design) => store.execute("semio.kit.createDesign", design),
+    updateDesign: (designId: DesignId, designDiff: DesignDiff) => store.execute("semio.kit.updateDesign", designId, designDiff),
+    deleteDesign: (designId: DesignId) => store.execute("semio.kit.deleteDesign", designId),
+    addFile: (file: SemioFile, blob?: Blob) => store.execute("semio.kit.addFile", file, blob),
+    updateFile: (url: Url, fileDiff: FileDiff, blob?: Blob) => store.execute("semio.kit.updateFile", url, fileDiff, blob),
+    removeFile: (url: Url) => store.execute("semio.kit.removeFile", url),
+    addPiece: (designId: DesignId, piece: Piece) => store.execute("semio.kit.addPiece", designId, piece),
+    addPieces: (designId: DesignId, pieces: Piece[]) => store.execute("semio.kit.addPieces", designId, pieces),
+    removePiece: (designId: DesignId, pieceId: PieceId) => store.execute("semio.kit.removePiece", designId, pieceId),
+    removePieces: (designId: DesignId, pieceIds: PieceId[]) => store.execute("semio.kit.removePieces", designId, pieceIds),
+    addConnection: (designId: DesignId, connection: Connection) => store.execute("semio.kit.addConnection", designId, connection),
+    addConnections: (designId: DesignId, connections: Connection[]) => store.execute("semio.kit.addConnections", designId, connections),
+    removeConnection: (designId: DesignId, connectionId: ConnectionId) => store.execute("semio.kit.removeConnection", designId, connectionId),
+    removeConnections: (designId: DesignId, connectionIds: ConnectionId[]) => store.execute("semio.kit.removeConnections", designId, connectionIds),
+    deleteSelected: (designId: DesignId, selectedPieces: PieceId[], selectedConnections: ConnectionId[]) => store.execute("semio.kit.deleteSelected", designId, selectedPieces, selectedConnections),
+  };
 }
 
 export function useDesignEditorCommands() {
   const store = useDesignEditorStore();
-  return useMemo(
-    () => ({
-      startTransaction: () => store.execute("semio.designEditor.startTransaction"),
-      finalizeTransaction: () => store.execute("semio.designEditor.finalizeTransaction"),
-      abortTransaction: () => store.execute("semio.designEditor.abortTransaction"),
-      undo: () => store.execute("semio.designEditor.undo"),
-      redo: () => store.execute("semio.designEditor.redo"),
-      selectAll: () => store.execute("semio.designEditor.selectAll"),
-      deselectAll: () => store.execute("semio.designEditor.deselectAll"),
-      selectPiece: (pieceId: PieceId) => store.execute("semio.designEditor.selectPiece", pieceId),
-      selectPieces: (pieceIds: PieceId[]) => store.execute("semio.designEditor.selectPieces", pieceIds),
-      addPieceToSelection: (pieceId: PieceId) => store.execute("semio.designEditor.addPieceToSelection", pieceId),
-      removePieceFromSelection: (pieceId: PieceId) => store.execute("semio.designEditor.removePieceFromSelection", pieceId),
-      selectConnection: (connection: Connection) => store.execute("semio.designEditor.selectConnection", connection),
-      addConnectionToSelection: (connection: Connection) => store.execute("semio.designEditor.addConnectionToSelection", connection),
-      removeConnectionFromSelection: (connection: Connection) => store.execute("semio.designEditor.removeConnectionFromSelection", connection),
-      selectPiecePort: (pieceId: PieceId, portId: PortId) => store.execute("semio.designEditor.selectPiecePort", pieceId, portId),
-      deselectPiecePort: () => store.execute("semio.designEditor.deselectPiecePort"),
-      deleteSelected: () => store.execute("semio.designEditor.deleteSelected"),
-      toggleDiagramFullscreen: () => store.execute("semio.designEditor.toggleDiagramFullscreen"),
-      toggleModelFullscreen: () => store.execute("semio.designEditor.toggleModelFullscreen"),
-      execute: (command: string, ...args: any[]) => store.execute(command, ...args),
-    }),
-    [store],
-  );
+  return {
+    startTransaction: () => store.execute("semio.designEditor.startTransaction"),
+    finalizeTransaction: () => store.execute("semio.designEditor.finalizeTransaction"),
+    abortTransaction: () => store.execute("semio.designEditor.abortTransaction"),
+    undo: () => store.execute("semio.designEditor.undo"),
+    redo: () => store.execute("semio.designEditor.redo"),
+    selectAll: () => store.execute("semio.designEditor.selectAll"),
+    deselectAll: () => store.execute("semio.designEditor.deselectAll"),
+    selectPiece: (pieceId: PieceId) => store.execute("semio.designEditor.selectPiece", pieceId),
+    selectPieces: (pieceIds: PieceId[]) => store.execute("semio.designEditor.selectPieces", pieceIds),
+    addPieceToSelection: (pieceId: PieceId) => store.execute("semio.designEditor.addPieceToSelection", pieceId),
+    removePieceFromSelection: (pieceId: PieceId) => store.execute("semio.designEditor.removePieceFromSelection", pieceId),
+    selectConnection: (connection: Connection) => store.execute("semio.designEditor.selectConnection", connection),
+    addConnectionToSelection: (connection: Connection) => store.execute("semio.designEditor.addConnectionToSelection", connection),
+    removeConnectionFromSelection: (connection: Connection) => store.execute("semio.designEditor.removeConnectionFromSelection", connection),
+    selectPiecePort: (pieceId: PieceId, portId: PortId) => store.execute("semio.designEditor.selectPiecePort", pieceId, portId),
+    deselectPiecePort: () => store.execute("semio.designEditor.deselectPiecePort"),
+    deleteSelected: () => store.execute("semio.designEditor.deleteSelected"),
+    toggleDiagramFullscreen: () => store.execute("semio.designEditor.toggleDiagramFullscreen"),
+    toggleModelFullscreen: () => store.execute("semio.designEditor.toggleModelFullscreen"),
+    execute: (command: string, ...args: any[]) => store.execute(command, ...args),
+  };
 }
 // Design editor state hooks
 const selectionSelector = (s: DesignEditorStateFull) => s.selection;
@@ -4037,7 +3896,7 @@ export function useDesignEditorDesignDiff(): KitDiff {
 export function useDiffedKit(): Kit {
   const kit = useKit();
   const diff = useDiff();
-  return useMemo(() => applyKitDiff(kit, diff), [kit, diff]);
+  return applyKitDiff(kit, diff);
 }
 
 export function useFileUrls(): Map<Url, Url> {
