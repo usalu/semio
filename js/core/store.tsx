@@ -2993,6 +2993,218 @@ const designEditorCommands = {
       },
     };
   },
+  "semio.designEditor.addPiece": (context: DesignEditorCommandContext, piece: Piece): DesignEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { pieces: { added: [piece] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.addPieces": (context: DesignEditorCommandContext, pieces: Piece[]): DesignEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { pieces: { added: pieces } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.removePiece": (context: DesignEditorCommandContext, pieceId: PieceId): DesignEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { pieces: { removed: [pieceId] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.removePieces": (context: DesignEditorCommandContext, pieceIds: PieceId[]): DesignEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { pieces: { removed: pieceIds } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.addConnection": (context: DesignEditorCommandContext, connection: Connection): DesignEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { connections: { added: [connection] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.addConnections": (context: DesignEditorCommandContext, connections: Connection[]): DesignEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { connections: { added: connections } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.removeConnection": (context: DesignEditorCommandContext, connectionId: ConnectionId): DesignEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { connections: { removed: [connectionId] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.removeConnections": (context: DesignEditorCommandContext, connectionIds: ConnectionId[]): DesignEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { connections: { removed: connectionIds } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.updatePiece": (context: DesignEditorCommandContext, pieceId: PieceId, pieceDiff: PieceDiff): DesignEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { pieces: { updated: [{ id: pieceId, diff: pieceDiff }] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.updatePieces": (context: DesignEditorCommandContext, updates: { id: PieceId; diff: PieceDiff }[]): DesignEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { pieces: { updated: updates } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.updateConnection": (context: DesignEditorCommandContext, connectionId: ConnectionId, connectionDiff: ConnectionDiff): DesignEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { connections: { updated: [{ id: connectionId, diff: connectionDiff }] } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.updateConnections": (context: DesignEditorCommandContext, updates: { id: ConnectionId; diff: ConnectionDiff }[]): DesignEditorCommandResult => {
+    return {
+      diff: {},
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              id: context.designId,
+              diff: { connections: { updated: updates } },
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designEditor.selectConnection": (context: DesignEditorCommandContext, connection: Connection): DesignEditorCommandResult => {
+    const currentSelection = context.designEditor.selection;
+    return {
+      diff: {
+        selection: {
+          pieces: { removed: currentSelection.pieces ?? [] },
+          connections: {
+            removed: currentSelection.connections ?? [],
+            added: [connection],
+          },
+        },
+      },
+    };
+  },
+  "semio.designEditor.addConnectionToSelection": (context: DesignEditorCommandContext, connection: Connection): DesignEditorCommandResult => {
+    return {
+      diff: {
+        selection: {
+          connections: { added: [connection] },
+        },
+      },
+    };
+  },
+  "semio.designEditor.removeConnectionFromSelection": (context: DesignEditorCommandContext, connection: Connection): DesignEditorCommandResult => {
+    return {
+      diff: {
+        selection: {
+          connections: { removed: [connection] },
+        },
+      },
+    };
+  },
 };
 
 // #endregion Commands
@@ -3389,6 +3601,18 @@ export function useDesignEditorCommands() {
     deleteSelected: () => store.execute("semio.designEditor.deleteSelected"),
     toggleDiagramFullscreen: () => store.execute("semio.designEditor.toggleDiagramFullscreen"),
     toggleModelFullscreen: () => store.execute("semio.designEditor.toggleModelFullscreen"),
+    addPiece: (piece: Piece) => store.execute("semio.designEditor.addPiece", piece),
+    addPieces: (pieces: Piece[]) => store.execute("semio.designEditor.addPieces", pieces),
+    removePiece: (pieceId: PieceId) => store.execute("semio.designEditor.removePiece", pieceId),
+    removePieces: (pieceIds: PieceId[]) => store.execute("semio.designEditor.removePieces", pieceIds),
+    addConnection: (connection: Connection) => store.execute("semio.designEditor.addConnection", connection),
+    addConnections: (connections: Connection[]) => store.execute("semio.designEditor.addConnections", connections),
+    removeConnection: (connectionId: ConnectionId) => store.execute("semio.designEditor.removeConnection", connectionId),
+    removeConnections: (connectionIds: ConnectionId[]) => store.execute("semio.designEditor.removeConnections", connectionIds),
+    updatePiece: (pieceId: PieceId, pieceDiff: PieceDiff) => store.execute("semio.designEditor.updatePiece", pieceId, pieceDiff),
+    updatePieces: (updates: { id: PieceId; diff: PieceDiff }[]) => store.execute("semio.designEditor.updatePieces", updates),
+    updateConnection: (connectionId: ConnectionId, connectionDiff: ConnectionDiff) => store.execute("semio.designEditor.updateConnection", connectionId, connectionDiff),
+    updateConnections: (updates: { id: ConnectionId; diff: ConnectionDiff }[]) => store.execute("semio.designEditor.updateConnections", updates),
     execute: (command: string, ...args: any[]) => store.execute(command, ...args),
   };
 }

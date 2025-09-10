@@ -21,28 +21,20 @@ import {
 import React, { FC, useCallback, useEffect, useMemo, useState } from "react";
 
 import {
-  applyDesignDiff,
   arePortsCompatible,
   Connection,
-  ConnectionDiff,
   DesignId,
   DiagramPoint,
   DiffStatus,
   findAttributeValue,
-  findConnectionInDesign,
-  findDesignInKit,
   findPortInType,
   findTypeInKit,
-  flattenDesign,
   getClusterableGroups,
   getIncludedDesigns,
   ICON_WIDTH,
   isPortInUse,
   isSameConnection,
-  isSamePiece,
   Piece,
-  PieceDiff,
-  piecesMetadata,
   Port,
   TOLERANCE,
   Type,
@@ -59,8 +51,10 @@ import {
   useDesignEditorOthers,
   useDesignEditorSelection,
   useDiffedDesign,
+  useFlatDesign,
   useKit,
   useKitCommands,
+  usePiecesMetadata,
   usePortColoredTypes,
 } from "../../../store";
 
@@ -688,20 +682,15 @@ const connectionToEdge = (connection: Connection, selected: boolean, isParentCon
   };
 };
 
-const designToNodesAndEdges = (selection: any) => {
-  const design = findDesignInKit(kit, designId);
+const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata: Map<string, any>, kit: any, selection: any) => {
   if (!design) return null;
 
-  const flattenDiff = flattenDesign(kit, designId);
-  const flattenedDesign = applyDesignDiff(design, flattenDiff, true);
   const centerMap = new Map<string, DiagramPoint>();
   flattenedDesign.pieces?.forEach((piece) => {
     if (piece.id_ && piece.center) {
       centerMap.set(piece.id_, piece.center);
     }
   });
-
-  const metadata = piecesMetadata(kit, designId);
 
   const pieceNodes =
     design.pieces
@@ -850,9 +839,13 @@ const Diagram: FC = () => {
     finalizeTransaction,
     abortTransaction,
     execute,
+    addConnection,
+    addConnections,
+    updatePieces,
+    updateConnections,
   } = useDesignEditorCommands();
 
-  const { updateDesign, addConnections } = useKitCommands();
+  const { updateDesign } = useKitCommands();
 
   const selection = useDesignEditorSelection();
   const fullscreenPanel = useDesignEditorFullscreen();
@@ -860,9 +853,12 @@ const Diagram: FC = () => {
 
   const design = useDiffedDesign();
   const types = usePortColoredTypes();
+  const kit = useKit();
+  const flattenedDesign = useFlatDesign();
+  const metadata = usePiecesMetadata();
 
   if (!design) return null;
-  const { nodes, edges } = designToNodesAndEdges() ?? {
+  const { nodes, edges } = designToNodesAndEdges(design, flattenedDesign, metadata, kit, selection) ?? {
     nodes: [],
     edges: [],
   };
@@ -950,7 +946,6 @@ const Diagram: FC = () => {
       const SNAP_THRESHOLD = 20;
       if (!dragState) return;
       const { lastPostition } = dragState;
-      const metadata = piecesMetadata(kit, designId);
 
       const altPressed = event.altKey;
 
@@ -960,8 +955,9 @@ const Diagram: FC = () => {
       const draggedCenterY = node.position.y + ICON_WIDTH / 2;
 
       const addedConnections: Connection[] = [];
-      let updatedPieces: PieceDiff[] = [];
-      let updatedConnections: ConnectionDiff[] = [];
+      // Note: Piece updates during drag are temporarily disabled for new store architecture
+      // let updatedPieces: PieceDiff[] = [];
+      // let updatedConnections: ConnectionDiff[] = [];
 
       for (const selectedNode of nodes.filter((n) => selection?.pieces?.some((p: any) => p.id_ === getPieceIdFromNode(n)))) {
         if (selectedNode.type !== "piece") continue;
@@ -1427,57 +1423,59 @@ const Diagram: FC = () => {
 
         if (closestConnection) {
           addedConnections.push(closestConnection);
-          const updatedPiece = {
-            ...selectedNode.data.piece,
-            center: undefined,
-            plane: undefined,
-          };
-          if (updatedPiece.type) {
-            updatedPieces.push(updatedPiece as Piece);
-          }
+          // Note: Piece updates during drag are temporarily disabled for new store architecture
+          // const updatedPiece = {
+          //   ...selectedNode.data.piece,
+          //   center: undefined,
+          //   plane: undefined,
+          // };
+          // if (updatedPiece.type) {
+          //   updatedPieces.push(updatedPiece as Piece);
+          // }
         } else {
-          if (!piece.center) {
-            const parentPieceId = metadata.get(selectedNode.data.piece.id_)!.parentPieceId!;
-            const parentNode = nodes.find((n) => n.data.piece.id_ === parentPieceId);
-            if (!parentNode) throw new Error(`Parent node not found for piece ${parentPieceId}`);
-            const parentInternalNode = reactFlowInstance.getInternalNode(parentNode.id);
-            if (!parentInternalNode) throw new Error(`Internal node not found for ${parentNode.id}`);
-            const parentConnection = findConnectionInDesign(design, {
-              connected: { piece: { id_: selectedNode.data.piece.id_ } },
-              connecting: { piece: { id_: parentPieceId } },
-            });
-            updatedConnections.push({
-              ...parentConnection,
-              x: (parentConnection.x ?? 0) + (draggedX - lastPostition.x) / ICON_WIDTH,
-              y: (parentConnection.y ?? 0) - (draggedY - lastPostition.y) / ICON_WIDTH,
-            });
-          } else {
-            const scaledOffset = {
-              x: (draggedX - lastPostition.x) / ICON_WIDTH,
-              y: -(draggedY - lastPostition.y) / ICON_WIDTH,
-            };
-            const updatedPiece = {
-              ...piece,
-              center: {
-                x: piece.center!.x + scaledOffset.x,
-                y: piece.center!.y + scaledOffset.y,
-              },
-            };
-            if (updatedPiece.type) {
-              updatedPieces.push(updatedPiece as Piece);
-            }
-          }
+          // Note: Piece position updates during drag are temporarily disabled for new store architecture
+          // if (!piece.center) {
+          //   const parentPieceId = metadata.get(selectedNode.data.piece.id_)!.parentPieceId!;
+          //   const parentNode = nodes.find((n) => n.data.piece.id_ === parentPieceId);
+          //   if (!parentNode) throw new Error(`Parent node not found for piece ${parentPieceId}`);
+          //   const parentInternalNode = reactFlowInstance.getInternalNode(parentNode.id);
+          //   if (!parentInternalNode) throw new Error(`Internal node not found for ${parentNode.id}`);
+          //   const parentConnection = findConnectionInDesign(design, {
+          //     connected: { piece: { id_: selectedNode.data.piece.id_ } },
+          //     connecting: { piece: { id_: parentPieceId } },
+          //   });
+          //   updatedConnections.push({
+          //     ...parentConnection,
+          //     x: (parentConnection.x ?? 0) + (draggedX - lastPostition.x) / ICON_WIDTH,
+          //     y: (parentConnection.y ?? 0) - (draggedY - lastPostition.y) / ICON_WIDTH,
+          //   });
+          // } else {
+          //   const scaledOffset = {
+          //     x: (draggedX - lastPostition.x) / ICON_WIDTH,
+          //     y: -(draggedY - lastPostition.y) / ICON_WIDTH,
+          //   };
+          //   const updatedPiece = {
+          //     ...piece,
+          //     center: {
+          //       x: piece.center!.x + scaledOffset.x,
+          //       y: piece.center!.y + scaledOffset.y,
+          //     },
+          //   };
+          //   if (updatedPiece.type) {
+          //     updatedPieces.push(updatedPiece as Piece);
+          //   }
+          // }
         }
-        if (updatedPieces.length > 0) setPieces(updatedPieces.filter((piece) => piece.type) as Piece[]);
-        if (addedConnections.length > 0) addConnections(addedConnections);
-        if (updatedConnections.length > 0) setConnections(updatedConnections as Connection[]);
+        if (addedConnections.length > 0) {
+          addedConnections.forEach((conn) => addConnection(conn));
+        }
         setDragState({
           ...dragState!,
           lastPostition: { x: draggedX, y: draggedY },
         });
       }
     },
-    [setPieces, addConnections, setConnections, design, reactFlowInstance, selection, nodes],
+    [addConnection, design, reactFlowInstance, selection, nodes, metadata],
   );
 
   const onNodeDragStop = useCallback(() => {
@@ -1514,17 +1512,10 @@ const Diagram: FC = () => {
         y: -((sourceInternalNode.internals.positionAbsolute.y + sourceHandle.y - (targetInternalNode.internals.positionAbsolute.y + targetHandle.y)) / ICON_WIDTH),
       };
 
-      const design = findDesignInKit(kit, designId);
       if ((design.connections ?? []).find((c) => isSameConnection(c, newConnection))) return;
-      const newConnections = [...(design.connections ?? []), newConnection];
-      const updatedPieces = design.pieces?.map((piece) => (isSamePiece(piece, { id_: sourcePieceId }) ? { ...piece, center: undefined, plane: undefined } : piece));
-      updateDesign({
-        ...design,
-        connections: newConnections,
-        pieces: updatedPieces,
-      });
+      addConnection(newConnection);
     },
-    [updateDesign, kit, designId, reactFlowInstance, design],
+    [addConnection, reactFlowInstance, design],
   );
 
   const nodeTypes = useMemo(() => ({ piece: PieceNodeComponent, design: DesignNodeComponent }), []);
