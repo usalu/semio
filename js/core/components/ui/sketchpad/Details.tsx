@@ -24,7 +24,7 @@ import {
   PieceId,
   PortId,
 } from "../../../semio";
-import { useDesign, useDesignEditorCommands, useDesignId, useKit, usePiecesMetadata, useSelection } from "../../../store";
+import { useDesign, useDesignEditorCommands, useDesignEditorSelection, useKit, usePiecesMetadata } from "../../../store";
 import Combobox from "../Combobox";
 import { ResizablePanelProps } from "./DesignEditor";
 
@@ -1363,7 +1363,7 @@ const Details: FC<DetailsProps> = ({ visible, onWidthChange, width }) => {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
-  const selection = useSelection();
+  const selection = useDesignEditorSelection();
 
   const hasPieces = (selection.pieces || []).length > 0;
   const hasConnections = (selection.connections || []).length > 0;

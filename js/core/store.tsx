@@ -1827,11 +1827,21 @@ class YDesignEditorStore implements DesignEditorStore {
     return yStack ? yStack.toArray() : [];
   }
 
+  get canUndo(): boolean {
+    return this.pastTransactionsStack.length > 0;
+  }
+
+  get canRedo(): boolean {
+    return this.currentTransactionStack.length > 0 && !this.isTransactionActive;
+  }
+
   snapshot = (): DesignEditorState => {
     const currentData = {
       fullscreenPanel: this.fullscreenPanel,
       selection: this.selection,
       isTransactionActive: this.isTransactionActive,
+      canUndo: this.canUndo,
+      canRedo: this.canRedo,
       presence: this.presence,
       others: this.others,
       diff: this.diff,
@@ -2070,6 +2080,14 @@ class YDesignEditorStore implements DesignEditorStore {
     }
     if (command === "semio.designEditor.abortTransaction") {
       this.abortTransaction();
+      return {} as T;
+    }
+    if (command === "semio.designEditor.undo") {
+      this.undo();
+      return {} as T;
+    }
+    if (command === "semio.designEditor.redo") {
+      this.redo();
       return {} as T;
     }
 
@@ -2316,10 +2334,16 @@ class YSketchpadStore implements SketchpadStore {
   };
 
   async executeCommand<T>(command: string, ...rest: any[]): Promise<T> {
-    const callback = this.commandRegistry.get(command);
-    if (!callback) throw new Error(`Command "${command}" not found in sketchpad store`);
     if (command === "semio.sketchpad.createKit") {
       const kit = rest[0] as Kit;
+      if (!kit.name) throw new Error("Kit name is required to create a kit.");
+
+      const kitId = kitIdLikeToKitId(kit);
+      const kitIdStr = kitIdToString(kitId);
+      if (this.kits.has(kitIdStr)) {
+        throw new Error(`Kit (${kitId.name}, ${kitId.version || ""}) already exists.`);
+      }
+
       this.createKit(kit);
       return {} as T;
     }
@@ -2337,9 +2361,10 @@ class YSketchpadStore implements SketchpadStore {
       }
       return {} as T;
     }
+    const callback = this.commandRegistry.get(command);
+    if (!callback) throw new Error(`Command "${command}" not found in sketchpad store`);
     const context: SketchpadCommandContext = {
       sketchpad: this.snapshot(),
-      store: this,
     };
     const result = callback(context, ...rest);
     if (result.diff) {
@@ -2409,32 +2434,9 @@ const sketchpadCommands = {
       diff: { layout },
     };
   },
-  "semio.sketchpad.createKit": (context: SketchpadCommandContext, kit: Kit): SketchpadCommandResult => {
-    if (!kit.name) throw new Error("Kit name is required to create a kit.");
-
-    const kitId = kitIdLikeToKitId(kit);
-    const kitIdStr = kitIdToString(kitId);
-    if (context.store.kits.has(kitIdStr)) {
-      throw new Error(`Kit (${kitId.name}, ${kitId.version || ""}) already exists.`);
-    }
-
-    context.store.createKit(kit);
-
-    return {};
-  },
-  "semio.sketchpad.createDesignEditor": (context: SketchpadCommandContext, id: DesignEditorId): SketchpadCommandResult => {
-    return {
-      diff: {},
-    };
-  },
   "semio.sketchpad.setActiveDesignEditor": (context: SketchpadCommandContext, id: DesignEditorId): SketchpadCommandResult => {
     return {
       diff: { activeDesignEditor: id },
-    };
-  },
-  "semio.sketchpad.importKit": (context: SketchpadCommandContext, kitId: KitId, url: string): SketchpadCommandResult => {
-    return {
-      diff: {},
     };
   },
 };
@@ -2860,20 +2862,6 @@ const kitCommands = {
       },
     };
   },
-  "semio.kit.deleteSelected": (context: KitCommandContext, designId: DesignId, selectedPieces: PieceId[], selectedConnections: ConnectionId[]): KitCommandResult => {
-    return {
-      diff: {
-        designs: {
-          updated: [
-            {
-              id: designId,
-              diff: { pieces: { removed: selectedPieces }, connections: { removed: selectedConnections } },
-            },
-          ],
-        },
-      },
-    };
-  },
 };
 
 const designEditorCommands = {
@@ -2886,189 +2874,21 @@ const designEditorCommands = {
   "semio.designEditor.setLayout": (context: DesignEditorCommandContext, layout: Layout): DesignEditorCommandResult => {
     return { diff: {} };
   },
-  "semio.designEditor.startTransaction": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
-    return { diff: {} };
-  },
-  "semio.designEditor.finalizeTransaction": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
-    return { diff: {} };
-  },
-  "semio.designEditor.abortTransaction": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
-    return { diff: {} };
-  },
-  "semio.designEditor.setDesign": (context: DesignEditorCommandContext, design: Design): DesignEditorCommandResult => {
+  "semio.designEditor.toggleDiagramFullscreen": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    const currentPanel = context.designEditor.fullscreenPanel;
+    const newPanel = currentPanel === DesignEditorFullscreenPanel.Diagram ? DesignEditorFullscreenPanel.None : DesignEditorFullscreenPanel.Diagram;
     return {
-      kitDiff: {
-        designs: {
-          updated: [{ id: context.designId, diff: { name: design.name, description: design.description } }],
-        },
+      diff: {
+        fullscreenPanel: newPanel,
       },
     };
   },
-  "semio.designEditor.setPiece": (context: DesignEditorCommandContext, piece: Piece): DesignEditorCommandResult => {
+  "semio.designEditor.toggleModelFullscreen": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
+    const currentPanel = context.designEditor.fullscreenPanel;
+    const newPanel = currentPanel === DesignEditorFullscreenPanel.Model ? DesignEditorFullscreenPanel.None : DesignEditorFullscreenPanel.Model;
     return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              id: context.designId,
-              diff: { pieces: { updated: [{ id: { id_: piece.id_ }, diff: piece }] } },
-            },
-          ],
-        },
-      },
-    };
-  },
-  "semio.designEditor.setPieces": (context: DesignEditorCommandContext, pieces: Piece[]): DesignEditorCommandResult => {
-    return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              id: context.designId,
-              diff: { pieces: { updated: pieces.map((p) => ({ id: { id_: p.id_ }, diff: p })) } },
-            },
-          ],
-        },
-      },
-    };
-  },
-  "semio.designEditor.setConnection": (context: DesignEditorCommandContext, connection: Connection): DesignEditorCommandResult => {
-    return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              id: context.designId,
-              diff: { connections: { updated: [{ id: { connected: { piece: connection.connected.piece }, connecting: { piece: connection.connecting.piece } }, diff: connection }] } },
-            },
-          ],
-        },
-      },
-    };
-  },
-  "semio.designEditor.setConnections": (context: DesignEditorCommandContext, connections: Connection[]): DesignEditorCommandResult => {
-    return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              id: context.designId,
-              diff: { connections: { updated: connections.map((c) => ({ id: { connected: { piece: c.connected.piece }, connecting: { piece: c.connecting.piece } }, diff: c })) } },
-            },
-          ],
-        },
-      },
-    };
-  },
-  "semio.designEditor.addPiece": (context: DesignEditorCommandContext, piece: Piece): DesignEditorCommandResult => {
-    return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              id: context.designId,
-              diff: { pieces: { added: [piece] } },
-            },
-          ],
-        },
-      },
-    };
-  },
-  "semio.designEditor.addPieces": (context: DesignEditorCommandContext, pieces: Piece[]): DesignEditorCommandResult => {
-    return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              id: context.designId,
-              diff: { pieces: { added: pieces } },
-            },
-          ],
-        },
-      },
-    };
-  },
-  "semio.designEditor.removePiece": (context: DesignEditorCommandContext, pieceId: PieceId): DesignEditorCommandResult => {
-    return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              id: context.designId,
-              diff: { pieces: { removed: [pieceId] } },
-            },
-          ],
-        },
-      },
-    };
-  },
-  "semio.designEditor.removePieces": (context: DesignEditorCommandContext, pieceIds: PieceId[]): DesignEditorCommandResult => {
-    return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              id: context.designId,
-              diff: { pieces: { removed: pieceIds } },
-            },
-          ],
-        },
-      },
-    };
-  },
-  "semio.designEditor.addConnection": (context: DesignEditorCommandContext, connection: Connection): DesignEditorCommandResult => {
-    return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              id: context.designId,
-              diff: { connections: { added: [connection] } },
-            },
-          ],
-        },
-      },
-    };
-  },
-  "semio.designEditor.addConnections": (context: DesignEditorCommandContext, connections: Connection[]): DesignEditorCommandResult => {
-    return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              id: context.designId,
-              diff: { connections: { added: connections } },
-            },
-          ],
-        },
-      },
-    };
-  },
-  "semio.designEditor.removeConnection": (context: DesignEditorCommandContext, connectionId: ConnectionId): DesignEditorCommandResult => {
-    return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              id: context.designId,
-              diff: { connections: { removed: [connectionId] } },
-            },
-          ],
-        },
-      },
-    };
-  },
-  "semio.designEditor.removeConnections": (context: DesignEditorCommandContext, connectionIds: ConnectionId[]): DesignEditorCommandResult => {
-    return {
-      kitDiff: {
-        designs: {
-          updated: [
-            {
-              id: context.designId,
-              diff: { connections: { removed: connectionIds } },
-            },
-          ],
-        },
+      diff: {
+        fullscreenPanel: newPanel,
       },
     };
   },
@@ -3179,24 +2999,6 @@ const designEditorCommands = {
             },
           ],
         },
-      },
-    };
-  },
-  "semio.designEditor.toggleDiagramFullscreen": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
-    const currentPanel = context.designEditor.fullscreenPanel;
-    const newPanel = currentPanel === DesignEditorFullscreenPanel.Diagram ? DesignEditorFullscreenPanel.None : DesignEditorFullscreenPanel.Diagram;
-    return {
-      diff: {
-        fullscreenPanel: newPanel,
-      },
-    };
-  },
-  "semio.designEditor.toggleModelFullscreen": (context: DesignEditorCommandContext): DesignEditorCommandResult => {
-    const currentPanel = context.designEditor.fullscreenPanel;
-    const newPanel = currentPanel === DesignEditorFullscreenPanel.Model ? DesignEditorFullscreenPanel.None : DesignEditorFullscreenPanel.Model;
-    return {
-      diff: {
-        fullscreenPanel: newPanel,
       },
     };
   },

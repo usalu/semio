@@ -22,7 +22,7 @@
 import { AppWindow, Fingerprint, Home, Minus, Moon, Share2, Square, Sun, X } from "lucide-react";
 import { createContext, FC, ReactNode, useContext } from "react";
 import { DesignId } from "../../semio";
-import { Layout, Theme, useDesignId, useDesigns, useLayout, useSketchpadCommands, useTheme } from "../../store";
+import { Layout, Theme, useActiveDesignEditor, useDesigns, useLayout, useSketchpadCommands, useTheme } from "../../store";
 import { Avatar, AvatarFallback, AvatarImage } from "./Avatar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "./Breadcrumb";
 import { Toggle } from "./Toggle";
@@ -58,7 +58,7 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
   const { navbarToolbar } = useNavbar();
   const layout = useLayout();
   const theme = useTheme();
-  const designId = useDesignId();
+  const designId = useActiveDesignEditor();
   const availableDesigns = useDesigns();
   // Create a unique key for each design
   const getDesignKey = (design: DesignId): string => {

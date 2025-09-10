@@ -14,6 +14,7 @@ const KitEditor: FC = () => {
   const defaultDesignId: DesignId = { name: "Nakagin Capsule Tower", variant: "", view: "" };
   const design: Design = {
     name: "Nakagin Capsule Tower",
+    unit: "m",
     variant: "",
     view: "",
     pieces: [

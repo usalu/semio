@@ -27,7 +27,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 
 import { ReactFlowProvider } from "@xyflow/react";
 import { DesignId, TypeId } from "../../../semio";
-import { useDesignEditorCommands, useFullscreen } from "../../../store";
+import { useDesignEditorCommands, useDesignEditorFullscreen } from "../../../store";
 import Navbar, { useNavbar } from "../Navbar";
 import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
 import Chat from "./Chat";
@@ -54,7 +54,7 @@ interface VisiblePanels {
 
 const DesignEditor: FC<DesignEditorProps> = () => {
   const { setNavbarToolbar } = useNavbar();
-  const fullscreenPanel = useFullscreen();
+  const fullscreenPanel = useDesignEditorFullscreen();
   const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen } = useDesignEditorCommands();
 
   // Panel visibility and sizing state

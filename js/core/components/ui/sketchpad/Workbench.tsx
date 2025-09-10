@@ -6,7 +6,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/compone
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
 import { Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
 import { Design, DesignId, Type, TypeId } from "../../../semio";
-import { useDesignId, useKit } from "../../../store";
+import { useActiveDesignEditor, useKit } from "../../../store";
 import { ResizablePanelProps } from "./DesignEditor";
 
 interface TypeAvatarProps {
@@ -116,7 +116,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
   const [isResizing, setIsResizing] = useState(false);
 
   const isDesignActive = (design: Design): boolean => {
-    const activeDesignId = useDesignId();
+    const activeDesignId = useActiveDesignEditor();
     return design.name === activeDesignId.name && (design.variant || undefined) === activeDesignId.variant && (design.view || undefined) === activeDesignId.view;
   };
 
