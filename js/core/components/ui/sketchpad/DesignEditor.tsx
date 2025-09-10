@@ -54,13 +54,11 @@ interface VisiblePanels {
 }
 
 const DesignEditor: FC<DesignEditorProps> = () => {
-  console.log("DesignEditor: Starting render");
   const { setNavbarToolbar } = useNavbar();
   const kit = useKit();
   const design = useDesign();
   const fullscreenPanel = useFullscreen();
   const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen } = useDesignEditorCommands();
-  console.log("DesignEditor: kit:", kit ? `${kit.name} v${kit.version}` : "null", "design:", design ? `${design.name}` : "null");
 
   // Panel visibility and sizing state
   const [visiblePanels, setVisiblePanels] = useState<VisiblePanels>({
@@ -131,10 +129,8 @@ const DesignEditor: FC<DesignEditorProps> = () => {
     if (over && over.id === "diagram-drop-zone") {
       if (activeDraggedTypeId) {
         // TODO: Add piece to diagram using commands
-        console.log("Adding type to diagram:", activeDraggedTypeId);
       } else if (activeDraggedDesignId) {
         // TODO: Add design to diagram using commands
-        console.log("Adding design to diagram:", activeDraggedDesignId);
       }
     }
 

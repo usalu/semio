@@ -1368,7 +1368,6 @@ const Console: FC = () => {
   useEffect(() => {
     if (terminalConsoleRef.current && designEditor) {
       // TODO: Implement design editor update if needed
-      console.log("Design editor updated", designEditor);
     }
   }, [designEditor]);
 

@@ -153,7 +153,6 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(({ piece, plane, fileUrl, sel
 
   const handleMouseDown = useCallback(
     (e?: THREE.Event) => {
-      console.log("handleMouseDown", e);
       startTransaction();
     },
     [startTransaction],
@@ -161,7 +160,6 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(({ piece, plane, fileUrl, sel
 
   const handleMouseUp = useCallback(
     (e?: THREE.Event) => {
-      console.log("handleMouseUp", e);
       finalizeTransaction();
     },
     [finalizeTransaction],
@@ -180,9 +178,6 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(({ piece, plane, fileUrl, sel
   }, [selected, fixed, abortTransaction]);
 
   const transformControl = selected && fixed;
-  if (transformControl) {
-    console.log("transformControl", transformControl);
-  }
   const userData = useMemo(() => ({ pieceId: piece.id_ }), [piece.id_]);
   const pieceIdScope = useMemo(() => ({ id_: piece.id_ }), [piece.id_]);
   const group = (
@@ -207,29 +202,15 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(({ piece, plane, fileUrl, sel
 const ModelDesign: FC = () => {
   const [debugInfo, setDebugInfo] = useState<string>("");
 
-  console.log("ModelDesign: Starting render");
-
   let commands, selection, fileUrls, others, kit, flatDesign;
 
   try {
     commands = useDesignEditorCommands();
-    console.log("ModelDesign: Got commands");
-
     selection = useDesignEditorSelection();
-    console.log("ModelDesign: Got selection");
-
     fileUrls = useFileUrls();
-    console.log("ModelDesign: Got fileUrls");
-
     others = useDesignEditorOthers();
-    console.log("ModelDesign: Got others");
-
     kit = useKit();
-    console.log("ModelDesign: Got kit", kit ? `${kit.name} v${kit.version}` : "null");
-
     flatDesign = useFlatDesign();
-    console.log("ModelDesign: Got flatDesign", flatDesign ? { pieces: flatDesign.pieces?.length || 0 } : "null");
-
     setDebugInfo(`Kit: ${kit ? `${kit.name} v${kit.version}` : "null"}, FlatDesign: ${flatDesign ? `${flatDesign.pieces?.length || 0} pieces` : "null"}`);
   } catch (error) {
     console.error("ModelDesign: Error in hooks:", error);
@@ -244,7 +225,6 @@ const ModelDesign: FC = () => {
   const { removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = commands;
 
   if (!kit || !flatDesign) {
-    console.log("ModelDesign: Returning null because kit or flatDesign is null");
     return (
       <mesh>
         <boxGeometry args={[2, 0.5, 0.5]} />
@@ -339,7 +319,6 @@ const ModelDesign: FC = () => {
 };
 
 const SimpleModelCore: FC = () => {
-  console.log("SimpleModelCore: Starting render");
 
   return (
     <>
@@ -368,13 +347,11 @@ const Gizmo: FC = () => {
 };
 
 const ModelCore: FC = () => {
-  console.log("ModelCore: Starting render");
   const fullscreen = useDesignEditorFullscreen() === DesignEditorFullscreenPanel.Model;
   const [gridColors, setGridColors] = useState({
     sectionColor: getComputedColor("--foreground"),
     cellColor: getComputedColor("--accent-foreground"),
   });
-  console.log("ModelCore: fullscreen:", fullscreen, "gridColors:", gridColors);
 
   useEffect(() => {
     const updateColors = () =>
@@ -418,7 +395,6 @@ const ModelCore: FC = () => {
 };
 
 const Model: FC = () => {
-  console.log("Model: Starting render");
   const { deselectAll, toggleModelFullscreen } = useDesignEditorCommands();
   const onDoubleClickCapture = useCallback(
     (e: React.MouseEvent) => {

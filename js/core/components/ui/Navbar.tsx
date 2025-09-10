@@ -124,7 +124,7 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
                 { label: "Starter", href: "/metabolism/starter" },
                 { label: "Geometry", href: "/metabolism/geometry" },
               ]}
-              onNavigate={(href) => console.log("Navigate to:", href)}
+              onNavigate={(href) => {}}
             />
             <BreadcrumbItem>
               <BreadcrumbLink href="/metabolism">Metabolism</BreadcrumbLink>
@@ -134,7 +134,7 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
                 { label: "Types", href: "/designs/types" },
                 { label: "Representations", href: "/designs/representations" },
               ]}
-              onNavigate={(href) => console.log("Navigate to:", href)}
+              onNavigate={(href) => {}}
             />
             <BreadcrumbItem>
               <BreadcrumbLink href="/designs">Designs</BreadcrumbLink>
@@ -146,7 +146,7 @@ const Navbar: FC<NavbarProps> = ({ toolbarContent, onWindowEvents }) => {
                   href: "/designs/nakagin/capsule-dream",
                 },
               ]}
-              onNavigate={(href) => console.log("Navigate to:", href)}
+              onNavigate={(href) => {}}
             />
             <BreadcrumbItem>
               <Select value={currentDesignKey} onValueChange={handleDesignChange}>
