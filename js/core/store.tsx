@@ -43,6 +43,7 @@ import {
   DesignId,
   designIdLikeToDesignId,
   designIdToString,
+  DesignShallow,
   DiagramPoint,
   FileDiff,
   fileIdLikeToFileId,
@@ -54,6 +55,7 @@ import {
   KitIdLike,
   kitIdLikeToKitId,
   kitIdToString,
+  KitShallow,
   Piece,
   PieceDiff,
   PieceId,
@@ -116,60 +118,40 @@ export interface DesignEditorEdit {
   undo: DesignEditorStep;
 }
 
-export interface YStore {}
-
-export interface FileSnapshot {
-  snapshot(): SemioFile;
+export interface Snapshot<T> {
+  snapshot(): T;
 }
-export interface FileActions {
-  change: (diff: FileDiff) => void;
+export interface Actions<T> {
+  change: (diff: T) => void;
 }
-
-export interface FileSubscriptions {
-  onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+export interface Subscriptions {
+  onChanged: (subscribe: Subscribe) => Unsubscribe;
+  onChangedDeep: (subscribe: Subscribe) => Unsubscribe;
 }
+export interface Store<T> extends Snapshot<T> {}
+export interface StoreFull<T> extends Store<T>, Actions<T>, Subscriptions {}
 
+export interface FileSnapshot extends Snapshot<SemioFile> {}
+export interface FileActions extends Actions<FileDiff> {}
+export interface FileSubscriptions extends Subscriptions {}
 export interface FileStore extends FileSnapshot {}
-
 export interface FileStoreFull extends FileSnapshot, FileActions, FileSubscriptions {}
 
-export interface RepresentationSnapshot {
-  snapshot(): Representation;
-}
-
-export interface RepresentationActions {
-  change: (diff: RepresentationDiff) => void;
-}
-
-export interface RepresentationSubscriptions {
-  onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
-}
-
+export interface RepresentationSnapshot extends Snapshot<Representation> {}
+export interface RepresentationActions extends Actions<RepresentationDiff> {}
+export interface RepresentationSubscriptions extends Subscriptions {}
 export interface RepresentationStore extends RepresentationSnapshot {}
+export interface RepresentationStoreFull extends RepresentationStore, RepresentationActions, RepresentationSubscriptions {}
 
-export interface RepresentationStoreFull extends RepresentationSnapshot, RepresentationActions, RepresentationSubscriptions {}
-
-export interface PortSnapshot {
-  snapshot(): Port;
-}
-export interface PortActions {
-  change: (diff: PortDiff) => void;
-}
-export interface PortSubscriptions {
-  onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
-}
+export interface PortSnapshot extends Snapshot<Port> {}
+export interface PortActions extends Actions<PortDiff> {}
+export interface PortSubscriptions extends Subscriptions {}
 export interface PortStore extends PortSnapshot {}
-export interface PortStoreFull extends PortSnapshot, PortActions, PortSubscriptions {}
+export interface PortStoreFull extends PortStore, PortActions, PortSubscriptions {}
 
-export interface TypeSnapshot {
-  snapshot(): Type;
-}
-export interface TypeActions {
-  change: (diff: TypeDiff) => void;
-}
-export interface TypeSubscriptions {
-  onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
-}
+export interface TypeSnapshot extends Snapshot<Type> {}
+export interface TypeActions extends Actions<TypeDiff> {}
+export interface TypeSubscriptions extends Subscriptions {}
 export interface TypeChildStores {
   representations: Map<string, RepresentationStore>;
   ports: Map<string, PortStore>;
@@ -188,21 +170,20 @@ export interface PieceActions {
   change: (diff: PieceDiff) => void;
 }
 export interface PieceSubscriptions {
-  onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  onChanged: (subscribe: Subscribe) => Unsubscribe;
+  onChangedDeep: (subscribe: Subscribe) => Unsubscribe;
 }
 export interface PieceChildStores {}
 export interface PieceChildStoresFull {}
 export interface PieceStore extends PieceSnapshot, PieceChildStores {}
 export interface PieceStoreFull extends PieceSnapshot, PieceChildStoresFull, PieceActions, PieceSubscriptions {}
 
-export interface ConnectionSnapshot {
-  snapshot(): Connection;
-}
-export interface ConnectionActions {
-  change: (diff: ConnectionDiff) => void;
-}
+export interface ConnectionSnapshot extends Snapshot<Connection> {}
+export interface ConnectionActions extends Actions<ConnectionDiff> {}
 export interface ConnectionSubscriptions {
-  onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  onChanged: (subscribe: Subscribe) => Unsubscribe;
+}
+  onChangedDeep: (subscribe: Subscribe) => Unsubscribe;
 }
 export interface ConnectionStore extends ConnectionSnapshot {}
 export interface ConnectionStoreFull extends ConnectionSnapshot, ConnectionActions, ConnectionSubscriptions {}
@@ -214,7 +195,8 @@ export interface DesignActions {
   change: (diff: DesignDiff) => void;
 }
 export interface DesignSubscriptions {
-  onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  onChanged: (subscribe: Subscribe) => Unsubscribe;
+  onChangedDeep: (subscribe: Subscribe) => Unsubscribe;
 }
 export interface DesignChildStores {
   pieces: Map<string, PieceStore>;
@@ -237,7 +219,8 @@ export interface KitFileUrls {
   fileUrls(): Map<Url, Url>;
 }
 export interface KitSubscriptions {
-  onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  onChanged: (subscribe: Subscribe) => Unsubscribe;
+  onChangedDeep: (subscribe: Subscribe) => Unsubscribe;
 }
 export interface KitCommandContext {
   kit: Kit;
@@ -340,6 +323,7 @@ export interface DesignEditorSubscriptions {
   onUndone: (subscribe: Subscribe) => Unsubscribe;
   onRedone: (subscribe: Subscribe) => Unsubscribe;
   onChanged: (subscribe: Subscribe) => Unsubscribe;
+  onChangedDeep: (subscribe: Subscribe) => Unsubscribe;
   onTransactionStarted: (subscribe: Subscribe) => Unsubscribe;
   onTransactionAborted: (subscribe: Subscribe) => Unsubscribe;
   onTransactionFinalized: (subscribe: Subscribe) => Unsubscribe;
@@ -390,7 +374,8 @@ export interface SketchpadActions {
 export interface SketchpadSubscriptions {
   onKitCreated: (subscribe: Subscribe) => Unsubscribe;
   onDesignEditorCreated: (subscribe: Subscribe) => Unsubscribe;
-  onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe;
+  onChanged: (subscribe: Subscribe) => Unsubscribe;
+  onChangedDeep: (subscribe: Subscribe) => Unsubscribe;
   onKitDeleted: (subscribe: Subscribe) => Unsubscribe;
   onDesignEditorDeleted: (subscribe: Subscribe) => Unsubscribe;
 }
@@ -746,8 +731,12 @@ class YFileStore implements FileStoreFull {
     return this.lastSnapshot;
   };
 
-  onChanged = (subscribe: Subscribe, deep?: boolean) => {
-    return createObserver(this.yFile, subscribe, deep);
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yFile, subscribe, false);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yFile, subscribe, true);
   };
 }
 
@@ -807,8 +796,12 @@ class YRepresentationStore implements RepresentationStoreFull {
     }
   };
 
-  onChanged = (subscribe: Subscribe, deep?: boolean) => {
-    return createObserver(this.yRepresentation, subscribe, deep);
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yRepresentation, subscribe, false);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yRepresentation, subscribe, true);
   };
 }
 
@@ -894,8 +887,12 @@ class YPortStore implements PortStoreFull {
     }
   };
 
-  onChanged = (subscribe: Subscribe, deep?: boolean) => {
-    return createObserver(this.yPort, subscribe, deep);
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yPort, subscribe, false);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yPort, subscribe, true);
   };
 }
 
@@ -1008,8 +1005,12 @@ class YTypeStore implements TypeStoreFull {
     return this.lastSnapshot;
   };
 
-  onChanged = (subscribe: Subscribe, deep?: boolean) => {
-    return createObserver(this.yType, subscribe, deep);
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yType, subscribe, false);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yType, subscribe, true);
   };
 }
 
@@ -1150,8 +1151,12 @@ class YPieceStore implements PieceStoreFull {
     }
   };
 
-  onChanged = (subscribe: Subscribe, deep?: boolean) => {
-    return createObserver(this.yPiece, subscribe, deep);
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yPiece, subscribe, false);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yPiece, subscribe, true);
   };
 }
 
@@ -1273,8 +1278,12 @@ class YConnectionStore implements ConnectionStoreFull {
     if (diff.y !== undefined) this.yConnection.set("y", diff.y);
   };
 
-  onChanged = (subscribe: Subscribe, deep?: boolean) => {
-    return createObserver(this.yConnection, subscribe, deep);
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yConnection, subscribe, false);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yConnection, subscribe, true);
   };
 }
 
@@ -1449,19 +1458,20 @@ class YDesignStore implements DesignStoreFull {
     this.lastSnapshotHash = undefined;
   };
 
-  onChanged = (subscribe: Subscribe, deep?: boolean) => {
+  onChanged = (subscribe: Subscribe) => {
     const observer = () => subscribe();
-    if (deep) {
-      this.yDesign.observeDeep(observer);
-      return () => {
-        this.yDesign.unobserveDeep(observer);
-      };
-    } else {
-      this.yDesign.observe(observer);
-      return () => {
-        this.yDesign.unobserve(observer);
-      };
-    }
+    this.yDesign.observe(observer);
+    return () => {
+      this.yDesign.unobserve(observer);
+    };
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    this.yDesign.observeDeep(observer);
+    return () => {
+      this.yDesign.unobserveDeep(observer);
+    };
   };
 }
 
@@ -1772,11 +1782,19 @@ class YKitStore implements KitStoreFull {
     return this.regularFiles;
   };
 
-  onChanged = (subscribe: Subscribe, deep?: boolean) => {
+  onChanged = (subscribe: Subscribe) => {
     const observer = () => subscribe();
-    deep ? (this.yKit as unknown as Y.Map<any>).observeDeep(observer) : (this.yKit as unknown as Y.Map<any>).observe(observer);
+    (this.yKit as unknown as Y.Map<any>).observe(observer);
     return () => {
-      deep ? (this.yKit as unknown as Y.Map<any>).unobserveDeep(observer) : (this.yKit as unknown as Y.Map<any>).unobserve(observer);
+      (this.yKit as unknown as Y.Map<any>).unobserve(observer);
+    };
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    (this.yKit as unknown as Y.Map<any>).observeDeep(observer);
+    return () => {
+      (this.yKit as unknown as Y.Map<any>).unobserveDeep(observer);
     };
   };
 
@@ -2027,11 +2045,19 @@ class YDesignEditorStore implements DesignEditorStoreFull {
     }
   };
 
-  onChanged = (subscribe: Subscribe, deep?: boolean) => {
+  onChanged = (subscribe: Subscribe) => {
     const observer = () => subscribe();
-    deep ? (this.yDesignEditorStore as unknown as Y.Map<any>).observeDeep(observer) : (this.yDesignEditorStore as unknown as Y.Map<any>).observe(observer);
+    (this.yDesignEditorStore as unknown as Y.Map<any>).observe(observer);
     return () => {
-      deep ? (this.yDesignEditorStore as unknown as Y.Map<any>).unobserveDeep(observer) : (this.yDesignEditorStore as unknown as Y.Map<any>).unobserve(observer);
+      (this.yDesignEditorStore as unknown as Y.Map<any>).unobserve(observer);
+    };
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    const observer = () => subscribe();
+    (this.yDesignEditorStore as unknown as Y.Map<any>).observeDeep(observer);
+    return () => {
+      (this.yDesignEditorStore as unknown as Y.Map<any>).unobserveDeep(observer);
     };
   };
 
@@ -2373,6 +2399,14 @@ class YSketchpadStore implements SketchpadStoreFull {
     this.getYSketchpad().observe(observer);
     return () => {
       this.getYSketchpad().unobserve(observer);
+    };
+  };
+
+  onChangedDeep = (subscribe: Subscribe): Unsubscribe => {
+    const observer = () => subscribe();
+    this.getYSketchpad().observeDeep(observer);
+    return () => {
+      this.getYSketchpad().unobserveDeep(observer);
     };
   };
 
@@ -3357,9 +3391,14 @@ const useDesignEditorScope = () => useContext(DesignEditorScopeContext);
 
 const identitySelector = (state: any) => state;
 
-function useSync<TSnapshot, TSelected = TSnapshot>(store: { snapshot: () => TSnapshot; onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe }, selector?: (state: TSnapshot) => TSelected): TSelected {
-  const state = useSyncExternalStore(store.onChanged, store.snapshot);
-  return selector ? selector(state) : (state as unknown as TSelected);
+function useSync<TSnapshot, TSelected = TSnapshot>(store: { snapshot: () => TSnapshot; onChanged: (subscribe: Subscribe) => Unsubscribe }, selector?: (state: TSnapshot) => TSelected, deep: boolean = false): TSnapshot | TSelected {
+  const state = deep ? useSyncExternalStore(store.onChangedDeep, store.snapshot) : useSyncExternalStore(store.onChanged, store.snapshot);
+  return selector ? selector(state) : state;
+}
+
+function useSyncDeep<TSnapshot, TSelected = TSnapshot>(store: { snapshot: () => TSnapshot; onChangedDeep: (subscribe: Subscribe) => Unsubscribe }, selector?: (state: TSnapshot) => TSelected): TSnapshot | TSelected {
+  const state = useSyncExternalStore(store.onChangedDeep, store.snapshot);
+  return selector ? selector(state) : state;
 }
 
 function useSketchpadStore(id?: string) {
@@ -3386,8 +3425,11 @@ function useKitStore<T>(selector?: (store: KitStore) => T, id?: KitId): T | KitS
   return selector ? selector(kitStore) : kitStore;
 }
 
-export function useKit<T>(selector?: (kit: Kit) => T, id?: KitId): T | Kit {
-  return useSync<Kit, T>(useKitStore(identitySelector, id) as KitStore, selector ? selector : identitySelector);
+export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, id?: KitId, deep: boolean = false): T | KitShallow | Kit {
+  if (deep) {
+    return useSyncDeep<Kit, T>(useKitStore(identitySelector, id) as KitStore, selector ? selector : identitySelector);
+  }
+  return useSync<KitShallow, T>(useKitStore(identitySelector, id) as KitStore, selector ? selector : identitySelector, deep);
 }
 
 function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?: DesignEditorId): T | DesignEditorStore {
@@ -3422,8 +3464,11 @@ function useDesignStore<T>(selector?: (store: DesignStoreFull) => T, id?: Design
   return selector ? selector(designStore) : designStore;
 }
 
-export function useDesign<T>(selector?: (design: Design) => T, id?: DesignId): T | Design {
-  return useSync<Design, T>(useDesignStore(identitySelector, id) as DesignStoreFull, selector ? selector : identitySelector);
+export function useDesign<T>(selector?: (design: DesignShallow | Design) => T, id?: DesignId, deep: boolean = false): T | DesignShallow | Design {
+  if (deep) {
+    return useSyncDeep<Design, T>(useDesignStore(identitySelector, id) as DesignStoreFull, selector ? selector : identitySelector);
+  }
+  return useSync<DesignShallow, T>(useDesignStore(identitySelector, id) as DesignStoreFull, selector ? selector : identitySelector, deep);
 }
 
 export function useFlattenDiff(): DesignDiff {
@@ -3454,7 +3499,7 @@ export function usePiecesMetadata(): Map<
     depth: number;
   }
 > {
-  const kit = useKit() as Kit;
+  const kit = useKit(undefined, undefined, true) as Kit;
   const designScope = useDesignScope();
   if (!designScope) throw new Error("usePiecesMetadata must be called within a DesignScopeProvider");
   return piecesMetadata(kit, designScope.id);
@@ -3471,8 +3516,8 @@ function useTypeStore<T>(selector?: (store: TypeStoreFull) => T, id?: TypeId): T
   return selector ? selector(typeStore) : typeStore;
 }
 
-export function useType<T>(selector?: (type: Type) => T, id?: TypeId): T | Type {
-  return useSync<Type, T>(useTypeStore(identitySelector, id) as TypeStoreFull, selector ? selector : identitySelector);
+export function useType<T>(selector?: (type: Type) => T, id?: TypeId, deep: boolean = false): T | Type {
+  return useSync<Type, T>(useTypeStore(identitySelector, id) as TypeStoreFull, selector ? selector : identitySelector, deep);
 }
 
 function usePieceStore<T>(selector?: (store: PieceStoreFull) => T, id?: PieceId): T | PieceStoreFull {
@@ -3486,8 +3531,8 @@ function usePieceStore<T>(selector?: (store: PieceStoreFull) => T, id?: PieceId)
   return selector ? selector(pieceStore) : pieceStore;
 }
 
-export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId): T | Piece {
-  return useSync<Piece, T>(usePieceStore(identitySelector, id) as PieceStoreFull, selector ? selector : identitySelector);
+export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId, deep: boolean = false): T | Piece {
+  return useSync<Piece, T>(usePieceStore(identitySelector, id) as PieceStoreFull, selector ? selector : identitySelector, deep);
 }
 
 function useConnectionStore<T>(selector?: (store: ConnectionStoreFull) => T, id?: ConnectionId): T | ConnectionStoreFull {
@@ -3501,8 +3546,8 @@ function useConnectionStore<T>(selector?: (store: ConnectionStoreFull) => T, id?
   return selector ? selector(connectionStore) : connectionStore;
 }
 
-export function useConnection<T>(selector?: (connection: Connection) => T, id?: ConnectionId): T | Connection {
-  return useSync<Connection, T>(useConnectionStore(identitySelector, id) as ConnectionStoreFull, selector ? selector : identitySelector);
+export function useConnection<T>(selector?: (connection: Connection) => T, id?: ConnectionId, deep: boolean = false): T | Connection {
+  return useSync<Connection, T>(useConnectionStore(identitySelector, id) as ConnectionStoreFull, selector ? selector : identitySelector, deep);
 }
 
 function usePortStore<T>(selector?: (store: PortStoreFull) => T, id?: PortId): T | PortStoreFull {
@@ -3516,8 +3561,8 @@ function usePortStore<T>(selector?: (store: PortStoreFull) => T, id?: PortId): T
   return selector ? selector(portStore) : portStore;
 }
 
-export function usePort<T>(selector?: (port: Port) => T, id?: PortId): T | Port {
-  return useSync<Port, T>(usePortStore(identitySelector, id) as PortStoreFull, selector ? selector : identitySelector);
+export function usePort<T>(selector?: (port: Port) => T, id?: PortId, deep: boolean = false): T | Port {
+  return useSync<Port, T>(usePortStore(identitySelector, id) as PortStoreFull, selector ? selector : identitySelector, deep);
 }
 
 function useRepresentationStore<T>(selector?: (store: RepresentationStoreFull) => T, id?: RepresentationId): T | RepresentationStoreFull {
@@ -3531,8 +3576,8 @@ function useRepresentationStore<T>(selector?: (store: RepresentationStoreFull) =
   return selector ? selector(representationStore) : representationStore;
 }
 
-export function useRepresentation<T>(selector?: (representation: Representation) => T, id?: RepresentationId): T | Representation {
-  return useSync<Representation, T>(useRepresentationStore(identitySelector, id) as RepresentationStoreFull, selector ? selector : identitySelector);
+export function useRepresentation<T>(selector?: (representation: Representation) => T, id?: RepresentationId, deep: boolean = false): T | Representation {
+  return useSync<Representation, T>(useRepresentationStore(identitySelector, id) as RepresentationStoreFull, selector ? selector : identitySelector, deep);
 }
 
 // Additional utility hooks for the new store architecture

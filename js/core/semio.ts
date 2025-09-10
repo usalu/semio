@@ -150,6 +150,8 @@ export const QualitySchema = z.object({
   benchmarks: z.array(BenchmarkSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
+export const QualityIdSchema = z.object({ key: z.string() });
+export const QualityIdLikeSchema = z.union([QualitySchema, QualityIdSchema, z.string()]);
 
 // https://github.com/usalu/semio#-prop-
 export const PropSchema = z.object({
@@ -193,6 +195,33 @@ export const PortIdSchema = z.object({ id_: z.string().optional() });
 export const PortIdLikeSchema = z.union([PortSchema, PortIdSchema, z.string(), z.null(), z.undefined()]);
 
 // https://github.com/usalu/semio#-type-
+export const TypeShallowSchema = z.object({
+  name: z.string(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  image: z.string().optional(),
+  variant: z.string().optional(),
+  stock: z.number().optional(),
+  virtual: z.boolean().optional(),
+  scalable: z.boolean().optional(),
+  mirrorable: z.boolean().optional(),
+  unit: z.string(),
+  created: z
+    .string()
+    .transform((val) => new Date(val))
+    .or(z.date())
+    .optional(),
+  updated: z
+    .string()
+    .transform((val) => new Date(val))
+    .or(z.date())
+    .optional(),
+  location: LocationSchema.optional(),
+  representations: z.array(RepresentationIdSchema).optional(),
+  ports: z.array(PortIdSchema).optional(),
+  authors: z.array(AuthorIdSchema).optional(),
+  attributes: z.array(AttributeIdSchema).optional(),
+});
 export const TypeSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
@@ -288,6 +317,46 @@ export const ConnectionIdSchema = z.object({
 export const ConnectionIdLikeSchema = z.union([ConnectionSchema, ConnectionIdSchema, z.tuple([z.string(), z.string()]), z.string()]);
 
 // https://github.com/usalu/semio#-design-
+export const DesignShallowSchema = z.object({
+  name: z.string(),
+  variant: z.string().optional(),
+  view: z.string().optional(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  image: z.string().optional(),
+  concepts: z.array(z.string()).optional(),
+  authors: z.array(AuthorIdSchema).optional(),
+  location: LocationSchema.optional(),
+  unit: z.string(),
+  scalable: z.boolean().optional(),
+  mirrorable: z.boolean().optional(),
+  layers: z.array(LayerSchema).optional(),
+  pieces: z.array(PieceIdSchema).optional(),
+  groups: z.array(GroupIdSchema).optional(),
+  connections: z.array(ConnectionIdSchema).optional(),
+  fixedDesigns: z
+    .array(
+      z.object({
+        designId: z.lazy(() => DesignIdSchema),
+        plane: PlaneSchema.optional(),
+        center: DiagramPointSchema.optional(),
+      }),
+    )
+    .optional(),
+  props: z.array(PropSchema).optional(),
+  stats: z.array(StatSchema).optional(),
+  attributes: z.array(AttributeIdSchema).optional(),
+  created: z
+    .string()
+    .transform((val) => new Date(val))
+    .or(z.date())
+    .optional(),
+  updated: z
+    .string()
+    .transform((val) => new Date(val))
+    .or(z.date())
+    .optional(),
+});
 export const DesignSchema = z.object({
   name: z.string(),
   variant: z.string().optional(),
@@ -341,6 +410,37 @@ export const DesignPieceSchema = z.object({
 });
 
 // https://github.com/usalu/semio#-kit-
+export const KitShallowSchema = z.object({
+  uri: z.string(),
+  name: z.string(),
+  version: z.string().optional(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  image: z.string().optional(),
+  concepts: z.array(z.string()).optional(),
+  remote: z.string().optional(),
+  homepage: z.string().optional(),
+  license: z.string().optional(),
+  authors: z.array(AuthorIdSchema).optional(),
+  props: z.array(PropSchema).optional(),
+  stats: z.array(StatSchema).optional(),
+  preview: z.string().optional(),
+  files: z.array(FileIdSchema).optional(),
+  qualities: z.array(QualityIdSchema).optional(),
+  types: z.array(TypeIdSchema).optional(),
+  designs: z.array(DesignIdSchema).optional(),
+  attributes: z.array(AttributeIdSchema).optional(),
+  created: z
+    .string()
+    .transform((val) => new Date(val))
+    .or(z.date())
+    .optional(),
+  updated: z
+    .string()
+    .transform((val) => new Date(val))
+    .or(z.date())
+    .optional(),
+});
 export const KitSchema = z.object({
   uri: z.string(),
   name: z.string(),
@@ -702,7 +802,9 @@ export type Vector = z.infer<typeof VectorSchema>;
 export type Plane = z.infer<typeof PlaneSchema>;
 export type QualityKind = z.infer<typeof QualityKindSchema>;
 export type Benchmark = z.infer<typeof BenchmarkSchema>;
+export type QualityId = z.infer<typeof QualityIdSchema>;
 export type Quality = z.infer<typeof QualitySchema>;
+export type QualityIdLike = z.infer<typeof QualityIdLikeSchema>;
 export type Prop = z.infer<typeof PropSchema>;
 export type Stat = z.infer<typeof StatSchema>;
 export type Layer = z.infer<typeof LayerSchema>;
@@ -713,6 +815,7 @@ export type PortIdLike = z.infer<typeof PortIdLikeSchema>;
 export type PortDiff = z.infer<typeof PortDiffSchema>;
 export type PortsDiff = z.infer<typeof PortsDiffSchema>;
 export type TypeId = z.infer<typeof TypeIdSchema>;
+export type TypeShallow = z.infer<typeof TypeShallowSchema>;
 export type Type = z.infer<typeof TypeSchema>;
 export type TypeIdLike = z.infer<typeof TypeIdLikeSchema>;
 export type TypeDiff = z.infer<typeof TypeDiffSchema>;
@@ -730,10 +833,12 @@ export type Connection = z.infer<typeof ConnectionSchema>;
 export type ConnectionDiff = z.infer<typeof ConnectionDiffSchema>;
 export type ConnectionIdLike = z.infer<typeof ConnectionIdLikeSchema>;
 export type DesignId = z.infer<typeof DesignIdSchema>;
+export type DesignShallow = z.infer<typeof DesignShallowSchema>;
 export type Design = z.infer<typeof DesignSchema>;
 export type DesignDiff = z.infer<typeof DesignDiffSchema>;
 export type DesignIdLike = z.infer<typeof DesignIdLikeSchema>;
 export type DesignsDiff = z.infer<typeof DesignsDiffSchema>;
+export type KitShallow = z.infer<typeof KitShallowSchema>;
 export type Kit = z.infer<typeof KitSchema>;
 export type KitId = z.infer<typeof KitIdSchema>;
 export type KitDiff = z.infer<typeof KitDiffSchema>;
