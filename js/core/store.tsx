@@ -173,7 +173,7 @@ export interface Commands<TContext, TResult> {
   register(command: string, callback: (context: TContext, ...rest: any[]) => TResult): Disposable;
 }
 export interface StoreWithCommands<TModel, TDiff, TContext, TResult> extends Store<TModel, TDiff>, Commands<TContext, TResult> {}
-export interface Editor<TModel, TDiff, TSelection, TSelectionDiff, TPresence, TContext, TResult>
+export interface Editor<TDiff, TSelection, TSelectionDiff, TPresence, TContext, TResult>
   extends Commands<TContext, TResult>,
     EditorActions<TDiff, TSelectionDiff, TPresence>,
     EditorSelection<TSelection>,
@@ -197,7 +197,7 @@ export interface KitStore extends StoreWithCommands<Kit, KitDiff, KitCommandCont
   types: Map<string, TypeStore>;
   designs: Map<string, DesignStore>;
   files: Map<Url, FileStore>;
-  fileUrls: Map<Url, Url>;
+  fileUrls(): Map<Url, Url>;
 }
 export interface KitCommandContext {
   kit: Kit;
@@ -247,13 +247,15 @@ export interface DesignEditorPresenceOther extends DesignEditorPresence {}
 export interface DesignEditorChangableState extends EditorChangableState<DesignEditorSelection, DesignEditorPresence> {
   fullscreenPanel: DesignEditorFullscreenPanel;
 }
-export interface DesignEditorDiff extends DesignEditorPresence {
+export interface DesignEditorDiff {
   selection?: DesignEditorSelectionDiff;
+  presence?: DesignEditorPresence;
+  fullscreenPanel?: DesignEditorFullscreenPanel;
 }
 export interface DesignEditorStep extends EditorStep<DesignEditorDiff, DesignEditorSelectionDiff> {}
-export interface DesignEditorEdit extends EditorEdit<DesignEditorDiff, DesignEditorSelectionDiff> {}
-export interface DesignEditorState extends EditorState<DesignEditorDiff, DesignEditorPresenceOther, DesignEditorSelection, DesignEditorPresence, DesignEditorStep> {
-  designId: DesignId;
+export interface DesignEditorEdit extends EditorEdit<KitDiff, DesignEditorSelectionDiff> {}
+export interface DesignEditorState extends EditorState<KitDiff, DesignEditorPresenceOther, DesignEditorSelection, DesignEditorPresence, DesignEditorStep> {
+  fullscreenPanel: DesignEditorFullscreenPanel;
 }
 
 export interface DesignEditorSnapshot {
@@ -316,19 +318,6 @@ export interface SketchpadStore extends StoreWithCommands<SketchpadState, Sketch
 // #endregion Api
 
 // #region Stores
-
-// Base class for common functionality
-abstract class BaseYStore<TYObject extends Y.AbstractType<any>> {
-  protected abstract yObject: TYObject;
-
-  protected createObserver = (subscribe: Subscribe, deep?: boolean): Unsubscribe => {
-    return createObserver(this.yObject, subscribe, deep);
-  };
-
-  changed = (subscribe: Subscribe, deep?: boolean) => {
-    return this.createObserver(subscribe, deep);
-  };
-}
 
 type YAuthor = Y.Map<string>;
 type YAuthors = Y.Map<YAuthor>;
@@ -506,18 +495,16 @@ function updateAttributes(yAttributes: YAttributes, attributes: Attribute[]): vo
   attributes.forEach((attr) => yAttributes.push([createAttribute(attr)]));
 }
 
-// Generic observer helper
 function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscribe, deep?: boolean): Unsubscribe {
-  const observer = () => subscribe();
   if (deep) {
-    yObject.observeDeep(observer);
+    yObject.observeDeep(subscribe);
     return () => {
-      yObject.unobserveDeep(observer);
+      yObject.unobserveDeep(subscribe);
     };
   } else {
-    yObject.observe(observer);
+    yObject.observe(subscribe);
     return () => {
-      yObject.unobserve(observer);
+      yObject.unobserve(subscribe);
     };
   }
 }
@@ -578,8 +565,8 @@ function getPlane(yPlane: Y.Map<any>): { origin: { x: number; y: number; z: numb
 class YFileStore implements FileStore {
   public readonly parent: YKitStore;
   public readonly yFile: Y.Map<string>;
-  private lastSnapshot?: SemioFile;
-  private lastSnapshotHash?: string;
+  private cache?: SemioFile;
+  private cacheHash?: string;
 
   private hash(file: SemioFile): string {
     // TODO: Implement hash calculation
@@ -617,8 +604,8 @@ class YFileStore implements FileStore {
     if (diff.remote !== undefined) this.yFile.set("remote", diff.remote);
     if (diff.size !== undefined) this.yFile.set("size", diff.size.toString());
     if (diff.hash !== undefined) this.yFile.set("hash", diff.hash);
-    this.lastSnapshot = undefined; // Invalidate cache when data changes
-    this.lastSnapshotHash = undefined; // Invalidate hash when data changes
+    this.cache = undefined; // Invalidate cache when data changes
+    this.cacheHash = undefined; // Invalidate hash when data changes
   };
 
   snapshot = (): SemioFile => {
@@ -632,12 +619,12 @@ class YFileStore implements FileStore {
     };
     const currentHash = this.hash(currentData);
 
-    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.lastSnapshot = currentData;
-      this.lastSnapshotHash = currentHash;
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
     }
 
-    return this.lastSnapshot;
+    return this.cache;
   };
 
   onChanged = (subscribe: Subscribe) => {
@@ -652,8 +639,8 @@ class YFileStore implements FileStore {
 class YRepresentationStore implements RepresentationStore {
   public readonly parent: YKitStore;
   public readonly yRepresentation: YRepresentation;
-  private lastSnapshot?: Representation;
-  private lastSnapshotHash?: string;
+  private cache?: Representation;
+  private cacheHash?: string;
 
   private hash(representation: Representation): string {
     // TODO: Implement hash calculation
@@ -686,12 +673,12 @@ class YRepresentationStore implements RepresentationStore {
     };
     const currentHash = this.hash(currentData);
 
-    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.lastSnapshot = currentData;
-      this.lastSnapshotHash = currentHash;
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
     }
 
-    return this.lastSnapshot;
+    return this.cache;
   };
 
   change = (diff: RepresentationDiff) => {
@@ -717,8 +704,8 @@ class YRepresentationStore implements RepresentationStore {
 class YPortStore implements PortStore {
   public readonly parent: YTypeStore;
   public readonly yPort: YPort;
-  private lastSnapshot?: Port;
-  private lastSnapshotHash?: string;
+  private cache?: Port;
+  private cacheHash?: string;
 
   private hash(port: Port): string {
     // TODO: Implement hash calculation
@@ -768,12 +755,12 @@ class YPortStore implements PortStore {
     };
     const currentHash = this.hash(currentData);
 
-    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.lastSnapshot = currentData;
-      this.lastSnapshotHash = currentHash;
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
     }
 
-    return this.lastSnapshot;
+    return this.cache;
   };
 
   change = (diff: PortDiff) => {
@@ -812,8 +799,8 @@ class YTypeStore implements TypeStore {
   public readonly ports: Map<string, YPortStore> = new Map();
   public readonly representationIds: Map<string, string> = new Map();
   public readonly portIds: Map<string, string> = new Map();
-  private lastSnapshot?: Type;
-  private lastSnapshotHash?: string;
+  private cache?: Type;
+  private cacheHash?: string;
 
   private hash(type: Type): string {
     // TODO: Implement hash calculation
@@ -874,8 +861,8 @@ class YTypeStore implements TypeStore {
         }
       });
     }
-    this.lastSnapshot = undefined;
-    this.lastSnapshotHash = undefined;
+    this.cache = undefined;
+    this.cacheHash = undefined;
   };
 
   snapshot = (): Type => {
@@ -906,12 +893,12 @@ class YTypeStore implements TypeStore {
     };
     const currentHash = this.hash(currentData);
 
-    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.lastSnapshot = currentData;
-      this.lastSnapshotHash = currentHash;
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
     }
 
-    return this.lastSnapshot;
+    return this.cache;
   };
 
   onChanged = (subscribe: Subscribe) => {
@@ -926,8 +913,8 @@ class YTypeStore implements TypeStore {
 class YPieceStore implements PieceStore {
   public readonly parent: YDesignStore;
   public readonly yPiece: YPiece;
-  private lastSnapshot?: Piece;
-  private lastSnapshotHash?: string;
+  private cache?: Piece;
+  private cacheHash?: string;
 
   private hash(piece: Piece): string {
     // TODO: Implement hash calculation
@@ -1019,12 +1006,12 @@ class YPieceStore implements PieceStore {
 
     const currentHash = this.hash(currentData);
 
-    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.lastSnapshot = currentData;
-      this.lastSnapshotHash = currentHash;
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
     }
 
-    return this.lastSnapshot;
+    return this.cache;
   };
 
   change = (diff: PieceDiff) => {
@@ -1072,8 +1059,8 @@ class YPieceStore implements PieceStore {
 class YConnectionStore implements ConnectionStore {
   public readonly parent: YDesignStore;
   public readonly yConnection: YConnection;
-  private lastSnapshot?: Connection;
-  private lastSnapshotHash?: string;
+  private cache?: Connection;
+  private cacheHash?: string;
 
   private hash(connection: Connection): string {
     // TODO: Implement hash calculation
@@ -1167,12 +1154,12 @@ class YConnectionStore implements ConnectionStore {
     };
     const currentHash = this.hash(currentData);
 
-    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.lastSnapshot = currentData;
-      this.lastSnapshotHash = currentHash;
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
     }
 
-    return this.lastSnapshot;
+    return this.cache;
   };
 
   change = (diff: ConnectionDiff) => {
@@ -1203,8 +1190,8 @@ class YDesignStore implements DesignStore {
   public readonly connections: Map<string, YConnectionStore> = new Map();
   public readonly pieceIds: Map<string, string> = new Map();
   public readonly connectionIds: Map<string, string> = new Map();
-  private lastSnapshot?: Design;
-  private lastSnapshotHash?: string;
+  private cache?: Design;
+  private cacheHash?: string;
 
   private hash(design: Design): string {
     // TODO: Implement hash calculation
@@ -1269,12 +1256,12 @@ class YDesignStore implements DesignStore {
     };
     const currentHash = this.hash(currentData);
 
-    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.lastSnapshot = currentData;
-      this.lastSnapshotHash = currentHash;
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
     }
 
-    return this.lastSnapshot;
+    return this.cache;
   };
 
   change = (diff: DesignDiff) => {
@@ -1363,8 +1350,8 @@ class YDesignStore implements DesignStore {
         });
       }
     }
-    this.lastSnapshot = undefined;
-    this.lastSnapshotHash = undefined;
+    this.cache = undefined;
+    this.cacheHash = undefined;
   };
 
   onChanged = (subscribe: Subscribe) => {
@@ -1394,8 +1381,8 @@ class YKitStore implements KitStore {
   private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult> = new Map();
   private readonly regularFiles: Map<Url, string> = new Map();
   private readonly parent: SketchpadStore;
-  private lastSnapshot?: Kit;
-  private lastSnapshotHash?: string;
+  private cache?: Kit;
+  private cacheHash?: string;
 
   private hash(kit: Kit): string {
     // TODO: Implement hash calculation
@@ -1518,12 +1505,16 @@ class YKitStore implements KitStore {
     };
     const currentHash = this.hash(currentData);
 
-    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.lastSnapshot = currentData;
-      this.lastSnapshotHash = currentHash;
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
     }
 
-    return this.lastSnapshot;
+    return this.cache;
+  };
+
+  fileUrls = (): Map<Url, Url> => {
+    return this.regularFiles;
   };
 
   change = (diff: KitDiff) => {
@@ -1683,12 +1674,8 @@ class YKitStore implements KitStore {
     }
 
     this.yKit.set("updated", new Date().toISOString());
-    this.lastSnapshot = undefined;
-    this.lastSnapshotHash = undefined;
-  };
-
-  fileUrls = (): Map<Url, Url> => {
-    return this.regularFiles;
+    this.cache = undefined;
+    this.cacheHash = undefined;
   };
 
   onChanged = (subscribe: Subscribe) => {
@@ -1754,8 +1741,8 @@ class YDesignEditorStore implements DesignEditorStore {
   public readonly yDesignEditorStore: YDesignEditorStoreValMap;
   private readonly commandRegistry: Map<string, (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult> = new Map();
   private readonly parent: SketchpadStore;
-  private lastSnapshot?: DesignEditorState;
-  private lastSnapshotHash?: string;
+  private cache?: DesignEditorState;
+  private cacheHash?: string;
 
   private hash(state: DesignEditorState): string {
     // TODO: Implement hash calculation
@@ -1814,9 +1801,6 @@ class YDesignEditorStore implements DesignEditorStore {
       port,
     };
   }
-  get designDiff(): DesignDiff {
-    return {};
-  }
   get isTransactionActive(): boolean {
     return (this.yDesignEditorStore.get("isTransactionActive") as boolean) || false;
   }
@@ -1856,12 +1840,12 @@ class YDesignEditorStore implements DesignEditorStore {
     };
     const currentHash = this.hash(currentData);
 
-    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.lastSnapshot = currentData;
-      this.lastSnapshotHash = currentHash;
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
     }
 
-    return this.lastSnapshot;
+    return this.cache;
   };
 
   change = (diff: DesignEditorDiff) => {
@@ -1948,9 +1932,6 @@ class YDesignEditorStore implements DesignEditorStore {
         this.yDesignEditorStore.set("presenceCursorX", diff.presence.cursor.x);
         this.yDesignEditorStore.set("presenceCursorY", diff.presence.cursor.y);
       }
-    }
-    if (diff.others) {
-      // Others are typically managed by collaboration providers, not stored in Yjs directly
     }
   };
 
@@ -2119,11 +2100,11 @@ class YDesignEditorStore implements DesignEditorStore {
       const edit: DesignEditorEdit = {
         do: {
           diff: result.kitDiff,
-          selection: this.snapshot().selection,
+          selectionDiff: this.snapshot().selectionDiff,
         },
         undo: {
           diff: undefined,
-          selection: beforeState.selection,
+          selectionDiff: beforeState.selectionDiff,
         },
       };
       currentStack.push([edit]);
@@ -2163,8 +2144,10 @@ class YSketchpadStore implements SketchpadStore {
   public readonly kits: Map<string, YKitStore> = new Map();
   public readonly designEditors: Map<string, Map<string, DesignEditorStore>> = new Map();
   private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult> = new Map();
-  private lastSnapshot?: SketchpadState;
-  private lastSnapshotHash?: string;
+  private cache?: SketchpadState;
+  private cacheHash?: string;
+  // private readonly clientId: string;
+  // private readonly broadcastChannel: BroadcastChannel;
 
   private hash(state: SketchpadState): string {
     // TODO: Implement hash calculation
@@ -2176,6 +2159,8 @@ class YSketchpadStore implements SketchpadStore {
   }
 
   constructor(state: SketchpadState) {
+    // this.clientId = uuidv4();
+    // this.broadcastChannel = new BroadcastChannel("semio-yjs");
     this.ySketchpadDoc = new Y.Doc();
 
     // Initialize the sketchpad map immediately and ensure it's properly integrated
@@ -2193,6 +2178,17 @@ class YSketchpadStore implements SketchpadStore {
     if (state.persistantId && state.persistantId !== "") {
       this.sketchpadIndexeddbProvider = new IndexeddbPersistence(`semio-sketchpad-${state.persistantId}`, this.ySketchpadDoc);
     }
+
+    // this.ySketchpadDoc.on("update", (update: Uint8Array) => {
+    //   this.broadcastChannel.postMessage({ client: this.clientId, update });
+    // });
+
+    // this.broadcastChannel.addEventListener("message", (msg) => {
+    //   const { data } = msg;
+    //   if (data.client !== this.clientId) {
+    //     Y.applyUpdate(this.ySketchpadDoc, data.update);
+    //   }
+    // });
   }
 
   get mode(): Mode {
@@ -2219,12 +2215,12 @@ class YSketchpadStore implements SketchpadStore {
     };
     const currentHash = this.hash(currentValues);
 
-    if (!this.lastSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.lastSnapshot = currentValues;
-      this.lastSnapshotHash = currentHash;
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentValues;
+      this.cacheHash = currentHash;
     }
 
-    return this.lastSnapshot;
+    return this.cache;
   };
 
   createKit = (kit: Kit) => {
@@ -3503,8 +3499,8 @@ export function useLayout(): Layout {
   return useSketchpad((s) => s.layout) as Layout;
 }
 
-export function useDesignId(): DesignId | undefined {
-  return useSketchpad((s) => s.activeDesignEditor?.design) as DesignId | undefined;
+export function useActiveDesignEditor(): DesignId | undefined {
+  return (useSketchpad((s) => s.activeDesignEditor) as DesignEditorId)?.design;
 }
 
 export function useDesigns(): Design[] {
@@ -3575,52 +3571,31 @@ export function useDesignEditorCommands() {
   };
 }
 // Design editor state hooks
-const selectionSelector = (s: DesignEditorState) => s.selection;
-const fullscreenSelector = (s: DesignEditorState) => s.fullscreenPanel;
-
-export function useSelection(): DesignEditorSelection {
-  return useDesignEditor(selectionSelector) as DesignEditorSelection;
-}
 
 export function useDesignEditorSelection(): DesignEditorSelection {
-  return useDesignEditor(selectionSelector) as DesignEditorSelection;
-}
-
-export function useFullscreen(): DesignEditorFullscreenPanel {
-  return useDesignEditor(fullscreenSelector) as DesignEditorFullscreenPanel;
+  return useDesignEditor((s) => s.selection) as DesignEditorSelection;
 }
 
 export function useDesignEditorFullscreen(): DesignEditorFullscreenPanel {
-  return useDesignEditor(fullscreenSelector) as DesignEditorFullscreenPanel;
+  return useDesignEditor((s) => s.fullscreenPanel) as DesignEditorFullscreenPanel;
 }
 
-const diffSelector = (s: DesignEditorState) => s.diff;
-export function useDiff(): KitDiff {
-  return useDesignEditor(diffSelector) as KitDiff;
-}
-
-export function useDesignEditorDesignDiff(): KitDiff {
-  return useDesignEditor(diffSelector) as KitDiff;
+export function useDesignEditorDiff(): KitDiff {
+  return useDesignEditor((s) => s.diff) as KitDiff;
 }
 
 export function useDiffedKit(): Kit {
   const kit = useKit() as Kit;
-  const diff = useDiff();
+  const diff = useDesignEditorDiff();
   return applyKitDiff(kit, diff);
 }
 
 export function useFileUrls(): Map<Url, Url> {
-  return (useKitStore() as KitStore).fileUrls;
-}
-
-const othersSelector = (s: DesignEditorState) => s.others;
-
-export function useOthers(): DesignEditorPresenceOther[] {
-  return useDesignEditor(othersSelector) as DesignEditorPresenceOther[];
+  return (useKitStore() as KitStore).fileUrls();
 }
 
 export function useDesignEditorOthers(): DesignEditorPresenceOther[] {
-  return useDesignEditor(othersSelector) as DesignEditorPresenceOther[];
+  return useDesignEditor((s) => s.others) as DesignEditorPresenceOther[];
 }
 
 // #endregion Hooks
