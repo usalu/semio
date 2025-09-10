@@ -968,6 +968,8 @@ class YTypeStore implements TypeStoreFull {
         }
       });
     }
+    this.cachedSnapshot = undefined;
+    this.lastSnapshotHash = undefined;
   };
 
   snapshot = (): Type => {
@@ -984,22 +986,32 @@ class YTypeStore implements TypeStoreFull {
     const stock = this.yType.get("stock") as number | undefined;
     const virtual = this.yType.get("virtual") as boolean | undefined;
 
-    const currentData = {
+    const currentHash = JSON.stringify({
       name: name,
       description: description,
       variant: variant,
       unit: unit,
       stock: stock,
       virtual: virtual,
-      representations: Array.from(this.representations.values()).map((store) => store.snapshot()),
-      ports: Array.from(this.ports.values()).map((store) => store.snapshot()),
+      representationCount: this.representations.size,
+      portCount: this.ports.size,
       authors: authors,
       attributes: attributes,
-    };
-    const currentHash = JSON.stringify(currentData);
+    });
 
     if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.cachedSnapshot = currentData;
+      this.cachedSnapshot = {
+        name: name,
+        description: description,
+        variant: variant,
+        unit: unit,
+        stock: stock,
+        virtual: virtual,
+        representations: Array.from(this.representations.values()).map((store) => store.snapshot()),
+        ports: Array.from(this.ports.values()).map((store) => store.snapshot()),
+        authors: authors,
+        attributes: attributes,
+      };
       this.lastSnapshotHash = currentHash;
     }
 
@@ -1368,21 +1380,30 @@ class YDesignStore implements DesignStoreFull {
       // Y object not properly attached, use defaults
     }
 
-    const currentData = {
+    const currentHash = JSON.stringify({
       name: name,
       description: description,
       variant: variant,
       view: view,
       unit: unit,
-      pieces: Array.from(this.pieces.values()).map((p) => p.snapshot()),
-      connections: Array.from(this.connections.values()).map((c) => c.snapshot()),
+      pieceCount: this.pieces.size,
+      connectionCount: this.connections.size,
       authors: authors,
       attributes: attributes,
-    };
-    const currentHash = JSON.stringify(currentData);
+    });
 
     if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
-      this.cachedSnapshot = currentData;
+      this.cachedSnapshot = {
+        name: name,
+        description: description,
+        variant: variant,
+        view: view,
+        unit: unit,
+        pieces: Array.from(this.pieces.values()).map((p) => p.snapshot()),
+        connections: Array.from(this.connections.values()).map((c) => c.snapshot()),
+        authors: authors,
+        attributes: attributes,
+      };
       this.lastSnapshotHash = currentHash;
     }
 
@@ -1425,8 +1446,7 @@ class YDesignStore implements DesignStoreFull {
       if (diff.pieces.updated) {
         diff.pieces.updated.forEach((updatedItem) => {
           const matchingPiece = Array.from(this.pieces.entries()).find(([_, store]) => {
-            const piece = store.snapshot();
-            return !updatedItem.diff.id_ || piece.id_ === updatedItem.id.id_;
+            return !updatedItem.diff.id_ || store.yPiece.get("id_") === updatedItem.id.id_;
           });
           if (matchingPiece) {
             matchingPiece[1].change(updatedItem.diff);
@@ -1464,8 +1484,11 @@ class YDesignStore implements DesignStoreFull {
       if (diff.connections.updated) {
         diff.connections.updated.forEach((updatedItem) => {
           const matchingConnection = Array.from(this.connections.entries()).find(([_, store]) => {
-            const connection = store.snapshot();
-            return connection.connected.piece.id_ === updatedItem.id.connected.piece.id_ && connection.connecting.piece.id_ === updatedItem.id.connecting.piece.id_;
+            const yConnected = store.yConnection.get("connected") as Y.Map<any>;
+            const yConnecting = store.yConnection.get("connecting") as Y.Map<any>;
+            const yConnectedPiece = yConnected.get("piece") as Y.Map<string>;
+            const yConnectingPiece = yConnecting.get("piece") as Y.Map<string>;
+            return yConnectedPiece.get("id_") === updatedItem.id.connected.piece.id_ && yConnectingPiece.get("id_") === updatedItem.id.connecting.piece.id_;
           });
           if (matchingConnection) {
             matchingConnection[1].change(updatedItem.diff);
@@ -1473,6 +1496,8 @@ class YDesignStore implements DesignStoreFull {
         });
       }
     }
+    this.cachedSnapshot = undefined;
+    this.lastSnapshotHash = undefined;
   };
 
   onChanged = (subscribe: Subscribe, deep?: boolean) => {
@@ -1627,8 +1652,26 @@ class YKitStore implements KitStoreFull {
       }
     }
 
+    let hashData;
     let currentData;
     try {
+      hashData = {
+        uri: this.yKit.get("uri") as string,
+        name: this.yKit.get("name") as string,
+        version: this.yKit.get("version") as string | undefined,
+        description: this.yKit.get("description") as string | undefined,
+        icon: this.yKit.get("icon") as string | undefined,
+        image: this.yKit.get("image") as string | undefined,
+        preview: this.yKit.get("preview") as string | undefined,
+        remote: this.yKit.get("remote") as string | undefined,
+        homepage: this.yKit.get("homepage") as string | undefined,
+        license: this.yKit.get("license") as string | undefined,
+        created: this.yKit.get("created") ? new Date(this.yKit.get("created") as string) : undefined,
+        updated: this.yKit.get("updated") ? new Date(this.yKit.get("updated") as string) : undefined,
+        typeCount: this.types.size,
+        designCount: this.designs.size,
+        attributes: attributes,
+      };
       currentData = {
         uri: this.yKit.get("uri") as string,
         name: this.yKit.get("name") as string,
@@ -1648,6 +1691,23 @@ class YKitStore implements KitStoreFull {
       };
     } catch (e) {
       // Y.Map not available, use fallback data
+      hashData = {
+        uri: "",
+        name: "",
+        version: undefined,
+        description: undefined,
+        icon: undefined,
+        image: undefined,
+        preview: undefined,
+        remote: undefined,
+        homepage: undefined,
+        license: undefined,
+        created: undefined,
+        updated: undefined,
+        typeCount: 0,
+        designCount: 0,
+        attributes: attributes,
+      };
       currentData = {
         uri: "",
         name: "",
@@ -1666,7 +1726,7 @@ class YKitStore implements KitStoreFull {
         attributes: attributes,
       };
     }
-    const currentHash = JSON.stringify(currentData);
+    const currentHash = JSON.stringify(hashData);
 
     if (!this.cachedSnapshot || this.lastSnapshotHash !== currentHash) {
       this.cachedSnapshot = currentData;
@@ -1740,8 +1800,7 @@ class YKitStore implements KitStoreFull {
         if (diff.types.updated) {
           diff.types.updated.forEach((updatedItem) => {
             const matchingType = Array.from(this.types.entries()).find(([_, store]) => {
-              const type = store.snapshot();
-              return (!updatedItem.diff.name || type.name === updatedItem.id.name) && (!updatedItem.diff.variant || type.variant === updatedItem.id.variant);
+              return (!updatedItem.diff.name || store.yType.get("name") === updatedItem.id.name) && (!updatedItem.diff.variant || store.yType.get("variant") === updatedItem.id.variant);
             });
             if (matchingType) {
               matchingType[1].change(updatedItem.diff);
@@ -1803,8 +1862,7 @@ class YKitStore implements KitStoreFull {
         if (diff.designs.updated) {
           diff.designs.updated.forEach((updatedItem) => {
             const matchingDesign = Array.from(this.designs.entries()).find(([_, store]) => {
-              const design = store.snapshot();
-              return (!updatedItem.diff.name || design.name === updatedItem.id.name) && (!updatedItem.diff.variant || design.variant === updatedItem.id.variant) && (!updatedItem.diff.view || design.view === updatedItem.id.view);
+              return (!updatedItem.diff.name || store.yDesign.get("name") === updatedItem.id.name) && (!updatedItem.diff.variant || store.yDesign.get("variant") === updatedItem.id.variant) && (!updatedItem.diff.view || store.yDesign.get("view") === updatedItem.id.view);
             });
             if (matchingDesign) {
               matchingDesign[1].change(updatedItem.diff);
@@ -1847,6 +1905,8 @@ class YKitStore implements KitStoreFull {
     } catch (e) {
       // Y.Map operation for updated timestamp not available
     }
+    this.cachedSnapshot = undefined;
+    this.lastSnapshotHash = undefined;
   };
 
   fileUrls = (): Map<Url, Url> => {
@@ -3590,21 +3650,31 @@ function useStoreState<TSnapshot, TSelected = TSnapshot>(
   store: { snapshot: () => TSnapshot; onChanged: (subscribe: Subscribe, deep?: boolean) => Unsubscribe },
   selector?: (state: TSnapshot) => TSelected
 ): TSelected {
-  const getSnapshot = useCallback(() => store.snapshot(), [store]);
-  const state = useSyncExternalStore(
-    useCallback((callback) => store.onChanged(callback), [store]),
-    getSnapshot,
-    getSnapshot
-  );
-  return selector ? selector(state) : (state as any);
+  const storeRef = useRef(store);
+  storeRef.current = store;
+  
+  const selectorRef = useRef(selector);
+  selectorRef.current = selector;
+  
+  const getSnapshot = useCallback(() => storeRef.current.snapshot(), []);
+  const subscribe = useCallback((callback: () => void) => storeRef.current.onChanged(callback), []);
+  
+  const state = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  
+  return useMemo(() => {
+    return selectorRef.current ? selectorRef.current(state) : (state as any);
+  }, [state]);
 }
 
 function useSketchpadStore(id?: string) {
   const scope = useSketchpadScope();
-  const storeId = scope?.id ?? id;
-  if (!storeId) throw new Error("useSketchpad must be called within a SketchpadScopeProvider or be directly provided with an id");
-  if (!stores.has(storeId)) throw new Error(`Sketchpad store was not found for id ${storeId}`);
-  return stores.get(storeId)!;
+  const storeId = useMemo(() => scope?.id ?? id, [scope?.id, id]);
+  const store = useMemo(() => {
+    if (!storeId) throw new Error("useSketchpad must be called within a SketchpadScopeProvider or be directly provided with an id");
+    if (!stores.has(storeId)) throw new Error(`Sketchpad store was not found for id ${storeId}`);
+    return stores.get(storeId)!;
+  }, [storeId]);
+  return store;
 }
 
 export function useSketchpad(): SketchpadState;
@@ -3633,7 +3703,7 @@ export function useKit(): Kit;
 export function useKit<T>(selector: (kit: Kit) => T): T;
 export function useKit<T>(selector: (kit: Kit) => T, id: KitId): T;
 export function useKit<T>(selector?: (kit: Kit) => T, id?: KitId): T | Kit {
-  const store = id ? useKitStore((s) => s, id) : useKitStore();
+  const store = id ? useKitStore(identitySelector, id) : useKitStore();
   return useStoreState(store, selector);
 }
 
@@ -3657,11 +3727,13 @@ function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?
   return selector ? selector(designEditorStore) : designEditorStore;
 }
 
+const identitySelector = <T,>(s: T) => s;
+
 export function useDesignEditor(): DesignEditorStateFull;
 export function useDesignEditor<T>(selector: (state: DesignEditorStateFull) => T): T;
 export function useDesignEditor<T>(selector: (state: DesignEditorStateFull) => T, id: DesignEditorId): T;
 export function useDesignEditor<T>(selector?: (state: DesignEditorStateFull) => T, id?: DesignEditorId): T | DesignEditorStateFull {
-  const store = id ? useDesignEditorStore((s) => s, id) : useDesignEditorStore();
+  const store = id ? useDesignEditorStore(identitySelector, id) : useDesignEditorStore();
   return useStoreState(store, selector);
 }
 
@@ -3683,7 +3755,7 @@ export function useDesign(): Design;
 export function useDesign<T>(selector: (design: Design) => T): T;
 export function useDesign<T>(selector: (design: Design) => T, id: DesignId): T;
 export function useDesign<T>(selector?: (design: Design) => T, id?: DesignId): T | Design {
-  const store = id ? useDesignStore((s) => s, id) : useDesignStore();
+  const store = id ? useDesignStore(identitySelector, id) : useDesignStore();
   return useStoreState(store, selector);
 }
 
@@ -3739,7 +3811,7 @@ export function useType(): Type;
 export function useType<T>(selector: (type: Type) => T): T;
 export function useType<T>(selector: (type: Type) => T, id: TypeId): T;
 export function useType<T>(selector?: (type: Type) => T, id?: TypeId): T | Type {
-  const store = id ? useTypeStore((s) => s, id) : useTypeStore();
+  const store = id ? useTypeStore(identitySelector, id) : useTypeStore();
   return useStoreState(store, selector);
 }
 
@@ -3761,7 +3833,7 @@ export function usePiece(): Piece;
 export function usePiece<T>(selector: (piece: Piece) => T): T;
 export function usePiece<T>(selector: (piece: Piece) => T, id: PieceId): T;
 export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId): T | Piece {
-  const store = id ? usePieceStore((s) => s, id) : usePieceStore();
+  const store = id ? usePieceStore(identitySelector, id) : usePieceStore();
   return useStoreState(store, selector);
 }
 
@@ -3783,7 +3855,7 @@ export function useConnection(): Connection;
 export function useConnection<T>(selector: (connection: Connection) => T): T;
 export function useConnection<T>(selector: (connection: Connection) => T, id: ConnectionId): T;
 export function useConnection<T>(selector?: (connection: Connection) => T, id?: ConnectionId): T | Connection {
-  const store = id ? useConnectionStore((s) => s, id) : useConnectionStore();
+  const store = id ? useConnectionStore(identitySelector, id) : useConnectionStore();
   return useStoreState(store, selector);
 }
 
@@ -3805,7 +3877,7 @@ export function usePort(): Port;
 export function usePort<T>(selector: (port: Port) => T): T;
 export function usePort<T>(selector: (port: Port) => T, id: PortId): T;
 export function usePort<T>(selector?: (port: Port) => T, id?: PortId): T | Port {
-  const store = id ? usePortStore((s) => s, id) : usePortStore();
+  const store = id ? usePortStore(identitySelector, id) : usePortStore();
   return useStoreState(store, selector);
 }
 
@@ -3827,46 +3899,52 @@ export function useRepresentation(): Representation;
 export function useRepresentation<T>(selector: (representation: Representation) => T): T;
 export function useRepresentation<T>(selector: (representation: Representation) => T, id: RepresentationId): T;
 export function useRepresentation<T>(selector?: (representation: Representation) => T, id?: RepresentationId): T | Representation {
-  const store = id ? useRepresentationStore((s) => s, id) : useRepresentationStore();
+  const store = id ? useRepresentationStore(identitySelector, id) : useRepresentationStore();
   return useStoreState(store, selector);
 }
 
 // Additional utility hooks for the new store architecture
+const modeSelector = (s: SketchpadState) => s.mode;
+const themeSelector = (s: SketchpadState) => s.theme;
+const layoutSelector = (s: SketchpadState) => s.layout;
+const designIdSelector = (s: SketchpadState) => s.activeDesignEditor?.design;
+const designsSelector = (k: Kit) => k.designs ?? [];
+
 export function useMode(): Mode {
-  return useSketchpad((s) => s.mode);
+  return useSketchpad(modeSelector);
 }
 
 export function useTheme(): Theme {
-  return useSketchpad((s) => s.theme);
+  return useSketchpad(themeSelector);
 }
 
 export function useLayout(): Layout {
-  return useSketchpad((s) => s.layout);
+  return useSketchpad(layoutSelector);
 }
 
 export function useDesignId(): DesignId | undefined {
-  return useSketchpad((s) => s.activeDesignEditor?.design);
+  return useSketchpad(designIdSelector);
 }
 
 export function useDesigns(): Design[] {
-  return useKit((k) => k.designs ?? []);
+  return useKit(designsSelector);
 }
 
 export function useSketchpadCommands() {
   const store = useSketchpadStore();
-  return {
+  return useMemo(() => ({
     setMode: (mode: Mode) => store.execute("semio.sketchpad.setMode", mode),
     setTheme: (theme: Theme) => store.execute("semio.sketchpad.setTheme", theme),
     setLayout: (layout: Layout) => store.execute("semio.sketchpad.setLayout", layout),
     createKit: (kit: Kit) => store.execute("semio.sketchpad.createKit", kit),
     createDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.createDesignEditor", designEditorId),
     setActiveDesignEditor: (designEditorId: DesignEditorId) => store.execute("semio.sketchpad.setActiveDesignEditor", designEditorId),
-  };
+  }), [store]);
 }
 
 export function useKitCommands() {
   const kitStore = useKitStore();
-  return {
+  return useMemo(() => ({
     importKit: (url: string) => kitStore.execute("semio.kit.import", url),
     exportKit: () => kitStore.execute("semio.kit.export"),
     createType: (type: Type) => kitStore.execute("semio.kit.createType", type),
@@ -3887,12 +3965,12 @@ export function useKitCommands() {
     removeConnection: (designId: DesignId, connectionId: ConnectionId) => kitStore.execute("semio.kit.removeConnection", designId, connectionId),
     removeConnections: (designId: DesignId, connectionIds: ConnectionId[]) => kitStore.execute("semio.kit.removeConnections", designId, connectionIds),
     deleteSelected: (designId: DesignId, selectedPieces: PieceId[], selectedConnections: ConnectionId[]) => kitStore.execute("semio.kit.deleteSelected", designId, selectedPieces, selectedConnections),
-  };
+  }), [kitStore]);
 }
 
 export function useDesignEditorCommands() {
   const store = useDesignEditorStore();
-  return {
+  return useMemo(() => ({
     startTransaction: () => store.execute("semio.designEditor.startTransaction"),
     finalizeTransaction: () => store.execute("semio.designEditor.finalizeTransaction"),
     abortTransaction: () => store.execute("semio.designEditor.abortTransaction"),
@@ -3913,31 +3991,35 @@ export function useDesignEditorCommands() {
     toggleDiagramFullscreen: () => store.execute("semio.designEditor.toggleDiagramFullscreen"),
     toggleModelFullscreen: () => store.execute("semio.designEditor.toggleModelFullscreen"),
     execute: (command: string, ...args: any[]) => store.execute(command, ...args),
-  };
+  }), [store]);
 }
 // Design editor state hooks
+const selectionSelector = (s: DesignEditorStateFull) => s.selection;
+const fullscreenSelector = (s: DesignEditorStateFull) => s.fullscreenPanel;
+
 export function useSelection(): DesignEditorSelection {
-  return useDesignEditor((s) => s.selection);
+  return useDesignEditor(selectionSelector);
 }
 
 export function useDesignEditorSelection(): DesignEditorSelection {
-  return useDesignEditor((s) => s.selection);
+  return useDesignEditor(selectionSelector);
 }
 
 export function useFullscreen(): DesignEditorFullscreenPanel {
-  return useDesignEditor((s) => s.fullscreenPanel);
+  return useDesignEditor(fullscreenSelector);
 }
 
 export function useDesignEditorFullscreen(): DesignEditorFullscreenPanel {
-  return useDesignEditor((s) => s.fullscreenPanel);
+  return useDesignEditor(fullscreenSelector);
 }
 
+const diffSelector = (s: DesignEditorStateFull) => s.diff;
 export function useDiff(): KitDiff {
-  return useDesignEditor((s) => s.diff);
+  return useDesignEditor(diffSelector);
 }
 
 export function useDesignEditorDesignDiff(): KitDiff {
-  return useDesignEditor((s) => s.diff);
+  return useDesignEditor(diffSelector);
 }
 
 export function useDiffedKit(): Kit {
@@ -3951,12 +4033,14 @@ export function useFileUrls(): Map<Url, Url> {
   return kitStore.fileUrls();
 }
 
+const othersSelector = (s: DesignEditorStateFull) => s.others;
+
 export function useOthers(): DesignEditorPresenceOther[] {
-  return useDesignEditor((s) => s.others);
+  return useDesignEditor(othersSelector);
 }
 
 export function useDesignEditorOthers(): DesignEditorPresenceOther[] {
-  return useDesignEditor((s) => s.others);
+  return useDesignEditor(othersSelector);
 }
 
 // #endregion Hooks
