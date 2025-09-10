@@ -3586,6 +3586,12 @@ function useRerender() {
   return useReducer((x) => x + 1, 0)[1];
 }
 
+// const useStoreState = <T>(store: Store<T>, selector?: (state: T) => T) => {
+//   const getSnapshot = useMemo(() => () => store.snapshot(), [store]);
+//   const state = useSyncExternalStore(store.onChanged, getSnapshot, getSnapshot);
+//   return selector ? selector(state) : state;
+// };
+
 function useSketchpadStore(id?: string) {
   const scope = useSketchpadScope();
   const storeId = scope?.id ?? id;
@@ -3611,31 +3617,6 @@ export function useSketchpad<T>(selector?: (state: SketchpadState) => T, id?: st
   return selector ? selector(state) : state;
 }
 
-export function useDesignEditor(): DesignEditorStore;
-export function useDesignEditor<T>(selector: (store: DesignEditorStore) => T): T;
-export function useDesignEditor<T>(selector: (store: DesignEditorStore) => T, kitId: KitId, designId: DesignId): T;
-export function useDesignEditor<T>(selector?: (store: DesignEditorStore) => T, kitId?: KitId, designId?: DesignId): T | DesignEditorStore {
-  const store = useSketchpadStore();
-
-  const kitScope = useKitStoreScope();
-  const resolvedKitId = kitScope?.id ?? kitId;
-  const designScope = useDesignScope();
-  const resolvedDesignId = designScope?.id ?? designId;
-
-  if (!resolvedKitId) throw new Error("useDesignEditor must be called within a KitScopeProvider or be directly provided with a kitId");
-  if (!resolvedDesignId) throw new Error("useDesignEditor must be called within a DesignScopeProvider or be directly provided with a designId");
-
-  const resolvedKitIdStr = kitIdToString(resolvedKitId);
-  const resolvedDesignIdStr = designIdToString(resolvedDesignId);
-  if (!store.designEditors.has(resolvedKitIdStr)) throw new Error(`Design editor store not found for kit ${resolvedKitId.name}`);
-  const kitEditors = store.designEditors.get(resolvedKitIdStr)!;
-  if (!kitEditors.has(resolvedDesignIdStr)) throw new Error(`Design editor store not found for design ${resolvedDesignId.name}`);
-  const designEditor = useMemo(() => kitEditors.get(resolvedDesignIdStr)!, [kitEditors, resolvedDesignIdStr]);
-  const getSnapshot = useMemo(() => () => designEditor.snapshot(), [designEditor]);
-  const state = useSyncExternalStore(designEditor.onChanged, getSnapshot, getSnapshot);
-  return selector ? selector(designEditor) : designEditor;
-}
-
 function useKitStore(): KitStore;
 function useKitStore<T>(selector: (store: KitStore) => T): T;
 function useKitStore<T>(selector: (store: KitStore) => T, id: KitId): T;
@@ -3654,16 +3635,38 @@ export function useKit(): Kit;
 export function useKit<T>(selector: (kit: Kit) => T): T;
 export function useKit<T>(selector: (kit: Kit) => T, id: KitId): T;
 export function useKit<T>(selector?: (kit: Kit) => T, id?: KitId): T | Kit {
-  const kitStore = useKitStore();
-  const getSnapshot = useMemo(
-    () => () => {
-      const result = kitStore.snapshot();
-      return result;
-    },
-    [kitStore],
-  );
-  const kit = useSyncExternalStore(kitStore.onChanged, getSnapshot, getSnapshot);
-  return selector ? selector(kit as Kit) : (kit as Kit);
+  const store = useKitStore();
+  const getSnapshot = useMemo(() => () => store.snapshot(), [store]);
+  const kit = useSyncExternalStore(store.onChanged, getSnapshot, getSnapshot);
+  return selector ? selector(kit) : kit;
+}
+
+function useDesignEditorStore(): DesignEditorStore;
+function useDesignEditorStore<T>(selector: (store: DesignEditorStore) => T): T;
+function useDesignEditorStore<T>(selector: (store: DesignEditorStore) => T, id: DesignEditorId): T;
+function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?: DesignEditorId): T | DesignEditorStore {
+  const store = useSketchpadStore();
+  const kitScope = useKitStoreScope();
+  const resolvedKitId = kitScope?.id ?? id?.kit;
+  if (!resolvedKitId) throw new Error("useDesignEditor must be called within a KitScopeProvider or be directly provided with an id");
+  const resolvedKitIdStr = kitIdToString(resolvedKitId);
+  const designScope = useDesignScope();
+  const resolvedDesignId = designScope?.id ?? id?.design;
+  if (!resolvedDesignId) throw new Error("useDesignEditor must be called within a DesignScopeProvider or be directly provided with an id");
+  const resolvedDesignIdStr = designIdToString(resolvedDesignId);
+  if (!store.designEditors.has(resolvedKitIdStr)) throw new Error(`Design editor not found for kit ${resolvedKitId.name}`);
+  const kitEditors = store.designEditors.get(resolvedKitIdStr)!;
+  if (!kitEditors.has(resolvedDesignIdStr)) throw new Error(`Design editor not found for design ${resolvedDesignId.name}`);
+}
+
+export function useDesignEditor(): DesignEditorState;
+export function useDesignEditor<T>(selector: (state: DesignEditorState) => T): T;
+export function useDesignEditor<T>(selector: (state: DesignEditorState) => T, id: DesignEditorId): T;
+export function useDesignEditor<T>(selector?: (state: DesignEditorState) => T, id?: DesignEditorId): T | DesignEditorState {
+  const store = useDesignEditorStore(id);
+  const getSnapshot = useMemo(() => () => store.snapshot(), [store]);
+  const state = useSyncExternalStore(store.onChanged, getSnapshot, getSnapshot);
+  return selector ? selector(state) : state;
 }
 
 export function useDesign(): Design;
