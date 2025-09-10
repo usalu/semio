@@ -112,7 +112,6 @@ export interface DesignEditorStep {
   diff?: KitDiff;
   selection?: DesignEditorSelection;
 }
-
 export interface DesignEditorEdit {
   do: DesignEditorStep;
   undo: DesignEditorStep;
@@ -124,30 +123,48 @@ export interface Snapshot<T> {
 export interface Actions<T> {
   change: (diff: T) => void;
 }
+export interface EditorActions<TDiff> extends Actions<TDiff> {
+  undo: () => void;
+  redo: () => void;
+  startTransaction: () => void;
+  abortTransaction: () => void;
+  finalizeTransaction: () => void;
+}
 export interface Subscriptions {
   onChanged: (subscribe: Subscribe) => Unsubscribe;
   onChangedDeep: (subscribe: Subscribe) => Unsubscribe;
 }
-export interface Store<T> extends Snapshot<T> {}
-export interface StoreFull<T> extends Store<T>, Actions<T>, Subscriptions {}
+export interface EditorSubscriptions extends Subscriptions {
+  onUndone: (subscribe: Subscribe) => Unsubscribe;
+  onRedone: (subscribe: Subscribe) => Unsubscribe;
+  onTransactionStarted: (subscribe: Subscribe) => Unsubscribe;
+  onTransactionAborted: (subscribe: Subscribe) => Unsubscribe;
+  onTransactionFinalized: (subscribe: Subscribe) => Unsubscribe;
+}
+export interface Store<TModel> extends Snapshot<TModel>, Actions<TModel>, Subscriptions {}
+export interface ExecuteCommands<TResult> {
+  execute(command: string, ...rest: any[]): Promise<TResult>;
+}
+export interface RegisterCommands<TContext, TResult> {
+  register(command: string, callback: (context: TContext, ...rest: any[]) => TResult): Disposable;
+}
+export interface StoreWithExecuteCommands<TModel, TResult> extends Store<TModel>, ExecuteCommands<TResult> {}
+export interface StoreWithCommands<TModel, TContext, TResult> extends StoreWithExecuteCommands<TModel, TResult>, RegisterCommands<TContext, TResult> {}
 
 export interface FileSnapshot extends Snapshot<SemioFile> {}
 export interface FileActions extends Actions<FileDiff> {}
 export interface FileSubscriptions extends Subscriptions {}
-export interface FileStore extends FileSnapshot {}
-export interface FileStoreFull extends FileSnapshot, FileActions, FileSubscriptions {}
+export interface FileStore extends FileSnapshot, FileActions, FileSubscriptions {}
 
 export interface RepresentationSnapshot extends Snapshot<Representation> {}
 export interface RepresentationActions extends Actions<RepresentationDiff> {}
 export interface RepresentationSubscriptions extends Subscriptions {}
-export interface RepresentationStore extends RepresentationSnapshot {}
-export interface RepresentationStoreFull extends RepresentationStore, RepresentationActions, RepresentationSubscriptions {}
+export interface RepresentationStore extends RepresentationSnapshot, RepresentationActions, RepresentationSubscriptions {}
 
 export interface PortSnapshot extends Snapshot<Port> {}
 export interface PortActions extends Actions<PortDiff> {}
 export interface PortSubscriptions extends Subscriptions {}
-export interface PortStore extends PortSnapshot {}
-export interface PortStoreFull extends PortStore, PortActions, PortSubscriptions {}
+export interface PortStore extends PortSnapshot, PortActions, PortSubscriptions {}
 
 export interface TypeSnapshot extends Snapshot<Type> {}
 export interface TypeActions extends Actions<TypeDiff> {}
@@ -157,71 +174,36 @@ export interface TypeChildStores {
   ports: Map<string, PortStore>;
 }
 export interface TypeChildStoresFull {
-  representations: Map<string, RepresentationStoreFull>;
-  ports: Map<string, PortStoreFull>;
+  representations: Map<string, RepresentationStore>;
+  ports: Map<string, PortStore>;
 }
-export interface TypeStore extends TypeSnapshot, TypeChildStores {}
-export interface TypeStoreFull extends TypeSnapshot, TypeChildStoresFull, TypeActions, TypeSubscriptions {}
+export interface TypeStore extends TypeSnapshot, TypeActions, TypeSubscriptions, TypeChildStores {}
 
-export interface PieceSnapshot {
-  snapshot(): Piece;
-}
-export interface PieceActions {
-  change: (diff: PieceDiff) => void;
-}
-export interface PieceSubscriptions {
-  onChanged: (subscribe: Subscribe) => Unsubscribe;
-  onChangedDeep: (subscribe: Subscribe) => Unsubscribe;
-}
-export interface PieceChildStores {}
-export interface PieceChildStoresFull {}
-export interface PieceStore extends PieceSnapshot, PieceChildStores {}
-export interface PieceStoreFull extends PieceSnapshot, PieceChildStoresFull, PieceActions, PieceSubscriptions {}
+export interface PieceSnapshot extends Snapshot<Piece> {}
+export interface PieceActions extends Actions<PieceDiff> {}
+export interface PieceSubscriptions extends Subscriptions {}
+export interface PieceStore extends PieceSnapshot, PieceActions, PieceSubscriptions {}
 
 export interface ConnectionSnapshot extends Snapshot<Connection> {}
 export interface ConnectionActions extends Actions<ConnectionDiff> {}
-export interface ConnectionSubscriptions {
-  onChanged: (subscribe: Subscribe) => Unsubscribe;
-}
-  onChangedDeep: (subscribe: Subscribe) => Unsubscribe;
-}
-export interface ConnectionStore extends ConnectionSnapshot {}
-export interface ConnectionStoreFull extends ConnectionSnapshot, ConnectionActions, ConnectionSubscriptions {}
+export interface ConnectionSubscriptions extends Subscriptions {}
+export interface ConnectionStore extends ConnectionSnapshot, ConnectionActions, ConnectionSubscriptions {}
 
-export interface DesignSnapshot {
-  snapshot(): Design;
-}
-export interface DesignActions {
-  change: (diff: DesignDiff) => void;
-}
-export interface DesignSubscriptions {
-  onChanged: (subscribe: Subscribe) => Unsubscribe;
-  onChangedDeep: (subscribe: Subscribe) => Unsubscribe;
-}
+export interface DesignSnapshot extends Snapshot<Design> {}
+export interface DesignActions extends Actions<DesignDiff> {}
+export interface DesignSubscriptions extends Subscriptions {}
 export interface DesignChildStores {
   pieces: Map<string, PieceStore>;
   connections: Map<string, ConnectionStore>;
 }
-export interface DesignChildStoresFull {
-  pieces: Map<string, PieceStoreFull>;
-  connections: Map<string, ConnectionStoreFull>;
-}
-export interface DesignStore extends DesignSnapshot, DesignChildStores {}
-export interface DesignStoreFull extends DesignSnapshot, DesignActions, DesignSubscriptions, DesignChildStoresFull {}
+export interface DesignStore extends DesignSnapshot, DesignActions, DesignSubscriptions, DesignChildStores {}
 
-export interface KitSnapshot {
-  snapshot(): Kit;
-}
-export interface KitActions {
-  change: (diff: KitDiff) => void;
-}
+export interface KitSnapshot extends Snapshot<Kit> {}
+export interface KitActions extends Actions<KitDiff> {}
 export interface KitFileUrls {
   fileUrls(): Map<Url, Url>;
 }
-export interface KitSubscriptions {
-  onChanged: (subscribe: Subscribe) => Unsubscribe;
-  onChangedDeep: (subscribe: Subscribe) => Unsubscribe;
-}
+export interface KitSubscriptions extends Subscriptions {}
 export interface KitCommandContext {
   kit: Kit;
   fileUrls: Map<Url, Url>;
@@ -230,25 +212,16 @@ export interface KitCommandResult {
   diff?: KitDiff;
   files?: File[];
 }
-export interface KitCommands {
-  execute<T>(command: string, ...rest: any[]): Promise<T>;
-}
-export interface KitCommandsFull {
-  execute<T>(command: string, ...rest: any[]): Promise<T>;
-  register(command: string, callback: (context: KitCommandContext, ...rest: any[]) => KitCommandResult): Disposable;
-}
+export interface KitExecuteCommands extends ExecuteCommands<KitCommandResult> {}
+export interface KitRegisterCommands extends RegisterCommands<KitCommandContext, KitCommandResult> {}
+export interface KitCommands extends KitExecuteCommands, KitRegisterCommands {}
 export interface KitChildStores {
   types: Map<string, TypeStore>;
   designs: Map<string, DesignStore>;
   files: Map<Url, FileStore>;
 }
-export interface KitChildStoresFull {
-  types: Map<string, TypeStoreFull>;
-  designs: Map<string, DesignStoreFull>;
-  files: Map<Url, FileStoreFull>;
-}
-export interface KitStore extends KitSnapshot, KitChildStores, KitFileUrls, KitCommands, KitSubscriptions {}
-export interface KitStoreFull extends KitSnapshot, KitActions, KitSubscriptions, KitCommandsFull, KitChildStoresFull, KitFileUrls {}
+export interface KitStore extends KitSnapshot, KitChildStores, KitFileUrls, KitExecuteCommands, KitSubscriptions {}
+export interface KitStoreFull extends KitStore, KitRegisterCommands {}
 
 export interface DesignEditorId {
   kit: KitId;
@@ -305,29 +278,9 @@ export interface DesignEditorStateFull extends DesignEditorState {
 export interface DesignEditorSnapshot {
   snapshot(): DesignEditorStateFull;
 }
-export interface DesignEditorStateDiff {
-  fullscreenPanel?: DesignEditorFullscreenPanel;
-  selection?: DesignEditorSelectionDiff;
-  presence?: DesignEditorPresence;
-  others?: DesignEditorPresenceOther[];
-}
-export interface DesignEditorActions {
-  change: (diff: DesignEditorStateDiff) => void;
-  undo: () => void;
-  redo: () => void;
-  startTransaction: () => void;
-  abortTransaction: () => void;
-  finalizeTransaction: () => void;
-}
-export interface DesignEditorSubscriptions {
-  onUndone: (subscribe: Subscribe) => Unsubscribe;
-  onRedone: (subscribe: Subscribe) => Unsubscribe;
-  onChanged: (subscribe: Subscribe) => Unsubscribe;
-  onChangedDeep: (subscribe: Subscribe) => Unsubscribe;
-  onTransactionStarted: (subscribe: Subscribe) => Unsubscribe;
-  onTransactionAborted: (subscribe: Subscribe) => Unsubscribe;
-  onTransactionFinalized: (subscribe: Subscribe) => Unsubscribe;
-}
+export interface DesignEditorStateDiff extends Partial<DesignEditorState> {}
+export interface DesignEditorActions extends EditorActions<DesignEditorStateDiff> {}
+export interface DesignEditorSubscriptions extends EditorSubscriptions {}
 export interface DesignEditorCommandContext extends KitCommandContext {
   designEditor: DesignEditorStateFull;
   designId: DesignId;
@@ -336,15 +289,12 @@ export interface DesignEditorCommandResult {
   diff?: DesignEditorStateDiff;
   kitDiff?: KitDiff;
 }
-export interface DesignEditorCommands {
-  execute<T>(command: string, ...rest: any[]): Promise<T>;
-}
-export interface DesignEditorCommandsFull {
-  execute<T>(command: string, ...rest: any[]): Promise<T>;
-  register(command: string, callback: (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult): Disposable;
-}
+export interface DesignEditorExecuteCommands extends ExecuteCommands<DesignEditorCommandResult> {}
+export interface DesignEditorRegisterCommands extends RegisterCommands<DesignEditorCommandContext, DesignEditorCommandResult> {}
+export interface DesignEditorCommands extends DesignEditorExecuteCommands, DesignEditorRegisterCommands {}
 export interface DesignEditorStore extends DesignEditorSnapshot, DesignEditorCommands, DesignEditorSubscriptions {}
-export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommandsFull, DesignEditorActions, DesignEditorSubscriptions {}
+export interface DesignEditorStoreFull extends DesignEditorSnapshot, DesignEditorCommands, DesignEditorActions, DesignEditorSubscriptions {}
+
 export interface SketchpadState {
   mode: Mode;
   theme: Theme;
@@ -3391,7 +3341,7 @@ const useDesignEditorScope = () => useContext(DesignEditorScopeContext);
 
 const identitySelector = (state: any) => state;
 
-function useSync<TSnapshot, TSelected = TSnapshot>(store: { snapshot: () => TSnapshot; onChanged: (subscribe: Subscribe) => Unsubscribe }, selector?: (state: TSnapshot) => TSelected, deep: boolean = false): TSnapshot | TSelected {
+function useSync<TSnapshot, TSelected = TSnapshot>(store: Store<TSnapshot>, selector?: (state: TSnapshot) => TSelected, deep: boolean = false): TSnapshot | TSelected {
   const state = deep ? useSyncExternalStore(store.onChangedDeep, store.snapshot) : useSyncExternalStore(store.onChanged, store.snapshot);
   return selector ? selector(state) : state;
 }
