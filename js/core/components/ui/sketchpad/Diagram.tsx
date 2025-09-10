@@ -23,16 +23,15 @@ import React, { FC, useCallback, useEffect, useMemo, useState } from "react";
 import {
   applyDesignDiff,
   arePortsCompatible,
-  colorPortsForTypes,
   Connection,
   ConnectionDiff,
   DesignId,
   DiagramPoint,
   DiffStatus,
+  findAttributeValue,
   findConnectionInDesign,
   findDesignInKit,
   findPortInType,
-  findAttributeValue,
   findTypeInKit,
   flattenDesign,
   getClusterableGroups,
@@ -41,14 +40,12 @@ import {
   isPortInUse,
   isSameConnection,
   isSamePiece,
-  Kit,
   Piece,
   PieceDiff,
   piecesMetadata,
   Port,
   TOLERANCE,
   Type,
-  updateDesignInKit,
 } from "../../../semio";
 
 import "@xyflow/react/dist/style.css";
@@ -58,12 +55,13 @@ import {
   PieceScopeProvider,
   useDesign,
   useDesignEditorCommands,
-  useDesignEditorSelection,
   useDesignEditorFullscreen,
   useDesignEditorOthers,
-  useDesignEditorDesignDiff,
+  useDesignEditorSelection,
+  useDiffedDesign,
   useKit,
-  useDiffedKit,
+  useKitCommands,
+  usePortColoredTypes,
 } from "../../../store";
 
 type ClusterMenuProps = {
@@ -164,7 +162,7 @@ type ExpandMenuProps = {
 const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, selection, onExpand }) => {
   const kit = useKit();
 
-  const expandableDesignNodes = useMemo(() => {
+  const explodeableDesignNodes = useMemo(() => {
     return nodes.filter((node) => {
       if (node.type !== "design") return false;
       const pieceId = getPieceIdFromNode(node);
@@ -191,19 +189,19 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, selection, onExpand }) 
     };
   }, []);
 
-  if (expandableDesignNodes.length === 0) {
+  if (explodeableDesignNodes.length === 0) {
     return null;
   }
 
   return (
     <ViewportPortal>
-      {expandableDesignNodes.map((node) => {
+      {explodeableDesignNodes.map((node) => {
         const boundingBox = getBoundingBoxForNode(node);
-        const designName = (node.data.piece as Piece).type?.variant!
+        const designName = (node.data.piece as Piece).type?.variant!;
 
         return (
           <div
-            key={`expand-design-${designName}`}
+            key={`explode-design-${designName}`}
             className="absolute pointer-events-none"
             style={{
               left: boundingBox.x,
@@ -690,7 +688,7 @@ const connectionToEdge = (connection: Connection, selected: boolean, isParentCon
   };
 };
 
-const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: any) => {
+const designToNodesAndEdges = (selection: any) => {
   const design = findDesignInKit(kit, designId);
   if (!design) return null;
 
@@ -706,30 +704,32 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: any) => 
   const metadata = piecesMetadata(kit, designId);
 
   const pieceNodes =
-    design.pieces?.map((piece, i) => {
-      const isSelected = selection?.pieces?.some((p: any) => p.id_ === piece.id_) ?? false;
-      const center = centerMap.get(piece.id_) || piece.center || { x: 0, y: 0 };
+    design.pieces
+      ?.map((piece, i) => {
+        const isSelected = selection?.pieces?.some((p: any) => p.id_ === piece.id_) ?? false;
+        const center = centerMap.get(piece.id_) || piece.center || { x: 0, y: 0 };
 
-      if (!piece.type) {
-        console.warn(`No type defined for piece ${piece.id_}`);
-        return null;
-      }
-      
-      const type = findTypeInKit(kit, piece.type);
-      if (!type) {
-        console.warn(`Type not found for piece ${piece.id_}: ${piece.type.name}/${piece.type.variant || 'no-variant'}`);
-        const fallbackType: Type = {
-          name: piece.type.name,
-          variant: piece.type.variant,
-          unit: "m",
-          description: `Missing type: ${piece.type.name}`,
-          ports: [],
-          representations: [],
-        };
-        return pieceToNode(piece, fallbackType, center, isSelected, i);
-      }
-      return pieceToNode(piece, type, center, isSelected, i);
-    }).filter((node): node is PieceNode => node !== null) ?? [];
+        if (!piece.type) {
+          console.warn(`No type defined for piece ${piece.id_}`);
+          return null;
+        }
+
+        const type = findTypeInKit(kit, piece.type);
+        if (!type) {
+          console.warn(`Type not found for piece ${piece.id_}: ${piece.type.name}/${piece.type.variant || "no-variant"}`);
+          const fallbackType: Type = {
+            name: piece.type.name,
+            variant: piece.type.variant,
+            unit: "m",
+            description: `Missing type: ${piece.type.name}`,
+            ports: [],
+            representations: [],
+          };
+          return pieceToNode(piece, fallbackType, center, isSelected, i);
+        }
+        return pieceToNode(piece, type, center, isSelected, i);
+      })
+      .filter((node): node is PieceNode => node !== null) ?? [];
 
   const includedDesigns = getIncludedDesigns(design);
 
@@ -838,7 +838,6 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: any) => 
 
 const Diagram: FC = () => {
   const {
-    setDesign,
     deselectAll,
     selectPiece,
     addPieceToSelection,
@@ -850,37 +849,20 @@ const Diagram: FC = () => {
     startTransaction,
     finalizeTransaction,
     abortTransaction,
-    addConnections,
-    setConnections,
-    setPieces,
-    executeCommand,
+    execute,
   } = useDesignEditorCommands();
 
+  const { updateDesign, addConnections } = useKitCommands();
+
   const selection = useDesignEditorSelection();
-  const designDiff = useDesignEditorDesignDiff();
   const fullscreenPanel = useDesignEditorFullscreen();
   const others = useDesignEditorOthers();
 
-  const kit = useKit();
-  const baseDesign = useDesign();
-  if (!kit || !baseDesign) return null;
-  const design = applyDesignDiff(baseDesign, designDiff, true);
-
-  const designId = { name: design.name, variant: design.variant, view: design.view };
-
-  const diffedKit = useDiffedKit();
-  const typesWithColoredPorts = useMemo(() => {
-    if (!diffedKit.types) return [];
-    const colorDiff = colorPortsForTypes(diffedKit.types);
-    return colorDiff.updated ? diffedKit.types.map(type => {
-      const update = colorDiff.updated?.find(u => u.id.name === type.name && u.id.variant === type.variant);
-      return update ? { ...type, ports: update.diff.ports } : type;
-    }) : diffedKit.types;
-  }, [diffedKit.types]);
-  const unified = useMemo(() => ({ ...diffedKit, types: typesWithColoredPorts }), [diffedKit, typesWithColoredPorts]);
+  const design = useDiffedDesign();
+  const types = usePortColoredTypes();
 
   if (!design) return null;
-  const { nodes, edges } = designToNodesAndEdges(unified, designId, selection) ?? {
+  const { nodes, edges } = designToNodesAndEdges() ?? {
     nodes: [],
     edges: [],
   };
@@ -929,16 +911,16 @@ const Diagram: FC = () => {
 
   const onCluster = useCallback(
     (clusterPieceIds: string[]) => {
-      executeCommand?.("cluster", { pieceIds: clusterPieceIds }).catch(() => {});
+      execute?.("cluster", { pieceIds: clusterPieceIds }).catch(() => {});
     },
-    [executeCommand],
+    [execute],
   );
 
   const onExpand = useCallback(
     (target: DesignId) => {
-      executeCommand?.("expand", { designId: target }).catch(() => {});
+      execute?.("explode", { designId: target }).catch(() => {});
     },
-    [executeCommand],
+    [execute],
   );
 
   const onNodeDragStart = useCallback(
@@ -1536,13 +1518,13 @@ const Diagram: FC = () => {
       if ((design.connections ?? []).find((c) => isSameConnection(c, newConnection))) return;
       const newConnections = [...(design.connections ?? []), newConnection];
       const updatedPieces = design.pieces?.map((piece) => (isSamePiece(piece, { id_: sourcePieceId }) ? { ...piece, center: undefined, plane: undefined } : piece));
-      setDesign({
+      updateDesign({
         ...design,
         connections: newConnections,
         pieces: updatedPieces,
       });
     },
-    [setDesign, kit, designId, reactFlowInstance, design],
+    [updateDesign, kit, designId, reactFlowInstance, design],
   );
 
   const nodeTypes = useMemo(() => ({ piece: PieceNodeComponent, design: DesignNodeComponent }), []);

@@ -20,7 +20,7 @@
 // #endregion
 
 import JSZip from "jszip";
-import React, { createContext, useContext, useSyncExternalStore } from "react";
+import React, { createContext, useContext, useMemo, useSyncExternalStore } from "react";
 import type { Database, SqlJsStatic } from "sql.js";
 import initSqlJs from "sql.js";
 import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
@@ -33,6 +33,7 @@ import {
   Attribute,
   Author,
   Camera,
+  colorPortsForTypes,
   Connection,
   ConnectionDiff,
   ConnectionId,
@@ -243,7 +244,7 @@ export interface DesignEditorPresence {
   cursor?: DiagramPoint;
   camera?: Camera;
 }
-export interface DesignEditorPresenceOther extends DesignEditorPresence {}
+export interface DesignEditorPresenceOther extends OtherPresence, DesignEditorPresence {}
 export interface DesignEditorChangableState extends EditorChangableState<DesignEditorSelection, DesignEditorPresence> {
   fullscreenPanel: DesignEditorFullscreenPanel;
 }
@@ -569,8 +570,7 @@ class YFileStore implements FileStore {
   private cacheHash?: string;
 
   private hash(file: SemioFile): string {
-    // TODO: Implement hash calculation
-    return "";
+    return JSON.stringify(file);
   }
 
   constructor(parent: YKitStore, file: SemioFile) {
@@ -643,8 +643,7 @@ class YRepresentationStore implements RepresentationStore {
   private cacheHash?: string;
 
   private hash(representation: Representation): string {
-    // TODO: Implement hash calculation
-    return "";
+    return JSON.stringify(representation);
   }
 
   constructor(parent: YKitStore, representation: Representation) {
@@ -708,8 +707,7 @@ class YPortStore implements PortStore {
   private cacheHash?: string;
 
   private hash(port: Port): string {
-    // TODO: Implement hash calculation
-    return "";
+    return JSON.stringify(port);
   }
 
   constructor(parent: YTypeStore, port: Port) {
@@ -803,8 +801,7 @@ class YTypeStore implements TypeStore {
   private cacheHash?: string;
 
   private hash(type: Type): string {
-    // TODO: Implement hash calculation
-    return "";
+    return JSON.stringify(type);
   }
 
   constructor(parent: YKitStore, type: Type) {
@@ -917,8 +914,7 @@ class YPieceStore implements PieceStore {
   private cacheHash?: string;
 
   private hash(piece: Piece): string {
-    // TODO: Implement hash calculation
-    return "";
+    return JSON.stringify(piece);
   }
 
   constructor(parent: YDesignStore, piece: Piece) {
@@ -1063,8 +1059,7 @@ class YConnectionStore implements ConnectionStore {
   private cacheHash?: string;
 
   private hash(connection: Connection): string {
-    // TODO: Implement hash calculation
-    return "";
+    return JSON.stringify(connection);
   }
 
   constructor(parent: YDesignStore, connection: Connection) {
@@ -1194,8 +1189,7 @@ class YDesignStore implements DesignStore {
   private cacheHash?: string;
 
   private hash(design: Design): string {
-    // TODO: Implement hash calculation
-    return "";
+    return JSON.stringify(design);
   }
 
   constructor(parent: YKitStore, design: Design) {
@@ -1385,8 +1379,7 @@ class YKitStore implements KitStore {
   private cacheHash?: string;
 
   private hash(kit: Kit): string {
-    // TODO: Implement hash calculation
-    return "";
+    return JSON.stringify(kit);
   }
 
   constructor(parent: SketchpadStore, kit: Kit) {
@@ -1745,8 +1738,7 @@ class YDesignEditorStore implements DesignEditorStore {
   private cacheHash?: string;
 
   private hash(state: DesignEditorState): string {
-    // TODO: Implement hash calculation
-    return "";
+    return JSON.stringify(state);
   }
 
   constructor(parent: SketchpadStore, state?: DesignEditorState) {
@@ -2168,8 +2160,7 @@ class YSketchpadStore implements SketchpadStore {
   // private readonly broadcastChannel: BroadcastChannel;
 
   private hash(state: SketchpadState): string {
-    // TODO: Implement hash calculation
-    return this.theme.toString();
+    return JSON.stringify(state);
   }
 
   private getYSketchpad(): YSketchpad {
@@ -3139,6 +3130,12 @@ export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, id?: KitId, d
   return useSync<KitShallow, T>(useKitStore(identitySelector, id) as KitStore, selector ? selector : identitySelector, deep);
 }
 
+export function useDiffedKit(): Kit {
+  const kit = useKit() as Kit;
+  const diff = useDesignEditorDiff();
+  return applyKitDiff(kit, diff);
+}
+
 function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?: DesignEditorId): T | DesignEditorStore {
   const store = useSketchpadStore();
   const kitScope = useKitStoreScope();
@@ -3176,6 +3173,13 @@ export function useDesign<T>(selector?: (design: DesignShallow | Design) => T, i
     return useSyncDeep<Design, T>(useDesignStore(identitySelector, id) as DesignStore, selector ? selector : identitySelector);
   }
   return useSync<DesignShallow, T>(useDesignStore(identitySelector, id) as DesignStore, selector ? selector : identitySelector, deep);
+}
+
+export function useDiffedDesign(): Design {
+  const kit = useDiffedKit();
+  const designScope = useDesignScope();
+  if (!designScope) throw new Error("useDiffedDesign must be called within a DesignScopeProvider");
+  return findDesignInKit(kit, designScope.id);
 }
 
 export function useFlattenDiff(): DesignDiff {
@@ -3225,6 +3229,22 @@ function useTypeStore<T>(selector?: (store: TypeStore) => T, id?: TypeId): T | T
 
 export function useType<T>(selector?: (type: Type) => T, id?: TypeId, deep: boolean = false): T | Type {
   return useSync<Type, T>(useTypeStore(identitySelector, id) as TypeStore, selector ? selector : identitySelector, deep);
+}
+
+export function usePortColoredTypes(): Type[] {
+  const diffedKit = useDiffedKit();
+  const typesWithColoredPorts = useMemo(() => {
+    if (!diffedKit.types) return [];
+    const colorDiff = colorPortsForTypes(diffedKit.types);
+    return colorDiff.updated
+      ? diffedKit.types.map((type) => {
+          const update = colorDiff.updated?.find((u) => u.id.name === type.name && u.id.variant === type.variant);
+          return update ? { ...type, ports: update.diff.ports } : type;
+        })
+      : diffedKit.types;
+  }, [diffedKit.types]);
+  const unified = useMemo(() => ({ ...diffedKit, types: typesWithColoredPorts }), [diffedKit, typesWithColoredPorts]);
+  return unified.types;
 }
 
 function usePieceStore<T>(selector?: (store: PieceStore) => T, id?: PieceId): T | PieceStore {
@@ -3384,12 +3404,6 @@ export function useDesignEditorFullscreen(): DesignEditorFullscreenPanel {
 
 export function useDesignEditorDiff(): KitDiff {
   return useDesignEditor((s) => s.diff) as KitDiff;
-}
-
-export function useDiffedKit(): Kit {
-  const kit = useKit() as Kit;
-  const diff = useDesignEditorDiff();
-  return applyKitDiff(kit, diff);
 }
 
 export function useFileUrls(): Map<Url, Url> {
