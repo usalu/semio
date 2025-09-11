@@ -22,7 +22,7 @@
 
 import { GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, OrthographicCamera, Select, TransformControls, useGLTF } from "@react-three/drei";
 import { Canvas, ThreeEvent } from "@react-three/fiber";
-import { DiffStatus, getPieceRepresentationUrls, Piece, Plane, planeToMatrix, toSemioRotation } from "../../../semio";
+import { DiffStatus, Piece, Plane, planeToMatrix, toSemioRotation } from "../../../semio";
 import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import {
@@ -36,6 +36,9 @@ import {
   useFlatDesign,
   useFileUrls,
   useKit,
+  usePieceDiffStatuses,
+  usePiecePlanes,
+  usePieceRepresentationUrls,
 } from "../../../store";
 
 const getComputedColor = (variable: string): string => {
@@ -71,17 +74,26 @@ const PlaneThree: FC<PlaneThreeProps> = ({ plane }) => {
 };
 
 interface ModelPieceProps {
-  piece: Piece;
-  plane: Plane;
-  fileUrl: string;
-  selected?: boolean;
-  updating?: boolean;
-  diffStatus?: DiffStatus;
+  pieceIndex: number;
   onSelect: (piece: Piece, e?: MouseEvent) => void;
   onPieceUpdate: (piece: Piece) => void;
 }
 
-const ModelPiece: FC<ModelPieceProps> = React.memo(({ piece, plane, fileUrl, selected, updating, diffStatus = DiffStatus.Unchanged, onSelect, onPieceUpdate }) => {
+const ModelPiece: FC<ModelPieceProps> = React.memo(({ pieceIndex, onSelect, onPieceUpdate }) => {
+  const flatDesign = useFlatDesign();
+  const piecePlanes = usePiecePlanes();
+  const pieceRepresentationUrls = usePieceRepresentationUrls();
+  const pieceDiffStatuses = usePieceDiffStatuses();
+  const fileUrls = useFileUrls();
+  const selection = useDesignEditorSelection();
+  
+  const piece = flatDesign.pieces?.[pieceIndex];
+  const plane = piecePlanes[pieceIndex];
+  const fileUrl = fileUrls.get(pieceRepresentationUrls.get(piece?.id_!)!)!;
+  const selected = selection.pieces?.some((id) => id.id_ === piece?.id_) ?? false;
+  const diffStatus = pieceDiffStatuses[pieceIndex] || DiffStatus.Unchanged;
+
+  if (!piece) return null;
   const { startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
   const fixed = piece.plane !== undefined;
   const matrix = useMemo(() => {
@@ -200,27 +212,13 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(({ piece, plane, fileUrl, sel
 });
 
 const ModelDesign: FC = () => {
-  const [debugInfo, setDebugInfo] = useState<string>("");
-
-  let commands, selection, fileUrls, others, kit, flatDesign;
-
-  try {
-    commands = useDesignEditorCommands();
-    selection = useDesignEditorSelection();
-    fileUrls = useFileUrls();
-    others = useDesignEditorOthers();
-    kit = useKit();
-    flatDesign = useFlatDesign();
-    setDebugInfo(`Kit: ${kit ? `${kit.name} v${kit.version}` : "null"}, FlatDesign: ${flatDesign ? `${flatDesign.pieces?.length || 0} pieces` : "null"}`);
-  } catch (error) {
-    console.error("ModelDesign: Error in hooks:", error);
-    return (
-      <mesh>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshBasicMaterial color="red" />
-      </mesh>
-    );
-  }
+  const commands = useDesignEditorCommands();
+  const selection = useDesignEditorSelection();
+  const fileUrls = useFileUrls();
+  const others = useDesignEditorOthers();
+  const kit = useKit();
+  const flatDesign = useFlatDesign();
+  const pieceRepresentationUrls = usePieceRepresentationUrls();
 
   const { removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = commands;
 
@@ -232,11 +230,7 @@ const ModelDesign: FC = () => {
       </mesh>
     );
   }
-  const types = kit?.types ?? [];
-
-  const piecePlanes = useMemo(() => flatDesign.pieces?.map((p: Piece) => p.plane!) || [], [flatDesign]);
-
-  const pieceRepresentationUrls = useMemo(() => getPieceRepresentationUrls(flatDesign, types), [flatDesign, types]);
+  const types = kit.types ?? [];
 
   useEffect(() => {
     fileUrls.forEach((url, id) => {
@@ -260,15 +254,6 @@ const ModelDesign: FC = () => {
       if (!fileUrls.has(url)) throw new Error(`Representation url ${url} for piece ${id} not found in fileUrls map`);
     });
   }, [pieceRepresentationUrls, fileUrls]);
-
-  const pieceDiffStatuses = useMemo(() => {
-    return (
-      flatDesign.pieces?.map((piece: Piece) => {
-        const diffAttribute = piece.attributes?.find((q: any) => q.key === "semio.diffStatus");
-        return (diffAttribute?.value as DiffStatus) || DiffStatus.Unchanged;
-      }) || []
-    );
-  }, [flatDesign]);
 
   const onChange = useCallback(
     (selected: THREE.Object3D[]) => {
@@ -301,11 +286,7 @@ const ModelDesign: FC = () => {
         {flatDesign.pieces?.map((piece: Piece, index: number) => (
           <ModelPiece
             key={`piece-${piece.id_}`}
-            piece={piece}
-            plane={piecePlanes[index!]}
-            fileUrl={fileUrls.get(pieceRepresentationUrls.get(piece.id_)!)!}
-            selected={selection.pieces?.some((id) => id.id_ === piece.id_) ?? false}
-            diffStatus={pieceDiffStatuses[index]}
+            pieceIndex={index}
             onSelect={onSelect}
             onPieceUpdate={onPieceUpdate}
           />
@@ -413,7 +394,7 @@ const Model: FC = () => {
   return (
     <div id="model" className="h-full w-full">
       <Canvas onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed}>
-        <SimpleModelCore />
+        <ModelCore />
       </Canvas>
     </div>
   );

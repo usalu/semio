@@ -20,7 +20,7 @@
 // #endregion
 
 import JSZip from "jszip";
-import React, { createContext, useContext, useMemo, useSyncExternalStore } from "react";
+import React, { createContext, useCallback, useContext, useMemo, useSyncExternalStore } from "react";
 import type { Database, SqlJsStatic } from "sql.js";
 import initSqlJs from "sql.js";
 import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
@@ -46,10 +46,17 @@ import {
   designIdToString,
   DesignShallow,
   DiagramPoint,
+  DiffStatus,
   FileDiff,
   fileIdLikeToFileId,
   findDesignInKit,
+  findPieceInDesign,
+  findReplacableDesignsForDesignPiece,
+  findReplacableTypesForPieceInDesign,
+  findReplacableTypesForPiecesInDesign,
   flattenDesign,
+  getIncludedDesigns,
+  getPieceRepresentationUrls,
   Kit,
   KitDiff,
   KitId,
@@ -3636,6 +3643,179 @@ export function useFileUrls(): Map<Url, Url> {
 
 export function useDesignEditorOthers(): DesignEditorPresenceOther[] {
   return useDesignEditor((s) => s.others) as DesignEditorPresenceOther[];
+}
+
+// Domain-specific computed hooks
+
+export function usePiecePlanes(): Plane[] {
+  const flatDesign = useFlatDesign();
+  return useMemo(() => flatDesign.pieces?.map((p: Piece) => p.plane!) || [], [flatDesign]);
+}
+
+export function usePieceRepresentationUrls(): Map<string, string> {
+  const flatDesign = useFlatDesign();
+  const types = usePortColoredTypes();
+  return useMemo(() => getPieceRepresentationUrls(flatDesign, types), [flatDesign, types]);
+}
+
+export function usePieceDiffStatuses(): DiffStatus[] {
+  const flatDesign = useFlatDesign();
+  return useMemo(() => {
+    return (
+      flatDesign.pieces?.map((piece: Piece) => {
+        const diffAttribute = piece.attributes?.find((q: any) => q.key === "semio.diffStatus");
+        return (diffAttribute?.value as DiffStatus) || DiffStatus.Unchanged;
+      }) || []
+    );
+  }, [flatDesign]);
+}
+
+export function useTypesByName(): Record<string, Type[]> {
+  const kit = useKit();
+  return useMemo(() => {
+    if (!kit?.types) return {};
+    return kit.types.reduce(
+      (acc, type) => {
+        acc[type.name] = acc[type.name] || [];
+        acc[type.name].push(type);
+        return acc;
+      },
+      {} as Record<string, Type[]>,
+    );
+  }, [kit?.types]);
+}
+
+export function useDesignsByName(): Record<string, Design[]> {
+  const kit = useKit();
+  return useMemo(() => {
+    if (!kit?.designs) return {};
+    return kit.designs.reduce(
+      (acc, design) => {
+        const nameKey = design.name;
+        acc[nameKey] = acc[nameKey] || [];
+        acc[nameKey].push(design);
+        return acc;
+      },
+      {} as Record<string, Design[]>,
+    );
+  }, [kit?.designs]);
+}
+
+export function useIncludedDesigns() {
+  const design = useDesign();
+  return useMemo(() => getIncludedDesigns(design), [design]);
+}
+
+export function useReplacableTypes(pieceIds: PieceId[], selectedVariants?: string[]) {
+  const kit = useKit();
+  const design = useDesign();
+  const designId = useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
+  
+  return useMemo(() => {
+    if (pieceIds.length === 1) {
+      return findReplacableTypesForPieceInDesign(kit, designId, pieceIds[0], selectedVariants);
+    } else {
+      return findReplacableTypesForPiecesInDesign(kit, designId, pieceIds, selectedVariants);
+    }
+  }, [kit, designId, pieceIds, selectedVariants]);
+}
+
+export function useReplacableDesigns(piece: Piece) {
+  const kit = useKit();
+  const design = useDesign();
+  const designId = useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
+  
+  return useMemo(() => {
+    return findReplacableDesignsForDesignPiece(kit, designId, piece);
+  }, [kit, designId, piece]);
+}
+
+export function useIsDesignActive(): (design: Design) => boolean {
+  const activeDesignId = useActiveDesignEditor();
+  return useCallback((design: Design): boolean => {
+    if (!activeDesignId) return false;
+    return design.name === activeDesignId.name && 
+           (design.variant || undefined) === activeDesignId.variant && 
+           (design.view || undefined) === activeDesignId.view;
+  }, [activeDesignId]);
+}
+
+export function usePiecesFromIds(pieceIds: PieceId[]) {
+  const design = useDesign();
+  const includedDesigns = useIncludedDesigns();
+  const includedDesignMap = useMemo(() => new Map(includedDesigns.map((d) => [d.id, d])), [includedDesigns]);
+
+  return useMemo(() => {
+    return pieceIds.map((id) => {
+      try {
+        const foundPiece = findPieceInDesign(design, id);
+        return {
+          ...foundPiece,
+          id_: typeof foundPiece.id_ === "string" ? foundPiece.id_ : (foundPiece.id_ as any).id_,
+        };
+      } catch {
+        const pieceIdString = typeof id === "string" ? id : (id as any).id_;
+        const includedDesign = includedDesignMap.get(pieceIdString);
+        if (includedDesign) {
+          return {
+            id_: pieceIdString,
+            type: {
+              name: "design",
+              variant:
+                includedDesign.type === "fixed"
+                  ? `${includedDesign.designId.name}${includedDesign.designId.variant ? `-${includedDesign.designId.variant}` : ""}${includedDesign.designId.view ? `-${includedDesign.designId.view}` : ""}`
+                  : includedDesign.designId.name,
+            },
+            center: includedDesign.center,
+            plane: includedDesign.plane,
+            description: `${includedDesign.type === "fixed" ? "Fixed" : "Clustered"} design: ${includedDesign.designId.name}`,
+          };
+        }
+        
+        console.warn(`Piece ${pieceIdString} not found in pieces or includedDesigns. Creating fallback piece.`);
+        return {
+          id_: pieceIdString,
+          type: {
+            name: "unknown",
+            variant: "",
+          },
+          description: `Unknown piece: ${pieceIdString}`,
+        };
+      }
+    });
+  }, [pieceIds, design, includedDesignMap]);
+}
+
+export function useDesignId() {
+  const design = useDesign();
+  return useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
+}
+
+export function useClusterableGroups() {
+  const design = useDesign();
+  const selection = useDesignEditorSelection();
+  return useMemo(() => {
+    if (!design) return [];
+    return getClusterableGroups(
+      design,
+      selection.pieces.map((p: any) => p.id_),
+    );
+  }, [design, selection.pieces]);
+}
+
+export function useExplodeableDesignNodes(nodes: any[], selection: any) {
+  const kit = useKit();
+  return useMemo(() => {
+    return nodes.filter((node) => {
+      if (node.type !== "design") return false;
+      const pieceId = node.data.piece.id_;
+      if (!selection.pieces?.some((p: any) => p.id_ === pieceId)) return false;
+      const designName = (node.data.piece as any).type?.variant;
+      if (!designName) return false;
+      if (!kit?.designs?.find((d) => d.name === designName)) return false;
+      return true;
+    });
+  }, [nodes, selection.pieces, kit]);
 }
 
 // #endregion Hooks

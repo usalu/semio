@@ -6,7 +6,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/compone
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
 import { Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
 import { Design, DesignId, Type, TypeId } from "../../../semio";
-import { useActiveDesignEditor, useKit } from "../../../store";
+import { useActiveDesignEditor, useDesignsByName, useIsDesignActive, useKit, useTypesByName } from "../../../store";
 import { ResizablePanelProps } from "./DesignEditor";
 
 interface TypeAvatarProps {
@@ -112,13 +112,10 @@ interface WorkbenchProps extends ResizablePanelProps {}
 const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
   if (!visible) return null;
   const kit = useKit();
+  const activeDesignId = useActiveDesignEditor();
+  const isDesignActive = useIsDesignActive();
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-
-  const isDesignActive = (design: Design): boolean => {
-    const activeDesignId = useActiveDesignEditor();
-    return design.name === activeDesignId.name && (design.variant || undefined) === activeDesignId.variant && (design.view || undefined) === activeDesignId.view;
-  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -144,26 +141,10 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
+  const typesByName = useTypesByName();
+  const designsByName = useDesignsByName();
+
   if (!kit?.types || !kit?.designs) return null;
-
-  const typesByName = kit.types.reduce(
-    (acc, type) => {
-      acc[type.name] = acc[type.name] || [];
-      acc[type.name].push(type);
-      return acc;
-    },
-    {} as Record<string, Type[]>,
-  );
-
-  const designsByName = kit.designs.reduce(
-    (acc, design) => {
-      const nameKey = design.name;
-      acc[nameKey] = acc[nameKey] || [];
-      acc[nameKey].push(design);
-      return acc;
-    },
-    {} as Record<string, Design[]>,
-  );
 
   return (
     <div

@@ -24,7 +24,7 @@ import {
   PieceId,
   PortId,
 } from "../../../semio";
-import { useDesign, useDesignEditorCommands, useDesignEditorSelection, useKit, usePiecesMetadata } from "../../../store";
+import { useDesign, useDesignEditorCommands, useDesignEditorSelection, useDesignId, useIncludedDesigns, useKit, usePiecesFromIds, usePiecesMetadata, useReplacableDesigns, useReplacableTypes } from "../../../store";
 import Combobox from "../Combobox";
 import { ResizablePanelProps } from "./DesignEditor";
 
@@ -408,82 +408,33 @@ const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
   const { setDesign, setPiece, setPieces, setConnection, startTransaction, finalizeTransaction, abortTransaction, executeCommand } = useDesignEditorCommands();
   const design = useDesign();
   const metadata = usePiecesMetadata();
+  const pieces = usePiecesFromIds(pieceIds);
+  const includedDesigns = useIncludedDesigns();
+  const kit = useKit();
+  const designId = useDesignId();
+  
+  const includedDesignMap = useMemo(() => new Map(includedDesigns.map((d) => [d.id, d])), [includedDesigns]);
 
-  // Handle both regular pieces and synthetic design pieces (fixed and connected)
-  const includedDesigns = getIncludedDesigns(design);
-  const includedDesignMap = new Map(includedDesigns.map((d) => [d.id, d]));
-
-  // Helper function to find parent connection for a design piece
-  const findParentConnectionForDesignPiece = (pieceId: string): Connection | null => {
+  const findParentConnectionForDesignPiece = useCallback((pieceId: string): Connection | null => {
     const includedDesign = includedDesignMap.get(pieceId);
     if (!includedDesign || includedDesign.type !== "connected") {
-      return null; // Fixed designs don't have parent connections
+      return null;
     }
 
-    // For connected designs, find the actual parent connection using BFS metadata
     const pieceMetadata = metadata.get(pieceId);
-
     if (!pieceMetadata?.parentPieceId) {
-      return null; // No parent found
+      return null;
     }
 
-    // Find the connection between the parent piece and this design piece
     const parentPieceId = pieceMetadata.parentPieceId;
-
-    // Look for a connection that connects the parent piece to this design piece
-    // The connection should have the designId parameter set
     const parentConn = design.connections?.find((connection: Connection) => {
       const isParentConnecting = connection.connecting.piece.id_ === parentPieceId && connection.connected.designPiece?.id_ === includedDesign.designId.name;
       const isParentConnected = connection.connected.piece.id_ === parentPieceId && connection.connecting.designPiece?.id_ === includedDesign.designId.name;
-
       return isParentConnecting || isParentConnected;
     });
 
     return parentConn || null;
-  };
-
-  const pieces = pieceIds.map((id) => {
-    try {
-      // Try to find as regular piece first
-      const foundPiece = findPieceInDesign(design, id);
-      // Normalize the piece to ensure consistent ID structure
-      return {
-        ...foundPiece,
-        id_: getPieceId(foundPiece),
-      };
-    } catch {
-      // Check if it's a design piece (either fixed or connected)
-      const pieceIdString = getPieceId({ id_: id } as any);
-      const includedDesign = includedDesignMap.get(pieceIdString);
-      if (includedDesign) {
-        // Create a synthetic piece that matches the design
-        return {
-          id_: pieceIdString,
-          type: {
-            name: "design",
-            variant:
-              includedDesign.type === "fixed"
-                ? `${includedDesign.designId.name}${includedDesign.designId.variant ? `-${includedDesign.designId.variant}` : ""}${includedDesign.designId.view ? `-${includedDesign.designId.view}` : ""}`
-                : includedDesign.designId.name,
-          },
-          center: includedDesign.center,
-          plane: includedDesign.plane,
-          description: `${includedDesign.type === "fixed" ? "Fixed" : "Clustered"} design: ${includedDesign.designId.name}`,
-        };
-      }
-
-      // If still not found, create a fallback synthetic piece instead of throwing an error
-      console.warn(`Piece ${pieceIdString} not found in pieces or includedDesigns. Creating fallback piece.`);
-      return {
-        id_: pieceIdString,
-        type: {
-          name: "unknown",
-          variant: "",
-        },
-        description: `Unknown piece: ${pieceIdString}`,
-      };
-    }
-  });
+  }, [includedDesignMap, metadata, design.connections]);
 
   const isSingle = pieceIds.length === 1;
   const piece = isSingle ? pieces[0] : null;
@@ -818,25 +769,24 @@ const PiecesSection: FC<{ pieceIds: PieceId[] }> = ({ pieceIds }) => {
   const hasVariant = pieces.some((p) => p.type.variant);
   const hasUnfixedPieces = pieces.some((p) => !p.plane || !p.center);
 
-  // For regular pieces
-  const selectedVariants = [...new Set(pieces.map((p) => p.type.variant).filter((v): v is string => Boolean(v)))];
-  const availableTypes = !isDesignPiece ? (isSingle ? findReplacableTypesForPieceInDesign(kit, designId, pieceIds[0], selectedVariants) : findReplacableTypesForPiecesInDesign(kit, designId, pieceIds, selectedVariants)) : [];
-  const availableTypeNames = [...new Set(availableTypes.map((t) => t.name))];
-  const availableVariants =
+  const selectedVariants = useMemo(() => [...new Set(pieces.map((p) => p.type.variant).filter((v): v is string => Boolean(v)))], [pieces]);
+  const availableTypes = useReplacableTypes(pieceIds, isDesignPiece ? [] : selectedVariants);
+  const availableTypeNames = useMemo(() => [...new Set(availableTypes.map((t) => t.name))], [availableTypes]);
+  const allReplacableTypes = useReplacableTypes(pieceIds, []);
+  const availableVariants = useMemo(() =>
     commonTypeName && !isDesignPiece
       ? [
           ...new Set(
-            (isSingle ? findReplacableTypesForPieceInDesign(kit, designId, pieceIds[0]) : findReplacableTypesForPiecesInDesign(kit, designId, pieceIds))
+            allReplacableTypes
               .filter((t) => t.name === commonTypeName)
               .map((t) => t.variant)
               .filter((v): v is string => Boolean(v)),
           ),
         ]
-      : [];
+      : [], [commonTypeName, isDesignPiece, allReplacableTypes]);
 
-  // For design pieces
-  const availableDesigns = isDesignPiece && isSingle ? findReplacableDesignsForDesignPiece(kit, designId, piece!) : [];
-  const availableDesignNames = [...new Set(availableDesigns.map((d) => d.name))];
+  const availableDesigns = isDesignPiece && isSingle && piece ? useReplacableDesigns(piece) : [];
+  const availableDesignNames = useMemo(() => [...new Set(availableDesigns.map((d) => d.name))], [availableDesigns]);
 
   // Parse current design ID for design pieces
   const currentDesignId = isDesignPiece && isSingle ? parseDesignIdFromVariant(piece!.type.variant || "") : null;

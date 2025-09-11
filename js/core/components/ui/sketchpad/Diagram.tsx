@@ -45,12 +45,14 @@ import {
   DesignEditorFullscreenPanel,
   DesignEditorPresenceOther,
   PieceScopeProvider,
+  useClusterableGroups,
   useDesign,
   useDesignEditorCommands,
   useDesignEditorFullscreen,
   useDesignEditorOthers,
   useDesignEditorSelection,
   useDiffedDesign,
+  useExplodeableDesignNodes,
   useFlatDesign,
   useKit,
   useKitCommands,
@@ -61,22 +63,12 @@ import {
 type ClusterMenuProps = {
   nodes: DiagramNode[];
   edges: DiagramEdge[];
-  selection: any;
   onCluster: (clusterPieceIds: string[]) => void;
 };
 
-const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, selection, onCluster }) => {
+const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, onCluster }) => {
   const reactFlowInstance = useReactFlow();
-  const kit = useKit();
-  const design = useDesign();
-
-  const clusterableGroups = useMemo(() => {
-    if (!design) return [];
-    return getClusterableGroups(
-      design,
-      selection.pieces.map((p: any) => p.id_),
-    );
-  }, [design, selection.pieces]);
+  const clusterableGroups = useClusterableGroups();
 
   const getBoundingBoxForGroup = useCallback(
     (groupPieceIds: string[]) => {
@@ -149,24 +141,12 @@ const ClusterMenu: FC<ClusterMenuProps> = ({ nodes, edges, selection, onCluster 
 type ExpandMenuProps = {
   nodes: DiagramNode[];
   edges: DiagramEdge[];
-  selection: any;
   onExpand: (designId: DesignId) => void;
 };
 
-const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, selection, onExpand }) => {
-  const kit = useKit();
-
-  const explodeableDesignNodes = useMemo(() => {
-    return nodes.filter((node) => {
-      if (node.type !== "design") return false;
-      const pieceId = getPieceIdFromNode(node);
-      if (!selection.pieces?.some((p: any) => p.id_ === pieceId)) return false;
-      const designName = (node.data.piece as Piece).type?.variant;
-      if (!designName) return false;
-      if (!kit?.designs?.find((d) => d.name === designName)) return false;
-      return true;
-    });
-  }, [nodes, selection.pieces, kit]);
+const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
+  const selection = useDesignEditorSelection();
+  const explodeableDesignNodes = useExplodeableDesignNodes(nodes, selection);
 
   const getBoundingBoxForNode = useCallback((node: DiagramNode) => {
     const x = node.position.x;
@@ -1556,8 +1536,8 @@ const Diagram: FC = () => {
         ))}
       </ReactFlow>
       <HelperLines lines={helperLines} nodes={nodes} />
-      <ClusterMenu nodes={nodes} edges={edges} selection={selection} onCluster={onCluster} />
-      <ExpandMenu nodes={nodes} edges={edges} selection={selection} onExpand={onExpand} />
+      <ClusterMenu nodes={nodes} edges={edges} onCluster={onCluster} />
+      <ExpandMenu nodes={nodes} edges={edges} onExpand={onExpand} />
     </div>
   );
 };
