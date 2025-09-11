@@ -55,7 +55,7 @@ interface VisiblePanels {
 const DesignEditor: FC<DesignEditorProps> = () => {
   const { setNavbarToolbar } = useNavbar();
   const fullscreenPanel = useDesignEditorFullscreen();
-  const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen } = useDesignEditorCommands();
+  const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, addPiece, execute } = useDesignEditorCommands();
 
   // Panel visibility and sizing state
   const [visiblePanels, setVisiblePanels] = useState<VisiblePanels>({
@@ -121,13 +121,27 @@ const DesignEditor: FC<DesignEditorProps> = () => {
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
+    const { active, over, delta } = event;
 
     if (over && over.id === "diagram-drop-zone") {
+      const ICON_WIDTH = 64;
+      const centerX = Math.round(delta.x / ICON_WIDTH);
+      const centerY = Math.round(-delta.y / ICON_WIDTH);
+      
       if (activeDraggedTypeId) {
-        // TODO: Add piece to diagram using commands
+        const piece = {
+          id_: `piece-${Date.now()}`,
+          type: activeDraggedTypeId,
+          center: { x: centerX, y: centerY },
+        };
+        addPiece(piece).catch(() => {});
       } else if (activeDraggedDesignId) {
-        // TODO: Add design to diagram using commands
+        const piece = {
+          id_: `design-${Date.now()}`,
+          design: activeDraggedDesignId,
+          center: { x: centerX, y: centerY },
+        };
+        addPiece(piece).catch(() => {});
       }
     }
 

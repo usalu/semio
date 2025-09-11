@@ -1504,7 +1504,7 @@ const Diagram: FC = () => {
   return (
     <div id="diagram" className="h-full w-full relative">
       <ReactFlow
-        ref={useDroppable({ id: "diagram" }).setNodeRef}
+        ref={useDroppable({ id: "diagram-drop-zone" }).setNodeRef}
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}

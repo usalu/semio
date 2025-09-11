@@ -22,10 +22,10 @@
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
-import React, { FC, useEffect, useRef, useState } from "react";
+import React, { FC, useEffect, useMemo, useRef, useState } from "react";
 
-import { Design, DesignId, Kit } from "../../../semio";
-import { DesignEditorSelection, useActiveDesignEditor, useDesignEditorSelection, useKit } from "../../../store";
+import { Design, DesignId, Kit, Piece, TypeId } from "../../../semio";
+import { DesignEditorSelection, useActiveDesignEditor, useDesignEditorCommands, useDesignEditorSelection, useKit } from "../../../store";
 
 export interface CommandParameter {
   name: string;
@@ -1163,23 +1163,29 @@ class TerminalConsole {
     });
 
     try {
+      const kit = this.designEditor?.kit || {};
+      const designId = this.designEditor?.designId || { name: "", variant: "", view: "" };
+      const selection = this.designEditor?.selection || {
+        pieces: [],
+        connections: [],
+        port: undefined,
+      };
+      
       const context = {
-        kit: useKit(),
-        designId: useActiveDesignEditor() || "",
-        selection: useDesignEditorSelection() || {
-          pieces: [],
-          connections: [],
-          port: undefined,
-        },
+        kit,
+        designId,
+        selection,
+        commands: this.designEditor?.commands,
       };
 
       if (command.editorOnly) {
         const result = await command.execute(context, payload);
 
-        // TODO: implement
-        // if (result.selection && useDesignEditorSelection) {
-        //   useDesignEditorSelection(result.selection);
-        // }
+        if (this.designEditor && result.selection) {
+          if (this.designEditor.setSelection) {
+            this.designEditor.setSelection(result.selection);
+          }
+        }
 
         if (result.content) {
           this.renderReactContent(result.content);
@@ -1193,26 +1199,23 @@ class TerminalConsole {
           this.notifyStateChange();
         }
       } else {
-        // TODO: implement
-        // if (this.designEditor.startTransaction) {
-        //   this.designEditor.startTransaction();
-        // }
+        if (this.designEditor && this.designEditor.startTransaction) {
+          this.designEditor.startTransaction();
+        }
 
         try {
           const result = await command.execute(context, payload);
 
-          // TODO: implement
-          // if (result.design && this.designEditor.setDesign) {
-          //   this.designEditor.setDesign(result.design);
-          // }
-          // if (result.selection && this.designEditor.setSelection) {
-          //   this.designEditor.setSelection(result.selection);
-          // }
+          if (this.designEditor && result.design && this.designEditor.setDesign) {
+            this.designEditor.setDesign(result.design);
+          }
+          if (this.designEditor && result.selection && this.designEditor.setSelection) {
+            this.designEditor.setSelection(result.selection);
+          }
 
-          // TODO: implement
-          // if (this.designEditor.finalizeTransaction) {
-          //   this.designEditor.finalizeTransaction();
-          // }
+          if (this.designEditor && this.designEditor.finalizeTransaction) {
+            this.designEditor.finalizeTransaction();
+          }
 
           if (result.content) {
             this.renderReactContent(result.content);
@@ -1225,13 +1228,10 @@ class TerminalConsole {
             });
             this.notifyStateChange();
           }
-
-          // Don't automatically return to prompt - wait for user input
         } catch (error) {
-          // TODO: implement
-          // if (this.designEditor.abortTransaction) {
-          //   this.designEditor.abortTransaction();
-          // }
+          if (this.designEditor && this.designEditor.abortTransaction) {
+            this.designEditor.abortTransaction();
+          }
           throw error;
         }
       }
@@ -1327,7 +1327,22 @@ class TerminalConsole {
 }
 
 const Console: FC = () => {
-  const designEditor = null; // TODO: Replace with proper design editor reference
+  const kit = useKit();
+  const designId = useActiveDesignEditor();
+  const selection = useDesignEditorSelection();
+  const commands = useDesignEditorCommands();
+  
+  const designEditor = useMemo(() => ({
+    kit,
+    designId,
+    selection,
+    commands,
+    setSelection: commands.changeSelection,
+    setDesign: undefined,
+    startTransaction: commands.startTransaction,
+    finalizeTransaction: commands.finalizeTransaction,
+    abortTransaction: commands.abortTransaction,
+  }), [kit, designId, selection, commands]);
   const terminalRef = useRef<HTMLDivElement>(null);
   const terminalConsoleRef = useRef<TerminalConsole | null>(null);
   const [state, setState] = useState<ConsoleState>(() => {
@@ -1367,7 +1382,7 @@ const Console: FC = () => {
   // Update design editor reference when it changes
   useEffect(() => {
     if (terminalConsoleRef.current && designEditor) {
-      // TODO: Implement design editor update if needed
+      terminalConsoleRef.current.updateDesignEditor(designEditor);
     }
   }, [designEditor]);
 
@@ -1530,5 +1545,133 @@ export const ConsolePanel: FC<ConsolePanelProps> = ({ visible, leftPanelVisible,
 };
 
 export const commandRegistry = new EnhancedCommandRegistry();
+
+// Register basic console commands that connect to store commands
+const registerBasicCommands = () => {
+  commandRegistry.register({
+    id: "clear",
+    name: "clear",
+    description: "Clear the console screen",
+    parameters: [],
+    execute: async () => ({ content: null }),
+  });
+
+  commandRegistry.register({
+    id: "select-all",
+    name: "select all",
+    description: "Select all pieces in the current design",
+    parameters: [],
+    editorOnly: true,
+    execute: async (context: CommandContext) => {
+      const commands = (context as any).commands;
+      if (commands && commands.selectAll) {
+        await commands.selectAll();
+      }
+      return { content: "✅ Selected all pieces" };
+    },
+  });
+
+  commandRegistry.register({
+    id: "deselect-all", 
+    name: "deselect all",
+    description: "Deselect all pieces in the current design",
+    parameters: [],
+    editorOnly: true,
+    execute: async (context: CommandContext) => {
+      const commands = (context as any).commands;
+      if (commands && commands.deselectAll) {
+        await commands.deselectAll();
+      }
+      return { content: "✅ Deselected all pieces" };
+    },
+  });
+
+  commandRegistry.register({
+    id: "delete-selected",
+    name: "delete selected", 
+    description: "Delete currently selected pieces and connections",
+    parameters: [],
+    editorOnly: true,
+    execute: async (context: CommandContext) => {
+      const commands = (context as any).commands;
+      if (commands && commands.deleteSelected) {
+        await commands.deleteSelected();
+      }
+      return { content: "✅ Deleted selected items" };
+    },
+  });
+
+  commandRegistry.register({
+    id: "add-piece",
+    name: "add piece",
+    description: "Add a new piece to the design",
+    parameters: [
+      {
+        name: "type",
+        type: "TypeId",
+        description: "The type of piece to add",
+        required: true,
+      },
+      {
+        name: "x",
+        type: "number", 
+        description: "X coordinate",
+        defaultValue: 0,
+      },
+      {
+        name: "y",
+        type: "number",
+        description: "Y coordinate", 
+        defaultValue: 0,
+      },
+    ],
+    editorOnly: true,
+    execute: async (context: CommandContext, payload: Record<string, any>) => {
+      const commands = (context as any).commands;
+      if (commands && commands.addPiece) {
+        const piece: Piece = {
+          id_: `piece-${Date.now()}`,
+          type: payload.type as TypeId,
+          center: { x: payload.x || 0, y: payload.y || 0 },
+        };
+        await commands.addPiece(piece);
+      }
+      return { content: `✅ Added piece of type ${payload.type.name}` };
+    },
+  });
+
+  commandRegistry.register({
+    id: "undo",
+    name: "undo",
+    description: "Undo the last action",
+    parameters: [],
+    editorOnly: true, 
+    execute: async (context: CommandContext) => {
+      const commands = (context as any).commands;
+      if (commands && commands.undo) {
+        await commands.undo();
+      }
+      return { content: "↶ Undid last action" };
+    },
+  });
+
+  commandRegistry.register({
+    id: "redo",
+    name: "redo",
+    description: "Redo the last undone action", 
+    parameters: [],
+    editorOnly: true,
+    execute: async (context: CommandContext) => {
+      const commands = (context as any).commands;
+      if (commands && commands.redo) {
+        await commands.redo();
+      }
+      return { content: "↷ Redid last action" };
+    },
+  });
+};
+
+// Initialize basic commands
+registerBasicCommands();
 
 export default Console;
