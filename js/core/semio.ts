@@ -246,7 +246,7 @@ export const TypeSchema = z.object({
   location: LocationSchema.optional(),
   representations: z.array(RepresentationSchema).optional(),
   ports: z.array(PortSchema).optional(),
-  authors: z.array(AuthorSchema).optional(),
+  authors: z.array(AuthorIdSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
 export const TypeIdSchema = z.object({
@@ -365,7 +365,7 @@ export const DesignSchema = z.object({
   icon: z.string().optional(),
   image: z.string().optional(),
   concepts: z.array(z.string()).optional(),
-  authors: z.array(AuthorSchema).optional(),
+  authors: z.array(AuthorIdSchema).optional(),
   location: LocationSchema.optional(),
   unit: z.string(),
   scalable: z.boolean().optional(),
@@ -555,7 +555,7 @@ export const TypeDiffSchema = z.object({
   location: LocationSchema.optional(),
   representations: z.array(RepresentationSchema).optional(),
   ports: z.array(PortSchema).optional(),
-  authors: z.array(AuthorSchema).optional(),
+  authors: z.array(AuthorIdSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
 export const TypesDiffSchema = z.object({
@@ -618,7 +618,7 @@ export const DesignDiffSchema = z.object({
   connections: ConnectionsDiffSchema.optional(),
   stats: z.array(StatSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
-  authors: z.array(AuthorSchema).optional(),
+  authors: z.array(AuthorIdSchema).optional(),
 });
 export const DesignsDiffSchema = z.object({
   removed: z.array(DesignIdSchema).optional(),

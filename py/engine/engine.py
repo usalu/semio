@@ -1421,35 +1421,58 @@ class Author(AuthorRankField, AuthorEmailField, AuthorNameField, TableEntity, ta
     PLURAL = "authors"
     __tablename__ = "authors"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
-    typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
-    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="authors_")
-    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
-    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="authors_")
     kitPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kits.id")), default=None, exclude=True)
     kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="authors_")
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="author", cascade_delete=True)
 
     __table_args__ = (
-        sqlalchemy.CheckConstraint(
-            "(type_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL) OR (type_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL) OR (type_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL)", name="ck_authors_parent_set"
-        ),
-        sqlalchemy.UniqueConstraint("email", "type_id", "design_id", "kit_id", name="uq_authors_email_type_id_design_id_kit_id"),
+        sqlalchemy.UniqueConstraint("email", "kit_id", name="uq_authors_email_kit_id"),
     )
 
-    def parent(self) -> typing.Union["Type", "Design", "Kit", None]:
-        if self.type is not None:
-            return self.type
-        if self.design is not None:
-            return self.design
+    def parent(self) -> "Kit":
         if self.kit is not None:
             return self.kit
-        raise NoTypeOrDesignAssigned()
+        raise NoKitAssigned()
 
     def idMembers(self) -> RecursiveAnyList:
         return self.email
 
 
 # endregion Author
+
+# region ArtifactAuthor
+
+class ArtifactAuthorEmailField(RealField, abc.ABC):
+    author_email: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
+
+class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity, table=True):
+    PLURAL = "artifact_authors"
+    __tablename__ = "artifact_authors"
+    pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
+    typePk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("type_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("types.id")), default=None, exclude=True)
+    type: typing.Optional["Type"] = sqlmodel.Relationship(back_populates="artifact_authors")
+    designPk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("design_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("designs.id")), default=None, exclude=True)
+    design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="artifact_authors")
+
+    __table_args__ = (
+        sqlalchemy.CheckConstraint(
+            "(type_id IS NOT NULL AND design_id IS NULL) OR (type_id IS NULL AND design_id IS NOT NULL)", 
+            name="ck_artifact_authors_parent_set"
+        ),
+        sqlalchemy.UniqueConstraint("author_email", "type_id", "design_id", name="uq_artifact_authors_email_type_id_design_id"),
+    )
+
+    def parent(self) -> typing.Union["Type", "Design", None]:
+        if self.type is not None:
+            return self.type
+        if self.design is not None:
+            return self.design
+        raise NoTypeOrDesignAssigned()
+
+    def idMembers(self) -> RecursiveAnyList:
+        return [self.author_email, self.type.idMembers() if self.type else self.design.idMembers()]
+
+# endregion ArtifactAuthor
 
 # region Location
 # https://github.com/usalu/semio-location-
@@ -1556,7 +1579,7 @@ class TypeInput(TypeUnitField, TypeVirtualField, TypeStockField, TypeVariantFiel
     location: typing.Optional[LocationInput] = sqlmodel.Field(default=None)
     representations: list[RepresentationInput] = sqlmodel.Field(default_factory=list)
     ports: list[PortInput] = sqlmodel.Field(default_factory=list)
-    authors: list[AuthorInput] = sqlmodel.Field(default_factory=list)
+    authors: list[str] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
@@ -1565,7 +1588,7 @@ class TypeOutput(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeVirtualF
     location: typing.Optional[LocationOutput] = sqlmodel.Field(default=None)
     representations: list[RepresentationOutput] = sqlmodel.Field(default_factory=list)
     ports: list[PortOutput] = sqlmodel.Field(default_factory=list)
-    authors: list[AuthorOutput] = sqlmodel.Field(default_factory=list)
+    authors: list[str] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
@@ -1590,7 +1613,7 @@ class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeMirrborableFie
 
     ports: list[Port] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
 
-    authors_: list[Author] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
+    artifact_authors: list[ArtifactAuthor] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
 
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
 
@@ -1632,14 +1655,12 @@ class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeMirrborableFie
             self.locationLatitude = location.latitude
 
     @property
-    def authors(self) -> list[Author]:
-        return sorted(self.authors_, key=lambda a: a.rank)
+    def authors(self) -> list[str]:
+        return [artifact_author.author_email for artifact_author in self.artifact_authors]
 
     @authors.setter
-    def authors(self, authors: list[Author]):
-        self.authors_ = authors
-        for i, author in enumerate(self.authors_):
-            author.rank = i
+    def authors(self, author_emails: list[str]):
+        self.artifact_authors = [ArtifactAuthor(author_email=email) for email in author_emails]
 
     @property
     def concepts(self: "Type") -> list[str]:
@@ -1681,10 +1702,8 @@ class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeMirrborableFie
         except KeyError:
             pass
         try:
-            authors = [Author.parse(a) for a in obj["authors"]]
-            for i, author in enumerate(authors):
-                author.rank = i
-            entity.authors = authors
+            author_emails = obj["authors"]
+            entity.authors = author_emails
         except KeyError:
             pass
         try:
@@ -1700,7 +1719,7 @@ class Type(TypeUpdatedField, TypeCreatedField, TypeUnitField, TypeMirrborableFie
         entity["representations"] = [r.dump() for r in self.representations]
         entity["ports"] = [p.dump() for p in self.ports]
         entity["attributes"] = [q.dump() for q in self.attributes]
-        entity["authors"] = [a.dump() for a in self.authors]
+        entity["authors"] = self.authors
         entity["concepts"] = self.concepts
         return TypeOutput(**entity)
 
@@ -2316,7 +2335,7 @@ class DesignInput(DesignUnitField, DesignViewField, DesignVariantField, DesignIm
     location: typing.Optional[LocationInput] = sqlmodel.Field(default=None)
     pieces: list[PieceInput] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionInput] = sqlmodel.Field(default_factory=list)
-    authors: list[AuthorInput] = sqlmodel.Field(default_factory=list)
+    authors: list[str] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
@@ -2337,7 +2356,7 @@ class DesignOutput(DesignUpdatedField, DesignCreatedField, DesignUnitField, Desi
     location: typing.Optional[LocationOutput] = sqlmodel.Field(default=None)
     pieces: list[PieceOutput] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionOutput] = sqlmodel.Field(default_factory=list)
-    authors: list[AuthorOutput] = sqlmodel.Field(default_factory=list)
+    authors: list[str] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
@@ -2356,7 +2375,7 @@ class Design(
     __tablename__ = "designs"
     pk: typing.Optional[int] = sqlmodel.Field(sa_column=sqlmodel.Column("id", sqlalchemy.Integer(), primary_key=True), default=None, exclude=True)
     concepts_: list[Concept] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
-    authors_: list[Author] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
+    artifact_authors: list[ArtifactAuthor] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
     locationLongitude: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("location_longitude", sqlalchemy.Float()), exclude=True, default=None)
     locationLatitude: typing.Optional[float] = sqlmodel.Field(sa_column=sqlmodel.Column("location_latitude", sqlalchemy.Float()), exclude=True, default=None)
     layers: list[Layer] = sqlmodel.Relationship(back_populates="design", cascade_delete=True)
@@ -2389,14 +2408,12 @@ class Design(
             self.locationLatitude = location.latitude
 
     @property
-    def authors(self) -> list[Author]:
-        return sorted(self.authors_, key=lambda a: a.rank)
+    def authors(self) -> list[str]:
+        return [artifact_author.author_email for artifact_author in self.artifact_authors]
 
     @authors.setter
-    def authors(self, authors: list[Author]):
-        self.authors_ = authors
-        for i, author in enumerate(authors):
-            author.rank = i
+    def authors(self, author_emails: list[str]):
+        self.artifact_authors = [ArtifactAuthor(author_email=email) for email in author_emails]
 
     @property
     def concepts(self: "Design") -> list[str]:
@@ -2446,8 +2463,8 @@ class Design(
         except KeyError:
             pass
         try:
-            authors = [Author.parse(a) for a in obj["authors"]]
-            entity.authors = authors
+            author_emails = obj["authors"]
+            entity.authors = author_emails
         except KeyError:
             pass
         try:
@@ -2462,7 +2479,7 @@ class Design(
         entity["pieces"] = [p.dump() for p in self.pieces]
         entity["connections"] = [c.dump() for c in self.connections]
         entity["attributes"] = [q.dump() for q in self.attributes]
-        entity["authors"] = [a.dump() for a in self.authors]
+        entity["authors"] = self.authors
         entity["concepts"] = self.concepts
         return DesignOutput(**entity)
 

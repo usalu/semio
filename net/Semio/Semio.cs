@@ -2698,6 +2698,34 @@ public class AuthorId : Model<AuthorId>
     public override string ToString() => $"Aut({ToHumanIdString()})";
 }
 
+[Model("🔗", "AA", "ArtAuth", "A many-to-many relationship between authors and artifacts (types/designs).")]
+public class ArtifactAuthor : Model<ArtifactAuthor>
+{
+    [Email("📧", "AEm", "AEml", "The email of the author.", PropImportance.ID)]
+    public string AuthorEmail { get; set; } = "";
+    [Id("🧩", "TId?", "TyId?", "The optional type ID if this author is for a type.", isDefaultValid: true)]
+    public TypeId? TypeId { get; set; }
+    [Id("🏙️", "DId?", "DsId?", "The optional design ID if this author is for a design.", isDefaultValid: true)]
+    public DesignId? DesignId { get; set; }
+
+    public string ToIdString() => $"{AuthorEmail}#{(TypeId?.ToIdString() ?? DesignId?.ToIdString() ?? "")}";
+    public string ToHumanIdString() => $"{ToIdString()}";
+    public override string ToString() => $"ArtAuth({ToHumanIdString()})";
+
+    public override (bool, List<string>) Validate()
+    {
+        var (isValid, errors) = base.Validate();
+        var hasType = TypeId is not null && TypeId.Name != "";
+        var hasDesign = DesignId is not null && DesignId.Name != "";
+        if (!(hasType ^ hasDesign))
+        {
+            isValid = false;
+            errors.Add("Exactly one of TypeId or DesignId must be set on an artifact author.");
+        }
+        return (isValid, errors);
+    }
+}
+
 [Model("📍", "Lc", "Loc", "A location on the earth surface (longitude, latitude).")]
 public class Location : Model<Location>
 {
@@ -2755,7 +2783,7 @@ public class TypeDiff : Model<TypeDiff>
     [ModelProp("🔌", "Po*", "Pors*", "The optional ports of the type.", PropImportance.OPTIONAL)]
     public List<Port> Ports { get; set; } = new();
     [ModelProp("👥", "Au*", "Aut*", "The optional authors of the type.", PropImportance.OPTIONAL)]
-    public List<Author> Authors { get; set; } = new();
+    public List<AuthorId> Authors { get; set; } = new();
     [ModelProp("🔐", "At*", "Atr*", "The optional attributes of the type.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
     [ModelProp("💡", "Co*", "Con*", "The optional concepts of the type.", PropImportance.OPTIONAL)]
@@ -2786,7 +2814,7 @@ public class TypeDiff : Model<TypeDiff>
     }
 
     public static implicit operator TypeDiff(TypeId id) => new() { Name = id.Name, Variant = id.Variant };
-    public static implicit operator TypeDiff(Type type) => new() { Name = type.Name, Description = type.Description, Icon = type.Icon, Image = type.Image, Variant = type.Variant, Stock = type.Stock, Virtual = type.Virtual, Scalable = type.Scalable, Mirrorable = type.Mirrorable, Uri = type.Uri, Unit = type.Unit, Location = type.Location, Representations = type.Representations, Ports = type.Ports, Authors = type.Authors.Select(a => (Author)a).ToList(), Attributes = type.Attributes, Concepts = type.Concepts };
+    public static implicit operator TypeDiff(Type type) => new() { Name = type.Name, Description = type.Description, Icon = type.Icon, Image = type.Image, Variant = type.Variant, Stock = type.Stock, Virtual = type.Virtual, Scalable = type.Scalable, Mirrorable = type.Mirrorable, Uri = type.Uri, Unit = type.Unit, Location = type.Location, Representations = type.Representations, Ports = type.Ports, Authors = type.Authors, Attributes = type.Attributes, Concepts = type.Concepts };
 }
 
 [Model("📊", "TsD", "TsDf", "A diff for multiple types.")]
@@ -2852,7 +2880,7 @@ public class Type : Model<Type>
     public override string ToString() => $"Typ({ToHumanIdString()})";
 
     public static implicit operator Type(TypeId id) => new() { Name = id.Name, Variant = id.Variant };
-    public static implicit operator Type(TypeDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Variant = diff.Variant ?? "", Stock = diff.Stock ?? 2147483647, Virtual = diff.Virtual ?? false, Scalable = diff.Scalable ?? false, Mirrorable = diff.Mirrorable ?? false, Uri = diff.Uri ?? "", Unit = diff.Unit ?? "", Location = diff.Location, Representations = diff.Representations ?? new(), Ports = diff.Ports ?? new(), Authors = diff.Authors?.Select(a => (AuthorId)a).ToList() ?? new(), Attributes = diff.Attributes ?? new(), Concepts = diff.Concepts ?? new() };
+    public static implicit operator Type(TypeDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Variant = diff.Variant ?? "", Stock = diff.Stock ?? 2147483647, Virtual = diff.Virtual ?? false, Scalable = diff.Scalable ?? false, Mirrorable = diff.Mirrorable ?? false, Uri = diff.Uri ?? "", Unit = diff.Unit ?? "", Location = diff.Location, Representations = diff.Representations ?? new(), Ports = diff.Ports ?? new(), Authors = diff.Authors ?? new(), Attributes = diff.Attributes ?? new(), Concepts = diff.Concepts ?? new() };
     public static implicit operator string(Type type) => type.Name;
     public static implicit operator Type(string name) => new() { Name = name };
 
@@ -2874,7 +2902,7 @@ public class Type : Model<Type>
             Location = diff.Location ?? Location,
             Representations = diff.Representations.Any() ? diff.Representations : Representations,
             Ports = diff.Ports.Any() ? diff.Ports : Ports,
-            Authors = diff.Authors.Any() ? diff.Authors.Select(a => new AuthorId { Email = a.Email }).ToList() : Authors,
+            Authors = diff.Authors.Any() ? diff.Authors : Authors,
             Attributes = diff.Attributes.Any() ? diff.Attributes : Attributes,
             Concepts = diff.Concepts.Any() ? diff.Concepts : Concepts,
             Props = Props
@@ -2899,7 +2927,7 @@ public class Type : Model<Type>
             Location = Location,
             Representations = Representations,
             Ports = Ports,
-            Authors = Authors.Select(a => new Author { Email = a.Email }).ToList(),
+            Authors = Authors,
             Attributes = Attributes,
             Concepts = Concepts
         };
@@ -2923,7 +2951,7 @@ public class Type : Model<Type>
             Location = appliedDiff.Location != null ? Location : null,
             Representations = appliedDiff.Representations.Any() ? Representations : new List<Representation>(),
             Ports = appliedDiff.Ports.Any() ? Ports : new List<Port>(),
-            Authors = appliedDiff.Authors.Any() ? Authors.Select(a => new Author { Email = a.Email }).ToList() : new List<Author>(),
+            Authors = appliedDiff.Authors.Any() ? Authors : new List<AuthorId>(),
             Attributes = appliedDiff.Attributes.Any() ? Attributes : new List<Attribute>()
         };
     }
@@ -3128,7 +3156,7 @@ public class DesignDiff : Model<DesignDiff>
     [ModelProp("�🔐", "At*", "Atr*", "The optional attributes of the design.", PropImportance.OPTIONAL)]
     public List<Attribute> Attributes { get; set; } = new();
     [ModelProp("👥", "Au*", "Aut*", "The optional authors of the design.", PropImportance.OPTIONAL)]
-    public List<Author> Authors { get; set; } = new();
+    public List<AuthorId> Authors { get; set; } = new();
     [ModelProp("💡", "Co*", "Con*", "The optional concepts of the design.", PropImportance.OPTIONAL)]
     public List<string> Concepts { get; set; } = new();
 
@@ -3154,7 +3182,7 @@ public class DesignDiff : Model<DesignDiff>
     }
 
     public static implicit operator DesignDiff(DesignId id) => new() { Name = id.Name, Variant = id.Variant, View = id.View };
-    public static implicit operator DesignDiff(Design design) => new() { Name = design.Name, Description = design.Description, Icon = design.Icon, Image = design.Image, Variant = design.Variant, View = design.View, Location = design.Location, Unit = design.Unit, Stats = design.Stats, Attributes = design.Attributes, Authors = design.Authors.Select(a => (Author)a).ToList(), Concepts = design.Concepts };
+    public static implicit operator DesignDiff(Design design) => new() { Name = design.Name, Description = design.Description, Icon = design.Icon, Image = design.Image, Variant = design.Variant, View = design.View, Location = design.Location, Unit = design.Unit, Stats = design.Stats, Attributes = design.Attributes, Authors = design.Authors, Concepts = design.Concepts };
 }
 
 [Model("📊", "DsD", "DsDf", "A diff for multiple designs.")]
@@ -3890,7 +3918,7 @@ public class Design : Model<Design>
     public override string ToString() => $"Dsn({ToHumanIdString()})";
 
     public static implicit operator Design(DesignId id) => new() { Name = id.Name, Variant = id.Variant, View = id.View };
-    public static implicit operator Design(DesignDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Variant = diff.Variant ?? "", View = diff.View ?? "", Location = diff.Location, Unit = diff.Unit ?? "", Attributes = diff.Attributes ?? new(), Authors = diff.Authors?.Select(a => (AuthorId)a).ToList() ?? new(), Concepts = diff.Concepts ?? new() };
+    public static implicit operator Design(DesignDiff diff) => new() { Name = diff.Name ?? "", Description = diff.Description ?? "", Icon = diff.Icon ?? "", Image = diff.Image ?? "", Variant = diff.Variant ?? "", View = diff.View ?? "", Location = diff.Location, Unit = diff.Unit ?? "", Attributes = diff.Attributes ?? new(), Authors = diff.Authors ?? new(), Concepts = diff.Concepts ?? new() };
     public static implicit operator string(Design design) => design.Name;
     public static implicit operator Design(string name) => new() { Name = name };
 
@@ -3922,7 +3950,7 @@ public class Design : Model<Design>
             Connections = connections,
             Props = Props,
             Stats = diff.Stats.Any() ? diff.Stats : Stats,
-            Authors = diff.Authors.Any() ? diff.Authors.Select(a => new AuthorId { Email = a.Email }).ToList() : Authors,
+            Authors = diff.Authors.Any() ? diff.Authors : Authors,
             Attributes = diff.Attributes.Any() ? diff.Attributes : Attributes,
             Concepts = diff.Concepts.Any() ? diff.Concepts : Concepts
         };
@@ -3953,7 +3981,7 @@ public class Design : Model<Design>
                 Added = new List<Connection>()
             },
             Stats = Stats,
-            Authors = Authors.Select(a => new Author { Name = "", Email = a.Email }).ToList(),
+            Authors = Authors,
             Attributes = Attributes,
             Concepts = Concepts
         };
@@ -4873,7 +4901,7 @@ public class Kit : Model<Kit>
                 Location = t.Location,
                 Representations = t.Representations,
                 Ports = t.Ports,
-                Authors = t.Authors.Select(a => new Author { Email = a.Email }).ToList(),
+                Authors = t.Authors,
                 Attributes = t.Attributes
             }).ToList()
         };
