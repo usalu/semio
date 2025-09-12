@@ -1,6 +1,6 @@
 ---
-name: formatter
-description: Exclusively to format text (code, lists, …)
+name: reformatter
+description: Exclusively to reformat text (code, lists, …)
 tools:
 ---
 

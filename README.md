@@ -50,8 +50,10 @@ Let me walk you through 🚶
 1. [🛍️ Products](#%EF%B8%8F-products-)
    - [✏️ sketchpad](#%EF%B8%8F-sketchpad-)
    - [👥 studio](#-studio-)
+   - [☁️ cloud](#%EF%B8%8F-cloud-)
    - [🤖 assistant](#-assistant-)
    - [🦗 semio.gh](#-semiogh-)
+   - [🦏 semio.3dm](#-semio3dm-)
    - [🐝 semio.wasp](#-semiowasp-)
    - [🦌 semio.monoceros](#-semiomonoceros-)
    - [🐞 semio.ladybug](#-semioladybug-)
@@ -78,14 +80,39 @@ Let me walk you through 🚶
 1. [🦑 Repo](#-repo-)
    - [⚖️ Principles](#️-principles-)
    - [🔀 Git](#-git-)
+     - [🦑 GitKraken](#-gitkraken-)
+     - [💬 Discord](#-discord-)
      - [📢 Release](#-release-)
-     - [🏷️ Tag](#%EF%B8%8F-tag--1)
+     - [🏷️ Tag](#%EF%B8%8F-tag-)
      - [🌿 Branch](#-branch-)
-     - [🗃️ Commit](#️%EF%B8%8F-commit-)
+     - [🗃️ Commit](#%EF%B8%8F-commit-)
 1. [🧑‍💻 Development](#-development-)
    - [🪄 AI](#-ai-)
-     - [🖱️ Cursor](#%EF%B8%8F-cursor-)
-     - [✈️ Copilot](#%EF%B8%8F-copilot-)
+     - [🛠️ Uses-Cases](#-uses-cases-)
+       - [⚖️ Decision Making](#-decision-making-)
+       - [🔁 Refactoring](#-refactoring-)
+       - [🐛 Bug Fixes](#-bug-fixes-)
+     - [⌨️ Tools](#-tools-)
+       - [🌐 Web-Chat](#-web-chat-)
+         - [❄️ ChatGPT](#-chatgpt-)
+         - [🌟 Gemini](#-gemini-)
+         - [AI studio](#-ai-studio-)
+       - [💻 Editor](#-editor-)
+         - [✈️ Copilot](#-copilot-)
+         - [🖱️ Cursor](#-cursor-)
+       - [⌨️ CLI](#-cli-)
+         - [⌨️ Claude Code](#-claude-code-)
+       - [☁️ Cloud](#-cloud-)
+         - [🦑 Jules](#-jules-)
+       - [🔍 Agents](#-agents-)
+         - [↕️ Reorderer](#-reorderer-)
+         - [🔁 Formatter](#-formatter-)
+       - [🤖 Models](#-models-)
+         - [Claude Sonnet 4](#-claude-sonnet-4-)
+         - [GPT-5](#-gpt-5-)
+         - [Gemini 2.5 Pro](#-gemini-25-pro-)
+         - [Groq](#-groq-)
+     - [🔄 CI/CD](#-cicd-)
 1. [♻️ Ecosystems](#%EF%B8%8F-ecosystems-)
    - [🟨 JavaScript](#-javascript-)
    - [🟪 .NET](#-net-)
@@ -107,15 +134,26 @@ Let me walk you through 🚶
 1. [🏘️ Examples](#%EF%B8%8F-examples-)
    - [🚀 Starter](#-starter-)
    - [👋 Hello semio](#-hello-semio-)
+   - [🌈 Geometry](#-geometry-)
    - [🫀 Metabolism](#-metabolism-)
 1. [💯 Brand](#-brand-)
    - [✍️ Concept](#%EF%B8%8F-concept-)
+     - [✅ Do](#-do-)
+     - [❌ Dont](#-dont-)
    - [🌈 Colors](#-colors-)
+     - [🥇 Primary](#-primary-)
+     - [🥈 Secondary](#-secondary-)
+     - [🥉 Tertiary](#-tertiary-)
+     - [⚫ Dark](#-dark-)
+     - [⚪ Light](#-light-)
+     - [🩶 Gray](#-gray-)
    - [📄 Typography](#-typography-)
+     - [🔡 Typesetting](#-typesetting-)
    - [👀 Visual elements](#-visual-elements-)
 1. [⚖️ License](#-license-)
 1. [🔒Security](#-security-)
 1. [✨ Contributors](#-contributors-)
+1. [📊 Stats](#-stats-)
 
 # 🛍️ Products [↑](#-overview)
 
@@ -357,8 +395,8 @@ A single file is easier for humans and computers to understand 💡
 
 You will be surprised
 
-- by the awesome fill-in-the-middle suggestions of your copilot 🤖
-- by the hassle-free context selection for your ai agent 🖱️
+- by the awesome [fill-in-the-middle suggestions](#-cursor-) of your copilot 🤖
+- by the hassle-free [context selection](#-browser-) for your ai agent 🖱️
 - by the smooth refactor experience by just going top-to-bottom ⬇️
 - by the beautiful diff for your next code review 🔍
 - by the clean git-history when you try to find a certain change 🔁
@@ -647,11 +685,71 @@ If you don't care just run:
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope LocalMachine
 ```
 
-### 🪄 AI [↑](#-development-)
+# 🪄 [AI](AGENTS.md) [↑](#-development-)
 
 Most of our [codebase](#-principles-) is heavily optimized for AI agents 🤖
 
-### ✈️ [Copilot](.github/chatmodes) [↑](#-ai-)
+Usually we work on two unrelated tickets at the same time and while one agent works on one task we prepare a new ticket for the other agent 🔀
+
+We usually always start with the free quotas, then move to the hourly quotas, then to the request-based quotas, then to the token-based quotas 🔢
+
+When
+
+## 🛠️ Uses-Cases [↑](#-ai-)
+
+Here some strategic advice for different uses-cases 🗺️
+
+### ⚖️ Decision Making [↑](#-uses-cases-)
+
+[Model](#-models-) will always tell you that your ideas, guesses, analysis, … are great 💯
+
+This makes it really hard to use them for decision making because they tend to just reinforce your own bias 📢
+
+Try to formulate everything as neutral, general and unbiased as possible 🕊️
+
+### 🔁 Refactoring [↑](#-uses-cases-)
+
+Most refactors are too big to be done in one go and [models](#-models-) are usually steered that if they think the problem is too big then they try to automate it with scripting 🤖
+
+This is usually not possible and then they fail ❌
+
+After all from a provider perspective those tasks are dangerous and hard to scale and we understand why they want the model to avoid doing it 🔥
+
+The next problem is that when they take the wrong approach then, due to large context, they hardely remember how the original state was 🤔
+
+For this reason, we usually create a new file which we name with the suffix`*.old` and this way in the prompt we can refer to the original state 📄
+
+### 🐛 Bug Fixes [↑](#-uses-cases-)
+
+Try to describe only how to the bug appears and **not** what you think caused it 😶
+
+Experience what can be causes for bugs is increadibly valuable skill as a developer but the problem is that [models](#-models-) are really biased the way you ask questions 🏋️
+
+Especially when your guess is wrong then the [model](#-models-) might have found the mistake but because of your bias it tries to take a different approach to fix it 🔀
+
+Secondly, if the model can't find the bug then it will often try to remove functionality, add try catch blocks, add logging and other things that fastly turn your codebase into a mess 💣
+
+Therefore, it is often a good idea that after you found the bug, reset your branch and create a new ticket where you define exactly how to fix the bug 🪛
+
+## ⌨️ Tools [↑](#-ai-)
+
+### 🌐 Web-Chat [↑](#-tools-)
+
+For research, prompt preparation or [single file-related](#-principles-) operations (sorting, formatting, explaining, …) we use the free , [Gemini](https://gemini.google.com) or [Groq](https://console.groq.com), … in the browser to not waste precious tokens 🆓
+
+#### [❄️ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)
+
+The free quota is very quickly reached but resets regularly and hence we just use it for questioning or prompt preparation 💬
+
+#### [🌟 Gemini](https://gemini.google.com) [↑](#-web-chat-)
+
+#### [AI studio](https://ai.google.com/studio) [↑](#-web-chat-)
+
+Good for larger experiments due to more generous free quota 🧪
+
+### 💻 Editor [↑](#-tools-)
+
+#### ✈️ [Copilot](.github/chatmodes) [↑](#-ai-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -662,9 +760,9 @@ Most of our [codebase](#-principles-) is heavily optimized for AI agents 🤖
 
 Copilot is the only request-based billing provider left and is hence much cheaper than the others 💳
 
-We prepare good tickets for the agent, currently with [GPT-5](https://openai.com/gpt-5) and [Claude Sonnet 4](https://www.anthropic.com/claude/sonnet) 🚀
+We use it over multiple open windows as soon we hit the 5h limit of [Claude Code](#-claude-code-), [Codex](#-codex-) or [Gemini CLI](#-gemini-cli-) 🕒
 
-### 🖱️ [Cursor](.cursor) [↑](#-ai-)
+#### 🖱️ [Cursor](.cursor) [↑](#-ai-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -673,17 +771,73 @@ We prepare good tickets for the agent, currently with [GPT-5](https://openai.com
 
 </details>
 
+We have the [Pro](https://www.anthropic.com/claude/pricing) plan 💳
+
 We use [Cursor](https://www.cursor.com) as general editor for typing code mostly with [Tab](https://docs.cursor.com/tab/overview) ➡️
 
-For tasks that require updated docs we use the agent 💬
+For tasks that require updated large docs that are too large to paste into the prompt, we use the agent 📚
 
-### ⌨️ [Claude Code](CLAUDE.md) [↑](#-ai-)
+But in general, we don't use the chat because it is way too expensive 💰
 
-For tasks that require a lot of codebase context or tool usage we use [Claude Code]() 💬
+### ⌨️ CLI [↑](#-tools-)
 
-### 🌐 Browser [↑](#-ai-)
+#### ⌨️ [Claude Code](CLAUDE.md) [↑](#-ai-)
 
-For simple tasks that only affect one file (sorting, formatting, explaining, …) we use the free [ChatGPT](https://chatgpt.com), [Gemini](https://gemini.google.com) or [Groq](https://console.groq.com), … in the browser to not waste precious tokens 🐒
+We have the [Pro](https://www.anthropic.com/claude/pricing) plan 💳
+
+The goto tool for coding in the IDE until we hit the 5h limit 🕒
+
+We don't recommend using it for two tasks at the same time because then both tasks abrubtly end and you hit the
+
+Nice for tasks that require a lot of codebase context 👍
+
+The MCP integration doesn't work as good as the
+
+### ☁️ Cloud [↑](#-tools-)
+
+#### 🦑 Jules [↑](#-tools-)
+
+[!NOTE] Free plan includes 15 tasks per day, 3 concurrent tasks and powered by Gemini 2.5 Pro 🚀
+
+Used on the phone when no IDE is available 📱
+
+### 🔍 Agents [↑](#-ai-)
+
+#### ↕️ Reorderer [↑](#-agents-)
+
+Used to ensure consistent order of source code, docs, …
+
+- [Claude Code Agent](.claude/agents/reorderer.md)
+- [GitHub Copilot Chatmode](.github/chatmodes/Reorder.chatmode.md)
+
+#### 🔁 Formatter [↑](#-agents-)
+
+Used to ensure consistent formatting of source code, docs, …
+
+- [Claude Code Agent](.claude/agents/formatter.md)
+- [GitHub Copilot Chatmode](.github/chatmodes/Formatter.chatmode.md)
+
+### 🤖 Models [↑](#-ai-)
+
+In our experience, all [models](#-models-) achieve most tasks and if a task is too hard then all of them fail ⚖️
+
+Never the less, here are our preferences:
+
+1. [Claude Sonnet 4](#-claude-sonnet-4-)
+2. [GPT-5](#-gpt-5-)
+3. [Gemini 2.5 Pro](#-gemini-2.5-pro-)
+
+#### [Claude Sonnet 4](https://www.anthropic.com/claude/sonnet) [↑](#-models-)
+
+First model that works with micro-edits but [GPT-5](#-gpt-5-) also uses this approach now 🤏
+
+This generally reduces the amount of accidental waste that is included in large edits such as by [Gemini 2.5 Pro](#-gemini-2.5-pro-) 🗑️
+
+#### [GPT-5](https://openai.com/gpt-5) [↑](#-models-)
+
+#### [Gemini 2.5 Pro](https://gemini.google.com) [↑](#-models-)
+
+#### [Groq](https://console.groq.com) [↑](#-models-)
 
 ## 🔄 CI/CD [↑](#-development-)
 

@@ -76,8 +76,9 @@ The following rules MUST alwaysbe followed unless explicitly asked to do otherwi
 
 ├── .claude
 │ ├── agents
-│ │ ├── formatter.md # Exclusively to format text (code, lists, …)
-│ │ └── order.md # Exclusively to reorder text (code, lists, …)
+│ │ ├── reformatter.md # Exclusively to reformat text (code, lists, …)
+│ │ └── reorderer.md # Exclusively to reorder text (code, lists, …)
+│ │ └── schema-changer.md # Exclusively to change the schema (code, api, database, …)
 │ └── settings.json
 ├── .cursor
 │ ├── rules
@@ -86,6 +87,9 @@ The following rules MUST alwaysbe followed unless explicitly asked to do otherwi
 │ │ └── repo.mdc # \*_/_.\*
 ├── .github
 │ ├── chatmodes
+│ │ ├── Reformatter.chatmode.md # Exclusively to reformat text (code, lists, …)
+│ │ └── Reorderer.chatmode.md # Exclusively to reorder text (code, lists, …)
+│ │ └── Schema-Changer.chatmode.md # Exclusively to change the schema (code, api, database, …)
 │ └── workflows
 ├── .vscode
 ├── antlr
