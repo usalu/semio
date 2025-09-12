@@ -67,6 +67,14 @@ Let me walk you through 🚶
    - [🏷️ Tag](#%EF%B8%8F-tag-)
    - [◳ Plane](#-plane-)
    - [🔗 Url](#-url-)
+   - [🔢 Quality](#-quality-)
+   - [📊 Benchmark](#-benchmark-)
+   - [🏷️ Concept](#%EF%B8%8F-concept-)
+   - [👤 Author](#-author-)
+   - [📋 Layer](#-layer-)
+   - [👥 Group](#-group-)
+   - [⚙️ Prop](#️-prop-)
+   - [📈 Stat](#-stat-)
 1. [🦑 Repo](#-repo-)
    - [⚖️ Principles](#️-principles-)
    - [🔀 Git](#-git-)
@@ -167,7 +175,7 @@ A Grasshopper-based integration of [Ladybug](https://www.ladybug.tools) and semi
 
 ## 📦 Kit [↑](#-specs-)
 
-A [`kit`](#-kit-) is a collection of [`types`](#-type-) and [`designs`](#%EF%B8%8F-design-) 📦
+A [`kit`](#-kit-) is a collection of [`types`](#-type-), [`designs`](#%EF%B8%8F-design-), [`authors`](#-author-), [`qualities`](#-quality-), [`attributes`](#%EF%B8%8F-attribute-), and [`concepts`](#%EF%B8%8F-concept-) 📦
 
 A [`kit`](#-kit-) is either _static_ (a special `.zip` file) or _dynamic_ (bound to a runtime) 📦
 
@@ -179,7 +187,7 @@ For Inter-Process-Communication (IPC) the JSON-schema in [`./jsonschema/kit.json
 
 ## 🏘️ Design [↑](#-specs-)
 
-A [`design`](#%EF%B8%8F-design-) is an undirected graph of [`pieces`](#-piece-) (nodes) and [`connections`](#-connection-) (edges) 📐
+A [`design`](#%EF%B8%8F-design-) is an undirected graph of [`pieces`](#-piece-) (nodes) and [`connections`](#-connection-) (edges) with organizational [`layers`](#-layer-), [`groups`](#-group-), [`stats`](#-stat-), [`attributes`](#%EF%B8%8F-attribute-), and [`concepts`](#%EF%B8%8F-concept-) 📐
 
 A _flat_ [`design`](#%EF%B8%8F-design-) has no [`connections`](#-connection-) and all [`pieces`](#-piece-) are _fixed_ ◳
 
@@ -189,7 +197,9 @@ Additional [`connections`](#-connection-) which where not used in the _placement
 
 ## 🏠 Type [↑](#-specs-)
 
-A [`type`](#-type-) is a resuable component with different [**`representations`**](#-representation-) and[**`ports`**](#-port-) 🧱
+A [`type`](#-type-) is a reusable component with different [`representations`](#-representation-), [`ports`](#-port-), [`attributes`](#%EF%B8%8F-attribute-), [`concepts`](#%EF%B8%8F-concept-), and [`authors`](#-author-) 🧱
+
+A [`type`](#-type-) can be **virtual** (intermediate type requiring other virtual types to form a physical type), **scalable**, and **mirrorable** with **stock** quantity, **unit**, and optional **location** 📍
 
 ## 🔗 Connection [↑](#-specs-)
 
@@ -201,27 +211,31 @@ The two [`pieces`](#-piece-) are called **_connected_** and **_connecting_** but
 
 The _direction_ of a [`connection`](#-connection-) goes from the lower _hierarchy_ to the higher _hierarchy_ of the [`pieces`](#-piece-) ➡️
 
+A [`connection`](#-connection-) can have [`attributes`](#%EF%B8%8F-attribute-) and diagram positioning with **x** and **y** offsets 📍
+
 ## ⭕ Piece [↑](#-specs-)
 
-A [`piece`](#-piece-) is an instance of either a [`type`](#-type-) or a [`design`](#%EF%B8%8F-design-) 📐
+A [`piece`](#-piece-) is an instance of either a [`type`](#-type-) or a [`design`](#%EF%B8%8F-design-) with **id**, optional **description**, optional **plane**, **center** position, **scale**, optional **mirror plane**, **hidden** and **locked** states, **color**, and [`attributes`](#%EF%B8%8F-attribute-) 📐
 
 A [`piece`](#-piece-) is either _fixed_ (with a [`plane`](#-plane-)) or _linked_ (with a [`connection`](#-connection-)) 📐
 
 A group of _connected_ [`pieces`](#-piece-) is called a _component_ 🌿
 
-The _hierachy_ of a [`piece`](#-piece-) is the length of the shortest path to the next _fixed_ [`piece`](#-piece-) 👣
+The _hierarchy_ of a [`piece`](#-piece-) is the length of the shortest path to the next _fixed_ [`piece`](#-piece-) 👣
 
 ## ⚓ Port [↑](#-specs-)
 
-A [`port`](#-port-) is a conceptual connection **point** with an outwards **direction** 🤝
+A [`port`](#-port-) is a conceptual connection **point** with an outwards **direction**, **id**, optional **description**, and **t** value for diagram ring positioning 🤝
 
 A [`port`](#-port-) can be marked as **mandatory** in which case it is required to be connected to a [`piece`](#-piece-) 💯
 
-A [`port`](#-port-) can have a port **family** and a list of **compatible families** 👨‍👩‍👧‍👦
+A [`port`](#-port-) can have a port **family** and a list of **compatible families** for explicit compatibility control 👨‍👩‍👧‍👦
 
 No **family** means the _default_ family and no **compatible families** means the port is compatible with all other ports 🔑
 
 It is enough for one [`port`](#-port-) to be compatible with another [`port`](#-port-) to be compatible with each other ↔️
+
+A [`port`](#-port-) can have [`props`](#️-prop-) that define measurable characteristics and [`attributes`](#%EF%B8%8F-attribute-) for additional metadata 📏
 
 ## 💾 Representation [↑](#-specs-)
 
@@ -271,6 +285,56 @@ The coordinate system is left-handed where the thumb points up into the directio
 A [`url`](#-url-) is either _relative_ (to the root of the `.zip` file) or _remote_ (http, https, ftp, …) string🌐
 
 A _relative_ [`url`](#-url-) is a `/`-normalized path to a file in the `.zip` file and is not prefixed with with `.`, `./`, `/`, …
+
+## 🔢 Quality [↑](#-specs-)
+
+A [`quality`](#-quality-) is a measurement definition with a **key**, **name**, **description**, **kind** (General, Design, Type, Piece, Connection, Port), **unit information** (SI and Imperial), **range constraints** (min/max with exclusion flags), **default value**, and optional **formula** 📏
+
+A [`quality`](#-quality-) can be **scalable** (adjusts with piece scaling) and have multiple **benchmarks** for performance evaluation 🎯
+
+The **kind** determines which entities the quality can be applied to using a bitwise enum system 🔢
+
+## 📊 Benchmark [↑](#-specs-)
+
+A [`benchmark`](#-benchmark-) is a performance standard within a [`quality`](#-quality-) with a **name**, optional **icon**, and **range** (min/max with exclusion flags) 🏆
+
+Benchmarks provide reference points for evaluating quality measurements against industry or design standards 📈
+
+## 🏷️ Concept [↑](#-specs-)
+
+A [`concept`](#%EF%B8%8F-concept-) is a **name** and **order** pair that provides semantic grouping for [`kits`](#-kit-), [`types`](#-type-), or [`designs`](#%EF%B8%8F-design-) 🧠
+
+Concepts enable hierarchical organization and categorization of design elements beyond simple naming 📂
+
+## 👤 Author [↑](#-specs-)
+
+An [`author`](#-author-) has a **name** and **email** and can be associated with [`kits`](#-kit-), [`types`](#-type-), or [`designs`](#%EF%B8%8F-design-) with a **rank** indicating contribution level 👨‍💻
+
+Authors provide attribution and contact information for design ownership and collaboration 🤝
+
+## 📋 Layer [↑](#-specs-)
+
+A [`layer`](#-layer-) is an organizational grouping within a [`design`](#%EF%B8%8F-design-) with a **name**, optional **description**, and **color** for visual organization 🎨
+
+Layers provide a way to group and manage pieces logically within complex designs 📑
+
+## 👥 Group [↑](#-specs-)
+
+A [`group`](#-group-) is a collection of [`pieces`](#-piece-) within a [`design`](#%EF%B8%8F-design-) with optional **name**, **description**, **color**, and **attributes** 👥
+
+Groups enable semantic clustering of pieces that belong together functionally or conceptually 🔗
+
+## ⚙️ Prop [↑](#-specs-)
+
+A [`prop`](#️-prop-) is a **key-value** pair on a [`port`](#-port-) that references a [`quality`](#-quality-) with a specific **value** and optional **unit** 🔧
+
+Props define measurable characteristics of ports using the quality system for standardized measurement 📐
+
+## 📈 Stat [↑](#-specs-)
+
+A [`stat`](#-stat-) is a statistical measurement on a [`design`](#%EF%B8%8F-design-) that references a [`quality`](#-quality-) with **range** (min/max) and optional **unit** 📊
+
+Stats provide computed or measured performance data for entire designs using the quality framework 📈
 
 # 🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)
 
