@@ -1,5 +1,5 @@
 ---
-name: schema
+name: schema-changer
 description: Changes in the schema (code, api, database, …)
 tools:
 ---

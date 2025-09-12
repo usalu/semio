@@ -1,14 +1,10 @@
----
-description:
-globs:
-alwaysApply: true
----
+# Monorepo
 
-# Project
+## Project
 
 An ecosystem for designing kit-of-parts architecture together.
 
-# Rules
+## Rules
 
 The following rules MUST alwaysbe followed unless explicitly asked to do otherwise.
 
@@ -35,15 +31,15 @@ The following rules MUST alwaysbe followed unless explicitly asked to do otherwi
 - NEVER create a variable, function, … class, that is only used once and inline it.
 - NEVER add extra new lines inside of code.
 
-# Styling
+## Styling
 
 - NEVER use rounded corners unless a circle.
 - NEVER use shadows.
 - NEVER use hardcoded or standard colors. All theme colors are explicitly defined.
 
-# Glossary
+## Glossary
 
-## Nouns
+### Nouns
 
 - Kit: A collection of types and designs. Can be either static (a special .zip file) or dynamic (bound to a runtime).
 - Design: An undirected graph of pieces (nodes) and connections (edges).
@@ -61,7 +57,7 @@ The following rules MUST alwaysbe followed unless explicitly asked to do otherwi
 - Vector: A vector in 3D space.
 - Point: A point in 3D space.
 
-## Adjectives
+### Adjectives
 
 - A `fixed` piece is a piece with a plane.
 - A `linked` piece is a piece that is not fixed and is connected with a connection.
@@ -76,7 +72,7 @@ The following rules MUST alwaysbe followed unless explicitly asked to do otherwi
 - A `default` port family means the port is compatible with all other ports.
 - A `virtual` type is an intermediate type that needs other `virtual` types to form a `physical` type.
 
-# File Structure
+## File Structure
 
 ├── .claude
 │ ├── agents
@@ -199,3 +195,40 @@ The following rules MUST alwaysbe followed unless explicitly asked to do otherwi
 ├── package.json # Monorepo and workspace setup
 ├── powershell.ps1 # General Powershell utility
 └── README.md # GFM dev docs
+
+# Ecosystems
+
+## js
+
+Javascript code with shared core (@semio/js) that uses storybook and exports a handful of React components (Sketchpad, Diagram, Model) for both web-based and desktop-based environments, a documentation (@semio/docs) that uses astro with starlight and mdx, and sketchpad (@semio/sketchpad) that runs in electron.
+
+### Guidelines
+
+- No relative imports. Use @semio/PROJECT as base instead of `./`.
+- No inline styling. Use tailwindcss (v4). v4 uses a `theme.css` (`@semio/js/theme.css`) for theming and not `{theme:{…}}` in `tailwindconfig`.
+- Everything light and darkmode compatible.
+- Use only colors defined in `@theme inline {…}` from `@semio/js/globals.css`.
+- No rounded borders (unless full rounded).
+- No shadows.
+
+### Styling
+
+- The ui consists of a navbar and edgeless content. Everything else is displayed as HUD with floating panels that show different colors.
+
+# Packages
+
+## @semio/js
+
+Shared react components. The main component is Sketchpad. Sketchpad is used in three different szenarios:
+
+1. As guest mode (readonly) in a statically generated pages.
+2. As user mode in the browser (nextjs).
+3. As user mode in a desktop app (electron).
+   Sketchpad has a local store in yjs which syncs with indexeddb and the backend provider.
+
+# Guidelines
+
+- All domain logic is in semio.ts and whenever an operation is not ui bound, it should be implemented there.
+- All state is stored in the SketchpadStore. All state and cruds are accessed over hooks.
+- There are different scopes: SketchpadScope, KitScope, DesignScope, DesignEditorScope.
+- There is a transaction mechanism for kits. Every design editor transaction is an extended kit transaction. The undo redo manager is on editor level and stores the diff of the transaction along with the editor state. This way undo redo works even when the kit changes because only the diff is stored.

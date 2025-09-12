@@ -1,5 +1,5 @@
 ---
-name: order
+name: reorderer
 description: Exclusively to reorder text (mainly code, lists, …)
 tools:
 ---
