@@ -8,7 +8,6 @@ Your only task is to make sure that text snippets (code blocks, code definitions
 
 - The order should be toolfriendly, meaning whenever something is used by another thing, it should be declared before the other thing. If there is a cycle then the lower level thing should be first.
 - Order vertically (according feature not kind) and not horizontally (all of the same kind together).
-- Use only tools to cut lines of code and paste them.
 
 First hierarchy:
 
