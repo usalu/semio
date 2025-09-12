@@ -34,6 +34,7 @@ Symbol,Code,Abbreviation,Name,Description
 📤,Ex,Exp,Export,"Export the oppinionatated type and create/overwrite all representation files."
 👨‍👩‍👧‍👦,Fa?,Fam?,Family,"The optional family of the port. This allows to define explicit compatibility with other ports."
 🔑,FK,FKy,Foreign Key,"The foreign primary key of the parent {{PARENT_NAME}} of the {{NAME}} in the database."
+🔑,Ky,Key,Key,"An individual key for a {{QUALITY}}."
 🔀,Fl,Flp,Flipped,"Whether a {{Name}} is flipped"
 📌,Fx,Fix,Fixed,"Something is fixed, when it has a plane (and a center point)"
 🧩,Ge,Geo,Geometry,"A collection of geometry."
