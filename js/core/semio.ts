@@ -47,6 +47,8 @@ export const CoordSchema = z.object({
   y: z.number(),
   z: z.number(),
 });
+export type Coord = z.infer<typeof CoordSchema>;
+
 
 // https://github.com/usalu/semio#-point-
 export const PointSchema = z.object({
@@ -54,6 +56,7 @@ export const PointSchema = z.object({
   y: z.number(),
   z: z.number(),
 });
+export type Point = z.infer<typeof PointSchema>;
 
 // https://github.com/usalu/semio#-vector-
 export const VectorSchema = z.object({
@@ -61,6 +64,7 @@ export const VectorSchema = z.object({
   y: z.number(),
   z: z.number(),
 });
+export type Vector = z.infer<typeof VectorSchema>;
 
 // https://github.com/usalu/semio#-plane-
 export const PlaneSchema = z.object({
@@ -68,6 +72,8 @@ export const PlaneSchema = z.object({
   xAxis: VectorSchema,
   yAxis: VectorSchema,
 });
+export type Plane = z.infer<typeof PlaneSchema>;
+
 
 // https://github.com/usalu/semio#-attribute-
 export const AttributeSchema = z.object({
@@ -75,14 +81,20 @@ export const AttributeSchema = z.object({
   value: z.string().optional(),
   definition: z.string().optional(),
 });
+export type Attribute = z.infer<typeof AttributeSchema>;
 export const AttributeIdSchema = z.object({ key: z.string() });
+export type AttributeId = z.infer<typeof AttributeIdSchema>;
 export const AttributeIdLikeSchema = z.union([AttributeSchema, AttributeIdSchema, z.string()]);
+export type AttributeIdLike = z.infer<typeof AttributeIdLikeSchema>;
 
 
 // https://github.com/usalu/semio#-author-
-export const AuthorIdSchema = z.object({ email: z.string() });
 export const AuthorSchema = z.object({ name: z.string(), email: z.string(), attributes: z.array(AttributeSchema).optional() });
+export type Author = z.infer<typeof AuthorSchema>;
+export const AuthorIdSchema = AuthorSchema.pick({ email: true });
+export type AuthorId = z.infer<typeof AuthorIdSchema>;
 export const AuthorIdLikeSchema = z.union([AuthorSchema, AuthorIdSchema, z.string()]);
+export type AuthorIdLike = z.infer<typeof AuthorIdLikeSchema>;
 
 // https://github.com/usalu/semio#-prop-
 export const PropSchema = z.object({
@@ -91,6 +103,11 @@ export const PropSchema = z.object({
   unit: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
+export type Prop = z.infer<typeof PropSchema>;
+export const PropIdSchema = PropSchema.pick({ key: true });
+export type PropId = z.infer<typeof PropIdSchema>;
+export const PropIdLikeSchema = z.union([PropSchema, PropIdSchema, z.string()]);
+export type PropIdLike = z.infer<typeof PropIdLikeSchema>;
 
 // https://github.com/usalu/semio#-benchmark-
 export const BenchmarkSchema = z.object({
@@ -102,6 +119,11 @@ export const BenchmarkSchema = z.object({
   maxExcluded: z.boolean().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
+export type Benchmark = z.infer<typeof BenchmarkSchema>;
+export const BenchmarkIdSchema = BenchmarkSchema.pick({ name: true });
+export type BenchmarkId = z.infer<typeof BenchmarkIdSchema>;
+export const BenchmarkIdLikeSchema = z.union([BenchmarkSchema, BenchmarkIdSchema, z.string()]);
+export type BenchmarkIdLike = z.infer<typeof BenchmarkIdLikeSchema>;
 
 // https://github.com/usalu/semio#-representation-
 export const RepresentationSchema = z.object({
@@ -110,10 +132,11 @@ export const RepresentationSchema = z.object({
   tags: z.array(z.string()).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
-export const RepresentationIdSchema = z.object({
-  tags: z.array(z.string()).optional(),
-});
+export type Representation = z.infer<typeof RepresentationSchema>;
+export const RepresentationIdSchema = RepresentationSchema.pick({ url: true });
+export type RepresentationId = z.infer<typeof RepresentationIdSchema>;
 export const RepresentationIdLikeSchema = z.union([RepresentationSchema, RepresentationIdSchema, z.array(z.string()), z.string(), z.null(), z.undefined()]);
+export type RepresentationIdLike = z.infer<typeof RepresentationIdLikeSchema>;
 
 // https://github.com/usalu/semio#-port-
 export const PortSchema = z.object({
@@ -128,8 +151,11 @@ export const PortSchema = z.object({
   props: z.array(PropSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
-export const PortIdSchema = z.object({ id_: z.string().optional() });
+export const PortIdSchema = PortSchema.pick({ id_: true });
+export type PortId = z.infer<typeof PortIdSchema>;
 export const PortIdLikeSchema = z.union([PortSchema, PortIdSchema, z.string(), z.null(), z.undefined()]);
+export type PortIdLike = z.infer<typeof PortIdLikeSchema>;
+
 // https://github.com/usalu/semio#-stat-
 export const StatSchema = z.object({
   key: z.string(),
@@ -139,6 +165,11 @@ export const StatSchema = z.object({
   max: z.number().optional(),
   maxExcluded: z.boolean().optional(),
 });
+export type Stat = z.infer<typeof StatSchema>;
+export const StatIdSchema = StatSchema.pick({ key: true });
+export type StatId = z.infer<typeof StatIdSchema>;
+export const StatIdLikeSchema = z.union([StatSchema, StatIdSchema, z.string()]);
+export type StatIdLike = z.infer<typeof StatIdLikeSchema>;
 
 // https://github.com/usalu/semio#-quality-
 export const QualityKindSchema = z.enum(["General", "Design", "Type", "Piece", "Connection", "Port"]);
@@ -160,13 +191,13 @@ export const QualitySchema = z.object({
   benchmarks: z.array(BenchmarkSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
-export const QualityIdSchema = z.object({ key: z.string() });
+export type Quality = z.infer<typeof QualitySchema>;
+export const QualityIdSchema = QualitySchema.pick({ key: true });
+export type QualityId = z.infer<typeof QualityIdSchema>;
 export const QualityIdLikeSchema = z.union([QualitySchema, QualityIdSchema, z.string()]);
 
 // https://github.com/usalu/semio#-file-
-export const FileIdSchema = z.object({
-  path: z.url(),
-});
+
 export const FileSchema = z.object({
   path: z.url(),
   remote: z.url().optional(),
@@ -185,7 +216,11 @@ export const FileSchema = z.object({
     .optional(),
   updatedBy: AuthorIdSchema.optional(),
 });
+export type File = z.infer<typeof FileSchema>;
+export const FileIdSchema = FileSchema.pick({ path: true });
+export type FileId = z.infer<typeof FileIdSchema>;
 export const FileIdLikeSchema = z.union([FileSchema, FileIdSchema, z.string()]);
+export type FileIdLike = z.infer<typeof FileIdLikeSchema>;
 
 // https://github.com/usalu/semio#-location-
 export const LocationSchema = z.object({
@@ -193,12 +228,16 @@ export const LocationSchema = z.object({
   latitude: z.number(),
   attributes: z.array(AttributeSchema).optional(),
 });
+export type Location = z.infer<typeof LocationSchema>;
 
 // https://github.com/usalu/semio#-diagram-
-export const DiagramPointSchema = z.object({ x: z.number(), y: z.number() });
-export const DiagramVectorSchema = z.object({ x: z.number(), y: z.number() });
+export const CoordSchema = z.object({ x: z.number(), y: z.number() });
+export type Coord = z.infer<typeof CoordSchema>;
+export const VecSchema = z.object({ x: z.number(), y: z.number() });
+export type Vec = z.infer<typeof VecSchema>;
 
-export const TypeShallowSchema = z.object({
+
+export const TypeSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   icon: z.string().optional(),
@@ -209,21 +248,47 @@ export const TypeShallowSchema = z.object({
   scalable: z.boolean().optional(),
   mirrorable: z.boolean().optional(),
   unit: z.string(),
-  created: z
-    .string()
-    .transform((val) => new Date(val))
-    .or(z.date())
-    .optional(),
-  updated: z
-    .string()
-    .transform((val) => new Date(val))
-    .or(z.date())
-    .optional(),
+  created: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
+  updated: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
   location: LocationSchema.optional(),
+  representations: z.array(RepresentationSchema).optional(),
+  ports: z.array(PortSchema).optional(),
+  authors: z.array(AuthorIdSchema).optional(),
+  attributes: z.array(AttributeSchema).optional()
+});
+export type Type = z.infer<typeof TypeSchema>;
+export const TypeShallowSchema = TypeSchema.overwrite({
   representations: z.array(RepresentationIdSchema).optional(),
   ports: z.array(PortIdSchema).optional(),
-  authors: z.array(AuthorIdSchema).optional(),
-  attributes: z.array(AttributeIdSchema).optional(),
+});
+export const TypeDiffSchema = TypeSchema.partial().overwrite({
+  representations: z.array(RepresentationsDiffSchema).optional(),
+  ports: z.array(PortsDiffSchema).optional(),
+});
+export type TypeDiff = z.infer<typeof TypeDiffSchema>;
+
+export const TypesDiffSchema = z.object({
+  removed: z.array(TypeIdSchema).optional(),
+  updated: z.array(z.object({ id: TypeIdSchema, diff: TypeDiffSchema })).optional(),
+  added: z.array(TypeSchema).optional(),
+});
+export const TypeIdSchema = TypeSchema.pick({ name: true, variant: true });
+export type TypeId = z.infer<typeof TypeIdSchema>;
+export const TypeIdLikeSchema = z.union([TypeSchema, TypeIdSchema, z.string()]);
+export type TypeIdLike = z.infer<typeof TypeIdLikeSchema>;
+
+
+// Basic schemas needed for shallow schemas
+export const LayerSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  image: z.string().optional(),
+  variant: z.string().optional(),
+  visible: z.boolean().optional(),
+  locked: z.boolean().optional(),
+  attributes: z.array(AttributeSchema).optional()
 });
 
 // https://github.com/usalu/semio#-design-
@@ -249,7 +314,7 @@ export const DesignShallowSchema = z.object({
       z.object({
         designId: z.lazy(() => DesignIdSchema),
         plane: PlaneSchema.optional(),
-        center: DiagramPointSchema.optional(),
+        center: CoordSchema.optional(),
       }),
     )
     .optional(),
@@ -352,46 +417,13 @@ export const PortsDiffSchema = z.object({
   updated: z.array(z.object({ id: PortIdSchema, diff: PortDiffSchema })).optional(),
   added: z.array(PortSchema).optional(),
 });
-export const TypeDiffSchema = z.object({
-  name: z.string().optional(),
-  description: z.string().optional(),
-  icon: z.string().optional(),
-  image: z.string().optional(),
-  variant: z.string().optional(),
-  stock: z.number().optional(),
-  virtual: z.boolean().optional(),
-  scalable: z.boolean().optional(),
-  mirrorable: z.boolean().optional(),
-  uri: z.string().optional(),
-  unit: z.string().optional(),
-  created: z
-    .string()
-    .transform((val) => new Date(val))
-    .or(z.date())
-    .optional(),
-  updated: z
-    .string()
-    .transform((val) => new Date(val))
-    .or(z.date())
-    .optional(),
-  location: LocationSchema.optional(),
-  representations: z.array(RepresentationSchema).optional(),
-  ports: z.array(PortSchema).optional(),
-  authors: z.array(AuthorIdSchema).optional(),
-  attributes: z.array(AttributeSchema).optional(),
-});
-export const TypesDiffSchema = z.object({
-  removed: z.array(TypeIdSchema).optional(),
-  updated: z.array(z.object({ id: TypeIdSchema, diff: TypeDiffSchema })).optional(),
-  added: z.array(TypeSchema).optional(),
-});
 export const PieceDiffSchema = z.object({
   id_: z.string().optional(),
   name: z.string().optional(),
   description: z.string().optional(),
   type: TypeIdSchema.optional(),
   plane: PlaneSchema.optional(),
-  center: DiagramPointSchema.optional(),
+  center: CoordSchema.optional(),
   scale: z.number().optional(),
   mirrorPlane: PlaneSchema.optional(),
   hidden: z.boolean().optional(),
@@ -527,159 +559,98 @@ export const GroupDiffSchema = z.object({
 
 export const DiffStatusSchema = z.enum(["unchanged", "added", "removed", "modified"]);
 
-//#endregion Ephermal
 
-export const schemas = {
-  AuthorId: AuthorIdSchema,
-  Author: AuthorSchema,
-  AuthorIdLike: AuthorIdLikeSchema,
-  FileId: FileIdSchema,
-  File: FileSchema,
-  FileIdLike: FileIdLikeSchema,
-  FileDiff: FileDiffSchema,
-  FilesDiff: FilesDiffSchema,
-  AttributeId: AttributeIdSchema,
-  Attribute: AttributeSchema,
-  AttributeIdLike: AttributeIdLikeSchema,
-  RepresentationId: RepresentationIdSchema,
-  Representation: RepresentationSchema,
-  RepresentationIdLike: RepresentationIdLikeSchema,
-  RepresentationDiff: RepresentationDiffSchema,
-  RepresentationsDiff: RepresentationsDiffSchema,
-  Location: LocationSchema,
-  DiagramPoint: DiagramPointSchema,
-  DiagramVector: DiagramVectorSchema,
-  Point: PointSchema,
-  Vector: VectorSchema,
-  Plane: PlaneSchema,
-  QualityKind: QualityKindSchema,
-  Benchmark: BenchmarkSchema,
-  Quality: QualitySchema,
-  Prop: PropSchema,
-  Stat: StatSchema,
-  Layer: LayerSchema,
-  Group: GroupSchema,
-  PortId: PortIdSchema,
-  Port: PortSchema,
-  PortIdLike: PortIdLikeSchema,
-  PortDiff: PortDiffSchema,
-  PortsDiff: PortsDiffSchema,
-  TypeId: TypeIdSchema,
-  Type: TypeSchema,
-  TypeIdLike: TypeIdLikeSchema,
-  TypeDiff: TypeDiffSchema,
-  TypesDiff: TypesDiffSchema,
-  PieceId: PieceIdSchema,
-  Piece: PieceSchema,
-  PieceIdLike: PieceIdLikeSchema,
-  PieceDiff: PieceDiffSchema,
-  PiecesDiff: PiecesDiffSchema,
-  SideId: SideIdSchema,
-  Side: SideSchema,
-  SideIdLike: SideIdLikeSchema,
-  SideDiff: SideDiffSchema,
-  ConnectionId: ConnectionIdSchema,
-  Connection: ConnectionSchema,
-  ConnectionIdLike: ConnectionIdLikeSchema,
-  ConnectionDiff: ConnectionDiffSchema,
-  ConnectionsDiff: ConnectionsDiffSchema,
-  DesignId: DesignIdSchema,
-  Design: DesignSchema,
-  DesignIdLike: DesignIdLikeSchema,
-  DesignDiff: DesignDiffSchema,
-  DesignsDiff: DesignsDiffSchema,
-  KitId: KitIdSchema,
-  Kit: KitSchema,
-  KitIdLike: KitIdLikeSchema,
-  KitDiff: KitDiffSchema,
-  QualityDiff: QualityDiffSchema,
-  BenchmarkDiff: BenchmarkDiffSchema,
-  PropDiff: PropDiffSchema,
-  StatDiff: StatDiffSchema,
-  LayerDiff: LayerDiffSchema,
-  GroupDiff: GroupDiffSchema,
-};
+export const PieceIdLikeSchema = z.union([z.string(), z.object({ id: z.string() })]);
 
-// Type definitions following hierarchy order
-export type Coord = z.infer<typeof CoordSchema>;
-export type Point = z.infer<typeof PointSchema>;
-export type Vector = z.infer<typeof VectorSchema>;
-export type Plane = z.infer<typeof PlaneSchema>;
-export type AttributeId = z.infer<typeof AttributeIdSchema>;
-export type Attribute = z.infer<typeof AttributeSchema>;
-export type AttributeIdLike = z.infer<typeof AttributeIdLikeSchema>;
-export type AuthorId = z.infer<typeof AuthorIdSchema>;
-export type Author = z.infer<typeof AuthorSchema>;
-export type AuthorIdLike = z.infer<typeof AuthorIdLikeSchema>;
-export type Prop = z.infer<typeof PropSchema>;
-export type Benchmark = z.infer<typeof BenchmarkSchema>;
-export type RepresentationId = z.infer<typeof RepresentationIdSchema>;
-export type Representation = z.infer<typeof RepresentationSchema>;
-export type RepresentationIdLike = z.infer<typeof RepresentationIdLikeSchema>;
-export type PortId = z.infer<typeof PortIdSchema>;
-export type Port = z.infer<typeof PortSchema>;
-export type PortIdLike = z.infer<typeof PortIdLikeSchema>;
-export type PieceId = z.infer<typeof PieceIdSchema>;
-export type Piece = z.infer<typeof PieceSchema>;
-export type PieceIdLike = z.infer<typeof PieceIdLikeSchema>;
-export type SideId = z.infer<typeof SideIdSchema>;
-export type Side = z.infer<typeof SideSchema>;
-export type SideIdLike = z.infer<typeof SideIdLikeSchema>;
-export type ConnectionId = z.infer<typeof ConnectionIdSchema>;
-export type Connection = z.infer<typeof ConnectionSchema>;
-export type ConnectionIdLike = z.infer<typeof ConnectionIdLikeSchema>;
-export type Stat = z.infer<typeof StatSchema>;
-export type QualityId = z.infer<typeof QualityIdSchema>;
-export type Quality = z.infer<typeof QualitySchema>;
-export type QualityIdLike = z.infer<typeof QualityIdLikeSchema>;
-export type TypeId = z.infer<typeof TypeIdSchema>;
-export type Type = z.infer<typeof TypeSchema>;
-export type TypeIdLike = z.infer<typeof TypeIdLikeSchema>;
-export type Layer = z.infer<typeof LayerSchema>;
-export type GroupId = z.infer<typeof GroupIdSchema>;
-export type Group = z.infer<typeof GroupSchema>;
-export type GroupIdLike = z.infer<typeof GroupIdLikeSchema>;
-export type DesignId = z.infer<typeof DesignIdSchema>;
-export type Design = z.infer<typeof DesignSchema>;
-export type DesignIdLike = z.infer<typeof DesignIdLikeSchema>;
-export type KitId = z.infer<typeof KitIdSchema>;
-export type Kit = z.infer<typeof KitSchema>;
-export type KitIdLike = z.infer<typeof KitIdLikeSchema>;
+export const PieceSchema = z.object({
+  id: z.string(),
+  name: z.string().optional(),
+  description: z.string().optional(),
+  type: TypeIdSchema,
+  plane: PlaneSchema.optional(),
+  center: CoordSchema.optional(),
+  scale: z.number().optional(),
+  mirrorPlane: PlaneSchema.optional(),
+  hidden: z.boolean().optional(),
+  locked: z.boolean().optional(),
+  color: z.string().optional(),
+  attributes: z.array(AttributeSchema).optional()
+});
 
-// Supporting types
-export type FileId = z.infer<typeof FileIdSchema>;
-export type File = z.infer<typeof FileSchema>;
-export type FileIdLike = z.infer<typeof FileIdLikeSchema>;
-export type FileDiff = z.infer<typeof FileDiffSchema>;
-export type FilesDiff = z.infer<typeof FilesDiffSchema>;
-export type RepresentationDiff = z.infer<typeof RepresentationDiffSchema>;
-export type RepresentationsDiff = z.infer<typeof RepresentationsDiffSchema>;
-export type Location = z.infer<typeof LocationSchema>;
-export type DiagramPoint = z.infer<typeof DiagramPointSchema>;
-export type DiagramVector = z.infer<typeof DiagramVectorSchema>;
-export type QualityKind = z.infer<typeof QualityKindSchema>;
-export type PortDiff = z.infer<typeof PortDiffSchema>;
-export type PortsDiff = z.infer<typeof PortsDiffSchema>;
-export type TypeShallow = z.infer<typeof TypeShallowSchema>;
-export type TypeDiff = z.infer<typeof TypeDiffSchema>;
-export type PieceDiff = z.infer<typeof PieceDiffSchema>;
-export type PiecesDiff = z.infer<typeof PiecesDiffSchema>;
-export type SideDiff = z.infer<typeof SideDiffSchema>;
-export type ConnectionDiff = z.infer<typeof ConnectionDiffSchema>;
-export type DesignShallow = z.infer<typeof DesignShallowSchema>;
-export type DesignDiff = z.infer<typeof DesignDiffSchema>;
-export type DesignsDiff = z.infer<typeof DesignsDiffSchema>;
-export type KitShallow = z.infer<typeof KitShallowSchema>;
-export type KitDiff = z.infer<typeof KitDiffSchema>;
-export type QualityDiff = z.infer<typeof QualityDiffSchema>;
-export type BenchmarkDiff = z.infer<typeof BenchmarkDiffSchema>;
-export type PropDiff = z.infer<typeof PropDiffSchema>;
-export type StatDiff = z.infer<typeof StatDiffSchema>;
-export type LayerDiff = z.infer<typeof LayerDiffSchema>;
-export type GroupDiff = z.infer<typeof GroupDiffSchema>;
-export type ConnectionsDiff = z.infer<typeof ConnectionsDiffSchema>;
-export type TypesDiff = z.infer<typeof TypesDiffSchema>;
-export type Camera = z.infer<typeof CameraSchema>;
+export const SideIdSchema = z.string();
+export const SideIdLikeSchema = z.union([z.string(), z.object({ id: z.string() })]);
+
+export const SideSchema = z.object({
+  id: z.string(),
+  pieceId: PieceIdSchema,
+  portId: z.string(),
+  name: z.string().optional(),
+  attributes: z.array(AttributeSchema).optional()
+});
+
+export const ConnectionIdLikeSchema = z.union([z.string(), z.object({ id: z.string() })]);
+
+export const ConnectionSchema = z.object({
+  id: z.string(),
+  fromSideId: SideIdSchema,
+  toSideId: SideIdSchema,
+  name: z.string().optional(),
+  description: z.string().optional(),
+  attributes: z.array(AttributeSchema).optional()
+});
+
+export const DesignIdLikeSchema = z.union([z.string(), z.object({ id: z.string() })]);
+
+export const DesignSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  variant: z.string().optional(),
+  view: z.string().optional(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  image: z.string().optional(),
+  concepts: z.array(z.string()).optional(),
+  authors: z.array(AuthorIdSchema).optional(),
+  location: LocationSchema.optional(),
+  layers: z.array(z.lazy(() => LayerSchema)).optional(),
+  pieces: z.array(PieceSchema).optional(),
+  groups: z.array(z.lazy(() => GroupSchema)).optional(),
+  connections: z.array(ConnectionSchema).optional(),
+  files: z.array(FileSchema).optional(),
+  created: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
+  updated: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
+  attributes: z.array(AttributeSchema).optional()
+});
+
+export const KitIdLikeSchema = z.union([z.string(), z.object({ id: z.string() })]);
+
+export const KitSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  image: z.string().optional(),
+  variant: z.string().optional(),
+  types: z.array(TypeSchema).optional(),
+  designs: z.array(DesignSchema).optional(),
+  authors: z.array(AuthorIdSchema).optional(),
+  created: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
+  updated: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
+  attributes: z.array(AttributeSchema).optional()
+});
+
+export const GroupIdLikeSchema = z.union([z.string(), z.object({ id: z.string() })]);
+
+export const GroupSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  image: z.string().optional(),
+  variant: z.string().optional(),
+  collapsed: z.boolean().optional(),
+  attributes: z.array(AttributeSchema).optional()
+});
 
 export enum DiffStatus {
   Unchanged = "unchanged",
@@ -857,8 +828,8 @@ export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vec
 
 export const serializeAttribute = (attribute: Attribute): string => JSON.stringify(AttributeSchema.parse(attribute), null, 2);
 export const serializeAuthor = (author: Author): string => JSON.stringify(AuthorSchema.parse(author), null, 2);
-export const serializeDiagramPoint = (diagramPoint: DiagramPoint): string => JSON.stringify(DiagramPointSchema.parse(diagramPoint), null, 2);
-export const serializeDiagramVector = (diagramVector: DiagramVector): string => JSON.stringify(DiagramVectorSchema.parse(diagramVector), null, 2);
+export const serializeCoord = (coord: Coord): string => JSON.stringify(CoordSchema.parse(coord), null, 2);
+export const serializeVec = (diagramVector: Vec): string => JSON.stringify(VecSchema.parse(diagramVector), null, 2);
 export const serializePlane = (plane: Plane): string => JSON.stringify(PlaneSchema.parse(plane), null, 2);
 export const serializePoint = (point: Point): string => JSON.stringify(PointSchema.parse(point), null, 2);
 export const serializeVector = (vector: Vector): string => JSON.stringify(VectorSchema.parse(vector), null, 2);
@@ -873,8 +844,8 @@ export const serializeFile = (file: File): string => JSON.stringify(FileSchema.p
 export const serializeKit = (kit: Kit): string => JSON.stringify(KitSchema.parse(kit), null, 2);
 export const deserializeAttribute = (json: string): Attribute => AttributeSchema.parse(JSON.parse(json));
 export const deserializeAuthor = (json: string): Author => AuthorSchema.parse(JSON.parse(json));
-export const deserializeDiagramPoint = (json: string): DiagramPoint => DiagramPointSchema.parse(JSON.parse(json));
-export const deserializeDiagramVector = (json: string): DiagramVector => DiagramVectorSchema.parse(JSON.parse(json));
+export const deserializeCoord = (json: string): Coord => CoordSchema.parse(JSON.parse(json));
+export const deserializeVec = (json: string): Vec => VecSchema.parse(JSON.parse(json));
 export const deserializePlane = (json: string): Plane => PlaneSchema.parse(JSON.parse(json));
 export const deserializePoint = (json: string): Point => PointSchema.parse(JSON.parse(json));
 export const deserializeVector = (json: string): Vector => VectorSchema.parse(JSON.parse(json));
@@ -888,8 +859,8 @@ export const deserializeDesign = (json: string): Design => DesignSchema.parse(JS
 export const deserializeKit = (json: string): Kit => KitSchema.parse(JSON.parse(json));
 export const parseAttribute = (json: string): Attribute => AttributeSchema.parse(JSON.parse(json));
 export const parseAuthor = (json: string): Author => AuthorSchema.parse(JSON.parse(json));
-export const parseDiagramPoint = (json: string): DiagramPoint => DiagramPointSchema.parse(JSON.parse(json));
-export const parseDiagramVector = (json: string): DiagramVector => DiagramVectorSchema.parse(JSON.parse(json));
+export const parseCoord = (json: string): Coord => CoordSchema.parse(JSON.parse(json));
+export const parseVec = (json: string): Vec => VecSchema.parse(JSON.parse(json));
 export const parsePlane = (json: string): Plane => PlaneSchema.parse(JSON.parse(json));
 export const parsePoint = (json: string): Point => PointSchema.parse(JSON.parse(json));
 export const parseVector = (json: string): Vector => VectorSchema.parse(JSON.parse(json));
@@ -904,8 +875,8 @@ export const parseFile = (json: string): File => FileSchema.parse(JSON.parse(jso
 export const parseKit = (json: string): Kit => KitSchema.parse(JSON.parse(json));
 export const safeParseAttribute = (data: unknown) => AttributeSchema.safeParse(data);
 export const safeParseAuthor = (data: unknown) => AuthorSchema.safeParse(data);
-export const safeParseDiagramPoint = (data: unknown) => DiagramPointSchema.safeParse(data);
-export const safeParseDiagramVector = (data: unknown) => DiagramVectorSchema.safeParse(data);
+export const safeParseCoord = (data: unknown) => CoordSchema.safeParse(data);
+export const safeParseVec = (data: unknown) => VecSchema.safeParse(data);
 export const safeParsePlane = (data: unknown) => PlaneSchema.safeParse(data);
 export const safeParsePoint = (data: unknown) => PointSchema.safeParse(data);
 export const safeParseVector = (data: unknown) => VectorSchema.safeParse(data);
@@ -1182,7 +1153,7 @@ export const piecesMetadata = (
   string,
   {
     plane: Plane;
-    center: DiagramPoint;
+    center: Coord;
     fixedPieceId: string;
     parentPieceId: string | null;
     depth: number;
@@ -1433,7 +1404,6 @@ export const getDesignDiff = (before: Design, after: Design): DesignDiff => {
 };
 export const getKitDiff = (before: Kit, after: Kit): KitDiff => {
   const diff: any = {};
-  if (before.uri !== after.uri) diff.uri = after.uri;
   if (before.name !== after.name) diff.name = after.name;
   if (before.description !== after.description) diff.description = after.description;
   if (before.icon !== after.icon) diff.icon = after.icon;
@@ -2543,7 +2513,7 @@ export const mergeDesigns = (designs: Design[]): DesignDiff => {
   };
 };
 
-export const orientDesign = (plane?: Plane, center?: DiagramPoint): DesignDiff => {
+export const orientDesign = (plane?: Plane, center?: Coord): DesignDiff => {
   if (plane === undefined && center === undefined) {
     return {};
   }
@@ -3199,7 +3169,7 @@ export type IncludedDesignInfo = {
   id: string;
   designId: DesignId;
   type: "connected" | "fixed";
-  center?: DiagramPoint;
+  center?: Coord;
   plane?: Plane;
   externalConnections?: Connection[];
 };

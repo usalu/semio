@@ -6,7 +6,7 @@ An ecosystem for designing kit-of-parts architecture together.
 
 ## Rules
 
-The following rules MUST alwaysbe followed unless explicitly asked to do otherwise.
+The following rules MUST always be followed unless explicitly asked to do otherwise.
 
 - NEVER remove functionality! Not even to get the code to work quickly.
 - ALWAYS be thorough.
@@ -74,6 +74,8 @@ The following rules MUST alwaysbe followed unless explicitly asked to do otherwi
 
 ## File Structure
 
+The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNAME | …]? [SUMMARY]?
+
 ├── .claude
 │ ├── agents
 │ │ ├── reformatter.md # Exclusively to reformat text (code, lists, …)
@@ -82,15 +84,15 @@ The following rules MUST alwaysbe followed unless explicitly asked to do otherwi
 │ └── settings.json
 ├── .cursor
 │ ├── rules
-│ │ ├── js-core.mdc # js/core/**/_._
-│ │ ├── js.mdc # js/**/_._
 │ │ └── repo.mdc # \*_/_.\*
 ├── .github
 │ ├── chatmodes
 │ │ ├── Reformatter.chatmode.md # Exclusively to reformat text (code, lists, …)
 │ │ └── Reorderer.chatmode.md # Exclusively to reorder text (code, lists, …)
 │ │ └── Schema-Changer.chatmode.md # Exclusively to change the schema (code, api, database, …)
-│ └── workflows
+│ ├── workflows
+│ │ └── gh-pages.yml # Deploy user docs togh-pages
+│ └── dependabot.yml
 ├── .vscode
 ├── antlr
 ├── assets # @semio/gh: assets for the complete repo
@@ -200,20 +202,19 @@ The following rules MUST alwaysbe followed unless explicitly asked to do otherwi
 ├── powershell.ps1 # General Powershell utility
 └── README.md # GFM dev docs
 
+In general, if the user talks about an old file, then probably there is the same file with the suffix `*.old` that is the original state.
+
 # Ecosystems
 
 ## js
 
 Javascript code with shared core (@semio/js) that uses storybook and exports a handful of React components (Sketchpad, Diagram, Model) for both web-based and desktop-based environments, a documentation (@semio/docs) that uses astro with starlight and mdx, and sketchpad (@semio/sketchpad) that runs in electron.
 
-### Guidelines
+### Rules
 
-- No relative imports. Use @semio/PROJECT as base instead of `./`.
-- No inline styling. Use tailwindcss (v4). v4 uses a `theme.css` (`@semio/js/theme.css`) for theming and not `{theme:{…}}` in `tailwindconfig`.
-- Everything light and darkmode compatible.
-- Use only colors defined in `@theme inline {…}` from `@semio/js/globals.css`.
-- No rounded borders (unless full rounded).
-- No shadows.
+- NEVER use inline styling. Use tailwindcss (v4). v4 uses a `theme.css` (`@semio/js/theme.css`) for theming and not `{theme:{…}}` in `tailwindconfig`.
+- ALWAYS be light and darkmode compatible.
+- ALWAYS use colors defined in `@theme inline {…}` from `@semio/js/globals.css`.
 
 ### Styling
 
