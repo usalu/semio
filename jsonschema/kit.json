@@ -212,7 +212,7 @@
       "title": "Design",
       "type": "object"
     },
-    "DiagramPoint": {
+    "Coord": {
       "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system.",
       "properties": {
         "x": {
@@ -230,7 +230,7 @@
         "x",
         "y"
       ],
-      "title": "DiagramPoint",
+      "title": "Coord",
       "type": "object"
     },
     "Location": {
@@ -304,7 +304,7 @@
         "center": {
           "anyOf": [
             {
-              "$ref": "#/$defs/DiagramPoint"
+              "$ref": "#/$defs/Coord"
             },
             {
               "type": "null"

@@ -2311,7 +2311,7 @@ public class File : Model<File>
 /// <see href="https://github.com/usalu/semio#-diagram-point-"/>
 /// </summary>
 [Model("📺", "DP", "DPt", "A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.")]
-public class DiagramPoint : Model<DiagramPoint>
+public class Coord : Model<Coord>
 {
     [NumberProp("🎚️", "X", "X", "The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.", PropImportance.REQUIRED)]
     public float X { get; set; }
@@ -2319,10 +2319,10 @@ public class DiagramPoint : Model<DiagramPoint>
     [NumberProp("🎚️", "Y", "Y", "The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.", PropImportance.REQUIRED)]
     public float Y { get; set; }
 
-    public DiagramPoint Normalize()
+    public Coord Normalize()
     {
         var length = (float)Math.Sqrt(X * X + Y * Y);
-        return new DiagramPoint { X = X / length, Y = Y / length };
+        return new Coord { X = X / length, Y = Y / length };
     }
 }
 
@@ -3354,7 +3354,7 @@ public class PieceDiff : Model<PieceDiff>
     [ModelProp("📐", "Pl?", "Pln?", "The optional plane of the piece.", PropImportance.OPTIONAL)]
     public Plane? Plane { get; set; }
     [ModelProp("📍", "Cn?", "Cnt?", "The optional center of the piece for the diagram.", PropImportance.OPTIONAL)]
-    public DiagramPoint? Center { get; set; }
+    public Coord? Center { get; set; }
     [Color("🎨", "Cl?", "Col?", "The optional hex color of the piece.")]
     public string Color { get; set; } = "";
     [NumberProp("⚖️", "Sc?", "Scl?", "The optional scale factor of the piece.", PropImportance.OPTIONAL)]
@@ -3441,7 +3441,7 @@ public class Piece : Model<Piece>
     [ModelProp("◳", "Pn?", "Pln?", "The optional plane of the piece. When pieces are connected only one piece can have a plane.", PropImportance.OPTIONAL)]
     public Plane? Plane { get; set; }
     [ModelProp("⌖", "Ce?", "Cen?", "The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.", PropImportance.OPTIONAL)]
-    public DiagramPoint? Center { get; set; }
+    public Coord? Center { get; set; }
     [FalseOrTrue("👻", "Hi?", "Hid?", "Whether the piece is hidden. A hidden piece is not visible in the model.")]
     public bool Hidden { get; set; } = false;
     [FalseOrTrue("🔒", "Lk?", "Lck?", "Whether the piece is locked. A locked piece cannot be edited.")]
@@ -4169,7 +4169,7 @@ public class Design : Model<Design>
             var onRoot = new Action<Piece>(piece =>
             {
                 if (piece.Plane == null) piece.Plane = new Plane();
-                if (piece.Center == null) piece.Center = new DiagramPoint();
+                if (piece.Center == null) piece.Center = new Coord();
             });
             var onConnection = new Action<Piece, Piece, Connection>((parent, child, connection) =>
             {
@@ -4187,12 +4187,12 @@ public class Design : Model<Design>
                     connection.Rotation, connection.Turn, connection.Tilt);
                 child.Plane = childPlane;
 
-                var direction = new DiagramPoint
+                var direction = new Coord
                 {
                     X = connection.X,
                     Y = connection.Y
                 }.Normalize();
-                var childCenter = new DiagramPoint
+                var childCenter = new Coord
                 {
                     X = parent.Center.X + connection.X + direction.X,
                     Y = parent.Center.Y + connection.Y + direction.Y

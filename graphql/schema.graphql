@@ -355,7 +355,7 @@ type Piece implements Node {
   The ID of the object
   """
   id: ID!
-  center: DiagramPoint!
+  center: Coord!
   connections: [Connection!]!
 }
 
@@ -369,7 +369,7 @@ type Plane {
 """
 📺 A 2d-point (xy) of floats in the diagram. One unit is equal the width of a piece icon.
 """
-type DiagramPoint {
+type Coord {
   """
   🏁 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
   """
@@ -850,7 +850,7 @@ input PieceInputNode {
   """
   📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.
   """
-  center: DiagramPointInputNode = null
+  center: CoordInputNode = null
 
   """
   🏷️ The attributes of the piece.
@@ -876,7 +876,7 @@ input PlaneInputNode {
   yAxis: VectorInputNode!
 }
 
-input DiagramPointInputNode {
+input CoordInputNode {
   """
   🏁 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
   """

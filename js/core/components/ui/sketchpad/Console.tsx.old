@@ -29,7 +29,7 @@ import { DesignEditorStoreSelection, useDesignEditorStoreSelection, useDesignId,
 
 export interface CommandParameter {
   name: string;
-  type: "string" | "number" | "boolean" | "select" | "DiagramPoint" | "Plane" | "TypeId" | "PortId" | "PieceId";
+  type: "string" | "number" | "boolean" | "select" | "Coord" | "Plane" | "TypeId" | "PortId" | "PieceId";
   description: string;
   required?: boolean;
   options?: { value: string; label: string }[];

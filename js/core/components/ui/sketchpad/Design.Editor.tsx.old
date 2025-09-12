@@ -36,7 +36,7 @@ import {
   Design,
   DesignDiff,
   DesignId,
-  DiagramPoint,
+  Coord,
   ICON_WIDTH,
   Kit,
   Model,
@@ -410,13 +410,13 @@ const subDesignFromSelection = (design: Design, selection: DesignEditorStoreSele
   return { ...design, pieces: subPieces, connections: subConnections };
 };
 
-const copyToClipboard = (design: Design, selection: DesignEditorStoreSelection, plane?: Plane, center?: DiagramPoint): void => {
+const copyToClipboard = (design: Design, selection: DesignEditorStoreSelection, plane?: Plane, center?: Coord): void => {
   navigator.clipboard.writeText(JSON.stringify(orientDesign(subDesignFromSelection(design, selection), plane, center))).then(() => {});
 };
-const cutToClipboard = (design: Design, selection: DesignEditorStoreSelection, plane?: Plane, center?: DiagramPoint): void => {
+const cutToClipboard = (design: Design, selection: DesignEditorStoreSelection, plane?: Plane, center?: Coord): void => {
   navigator.clipboard.writeText(JSON.stringify(subDesignFromSelection(orientDesign(design, plane, center), selection))).then(() => {});
 };
-const pasteFromClipboard = async (design: Design, plane?: Plane, center?: DiagramPoint): Promise<Design> => {
+const pasteFromClipboard = async (design: Design, plane?: Plane, center?: Coord): Promise<Design> => {
   try {
     const text = await navigator.clipboard.readText();
     const clipboardDesign = JSON.parse(text);
@@ -580,18 +580,18 @@ export const useDesignEditorCommands = () => {
   const removeConnectionsFromSelection = useCallback((cs: (Connection | ConnectionId)[]) => dispatch({ type: DesignEditorAction.RemoveConnectionsFromSelection, payload: cs }), [dispatch]);
   const selectPiecePort = useCallback((pieceId: string, portId: string) => dispatch({ type: DesignEditorAction.SelectPiecePort, payload: { pieceId, portId } }), [dispatch]);
   const deselectPiecePort = useCallback(() => dispatch({ type: DesignEditorAction.DeselectPiecePort, payload: null }), [dispatch]);
-  const deleteSelected = useCallback((plane?: Plane, center?: DiagramPoint) => dispatch({ type: DesignEditorAction.DeleteSelected, payload: { plane, center } }), [dispatch]);
+  const deleteSelected = useCallback((plane?: Plane, center?: Coord) => dispatch({ type: DesignEditorAction.DeleteSelected, payload: { plane, center } }), [dispatch]);
   const setFullscreen = useCallback((fp: DesignEditorStoreFullscreenPanel) => dispatch({ type: DesignEditorAction.SetFullscreen, payload: fp }), [dispatch]);
   const toggleDiagramFullscreen = useCallback(() => dispatch({ type: DesignEditorAction.ToggleDiagramFullscreen, payload: null }), [dispatch]);
   const toggleModelFullscreen = useCallback(() => dispatch({ type: DesignEditorAction.ToggleModelFullscreen, payload: null }), [dispatch]);
   const copyToClipboard = useCallback(() => dispatch({ type: DesignEditorAction.CopyToClipboard, payload: null }), [dispatch]);
-  const pasteFromClipboard = useCallback((plane?: Plane, center?: DiagramPoint) => dispatch({ type: DesignEditorAction.PasteFromClipboard, payload: { plane, center } }), [dispatch]);
+  const pasteFromClipboard = useCallback((plane?: Plane, center?: Coord) => dispatch({ type: DesignEditorAction.PasteFromClipboard, payload: { plane, center } }), [dispatch]);
   const undo = useCallback(() => dispatch({ type: DesignEditorAction.Undo, payload: null }), [dispatch]);
   const redo = useCallback(() => dispatch({ type: DesignEditorAction.Redo, payload: null }), [dispatch]);
   const startTransaction = useCallback(() => dispatch({ type: DesignEditorAction.StartTransaction, payload: null }), [dispatch]);
   const finalizeTransaction = useCallback(() => dispatch({ type: DesignEditorAction.FinalizeTransaction, payload: null }), [dispatch]);
   const abortTransaction = useCallback(() => dispatch({ type: DesignEditorAction.AbortTransaction, payload: null }), [dispatch]);
-  const setCursor = useCallback((cursor: DiagramPoint | undefined) => dispatch({ type: DesignEditorAction.SetCursor, payload: cursor }), [dispatch]);
+  const setCursor = useCallback((cursor: Coord | undefined) => dispatch({ type: DesignEditorAction.SetCursor, payload: cursor }), [dispatch]);
   const setCamera = useCallback((camera: Camera | undefined) => dispatch({ type: DesignEditorAction.SetCamera, payload: camera }), [dispatch]);
   const stepIn = useCallback((presence: DesignEditorStorePresence) => dispatch({ type: DesignEditorAction.StepIn, payload: presence }), [dispatch]);
   const stepOut = useCallback((presence: DesignEditorStorePresence) => dispatch({ type: DesignEditorAction.StepOut, payload: presence }), [dispatch]);

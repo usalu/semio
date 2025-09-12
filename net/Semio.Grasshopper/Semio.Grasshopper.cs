@@ -33,7 +33,7 @@
 // Think of a better way to handle this.
 // The invalid check happen twice and code is duplicated.
 // TODO: Figure out why cast from Piece to Text is not triggering the casts. ToString has somehow has precedence.
-// TODO: NameM.ToLower() doesn't work for composite names. E.g. "DiagramPoint" -> "diagrampoint".
+// TODO: NameM.ToLower() doesn't work for composite names. E.g. "Coord" -> "coord".
 // TODO: Implement a status check and wait for the engine to be ready
 
 #endregion
@@ -1430,12 +1430,12 @@ public class DeserializeFileComponent : DeserializeComponent<FileParam, FileGoo,
 
 #endregion File
 
-#region DiagramPoint
+#region Coord
 
-public class DiagramPointGoo : ModelGoo<DiagramPoint>
+public class CoordGoo : ModelGoo<Coord>
 {
-    public DiagramPointGoo() { }
-    public DiagramPointGoo(DiagramPoint value) : base(value) { }
+    public CoordGoo() { }
+    public CoordGoo(Coord value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
@@ -1453,36 +1453,36 @@ public class DiagramPointGoo : ModelGoo<DiagramPoint>
         Point3d point = new Point3d();
         if (GH_Convert.ToPoint3d(source, ref point, GH_Conversion.Both))
         {
-            Value = new DiagramPoint { X = (float)point.X, Y = (float)point.Y };
+            Value = new Coord { X = (float)point.X, Y = (float)point.Y };
             return true;
         }
         return false;
     }
 }
 
-public class DiagramPointParam : ModelParam<DiagramPointGoo, DiagramPoint>
+public class CoordParam : ModelParam<CoordGoo, Coord>
 {
     public override Guid ComponentGuid => new("4685CCE8-C629-4638-8DF6-F76A17571841");
 }
 
-public class DiagramPointComponent : ModelComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
+public class CoordComponent : ModelComponent<CoordParam, CoordGoo, Coord>
 {
     public override Guid ComponentGuid => new("61FB9BBE-64DE-42B2-B7EF-69CD97FDD9E3");
 }
 
-public class SerializeDiagramPointComponent : SerializeComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
+public class SerializeCoordComponent : SerializeComponent<CoordParam, CoordGoo, Coord>
 {
-    public SerializeDiagramPointComponent() { }
+    public SerializeCoordComponent() { }
     public override Guid ComponentGuid => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A99");
 }
 
-public class DeserializeDiagramPointComponent : DeserializeComponent<DiagramPointParam, DiagramPointGoo, DiagramPoint>
+public class DeserializeCoordComponent : DeserializeComponent<CoordParam, CoordGoo, Coord>
 {
-    public DeserializeDiagramPointComponent() { }
+    public DeserializeCoordComponent() { }
     public override Guid ComponentGuid => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A9A");
 }
 
-#endregion DiagramPoint
+#endregion Coord
 
 #region Port
 

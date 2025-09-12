@@ -1192,12 +1192,12 @@
         "icon": ""
       },
       {
-        "name": "Deserialize DiagramPoint",
-        "description": "Deserialize a diagrampoint.",
+        "name": "Deserialize Coord",
+        "description": "Deserialize a coord.",
         "nickname": "<DPt",
         "inputs": [
           {
-            "description": "Text of serialized DiagramPoint.",
+            "description": "Text of serialized Coord.",
             "name": "Text",
             "nickname": "Tx",
             "kind": "Text"
@@ -1205,10 +1205,10 @@
         ],
         "outputs": [
           {
-            "description": "Deserialized DiagramPoint.",
-            "name": "DiagramPoint",
+            "description": "Deserialized Coord.",
+            "name": "Coord",
             "nickname": "DP",
-            "kind": "DiagramPoint"
+            "kind": "Coord"
           }
         ],
         "icon": ""
@@ -1680,18 +1680,18 @@
         "icon": ""
       },
       {
-        "name": "Serialize DiagramPoint",
-        "description": "Serialize a diagrampoint.",
+        "name": "Serialize Coord",
+        "description": "Serialize a coord.",
         "nickname": ">DPt",
         "inputs": [
           {
-            "description": "The diagrampoint to serialize.",
-            "name": "DiagramPoint",
+            "description": "The coord to serialize.",
+            "name": "Coord",
             "nickname": "DP",
-            "kind": "DiagramPoint"
+            "kind": "Coord"
           },
           {
-            "description": "The optional indent unit for the serialized diagrampoint. Empty text for no indent or spaces or tabs",
+            "description": "The optional indent unit for the serialized coord. Empty text for no indent or spaces or tabs",
             "name": "Indent",
             "nickname": "In?",
             "kind": "Indent"
@@ -1699,7 +1699,7 @@
         ],
         "outputs": [
           {
-            "description": "Text of serialized DiagramPoint.",
+            "description": "Text of serialized Coord.",
             "name": "Text",
             "nickname": "Tx",
             "kind": "Text"
@@ -2964,18 +2964,18 @@
         "icon": ""
       },
       {
-        "name": "Model DiagramPoint",
-        "description": "Construct, deconstruct or modify a diagrampoint",
+        "name": "Model Coord",
+        "description": "Construct, deconstruct or modify a coord",
         "nickname": "~DPt",
         "inputs": [
           {
-            "description": "The optional diagrampoint to deconstruct or modify.",
-            "name": "DiagramPoint",
+            "description": "The optional coord to deconstruct or modify.",
+            "name": "Coord",
             "nickname": "DP?",
-            "kind": "DiagramPoint"
+            "kind": "Coord"
           },
           {
-            "description": "Whether the diagrampoint should be validated.",
+            "description": "Whether the coord should be validated.",
             "name": "Validate",
             "nickname": "Vd?",
             "kind": "Validate"
@@ -2995,13 +2995,13 @@
         ],
         "outputs": [
           {
-            "description": "The constructed or modified diagrampoint.",
-            "name": "DiagramPoint",
+            "description": "The constructed or modified coord.",
+            "name": "Coord",
             "nickname": "DP",
-            "kind": "DiagramPoint"
+            "kind": "Coord"
           },
           {
-            "description": "True if the diagrampoint is valid. Null if no validation was performed.",
+            "description": "True if the coord is valid. Null if no validation was performed.",
             "name": "Valid",
             "nickname": "Vd?",
             "kind": "Valid"

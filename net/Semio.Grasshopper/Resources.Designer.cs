@@ -108,17 +108,17 @@ namespace Semio.Grasshopper
         internal static System.Drawing.Bitmap diagram_draw_24x24 =>
             (System.Drawing.Bitmap)ResourceManager.GetObject("diagram_draw_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap diagrampoint_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("diagrampoint_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap coord_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("coord_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap diagrampoint_deserialize_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("diagrampoint_deserialize_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap coord_deserialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("coord_deserialize_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap diagrampoint_modify_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("diagrampoint_modify_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap coord_modify_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("coord_modify_24x24", resourceCulture);
 
-        internal static System.Drawing.Bitmap diagrampoint_serialize_24x24 =>
-            (System.Drawing.Bitmap)ResourceManager.GetObject("diagrampoint_serialize_24x24", resourceCulture);
+        internal static System.Drawing.Bitmap coord_serialize_24x24 =>
+            (System.Drawing.Bitmap)ResourceManager.GetObject("coord_serialize_24x24", resourceCulture);
 
         internal static System.Drawing.Bitmap encode_24x24 =>
             (System.Drawing.Bitmap)ResourceManager.GetObject("encode_24x24", resourceCulture);

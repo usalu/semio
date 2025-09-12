@@ -829,11 +829,11 @@ class Representation(RepresentationDescriptionField, RepresentationUrlField, Tab
 
 # endregion Representation
 
-# region DiagramPoint
-# https://github.com/usalu/semio-diagrampoint-
+# region Coord
+# https://github.com/usalu/semio-coord-
 
 
-class DiagramPoint(Model):
+class Coord(Model):
     x: float = sqlmodel.Field()
     y: float = sqlmodel.Field()
 
@@ -861,23 +861,23 @@ class DiagramPoint(Model):
     #     return iter((self.x, self.y))
 
 
-class DiagramPointInput(DiagramPoint, Input):
+class CoordInput(Coord, Input):
     pass
 
 
-class DiagramPointContext(DiagramPoint, Context):
+class CoordContext(Coord, Context):
     pass
 
 
-class DiagramPointOutput(DiagramPoint, Output):
+class CoordOutput(Coord, Output):
     pass
 
 
-class DiagramPointPrediction(DiagramPoint, Prediction):
+class CoordPrediction(Coord, Prediction):
     pass
 
 
-# endregion DiagramPoint
+# endregion Coord
 
 # region Point
 # https://github.com/usalu/semio-point-
@@ -1425,9 +1425,7 @@ class Author(AuthorRankField, AuthorEmailField, AuthorNameField, TableEntity, ta
     kit: typing.Optional["Kit"] = sqlmodel.Relationship(back_populates="authors_")
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="author", cascade_delete=True)
 
-    __table_args__ = (
-        sqlalchemy.UniqueConstraint("email", "kit_id", name="uq_authors_email_kit_id"),
-    )
+    __table_args__ = (sqlalchemy.UniqueConstraint("email", "kit_id", name="uq_authors_email_kit_id"),)
 
     def parent(self) -> "Kit":
         if self.kit is not None:
@@ -1442,8 +1440,10 @@ class Author(AuthorRankField, AuthorEmailField, AuthorNameField, TableEntity, ta
 
 # region ArtifactAuthor
 
+
 class ArtifactAuthorEmailField(RealField, abc.ABC):
     author_email: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
+
 
 class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity, table=True):
     PLURAL = "artifact_authors"
@@ -1455,10 +1455,7 @@ class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity, table=True):
     design: typing.Optional["Design"] = sqlmodel.Relationship(back_populates="artifact_authors")
 
     __table_args__ = (
-        sqlalchemy.CheckConstraint(
-            "(type_id IS NOT NULL AND design_id IS NULL) OR (type_id IS NULL AND design_id IS NOT NULL)", 
-            name="ck_artifact_authors_parent_set"
-        ),
+        sqlalchemy.CheckConstraint("(type_id IS NOT NULL AND design_id IS NULL) OR (type_id IS NULL AND design_id IS NOT NULL)", name="ck_artifact_authors_parent_set"),
         sqlalchemy.UniqueConstraint("author_email", "type_id", "design_id", name="uq_artifact_authors_email_type_id_design_id"),
     )
 
@@ -1471,6 +1468,7 @@ class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity, table=True):
 
     def idMembers(self) -> RecursiveAnyList:
         return [self.author_email, self.type.idMembers() if self.type else self.design.idMembers()]
+
 
 # endregion ArtifactAuthor
 
@@ -1776,7 +1774,7 @@ class PiecePlaneField(MaskedField, abc.ABC):
 
 
 class PieceCenterField(MaskedField, abc.ABC):
-    center: typing.Optional[DiagramPoint] = sqlmodel.Field(default=None)
+    center: typing.Optional[Coord] = sqlmodel.Field(default=None)
 
 
 class PieceScaleField(RealField, abc.ABC):
@@ -1809,25 +1807,25 @@ class PieceProps(PieceCenterField, PiecePlaneField, PieceDesignField, PieceTypeF
 
 class PieceInput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Input):
     plane: typing.Optional[PlaneInput] = sqlmodel.Field(default=None)
-    center: typing.Optional[DiagramPointInput] = sqlmodel.Field(default=None)
+    center: typing.Optional[CoordInput] = sqlmodel.Field(default=None)
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
 
 class PieceContext(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Context):
     plane: typing.Optional[PlaneContext] = sqlmodel.Field(default=None)
-    center: typing.Optional[DiagramPointContext] = sqlmodel.Field(default=None)
+    center: typing.Optional[CoordContext] = sqlmodel.Field(default=None)
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
 
 class PieceOutput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Output):
     plane: typing.Optional[PlaneOutput] = sqlmodel.Field(default=None)
-    center: typing.Optional[DiagramPointOutput] = sqlmodel.Field(default=None)
+    center: typing.Optional[CoordOutput] = sqlmodel.Field(default=None)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 
 class PiecePrediction(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Prediction):
     pass
-    # center: typing.Optional[DiagramPointPrediction] = sqlmodel.Field(
+    # center: typing.Optional[CoordPrediction] = sqlmodel.Field(
     #     default=None,
     #     ,
     # )
@@ -1856,13 +1854,13 @@ class Piece(PieceIdField, PieceTypeField, PieceDesignField, PiecePlaneField, Pie
     __table_args__ = (sqlalchemy.UniqueConstraint("local_id", "design_id", name="uq_pieces_local_id_design_id"),)
 
     @property
-    def center(self) -> typing.Optional[DiagramPoint]:
+    def center(self) -> typing.Optional[Coord]:
         if self.centerX is None or self.centerY is None:
             return None
-        return DiagramPoint(x=self.centerX, y=self.centerY)
+        return Coord(x=self.centerX, y=self.centerY)
 
     @center.setter
-    def center(self, center: typing.Optional[DiagramPoint]):
+    def center(self, center: typing.Optional[Coord]):
         if center is None:
             self.centerX = None
             self.centerY = None
@@ -1914,7 +1912,7 @@ class Piece(PieceIdField, PieceTypeField, PieceDesignField, PiecePlaneField, Pie
             pass
         try:
             if obj["center"] is not None:
-                center = DiagramPoint.parse(obj["center"])
+                center = Coord.parse(obj["center"])
                 entity.center = center
         except KeyError:
             pass
@@ -4099,10 +4097,10 @@ GRAPHQLTYPES = {
     "list[__main__.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AttributeNode))),
     "list[__mp_main__.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AttributeNode))),
     "list[engine.Attribute]": graphene.NonNull(graphene.List(graphene.NonNull(lambda: AttributeNode))),
-    "DiagramPoint": graphene.NonNull(lambda: DiagramPointNode),
-    "typing.Optional[__main__.DiagramPoint]": lambda: DiagramPointNode,
-    "typing.Optional[__mp_main__.DiagramPoint]": lambda: DiagramPointNode,
-    "typing.Optional[engine.DiagramPoint]": lambda: DiagramPointNode,
+    "Coord": graphene.NonNull(lambda: CoordNode),
+    "typing.Optional[__main__.Coord]": lambda: CoordNode,
+    "typing.Optional[__mp_main__.Coord]": lambda: CoordNode,
+    "typing.Optional[engine.Coord]": lambda: CoordNode,
     "Location": graphene.NonNull(lambda: LocationNode),
     "typing.Optional[__main__.Location]": lambda: LocationNode,
     "typing.Optional[__mp_main__.Location]": lambda: LocationNode,
@@ -4291,14 +4289,14 @@ class RepresentationInputNode(InputNode):
         model = RepresentationInput
 
 
-class DiagramPointNode(Node):
+class CoordNode(Node):
     class Meta:
-        model = DiagramPoint
+        model = Coord
 
 
-class DiagramPointInputNode(InputNode):
+class CoordInputNode(InputNode):
     class Meta:
-        model = DiagramPointInput
+        model = CoordInput
 
 
 class PointNode(Node):

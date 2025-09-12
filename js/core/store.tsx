@@ -39,13 +39,13 @@ import {
   ConnectionId,
   connectionIdLikeToConnectionId,
   connectionIdToString,
+  Coord,
   Design,
   DesignDiff,
   DesignId,
   designIdLikeToDesignId,
   designIdToString,
   DesignShallow,
-  DiagramPoint,
   DiffStatus,
   FileDiff,
   fileIdLikeToFileId,
@@ -248,7 +248,7 @@ export enum DesignEditorFullscreenPanel {
   Model = "model",
 }
 export interface DesignEditorPresence {
-  cursor?: DiagramPoint;
+  cursor?: Coord;
   camera?: Camera;
 }
 export interface DesignEditorPresenceOther extends OtherPresence, DesignEditorPresence {}
@@ -3423,7 +3423,7 @@ export function usePiecesMetadata(): Map<
   string,
   {
     plane: Plane;
-    center: DiagramPoint;
+    center: Coord;
     fixedPieceId: string;
     parentPieceId: string | null;
     depth: number;
@@ -3710,7 +3710,7 @@ export function useReplacableTypes(pieceIds: PieceId[], selectedVariants?: strin
   const kit = useKit();
   const design = useDesign();
   const designId = useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
-  
+
   return useMemo(() => {
     if (pieceIds.length === 1) {
       return findReplacableTypesForPieceInDesign(kit, designId, pieceIds[0], selectedVariants);
@@ -3724,7 +3724,7 @@ export function useReplacableDesigns(piece: Piece) {
   const kit = useKit();
   const design = useDesign();
   const designId = useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
-  
+
   return useMemo(() => {
     return findReplacableDesignsForDesignPiece(kit, designId, piece);
   }, [kit, designId, piece]);
@@ -3732,12 +3732,13 @@ export function useReplacableDesigns(piece: Piece) {
 
 export function useIsDesignActive(): (design: Design) => boolean {
   const activeDesignId = useActiveDesignEditor();
-  return useCallback((design: Design): boolean => {
-    if (!activeDesignId) return false;
-    return design.name === activeDesignId.name && 
-           (design.variant || undefined) === activeDesignId.variant && 
-           (design.view || undefined) === activeDesignId.view;
-  }, [activeDesignId]);
+  return useCallback(
+    (design: Design): boolean => {
+      if (!activeDesignId) return false;
+      return design.name === activeDesignId.name && (design.variant || undefined) === activeDesignId.variant && (design.view || undefined) === activeDesignId.view;
+    },
+    [activeDesignId],
+  );
 }
 
 export function usePiecesFromIds(pieceIds: PieceId[]) {
@@ -3771,7 +3772,7 @@ export function usePiecesFromIds(pieceIds: PieceId[]) {
             description: `${includedDesign.type === "fixed" ? "Fixed" : "Clustered"} design: ${includedDesign.designId.name}`,
           };
         }
-        
+
         console.warn(`Piece ${pieceIdString} not found in pieces or includedDesigns. Creating fallback piece.`);
         return {
           id_: pieceIdString,

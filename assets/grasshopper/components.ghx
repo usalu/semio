@@ -7424,15 +7424,15 @@ If none is provided, it will try to see if the Grasshopper script is executed in
               <items count="3">
                 <item name="GUID" type_name="gh_guid" type_code="9">61fb9bbe-64de-42b2-b7ef-69cd97fdd9e3</item>
                 <item name="Lib" type_name="gh_guid" type_code="9">fe587cbf-5f7d-4091-aa6d-d9d30cf80b64</item>
-                <item name="Name" type_name="gh_string" type_code="10">Model DiagramPoint</item>
+                <item name="Name" type_name="gh_string" type_code="10">Model Coord</item>
               </items>
               <chunks count="1">
                 <chunk name="Container">
                   <items count="5">
-                    <item name="Description" type_name="gh_string" type_code="10">Construct, deconstruct or modify a diagrampoint</item>
+                    <item name="Description" type_name="gh_string" type_code="10">Construct, deconstruct or modify a coord</item>
                     <item name="Hidden" type_name="gh_bool" type_code="1">true</item>
                     <item name="InstanceGuid" type_name="gh_guid" type_code="9">0b28cdc3-6ed4-4d2d-93f4-3e2c36358777</item>
-                    <item name="Name" type_name="gh_string" type_code="10">Model DiagramPoint</item>
+                    <item name="Name" type_name="gh_string" type_code="10">Model Coord</item>
                     <item name="NickName" type_name="gh_string" type_code="10">~DPt</item>
                   </items>
                   <chunks count="9">
@@ -7452,9 +7452,9 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_input" index="0">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">The optional diagrampoint to deconstruct or modify.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">The optional coord to deconstruct or modify.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">477cc18b-f5d0-4667-a240-d9646873b9c4</item>
-                        <item name="Name" type_name="gh_string" type_code="10">DiagramPoint</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Coord</item>
                         <item name="NickName" type_name="gh_string" type_code="10">DP?</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">true</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -7478,7 +7478,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_input" index="1">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">Whether the diagrampoint should be validated.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">Whether the coord should be validated.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">9717348e-625d-4d65-ae98-34de07f6c96a</item>
                         <item name="Name" type_name="gh_string" type_code="10">Validate</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Vd?</item>
@@ -7556,9 +7556,9 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_output" index="0">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">The constructed or modified diagrampoint.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">The constructed or modified coord.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">42882cb4-b1b7-4629-b1e0-5a3896907c4f</item>
-                        <item name="Name" type_name="gh_string" type_code="10">DiagramPoint</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Coord</item>
                         <item name="NickName" type_name="gh_string" type_code="10">DP</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -7582,7 +7582,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_output" index="1">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">True if the diagrampoint is valid. Null if no validation was performed.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">True if the coord is valid. Null if no validation was performed.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">82a7f83d-c47d-48a9-8156-a0e8ac18d1c3</item>
                         <item name="Name" type_name="gh_string" type_code="10">Valid</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Vd?</item>
@@ -17055,15 +17055,15 @@ If none is provided, it will try to see if the Grasshopper script is executed in
               <items count="3">
                 <item name="GUID" type_name="gh_guid" type_code="9">edd83721-d2bd-4cf1-929f-fbb07f0a6a99</item>
                 <item name="Lib" type_name="gh_guid" type_code="9">fe587cbf-5f7d-4091-aa6d-d9d30cf80b64</item>
-                <item name="Name" type_name="gh_string" type_code="10">Serialize DiagramPoint</item>
+                <item name="Name" type_name="gh_string" type_code="10">Serialize Coord</item>
               </items>
               <chunks count="1">
                 <chunk name="Container">
                   <items count="5">
-                    <item name="Description" type_name="gh_string" type_code="10">Serialize a diagrampoint.</item>
+                    <item name="Description" type_name="gh_string" type_code="10">Serialize a coord.</item>
                     <item name="Hidden" type_name="gh_bool" type_code="1">true</item>
                     <item name="InstanceGuid" type_name="gh_guid" type_code="9">bd1bb0fc-b9b3-42c7-a8c5-2105953f683a</item>
-                    <item name="Name" type_name="gh_string" type_code="10">Serialize DiagramPoint</item>
+                    <item name="Name" type_name="gh_string" type_code="10">Serialize Coord</item>
                     <item name="NickName" type_name="gh_string" type_code="10">&gt;DPt</item>
                   </items>
                   <chunks count="4">
@@ -17083,9 +17083,9 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_input" index="0">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">The diagrampoint to serialize.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">The coord to serialize.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">4ec20945-5283-4aef-b5e8-acc5a7b6727b</item>
-                        <item name="Name" type_name="gh_string" type_code="10">DiagramPoint</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Coord</item>
                         <item name="NickName" type_name="gh_string" type_code="10">DP</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -17109,7 +17109,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_input" index="1">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">The optional indent unit for the serialized diagrampoint. Empty text for no indent or spaces or tabs</item>
+                        <item name="Description" type_name="gh_string" type_code="10">The optional indent unit for the serialized coord. Empty text for no indent or spaces or tabs</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">83579441-d437-401c-8ad8-045c55ce107e</item>
                         <item name="Name" type_name="gh_string" type_code="10">Indent</item>
                         <item name="NickName" type_name="gh_string" type_code="10">In?</item>
@@ -17156,7 +17156,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_output" index="0">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">Text of serialized DiagramPoint.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">Text of serialized Coord.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">25cad48c-460d-47d1-bcee-49fe4658cfca</item>
                         <item name="Name" type_name="gh_string" type_code="10">Text</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Tx</item>
@@ -18377,15 +18377,15 @@ If none is provided, it will try to see if the Grasshopper script is executed in
               <items count="3">
                 <item name="GUID" type_name="gh_guid" type_code="9">7fbeece1-ecac-4ac1-8daf-c659a9b6238c</item>
                 <item name="Lib" type_name="gh_guid" type_code="9">fe587cbf-5f7d-4091-aa6d-d9d30cf80b64</item>
-                <item name="Name" type_name="gh_string" type_code="10">Deserialize DiagramPoint</item>
+                <item name="Name" type_name="gh_string" type_code="10">Deserialize Coord</item>
               </items>
               <chunks count="1">
                 <chunk name="Container">
                   <items count="5">
-                    <item name="Description" type_name="gh_string" type_code="10">Deserialize a diagrampoint.</item>
+                    <item name="Description" type_name="gh_string" type_code="10">Deserialize a coord.</item>
                     <item name="Hidden" type_name="gh_bool" type_code="1">true</item>
                     <item name="InstanceGuid" type_name="gh_guid" type_code="9">3e97779d-ec2b-4ce5-a9b6-292bcac914d5</item>
-                    <item name="Name" type_name="gh_string" type_code="10">Deserialize DiagramPoint</item>
+                    <item name="Name" type_name="gh_string" type_code="10">Deserialize Coord</item>
                     <item name="NickName" type_name="gh_string" type_code="10">&lt;DPt</item>
                   </items>
                   <chunks count="3">
@@ -18405,7 +18405,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_input" index="0">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">Text of serialized DiagramPoint.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">Text of serialized Coord.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">2d3876b5-4c70-457e-86f2-912fc5d90249</item>
                         <item name="Name" type_name="gh_string" type_code="10">Text</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Tx</item>
@@ -18431,9 +18431,9 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                     </chunk>
                     <chunk name="param_output" index="0">
                       <items count="6">
-                        <item name="Description" type_name="gh_string" type_code="10">Deserialized DiagramPoint.</item>
+                        <item name="Description" type_name="gh_string" type_code="10">Deserialized Coord.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">16afd482-addb-4418-9770-978f83205f79</item>
-                        <item name="Name" type_name="gh_string" type_code="10">DiagramPoint</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Coord</item>
                         <item name="NickName" type_name="gh_string" type_code="10">DP</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>

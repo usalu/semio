@@ -181,7 +181,7 @@ class Piece {
   id: str
   description: str
   plane: Plane
-  center: DiagramPoint
+  center: Coord
   scale: float
   mirrorPlane: Plane
   hidden: bool
@@ -287,7 +287,7 @@ class Vector {
     x <> 0 or y <> 0 or z <> 0
 }
 
-class DiagramPoint {
+class Coord {
   x: float
   y: float
 }
@@ -392,7 +392,7 @@ Piece *-- "1" Type : instance of >
 Piece o-- "0..1" Plane : located by >
 Piece o-- "0..1" Plane : mirrored by >
 Piece *-- "0..*" Attribute : has >
-Piece o-- "0..1" DiagramPoint : has center >
+Piece o-- "0..1" Coord : has center >
 
 Group *-- "0..*" Piece : contains >
 

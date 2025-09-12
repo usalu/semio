@@ -29,7 +29,7 @@ import { DesignEditorSelection, useActiveDesignEditor, useDesignEditorCommands, 
 
 export interface CommandParameter {
   name: string;
-  type: "string" | "number" | "boolean" | "select" | "DiagramPoint" | "Plane" | "TypeId" | "PortId" | "PieceId";
+  type: "string" | "number" | "boolean" | "select" | "Coord" | "Plane" | "TypeId" | "PortId" | "PieceId";
   description: string;
   required?: boolean;
   options?: { value: string; label: string }[];
@@ -1170,7 +1170,7 @@ class TerminalConsole {
         connections: [],
         port: undefined,
       };
-      
+
       const context = {
         kit,
         designId,
@@ -1331,18 +1331,21 @@ const Console: FC = () => {
   const designId = useActiveDesignEditor();
   const selection = useDesignEditorSelection();
   const commands = useDesignEditorCommands();
-  
-  const designEditor = useMemo(() => ({
-    kit,
-    designId,
-    selection,
-    commands,
-    setSelection: commands.changeSelection,
-    setDesign: undefined,
-    startTransaction: commands.startTransaction,
-    finalizeTransaction: commands.finalizeTransaction,
-    abortTransaction: commands.abortTransaction,
-  }), [kit, designId, selection, commands]);
+
+  const designEditor = useMemo(
+    () => ({
+      kit,
+      designId,
+      selection,
+      commands,
+      setSelection: commands.changeSelection,
+      setDesign: undefined,
+      startTransaction: commands.startTransaction,
+      finalizeTransaction: commands.finalizeTransaction,
+      abortTransaction: commands.abortTransaction,
+    }),
+    [kit, designId, selection, commands],
+  );
   const terminalRef = useRef<HTMLDivElement>(null);
   const terminalConsoleRef = useRef<TerminalConsole | null>(null);
   const [state, setState] = useState<ConsoleState>(() => {
@@ -1572,7 +1575,7 @@ const registerBasicCommands = () => {
   });
 
   commandRegistry.register({
-    id: "deselect-all", 
+    id: "deselect-all",
     name: "deselect all",
     description: "Deselect all pieces in the current design",
     parameters: [],
@@ -1588,7 +1591,7 @@ const registerBasicCommands = () => {
 
   commandRegistry.register({
     id: "delete-selected",
-    name: "delete selected", 
+    name: "delete selected",
     description: "Delete currently selected pieces and connections",
     parameters: [],
     editorOnly: true,
@@ -1614,14 +1617,14 @@ const registerBasicCommands = () => {
       },
       {
         name: "x",
-        type: "number", 
+        type: "number",
         description: "X coordinate",
         defaultValue: 0,
       },
       {
         name: "y",
         type: "number",
-        description: "Y coordinate", 
+        description: "Y coordinate",
         defaultValue: 0,
       },
     ],
@@ -1645,7 +1648,7 @@ const registerBasicCommands = () => {
     name: "undo",
     description: "Undo the last action",
     parameters: [],
-    editorOnly: true, 
+    editorOnly: true,
     execute: async (context: CommandContext) => {
       const commands = (context as any).commands;
       if (commands && commands.undo) {
@@ -1658,7 +1661,7 @@ const registerBasicCommands = () => {
   commandRegistry.register({
     id: "redo",
     name: "redo",
-    description: "Redo the last undone action", 
+    description: "Redo the last undone action",
     parameters: [],
     editorOnly: true,
     execute: async (context: CommandContext) => {

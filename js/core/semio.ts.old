@@ -65,7 +65,7 @@ export const RepresentationIdSchema = z.object({
 export const RepresentationIdLikeSchema = z.union([RepresentationSchema, RepresentationIdSchema, z.array(z.string()), z.string(), z.null(), z.undefined()]);
 
 // https://github.com/usalu/semio#-diagram-
-export const DiagramPointSchema = z.object({ x: z.number(), y: z.number() });
+export const CoordSchema = z.object({ x: z.number(), y: z.number() });
 export const DiagramVectorSchema = z.object({ x: z.number(), y: z.number() });
 
 // https://github.com/usalu/semio#-plane-
@@ -147,7 +147,7 @@ export const PieceSchema = z.object({
   description: z.string().optional(),
   type: TypeIdSchema,
   plane: PlaneSchema.optional(),
-  center: DiagramPointSchema.optional(),
+  center: CoordSchema.optional(),
   qualities: z.array(QualitySchema).optional(),
 });
 export const PieceIdSchema = z.object({ id_: z.string() });
@@ -211,7 +211,7 @@ export const DesignSchema = z.object({
       z.object({
         designId: z.lazy(() => DesignIdSchema),
         plane: PlaneSchema.optional(),
-        center: DiagramPointSchema.optional(),
+        center: CoordSchema.optional(),
       }),
     )
     .optional(),
@@ -228,7 +228,7 @@ export const DesignIdLikeSchema = z.union([DesignSchema, DesignIdSchema, z.tuple
 export const DesignPieceSchema = z.object({
   designId: DesignIdSchema,
   plane: PlaneSchema.optional(),
-  center: DiagramPointSchema.optional(),
+  center: CoordSchema.optional(),
 });
 
 // https://github.com/usalu/semio#-kit-
@@ -358,7 +358,7 @@ export const PieceDiffSchema = z.object({
   description: z.string().optional(),
   type: TypeIdSchema.optional(),
   plane: PlaneSchema.optional(),
-  center: DiagramPointSchema.optional(),
+  center: CoordSchema.optional(),
   qualities: z.array(QualitySchema).optional(),
 });
 export const PiecesDiffSchema = z.object({
@@ -431,7 +431,7 @@ export type QualityIdLike = z.infer<typeof QualityIdLikeSchema>;
 export type Representation = z.infer<typeof RepresentationSchema>;
 export type RepresentationId = z.infer<typeof RepresentationIdSchema>;
 export type RepresentationIdLike = z.infer<typeof RepresentationIdLikeSchema>;
-export type DiagramPoint = z.infer<typeof DiagramPointSchema>;
+export type Coord = z.infer<typeof CoordSchema>;
 export type DiagramVector = z.infer<typeof DiagramVectorSchema>;
 export type Point = z.infer<typeof PointSchema>;
 export type Vector = z.infer<typeof VectorSchema>;
@@ -447,7 +447,7 @@ export type TypeIdLike = z.infer<typeof TypeIdLikeSchema>;
 export type Piece = z.infer<typeof PieceSchema>;
 export type PieceId = z.infer<typeof PieceIdSchema>;
 export type PieceIdLike = z.infer<typeof PieceIdLikeSchema>;
-export type DesignPiece = { designId: DesignId; plane?: Plane; center?: DiagramPoint };
+export type DesignPiece = { designId: DesignId; plane?: Plane; center?: Coord };
 export type Side = z.infer<typeof SideSchema>;
 export type SideId = z.infer<typeof SideIdSchema>;
 export type SideIdLike = z.infer<typeof SideIdLikeSchema>;
@@ -493,7 +493,7 @@ export const serialize = {
   connection: (value: Connection): string => JSON.stringify(ConnectionSchema.parse(value), null, 2),
   port: (value: Port): string => JSON.stringify(PortSchema.parse(value), null, 2),
   quality: (value: Quality): string => JSON.stringify(QualitySchema.parse(value), null, 2),
-  diagramPoint: (value: DiagramPoint): string => JSON.stringify(DiagramPointSchema.parse(value), null, 2),
+  coord: (value: Coord): string => JSON.stringify(CoordSchema.parse(value), null, 2),
   diagramVector: (value: DiagramVector): string => JSON.stringify(DiagramVectorSchema.parse(value), null, 2),
   plane: (value: Plane): string => JSON.stringify(PlaneSchema.parse(value), null, 2),
   point: (value: Point): string => JSON.stringify(PointSchema.parse(value), null, 2),
@@ -510,7 +510,7 @@ export const deserialize = {
   connection: (json: string): Connection => ConnectionSchema.parse(JSON.parse(json)),
   port: (json: string): Port => PortSchema.parse(JSON.parse(json)),
   quality: (json: string): Quality => QualitySchema.parse(JSON.parse(json)),
-  diagramPoint: (json: string): DiagramPoint => DiagramPointSchema.parse(JSON.parse(json)),
+  coord: (json: string): Coord => CoordSchema.parse(JSON.parse(json)),
   diagramVector: (json: string): DiagramVector => DiagramVectorSchema.parse(JSON.parse(json)),
   plane: (json: string): Plane => PlaneSchema.parse(JSON.parse(json)),
   point: (json: string): Point => PointSchema.parse(JSON.parse(json)),
@@ -566,7 +566,7 @@ export const schemas = {
   Author: AuthorSchema,
   Location: LocationSchema,
   Representation: RepresentationSchema,
-  DiagramPoint: DiagramPointSchema,
+  Coord: CoordSchema,
   DiagramVector: DiagramVectorSchema,
   TypeId: TypeIdSchema,
   PieceId: PieceIdSchema,
@@ -958,7 +958,7 @@ export const piecesMetadata = (
   string,
   {
     plane: Plane;
-    center: DiagramPoint;
+    center: Coord;
     fixedPieceId: string;
     parentPieceId: string | null;
     depth: number;
@@ -1316,7 +1316,7 @@ export const mergeDesigns = (designs: Design[]): Design => {
   return { ...designs[0], pieces, connections };
 };
 
-export const orientDesign = (design: Design, plane?: Plane, center?: DiagramPoint): Design => {
+export const orientDesign = (design: Design, plane?: Plane, center?: Coord): Design => {
   let fixedPieces = design.pieces?.filter(isFixedPiece) ?? [];
   if (plane !== undefined)
     fixedPieces = fixedPieces.map((p) => ({
@@ -1901,7 +1901,7 @@ export type IncludedDesignInfo = {
   id: string;
   designId: DesignId;
   type: "connected" | "fixed";
-  center?: DiagramPoint;
+  center?: Coord;
   plane?: Plane;
   externalConnections?: Connection[];
 };

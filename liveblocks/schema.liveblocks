@@ -105,7 +105,7 @@ type PortId {
 # ⭕ A piece is a 3d-instance of a type in a design.
 type Piece {
     # 📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center.
-    center?: null | DiagramPoint;
+    center?: null | Coord;
     # 🆔 The id of the piece.
     id_?: string;
     # ◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.
@@ -115,7 +115,7 @@ type Piece {
 }
 
 # 📺 A 2d-point (xy) of integers in screen coordinate system.
-type DiagramPoint {
+type Coord {
     # 🏁 The x-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.
     x: number;
     # 🏁 The y-coordinate of the icon of the piece in the diagram. One unit is equal the width of a piece icon.

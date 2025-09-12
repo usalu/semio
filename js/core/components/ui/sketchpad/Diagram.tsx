@@ -20,25 +20,7 @@ import {
 } from "@xyflow/react";
 import React, { FC, useCallback, useEffect, useMemo, useState } from "react";
 
-import {
-  arePortsCompatible,
-  Connection,
-  DesignId,
-  DiagramPoint,
-  DiffStatus,
-  findAttributeValue,
-  findPortInType,
-  findTypeInKit,
-  getClusterableGroups,
-  getIncludedDesigns,
-  ICON_WIDTH,
-  isPortInUse,
-  isSameConnection,
-  Piece,
-  Port,
-  TOLERANCE,
-  Type,
-} from "../../../semio";
+import { arePortsCompatible, Connection, Coord, DesignId, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, ICON_WIDTH, isPortInUse, isSameConnection, Piece, Port, TOLERANCE, Type } from "../../../semio";
 
 import "@xyflow/react/dist/style.css";
 import {
@@ -46,7 +28,6 @@ import {
   DesignEditorPresenceOther,
   PieceScopeProvider,
   useClusterableGroups,
-  useDesign,
   useDesignEditorCommands,
   useDesignEditorFullscreen,
   useDesignEditorOthers,
@@ -567,7 +548,7 @@ const HelperLines: React.FC<{
   );
 };
 
-const pieceToNode = (piece: Piece, type: Type, center: DiagramPoint, selected: boolean, index: number): PieceNode => ({
+const pieceToNode = (piece: Piece, type: Type, center: Coord, selected: boolean, index: number): PieceNode => ({
   type: "piece",
   id: `piece-${index}-${piece.id_}`,
   position: {
@@ -579,7 +560,7 @@ const pieceToNode = (piece: Piece, type: Type, center: DiagramPoint, selected: b
   className: selected ? "selected" : "",
 });
 
-const designToNode = (piece: Piece, externalConnections: Connection[], center: DiagramPoint, selected: boolean, index: number): DesignNode => ({
+const designToNode = (piece: Piece, externalConnections: Connection[], center: Coord, selected: boolean, index: number): DesignNode => ({
   type: "design",
   id: `piece-${index}-${piece.id_}`,
   position: {
@@ -665,7 +646,7 @@ const connectionToEdge = (connection: Connection, selected: boolean, isParentCon
 const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata: Map<string, any>, kit: any, selection: any) => {
   if (!design) return null;
 
-  const centerMap = new Map<string, DiagramPoint>();
+  const centerMap = new Map<string, Coord>();
   flattenedDesign.pieces?.forEach((piece) => {
     if (piece.id_ && piece.center) {
       centerMap.set(piece.id_, piece.center);
@@ -717,7 +698,7 @@ const designToNodesAndEdges = (design: Design, flattenedDesign: Design, metadata
           }
         });
 
-        const connectedPieceCenters: DiagramPoint[] = [];
+        const connectedPieceCenters: Coord[] = [];
         Array.from(connectedPieceIds).forEach((pieceId) => {
           const center = centerMap.get(pieceId);
           if (center) {

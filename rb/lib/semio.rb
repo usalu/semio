@@ -10,7 +10,7 @@ module Semio
   Vector = Struct.new(:x, :y, :z, keyword_init: true)
 
   # 📺 A 2D point (xy) in the diagram coordinate system.
-  DiagramPoint = Struct.new(:x, :y, keyword_init: true)
+  Coord = Struct.new(:x, :y, keyword_init: true)
 
   # 🗺️ The optional location of the type
   Location = Struct.new(:longitude, :latitude, keyword_init: true)

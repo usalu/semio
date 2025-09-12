@@ -39,7 +39,7 @@ import {
   DesignId,
   DesignIdLike,
   designIdLikeToDesignId,
-  DiagramPoint,
+  Coord,
   Kit,
   KitId,
   KitIdLike,
@@ -92,7 +92,7 @@ export enum DesignEditorStoreFullscreenPanel {
   Model = "model",
 }
 export interface DesignEditorStorePresence {
-  cursor?: DiagramPoint;
+  cursor?: Coord;
   camera?: Camera;
 }
 export interface DesignEditorStorePresenceOther extends DesignEditorStorePresence {
@@ -1556,7 +1556,7 @@ export class SketchpadStore {
         : null;
 
     const yCenter = gPiece(yPiece, "center") as YLeafMapNumber | undefined;
-    const center: DiagramPoint | null = yCenter
+    const center: Coord | null = yCenter
       ? {
           x: yCenter.get("x") as number,
           y: yCenter.get("y") as number,

@@ -1274,7 +1274,7 @@
         "title": "DesignPrediction",
         "description": "\ud83c\udfd9\ufe0f A design is a collection of pieces that are connected."
       },
-      "DiagramPointContext": {
+      "CoordContext": {
         "properties": {
           "x": {
             "type": "number",
@@ -1292,10 +1292,10 @@
           "x",
           "y"
         ],
-        "title": "DiagramPointContext",
+        "title": "CoordContext",
         "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system."
       },
-      "DiagramPointInput": {
+      "CoordInput": {
         "properties": {
           "x": {
             "type": "number",
@@ -1313,10 +1313,10 @@
           "x",
           "y"
         ],
-        "title": "DiagramPointInput",
+        "title": "CoordInput",
         "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system."
       },
-      "DiagramPoint": {
+      "Coord": {
         "properties": {
           "x": {
             "type": "number",
@@ -1334,7 +1334,7 @@
           "x",
           "y"
         ],
-        "title": "DiagramPoint",
+        "title": "Coord",
         "description": "\ud83d\udcfa A 2d-point (xy) of integers in screen coordinate system."
       },
       "HTTPValidationError": {
@@ -1705,7 +1705,7 @@
           "center": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/DiagramPointContext"
+                "$ref": "#/components/schemas/CoordContext"
               },
               {
                 "type": "null"
@@ -1763,7 +1763,7 @@
           "center": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/DiagramPointContext"
+                "$ref": "#/components/schemas/CoordContext"
               },
               {
                 "type": "null"
@@ -1835,7 +1835,7 @@
           "center": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/DiagramPointInput"
+                "$ref": "#/components/schemas/CoordInput"
               },
               {
                 "type": "null"
@@ -1893,7 +1893,7 @@
           "center": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/DiagramPoint"
+                "$ref": "#/components/schemas/Coord"
               },
               {
                 "type": "null"

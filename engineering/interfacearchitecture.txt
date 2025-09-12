@@ -132,7 +132,7 @@ kit : !Kit{
                     z : !Float
                 }
             }
-            center : ?DiagramPoint{
+            center : ?Coord{
                 x : !Float
                 y : !Float
             }

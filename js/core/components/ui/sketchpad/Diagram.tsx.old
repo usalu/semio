@@ -49,7 +49,7 @@ import {
   Connection,
   ConnectionDiff,
   DesignId,
-  DiagramPoint,
+  Coord,
   DiffStatus,
   findConnectionInDesign,
   findDesignInKit,
@@ -668,7 +668,7 @@ const HelperLines: React.FC<{
 
 //#region Semio to React Flow mapping
 
-const pieceToNode = (piece: Piece, type: Type, center: DiagramPoint, selected: boolean, index: number): PieceNode => ({
+const pieceToNode = (piece: Piece, type: Type, center: Coord, selected: boolean, index: number): PieceNode => ({
   type: "piece",
   id: `piece-${index}-${piece.id_}`,
   position: {
@@ -680,7 +680,7 @@ const pieceToNode = (piece: Piece, type: Type, center: DiagramPoint, selected: b
   className: selected ? "selected" : "",
 });
 
-const designToNode = (piece: Piece, externalConnections: Connection[], center: DiagramPoint, selected: boolean, index: number): DesignNode => ({
+const designToNode = (piece: Piece, externalConnections: Connection[], center: Coord, selected: boolean, index: number): DesignNode => ({
   type: "design",
   id: `piece-${index}-${piece.id_}`,
   position: {
@@ -777,7 +777,7 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
 
   // Create a map of piece IDs to their flattened centers
   const flattenedDesign = flattenDesign(kit, designId);
-  const centerMap = new Map<string, DiagramPoint>();
+  const centerMap = new Map<string, Coord>();
   flattenedDesign.pieces?.forEach((piece) => {
     if (piece.id_ && piece.center) {
       centerMap.set(piece.id_, piece.center);
@@ -833,7 +833,7 @@ const designToNodesAndEdges = (kit: Kit, designId: DesignId, selection: DesignEd
         });
 
         // Find the actual positions of these connected pieces in the current diagram
-        const connectedPieceCenters: DiagramPoint[] = [];
+        const connectedPieceCenters: Coord[] = [];
         Array.from(connectedPieceIds).forEach((pieceId) => {
           const center = centerMap.get(pieceId);
           if (center) {
