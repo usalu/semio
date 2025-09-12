@@ -1,18 +1,19 @@
 ---
 name: schema
-description: Change in the schema (code, api, database, …)
+description: Changes in the schema (code, api, database, …)
 tools:
 ---
 
-Your only task is implement a schema change.
+Your only task is implement schema changes.
 
-Files that need to be updated:
+# Files
+
+Every of those files is affected:
 
 ├── engineering
 │ ├── dataarchitecture.pu # blueprint for sql schemas
 │ ├── interfacearchitecture.txt # blueprint for json-based (rest api, graphql api, copy&paste) schemas
 │ └── softwarearchitecture.txt # blueprint for object-oriented code
-├── antlr
 ├── js
 │ ├── ai
 │ ├── core # @semio/js: all shared js code (ui, domain logic, configs, …)
@@ -30,25 +31,14 @@ Files that need to be updated:
 │ │ │ │ │ │ ├── Navbar.tsx
 │ │ │ │ │ │ ├── Workbench.tsx
 │ │ │ │ │ │ ├── Sketchpad.stories.tsx
-│ │ │ │ │ │ ├── Sketchpad.tsx # main component of @semio/js
+│ │ │ │ │ │ ├── Sketchpad.tsx # main component of @semio/
 │ │ │ │ │ │ ├── TypeEditor.tsx
 │ │ │ │ │ │ └── Workbench.tsx
-│ ├── docs
-│ ├── play
-│ ├── playground
-│ └── sketchpad
-├── jsonschema
-├── liveblocks
 ├── meta
+│ └── dictionary.csv # name, abbreviation, description, … strings for entities, properties, functions, …
 ├── net
 │ ├── Semio
-│ │ ├── Semio.cs # @semio/net: all .NET code
-│ │ ├── UserObjects
-│ │ │ ├── github
-│ │ │ ├── gitlab
-│ │ │ ├── monoceros
-│ │ │ ├── semio
-│ │ │ └── wasp
+│ │ └── Semio.cs # @semio/net: all .NET code
 │ ├── Semio.Grasshopper
 │ │ └── Semio.Grasshopper.cs # @semio/gh: all grasshopper code
 │ ├── Semio.Grasshopper.Tests
