@@ -1,6 +1,6 @@
 A list of shortcuts for the following files:
 
-# Architecture | Design | Blueprint | Schema
+# Architecture | Design | Blueprint | Schema | Diagram
 
 data: ./engineering/dataarchitecture.pu
 software: ./engineering/softwarearchitecture.pu

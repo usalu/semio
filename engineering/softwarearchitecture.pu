@@ -125,9 +125,237 @@ Kit *-- "0..*" Type : contains >
 Kit *-- "0..*" Quality : defines >
 Kit *-- "0..*" Author : has >
 Kit *-- "0..*" Attribute : has >
+class AttributeId {
+  key: str
+}
+class AuthorId {
+  name: str
+  email: str
+}
+class FileId {
+  path: str
+}
+class BenchmarkId {
+  name: str
+}
+class QualityId {
+  key: str
+}
+class PropId {
+  key: str
+}
+class RepresentationId {
+  url: str
+  tags: list[str]
+}
+class PortId {
+  id: str
+}
+class TypeId {
+  name: str
+  variant: str
+}
+class LayerId {
+  name: str
+}
+class GroupId {
+  name: str
+}
+class PieceId {
+  id: str
+}
+class SideId {
+  piece: PieceId
+  port: PortId
+}
+class ConnectionId {
+  connecting: SideId
+  connected: SideId
+}
+class StatId {
+  key: str
+}
+class DesignId {
+  name: str
+  variant: str
+  view: str
+}
 class KitId {
   name: str
   version: str
+}
+class AttributeDiff {
+  key?: str
+  value?: str
+  definition?: str
+}
+class LocationDiff {
+  longitude?: float
+  latitude?: float
+  altitude?: float
+  attributes?: AttributesDiff
+}
+class AuthorDiff {
+  name?: str
+  email?: str
+  attributes?: AttributesDiff
+}
+class FileDiff {
+  path?: str
+  remoteUrl?: str
+  description?: str
+  attributes?: AttributesDiff
+}
+class BenchmarkDiff {
+  name?: str
+  icon?: str
+  min?: float
+  minExcluded?: bool
+  max?: float
+  maxExcluded?: bool
+  definition?: str
+  attributes?: AttributesDiff
+}
+class QualityDiff {
+  key?: str
+  name?: str
+  kind?: QualityKind
+  default?: float
+  formula?: str
+  defaultSiUnit?: str
+  defaultImperialUnit?: str
+  min?: float
+  minExcluded?: bool
+  max?: float
+  maxExcluded?: bool
+  canScale?: bool
+  benchmarks?: BenchmarksDiff
+  definition?: str
+  attributes?: AttributesDiff
+}
+class PropDiff {
+  key?: str
+  value?: str
+  unit?: str
+  attributes?: AttributesDiff
+}
+class RepresentationDiff {
+  tags?: list[str]
+  url?: str
+  description?: str
+  attributes?: AttributesDiff
+}
+class PortDiff {
+  id?: str
+  point?: Point
+  direction?: Vector
+  t?: float
+  mandatory?: bool
+  family?: str
+  compatibleFamilies?: list[str]
+  description?: str
+  attributes?: AttributesDiff
+}
+class TypeDiff {
+  name?: str
+  variant?: str
+  representations?: RepresentationsDiff
+  ports?: PortsDiff
+  props?: PropsDiff
+  isVirtual?: bool
+  canScale?: bool
+  canMirror?: bool
+  unit?: str
+  availableCount?: float
+  location?: LocationDiff
+  authors?: AuthorsDiff
+  concepts?: list[str]
+  icon?: str
+  image?: str
+  description?: str
+  attributes?: AttributesDiff
+  created?: datetime
+  updated?: datetime
+}
+class LayerDiff {
+  path?: str
+  isHidden?: bool
+  isLocked?: bool
+  color?: str
+  description?: str
+  attributes?: AttributesDiff
+}
+class GroupDiff {
+  pieces?: PiecesDiff
+  color?: str
+  name?: str
+  description?: str
+  attributes?: AttributesDiff
+}
+class PieceDiff {
+  id?: str
+  type?: TypeId
+  design?: DesignId
+  plane?: Plane
+  center?: Coord
+  scale?: float
+  mirrorPlane?: Plane
+  props?: PropsDiff
+  isHidden?: bool
+  isLocked?: bool
+  color?: str
+  description?: str
+  attributes?: AttributesDiff
+}
+class SideDiff {
+  piece?: PieceId
+  port?: PortId
+}
+class ConnectionDiff {
+  connected?: SideId
+  connecting?: SideId
+  gap?: float
+  shift?: float
+  rise?: float
+  rotation?: float
+  turn?: float
+  tilt?: float
+  x?: float
+  y?: float
+  description?: str
+  attributes?: AttributesDiff
+}
+class StatDiff {
+  key?: str
+  unit?: str
+  min?: float
+  minExcluded?: bool
+  max?: float
+  maxExcluded?: bool
+}
+class DesignDiff {
+  name?: str
+  variant?: str
+  view?: str
+  pieces?: PiecesDiff
+  connections?: ConnectionsDiff
+  stats?: StatsDiff
+  props?: PropsDiff
+  layers?: LayersDiff
+  activeLayer?: LayerId
+  groups?: GroupsDiff
+  canScale?: bool
+  canMirror?: bool
+  unit?: str
+  location?: LocationDiff
+  authors?: AuthorsDiff
+  concepts?: list[str]
+  icon?: str
+  image?: str
+  description?: str
+  attributes?: AttributesDiff
+  created?: datetime
+  updated?: datetime
 }
 class KitDiff {
   name?: str
@@ -144,6 +372,81 @@ class KitDiff {
   designs?: DesignsDiff
   authors?: AuthorsDiff
   attributes?: AttributesDiff
+}
+class AttributesDiff {
+  removed?: list[AttributeId]
+  updated?: list[AttributeDiff]
+  added?: list[Attribute]
+}
+class AuthorsDiff {
+  removed?: list[AuthorId]
+  updated?: list[AuthorDiff]
+  added?: list[Author]
+}
+class FilesDiff {
+  removed?: list[FileId]
+  updated?: list[FileDiff]
+  added?: list[File]
+}
+class BenchmarksDiff {
+  removed?: list[BenchmarkId]
+  updated?: list[BenchmarkDiff]
+  added?: list[Benchmark]
+}
+class PropsDiff {
+  removed?: list[PropId]
+  updated?: list[PropDiff]
+  added?: list[Prop]
+}
+class RepresentationsDiff {
+  removed?: list[RepresentationId]
+  updated?: list[RepresentationDiff]
+  added?: list[Representation]
+}
+class PortsDiff {
+  removed?: list[PortId]
+  updated?: list[PortDiff]
+  added?: list[Port]
+}
+class TypesDiff {
+  removed?: list[TypeId]
+  updated?: list[TypeDiff]
+  added?: list[Type]
+}
+class LayersDiff {
+  removed?: list[LayerId]
+  updated?: list[LayerDiff]
+  added?: list[Layer]
+}
+class GroupsDiff {
+  removed?: list[GroupId]
+  updated?: list[GroupDiff]
+  added?: list[Group]
+}
+class PiecesDiff {
+  removed?: list[PieceId]
+  updated?: list[PieceDiff]
+  added?: list[Piece]
+}
+class SidesDiff {
+  removed?: list[SideId]
+  updated?: list[SideDiff]
+  added?: list[Side]
+}
+class ConnectionsDiff {
+  removed?: list[ConnectionId]
+  updated?: list[ConnectionDiff]
+  added?: list[Connection]
+}
+class StatsDiff {
+  removed?: list[StatId]
+  updated?: list[StatDiff]
+  added?: list[Stat]
+}
+class DesignsDiff {
+  removed?: list[DesignId]
+  updated?: list[DesignDiff]
+  added?: list[Design]
 }
 class KitsDiff {
   removed?: list[KitId]

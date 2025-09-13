@@ -7,6 +7,8 @@ Your only task is to make sure that text snippets (code blocks, code definitions
 
 # Rules
 
+- ALWAYS just move complete lines of code.
+- NEVER change anything inside a line (no additions, no updated, no removals, no reformatting).
 - Whenever something uses another thing, something is ALWAYS first. If there is a cycle then the lower level thing is ALWAYS first.
 - ALWAYS order vertically (according feature not kind) and NEVER horizontally (all of the same kind together).
 

@@ -30,52 +30,7 @@ entity attributes {
         OR (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL)
         OR (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL)
         ))
-}
-
-entity coords {
-    *id : int <<PK,generated>>
-    *x : float
-    *y : float
-}
-
-entity vecs {
-    *id : int <<PK,generated>>
-    *x : float
-    *y : float
-}
-
-entity points {
-    *id : int <<PK,generated>>
-    *x : float
-    *y : float
-    *z : float
-}
-
-entity vectors {
-    *id : int <<PK,generated>>
-    *x : float
-    *y : float
-    *z : float
-}
-
-entity cameras {
-    *id : int <<PK,generated>>
-    *position_x : float
-    *position_y : float
-    *position_z : float
-    *forward_x : float
-    *forward_y : float
-    *forward_z : float
-    *up_x : float
-    *up_y : float
-    *up_z : float
-}
-
-entity locations {
-    *id : int <<PK,generated>>
-    *longitude : float
-    *latitude : float
-    altitude : float
+    UNIQUE (key,representation_id, port_id, type_id, piece_id, connection_id, design_id, kit_id)
 }
 
 entity files {
@@ -83,8 +38,11 @@ entity files {
     *path : string
     *remote_url : string
     *description : string
+    ..
+    *kit_id : int <<FK>>
+    --
+    UNIQUE (path, kit_id)
 }
-
 
 entity qualities {
     *id : int <<PK,generated>>
@@ -105,10 +63,11 @@ entity qualities {
     *created_at : datetime
     *updated_at : datetime
     ..
-    kit_id : int <<FK>>
+    *kit_id : int <<FK>>
     --
     CHECK (kind >= 0 AND kind <= 63)
     CHECK (kind & (kind - 1) = 0 OR kind IN (0, 1, 2, 4, 8, 16))
+    UNIQUE (key, kit_id)
 }
 
 entity benchmarks {
@@ -120,8 +79,9 @@ entity benchmarks {
     *max : float
     *is_max_excluded : boolean
     ..
-    quality_id : int <<FK>>
+    *quality_id : int <<FK>>
     --
+    UNIQUE (name, quality_id)
 }
 
 entity props {
@@ -132,8 +92,9 @@ entity props {
     *created_at : datetime
     *updated_at : datetime
     ..
-    port_id : int <<FK>>
+    *port_id : int <<FK>>
     --
+    UNIQUE (key, port_id)
 }
 
 entity stats {
@@ -147,8 +108,9 @@ entity stats {
     *created_at : datetime
     *updated_at : datetime
     ..
-    design_id : int <<FK>>
+    *design_id : int <<FK>>
     --
+    UNIQUE (key, design_id)
 }
 
 entity tags {
@@ -156,7 +118,9 @@ entity tags {
     *name : string
     *order : int
     ..
-    representation_id : int <<FK>>
+    *representation_id : int <<FK>>
+    --
+    UNIQUE (name, representation_id)
 }
 
 entity concepts {
@@ -164,23 +128,25 @@ entity concepts {
     *name : string
     *order : int
     ..
-    kit_id : int <<FK>>
     type_id : int <<FK>>
     design_id : int <<FK>>
+    kit_id : int <<FK>>
     --
-    CHECK (( (kit_id IS NOT NULL AND type_id IS NULL AND design_id IS NULL)
-        OR (kit_id IS NULL AND type_id IS NOT NULL AND design_id IS NULL)
-        OR (kit_id IS NULL AND type_id IS NULL AND design_id IS NOT NULL)
-        ))
+    CHECK ((type_id IS NOT NULL AND design_id IS NULL AND kit_id IS NULL) OR
+           (type_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL) OR
+           (type_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL))
+    UNIQUE (name, type_id, design_id, kit_id)
 }
 
 entity representations {
     *id : int <<PK,generated>>
     *url : string
+    file_id : int <<FK>>
     *description : string
     ..
     type_id : int <<FK>>
     --
+    CHECK ((url != '' AND file_id IS NULL) OR (url == '' AND file_id IS NOT NULL))
 }
 
 entity planes {
@@ -219,9 +185,12 @@ entity ports {
     *t : float
     ..
     type_id : int <<FK>>
+    design_id : int <<FK>>
     --
+    CHECK ((type_id IS NOT NULL AND design_id IS NULL) OR
+           (type_id IS NULL AND design_id IS NOT NULL))
     CHECK (t >= 0 AND t < 1)
-    UNIQUE (port_id, type_id)
+    UNIQUE (port_id, type_id, design_id)
 }
 
 entity authors {
@@ -230,6 +199,8 @@ entity authors {
     *email : string
     ..
     kit_id : int <<FK>>
+    --
+    UNIQUE (email, kit_id)
 }
 
 entity author_artifact {
@@ -240,6 +211,7 @@ entity author_artifact {
     --
     CHECK ((type_id IS NOT NULL AND design_id IS NULL) OR
            (type_id IS NULL AND design_id IS NOT NULL))
+    UNIQUE (author_id, type_id, design_id)
 }
 
 entity types {
@@ -406,13 +378,13 @@ types ||--o{ concepts
 types -- authors : "has" >
 
 pieces ||--o{ planes
-pieces ||--o{ coords
 pieces ||--o{ attributes
 
 connections ||--o{ attributes
 
 representations ||--o{ tags
 representations ||--o{ attributes
+representations -- files : "refers to" >
 
 ports ||--o{ compatible_families
 ports ||--o{ attributes
@@ -424,5 +396,9 @@ connections -- pieces : "connected" >
 connections -- pieces : "connecting" >
 connections -- ports : "connected" >
 connections -- ports : "connecting" >
+
+authors -- author_artifact
+author_artifact -- types
+author_artifact -- designs
 
 @enduml

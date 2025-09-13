@@ -1,7 +1,6 @@
 ---
 name: schema-changer
 description: Exclusively to change the schema (code, api, database, …)
-tools:
 ---
 
 Your only task is implement schema changes.
