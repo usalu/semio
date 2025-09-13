@@ -29,7 +29,7 @@ becomes
 export const VecSchema = z.object({ x: z.number(), y: z.number() });
 ```
 
----
+### Inline single uses
 
 ```typescript
 export const authorIdLikeToAuthorId = (author: AuthorIdLike): AuthorId => {

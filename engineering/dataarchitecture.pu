@@ -10,9 +10,8 @@ entity semio {
 
 entity attributes {
     *id : int <<PK,generated>>
-    *name : string
+    *key : string
     *value : string
-    *unit : string
     *definition : string
     ..
     representation_id : int <<FK>>
@@ -31,6 +30,59 @@ entity attributes {
         OR (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL AND kit_id IS NULL)
         OR (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL AND kit_id IS NOT NULL)
         ))
+}
+
+entity coords {
+    *id : int <<PK,generated>>
+    *x : float
+    *y : float
+}
+
+entity vecs {
+    *id : int <<PK,generated>>
+    *x : float
+    *y : float
+}
+
+entity points {
+    *id : int <<PK,generated>>
+    *x : float
+    *y : float
+    *z : float
+}
+
+entity vectors {
+    *id : int <<PK,generated>>
+    *x : float
+    *y : float
+    *z : float
+}
+
+entity cameras {
+    *id : int <<PK,generated>>
+    *position_x : float
+    *position_y : float
+    *position_z : float
+    *forward_x : float
+    *forward_y : float
+    *forward_z : float
+    *up_x : float
+    *up_y : float
+    *up_z : float
+}
+
+entity locations {
+    *id : int <<PK,generated>>
+    *longitude : float
+    *latitude : float
+    altitude : float
+}
+
+entity files {
+    *id : int <<PK,generated>>
+    *path : string
+    *remote_url : string
+    *description : string
 }
 
 
@@ -193,43 +245,39 @@ entity author_artifact {
 entity types {
     *id : int <<PK,generated>>
     *name : string
-    *description : string
-    *icon : string
-    *image_url : string
     *variant : string
-    *stock : float
     *is_virtual : boolean
     *can_scale : boolean
     *can_mirror : boolean
     *unit : string
-    *location_longitude : float
-    *location_latitude : float
+    *available_count : float
+    *location_id : int <<FK>>
+    *icon : string
+    *image_url : string
+    *description : string
     *created_at : datetime
     *updated_at : datetime
     ..
     kit_id : int <<FK>>
     --
     UNIQUE (name, variant, kit_id)
-    CHECK (stock >= 0 AND stock <= 2147483647)
-    CHECK (location_longitude IS NULL AND location_latitude IS NULL
-    OR (location_longitude IS NOT NULL AND location_latitude IS NOT NULL))
+    CHECK (available_count >= 0 AND available_count <= 2147483647)
 }
 
 entity pieces {
     *id : int <<PK,generated>>
     *piece_id : string
-    *description : string
+    *type_id : int <<FK>>
+    *design_id : int <<FK>>
     *plane_id : int <<FK>>
-    *center_x : float
-    *center_y : float
+    *center_id : int <<FK>>
     *scale : float
-    mirror_plane_id : int <<FK>>
+    *mirror_plane_id : int <<FK>>
     *is_hidden: boolean
     *is_locked: boolean
     *color: string
+    *description : string
     ..
-    type_id : int <<FK>>
-    design_id : int <<FK>>
     parent_piece_id : int <<FK>>
     --
     CHECK ((type_id IS NOT NULL AND design_id IS NULL AND parent_piece_id IS NULL) OR
@@ -292,16 +340,15 @@ entity group_pieces {
 entity designs {
     *id : int <<PK,generated>>
     *name : string
-    *description : string
-    *icon : string
-    *image_url : string
     *variant : string
     *view : string
     *can_scale : boolean
     *can_mirror : boolean
     *unit : string
-    location_longitude : float
-    location_latitude : float
+    *location_id : int <<FK>>
+    *icon : string
+    *image_url : string
+    *description : string
     *created_at : datetime
     *updated_at : datetime
     ..
@@ -310,21 +357,18 @@ entity designs {
     UNIQUE (name, variant, view, kit_id)
     CHECK (name != '')
     CHECK (unit != '')
-    CHECK (location_longitude IS NULL AND location_latitude IS NULL
-    OR (location_longitude IS NOT NULL AND location_latitude IS NOT NULL))
 }
 
 entity kits {
     *id : int <<PK,generated>>
     *name : string
-    *description : string
-    *icon : string
-    *image_url : string
-    *avatar_url : string
     *version : string
     *remote_url : string
     *homepage_url : string
     *license : string
+    *icon : string
+    *image_url : string
+    *description : string
     *created_at : datetime
     *updated_at : datetime
     --
@@ -337,6 +381,10 @@ kits ||--o{ authors
 kits ||--o{ qualities
 kits ||--o{ attributes
 kits ||--o{ concepts
+kits ||--o{ files
+
+types ||--o{ locations
+designs ||--o{ locations
 
 designs ||--o{ layers
 designs ||--o{ pieces
@@ -358,6 +406,7 @@ types ||--o{ concepts
 types -- authors : "has" >
 
 pieces ||--o{ planes
+pieces ||--o{ coords
 pieces ||--o{ attributes
 
 connections ||--o{ attributes

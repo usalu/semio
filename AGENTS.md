@@ -417,13 +417,14 @@ Use this hierarchy for code organization (order of appearance of regions,classes
 7. CanScale
 8. CanMirror
 9. Unit
-10. Location
-11. Authors
-12. Concepts
-13. Icon
-14. Image
-15. Description
-16. Attributes
+10. AvailableCount
+11. Location
+12. Authors
+13. Concepts
+14. Icon
+15. Image
+16. Description
+17. Attributes
 
 ### Layer
 

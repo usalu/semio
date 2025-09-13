@@ -1,47 +1,123 @@
 @startuml "software architecture"
 skinparam linetype ortho
 
-class Base {
-  Validate(): bool,List[str]
+class Attribute {
+  key: str
+  value: str
+  definition: str
 }
 
-interface Id {
-
+class Coord {
+  x: float
+  y: float
 }
-Id -|> Base
 
-interface Diff {
-  Merge(Diff other): Diff
+class Vec {
+  x: float
+  y: float
 }
-Diff -|> Base
+
+class Point {
+  x: float
+  y: float
+  z: float
+}
+
+class Vector {
+  x: float
+  y: float
+  z: float
+}
+
+class Plane {
+  origin: Point
+  xAxis: Vector
+  yAxis: Vector
+}
+
+class Camera {
+  position: Point
+  forward: Vector
+  up: Vector
+}
+
+class Location {
+  longitude: float
+  latitude: float
+  altitude: float
+  attributes: list[Attribute]
+}
+
+class Author {
+  name: str
+  email: str
+  attributes: list[Attribute]
+}
+
+class File {
+  path: str
+  remoteUrl: str
+  description: str
+  attributes: list[Attribute]
+}
 
 interface Model {
   ApplyDiff(Diff diff): Model
   InversedDiff(Diff diff): Diff
 }
-Model -|> Base
+
+interface Id {
+
+}
+
+interface Shallow {
+
+}
+
+interface Diff {
+  Merge(Diff other): Diff
+}
+
+interface Diffs {
+
+}
+
+interface Input {
+
+}
+
+interface Output {
+
+}
+
+interface Context {
+
+}
+
+interface Prediction {
+
+}
 
 ' #region Kit
 
 class Kit {
   name: str
-  description: str
-  icon: str
-  image: str
-  preview: str
   version: str
-  remote: str
-  homepage: str
-  license: str
-  qualities: list[Quality]
   types: list[Type]
   designs: list[Design]
+  qualities: list[Quality]
+  files: list[File]
   authors: list[Author]
-  attributes: list[Attribute]
+  remoteUrl: str
+  homepageUrl: str
+  license: str
   concepts: list[str]
+  icon: str
+  image: str
+  description: str
+  attributes: list[Attribute]
   created: datetime
   updated: datetime
-  --
 }
 Kit -|> Model
 Kit *-- "0..*" Design : contains >
@@ -77,68 +153,179 @@ class KitsDiff {
 
 ' #endregion Kit
 
+class Benchmark {
+  name: str
+  icon: str
+  min: float
+  minExcluded: bool
+  max: float
+  maxExcluded: bool
+  definition: str
+  attributes: list[Attribute]
+}
+
+class QualityKind {
+  <<enumeration>>
+  General
+  Design
+  Type
+  Piece
+  Connection
+  Port
+}
+
+class Quality {
+  key: str
+  name: str
+  kind: QualityKind
+  default: float
+  formula: str
+  defaultSiUnit: str
+  defaultImperialUnit: str
+  min: float
+  minExcluded: bool
+  max: float
+  maxExcluded: bool
+  canScale: bool
+  benchmarks: list[Benchmark]
+  definition: str
+  attributes: list[Attribute]
+}
+
+class Prop {
+  key: str
+  value: str
+  unit: str
+  attributes: list[Attribute]
+}
+
+class Representation {
+  tags: list[str]
+  url: str
+  description: str
+  attributes: list[Attribute]
+}
+
+class Port {
+  id: str
+  point: Point
+  direction: Vector
+  t: float
+  mandatory: bool
+  family: str
+  compatibleFamilies: list[str]
+  description: str
+  attributes: list[Attribute]
+}
+
 class Type {
   name: str
-  description: str
-  icon: str
-  image: str
   variant: str
-  stock: float
-  virtual: bool
-  unit: str
-  location: Location
   representations: list[Representation]
   ports: list[Port]
+  props: list[Prop]
+  isVirtual: bool
+  canScale: bool
+  canMirror: bool
+  unit: str
+  availableCount: float
+  location: Location
   authors: list[Author]
-  attributes: list[Attribute]
   concepts: list[str]
+  icon: str
+  image: str
+  description: str
+  attributes: list[Attribute]
   created: datetime
   updated: datetime
-  --
-  context Type inv optionalFieldsCanBeEmpty:
-    description->notEmpty() or description->isEmpty() and
-    icon->notEmpty() or icon->isEmpty() and
-    image->notEmpty() or image->isEmpty() and
-    variant->notEmpty() or variant->isEmpty()
-  context Type inv emptyVariantMeansDefault:
-    variant->isEmpty() implies variant = 'default'
-  context Type inv stockPositive:
-    stock >= 0
-  context Type inv virtualTypesHaveNoPorts:
-    virtual = true implies ports->isEmpty()
+}
+
+class Layer {
+  path: str
+  isHidden: bool
+  isLocked: bool
+  color: str
+  description: str
+  attributes: list[Attribute]
+}
+
+class Piece {
+  id: str
+  type: Type
+  design: Design
+  plane: Plane
+  center: Coord
+  scale: float
+  mirrorPlane: Plane
+  props: list[Prop]
+  isHidden: bool
+  isLocked: bool
+  color: str
+  description: str
+  attributes: list[Attribute]
+}
+
+class Group {
+  pieces: list[Piece]
+  color: str
+  name: str
+  description: str
+  attributes: list[Attribute]
+}
+
+class Side {
+  piece: Piece
+  designPiece: Piece
+  port: Port
+}
+
+class Connection {
+  connected: Side
+  connecting: Side
+  gap: float
+  shift: float
+  rise: float
+  rotation: float
+  turn: float
+  tilt: float
+  x: float
+  y: float
+  description: str
+  attributes: list[Attribute]
+}
+
+class Stat {
+  key: str
+  unit: str
+  min: float
+  minExcluded: bool
+  max: float
+  maxExcluded: bool
 }
 
 class Design {
   name: str
-  description: str
-  icon: str
-  image: str
   variant: str
   view: str
-  unit: str
-  created: datetime
-  updated: datetime
   pieces: list[Piece]
   connections: list[Connection]
+  stats: list[Stat]
+  props: list[Prop]
   layers: list[Layer]
+  activeLayer: Layer
   groups: list[Group]
-  attributes: list[Attribute]
+  canScale: bool
+  canMirror: bool
+  unit: str
+  location: Location
+  authors: list[Author]
   concepts: list[str]
-  ..
-  Flatten()
-  --
-  context Design inv optionalFieldsCanBeEmpty:
-    description->notEmpty() or description->isEmpty() and
-    icon->notEmpty() or icon->isEmpty() and
-    image->notEmpty() or image->isEmpty() and
-    variant->notEmpty() or variant->isEmpty() and
-    view->notEmpty() or view->isEmpty()
-  context Design inv emptyVariantMeansDefault:
-    variant->isEmpty() implies variant = 'default'
-  context Design inv emptyViewMeansDefault:
-    view->isEmpty() implies view = 'default'
-  context Design inv connectionsReferenceDesignPieces:
-    connections->forAll(c | pieces->includes(c.connecting.piece) and pieces->includes(c.connected.piece))
+  icon: str
+  image: str
+  description: str
+  attributes: list[Attribute]
+  created: datetime
+  updated: datetime
 }
 
 class Representation {

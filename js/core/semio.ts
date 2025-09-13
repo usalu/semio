@@ -30,7 +30,7 @@ import cytoscape from "cytoscape";
 import * as THREE from "three";
 import { z } from "zod";
 import CONSTANTS from "./constants.json";
-import { arraysEqual, deepEqual, round } from "./lib/utils";
+import { arraysEqual, deepEqual, jaccard, normalize, round } from "./lib/utils";
 
 // #region Constants
 
@@ -52,7 +52,6 @@ export const toThreeRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0
 export const toSemioRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
 export const toThreeQuaternion = (): THREE.Quaternion => new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476);
 export const toSemioQuaternion = (): THREE.Quaternion => new THREE.Quaternion(0.7071067811865476, 0, 0, -0.7071067811865476);
-
 export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vector3(v.x, v.y, v.z);
 
 
@@ -60,6 +59,7 @@ export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vec
 
 // #endregion Ids
 
+const DateProperty = () => z.string().transform((val) => new Date(val)).or(z.date()).optional()
 
 // #region Attribute
 // https://github.com/usalu/semio#-attribute-
@@ -283,13 +283,20 @@ export type AuthorId = z.infer<typeof AuthorIdSchema>;
 export const authorIdToString = (author: AuthorId): string => author.email;
 export const AuthorIdLikeSchema = z.union([AuthorSchema, AuthorIdSchema, z.string()]);
 export type AuthorIdLike = z.infer<typeof AuthorIdLikeSchema>;
-export const authorIdLikeToAuthorId = (author: AuthorIdLike): AuthorId => { typeof author === "string" ? { email: author } : { email: author.email } };
+export const authorIdLikeToAuthorId = (author: AuthorIdLike): AuthorId => { return typeof author === "string" ? { email: author } : { email: author.email } };
 export const AuthorDiffSchema = AuthorSchema.partial();
 export type AuthorDiff = z.infer<typeof AuthorDiffSchema>;
 export const AuthorsDiffSchema = z.object({
   removed: z.array(AuthorIdSchema).optional(),
   updated: z.array(z.object({ id: AuthorIdSchema, diff: AuthorDiffSchema })).optional(),
   added: z.array(AuthorSchema).optional(),
+});
+export const applyAuthorDiff = (base: Author, diff: AuthorDiff): Author => ({ ...base, ...diff, });
+export const mergeAuthorDiff = (diff1: AuthorDiff, diff2: AuthorDiff): AuthorDiff => ({ ...diff1, ...diff2, });
+export const inverseAuthorDiff = (original: Author, appliedDiff: AuthorDiff): AuthorDiff => ({
+  name: appliedDiff.name !== undefined ? original.name : undefined,
+  email: appliedDiff.email !== undefined ? original.email : undefined,
+  attributes: appliedDiff.attributes !== undefined ? original.attributes : undefined,
 });
 
 // #endregion Author
@@ -302,17 +309,9 @@ export const FileSchema = z.object({
   remote: z.url().optional(),
   size: z.number().optional(),
   hash: z.string().optional(),
-  created: z
-    .string()
-    .transform((val) => new Date(val))
-    .or(z.date())
-    .optional(),
+  created: DateProperty(),
   createdBy: AuthorIdSchema.optional(),
-  updated: z
-    .string()
-    .transform((val) => new Date(val))
-    .or(z.date())
-    .optional(),
+  updated: DateProperty(),
   updatedBy: AuthorIdSchema.optional(),
 });
 export type File = z.infer<typeof FileSchema>;
@@ -337,25 +336,13 @@ export const getFileDiff = (before: File, after: File): FileDiff => {
 };
 
 export const applyFileDiff = (base: File, diff: FileDiff): File => ({
-  path: diff.path ?? base.path,
-  remote: diff.remote ?? base.remote,
-  size: diff.size ?? base.size,
-  hash: diff.hash ?? base.hash,
-  created: base.created,
-  createdBy: base.createdBy,
-  updated: base.updated,
-  updatedBy: base.updatedBy,
+  ...base,
+  ...diff,
 });
 
 export const mergeFileDiff = (diff1: FileDiff, diff2: FileDiff): FileDiff => ({
-  path: diff2.path ?? diff1.path,
-  remote: diff2.remote ?? diff1.remote,
-  size: diff2.size ?? diff1.size,
-  hash: diff2.hash ?? diff1.hash,
-  created: diff2.created ?? diff1.created,
-  createdBy: diff2.createdBy ?? diff1.createdBy,
-  updated: diff2.updated ?? diff1.updated,
-  updatedBy: diff2.updatedBy ?? diff1.updatedBy,
+  ...diff1,
+  ...diff2,
 });
 
 export const inverseFileDiff = (original: File, appliedDiff: FileDiff): FileDiff => {
@@ -364,6 +351,10 @@ export const inverseFileDiff = (original: File, appliedDiff: FileDiff): FileDiff
   if (appliedDiff.remote !== undefined) inverseDiff.remote = original.remote;
   if (appliedDiff.size !== undefined) inverseDiff.size = original.size;
   if (appliedDiff.hash !== undefined) inverseDiff.hash = original.hash;
+  if (appliedDiff.created !== undefined) inverseDiff.created = original.created;
+  if (appliedDiff.createdBy !== undefined) inverseDiff.createdBy = original.createdBy;
+  if (appliedDiff.updated !== undefined) inverseDiff.updated = original.updated;
+  if (appliedDiff.updatedBy !== undefined) inverseDiff.updatedBy = original.updatedBy;
   return inverseDiff;
 };
 export const FilesDiffSchema = z.object({
@@ -1596,8 +1587,8 @@ export const DesignSchema = z.object({
   image: z.string().optional(),
   description: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
-  created: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
-  updated: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
+  created: DateProperty(),
+  updated: DateProperty(),
 });
 export type Design = z.infer<typeof DesignSchema>;
 export const DesignIdSchema = DesignSchema.pick({ name: true, variant: true, view: true });
@@ -2386,11 +2377,11 @@ export const KitSchema = z.object({
   image: z.string().optional(),
   description: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
-  created: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
-  updated: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
+  created: DateProperty(),
+  updated: DateProperty(),
 });
 export type Kit = z.infer<typeof KitSchema>;
-export const KitIdSchema = KitSchema.pick({ id: true });
+export const KitIdSchema = KitSchema.pick({ name: true, version: true });
 export type KitId = z.infer<typeof KitIdSchema>;
 export const KitShallowSchema = KitSchema.overwrite({
   types: z.array(TypeIdSchema).optional(),
@@ -2406,10 +2397,7 @@ export const getKitDiff = (before: Kit, after: Kit): KitDiff => {
   if (before.description !== after.description) diff.description = after.description;
   if (before.icon !== after.icon) diff.icon = after.icon;
   if (before.image !== after.image) diff.image = after.image;
-  if (before.preview !== after.preview) diff.preview = after.preview;
   if (before.version !== after.version) diff.version = after.version;
-  if (before.remote !== after.remote) diff.remote = after.remote;
-  if (before.homepage !== after.homepage) diff.homepage = after.homepage;
   if (before.license !== after.license) diff.license = after.license;
   if (JSON.stringify(before.authors) !== JSON.stringify(after.authors)) diff.authors = after.authors;
   if (JSON.stringify(before.qualities) !== JSON.stringify(after.qualities)) diff.qualities = after.qualities;
@@ -2503,13 +2491,8 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
         if (!updateDiff) return f;
         return {
           ...f,
-          path: updateDiff.diff.path ?? f.path,
-          remote: updateDiff.diff.remote ?? f.remote,
-          size: updateDiff.diff.size ?? f.size,
-          hash: updateDiff.diff.hash ?? f.hash,
-          created: updateDiff.diff.created ?? f.created,
+          ...updateDiff.diff,
           createdBy: updateDiff.diff.createdBy ? { email: updateDiff.diff.createdBy } : f.createdBy,
-          updated: updateDiff.diff.updated ?? f.updated,
           updatedBy: updateDiff.diff.updatedBy ? { email: updateDiff.diff.updatedBy } : f.updatedBy,
         };
       })
@@ -2558,14 +2541,7 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
         }
         return {
           ...d,
-          name: updateDiff.diff.name ?? d.name,
-          description: updateDiff.diff.description ?? d.description,
-          icon: updateDiff.diff.icon ?? d.icon,
-          image: updateDiff.diff.image ?? d.image,
-          variant: updateDiff.diff.variant ?? d.variant,
-          view: updateDiff.diff.view ?? d.view,
-          location: updateDiff.diff.location ?? d.location,
-          unit: updateDiff.diff.unit ?? d.unit,
+          ...updateDiff.diff,
           pieces,
           connections
         };
@@ -2575,16 +2551,8 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
   }
 
   return {
-    uri: diff.uri ?? base.uri,
-    name: diff.name ?? base.name,
-    description: diff.description ?? base.description,
-    icon: diff.icon ?? base.icon,
-    image: diff.image ?? base.image,
-    preview: diff.preview ?? base.preview,
-    version: diff.version ?? base.version,
-    remote: diff.remote ?? base.remote,
-    homepage: diff.homepage ?? base.homepage,
-    license: diff.license ?? base.license,
+    ...base,
+    ...diff,
     created: base.created,
     updated: base.updated,
     authors: diff.authors ?? base.authors,
