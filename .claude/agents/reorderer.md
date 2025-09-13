@@ -4,7 +4,7 @@ description: Exclusively to reorder text (mainly code, lists, …)
 tools:
 ---
 
-Your only task is to make sure that text snippets (code blocks, code definitions, bullet points, doc chapters, …) are in a consistent order.
+Your only task is to make sure that text snippets (code blocks, code definitions, bullet points, doc chapters, …) are in a consistent order. Every class, function, type, constant, statement, … is affected by the order task.
 
 # Rules
 
@@ -16,26 +16,29 @@ Your only task is to make sure that text snippets (code blocks, code definitions
 ## 1. Models
 
 1. Attribute
-2. Coord
-3. Point
-4. Vector
-5. Plane
-6. Camera
-7. Author
-8. File
-9. Benchmark
-10. QualityKind
-11. Quality
-12. Prop
-13. Representation
-14. Port
-15. Type
-16. Piece
-17. Side
-18. Connection
-19. Stat
-20. Design
-21. Kit
+2. Author
+3. Location
+4. Coord
+5. Point
+6. Vector
+7. Plane
+8. Camera
+9. File
+10. Benchmark
+11. QualityKind
+12. Quality
+13. Prop
+14. Representation
+15. Port
+16. Type
+17. Layer
+18. Piece
+19. Group
+20. Side
+21. Connection
+22. Stat
+23. Design
+24. Kit
 
 ## 2. Classes | Types
 
@@ -56,6 +59,19 @@ Your only task is to make sure that text snippets (code blocks, code definitions
 1. Key
 2. Value
 3. Definition
+
+### Author
+
+1. Name
+2. Email
+3. Attributes
+
+### Location
+
+1. Longitude
+2. Latitude
+3. Altitude
+4. Attributes
 
 ### Coord
 
@@ -85,12 +101,6 @@ Your only task is to make sure that text snippets (code blocks, code definitions
 1. Position
 2. Forward
 3. Up
-
-### Author
-
-1. Name
-2. Email
-3. Attributes
 
 ### File
 
@@ -176,6 +186,23 @@ Your only task is to make sure that text snippets (code blocks, code definitions
 9. Description
 10. Attributes
 
+### Layer
+
+1. Path
+2. IsHidden
+3. IsLocked
+4. Color
+5. Description
+6. Attributes
+
+### Group
+
+1. Pieces
+2. Color
+3. Name
+4. Description
+5. Attributes
+
 ### Piece
 
 1. Id
@@ -223,17 +250,18 @@ Your only task is to make sure that text snippets (code blocks, code definitions
 6. Stats
 7. Props
 8. Layers
-9. Groups
-10. CanScale
-11. CanMirror
-12. Unit
-13. Location
-14. Authors
-15. Concepts
-16. Icon
-17. Image
-18. Description
-19. Attributes
+9. ActiveLayer
+10. Groups
+11. CanScale
+12. CanMirror
+13. Unit
+14. Location
+15. Authors
+16. Concepts
+17. Icon
+18. Image
+19. Description
+20. Attributes
 
 ### Kit
 
