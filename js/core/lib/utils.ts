@@ -61,3 +61,43 @@ export class Generator {
     return `${adjective}`;
   }
 }
+
+
+export const normalize = (val: string | undefined | null): string => (val === undefined || val === null ? "" : val);
+export const round = (value: number): number => Math.round(value / TOLERANCE) * TOLERANCE;
+export const jaccard = (a: string[] | undefined, b: string[] | undefined): number => {
+  if ((a === undefined && b === undefined) || (a?.length === 0 && b?.length === 0)) return 1;
+  if (a === undefined || b === undefined) return 0;
+  const setA = new Set(a);
+  const setB = new Set(b);
+  const intersection = Array.from(setA).filter((x) => setB.has(x)).length;
+  const union = setA.size + setB.size - intersection;
+  if (union === 0) return 0;
+  return intersection / union;
+};
+
+export const deepEqual = (a: any, b: any): boolean => {
+  if (a === b) return true;
+  if (a == null || b == null) return a === b;
+  if (typeof a !== typeof b) return false;
+
+  if (Array.isArray(a)) {
+    if (!Array.isArray(b) || a.length !== b.length) return false;
+    return a.every((item, index) => deepEqual(item, b[index]));
+  }
+
+  if (typeof a === 'object') {
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+    if (keysA.length !== keysB.length) return false;
+    return keysA.every(key => keysB.includes(key) && deepEqual(a[key], b[key]));
+  }
+
+  return false;
+};
+
+const arraysEqual = <T>(a: T[] | undefined, b: T[] | undefined): boolean => {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return a.length === b.length && a.every((val, index) => deepEqual(val, b[index]));
+};

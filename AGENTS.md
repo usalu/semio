@@ -244,28 +244,29 @@ Use this hierarchy for code organization (order of appearance of regions,classes
 
 1. Attribute
 2. Coord
-3. Point
-4. Vector
-5. Plane
-6. Camera
-7. Location
-8. Author
-9. File
-10. Benchmark
-11. QualityKind
-12. Quality
-13. Prop
-14. Representation
-15. Port
-16. Type
-17. Layer
-18. Piece
-19. Group
-20. Side
-21. Connection
-22. Stat
-23. Design
-24. Kit
+3. Vec
+4. Point
+5. Vector
+6. Plane
+7. Camera
+8. Location
+9. Author
+10. File
+11. Benchmark
+12. QualityKind
+13. Quality
+14. Prop
+15. Representation
+16. Port
+17. Type
+18. Layer
+19. Piece
+20. Group
+21. Side
+22. Connection
+23. Stat
+24. Design
+25. Kit
 
 ## 2. Classes | Types
 
@@ -288,6 +289,11 @@ Use this hierarchy for code organization (order of appearance of regions,classes
 3. Definition
 
 ### Coord
+
+1. X
+2. Y
+
+### Vec
 
 1. X
 2. Y
@@ -499,16 +505,17 @@ Use this hierarchy for code organization (order of appearance of regions,classes
 ### Kit
 
 1. Name
-1. Version
-1. Types
-1. Designs
-1. Qualities
-1. Authors
-1. Icon
-1. Image
-1. Remote
-1. Homepage
-1. License
-1. Concepts
-1. Description
-1. Attributes
+2. Version
+3. Types
+4. Designs
+5. Qualities
+6. Files
+7. Authors
+8. RemoteUrl
+9. HomepageUrl
+10. License
+11. Concepts
+12. Icon
+13. Image
+14. Description
+15. Attributes

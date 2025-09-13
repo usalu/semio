@@ -29,6 +29,7 @@
 import cytoscape from "cytoscape";
 import * as THREE from "three";
 import { z } from "zod";
+import { arraysEqual, deepEqual, round } from "./lib/utils";
 
 // #region Constants
 
@@ -37,309 +38,8 @@ export const TOLERANCE = 1e-5;
 
 // #endregion Constants
 
-//#region Schemas
+// #region Schemas
 
-// https://github.com/usalu/semio#-attribute-
-export const AttributeSchema = z.object({
-  key: z.string(),
-  value: z.string().optional(),
-  definition: z.string().optional(),
-});
-export type Attribute = z.infer<typeof AttributeSchema>;
-export const AttributeIdSchema = z.object({ key: z.string() });
-export type AttributeId = z.infer<typeof AttributeIdSchema>;
-export const attributeToString = (attribute: Attribute): string => attribute.key;
-export const AttributeIdLikeSchema = z.union([AttributeSchema, AttributeIdSchema, z.string()]);
-export type AttributeIdLike = z.infer<typeof AttributeIdLikeSchema>;
-export const attributeIdLikeToAttributeId = (attributeId: AttributeIdLike): AttributeId => {
-  if (typeof attributeId === "string") return { key: attributeId };
-  return { key: attributeId.key };
-};
-
-// https://github.com/usalu/semio#-coord-
-export const CoordSchema = z.object({
-  x: z.number(),
-  y: z.number(),
-});
-export type Coord = z.infer<typeof CoordSchema>;
-
-// https://github.com/usalu/semio#-vec-
-export const VecSchema = z.object({
-  x: z.number(),
-  y: z.number()
-});
-export type Vec = z.infer<typeof VecSchema>;
-
-// https://github.com/usalu/semio#-point-
-export const PointSchema = z.object({
-  x: z.number(),
-  y: z.number(),
-  z: z.number(),
-});
-export type Point = z.infer<typeof PointSchema>;
-
-// https://github.com/usalu/semio#-vector-
-export const VectorSchema = z.object({
-  x: z.number(),
-  y: z.number(),
-  z: z.number(),
-});
-export type Vector = z.infer<typeof VectorSchema>;
-
-// https://github.com/usalu/semio#-plane-
-export const PlaneSchema = z.object({
-  origin: PointSchema,
-  xAxis: VectorSchema,
-  yAxis: VectorSchema,
-});
-export type Plane = z.infer<typeof PlaneSchema>;
-
-// https://github.com/usalu/semio#-camera-
-export const CameraSchema = z.object({
-  position: PointSchema,
-  forward: VectorSchema,
-  up: VectorSchema,
-});
-
-// https://github.com/usalu/semio#-location-
-export const LocationSchema = z.object({
-  longitude: z.number(),
-  latitude: z.number(),
-  attributes: z.array(AttributeSchema).optional(),
-});
-export type Location = z.infer<typeof LocationSchema>;
-export const LocationDiffSchema = LocationSchema.partial();
-export type LocationDiff = z.infer<typeof LocationDiffSchema>;
-
-// https://github.com/usalu/semio#-author-
-export const AuthorSchema = z.object({ name: z.string(), email: z.string(), attributes: z.array(AttributeSchema).optional() });
-export type Author = z.infer<typeof AuthorSchema>;
-export const AuthorIdSchema = AuthorSchema.pick({ email: true });
-export type AuthorId = z.infer<typeof AuthorIdSchema>;
-export const authorIdToString = (author: AuthorId): string => author.email;
-export const AuthorIdLikeSchema = z.union([AuthorSchema, AuthorIdSchema, z.string()]);
-export type AuthorIdLike = z.infer<typeof AuthorIdLikeSchema>;
-export const authorIdLikeToAuthorId = (author: AuthorIdLike): AuthorId => {
-  if (typeof author === "string") return { email: author };
-  return { email: author.email };
-};
-export const AttributeDiffSchema = AttributeSchema.partial();
-export type AttributeDiff = z.infer<typeof AttributeDiffSchema>;
-export const AttributesDiffSchema = z.object({
-  removed: z.array(AttributeIdSchema).optional(),
-  updated: z.array(z.object({ id: AttributeIdSchema, diff: AttributeDiffSchema })).optional(),
-  added: z.array(AttributeSchema).optional(),
-});
-
-// https://github.com/usalu/semio#-file-
-export const FileSchema = z.object({
-  path: z.url(),
-  remote: z.url().optional(),
-  size: z.number().optional(),
-  hash: z.string().optional(),
-  created: z
-    .string()
-    .transform((val) => new Date(val))
-    .or(z.date())
-    .optional(),
-  createdBy: AuthorIdSchema.optional(),
-  updated: z
-    .string()
-    .transform((val) => new Date(val))
-    .or(z.date())
-    .optional(),
-  updatedBy: AuthorIdSchema.optional(),
-});
-export type File = z.infer<typeof FileSchema>;
-export const FileIdSchema = FileSchema.pick({ path: true });
-export type FileId = z.infer<typeof FileIdSchema>;
-export const fileIdToString = (file: FileId): string => file.path;
-export const FileIdLikeSchema = z.union([FileSchema, FileIdSchema, z.string()]);
-export type FileIdLike = z.infer<typeof FileIdLikeSchema>;
-export const fileIdLikeToFileId = (file: FileIdLike): FileId => {
-  if (typeof file === "string") return { path: file };
-  return { path: file.path };
-};
-export const FileDiffSchema = FileSchema.partial();
-export type FileDiff = z.infer<typeof FileDiffSchema>;
-export const FilesDiffSchema = z.object({
-  removed: z.array(FileIdSchema).optional(),
-  updated: z.array(z.object({ id: FileIdSchema, diff: FileDiffSchema })).optional(),
-  added: z.array(FileSchema).optional(),
-});
-
-// https://github.com/usalu/semio#-benchmark-
-export const BenchmarkSchema = z.object({
-  name: z.string(),
-  icon: z.string().optional(),
-  min: z.number().optional(),
-  minExcluded: z.boolean().optional(),
-  max: z.number().optional(),
-  maxExcluded: z.boolean().optional(),
-  attributes: z.array(AttributeSchema).optional(),
-});
-export type Benchmark = z.infer<typeof BenchmarkSchema>;
-export const BenchmarkIdSchema = BenchmarkSchema.pick({ name: true });
-export type BenchmarkId = z.infer<typeof BenchmarkIdSchema>;
-export const benchmarkIdToString = (benchmark: BenchmarkId): string => benchmark.name;
-export const BenchmarkIdLikeSchema = z.union([BenchmarkSchema, BenchmarkIdSchema, z.string()]);
-export type BenchmarkIdLike = z.infer<typeof BenchmarkIdLikeSchema>;
-export const benchmarkIdLikeToBenchmarkId = (benchmark: BenchmarkIdLike): BenchmarkId => {
-  if (typeof benchmark === "string") return { name: benchmark };
-  return { name: benchmark.name };
-};
-export const BenchmarkDiffSchema = BenchmarkSchema.partial();
-export type BenchmarkDiff = z.infer<typeof BenchmarkDiffSchema>;
-export const BenchmarksDiffSchema = z.object({
-  removed: z.array(BenchmarkIdSchema).optional(),
-  updated: z.array(z.object({ id: BenchmarkIdSchema, diff: BenchmarkDiffSchema })).optional(),
-  added: z.array(BenchmarkSchema).optional(),
-});
-
-// https://github.com/usalu/semio#-quality-
-export const QualitySchema = z.object({
-  key: z.string(),
-  name: z.string(),
-  description: z.string().optional(),
-  icon: z.string().optional(),
-  image: z.string().optional(),
-  variant: z.string().optional(),
-  unit: z.string().optional(),
-  benchmarks: z.array(BenchmarkSchema).optional(),
-  attributes: z.array(AttributeSchema).optional(),
-});
-export type Quality = z.infer<typeof QualitySchema>;
-export const QualityIdSchema = QualitySchema.pick({ key: true });
-export type QualityId = z.infer<typeof QualityIdSchema>;
-export const qualityIdToString = (quality: QualityId): string => quality.key;
-export const QualityIdLikeSchema = z.union([QualitySchema, QualityIdSchema, z.string()]);
-export type QualityIdLike = z.infer<typeof QualityIdLikeSchema>;
-export const qualityIdLikeToQualityId = (quality: QualityIdLike): QualityId => {
-  if (typeof quality === "string") return { key: quality };
-  return { key: quality.key };
-};
-export const QualityDiffSchema = QualitySchema.partial().overwrite({
-  benchmarks: BenchmarksDiffSchema.optional(),
-  attributes: AttributesDiffSchema.optional(),
-});
-
-// https://github.com/usalu/semio#-prop-
-export const PropSchema = z.object({
-  key: z.string(),
-  value: z.string(),
-  unit: z.string().optional(),
-  attributes: z.array(AttributeSchema).optional(),
-});
-export type Prop = z.infer<typeof PropSchema>;
-export const PropIdSchema = PropSchema.pick({ key: true });
-export type PropId = z.infer<typeof PropIdSchema>;
-export const propIdToString = (prop: PropId): string => prop.key;
-export const PropIdLikeSchema = z.union([PropSchema, PropIdSchema, z.string()]);
-export type PropIdLike = z.infer<typeof PropIdLikeSchema>;
-export const propIdLikeToPropId = (prop: PropIdLike): PropId => {
-  if (typeof prop === "string") return { key: prop };
-  return { key: prop.key };
-};
-export const PropDiffSchema = PropSchema.partial();
-export type PropDiff = z.infer<typeof PropDiffSchema>;
-export const PropsDiffSchema = z.object({
-  removed: z.array(PropIdSchema).optional(),
-  updated: z.array(z.object({ id: PropIdSchema, diff: PropDiffSchema })).optional(),
-  added: z.array(PropSchema).optional(),
-});
-// https://github.com/usalu/semio#-representation-
-export const RepresentationSchema = z.object({
-  tags: z.array(z.string()).optional(),
-  url: z.string(),
-  description: z.string().optional(),
-  attributes: z.array(AttributeSchema).optional(),
-});
-export type Representation = z.infer<typeof RepresentationSchema>;
-export const RepresentationIdSchema = RepresentationSchema.pick({ tags: true });
-export type RepresentationId = z.infer<typeof RepresentationIdSchema>;
-export const representationIdToString = (representation: RepresentationId): string => representation.tags?.join(",") ?? "";
-export const RepresentationIdLikeSchema = z.union([RepresentationSchema, RepresentationIdSchema, z.array(z.string()), z.string(), z.null(), z.undefined()]);
-export type RepresentationIdLike = z.infer<typeof RepresentationIdLikeSchema>;
-export const representationIdLikeToRepresentationId = (representation: RepresentationIdLike): RepresentationId => {
-  if (typeof representation === "string") return { tags: representation.split(",") };
-  return { tags: representation.tags };
-};
-export const RepresentationDiffSchema = RepresentationSchema.partial();
-export type RepresentationDiff = z.infer<typeof RepresentationDiffSchema>;
-export const RepresentationsDiffSchema = z.object({
-  removed: z.array(RepresentationIdSchema).optional(),
-  updated: z.array(z.object({ id: RepresentationIdSchema, diff: RepresentationDiffSchema })).optional(),
-  added: z.array(RepresentationSchema).optional(),
-});
-
-// https://github.com/usalu/semio#-port-
-export const PortSchema = z.object({
-  id_: z.string().optional(),
-  description: z.string().optional(),
-  family: z.string().optional(),
-  mandatory: z.boolean().optional(),
-  t: z.number(),
-  compatibleFamilies: z.array(z.string()).optional(),
-  point: PointSchema,
-  direction: VectorSchema,
-  props: z.array(PropSchema).optional(),
-  attributes: z.array(AttributeSchema).optional(),
-});
-export type Port = z.infer<typeof PortSchema>;
-export const PortIdSchema = PortSchema.pick({ id_: true });
-export type PortId = z.infer<typeof PortIdSchema>;
-export const portIdToString = (port: PortId): string => port.id_ ?? "";
-export const PortIdLikeSchema = z.union([PortSchema, PortIdSchema, z.string()]);
-export type PortIdLike = z.infer<typeof PortIdLikeSchema>;
-export const portIdLikeToPortId = (port: PortIdLike): PortId => {
-  if (typeof port === "string") return { id_: port };
-  return { id_: port.id_ };
-};
-export const PortDiffSchema = PortSchema.partial();
-export type PortDiff = z.infer<typeof PortDiffSchema>;
-export const PortsDiffSchema = z.object({
-  removed: z.array(PortIdSchema).optional(),
-  updated: z.array(z.object({ id: PortIdSchema, diff: PortDiffSchema })).optional(),
-  added: z.array(PortSchema).optional(),
-});
-
-// https://github.com/usalu/semio#-type-
-export const TypeSchema = z.object({
-  name: z.string(),
-  variant: z.string().optional(),
-  representations: z.array(RepresentationSchema).optional(),
-  ports: z.array(PortSchema).optional(),
-  props: z.array(PropSchema).optional(),
-  authors: z.array(AuthorIdSchema).optional(),
-  icon: z.string().optional(),
-  image: z.string().optional(),
-  description: z.string().optional(),
-  attributes: z.array(AttributeSchema).optional()
-});
-export type Type = z.infer<typeof TypeSchema>;
-export const TypeIdSchema = TypeSchema.pick({ name: true, variant: true });
-export const typeIdToString = (type: TypeId): string => type.name;
-export const TypeIdLikeSchema = z.union([TypeSchema, TypeIdSchema, z.string()]);
-export type TypeIdLike = z.infer<typeof TypeIdLikeSchema>;
-export const typeIdLikeToTypeId = (type: TypeIdLike): TypeId => {
-  if (typeof type === "string") return { name: type };
-  return { name: type.name };
-};
-export const TypeShallowSchema = TypeSchema.overwrite({
-  representations: z.array(RepresentationIdSchema).optional(),
-  ports: z.array(PortIdSchema).optional(),
-});
-export type TypeShallow = z.infer<typeof TypeShallowSchema>;
-export const TypeDiffSchema = TypeSchema.partial().overwrite({
-  representations: RepresentationsDiffSchema.optional(),
-  ports: PortsDiffSchema.optional(),
-});
-export type TypeDiff = z.infer<typeof TypeDiffSchema>;
-export const TypesDiffSchema = z.object({
-  removed: z.array(TypeIdSchema).optional(),
-  updated: z.array(z.object({ id: TypeIdSchema, diff: TypeDiffSchema })).optional(),
-  added: z.array(TypeSchema).optional(),
-});
 
 // https://github.com/usalu/semio#-layer-
 export const LayerSchema = z.object({
@@ -353,6 +53,8 @@ export const LayerSchema = z.object({
 export type Layer = z.infer<typeof LayerSchema>;
 export const LayerIdSchema = LayerSchema.pick({ path: true });
 export type LayerId = z.infer<typeof LayerIdSchema>;
+export const serializeLayer = (layer: Layer): string => JSON.stringify(LayerSchema.parse(layer));
+export const deserializeLayer = (json: string): Layer => LayerSchema.parse(JSON.parse(json));
 
 // https://github.com/usalu/semio#-piece-
 export const PieceSchema = z.object({
@@ -385,6 +87,8 @@ export const PiecesDiffSchema = z.object({
   updated: z.array(z.object({ id: PieceIdSchema, diff: PieceDiffSchema })).optional(),
   added: z.array(PieceSchema).optional(),
 });
+export const serializePiece = (piece: Piece): string => JSON.stringify(PieceSchema.parse(piece));
+export const deserializePiece = (json: string): Piece => PieceSchema.parse(JSON.parse(json));
 
 // https://github.com/usalu/semio#-group-
 export const GroupSchema = z.object({
@@ -411,6 +115,8 @@ export const GroupsDiffSchema = z.object({
   updated: z.array(z.object({ id: GroupIdSchema, diff: GroupDiffSchema })).optional(),
   added: z.array(GroupSchema).optional(),
 });
+export const serializeGroup = (group: Group): string => JSON.stringify(GroupSchema.parse(group));
+export const deserializeGroup = (json: string): Group => GroupSchema.parse(JSON.parse(json));
 
 // https://github.com/usalu/semio#-side-
 export const SideSchema = z.object({
@@ -433,6 +139,8 @@ export const SidesDiffSchema = z.object({
   updated: z.array(z.object({ id: SideIdSchema, diff: SideDiffSchema })).optional(),
   added: z.array(SideSchema).optional(),
 });
+export const serializeSide = (side: Side): string => JSON.stringify(SideSchema.parse(side));
+export const deserializeSide = (json: string): Side => SideSchema.parse(JSON.parse(json));
 
 // https://github.com/usalu/semio#-connection-
 export const ConnectionSchema = z.object({
@@ -460,6 +168,8 @@ export const ConnectionsDiffSchema = z.object({
   updated: z.array(z.object({ id: ConnectionIdSchema, diff: ConnectionDiffSchema })).optional(),
   added: z.array(ConnectionSchema).optional(),
 });
+export const serializeConnection = (connection: Connection): string => JSON.stringify(ConnectionSchema.parse(connection));
+export const deserializeConnection = (json: string): Connection => ConnectionSchema.parse(JSON.parse(json));
 
 // https://github.com/usalu/semio#-stat-
 export const StatSchema = z.object({
@@ -487,6 +197,8 @@ export const StatsDiffSchema = z.object({
   updated: z.array(z.object({ id: StatIdSchema, diff: StatDiffSchema })).optional(),
   added: z.array(StatSchema).optional(),
 });
+export const serializeStat = (stat: Stat): string => JSON.stringify(StatSchema.parse(stat));
+export const deserializeStat = (json: string): Stat => StatSchema.parse(JSON.parse(json));
 
 // https://github.com/usalu/semio#-design-
 export const DesignSchema = z.object({
@@ -535,21 +247,24 @@ export const DesignsDiffSchema = z.object({
   updated: z.array(z.object({ id: DesignIdSchema, diff: DesignDiffSchema })).optional(),
   added: z.array(DesignSchema).optional(),
 });
+export const serializeDesign = (design: Design): string => JSON.stringify(DesignSchema.parse(design));
+export const deserializeDesign = (json: string): Design => DesignSchema.parse(JSON.parse(json));
 
 // https://github.com/usalu/semio#-kit-
 export const KitSchema = z.object({
-  id: z.string(),
   name: z.string(),
-  description: z.string().optional(),
-  icon: z.string().optional(),
-  image: z.string().optional(),
-  variant: z.string().optional(),
+  version: z.string().optional(),
   types: z.array(TypeSchema).optional(),
   designs: z.array(DesignSchema).optional(),
+  qualities: z.array(QualitySchema).optional(),
   authors: z.array(AuthorIdSchema).optional(),
+  concepts: z.array(z.string()).optional(),
+  icon: z.string().optional(),
+  image: z.string().optional(),
+  description: z.string().optional(),
+  attributes: z.array(AttributeSchema).optional(),
   created: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
   updated: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
-  attributes: z.array(AttributeSchema).optional()
 });
 export type Kit = z.infer<typeof KitSchema>;
 export const KitIdSchema = KitSchema.pick({ id: true });
@@ -567,6 +282,8 @@ export const KitsDiffSchema = z.object({
   updated: z.array(z.object({ id: KitIdSchema, diff: KitDiffSchema })).optional(),
   added: z.array(KitSchema).optional(),
 });
+export const serializeKit = (kit: Kit): string => JSON.stringify(KitSchema.parse(kit));
+export const deserializeKit = (json: string): Kit => KitSchema.parse(JSON.parse(json));
 
 
 export const DiffStatusSchema = z.enum(["unchanged", "added", "removed", "modified"]);
@@ -578,54 +295,13 @@ export enum DiffStatus {
   Modified = "modified",
 }
 
-//#endregion Schemas
+// #endregion Schemas
 
-//#region Functions
+// #region Functions
 
-//#region Utility Functions
 
-const normalize = (val: string | undefined | null): string => (val === undefined || val === null ? "" : val);
-const round = (value: number): number => Math.round(value / TOLERANCE) * TOLERANCE;
-export const jaccard = (a: string[] | undefined, b: string[] | undefined): number => {
-  if ((a === undefined && b === undefined) || (a?.length === 0 && b?.length === 0)) return 1;
-  if (a === undefined || b === undefined) return 0;
-  const setA = new Set(a);
-  const setB = new Set(b);
-  const intersection = Array.from(setA).filter((x) => setB.has(x)).length;
-  const union = setA.size + setB.size - intersection;
-  if (union === 0) return 0;
-  return intersection / union;
-};
 
-const deepEqual = (a: any, b: any): boolean => {
-  if (a === b) return true;
-  if (a == null || b == null) return a === b;
-  if (typeof a !== typeof b) return false;
-
-  if (Array.isArray(a)) {
-    if (!Array.isArray(b) || a.length !== b.length) return false;
-    return a.every((item, index) => deepEqual(item, b[index]));
-  }
-
-  if (typeof a === 'object') {
-    const keysA = Object.keys(a);
-    const keysB = Object.keys(b);
-    if (keysA.length !== keysB.length) return false;
-    return keysA.every(key => keysB.includes(key) && deepEqual(a[key], b[key]));
-  }
-
-  return false;
-};
-
-const arraysEqual = <T>(a: T[] | undefined, b: T[] | undefined): boolean => {
-  if (a === b) return true;
-  if (!a || !b) return false;
-  return a.length === b.length && a.every((val, index) => deepEqual(val, b[index]));
-};
-
-//#endregion Utility Functions
-
-//#region Mapping
+// #region Mapping
 
 
 export const toThreeRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
@@ -633,102 +309,13 @@ export const toSemioRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0
 export const toThreeQuaternion = (): THREE.Quaternion => new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476);
 export const toSemioQuaternion = (): THREE.Quaternion => new THREE.Quaternion(0.7071067811865476, 0, 0, -0.7071067811865476);
 
-export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
-  const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
-  const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z);
-  const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z);
-  const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis).normalize();
-  const orthoYAxis = new THREE.Vector3().crossVectors(zAxis, xAxis).normalize();
-  const matrix = new THREE.Matrix4().makeBasis(xAxis.normalize(), orthoYAxis, zAxis).setPosition(origin);
-  return matrix;
-};
-export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
-  const origin = new THREE.Vector3();
-  const xAxis = new THREE.Vector3();
-  const yAxis = new THREE.Vector3();
-  const zAxis = new THREE.Vector3();
-  matrix.decompose(origin, new THREE.Quaternion(), new THREE.Vector3());
-  matrix.extractBasis(xAxis, yAxis, zAxis);
-  return {
-    origin: { x: origin.x, y: origin.y, z: origin.z },
-    xAxis: { x: xAxis.x, y: xAxis.y, z: xAxis.z },
-    yAxis: { x: yAxis.x, y: yAxis.y, z: yAxis.z },
-  };
-};
 export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vector3(v.x, v.y, v.z);
 
-//#endregion Mapping
+// #endregion Mapping
 
-// #region Serializing
+// #region Querying
 
-export const serializeAttribute = (attribute: Attribute): string => JSON.stringify(AttributeSchema.parse(attribute), null, 2);
-export const serializeAuthor = (author: Author): string => JSON.stringify(AuthorSchema.parse(author), null, 2);
-export const serializeCoord = (coord: Coord): string => JSON.stringify(CoordSchema.parse(coord), null, 2);
-export const serializeVec = (diagramVector: Vec): string => JSON.stringify(VecSchema.parse(diagramVector), null, 2);
-export const serializePlane = (plane: Plane): string => JSON.stringify(PlaneSchema.parse(plane), null, 2);
-export const serializePoint = (point: Point): string => JSON.stringify(PointSchema.parse(point), null, 2);
-export const serializeVector = (vector: Vector): string => JSON.stringify(VectorSchema.parse(vector), null, 2);
-export const serializeLocation = (location: Location): string => JSON.stringify(LocationSchema.parse(location), null, 2);
-export const serializeRepresentation = (representation: Representation): string => JSON.stringify(RepresentationSchema.parse(representation), null, 2);
-export const serializePort = (port: Port): string => JSON.stringify(PortSchema.parse(port), null, 2);
-export const serializePiece = (piece: Piece): string => JSON.stringify(PieceSchema.parse(piece), null, 2);
-export const serializeConnection = (connection: Connection): string => JSON.stringify(ConnectionSchema.parse(connection), null, 2);
-export const serializeType = (type: Type): string => JSON.stringify(TypeSchema.parse(type), null, 2);
-export const serializeDesign = (design: Design): string => JSON.stringify(DesignSchema.parse(design), null, 2);
-export const serializeFile = (file: File): string => JSON.stringify(FileSchema.parse(file), null, 2);
-export const serializeKit = (kit: Kit): string => JSON.stringify(KitSchema.parse(kit), null, 2);
-export const deserializeAttribute = (json: string): Attribute => AttributeSchema.parse(JSON.parse(json));
-export const deserializeAuthor = (json: string): Author => AuthorSchema.parse(JSON.parse(json));
-export const deserializeCoord = (json: string): Coord => CoordSchema.parse(JSON.parse(json));
-export const deserializeVec = (json: string): Vec => VecSchema.parse(JSON.parse(json));
-export const deserializePlane = (json: string): Plane => PlaneSchema.parse(JSON.parse(json));
-export const deserializePoint = (json: string): Point => PointSchema.parse(JSON.parse(json));
-export const deserializeVector = (json: string): Vector => VectorSchema.parse(JSON.parse(json));
-export const deserializeLocation = (json: string): Location => LocationSchema.parse(JSON.parse(json));
-export const deserializeRepresentation = (json: string): Representation => RepresentationSchema.parse(JSON.parse(json));
-export const deserializePort = (json: string): Port => PortSchema.parse(JSON.parse(json));
-export const deserializePiece = (json: string): Piece => PieceSchema.parse(JSON.parse(json));
-export const deserializeConnection = (json: string): Connection => ConnectionSchema.parse(JSON.parse(json));
-export const deserializeType = (json: string): Type => TypeSchema.parse(JSON.parse(json));
-export const deserializeDesign = (json: string): Design => DesignSchema.parse(JSON.parse(json));
-export const deserializeKit = (json: string): Kit => KitSchema.parse(JSON.parse(json));
-export const parseAttribute = (json: string): Attribute => AttributeSchema.parse(JSON.parse(json));
-export const parseAuthor = (json: string): Author => AuthorSchema.parse(JSON.parse(json));
-export const parseCoord = (json: string): Coord => CoordSchema.parse(JSON.parse(json));
-export const parseVec = (json: string): Vec => VecSchema.parse(JSON.parse(json));
-export const parsePlane = (json: string): Plane => PlaneSchema.parse(JSON.parse(json));
-export const parsePoint = (json: string): Point => PointSchema.parse(JSON.parse(json));
-export const parseVector = (json: string): Vector => VectorSchema.parse(JSON.parse(json));
-export const parseLocation = (json: string): Location => LocationSchema.parse(JSON.parse(json));
-export const parseRepresentation = (json: string): Representation => RepresentationSchema.parse(JSON.parse(json));
-export const parsePort = (json: string): Port => PortSchema.parse(JSON.parse(json));
-export const parsePiece = (json: string): Piece => PieceSchema.parse(JSON.parse(json));
-export const parseConnection = (json: string): Connection => ConnectionSchema.parse(JSON.parse(json));
-export const parseType = (json: string): Type => TypeSchema.parse(JSON.parse(json));
-export const parseDesign = (json: string): Design => DesignSchema.parse(JSON.parse(json));
-export const parseFile = (json: string): File => FileSchema.parse(JSON.parse(json));
-export const parseKit = (json: string): Kit => KitSchema.parse(JSON.parse(json));
-export const safeParseAttribute = (data: unknown) => AttributeSchema.safeParse(data);
-export const safeParseAuthor = (data: unknown) => AuthorSchema.safeParse(data);
-export const safeParseCoord = (data: unknown) => CoordSchema.safeParse(data);
-export const safeParseVec = (data: unknown) => VecSchema.safeParse(data);
-export const safeParsePlane = (data: unknown) => PlaneSchema.safeParse(data);
-export const safeParsePoint = (data: unknown) => PointSchema.safeParse(data);
-export const safeParseVector = (data: unknown) => VectorSchema.safeParse(data);
-export const safeParseLocation = (data: unknown) => LocationSchema.safeParse(data);
-export const safeParseRepresentation = (data: unknown) => RepresentationSchema.safeParse(data);
-export const safeParsePort = (data: unknown) => PortSchema.safeParse(data);
-export const safeParsePiece = (data: unknown) => PieceSchema.safeParse(data);
-export const safeParseConnection = (data: unknown) => ConnectionSchema.safeParse(data);
-export const safeParseType = (data: unknown) => TypeSchema.safeParse(data);
-export const safeParseDesign = (data: unknown) => DesignSchema.safeParse(data);
-export const safeParseFile = (data: unknown) => FileSchema.safeParse(data);
-export const safeParseKit = (data: unknown) => KitSchema.safeParse(data);
-
-//#endregion Serializing
-//#region Querying
-
-//#region Propositional
+// #region Propositional
 
 export const arePortsCompatible = (port: Port, otherPort: Port): boolean => {
   const normalizedPortFamily = normalize(port.family);
@@ -801,9 +388,9 @@ export const isSameKit = (kit: Kit | KitId, other: Kit | KitId): boolean => {
   return kit.name === other.name && normalize(kit.version) === normalize(other.version);
 };
 
-//#endregion Propositional
+// #endregion Propositional
 
-//#region Predicates
+// #region Predicates
 
 export const findAttributeValue = (entity: Kit | Type | Design | Piece | Connection | Representation | Port, name: string, defaultValue?: string | null): string | null => {
   const attribute = entity.attributes?.find((q) => q.key === name);
@@ -1089,12 +676,12 @@ export const colorPortsForTypes = (types: Type[]): TypesDiff => {
   return { updated };
 };
 
-//#endregion Predicates
+// #endregion Predicates
 
-//#endregion Querying
+// #endregion Querying
 
 
-//#region Diffing
+// #region Diffing
 
 export const getRepresentationDiff = (before: Representation, after: Representation): RepresentationDiff => {
   const diffResult: Partial<RepresentationDiff> = {};
@@ -1880,34 +1467,37 @@ export const inverseFileDiff = (original: File, appliedDiff: FileDiff): FileDiff
   return inverseDiff;
 };
 
-//#endregion Diffing
+// #endregion Diffing
 
 
-//#region CRUDs
+// #region Attribute
+// https://github.com/usalu/semio#-attribute-
 
-//#region Plane
-
-const roundPlane = (plane: Plane): Plane => ({
-  origin: {
-    x: round(plane.origin.x),
-    y: round(plane.origin.y),
-    z: round(plane.origin.z),
-  },
-  xAxis: {
-    x: round(plane.xAxis.x),
-    y: round(plane.xAxis.y),
-    z: round(plane.xAxis.z),
-  },
-  yAxis: {
-    x: round(plane.yAxis.x),
-    y: round(plane.yAxis.y),
-    z: round(plane.yAxis.z),
-  },
+export const AttributeSchema = z.object({
+  key: z.string(),
+  value: z.string().optional(),
+  definition: z.string().optional(),
 });
-
-//#endregion Plane
-
-//#region Attribute
+export type Attribute = z.infer<typeof AttributeSchema>;
+export const serializeAttribute = (attribute: Attribute): string => JSON.stringify(AttributeSchema.parse(attribute));
+export const deserializeAttribute = (json: string): Attribute => AttributeSchema.parse(JSON.parse(json));
+export const AttributeIdSchema = z.object({ key: z.string() });
+export type AttributeId = z.infer<typeof AttributeIdSchema>;
+export const attributeToString = (attribute: Attribute): string => attribute.key;
+export const AttributeIdLikeSchema = z.union([AttributeSchema, AttributeIdSchema, z.string()]);
+export type AttributeIdLike = z.infer<typeof AttributeIdLikeSchema>;
+export const attributeIdLikeToAttributeId = (attributeId: AttributeIdLike): AttributeId => {
+  if (typeof attributeId === "string") return { key: attributeId };
+  return { key: attributeId.key };
+};
+export const AttributeDiffSchema = AttributeSchema.partial();
+export type AttributeDiff = z.infer<typeof AttributeDiffSchema>;
+export const AttributesDiffSchema = z.object({
+  removed: z.array(AttributeIdSchema).optional(),
+  updated: z.array(z.object({ id: AttributeIdSchema, diff: AttributeDiffSchema })).optional(),
+  added: z.array(AttributeSchema).optional(),
+});
+export type AttributesDiff = z.infer<typeof AttributesDiffSchema>;
 
 export const setAttributeInKit = (kitId: KitIdLike, attribute: Attribute): KitDiff => ({
   attributes: [attribute]
@@ -1970,9 +1560,381 @@ export const setAttributes = <T extends Kit | Design | Type | Piece | Connection
   return attributes.reduce((acc, attribute) => setAttribute(acc, attribute), entity);
 };
 
-//#endregion Attribute
+// #endregion Attribute
 
-//#region Port
+// #region Coord
+// https://github.com/usalu/semio#-coord-
+
+export const CoordSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+});
+export type Coord = z.infer<typeof CoordSchema>;
+export const serializeCoord = (coord: Coord): string => JSON.stringify(CoordSchema.parse(coord));
+export const deserializeCoord = (json: string): Coord => CoordSchema.parse(JSON.parse(json));
+
+// #endregion Coord
+
+// #region Vec
+
+// https://github.com/usalu/semio#-vec-
+export const VecSchema = z.object({
+  x: z.number(),
+  y: z.number()
+});
+export type Vec = z.infer<typeof VecSchema>;
+export const serializeVec = (vec: Vec): string => JSON.stringify(VecSchema.parse(vec));
+export const deserializeVec = (json: string): Vec => VecSchema.parse(JSON.parse(json));
+
+// #endregion Vec
+
+// #region Point
+// https://github.com/usalu/semio#-point-
+
+export const PointSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  z: z.number(),
+});
+export type Point = z.infer<typeof PointSchema>;
+export const serializePoint = (point: Point): string => JSON.stringify(PointSchema.parse(point));
+export const deserializePoint = (json: string): Point => PointSchema.parse(JSON.parse(json));
+
+
+// #endregion Point
+
+// #region Vector
+// https://github.com/usalu/semio#-vector-
+
+export const VectorSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+  z: z.number(),
+});
+export type Vector = z.infer<typeof VectorSchema>;
+export const serializeVector = (vector: Vector): string => JSON.stringify(VectorSchema.parse(vector));
+export const deserializeVector = (json: string): Vector => VectorSchema.parse(JSON.parse(json));
+
+// #endregion Vector
+
+// #region Plane
+
+// https://github.com/usalu/semio#-plane-
+export const PlaneSchema = z.object({
+  origin: PointSchema,
+  xAxis: VectorSchema,
+  yAxis: VectorSchema,
+});
+export type Plane = z.infer<typeof PlaneSchema>;
+export const serializePlane = (plane: Plane): string => JSON.stringify(PlaneSchema.parse(plane));
+export const deserializePlane = (json: string): Plane => PlaneSchema.parse(JSON.parse(json));
+export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
+  const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
+  const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z);
+  const yAxis = new THREE.Vector3(plane.yAxis.x, plane.yAxis.y, plane.yAxis.z);
+  const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis).normalize();
+  const orthoYAxis = new THREE.Vector3().crossVectors(zAxis, xAxis).normalize();
+  const matrix = new THREE.Matrix4().makeBasis(xAxis.normalize(), orthoYAxis, zAxis).setPosition(origin);
+  return matrix;
+};
+export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
+  const origin = new THREE.Vector3();
+  const xAxis = new THREE.Vector3();
+  const yAxis = new THREE.Vector3();
+  const zAxis = new THREE.Vector3();
+  matrix.decompose(origin, new THREE.Quaternion(), new THREE.Vector3());
+  matrix.extractBasis(xAxis, yAxis, zAxis);
+  return {
+    origin: { x: origin.x, y: origin.y, z: origin.z },
+    xAxis: { x: xAxis.x, y: xAxis.y, z: xAxis.z },
+    yAxis: { x: yAxis.x, y: yAxis.y, z: yAxis.z },
+  };
+};
+const roundPlane = (plane: Plane): Plane => ({
+  origin: {
+    x: round(plane.origin.x),
+    y: round(plane.origin.y),
+    z: round(plane.origin.z),
+  },
+  xAxis: {
+    x: round(plane.xAxis.x),
+    y: round(plane.xAxis.y),
+    z: round(plane.xAxis.z),
+  },
+  yAxis: {
+    x: round(plane.yAxis.x),
+    y: round(plane.yAxis.y),
+    z: round(plane.yAxis.z),
+  },
+});
+
+// #endregion Plane
+
+// #region Camera
+// https://github.com/usalu/semio#-camera-
+
+export const CameraSchema = z.object({
+  position: PointSchema,
+  forward: VectorSchema,
+  up: VectorSchema,
+});
+export const serializeCamera = (camera: Camera): string => JSON.stringify(CameraSchema.parse(camera));
+export const deserializeCamera = (json: string): Camera => CameraSchema.parse(JSON.parse(json));
+
+// #endregion Camera
+
+// #region Location
+// https://github.com/usalu/semio#-location-
+
+export const LocationSchema = z.object({
+  longitude: z.number(),
+  latitude: z.number(),
+  attributes: z.array(AttributeSchema).optional(),
+});
+export type Location = z.infer<typeof LocationSchema>;
+export const LocationDiffSchema = LocationSchema.partial();
+export type LocationDiff = z.infer<typeof LocationDiffSchema>;
+export const serializeLocation = (location: Location): string => JSON.stringify(LocationSchema.parse(location));
+export const deserializeLocation = (json: string): Location => LocationSchema.parse(JSON.parse(json));
+
+// #endregion Location
+
+// #region Author
+// https://github.com/usalu/semio#-author-
+
+export const AuthorSchema = z.object({ name: z.string(), email: z.string(), attributes: z.array(AttributeSchema).optional() });
+export type Author = z.infer<typeof AuthorSchema>;
+export const AuthorIdSchema = AuthorSchema.pick({ email: true });
+export type AuthorId = z.infer<typeof AuthorIdSchema>;
+export const authorIdToString = (author: AuthorId): string => author.email;
+export const AuthorIdLikeSchema = z.union([AuthorSchema, AuthorIdSchema, z.string()]);
+export type AuthorIdLike = z.infer<typeof AuthorIdLikeSchema>;
+export const authorIdLikeToAuthorId = (author: AuthorIdLike): AuthorId => {
+  if (typeof author === "string") return { email: author };
+  return { email: author.email };
+};
+export const AttributeDiffSchema = AttributeSchema.partial();
+export type AttributeDiff = z.infer<typeof AttributeDiffSchema>;
+export const AttributesDiffSchema = z.object({
+  removed: z.array(AttributeIdSchema).optional(),
+  updated: z.array(z.object({ id: AttributeIdSchema, diff: AttributeDiffSchema })).optional(),
+  added: z.array(AttributeSchema).optional(),
+});
+export const serializeAuthor = (author: Author): string => JSON.stringify(AuthorSchema.parse(author));
+export const deserializeAuthor = (json: string): Author => AuthorSchema.parse(JSON.parse(json));
+
+// #endregion Author
+
+// #region File
+// https://github.com/usalu/semio#-file-
+
+export const FileSchema = z.object({
+  path: z.url(),
+  remote: z.url().optional(),
+  size: z.number().optional(),
+  hash: z.string().optional(),
+  created: z
+    .string()
+    .transform((val) => new Date(val))
+    .or(z.date())
+    .optional(),
+  createdBy: AuthorIdSchema.optional(),
+  updated: z
+    .string()
+    .transform((val) => new Date(val))
+    .or(z.date())
+    .optional(),
+  updatedBy: AuthorIdSchema.optional(),
+});
+export type File = z.infer<typeof FileSchema>;
+export const FileIdSchema = FileSchema.pick({ path: true });
+export type FileId = z.infer<typeof FileIdSchema>;
+export const fileIdToString = (file: FileId): string => file.path;
+export const FileIdLikeSchema = z.union([FileSchema, FileIdSchema, z.string()]);
+export type FileIdLike = z.infer<typeof FileIdLikeSchema>;
+export const fileIdLikeToFileId = (file: FileIdLike): FileId => {
+  if (typeof file === "string") return { path: file };
+  return { path: file.path };
+};
+export const FileDiffSchema = FileSchema.partial();
+export type FileDiff = z.infer<typeof FileDiffSchema>;
+export const FilesDiffSchema = z.object({
+  removed: z.array(FileIdSchema).optional(),
+  updated: z.array(z.object({ id: FileIdSchema, diff: FileDiffSchema })).optional(),
+  added: z.array(FileSchema).optional(),
+});
+export const serializeFile = (file: File): string => JSON.stringify(FileSchema.parse(file));
+export const deserializeFile = (json: string): File => FileSchema.parse(JSON.parse(json));
+
+// #endregion File
+
+// #region Benchmark
+
+// https://github.com/usalu/semio#-benchmark-
+export const BenchmarkSchema = z.object({
+  name: z.string(),
+  icon: z.string().optional(),
+  min: z.number().optional(),
+  minExcluded: z.boolean().optional(),
+  max: z.number().optional(),
+  maxExcluded: z.boolean().optional(),
+  attributes: z.array(AttributeSchema).optional(),
+});
+export type Benchmark = z.infer<typeof BenchmarkSchema>;
+export const BenchmarkIdSchema = BenchmarkSchema.pick({ name: true });
+export type BenchmarkId = z.infer<typeof BenchmarkIdSchema>;
+export const benchmarkIdToString = (benchmark: BenchmarkId): string => benchmark.name;
+export const BenchmarkIdLikeSchema = z.union([BenchmarkSchema, BenchmarkIdSchema, z.string()]);
+export type BenchmarkIdLike = z.infer<typeof BenchmarkIdLikeSchema>;
+export const benchmarkIdLikeToBenchmarkId = (benchmark: BenchmarkIdLike): BenchmarkId => {
+  if (typeof benchmark === "string") return { name: benchmark };
+  return { name: benchmark.name };
+};
+export const BenchmarkDiffSchema = BenchmarkSchema.partial();
+export type BenchmarkDiff = z.infer<typeof BenchmarkDiffSchema>;
+export const BenchmarksDiffSchema = z.object({
+  removed: z.array(BenchmarkIdSchema).optional(),
+  updated: z.array(z.object({ id: BenchmarkIdSchema, diff: BenchmarkDiffSchema })).optional(),
+  added: z.array(BenchmarkSchema).optional(),
+});
+export const serializeBenchmark = (benchmark: Benchmark): string => JSON.stringify(BenchmarkSchema.parse(benchmark));
+export const deserializeBenchmark = (json: string): Benchmark => BenchmarkSchema.parse(JSON.parse(json));
+
+// #endregion Benchmark
+
+// #region QualityKind
+
+// #endregion QualityKind
+
+// #region Quality
+
+// https://github.com/usalu/semio#-quality-
+export const QualitySchema = z.object({
+  key: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  image: z.string().optional(),
+  variant: z.string().optional(),
+  unit: z.string().optional(),
+  benchmarks: z.array(BenchmarkSchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
+});
+export type Quality = z.infer<typeof QualitySchema>;
+export const QualityIdSchema = QualitySchema.pick({ key: true });
+export type QualityId = z.infer<typeof QualityIdSchema>;
+export const qualityIdToString = (quality: QualityId): string => quality.key;
+export const QualityIdLikeSchema = z.union([QualitySchema, QualityIdSchema, z.string()]);
+export type QualityIdLike = z.infer<typeof QualityIdLikeSchema>;
+export const qualityIdLikeToQualityId = (quality: QualityIdLike): QualityId => {
+  if (typeof quality === "string") return { key: quality };
+  return { key: quality.key };
+};
+export const QualityDiffSchema = QualitySchema.partial().overwrite({
+  benchmarks: BenchmarksDiffSchema.optional(),
+  attributes: AttributesDiffSchema.optional(),
+});
+export const serializeQuality = (quality: Quality): string => JSON.stringify(QualitySchema.parse(quality));
+export const deserializeQuality = (json: string): Quality => QualitySchema.parse(JSON.parse(json));
+
+// #endregion Quality
+
+// #region Prop
+// https://github.com/usalu/semio#-prop-
+
+export const PropSchema = z.object({
+  key: z.string(),
+  value: z.string(),
+  unit: z.string().optional(),
+  attributes: z.array(AttributeSchema).optional(),
+});
+export type Prop = z.infer<typeof PropSchema>;
+export const PropIdSchema = PropSchema.pick({ key: true });
+export type PropId = z.infer<typeof PropIdSchema>;
+export const propIdToString = (prop: PropId): string => prop.key;
+export const PropIdLikeSchema = z.union([PropSchema, PropIdSchema, z.string()]);
+export type PropIdLike = z.infer<typeof PropIdLikeSchema>;
+export const propIdLikeToPropId = (prop: PropIdLike): PropId => {
+  if (typeof prop === "string") return { key: prop };
+  return { key: prop.key };
+};
+export const PropDiffSchema = PropSchema.partial();
+export type PropDiff = z.infer<typeof PropDiffSchema>;
+export const PropsDiffSchema = z.object({
+  removed: z.array(PropIdSchema).optional(),
+  updated: z.array(z.object({ id: PropIdSchema, diff: PropDiffSchema })).optional(),
+  added: z.array(PropSchema).optional(),
+});
+export const serializeProp = (prop: Prop): string => JSON.stringify(PropSchema.parse(prop));
+export const deserializeProp = (json: string): Prop => PropSchema.parse(JSON.parse(json));
+
+// #endregion Prop
+
+// #region Representation
+// https://github.com/usalu/semio#-representation-
+
+export const RepresentationSchema = z.object({
+  tags: z.array(z.string()).optional(),
+  url: z.string(),
+  description: z.string().optional(),
+  attributes: z.array(AttributeSchema).optional(),
+});
+export type Representation = z.infer<typeof RepresentationSchema>;
+export const RepresentationIdSchema = RepresentationSchema.pick({ tags: true });
+export type RepresentationId = z.infer<typeof RepresentationIdSchema>;
+export const representationIdToString = (representation: RepresentationId): string => representation.tags?.join(",") ?? "";
+export const RepresentationIdLikeSchema = z.union([RepresentationSchema, RepresentationIdSchema, z.array(z.string()), z.string(), z.null(), z.undefined()]);
+export type RepresentationIdLike = z.infer<typeof RepresentationIdLikeSchema>;
+export const representationIdLikeToRepresentationId = (representation: RepresentationIdLike): RepresentationId => {
+  if (typeof representation === "string") return { tags: representation.split(",") };
+  return { tags: representation.tags };
+};
+export const RepresentationDiffSchema = RepresentationSchema.partial();
+export type RepresentationDiff = z.infer<typeof RepresentationDiffSchema>;
+export const RepresentationsDiffSchema = z.object({
+  removed: z.array(RepresentationIdSchema).optional(),
+  updated: z.array(z.object({ id: RepresentationIdSchema, diff: RepresentationDiffSchema })).optional(),
+  added: z.array(RepresentationSchema).optional(),
+});
+export const serializeRepresentation = (representation: Representation): string => JSON.stringify(RepresentationSchema.parse(representation));
+export const deserializeRepresentation = (json: string): Representation => RepresentationSchema.parse(JSON.parse(json));
+
+// #endregion Representation
+
+// #region Port
+// https://github.com/usalu/semio#-port-
+
+export const PortSchema = z.object({
+  id_: z.string().optional(),
+  description: z.string().optional(),
+  family: z.string().optional(),
+  mandatory: z.boolean().optional(),
+  t: z.number(),
+  compatibleFamilies: z.array(z.string()).optional(),
+  point: PointSchema,
+  direction: VectorSchema,
+  props: z.array(PropSchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
+});
+export type Port = z.infer<typeof PortSchema>;
+export const PortIdSchema = PortSchema.pick({ id_: true });
+export type PortId = z.infer<typeof PortIdSchema>;
+export const portIdToString = (port: PortId): string => port.id_ ?? "";
+export const PortIdLikeSchema = z.union([PortSchema, PortIdSchema, z.string()]);
+export type PortIdLike = z.infer<typeof PortIdLikeSchema>;
+export const portIdLikeToPortId = (port: PortIdLike): PortId => {
+  if (typeof port === "string") return { id_: port };
+  return { id_: port.id_ };
+};
+export const PortDiffSchema = PortSchema.partial();
+export type PortDiff = z.infer<typeof PortDiffSchema>;
+export const PortsDiffSchema = z.object({
+  removed: z.array(PortIdSchema).optional(),
+  updated: z.array(z.object({ id: PortIdSchema, diff: PortDiffSchema })).optional(),
+  added: z.array(PortSchema).optional(),
+});
+export const serializePort = (port: Port): string => JSON.stringify(PortSchema.parse(port));
+export const deserializePort = (json: string): Port => PortSchema.parse(JSON.parse(json));
 
 export const unifyPortFamiliesAndCompatibleFamiliesForTypes = (types: Type[]): TypesDiff => {
   const allFamilies = new Set<string>();
@@ -2099,9 +2061,60 @@ export const unifyPortFamiliesAndCompatibleFamiliesForTypes = (types: Type[]): T
   return { updated };
 };
 
-//#endregion Port
+// #endregion Port
 
-//#region Piece
+// #region Type
+// https://github.com/usalu/semio#-type-
+export const TypeSchema = z.object({
+  name: z.string(),
+  variant: z.string().optional(),
+  representations: z.array(RepresentationSchema).optional(),
+  ports: z.array(PortSchema).optional(),
+  props: z.array(PropSchema).optional(),
+  authors: z.array(AuthorIdSchema).optional(),
+  icon: z.string().optional(),
+  image: z.string().optional(),
+  description: z.string().optional(),
+  attributes: z.array(AttributeSchema).optional()
+});
+export type Type = z.infer<typeof TypeSchema>;
+export const TypeIdSchema = TypeSchema.pick({ name: true, variant: true });
+export const typeIdToString = (type: TypeId): string => type.name;
+export const TypeIdLikeSchema = z.union([TypeSchema, TypeIdSchema, z.string()]);
+export type TypeIdLike = z.infer<typeof TypeIdLikeSchema>;
+export const typeIdLikeToTypeId = (type: TypeIdLike): TypeId => {
+  if (typeof type === "string") return { name: type };
+  return { name: type.name };
+};
+export const TypeShallowSchema = TypeSchema.overwrite({
+  representations: z.array(RepresentationIdSchema).optional(),
+  ports: z.array(PortIdSchema).optional(),
+});
+export type TypeShallow = z.infer<typeof TypeShallowSchema>;
+export const TypeDiffSchema = TypeSchema.partial().overwrite({
+  representations: RepresentationsDiffSchema.optional(),
+  ports: PortsDiffSchema.optional(),
+});
+export type TypeDiff = z.infer<typeof TypeDiffSchema>;
+export const TypesDiffSchema = z.object({
+  removed: z.array(TypeIdSchema).optional(),
+  updated: z.array(z.object({ id: TypeIdSchema, diff: TypeDiffSchema })).optional(),
+  added: z.array(TypeSchema).optional(),
+});
+export const serializeType = (type: Type): string => JSON.stringify(TypeSchema.parse(type));
+export const deserializeType = (json: string): Type => TypeSchema.parse(JSON.parse(json));
+
+// #endregion Type
+
+// #region Layer
+
+// #endregion Layer
+
+// #region Group
+
+// #endregion Group
+
+// #region Piece
 
 export const addPieceToDesign = (piece: Piece): DesignDiff => ({
   pieces: {
@@ -2252,9 +2265,261 @@ export const fixPiecesInDesign = (kit: Kit, designId: DesignIdLike, pieceIds: Pi
   };
 };
 
-//#endregion Piece
 
-//#region Connection
+/**
+ * Creates a clustered design from a cluster of pieces and connections
+ * @param originalDesign - The original design containing the pieces to cluster
+ * @param clusterPieceIds - The IDs of pieces to include in the clustered design
+ * @param designName - Name for the new design
+ * @returns Object containing the clustered design and external connections
+ */
+export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: string[], designName: string): { clusteredDesign: Design; externalConnections: Connection[] } => {
+  // Validate inputs
+  if (!originalDesign.pieces || originalDesign.pieces.length === 0) {
+    throw new Error("Original design has no pieces to cluster");
+  }
+  if (!clusterPieceIds || clusterPieceIds.length === 0) {
+    throw new Error("No piece IDs provided for clustering");
+  }
+
+  // Extract clustered pieces and their connections
+  const clusteredPieces = (originalDesign.pieces || []).filter((piece) => clusterPieceIds.includes(piece.id_));
+
+  if (clusteredPieces.length === 0) {
+    throw new Error("No pieces found matching the provided IDs");
+  }
+
+  // Find internal connections (both pieces in cluster)
+  const internalConnections = (originalDesign.connections || []).filter((connection) => clusterPieceIds.includes(connection.connected.piece.id_) && clusterPieceIds.includes(connection.connecting.piece.id_));
+
+  // Find external connections (one piece in cluster, one outside)
+  const externalConnections = (originalDesign.connections || []).filter((connection) => {
+    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.id_);
+    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.id_);
+    return connectedInCluster !== connectingInCluster; // XOR - exactly one is in cluster
+  });
+
+  // Create the clustered design
+  const clusteredDesign: Design = {
+    name: designName,
+    unit: originalDesign.unit,
+    description: `Clustered design with ${clusteredPieces.length} pieces`,
+    pieces: clusteredPieces,
+    connections: internalConnections,
+    created: new Date(),
+    updated: new Date(),
+  };
+
+  return { clusteredDesign, externalConnections };
+};
+
+/**
+ * Replaces clustered pieces with direct design references in connections
+ * @param originalDesign - The original design
+ * @param clusterPieceIds - IDs of pieces to remove and cluster
+ * @param clusteredDesign - The clustered design to include
+ * @param externalConnections - External connections to update
+ * @returns Updated design with clustered pieces removed and direct design references
+ */
+export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds: string[], clusteredDesign: Design, externalConnections: Connection[]): DesignDiff => {
+  // Remove clustered pieces
+  const piecesToRemove = clusterPieceIds.map(id => ({ id_: id }));
+
+  // Remove all connections involving clustered pieces
+  const connectionsToRemove = (originalDesign.connections || []).filter((connection) => {
+    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.id_);
+    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.id_);
+    return connectedInCluster || connectingInCluster;
+  }).map(c => ({
+    connected: { piece: { id_: c.connected.piece.id_ } },
+    connecting: { piece: { id_: c.connecting.piece.id_ } }
+  }));
+
+  // Update external connections to use direct design references
+  const updatedExternalConnections = externalConnections.map((connection) => {
+    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.id_);
+    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.id_);
+
+    if (connectedInCluster) {
+      // Keep original piece ID but add designId to reference the nested design
+      return {
+        ...connection,
+        connected: {
+          piece: { id_: connection.connected.piece.id_ }, // Keep original piece ID
+          port: connection.connected.port,
+          designId: clusteredDesign.name, // Reference to nested design
+        },
+      };
+    } else if (connectingInCluster) {
+      // Keep original piece ID but add designId to reference the nested design
+      return {
+        ...connection,
+        connecting: {
+          piece: { id_: connection.connecting.piece.id_ }, // Keep original piece ID
+          port: connection.connecting.port,
+          designId: clusteredDesign.name, // Reference to nested design
+        },
+      };
+    }
+
+    return connection;
+  });
+
+  return {
+    pieces: {
+      removed: piecesToRemove
+    },
+    connections: {
+      removed: connectionsToRemove,
+      added: updatedExternalConnections
+    }
+  };
+};
+
+/**
+ * Expands design pieces by replacing them with their constituent pieces and connections
+ * @param design - The design to expand
+ * @param kit - The kit containing type information
+ * @returns Design with design pieces expanded
+ */
+export const getClusterableGroups = (design: Design, selectedPieceIds: string[]): string[][] => {
+  if (selectedPieceIds.length < 2) return []; // Need at least 2 items to cluster
+
+  // Build adjacency map from all connections
+  const adjacencyMap = new Map<string, Set<string>>();
+  (design.connections || []).forEach((connection) => {
+    const sourceId = connection.connecting.piece.id_;
+    const targetId = connection.connected.piece.id_;
+
+    if (!adjacencyMap.has(sourceId)) adjacencyMap.set(sourceId, new Set());
+    if (!adjacencyMap.has(targetId)) adjacencyMap.set(targetId, new Set());
+
+    adjacencyMap.get(sourceId)!.add(targetId);
+    adjacencyMap.get(targetId)!.add(sourceId);
+  });
+
+  // Find connected components using DFS
+  const visited = new Set<string>();
+  const connectedGroups: string[][] = [];
+
+  const dfs = (pieceId: string, currentGroup: string[]) => {
+    if (visited.has(pieceId)) return;
+    visited.add(pieceId);
+    currentGroup.push(pieceId);
+
+    const neighbors = adjacencyMap.get(pieceId) || new Set();
+    for (const neighbor of Array.from(neighbors)) {
+      if (selectedPieceIds.includes(neighbor) && !visited.has(neighbor)) {
+        dfs(neighbor, currentGroup);
+      }
+    }
+  };
+
+  // First, find all connected components
+  for (const pieceId of selectedPieceIds) {
+    if (!visited.has(pieceId)) {
+      const group: string[] = [];
+      dfs(pieceId, group);
+      connectedGroups.push(group);
+    }
+  }
+
+  // If we have multiple connected components OR design nodes in selection,
+  // allow clustering the entire selection as one group
+  const hasDesignNodes = selectedPieceIds.some((id) => id.startsWith("design-"));
+  const hasMultipleComponents = connectedGroups.length > 1;
+  const hasLargeConnectedGroup = connectedGroups.some((group) => group.length > 1);
+
+  if (hasDesignNodes || hasMultipleComponents || hasLargeConnectedGroup) {
+    // Return all selected pieces as one clusterable group
+    return [selectedPieceIds];
+  }
+
+  return [];
+};
+
+export const expandDesignPieces = (design: Design, kit: Kit): Design => {
+  // Check if there are any connections with designPiece (indicating clustered pieces)
+  const hasDesignConnections = design.connections?.some((conn) => conn.connected.designPiece || conn.connecting.designPiece);
+  if (!hasDesignConnections) {
+    return design; // No design connections to expand
+  }
+
+  let expandedDesign = { ...design };
+
+  // Find all unique designIds referenced in connections
+  const designIds = new Set<string>();
+  design.connections?.forEach((conn) => {
+    if (conn.connected.designPiece) designIds.add(conn.connected.designPiece.id_);
+    if (conn.connecting.designPiece) designIds.add(conn.connecting.designPiece.id_);
+  });
+
+  if (designIds.size === 0) {
+    return expandedDesign; // No design references found
+  }
+
+  // For each referenced design, expand it
+  for (const designName of Array.from(designIds)) {
+    // Find the design in the kit
+    const referencedDesign = findDesignInKit(kit, { name: designName });
+    if (!referencedDesign) continue;
+
+    // Recursively expand the referenced design first
+    const expandedReferencedDesign = expandDesignPieces(referencedDesign, kit);
+
+    // For design connections, use the original pieces and connections without namespacing
+    const transformedPieces = (expandedReferencedDesign.pieces || []).map((piece) => ({
+      ...piece,
+      center: piece.center || { x: 0, y: 0 },
+    }));
+
+    const transformedConnections = expandedReferencedDesign.connections || [];
+
+    const updatedExternalConnections = (expandedDesign.connections || []).map((connection) => {
+      if (connection.connected.designPiece?.id_ === designName) {
+        return {
+          ...connection,
+          connected: {
+            ...connection.connected,
+            designPiece: undefined,
+          },
+        };
+      }
+
+      if (connection.connecting.designPiece?.id_ === designName) {
+        // Use the original piece ID directly (no namespacing)
+        return {
+          ...connection,
+          connecting: {
+            ...connection.connecting,
+            designPiece: undefined, // Remove designPiece since we've expanded
+          },
+        };
+      }
+
+      return connection;
+    });
+
+    // Add expanded pieces and update connections
+    expandedDesign = {
+      ...expandedDesign,
+      pieces: [...(expandedDesign.pieces || []), ...transformedPieces],
+      connections: [...updatedExternalConnections, ...transformedConnections],
+    };
+  }
+
+  return expandedDesign;
+};
+
+// #endregion Piece
+
+
+// #region Side
+
+// #endregion Side
+
+
+// #region Connection
 
 export const addConnectionToDesign = (connection: Connection): DesignDiff => ({
   connections: {
@@ -2334,9 +2599,13 @@ export const removeConnectionsFromDesign = (kit: Kit, designId: DesignIdLike, co
   };
 };
 
-//#endregion Connection
+// #endregion Connection
 
-//#region Design
+// #region Stat
+
+// #endregion Stat
+
+// #region Design
 
 export const mergeDesigns = (designs: Design[]): DesignDiff => {
   const pieces = designs.flatMap((d) => d.pieces ?? []);
@@ -2636,302 +2905,7 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): DesignDiff => {
   };
 };
 
-//#endregion Design
-
-//#region Design Pieces
-
-/**
- * Creates a clustered design from a cluster of pieces and connections
- * @param originalDesign - The original design containing the pieces to cluster
- * @param clusterPieceIds - The IDs of pieces to include in the clustered design
- * @param designName - Name for the new design
- * @returns Object containing the clustered design and external connections
- */
-export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: string[], designName: string): { clusteredDesign: Design; externalConnections: Connection[] } => {
-  // Validate inputs
-  if (!originalDesign.pieces || originalDesign.pieces.length === 0) {
-    throw new Error("Original design has no pieces to cluster");
-  }
-  if (!clusterPieceIds || clusterPieceIds.length === 0) {
-    throw new Error("No piece IDs provided for clustering");
-  }
-
-  // Extract clustered pieces and their connections
-  const clusteredPieces = (originalDesign.pieces || []).filter((piece) => clusterPieceIds.includes(piece.id_));
-
-  if (clusteredPieces.length === 0) {
-    throw new Error("No pieces found matching the provided IDs");
-  }
-
-  // Find internal connections (both pieces in cluster)
-  const internalConnections = (originalDesign.connections || []).filter((connection) => clusterPieceIds.includes(connection.connected.piece.id_) && clusterPieceIds.includes(connection.connecting.piece.id_));
-
-  // Find external connections (one piece in cluster, one outside)
-  const externalConnections = (originalDesign.connections || []).filter((connection) => {
-    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.id_);
-    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.id_);
-    return connectedInCluster !== connectingInCluster; // XOR - exactly one is in cluster
-  });
-
-  // Create the clustered design
-  const clusteredDesign: Design = {
-    name: designName,
-    unit: originalDesign.unit,
-    description: `Clustered design with ${clusteredPieces.length} pieces`,
-    pieces: clusteredPieces,
-    connections: internalConnections,
-    created: new Date(),
-    updated: new Date(),
-  };
-
-  return { clusteredDesign, externalConnections };
-};
-
-/**
- * Replaces clustered pieces with direct design references in connections
- * @param originalDesign - The original design
- * @param clusterPieceIds - IDs of pieces to remove and cluster
- * @param clusteredDesign - The clustered design to include
- * @param externalConnections - External connections to update
- * @returns Updated design with clustered pieces removed and direct design references
- */
-export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds: string[], clusteredDesign: Design, externalConnections: Connection[]): DesignDiff => {
-  // Remove clustered pieces
-  const piecesToRemove = clusterPieceIds.map(id => ({ id_: id }));
-
-  // Remove all connections involving clustered pieces
-  const connectionsToRemove = (originalDesign.connections || []).filter((connection) => {
-    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.id_);
-    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.id_);
-    return connectedInCluster || connectingInCluster;
-  }).map(c => ({
-    connected: { piece: { id_: c.connected.piece.id_ } },
-    connecting: { piece: { id_: c.connecting.piece.id_ } }
-  }));
-
-  // Update external connections to use direct design references
-  const updatedExternalConnections = externalConnections.map((connection) => {
-    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.id_);
-    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.id_);
-
-    if (connectedInCluster) {
-      // Keep original piece ID but add designId to reference the nested design
-      return {
-        ...connection,
-        connected: {
-          piece: { id_: connection.connected.piece.id_ }, // Keep original piece ID
-          port: connection.connected.port,
-          designId: clusteredDesign.name, // Reference to nested design
-        },
-      };
-    } else if (connectingInCluster) {
-      // Keep original piece ID but add designId to reference the nested design
-      return {
-        ...connection,
-        connecting: {
-          piece: { id_: connection.connecting.piece.id_ }, // Keep original piece ID
-          port: connection.connecting.port,
-          designId: clusteredDesign.name, // Reference to nested design
-        },
-      };
-    }
-
-    return connection;
-  });
-
-  return {
-    pieces: {
-      removed: piecesToRemove
-    },
-    connections: {
-      removed: connectionsToRemove,
-      added: updatedExternalConnections
-    }
-  };
-};
-
-/**
- * Expands design pieces by replacing them with their constituent pieces and connections
- * @param design - The design to expand
- * @param kit - The kit containing type information
- * @returns Design with design pieces expanded
- */
-export const getClusterableGroups = (design: Design, selectedPieceIds: string[]): string[][] => {
-  if (selectedPieceIds.length < 2) return []; // Need at least 2 items to cluster
-
-  // Build adjacency map from all connections
-  const adjacencyMap = new Map<string, Set<string>>();
-  (design.connections || []).forEach((connection) => {
-    const sourceId = connection.connecting.piece.id_;
-    const targetId = connection.connected.piece.id_;
-
-    if (!adjacencyMap.has(sourceId)) adjacencyMap.set(sourceId, new Set());
-    if (!adjacencyMap.has(targetId)) adjacencyMap.set(targetId, new Set());
-
-    adjacencyMap.get(sourceId)!.add(targetId);
-    adjacencyMap.get(targetId)!.add(sourceId);
-  });
-
-  // Find connected components using DFS
-  const visited = new Set<string>();
-  const connectedGroups: string[][] = [];
-
-  const dfs = (pieceId: string, currentGroup: string[]) => {
-    if (visited.has(pieceId)) return;
-    visited.add(pieceId);
-    currentGroup.push(pieceId);
-
-    const neighbors = adjacencyMap.get(pieceId) || new Set();
-    for (const neighbor of Array.from(neighbors)) {
-      if (selectedPieceIds.includes(neighbor) && !visited.has(neighbor)) {
-        dfs(neighbor, currentGroup);
-      }
-    }
-  };
-
-  // First, find all connected components
-  for (const pieceId of selectedPieceIds) {
-    if (!visited.has(pieceId)) {
-      const group: string[] = [];
-      dfs(pieceId, group);
-      connectedGroups.push(group);
-    }
-  }
-
-  // If we have multiple connected components OR design nodes in selection,
-  // allow clustering the entire selection as one group
-  const hasDesignNodes = selectedPieceIds.some((id) => id.startsWith("design-"));
-  const hasMultipleComponents = connectedGroups.length > 1;
-  const hasLargeConnectedGroup = connectedGroups.some((group) => group.length > 1);
-
-  if (hasDesignNodes || hasMultipleComponents || hasLargeConnectedGroup) {
-    // Return all selected pieces as one clusterable group
-    return [selectedPieceIds];
-  }
-
-  return [];
-};
-
-export const expandDesignPieces = (design: Design, kit: Kit): Design => {
-  // Check if there are any connections with designPiece (indicating clustered pieces)
-  const hasDesignConnections = design.connections?.some((conn) => conn.connected.designPiece || conn.connecting.designPiece);
-  if (!hasDesignConnections) {
-    return design; // No design connections to expand
-  }
-
-  let expandedDesign = { ...design };
-
-  // Find all unique designIds referenced in connections
-  const designIds = new Set<string>();
-  design.connections?.forEach((conn) => {
-    if (conn.connected.designPiece) designIds.add(conn.connected.designPiece.id_);
-    if (conn.connecting.designPiece) designIds.add(conn.connecting.designPiece.id_);
-  });
-
-  if (designIds.size === 0) {
-    return expandedDesign; // No design references found
-  }
-
-  // For each referenced design, expand it
-  for (const designName of Array.from(designIds)) {
-    // Find the design in the kit
-    const referencedDesign = findDesignInKit(kit, { name: designName });
-    if (!referencedDesign) continue;
-
-    // Recursively expand the referenced design first
-    const expandedReferencedDesign = expandDesignPieces(referencedDesign, kit);
-
-    // For design connections, use the original pieces and connections without namespacing
-    const transformedPieces = (expandedReferencedDesign.pieces || []).map((piece) => ({
-      ...piece,
-      center: piece.center || { x: 0, y: 0 },
-    }));
-
-    const transformedConnections = expandedReferencedDesign.connections || [];
-
-    const updatedExternalConnections = (expandedDesign.connections || []).map((connection) => {
-      if (connection.connected.designPiece?.id_ === designName) {
-        return {
-          ...connection,
-          connected: {
-            ...connection.connected,
-            designPiece: undefined,
-          },
-        };
-      }
-
-      if (connection.connecting.designPiece?.id_ === designName) {
-        // Use the original piece ID directly (no namespacing)
-        return {
-          ...connection,
-          connecting: {
-            ...connection.connecting,
-            designPiece: undefined, // Remove designPiece since we've expanded
-          },
-        };
-      }
-
-      return connection;
-    });
-
-    // Add expanded pieces and update connections
-    expandedDesign = {
-      ...expandedDesign,
-      pieces: [...(expandedDesign.pieces || []), ...transformedPieces],
-      connections: [...updatedExternalConnections, ...transformedConnections],
-    };
-  }
-
-  return expandedDesign;
-};
-
-//#endregion Design Pieces
-
-//#region Type
-
-export const addTypeToKit = (type: Type): KitDiff => ({
-  types: {
-    added: [type]
-  }
-});
-
-export const setTypeInKit = (type: Type): KitDiff => ({
-  types: {
-    updated: [{
-      id: { name: type.name, variant: type.variant },
-      diff: {
-        name: type.name,
-        description: type.description,
-        icon: type.icon,
-        image: type.image,
-        variant: type.variant,
-        stock: type.stock,
-        virtual: type.virtual,
-        unit: type.unit,
-        created: type.created,
-        updated: type.updated,
-        location: type.location,
-        representations: type.representations,
-        ports: type.ports,
-        authors: type.authors,
-        attributes: type.attributes
-      }
-    }]
-  }
-});
-
-export const removeTypeFromKit = (typeId: TypeIdLike): KitDiff => {
-  const normalizedTypeId = typeIdLikeToTypeId(typeId);
-  return {
-    types: {
-      removed: [normalizedTypeId]
-    }
-  };
-};
-
-//#endregion Type
-
-//#region Design
+// #endregion Design
 
 export const addDesignToKit = (design: Design): KitDiff => ({
   designs: {
@@ -3051,11 +3025,126 @@ export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
   return includedDesigns;
 };
 
-//#endregion Design
+// #endregion Design
 
-//#region Kit
+// #region Kit
 
-//#region DesignDiff
+export const addTypeToKit = (type: Type): KitDiff => ({
+  types: {
+    added: [type]
+  }
+});
+export const setTypeInKit = (type: Type): KitDiff => ({
+  types: {
+    updated: [{
+      id: { name: type.name, variant: type.variant },
+      diff: {
+        name: type.name,
+        description: type.description,
+        icon: type.icon,
+        image: type.image,
+        variant: type.variant,
+        stock: type.stock,
+        virtual: type.virtual,
+        unit: type.unit,
+        created: type.created,
+        updated: type.updated,
+        location: type.location,
+        representations: type.representations,
+        ports: type.ports,
+        authors: type.authors,
+        attributes: type.attributes
+      }
+    }]
+  }
+});
+export const removeTypeFromKit = (typeId: TypeIdLike): KitDiff => { { types: { removed: [typeIdLikeToTypeId(typeId)] } }; };
+
+export const findFileInKit = (kit: Kit, fileId: FileIdLike): File => {
+  const normalizedFileId = fileIdLikeToFileId(fileId);
+  const file = (kit.files || []).find(f => f.path === normalizedFileId.path);
+  if (!file) throw new Error(`File ${normalizedFileId.path} not found in kit`);
+  return file;
+};
+
+export const addFileToKit = (file: File): KitDiff => ({ files: { added: [file] } });
+export const setFileInKit = (file: File): KitDiff => ({ files: { updated: [{ id: { path: file.path }, diff: { ...file } }] } });
+export const removeFileFromKit = (fileId: FileIdLike): KitDiff => { { files: { removed: [fileIdLikeToFileId(fileId)] } }; };
+
+
+export const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignId: DesignId, designPiece: Piece): Design[] => {
+  if (designPiece.type.name !== "design") return [];
+
+  // Parse the current design ID from the piece's type.variant
+  const currentVariant = designPiece.type.variant || "";
+  const parts = currentVariant.split("-");
+  const currentDesignName = parts[0];
+  const currentDesignVariant = parts[1] || "";
+  const currentDesignView = parts[2] || "";
+
+  // Find all designs in the kit that could be replacements
+  const allDesigns = kit.designs || [];
+
+  // For now, return designs with the same name but different variant/view
+  // This is a simplified implementation - in the future we could add more sophisticated
+  // compatibility checking based on piece IDs and port compatibility
+  return allDesigns.filter((design) => {
+    // Don't include the current design
+    if (design.name === currentDesignName && (design.variant || "") === currentDesignVariant && (design.view || "") === currentDesignView) {
+      return false;
+    }
+
+    // For now, allow any design to be a replacement
+    // TODO: Add more sophisticated compatibility checking:
+    // - Same piece IDs
+    // - Compatible outgoing ports
+    return true;
+  });
+};
+
+// Helper function to parse design ID from design piece variant
+export const parseDesignIdFromVariant = (variant: string): DesignId => {
+  const parts = variant.split("-");
+  return {
+    name: parts[0],
+    variant: parts[1] || undefined,
+    view: parts[2] || undefined,
+  };
+};
+
+// File utility functions
+export const createFileFromDataUri = (url: string, dataUri: string): File => {
+  const sizeMatch = dataUri.match(/data:([^;]+)(;base64)?,(.+)/);
+  let size = 0;
+  if (sizeMatch) {
+    const data = sizeMatch[3];
+    if (sizeMatch[2] === ';base64') {
+      size = Math.floor(data.length * 0.75);
+    } else {
+      size = data.length;
+    }
+  }
+
+  // Simple hash calculation (not cryptographically secure, but sufficient for tracking)
+  let hash = 0;
+  for (let i = 0; i < dataUri.length; i++) {
+    const char = dataUri.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+
+  return {
+    path: url,
+    size,
+    hash: hash.toString(36),
+    created: new Date(),
+    updated: new Date(),
+  };
+};
+
+
+
+// #region DesignDiff
 
 export const addPieceToDesignDiff = (designDiff: any, piece: Piece): any => {
   return {
@@ -3295,123 +3384,6 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
   }
 };
 
-//#endregion DesignDiff
+// #endregion DesignDiff
 
-//#endregion CRUDs
-
-//#region Helper Functions
-
-// Helper function to find replaceable designs for design piece
-export const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignId: DesignId, designPiece: Piece): Design[] => {
-  if (designPiece.type.name !== "design") return [];
-
-  // Parse the current design ID from the piece's type.variant
-  const currentVariant = designPiece.type.variant || "";
-  const parts = currentVariant.split("-");
-  const currentDesignName = parts[0];
-  const currentDesignVariant = parts[1] || "";
-  const currentDesignView = parts[2] || "";
-
-  // Find all designs in the kit that could be replacements
-  const allDesigns = kit.designs || [];
-
-  // For now, return designs with the same name but different variant/view
-  // This is a simplified implementation - in the future we could add more sophisticated
-  // compatibility checking based on piece IDs and port compatibility
-  return allDesigns.filter((design) => {
-    // Don't include the current design
-    if (design.name === currentDesignName && (design.variant || "") === currentDesignVariant && (design.view || "") === currentDesignView) {
-      return false;
-    }
-
-    // For now, allow any design to be a replacement
-    // TODO: Add more sophisticated compatibility checking:
-    // - Same piece IDs
-    // - Compatible outgoing ports
-    return true;
-  });
-};
-
-// Helper function to parse design ID from design piece variant
-export const parseDesignIdFromVariant = (variant: string): DesignId => {
-  const parts = variant.split("-");
-  return {
-    name: parts[0],
-    variant: parts[1] || undefined,
-    view: parts[2] || undefined,
-  };
-};
-
-// File utility functions
-export const createFileFromDataUri = (url: string, dataUri: string): File => {
-  const sizeMatch = dataUri.match(/data:([^;]+)(;base64)?,(.+)/);
-  let size = 0;
-  if (sizeMatch) {
-    const data = sizeMatch[3];
-    if (sizeMatch[2] === ';base64') {
-      size = Math.floor(data.length * 0.75);
-    } else {
-      size = data.length;
-    }
-  }
-
-  // Simple hash calculation (not cryptographically secure, but sufficient for tracking)
-  let hash = 0;
-  for (let i = 0; i < dataUri.length; i++) {
-    const char = dataUri.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-
-  return {
-    path: url,
-    size,
-    hash: hash.toString(36),
-    created: new Date(),
-    updated: new Date(),
-  };
-};
-
-export const findFileInKit = (kit: Kit, fileId: FileIdLike): File => {
-  const normalizedFileId = fileIdLikeToFileId(fileId);
-  const file = (kit.files || []).find(f => f.path === normalizedFileId.path);
-  if (!file) throw new Error(`File ${normalizedFileId.path} not found in kit`);
-  return file;
-};
-
-export const addFileToKit = (file: File): KitDiff => ({
-  files: {
-    added: [file]
-  }
-});
-
-export const setFileInKit = (file: File): KitDiff => ({
-  files: {
-    updated: [{
-      id: { path: file.path },
-      diff: {
-        path: file.path,
-        remote: file.remote,
-        size: file.size,
-        hash: file.hash,
-        created: file.created,
-        createdBy: file.createdBy?.email,
-        updated: file.updated,
-        updatedBy: file.updatedBy?.email
-      }
-    }]
-  }
-});
-
-export const removeFileFromKit = (fileId: FileIdLike): KitDiff => {
-  const normalizedFileId = fileIdLikeToFileId(fileId);
-  return {
-    files: {
-      removed: [normalizedFileId]
-    }
-  };
-};
-
-//#endregion Helper Functions
-
-//#endregion
+// #endregion CRUDs
