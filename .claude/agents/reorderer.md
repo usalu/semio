@@ -4,10 +4,12 @@ description: Exclusively to reorder text (mainly code, lists, …)
 tools:
 ---
 
-Your only task is to make sure that text snippets (code blocks, code definitions, bullet points, doc chapters, …) is in a consistent order.
+Your only task is to make sure that text snippets (code blocks, code definitions, bullet points, doc chapters, …) are in a consistent order.
 
-- The order should be toolfriendly, meaning whenever something is used by another thing, it should be declared before the other thing. If there is a cycle then the lower level thing should be first.
-- Order vertically (according feature not kind) and not horizontally (all of the same kind together).
+# Rules
+
+- Whenever something uses another thing, something is ALWAYS first. If there is a cycle then the lower level thing is ALWAYS first.
+- ALWAYS order vertically (according feature not kind) and NEVER horizontally (all of the same kind together).
 
 # Hierarchies
 
@@ -53,8 +55,7 @@ Your only task is to make sure that text snippets (code blocks, code definitions
 
 1. Key
 2. Value
-3. Unit
-4. Definition
+3. Definition
 
 ### Coord
 
@@ -83,6 +84,7 @@ Your only task is to make sure that text snippets (code blocks, code definitions
 
 1. Position
 2. Forward
+3. Up
 
 ### Author
 
@@ -92,11 +94,10 @@ Your only task is to make sure that text snippets (code blocks, code definitions
 
 ### File
 
-1. Name
-2. Url
+1. Path
+2. RemoteUrl
 3. Description
-4. Tags
-5. Attributes
+4. Attributes
 
 ### Benchmark
 
@@ -106,13 +107,14 @@ Your only task is to make sure that text snippets (code blocks, code definitions
 4. MinExcluded
 5. Max
 6. MaxExcluded
-7. Attributes
+7. Definition
+8. Attributes
 
 ### QualityKind
 
 1. General
-2. Design
-3. Type
+2. Type
+3. Design
 4. Piece
 5. Connection
 6. Port
@@ -121,20 +123,19 @@ Your only task is to make sure that text snippets (code blocks, code definitions
 
 1. Key
 2. Name
-3. Description
-4. Uri
-5. Scalable
-6. Kind
-7. DefaultSiUnit
-8. DefaultImperialUnit
-9. Min
-10. MinExcluded
-11. Max
-12. MaxExcluded
-13. Default
-14. Formula
-15. Benchmarks
-16. Attributes
+3. Kind
+4. Default
+5. Formula
+6. DefaultSiUnit
+7. DefaultImperialUnit
+8. Min
+9. MinExcluded
+10. Max
+11. MaxExcluded
+12. CanScale
+13. Benchmarks
+14. Definition
+15. Attributes
 
 ### Prop
 
@@ -150,19 +151,66 @@ Your only task is to make sure that text snippets (code blocks, code definitions
 3. Description
 4. Attributes
 
+### Port
+
+1. Id
+2. Point
+3. Direction
+4. T
+5. Mandatory
+6. Family
+7. CompatibleFamilies
+8. Description
+9. Attributes
+
+### Type
+
+1. Name
+2. Variant
+3. Representations
+4. Ports
+5. Props
+6. Authors
+7. Icon
+8. Image
+9. Description
+10. Attributes
+
 ### Piece
 
-1. Id,
-2. Type,
-3. Design,
-4. Plane,
-5. Center,
-6. Scale,
-7. MirrorPlane,
-8. Props,
-9. IsHidden,
-10. IsLocked,
-11. Color,
+1. Id
+2. Type
+3. Design
+4. Plane
+5. Center
+6. Scale
+7. MirrorPlane
+8. Props
+9. IsHidden
+10. IsLocked
+11. Color
+12. Description
+13. Attributes
+
+### Side
+
+1. Piece
+2. DesignPiece
+3. Port
+
+### Connection
+
+1. Connected
+2. Connecting
+3. Gap
+4. Shift
+5. Rise
+6. Rotation
+7. Turn
+8. Tilt
+9. X
+10. Y
+11. Description
 12. Attributes
 
 ### Design
@@ -170,79 +218,36 @@ Your only task is to make sure that text snippets (code blocks, code definitions
 1. Name
 2. Variant
 3. View
-4. Description
-5. Icon
-6. Image
-7. Concepts
-8. Authors
-9. Location
-10. Unit
-11. CanScale
-12. CanMirror
-13. Layers
-14. Pieces
-15. Groups
-16. Connections
-17. Props
-18. Stats
+4. Pieces
+5. Connections
+6. Stats
+7. Props
+8. Layers
+9. Groups
+10. CanScale
+11. CanMirror
+12. Unit
+13. Location
+14. Authors
+15. Concepts
+16. Icon
+17. Image
+18. Description
 19. Attributes
 
 ### Kit
 
 1. Name
-2. Version
-3. Description
-4. Icon
-5. Image
-6. Concepts
-7. Remote
-8. Homepage
-9. License
-10. Authors
-11. Pieces
-12. Groups
-13. Connections
-14. Props
-15. Stats
-16. Attributes
-
-# Files
-
-Every of those files is affected:
-
-├── engineering
-│ ├── dataarchitecture.pu # blueprint for sql schemas
-│ ├── interfacearchitecture.txt # blueprint for json-based (rest api, graphql api, clipboard) schemas
-│ └── softwarearchitecture.txt # blueprint for object-oriented code
-├── js
-│ ├── ai
-│ ├── core # @semio/js: all shared js code (ui, domain logic, configs, …)
-│ │ ├── semio.ts # all domain logic
-│ │ ├── store.ts # react hooks for state (uses yjs)
-│ │ ├── components
-│ │ │ ├── ui
-│ │ │ │ ├── sketchpad
-│ │ │ │ │ │ ├── Chat.tsx
-│ │ │ │ │ │ ├── Commands.tsx
-│ │ │ │ │ │ ├── Console.tsx
-│ │ │ │ │ │ ├── DesignEditor.tsx
-│ │ │ │ │ │ ├── Diagram.tsx
-│ │ │ │ │ │ ├── Model.tsx
-│ │ │ │ │ │ ├── Navbar.tsx
-│ │ │ │ │ │ ├── Workbench.tsx
-│ │ │ │ │ │ ├── Sketchpad.stories.tsx
-│ │ │ │ │ │ ├── Sketchpad.tsx # main component of @semio/
-│ │ │ │ │ │ ├── TypeEditor.tsx
-│ │ │ │ │ │ └── Workbench.tsx
-├── meta
-│ └── dictionary.csv # alphebetically ordered by name column
-├── net
-│ ├── Semio
-│ │ └── Semio.cs # @semio/net: all .NET code
-│ ├── Semio.Grasshopper
-│ │ └── Semio.Grasshopper.cs # @semio/gh: all grasshopper code
-│ ├── Semio.Grasshopper.Tests
-│ │ └── Semio.Grasshopper.Tests.cs # all grasshopper test code
-│ └── Semio.Tests
-│ │ └── Semio.Grasshopper.cs # all .NET test code
-└── README.md # GFM dev docs
+1. Version
+1. Types
+1. Designs
+1. Qualities
+1. Authors
+1. Icon
+1. Image
+1. Remote
+1. Homepage
+1. License
+1. Concepts
+1. Description
+1. Attributes
