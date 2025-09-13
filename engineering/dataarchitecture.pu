@@ -70,6 +70,7 @@ entity qualities {
     UNIQUE (key, kit_id)
 }
 
+
 entity benchmarks {
     *id : int <<PK,generated>>
     *name : string
@@ -92,9 +93,22 @@ entity props {
     *created_at : datetime
     *updated_at : datetime
     ..
-    *port_id : int <<FK>>
+    representation_id : int <<FK>>
+    port_id : int <<FK>>
+    type_id : int <<FK>>
+    piece_id : int <<FK>>
+    connection_id : int <<FK>>
+    design_id : int <<FK>>
     --
-    UNIQUE (key, port_id)
+    CHECK (( (representation_id IS NOT NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL)
+        OR (representation_id IS NULL AND port_id IS NOT NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL)
+        OR (representation_id IS NULL AND port_id IS NULL AND type_id IS NOT NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL)
+        OR (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NOT NULL AND connection_id IS NULL AND design_id IS NULL)
+        OR (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NOT NULL AND design_id IS NULL)
+        OR (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NOT NULL)
+        OR (representation_id IS NULL AND port_id IS NULL AND type_id IS NULL AND piece_id IS NULL AND connection_id IS NULL AND design_id IS NULL)
+        ))
+    UNIQUE (key, representation_id, port_id, type_id, piece_id, connection_id, design_id)
 }
 
 entity stats {
@@ -148,6 +162,7 @@ entity representations {
     --
     CHECK ((url != '' AND file_id IS NULL) OR (url == '' AND file_id IS NOT NULL))
 }
+
 
 entity planes {
     *id : int <<PK,generated>>
@@ -211,6 +226,7 @@ entity author_artifact {
     --
     CHECK ((type_id IS NOT NULL AND design_id IS NULL) OR
            (type_id IS NULL AND design_id IS NOT NULL))
+    CHECK (rank >= 0)
     UNIQUE (author_id, type_id, design_id)
 }
 
@@ -347,58 +363,56 @@ entity kits {
     CHECK (name != '')
 }
 
-kits ||--o{ types
-kits ||--o{ designs
-kits ||--o{ authors
-kits ||--o{ qualities
-kits ||--o{ attributes
-kits ||--o{ concepts
-kits ||--o{ files
+author_artifact -- authors : "links" >
+author_artifact -- types : "references" >
+author_artifact -- designs : "references" >
 
-types ||--o{ locations
-designs ||--o{ locations
+representations ||--o{ tags : "has" >
+representations ||--o{ attributes : "has" >
+representations -- files : "might reference" >
 
-designs ||--o{ layers
-designs ||--o{ pieces
-designs ||--o{ groups
-designs ||--o{ connections
-designs ||--o{ stats
-designs ||--o{ attributes
-designs ||--o{ concepts
-designs -- authors : "has" >
+ports ||--o{ compatible_families : "has" >
+ports ||--o{ attributes : "has" >
+ports ||--o{ props : "has" >
 
-group_pieces -- groups
-group_pieces -- pieces
-
-types ||--o{ representations
-types ||--o{ ports
-types ||--o{ authors
-types ||--o{ attributes
-types ||--o{ concepts
+types ||--o{ locations : "has" >
+types ||--o{ representations : "has" >
+types ||--o{ ports : "has" >
+types ||--o{ authors : "has" >
+types ||--o{ attributes : "has" >
+types ||--o{ concepts : "has" >
 types -- authors : "has" >
 
-pieces ||--o{ planes
-pieces ||--o{ attributes
+pieces ||--o{ planes : "has" >
+pieces ||--o{ attributes : "has" >
 
-connections ||--o{ attributes
+group_pieces -- pieces : "links" >
+group_pieces -- groups : "references" >
+group_pieces -- pieces : "references" >
 
-representations ||--o{ tags
-representations ||--o{ attributes
-representations -- files : "refers to" >
-
-ports ||--o{ compatible_families
-ports ||--o{ attributes
-ports ||--o{ props
-
-qualities ||--o{ benchmarks
-
+connections ||--o{ attributes : "has" >
 connections -- pieces : "connected" >
 connections -- pieces : "connecting" >
 connections -- ports : "connected" >
 connections -- ports : "connecting" >
 
-authors -- author_artifact
-author_artifact -- types
-author_artifact -- designs
+designs ||--o{ pieces
+designs ||--o{ connections
+designs ||--o{ stats
+designs ||--o{ props
+designs ||--o{ layers
+designs ||--o{ groups
+designs ||--o{ locations
+designs ||--o{ concepts
+designs ||--o{ attributes
+designs -- authors : "has" >
+
+kits ||--o{ types
+kits ||--o{ designs
+kits ||--o{ qualities
+kits ||--o{ files
+kits ||--o{ authors
+kits ||--o{ concepts
+kits ||--o{ attributes
 
 @enduml

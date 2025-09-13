@@ -57,6 +57,8 @@ export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vec
 
 // #region Ids
 
+export const DesignIdSchema = z.object({ name: z.string(), variant: z.string().optional(), view: z.string().optional() });
+
 // #endregion Ids
 
 const DateProperty = () => z.string().transform((val) => new Date(val)).or(z.date()).optional()
@@ -80,6 +82,22 @@ export type AttributeIdLike = z.infer<typeof AttributeIdLikeSchema>;
 export const attributeIdLikeToAttributeId = (attributeId: AttributeIdLike): AttributeId => {
   if (typeof attributeId === "string") return { key: attributeId };
   return { key: attributeId.key };
+};
+
+export const setAttribute = <T extends { attributes?: Attribute[] }>(entity: T, attribute: Attribute): T => ({
+  ...entity,
+  attributes: [
+    ...(entity.attributes || []).filter(a => a.key !== attribute.key),
+    attribute
+  ]
+});
+
+export const setAttributes = <T extends { attributes?: Attribute[] }>(entity: T, attributes: Attribute[]): T => {
+  let result = entity;
+  for (const attribute of attributes) {
+    result = setAttribute(result, attribute);
+  }
+  return result;
 };
 export const AttributeDiffSchema = AttributeSchema.partial();
 export type AttributeDiff = z.infer<typeof AttributeDiffSchema>;
@@ -250,6 +268,7 @@ export const CameraSchema = z.object({
   forward: VectorSchema,
   up: VectorSchema,
 });
+export type Camera = z.infer<typeof CameraSchema>;
 export const serializeCamera = (camera: Camera): string => JSON.stringify(CameraSchema.parse(camera));
 export const deserializeCamera = (json: string): Camera => CameraSchema.parse(JSON.parse(json));
 
@@ -362,6 +381,7 @@ export const FilesDiffSchema = z.object({
   updated: z.array(z.object({ id: FileIdSchema, diff: FileDiffSchema })).optional(),
   added: z.array(FileSchema).optional(),
 });
+export type FilesDiff = z.infer<typeof FilesDiffSchema>;
 export const serializeFile = (file: File): string => JSON.stringify(FileSchema.parse(file));
 export const deserializeFile = (json: string): File => FileSchema.parse(JSON.parse(json));
 
@@ -412,6 +432,17 @@ export const QualitySchema = z.object({
   key: z.string(),
   name: z.string(),
   description: z.string().optional(),
+  uri: z.string().optional(),
+  kind: z.number().optional(),
+  canScale: z.boolean().optional(),
+  defaultSiUnit: z.string().optional(),
+  defaultImperialUnit: z.string().optional(),
+  min: z.number().optional(),
+  isMinExcluded: z.boolean().optional(),
+  max: z.number().optional(),
+  isMaxExcluded: z.boolean().optional(),
+  defaultValue: z.number().optional(),
+  formula: z.string().optional(),
   icon: z.string().optional(),
   image: z.string().optional(),
   variant: z.string().optional(),
@@ -485,6 +516,8 @@ export const representationIdToString = (representation: RepresentationId): stri
 export const RepresentationIdLikeSchema = z.union([RepresentationSchema, RepresentationIdSchema, z.array(z.string()), z.string(), z.null(), z.undefined()]);
 export type RepresentationIdLike = z.infer<typeof RepresentationIdLikeSchema>;
 export const representationIdLikeToRepresentationId = (representation: RepresentationIdLike): RepresentationId => {
+  if (representation === null || representation === undefined) return { tags: [] };
+  if (Array.isArray(representation)) return { tags: representation };
   if (typeof representation === "string") return { tags: representation.split(",") };
   return { tags: representation.tags };
 };
@@ -711,7 +744,7 @@ export const unifyPortFamiliesAndCompatibleFamiliesForTypes = (types: Type[]): T
   }
 
   // Update all types with unified port families
-  const updated: { id: TypeId; diff: TypeDiff }[] = [];
+  const updated: { id_: TypeId; diff: TypeDiff }[] = [];
 
   for (const type of types) {
     const updatedPorts = type.ports?.map((port) => {
@@ -784,6 +817,12 @@ export const TypeSchema = z.object({
   representations: z.array(RepresentationSchema).optional(),
   ports: z.array(PortSchema).optional(),
   props: z.array(PropSchema).optional(),
+  stock: z.number().optional(),
+  virtual: z.boolean().optional(),
+  unit: z.string().optional(),
+  created: z.string().optional(),
+  updated: z.string().optional(),
+  location: LocationSchema.optional(),
   authors: z.array(AuthorIdSchema).optional(),
   icon: z.string().optional(),
   image: z.string().optional(),
@@ -792,6 +831,7 @@ export const TypeSchema = z.object({
 });
 export type Type = z.infer<typeof TypeSchema>;
 export const TypeIdSchema = TypeSchema.pick({ name: true, variant: true });
+export type TypeId = z.infer<typeof TypeIdSchema>;
 export const typeIdToString = (type: TypeId): string => type.name;
 export const TypeIdLikeSchema = z.union([TypeSchema, TypeIdSchema, z.string()]);
 export type TypeIdLike = z.infer<typeof TypeIdLikeSchema>;
@@ -890,6 +930,7 @@ export const TypesDiffSchema = z.object({
   updated: z.array(z.object({ id: TypeIdSchema, diff: TypeDiffSchema })).optional(),
   added: z.array(TypeSchema).optional(),
 });
+export type TypesDiff = z.infer<typeof TypesDiffSchema>;
 export const serializeType = (type: Type): string => JSON.stringify(TypeSchema.parse(type));
 export const deserializeType = (json: string): Type => TypeSchema.parse(JSON.parse(json));
 
@@ -922,43 +963,11 @@ export const deserializeLayer = (json: string): Layer => LayerSchema.parse(JSON.
 
 // #endregion Layer
 
-// #region Group
-// https://github.com/usalu/semio#-group-
-
-export const GroupSchema = z.object({
-  pieces: z.array(PieceIdSchema),
-  color: z.string().optional(),
-  name: z.string().optional(),
-  description: z.string().optional(),
-  attributes: z.array(AttributeSchema).optional()
-});
-export type Group = z.infer<typeof GroupSchema>;
-export const GroupIdSchema = GroupSchema.pick({ pieces: true });
-export type GroupId = z.infer<typeof GroupIdSchema>;
-export const groupIdToString = (group: GroupId): string => group.pieces.join(",");
-export const GroupIdLikeSchema = z.union([GroupSchema, GroupIdSchema, z.array(PieceIdSchema), z.string()]);
-export type GroupIdLike = z.infer<typeof GroupIdLikeSchema>;
-export const groupIdLikeToGroupId = (group: GroupIdLike): GroupId => {
-  if (typeof group === "string") return { pieces: group.split(",") };
-  return { pieces: group.pieces };
-};
-export const GroupDiffSchema = GroupSchema.partial();
-export type GroupDiff = z.infer<typeof GroupDiffSchema>;
-export const GroupsDiffSchema = z.object({
-  removed: z.array(GroupIdSchema).optional(),
-  updated: z.array(z.object({ id: GroupIdSchema, diff: GroupDiffSchema })).optional(),
-  added: z.array(GroupSchema).optional(),
-});
-export const serializeGroup = (group: Group): string => JSON.stringify(GroupSchema.parse(group));
-export const deserializeGroup = (json: string): Group => GroupSchema.parse(JSON.parse(json));
-
-// #endregion Group
-
 // #region Piece
 // https://github.com/usalu/semio#-piece-
 
 export const PieceSchema = z.object({
-  id: z.string(),
+  id_: z.string(),
   type: TypeIdSchema.optional(),
   design: DesignIdSchema.optional(),
   plane: PlaneSchema.optional(),
@@ -972,13 +981,13 @@ export const PieceSchema = z.object({
   attributes: z.array(AttributeSchema).optional()
 });
 export type Piece = z.infer<typeof PieceSchema>;
-export const PieceIdSchema = PieceSchema.pick({ id: true });
+export const PieceIdSchema = PieceSchema.pick({ id_: true });
 export type PieceId = z.infer<typeof PieceIdSchema>;
 export const PieceIdLikeSchema = z.union([PieceSchema, PieceIdSchema, z.string()]);
 export type PieceIdLike = z.infer<typeof PieceIdLikeSchema>;
 export const pieceIdLikeToPieceId = (piece: PieceIdLike): PieceId => {
-  if (typeof piece === "string") return { id: piece };
-  return { id: piece.id };
+  if (typeof piece === "string") return { id_: piece };
+  return { id_: piece.id_ };
 };
 export const PieceDiffSchema = PieceSchema.partial();
 export type PieceDiff = z.infer<typeof PieceDiffSchema>;
@@ -1030,6 +1039,7 @@ export const PiecesDiffSchema = z.object({
   updated: z.array(z.object({ id: PieceIdSchema, diff: PieceDiffSchema })).optional(),
   added: z.array(PieceSchema).optional(),
 });
+export type PiecesDiff = z.infer<typeof PiecesDiffSchema>;
 export const serializePiece = (piece: Piece): string => JSON.stringify(PieceSchema.parse(piece));
 export const deserializePiece = (json: string): Piece => PieceSchema.parse(JSON.parse(json));
 
@@ -1349,6 +1359,39 @@ export const findPiece = (pieces: Piece[], pieceId: PieceIdLike): Piece => {
 
 // #endregion Piece
 
+// #region Group
+// https://github.com/usalu/semio#-group-
+
+export const GroupSchema = z.object({
+  pieces: z.array(PieceIdSchema),
+  color: z.string().optional(),
+  name: z.string().optional(),
+  description: z.string().optional(),
+  attributes: z.array(AttributeSchema).optional()
+});
+export type Group = z.infer<typeof GroupSchema>;
+export const GroupIdSchema = GroupSchema.pick({ pieces: true });
+export type GroupId = z.infer<typeof GroupIdSchema>;
+export const groupIdToString = (group: GroupId): string => group.pieces.join(",");
+export const GroupIdLikeSchema = z.union([GroupSchema, GroupIdSchema, z.array(PieceIdSchema), z.string()]);
+export type GroupIdLike = z.infer<typeof GroupIdLikeSchema>;
+export const groupIdLikeToGroupId = (group: GroupIdLike): GroupId => {
+  if (typeof group === "string") return { pieces: group.split(",").map(id => ({ id_: id })) };
+  if (Array.isArray(group)) return { pieces: group };
+  return { pieces: group.pieces };
+};
+export const GroupDiffSchema = GroupSchema.partial();
+export type GroupDiff = z.infer<typeof GroupDiffSchema>;
+export const GroupsDiffSchema = z.object({
+  removed: z.array(GroupIdSchema).optional(),
+  updated: z.array(z.object({ id: GroupIdSchema, diff: GroupDiffSchema })).optional(),
+  added: z.array(GroupSchema).optional(),
+});
+export const serializeGroup = (group: Group): string => JSON.stringify(GroupSchema.parse(group));
+export const deserializeGroup = (json: string): Group => GroupSchema.parse(JSON.parse(json));
+
+// #endregion Group
+
 // #region Side
 // https://github.com/usalu/semio#-side-
 
@@ -1357,12 +1400,14 @@ export const SideSchema = z.object({
   designPiece: PieceIdSchema.optional(),
   port: PortIdSchema,
 });
+export type Side = z.infer<typeof SideSchema>;
 export const SideIdSchema = SideSchema.pick({ piece: true, designPiece: true });
 export type SideId = z.infer<typeof SideIdSchema>;
 export const SideIdLikeSchema = z.union([SideSchema, SideIdSchema, z.string(), z.tuple([PieceIdSchema, PortIdSchema])]);
 export type SideIdLike = z.infer<typeof SideIdLikeSchema>;
 export const sideIdLikeToSideId = (side: SideIdLike): SideId => {
-  if (typeof side === "string") return { piece: side.split(":")[0], designPiece: side.split(":")[1] };
+  if (typeof side === "string") return { piece: { id_: side.split(":")[0] }, designPiece: side.split(":")[1] ? { id_: side.split(":")[1] } : undefined };
+  if (Array.isArray(side)) return { piece: side[0], designPiece: undefined };
   return { piece: side.piece, designPiece: side.designPiece };
 };
 export const SideDiffSchema = SideSchema.partial();
@@ -1372,6 +1417,7 @@ export const SidesDiffSchema = z.object({
   updated: z.array(z.object({ id: SideIdSchema, diff: SideDiffSchema })).optional(),
   added: z.array(SideSchema).optional(),
 });
+export type SidesDiff = z.infer<typeof SidesDiffSchema>;
 export const serializeSide = (side: Side): string => JSON.stringify(SideSchema.parse(side));
 export const deserializeSide = (json: string): Side => SideSchema.parse(JSON.parse(json));
 
@@ -1381,22 +1427,43 @@ export const deserializeSide = (json: string): Side => SideSchema.parse(JSON.par
 
 // https://github.com/usalu/semio#-connection-
 export const ConnectionSchema = z.object({
-  id: z.string(),
-  fromSideId: SideIdSchema,
-  toSideId: SideIdSchema,
-  name: z.string().optional(),
+  connected: SideSchema,
+  connecting: SideSchema,
+  gap: z.number().optional(),
+  shift: z.number().optional(),
+  rise: z.number().optional(),
+  rotation: z.number().optional(),
+  turn: z.number().optional(),
+  tilt: z.number().optional(),
+  x: z.number().optional(),
+  y: z.number().optional(),
   description: z.string().optional(),
   attributes: z.array(AttributeSchema).optional()
 });
 export type Connection = z.infer<typeof ConnectionSchema>;
-export const ConnectionIdSchema = ConnectionSchema.pick({ id: true });
+export const ConnectionIdSchema = z.object({
+  connected: z.object({ piece: PieceIdSchema }),
+  connecting: z.object({ piece: PieceIdSchema })
+});
 export type ConnectionId = z.infer<typeof ConnectionIdSchema>;
-export const connectionIdToString = (connection: ConnectionId): string => connection.id;
+export const connectionIdToString = (connection: ConnectionId): string => `${connection.connected.piece.id_}-${connection.connecting.piece.id_}`;
 export const ConnectionIdLikeSchema = z.union([ConnectionSchema, ConnectionIdSchema, z.string()]);
 export type ConnectionIdLike = z.infer<typeof ConnectionIdLikeSchema>;
 export const connectionIdLikeToConnectionId = (connection: ConnectionIdLike): ConnectionId => {
-  if (typeof connection === "string") return { id: connection };
-  return { id: connection.id };
+  if (typeof connection === "string") {
+    const parts = connection.split("-");
+    return {
+      connected: { piece: { id_: parts[0] } },
+      connecting: { piece: { id_: parts[1] } }
+    };
+  }
+  if ('connected' in connection) {
+    return {
+      connected: { piece: connection.connected.piece },
+      connecting: { piece: connection.connecting.piece }
+    };
+  }
+  return connection as ConnectionId;
 };
 export const ConnectionDiffSchema = ConnectionSchema.partial();
 export type ConnectionDiff = z.infer<typeof ConnectionDiffSchema>;
@@ -1447,16 +1514,18 @@ export const applyConnectionDiff = (base: Connection, diff: ConnectionDiff): Con
 });
 
 export const mergeConnectionDiff = (diff1: ConnectionDiff, diff2: ConnectionDiff): ConnectionDiff => ({
-  connected: {
-    piece: diff2.connected?.piece ?? diff1.connected?.piece,
-    port: diff2.connected?.port ?? diff1.connected?.port,
+  connected: (diff2.connected?.piece || diff2.connected?.port || diff2.connected?.designPiece ||
+    diff1.connected?.piece || diff1.connected?.port || diff1.connected?.designPiece) ? {
+    piece: diff2.connected?.piece ?? diff1.connected?.piece ?? { id_: "" },
+    port: diff2.connected?.port ?? diff1.connected?.port ?? {},
     designPiece: diff2.connected?.designPiece ?? diff1.connected?.designPiece
-  },
-  connecting: {
-    piece: diff2.connecting?.piece ?? diff1.connecting?.piece,
-    port: diff2.connecting?.port ?? diff1.connecting?.port,
+  } : undefined,
+  connecting: (diff2.connecting?.piece || diff2.connecting?.port || diff2.connecting?.designPiece ||
+    diff1.connecting?.piece || diff1.connecting?.port || diff1.connecting?.designPiece) ? {
+    piece: diff2.connecting?.piece ?? diff1.connecting?.piece ?? { id_: "" },
+    port: diff2.connecting?.port ?? diff1.connecting?.port ?? {},
     designPiece: diff2.connecting?.designPiece ?? diff1.connecting?.designPiece
-  },
+  } : undefined,
   description: diff2.description ?? diff1.description,
   gap: diff2.gap ?? diff1.gap,
   shift: diff2.shift ?? diff1.shift,
@@ -1492,6 +1561,7 @@ export const ConnectionsDiffSchema = z.object({
   updated: z.array(z.object({ id: ConnectionIdSchema, diff: ConnectionDiffSchema })).optional(),
   added: z.array(ConnectionSchema).optional(),
 });
+export type ConnectionsDiff = z.infer<typeof ConnectionsDiffSchema>;
 export const serializeConnection = (connection: Connection): string => JSON.stringify(ConnectionSchema.parse(connection));
 export const deserializeConnection = (json: string): Connection => ConnectionSchema.parse(JSON.parse(json));
 
@@ -1525,6 +1595,7 @@ export const findPieceConnections = (connections: Connection[], pieceId: PieceId
 export const findPortForPieceInConnection = (type: Type, connection: Connection, pieceId: PieceIdLike): Port => {
   const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
   const portId = connection.connected.piece.id_ === normalizedPieceId.id_ ? connection.connected.port.id_ : connection.connecting.port.id_;
+  if (!portId) throw new Error('Port ID is required');
   return findPortInType(type, portId);
 };
 
@@ -1591,7 +1662,6 @@ export const DesignSchema = z.object({
   updated: DateProperty(),
 });
 export type Design = z.infer<typeof DesignSchema>;
-export const DesignIdSchema = DesignSchema.pick({ name: true, variant: true, view: true });
 export type DesignId = z.infer<typeof DesignIdSchema>;
 export const designIdToString = (design: DesignId): string => design.name;
 export const DesignIdLikeSchema = z.union([DesignSchema, DesignIdSchema, z.string()]);
@@ -1605,7 +1675,10 @@ export const DesignShallowSchema = DesignSchema.overwrite({
   connections: z.array(ConnectionIdSchema).optional(),
   stats: z.array(StatIdSchema).optional(),
 });
-export const DesignDiffSchema = DesignSchema.partial();
+export const DesignDiffSchema = DesignSchema.partial().overwrite({
+  pieces: PiecesDiffSchema.optional(),
+  connections: ConnectionsDiffSchema.optional(),
+});
 export type DesignDiff = z.infer<typeof DesignDiffSchema>;
 export const getDesignDiff = (before: Design, after: Design): DesignDiff => {
   const diff: any = {};
@@ -1630,7 +1703,10 @@ export const getDesignDiff = (before: Design, after: Design): DesignDiff => {
     return bp && JSON.stringify(bp) !== JSON.stringify(ap);
   }).map(ap => {
     const bp = beforePieces.find(bp => bp.id_ === ap.id_)!;
-    return getPieceDiff(bp, ap);
+    return {
+      id: { id_: ap.id_ },
+      diff: getPieceDiff(bp, ap)
+    };
   });
 
   if (removedPieces.length > 0) piecesDiff.removed = removedPieces.map(p => ({ id_: p.id_ }));
@@ -1663,7 +1739,10 @@ export const getDesignDiff = (before: Design, after: Design): DesignDiff => {
       bc.connected.piece.id_ === ac.connected.piece.id_ &&
       bc.connecting.piece.id_ === ac.connecting.piece.id_
     )!;
-    return getConnectionDiff(bc, ac);
+    return {
+      id: { connected: { piece: { id_: ac.connected.piece.id_ } }, connecting: { piece: { id_: ac.connecting.piece.id_ } } },
+      diff: getConnectionDiff(bc, ac)
+    };
   });
 
   if (removedConnections.length > 0) connectionsDiff.removed = removedConnections.map(c => ({
@@ -1719,7 +1798,7 @@ export const inverseDesignDiff = (original: Design, appliedDiff: DesignDiff): De
       piecesDiff.updated = appliedDiff.pieces.updated.map(updatedPiece => {
         const originalPiece = originalPieces.find(p => p.id_ === updatedPiece.id.id_)!;
         return {
-          id: updatedPiece.id,
+          id: updatedPiece.id_,
           diff: inversePieceDiff(originalPiece, updatedPiece.diff)
         };
       });
@@ -1753,7 +1832,7 @@ export const inverseDesignDiff = (original: Design, appliedDiff: DesignDiff): De
           c.connecting.piece.id_ === updatedConnection.id.connecting.piece.id_
         )!;
         return {
-          id: updatedConnection.id,
+          id: updatedConnection.id_,
           diff: inverseConnectionDiff(originalConnection, updatedConnection.diff)
         };
       });
@@ -1770,6 +1849,7 @@ export const DesignsDiffSchema = z.object({
   updated: z.array(z.object({ id: DesignIdSchema, diff: DesignDiffSchema })).optional(),
   added: z.array(DesignSchema).optional(),
 });
+export type DesignsDiff = z.infer<typeof DesignsDiffSchema>;
 export const serializeDesign = (design: Design): string => JSON.stringify(DesignSchema.parse(design));
 export const deserializeDesign = (json: string): Design => DesignSchema.parse(JSON.parse(json));
 
@@ -1784,7 +1864,7 @@ export const setPieceInDesign = (piece: Piece): DesignDiff => ({
     updated: [{
       id: { id_: piece.id_ },
       diff: {
-        id_: piece.id_,
+        id: piece.id_,
         description: piece.description,
         type: piece.type,
         plane: piece.plane,
@@ -1834,7 +1914,7 @@ export const setPiecesInDesign = (pieces: Piece[]): DesignDiff => ({
     updated: pieces.map(piece => ({
       id: { id_: piece.id_ },
       diff: {
-        id_: piece.id_,
+        id: piece.id_,
         description: piece.description,
         type: piece.type,
         plane: piece.plane,
@@ -2096,7 +2176,7 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): DesignDiff => {
   const cy = cytoscape({
     elements: {
       nodes: flatDesign.pieces!.map((piece) => ({
-        data: { id: piece.id_, label: piece.id_ },
+        data: { id_: piece.id_, label: piece.id_ },
       })),
       edges: flatDesign.connections?.map((connection, index) => {
         const sourceId = connection.connected.piece.id_;
@@ -2239,7 +2319,7 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): DesignDiff => {
       id: { id_: flatPiece.id_ },
       diff: pieceDiff
     };
-  }).filter(update => update !== null) as Array<{ id: PieceId; diff: PieceDiff }>;
+  }).filter(update => update !== null) as Array<{ id_: PieceId; diff: PieceDiff }>;
 
   const removedConnections = expandedDesign.connections?.map(c => ({
     connected: { piece: { id_: c.connected.piece.id_ } },
@@ -2249,11 +2329,11 @@ export const flattenDesign = (kit: Kit, designId: DesignIdLike): DesignDiff => {
   return {
     pieces: updatedPieces.length > 0 ? { updated: updatedPieces } : undefined,
     connections: removedConnections.length > 0 ? { removed: removedConnections } : undefined
-  };
+  } as DesignDiff;
 };
 
 export type IncludedDesignInfo = {
-  id: string;
+  id_: string;
   designId: DesignId;
   type: "connected" | "fixed";
   center?: Coord;
@@ -2606,7 +2686,7 @@ export const inverseKitDiff = (original: Kit, appliedDiff: KitDiff): KitDiff => 
       typesDiff.updated = appliedDiff.types.updated.map(updatedType => {
         const originalType = originalTypes.find(t => t.name === updatedType.id.name && t.variant === updatedType.id.variant)!;
         return {
-          id: updatedType.id,
+          id: updatedType.id_,
           diff: inverseTypeDiff(originalType, updatedType.diff)
         };
       });
@@ -2631,7 +2711,7 @@ export const inverseKitDiff = (original: Kit, appliedDiff: KitDiff): KitDiff => 
       designsDiff.updated = appliedDiff.designs.updated.map(updatedDesign => {
         const originalDesign = originalDesigns.find(d => d.name === updatedDesign.id.name && d.variant === updatedDesign.id.variant && d.view === updatedDesign.id.view)!;
         return {
-          id: updatedDesign.id,
+          id: updatedDesign.id_,
           diff: inverseDesignDiff(originalDesign, updatedDesign.diff)
         };
       });
@@ -2656,7 +2736,7 @@ export const inverseKitDiff = (original: Kit, appliedDiff: KitDiff): KitDiff => 
       filesDiff.updated = appliedDiff.files.updated.map(updatedFile => {
         const originalFile = originalFiles.find(f => f.path === updatedFile.id.path)!;
         return {
-          id: updatedFile.id,
+          id: updatedFile.id_,
           diff: inverseFileDiff(originalFile, updatedFile.diff)
         };
       });
@@ -2783,7 +2863,7 @@ export const findFileInKit = (kit: Kit, fileId: FileIdLike): File => {
 };
 
 export const addFileToKit = (file: File): KitDiff => ({ files: { added: [file] } });
-export const setFileInKit = (file: File): KitDiff => ({ files: { updated: [{ id: { path: file.path }, diff: { ...file } }] } });
+export const setFileInKit = (file: File): KitDiff => ({ files: { updated: [{ id_: { path: file.path }, diff: { ...file } }] } });
 export const removeFileFromKit = (fileId: FileIdLike): KitDiff => { { files: { removed: [fileIdLikeToFileId(fileId)] } }; };
 
 export const setAttributeInKit = (kitId: KitIdLike, attribute: Attribute): KitDiff => ({
@@ -3031,7 +3111,7 @@ const getColorForText = (text?: string): string => {
 };
 
 export const colorPortsForTypes = (types: Type[]): TypesDiff => {
-  const updated: { id: TypeId; diff: TypeDiff }[] = [];
+  const updated: { id_: TypeId; diff: TypeDiff }[] = [];
 
   for (const type of types) {
     const coloredPorts: Port[] = [];
@@ -3107,8 +3187,12 @@ export const addPieceToDesignDiff = (designDiff: any, piece: Piece): any => {
     },
   };
 };
-export const setPieceInDesignDiff = (designDiff: any, pieceDiff: PieceDiff): any => {
-  const existingIndex = (designDiff.pieces?.updated || []).findIndex((p: PieceDiff) => p.id_ === pieceDiff.id_);
+export const setPieceInDesignDiff = (designDiff: any, pieceDiff: { id_: PieceId, diff: PieceDiff }): any => {
+  const existingIndex = (designDiff.pieces?.updated || []).findIndex((p: { id_: PieceId, diff: PieceDiff }) => {
+    const pId = typeof p.id_ === 'string' ? p.id_ : p.id.id_;
+    const targetId = typeof pieceDiff.id_ === 'string' ? pieceDiff.id_ : pieceDiff.id.id_;
+    return pId === targetId;
+  });
   const updated = [...(designDiff.pieces?.updated || [])];
   if (existingIndex >= 0) {
     updated[existingIndex] = pieceDiff;
@@ -3136,10 +3220,14 @@ export const addPiecesToDesignDiff = (designDiff: any, pieces: Piece[]): any => 
     },
   };
 };
-export const setPiecesInDesignDiff = (designDiff: any, pieceDiffs: PieceDiff[]): any => {
+export const setPiecesInDesignDiff = (designDiff: any, pieceDiffs: { id_: PieceId, diff: PieceDiff }[]): any => {
   const updated = [...(designDiff.pieces?.updated || [])];
-  pieceDiffs.forEach((pieceDiff: PieceDiff) => {
-    const existingIndex = updated.findIndex((p: PieceDiff) => p.id_ === pieceDiff.id_);
+  pieceDiffs.forEach((pieceDiff: { id_: PieceId, diff: PieceDiff }) => {
+    const existingIndex = updated.findIndex((p: { id_: PieceId, diff: PieceDiff }) => {
+      const pId = typeof p.id_ === 'string' ? p.id_ : p.id.id_;
+      const targetId = typeof pieceDiff.id_ === 'string' ? pieceDiff.id_ : pieceDiff.id.id_;
+      return pId === targetId;
+    });
     if (existingIndex >= 0) {
       updated[existingIndex] = pieceDiff;
     } else {
@@ -3223,8 +3311,8 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
     const effectivePieces: Piece[] = base.pieces
       ? base.pieces
         .map((p: Piece) => {
-          const pd = diff.pieces?.updated?.find((up) => up.id.id_ === p.id_);
-          const isRemoved = diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_);
+          const pd = diff.pieces?.updated?.find((up: any) => up.id.id_ === p.id_);
+          const isRemoved = diff.pieces?.removed?.some((rp: PieceId) => (typeof rp === 'string' ? rp : rp.id_) === p.id_);
           const baseWithUpdate = pd ? { ...p, ...pd.diff } : p;
           const diffStatus = isRemoved ? DiffStatus.Removed : pd ? DiffStatus.Modified : DiffStatus.Unchanged;
           return setAttribute(baseWithUpdate, {
@@ -3250,7 +3338,7 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean
               ud.id.connected.piece.id_ === c.connected.piece.id_ &&
               ud.id.connecting.piece.id_ === c.connecting.piece.id_
           );
-          const isRemoved = diff.connections?.removed?.some((rc: ConnectionId) => rc.connected.piece.id_ === c.connected.piece.id_ && rc.connecting.piece.id_ === c.connecting.piece.id_);
+          const isRemoved = diff.connections?.removed?.some((rc: ConnectionId) => (typeof rc.connected.piece === 'string' ? rc.connected.piece : rc.connected.piece.id_) === c.connected.piece.id_ && (typeof rc.connecting.piece === 'string' ? rc.connecting.piece : rc.connecting.piece.id_) === c.connecting.piece.id_);
           const baseWithUpdate = cd
             ? {
               ...c,
