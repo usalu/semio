@@ -9,44 +9,202 @@ Your only task is to make sure that text snippets (code blocks, code definitions
 - The order should be toolfriendly, meaning whenever something is used by another thing, it should be declared before the other thing. If there is a cycle then the lower level thing should be first.
 - Order vertically (according feature not kind) and not horizontally (all of the same kind together).
 
-First hierarchy:
+# Hierarchies
 
-1. Coord
-1. Point
-1. Vector
-1. Plane
-1. Camera
+## 1. Models
+
 1. Attribute
-1. Author
-1. File
-1. Benchmark
-1. Quality
-1. Prop
-1. Representation
-1. Port
-1. Type
-1. Piece
-1. Side
-1. Connection
-1. Stat
-1. Design
-1. Kit
+2. Coord
+3. Point
+4. Vector
+5. Plane
+6. Camera
+7. Author
+8. File
+9. Benchmark
+10. QualityKind
+11. Quality
+12. Prop
+13. Representation
+14. Port
+15. Type
+16. Piece
+17. Side
+18. Connection
+19. Stat
+20. Design
+21. Kit
 
-Second hierarchy:
+## 2. Classes | Types
 
-1. Id
-1. Input
-1. Output
-1. Diff
-1. Diffs
-1. Context
-1. Prediction
 1. Model
+2. Id
+3. Shallow
+4. Diff
+5. Diffs
+6. Input
+7. Output
+8. Context
+9. Prediction
 
-1. Representation Editor
-1. Type Editor
-1. Design Editor
-1. Sketchpad
+## 3. Properties
+
+### Attribute
+
+1. Key
+2. Value
+3. Unit
+4. Definition
+
+### Coord
+
+1. X
+2. Y
+
+### Point
+
+1. X
+2. Y
+3. Z
+
+### Vector
+
+1. X
+2. Y
+3. Z
+
+### Plane
+
+1. Origin
+2. XAxis
+3. YAxis
+
+### Camera
+
+1. Position
+2. Forward
+
+### Author
+
+1. Name
+2. Email
+3. Attributes
+
+### File
+
+1. Name
+2. Url
+3. Description
+4. Tags
+5. Attributes
+
+### Benchmark
+
+1. Name
+2. Icon
+3. Min
+4. MinExcluded
+5. Max
+6. MaxExcluded
+7. Attributes
+
+### QualityKind
+
+1. General
+2. Design
+3. Type
+4. Piece
+5. Connection
+6. Port
+
+### Quality
+
+1. Key
+2. Name
+3. Description
+4. Uri
+5. Scalable
+6. Kind
+7. DefaultSiUnit
+8. DefaultImperialUnit
+9. Min
+10. MinExcluded
+11. Max
+12. MaxExcluded
+13. Default
+14. Formula
+15. Benchmarks
+16. Attributes
+
+### Prop
+
+1. Key
+2. Value
+3. Unit
+4. Attributes
+
+### Representation
+
+1. Tags
+2. Url
+3. Description
+4. Attributes
+
+### Piece
+
+1. Id,
+2. Type,
+3. Design,
+4. Plane,
+5. Center,
+6. Scale,
+7. MirrorPlane,
+8. Props,
+9. IsHidden,
+10. IsLocked,
+11. Color,
+12. Attributes
+
+### Design
+
+1. Name
+2. Variant
+3. View
+4. Description
+5. Icon
+6. Image
+7. Concepts
+8. Authors
+9. Location
+10. Unit
+11. CanScale
+12. CanMirror
+13. Layers
+14. Pieces
+15. Groups
+16. Connections
+17. Props
+18. Stats
+19. Attributes
+
+### Kit
+
+1. Name
+2. Version
+3. Description
+4. Icon
+5. Image
+6. Concepts
+7. Remote
+8. Homepage
+9. License
+10. Authors
+11. Pieces
+12. Groups
+13. Connections
+14. Props
+15. Stats
+16. Attributes
 
 # Files
 

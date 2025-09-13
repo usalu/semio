@@ -1,26 +1,29 @@
 @startuml "software architecture"
 skinparam linetype ortho
 
+class Base {
+  Validate(): bool,List[str]
+}
 
 interface Id {
 
 }
+Id -|> Base
 
 interface Diff {
   Merge(Diff other): Diff
 }
+Diff -|> Base
 
 interface Model {
   ApplyDiff(Diff diff): Model
   InversedDiff(Diff diff): Diff
 }
+Model -|> Base
 
-interface Validator {
-  Validate(Model model): ValidationResult
-}
+' #region Kit
 
 class Kit {
-  uri: str
   name: str
   description: str
   icon: str
@@ -30,33 +33,49 @@ class Kit {
   remote: str
   homepage: str
   license: str
-  created: datetime
-  updated: datetime
+  qualities: list[Quality]
   types: list[Type]
   designs: list[Design]
   authors: list[Author]
   attributes: list[Attribute]
   concepts: list[str]
+  created: datetime
+  updated: datetime
   --
-  context Kit inv optionalFieldsCanBeEmpty:
-    description->notEmpty() or description->isEmpty() and
-    icon->notEmpty() or icon->isEmpty() and
-    image->notEmpty() or image->isEmpty() and
-    preview->notEmpty() or preview->isEmpty() and
-    version->notEmpty() or version->isEmpty() and
-    remote->notEmpty() or remote->isEmpty() and
-    homepage->notEmpty() or homepage->isEmpty() and
-    license->notEmpty() or license->isEmpty()
-  context Kit inv emptyVersionMeansLatest:
-    version->isEmpty() implies version = 'latest'
-  context Kit inv validUri:
-    uri->matches('^https?://.*') or uri->matches('^file://.*')
 }
-
+Kit -|> Model
+Kit *-- "0..*" Design : contains >
+Kit *-- "0..*" Type : contains >
+Kit *-- "0..*" Quality : defines >
+Kit *-- "0..*" Author : has >
+Kit *-- "0..*" Attribute : has >
+class KitId {
+  name: str
+  version: str
+}
 class KitDiff {
   name?: str
-
+  description?: str
+  icon?: str
+  image?: str
+  preview?: str
+  version?: str
+  remote?: str
+  homepage?: str
+  license?: str
+  concepts?: list[str]
+  types?: TypesDiff
+  designs?: DesignsDiff
+  authors?: AuthorsDiff
+  attributes?: AttributesDiff
 }
+class KitsDiff {
+  removed?: list[KitId]
+  updated?: list[KitDiff]
+  added?: list[Kit]
+}
+
+' #endregion Kit
 
 class Type {
   name: str
@@ -67,14 +86,14 @@ class Type {
   stock: float
   virtual: bool
   unit: str
-  created: datetime
-  updated: datetime
   location: Location
   representations: list[Representation]
   ports: list[Port]
   authors: list[Author]
   attributes: list[Attribute]
   concepts: list[str]
+  created: datetime
+  updated: datetime
   --
   context Type inv optionalFieldsCanBeEmpty:
     description->notEmpty() or description->isEmpty() and
@@ -371,11 +390,7 @@ class Stat {
     min < max
 }
 
-Kit *-- "0..*" Type : contains >
-Kit *-- "0..*" Design : contains >
-Kit *-- "0..*" Author : has >
-Kit *-- "0..*" Attribute : has >
-Kit *-- "0..*" Quality : defines >
+
 
 Design *-- "0..*" Piece : contains >
 Design *-- "0..*" Connection : contains >

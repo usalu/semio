@@ -258,24 +258,8 @@ export const TypeSchema = z.object({
   attributes: z.array(AttributeSchema).optional()
 });
 export type Type = z.infer<typeof TypeSchema>;
-export const RepresentationDiffSchema = z.object({
-  url: z.string().optional(),
-  description: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  attributes: z.array(AttributeSchema).optional(),
-});
-export const PortDiffSchema = z.object({
-  id_: z.string().optional(),
-  description: z.string().optional(),
-  family: z.string().optional(),
-  mandatory: z.boolean().optional(),
-  t: z.number().optional(),
-  compatibleFamilies: z.array(z.string()).optional(),
-  point: PointSchema.optional(),
-  direction: VectorSchema.optional(),
-  props: z.array(PropSchema).optional(),
-  attributes: z.array(AttributeSchema).optional(),
-});
+export const RepresentationDiffSchema = RepresentationSchema.partial();
+export const PortDiffSchema = PortSchema.partial();
 export const RepresentationsDiffSchema = z.object({
   removed: z.array(RepresentationIdSchema).optional(),
   updated: z.array(z.object({ id: RepresentationIdSchema, diff: RepresentationDiffSchema })).optional(),
@@ -297,7 +281,7 @@ export const TypeDiffSchema = TypeSchema.partial().overwrite({
 });
 export type TypeDiff = z.infer<typeof TypeDiffSchema>;
 
-export const TypeIdSchema = z.string();
+export const TypeIdSchema = TypeSchema.pick({ id: true });
 export type TypeId = z.infer<typeof TypeIdSchema>;
 export const TypeIdLikeSchema = z.union([TypeSchema, TypeIdSchema, z.string()]);
 export type TypeIdLike = z.infer<typeof TypeIdLikeSchema>;
@@ -324,16 +308,96 @@ export const LayerSchema = z.object({
 });
 export type Layer = z.infer<typeof LayerSchema>;
 
+// Core schemas needed by ID schemas
+export const PieceSchema = z.object({
+  id: z.string(),
+  name: z.string().optional(),
+  description: z.string().optional(),
+  type: TypeIdSchema,
+  plane: PlaneSchema.optional(),
+  center: DiagramCoordSchema.optional(),
+  scale: z.number().optional(),
+  mirrorPlane: PlaneSchema.optional(),
+  hidden: z.boolean().optional(),
+  locked: z.boolean().optional(),
+  color: z.string().optional(),
+  attributes: z.array(AttributeSchema).optional()
+});
+export type Piece = z.infer<typeof PieceSchema>;
+
+export const SideIdSchema = z.string();
+export const SideIdLikeSchema = z.union([z.string(), z.object({ id: z.string() })]);
+
+export const ConnectionSchema = z.object({
+  id: z.string(),
+  fromSideId: SideIdSchema,
+  toSideId: SideIdSchema,
+  name: z.string().optional(),
+  description: z.string().optional(),
+  attributes: z.array(AttributeSchema).optional()
+});
+export type Connection = z.infer<typeof ConnectionSchema>;
+
+export const GroupSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  image: z.string().optional(),
+  variant: z.string().optional(),
+  collapsed: z.boolean().optional(),
+  attributes: z.array(AttributeSchema).optional()
+});
+export type Group = z.infer<typeof GroupSchema>;
+
+export const DesignSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  variant: z.string().optional(),
+  view: z.string().optional(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  image: z.string().optional(),
+  concepts: z.array(z.string()).optional(),
+  authors: z.array(AuthorIdSchema).optional(),
+  location: LocationSchema.optional(),
+  layers: z.array(z.lazy(() => LayerSchema)).optional(),
+  pieces: z.array(PieceSchema).optional(),
+  groups: z.array(z.lazy(() => GroupSchema)).optional(),
+  connections: z.array(ConnectionSchema).optional(),
+  files: z.array(FileSchema).optional(),
+  created: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
+  updated: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
+  attributes: z.array(AttributeSchema).optional()
+});
+export type Design = z.infer<typeof DesignSchema>;
+
+export const KitSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  image: z.string().optional(),
+  variant: z.string().optional(),
+  types: z.array(TypeSchema).optional(),
+  designs: z.array(DesignSchema).optional(),
+  authors: z.array(AuthorIdSchema).optional(),
+  created: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
+  updated: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
+  attributes: z.array(AttributeSchema).optional()
+});
+export type Kit = z.infer<typeof KitSchema>;
+
 // ID schemas needed by DesignShallowSchema
-export const PieceIdSchema = z.string();
+export const PieceIdSchema = PieceSchema.pick({ id: true });
 export type PieceId = z.infer<typeof PieceIdSchema>;
-export const GroupIdSchema = z.string();
+export const GroupIdSchema = GroupSchema.pick({ id: true });
 export type GroupId = z.infer<typeof GroupIdSchema>;
-export const ConnectionIdSchema = z.string();
+export const ConnectionIdSchema = ConnectionSchema.pick({ id: true });
 export type ConnectionId = z.infer<typeof ConnectionIdSchema>;
-export const DesignIdSchema = z.string();
+export const DesignIdSchema = DesignSchema.pick({ id: true });
 export type DesignId = z.infer<typeof DesignIdSchema>;
-export const KitIdSchema = z.string();
+export const KitIdSchema = KitSchema.pick({ id: true });
 export type KitId = z.infer<typeof KitIdSchema>;
 
 // https://github.com/usalu/semio#-design-
@@ -576,28 +640,8 @@ export const GroupDiffSchema = z.object({
 
 export const DiffStatusSchema = z.enum(["unchanged", "added", "removed", "modified"]);
 
-
-export const PieceSchema = z.object({
-  id: z.string(),
-  name: z.string().optional(),
-  description: z.string().optional(),
-  type: TypeIdSchema,
-  plane: PlaneSchema.optional(),
-  center: DiagramCoordSchema.optional(),
-  scale: z.number().optional(),
-  mirrorPlane: PlaneSchema.optional(),
-  hidden: z.boolean().optional(),
-  locked: z.boolean().optional(),
-  color: z.string().optional(),
-  attributes: z.array(AttributeSchema).optional()
-});
-export type Piece = z.infer<typeof PieceSchema>;
-
 export const PieceIdLikeSchema = z.union([PieceSchema, PieceIdSchema, z.string()]);
 export type PieceIdLike = z.infer<typeof PieceIdLikeSchema>;
-
-export const SideIdSchema = z.string();
-export const SideIdLikeSchema = z.union([z.string(), z.object({ id: z.string() })]);
 
 export const SideSchema = z.object({
   id: z.string(),
@@ -609,67 +653,16 @@ export const SideSchema = z.object({
 
 export const ConnectionIdLikeSchema = z.union([z.string(), z.object({ id: z.string() })]);
 
-export const ConnectionSchema = z.object({
-  id: z.string(),
-  fromSideId: SideIdSchema,
-  toSideId: SideIdSchema,
-  name: z.string().optional(),
-  description: z.string().optional(),
-  attributes: z.array(AttributeSchema).optional()
-});
-
 export const DesignIdLikeSchema = z.union([z.string(), z.object({ id: z.string() })]);
-
-export const DesignSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  variant: z.string().optional(),
-  view: z.string().optional(),
-  description: z.string().optional(),
-  icon: z.string().optional(),
-  image: z.string().optional(),
-  concepts: z.array(z.string()).optional(),
-  authors: z.array(AuthorIdSchema).optional(),
-  location: LocationSchema.optional(),
-  layers: z.array(z.lazy(() => LayerSchema)).optional(),
-  pieces: z.array(PieceSchema).optional(),
-  groups: z.array(z.lazy(() => GroupSchema)).optional(),
-  connections: z.array(ConnectionSchema).optional(),
-  files: z.array(FileSchema).optional(),
-  created: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
-  updated: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
-  attributes: z.array(AttributeSchema).optional()
-});
 
 export const KitIdLikeSchema = z.union([z.string(), z.object({ id: z.string() })]);
 
-export const KitSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string().optional(),
-  icon: z.string().optional(),
-  image: z.string().optional(),
-  variant: z.string().optional(),
-  types: z.array(TypeSchema).optional(),
-  designs: z.array(DesignSchema).optional(),
-  authors: z.array(AuthorIdSchema).optional(),
-  created: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
-  updated: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
-  attributes: z.array(AttributeSchema).optional()
-});
-
 export const GroupIdLikeSchema = z.union([z.string(), z.object({ id: z.string() })]);
 
-export const GroupSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string().optional(),
-  icon: z.string().optional(),
-  image: z.string().optional(),
-  variant: z.string().optional(),
-  collapsed: z.boolean().optional(),
-  attributes: z.array(AttributeSchema).optional()
-});
+export type Connection = z.infer<typeof ConnectionSchema>;
+export type Design = z.infer<typeof DesignSchema>;
+export type Kit = z.infer<typeof KitSchema>;
+export type Group = z.infer<typeof GroupSchema>;
 
 export enum DiffStatus {
   Unchanged = "unchanged",
