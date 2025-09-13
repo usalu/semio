@@ -29,12 +29,13 @@
 import cytoscape from "cytoscape";
 import * as THREE from "three";
 import { z } from "zod";
+import CONSTANTS from "./constants.json";
 import { arraysEqual, deepEqual, round } from "./lib/utils";
 
 // #region Constants
 
-export const ICON_WIDTH = 50;
-export const TOLERANCE = 1e-5;
+export const ICON_WIDTH = CONSTANTS.icon.width;
+export const TOLERANCE = CONSTANTS.tolerance;
 
 // #endregion Constants
 
@@ -55,372 +56,10 @@ export const toSemioQuaternion = (): THREE.Quaternion => new THREE.Quaternion(0.
 export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vector3(v.x, v.y, v.z);
 
 
-// #region Querying
+// #region Ids
 
-// #region Propositional
+// #endregion Ids
 
-export const arePortsCompatible = (port: Port, otherPort: Port): boolean => {
-  const normalizedPortFamily = normalize(port.family);
-  const normalizedOtherPortFamily = normalize(otherPort.family);
-  if (normalizedPortFamily === "" || normalizedOtherPortFamily === "") return true;
-  return (port.compatibleFamilies ?? []).includes(normalizedOtherPortFamily) || (otherPort.compatibleFamilies ?? []).includes(normalizedPortFamily);
-};
-
-export const isPortInUse = (design: Design, piece: Piece | PieceId, port: Port | PortId): boolean => {
-  const normalizedPieceId = pieceIdLikeToPieceId(piece);
-  const normalizedPortId = portIdLikeToPortId(port);
-  const connections = findPieceConnectionsInDesign(design, piece);
-  for (const connection of connections) {
-    const isPieceConnected = connection.connected.piece.id_ === normalizedPieceId.id_;
-    const isPortConnected = isPieceConnected ? connection.connected.port.id_ === normalizedPortId.id_ : connection.connecting.port.id_ === normalizedPortId.id_;
-    if (isPortConnected) return true;
-  }
-  return false;
-};
-
-export const isConnectionInDesign = (design: Design, connection: Connection | ConnectionId): boolean => {
-  return design.connections?.some((c) => isSameConnection(c, connection)) ?? false;
-};
-
-export const isFixedPiece = (piece: Piece): boolean => {
-  const isPlaneSet = piece.plane !== undefined;
-  const isCenterSet = piece.center !== undefined;
-  if (isPlaneSet !== isCenterSet) throw new Error(`Piece ${piece.id_} has inconsistent plane and center`);
-  return isPlaneSet;
-};
-
-export const isSameRepresentation = (representation: Representation, other: Representation): boolean => {
-  return representation.tags?.every((tag) => other.tags?.includes(tag)) ?? true;
-};
-export const isSamePort = (port: Port | PortId, other: Port | PortId): boolean => {
-  const p1 = portIdLikeToPortId(port);
-  const p2 = portIdLikeToPortId(other);
-  return normalize(p1.id_) === normalize(p2.id_);
-};
-export const isSameType = (type: Type | TypeId, other: Type | TypeId): boolean => {
-  const t1 = typeIdLikeToTypeId(type);
-  const t2 = typeIdLikeToTypeId(other);
-  return t1.name === t2.name && normalize(t1.variant) === normalize(t2.variant);
-};
-export const isSamePiece = (piece: Piece | PieceId, other: Piece | PieceId): boolean => {
-  const p1 = pieceIdLikeToPieceId(piece);
-  const p2 = pieceIdLikeToPieceId(other);
-  return normalize(p1.id_) === normalize(p2.id_);
-};
-export const isSameConnection = (connection: Connection | ConnectionId | ConnectionDiff, other: Connection | ConnectionId | ConnectionDiff, strict: boolean = false): boolean => {
-  const getConnectedPieceId = (conn: typeof connection) => ("connected" in conn && conn.connected && "piece" in conn.connected && conn.connected.piece ? conn.connected.piece.id_ : "");
-  const getConnectingPieceId = (conn: typeof connection) => ("connecting" in conn && conn.connecting && "piece" in conn.connecting && conn.connecting.piece ? conn.connecting.piece.id_ : "");
-
-  const connectedPiece1 = getConnectedPieceId(connection);
-  const connectingPiece1 = getConnectingPieceId(connection);
-  const connectedPiece2 = getConnectedPieceId(other);
-  const connectingPiece2 = getConnectingPieceId(other);
-
-  const isExactMatch = connectingPiece1 === connectingPiece2 && connectedPiece1 === connectedPiece2;
-  if (strict) return isExactMatch;
-  const isSwappedMatch = connectingPiece1 === connectedPiece2 && connectedPiece1 === connectingPiece2;
-  return isExactMatch || isSwappedMatch;
-};
-export const isSameDesign = (design: DesignIdLike, other: DesignIdLike): boolean => {
-  const d1 = designIdLikeToDesignId(design);
-  const d2 = designIdLikeToDesignId(other);
-  return d1.name === d2.name && normalize(d1.variant) === normalize(d2.variant) && normalize(d1.view) === normalize(d2.view);
-};
-export const isSameKit = (kit: Kit | KitId, other: Kit | KitId): boolean => {
-  return kit.name === other.name && normalize(kit.version) === normalize(other.version);
-};
-
-// #endregion Propositional
-
-// #region Predicates
-
-export const findAttributeValue = (entity: Kit | Type | Design | Piece | Connection | Representation | Port, name: string, defaultValue?: string | null): string | null => {
-  const attribute = entity.attributes?.find((q) => q.key === name);
-  if (!attribute && defaultValue === undefined) throw new Error(`Attribute ${name} not found in ${entity}`);
-  if (attribute?.value === undefined && defaultValue === null) return null;
-  return attribute?.value ?? defaultValue ?? "";
-};
-const findRepresentation = (representations: Representation[], tags: string[]): Representation => {
-  const indices = representations.map((r) => jaccard(r.tags, tags));
-  const maxIndex = Math.max(...indices);
-  const maxIndexIndex = indices.indexOf(maxIndex);
-  return representations[maxIndexIndex];
-};
-export const findPort = (ports: Port[], portId: PortIdLike): Port => {
-  const normalizedPortId = portIdLikeToPortId(portId);
-  const port = ports.find((p) => normalize(p.id_) === normalize(normalizedPortId.id_));
-  if (!port) throw new Error(`Port ${normalizedPortId.id_} not found in ports`);
-  return port;
-};
-export const findPortInType = (type: Type, portId: PortIdLike): Port => findPort(type.ports ?? [], portId);
-export const findPiece = (pieces: Piece[], pieceId: PieceIdLike): Piece => {
-  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
-  const piece = pieces.find((p) => p.id_ === normalizedPieceId.id_);
-  if (!piece) throw new Error(`Piece ${normalizedPieceId.id_} not found in pieces`);
-  return piece;
-};
-export const findPortForPieceInConnection = (type: Type, connection: Connection, pieceId: PieceIdLike): Port => {
-  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
-  const portId = connection.connected.piece.id_ === normalizedPieceId.id_ ? connection.connected.port.id_ : connection.connecting.port.id_;
-  return findPortInType(type, portId);
-};
-export const findPieceInDesign = (design: Design, pieceId: PieceIdLike): Piece => findPiece(design.pieces ?? [], pieceId);
-export const findPieceTypeInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Type => findTypeInKit(kit, findPieceInDesign(findDesignInKit(kit, designId), pieceId).type);
-export const findConnection = (connections: Connection[], connectionId: ConnectionIdLike, strict: boolean = false): Connection => {
-  const normalizedConnectionId = connectionIdLikeToConnectionId(connectionId);
-  const connection = connections.find((c) => isSameConnection(c, normalizedConnectionId, strict));
-  if (!connection) throw new Error(`Connection ${normalizedConnectionId.connected.piece.id_} -> ${normalizedConnectionId.connecting.piece.id_} not found in connections`);
-  return connection;
-};
-export const findConnectionInDesign = (design: Design, connectionId: ConnectionIdLike, strict: boolean = false): Connection => {
-  return findConnection(design.connections ?? [], connectionId, strict);
-};
-export const findConnectionsInDesign = (design: Design, connectionIds: ConnectionIdLike[]): Connection[] => {
-  return connectionIds.map((connectionId) => findConnectionInDesign(design, connectionId));
-};
-export const findPieceConnections = (connections: Connection[], pieceId: PieceIdLike): Connection[] => {
-  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
-  return connections.filter((c) => c.connected.piece.id_ === normalizedPieceId.id_ || c.connecting.piece.id_ === normalizedPieceId.id_);
-};
-export const findPieceConnectionsInDesign = (design: Design, pieceId: PieceIdLike): Connection[] => {
-  return findPieceConnections(design.connections ?? [], pieceId);
-};
-export const findParentPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Piece => {
-  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
-  const parentPieceId = piecesMetadata(kit, designId).get(normalizedPieceId.id_)?.parentPieceId;
-  if (!parentPieceId) throw new Error(`Piece ${normalizedPieceId.id_} has no parent piece`);
-  return findPieceInDesign(findDesignInKit(kit, designId), parentPieceId);
-};
-export const findParentConnectionForPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Connection => {
-  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
-  const parentPieceId = piecesMetadata(kit, designId).get(normalizedPieceId.id_)?.parentPieceId;
-  if (!parentPieceId) throw new Error(`Piece ${normalizedPieceId.id_} has no parent piece and connection`);
-  return findConnectionInDesign(findDesignInKit(kit, designId), parentPieceId);
-};
-export const findChildrenPiecesInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Piece[] => {
-  const design = findDesignInKit(kit, designId);
-  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
-  const metadata = piecesMetadata(kit, designId);
-  const children: Piece[] = [];
-  for (const [id, data] of Array.from(metadata)) {
-    if (data.parentPieceId === normalizedPieceId.id_) {
-      children.push(findPieceInDesign(design, id));
-    }
-  }
-  return children;
-};
-export const findConnectionPiecesInDesign = (design: Design, connection: Connection | ConnectionId): { connecting: Piece; connected: Piece } => {
-  return {
-    connected: findPieceInDesign(design, connection.connected.piece),
-    connecting: findPieceInDesign(design, connection.connecting.piece),
-  };
-};
-export const findStaleConnectionsInDesign = (design: Design): Connection[] => {
-  return (
-    design.connections?.filter((c) => {
-      try {
-        findPieceInDesign(design, c.connected.piece);
-        findPieceInDesign(design, c.connecting.piece);
-        return false;
-      } catch (e) {
-        return true;
-      }
-    }) ?? []
-  );
-};
-export const findTypeInKit = (kit: Kit, typeId: TypeIdLike): Type => {
-  const normalizedTypeId = typeIdLikeToTypeId(typeId);
-  const type = kit.types?.find((t) => t.name === normalizedTypeId.name && normalize(t.variant) === normalize(normalizedTypeId.variant));
-  if (!type) throw new Error(`Type ${normalizedTypeId.name} not found in kit ${kit.name}`);
-  return type;
-};
-export const findDesignInKit = (kit: Kit, designId: DesignIdLike): Design => {
-  const normalizedDesignId = designIdLikeToDesignId(designId);
-  const design = kit.designs?.find((d) => d.name === normalizedDesignId.name && normalize(d.variant) === normalize(normalizedDesignId.variant) && normalize(d.view) === normalize(normalizedDesignId.view));
-  if (!design) throw new Error(`Design ${normalizedDesignId.name} not found in kit ${kit.name}`);
-  return design;
-};
-export const findUsedPortsByPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Port[] => {
-  const design = findDesignInKit(kit, designId);
-  const piece = findPieceInDesign(design, pieceId);
-  const type = findTypeInKit(kit, piece.type);
-  const connections = findPieceConnectionsInDesign(design, pieceId);
-  return connections.map((c) => findPortForPieceInConnection(type, c, pieceId));
-};
-export const findReplacableTypesForPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike, variants?: string[]): Type[] => {
-  const design = findDesignInKit(kit, designId);
-  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
-  const connections = findPieceConnectionsInDesign(design, pieceId);
-  const requiredPorts: Port[] = [];
-  for (const connection of connections) {
-    try {
-      const otherPieceId = connection.connected.piece.id_ === normalizedPieceId.id_ ? connection.connecting.piece.id_ : connection.connected.piece.id_;
-      const otherPiece = findPieceInDesign(design, otherPieceId);
-      const otherType = findTypeInKit(kit, otherPiece.type);
-      const otherPortId = connection.connected.piece.id_ === normalizedPieceId.id_ ? connection.connecting.port.id_ : connection.connected.port.id_;
-      const otherPort = findPortInType(otherType, otherPortId || "");
-      requiredPorts.push(otherPort);
-    } catch (error) {
-      continue;
-    }
-  }
-  return (
-    kit.types?.filter((replacementType) => {
-      if (variants !== undefined && !variants.includes(replacementType.variant ?? "")) return false;
-      if (!replacementType.ports || replacementType.ports.length === 0) return requiredPorts.length === 0;
-      return requiredPorts.every((requiredPort) => {
-        return replacementType.ports!.some((replacementPort) => arePortsCompatible(replacementPort, requiredPort));
-      });
-    }) ?? []
-  );
-};
-export const findReplacableTypesForPiecesInDesign = (kit: Kit, designId: DesignIdLike, pieceIds: PieceIdLike[], variants?: string[]): Type[] => {
-  const design = findDesignInKit(kit, designId);
-  const normalizedPieceIds = pieceIds.map((id) => (typeof id === "string" ? id : id.id_));
-  const pieces = normalizedPieceIds.map((id) => findPieceInDesign(design, id));
-  const externalConnections: Array<{
-    connection: Connection;
-    requiredPort: Port;
-  }> = [];
-  for (const piece of pieces) {
-    const connections = findPieceConnectionsInDesign(design, piece.id_);
-    for (const connection of connections) {
-      const otherPieceId = connection.connected.piece.id_ === piece.id_ ? connection.connecting.piece.id_ : connection.connected.piece.id_;
-      if (!normalizedPieceIds.includes(otherPieceId)) {
-        try {
-          const otherPiece = findPieceInDesign(design, otherPieceId);
-          const otherType = findTypeInKit(kit, otherPiece.type);
-          const otherPortId = connection.connected.piece.id_ === piece.id_ ? connection.connecting.port.id_ : connection.connected.port.id_;
-          const otherPort = findPortInType(otherType, otherPortId || "");
-          externalConnections.push({ connection, requiredPort: otherPort });
-        } catch (error) {
-          continue;
-        }
-      }
-    }
-  }
-  return (
-    kit.types?.filter((replacementType) => {
-      if (variants !== undefined && !variants.includes(replacementType.variant ?? "")) return false;
-      if (!replacementType.ports || replacementType.ports.length === 0) return externalConnections.length === 0;
-      return externalConnections.every(({ requiredPort }) => {
-        return replacementType.ports!.some((replacementPort) => arePortsCompatible(replacementPort, requiredPort));
-      });
-    }) ?? []
-  );
-};
-
-export const piecesMetadata = (
-  kit: Kit,
-  designId: DesignIdLike,
-): Map<
-  string,
-  {
-    plane: Plane;
-    center: Coord;
-    fixedPieceId: string;
-    parentPieceId: string | null;
-    depth: number;
-  }
-> => {
-  const normalizedDesignId = designIdLikeToDesignId(designId);
-  const design = findDesignInKit(kit, normalizedDesignId);
-  if (!design) {
-    throw new Error(`Design ${normalizedDesignId.name} not found in kit ${kit.name}`);
-  }
-  const flattenDiff = flattenDesign(kit, normalizedDesignId);
-  const flatDesign = applyDesignDiff(design, flattenDiff, true);
-  const fixedPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.fixedPieceId") || p.id_);
-  const parentPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.parentPieceId", null));
-  const depths = flatDesign.pieces?.map((p) => parseInt(findAttributeValue(p, "semio.depth", "0")!));
-  return new Map(
-    flatDesign.pieces?.map((p, index) => [
-      p.id_,
-      {
-        plane: p.plane!,
-        center: p.center!,
-        fixedPieceId: fixedPieceIds![index],
-        parentPieceId: parentPieceIds![index],
-        depth: depths![index],
-      },
-    ]),
-  );
-};
-
-const getColorForText = (text?: string): string => {
-  if (!text || text === "") {
-    return "var(--color-dark)";
-  }
-
-  // Create a simple hash from the family string
-  let hash = 0;
-  for (let i = 0; i < text.length; i++) {
-    const char = text.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-
-  // Generate color variations based on primary, secondary, tertiary
-  const baseColors = [
-    {
-      base: "var(--color-primary)",
-      variations: ["#ff344f", "#ff5569", "#ff7684", "#ff97a0"],
-    },
-    {
-      base: "var(--color-secondary)",
-      variations: ["#34d1bf", "#4dd7c9", "#66ddd3", "#80e3dd"],
-    },
-    {
-      base: "var(--color-tertiary)",
-      variations: ["#fa9500", "#fba320", "#fcb140", "#fdc060"],
-    },
-    {
-      base: "var(--color-success)",
-      variations: ["#7eb77f", "#8ec28f", "#9ecd9f", "#aed8af"],
-    },
-    {
-      base: "var(--color-warning)",
-      variations: ["#fccf05", "#fcd525", "#fddb45", "#fde165"],
-    },
-    {
-      base: "var(--color-info)",
-      variations: ["#dbbea1", "#e1c7ae", "#e7d0bb", "#edd9c8"],
-    },
-  ];
-
-  const colorSetIndex = Math.abs(hash) % baseColors.length;
-  const variationIndex = Math.abs(Math.floor(hash / baseColors.length)) % baseColors[colorSetIndex].variations.length;
-
-  return baseColors[colorSetIndex].variations[variationIndex];
-};
-
-export const colorPortsForTypes = (types: Type[]): TypesDiff => {
-  const updated: { id: TypeId; diff: TypeDiff }[] = [];
-
-  for (const type of types) {
-    const coloredPorts: Port[] = [];
-    for (const port of type.ports || []) {
-      const coloredPort = setAttribute(port, {
-        key: "semio.color",
-        value: getColorForText(port.family),
-      });
-      coloredPorts.push(coloredPort);
-    }
-
-    updated.push({
-      id: { name: type.name, variant: type.variant },
-      diff: {
-        ports: coloredPorts
-      }
-    });
-  }
-
-  return { updated };
-};
-
-// #endregion Predicates
-
-// #endregion Querying
 
 // #region Attribute
 // https://github.com/usalu/semio#-attribute-
@@ -451,9 +90,6 @@ export const AttributesDiffSchema = z.object({
 });
 export type AttributesDiff = z.infer<typeof AttributesDiffSchema>;
 
-export const setAttributeInKit = (kitId: KitIdLike, attribute: Attribute): KitDiff => ({
-  attributes: [attribute]
-});
 
 export const setAttributeInType = (typeId: TypeIdLike, attribute: Attribute): KitDiff => ({
   types: {
@@ -493,34 +129,18 @@ export const setAttributeInConnection = (connectionId: ConnectionIdLike, attribu
     updated: [{
       id: connectionIdLikeToConnectionId(connectionId),
       diff: {
-        // Note: ConnectionDiff doesn't support attributes, so this would need schema update
+        attributes: [attribute]
       }
     }]
   }
 });
-
-// Legacy generic functions (kept for backward compatibility but should be replaced with specific ones above)
-export const setAttribute = <T extends Kit | Design | Type | Piece | Connection | Representation | Port>(entity: T, attribute: Attribute): T => {
-  const attributesArray = entity.attributes || [];
-  const existingIndex = attributesArray.findIndex((q) => q.key === attribute.key);
-  if (existingIndex >= 0) attributesArray[existingIndex] = attribute;
-  else attributesArray.push(attribute);
-  return { ...entity, attributes: attributesArray };
-};
-
-export const setAttributes = <T extends Kit | Design | Type | Piece | Connection | Representation | Port>(entity: T, attributes: Attribute[]): T => {
-  return attributes.reduce((acc, attribute) => setAttribute(acc, attribute), entity);
-};
 
 // #endregion Attribute
 
 // #region Coord
 // https://github.com/usalu/semio#-coord-
 
-export const CoordSchema = z.object({
-  x: z.number(),
-  y: z.number(),
-});
+export const CoordSchema = z.object({ x: z.number(), y: z.number() });
 export type Coord = z.infer<typeof CoordSchema>;
 export const serializeCoord = (coord: Coord): string => JSON.stringify(CoordSchema.parse(coord));
 export const deserializeCoord = (json: string): Coord => CoordSchema.parse(JSON.parse(json));
@@ -656,24 +276,21 @@ export const deserializeLocation = (json: string): Location => LocationSchema.pa
 
 export const AuthorSchema = z.object({ name: z.string(), email: z.string(), attributes: z.array(AttributeSchema).optional() });
 export type Author = z.infer<typeof AuthorSchema>;
+export const serializeAuthor = (author: Author): string => JSON.stringify(AuthorSchema.parse(author));
+export const deserializeAuthor = (json: string): Author => AuthorSchema.parse(JSON.parse(json));
 export const AuthorIdSchema = AuthorSchema.pick({ email: true });
 export type AuthorId = z.infer<typeof AuthorIdSchema>;
 export const authorIdToString = (author: AuthorId): string => author.email;
 export const AuthorIdLikeSchema = z.union([AuthorSchema, AuthorIdSchema, z.string()]);
 export type AuthorIdLike = z.infer<typeof AuthorIdLikeSchema>;
-export const authorIdLikeToAuthorId = (author: AuthorIdLike): AuthorId => {
-  if (typeof author === "string") return { email: author };
-  return { email: author.email };
-};
-export const AttributeDiffSchema = AttributeSchema.partial();
-export type AttributeDiff = z.infer<typeof AttributeDiffSchema>;
-export const AttributesDiffSchema = z.object({
-  removed: z.array(AttributeIdSchema).optional(),
-  updated: z.array(z.object({ id: AttributeIdSchema, diff: AttributeDiffSchema })).optional(),
-  added: z.array(AttributeSchema).optional(),
+export const authorIdLikeToAuthorId = (author: AuthorIdLike): AuthorId => { typeof author === "string" ? { email: author } : { email: author.email } };
+export const AuthorDiffSchema = AuthorSchema.partial();
+export type AuthorDiff = z.infer<typeof AuthorDiffSchema>;
+export const AuthorsDiffSchema = z.object({
+  removed: z.array(AuthorIdSchema).optional(),
+  updated: z.array(z.object({ id: AuthorIdSchema, diff: AuthorDiffSchema })).optional(),
+  added: z.array(AuthorSchema).optional(),
 });
-export const serializeAuthor = (author: Author): string => JSON.stringify(AuthorSchema.parse(author));
-export const deserializeAuthor = (json: string): Author => AuthorSchema.parse(JSON.parse(json));
 
 // #endregion Author
 
@@ -921,6 +538,17 @@ export const RepresentationsDiffSchema = z.object({
 export const serializeRepresentation = (representation: Representation): string => JSON.stringify(RepresentationSchema.parse(representation));
 export const deserializeRepresentation = (json: string): Representation => RepresentationSchema.parse(JSON.parse(json));
 
+export const isSameRepresentation = (representation: Representation, other: Representation): boolean => {
+  return representation.tags?.every((tag) => other.tags?.includes(tag)) ?? true;
+};
+
+const findRepresentation = (representations: Representation[], tags: string[]): Representation => {
+  const indices = representations.map((r) => jaccard(r.tags, tags));
+  const maxIndex = Math.max(...indices);
+  const maxIndexIndex = indices.indexOf(maxIndex);
+  return representations[maxIndexIndex];
+};
+
 // #endregion Representation
 
 // #region Port
@@ -1135,6 +763,26 @@ export const unifyPortFamiliesAndCompatibleFamiliesForTypes = (types: Type[]): T
   return { updated };
 };
 
+export const arePortsCompatible = (port: Port, otherPort: Port): boolean => {
+  const normalizedPortFamily = normalize(port.family);
+  const normalizedOtherPortFamily = normalize(otherPort.family);
+  if (normalizedPortFamily === "" || normalizedOtherPortFamily === "") return true;
+  return (port.compatibleFamilies ?? []).includes(normalizedOtherPortFamily) || (otherPort.compatibleFamilies ?? []).includes(normalizedPortFamily);
+};
+
+export const isSamePort = (port: Port | PortId, other: Port | PortId): boolean => {
+  const p1 = portIdLikeToPortId(port);
+  const p2 = portIdLikeToPortId(other);
+  return normalize(p1.id_) === normalize(p2.id_);
+};
+
+export const findPort = (ports: Port[], portId: PortIdLike): Port => {
+  const normalizedPortId = portIdLikeToPortId(portId);
+  const port = ports.find((p) => normalize(p.id_) === normalize(normalizedPortId.id_));
+  if (!port) throw new Error(`Port ${normalizedPortId.id_} not found in ports`);
+  return port;
+};
+
 // #endregion Port
 
 // #region Type
@@ -1253,6 +901,14 @@ export const TypesDiffSchema = z.object({
 });
 export const serializeType = (type: Type): string => JSON.stringify(TypeSchema.parse(type));
 export const deserializeType = (json: string): Type => TypeSchema.parse(JSON.parse(json));
+
+export const isSameType = (type: Type | TypeId, other: Type | TypeId): boolean => {
+  const t1 = typeIdLikeToTypeId(type);
+  const t2 = typeIdLikeToTypeId(other);
+  return t1.name === t2.name && normalize(t1.variant) === normalize(t2.variant);
+};
+
+export const findPortInType = (type: Type, portId: PortIdLike): Port => findPort(type.ports ?? [], portId);
 
 // #endregion Type
 
@@ -1680,6 +1336,26 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
   return expandedDesign;
 };
 
+export const isFixedPiece = (piece: Piece): boolean => {
+  const isPlaneSet = piece.plane !== undefined;
+  const isCenterSet = piece.center !== undefined;
+  if (isPlaneSet !== isCenterSet) throw new Error(`Piece ${piece.id_} has inconsistent plane and center`);
+  return isPlaneSet;
+};
+
+export const isSamePiece = (piece: Piece | PieceId, other: Piece | PieceId): boolean => {
+  const p1 = pieceIdLikeToPieceId(piece);
+  const p2 = pieceIdLikeToPieceId(other);
+  return normalize(p1.id_) === normalize(p2.id_);
+};
+
+export const findPiece = (pieces: Piece[], pieceId: PieceIdLike): Piece => {
+  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
+  const piece = pieces.find((p) => p.id_ === normalizedPieceId.id_);
+  if (!piece) throw new Error(`Piece ${normalizedPieceId.id_} not found in pieces`);
+  return piece;
+};
+
 // #endregion Piece
 
 // #region Side
@@ -1828,6 +1504,39 @@ export const ConnectionsDiffSchema = z.object({
 export const serializeConnection = (connection: Connection): string => JSON.stringify(ConnectionSchema.parse(connection));
 export const deserializeConnection = (json: string): Connection => ConnectionSchema.parse(JSON.parse(json));
 
+export const isSameConnection = (connection: Connection | ConnectionId | ConnectionDiff, other: Connection | ConnectionId | ConnectionDiff, strict: boolean = false): boolean => {
+  const getConnectedPieceId = (conn: typeof connection) => ("connected" in conn && conn.connected && "piece" in conn.connected && conn.connected.piece ? conn.connected.piece.id_ : "");
+  const getConnectingPieceId = (conn: typeof connection) => ("connecting" in conn && conn.connecting && "piece" in conn.connecting && conn.connecting.piece ? conn.connecting.piece.id_ : "");
+
+  const connectedPiece1 = getConnectedPieceId(connection);
+  const connectingPiece1 = getConnectingPieceId(connection);
+  const connectedPiece2 = getConnectedPieceId(other);
+  const connectingPiece2 = getConnectingPieceId(other);
+
+  const isExactMatch = connectingPiece1 === connectingPiece2 && connectedPiece1 === connectedPiece2;
+  if (strict) return isExactMatch;
+  const isSwappedMatch = connectingPiece1 === connectedPiece2 && connectedPiece1 === connectingPiece2;
+  return isExactMatch || isSwappedMatch;
+};
+
+export const findConnection = (connections: Connection[], connectionId: ConnectionIdLike, strict: boolean = false): Connection => {
+  const normalizedConnectionId = connectionIdLikeToConnectionId(connectionId);
+  const connection = connections.find((c) => isSameConnection(c, normalizedConnectionId, strict));
+  if (!connection) throw new Error(`Connection ${normalizedConnectionId.connected.piece.id_} -> ${normalizedConnectionId.connecting.piece.id_} not found in connections`);
+  return connection;
+};
+
+export const findPieceConnections = (connections: Connection[], pieceId: PieceIdLike): Connection[] => {
+  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
+  return connections.filter((c) => c.connected.piece.id_ === normalizedPieceId.id_ || c.connecting.piece.id_ === normalizedPieceId.id_);
+};
+
+export const findPortForPieceInConnection = (type: Type, connection: Connection, pieceId: PieceIdLike): Port => {
+  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
+  const portId = connection.connected.piece.id_ === normalizedPieceId.id_ ? connection.connected.port.id_ : connection.connecting.port.id_;
+  return findPortInType(type, portId);
+};
+
 // #endregion Connection
 
 // #region Stat
@@ -1886,7 +1595,7 @@ export const DesignSchema = z.object({
   icon: z.string().optional(),
   image: z.string().optional(),
   description: z.string().optional(),
-  attributes: z.array(AttributeSchema).optional()
+  attributes: z.array(AttributeSchema).optional(),
   created: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
   updated: z.string().transform((val) => new Date(val)).or(z.date()).optional(),
 });
@@ -2603,6 +2312,63 @@ export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
   return includedDesigns;
 };
 
+export const isSameDesign = (design: DesignIdLike, other: DesignIdLike): boolean => {
+  const d1 = designIdLikeToDesignId(design);
+  const d2 = designIdLikeToDesignId(other);
+  return d1.name === d2.name && normalize(d1.variant) === normalize(d2.variant) && normalize(d1.view) === normalize(d2.view);
+};
+
+export const isPortInUse = (design: Design, piece: Piece | PieceId, port: Port | PortId): boolean => {
+  const normalizedPieceId = pieceIdLikeToPieceId(piece);
+  const normalizedPortId = portIdLikeToPortId(port);
+  const connections = findPieceConnectionsInDesign(design, piece);
+  for (const connection of connections) {
+    const isPieceConnected = connection.connected.piece.id_ === normalizedPieceId.id_;
+    const isPortConnected = isPieceConnected ? connection.connected.port.id_ === normalizedPortId.id_ : connection.connecting.port.id_ === normalizedPortId.id_;
+    if (isPortConnected) return true;
+  }
+  return false;
+};
+
+export const isConnectionInDesign = (design: Design, connection: Connection | ConnectionId): boolean => {
+  return design.connections?.some((c) => isSameConnection(c, connection)) ?? false;
+};
+
+export const findPieceInDesign = (design: Design, pieceId: PieceIdLike): Piece => findPiece(design.pieces ?? [], pieceId);
+
+export const findConnectionInDesign = (design: Design, connectionId: ConnectionIdLike, strict: boolean = false): Connection => {
+  return findConnection(design.connections ?? [], connectionId, strict);
+};
+
+export const findConnectionsInDesign = (design: Design, connectionIds: ConnectionIdLike[]): Connection[] => {
+  return connectionIds.map((connectionId) => findConnectionInDesign(design, connectionId));
+};
+
+export const findPieceConnectionsInDesign = (design: Design, pieceId: PieceIdLike): Connection[] => {
+  return findPieceConnections(design.connections ?? [], pieceId);
+};
+
+export const findConnectionPiecesInDesign = (design: Design, connection: Connection | ConnectionId): { connecting: Piece; connected: Piece } => {
+  return {
+    connected: findPieceInDesign(design, connection.connected.piece),
+    connecting: findPieceInDesign(design, connection.connecting.piece),
+  };
+};
+
+export const findStaleConnectionsInDesign = (design: Design): Connection[] => {
+  return (
+    design.connections?.filter((c) => {
+      try {
+        findPieceInDesign(design, c.connected.piece);
+        findPieceInDesign(design, c.connecting.piece);
+        return false;
+      } catch (e) {
+        return true;
+      }
+    }) ?? []
+  );
+};
+
 // #endregion Design
 
 // #region Kit
@@ -2715,7 +2481,6 @@ export const getKitDiff = (before: Kit, after: Kit): KitDiff => {
 
   return diff;
 };
-
 export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
   let types = base.types;
   let designs = base.designs;
@@ -2830,7 +2595,6 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
     attributes: base.attributes,
   };
 }
-
 export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => ({
   name: diff2.name ?? diff1.name,
   description: diff2.description ?? diff1.description,
@@ -2846,7 +2610,6 @@ export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => ({
   files: diff2.files ?? diff1.files,
   attributes: diff2.attributes ?? diff1.attributes,
 });
-
 export const inverseKitDiff = (original: Kit, appliedDiff: KitDiff): KitDiff => {
   const inverseDiff: any = {};
   if (appliedDiff.name !== undefined) inverseDiff.name = original.name;
@@ -2984,7 +2747,6 @@ export const addDesignToKit = (design: Design): KitDiff => ({
     added: [design]
   }
 });
-
 export const setDesignInKit = (design: Design): KitDiff => ({
   designs: {
     updated: [{
@@ -3010,7 +2772,6 @@ export const setDesignInKit = (design: Design): KitDiff => ({
     }]
   }
 });
-
 export const removeDesignFromKit = (designId: DesignIdLike): KitDiff => {
   const normalizedDesignId = designIdLikeToDesignId(designId);
   return {
@@ -3057,6 +2818,9 @@ export const addFileToKit = (file: File): KitDiff => ({ files: { added: [file] }
 export const setFileInKit = (file: File): KitDiff => ({ files: { updated: [{ id: { path: file.path }, diff: { ...file } }] } });
 export const removeFileFromKit = (fileId: FileIdLike): KitDiff => { { files: { removed: [fileIdLikeToFileId(fileId)] } }; };
 
+export const setAttributeInKit = (kitId: KitIdLike, attribute: Attribute): KitDiff => ({
+  attributes: [attribute]
+});
 
 export const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignId: DesignId, designPiece: Piece): Design[] => {
   if (designPiece.type.name !== "design") return [];
@@ -3086,6 +2850,240 @@ export const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignId: D
     // - Compatible outgoing ports
     return true;
   });
+};
+
+export const isSameKit = (kit: Kit | KitId, other: Kit | KitId): boolean => {
+  return kit.name === other.name && normalize(kit.version) === normalize(other.version);
+};
+
+export const findTypeInKit = (kit: Kit, typeId: TypeIdLike): Type => {
+  const normalizedTypeId = typeIdLikeToTypeId(typeId);
+  const type = kit.types?.find((t) => t.name === normalizedTypeId.name && normalize(t.variant) === normalize(normalizedTypeId.variant));
+  if (!type) throw new Error(`Type ${normalizedTypeId.name} not found in kit ${kit.name}`);
+  return type;
+};
+
+export const findDesignInKit = (kit: Kit, designId: DesignIdLike): Design => {
+  const normalizedDesignId = designIdLikeToDesignId(designId);
+  const design = kit.designs?.find((d) => d.name === normalizedDesignId.name && normalize(d.variant) === normalize(normalizedDesignId.variant) && normalize(d.view) === normalize(normalizedDesignId.view));
+  if (!design) throw new Error(`Design ${normalizedDesignId.name} not found in kit ${kit.name}`);
+  return design;
+};
+
+export const findPieceTypeInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Type => findTypeInKit(kit, findPieceInDesign(findDesignInKit(kit, designId), pieceId).type);
+
+export const findParentPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Piece => {
+  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
+  const parentPieceId = piecesMetadata(kit, designId).get(normalizedPieceId.id_)?.parentPieceId;
+  if (!parentPieceId) throw new Error(`Piece ${normalizedPieceId.id_} has no parent piece`);
+  return findPieceInDesign(findDesignInKit(kit, designId), parentPieceId);
+};
+
+export const findParentConnectionForPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Connection => {
+  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
+  const parentPieceId = piecesMetadata(kit, designId).get(normalizedPieceId.id_)?.parentPieceId;
+  if (!parentPieceId) throw new Error(`Piece ${normalizedPieceId.id_} has no parent piece and connection`);
+  return findConnectionInDesign(findDesignInKit(kit, designId), parentPieceId);
+};
+
+export const findChildrenPiecesInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Piece[] => {
+  const design = findDesignInKit(kit, designId);
+  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
+  const metadata = piecesMetadata(kit, designId);
+  const children: Piece[] = [];
+  for (const [id, data] of Array.from(metadata)) {
+    if (data.parentPieceId === normalizedPieceId.id_) {
+      children.push(findPieceInDesign(design, id));
+    }
+  }
+  return children;
+};
+
+export const findUsedPortsByPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike): Port[] => {
+  const design = findDesignInKit(kit, designId);
+  const piece = findPieceInDesign(design, pieceId);
+  const type = findTypeInKit(kit, piece.type);
+  const connections = findPieceConnectionsInDesign(design, pieceId);
+  return connections.map((c) => findPortForPieceInConnection(type, c, pieceId));
+};
+
+export const findReplacableTypesForPieceInDesign = (kit: Kit, designId: DesignIdLike, pieceId: PieceIdLike, variants?: string[]): Type[] => {
+  const design = findDesignInKit(kit, designId);
+  const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
+  const connections = findPieceConnectionsInDesign(design, pieceId);
+  const requiredPorts: Port[] = [];
+  for (const connection of connections) {
+    try {
+      const otherPieceId = connection.connected.piece.id_ === normalizedPieceId.id_ ? connection.connecting.piece.id_ : connection.connected.piece.id_;
+      const otherPiece = findPieceInDesign(design, otherPieceId);
+      const otherType = findTypeInKit(kit, otherPiece.type);
+      const otherPortId = connection.connected.piece.id_ === normalizedPieceId.id_ ? connection.connecting.port.id_ : connection.connected.port.id_;
+      const otherPort = findPortInType(otherType, otherPortId || "");
+      requiredPorts.push(otherPort);
+    } catch (error) {
+      continue;
+    }
+  }
+  return (
+    kit.types?.filter((replacementType) => {
+      if (variants !== undefined && !variants.includes(replacementType.variant ?? "")) return false;
+      if (!replacementType.ports || replacementType.ports.length === 0) return requiredPorts.length === 0;
+      return requiredPorts.every((requiredPort) => {
+        return replacementType.ports!.some((replacementPort) => arePortsCompatible(replacementPort, requiredPort));
+      });
+    }) ?? []
+  );
+};
+
+export const findReplacableTypesForPiecesInDesign = (kit: Kit, designId: DesignIdLike, pieceIds: PieceIdLike[], variants?: string[]): Type[] => {
+  const design = findDesignInKit(kit, designId);
+  const normalizedPieceIds = pieceIds.map((id) => (typeof id === "string" ? id : id.id_));
+  const pieces = normalizedPieceIds.map((id) => findPieceInDesign(design, id));
+  const externalConnections: Array<{
+    connection: Connection;
+    requiredPort: Port;
+  }> = [];
+  for (const piece of pieces) {
+    const connections = findPieceConnectionsInDesign(design, piece.id_);
+    for (const connection of connections) {
+      const otherPieceId = connection.connected.piece.id_ === piece.id_ ? connection.connecting.piece.id_ : connection.connected.piece.id_;
+      if (!normalizedPieceIds.includes(otherPieceId)) {
+        try {
+          const otherPiece = findPieceInDesign(design, otherPieceId);
+          const otherType = findTypeInKit(kit, otherPiece.type);
+          const otherPortId = connection.connected.piece.id_ === piece.id_ ? connection.connecting.port.id_ : connection.connected.port.id_;
+          const otherPort = findPortInType(otherType, otherPortId || "");
+          externalConnections.push({ connection, requiredPort: otherPort });
+        } catch (error) {
+          continue;
+        }
+      }
+    }
+  }
+  return (
+    kit.types?.filter((replacementType) => {
+      if (variants !== undefined && !variants.includes(replacementType.variant ?? "")) return false;
+      if (!replacementType.ports || replacementType.ports.length === 0) return externalConnections.length === 0;
+      return externalConnections.every(({ requiredPort }) => {
+        return replacementType.ports!.some((replacementPort) => arePortsCompatible(replacementPort, requiredPort));
+      });
+    }) ?? []
+  );
+};
+
+export const piecesMetadata = (
+  kit: Kit,
+  designId: DesignIdLike,
+): Map<
+  string,
+  {
+    plane: Plane;
+    center: Coord;
+    fixedPieceId: string;
+    parentPieceId: string | null;
+    depth: number;
+  }
+> => {
+  const normalizedDesignId = designIdLikeToDesignId(designId);
+  const design = findDesignInKit(kit, normalizedDesignId);
+  if (!design) {
+    throw new Error(`Design ${normalizedDesignId.name} not found in kit ${kit.name}`);
+  }
+  const flattenDiff = flattenDesign(kit, normalizedDesignId);
+  const flatDesign = applyDesignDiff(design, flattenDiff, true);
+  const fixedPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.fixedPieceId") || p.id_);
+  const parentPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.parentPieceId", null));
+  const depths = flatDesign.pieces?.map((p) => parseInt(findAttributeValue(p, "semio.depth", "0")!));
+  return new Map(
+    flatDesign.pieces?.map((p, index) => [
+      p.id_,
+      {
+        plane: p.plane!,
+        center: p.center!,
+        fixedPieceId: fixedPieceIds![index],
+        parentPieceId: parentPieceIds![index],
+        depth: depths![index],
+      },
+    ]),
+  );
+};
+
+export const findAttributeValue = (entity: Kit | Type | Design | Piece | Connection | Representation | Port, name: string, defaultValue?: string | null): string | null => {
+  const attribute = entity.attributes?.find((q) => q.key === name);
+  if (!attribute && defaultValue === undefined) throw new Error(`Attribute ${name} not found in ${entity}`);
+  if (attribute?.value === undefined && defaultValue === null) return null;
+  return attribute?.value ?? defaultValue ?? "";
+};
+
+const getColorForText = (text?: string): string => {
+  if (!text || text === "") {
+    return "var(--color-dark)";
+  }
+
+  // Create a simple hash from the family string
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    const char = text.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+
+  // Generate color variations based on primary, secondary, tertiary
+  const baseColors = [
+    {
+      base: "var(--color-primary)",
+      variations: ["#ff344f", "#ff5569", "#ff7684", "#ff97a0"],
+    },
+    {
+      base: "var(--color-secondary)",
+      variations: ["#34d1bf", "#4dd7c9", "#66ddd3", "#80e3dd"],
+    },
+    {
+      base: "var(--color-tertiary)",
+      variations: ["#fa9500", "#fba320", "#fcb140", "#fdc060"],
+    },
+    {
+      base: "var(--color-success)",
+      variations: ["#7eb77f", "#8ec28f", "#9ecd9f", "#aed8af"],
+    },
+    {
+      base: "var(--color-warning)",
+      variations: ["#fccf05", "#fcd525", "#fddb45", "#fde165"],
+    },
+    {
+      base: "var(--color-info)",
+      variations: ["#dbbea1", "#e1c7ae", "#e7d0bb", "#edd9c8"],
+    },
+  ];
+
+  const colorSetIndex = Math.abs(hash) % baseColors.length;
+  const variationIndex = Math.abs(Math.floor(hash / baseColors.length)) % baseColors[colorSetIndex].variations.length;
+
+  return baseColors[colorSetIndex].variations[variationIndex];
+};
+
+export const colorPortsForTypes = (types: Type[]): TypesDiff => {
+  const updated: { id: TypeId; diff: TypeDiff }[] = [];
+
+  for (const type of types) {
+    const coloredPorts: Port[] = [];
+    for (const port of type.ports || []) {
+      const coloredPort = setAttribute(port, {
+        key: "semio.color",
+        value: getColorForText(port.family),
+      });
+      coloredPorts.push(coloredPort);
+    }
+
+    updated.push({
+      id: { name: type.name, variant: type.variant },
+      diff: {
+        ports: coloredPorts
+      }
+    });
+  }
+
+  return { updated };
 };
 
 // Helper function to parse design ID from design piece variant

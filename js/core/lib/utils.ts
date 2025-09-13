@@ -23,7 +23,13 @@ import { twMerge } from "tailwind-merge";
 
 import { default as adjectives } from "@semio/assets/lists/adjectives.json";
 import { default as animals } from "@semio/assets/lists/animals.json";
+import CONSTANTS from "../constants.json";
 
+// #region Constants
+
+export const TOLERANCE = CONSTANTS.tolerance;
+
+// #endregion Constants
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -96,7 +102,7 @@ export const deepEqual = (a: any, b: any): boolean => {
   return false;
 };
 
-const arraysEqual = <T>(a: T[] | undefined, b: T[] | undefined): boolean => {
+export const arraysEqual = <T>(a: T[] | undefined, b: T[] | undefined): boolean => {
   if (a === b) return true;
   if (!a || !b) return false;
   return a.length === b.length && a.every((val, index) => deepEqual(val, b[index]));
