@@ -231,13 +231,14 @@ export const LocationSchema = z.object({
 export type Location = z.infer<typeof LocationSchema>;
 
 // https://github.com/usalu/semio#-diagram-
-export const CoordSchema = z.object({ x: z.number(), y: z.number() });
-export type Coord = z.infer<typeof CoordSchema>;
+export const DiagramCoordSchema = z.object({ x: z.number(), y: z.number() });
+export type DiagramCoord = z.infer<typeof DiagramCoordSchema>;
 export const VecSchema = z.object({ x: z.number(), y: z.number() });
 export type Vec = z.infer<typeof VecSchema>;
 
 
 export const TypeSchema = z.object({
+  id: z.string(),
   name: z.string(),
   description: z.string().optional(),
   icon: z.string().optional(),
@@ -257,25 +258,56 @@ export const TypeSchema = z.object({
   attributes: z.array(AttributeSchema).optional()
 });
 export type Type = z.infer<typeof TypeSchema>;
+export const RepresentationDiffSchema = z.object({
+  url: z.string().optional(),
+  description: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  attributes: z.array(AttributeSchema).optional(),
+});
+export const PortDiffSchema = z.object({
+  id_: z.string().optional(),
+  description: z.string().optional(),
+  family: z.string().optional(),
+  mandatory: z.boolean().optional(),
+  t: z.number().optional(),
+  compatibleFamilies: z.array(z.string()).optional(),
+  point: PointSchema.optional(),
+  direction: VectorSchema.optional(),
+  props: z.array(PropSchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
+});
+export const RepresentationsDiffSchema = z.object({
+  removed: z.array(RepresentationIdSchema).optional(),
+  updated: z.array(z.object({ id: RepresentationIdSchema, diff: RepresentationDiffSchema })).optional(),
+  added: z.array(RepresentationSchema).optional(),
+});
+export const PortsDiffSchema = z.object({
+  removed: z.array(PortIdSchema).optional(),
+  updated: z.array(z.object({ id: PortIdSchema, diff: PortDiffSchema })).optional(),
+  added: z.array(PortSchema).optional(),
+});
 export const TypeShallowSchema = TypeSchema.overwrite({
   representations: z.array(RepresentationIdSchema).optional(),
   ports: z.array(PortIdSchema).optional(),
 });
+export type TypeShallow = z.infer<typeof TypeShallowSchema>;
 export const TypeDiffSchema = TypeSchema.partial().overwrite({
   representations: z.array(RepresentationsDiffSchema).optional(),
   ports: z.array(PortsDiffSchema).optional(),
 });
 export type TypeDiff = z.infer<typeof TypeDiffSchema>;
 
+export const TypeIdSchema = z.string();
+export type TypeId = z.infer<typeof TypeIdSchema>;
+export const TypeIdLikeSchema = z.union([TypeSchema, TypeIdSchema, z.string()]);
+export type TypeIdLike = z.infer<typeof TypeIdLikeSchema>;
+
 export const TypesDiffSchema = z.object({
   removed: z.array(TypeIdSchema).optional(),
   updated: z.array(z.object({ id: TypeIdSchema, diff: TypeDiffSchema })).optional(),
   added: z.array(TypeSchema).optional(),
 });
-export const TypeIdSchema = TypeSchema.pick({ name: true, variant: true });
-export type TypeId = z.infer<typeof TypeIdSchema>;
-export const TypeIdLikeSchema = z.union([TypeSchema, TypeIdSchema, z.string()]);
-export type TypeIdLike = z.infer<typeof TypeIdLikeSchema>;
+export type TypesDiff = z.infer<typeof TypesDiffSchema>;
 
 
 // Basic schemas needed for shallow schemas
@@ -290,6 +322,19 @@ export const LayerSchema = z.object({
   locked: z.boolean().optional(),
   attributes: z.array(AttributeSchema).optional()
 });
+export type Layer = z.infer<typeof LayerSchema>;
+
+// ID schemas needed by DesignShallowSchema
+export const PieceIdSchema = z.string();
+export type PieceId = z.infer<typeof PieceIdSchema>;
+export const GroupIdSchema = z.string();
+export type GroupId = z.infer<typeof GroupIdSchema>;
+export const ConnectionIdSchema = z.string();
+export type ConnectionId = z.infer<typeof ConnectionIdSchema>;
+export const DesignIdSchema = z.string();
+export type DesignId = z.infer<typeof DesignIdSchema>;
+export const KitIdSchema = z.string();
+export type KitId = z.infer<typeof KitIdSchema>;
 
 // https://github.com/usalu/semio#-design-
 export const DesignShallowSchema = z.object({
@@ -314,7 +359,7 @@ export const DesignShallowSchema = z.object({
       z.object({
         designId: z.lazy(() => DesignIdSchema),
         plane: PlaneSchema.optional(),
-        center: CoordSchema.optional(),
+        center: DiagramCoordSchema.optional(),
       }),
     )
     .optional(),
@@ -389,41 +434,13 @@ export const FilesDiffSchema = z.object({
   updated: z.array(z.object({ id: FileIdSchema, diff: FileDiffSchema })).optional(),
   added: z.array(FileSchema).optional(),
 });
-export const RepresentationDiffSchema = z.object({
-  url: z.string().optional(),
-  description: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  attributes: z.array(AttributeSchema).optional(),
-});
-export const RepresentationsDiffSchema = z.object({
-  removed: z.array(RepresentationIdSchema).optional(),
-  updated: z.array(z.object({ id: RepresentationIdSchema, diff: RepresentationDiffSchema })).optional(),
-  added: z.array(RepresentationSchema).optional(),
-});
-export const PortDiffSchema = z.object({
-  id_: z.string().optional(),
-  description: z.string().optional(),
-  family: z.string().optional(),
-  mandatory: z.boolean().optional(),
-  t: z.number().optional(),
-  compatibleFamilies: z.array(z.string()).optional(),
-  point: PointSchema.optional(),
-  direction: VectorSchema.optional(),
-  props: z.array(PropSchema).optional(),
-  attributes: z.array(AttributeSchema).optional(),
-});
-export const PortsDiffSchema = z.object({
-  removed: z.array(PortIdSchema).optional(),
-  updated: z.array(z.object({ id: PortIdSchema, diff: PortDiffSchema })).optional(),
-  added: z.array(PortSchema).optional(),
-});
 export const PieceDiffSchema = z.object({
   id_: z.string().optional(),
   name: z.string().optional(),
   description: z.string().optional(),
   type: TypeIdSchema.optional(),
   plane: PlaneSchema.optional(),
-  center: CoordSchema.optional(),
+  center: DiagramCoordSchema.optional(),
   scale: z.number().optional(),
   mirrorPlane: PlaneSchema.optional(),
   hidden: z.boolean().optional(),
@@ -560,15 +577,13 @@ export const GroupDiffSchema = z.object({
 export const DiffStatusSchema = z.enum(["unchanged", "added", "removed", "modified"]);
 
 
-export const PieceIdLikeSchema = z.union([z.string(), z.object({ id: z.string() })]);
-
 export const PieceSchema = z.object({
   id: z.string(),
   name: z.string().optional(),
   description: z.string().optional(),
   type: TypeIdSchema,
   plane: PlaneSchema.optional(),
-  center: CoordSchema.optional(),
+  center: DiagramCoordSchema.optional(),
   scale: z.number().optional(),
   mirrorPlane: PlaneSchema.optional(),
   hidden: z.boolean().optional(),
@@ -576,6 +591,10 @@ export const PieceSchema = z.object({
   color: z.string().optional(),
   attributes: z.array(AttributeSchema).optional()
 });
+export type Piece = z.infer<typeof PieceSchema>;
+
+export const PieceIdLikeSchema = z.union([PieceSchema, PieceIdSchema, z.string()]);
+export type PieceIdLike = z.infer<typeof PieceIdLikeSchema>;
 
 export const SideIdSchema = z.string();
 export const SideIdLikeSchema = z.union([z.string(), z.object({ id: z.string() })]);
