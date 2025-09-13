@@ -1,17 +1,15 @@
 # Monorepo
 
-## Project
-
-An ecosystem for designing kit-of-parts architecture together.
+This document MUST ALWAYS be followed unless explicitly asked to do otherwise.
 
 ## Rules
 
-The following rules MUST always be followed unless explicitly asked to do otherwise.
-
 - NEVER remove functionality! Not even to get the code to work quickly.
 - ALWAYS be thorough.
-- NEVER create scripts to automate manual tasks. If a task is long
+- NEVER create scripts to automate manual tasks.
+- NEVER leave a placeholder.
 - NEVER stop halfways and ask if you should continue.
+- If a task is to big, ALWAYS start with one small part and ALWAYS finish it and keep on as much as you can.
 - ALWAYS finish the task.
 - ALWAYS make the choice directly! If you have several options, don't ask in between, be opionionated and just go for it. Try to do as much as you can.
 - ALWAYS toolfriendly over intuitive.
@@ -20,7 +18,7 @@ The following rules MUST always be followed unless explicitly asked to do otherw
 - NEVER worry about breaking compatiblity.
 - NEVER create additional example files and implement it directly in the dependent parts.
 - NEVER remove code that is commented out.
-- NEVER add comments to the code.
+- NEVER add comments to the code. Especially not to communicate to the user.
 - NEVER ask to run a command where you are not using the output. All dev servers, debugging and testing processes are running.
 - NEVER run modifying `git` commands. Only read-only `git`commands are allowed. If you messed up, ALWAYS fix the file.
 - NEVER add comments to the code.
@@ -41,7 +39,7 @@ The following rules MUST always be followed unless explicitly asked to do otherw
 
 ### Nouns
 
-- Kit: A collection of types and designs. Can be either static (a special .zip file) or dynamic (bound to a runtime).
+- Kit: A collection of qualities,types and designs. Can be either static (a special .zip file) or dynamic (bound to a runtime).
 - Design: An undirected graph of pieces (nodes) and connections (edges).
 - Type: A reusable component with different representations and ports.
 - Piece: An instance of either a type or a design.
@@ -237,3 +235,280 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
 - All state is stored in the SketchpadStore. All state and cruds are accessed over hooks.
 - There are different scopes: SketchpadScope, KitScope, DesignScope, DesignEditorScope.
 - There is a transaction mechanism for kits. Every design editor transaction is an extended kit transaction. The undo redo manager is on editor level and stores the diff of the transaction along with the editor state. This way undo redo works even when the kit changes because only the diff is stored.
+
+# Hierarchies
+
+Use this hierarchy for code organization (order of appearance of regions,classes, properties, functions, methods, types, statements, constants, …).
+
+## 1. Models
+
+1. Attribute
+2. Coord
+3. Point
+4. Vector
+5. Plane
+6. Camera
+7. Location
+8. Author
+9. File
+10. Benchmark
+11. QualityKind
+12. Quality
+13. Prop
+14. Representation
+15. Port
+16. Type
+17. Layer
+18. Piece
+19. Group
+20. Side
+21. Connection
+22. Stat
+23. Design
+24. Kit
+
+## 2. Classes | Types
+
+1. Model
+2. Id
+3. Shallow
+4. Diff
+5. Diffs
+6. Input
+7. Output
+8. Context
+9. Prediction
+
+## 3. Properties
+
+### Attribute
+
+1. Key
+2. Value
+3. Definition
+
+### Coord
+
+1. X
+2. Y
+
+### Point
+
+1. X
+2. Y
+3. Z
+
+### Vector
+
+1. X
+2. Y
+3. Z
+
+### Plane
+
+1. Origin
+2. XAxis
+3. YAxis
+
+### Camera
+
+1. Position
+2. Forward
+3. Up
+
+### Location
+
+1. Longitude
+2. Latitude
+3. Altitude
+4. Attributes
+
+### Author
+
+1. Name
+2. Email
+3. Attributes
+
+### File
+
+1. Path
+2. RemoteUrl
+3. Description
+4. Attributes
+
+### Benchmark
+
+1. Name
+2. Icon
+3. Min
+4. MinExcluded
+5. Max
+6. MaxExcluded
+7. Definition
+8. Attributes
+
+### QualityKind
+
+1. General
+2. Type
+3. Design
+4. Piece
+5. Connection
+6. Port
+
+### Quality
+
+1. Key
+2. Name
+3. Kind
+4. Default
+5. Formula
+6. DefaultSiUnit
+7. DefaultImperialUnit
+8. Min
+9. MinExcluded
+10. Max
+11. MaxExcluded
+12. CanScale
+13. Benchmarks
+14. Definition
+15. Attributes
+
+### Prop
+
+1. Key
+2. Value
+3. Unit
+4. Attributes
+
+### Representation
+
+1. Tags
+2. Url
+3. Description
+4. Attributes
+
+### Port
+
+1. Id
+2. Point
+3. Direction
+4. T
+5. Mandatory
+6. Family
+7. CompatibleFamilies
+8. Description
+9. Attributes
+
+### Type
+
+1. Name
+2. Variant
+3. Representations
+4. Ports
+5. Props
+6. IsVirtual
+7. CanScale
+8. CanMirror
+9. Unit
+10. Location
+11. Authors
+12. Concepts
+13. Icon
+14. Image
+15. Description
+16. Attributes
+
+### Layer
+
+1. Path
+2. IsHidden
+3. IsLocked
+4. Color
+5. Description
+6. Attributes
+
+### Group
+
+1. Pieces
+2. Color
+3. Name
+4. Description
+5. Attributes
+
+### Piece
+
+1. Id
+2. Type
+3. Design
+4. Plane
+5. Center
+6. Scale
+7. MirrorPlane
+8. Props
+9. IsHidden
+10. IsLocked
+11. Color
+12. Description
+13. Attributes
+
+### Side
+
+1. Piece
+2. DesignPiece
+3. Port
+
+### Connection
+
+1. Connected
+2. Connecting
+3. Gap
+4. Shift
+5. Rise
+6. Rotation
+7. Turn
+8. Tilt
+9. X
+10. Y
+11. Description
+12. Attributes
+
+### Design
+
+1. Name
+2. Variant
+3. View
+4. Pieces
+5. Connections
+6. Stats
+7. Props
+8. Layers
+9. ActiveLayer
+10. Groups
+11. CanScale
+12. CanMirror
+13. Unit
+14. Location
+15. Authors
+16. Concepts
+17. Icon
+18. Image
+19. Description
+20. Attributes
+
+### Kit
+
+1. Name
+1. Version
+1. Types
+1. Designs
+1. Qualities
+1. Authors
+1. Icon
+1. Image
+1. Remote
+1. Homepage
+1. License
+1. Concepts
+1. Description
+1. Attributes
