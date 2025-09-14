@@ -972,6 +972,41 @@ export const LayerIdSchema = LayerSchema.pick({ path: true });
 export type LayerId = z.infer<typeof LayerIdSchema>;
 export const serializeLayer = (layer: Layer): string => JSON.stringify(LayerSchema.parse(layer));
 export const deserializeLayer = (json: string): Layer => LayerSchema.parse(JSON.parse(json));
+export const LayerDiffSchema = LayerSchema.partial().omit({ attributes: true }).extend({
+  attributes: AttributesDiffSchema.optional(),
+});
+export type LayerDiff = z.infer<typeof LayerDiffSchema>;
+export const getLayerDiff = (before: Layer, after: Layer): LayerDiff => {
+  const diffResult: Partial<LayerDiff> = { path: after.path };
+  if (before.description !== after.description) diffResult.description = after.description;
+  if (!deepEqual(before.color, after.color)) diffResult.color = after.color;
+  if (!arraysEqual(before.attributes, after.attributes)) diffResult.attributes = after.attributes;
+  return diffResult;
+};
+
+export const applyLayerDiff = (base: Layer, diff: LayerDiff): Layer => ({
+  ...base, ...diff,
+  attributes: diff.attributes ?? base.attributes,
+});
+export const mergeLayerDiff = (diff1: LayerDiff, diff2: LayerDiff): LayerDiff => ({
+  path: diff2.path ?? diff1.path,
+  description: diff2.description ?? diff1.description,
+  color: diff2.color ?? diff1.color,
+  attributes: diff2.attributes ?? diff1.attributes,
+});
+export const inverseLayerDiff = (original: Layer, appliedDiff: LayerDiff): LayerDiff => {
+  const inverseDiff: any = { path: original.path };
+  if (appliedDiff.description !== undefined) inverseDiff.description = original.description;
+  if (appliedDiff.color !== undefined) inverseDiff.color = original.color;
+  if (appliedDiff.attributes !== undefined) inverseDiff.attributes = original.attributes;
+  return inverseDiff;
+};
+export const LayersDiffSchema = z.object({
+  removed: z.array(LayerIdSchema).optional(),
+  updated: z.array(z.object({ id: LayerIdSchema, diff: LayerDiffSchema })).optional(),
+  added: z.array(LayerSchema).optional(),
+});
+export type LayersDiff = z.infer<typeof LayersDiffSchema>;
 
 // #endregion Layer
 
@@ -995,6 +1030,7 @@ export const PieceSchema = z.object({
 export type Piece = z.infer<typeof PieceSchema>;
 export const PieceIdSchema = PieceSchema.pick({ id_: true });
 export type PieceId = z.infer<typeof PieceIdSchema>;
+export const pieceIdToString = (piece: PieceId): string => piece.id_;
 export const PieceIdLikeSchema = z.union([PieceSchema, PieceIdSchema, z.string()]);
 export type PieceIdLike = z.infer<typeof PieceIdLikeSchema>;
 export const pieceIdLikeToPieceId = (piece: PieceIdLike): PieceId => {
@@ -1694,9 +1730,15 @@ export const DesignShallowSchema = DesignSchema.omit({ pieces: true, connections
 export type DesignShallow = z.infer<typeof DesignShallowSchema>;
 export const serializeDesignShallow = (design: DesignShallow): string => JSON.stringify(DesignShallowSchema.parse(design));
 export const deserializeDesignShallow = (json: string): DesignShallow => DesignShallowSchema.parse(JSON.parse(json));
-export const DesignDiffSchema = DesignSchema.partial().extend({
+export const DesignDiffSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true, props: true, layers: true, groups: true, authors: true, attributes: true }).extend({
   pieces: PiecesDiffSchema.optional(),
   connections: ConnectionsDiffSchema.optional(),
+  stats: StatsDiffSchema.optional(),
+  props: PropsDiffSchema.optional(),
+  layers: LayersDiffSchema.optional(),
+  groups: GroupsDiffSchema.optional(),
+  authors: AuthorsDiffSchema.optional(),
+  attributes: AttributesDiffSchema.optional(),
 });
 export type DesignDiff = z.infer<typeof DesignDiffSchema>;
 export const getDesignDiff = (before: Design, after: Design): DesignDiff => {
@@ -1862,6 +1904,161 @@ export const inverseDesignDiff = (original: Design, appliedDiff: DesignDiff): De
 
   return inverseDiff;
 };
+
+
+export const addPieceToDesignDiff = (designDiff: any, piece: Piece): any => {
+  return {
+    ...designDiff,
+    pieces: {
+      ...designDiff.pieces,
+      added: [...(designDiff.pieces?.added || []), piece],
+    },
+  };
+};
+export const setPieceInDesignDiff = (designDiff: any, pieceDiff: { id_: PieceId, diff: PieceDiff }): any => {
+  const existingIndex = (designDiff.pieces?.updated || []).findIndex((p: { id_: PieceId, diff: PieceDiff }) => {
+    const pId = typeof p.id_ === 'string' ? p.id_ : p.id_.id_;
+    const targetId = typeof pieceDiff.id_ === 'string' ? pieceDiff.id_ : pieceDiff.id_.id_;
+    return pId === targetId;
+  });
+  const updated = [...(designDiff.pieces?.updated || [])];
+  if (existingIndex >= 0) {
+    updated[existingIndex] = pieceDiff;
+  } else {
+    updated.push(pieceDiff);
+  }
+  return { ...designDiff, pieces: { ...designDiff.pieces, updated } };
+};
+export const removePieceFromDesignDiff = (designDiff: any, pieceId: PieceId): any => {
+  return {
+    ...designDiff,
+    pieces: {
+      ...designDiff.pieces,
+      removed: [...(designDiff.pieces?.removed || []), pieceId],
+    },
+  };
+};
+
+export const addPiecesToDesignDiff = (designDiff: any, pieces: Piece[]): any => {
+  return {
+    ...designDiff,
+    pieces: {
+      ...designDiff.pieces,
+      added: [...(designDiff.pieces?.added || []), ...pieces],
+    },
+  };
+};
+export const setPiecesInDesignDiff = (designDiff: any, pieceDiffs: { id_: PieceId, diff: PieceDiff }[]): any => {
+  const updated = [...(designDiff.pieces?.updated || [])];
+  pieceDiffs.forEach((pieceDiff: { id_: PieceId, diff: PieceDiff }) => {
+    const existingIndex = updated.findIndex((p: { id_: PieceId, diff: PieceDiff }) => {
+      const pId = typeof p.id_ === 'string' ? p.id_ : p.id_.id_;
+      const targetId = typeof pieceDiff.id_ === 'string' ? pieceDiff.id_ : pieceDiff.id_.id_;
+      return pId === targetId;
+    });
+    if (existingIndex >= 0) {
+      updated[existingIndex] = pieceDiff;
+    } else {
+      updated.push(pieceDiff);
+    }
+  });
+  return { ...designDiff, pieces: { ...designDiff.pieces, updated } };
+};
+export const removePiecesFromDesignDiff = (designDiff: any, pieceIds: PieceId[]): any => {
+  return {
+    ...designDiff,
+    pieces: {
+      ...designDiff.pieces,
+      removed: [...(designDiff.pieces?.removed || []), ...pieceIds],
+    },
+  };
+};
+
+export const addConnectionToDesignDiff = (designDiff: any, connection: Connection): any => {
+  return {
+    ...designDiff,
+    connections: {
+      ...designDiff.connections,
+      added: [...(designDiff.connections?.added || []), connection],
+    },
+  };
+};
+export const setConnectionInDesignDiff = (designDiff: any, connectionDiff: ConnectionDiff): any => {
+  const existingIndex = (designDiff.connections?.updated || []).findIndex((c: ConnectionDiff) => isSameConnection(c, connectionDiff));
+  const updated = [...(designDiff.connections?.updated || [])];
+  if (existingIndex >= 0) {
+    updated[existingIndex] = connectionDiff;
+  } else {
+    updated.push(connectionDiff);
+  }
+  return { ...designDiff, connections: { ...designDiff.connections, updated } };
+};
+export const removeConnectionFromDesignDiff = (designDiff: any, connectionId: ConnectionId): any => {
+  return {
+    ...designDiff,
+    connections: {
+      ...designDiff.connections,
+      removed: [...(designDiff.connections?.removed || []), connectionId],
+    },
+  };
+};
+
+export const addConnectionsToDesignDiff = (designDiff: any, connections: Connection[]): any => {
+  return {
+    ...designDiff,
+    connections: {
+      ...designDiff.connections,
+      added: [...(designDiff.connections?.added || []), ...connections],
+    },
+  };
+};
+export const setConnectionsInDesignDiff = (designDiff: any, connectionDiffs: ConnectionDiff[]): any => {
+  const updated = [...(designDiff.connections?.updated || [])];
+  connectionDiffs.forEach((connectionDiff: ConnectionDiff) => {
+    const existingIndex = updated.findIndex((c: ConnectionDiff) => isSameConnection(c, connectionDiff));
+    if (existingIndex >= 0) {
+      updated[existingIndex] = connectionDiff;
+    } else {
+      updated.push(connectionDiff);
+    }
+  });
+  return { ...designDiff, connections: { ...designDiff.connections, updated } };
+};
+export const removeConnectionsFromDesignDiff = (designDiff: any, connectionIds: ConnectionId[]): any => {
+  return {
+    ...designDiff,
+    connections: {
+      ...designDiff.connections,
+      removed: [...(designDiff.connections?.removed || []), ...connectionIds],
+    },
+  };
+};
+
+export const applyDesignDiff = (base: Design, diff: DesignDiff): Design => {
+  const result = { ...base, ...diff, pieces: base.pieces, connections: base.connections, };
+  if (diff.pieces) {
+    result.pieces = diff.pieces.added ? [...(result.pieces || []), ...diff.pieces.added] : result.pieces;
+    result.pieces = diff.pieces.removed ? result.pieces.filter(p => !diff.pieces.removed.includes(p.id_)) : result.pieces;
+    result.pieces = diff.pieces.updated ? result.pieces.map(p => diff.pieces.updated.find(pu => pu.id.id_ === p.id_)?.diff ? { ...p, ...diff.pieces.updated.find(pu => pu.id.id_ === p.id_)?.diff } : p) : result.pieces;
+  }
+  if (diff.connections) {
+    result.connections = diff.connections.added ? [...(result.connections || []), ...diff.connections.added] : result.connections;
+    result.connections = diff.connections.removed ? result.connections.filter(c => !diff.connections.removed.includes(c.id_)) : result.connections;
+    result.connections = diff.connections.updated ? result.connections.map(c => diff.connections.updated.find(cu => cu.id.id_ === c.id_)?.diff ? { ...c, ...diff.connections.updated.find(cu => cu.id.id_ === c.id_)?.diff } : c) : result.connections;
+  }
+  if (diff.stats) {
+    result.stats = diff.stats;
+  }
+  if (diff.authors) {
+    result.authors = diff.authors;
+  }
+  if (diff.attributes) {
+    result.attributes = diff.attributes;
+  }
+  return result;
+};
+
+
 
 export const DesignsDiffSchema = z.object({
   removed: z.array(DesignIdSchema).optional(),
@@ -2486,6 +2683,7 @@ export const KitSchema = z.object({
 export type Kit = z.infer<typeof KitSchema>;
 export const KitIdSchema = KitSchema.pick({ name: true, version: true });
 export type KitId = z.infer<typeof KitIdSchema>;
+export const kitIdToString = (kitId: KitId): string => `${kitId.name}@${kitId.version ?? ""}`;
 export const KitIdLikeSchema = z.union([KitSchema, KitIdSchema, z.string()]);
 export type KitIdLike = z.infer<typeof KitIdLikeSchema>;
 export const kitIdLikeToKitId = (kit: KitIdLike): KitId => {
@@ -3238,257 +3436,3 @@ export const createFileFromDataUri = (url: string, dataUri: string): File => {
     updated: new Date(),
   };
 };
-
-
-
-// #region DesignDiff
-
-export const addPieceToDesignDiff = (designDiff: any, piece: Piece): any => {
-  return {
-    ...designDiff,
-    pieces: {
-      ...designDiff.pieces,
-      added: [...(designDiff.pieces?.added || []), piece],
-    },
-  };
-};
-export const setPieceInDesignDiff = (designDiff: any, pieceDiff: { id_: PieceId, diff: PieceDiff }): any => {
-  const existingIndex = (designDiff.pieces?.updated || []).findIndex((p: { id_: PieceId, diff: PieceDiff }) => {
-    const pId = typeof p.id_ === 'string' ? p.id_ : p.id_.id_;
-    const targetId = typeof pieceDiff.id_ === 'string' ? pieceDiff.id_ : pieceDiff.id_.id_;
-    return pId === targetId;
-  });
-  const updated = [...(designDiff.pieces?.updated || [])];
-  if (existingIndex >= 0) {
-    updated[existingIndex] = pieceDiff;
-  } else {
-    updated.push(pieceDiff);
-  }
-  return { ...designDiff, pieces: { ...designDiff.pieces, updated } };
-};
-export const removePieceFromDesignDiff = (designDiff: any, pieceId: PieceId): any => {
-  return {
-    ...designDiff,
-    pieces: {
-      ...designDiff.pieces,
-      removed: [...(designDiff.pieces?.removed || []), pieceId],
-    },
-  };
-};
-
-export const addPiecesToDesignDiff = (designDiff: any, pieces: Piece[]): any => {
-  return {
-    ...designDiff,
-    pieces: {
-      ...designDiff.pieces,
-      added: [...(designDiff.pieces?.added || []), ...pieces],
-    },
-  };
-};
-export const setPiecesInDesignDiff = (designDiff: any, pieceDiffs: { id_: PieceId, diff: PieceDiff }[]): any => {
-  const updated = [...(designDiff.pieces?.updated || [])];
-  pieceDiffs.forEach((pieceDiff: { id_: PieceId, diff: PieceDiff }) => {
-    const existingIndex = updated.findIndex((p: { id_: PieceId, diff: PieceDiff }) => {
-      const pId = typeof p.id_ === 'string' ? p.id_ : p.id_.id_;
-      const targetId = typeof pieceDiff.id_ === 'string' ? pieceDiff.id_ : pieceDiff.id_.id_;
-      return pId === targetId;
-    });
-    if (existingIndex >= 0) {
-      updated[existingIndex] = pieceDiff;
-    } else {
-      updated.push(pieceDiff);
-    }
-  });
-  return { ...designDiff, pieces: { ...designDiff.pieces, updated } };
-};
-export const removePiecesFromDesignDiff = (designDiff: any, pieceIds: PieceId[]): any => {
-  return {
-    ...designDiff,
-    pieces: {
-      ...designDiff.pieces,
-      removed: [...(designDiff.pieces?.removed || []), ...pieceIds],
-    },
-  };
-};
-
-export const addConnectionToDesignDiff = (designDiff: any, connection: Connection): any => {
-  return {
-    ...designDiff,
-    connections: {
-      ...designDiff.connections,
-      added: [...(designDiff.connections?.added || []), connection],
-    },
-  };
-};
-export const setConnectionInDesignDiff = (designDiff: any, connectionDiff: ConnectionDiff): any => {
-  const existingIndex = (designDiff.connections?.updated || []).findIndex((c: ConnectionDiff) => isSameConnection(c, connectionDiff));
-  const updated = [...(designDiff.connections?.updated || [])];
-  if (existingIndex >= 0) {
-    updated[existingIndex] = connectionDiff;
-  } else {
-    updated.push(connectionDiff);
-  }
-  return { ...designDiff, connections: { ...designDiff.connections, updated } };
-};
-export const removeConnectionFromDesignDiff = (designDiff: any, connectionId: ConnectionId): any => {
-  return {
-    ...designDiff,
-    connections: {
-      ...designDiff.connections,
-      removed: [...(designDiff.connections?.removed || []), connectionId],
-    },
-  };
-};
-
-export const addConnectionsToDesignDiff = (designDiff: any, connections: Connection[]): any => {
-  return {
-    ...designDiff,
-    connections: {
-      ...designDiff.connections,
-      added: [...(designDiff.connections?.added || []), ...connections],
-    },
-  };
-};
-export const setConnectionsInDesignDiff = (designDiff: any, connectionDiffs: ConnectionDiff[]): any => {
-  const updated = [...(designDiff.connections?.updated || [])];
-  connectionDiffs.forEach((connectionDiff: ConnectionDiff) => {
-    const existingIndex = updated.findIndex((c: ConnectionDiff) => isSameConnection(c, connectionDiff));
-    if (existingIndex >= 0) {
-      updated[existingIndex] = connectionDiff;
-    } else {
-      updated.push(connectionDiff);
-    }
-  });
-  return { ...designDiff, connections: { ...designDiff.connections, updated } };
-};
-export const removeConnectionsFromDesignDiff = (designDiff: any, connectionIds: ConnectionId[]): any => {
-  return {
-    ...designDiff,
-    connections: {
-      ...designDiff.connections,
-      removed: [...(designDiff.connections?.removed || []), ...connectionIds],
-    },
-  };
-};
-
-export const applyDesignDiff = (base: Design, diff: DesignDiff, inplace: boolean = false): Design => {
-  if (inplace) {
-    const effectivePieces: Piece[] = base.pieces
-      ? base.pieces
-        .map((p: Piece) => {
-          const pd = diff.pieces?.updated?.find((up: any) => up.id.id_ === p.id_);
-          const isRemoved = diff.pieces?.removed?.some((rp: PieceId) => (typeof rp === 'string' ? rp : rp.id_) === p.id_);
-          const baseWithUpdate = pd ? { ...p, ...pd.diff } : p;
-          const diffStatus = isRemoved ? DiffStatus.Removed : pd ? DiffStatus.Modified : DiffStatus.Unchanged;
-          return setAttribute(baseWithUpdate, {
-            key: "semio.diffStatus",
-            value: diffStatus,
-          });
-        })
-        .concat(
-          (diff.pieces?.added || []).map((p: Piece) =>
-            setAttribute(p, {
-              key: "semio.diffStatus",
-              value: DiffStatus.Added,
-            }),
-          ),
-        )
-      : (diff.pieces?.added || []).map((p: Piece) => setAttribute(p, { key: "semio.diffStatus", value: DiffStatus.Added }));
-
-    const effectiveConnections: Connection[] = base.connections
-      ? base.connections
-        .map((c: Connection) => {
-          const cd = diff.connections?.updated?.find(
-            (ud) =>
-              ud.id.connected.piece.id_ === c.connected.piece.id_ &&
-              ud.id.connecting.piece.id_ === c.connecting.piece.id_
-          );
-          const isRemoved = diff.connections?.removed?.some((rc: ConnectionId) => (typeof rc.connected.piece === 'string' ? rc.connected.piece : rc.connected.piece.id_) === c.connected.piece.id_ && (typeof rc.connecting.piece === 'string' ? rc.connecting.piece : rc.connecting.piece.id_) === c.connecting.piece.id_);
-          const baseWithUpdate = cd
-            ? {
-              ...c,
-              ...cd.diff,
-              connected: {
-                piece: cd.diff.connected?.piece ?? c.connected.piece,
-                port: cd.diff.connected?.port ?? c.connected.port,
-                designPiece: cd.diff.connected?.designPiece ?? c.connected.designPiece,
-              },
-              connecting: {
-                piece: cd.diff.connecting?.piece ?? c.connecting.piece,
-                port: cd.diff.connecting?.port ?? c.connecting.port,
-                designPiece: cd.diff.connecting?.designPiece ?? c.connecting.designPiece,
-              },
-            }
-            : c;
-          const diffStatus = isRemoved ? DiffStatus.Removed : cd ? DiffStatus.Modified : DiffStatus.Unchanged;
-          return setAttribute(baseWithUpdate, {
-            key: "semio.diffStatus",
-            value: diffStatus,
-          });
-        })
-        .concat(
-          (diff.connections?.added || []).map((c: Connection) =>
-            setAttribute(c, {
-              key: "semio.diffStatus",
-              value: DiffStatus.Added,
-            }),
-          ),
-        )
-      : (diff.connections?.added || []).map((c: Connection) => setAttribute(c, { key: "semio.diffStatus", value: DiffStatus.Added }));
-
-    return {
-      ...base,
-      pieces: effectivePieces,
-      connections: effectiveConnections,
-    };
-  } else {
-    const effectivePieces: Piece[] = base.pieces
-      ? base.pieces
-        .map((p: Piece) => {
-          const pd = diff.pieces?.updated?.find((up) => up.id.id_ === p.id_);
-          return pd ? { ...p, ...pd.diff } : p;
-        })
-        .filter((p: Piece) => !diff.pieces?.removed?.some((rp: PieceId) => rp.id_ === p.id_))
-        .concat(diff.pieces?.added || [])
-      : diff.pieces?.added || [];
-
-    const effectiveConnections: Connection[] = base.connections
-      ? base.connections
-        .map((c: Connection) => {
-          const cd = diff.connections?.updated?.find(
-            (ud) =>
-              ud.id.connected.piece.id_ === c.connected.piece.id_ &&
-              ud.id.connecting.piece.id_ === c.connecting.piece.id_
-          );
-          return cd
-            ? {
-              ...c,
-              ...cd.diff,
-              connected: {
-                piece: cd.diff.connected?.piece ?? c.connected.piece,
-                port: cd.diff.connected?.port ?? c.connected.port,
-                designPiece: cd.diff.connected?.designPiece ?? c.connected.designPiece,
-              },
-              connecting: {
-                piece: cd.diff.connecting?.piece ?? c.connecting.piece,
-                port: cd.diff.connecting?.port ?? c.connecting.port,
-                designPiece: cd.diff.connecting?.designPiece ?? c.connecting.designPiece,
-              },
-            }
-            : c;
-        })
-        .filter((c: Connection) => !diff.connections?.removed?.some((rc: ConnectionId) => rc.connected.piece.id_ === c.connected.piece.id_ && rc.connecting.piece.id_ === c.connecting.piece.id_))
-        .concat(diff.connections?.added || [])
-      : diff.connections?.added || [];
-
-    return {
-      ...base,
-      pieces: effectivePieces,
-      connections: effectiveConnections,
-    };
-  }
-};
-
-// #endregion DesignDiff
-
-// #endregion CRUDs

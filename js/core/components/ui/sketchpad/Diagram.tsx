@@ -34,11 +34,9 @@ import {
   useDesignEditorSelection,
   useDiffedDesign,
   useExplodeableDesignNodes,
-  useFlatDesign,
   useKit,
   useKitCommands,
   usePiecesMetadata,
-  usePortColoredTypes,
 } from "../../../store";
 
 type ClusterMenuProps = {
@@ -813,9 +811,10 @@ const Diagram: FC = () => {
   const others = useDesignEditorOthers();
 
   const design = useDiffedDesign();
-  const types = usePortColoredTypes();
+  // const types = usePortColoredTypes();
   const kit = useKit();
-  const flattenedDesign = useFlatDesign();
+  // const flattenedDesign = useFlatDesign();
+  const flattenedDesign = design;
   const metadata = usePiecesMetadata();
 
   if (!design) return null;
