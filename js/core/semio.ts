@@ -165,6 +165,9 @@ export const deserializeCoord = (json: string): Coord => CoordSchema.parse(JSON.
 export const CoordDiffSchema = CoordSchema.partial();
 export type CoordDiff = z.infer<typeof CoordDiffSchema>;
 export const getCoordDiff = (before: Coord, after: Coord): CoordDiff => { }
+export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => { }
+export const mergeCoordDiff = (diff1: CoordDiff, diff2: CoordDiff): CoordDiff => { }
+export const inverseCoordDiff = (original: Coord, appliedDiff: CoordDiff): CoordDiff => { }
 
 // #endregion Coord
 
@@ -180,6 +183,10 @@ export const serializeVec = (vec: Vec): string => JSON.stringify(VecSchema.parse
 export const deserializeVec = (json: string): Vec => VecSchema.parse(JSON.parse(json));
 export const VecDiffSchema = VecSchema.partial();
 export type VecDiff = z.infer<typeof VecDiffSchema>;
+export const getVecDiff = (before: Vec, after: Vec): VecDiff => { }
+export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => { }
+export const mergeVecDiff = (diff1: VecDiff, diff2: VecDiff): VecDiff => { }
+export const inverseVecDiff = (original: Vec, appliedDiff: VecDiff): VecDiff => { }
 
 // #endregion Vec
 
@@ -196,6 +203,10 @@ export const serializePoint = (point: Point): string => JSON.stringify(PointSche
 export const deserializePoint = (json: string): Point => PointSchema.parse(JSON.parse(json));
 export const PointDiffSchema = PointSchema.partial();
 export type PointDiff = z.infer<typeof PointDiffSchema>;
+export const getPointDiff = (before: Point, after: Point): PointDiff => { }
+export const applyPointDiff = (base: Point, diff: PointDiff): Point => { }
+export const mergePointDiff = (diff1: PointDiff, diff2: PointDiff): PointDiff => { }
+export const inversePointDiff = (original: Point, appliedDiff: PointDiff): PointDiff => { }
 
 // #endregion Point
 
@@ -212,6 +223,10 @@ export const serializeVector = (vector: Vector): string => JSON.stringify(Vector
 export const deserializeVector = (json: string): Vector => VectorSchema.parse(JSON.parse(json));
 export const VectorDiffSchema = VectorSchema.partial();
 export type VectorDiff = z.infer<typeof VectorDiffSchema>;
+export const getVectorDiff = (before: Vector, after: Vector): VectorDiff => { }
+export const applyVectorDiff = (base: Vector, diff: VectorDiff): Vector => { }
+export const mergeVectorDiff = (diff1: VectorDiff, diff2: VectorDiff): VectorDiff => { }
+export const inverseVectorDiff = (original: Vector, appliedDiff: VectorDiff): VectorDiff => { }
 
 // #endregion Vector
 
@@ -270,6 +285,10 @@ export const PlaneDiffSchema = PlaneSchema.partial().omit({ origin: true, xAxis:
   xAxis: VectorDiffSchema.optional(),
   yAxis: VectorDiffSchema.optional(),
 });
+export const getPlaneDiff = (before: Plane, after: Plane): PlaneDiff => { }
+export const applyPlaneDiff = (base: Plane, diff: PlaneDiff): Plane => { }
+export const mergePlaneDiff = (diff1: PlaneDiff, diff2: PlaneDiff): PlaneDiff => { }
+export const inversePlaneDiff = (original: Plane, appliedDiff: PlaneDiff): PlaneDiff => { }
 
 // #endregion Plane
 
@@ -284,6 +303,12 @@ export const CameraSchema = z.object({
 export type Camera = z.infer<typeof CameraSchema>;
 export const serializeCamera = (camera: Camera): string => JSON.stringify(CameraSchema.parse(camera));
 export const deserializeCamera = (json: string): Camera => CameraSchema.parse(JSON.parse(json));
+export const CameraDiffSchema = CameraSchema.partial();
+export type CameraDiff = z.infer<typeof CameraDiffSchema>;
+export const getCameraDiff = (before: Camera, after: Camera): CameraDiff => { }
+export const applyCameraDiff = (base: Camera, diff: CameraDiff): Camera => { }
+export const mergeCameraDiff = (diff1: CameraDiff, diff2: CameraDiff): CameraDiff => { }
+export const inverseCameraDiff = (original: Camera, appliedDiff: CameraDiff): CameraDiff => { }
 
 // #endregion Camera
 
@@ -296,10 +321,14 @@ export const LocationSchema = z.object({
   attributes: z.array(AttributeSchema).optional(),
 });
 export type Location = z.infer<typeof LocationSchema>;
-export const LocationDiffSchema = LocationSchema.partial();
-export type LocationDiff = z.infer<typeof LocationDiffSchema>;
 export const serializeLocation = (location: Location): string => JSON.stringify(LocationSchema.parse(location));
 export const deserializeLocation = (json: string): Location => LocationSchema.parse(JSON.parse(json));
+export const LocationDiffSchema = LocationSchema.partial();
+export type LocationDiff = z.infer<typeof LocationDiffSchema>;
+export const getLocationDiff = (before: Location, after: Location): LocationDiff => { }
+export const applyLocationDiff = (base: Location, diff: LocationDiff): Location => { }
+export const mergeLocationDiff = (diff1: LocationDiff, diff2: LocationDiff): LocationDiff => { }
+export const inverseLocationDiff = (original: Location, appliedDiff: LocationDiff): LocationDiff => { }
 
 // #endregion Location
 

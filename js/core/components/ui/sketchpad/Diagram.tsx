@@ -18,7 +18,7 @@ import {
   ViewportPortal,
   XYPosition,
 } from "@xyflow/react";
-import React, { FC, useCallback, useEffect, useMemo, useState } from "react";
+import React, { FC, useCallback, useEffect, useState } from "react";
 
 import { arePortsCompatible, Connection, Coord, DesignId, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, ICON_WIDTH, isPortInUse, isSameConnection, Piece, Port, TOLERANCE, Type } from "../../../semio";
 
@@ -28,15 +28,14 @@ import {
   DesignEditorPresenceOther,
   PieceScopeProvider,
   useClusterableGroups,
+  useDesign,
   useDesignEditorCommands,
   useDesignEditorFullscreen,
   useDesignEditorOthers,
   useDesignEditorSelection,
-  useDiffedDesign,
   useExplodeableDesignNodes,
   useKit,
   useKitCommands,
-  usePiecesMetadata,
 } from "../../../store";
 
 type ClusterMenuProps = {
@@ -450,6 +449,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
     </div>
   );
 });
+const nodeComponents = { piece: PieceNodeComponent, design: DesignNodeComponent };
 
 const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({ id, source, target, sourceX, sourceY, targetX, targetY, sourceHandleId, targetHandleId, data, selected }) => {
   const HANDLE_HEIGHT = 5;
@@ -491,6 +491,7 @@ const ConnectionEdgeComponent: React.FC<EdgeProps<ConnectionEdge>> = ({ id, sour
     />
   );
 };
+const edgeComponents = { connection: ConnectionEdgeComponent };
 
 const ConnectionConnectionLine: React.FC<ConnectionLineComponentProps> = (props: ConnectionLineComponentProps) => {
   const { fromX, fromY, toX, toY } = props;
@@ -810,12 +811,14 @@ const Diagram: FC = () => {
   const fullscreenPanel = useDesignEditorFullscreen();
   const others = useDesignEditorOthers();
 
-  const design = useDiffedDesign();
+  // const design = useDiffedDesign();
+  const design = useDesign();
   // const types = usePortColoredTypes();
   const kit = useKit();
   // const flattenedDesign = useFlatDesign();
   const flattenedDesign = design;
-  const metadata = usePiecesMetadata();
+  // const metadata = usePiecesMetadata();
+  const metadata = new Map();
 
   if (!design) return null;
   const { nodes, edges } = designToNodesAndEdges(design, flattenedDesign, metadata, kit, selection) ?? {
@@ -1478,17 +1481,14 @@ const Diagram: FC = () => {
     [addConnection, reactFlowInstance, design],
   );
 
-  const nodeTypes = useMemo(() => ({ piece: PieceNodeComponent, design: DesignNodeComponent }), []);
-  const edgeTypes = useMemo(() => ({ connection: ConnectionEdgeComponent }), []);
-
   return (
     <div id="diagram" className="h-full w-full relative">
       <ReactFlow
         ref={useDroppable({ id: "diagram-drop-zone" }).setNodeRef}
         nodes={nodes}
         edges={edges}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
+        nodeTypes={nodeComponents}
+        edgeTypes={edgeComponents}
         connectionMode={ConnectionMode.Loose}
         elementsSelectable={false}
         minZoom={0.1}
@@ -1516,8 +1516,8 @@ const Diagram: FC = () => {
         ))}
       </ReactFlow>
       <HelperLines lines={helperLines} nodes={nodes} />
-      <ClusterMenu nodes={nodes} edges={edges} onCluster={onCluster} />
-      <ExpandMenu nodes={nodes} edges={edges} onExpand={onExpand} />
+      {/* <ClusterMenu nodes={nodes} edges={edges} onCluster={onCluster} /> */}
+      {/* <ExpandMenu nodes={nodes} edges={edges} onExpand={onExpand} /> */}
     </div>
   );
 };

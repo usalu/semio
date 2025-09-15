@@ -22,9 +22,9 @@
 
 import { GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, OrthographicCamera, Select, TransformControls, useGLTF } from "@react-three/drei";
 import { Canvas, ThreeEvent } from "@react-three/fiber";
-import { DiffStatus, Piece, Plane, planeToMatrix, toSemioRotation } from "../../../semio";
 import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import { DiffStatus, Piece, Plane, planeToMatrix, toSemioRotation } from "../../../semio";
 import {
   DesignEditorFullscreenPanel,
   DesignEditorPresenceOther,
@@ -33,8 +33,8 @@ import {
   useDesignEditorFullscreen,
   useDesignEditorOthers,
   useDesignEditorSelection,
-  useFlatDesign,
   useFileUrls,
+  useFlatDesign,
   useKit,
   usePieceDiffStatuses,
   usePiecePlanes,
@@ -75,18 +75,16 @@ const PlaneThree: FC<PlaneThreeProps> = ({ plane }) => {
 
 interface ModelPieceProps {
   pieceIndex: number;
-  onSelect: (piece: Piece, e?: MouseEvent) => void;
-  onPieceUpdate: (piece: Piece) => void;
 }
 
-const ModelPiece: FC<ModelPieceProps> = React.memo(({ pieceIndex, onSelect, onPieceUpdate }) => {
+const ModelPiece: FC<ModelPieceProps> = React.memo(({ pieceIndex }) => {
   const flatDesign = useFlatDesign();
   const piecePlanes = usePiecePlanes();
   const pieceRepresentationUrls = usePieceRepresentationUrls();
   const pieceDiffStatuses = usePieceDiffStatuses();
   const fileUrls = useFileUrls();
   const selection = useDesignEditorSelection();
-  
+
   const piece = flatDesign.pieces?.[pieceIndex];
   const plane = piecePlanes[pieceIndex];
   const fileUrl = fileUrls.get(pieceRepresentationUrls.get(piece?.id_!)!)!;
@@ -94,7 +92,7 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(({ pieceIndex, onSelect, onPi
   const diffStatus = pieceDiffStatuses[pieceIndex] || DiffStatus.Unchanged;
 
   if (!piece) return null;
-  const { startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
+  const { selectPiece, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
   const fixed = piece.plane !== undefined;
   const matrix = useMemo(() => {
     const planeRotationMatrix = planeToMatrix(plane);
@@ -155,10 +153,10 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(({ pieceIndex, onSelect, onPi
 
   const onClick = useCallback(
     (e: ThreeEvent<MouseEvent>) => {
-      onSelect(piece, e.nativeEvent);
+      selectPiece(piece);
       e.stopPropagation();
     },
-    [onSelect, piece],
+    [selectPiece, piece],
   );
 
   const transformControlRef = useRef(null);
@@ -218,7 +216,7 @@ const ModelDesign: FC = () => {
   const others = useDesignEditorOthers();
   const kit = useKit();
   const flatDesign = useFlatDesign();
-  const pieceRepresentationUrls = usePieceRepresentationUrls();
+  // const pieceRepresentationUrls = usePieceRepresentationUrls();
 
   const { removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = commands;
 
@@ -249,11 +247,11 @@ const ModelDesign: FC = () => {
     });
   }, [flatDesign.pieces, types]);
 
-  useEffect(() => {
-    pieceRepresentationUrls.forEach((url, id) => {
-      if (!fileUrls.has(url)) throw new Error(`Representation url ${url} for piece ${id} not found in fileUrls map`);
-    });
-  }, [pieceRepresentationUrls, fileUrls]);
+  // useEffect(() => {
+  //   pieceRepresentationUrls.forEach((url, id) => {
+  //     if (!fileUrls.has(url)) throw new Error(`Representation url ${url} for piece ${id} not found in fileUrls map`);
+  //   });
+  // }, [pieceRepresentationUrls, fileUrls]);
 
   const onChange = useCallback(
     (selected: THREE.Object3D[]) => {
@@ -278,18 +276,12 @@ const ModelDesign: FC = () => {
     [removePieceFromSelection, addPieceToSelection, selectPiece],
   );
 
-  const onPieceUpdate = useCallback((piece: Piece) => setPiece(piece), [setPiece]);
   const filterFunction = useCallback((items: any) => items, []);
   return (
     <Select box multiple onChange={onChange} filter={filterFunction}>
       <group quaternion={new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)}>
         {flatDesign.pieces?.map((piece: Piece, index: number) => (
-          <ModelPiece
-            key={`piece-${piece.id_}`}
-            pieceIndex={index}
-            onSelect={onSelect}
-            onPieceUpdate={onPieceUpdate}
-          />
+          <ModelPiece key={`piece-${piece.id_}`} pieceIndex={index} onSelect={onSelect} />
         ))}
         {others.map((presence, id) => (
           <PresenceThree key={id} {...presence} />
@@ -300,7 +292,6 @@ const ModelDesign: FC = () => {
 };
 
 const SimpleModelCore: FC = () => {
-
   return (
     <>
       <OrthographicCamera />

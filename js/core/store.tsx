@@ -55,6 +55,7 @@ import {
   findReplacableTypesForPieceInDesign,
   findReplacableTypesForPiecesInDesign,
   flattenDesign,
+  getClusterableGroups,
   getIncludedDesigns,
   getPieceRepresentationUrls,
   Kit,

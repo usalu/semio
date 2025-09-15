@@ -127,7 +127,7 @@ const DesignEditor: FC<DesignEditorProps> = () => {
       const ICON_WIDTH = 64;
       const centerX = Math.round(delta.x / ICON_WIDTH);
       const centerY = Math.round(-delta.y / ICON_WIDTH);
-      
+
       if (activeDraggedTypeId) {
         const piece = {
           id_: `piece-${Date.now()}`,
