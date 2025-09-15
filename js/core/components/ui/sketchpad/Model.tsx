@@ -20,25 +20,24 @@
 
 // #endregion
 
-import { GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, OrthographicCamera, Select, TransformControls, useGLTF } from "@react-three/drei";
-import { Canvas, ThreeEvent } from "@react-three/fiber";
+import { GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, OrthographicCamera, Select } from "@react-three/drei";
+import { Canvas } from "@react-three/fiber";
 import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { DiffStatus, Piece, Plane, planeToMatrix, toSemioRotation } from "../../../semio";
+import { Piece, Plane, planeToMatrix } from "../../../semio";
 import {
   DesignEditorFullscreenPanel,
   DesignEditorPresenceOther,
-  PieceScopeProvider,
+  useDesign,
   useDesignEditorCommands,
   useDesignEditorFullscreen,
   useDesignEditorOthers,
   useDesignEditorSelection,
-  useFileUrls,
-  useFlatDesign,
-  useKit,
-  usePieceDiffStatuses,
-  usePiecePlanes,
-  usePieceRepresentationUrls,
+  useIsPieceHovered,
+  useIsPieceSelected,
+  usePiece,
+  usePiecePlane,
+  usePieceStatus,
 } from "../../../store";
 
 const getComputedColor = (variable: string): string => {
@@ -73,196 +72,86 @@ const PlaneThree: FC<PlaneThreeProps> = ({ plane }) => {
   );
 };
 
-interface ModelPieceProps {
-  pieceIndex: number;
-}
+interface ModelPieceProps {}
 
-const ModelPiece: FC<ModelPieceProps> = React.memo(({ pieceIndex }) => {
-  const flatDesign = useFlatDesign();
-  const piecePlanes = usePiecePlanes();
-  const pieceRepresentationUrls = usePieceRepresentationUrls();
-  const pieceDiffStatuses = usePieceDiffStatuses();
-  const fileUrls = useFileUrls();
-  const selection = useDesignEditorSelection();
-
-  const piece = flatDesign.pieces?.[pieceIndex];
-  const plane = piecePlanes[pieceIndex];
-  const fileUrl = fileUrls.get(pieceRepresentationUrls.get(piece?.id_!)!)!;
-  const selected = selection.pieces?.some((id) => id.id_ === piece?.id_) ?? false;
-  const diffStatus = pieceDiffStatuses[pieceIndex] || DiffStatus.Unchanged;
-
-  if (!piece) return null;
-  const { selectPiece, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
-  const fixed = piece.plane !== undefined;
-  const matrix = useMemo(() => {
-    const planeRotationMatrix = planeToMatrix(plane);
-    planeRotationMatrix.multiply(toSemioRotation());
-    return planeRotationMatrix;
-  }, [plane]);
-  const styledScene = useMemo(() => {
-    const scene = useGLTF(fileUrl).scene.clone();
-    let meshColor: THREE.Color;
-    let meshOpacity = 1;
-    let lineOpacity = 1;
-
-    if (diffStatus === DiffStatus.Added) {
-      meshColor = new THREE.Color(getComputedColor("--color-success"));
-      if (selected) {
-        const selectedColor = new THREE.Color(getComputedColor("--color-primary"));
-        meshColor.lerp(selectedColor, 0.5);
-      }
-    } else if (diffStatus === DiffStatus.Modified) {
-      meshColor = new THREE.Color(getComputedColor("--color-warning"));
-      if (selected) {
-        const selectedColor = new THREE.Color(getComputedColor("--color-primary"));
-        meshColor.lerp(selectedColor, 0.5);
-      }
-    } else if (diffStatus === DiffStatus.Removed) {
-      meshColor = new THREE.Color(getComputedColor("--color-error"));
-      meshOpacity = 0.2;
-      lineOpacity = 0.25;
-      if (selected) {
-        const selectedColor = new THREE.Color(getComputedColor("--color-primary"));
-        meshColor.lerp(selectedColor, 0.5);
-      }
-    } else if (selected) {
-      meshColor = new THREE.Color(getComputedColor("--color-primary"));
-    } else {
-      meshColor = new THREE.Color(getComputedColor("--color-light"));
-    }
-
-    const lineColor = new THREE.Color(getComputedColor("--color-dark"));
-    scene.traverse((object) => {
-      if (object instanceof THREE.Mesh) {
-        object.material = new THREE.MeshBasicMaterial({
-          color: meshColor,
-          transparent: meshOpacity < 1,
-          opacity: meshOpacity,
-        });
-      }
-      if (object instanceof THREE.Line) {
-        object.material = new THREE.LineBasicMaterial({
-          color: lineColor,
-          transparent: lineOpacity < 1,
-          opacity: lineOpacity,
-        });
-      }
-    });
-    return scene;
-  }, [fileUrl, diffStatus, selected]);
-
-  const onClick = useCallback(
-    (e: ThreeEvent<MouseEvent>) => {
-      selectPiece(piece);
-      e.stopPropagation();
-    },
-    [selectPiece, piece],
-  );
-
-  const transformControlRef = useRef(null);
-
-  const handleMouseDown = useCallback(
-    (e?: THREE.Event) => {
-      startTransaction();
-    },
-    [startTransaction],
-  );
-
-  const handleMouseUp = useCallback(
-    (e?: THREE.Event) => {
-      finalizeTransaction();
-    },
-    [finalizeTransaction],
-  );
-
-  // Handle escape key to abort transactions during transform
-  useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && selected && fixed) {
-        abortTransaction();
-      }
-    };
-
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [selected, fixed, abortTransaction]);
-
-  const transformControl = selected && fixed;
-  const userData = useMemo(() => ({ pieceId: piece.id_ }), [piece.id_]);
-  const pieceIdScope = useMemo(() => ({ id_: piece.id_ }), [piece.id_]);
-  const group = (
-    <group matrix={matrix} matrixAutoUpdate={false} userData={userData} onClick={onClick}>
-      <primitive object={styledScene} />
-    </group>
-  );
-
-  return (
-    <PieceScopeProvider id={pieceIdScope}>
-      {transformControl ? (
-        <TransformControls ref={transformControlRef} enabled={selected && fixed} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}>
-          {group}
-        </TransformControls>
-      ) : (
-        group
-      )}
-    </PieceScopeProvider>
-  );
-});
-
-const ModelDesign: FC = () => {
-  const commands = useDesignEditorCommands();
-  const selection = useDesignEditorSelection();
-  const fileUrls = useFileUrls();
-  const others = useDesignEditorOthers();
-  const kit = useKit();
-  const flatDesign = useFlatDesign();
+const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
+  // const flatDesign = useFlatDesign();
+  // const piecePlanes = usePiecePlanes();
   // const pieceRepresentationUrls = usePieceRepresentationUrls();
+  // const pieceDiffStatuses = usePieceDiffStatuses();
+  // const fileUrls = useFileUrls();
+  const piece = usePiece();
+  const isSelected = useIsPieceSelected();
+  const isHovered = useIsPieceHovered();
+  const piecePlane = usePiecePlane();
+  const status = usePieceStatus();
 
-  const { removePieceFromSelection, selectPiece, addPieceToSelection, selectPieces, startTransaction, finalizeTransaction, abortTransaction, setPiece } = commands;
+  const { selectPiece, removePieceFromSelection, addPieceToSelection, startTransaction, finalizeTransaction, abortTransaction } = useDesignEditorCommands();
 
-  if (!kit || !flatDesign) {
-    return (
-      <mesh>
-        <boxGeometry args={[2, 0.5, 0.5]} />
-        <meshBasicMaterial color="yellow" />
-      </mesh>
-    );
-  }
-  const types = kit.types ?? [];
+  // const piece = flatDesign.pieces?.[pieceIndex];
+  // const plane = piecePlanes[pieceIndex];
+  // const fileUrl = fileUrls.get(pieceRepresentationUrls.get(piece?.id_!)!)!;
+  // const selected = selection.pieces?.some((id) => id.id_ === piece?.id_) ?? false;
+  // const diffStatus = pieceDiffStatuses[pieceIndex] || DiffStatus.Unchanged;
 
-  useEffect(() => {
-    fileUrls.forEach((url, id) => {
-      useGLTF.preload(id);
-    });
-  }, [fileUrls]);
+  // if (!piece) return null;
+  // const fixed = piece.plane !== undefined;
+  // const matrix = useMemo(() => {
+  //   const planeRotationMatrix = planeToMatrix(plane);
+  //   planeRotationMatrix.multiply(toSemioRotation());
+  //   return planeRotationMatrix;
+  // }, [plane]);
+  // const styledScene = useMemo(() => {
+  //   const scene = useGLTF(fileUrl).scene.clone();
+  //   let meshColor: THREE.Color;
+  //   let meshOpacity = 1;
+  //   let lineOpacity = 1;
 
-  useEffect(() => {
-    flatDesign.pieces?.forEach((p: Piece) => {
-      if (!p.type) {
-        console.warn(`No type defined for piece ${p.id_}`);
-        return;
-      }
-      const type = types.find((t) => t.name === p.type?.name && (t.variant || "") === (p.type?.variant || ""));
-      if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`);
-    });
-  }, [flatDesign.pieces, types]);
+  //   if (diffStatus === DiffStatus.Added) {
+  //     meshColor = new THREE.Color(getComputedColor("--color-success"));
+  //     if (selected) {
+  //       const selectedColor = new THREE.Color(getComputedColor("--color-primary"));
+  //       meshColor.lerp(selectedColor, 0.5);
+  //     }
+  //   } else if (diffStatus === DiffStatus.Modified) {
+  //     meshColor = new THREE.Color(getComputedColor("--color-warning"));
+  //     if (selected) {
+  //       const selectedColor = new THREE.Color(getComputedColor("--color-primary"));
+  //       meshColor.lerp(selectedColor, 0.5);
+  //     }
+  //   } else if (diffStatus === DiffStatus.Removed) {
+  //     meshColor = new THREE.Color(getComputedColor("--color-error"));
+  //     meshOpacity = 0.2;
+  //     lineOpacity = 0.25;
+  //     if (selected) {
+  //       const selectedColor = new THREE.Color(getComputedColor("--color-primary"));
+  //       meshColor.lerp(selectedColor, 0.5);
+  //     }
+  //   } else if (selected) {
+  //     meshColor = new THREE.Color(getComputedColor("--color-primary"));
+  //   } else {
+  //     meshColor = new THREE.Color(getComputedColor("--color-light"));
+  //   }
 
-  // useEffect(() => {
-  //   pieceRepresentationUrls.forEach((url, id) => {
-  //     if (!fileUrls.has(url)) throw new Error(`Representation url ${url} for piece ${id} not found in fileUrls map`);
+  //   const lineColor = new THREE.Color(getComputedColor("--color-dark"));
+  //   scene.traverse((object) => {
+  //     if (object instanceof THREE.Mesh) {
+  //       object.material = new THREE.MeshBasicMaterial({
+  //         color: meshColor,
+  //         transparent: meshOpacity < 1,
+  //         opacity: meshOpacity,
+  //       });
+  //     }
+  //     if (object instanceof THREE.Line) {
+  //       object.material = new THREE.LineBasicMaterial({
+  //         color: lineColor,
+  //         transparent: lineOpacity < 1,
+  //         opacity: lineOpacity,
+  //       });
+  //     }
   //   });
-  // }, [pieceRepresentationUrls, fileUrls]);
-
-  const onChange = useCallback(
-    (selected: THREE.Object3D[]) => {
-      // const newSelectedPieceIds = selected.map((item) => item.parent?.userData.pieceId).filter(Boolean);
-      // if (newSelectedPieceIds.length !== selection.pieces?.length || newSelectedPieceIds.some((id, index) => id !== selection.pieces?.[index]?.id_)) {
-      //   selectPieces(newSelectedPieceIds.map((id) => ({ id_: id })));
-      // }
-    },
-    [selection, selectPieces],
-  );
-
+  //   return scene;
+  // }, [fileUrl, diffStatus, selected]);
   const onSelect = useCallback(
     (piece: Piece, e?: MouseEvent) => {
       if (e?.ctrlKey || e?.metaKey) {
@@ -273,36 +162,119 @@ const ModelDesign: FC = () => {
         selectPiece(piece);
       }
     },
-    [removePieceFromSelection, addPieceToSelection, selectPiece],
+    [selectPiece, removePieceFromSelection, addPieceToSelection],
+  );
+  return (
+    <mesh onClick={onSelect}>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshBasicMaterial color={isSelected ? "purple" : isHovered ? "orange" : "red"} />
+    </mesh>
   );
 
-  const filterFunction = useCallback((items: any) => items, []);
+  // const transformControlRef = useRef(null);
+
+  // const handleMouseDown = useCallback(
+  //   (e?: THREE.Event) => {
+  //     startTransaction();
+  //   },
+  //   [startTransaction],
+  // );
+
+  // const handleMouseUp = useCallback(
+  //   (e?: THREE.Event) => {
+  //     finalizeTransaction();
+  //   },
+  //   [finalizeTransaction],
+  // );
+
+  // // Handle escape key to abort transactions during transform
+  // useEffect(() => {
+  //   const handleEscape = (event: KeyboardEvent) => {
+  //     if (event.key === "Escape" && selected && fixed) {
+  //       abortTransaction();
+  //     }
+  //   };
+
+  //   document.addEventListener("keydown", handleEscape);
+  //   return () => document.removeEventListener("keydown", handleEscape);
+  // }, [selected, fixed, abortTransaction]);
+
+  // const transformControl = selected && fixed;
+  // const userData = useMemo(() => ({ pieceId: piece.id_ }), [piece.id_]);
+  // const group = (
+  //   <group matrix={matrix} matrixAutoUpdate={false} userData={userData} onClick={onSelect}>
+  //     <primitive object={styledScene} />
+  //   </group>
+  // );
+
+  // if (transformControl)
+  //   return (
+  //     <TransformControls ref={transformControlRef} enabled={selected && fixed} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}>
+  //       {group}
+  //     </TransformControls>
+  //   );
+
+  // return group;
+});
+
+const ModelDesign: FC = () => {
+  const commands = useDesignEditorCommands();
+  const selection = useDesignEditorSelection();
+  // const fileUrls = useFileUrls();
+  const others = useDesignEditorOthers();
+  const design = useDesign();
+  // const flatDesign = useFlatDesign();
+  const flatDesign = design;
+  // const pieceRepresentationUrls = usePieceRepresentationUrls();
+
+  const { selectPieces, startTransaction, finalizeTransaction, abortTransaction } = commands;
+
+  // useEffect(() => {
+  //   fileUrls.forEach((url, id) => {
+  //     useGLTF.preload(id);
+  //   });
+  // }, [fileUrls]);
+
+  // useEffect(() => {
+  //   flatDesign.pieces?.forEach((p: Piece) => {
+  //     if (!p.type) {
+  //       console.warn(`No type defined for piece ${p.id_}`);
+  //       return;
+  //     }
+  //     const type = types.find((t) => t.name === p.type?.name && (t.variant || "") === (p.type?.variant || ""));
+  //     if (!type) throw new Error(`Type (${p.type.name}, ${p.type.variant}) for piece ${p.id_} not found`);
+  //   });
+  // }, [flatDesign.pieces, types]);
+
+  // useEffect(() => {
+  //   pieceRepresentationUrls.forEach((url, id) => {
+  //     if (!fileUrls.has(url)) throw new Error(`Representation url ${url} for piece ${id} not found in fileUrls map`);
+  //   });
+  // }, [pieceRepresentationUrls, fileUrls]);
+
+  const onChange = useCallback(
+    (selected: THREE.Object3D[]) => {
+      const newSelectedPieceIds = selected.map((item) => item.parent?.userData.pieceId).filter(Boolean);
+      if (newSelectedPieceIds.length !== selection.pieces?.length || newSelectedPieceIds.some((id, index) => id !== selection.pieces?.[index]?.id_)) {
+        selectPieces(newSelectedPieceIds.map((id) => ({ id_: id })));
+      }
+    },
+    [selectPieces],
+  );
+
   return (
-    <Select box multiple onChange={onChange} filter={filterFunction}>
+    <Select box multiple onChange={onChange}>
       <group quaternion={new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)}>
-        {flatDesign.pieces?.map((piece: Piece, index: number) => (
-          <ModelPiece key={`piece-${piece.id_}`} pieceIndex={index} onSelect={onSelect} />
+        {/* {flatDesign.pieces?.map((piece: Piece, index: number) => (
+          <PieceScopeProvider key={`piece-${piece.id_}`} id={{ id_: piece.id_ }}>
+            <ModelPiece />
+          </PieceScopeProvider>
         ))}
         {others.map((presence, id) => (
           <PresenceThree key={id} {...presence} />
-        ))}
+        ))} */}
       </group>
     </Select>
-  );
-};
-
-const SimpleModelCore: FC = () => {
-  return (
-    <>
-      <OrthographicCamera />
-      <OrbitControls makeDefault />
-      <ambientLight intensity={1} />
-      <mesh>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshBasicMaterial color="purple" />
-      </mesh>
-      <Grid infiniteGrid={true} sectionColor="#888888" cellColor="#444444" />
-    </>
   );
 };
 
@@ -318,7 +290,7 @@ const Gizmo: FC = () => {
   );
 };
 
-const ModelCore: FC = () => {
+const ModelInner: FC = () => {
   const fullscreen = useDesignEditorFullscreen() === DesignEditorFullscreenPanel.Model;
   const [gridColors, setGridColors] = useState({
     sectionColor: getComputedColor("--foreground"),
@@ -352,11 +324,6 @@ const ModelCore: FC = () => {
         }}
       />
       <ambientLight intensity={1} />
-      {/* Debug cube to show ModelCore is rendering */}
-      <mesh position={[0, 0, 5]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshBasicMaterial color="blue" />
-      </mesh>
       {/* <Stage center={{ disable: true }} environment={null}> */}
       <ModelDesign />
       {/* </Stage> */}
@@ -385,7 +352,7 @@ const Model: FC = () => {
   return (
     <div id="model" className="h-full w-full">
       <Canvas onDoubleClickCapture={onDoubleClickCapture} onPointerMissed={onPointerMissed}>
-        <ModelCore />
+        <ModelInner />
       </Canvas>
     </div>
   );

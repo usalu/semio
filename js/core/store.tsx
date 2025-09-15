@@ -252,6 +252,11 @@ export interface DesignEditorPresence {
   cursor?: Coord;
   camera?: Camera;
 }
+export interface DesignEditorHover {
+  piece?: PieceId;
+  connection?: ConnectionId;
+  port?: PortId;
+}
 export interface DesignEditorPresenceOther extends OtherPresence, DesignEditorPresence {}
 export interface DesignEditorChangableState extends EditorChangableState<DesignEditorSelection, DesignEditorPresence> {
   fullscreenPanel: DesignEditorFullscreenPanel;
@@ -259,11 +264,13 @@ export interface DesignEditorChangableState extends EditorChangableState<DesignE
 export interface DesignEditorDiff {
   selection?: DesignEditorSelectionDiff;
   presence?: DesignEditorPresence;
+  hover?: DesignEditorHover;
   fullscreenPanel?: DesignEditorFullscreenPanel;
 }
 export interface DesignEditorStep extends EditorStep<DesignEditorDiff, DesignEditorSelectionDiff> {}
 export interface DesignEditorEdit extends EditorEdit<KitDiff, DesignEditorSelectionDiff> {}
 export interface DesignEditorState extends EditorState<KitDiff, DesignEditorPresenceOther, DesignEditorSelection, DesignEditorPresence, DesignEditorStep> {
+  hover?: DesignEditorHover;
   fullscreenPanel: DesignEditorFullscreenPanel;
 }
 
@@ -3481,6 +3488,30 @@ function usePieceStore<T>(selector?: (store: PieceStore) => T, id?: PieceId): T 
 export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId, deep: boolean = false): T | Piece {
   return useSync<Piece, T>(usePieceStore(identitySelector, id) as PieceStore, selector ? selector : identitySelector, deep);
 }
+
+export function useIsPieceSelected(): boolean {
+  const piece = usePieceScope();
+  const selection = useDesignEditorSelection();
+  return selection.pieces?.some((p) => p.id_ === piece?.id) ?? false;
+}
+
+export function useIsPieceHovered(): boolean {
+  // const hover = useDesignEditorHover();
+  // return hover.piece?.id_ === piece.id_ ?? false;
+  return false;
+}
+
+export function usePiecePlane(): Plane {
+  const plane = usePiece((p) => p.plane);
+  // TODO: integrate flat piece plane otherwise
+  return plane as Plane;
+}
+
+export function usePieceStatus(): DiffStatus {
+  // TODO: Check diff for status
+  return DiffStatus.Unchanged;
+}
+usePieceStatus();
 
 function useConnectionStore<T>(selector?: (store: ConnectionStore) => T, id?: ConnectionId): T | ConnectionStore {
   const designStore = useDesignStore() as DesignStore;
