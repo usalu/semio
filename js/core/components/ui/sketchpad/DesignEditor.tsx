@@ -27,8 +27,9 @@ import { useHotkeys } from "react-hotkeys-hook";
 
 import { ReactFlowProvider } from "@xyflow/react";
 import { DesignId, TypeId } from "../../../semio";
-import { useDesignEditorCommands, useDesignEditorFullscreen } from "../../../store";
+import { DesignEditorFullscreenPanel, useDesignEditorCommands, useDesignEditorFullscreen } from "../../../store";
 import Navbar, { useNavbar } from "../Navbar";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../Resizable";
 import { ToggleGroup, ToggleGroupItem } from "../ToggleGroup";
 import Chat from "./Chat";
 import Console from "./Console";
@@ -55,7 +56,7 @@ interface VisiblePanels {
 const DesignEditor: FC<DesignEditorProps> = () => {
   const { setNavbarToolbar } = useNavbar();
   const fullscreenPanel = useDesignEditorFullscreen();
-  const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, addPiece, execute } = useDesignEditorCommands();
+  const { selectAll, deselectAll, deleteSelected, undo, redo, toggleDiagramFullscreen, toggleModelFullscreen, addPiece, execute } = useDesignEditorCommands();
 
   // Panel visibility and sizing state
   const [visiblePanels, setVisiblePanels] = useState<VisiblePanels>({
@@ -163,16 +164,6 @@ const DesignEditor: FC<DesignEditorProps> = () => {
     });
   };
 
-  // Check for fullscreen mode
-  if (fullscreenPanel && fullscreenPanel !== "none") {
-    return (
-      <div className="h-screen w-screen bg-background">
-        {fullscreenPanel === "diagram" && <Diagram />}
-        {fullscreenPanel === "model" && <Model />}
-      </div>
-    );
-  }
-
   const designEditorToolbar = (
     <ToggleGroup
       type="multiple"
@@ -215,16 +206,15 @@ const DesignEditor: FC<DesignEditorProps> = () => {
         <Navbar />
         <div className="flex-1 flex overflow-hidden relative">
           <ReactFlowProvider>
-            <div className="flex-1 flex flex-col">
-              <div className="flex-1 flex">
-                <div className="flex-1 relative">
-                  <Diagram />
-                </div>
-                <div className="flex-1 relative">
-                  <Model />
-                </div>
-              </div>
-            </div>
+            <ResizablePanelGroup direction="horizontal">
+              <ResizablePanel defaultSize={fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? 100 : 50} className={`${fullscreenPanel === DesignEditorFullscreenPanel.Model ? "hidden" : "block"}`} onDoubleClick={toggleDiagramFullscreen}>
+                <Diagram />
+              </ResizablePanel>
+              <ResizableHandle className={`border-r ${fullscreenPanel !== DesignEditorFullscreenPanel.None ? "hidden" : "block"}`} />
+              <ResizablePanel defaultSize={fullscreenPanel === DesignEditorFullscreenPanel.Model ? 100 : 50} className={`${fullscreenPanel === DesignEditorFullscreenPanel.Diagram ? "hidden" : "block"}`} onDoubleClick={toggleModelFullscreen}>
+                <Model />
+              </ResizablePanel>
+            </ResizablePanelGroup>
           </ReactFlowProvider>
           {visiblePanels.workbench && <Workbench visible={visiblePanels.workbench} onWidthChange={setWorkbenchWidth} width={workbenchWidth} />}
           {visiblePanels.console && <Console visible={visiblePanels.console} onHeightChange={setConsoleHeight} height={consoleHeight} />}

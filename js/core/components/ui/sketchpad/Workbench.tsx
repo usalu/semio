@@ -6,7 +6,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/compone
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
 import { Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
 import { DesignId, TypeId } from "../../../semio";
-import { useActiveDesignEditor, useDesignsByName, useIsDesignEditorActive, useKit, useTypesByName } from "../../../store";
+import { useDesignsByName, useKit, useTypesByName } from "../../../store";
 import { ResizablePanelProps } from "./DesignEditor";
 
 interface TypeAvatarProps {
@@ -112,8 +112,6 @@ interface WorkbenchProps extends ResizablePanelProps {}
 const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
   if (!visible) return null;
   const kit = useKit();
-  const activeDesignId = useActiveDesignEditor();
-  const isDesignActive = useIsDesignEditorActive();
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
 
@@ -144,8 +142,6 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
   const typesByName = useTypesByName();
   const designsByName = useDesignsByName();
 
-  if (!kit?.types || !kit?.designs) return null;
-
   return (
     <div
       className={`absolute top-4 left-4 bottom-4 z-20 bg-background-level-2 text-foreground border
@@ -171,7 +167,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
                 <TreeItem key={name} label={name} defaultOpen={false}>
                   <div className="grid grid-cols-[repeat(auto-fill,calc(var(--spacing)*8))] auto-rows-[calc(var(--spacing)*8)] justify-start gap-1 p-1">
                     {designs.map((design) => (
-                      <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} designId={design} showHoverCard={true} isActive={isDesignActive(design)} />
+                      <DesignAvatar key={`${design.name}-${design.variant}-${design.view}`} designId={design} showHoverCard={true} />
                     ))}
                   </div>
                 </TreeItem>

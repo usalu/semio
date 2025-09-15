@@ -2074,15 +2074,13 @@ export const KitSchema = z.object({
   updated: DateProperty(),
 });
 export type Kit = z.infer<typeof KitSchema>;
+export const serializeKit = (kit: Kit): string => JSON.stringify(KitSchema.parse(kit));
+export const deserializeKit = (json: string): Kit => KitSchema.parse(JSON.parse(json));
+
 export const KitIdSchema = KitSchema.pick({ name: true, version: true });
 export type KitId = z.infer<typeof KitIdSchema>;
 export const kitIdToString = (kitId: KitId): string => `${kitId.name}@${kitId.version ?? ""}`;
-export const KitIdLikeSchema = z.union([KitSchema, KitIdSchema, z.string()]);
-export type KitIdLike = z.infer<typeof KitIdLikeSchema>;
-export const kitIdLikeToKitId = (kit: KitIdLike): KitId => {
-  if (typeof kit === 'string') return { name: kit };
-  return { name: kit.name, version: kit.version };
-};
+
 export const KitShallowSchema = KitSchema.omit({ types: true, designs: true, qualities: true, authors: true }).extend({
   types: z.array(TypeIdSchema).optional(),
   designs: z.array(DesignIdSchema).optional(),
@@ -2100,22 +2098,16 @@ export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: tr
   files: FilesDiffSchema.optional(),
 });
 export type KitDiff = z.infer<typeof KitDiffSchema>;
-export const getKitDiff = (before: Kit, after: Kit): KitDiff => {
-};
-export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
-};
-export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => {
-};
-export const inverseKitDiff = (original: Kit, appliedDiff: KitDiff): KitDiff => {
-};
+export const getKitDiff = (before: Kit, after: Kit): KitDiff => { };
+export const inverseKitDiff = (original: Kit, appliedDiff: KitDiff): KitDiff => { };
+export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => { };
+export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => { };
 
 export const KitsDiffSchema = z.object({
   removed: z.array(KitIdSchema).optional(),
   updated: z.array(z.object({ id: KitIdSchema, diff: KitDiffSchema })).optional(),
   added: z.array(KitSchema).optional(),
 });
-export const serializeKit = (kit: Kit): string => JSON.stringify(KitSchema.parse(kit));
-export const deserializeKit = (json: string): Kit => KitSchema.parse(JSON.parse(json));
 
 export const addTypeToKit = (type: Type): KitDiff => ({
   types: {
@@ -2527,3 +2519,15 @@ export const createFileFromDataUri = (url: string, dataUri: string): File => {
     updated: new Date(),
   };
 };
+
+export const KitIdLikeSchema = z.union([KitIdSchema, KitSchema, KitDiffSchema, z.tuple([z.string(), z.string()]), z.string()]);
+export type KitIdLike = z.infer<typeof KitIdLikeSchema>;
+export const kitIdLikeToKitId = (kit: KitIdLike): KitId => {
+  if (typeof kit === "object" && "name" in kit && "version" in kit) return { name: kit.name!, version: kit.version! };
+  if (typeof kit === "object" && "name" in kit) return { name: kit.name!, version: "" };
+  if (Array.isArray(kit)) return { name: kit[0], version: kit[1] };
+  if (typeof kit === 'string') return { name: kit };
+  throw new Error("Invalid kit id like");
+};
+
+// #endregion Kit

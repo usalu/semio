@@ -20,7 +20,7 @@ import {
 } from "@xyflow/react";
 import React, { FC, useCallback, useEffect, useState } from "react";
 
-import { arePortsCompatible, Connection, Coord, DesignId, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, ICON_WIDTH, isPortInUse, isSameConnection, Piece, Port, TOLERANCE, Type } from "../../../semio";
+import { arePortsCompatible, areSameConnection, Connection, Coord, DesignId, DiffStatus, findAttributeValue, findPortInType, findTypeInKit, getIncludedDesigns, ICON_WIDTH, isPortInUse, Piece, Port, TOLERANCE, Type } from "../../../semio";
 
 import "@xyflow/react/dist/style.css";
 import {
@@ -1346,7 +1346,7 @@ const Diagram: FC = () => {
           for (const otherNode of nodes.filter((n) => !(selection.pieces ?? []).some((p: any) => p.id_ === getPieceIdFromNode(n)))) {
             if (otherNode.type !== "piece") continue;
             const existingConnection = design.connections?.find((c) =>
-              isSameConnection(c, {
+              areSameConnection(c, {
                 connected: { piece: { id_: selectedNode.data.piece.id_ } },
                 connecting: { piece: { id_: otherNode.data.piece.id_ } },
               }),
@@ -1475,7 +1475,7 @@ const Diagram: FC = () => {
         y: -((sourceInternalNode.internals.positionAbsolute.y + sourceHandle.y - (targetInternalNode.internals.positionAbsolute.y + targetHandle.y)) / ICON_WIDTH),
       };
 
-      if ((design.connections ?? []).find((c) => isSameConnection(c, newConnection))) return;
+      if ((design.connections ?? []).find((c) => areSameConnection(c, newConnection))) return;
       addConnection(newConnection);
     },
     [addConnection, reactFlowInstance, design],
