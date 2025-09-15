@@ -328,7 +328,7 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{prod}",
-      "formula": "Add ( semio.area.prod-hall semio.area.work semio.area.tech-lab semio.area.phys-elec-lab semio.area.chem-bio-lab semio.area.anim-rm semio.area.plant-rm semio.area.kit-prod semio.area.spec-work-rm )",
+      "formula": "Add ( semio.area.floor.gross.net.usable.production-experiments.production-hall semio.area.floor.gross.net.usable.production-experiments.workshop semio.area.floor.gross.net.usable.production-experiments.technology-lab semio.area.floor.gross.net.usable.production-experiments.physics-electrical-lab semio.area.floor.gross.net.usable.production-experiments.chemistry-biology-lab semio.area.floor.gross.net.usable.production-experiments.animal-room semio.area.floor.gross.net.usable.production-experiments.plant-room semio.area.floor.gross.net.usable.production-experiments.kitchen semio.area.floor.gross.net.usable.production-experiments.special-work-room )",
       "format": "#,##0.##"
     },
     {
@@ -449,7 +449,7 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{stor-sales}",
-      "formula": "Add ( semio.area.stor-rm semio.area.coll-arch semio.area.cold-stor semio.area.recv-disp semio.area.sales-rm semio.area.exh-rm semio.area.other-stor )",
+      "formula": "Add ( semio.area.floor.gross.net.usable.storage-distribution-sales.storage-room semio.area.floor.gross.net.usable.storage-distribution-sales.collection-archive semio.area.floor.gross.net.usable.storage-distribution-sales.cold-storage semio.area.floor.gross.net.usable.storage-distribution-sales.receiving-dispatch semio.area.floor.gross.net.usable.storage-distribution-sales.sales-room semio.area.floor.gross.net.usable.storage-distribution-sales.exhibition-room semio.area.floor.gross.net.usable.storage-distribution-sales.other )",
       "format": "#,##0.##"
     },
     {
@@ -546,7 +546,7 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{edu}",
-      "formula": "Add ( semio.area.class-fix-seat semio.area.teach-prac semio.area.spec-class semio.area.lib semio.area.sport semio.area.assm-rm semio.area.stage-studio semio.area.disp-rm semio.area.sacr-rm )",
+      "formula": "Add ( semio.area.floor.gross.net.usable.education-culture.classroom-fixed-seating semio.area.floor.gross.net.usable.education-culture.teaching-practice semio.area.floor.gross.net.usable.education-culture.special-classroom semio.area.floor.gross.net.usable.education-culture.library semio.area.floor.gross.net.usable.education-culture.sports semio.area.floor.gross.net.usable.education-culture.assembly-room semio.area.floor.gross.net.usable.education-culture.stage-studio semio.area.floor.gross.net.usable.education-culture.display-room semio.area.floor.gross.net.usable.education-culture.sacred-room )",
       "format": "#,##0.##"
     },
     {
@@ -667,7 +667,7 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{med}",
-      "formula": "Add ( semio.area.gen-med-equip semio.area.spec-med-equip semio.area.surg-rm semio.area.rad-diag semio.area.rad-ther semio.area.rehab-physio semio.area.gen-pat-rm semio.area.spec-pat-rm semio.area.other-med )",
+      "formula": "Add ( semio.area.floor.gross.net.usable.healing-care.general-medical-equipment semio.area.floor.gross.net.usable.healing-care.special-medical-equipment semio.area.floor.gross.net.usable.healing-care.surgical-room semio.area.floor.gross.net.usable.healing-care.radiation-diagnostic semio.area.floor.gross.net.usable.healing-care.radiation-therapy semio.area.floor.gross.net.usable.healing-care.rehabilitation-physiotherapy semio.area.floor.gross.net.usable.healing-care.general-patient-room semio.area.floor.gross.net.usable.healing-care.special-patient-room semio.area.floor.gross.net.usable.healing-care.other )",
       "format": "#,##0.##"
     },
     {
@@ -788,7 +788,7 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{other-usbl}",
-      "formula": "Add ( semio.area.san-rm semio.area.cloak semio.area.stor-rm-other semio.area.veh-park semio.area.pass semio.area.cent-tech semio.area.prot-rm semio.area.laund semio.area.other )",
+      "formula": "Add ( semio.area.floor.gross.net.usable.other.sanitary-room semio.area.floor.gross.net.usable.other.cloakroom semio.area.floor.gross.net.usable.other.storage-room semio.area.floor.gross.net.usable.other.vehicle-parking semio.area.floor.gross.net.usable.other.passenger semio.area.floor.gross.net.usable.other.central-technical semio.area.floor.gross.net.usable.other.protective-room semio.area.floor.gross.net.usable.other.laundry semio.area.floor.gross.net.usable.other.miscellaneous )",
       "format": "#,##0.##"
     },
     {
@@ -909,7 +909,7 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{tech}",
-      "formula": "Add ( semio.area.waste-gas-water semio.area.heat-hw semio.area.vent-ac semio.area.elec-pwr semio.area.telecom semio.area.elev-conv semio.area.other-tech )",
+      "formula": "Add ( semio.area.floor.gross.net.technical.wastewater-gas-water-supply semio.area.floor.gross.net.technical.heating-hot-water semio.area.floor.gross.net.technical.ventilation-air-conditioning semio.area.floor.gross.net.technical.electrical-power-supply semio.area.floor.gross.net.technical.telecommunications semio.area.floor.gross.net.technical.elevator-conveyor-systems semio.area.floor.gross.net.technical.other )",
       "format": "#,##0.##"
     },
     {
@@ -1006,7 +1006,7 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{circ}",
-      "formula": "Add ( semio.area.corr-hall semio.area.stair semio.area.shaft-conv semio.area.veh-traf semio.area.other-circ )",
+      "formula": "Add ( semio.area.floor.gross.net.circulation.corridor-hall semio.area.floor.gross.net.circulation.stair semio.area.floor.gross.net.circulation.shaft-conveyor semio.area.floor.gross.net.circulation.vehicle-traffic semio.area.floor.gross.net.circulation.other )",
       "format": "#,##0.##"
     },
     {
@@ -1079,7 +1079,7 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{const}",
-      "formula": "Add ( semio.area.ext-wall-const semio.area.int-wall-const semio.area.part-wall semio.area.col semio.area.shaft semio.area.beam semio.area.other-const )",
+      "formula": "Add ( semio.area.floor.gross.construction.exterior-wall semio.area.floor.gross.construction.interior-wall semio.area.floor.gross.construction.partition-wall semio.area.floor.gross.construction.column semio.area.floor.gross.construction.shaft semio.area.floor.gross.construction.beam semio.area.floor.gross.construction.other )",
       "format": "#,##0.##"
     },
     {
@@ -1201,7 +1201,7 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{unbuilt}",
-      "formula": "Add ( semio.area.out-fac semio.area.green semio.area.paved semio.area.tech-fac semio.area.water semio.area.other-out )",
+      "formula": "Add ( semio.area.floor.property.unbuilt.outdoor-facility semio.area.floor.property.unbuilt.green semio.area.floor.property.unbuilt.paved semio.area.floor.property.unbuilt.technical-facility semio.area.floor.property.unbuilt.water semio.area.floor.property.unbuilt.other-outdoor )",
       "format": "#,##0.##"
     },
     {
@@ -1214,7 +1214,7 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{out-fac}",
-      "formula": "Add ( semio.area.traf semio.area.sidewalk semio.area.drive semio.area.park-sp semio.area.bike-park semio.area.turn semio.area.other-traf )",
+      "formula": "Add ( semio.area.floor.property.unbuilt.outdoor-facility.traffic semio.area.floor.property.unbuilt.outdoor-facility.sidewalk semio.area.floor.property.unbuilt.outdoor-facility.driveway semio.area.floor.property.unbuilt.outdoor-facility.parking-space semio.area.floor.property.unbuilt.outdoor-facility.bicycle-parking semio.area.floor.property.unbuilt.outdoor-facility.turning semio.area.floor.property.unbuilt.outdoor-facility.other-traffic )",
       "format": "#,##0.##"
     },
     {
@@ -1311,7 +1311,7 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{green}",
-      "formula": "Add ( semio.area.lawn semio.area.plant-bed semio.area.hedge semio.area.tree semio.area.roof-green semio.area.fac-green semio.area.other-green )",
+      "formula": "Add ( semio.area.floor.property.unbuilt.green.lawn semio.area.floor.property.unbuilt.green.plant-bed semio.area.floor.property.unbuilt.green.hedge semio.area.floor.property.unbuilt.green.tree semio.area.floor.property.unbuilt.green.roof-greening semio.area.floor.property.unbuilt.green.facade-greening semio.area.floor.property.unbuilt.green.other )",
       "format": "#,##0.##"
     },
     {
@@ -1408,7 +1408,7 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{paved}",
-      "formula": "Add ( semio.area.terr semio.area.balc semio.area.court semio.area.stor-util semio.area.play semio.area.other-paved )",
+      "formula": "Add ( semio.area.floor.property.unbuilt.paved.terrace semio.area.floor.property.unbuilt.paved.balcony semio.area.floor.property.unbuilt.paved.courtyard semio.area.floor.property.unbuilt.paved.storage-utility semio.area.floor.property.unbuilt.paved.playground semio.area.floor.property.unbuilt.paved.other )",
       "format": "#,##0.##"
     },
     {
@@ -1493,7 +1493,7 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{tech-fac}",
-      "formula": "Add ( semio.area.waste-coll semio.area.util-line semio.area.storm-mgmt semio.area.light-sys semio.area.fence semio.area.other-tech-fac )",
+      "formula": "Add ( semio.area.floor.property.unbuilt.technical-facility.waste-collection semio.area.floor.property.unbuilt.technical-facility.utility-line semio.area.floor.property.unbuilt.technical-facility.stormwater-management semio.area.floor.property.unbuilt.technical-facility.lighting-system semio.area.floor.property.unbuilt.technical-facility.fence semio.area.floor.property.unbuilt.technical-facility.other )",
       "format": "#,##0.##"
     },
     {
@@ -1578,7 +1578,7 @@
       "si": "m²",
       "imperial": "ft²",
       "symbol": "A_{water}",
-      "formula": "Add ( semio.area.pond semio.area.fountain semio.area.storm-ret semio.area.other-water )",
+      "formula": "Add ( semio.area.floor.property.unbuilt.water.pond semio.area.floor.property.unbuilt.water.fountain semio.area.floor.property.unbuilt.water.stormwater-retention semio.area.floor.property.unbuilt.water.other )",
       "format": "#,##0.##"
     },
     {
