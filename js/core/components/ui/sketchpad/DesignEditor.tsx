@@ -209,14 +209,11 @@ const DesignEditor: FC<DesignEditorProps> = () => {
     return () => setNavbarToolbar(null);
   }, [visiblePanels, setNavbarToolbar]);
 
-  const rightPanelVisible = visiblePanels.details || visiblePanels.chat;
-
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="h-screen flex flex-col overflow-hidden bg-background">
         <Navbar />
         <div className="flex-1 flex overflow-hidden relative">
-          {visiblePanels.workbench && <Workbench visible={visiblePanels.workbench} onWidthChange={setWorkbenchWidth} width={workbenchWidth} />}
           <ReactFlowProvider>
             <div className="flex-1 flex flex-col">
               <div className="flex-1 flex">
@@ -227,14 +224,11 @@ const DesignEditor: FC<DesignEditorProps> = () => {
                   <Model />
                 </div>
               </div>
-              {visiblePanels.console && (
-                <div className="h-48 border-t border-border">
-                  <Console />
-                </div>
-              )}
             </div>
           </ReactFlowProvider>
-          {rightPanelVisible && (
+          {visiblePanels.workbench && <Workbench visible={visiblePanels.workbench} onWidthChange={setWorkbenchWidth} width={workbenchWidth} />}
+          {visiblePanels.console && <Console visible={visiblePanels.console} onHeightChange={setConsoleHeight} height={consoleHeight} />}
+          {(visiblePanels.details || visiblePanels.chat) && (
             <div className="flex">
               {visiblePanels.details && <Details visible={visiblePanels.details} onWidthChange={setDetailsWidth} width={detailsWidth} />}
               {visiblePanels.chat && <Chat visible={visiblePanels.chat} onWidthChange={setChatWidth} width={chatWidth} />}

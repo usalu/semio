@@ -5,8 +5,8 @@ import { Avatar, AvatarFallback } from "@semio/js/components/ui/Avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@semio/js/components/ui/HoverCard";
 import { ScrollArea } from "@semio/js/components/ui/ScrollArea";
 import { Tree, TreeItem, TreeSection } from "@semio/js/components/ui/Tree";
-import { Design, DesignId, Type, TypeId } from "../../../semio";
-import { useActiveDesignEditor, useDesignsByName, useIsDesignActive, useKit, useTypesByName } from "../../../store";
+import { DesignId, TypeId } from "../../../semio";
+import { useActiveDesignEditor, useDesignsByName, useIsDesignEditorActive, useKit, useTypesByName } from "../../../store";
 import { ResizablePanelProps } from "./DesignEditor";
 
 interface TypeAvatarProps {
@@ -113,7 +113,7 @@ const Workbench: FC<WorkbenchProps> = ({ visible, onWidthChange, width }) => {
   if (!visible) return null;
   const kit = useKit();
   const activeDesignId = useActiveDesignEditor();
-  const isDesignActive = useIsDesignActive();
+  const isDesignActive = useIsDesignEditorActive();
   const [isResizeHovered, setIsResizeHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
 

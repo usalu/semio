@@ -20,7 +20,7 @@
 // #endregion
 
 import JSZip from "jszip";
-import React, { createContext, useCallback, useContext, useMemo, useSyncExternalStore } from "react";
+import React, { createContext, useContext, useMemo, useSyncExternalStore } from "react";
 import type { Database, SqlJsStatic } from "sql.js";
 import initSqlJs from "sql.js";
 import sqlWasmUrl from "sql.js/dist/sql-wasm.wasm?url";
@@ -3729,17 +3729,6 @@ export function useReplacableDesigns(piece: Piece) {
   return useMemo(() => {
     return findReplacableDesignsForDesignPiece(kit, designId, piece);
   }, [kit, designId, piece]);
-}
-
-export function useIsDesignActive(): (design: Design) => boolean {
-  const activeDesignId = useActiveDesignEditor();
-  return useCallback(
-    (design: Design): boolean => {
-      if (!activeDesignId) return false;
-      return design.name === activeDesignId.name && (design.variant || undefined) === activeDesignId.variant && (design.view || undefined) === activeDesignId.view;
-    },
-    [activeDesignId],
-  );
 }
 
 export function usePiecesFromIds(pieceIds: PieceId[]) {

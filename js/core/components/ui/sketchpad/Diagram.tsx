@@ -301,7 +301,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
   };
 
   let fillClass = "";
-  let strokeClass = "stroke-dark stroke-2";
+  let strokeClass = "stroke-foreground stroke-2";
   let opacity = 1;
 
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
@@ -325,7 +325,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
       <div style={{ opacity }}>
         <svg width={ICON_WIDTH} height={ICON_WIDTH} className="cursor-pointer">
           <circle cx={ICON_WIDTH / 2} cy={ICON_WIDTH / 2} r={ICON_WIDTH / 2 - 1} className={`${strokeClass} ${fillClass}`} />
-          <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className="text-xs font-bold fill-dark">
+          <text x={ICON_WIDTH / 2} y={ICON_WIDTH / 2} textAnchor="middle" dominantBaseline="middle" className="text-xs font-bold fill-foreground">
             {id_}
           </text>
         </svg>
