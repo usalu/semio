@@ -28,6 +28,7 @@ import { Piece, Plane, planeToMatrix } from "../../../semio";
 import {
   DesignEditorFullscreenPanel,
   DesignEditorPresenceOther,
+  PieceScopeProvider,
   useDesign,
   useDesignEditorCommands,
   useDesignEditorFullscreen,
@@ -80,8 +81,9 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
   // const pieceRepresentationUrls = usePieceRepresentationUrls();
   // const pieceDiffStatuses = usePieceDiffStatuses();
   // const fileUrls = useFileUrls();
-  const piece = usePiece();
+  const piece = usePiece() as Piece;
   const isSelected = useIsPieceSelected();
+  const selection = useDesignEditorSelection();
   const isHovered = useIsPieceHovered();
   const piecePlane = usePiecePlane();
   const status = usePieceStatus();
@@ -153,13 +155,13 @@ const ModelPiece: FC<ModelPieceProps> = React.memo(() => {
   //   return scene;
   // }, [fileUrl, diffStatus, selected]);
   const onSelect = useCallback(
-    (piece: Piece, e?: MouseEvent) => {
+    (e?: MouseEvent) => {
       if (e?.ctrlKey || e?.metaKey) {
-        removePieceFromSelection(piece);
+        removePieceFromSelection({ id_: piece.id_ });
       } else if (e?.shiftKey) {
-        addPieceToSelection(piece);
+        addPieceToSelection({ id_: piece.id_ });
       } else {
-        selectPiece(piece);
+        selectPiece({ id_: piece.id_ });
       }
     },
     [selectPiece, removePieceFromSelection, addPieceToSelection],
@@ -264,15 +266,16 @@ const ModelDesign: FC = () => {
 
   return (
     <Select box multiple onChange={onChange}>
-      <group quaternion={new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)}>
-        {/* {flatDesign.pieces?.map((piece: Piece, index: number) => (
+      <group>
+        {/* <group quaternion={new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476)}> */}
+        {flatDesign.pieces?.map((piece: Piece, index: number) => (
           <PieceScopeProvider key={`piece-${piece.id_}`} id={{ id_: piece.id_ }}>
             <ModelPiece />
           </PieceScopeProvider>
         ))}
         {others.map((presence, id) => (
           <PresenceThree key={id} {...presence} />
-        ))} */}
+        ))}
       </group>
     </Select>
   );

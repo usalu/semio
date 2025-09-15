@@ -58,6 +58,7 @@ import {
   getClusterableGroups,
   getIncludedDesigns,
   getPieceRepresentationUrls,
+  inverseKitDiff,
   Kit,
   KitDiff,
   KitId,
@@ -133,13 +134,9 @@ export interface EditorPresence<TPresence> {
   presence: TPresence;
 }
 export interface EditorChangableState<TSelection, TPresence> extends EditorSelection<TSelection>, EditorPresence<TPresence> {}
-export interface EditorStep<TDiff, TSelectionDiff> {
-  diff?: TDiff;
-  selectionDiff?: TSelectionDiff;
-}
-export interface EditorEdit<TDiff, TSelectionDiff> {
-  do: EditorStep<TDiff, TSelectionDiff>;
-  undo: EditorStep<TDiff, TSelectionDiff>;
+export interface EditorEdit<TEditorStep> {
+  do: TEditorStep;
+  undo: TEditorStep;
 }
 export interface EditorState<TDiff, TPresenceOther, TSelection, TPresence, TEdit> extends EditorChangableState<TSelection, TPresence> {
   isTransactionActive: boolean;
@@ -267,9 +264,12 @@ export interface DesignEditorDiff {
   hover?: DesignEditorHover;
   fullscreenPanel?: DesignEditorFullscreenPanel;
 }
-export interface DesignEditorStep extends EditorStep<DesignEditorDiff, DesignEditorSelectionDiff> {}
-export interface DesignEditorEdit extends EditorEdit<KitDiff, DesignEditorSelectionDiff> {}
-export interface DesignEditorState extends EditorState<KitDiff, DesignEditorPresenceOther, DesignEditorSelection, DesignEditorPresence, DesignEditorStep> {
+export interface DesignEditorStep {
+  kitDiff?: KitDiff;
+  selectionDiff?: DesignEditorSelectionDiff;
+}
+export interface DesignEditorEdit extends EditorEdit<DesignEditorStep> {}
+export interface DesignEditorState extends EditorState<KitDiff, DesignEditorPresenceOther, DesignEditorSelection, DesignEditorPresence, DesignEditorEdit> {
   hover?: DesignEditorHover;
   fullscreenPanel: DesignEditorFullscreenPanel;
 }
@@ -332,6 +332,10 @@ export interface SketchpadStore extends StoreWithCommands<SketchpadState, Sketch
 }
 
 // #endregion Api
+
+export const inverseDesignEditorSelectionDiff = (selection: DesignEditorSelection, diff: DesignEditorSelectionDiff): DesignEditorSelectionDiff => {
+  // TODO
+};
 
 // #region Stores
 
@@ -1869,85 +1873,45 @@ class YDesignEditorStore implements DesignEditorStore {
     if (diff.fullscreenPanel) this.yDesignEditorStore.set("fullscreenPanel", diff.fullscreenPanel);
     if (diff.selection) {
       if (diff.selection.pieces) {
-        let yPieceIds = this.yDesignEditorStore.get("selectedPieceIds") as Y.Array<string>;
-        if (!yPieceIds) {
-          yPieceIds = new Y.Array<string>();
-          this.yDesignEditorStore.set("selectedPieceIds", yPieceIds);
-        }
-
-        let currentIds: Set<string>;
-        currentIds = new Set(yPieceIds.toArray());
-
+        const selectedPiecesIds = this.yDesignEditorStore.get("selectedPieceIds") as Y.Array<string>;
         if (diff.selection.pieces.removed) {
           diff.selection.pieces.removed.forEach((piece) => {
-            const currentArray = yPieceIds.toArray();
-            const index = currentArray.indexOf(piece.id_);
+            const index = selectedPiecesIds.toArray().indexOf(piece.id_);
             if (index >= 0) {
-              yPieceIds.delete(index, 1);
+              selectedPiecesIds.delete(index, 1);
             }
           });
         }
-
         if (diff.selection.pieces.added) {
-          const newIds = diff.selection.pieces.added.filter((piece) => !currentIds.has(piece.id_)).map((piece) => piece.id_);
-          if (newIds.length > 0) {
-            yPieceIds.insert(yPieceIds.length, newIds);
-          }
+          selectedPiecesIds.insert(
+            selectedPiecesIds.length,
+            diff.selection.pieces.added.map((piece) => pieceIdToString(piece)),
+          );
         }
       }
 
       if (diff.selection.connections) {
-        let yConnectionIds = this.yDesignEditorStore.get("selectedConnections") as Y.Array<string>;
-        if (!yConnectionIds) {
-          yConnectionIds = new Y.Array<string>();
-          this.yDesignEditorStore.set("selectedConnections", yConnectionIds);
-        }
-
-        let currentIds: Set<string>;
-        currentIds = new Set(yConnectionIds.toArray());
-
+        const selectedConnections = this.yDesignEditorStore.get("selectedConnections") as Y.Array<string>;
         if (diff.selection.connections.removed) {
-          diff.selection.connections.removed.forEach((conn) => {
-            const connStr = `${conn.connected.piece.id_}->${conn.connecting.piece.id_}`;
-            const currentArray = yConnectionIds.toArray();
-            const index = currentArray.indexOf(connStr);
+          diff.selection.connections.removed.forEach((connection) => {
+            const index = selectedConnections.toArray().indexOf(connectionIdToString(connection));
             if (index >= 0) {
-              yConnectionIds.delete(index, 1);
+              selectedConnections.delete(index, 1);
             }
           });
         }
-
         if (diff.selection.connections.added) {
-          const newIds = diff.selection.connections.added
-            .filter((conn) => {
-              const connStr = `${conn.connected.piece.id_}->${conn.connecting.piece.id_}`;
-              return !currentIds.has(connStr);
-            })
-            .map((conn) => `${conn.connected.piece.id_}->${conn.connecting.piece.id_}`);
-          if (newIds.length > 0) {
-            yConnectionIds.insert(yConnectionIds.length, newIds);
-          }
+          selectedConnections.insert(
+            selectedConnections.length,
+            diff.selection.connections.added.map((connection) => connectionIdToString(connection)),
+          );
         }
       }
 
       if (diff.selection.port) {
-        if (diff.selection.port.piece && diff.selection.port.port) {
-          this.yDesignEditorStore.set("selectedPiecePortPieceId", diff.selection.port.piece.id_);
-          this.yDesignEditorStore.set("selectedPiecePortPortId", diff.selection.port.port.id_ || "");
-          if (diff.selection.port.designPiece) {
-            this.yDesignEditorStore.set("selectedPiecePortDesignPieceId", diff.selection.port.designPiece.id_);
-          }
-        } else {
-          this.yDesignEditorStore.set("selectedPiecePortPieceId", "");
-          this.yDesignEditorStore.set("selectedPiecePortPortId", "");
-          this.yDesignEditorStore.set("selectedPiecePortDesignPieceId", "");
-        }
-      }
-    }
-    if (diff.presence) {
-      if (diff.presence.cursor) {
-        this.yDesignEditorStore.set("presenceCursorX", diff.presence.cursor.x);
-        this.yDesignEditorStore.set("presenceCursorY", diff.presence.cursor.y);
+        this.yDesignEditorStore.set("selectedPiecePortPieceId", pieceIdToString(diff.selection.port.piece!));
+        this.yDesignEditorStore.set("selectedPiecePortPortId", portIdToString(diff.selection.port.port!));
+        this.yDesignEditorStore.set("selectedPiecePortDesignPieceId", pieceIdToString(diff.selection.port.designPiece!));
       }
     }
   };
@@ -2103,11 +2067,12 @@ class YDesignEditorStore implements DesignEditorStore {
     const parent = this.parent as YSketchpadStore;
     const kitStore = parent.kits.get(kitIdToString(parent.activeDesignEditor!.kit))!;
 
-    const beforeState = this.snapshot();
+    const state = this.snapshot();
+    const kitState = kitStore.snapshot();
 
     const context: DesignEditorCommandContext = {
-      designEditor: this.snapshot(),
-      kit: kitStore.snapshot(),
+      designEditor: state,
+      kit: kitState,
       designId: parent.activeDesignEditor!.design,
       fileUrls: kitStore.fileUrls(),
     };
@@ -2122,14 +2087,16 @@ class YDesignEditorStore implements DesignEditorStore {
 
     if (this.isTransactionActive && (result.diff || result.kitDiff)) {
       const currentStack = this.yDesignEditorStore.get("currentTransactionStack") as Y.Array<any>;
+      const inversedSelectionDiff = inverseDesignEditorSelectionDiff(state.selection, result.diff?.selection!);
+      const inversedKitDiff = inverseKitDiff(kitState, result.kitDiff!);
       const edit: DesignEditorEdit = {
         do: {
-          diff: result.kitDiff,
-          selectionDiff: this.snapshot().selectionDiff,
+          kitDiff: result.kitDiff,
+          selectionDiff: result.diff?.selection,
         },
         undo: {
-          diff: undefined,
-          selectionDiff: beforeState.selectionDiff,
+          kitDiff: inversedKitDiff,
+          selectionDiff: inversedSelectionDiff,
         },
       };
       currentStack.push([edit]);
