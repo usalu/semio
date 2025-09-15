@@ -335,6 +335,7 @@ export const deserializeFile = (json: string): File => FileSchema.parse(JSON.par
 
 export const FileIdSchema = FileSchema.pick({ path: true });
 export type FileId = z.infer<typeof FileIdSchema>;
+export const fileIdToString = (file: FileId): string => file.path;
 
 export const FileDiffSchema = FileSchema.partial();
 export type FileDiff = z.infer<typeof FileDiffSchema>;

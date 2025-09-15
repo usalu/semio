@@ -49,6 +49,7 @@ import {
   DiffStatus,
   FileDiff,
   fileIdLikeToFileId,
+  fileIdToString,
   findDesignInKit,
   findPieceInDesign,
   findReplacableDesignsForDesignPiece,
@@ -351,33 +352,33 @@ type YPlane = Y.Map<YVec3>;
 
 type YRepresentationVal = string | YStringArray | YAttributes;
 type YRepresentation = Y.Map<YRepresentationVal>;
-type YRepresentationMap = Y.Map<YRepresentation>;
+type YRepresentationArray = Y.Array<YRepresentation>;
 type YRepresentationId = string;
 
 type YPortVal = string | number | boolean | YLeafMapNumber | YAttributes | YStringArray;
 type YPort = Y.Map<YPortVal>;
-type YPortMap = Y.Map<YPort>;
+type YPortArray = Y.Array<YPort>;
 type YPortId = string;
 
 type YPieceVal = string | YLeafMapString | YLeafMapNumber | YPlane | YAttributes;
 type YPiece = Y.Map<YPieceVal>;
-type YPieceMap = Y.Map<YPiece>;
+type YPieceArray = Y.Array<YPiece>;
 type YPieceId = string;
 
 type YSide = Y.Map<YLeafMapString>;
 type YConnectionVal = string | number | YAttributes | YSide;
 type YConnection = Y.Map<YConnectionVal>;
-type YConnectionMap = Y.Map<YConnection>;
+type YConnectionArray = Y.Array<YConnection>;
 type YConnectionId = string;
 
-type YTypeVal = string | number | boolean | YAuthors | YAttributes | YRepresentationMap | YPortMap;
+type YTypeVal = string | number | boolean | YAuthors | YAttributes | YRepresentationArray | YPortArray;
 type YType = Y.Map<YTypeVal>;
-type YTypeMap = Y.Map<YType>;
+type YTypeArray = Y.Array<YType>;
 type YTypeId = string;
 
-type YDesignVal = string | YAuthors | YAttributes | YPieceMap | YConnectionMap;
+type YDesignVal = string | YAuthors | YAttributes | YPieceArray | YConnectionArray;
 type YDesign = Y.Map<YDesignVal>;
-type YDesignMap = Y.Map<YDesign>;
+type YDesignArray = Y.Array<YDesign>;
 type YDesignId = string;
 
 type YDesignEditorStoreVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
@@ -385,9 +386,9 @@ type YDesignEditorStoreValMap = Y.Map<YDesignEditorStoreVal>;
 type YDesignEditorStoreMap = Y.Map<YDesignEditorStore>;
 
 type YIdMap = Y.Map<string>;
-type YKitVal = string | YTypeMap | YDesignMap | YIdMap | YAttributes;
+type YKitVal = string | YTypeArray | YDesignArray | YIdMap | YAttributes;
 type YKit = Y.Map<YKitVal>;
-type YKitMap = Y.Map<YKit>;
+type YKitArray = Y.Array<YKit>;
 type YKitId = string;
 
 type YSketchpadVal = string | boolean;
@@ -594,7 +595,7 @@ class YFileStore implements FileStore {
 
   constructor(parent: YKitStore, file: SemioFile) {
     this.parent = parent;
-    this.yFile = new Y.Map<string>();
+    this.yFile = parent.getMap;
     this.yFile.set("path", file.path);
     this.yFile.set("remote", file.remote || "");
     this.yFile.set("size", file.size?.toString() || "");
@@ -1393,7 +1394,7 @@ class YKitStore implements KitStore {
   private readonly designIds: Map<string, string> = new Map();
   private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult> = new Map();
   private readonly regularFiles: Map<Url, string> = new Map();
-  private readonly parent: SketchpadStore;
+  private readonly parent: YSketchpadStore;
   private cache?: Kit;
   private cacheHash?: string;
 
@@ -1401,96 +1402,73 @@ class YKitStore implements KitStore {
     return JSON.stringify(kit);
   }
 
-  constructor(parent: SketchpadStore, kit: Kit) {
+  constructor(parent: YSketchpadStore, kit: Kit) {
     this.parent = parent;
-
-    // Create new Y.Doc for this kit
     const yDoc = new Y.Doc();
-    this.yKit = yDoc.getMap("kit") as YKit;
+    const yKit = yDoc.getMap() as YKit;
+    this.yKit = yKit;
+    const yAttributes = yKit.get("attributes") as YAttributes;
+    const yAuthors = yKit.get("authors") as YAuthors;
+    const yFiles = yKit.get("files") as YFiles;
+    const yBenchmarks = yKit.get("benchmarks") as YBenchmarks;
+    const yQualities = yKit.get("qualities") as YQualities;
+    const yProps = yKit.get("props") as YProps;
+    const yRepresentations = yKit.get("representations") as YRepresentations;
+    const yPorts = yKit.get("ports") as YPorts;
+    const yTypes = yKit.get("types") as YTypes;
+    const yLayers = yKit.get("layers") as YLayers;
+    const yPieces = yKit.get("pieces") as YPieces;
+    const yGroups = yKit.get("groups") as YGroups;
+    const yConnections = yKit.get("connections") as YConnections;
+    const yStats = yKit.get("stats") as YStats;
+    const yDesigns = yKit.get("designs") as YDesigns;
 
-    // Set initial values synchronously to ensure proper Y.js integration
-    this.yKit.set("uuid", uuidv4());
-    this.yKit.set("uri", kit.uri);
-    this.yKit.set("name", kit.name);
-    this.yKit.set("description", kit.description || "");
-    this.yKit.set("icon", kit.icon || "");
-    this.yKit.set("image", kit.image || "");
-    this.yKit.set("version", kit.version || "");
-    this.yKit.set("preview", kit.preview || "");
-    this.yKit.set("remote", kit.remote || "");
-    this.yKit.set("homepage", kit.homepage || "");
-    this.yKit.set("license", kit.license || "");
-    this.yKit.set("types", new Y.Map<YType>());
-    this.yKit.set("designs", new Y.Map<YDesign>());
-    this.yKit.set("attributes", new Y.Array<YAttribute>());
-    this.yKit.set("created", new Date().toISOString());
-    this.yKit.set("updated", new Date().toISOString());
+    yDoc.transact(() => {
+      yKit.set("name", kit.name);
+      yKit.set("description", kit.description || "");
+      yKit.set("icon", kit.icon || "");
+      yKit.set("image", kit.image || "");
+      yKit.set("version", kit.version || "");
+      yKit.set("preview", kit.preview || "");
+      yKit.set("remote", kit.remote || "");
+      yKit.set("homepage", kit.homepage || "");
+      yKit.set("license", kit.license || "");
+      yKit.set("attributes", createAttributes(kit.attributes));
+      yKit.set("authors", createAuthors(kit.authors));
+      yKit.set("files", new Y.Array<YFile>());
+      yKit.set("benchmarks", new Y.Array<YBenchmark>());
+      yKit.set("qualities", new Y.Array<YQuality>());
+      yKit.set("props", new Y.Array<YProp>());
+      yKit.set("representations", new Y.Array<YRepresentation>());
+      yKit.set("ports", new Y.Array<YPort>());
+      yKit.set("types", new Y.Array<YType>());
+      yKit.set("layers", new Y.Array<YLayer>());
+      yKit.set("pieces", new Y.Array<YPiece>());
+      yKit.set("groups", new Y.Array<YGroup>());
+      yKit.set("connections", new Y.Array<YConnection>());
+      yKit.set("stats", new Y.Array<YStat>());
+      yKit.set("designs", new Y.Array<YDesign>());
 
-    kit.types?.forEach((type) => {
-      const typeId = typeIdLikeToTypeId(type);
-      const typeIdStr = typeIdToString(typeId);
-      if (this.typeIds.has(typeIdStr)) {
-        throw new Error(`Type (${typeId.name}, ${typeId.variant || ""}) already exists.`);
-      }
-      const uuid = uuidv4();
-      const yTypeStore = new YTypeStore(this, type);
-      (this.yKit.get("types") as YTypeMap).set(uuid, yTypeStore.yType);
-      const representationsMap = yTypeStore.yType.get("representations") as YRepresentationMap;
-      const portsMap = yTypeStore.yType.get("ports") as YPortMap;
-      (type.representations || []).forEach((r) => {
-        const repId = representationIdLikeToRepresentationId(r);
-        const repIdStr = representationIdToString(repId);
-        const repUuid = uuidv4();
-        yTypeStore.representationIds.set(repIdStr, repUuid);
-        yTypeStore.representations.set(repIdStr, new YRepresentationStore(this, r));
-        representationsMap.set(repUuid, yTypeStore.representations.get(repIdStr)!.yRepresentation);
+      // TODO: Get values from stores
+      kit.files?.forEach((file) => {
+        const yFileStore = new YFileStore(this, file);
+        this.files.set(fileIdToString(file), yFileStore);
       });
-      (type.ports || []).forEach((p) => {
-        const portId = portIdLikeToPortId(p);
-        const portIdStr = portIdToString(portId);
-        const portUuid = uuidv4();
-        yTypeStore.portIds.set(portIdStr, portUuid);
-        yTypeStore.ports.set(portIdStr, new YPortStore(yTypeStore, p));
-        portsMap.set(portUuid, yTypeStore.ports.get(portIdStr)!.yPort);
+      kit.types?.forEach((type) => {
+        const yTypeStore = new YTypeStore(this, type);
+        this.types.set(typeIdToString(type), yTypeStore);
       });
-      this.typeIds.set(typeIdStr, uuid);
-      this.types.set(typeIdStr, yTypeStore);
-    });
-    kit.designs?.forEach((design) => {
-      const designId = designIdLikeToDesignId(design);
-      const designIdStr = designIdToString(designId);
-      if (this.designIds.has(designIdStr)) {
-        throw new Error(`Design (${designId.name}, ${designId.variant || ""}) already exists.`);
-      }
-      const uuid = uuidv4();
-      const yDesignStore = new YDesignStore(this, design);
-      (this.yKit.get("designs") as YDesignMap).set(uuid, yDesignStore.yDesign);
-      const piecesMap = yDesignStore.yDesign.get("pieces") as YPieceMap;
-      const connectionsMap = yDesignStore.yDesign.get("connections") as YConnectionMap;
-      (design.pieces || []).forEach((piece) => {
-        const pieceId = pieceIdLikeToPieceId(piece);
-        const pieceUuid = uuidv4();
-        const yPieceStore = new YPieceStore(yDesignStore, piece);
-        piecesMap.set(pieceUuid, yPieceStore.yPiece);
-        const pieceIdStr = pieceIdToString(pieceId);
-        yDesignStore.pieceIds.set(pieceIdStr, pieceUuid);
-        yDesignStore.pieces.set(pieceIdStr, yPieceStore);
+      kit.designs?.forEach((design) => {
+        const yDesignStore = new YDesignStore(this, design);
+        this.designs.set(designIdToString(design), yDesignStore);
       });
-      (design.connections || []).forEach((connection) => {
-        const connectionId = connectionIdLikeToConnectionId(connection);
-        const connectionUuid = uuidv4();
-        const yConnectionStore = new YConnectionStore(yDesignStore, connection);
-        connectionsMap.set(connectionUuid, yConnectionStore.yConnection);
-        const connectionIdStr = connectionIdToString(connectionId);
-        yDesignStore.connectionIds.set(connectionIdStr, connectionUuid);
-        yDesignStore.connections.set(connectionIdStr, yConnectionStore);
-      });
-      this.designIds.set(designIdStr, uuid);
-      this.designs.set(designIdStr, yDesignStore);
-    });
 
-    Object.entries(kitCommands).forEach(([commandId, command]) => {
-      this.registerCommand(commandId, command);
+      Object.entries(kitCommands).forEach(([commandId, command]) => {
+        this.registerCommand(commandId, command);
+      });
+
+      yKit.set("created", new Date().toISOString());
+      yKit.set("updated", new Date().toISOString());
     });
   }
 
@@ -1752,7 +1730,7 @@ class YKitStore implements KitStore {
 class YDesignEditorStore implements DesignEditorStore {
   public readonly yDesignEditorStore: YDesignEditorStoreValMap;
   private readonly commandRegistry: Map<string, (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult> = new Map();
-  private readonly parent: SketchpadStore;
+  private readonly parent: YSketchpadStore;
   private cache?: DesignEditorState;
   private cacheHash?: string;
 
@@ -1762,19 +1740,25 @@ class YDesignEditorStore implements DesignEditorStore {
 
   constructor(parent: SketchpadStore, state?: DesignEditorState) {
     this.parent = parent;
-    this.yDesignEditorStore = new Y.Map<YDesignEditorStoreVal>();
-    this.yDesignEditorStore.set("fullscreenPanel", state?.fullscreenPanel || DesignEditorFullscreenPanel.None);
-    this.yDesignEditorStore.set("selectedPieceIds", new Y.Array<string>());
-    this.yDesignEditorStore.set("selectedConnections", new Y.Array<string>());
-    this.yDesignEditorStore.set("selectedPiecePortPieceId", "");
-    this.yDesignEditorStore.set("selectedPiecePortPortId", "");
-    this.yDesignEditorStore.set("selectedPiecePortDesignPieceId", "");
-    this.yDesignEditorStore.set("isTransactionActive", false);
-    this.yDesignEditorStore.set("presence", new Y.Map<any>());
-    this.yDesignEditorStore.set("others", new Y.Array<any>());
-    this.yDesignEditorStore.set("diff", new Y.Map<any>());
-    this.yDesignEditorStore.set("currentTransactionStack", new Y.Array<any>());
-    this.yDesignEditorStore.set("pastTransactionsStack", new Y.Array<any>());
+    const yDesignEditorStore = new Y.Map<YDesignEditorStoreVal>();
+
+    const designEditors = this.parent.yDoc.getMap("designEditors");
+    const uuid = uuidv4();
+
+    parent.yDoc.transact(() => {
+      yDesignEditorStore.set("fullscreenPanel", state?.fullscreenPanel || DesignEditorFullscreenPanel.None);
+      yDesignEditorStore.set("selectedPieceIds", new Y.Array<string>());
+      yDesignEditorStore.set("selectedConnections", new Y.Array<string>());
+      yDesignEditorStore.set("selectedPiecePortPieceId", "");
+      yDesignEditorStore.set("selectedPiecePortPortId", "");
+      yDesignEditorStore.set("selectedPiecePortDesignPieceId", "");
+      yDesignEditorStore.set("isTransactionActive", false);
+      yDesignEditorStore.set("presence", new Y.Map<any>());
+      yDesignEditorStore.set("others", new Y.Array<any>());
+      yDesignEditorStore.set("diff", new Y.Map<any>());
+      yDesignEditorStore.set("currentTransactionStack", new Y.Array<any>());
+      yDesignEditorStore.set("pastTransactionsStack", new Y.Array<any>());
+    });
 
     Object.entries(designEditorCommands).forEach(([commandId, command]) => {
       this.registerCommand(commandId, command);
@@ -2154,21 +2138,25 @@ class YSketchpadStore implements SketchpadStore {
     // this.broadcastChannel = new BroadcastChannel("semio-yjs");
     this.ySketchpadDoc = new Y.Doc();
 
-    // Initialize the sketchpad map immediately and ensure it's properly integrated
-    const ySketchpad = this.ySketchpadDoc.getMap("sketchpad");
-
-    // Set initial values synchronously to ensure proper Y.js integration
-    ySketchpad.set("mode", state.mode);
-    ySketchpad.set("theme", state.theme);
-    ySketchpad.set("layout", state.layout);
-    if (state.activeDesignEditor) {
-      ySketchpad.set("activeDesignEditor", JSON.stringify(state.activeDesignEditor));
-    }
-
-    // Initialize IndexedDB persistence AFTER the document structure is set up
     if (state.persistantId && state.persistantId !== "") {
       this.sketchpadIndexeddbProvider = new IndexeddbPersistence(`semio-sketchpad-${state.persistantId}`, this.ySketchpadDoc);
     }
+
+    const ySketchpad = this.ySketchpadDoc.getMap("sketchpad");
+
+    ySketchpad.get("mode");
+    ySketchpad.get("theme");
+    ySketchpad.get("layout");
+    ySketchpad.get("designEditorStores");
+    ySketchpad.get("activeDesignEditor");
+
+    this.ySketchpadDoc.transact(() => {
+      ySketchpad.set("mode", state.mode);
+      ySketchpad.set("theme", state.theme);
+      ySketchpad.set("layout", state.layout);
+      ySketchpad.set("designEditorStores", new Y.Map<YDesignEditorStore>());
+      ySketchpad.set("activeDesignEditor", state.activeDesignEditor ? JSON.stringify(state.activeDesignEditor) : "");
+    });
 
     // this.ySketchpadDoc.on("update", (update: Uint8Array) => {
     //   this.broadcastChannel.postMessage({ client: this.clientId, update });
