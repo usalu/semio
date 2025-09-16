@@ -22,7 +22,7 @@ import { FC, ReactNode, useEffect, useState } from "react";
 import { TooltipProvider } from "../Tooltip";
 
 import { Kit, KitId } from "../../../semio";
-import { KitScopeProvider, Layout, Mode, SketchpadScopeProvider, Theme, useLayout, useMode, useSketchpadCommands, useTheme } from "../../../store";
+import { KitScopeProvider, Layout, SketchpadScopeProvider, Theme, useLayout, useMode, useSketchpadCommands, useTheme } from "../../../store";
 import { NavbarContext } from "../Navbar";
 import KitEditor from "./KitEditor";
 
@@ -67,14 +67,11 @@ const SketchpadInner: FC = () => {
   }, [layout]);
 
   useEffect(() => {
-    if (mode !== Mode.USER) setMode(mode);
-    if (layout !== Layout.NORMAL) setLayout(layout);
-    if (theme && theme !== Theme.SYSTEM) setTheme(theme);
     if (!theme && theme === Theme.SYSTEM && typeof window !== "undefined") {
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
       setTheme(prefersDark ? Theme.DARK : Theme.LIGHT);
     }
-  }, [mode, theme, layout, setMode, setTheme, setLayout]);
+  }, [theme, layout, setTheme, setLayout]);
 
   if (isImporting) return null;
 
@@ -95,7 +92,7 @@ const SketchpadInner: FC = () => {
 };
 
 interface SketchpadProps {
-  userId?: string;
+  id?: string;
   onWindowEvents?: {
     minimize: () => void;
     maximize: () => void;
@@ -103,10 +100,10 @@ interface SketchpadProps {
   };
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ userId, onWindowEvents }) => {
+const Sketchpad: FC<SketchpadProps> = ({ id, onWindowEvents }) => {
   return (
     <TooltipProvider>
-      <SketchpadScopeProvider id={userId || "default-user"} persisted={false}>
+      <SketchpadScopeProvider id={id}>
         <SketchpadInner />
       </SketchpadScopeProvider>
     </TooltipProvider>

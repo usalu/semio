@@ -739,11 +739,12 @@ export const portIdLikeToPortId = (port: PortIdLike): PortId => {
   if (typeof port === "string") return { id_: port };
   return { id_: port.id_ };
 };
-export const areSamePort = (port: Port | PortId, other: Port | PortId): boolean => {
+export const areSamePort = (port: PortIdLike, other: PortIdLike): boolean => {
   const p1 = portIdLikeToPortId(port);
   const p2 = portIdLikeToPortId(other);
   return normalize(p1.id_) === normalize(p2.id_);
 };
+export const hasSamePort = (port: PortIdLike, others: PortIdLike[]): boolean => others.some((other) => areSamePort(port, other));
 export const findPort = (ports: Port[], portId: PortIdLike): Port => {
   const normalizedPortId = portIdLikeToPortId(portId);
   const port = ports.find((p) => normalize(p.id_) === normalize(normalizedPortId.id_));
@@ -819,11 +820,12 @@ export const TypesDiffSchema = z.object({
 });
 export type TypesDiff = z.infer<typeof TypesDiffSchema>;
 
-export const areSameType = (type: Type | TypeId, other: Type | TypeId): boolean => {
+export const areSameType = (type: TypeIdLike, other: TypeIdLike): boolean => {
   const t1 = typeIdLikeToTypeId(type);
   const t2 = typeIdLikeToTypeId(other);
   return t1.name === t2.name && normalize(t1.variant) === normalize(t2.variant);
 };
+export const hasSameType = (type: TypeIdLike, others: TypeIdLike[]): boolean => others.some((other) => areSameType(type, other));
 
 export const findPortInType = (type: Type, portId: PortIdLike): Port => findPort(type.ports ?? [], portId);
 
@@ -980,11 +982,13 @@ export const pieceIdLikeToPieceId = (piece: PieceIdLike): PieceId => {
   throw new Error("Invalid piece id like");
 };
 
-export const areSamePiece = (piece: Piece | PieceId, other: Piece | PieceId): boolean => {
+export const areSamePiece = (piece: PieceIdLike, other: PieceIdLike): boolean => {
   const p1 = pieceIdLikeToPieceId(piece);
   const p2 = pieceIdLikeToPieceId(other);
   return normalize(p1.id_) === normalize(p2.id_);
 };
+
+export const hasSamePiece = (piece: PieceIdLike, others: PieceIdLike[]): boolean => others.some((other) => areSamePiece(piece, other));
 
 export const findPiece = (pieces: Piece[], pieceId: PieceIdLike): Piece => {
   const normalizedPieceId = pieceIdLikeToPieceId(pieceId);
