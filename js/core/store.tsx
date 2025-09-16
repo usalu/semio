@@ -47,7 +47,6 @@ import {
   DesignShallow,
   DiffStatus,
   FileDiff,
-  fileIdToString,
   findDesignInKit,
   findPieceInDesign,
   findReplacableDesignsForDesignPiece,
@@ -75,12 +74,10 @@ import {
   Port,
   PortDiff,
   PortId,
-  portIdLikeToPortId,
   portIdToString,
   Representation,
   RepresentationDiff,
   RepresentationId,
-  representationIdLikeToRepresentationId,
   representationIdToString,
   File as SemioFile,
   Type,
@@ -114,6 +111,7 @@ export enum Layout {
 export type Subscribe = () => void;
 export type Unsubscribe = () => void;
 export type Disposable = () => void;
+export type Transact = (fn: () => void) => void;
 export type Url = string;
 
 export interface Snapshot<TModel> {
@@ -349,36 +347,52 @@ type YLeafMapNumber = Y.Map<number>;
 type YVec3 = YLeafMapNumber;
 type YPlane = Y.Map<YVec3>;
 
+type YFile = Y.Map<string>;
+type YFiles = Y.Map<YFile>;
+
+type YBenchmark = Y.Map<string>;
+type YBenchmarks = Y.Map<YBenchmark>;
+
+type YQuality = Y.Map<string>;
+type YQualities = Y.Map<YQuality>;
+
+type YProp = Y.Map<string>;
+type YProps = Y.Map<YProp>;
+
 type YRepresentationVal = string | YStringArray | YAttributes;
 type YRepresentation = Y.Map<YRepresentationVal>;
 type YRepresentationArray = Y.Array<YRepresentation>;
-type YRepresentationId = string;
 
 type YPortVal = string | number | boolean | YLeafMapNumber | YAttributes | YStringArray;
 type YPort = Y.Map<YPortVal>;
 type YPortArray = Y.Array<YPort>;
-type YPortId = string;
+
+type YTypeVal = string | number | boolean | YAuthors | YAttributes | YRepresentationArray | YPortArray;
+type YType = Y.Map<YTypeVal>;
+type YTypes = Y.Map<YType>;
+
+type YLayer = Y.Map<string>;
+type YLayers = Y.Map<YLayer>;
 
 type YPieceVal = string | YLeafMapString | YLeafMapNumber | YPlane | YAttributes;
 type YPiece = Y.Map<YPieceVal>;
 type YPieceArray = Y.Array<YPiece>;
-type YPieceId = string;
+
+type YGroup = Y.Map<string>;
+type YGroups = Y.Map<YGroup>;
 
 type YSide = Y.Map<YLeafMapString>;
+
 type YConnectionVal = string | number | YAttributes | YSide;
 type YConnection = Y.Map<YConnectionVal>;
 type YConnectionArray = Y.Array<YConnection>;
-type YConnectionId = string;
 
-type YTypeVal = string | number | boolean | YAuthors | YAttributes | YRepresentationArray | YPortArray;
-type YType = Y.Map<YTypeVal>;
-type YTypeArray = Y.Array<YType>;
-type YTypeId = string;
+type YStat = Y.Map<string>;
+type YStats = Y.Map<YStat>;
 
 type YDesignVal = string | YAuthors | YAttributes | YPieceArray | YConnectionArray;
 type YDesign = Y.Map<YDesignVal>;
-type YDesignArray = Y.Array<YDesign>;
-type YDesignId = string;
+type YDesigns = Y.Map<YDesign>;
 
 type YDesignEditorStoreVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
 type YDesignEditorStoreValMap = Y.Map<YDesignEditorStoreVal>;
@@ -387,8 +401,6 @@ type YDesignEditorStoreMap = Y.Map<YDesignEditorStore>;
 type YIdMap = Y.Map<string>;
 type YKitVal = string | YTypeArray | YDesignArray | YIdMap | YAttributes;
 type YKit = Y.Map<YKitVal>;
-type YKitArray = Y.Array<YKit>;
-type YKitId = string;
 
 type YSketchpadVal = string | boolean;
 type YSketchpad = Y.Map<YSketchpadVal>;
@@ -810,12 +822,10 @@ class YPortStore implements PortStore {
 }
 
 class YTypeStore implements TypeStore {
-  public readonly parent: YKitStore;
-  public readonly yType: YType;
   public readonly representations: Map<string, YRepresentationStore> = new Map();
   public readonly ports: Map<string, YPortStore> = new Map();
-  public readonly representationIds: Map<string, string> = new Map();
-  public readonly portIds: Map<string, string> = new Map();
+  private yType: YType;
+  private transact: Transact;
   private cache?: Type;
   private cacheHash?: string;
 
@@ -823,60 +833,18 @@ class YTypeStore implements TypeStore {
     return JSON.stringify(type);
   }
 
-  constructor(parent: YKitStore, type: Type) {
-    this.parent = parent;
-    this.yType = new Y.Map<any>();
+  constructor(yType: YType, transact: Transact, type: Type) {
+    this.yType = yType;
+    this.transact = transact;
     this.yType.set("name", type.name);
-    this.yType.set("description", type.description || "");
     this.yType.set("variant", type.variant || "");
-    this.yType.set("unit", type.unit);
-    this.yType.set("stock", type.stock || Number.POSITIVE_INFINITY);
-    this.yType.set("virtual", type.virtual || false);
-    this.yType.set("representations", new Y.Map() as YRepresentationMap);
-    this.yType.set("ports", new Y.Map() as YPortMap);
-    this.yType.set("authors", createAuthors(type.authors));
-    this.yType.set("attributes", createAttributes(type.attributes));
   }
 
-  type = (): Type => {
-    return this.snapshot();
-  };
-
   change = (diff: TypeDiff) => {
-    if (diff.name !== undefined) this.yType.set("name", diff.name);
-    if (diff.description !== undefined) this.yType.set("description", diff.description);
-    if (diff.variant !== undefined) this.yType.set("variant", diff.variant);
-    if (diff.unit !== undefined) this.yType.set("unit", diff.unit);
-    if (diff.stock !== undefined) this.yType.set("stock", diff.stock);
-    if (diff.virtual !== undefined) this.yType.set("virtual", diff.virtual);
-    if (diff.representations !== undefined) {
-      diff.representations.forEach((rep) => {
-        const repId = representationIdLikeToRepresentationId(rep);
-        const repIdStr = representationIdToString(repId);
-        if (!this.representationIds.get(repIdStr)) {
-          const uuid = uuidv4();
-          this.representationIds.set(repIdStr, uuid);
-          this.representations.set(repIdStr, new YRepresentationStore(this.parent, rep));
-          (this.yType.get("representations") as YRepresentationMap).set(uuid, this.representations.get(repIdStr)!.yRepresentation);
-        } else {
-          this.representations.get(repIdStr)?.change(rep);
-        }
-      });
-    }
-    if (diff.ports !== undefined) {
-      diff.ports.forEach((port) => {
-        const portId = portIdLikeToPortId(port);
-        const portIdStr = portIdToString(portId);
-        if (!this.portIds.get(portIdStr)) {
-          const uuid = uuidv4();
-          this.portIds.set(portIdStr, uuid);
-          this.ports.set(portIdStr, new YPortStore(this, port));
-          (this.yType.get("ports") as YPortMap).set(uuid, this.ports.get(portIdStr)!.yPort);
-        } else {
-          this.ports.get(portIdStr)?.change(port);
-        }
-      });
-    }
+    this.transact(() => {
+      if (diff.name !== undefined) this.yType.set("name", diff.name);
+      if (diff.variant !== undefined) this.yType.set("variant", diff.variant);
+    });
     this.cache = undefined;
     this.cacheHash = undefined;
   };
@@ -1385,13 +1353,20 @@ class YDesignStore implements DesignStore {
 }
 
 class YKitStore implements KitStore {
+  public readonly types: Map<string, YTypeStore> = new Map();
+  public readonly designs: Map<string, YDesignStore> = new Map();
   private readonly yDoc: Y.Doc;
   private readonly yKit: YKit;
   private readonly yAuthors: YAuthors;
-  private readonly yFiles: YUuidArray;
-  private readonly yQualities: YUuidArray;
-  private readonly yTypes: YUuidArray;
-  private readonly yDesigns: YUuidArray;
+  private readonly yKitAuthors: YUuidArray;
+  private readonly yFiles: YFiles;
+  private readonly yKitFiles: YUuidArray;
+  private readonly yQualities: YQualities;
+  private readonly yKitQualities: YUuidArray;
+  private readonly yTypes: YTypes;
+  private readonly yKitTypes: YUuidArray;
+  private readonly yDesigns: YDesigns;
+  private readonly yKitDesigns: YUuidArray;
   private readonly indexeddbProviders: IndexeddbPersistence;
   private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult> = new Map();
   private readonly regularFiles: Map<Url, string> = new Map();
@@ -1405,57 +1380,53 @@ class YKitStore implements KitStore {
   constructor(kit: Kit) {
     this.yDoc = new Y.Doc();
     this.yKit = this.yDoc.getMap() as YKit;
+    this.yAuthors = this.yDoc.getMap("authors");
+    this.yKitAuthors = this.yDoc.getArray("authors");
+    this.yFiles = this.yDoc.getMap("files");
+    this.yKitFiles = this.yDoc.getArray("files");
+    this.yQualities = this.yDoc.getMap("qualities");
+    this.yKitQualities = this.yDoc.getArray("qualities");
     this.yTypes = this.yDoc.getMap("types");
+    this.yKitTypes = this.yDoc.getArray("types");
+    this.yDesigns = this.yDoc.getMap("designs");
+    this.yKitDesigns = this.yDoc.getArray("designs");
 
-    // const yAttributes = this.yKit.get("attributes") as YAttributes;
-    // const yAuthors = this.yKit.get("authors") as YAuthors;
-    // const yFiles = this.yKit.get("files") as YFiles;
-    // const yBenchmarks = this.yKit.get("benchmarks") as YBenchmarks;
-    // const yQualities = this.yKit.get("qualities") as YQualities;
-    // const yProps = this.yKit.get("props") as YProps;
-    // const yRepresentations = this.yKit.get("representations") as YRepresentations;
-    // const yPorts = this.yKit.get("ports") as YPorts;
-    // const yTypes = this.yKit.get("types") as YTypes;
-    // const yLayers = this.yKit.get("layers") as YLayers;
-    // const yPieces = this.yKit.get("pieces") as YPieces;
-    // const yGroups = this.yKit.get("groups") as YGroups;
-    // const yConnections = this.yKit.get("connections") as YConnections;
-    // const yStats = this.yKit.get("stats") as YStats;
-    // const yDesigns = this.yKit.get("designs") as YDesigns;
-
-    if (kit.types) {
-      for (const type of kit.types) {
-        const uuid = uuidv4();
-        const yType = new Y.Map<YTypeVal>();
-        const yTypeStore = new YTypeStore(yType, this.yDoc.transact);
-        this.yMap.set;
-      }
-    }
-
-    yDoc.transact(() => {
+    this.yDoc.transact(() => {
       this.yKit.set("name", kit.name);
       this.yKit.set("version", kit.version || "");
 
-      // TODO: Get values from stores
-      kit.files?.forEach((file) => {
-        const yFileStore = new YFileStore(this, file);
-        this.files.set(fileIdToString(file), yFileStore);
-      });
-      kit.types?.forEach((type) => {
-        const yTypeStore = new YTypeStore(this, type);
-        this.types.set(typeIdToString(type), yTypeStore);
-      });
-      kit.designs?.forEach((design) => {
-        const yDesignStore = new YDesignStore(this, design);
-        this.designs.set(designIdToString(design), yDesignStore);
-      });
+      if (kit.types) {
+        const uuids = new Array<string>();
+        for (const type of kit.types) {
+          const uuid = uuidv4();
+          const yType = new Y.Map<YTypeVal>();
+          this.yTypes.set(uuid, yType);
+          const yTypeStore = new YTypeStore(yType, this.yDoc.transact, type);
+          this.types.set(typeIdToString(type), yTypeStore);
+          uuids.push(uuid);
+        }
+        this.yKitTypes.insert(this.yKitTypes.length, uuids);
+      }
 
-      Object.entries(kitCommands).forEach(([commandId, command]) => {
-        this.registerCommand(commandId, command);
-      });
+      if (kit.designs) {
+        const uuids = new Array<string>();
+        for (const design of kit.designs) {
+          const uuid = uuidv4();
+          const yDesign = new Y.Map<YDesignVal>();
+          this.yDesigns.set(uuid, yDesign);
+          const yDesignStore = new YDesignStore(yDesign, this.yDoc.transact, design);
+          this.designs.set(designIdToString(design), yDesignStore);
+          uuids.push(uuid);
+        }
+        this.yKitDesigns.insert(this.yKitDesigns.length, uuids);
+      }
 
       this.yKit.set("created", new Date().toISOString());
       this.yKit.set("updated", new Date().toISOString());
+    });
+
+    Object.entries(kitCommands).forEach(([commandId, command]) => {
+      this.registerCommand(commandId, command);
     });
   }
 
@@ -1464,20 +1435,17 @@ class YKitStore implements KitStore {
     const attributes = getAttributes(yAttributes);
 
     const currentData = {
-      uri: this.yKit.get("uri") as string,
       name: this.yKit.get("name") as string,
       version: this.yKit.get("version") as string | undefined,
-      description: this.yKit.get("description") as string | undefined,
-      icon: this.yKit.get("icon") as string | undefined,
-      image: this.yKit.get("image") as string | undefined,
-      preview: this.yKit.get("preview") as string | undefined,
-      remote: this.yKit.get("remote") as string | undefined,
-      homepage: this.yKit.get("homepage") as string | undefined,
-      license: this.yKit.get("license") as string | undefined,
-      created: this.yKit.get("created") ? new Date(this.yKit.get("created") as string) : undefined,
-      updated: this.yKit.get("updated") ? new Date(this.yKit.get("updated") as string) : undefined,
-      types: Array.from(this.types.values()).map((store) => store.snapshot()),
-      designs: Array.from(this.designs.values()).map((store) => store.snapshot()),
+      // description: this.yKit.get("description") as string | undefined,
+      // icon: this.yKit.get("icon") as string | undefined,
+      // image: this.yKit.get("image") as string | undefined,
+      // preview: this.yKit.get("preview") as string | undefined,
+      // remote: this.yKit.get("remote") as string | undefined,
+      // homepage: this.yKit.get("homepage") as string | undefined,
+      // license: this.yKit.get("license") as string | undefined,
+      // created: this.yKit.get("created") ? new Date(this.yKit.get("created") as string) : undefined,
+      // updated: this.yKit.get("updated") ? new Date(this.yKit.get("updated") as string) : undefined,
       attributes: attributes,
     };
     const currentHash = this.hash(currentData);
