@@ -30,6 +30,8 @@ import * as Y from "yjs";
 import {
   applyDesignDiff,
   applyKitDiff,
+  areSameDesign,
+  areSameKit,
   Attribute,
   Author,
   Camera,
@@ -55,6 +57,7 @@ import {
   getClusterableGroups,
   getIncludedDesigns,
   getPieceRepresentationUrls,
+  hasSameKit,
   inverseKitDiff,
   Kit,
   KitDiff,
@@ -111,9 +114,13 @@ export type Unsubscribe = () => void;
 export type Disposable = () => void;
 export type Transact = (fn: () => void) => void;
 export type Url = string;
+export type SketchpadId = string;
 
 export interface Snapshot<TModel> {
   snapshot(): TModel;
+}
+export interface Id<TId> {
+  id(): TId;
 }
 export interface Actions<TDiff> {
   change: (diff: TDiff) => void;
@@ -167,12 +174,12 @@ export interface EditorSubscriptions extends Subscriptions {
   onTransactionAborted: (subscribe: Subscribe) => Unsubscribe;
   onTransactionFinalized: (subscribe: Subscribe) => Unsubscribe;
 }
-export interface Store<TModel, TDiff> extends Snapshot<TModel>, Actions<TDiff>, Subscriptions {}
+export interface Store<TModel, TId, TDiff> extends Snapshot<TModel>, Id<TId>, Actions<TDiff>, Subscriptions {}
 export interface Commands<TContext, TResult> {
   execute(command: string, ...rest: any[]): Promise<TResult>;
   register(command: string, callback: (context: TContext, ...rest: any[]) => TResult): Disposable;
 }
-export interface StoreWithCommands<TModel, TDiff, TContext, TResult> extends Store<TModel, TDiff>, Commands<TContext, TResult> {}
+export interface StoreWithCommands<TModel, TId, TDiff, TContext, TResult> extends Store<TModel, TId, TDiff>, Commands<TContext, TResult> {}
 export interface Editor<TDiff, TSelection, TSelectionDiff, TPresence, TContext, TResult>
   extends Commands<TContext, TResult>,
     EditorActions<TDiff, TSelectionDiff, TPresence>,
@@ -180,20 +187,20 @@ export interface Editor<TDiff, TSelection, TSelectionDiff, TPresence, TContext, 
     EditorPresence<TPresence>,
     EditorSelectionActions<TSelectionDiff> {}
 
-export interface FileStore extends Store<SemioFile, FileDiff> {}
-export interface RepresentationStore extends Store<Representation, RepresentationDiff> {}
-export interface PortStore extends Store<Port, PortDiff> {}
-export interface TypeStore extends Store<Type, TypeDiff> {
+export interface FileStore extends Store<SemioFile, FileId, FileDiff> {}
+export interface RepresentationStore extends Store<Representation, RepresentationId, RepresentationDiff> {}
+export interface PortStore extends Store<Port, PortId, PortDiff> {}
+export interface TypeStore extends Store<Type, TypeId, TypeDiff> {
   representations: Map<string, RepresentationStore>;
   ports: Map<string, PortStore>;
 }
-export interface PieceStore extends Store<Piece, PieceDiff> {}
-export interface ConnectionStore extends Store<Connection, ConnectionDiff> {}
-export interface DesignStore extends Store<Design, DesignDiff> {
+export interface PieceStore extends Store<Piece, PieceId, PieceDiff> {}
+export interface ConnectionStore extends Store<Connection, ConnectionId, ConnectionDiff> {}
+export interface DesignStore extends Store<Design, DesignId, DesignDiff> {
   pieces: Map<string, PieceStore>;
   connections: Map<string, ConnectionStore>;
 }
-export interface KitStore extends StoreWithCommands<Kit, KitDiff, KitCommandContext, KitCommandResult> {
+export interface KitStore extends StoreWithCommands<Kit, KitId, KitDiff, KitCommandContext, KitCommandResult> {
   types: Map<string, TypeStore>;
   designs: Map<string, DesignStore>;
   files: Map<Url, FileStore>;
@@ -281,7 +288,7 @@ export interface DesignEditorCommandResult {
   diff?: DesignEditorDiff;
   kitDiff?: KitDiff;
 }
-export interface DesignEditorStore extends StoreWithCommands<DesignEditorState, DesignEditorDiff, DesignEditorCommandContext, DesignEditorCommandResult> {}
+export interface DesignEditorStore extends StoreWithCommands<DesignEditorState, DesignEditorId, DesignEditorDiff, DesignEditorCommandContext, DesignEditorCommandResult> {}
 
 export interface SketchpadChangableState {
   mode: Mode;
@@ -320,7 +327,7 @@ export interface SketchpadCommandContext {
 export interface SketchpadCommandResult {
   diff?: SketchpadDiff;
 }
-export interface SketchpadStore extends StoreWithCommands<SketchpadState, SketchpadDiff, SketchpadCommandContext, SketchpadCommandResult> {
+export interface SketchpadStore extends StoreWithCommands<SketchpadState, SketchpadId, SketchpadDiff, SketchpadCommandContext, SketchpadCommandResult> {
   kits: Map<string, KitStore>;
   designEditors: Map<string, Map<string, DesignEditorStore>>;
 }
@@ -330,6 +337,8 @@ export interface SketchpadStore extends StoreWithCommands<SketchpadState, Sketch
 export const inverseDesignEditorSelectionDiff = (selection: DesignEditorSelection, diff: DesignEditorSelectionDiff): DesignEditorSelectionDiff => {
   // TODO
 };
+export const areSameDesignEditor = (designEditor: DesignEditorId, other: DesignEditorId): boolean => areSameKit(designEditor.kit, other.kit) && areSameDesign(designEditor.design, other.design);
+export const hasSameDesignEditor = (designEditor: DesignEditorId, others: DesignEditorId[]): boolean => others.some((other) => areSameDesignEditor(designEditor, other));
 
 // #region Stores
 type YUuid = string;
@@ -393,15 +402,16 @@ type YDesignVal = string | YAuthors | YAttributes | YPieceArray | YConnectionArr
 type YDesign = Y.Map<YDesignVal>;
 type YDesigns = Y.Map<YDesign>;
 
-type YDesignEditorStoreVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
-type YDesignEditorStoreValMap = Y.Map<YDesignEditorStoreVal>;
-type YDesignEditorStoreMap = Y.Map<YDesignEditorStore>;
+type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
+type YDesignEditor = Y.Map<YDesignEditorVal>;
+type YDesignEditors = Y.Map<YDesignEditor>;
 
 type YIdMap = Y.Map<string>;
 type YKitVal = string | YUuidArray | YIdMap | YAttributes;
 type YKit = Y.Map<YKitVal>;
+type YKits = Map<string, YKit>;
 
-type YSketchpadVal = string | boolean;
+type YSketchpadVal = string | boolean | YDesignEditors;
 type YSketchpad = Y.Map<YSketchpadVal>;
 
 type YSketchpadKeysMap = {
@@ -1129,7 +1139,7 @@ class YKitStore implements KitStore {
   private readonly yKitTypes: YUuidArray;
   private readonly yDesigns: YDesigns;
   private readonly yKitDesigns: YUuidArray;
-  private readonly indexeddbProviders: IndexeddbPersistence;
+  private readonly persistences: IndexeddbPersistence;
   private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult> = new Map();
   private readonly regularFiles: Map<Url, string> = new Map();
   private cache?: Kit;
@@ -1191,6 +1201,10 @@ class YKitStore implements KitStore {
       this.registerCommand(commandId, command);
     });
   }
+
+  id = (): KitId => {
+    return { name: this.yKit.get("name") as string, version: this.yKit.get("version") || "" } as KitId;
+  };
 
   snapshot = (): Kit => {
     const yAttributes = this.yKit.get("attributes") as YAttributes;
@@ -1300,7 +1314,7 @@ class YDesignEditorStore implements DesignEditorStore {
     return JSON.stringify(state);
   }
 
-  constructor(yMap: YDesignEditorStoreValMap, transact: (fn: () => void) => void, state?: DesignEditorState) {
+  constructor(yMap: YDesignEditor, transact: (fn: () => void) => void, id: DesignEditorId, state?: DesignEditorState) {
     this.yMap = yMap;
     this.transact = transact;
     this.transact(() => {
@@ -1671,15 +1685,15 @@ class YDesignEditorStore implements DesignEditorStore {
 }
 
 class YSketchpadStore implements SketchpadStore {
-  public readonly sketchpadIndexeddbProvider?: IndexeddbPersistence;
-  public readonly kits: Map<string, YKitStore> = new Map();
-  public readonly designEditors: Map<string, Map<string, DesignEditorStore>> = new Map();
+  public readonly kits: Map<string, YKitStore>;
+  public readonly designEditors: Map<string, Map<string, DesignEditorStore>>;
   private readonly yDoc: Y.Doc;
   private readonly ySketchpad: YSketchpad;
-  private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult> = new Map();
+  private readonly yDesignEditors: YDesignEditors;
+  private readonly persistence?: IndexeddbPersistence;
+  private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult>;
   private cache?: SketchpadState;
   private cacheHash?: string;
-  // private readonly clientId: string;
   // private readonly broadcastChannel: BroadcastChannel;
 
   private hash(state: SketchpadState): string {
@@ -1687,78 +1701,75 @@ class YSketchpadStore implements SketchpadStore {
   }
 
   constructor(state?: SketchpadState) {
-    // this.clientId = uuidv4();
-    // this.broadcastChannel = new BroadcastChannel("semio-yjs");
+    // this.broadcastChannel = new BroadcastChannel("semio-sketchpad");
     this.yDoc = new Y.Doc();
+    this.kits = new Map();
+    this.designEditors = new Map();
+    this.commandRegistry = new Map();
+
     if (state?.persistantId && state.persistantId !== "") {
-      this.sketchpadIndexeddbProvider = new IndexeddbPersistence(`semio-sketchpad-${state.persistantId}`, this.yDoc);
+      this.persistence = new IndexeddbPersistence(`semio-sketchpad-${state.persistantId}`, this.yDoc);
     }
+
+    // this.yDoc.on("update", (update: Uint8Array) => {
+    //   this.broadcastChannel.postMessage({ client: this.yDoc.clientId, update });
+    // });
+    // this.broadcastChannel.addEventListener("message", (msg) => {
+    //   const { data } = msg;
+    //   if (data.client !== this.yDoc.clientId) {
+    //     Y.applyUpdate(this.yDoc, data.update);
+    //   }
+    // });
+
     this.ySketchpad = this.yDoc.getMap("sketchpad");
+    this.yDesignEditors = this.yDoc.getMap("designEditors");
     this.yDoc.transact(() => {
       this.ySketchpad.set("mode", state?.mode || Mode.GUEST);
       this.ySketchpad.set("theme", state?.theme || Theme.SYSTEM);
       this.ySketchpad.set("layout", state?.layout || Layout.NORMAL);
-      this.ySketchpad.set("designEditorStores", new Y.Map<YDesignEditorStore>());
       this.ySketchpad.set("activeDesignEditor", state?.activeDesignEditor ? JSON.stringify(state.activeDesignEditor) : "");
     });
-    // this.yDoc.on("update", (update: Uint8Array) => {
-    //   this.broadcastChannel.postMessage({ client: this.clientId, update });
-    // });
-    // this.broadcastChannel.addEventListener("message", (msg) => {
-    //   const { data } = msg;
-    //   if (data.client !== this.clientId) {
-    //     Y.applyUpdate(this.yDoc, data.update);
-    //   }
-    // });
   }
 
-  get mode(): Mode {
-    return this.ySketchpad.get("mode") as Mode;
-  }
-  get theme(): Theme {
-    return this.ySketchpad.get("theme") as Theme;
-  }
-  get layout(): Layout {
-    return this.ySketchpad.get("layout") as Layout;
-  }
-  get activeDesignEditor(): DesignEditorId | undefined {
-    const designEditorIdStr = this.ySketchpad.get("activeDesignEditor");
-    if (!designEditorIdStr || typeof designEditorIdStr !== "string") return undefined;
-    return JSON.parse(designEditorIdStr) as DesignEditorId;
-  }
+  id = () => {
+    return this.yDoc.clientID.toString();
+  };
 
   snapshot = (): SketchpadState => {
+    const activeDesignEditorIdStr = this.ySketchpad.get("activeDesignEditor") as string;
+    const activeDesignEditor = activeDesignEditorIdStr ? (JSON.parse(activeDesignEditorIdStr) as DesignEditorId) : undefined;
     const currentValues = {
-      mode: this.mode,
-      theme: this.theme,
-      layout: this.layout,
-      activeDesignEditor: this.activeDesignEditor,
+      mode: this.ySketchpad.get("mode") as Mode,
+      theme: this.ySketchpad.get("theme") as Theme,
+      layout: this.ySketchpad.get("layout") as Layout,
+      activeDesignEditor: activeDesignEditor,
     };
     const currentHash = this.hash(currentValues);
-
     if (!this.cache || this.cacheHash !== currentHash) {
       this.cache = currentValues;
       this.cacheHash = currentHash;
     }
-
     return this.cache;
   };
 
   createKit = (kit: Kit) => {
-    const store = new YKitStore(this, kit);
-    const kitIdStr = kitIdToString(kit);
-    this.kits.set(kitIdStr, store);
+    if (
+      hasSameKit(
+        kit,
+        Array.from(this.kits.values()).map((kit) => kit.id()),
+      )
+    ) {
+      throw new Error(`Kit (${kit.name}, ${kit.version || ""}) already exists.`);
+    }
+    this.kits.set(uuidv4(), new YKitStore(kit));
   };
 
   createDesignEditor = (id: DesignEditorId) => {
-    const store = new YDesignEditorStore(this);
-    const kitIdStr = kitIdToString(id.kit);
-    const designIdStr = designIdToString(id.design);
-    if (!this.designEditors.has(kitIdStr)) {
-      this.designEditors.set(kitIdStr, new Map());
+    const existingDesignEditorIds = Array.from(this.designEditors.values()).map((designEditor) => designEditor.id());
+    if (hasSameDesignEditor(id, existingDesignEditorIds)) {
+      throw new Error(`Design editor (${id.kit.name}, ${id.kit.version || ""}, ${id.design.name}, ${id.design.variant || ""}, ${id.design.view || ""}) already exists.`);
     }
-    const kitEditors = this.designEditors.get(kitIdStr)!;
-    kitEditors.set(designIdStr, store);
+    this.designEditors.set(uuidv4(), new YDesignEditorStore(id));
   };
 
   change(diff: SketchpadDiff) {

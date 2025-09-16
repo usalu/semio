@@ -1997,6 +1997,7 @@ export const areSameDesign = (design: DesignIdLike, other: DesignIdLike): boolea
   const d2 = designIdLikeToDesignId(other);
   return d1.name === d2.name && normalize(d1.variant) === normalize(d2.variant) && normalize(d1.view) === normalize(d2.view);
 };
+export const hasSameDesign = (design: DesignIdLike, others: DesignIdLike[]): boolean => others.some((other) => areSameDesign(design, other));
 
 export const isPortInUse = (design: Design, piece: Piece | PieceId, port: Port | PortId): boolean => {
   const normalizedPieceId = pieceIdLikeToPieceId(piece);
@@ -2080,7 +2081,7 @@ export const deserializeKit = (json: string): Kit => KitSchema.parse(JSON.parse(
 
 export const KitIdSchema = KitSchema.pick({ name: true, version: true });
 export type KitId = z.infer<typeof KitIdSchema>;
-export const kitIdToString = (kitId: KitId): string => `${kitId.name}@${kitId.version ?? ""}`;
+export const kitIdToString = (kit: KitId): string => `${kit.name}@${kit.version ?? ""}`;
 
 export const KitShallowSchema = KitSchema.omit({ types: true, designs: true, qualities: true, authors: true }).extend({
   types: z.array(TypeIdSchema).optional(),
@@ -2240,9 +2241,12 @@ export const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignId: D
   });
 };
 
-export const areSameKit = (kit: Kit | KitId, other: Kit | KitId): boolean => {
-  return kit.name === other.name && normalize(kit.version) === normalize(other.version);
+export const areSameKit = (kit: KitIdLike, other: KitIdLike): boolean => {
+  const id = kitIdLikeToKitId(kit);
+  const otherId = kitIdLikeToKitId(other);
+  return id.name === otherId.name && normalize(id.version) === normalize(otherId.version);
 };
+export const hasSameKit = (kit: KitIdLike, others: KitIdLike[]): boolean => others.some((other) => areSameKit(kit, other));
 
 export const findTypeInKit = (kit: Kit, typeId: TypeIdLike): Type => {
   const normalizedTypeId = typeIdLikeToTypeId(typeId);
