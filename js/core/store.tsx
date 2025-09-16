@@ -37,7 +37,6 @@ import {
   Connection,
   ConnectionDiff,
   ConnectionId,
-  connectionIdLikeToConnectionId,
   connectionIdToString,
   Coord,
   Design,
@@ -67,7 +66,6 @@ import {
   Piece,
   PieceDiff,
   PieceId,
-  pieceIdLikeToPieceId,
   pieceIdToString,
   piecesMetadata,
   Plane,
@@ -377,6 +375,7 @@ type YLayers = Y.Map<YLayer>;
 type YPieceVal = string | YLeafMapString | YLeafMapNumber | YPlane | YAttributes;
 type YPiece = Y.Map<YPieceVal>;
 type YPieceArray = Y.Array<YPiece>;
+type YPieces = Y.Map<YPiece>;
 
 type YGroup = Y.Map<string>;
 type YGroups = Y.Map<YGroup>;
@@ -399,7 +398,7 @@ type YDesignEditorStoreValMap = Y.Map<YDesignEditorStoreVal>;
 type YDesignEditorStoreMap = Y.Map<YDesignEditorStore>;
 
 type YIdMap = Y.Map<string>;
-type YKitVal = string | YTypeArray | YDesignArray | YIdMap | YAttributes;
+type YKitVal = string | YUuidArray | YIdMap | YAttributes;
 type YKit = Y.Map<YKitVal>;
 
 type YSketchpadVal = string | boolean;
@@ -594,236 +593,236 @@ function getPlane(yPlane: Y.Map<any>): { origin: { x: number; y: number; z: numb
   };
 }
 
-class YFileStore implements FileStore {
-  public readonly parent: YKitStore;
-  public readonly yFile: Y.Map<string>;
-  private cache?: SemioFile;
-  private cacheHash?: string;
+// class YFileStore implements FileStore {
+//   public readonly parent: YKitStore;
+//   public readonly yFile: Y.Map<string>;
+//   private cache?: SemioFile;
+//   private cacheHash?: string;
 
-  private hash(file: SemioFile): string {
-    return JSON.stringify(file);
-  }
+//   private hash(file: SemioFile): string {
+//     return JSON.stringify(file);
+//   }
 
-  constructor(parent: YKitStore, file: SemioFile) {
-    this.parent = parent;
-    this.yFile = parent.getMap;
-    this.yFile.set("path", file.path);
-    this.yFile.set("remote", file.remote || "");
-    this.yFile.set("size", file.size?.toString() || "");
-    this.yFile.set("hash", file.hash || "");
-    this.yFile.set("created", file.created?.toISOString() || "");
-    this.yFile.set("updated", file.updated?.toISOString() || "");
-  }
+//   constructor(parent: YKitStore, file: SemioFile) {
+//     this.parent = parent;
+//     this.yFile = parent.getMap;
+//     this.yFile.set("path", file.path);
+//     this.yFile.set("remote", file.remote || "");
+//     this.yFile.set("size", file.size?.toString() || "");
+//     this.yFile.set("hash", file.hash || "");
+//     this.yFile.set("createdAt", file.createdAt?.toISOString() || "");
+//     this.yFile.set("updatedAt", file.updatedAt?.toISOString() || "");
+//   }
 
-  get file(): SemioFile {
-    const path = this.yFile.get("path") as string;
-    const remote = this.yFile.get("remote") as string;
-    const file: SemioFile = { path, remote: remote || undefined };
-    const size = this.yFile.get("size");
-    if (size) file.size = parseInt(size as string);
-    const hash = this.yFile.get("hash");
-    if (hash) file.hash = hash as string;
-    const created = this.yFile.get("created");
-    if (created) file.created = new Date(created as string);
-    const updated = this.yFile.get("updated");
-    if (updated) file.updated = new Date(updated as string);
-    return file;
-  }
+//   get file(): SemioFile {
+//     const path = this.yFile.get("path") as string;
+//     const remote = this.yFile.get("remote") as string;
+//     const file: SemioFile = { path, remote: remote || undefined };
+//     const size = this.yFile.get("size");
+//     if (size) file.size = parseInt(size as string);
+//     const hash = this.yFile.get("hash");
+//     if (hash) file.hash = hash as string;
+//     const createdAt = this.yFile.get("createdAt");
+//     if (createdAt) file.createdAt = new Date(createdAt as string);
+//     const updatedAt = this.yFile.get("updatedAt");
+//     if (updatedAt) file.updatedAt = new Date(updatedAt as string);
+//     return file;
+//   }
 
-  change = (diff: FileDiff) => {
-    if (diff.path !== undefined) this.yFile.set("path", diff.path);
-    if (diff.remote !== undefined) this.yFile.set("remote", diff.remote);
-    if (diff.size !== undefined) this.yFile.set("size", diff.size.toString());
-    if (diff.hash !== undefined) this.yFile.set("hash", diff.hash);
-    this.cache = undefined; // Invalidate cache when data changes
-    this.cacheHash = undefined; // Invalidate hash when data changes
-  };
+//   change = (diff: FileDiff) => {
+//     if (diff.path !== undefined) this.yFile.set("path", diff.path);
+//     if (diff.remote !== undefined) this.yFile.set("remote", diff.remote);
+//     if (diff.size !== undefined) this.yFile.set("size", diff.size.toString());
+//     if (diff.hash !== undefined) this.yFile.set("hash", diff.hash);
+//     this.cache = undefined; // Invalidate cache when data changes
+//     this.cacheHash = undefined; // Invalidate hash when data changes
+//   };
 
-  snapshot = (): SemioFile => {
-    const currentData = {
-      path: this.yFile.get("path") as string,
-      remote: (this.yFile.get("remote") as string) || undefined,
-      size: this.yFile.get("size") ? parseInt(this.yFile.get("size") as string) : undefined,
-      hash: (this.yFile.get("hash") as string) || undefined,
-      created: this.yFile.get("created") ? new Date(this.yFile.get("created") as string) : undefined,
-      updated: this.yFile.get("updated") ? new Date(this.yFile.get("updated") as string) : undefined,
-    };
-    const currentHash = this.hash(currentData);
+//   snapshot = (): SemioFile => {
+//     const currentData = {
+//       path: this.yFile.get("path") as string,
+//       remote: (this.yFile.get("remote") as string) || undefined,
+//       size: this.yFile.get("size") ? parseInt(this.yFile.get("size") as string) : undefined,
+//       hash: (this.yFile.get("hash") as string) || undefined,
+//       createdAt: this.yFile.get("createdAt") ? new Date(this.yFile.get("createdAt") as string) : undefined,
+//       updatedAt: this.yFile.get("updatedAt") ? new Date(this.yFile.get("updatedAt") as string) : undefined,
+//     };
+//     const currentHash = this.hash(currentData);
 
-    if (!this.cache || this.cacheHash !== currentHash) {
-      this.cache = currentData;
-      this.cacheHash = currentHash;
-    }
+//     if (!this.cache || this.cacheHash !== currentHash) {
+//       this.cache = currentData;
+//       this.cacheHash = currentHash;
+//     }
 
-    return this.cache;
-  };
+//     return this.cache;
+//   };
 
-  onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yFile, subscribe, false);
-  };
+//   onChanged = (subscribe: Subscribe) => {
+//     return createObserver(this.yFile, subscribe, false);
+//   };
 
-  onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yFile, subscribe, true);
-  };
-}
+//   onChangedDeep = (subscribe: Subscribe) => {
+//     return createObserver(this.yFile, subscribe, true);
+//   };
+// }
 
-class YRepresentationStore implements RepresentationStore {
-  public readonly parent: YKitStore;
-  public readonly yRepresentation: YRepresentation;
-  private cache?: Representation;
-  private cacheHash?: string;
+// class YRepresentationStore implements RepresentationStore {
+//   public readonly parent: YKitStore;
+//   public readonly yRepresentation: YRepresentation;
+//   private cache?: Representation;
+//   private cacheHash?: string;
 
-  private hash(representation: Representation): string {
-    return JSON.stringify(representation);
-  }
+//   private hash(representation: Representation): string {
+//     return JSON.stringify(representation);
+//   }
 
-  constructor(parent: YKitStore, representation: Representation) {
-    this.parent = parent;
-    this.yRepresentation = new Y.Map<any>();
-    this.yRepresentation.set("url", representation.url);
-    this.yRepresentation.set("description", representation.description || "");
-    this.yRepresentation.set("tags", createStringArray(representation.tags || []));
-    this.yRepresentation.set("attributes", createAttributes(representation.attributes));
-  }
+//   constructor(parent: YKitStore, representation: Representation) {
+//     this.parent = parent;
+//     this.yRepresentation = new Y.Map<any>();
+//     this.yRepresentation.set("url", representation.url);
+//     this.yRepresentation.set("description", representation.description || "");
+//     this.yRepresentation.set("tags", createStringArray(representation.tags || []));
+//     this.yRepresentation.set("attributes", createAttributes(representation.attributes));
+//   }
 
-  snapshot = (): Representation => {
-    const yTags = this.yRepresentation.get("tags") as Y.Array<string>;
-    const yAttributes = this.yRepresentation.get("attributes") as YAttributes;
+//   snapshot = (): Representation => {
+//     const yTags = this.yRepresentation.get("tags") as Y.Array<string>;
+//     const yAttributes = this.yRepresentation.get("attributes") as YAttributes;
 
-    const attributes = getAttributes(yAttributes);
-    const url = this.yRepresentation.get("url") as string;
-    const description = (this.yRepresentation.get("description") as string) || "";
-    const tags = yTags ? yTags.toArray() : [];
+//     const attributes = getAttributes(yAttributes);
+//     const url = this.yRepresentation.get("url") as string;
+//     const description = (this.yRepresentation.get("description") as string) || "";
+//     const tags = yTags ? yTags.toArray() : [];
 
-    const currentData = {
-      url: url,
-      description: description,
-      tags: tags,
-      attributes: attributes,
-    };
-    const currentHash = this.hash(currentData);
+//     const currentData = {
+//       url: url,
+//       description: description,
+//       tags: tags,
+//       attributes: attributes,
+//     };
+//     const currentHash = this.hash(currentData);
 
-    if (!this.cache || this.cacheHash !== currentHash) {
-      this.cache = currentData;
-      this.cacheHash = currentHash;
-    }
+//     if (!this.cache || this.cacheHash !== currentHash) {
+//       this.cache = currentData;
+//       this.cacheHash = currentHash;
+//     }
 
-    return this.cache;
-  };
+//     return this.cache;
+//   };
 
-  change = (diff: RepresentationDiff) => {
-    if (diff.url !== undefined) this.yRepresentation.set("url", diff.url);
-    if (diff.description !== undefined) this.yRepresentation.set("description", diff.description);
-    if (diff.tags !== undefined) {
-      updateStringArray(this.yRepresentation.get("tags") as Y.Array<string>, diff.tags);
-    }
-    if (diff.attributes !== undefined) {
-      updateAttributes(this.yRepresentation.get("attributes") as YAttributes, diff.attributes);
-    }
-  };
+//   change = (diff: RepresentationDiff) => {
+//     if (diff.url !== undefined) this.yRepresentation.set("url", diff.url);
+//     if (diff.description !== undefined) this.yRepresentation.set("description", diff.description);
+//     if (diff.tags !== undefined) {
+//       updateStringArray(this.yRepresentation.get("tags") as Y.Array<string>, diff.tags);
+//     }
+//     if (diff.attributes !== undefined) {
+//       updateAttributes(this.yRepresentation.get("attributes") as YAttributes, diff.attributes);
+//     }
+//   };
 
-  onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yRepresentation, subscribe, false);
-  };
+//   onChanged = (subscribe: Subscribe) => {
+//     return createObserver(this.yRepresentation, subscribe, false);
+//   };
 
-  onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yRepresentation, subscribe, true);
-  };
-}
+//   onChangedDeep = (subscribe: Subscribe) => {
+//     return createObserver(this.yRepresentation, subscribe, true);
+//   };
+// }
 
-class YPortStore implements PortStore {
-  public readonly parent: YTypeStore;
-  public readonly yPort: YPort;
-  private cache?: Port;
-  private cacheHash?: string;
+// class YPortStore implements PortStore {
+//   public readonly parent: YTypeStore;
+//   public readonly yPort: YPort;
+//   private cache?: Port;
+//   private cacheHash?: string;
 
-  private hash(port: Port): string {
-    return JSON.stringify(port);
-  }
+//   private hash(port: Port): string {
+//     return JSON.stringify(port);
+//   }
 
-  constructor(parent: YTypeStore, port: Port) {
-    this.parent = parent;
-    this.yPort = new Y.Map<any>();
-    this.yPort.set("id_", port.id_ || "");
-    this.yPort.set("description", port.description || "");
-    this.yPort.set("mandatory", port.mandatory || false);
-    this.yPort.set("family", port.family || "");
-    this.yPort.set("t", port.t);
-    this.yPort.set("compatibleFamilies", createStringArray(port.compatibleFamilies || []));
-    this.yPort.set("point", createVec3(port.point));
-    this.yPort.set("direction", createVec3(port.direction));
-    this.yPort.set("attributes", createAttributes(port.attributes));
-  }
+//   constructor(parent: YTypeStore, port: Port) {
+//     this.parent = parent;
+//     this.yPort = new Y.Map<any>();
+//     this.yPort.set("id_", port.id_ || "");
+//     this.yPort.set("description", port.description || "");
+//     this.yPort.set("mandatory", port.mandatory || false);
+//     this.yPort.set("family", port.family || "");
+//     this.yPort.set("t", port.t);
+//     this.yPort.set("compatibleFamilies", createStringArray(port.compatibleFamilies || []));
+//     this.yPort.set("point", createVec3(port.point));
+//     this.yPort.set("direction", createVec3(port.direction));
+//     this.yPort.set("attributes", createAttributes(port.attributes));
+//   }
 
-  snapshot = (): Port => {
-    const yCompatibleFamilies = this.yPort.get("compatibleFamilies") as Y.Array<string>;
-    const yPoint = this.yPort.get("point") as Y.Map<number>;
-    const yDirection = this.yPort.get("direction") as Y.Map<number>;
-    const yAttributes = this.yPort.get("attributes") as YAttributes;
+//   snapshot = (): Port => {
+//     const yCompatibleFamilies = this.yPort.get("compatibleFamilies") as Y.Array<string>;
+//     const yPoint = this.yPort.get("point") as Y.Map<number>;
+//     const yDirection = this.yPort.get("direction") as Y.Map<number>;
+//     const yAttributes = this.yPort.get("attributes") as YAttributes;
 
-    const attributes = getAttributes(yAttributes);
+//     const attributes = getAttributes(yAttributes);
 
-    const currentData = {
-      id_: this.yPort.get("id_") as string,
-      description: (this.yPort.get("description") as string) || "",
-      mandatory: this.yPort.get("mandatory") as boolean,
-      family: (this.yPort.get("family") as string) || "",
-      compatibleFamilies: yCompatibleFamilies ? yCompatibleFamilies.toArray() : [],
-      point: {
-        x: yPoint.get("x") as number,
-        y: yPoint.get("y") as number,
-        z: yPoint.get("z") as number,
-      },
-      direction: {
-        x: yDirection.get("x") as number,
-        y: yDirection.get("y") as number,
-        z: yDirection.get("z") as number,
-      },
-      t: this.yPort.get("t") as number,
-      attributes: attributes,
-    };
-    const currentHash = this.hash(currentData);
+//     const currentData = {
+//       id_: this.yPort.get("id_") as string,
+//       description: (this.yPort.get("description") as string) || "",
+//       mandatory: this.yPort.get("mandatory") as boolean,
+//       family: (this.yPort.get("family") as string) || "",
+//       compatibleFamilies: yCompatibleFamilies ? yCompatibleFamilies.toArray() : [],
+//       point: {
+//         x: yPoint.get("x") as number,
+//         y: yPoint.get("y") as number,
+//         z: yPoint.get("z") as number,
+//       },
+//       direction: {
+//         x: yDirection.get("x") as number,
+//         y: yDirection.get("y") as number,
+//         z: yDirection.get("z") as number,
+//       },
+//       t: this.yPort.get("t") as number,
+//       attributes: attributes,
+//     };
+//     const currentHash = this.hash(currentData);
 
-    if (!this.cache || this.cacheHash !== currentHash) {
-      this.cache = currentData;
-      this.cacheHash = currentHash;
-    }
+//     if (!this.cache || this.cacheHash !== currentHash) {
+//       this.cache = currentData;
+//       this.cacheHash = currentHash;
+//     }
 
-    return this.cache;
-  };
+//     return this.cache;
+//   };
 
-  change = (diff: PortDiff) => {
-    if (diff.id_ !== undefined) this.yPort.set("id_", diff.id_);
-    if (diff.description !== undefined) this.yPort.set("description", diff.description);
-    if (diff.mandatory !== undefined) this.yPort.set("mandatory", diff.mandatory);
-    if (diff.family !== undefined) this.yPort.set("family", diff.family);
-    if (diff.t !== undefined) this.yPort.set("t", diff.t);
-    if (diff.compatibleFamilies !== undefined) {
-      updateStringArray(this.yPort.get("compatibleFamilies") as Y.Array<string>, diff.compatibleFamilies);
-    }
-    if (diff.point !== undefined) {
-      updateVec3(this.yPort.get("point") as Y.Map<number>, diff.point);
-    }
-    if (diff.direction !== undefined) {
-      updateVec3(this.yPort.get("direction") as Y.Map<number>, diff.direction);
-    }
-    if (diff.attributes !== undefined) {
-      updateAttributes(this.yPort.get("attributes") as YAttributes, diff.attributes);
-    }
-  };
+//   change = (diff: PortDiff) => {
+//     if (diff.id_ !== undefined) this.yPort.set("id_", diff.id_);
+//     if (diff.description !== undefined) this.yPort.set("description", diff.description);
+//     if (diff.mandatory !== undefined) this.yPort.set("mandatory", diff.mandatory);
+//     if (diff.family !== undefined) this.yPort.set("family", diff.family);
+//     if (diff.t !== undefined) this.yPort.set("t", diff.t);
+//     if (diff.compatibleFamilies !== undefined) {
+//       updateStringArray(this.yPort.get("compatibleFamilies") as Y.Array<string>, diff.compatibleFamilies);
+//     }
+//     if (diff.point !== undefined) {
+//       updateVec3(this.yPort.get("point") as Y.Map<number>, diff.point);
+//     }
+//     if (diff.direction !== undefined) {
+//       updateVec3(this.yPort.get("direction") as Y.Map<number>, diff.direction);
+//     }
+//     if (diff.attributes !== undefined) {
+//       updateAttributes(this.yPort.get("attributes") as YAttributes, diff.attributes);
+//     }
+//   };
 
-  onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yPort, subscribe, false);
-  };
+//   onChanged = (subscribe: Subscribe) => {
+//     return createObserver(this.yPort, subscribe, false);
+//   };
 
-  onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yPort, subscribe, true);
-  };
-}
+//   onChangedDeep = (subscribe: Subscribe) => {
+//     return createObserver(this.yPort, subscribe, true);
+//   };
+// }
 
 class YTypeStore implements TypeStore {
-  public readonly representations: Map<string, YRepresentationStore> = new Map();
-  public readonly ports: Map<string, YPortStore> = new Map();
+  // public readonly representations: Map<string, YRepresentationStore> = new Map();
+  // public readonly ports: Map<string, YPortStore> = new Map();
   private yType: YType;
   private transact: Transact;
   private cache?: Type;
@@ -838,6 +837,9 @@ class YTypeStore implements TypeStore {
     this.transact = transact;
     this.yType.set("name", type.name);
     this.yType.set("variant", type.variant || "");
+
+    this.yType.set("createdAt", new Date().toISOString());
+    this.yType.set("updatedAt", new Date().toISOString());
   }
 
   change = (diff: TypeDiff) => {
@@ -850,30 +852,13 @@ class YTypeStore implements TypeStore {
   };
 
   snapshot = (): Type => {
-    const yAuthors = this.yType.get("authors") as YAuthors;
-    const yAttributes = this.yType.get("attributes") as YAttributes;
-
-    const authors = getAuthors(yAuthors);
-    const attributes = getAttributes(yAttributes);
-
     const name = this.yType.get("name") as string;
-    const description = (this.yType.get("description") as string) || "";
     const variant = this.yType.get("variant") as string | undefined;
-    const unit = (this.yType.get("unit") as string) || "";
-    const stock = this.yType.get("stock") as number | undefined;
-    const virtual = this.yType.get("virtual") as boolean | undefined;
-
     const currentData = {
       name: name,
-      description: description,
       variant: variant,
-      unit: unit,
-      stock: stock,
-      virtual: virtual,
-      representations: Array.from(this.representations.values()).map((store) => store.snapshot()),
-      ports: Array.from(this.ports.values()).map((store) => store.snapshot()),
-      authors: authors,
-      attributes: attributes,
+      createdAt: this.yType.get("createdAt") as string,
+      updatedAt: this.yType.get("updatedAt") as string,
     };
     const currentHash = this.hash(currentData);
 
@@ -895,8 +880,6 @@ class YTypeStore implements TypeStore {
 }
 
 class YPieceStore implements PieceStore {
-  public readonly parent: YDesignStore;
-  public readonly yPiece: YPiece;
   private cache?: Piece;
   private cacheHash?: string;
 
@@ -904,131 +887,11 @@ class YPieceStore implements PieceStore {
     return JSON.stringify(piece);
   }
 
-  constructor(parent: YDesignStore, piece: Piece) {
-    this.parent = parent;
-    this.yPiece = new Y.Map<any>();
-    this.yPiece.set("id_", piece.id_);
-    this.yPiece.set("description", piece.description || "");
-    if (piece.type) {
-      const yType = new Y.Map<string>();
-      yType.set("name", piece.type.name);
-      if (piece.type.variant) yType.set("variant", piece.type.variant);
-      this.yPiece.set("type", yType);
-    } else {
-      const yDesign = new Y.Map<string>();
-      yDesign.set("name", piece.design?.name || "");
-      if (piece.design?.variant) yDesign.set("variant", piece.design.variant);
-      if (piece.design?.view) yDesign.set("view", piece.design.view);
-      this.yPiece.set("design", yDesign);
-    }
-    if (piece.plane) {
-      this.yPiece.set("plane", createPlane(piece.plane));
-    }
-    if (piece.center) {
-      this.yPiece.set("center", createVec2(piece.center));
-    }
-    this.yPiece.set("attributes", createAttributes(piece.attributes));
-  }
+  constructor(parent: YDesignStore, piece: Piece) {}
 
-  snapshot = (): Piece => {
-    const yType = this.yPiece.get("type") as Y.Map<string>;
-    const yPlane = this.yPiece.get("plane") as Y.Map<any> | undefined;
-    const yCenter = this.yPiece.get("center") as Y.Map<number> | undefined;
-    const yAttributes = this.yPiece.get("attributes") as YAttributes;
+  snapshot = (): Piece => {};
 
-    const attributes: Attribute[] = [];
-    if (yAttributes) {
-      yAttributes.forEach((yMap: YAttribute) => {
-        attributes.push({
-          key: yMap.get("key") as string,
-          value: yMap.get("value") as string | undefined,
-          definition: yMap.get("definition") as string | undefined,
-        });
-      });
-    }
-
-    const currentData: Piece = {
-      id_: this.yPiece.get("id_") as string,
-      description: (this.yPiece.get("description") as string) || "",
-      type: {
-        name: yType.get("name") as string,
-        variant: yType.get("variant") as string | undefined,
-      },
-      attributes: attributes,
-    };
-
-    if (yPlane) {
-      const yOrigin = yPlane.get("origin") as Y.Map<number>;
-      const yXAxis = yPlane.get("xAxis") as Y.Map<number>;
-      const yYAxis = yPlane.get("yAxis") as Y.Map<number>;
-      currentData.plane = {
-        origin: {
-          x: yOrigin.get("x") as number,
-          y: yOrigin.get("y") as number,
-          z: yOrigin.get("z") as number,
-        },
-        xAxis: {
-          x: yXAxis.get("x") as number,
-          y: yXAxis.get("y") as number,
-          z: yXAxis.get("z") as number,
-        },
-        yAxis: {
-          x: yYAxis.get("x") as number,
-          y: yYAxis.get("y") as number,
-          z: yYAxis.get("z") as number,
-        },
-      };
-    }
-
-    if (yCenter) {
-      currentData.center = {
-        x: yCenter.get("x") as number,
-        y: yCenter.get("y") as number,
-      };
-    }
-
-    const currentHash = this.hash(currentData);
-
-    if (!this.cache || this.cacheHash !== currentHash) {
-      this.cache = currentData;
-      this.cacheHash = currentHash;
-    }
-
-    return this.cache;
-  };
-
-  change = (diff: PieceDiff) => {
-    if (diff.id_ !== undefined) this.yPiece.set("id_", diff.id_);
-    if (diff.description !== undefined) this.yPiece.set("description", diff.description);
-    if (diff.type !== undefined) {
-      const yType = this.yPiece.get("type") as Y.Map<string>;
-      yType.set("name", diff.type.name);
-      if (diff.type.variant !== undefined) yType.set("variant", diff.type.variant);
-    }
-    if (diff.plane !== undefined) {
-      const yPlane = this.yPiece.get("plane") as Y.Map<any>;
-      if (yPlane) {
-        if (diff.plane.origin !== undefined) {
-          updateVec3(yPlane.get("origin") as Y.Map<number>, diff.plane.origin);
-        }
-        if (diff.plane.xAxis !== undefined) {
-          updateVec3(yPlane.get("xAxis") as Y.Map<number>, diff.plane.xAxis);
-        }
-        if (diff.plane.yAxis !== undefined) {
-          updateVec3(yPlane.get("yAxis") as Y.Map<number>, diff.plane.yAxis);
-        }
-      }
-    }
-    if (diff.center !== undefined) {
-      const yCenter = this.yPiece.get("center") as Y.Map<number>;
-      if (yCenter) {
-        updateVec2(yCenter, diff.center);
-      }
-    }
-    if (diff.attributes !== undefined) {
-      updateAttributes(this.yPiece.get("attributes") as YAttributes, diff.attributes);
-    }
-  };
+  change = (diff: PieceDiff) => {};
 
   onChanged = (subscribe: Subscribe) => {
     return createObserver(this.yPiece, subscribe, false);
@@ -1039,139 +902,138 @@ class YPieceStore implements PieceStore {
   };
 }
 
-class YConnectionStore implements ConnectionStore {
-  public readonly parent: YDesignStore;
-  public readonly yConnection: YConnection;
-  private cache?: Connection;
-  private cacheHash?: string;
+// class YConnectionStore implements ConnectionStore {
+//   public readonly parent: YDesignStore;
+//   public readonly yConnection: YConnection;
+//   private cache?: Connection;
+//   private cacheHash?: string;
 
-  private hash(connection: Connection): string {
-    return JSON.stringify(connection);
-  }
+//   private hash(connection: Connection): string {
+//     return JSON.stringify(connection);
+//   }
 
-  constructor(parent: YDesignStore, connection: Connection) {
-    this.parent = parent;
-    this.yConnection = new Y.Map<any>();
-    const yConnected = new Y.Map<any>();
-    const yConnectedPiece = new Y.Map<string>();
-    yConnectedPiece.set("id_", connection.connected.piece.id_);
-    yConnected.set("piece", yConnectedPiece);
-    const yConnectedPort = new Y.Map<string>();
-    yConnectedPort.set("id_", connection.connected.port.id_ || "");
-    yConnected.set("port", yConnectedPort);
-    if (connection.connected.designPiece) {
-      const yConnectedDesignPiece = new Y.Map<string>();
-      yConnectedDesignPiece.set("id_", connection.connected.designPiece.id_);
-      yConnected.set("designPiece", yConnectedDesignPiece);
-    }
-    this.yConnection.set("connected", yConnected);
-    const yConnecting = new Y.Map<any>();
-    const yConnectingPiece = new Y.Map<string>();
-    yConnectingPiece.set("id_", connection.connecting.piece.id_);
-    yConnecting.set("piece", yConnectingPiece);
-    const yConnectingPort = new Y.Map<string>();
-    yConnectingPort.set("id_", connection.connecting.port.id_ || "");
-    yConnecting.set("port", yConnectingPort);
-    if (connection.connecting.designPiece) {
-      const yConnectingDesignPiece = new Y.Map<string>();
-      yConnectingDesignPiece.set("id_", connection.connecting.designPiece.id_);
-      yConnecting.set("designPiece", yConnectingDesignPiece);
-    }
-    this.yConnection.set("connecting", yConnecting);
-    this.yConnection.set("description", connection.description || "");
-    this.yConnection.set("gap", connection.gap || 0);
-    this.yConnection.set("shift", connection.shift || 0);
-    this.yConnection.set("rise", connection.rise || 0);
-    this.yConnection.set("rotation", connection.rotation || 0);
-    this.yConnection.set("turn", connection.turn || 0);
-    this.yConnection.set("tilt", connection.tilt || 0);
-    this.yConnection.set("x", connection.x || 0);
-    this.yConnection.set("y", connection.y || 0);
-    this.yConnection.set("attributes", createAttributes(connection.attributes));
-  }
+//   constructor(parent: YDesignStore, connection: Connection) {
+//     this.parent = parent;
+//     this.yConnection = new Y.Map<any>();
+//     const yConnected = new Y.Map<any>();
+//     const yConnectedPiece = new Y.Map<string>();
+//     yConnectedPiece.set("id_", connection.connected.piece.id_);
+//     yConnected.set("piece", yConnectedPiece);
+//     const yConnectedPort = new Y.Map<string>();
+//     yConnectedPort.set("id_", connection.connected.port.id_ || "");
+//     yConnected.set("port", yConnectedPort);
+//     if (connection.connected.designPiece) {
+//       const yConnectedDesignPiece = new Y.Map<string>();
+//       yConnectedDesignPiece.set("id_", connection.connected.designPiece.id_);
+//       yConnected.set("designPiece", yConnectedDesignPiece);
+//     }
+//     this.yConnection.set("connected", yConnected);
+//     const yConnecting = new Y.Map<any>();
+//     const yConnectingPiece = new Y.Map<string>();
+//     yConnectingPiece.set("id_", connection.connecting.piece.id_);
+//     yConnecting.set("piece", yConnectingPiece);
+//     const yConnectingPort = new Y.Map<string>();
+//     yConnectingPort.set("id_", connection.connecting.port.id_ || "");
+//     yConnecting.set("port", yConnectingPort);
+//     if (connection.connecting.designPiece) {
+//       const yConnectingDesignPiece = new Y.Map<string>();
+//       yConnectingDesignPiece.set("id_", connection.connecting.designPiece.id_);
+//       yConnecting.set("designPiece", yConnectingDesignPiece);
+//     }
+//     this.yConnection.set("connecting", yConnecting);
+//     this.yConnection.set("description", connection.description || "");
+//     this.yConnection.set("gap", connection.gap || 0);
+//     this.yConnection.set("shift", connection.shift || 0);
+//     this.yConnection.set("rise", connection.rise || 0);
+//     this.yConnection.set("rotation", connection.rotation || 0);
+//     this.yConnection.set("turn", connection.turn || 0);
+//     this.yConnection.set("tilt", connection.tilt || 0);
+//     this.yConnection.set("x", connection.x || 0);
+//     this.yConnection.set("y", connection.y || 0);
+//     this.yConnection.set("attributes", createAttributes(connection.attributes));
+//   }
 
-  snapshot = (): Connection => {
-    const yConnected = this.yConnection.get("connected") as Y.Map<any>;
-    const yConnecting = this.yConnection.get("connecting") as Y.Map<any>;
-    const yConnectedPiece = yConnected.get("piece") as Y.Map<string>;
-    const yConnectedDesignPiece = yConnected.get("designPiece") as Y.Map<string> | undefined;
-    const yConnectedPort = yConnected.get("port") as Y.Map<string>;
-    const yConnectingPiece = yConnecting.get("piece") as Y.Map<string>;
-    const yConnectingDesignPiece = yConnecting.get("designPiece") as Y.Map<string> | undefined;
-    const yConnectingPort = yConnecting.get("port") as Y.Map<string>;
+//   snapshot = (): Connection => {
+//     const yConnected = this.yConnection.get("connected") as Y.Map<any>;
+//     const yConnecting = this.yConnection.get("connecting") as Y.Map<any>;
+//     const yConnectedPiece = yConnected.get("piece") as Y.Map<string>;
+//     const yConnectedDesignPiece = yConnected.get("designPiece") as Y.Map<string> | undefined;
+//     const yConnectedPort = yConnected.get("port") as Y.Map<string>;
+//     const yConnectingPiece = yConnecting.get("piece") as Y.Map<string>;
+//     const yConnectingDesignPiece = yConnecting.get("designPiece") as Y.Map<string> | undefined;
+//     const yConnectingPort = yConnecting.get("port") as Y.Map<string>;
 
-    const yAttributes = this.yConnection.get("attributes") as YAttributes;
-    const attributes: Attribute[] = [];
-    if (yAttributes) {
-      yAttributes.forEach((yMap: YAttribute) => {
-        attributes.push({
-          key: yMap.get("key") as string,
-          value: yMap.get("value") as string | undefined,
-          definition: yMap.get("definition") as string | undefined,
-        });
-      });
-    }
+//     const yAttributes = this.yConnection.get("attributes") as YAttributes;
+//     const attributes: Attribute[] = [];
+//     if (yAttributes) {
+//       yAttributes.forEach((yMap: YAttribute) => {
+//         attributes.push({
+//           key: yMap.get("key") as string,
+//           value: yMap.get("value") as string | undefined,
+//           definition: yMap.get("definition") as string | undefined,
+//         });
+//       });
+//     }
 
-    const currentData = {
-      connected: {
-        piece: { id_: yConnectedPiece.get("id_") as string },
-        port: { id_: yConnectedPort.get("id_") as string },
-        designPiece: yConnectedDesignPiece ? { id_: yConnectedDesignPiece.get("id_") as string } : undefined,
-      },
-      connecting: {
-        piece: { id_: yConnectingPiece.get("id_") as string },
-        port: { id_: yConnectingPort.get("id_") as string },
-        designPiece: yConnectingDesignPiece ? { id_: yConnectingDesignPiece.get("id_") as string } : undefined,
-      },
-      description: (this.yConnection.get("description") as string) || "",
-      gap: this.yConnection.get("gap") as number,
-      shift: this.yConnection.get("shift") as number,
-      rise: this.yConnection.get("rise") as number,
-      rotation: this.yConnection.get("rotation") as number,
-      turn: this.yConnection.get("turn") as number,
-      tilt: this.yConnection.get("tilt") as number,
-      x: this.yConnection.get("x") as number,
-      y: this.yConnection.get("y") as number,
-      attributes: attributes,
-    };
-    const currentHash = this.hash(currentData);
+//     const currentData = {
+//       connected: {
+//         piece: { id_: yConnectedPiece.get("id_") as string },
+//         port: { id_: yConnectedPort.get("id_") as string },
+//         designPiece: yConnectedDesignPiece ? { id_: yConnectedDesignPiece.get("id_") as string } : undefined,
+//       },
+//       connecting: {
+//         piece: { id_: yConnectingPiece.get("id_") as string },
+//         port: { id_: yConnectingPort.get("id_") as string },
+//         designPiece: yConnectingDesignPiece ? { id_: yConnectingDesignPiece.get("id_") as string } : undefined,
+//       },
+//       description: (this.yConnection.get("description") as string) || "",
+//       gap: this.yConnection.get("gap") as number,
+//       shift: this.yConnection.get("shift") as number,
+//       rise: this.yConnection.get("rise") as number,
+//       rotation: this.yConnection.get("rotation") as number,
+//       turn: this.yConnection.get("turn") as number,
+//       tilt: this.yConnection.get("tilt") as number,
+//       x: this.yConnection.get("x") as number,
+//       y: this.yConnection.get("y") as number,
+//       attributes: attributes,
+//     };
+//     const currentHash = this.hash(currentData);
 
-    if (!this.cache || this.cacheHash !== currentHash) {
-      this.cache = currentData;
-      this.cacheHash = currentHash;
-    }
+//     if (!this.cache || this.cacheHash !== currentHash) {
+//       this.cache = currentData;
+//       this.cacheHash = currentHash;
+//     }
 
-    return this.cache;
-  };
+//     return this.cache;
+//   };
 
-  change = (diff: ConnectionDiff) => {
-    if (diff.description !== undefined) this.yConnection.set("description", diff.description);
-    if (diff.gap !== undefined) this.yConnection.set("gap", diff.gap);
-    if (diff.shift !== undefined) this.yConnection.set("shift", diff.shift);
-    if (diff.rise !== undefined) this.yConnection.set("rise", diff.rise);
-    if (diff.rotation !== undefined) this.yConnection.set("rotation", diff.rotation);
-    if (diff.turn !== undefined) this.yConnection.set("turn", diff.turn);
-    if (diff.tilt !== undefined) this.yConnection.set("tilt", diff.tilt);
-    if (diff.x !== undefined) this.yConnection.set("x", diff.x);
-    if (diff.y !== undefined) this.yConnection.set("y", diff.y);
-  };
+//   change = (diff: ConnectionDiff) => {
+//     if (diff.description !== undefined) this.yConnection.set("description", diff.description);
+//     if (diff.gap !== undefined) this.yConnection.set("gap", diff.gap);
+//     if (diff.shift !== undefined) this.yConnection.set("shift", diff.shift);
+//     if (diff.rise !== undefined) this.yConnection.set("rise", diff.rise);
+//     if (diff.rotation !== undefined) this.yConnection.set("rotation", diff.rotation);
+//     if (diff.turn !== undefined) this.yConnection.set("turn", diff.turn);
+//     if (diff.tilt !== undefined) this.yConnection.set("tilt", diff.tilt);
+//     if (diff.x !== undefined) this.yConnection.set("x", diff.x);
+//     if (diff.y !== undefined) this.yConnection.set("y", diff.y);
+//   };
 
-  onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yConnection, subscribe, false);
-  };
+//   onChanged = (subscribe: Subscribe) => {
+//     return createObserver(this.yConnection, subscribe, false);
+//   };
 
-  onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yConnection, subscribe, true);
-  };
-}
+//   onChangedDeep = (subscribe: Subscribe) => {
+//     return createObserver(this.yConnection, subscribe, true);
+//   };
+// }
 
 class YDesignStore implements DesignStore {
-  public readonly parent: YKitStore;
-  public readonly yDesign: YDesign;
   public readonly pieces: Map<string, YPieceStore> = new Map();
-  public readonly connections: Map<string, YConnectionStore> = new Map();
-  public readonly pieceIds: Map<string, string> = new Map();
-  public readonly connectionIds: Map<string, string> = new Map();
+  private yDesign: YDesign;
+  private transact: Transact;
+  private yPieces: YPieces;
+  private yDesignPieces: YUuidArray;
   private cache?: Design;
   private cacheHash?: string;
 
@@ -1179,61 +1041,46 @@ class YDesignStore implements DesignStore {
     return JSON.stringify(design);
   }
 
-  constructor(parent: YKitStore, design: Design) {
-    this.parent = parent;
+  constructor(yDesign: YDesign, transact: Transact, design: Design) {
+    this.yDesign = yDesign;
+    this.transact = transact;
     this.yDesign = new Y.Map<any>();
     this.yDesign.set("name", design.name);
-    this.yDesign.set("description", design.description || "");
     this.yDesign.set("variant", design.variant || "");
     this.yDesign.set("view", design.view || "");
-    this.yDesign.set("unit", design.unit);
-    this.yDesign.set("pieces", new Y.Map() as YPieceMap);
-    this.yDesign.set("connections", new Y.Map() as YConnectionMap);
-    this.yDesign.set("authors", createAuthors(design.authors));
-    this.yDesign.set("attributes", createAttributes(design.attributes));
+
+    this.yPieces = new Y.Map<YPiece>();
+    this.yDesign.set("pieces", this.yPieces);
+
+    if (design.pieces) {
+      const uuids = new Array<string>();
+      for (const piece of design.pieces) {
+        const uuid = uuidv4();
+        const yPiece = new Y.Map<YPiece>();
+        this.yPieces.set(uuid, yPiece);
+        const yPieceStore = new YPieceStore(yPiece, transact, piece);
+        this.pieces.set(pieceIdToString(piece), yPieceStore);
+        uuids.push(uuid);
+      }
+      this.yDesignPieces.insert(this.yDesignPieces.length, uuids);
+    }
+
+    this.yDesign.set("createdAt", new Date().toISOString());
+    this.yDesign.set("updatedAt", new Date().toISOString());
   }
 
   snapshot = (): Design => {
-    const yAuthors = this.yDesign.get("authors") as YAuthors;
-    const yAttributes = this.yDesign.get("attributes") as YAttributes;
-
-    const authors: Author[] = [];
-    if (yAuthors) {
-      yAuthors.forEach((yAuthor: YAuthor) => {
-        authors.push({
-          name: yAuthor.get("name") as string,
-          email: (yAuthor.get("email") as string) || "",
-        });
-      });
-    }
-
-    const attributes: Attribute[] = [];
-    if (yAttributes) {
-      yAttributes.forEach((yMap: YAttribute) => {
-        attributes.push({
-          key: yMap.get("key") as string,
-          value: yMap.get("value") as string | undefined,
-          definition: yMap.get("definition") as string | undefined,
-        });
-      });
-    }
-
     const name = this.yDesign.get("name") as string;
-    const description = this.yDesign.get("description") as string | undefined;
     const variant = this.yDesign.get("variant") as string | undefined;
     const view = this.yDesign.get("view") as string | undefined;
-    const unit = this.yDesign.get("unit") as string;
 
     const currentData = {
       name: name,
-      description: description,
       variant: variant,
       view: view,
-      unit: unit,
-      pieces: Array.from(this.pieces.values()).map((p) => p.snapshot()),
-      connections: Array.from(this.connections.values()).map((c) => c.snapshot()),
-      authors: authors,
-      attributes: attributes,
+
+      createdAt: this.yDesign.get("createdAt") as string,
+      updatedAt: this.yDesign.get("updatedAt") as string,
     };
     const currentHash = this.hash(currentData);
 
@@ -1246,91 +1093,6 @@ class YDesignStore implements DesignStore {
   };
 
   change = (diff: DesignDiff) => {
-    if (diff.name !== undefined) this.yDesign.set("name", diff.name);
-    if (diff.description !== undefined) this.yDesign.set("description", diff.description);
-    if (diff.variant !== undefined) this.yDesign.set("variant", diff.variant);
-    if (diff.view !== undefined) this.yDesign.set("view", diff.view);
-    if (diff.unit !== undefined) this.yDesign.set("unit", diff.unit);
-
-    if (diff.pieces) {
-      if (diff.pieces.added) {
-        diff.pieces.added.forEach((piece) => {
-          const pieceId = pieceIdLikeToPieceId(piece);
-          const pieceIdStr = pieceIdToString(pieceId);
-          if (!this.pieceIds.get(pieceIdStr)) {
-            const uuid = uuidv4();
-            const yPieceStore = new YPieceStore(this, piece);
-            (this.yDesign.get("pieces") as YPieceMap).set(uuid, yPieceStore.yPiece);
-            this.pieceIds.set(pieceIdStr, uuid);
-            this.pieces.set(pieceIdStr, yPieceStore);
-          }
-        });
-      }
-      if (diff.pieces.removed) {
-        diff.pieces.removed.forEach((pieceId) => {
-          const id = pieceIdLikeToPieceId(pieceId);
-          const idStr = pieceIdToString(id);
-          const uuid = this.pieceIds.get(idStr);
-          if (uuid) {
-            (this.yDesign.get("pieces") as YPieceMap).delete(uuid);
-            this.pieceIds.delete(idStr);
-            this.pieces.delete(idStr);
-          }
-        });
-      }
-      if (diff.pieces.updated) {
-        diff.pieces.updated.forEach((updatedItem) => {
-          const matchingPiece = Array.from(this.pieces.entries()).find(([_, store]) => {
-            return !updatedItem.diff.id_ || store.yPiece.get("id_") === updatedItem.id.id_;
-          });
-          if (matchingPiece) {
-            matchingPiece[1].change(updatedItem.diff);
-          }
-        });
-      }
-    }
-
-    if (diff.connections) {
-      if (diff.connections.added) {
-        diff.connections.added.forEach((connection) => {
-          const connectionId = connectionIdLikeToConnectionId(connection);
-          const connectionIdStr = connectionIdToString(connectionId);
-          if (!this.connectionIds.get(connectionIdStr)) {
-            const uuid = uuidv4();
-            const yConnectionStore = new YConnectionStore(this, connection);
-            (this.yDesign.get("connections") as YConnectionMap).set(uuid, yConnectionStore.yConnection);
-            this.connectionIds.set(connectionIdStr, uuid);
-            this.connections.set(connectionIdStr, yConnectionStore);
-          }
-        });
-      }
-      if (diff.connections.removed) {
-        diff.connections.removed.forEach((connectionId) => {
-          const id = connectionIdLikeToConnectionId(connectionId);
-          const idStr = connectionIdToString(id);
-          const uuid = this.connectionIds.get(idStr);
-          if (uuid) {
-            (this.yDesign.get("connections") as YConnectionMap).delete(uuid);
-            this.connectionIds.delete(idStr);
-            this.connections.delete(idStr);
-          }
-        });
-      }
-      if (diff.connections.updated) {
-        diff.connections.updated.forEach((updatedItem) => {
-          const matchingConnection = Array.from(this.connections.entries()).find(([_, store]) => {
-            const yConnected = store.yConnection.get("connected") as Y.Map<any>;
-            const yConnecting = store.yConnection.get("connecting") as Y.Map<any>;
-            const yConnectedPiece = yConnected.get("piece") as Y.Map<string>;
-            const yConnectingPiece = yConnecting.get("piece") as Y.Map<string>;
-            return yConnectedPiece.get("id_") === updatedItem.id.connected.piece.id_ && yConnectingPiece.get("id_") === updatedItem.id.connecting.piece.id_;
-          });
-          if (matchingConnection) {
-            matchingConnection[1].change(updatedItem.diff);
-          }
-        });
-      }
-    }
     this.cache = undefined;
     this.cacheHash = undefined;
   };
@@ -1421,8 +1183,8 @@ class YKitStore implements KitStore {
         this.yKitDesigns.insert(this.yKitDesigns.length, uuids);
       }
 
-      this.yKit.set("created", new Date().toISOString());
-      this.yKit.set("updated", new Date().toISOString());
+      this.yKit.set("createdAt", new Date().toISOString());
+      this.yKit.set("updatedAt", new Date().toISOString());
     });
 
     Object.entries(kitCommands).forEach(([commandId, command]) => {
@@ -1444,8 +1206,8 @@ class YKitStore implements KitStore {
       // remote: this.yKit.get("remote") as string | undefined,
       // homepage: this.yKit.get("homepage") as string | undefined,
       // license: this.yKit.get("license") as string | undefined,
-      // created: this.yKit.get("created") ? new Date(this.yKit.get("created") as string) : undefined,
-      // updated: this.yKit.get("updated") ? new Date(this.yKit.get("updated") as string) : undefined,
+      // createdAt: this.yKit.get("createdAt") ? new Date(this.yKit.get("createdAt") as string) : undefined,
+      // updatedAt: this.yKit.get("updatedAt") ? new Date(this.yKit.get("updatedAt") as string) : undefined,
       attributes: attributes,
     };
     const currentHash = this.hash(currentData);
@@ -1463,7 +1225,7 @@ class YKitStore implements KitStore {
   };
 
   change = (diff: KitDiff) => {
-    this.yKit.set("updated", new Date().toISOString());
+    this.yKit.set("updatedAt", new Date().toISOString());
     this.cache = undefined;
     this.cacheHash = undefined;
   };
@@ -1909,10 +1671,11 @@ class YDesignEditorStore implements DesignEditorStore {
 }
 
 class YSketchpadStore implements SketchpadStore {
-  public readonly ySketchpadDoc: Y.Doc;
   public readonly sketchpadIndexeddbProvider?: IndexeddbPersistence;
   public readonly kits: Map<string, YKitStore> = new Map();
   public readonly designEditors: Map<string, Map<string, DesignEditorStore>> = new Map();
+  private readonly yDoc: Y.Doc;
+  private readonly ySketchpad: YSketchpad;
   private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult> = new Map();
   private cache?: SketchpadState;
   private cacheHash?: string;
@@ -1923,47 +1686,43 @@ class YSketchpadStore implements SketchpadStore {
     return JSON.stringify(state);
   }
 
-  private getYSketchpad(): YSketchpad {
-    return this.ySketchpadDoc.getMap("sketchpad");
-  }
-
   constructor(state?: SketchpadState) {
     // this.clientId = uuidv4();
     // this.broadcastChannel = new BroadcastChannel("semio-yjs");
-    this.ySketchpadDoc = new Y.Doc();
+    this.yDoc = new Y.Doc();
     if (state?.persistantId && state.persistantId !== "") {
-      this.sketchpadIndexeddbProvider = new IndexeddbPersistence(`semio-sketchpad-${state.persistantId}`, this.ySketchpadDoc);
+      this.sketchpadIndexeddbProvider = new IndexeddbPersistence(`semio-sketchpad-${state.persistantId}`, this.yDoc);
     }
-    const ySketchpad = this.ySketchpadDoc.getMap("sketchpad");
-    this.ySketchpadDoc.transact(() => {
-      ySketchpad.set("mode", state?.mode || Mode.GUEST);
-      ySketchpad.set("theme", state?.theme || Theme.SYSTEM);
-      ySketchpad.set("layout", state?.layout || Layout.NORMAL);
-      ySketchpad.set("designEditorStores", new Y.Map<YDesignEditorStore>());
-      ySketchpad.set("activeDesignEditor", state?.activeDesignEditor ? JSON.stringify(state.activeDesignEditor) : "");
+    this.ySketchpad = this.yDoc.getMap("sketchpad");
+    this.yDoc.transact(() => {
+      this.ySketchpad.set("mode", state?.mode || Mode.GUEST);
+      this.ySketchpad.set("theme", state?.theme || Theme.SYSTEM);
+      this.ySketchpad.set("layout", state?.layout || Layout.NORMAL);
+      this.ySketchpad.set("designEditorStores", new Y.Map<YDesignEditorStore>());
+      this.ySketchpad.set("activeDesignEditor", state?.activeDesignEditor ? JSON.stringify(state.activeDesignEditor) : "");
     });
-    // this.ySketchpadDoc.on("update", (update: Uint8Array) => {
+    // this.yDoc.on("update", (update: Uint8Array) => {
     //   this.broadcastChannel.postMessage({ client: this.clientId, update });
     // });
     // this.broadcastChannel.addEventListener("message", (msg) => {
     //   const { data } = msg;
     //   if (data.client !== this.clientId) {
-    //     Y.applyUpdate(this.ySketchpadDoc, data.update);
+    //     Y.applyUpdate(this.yDoc, data.update);
     //   }
     // });
   }
 
   get mode(): Mode {
-    return this.getYSketchpad().get("mode") as Mode;
+    return this.ySketchpad.get("mode") as Mode;
   }
   get theme(): Theme {
-    return this.getYSketchpad().get("theme") as Theme;
+    return this.ySketchpad.get("theme") as Theme;
   }
   get layout(): Layout {
-    return this.getYSketchpad().get("layout") as Layout;
+    return this.ySketchpad.get("layout") as Layout;
   }
   get activeDesignEditor(): DesignEditorId | undefined {
-    const designEditorIdStr = this.getYSketchpad().get("activeDesignEditor");
+    const designEditorIdStr = this.ySketchpad.get("activeDesignEditor");
     if (!designEditorIdStr || typeof designEditorIdStr !== "string") return undefined;
     return JSON.parse(designEditorIdStr) as DesignEditorId;
   }
@@ -2003,10 +1762,12 @@ class YSketchpadStore implements SketchpadStore {
   };
 
   change(diff: SketchpadDiff) {
-    if (diff.mode) this.getYSketchpad().set("mode", diff.mode);
-    if (diff.theme) this.getYSketchpad().set("theme", diff.theme);
-    if (diff.layout) this.getYSketchpad().set("layout", diff.layout);
-    if (diff.activeDesignEditor) this.getYSketchpad().set("activeDesignEditor", JSON.stringify(diff.activeDesignEditor));
+    this.yDoc.transact(() => {
+      if (diff.mode) this.ySketchpad.set("mode", diff.mode);
+      if (diff.theme) this.ySketchpad.set("theme", diff.theme);
+      if (diff.layout) this.ySketchpad.set("layout", diff.layout);
+      if (diff.activeDesignEditor) this.ySketchpad.set("activeDesignEditor", JSON.stringify(diff.activeDesignEditor));
+    });
   }
 
   deleteKit = (id: KitIdLike) => {
@@ -2043,7 +1804,7 @@ class YSketchpadStore implements SketchpadStore {
 
   onDesignEditorCreated = (subscribe: Subscribe): Unsubscribe => {
     // Observe design editor stores map changes
-    const yDesignEditorStores = this.ySketchpadDoc.getMap("designEditorStores") as YDesignEditorStoreMap;
+    const yDesignEditorStores = this.yDoc.getMap("designEditorStores") as YDesignEditorStoreMap;
     const observer = () => subscribe();
     yDesignEditorStores.observe(observer);
     return () => {
@@ -2368,9 +2129,9 @@ const kitCommands = {
       const kit = context.kit;
 
       const schema = `
-        CREATE TABLE kit ( uri VARCHAR(2048) NOT NULL UNIQUE, name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, preview VARCHAR(1024) NOT NULL, version VARCHAR(64) NOT NULL, remote VARCHAR(1024) NOT NULL, homepage VARCHAR(1024) NOT NULL, license VARCHAR(1024) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY );
-        CREATE TABLE type ( name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, variant VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, CONSTRAINT "Unique name and variant" UNIQUE (name, variant, kit_id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
-        CREATE TABLE design ( name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, variant VARCHAR(64) NOT NULL, "view" VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, created DATETIME NOT NULL, updated DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, UNIQUE (name, variant, "view", kit_id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
+        CREATE TABLE kit ( uri VARCHAR(2048) NOT NULL UNIQUE, name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, preview VARCHAR(1024) NOT NULL, version VARCHAR(64) NOT NULL, remote VARCHAR(1024) NOT NULL, homepage VARCHAR(1024) NOT NULL, license VARCHAR(1024) NOT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY );
+        CREATE TABLE type ( name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, variant VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, CONSTRAINT "Unique name and variant" UNIQUE (name, variant, kit_id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
+        CREATE TABLE design ( name VARCHAR(64) NOT NULL, description VARCHAR(512) NOT NULL, icon VARCHAR(1024) NOT NULL, image VARCHAR(1024) NOT NULL, variant VARCHAR(64) NOT NULL, "view" VARCHAR(64) NOT NULL, unit VARCHAR(64) NOT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, UNIQUE (name, variant, "view", kit_id), FOREIGN KEY(kit_id) REFERENCES kit (id) );
         CREATE TABLE representation ( url VARCHAR(1024) NOT NULL, description VARCHAR(512) NOT NULL, id INTEGER NOT NULL PRIMARY KEY, type_id INTEGER, FOREIGN KEY(type_id) REFERENCES type (id) );
         CREATE TABLE tag ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, representation_id INTEGER, FOREIGN KEY(representation_id) REFERENCES representation (id) );
         CREATE TABLE concept ( name VARCHAR(64) NOT NULL, "order" INTEGER NOT NULL, id INTEGER NOT NULL PRIMARY KEY, kit_id INTEGER, type_id INTEGER, design_id INTEGER, FOREIGN KEY(kit_id) REFERENCES kit (id), FOREIGN KEY(type_id) REFERENCES type (id), FOREIGN KEY(design_id) REFERENCES design (id) );
@@ -2399,7 +2160,7 @@ const kitCommands = {
           stmt.free();
         };
 
-        const kitStmt = db.prepare("INSERT INTO kit (uri, name, description, icon, image, preview, version, remote, homepage, license, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        const kitStmt = db.prepare("INSERT INTO kit (uri, name, description, icon, image, preview, version, remote, homepage, license, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         const nowIso = new Date().toISOString();
         kitStmt.run([`urn:kit:${kit.name}:${kit.version || ""}`, kit.name, kit.description || "", kit.icon || "", kit.image || "", kit.preview || "", kit.version || "", kit.remote || "", kit.homepage || "", kit.license || "", nowIso, nowIso]);
         kitStmt.free();
@@ -2413,7 +2174,7 @@ const kitCommands = {
         }
 
         if (kit.types) {
-          const typeStmt = db.prepare("INSERT INTO type (name, description, icon, image, variant, unit, created, updated, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+          const typeStmt = db.prepare("INSERT INTO type (name, description, icon, image, variant, unit, createdAt, updatedAt, kit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
           const repStmt = db.prepare("INSERT INTO representation (url, description, type_id) VALUES (?, ?, ?)");
           const tagStmt = db.prepare('INSERT INTO tag (name, "order", representation_id) VALUES (?, ?, ?)');
           const portStmt = db.prepare("INSERT INTO port (local_id, description, family, t, point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");

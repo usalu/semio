@@ -324,9 +324,9 @@ export const FileSchema = z.object({
   remote: z.url().optional(),
   size: z.number().optional(),
   hash: z.string().optional(),
-  created: DateProperty(),
+  createdAt: DateProperty(),
   createdBy: AuthorIdSchema.optional(),
-  updated: DateProperty(),
+  updatedAt: DateProperty(),
   updatedBy: AuthorIdSchema.optional(),
 });
 export type File = z.infer<typeof FileSchema>;
@@ -764,8 +764,8 @@ export const TypeSchema = z.object({
   stock: z.number().optional(),
   virtual: z.boolean().optional(),
   unit: z.string().optional(),
-  created: z.string().optional(),
-  updated: z.string().optional(),
+  createdAt: DateProperty(),
+  updatedAt: DateProperty(),
   location: LocationSchema.optional(),
   authors: z.array(AuthorIdSchema).optional(),
   icon: z.string().optional(),
@@ -1217,8 +1217,8 @@ export const DesignSchema = z.object({
   image: z.string().optional(),
   description: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
-  created: DateProperty(),
-  updated: DateProperty(),
+  createdAt: DateProperty(),
+  updatedAt: DateProperty(),
 });
 export type Design = z.infer<typeof DesignSchema>;
 export const serializeDesign = (design: Design): string => JSON.stringify(DesignSchema.parse(design));
@@ -1736,8 +1736,8 @@ export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: s
     description: `Clustered design with ${clusteredPieces.length} pieces`,
     pieces: clusteredPieces,
     connections: internalConnections,
-    created: new Date(),
-    updated: new Date(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   return { clusteredDesign, externalConnections };
@@ -2071,8 +2071,8 @@ export const KitSchema = z.object({
   image: z.string().optional(),
   description: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
-  created: DateProperty(),
-  updated: DateProperty(),
+  createdAt: DateProperty(),
+  updatedAt: DateProperty(),
 });
 export type Kit = z.infer<typeof KitSchema>;
 export const serializeKit = (kit: Kit): string => JSON.stringify(KitSchema.parse(kit));
@@ -2516,8 +2516,8 @@ export const createFileFromDataUri = (url: string, dataUri: string): File => {
     path: url,
     size,
     hash: hash.toString(36),
-    created: new Date(),
-    updated: new Date(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 };
 
