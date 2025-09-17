@@ -350,7 +350,7 @@ type YUuid = string;
 type YUuidArray = Y.Array<YUuid>;
 
 type YAuthor = Y.Map<string>;
-type YAuthors = Y.Map<YAuthor>;
+type YAuthors = Y.Array<YAuthor>;
 type YAttribute = Y.Map<string>;
 type YAttributes = Y.Array<YAttribute>;
 type YStringArray = Y.Array<string>;
@@ -360,16 +360,16 @@ type YVec3 = YLeafMapNumber;
 type YPlane = Y.Map<YVec3>;
 
 type YFile = Y.Map<string>;
-type YFiles = Y.Map<YFile>;
+type YFiles = Y.Array<YFile>;
 
 type YBenchmark = Y.Map<string>;
-type YBenchmarks = Y.Map<YBenchmark>;
+type YBenchmarks = Y.Array<YBenchmark>;
 
 type YQuality = Y.Map<string>;
-type YQualities = Y.Map<YQuality>;
+type YQualities = Y.Array<YQuality>;
 
 type YProp = Y.Map<string>;
-type YProps = Y.Map<YProp>;
+type YProps = Y.Array<YProp>;
 
 type YRepresentationVal = string | YStringArray | YAttributes;
 type YRepresentation = Y.Map<YRepresentationVal>;
@@ -381,18 +381,18 @@ type YPortArray = Y.Array<YPort>;
 
 type YTypeVal = string | number | boolean | YAuthors | YAttributes | YRepresentationArray | YPortArray;
 type YType = Y.Map<YTypeVal>;
-type YTypes = Y.Map<YType>;
+type YTypes = Y.Array<YType>;
 
 type YLayer = Y.Map<string>;
-type YLayers = Y.Map<YLayer>;
+type YLayers = Y.Array<YLayer>;
 
 type YPieceVal = string | YLeafMapString | YLeafMapNumber | YPlane | YAttributes;
 type YPiece = Y.Map<YPieceVal>;
 type YPieceArray = Y.Array<YPiece>;
-type YPieces = Y.Map<YPiece>;
+type YPieces = Y.Array<YPiece>;
 
 type YGroup = Y.Map<string>;
-type YGroups = Y.Map<YGroup>;
+type YGroups = Y.Array<YGroup>;
 
 type YSide = Y.Map<YLeafMapString>;
 
@@ -401,11 +401,11 @@ type YConnection = Y.Map<YConnectionVal>;
 type YConnectionArray = Y.Array<YConnection>;
 
 type YStat = Y.Map<string>;
-type YStats = Y.Map<YStat>;
+type YStats = Y.Array<YStat>;
 
 type YDesignVal = string | YAuthors | YAttributes | YPieceArray | YConnectionArray;
 type YDesign = Y.Map<YDesignVal>;
-type YDesigns = Y.Map<YDesign>;
+type YDesigns = Y.Array<YDesign>;
 
 type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
 type YDesignEditor = Y.Map<YDesignEditorVal>;
@@ -414,7 +414,7 @@ type YDesignEditors = Y.Array<YDesignEditor>;
 type YIdMap = Y.Map<string>;
 type YKitVal = string | YUuidArray | YIdMap | YAttributes;
 type YKit = Y.Map<YKitVal>;
-type YKits = Map<string, YKit>;
+type YKits = Y.Array<YKit>;
 
 type YSketchpadVal = string | boolean | YDesignEditors;
 type YSketchpad = Y.Map<YSketchpadVal>;
@@ -425,121 +425,6 @@ type YSketchpadKeysMap = {
   layout: string;
   activeDesignEditorDesign: YDesign;
 };
-const getSketchpadStore = <K extends keyof YSketchpadKeysMap>(m: YSketchpad, k: K): YSketchpadKeysMap[K] => m.get(k as string) as YSketchpadKeysMap[K];
-
-// Helper functions for Yjs type conversion
-function createAttribute(attribute: Attribute): YAttribute {
-  const yMap = new Y.Map<string>();
-  yMap.set("key", attribute.key);
-  if (attribute.value !== undefined) yMap.set("value", attribute.value);
-  if (attribute.definition !== undefined) yMap.set("definition", attribute.definition);
-  return yMap;
-}
-
-function createAttributes(attributes: Attribute[] | undefined): YAttributes {
-  const yArr = new Y.Array<YAttribute>();
-  (attributes || []).forEach((attr) => yArr.push([createAttribute(attr)]));
-  return yArr;
-}
-
-function getAttributes(yArr: YAttributes | undefined): Attribute[] {
-  if (!yArr) return [];
-  const attributes: Attribute[] = [];
-  yArr.forEach((yMap: YAttribute) => {
-    attributes.push({
-      key: yMap.get("key") as string,
-      value: yMap.get("value") as string | undefined,
-      definition: yMap.get("definition") as string | undefined,
-    });
-  });
-  return attributes;
-}
-
-function createAuthor(author: Author): YAuthor {
-  const yAuthor = new Y.Map<string>();
-  yAuthor.set("name", author.name);
-  yAuthor.set("email", author.email || "");
-  return yAuthor;
-}
-
-function createAuthors(authors: Author[] | undefined): YAuthors {
-  const yAuthors = new Y.Map<YAuthor>();
-  (authors || []).forEach((author) => yAuthors.set(author.name, createAuthor(author)));
-  return yAuthors;
-}
-
-function getAuthors(yAuthors: YAuthors | undefined): Author[] {
-  if (!yAuthors) return [];
-  const authors: Author[] = [];
-  yAuthors.forEach((yAuthor: YAuthor) => {
-    authors.push({
-      name: yAuthor.get("name") as string,
-      email: (yAuthor.get("email") as string) || "",
-    });
-  });
-  return authors;
-}
-
-// Helper for creating Vec3 Y.Map objects
-function createVec3(vec: { x: number; y: number; z: number }): Y.Map<number> {
-  const yVec = new Y.Map<number>();
-  yVec.set("x", vec.x);
-  yVec.set("y", vec.y);
-  yVec.set("z", vec.z);
-  return yVec;
-}
-
-function getVec3(yVec: Y.Map<number>): { x: number; y: number; z: number } {
-  return {
-    x: yVec.get("x") as number,
-    y: yVec.get("y") as number,
-    z: yVec.get("z") as number,
-  };
-}
-
-function updateVec3(yVec: Y.Map<number>, diff: { x?: number; y?: number; z?: number }): void {
-  if (diff.x !== undefined) yVec.set("x", diff.x);
-  if (diff.y !== undefined) yVec.set("y", diff.y);
-  if (diff.z !== undefined) yVec.set("z", diff.z);
-}
-
-// Helper for creating Vec2 Y.Map objects
-function createVec2(vec: { x: number; y: number }): Y.Map<number> {
-  const yVec = new Y.Map<number>();
-  yVec.set("x", vec.x);
-  yVec.set("y", vec.y);
-  return yVec;
-}
-
-function getVec2(yVec: Y.Map<number>): { x: number; y: number } {
-  return {
-    x: yVec.get("x") as number,
-    y: yVec.get("y") as number,
-  };
-}
-
-function updateVec2(yVec: Y.Map<number>, diff: { x?: number; y?: number }): void {
-  if (diff.x !== undefined) yVec.set("x", diff.x);
-  if (diff.y !== undefined) yVec.set("y", diff.y);
-}
-
-// Helper for string arrays
-function createStringArray(items: string[]): Y.Array<string> {
-  const yArr = new Y.Array<string>();
-  items.forEach((item) => yArr.push([item]));
-  return yArr;
-}
-
-function updateStringArray(yArr: Y.Array<string>, items: string[]): void {
-  yArr.delete(0, yArr.length);
-  items.forEach((item) => yArr.push([item]));
-}
-
-// Helper for attributes update
-function updateAttributes(yAttributes: YAttributes, attributes: Attribute[]): void {
-  yAttributes.delete(0, yAttributes.length);
-  attributes.forEach((attr) => yAttributes.push([createAttribute(attr)]));
-}
 
 function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscribe, deep?: boolean): Unsubscribe {
   if (deep) {
@@ -555,289 +440,19 @@ function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscribe, deep
   }
 }
 
-// Helper for UUID-based ID mapping operations
-class IdMapper<T> {
-  private readonly idToUuid = new Map<T, string>();
-
-  getId(item: T): string | undefined {
-    return this.idToUuid.get(item);
-  }
-
-  setId(item: T, uuid?: string): string {
-    const id = uuid || uuidv4();
-    this.idToUuid.set(item, id);
-    return id;
-  }
-
-  deleteId(item: T): boolean {
-    return this.idToUuid.delete(item);
-  }
-
-  has(item: T): boolean {
-    return this.idToUuid.has(item);
-  }
-}
-
-// Helper for conditional property assignment
-function setIfDefined<T>(map: Y.Map<any>, key: string, value: T | undefined): void {
-  if (value !== undefined) {
-    map.set(key, value);
-  }
-}
-
-// Helper for safe property access with defaults
-function getWithDefault<T>(map: Y.Map<any>, key: string, defaultValue: T): T {
-  const value = map.get(key);
-  return value !== undefined ? value : defaultValue;
-}
-
-// Helper for plane objects
-function createPlane(plane: { origin: { x: number; y: number; z: number }; xAxis: { x: number; y: number; z: number }; yAxis: { x: number; y: number; z: number } }): Y.Map<any> {
-  const yPlane = new Y.Map<any>();
-  yPlane.set("origin", createVec3(plane.origin));
-  yPlane.set("xAxis", createVec3(plane.xAxis));
-  yPlane.set("yAxis", createVec3(plane.yAxis));
-  return yPlane;
-}
-
-function getPlane(yPlane: Y.Map<any>): { origin: { x: number; y: number; z: number }; xAxis: { x: number; y: number; z: number }; yAxis: { x: number; y: number; z: number } } {
-  return {
-    origin: getVec3(yPlane.get("origin") as Y.Map<number>),
-    xAxis: getVec3(yPlane.get("xAxis") as Y.Map<number>),
-    yAxis: getVec3(yPlane.get("yAxis") as Y.Map<number>),
-  };
-}
-
 // class YFileStore implements FileStore {
-//   public readonly parent: YKitStore;
-//   public readonly yFile: Y.Map<string>;
-//   private cache?: SemioFile;
-//   private cacheHash?: string;
-
-//   private hash(file: SemioFile): string {
-//     return JSON.stringify(file);
-//   }
-
-//   constructor(parent: YKitStore, file: SemioFile) {
-//     this.parent = parent;
-//     this.yFile = parent.getMap;
-//     this.yFile.set("path", file.path);
-//     this.yFile.set("remote", file.remote || "");
-//     this.yFile.set("size", file.size?.toString() || "");
-//     this.yFile.set("hash", file.hash || "");
-//     this.yFile.set("createdAt", file.createdAt?.toISOString() || "");
-//     this.yFile.set("updatedAt", file.updatedAt?.toISOString() || "");
-//   }
-
-//   get file(): SemioFile {
-//     const path = this.yFile.get("path") as string;
-//     const remote = this.yFile.get("remote") as string;
-//     const file: SemioFile = { path, remote: remote || undefined };
-//     const size = this.yFile.get("size");
-//     if (size) file.size = parseInt(size as string);
-//     const hash = this.yFile.get("hash");
-//     if (hash) file.hash = hash as string;
-//     const createdAt = this.yFile.get("createdAt");
-//     if (createdAt) file.createdAt = new Date(createdAt as string);
-//     const updatedAt = this.yFile.get("updatedAt");
-//     if (updatedAt) file.updatedAt = new Date(updatedAt as string);
-//     return file;
-//   }
-
-//   change = (diff: FileDiff) => {
-//     if (diff.path !== undefined) this.yFile.set("path", diff.path);
-//     if (diff.remote !== undefined) this.yFile.set("remote", diff.remote);
-//     if (diff.size !== undefined) this.yFile.set("size", diff.size.toString());
-//     if (diff.hash !== undefined) this.yFile.set("hash", diff.hash);
-//     this.cache = undefined; // Invalidate cache when data changes
-//     this.cacheHash = undefined; // Invalidate hash when data changes
-//   };
-
-//   snapshot = (): SemioFile => {
-//     const currentData = {
-//       path: this.yFile.get("path") as string,
-//       remote: (this.yFile.get("remote") as string) || undefined,
-//       size: this.yFile.get("size") ? parseInt(this.yFile.get("size") as string) : undefined,
-//       hash: (this.yFile.get("hash") as string) || undefined,
-//       createdAt: this.yFile.get("createdAt") ? new Date(this.yFile.get("createdAt") as string) : undefined,
-//       updatedAt: this.yFile.get("updatedAt") ? new Date(this.yFile.get("updatedAt") as string) : undefined,
-//     };
-//     const currentHash = this.hash(currentData);
-
-//     if (!this.cache || this.cacheHash !== currentHash) {
-//       this.cache = currentData;
-//       this.cacheHash = currentHash;
-//     }
-
-//     return this.cache;
-//   };
-
-//   onChanged = (subscribe: Subscribe) => {
-//     return createObserver(this.yFile, subscribe, false);
-//   };
-
-//   onChangedDeep = (subscribe: Subscribe) => {
-//     return createObserver(this.yFile, subscribe, true);
-//   };
 // }
 
 // class YRepresentationStore implements RepresentationStore {
-//   public readonly parent: YKitStore;
-//   public readonly yRepresentation: YRepresentation;
-//   private cache?: Representation;
-//   private cacheHash?: string;
-
-//   private hash(representation: Representation): string {
-//     return JSON.stringify(representation);
-//   }
-
-//   constructor(parent: YKitStore, representation: Representation) {
-//     this.parent = parent;
-//     this.yRepresentation = new Y.Map<any>();
-//     this.yRepresentation.set("url", representation.url);
-//     this.yRepresentation.set("description", representation.description || "");
-//     this.yRepresentation.set("tags", createStringArray(representation.tags || []));
-//     this.yRepresentation.set("attributes", createAttributes(representation.attributes));
-//   }
-
-//   snapshot = (): Representation => {
-//     const yTags = this.yRepresentation.get("tags") as Y.Array<string>;
-//     const yAttributes = this.yRepresentation.get("attributes") as YAttributes;
-
-//     const attributes = getAttributes(yAttributes);
-//     const url = this.yRepresentation.get("url") as string;
-//     const description = (this.yRepresentation.get("description") as string) || "";
-//     const tags = yTags ? yTags.toArray() : [];
-
-//     const currentData = {
-//       url: url,
-//       description: description,
-//       tags: tags,
-//       attributes: attributes,
-//     };
-//     const currentHash = this.hash(currentData);
-
-//     if (!this.cache || this.cacheHash !== currentHash) {
-//       this.cache = currentData;
-//       this.cacheHash = currentHash;
-//     }
-
-//     return this.cache;
-//   };
-
-//   change = (diff: RepresentationDiff) => {
-//     if (diff.url !== undefined) this.yRepresentation.set("url", diff.url);
-//     if (diff.description !== undefined) this.yRepresentation.set("description", diff.description);
-//     if (diff.tags !== undefined) {
-//       updateStringArray(this.yRepresentation.get("tags") as Y.Array<string>, diff.tags);
-//     }
-//     if (diff.attributes !== undefined) {
-//       updateAttributes(this.yRepresentation.get("attributes") as YAttributes, diff.attributes);
-//     }
-//   };
-
-//   onChanged = (subscribe: Subscribe) => {
-//     return createObserver(this.yRepresentation, subscribe, false);
-//   };
-
-//   onChangedDeep = (subscribe: Subscribe) => {
-//     return createObserver(this.yRepresentation, subscribe, true);
-//   };
 // }
 
 // class YPortStore implements PortStore {
-//   public readonly parent: YTypeStore;
-//   public readonly yPort: YPort;
-//   private cache?: Port;
-//   private cacheHash?: string;
 
-//   private hash(port: Port): string {
-//     return JSON.stringify(port);
-//   }
-
-//   constructor(parent: YTypeStore, port: Port) {
-//     this.parent = parent;
-//     this.yPort = new Y.Map<any>();
-//     this.yPort.set("id_", port.id_ || "");
-//     this.yPort.set("description", port.description || "");
-//     this.yPort.set("mandatory", port.mandatory || false);
-//     this.yPort.set("family", port.family || "");
-//     this.yPort.set("t", port.t);
-//     this.yPort.set("compatibleFamilies", createStringArray(port.compatibleFamilies || []));
-//     this.yPort.set("point", createVec3(port.point));
-//     this.yPort.set("direction", createVec3(port.direction));
-//     this.yPort.set("attributes", createAttributes(port.attributes));
-//   }
-
-//   snapshot = (): Port => {
-//     const yCompatibleFamilies = this.yPort.get("compatibleFamilies") as Y.Array<string>;
-//     const yPoint = this.yPort.get("point") as Y.Map<number>;
-//     const yDirection = this.yPort.get("direction") as Y.Map<number>;
-//     const yAttributes = this.yPort.get("attributes") as YAttributes;
-
-//     const attributes = getAttributes(yAttributes);
-
-//     const currentData = {
-//       id_: this.yPort.get("id_") as string,
-//       description: (this.yPort.get("description") as string) || "",
-//       mandatory: this.yPort.get("mandatory") as boolean,
-//       family: (this.yPort.get("family") as string) || "",
-//       compatibleFamilies: yCompatibleFamilies ? yCompatibleFamilies.toArray() : [],
-//       point: {
-//         x: yPoint.get("x") as number,
-//         y: yPoint.get("y") as number,
-//         z: yPoint.get("z") as number,
-//       },
-//       direction: {
-//         x: yDirection.get("x") as number,
-//         y: yDirection.get("y") as number,
-//         z: yDirection.get("z") as number,
-//       },
-//       t: this.yPort.get("t") as number,
-//       attributes: attributes,
-//     };
-//     const currentHash = this.hash(currentData);
-
-//     if (!this.cache || this.cacheHash !== currentHash) {
-//       this.cache = currentData;
-//       this.cacheHash = currentHash;
-//     }
-
-//     return this.cache;
-//   };
-
-//   change = (diff: PortDiff) => {
-//     if (diff.id_ !== undefined) this.yPort.set("id_", diff.id_);
-//     if (diff.description !== undefined) this.yPort.set("description", diff.description);
-//     if (diff.mandatory !== undefined) this.yPort.set("mandatory", diff.mandatory);
-//     if (diff.family !== undefined) this.yPort.set("family", diff.family);
-//     if (diff.t !== undefined) this.yPort.set("t", diff.t);
-//     if (diff.compatibleFamilies !== undefined) {
-//       updateStringArray(this.yPort.get("compatibleFamilies") as Y.Array<string>, diff.compatibleFamilies);
-//     }
-//     if (diff.point !== undefined) {
-//       updateVec3(this.yPort.get("point") as Y.Map<number>, diff.point);
-//     }
-//     if (diff.direction !== undefined) {
-//       updateVec3(this.yPort.get("direction") as Y.Map<number>, diff.direction);
-//     }
-//     if (diff.attributes !== undefined) {
-//       updateAttributes(this.yPort.get("attributes") as YAttributes, diff.attributes);
-//     }
-//   };
-
-//   onChanged = (subscribe: Subscribe) => {
-//     return createObserver(this.yPort, subscribe, false);
-//   };
-
-//   onChangedDeep = (subscribe: Subscribe) => {
-//     return createObserver(this.yPort, subscribe, true);
-//   };
 // }
 
 class YTypeStore {
-  // public readonly representations: Map<string, YRepresentationStore> = new Map();
-  // public readonly ports: Map<string, YPortStore> = new Map();
+  public readonly uuid: string;
+  public readonly parent: YKitStore;
   private yType: YType;
   private transact: Transact;
   private cache?: Type;
@@ -847,7 +462,9 @@ class YTypeStore {
     return JSON.stringify(type);
   }
 
-  constructor(yType: YType, transact: Transact, type: Type) {
+  constructor(parent: YKitStore, yType: YType, transact: Transact, type: Type) {
+    this.uuid = uuidv4();
+    this.parent = parent;
     this.yType = yType;
     this.transact = transact;
     this.yType.set("name", type.name);
@@ -856,15 +473,6 @@ class YTypeStore {
     this.yType.set("createdAt", new Date().toISOString());
     this.yType.set("updatedAt", new Date().toISOString());
   }
-
-  change = (diff: TypeDiff) => {
-    this.transact(() => {
-      if (diff.name !== undefined) this.yType.set("name", diff.name);
-      if (diff.variant !== undefined) this.yType.set("variant", diff.variant);
-    });
-    this.cache = undefined;
-    this.cacheHash = undefined;
-  };
 
   id = (): TypeId => {
     return { name: this.yType.get("name") as string, variant: this.yType.get("variant") as string | undefined } as TypeId;
@@ -889,6 +497,15 @@ class YTypeStore {
     return this.cache;
   };
 
+  change = (diff: TypeDiff) => {
+    this.transact(() => {
+      if (diff.name !== undefined) this.yType.set("name", diff.name);
+      if (diff.variant !== undefined) this.yType.set("variant", diff.variant);
+    });
+    this.cache = undefined;
+    this.cacheHash = undefined;
+  };
+
   onChanged = (subscribe: Subscribe) => {
     return createObserver(this.yType, subscribe, false);
   };
@@ -899,6 +516,8 @@ class YTypeStore {
 }
 
 class YPieceStore {
+  public readonly uuid: string;
+  public readonly parent: YDesignStore;
   private yPiece: YPiece;
   private transact: Transact;
   private cache?: Piece;
@@ -908,12 +527,26 @@ class YPieceStore {
     return JSON.stringify(piece);
   }
 
-  constructor(yPiece: YPiece, transact: Transact, piece: Piece, yTypeUuid: string, yDesignUuid: string) {
+  constructor(parent: YDesignStore, yPiece: YPiece, transact: Transact, piece: Piece) {
+    this.uuid = uuidv4();
+    this.parent = parent;
     this.yPiece = yPiece;
     this.transact = transact;
     this.yPiece.set("id_", piece.id_);
-    this.yPiece.set("pieceType", yTypeUuid);
-    this.yPiece.set("pieceDesign", yDesignUuid);
+    if (piece.type) {
+      const yType = new Y.Map<YTypeVal>();
+      const type = this.parent.parent.type(piece.type);
+      this.yPiece.set("type", type.uuid);
+      yType.set("name", piece.type.name);
+      yType.set("variant", piece.type.variant || "");
+    } else {
+      const yDesign = new Y.Map<YDesignVal>();
+      const design = this.parent.parent.design(piece.design!);
+      this.yPiece.set("design", design.uuid);
+      yDesign.set("name", piece.design!.name);
+      yDesign.set("variant", piece.design!.variant || "");
+      yDesign.set("view", piece.design!.view || "");
+    }
   }
 
   id = (): PieceId => {
@@ -923,9 +556,8 @@ class YPieceStore {
   snapshot = (): Piece => {
     const currentData = {
       id_: this.yPiece.get("id_") as string,
-      type: {
-        name: "Tambour",
-      },
+      type: this.parent.parent.typeByUuid(this.yPiece.get("type") as string)?.id(),
+      design: this.parent.parent.designByUuid(this.yPiece.get("design") as string)?.id(),
     };
     const currentHash = this.hash(currentData);
 
@@ -940,8 +572,6 @@ class YPieceStore {
   change = (diff: PieceDiff) => {
     this.transact(() => {
       if (diff.id_) this.yPiece.set("id_", diff.id_);
-      if (diff.pieceType) this.yPiece.set("pieceType", diff.pieceType);
-      if (diff.pieceDesign) this.yPiece.set("pieceDesign", diff.pieceDesign);
     });
   };
 
@@ -958,11 +588,13 @@ class YPieceStore {
 // }
 
 class YDesignStore {
+  public readonly uuid: string;
+  public readonly parent: YKitStore;
   private yDesign: YDesign;
   private transact: Transact;
   private yPieces: YPieces;
   private yDesignPieces: YUuidArray;
-  private pieces: Map<string, YPieceStore>;
+  private pieces: YPieceStore[];
   private cache?: Design;
   private cacheHash?: string;
 
@@ -970,12 +602,14 @@ class YDesignStore {
     return JSON.stringify(design);
   }
 
-  constructor(yDesign: YDesign, transact: Transact, design: Design) {
+  constructor(parent: YKitStore, yDesign: YDesign, transact: Transact, design: Design) {
+    this.uuid = uuidv4();
+    this.parent = parent;
     this.yDesign = yDesign;
     this.transact = transact;
-    this.yPieces = new Y.Map<YPiece>();
+    this.yPieces = new Y.Array<YPiece>();
     this.yDesignPieces = new Y.Array<string>();
-    this.pieces = new Map();
+    this.pieces = new Array();
 
     this.yDesign.set("name", design.name);
     this.yDesign.set("variant", design.variant || "");
@@ -996,13 +630,13 @@ class YDesignStore {
   hasPiece(piece: PieceIdLike): boolean {
     return hasSamePiece(
       piece,
-      Array.from(this.pieces.values()).map((piece) => piece.id()),
+      this.pieces.map((piece) => piece.id()),
     );
   }
 
   piece(piece: PieceIdLike): PieceStore {
     if (!this.hasPiece(piece)) throw new Error(`Piece store not found for piece ${piece}`);
-    return this.pieces.values().find((p) => areSamePiece(p.id(), piece))!;
+    return this.pieces.find((p) => areSamePiece(p.id(), piece))!;
   }
 
   id(): DesignId {
@@ -1014,7 +648,7 @@ class YDesignStore {
       name: this.yDesign.get("name") as string,
       variant: this.yDesign.get("variant") as string | undefined,
       view: this.yDesign.get("view") as string | undefined,
-      pieces: Array.from(this.pieces.values()).map((piece) => piece.snapshot()),
+      pieces: this.pieces.map((piece) => piece.snapshot()),
       createdAt: this.yDesign.get("createdAt") as string,
       updatedAt: this.yDesign.get("updatedAt") as string,
     };
@@ -1029,12 +663,11 @@ class YDesignStore {
   };
 
   createPiece(piece: Piece): void {
-    const uuid = uuidv4();
     const yPiece = new Y.Map<YPiece>();
     // const yTypeUuid = this.parent.type(piece.type!).id();
-    const yPieceStore = new YPieceStore(yPiece, this.transact, piece, "typeA", "designA");
-    this.yPieces.set(uuid, yPiece);
-    this.pieces.set(uuid, yPieceStore);
+    const yPieceStore = new YPieceStore(this, yPiece, this.transact, piece, "typeA", "designA");
+    this.yPieces.push([yPiece]);
+    this.pieces.push(yPieceStore);
   }
 
   change = (diff: DesignDiff) => {
@@ -1060,20 +693,14 @@ class YDesignStore {
 }
 
 class YKitStore {
+  public readonly uuid: string;
+  public readonly parent: YSketchpadStore;
   private readonly yDoc: Y.Doc;
   private readonly yKit: YKit;
-  private readonly yAuthors: YAuthors;
-  private readonly yKitAuthors: YUuidArray;
-  private readonly yFiles: YFiles;
-  private readonly yKitFiles: YUuidArray;
-  private readonly yQualities: YQualities;
-  private readonly yKitQualities: YUuidArray;
   private readonly yTypes: YTypes;
-  private readonly yKitTypes: YUuidArray;
-  private readonly types: Map<string, YTypeStore>;
+  private readonly types: YTypeStore[];
   private readonly yDesigns: YDesigns;
-  private readonly yKitDesigns: YUuidArray;
-  private readonly designs: Map<string, YDesignStore>;
+  private readonly designs: YDesignStore[];
   private readonly persistences: IndexeddbPersistence;
   private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult>;
   private readonly regularFiles: Map<Url, string>;
@@ -1084,24 +711,18 @@ class YKitStore {
     return JSON.stringify(kit);
   }
 
-  constructor(kit: Kit) {
+  constructor(parent: YSketchpadStore, kit: Kit) {
+    this.uuid = uuidv4();
+    this.parent = parent;
     this.yDoc = new Y.Doc();
     this.commandRegistry = new Map();
     this.regularFiles = new Map();
-    this.types = new Map();
-    this.designs = new Map();
+    this.types = new Array();
+    this.designs = new Array();
 
     this.yKit = this.yDoc.getMap() as YKit;
-    this.yAuthors = this.yDoc.getMap("authors");
-    this.yKitAuthors = this.yDoc.getArray("kitAuthors");
-    this.yFiles = this.yDoc.getMap("files");
-    this.yKitFiles = this.yDoc.getArray("kitFiles");
-    this.yQualities = this.yDoc.getMap("qualities");
-    this.yKitQualities = this.yDoc.getArray("kitQualities");
-    this.yTypes = this.yDoc.getMap("types");
-    this.yKitTypes = this.yDoc.getArray("kitTypes");
-    this.yDesigns = this.yDoc.getMap("designs");
-    this.yKitDesigns = this.yDoc.getArray("kitDesigns");
+    this.yTypes = this.yDoc.getArray("types");
+    this.yDesigns = this.yDoc.getArray("designs");
 
     this.yDoc.transact(() => {
       this.yKit.set("name", kit.name);
@@ -1134,37 +755,41 @@ class YKitStore {
   hasType(type: TypeIdLike): boolean {
     return hasSameType(
       type,
-      Array.from(this.types.values()).map((type) => type.id()),
+      this.types.map((type) => type.id()),
     );
   }
 
-  type(type: TypeIdLike): TypeStore {
+  type(type: TypeIdLike): YTypeStore {
     if (!this.hasType(type)) throw new Error(`Type store not found for type ${type}`);
-    return this.types.values().find((t) => areSameType(t.id(), type))!;
+    return this.types.find((t) => areSameType(t.id(), type))!;
+  }
+
+  typeByUuid(uuid: string): YTypeStore {
+    return this.types.find((t) => t.uuid === uuid)!;
   }
 
   hasDesign(design: DesignIdLike): boolean {
     return hasSameDesign(
       design,
-      Array.from(this.designs.values()).map((design) => design.id()),
+      this.designs.map((design) => design.id()),
     );
   }
 
-  design(design: DesignIdLike): DesignStore {
+  design(design: DesignIdLike): YDesignStore {
     if (!this.hasDesign(design)) throw new Error(`Design store not found for design ${design}`);
-    return this.designs.values().find((d) => areSameDesign(d.id(), design))!;
+    return this.designs.find((d) => areSameDesign(d.id(), design))!;
+  }
+
+  designByUuid(uuid: string): YDesignStore {
+    return this.designs.find((d) => d.uuid === uuid)!;
   }
 
   snapshot = (): Kit => {
-    const yAttributes = this.yKit.get("attributes") as YAttributes;
-    const attributes = getAttributes(yAttributes);
-
     const currentData = {
       name: this.yKit.get("name") as string,
       version: this.yKit.get("version") as string | undefined,
-      types: Array.from(this.types.values()).map((type) => type.snapshot()),
-      designs: Array.from(this.designs.values()).map((design) => design.snapshot()),
-      attributes: attributes,
+      types: this.types.map((type) => type.snapshot()),
+      designs: this.designs.map((design) => design.snapshot()),
     };
     const currentHash = this.hash(currentData);
 
@@ -1181,19 +806,17 @@ class YKitStore {
   };
 
   createType(type: Type): void {
-    const uuid = uuidv4();
     const yType = new Y.Map<YTypeVal>();
-    const yTypeStore = new YTypeStore(yType, this.yDoc.transact, type);
-    this.yTypes.set(uuid, yType);
-    this.types.set(uuid, yTypeStore);
+    const yTypeStore = new YTypeStore(this, yType, this.yDoc.transact, type);
+    this.yTypes.push([yType]);
+    this.types.push(yTypeStore);
   }
 
   createDesign(design: Design): void {
-    const uuid = uuidv4();
     const yDesign = new Y.Map<YDesignVal>();
-    const yDesignStore = new YDesignStore(yDesign, this.yDoc.transact, design);
-    this.yDesigns.set(uuid, yDesign);
-    this.designs.set(uuid, yDesignStore);
+    const yDesignStore = new YDesignStore(this, yDesign, this.yDoc.transact, design);
+    this.yDesigns.push([yDesign]);
+    this.designs.push(yDesignStore);
   }
 
   change = (diff: KitDiff) => {
@@ -1276,6 +899,8 @@ class YKitStore {
 }
 
 class YDesignEditorStore {
+  public readonly uuid: string;
+  public readonly parent: YSketchpadStore;
   public readonly yMap: YDesignEditor;
   private readonly commandRegistry: Map<string, (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult> = new Map();
   private readonly transact: (fn: () => void) => void;
@@ -1286,7 +911,9 @@ class YDesignEditorStore {
     return JSON.stringify(state);
   }
 
-  constructor(yMap: YDesignEditor, transact: (fn: () => void) => void, id: DesignEditorId, state?: DesignEditorState) {
+  constructor(parent: YSketchpadStore, yMap: YDesignEditor, transact: (fn: () => void) => void, id: DesignEditorId, state?: DesignEditorState) {
+    this.uuid = uuidv4();
+    this.parent = parent;
     this.yMap = yMap;
     this.transact = transact;
 
@@ -1663,6 +1290,7 @@ class YDesignEditorStore {
 }
 
 class YSketchpadStore {
+  public readonly parent?: any;
   private readonly yDoc: Y.Doc;
   private readonly ySketchpad: YSketchpad;
   private readonly kits: Array<YKitStore>;
@@ -1678,7 +1306,8 @@ class YSketchpadStore {
     return JSON.stringify(state);
   }
 
-  constructor(id?: string) {
+  constructor(parent?: any, id?: string) {
+    this.parent = parent;
     // this.broadcastChannel = new BroadcastChannel("semio-sketchpad");
     this.yDoc = new Y.Doc();
     this.kits = new Array();
@@ -1738,7 +1367,7 @@ class YSketchpadStore {
     if (this.hasKit(kit)) {
       throw new Error(`Kit (${kit.name}, ${kit.version || ""}) already exists.`);
     }
-    this.kits.push(new YKitStore(kit));
+    this.kits.push(new YKitStore(this, kit));
   };
 
   createDesignEditor = (id: DesignEditorId) => {
@@ -1748,7 +1377,7 @@ class YSketchpadStore {
     this.yDoc.transact(() => {
       const yDesignEditor = new Y.Map<YDesignEditorVal>();
       this.yDesignEditors.push([yDesignEditor]);
-      const designEditor = new YDesignEditorStore(yDesignEditor, this.yDoc.transact, id);
+      const designEditor = new YDesignEditorStore(this, yDesignEditor, this.yDoc.transact, id);
       this.designEditors.push(designEditor);
     });
   };
@@ -2760,13 +2389,13 @@ const useDesignEditorScope = () => useContext(DesignEditorScopeContext);
 
 const identitySelector = (state: any) => state;
 
-function useSync<TSnapshot, TSelected = TSnapshot>(store: Store<TSnapshot>, selector?: (state: TSnapshot) => TSelected, deep: boolean = false): TSnapshot | TSelected {
+function useSync<TModel, TId, TDiff, TSelected = TModel>(store: Store<TModel, TId, TDiff>, selector?: (state: TModel) => TSelected, deep: boolean = false): TModel | TSelected {
   const state = deep ? useSyncExternalStore(store.onChangedDeep, store.snapshot) : useSyncExternalStore(store.onChanged, store.snapshot);
   return selector ? selector(state) : state;
 }
 
-function useSyncDeep<TSnapshot, TSelected = TSnapshot>(store: { snapshot: () => TSnapshot; onChangedDeep: (subscribe: Subscribe) => Unsubscribe }, selector?: (state: TSnapshot) => TSelected): TSnapshot | TSelected {
-  const state = useSyncExternalStore(store.onChangedDeep, store.snapshot);
+function useSyncDeep<TModel, TId, TDiff, TSelected = TModel>(store: Store<TModel, TId, TDiff>, selector?: (state: TModel) => TSelected): TModel | TSelected {
+  const state = useSyncExternalStore(store.onChangedDeep, store.snapshot) as TModel;
   return selector ? selector(state) : state;
 }
 
@@ -2795,9 +2424,9 @@ function useKitStore<T>(selector?: (store: KitStore) => T, id?: KitId): T | KitS
 
 export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, id?: KitId, deep: boolean = false): T | KitShallow | Kit {
   if (deep) {
-    return useSyncDeep<Kit, T>(useKitStore(identitySelector, id) as KitStore, selector ? selector : identitySelector);
+    return useSyncDeep<Kit, KitId, KitDiff, T>(useKitStore(identitySelector, id) as KitStore, selector ? selector : identitySelector);
   }
-  return useSync<KitShallow, T>(useKitStore(identitySelector, id) as KitStore, selector ? selector : identitySelector, deep);
+  return useSync<KitShallow, KitId, KitDiff, T>(useKitStore(identitySelector, id) as KitStore, selector ? selector : identitySelector, deep);
 }
 
 export function useDiffedKit(): Kit {
@@ -2834,9 +2463,9 @@ function useDesignStore<T>(selector?: (store: DesignStore) => T, id?: DesignId):
 
 export function useDesign<T>(selector?: (design: DesignShallow | Design) => T, id?: DesignId, deep: boolean = false): T | DesignShallow | Design {
   if (deep) {
-    return useSyncDeep<Design, T>(useDesignStore(identitySelector, id) as DesignStore, selector ? selector : identitySelector);
+    return useSyncDeep<Design, DesignId, DesignDiff, T>(useDesignStore(identitySelector, id) as DesignStore, selector ? selector : identitySelector);
   }
-  return useSync<DesignShallow, T>(useDesignStore(identitySelector, id) as DesignStore, selector ? selector : identitySelector, deep);
+  return useSync<DesignShallow, DesignId, DesignDiff, T>(useDesignStore(identitySelector, id) as DesignStore, selector ? selector : identitySelector, deep);
 }
 
 export function useDiffedDesign(): Design {
@@ -2891,7 +2520,7 @@ function useTypeStore<T>(selector?: (store: TypeStore) => T, id?: TypeId): T | T
 }
 
 export function useType<T>(selector?: (type: Type) => T, id?: TypeId, deep: boolean = false): T | Type {
-  return useSync<Type, T>(useTypeStore(identitySelector, id) as TypeStore, selector ? selector : identitySelector, deep);
+  return useSync<Type, TypeId, TypeDiff, T>(useTypeStore(identitySelector, id) as TypeStore, selector ? selector : identitySelector, deep);
 }
 
 export function usePortColoredTypes(): Type[] {
@@ -2921,7 +2550,7 @@ function usePieceStore<T>(selector?: (store: PieceStore) => T, id?: PieceId): T 
 }
 
 export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId, deep: boolean = false): T | Piece {
-  return useSync<Piece, T>(usePieceStore(identitySelector, id) as PieceStore, selector ? selector : identitySelector, deep);
+  return useSync<Piece, PieceId, PieceDiff, T>(usePieceStore(identitySelector, id) as PieceStore, selector ? selector : identitySelector, deep);
 }
 
 export function useIsPieceSelected(): boolean {
@@ -2959,7 +2588,7 @@ function useConnectionStore<T>(selector?: (store: ConnectionStore) => T, id?: Co
 }
 
 export function useConnection<T>(selector?: (connection: Connection) => T, id?: ConnectionId, deep: boolean = false): T | Connection {
-  return useSync<Connection, T>(useConnectionStore(identitySelector, id) as ConnectionStore, selector ? selector : identitySelector, deep);
+  return useSync<Connection, ConnectionId, ConnectionDiff, T>(useConnectionStore(identitySelector, id) as ConnectionStore, selector ? selector : identitySelector, deep);
 }
 
 function usePortStore<T>(selector?: (store: PortStore) => T, id?: PortId): T | PortStore {
@@ -2973,7 +2602,7 @@ function usePortStore<T>(selector?: (store: PortStore) => T, id?: PortId): T | P
 }
 
 export function usePort<T>(selector?: (port: Port) => T, id?: PortId, deep: boolean = false): T | Port {
-  return useSync<Port, T>(usePortStore(identitySelector, id) as PortStore, selector ? selector : identitySelector, deep);
+  return useSync<Port, PortId, PortDiff, T>(usePortStore(identitySelector, id) as PortStore, selector ? selector : identitySelector, deep);
 }
 
 function useRepresentationStore<T>(selector?: (store: RepresentationStore) => T, id?: RepresentationId): T | RepresentationStore {
@@ -2987,7 +2616,7 @@ function useRepresentationStore<T>(selector?: (store: RepresentationStore) => T,
 }
 
 export function useRepresentation<T>(selector?: (representation: Representation) => T, id?: RepresentationId, deep: boolean = false): T | Representation {
-  return useSync<Representation, T>(useRepresentationStore(identitySelector, id) as RepresentationStore, selector ? selector : identitySelector, deep);
+  return useSync<Representation, RepresentationId, RepresentationDiff, T>(useRepresentationStore(identitySelector, id) as RepresentationStore, selector ? selector : identitySelector, deep);
 }
 
 // Additional utility hooks for the new store architecture
