@@ -426,6 +426,8 @@ type YSketchpadKeysMap = {
   activeDesignEditorDesign: YDesign;
 };
 
+export type YProviderFactory = (doc: Y.Doc, id: string) => Promise<() => void> | void;
+
 function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscribe, deep?: boolean): Unsubscribe {
   if (deep) {
     yObject.observeDeep(subscribe);
@@ -701,7 +703,7 @@ class YKitStore {
   private readonly types: YTypeStore[];
   private readonly yDesigns: YDesigns;
   private readonly designs: YDesignStore[];
-  private readonly persistences: IndexeddbPersistence;
+  private readonly persistence: IndexeddbPersistence;
   private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult>;
   private readonly regularFiles: Map<Url, string>;
   private cache?: Kit;
@@ -1265,32 +1267,38 @@ class YSketchpadStore {
     return JSON.stringify(state);
   }
 
-  constructor(id?: string) {
+  constructor(id?: string, yProviderFactory?: YProviderFactory) {
     this.broadcastChannel = new BroadcastChannel(`semio-sketchpad-${id}`);
     this.yDoc = new Y.Doc();
     this.kits = new Array();
     this.designEditors = new Array();
     this.commandRegistry = new Map();
 
-    if (id) {
-      this.persistence = new IndexeddbPersistence(`semio-sketchpad-${id}`, this.yDoc);
-      this.persistence.on("update", () => {
-        this.broadcastChannel.postMessage({ client: this.yDoc.clientID });
-      });
-      this.broadcastChannel.addEventListener("message", () => {
-        this.yDoc.load();
-        console.log("reloaded");
-      });
-    } else {
-      this.yDoc.on("update", (update: Uint8Array) => {
-        this.broadcastChannel.postMessage({ client: this.yDoc.clientID, update });
-      });
-      this.broadcastChannel.addEventListener("message", (msg) => {
-        const { data } = msg;
-        if (data.client !== this.yDoc.clientID) {
-          Y.applyUpdate(this.yDoc, data.update);
-        }
-      });
+    // if (id) {
+    //   this.persistence = new IndexeddbPersistence(`semio-sketchpad-${id}`, this.yDoc);
+    //   this.persistence!.doc.on("update", () => {
+    //     this.broadcastChannel.postMessage({ client: this.yDoc.clientID });
+    //   });
+    //   this.broadcastChannel.addEventListener("message", (msg) => {
+    //     console.log("message", msg);
+    //     const { data } = msg;
+    //     if (data.client !== this.yDoc.clientID) {
+    //     }
+    //   });
+    // } else {
+    //   this.yDoc.on("update", (update: Uint8Array) => {
+    //     this.broadcastChannel.postMessage({ client: this.yDoc.clientID, update });
+    //   });
+    //   this.broadcastChannel.addEventListener("message", (msg) => {
+    //     const { data } = msg;
+    //     if (data.client !== this.yDoc.clientID) {
+    //       Y.applyUpdate(this.yDoc, data.update);
+    //     }
+    //   });
+    // }
+
+    if (yProviderFactory) {
+      yProviderFactory(this.yDoc, id);
     }
 
     this.ySketchpad = this.yDoc.getMap("sketchpad");
@@ -2273,12 +2281,12 @@ const designEditorCommands = {
 
 // #region Scoping
 
-type SketchpadScope = { id: string };
+type SketchpadScope = { id: string; yProviderFactory?: YProviderFactory };
 const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
-export const SketchpadScopeProvider = (props: { id?: string; children: React.ReactNode }) => {
+export const SketchpadScopeProvider = (props: { id?: string; yProviderFactory?: YProviderFactory | void; children: React.ReactNode }) => {
   const id = props.id || uuidv4();
   if (!stores.has(id)) {
-    const store = new YSketchpadStore(props.id);
+    const store = new YSketchpadStore(props.id, props?.yProviderFactory);
     stores.set(id, store);
   }
   return React.createElement(SketchpadScopeContext.Provider, { value: { id } }, props.children as any);

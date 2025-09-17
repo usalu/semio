@@ -20,6 +20,7 @@
 // #endregion
 
 export { default as Sketchpad } from "./components/ui/sketchpad/Sketchpad";
+export type { YProviderFactory } from "./store";
 
 export { default as eslintConfig } from "./eslint.config";
 export { default as postcssConfig } from "./postcss.config";

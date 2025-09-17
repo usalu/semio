@@ -22,7 +22,7 @@ import { FC, ReactNode, useEffect, useState } from "react";
 import { TooltipProvider } from "../Tooltip";
 
 import { Kit, KitId } from "../../../semio";
-import { KitScopeProvider, Layout, SketchpadScopeProvider, Theme, useLayout, useMode, useSketchpadCommands, useTheme } from "../../../store";
+import { KitScopeProvider, Layout, SketchpadScopeProvider, Theme, useLayout, useMode, useSketchpadCommands, useTheme, YProviderFactory } from "../../../store";
 import { NavbarContext } from "../Navbar";
 import KitEditor from "./KitEditor";
 
@@ -93,6 +93,7 @@ const SketchpadInner: FC = () => {
 
 interface SketchpadProps {
   id?: string;
+  yProviderFactory?: YProviderFactory;
   onWindowEvents?: {
     minimize: () => void;
     maximize: () => void;
@@ -100,10 +101,10 @@ interface SketchpadProps {
   };
 }
 
-const Sketchpad: FC<SketchpadProps> = ({ id, onWindowEvents }) => {
+const Sketchpad: FC<SketchpadProps> = ({ id, yProviderFactory, onWindowEvents }) => {
   return (
     <TooltipProvider>
-      <SketchpadScopeProvider id={id}>
+      <SketchpadScopeProvider id={id} yProviderFactory={yProviderFactory}>
         <SketchpadInner />
       </SketchpadScopeProvider>
     </TooltipProvider>
@@ -113,4 +114,5 @@ const Sketchpad: FC<SketchpadProps> = ({ id, onWindowEvents }) => {
 export default Sketchpad;
 
 // Export Sketchpad state management types for external use
-export {};
+export { };
+

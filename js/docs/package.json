@@ -11,15 +11,15 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/markdoc": "^0.15.2",
-    "@astrojs/mdx": "^4.3.1",
-    "@astrojs/react": "^4.3.0",
-    "@astrojs/sitemap": "^3.4.2",
-    "@astrojs/starlight": "^0.35.2",
+    "@astrojs/markdoc": "^0.15.6",
+    "@astrojs/mdx": "^4.3.5",
+    "@astrojs/react": "^4.3.1",
+    "@astrojs/sitemap": "^3.6.0",
+    "@astrojs/starlight": "^0.35.3",
     "@astrojs/ts-plugin": "^1.10.4",
     "@semio/js": "^0.1.0",
-    "astro": "^5.12.5",
-    "sharp": "^0.34.3"
+    "astro": "^5.13.8",
+    "sharp": "^0.34.4"
   },
   "author": {
     "name": "Ueli Saluz",
