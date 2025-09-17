@@ -41,5 +41,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Metabolism: Story = {
-  args: {},
+  args: {
+    // id: "metabolism",
+  },
 };

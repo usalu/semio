@@ -917,16 +917,10 @@ class YDesignEditorStore {
     this.yMap = yMap;
     this.transact = transact;
 
-    const yKit = new Y.Map<any>();
-    yKit.set("name", id.kit.name);
-    yKit.set("version", id.kit.version);
-    yMap.set("kit", yKit);
-
-    const yDesign = new Y.Map<any>();
-    yDesign.set("name", id.design.name);
-    yDesign.set("variant", id.design.variant);
-    yDesign.set("view", id.design.view);
-    yMap.set("design", yDesign);
+    const kit = this.parent.kit(id.kit);
+    const design = kit.design(id.design);
+    yMap.set("kit", kit.uuid);
+    yMap.set("design", design.uuid);
 
     yMap.set("fullscreenPanel", state?.fullscreenPanel || DesignEditorFullscreenPanel.None);
 
@@ -1003,9 +997,12 @@ class YDesignEditorStore {
   }
 
   id(): DesignEditorId {
-    const yKit = this.yMap.get("kit");
-    const yDesign = this.yMap.get("design");
-    return { kit: { name: yKit.get("name") as string, version: yKit.get("version") as string }, design: { name: yDesign.get("name") as string, variant: yDesign.get("variant") as string, view: yDesign.get("view") as string } };
+    const kit = this.parent.kitByUuid(this.yMap.get("kit") as string);
+    const design = kit.designByUuid(this.yMap.get("design") as string);
+    return {
+      kit: kit.id(),
+      design: design.id(),
+    } as DesignEditorId;
   }
 
   snapshot = (): DesignEditorState => {
@@ -1035,44 +1032,7 @@ class YDesignEditorStore {
     this.transact(() => {
       if (diff.fullscreenPanel) this.yMap.set("fullscreenPanel", diff.fullscreenPanel);
       if (diff.selection) {
-        if (diff.selection.pieces) {
-          const selectedPiecesIds = this.yMap.get("selectedPieceIds") as Y.Array<string>;
-          if (diff.selection.pieces.removed) {
-            diff.selection.pieces.removed.forEach((piece) => {
-              const index = selectedPiecesIds.toArray().indexOf(piece.id_);
-              if (index >= 0) {
-                selectedPiecesIds.delete(index, 1);
-              }
-            });
-          }
-          if (diff.selection.pieces.added) {
-            selectedPiecesIds.push(diff.selection.pieces.added.map((piece) => pieceIdToString(piece)));
-          }
-        }
-
-        if (diff.selection.connections) {
-          const selectedConnections = this.yMap.get("selectedConnections") as Y.Array<string>;
-          if (diff.selection.connections.removed) {
-            diff.selection.connections.removed.forEach((connection) => {
-              const index = selectedConnections.toArray().indexOf(connectionIdToString(connection));
-              if (index >= 0) {
-                selectedConnections.delete(index, 1);
-              }
-            });
-          }
-          if (diff.selection.connections.added) {
-            selectedConnections.insert(
-              selectedConnections.length,
-              diff.selection.connections.added.map((connection) => connectionIdToString(connection)),
-            );
-          }
-        }
-
-        if (diff.selection.port) {
-          this.yMap.set("selectedPiecePortPieceId", pieceIdToString(diff.selection.port.piece!));
-          this.yMap.set("selectedPiecePortPortId", portIdToString(diff.selection.port.port!));
-          this.yMap.set("selectedPiecePortDesignPieceId", pieceIdToString(diff.selection.port.designPiece!));
-        }
+        const selection = this.yMap.get("selection") as Y.Map<any>;
       }
     });
   };
@@ -1290,7 +1250,6 @@ class YDesignEditorStore {
 }
 
 class YSketchpadStore {
-  public readonly parent?: any;
   private readonly yDoc: Y.Doc;
   private readonly ySketchpad: YSketchpad;
   private readonly kits: Array<YKitStore>;
@@ -1300,15 +1259,14 @@ class YSketchpadStore {
   private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult>;
   private cache?: SketchpadState;
   private cacheHash?: string;
-  // private readonly broadcastChannel: BroadcastChannel;
+  private readonly broadcastChannel: BroadcastChannel;
 
   private hash(state: SketchpadState): string {
     return JSON.stringify(state);
   }
 
-  constructor(parent?: any, id?: string) {
-    this.parent = parent;
-    // this.broadcastChannel = new BroadcastChannel("semio-sketchpad");
+  constructor(id?: string) {
+    this.broadcastChannel = new BroadcastChannel(`semio-sketchpad-${id}`);
     this.yDoc = new Y.Doc();
     this.kits = new Array();
     this.designEditors = new Array();
@@ -1316,17 +1274,24 @@ class YSketchpadStore {
 
     if (id) {
       this.persistence = new IndexeddbPersistence(`semio-sketchpad-${id}`, this.yDoc);
+      this.persistence.on("update", () => {
+        this.broadcastChannel.postMessage({ client: this.yDoc.clientID });
+      });
+      this.broadcastChannel.addEventListener("message", () => {
+        this.yDoc.load();
+        console.log("reloaded");
+      });
+    } else {
+      this.yDoc.on("update", (update: Uint8Array) => {
+        this.broadcastChannel.postMessage({ client: this.yDoc.clientID, update });
+      });
+      this.broadcastChannel.addEventListener("message", (msg) => {
+        const { data } = msg;
+        if (data.client !== this.yDoc.clientID) {
+          Y.applyUpdate(this.yDoc, data.update);
+        }
+      });
     }
-
-    // this.yDoc.on("update", (update: Uint8Array) => {
-    //   this.broadcastChannel.postMessage({ client: this.yDoc.clientId, update });
-    // });
-    // this.broadcastChannel.addEventListener("message", (msg) => {
-    //   const { data } = msg;
-    //   if (data.client !== this.yDoc.clientId) {
-    //     Y.applyUpdate(this.yDoc, data.update);
-    //   }
-    // });
 
     this.ySketchpad = this.yDoc.getMap("sketchpad");
     this.yDesignEditors = this.yDoc.getArray("designEditors");
@@ -1472,9 +1437,13 @@ class YSketchpadStore {
     );
   }
 
-  kit(kit: KitIdLike): KitStore {
+  kit(kit: KitIdLike): YKitStore {
     if (!this.hasKit(kit)) throw new Error(`Kit store not found for kit ${kit}`);
     return this.kits.find((k) => areSameKit(k.id(), kit))!;
+  }
+
+  kitByUuid(uuid: string): YKitStore {
+    return this.kits.find((k) => k.uuid === uuid)!;
   }
 
   hasDesignEditor(designEditor: DesignEditorId): boolean {
@@ -1484,9 +1453,13 @@ class YSketchpadStore {
     );
   }
 
-  designEditor(designEditor: DesignEditorId): DesignEditorStore {
+  designEditor(designEditor: DesignEditorId): YDesignEditorStore {
     if (!this.hasDesignEditor(designEditor)) throw new Error(`Design editor store not found for design editor ${designEditor}`);
     return this.designEditors.find((d) => areSameDesignEditor(d.id(), designEditor))!;
+  }
+
+  designEditorByUuid(uuid: string): YDesignEditorStore {
+    return this.designEditors.find((d) => d.uuid === uuid)!;
   }
 }
 
@@ -2305,7 +2278,7 @@ const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
 export const SketchpadScopeProvider = (props: { id?: string; children: React.ReactNode }) => {
   const id = props.id || uuidv4();
   if (!stores.has(id)) {
-    const store = new YSketchpadStore();
+    const store = new YSketchpadStore(props.id);
     stores.set(id, store);
   }
   return React.createElement(SketchpadScopeContext.Provider, { value: { id } }, props.children as any);
