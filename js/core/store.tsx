@@ -426,7 +426,7 @@ type YSketchpadKeysMap = {
   activeDesignEditorDesign: YDesign;
 };
 
-export type YProviderFactory = (doc: Y.Doc, id: string) => Promise<() => void> | void;
+export type YProviderFactory = (doc: Y.Doc, id: string) => Promise<void>;
 
 function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscribe, deep?: boolean): Unsubscribe {
   if (deep) {
@@ -695,8 +695,9 @@ class YDesignStore {
 }
 
 class YKitStore {
-  public readonly uuid: string;
+  public readonly uri: string;
   public readonly parent: YSketchpadStore;
+  private readonly yProviderFactory: YProviderFactory | undefined;
   private readonly yDoc: Y.Doc;
   private readonly yKit: YKit;
   private readonly yTypes: YTypes;
@@ -713,10 +714,16 @@ class YKitStore {
     return JSON.stringify(kit);
   }
 
-  constructor(parent: YSketchpadStore, kit: Kit) {
-    this.uuid = uuidv4();
+  constructor(parent: YSketchpadStore, uri: string, kit: Kit, yProviderFactory?: YProviderFactory) {
+    this.uri = uri;
     this.parent = parent;
+    this.yProviderFactory = yProviderFactory;
     this.yDoc = new Y.Doc();
+
+    if (yProviderFactory) {
+      yProviderFactory(this.yDoc, this.uri);
+    }
+
     this.commandRegistry = new Map();
     this.regularFiles = new Map();
     this.types = new Array();
@@ -1252,6 +1259,8 @@ class YDesignEditorStore {
 }
 
 class YSketchpadStore {
+  private readonly id: string | undefined;
+  private readonly yProviderFactory: YProviderFactory | undefined;
   private readonly yDoc: Y.Doc;
   private readonly ySketchpad: YSketchpad;
   private readonly kits: Array<YKitStore>;
@@ -1261,14 +1270,16 @@ class YSketchpadStore {
   private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult>;
   private cache?: SketchpadState;
   private cacheHash?: string;
-  private readonly broadcastChannel: BroadcastChannel;
+  // private readonly broadcastChannel: BroadcastChannel;
 
   private hash(state: SketchpadState): string {
     return JSON.stringify(state);
   }
 
   constructor(id?: string, yProviderFactory?: YProviderFactory) {
-    this.broadcastChannel = new BroadcastChannel(`semio-sketchpad-${id}`);
+    this.id = id;
+    this.yProviderFactory = yProviderFactory;
+    // this.broadcastChannel = new BroadcastChannel(`semio-sketchpad-${id}`);
     this.yDoc = new Y.Doc();
     this.kits = new Array();
     this.designEditors = new Array();
@@ -1297,9 +1308,9 @@ class YSketchpadStore {
     //   });
     // }
 
-    if (yProviderFactory) {
-      yProviderFactory(this.yDoc, id);
-    }
+    // if (yProviderFactory) {
+    //   yProviderFactory(this.yDoc, id);
+    // }
 
     this.ySketchpad = this.yDoc.getMap("sketchpad");
     this.yDesignEditors = this.yDoc.getArray("designEditors");
@@ -2283,7 +2294,7 @@ const designEditorCommands = {
 
 type SketchpadScope = { id: string; yProviderFactory?: YProviderFactory };
 const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
-export const SketchpadScopeProvider = (props: { id?: string; yProviderFactory?: YProviderFactory | void; children: React.ReactNode }) => {
+export const SketchpadScopeProvider = (props: { id?: string; yProviderFactory?: YProviderFactory; children: React.ReactNode }) => {
   const id = props.id || uuidv4();
   if (!stores.has(id)) {
     const store = new YSketchpadStore(props.id, props?.yProviderFactory);

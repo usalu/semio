@@ -320,8 +320,10 @@ export const authorIdLikeToAuthorId = (author: AuthorIdLike): AuthorId => {
 // https://github.com/usalu/semio#-file-
 
 export const FileSchema = z.object({
-  path: z.url(),
-  remote: z.url().optional(),
+  // path: z.url(),
+  path: z.string(),
+  // remote: z.url().optional(),
+  remote: z.string().optional(),
   size: z.number().optional(),
   hash: z.string().optional(),
   createdAt: DateProperty(),
