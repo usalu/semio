@@ -35,8 +35,17 @@ import {
   areSamePiece,
   areSameType,
   Attribute,
+  AttributeDiff,
+  AttributeId,
+  AttributeIdLike,
   Author,
+  AuthorDiff,
   AuthorId,
+  AuthorIdLike,
+  Benchmark,
+  BenchmarkDiff,
+  BenchmarkId,
+  BenchmarkIdLike,
   Camera,
   colorPortsForTypes,
   Connection,
@@ -52,6 +61,7 @@ import {
   DiffStatus,
   FileDiff,
   FileId,
+  FileIdLike,
   findDesignInKit,
   findPieceInDesign,
   findReplacableDesignsForDesignPiece,
@@ -62,6 +72,7 @@ import {
   getIncludedDesigns,
   getPieceRepresentationUrls,
   Group,
+  GroupId,
   hasSameDesign,
   hasSameKit,
   hasSamePiece,
@@ -84,15 +95,26 @@ import {
   piecesMetadata,
   Plane,
   Port,
-  Prop,
   PortDiff,
   PortId,
   portIdToString,
+  Prop,
+  PropDiff,
+  PropId,
+  PropIdLike,
+  Quality,
+  QualityDiff,
+  QualityId,
+  QualityIdLike,
   Representation,
   RepresentationDiff,
   RepresentationId,
+  RepresentationIdLike,
   File as SemioFile,
+  Side,
+  SideId,
   Stat,
+  StatId,
   Type,
   TypeDiff,
   TypeId,
@@ -1475,10 +1497,14 @@ class YStatStore {
   };
 }
 
-class YTypeStore {
+class YTypeStore implements TypeStore {
   public readonly uuid: string;
   public readonly parent: YKitStore;
   private yType: YType;
+  private yRepresentations: YRepresentations;
+  private yPorts: YPorts;
+  public representations: Map<string, RepresentationStore>;
+  public ports: Map<string, PortStore>;
   private cache?: Type;
   private cacheHash?: string;
 
@@ -1490,6 +1516,9 @@ class YTypeStore {
     this.uuid = uuidv4();
     this.parent = parent;
     this.yType = yType;
+    this.representations = new Map();
+    this.ports = new Map();
+
     this.name = type.name;
     this.variant = type.variant;
     this.stock = type.stock;
@@ -1498,6 +1527,22 @@ class YTypeStore {
     this.icon = type.icon;
     this.image = type.image;
     this.description = type.description;
+
+    // Initialize representations with proper YStore pattern
+    this.yRepresentations = this.yType.set("representations", new Y.Array<YRepresentation>());
+    if (type.representations) {
+      for (const representation of type.representations) {
+        this.createRepresentation(representation);
+      }
+    }
+
+    // Initialize ports with proper YStore pattern
+    this.yPorts = this.yType.set("ports", new Y.Array<YPort>());
+    if (type.ports) {
+      for (const port of type.ports) {
+        this.createPort(port);
+      }
+    }
 
     this.yType.set("createdAt", new Date().toISOString());
     this.updated();
@@ -1562,6 +1607,56 @@ class YTypeStore {
     this.yType.set("updatedAt", new Date().toISOString());
   }
 
+  createRepresentation(representation: Representation): void {
+    const yRepresentation = new Y.Map<YRepresentationVal>();
+    const yRepresentationStore = new YRepresentationStore(yRepresentation, representation);
+    this.yRepresentations.push([yRepresentation]);
+    this.representations.set(representation.tags.join(","), yRepresentationStore);
+  }
+
+  hasRepresentation(representation: any): boolean {
+    const key = typeof representation === "string" ? representation : representation.tags.join(",");
+    return this.representations.has(key);
+  }
+
+  representation(representation: any): YRepresentationStore {
+    const key = typeof representation === "string" ? representation : representation.tags.join(",");
+    if (!this.hasRepresentation(representation)) throw new Error(`Representation store not found for representation ${key}`);
+    return this.representations.get(key)!;
+  }
+
+  representationByUuid(uuid: string): YRepresentationStore {
+    for (const rep of this.representations.values()) {
+      if (rep.uuid === uuid) return rep;
+    }
+    throw new Error(`Representation store not found for uuid ${uuid}`);
+  }
+
+  createPort(port: Port): void {
+    const yPort = new Y.Map<YPortVal>();
+    const yPortStore = new YPortStore(yPort, port);
+    this.yPorts.push([yPort]);
+    this.ports.set(port.id_, yPortStore);
+  }
+
+  hasPort(port: any): boolean {
+    const key = typeof port === "string" ? port : port.id_;
+    return this.ports.has(key);
+  }
+
+  port(port: any): YPortStore {
+    const key = typeof port === "string" ? port : port.id_;
+    if (!this.hasPort(port)) throw new Error(`Port store not found for port ${key}`);
+    return this.ports.get(key)!;
+  }
+
+  portByUuid(uuid: string): YPortStore {
+    for (const p of this.ports.values()) {
+      if (p.uuid === uuid) return p;
+    }
+    throw new Error(`Port store not found for uuid ${uuid}`);
+  }
+
   id = (): TypeId => {
     return { name: this.name, variant: this.variant } as TypeId;
   };
@@ -1609,6 +1704,8 @@ class YPieceStore {
   public readonly uuid: string;
   public readonly parent: YDesignStore;
   private yPiece: YPiece;
+  private yAttributes: YAttributes;
+  private attributes: YAttributeStore[];
   private cache?: Piece;
   private cacheHash?: string;
 
@@ -1616,6 +1713,8 @@ class YPieceStore {
     this.uuid = uuidv4();
     this.parent = parent;
     this.yPiece = yPiece;
+    this.attributes = new Array();
+
     this.localId = piece.id_;
     if (piece.type) {
       const type = this.parent.parent.type(piece.type);
@@ -1630,6 +1729,7 @@ class YPieceStore {
     this.color = piece.color;
     this.description = piece.description;
 
+    // Handle plane as Y.js object (not a store since it's a simple nested object)
     if (piece.plane) {
       const yPlane = new Y.Map<YVec3>();
       if (piece.plane.origin) {
@@ -1656,6 +1756,7 @@ class YPieceStore {
       this.yPiece.set("plane", yPlane);
     }
 
+    // Handle center as Y.js object (not a store since it's a simple nested object)
     if (piece.center) {
       const yCenter = new Y.Map<number>();
       yCenter.set("x", piece.center.x || 0);
@@ -1664,6 +1765,7 @@ class YPieceStore {
       this.yPiece.set("center", yCenter);
     }
 
+    // Handle mirrorPlane as Y.js object (not a store since it's a simple nested object)
     if (piece.mirrorPlane) {
       const yMirrorPlane = new Y.Map<YVec3>();
       if (piece.mirrorPlane.origin) {
@@ -1690,16 +1792,12 @@ class YPieceStore {
       this.yPiece.set("mirrorPlane", yMirrorPlane);
     }
 
+    // Handle attributes with proper YStore pattern
+    this.yAttributes = this.yPiece.set("attributes", new Y.Array<YAttribute>());
     if (piece.attributes) {
-      const yAttributes = new Y.Array<YAttribute>();
-      piece.attributes.forEach(attr => {
-        const yAttr = new Y.Map<string>();
-        yAttr.set("key", attr.key || "");
-        yAttr.set("value", attr.value || "");
-        yAttr.set("definition", attr.definition || "");
-        yAttributes.push([yAttr]);
-      });
-      this.yPiece.set("attributes", yAttributes);
+      for (const attribute of piece.attributes) {
+        this.createAttribute(attribute);
+      }
     }
   }
 
@@ -1760,6 +1858,26 @@ class YPieceStore {
     this.yPiece.set("description", description || "");
   }
 
+  createAttribute(attribute: Attribute): void {
+    const yAttribute = new Y.Map<string>();
+    const yAttributeStore = new YAttributeStore(yAttribute, attribute);
+    this.yAttributes.push([yAttribute]);
+    this.attributes.push(yAttributeStore);
+  }
+
+  hasAttribute(attribute: any): boolean {
+    return this.attributes.some((a) => a.key === attribute.key || a.key === attribute);
+  }
+
+  attribute(attribute: any): YAttributeStore {
+    if (!this.hasAttribute(attribute)) throw new Error(`Attribute store not found for attribute ${attribute}`);
+    return this.attributes.find((a) => a.key === attribute.key || a.key === attribute)!;
+  }
+
+  attributeByUuid(uuid: string): YAttributeStore {
+    return this.attributes.find((a) => a.uuid === uuid)!;
+  }
+
   public hash(piece: Piece): string {
     return JSON.stringify(piece);
   }
@@ -1806,16 +1924,6 @@ class YPieceStore {
       };
     }
 
-    let attributes: Attribute[] | undefined;
-    const yAttributes = this.yPiece.get("attributes") as Y.Array<YAttribute> | undefined;
-    if (yAttributes) {
-      attributes = yAttributes.toArray().map(yAttr => ({
-        key: yAttr.get("key") || "",
-        value: yAttr.get("value") || "",
-        definition: yAttr.get("definition") || "",
-      }));
-    }
-
     const currentData = {
       id_: this.localId,
       type: this.type,
@@ -1828,7 +1936,7 @@ class YPieceStore {
       plane,
       center,
       mirrorPlane,
-      attributes,
+      attributes: this.attributes.map((attribute) => attribute.snapshot()),
     };
     const currentHash = this.hash(currentData);
 
@@ -1924,18 +2032,14 @@ class YPieceStore {
     }
 
     if (diff.attributes !== undefined) {
+      // Clear existing attributes
+      this.attributes = [];
+      this.yAttributes.delete(0, this.yAttributes.length);
+
       if (diff.attributes) {
-        const yAttributes = new Y.Array<YAttribute>();
-        diff.attributes.forEach(attr => {
-          const yAttr = new Y.Map<string>();
-          yAttr.set("key", attr.key || "");
-          yAttr.set("value", attr.value || "");
-          yAttr.set("definition", attr.definition || "");
-          yAttributes.push([yAttr]);
-        });
-        this.yPiece.set("attributes", yAttributes);
-      } else {
-        this.yPiece.delete("attributes");
+        for (const attribute of diff.attributes) {
+          this.createAttribute(attribute);
+        }
       }
     }
   };
@@ -2031,12 +2135,87 @@ class YConnectionStore implements ConnectionStore {
   };
 }
 
+class YAttributeStore implements Store<Attribute, any, any> {
+  public readonly uuid: string;
+  private yAttribute: YAttribute;
+  private cache?: Attribute;
+  private cacheHash?: string;
+
+  private hash(attribute: Attribute): string {
+    return JSON.stringify(attribute);
+  }
+
+  constructor(yAttribute: YAttribute, attribute: Attribute) {
+    this.uuid = uuidv4();
+    this.yAttribute = yAttribute;
+    this.key = attribute.key;
+    this.value = attribute.value;
+    this.definition = attribute.definition;
+  }
+
+  get key(): string {
+    return this.yAttribute.get("key") as string;
+  }
+  set key(key: string) {
+    this.yAttribute.set("key", key);
+  }
+
+  get value(): string | undefined {
+    return this.yAttribute.get("value") as string | undefined;
+  }
+  set value(value: string | undefined) {
+    this.yAttribute.set("value", value || "");
+  }
+
+  get definition(): string | undefined {
+    return this.yAttribute.get("definition") as string | undefined;
+  }
+  set definition(definition: string | undefined) {
+    this.yAttribute.set("definition", definition || "");
+  }
+
+  snapshot = (): Attribute => {
+    const currentData = {
+      key: this.key,
+      value: this.value,
+      definition: this.definition,
+    };
+    const currentHash = this.hash(currentData);
+
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
+    }
+
+    return this.cache;
+  };
+
+  id = () => ({ key: this.key });
+  change = (diff: any) => {
+    if (diff.key !== undefined) this.key = diff.key;
+    if (diff.value !== undefined) this.value = diff.value;
+    if (diff.definition !== undefined) this.definition = diff.definition;
+  };
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yAttribute, subscribe, false);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yAttribute, subscribe, true);
+  };
+}
+
 class YDesignStore {
   public readonly uuid: string;
   public readonly parent: YKitStore;
   private yDesign: YDesign;
   private yPieces: YPieces;
   private pieces: YPieceStore[];
+  private yConnections: YConnections;
+  private connections: YConnectionStore[];
+  private yAttributes: YAttributes;
+  private attributes: YAttributeStore[];
   private cache?: Design;
   private cacheHash?: string;
 
@@ -2045,6 +2224,8 @@ class YDesignStore {
     this.parent = parent;
     this.yDesign = yDesign;
     this.pieces = new Array();
+    this.connections = new Array();
+    this.attributes = new Array();
 
     this.yDesign.set("name", design.name);
     this.yDesign.set("variant", design.variant || "");
@@ -2056,21 +2237,17 @@ class YDesignStore {
     this.yDesign.set("image", design.image || "");
     this.yDesign.set("description", design.description || "");
 
-    // Initialize complex types as Y.js objects
+    // Initialize connections with proper YStore pattern
+    this.yConnections = this.yDesign.set("connections", new Y.Array<YConnection>());
     if (design.connections) {
-      const yConnections = new Y.Array<YConnection>();
-      design.connections.forEach(conn => {
-        const yConn = new Y.Map();
-        yConn.set("id_", conn.id_ || "");
-        // Add other connection properties as needed
-        yConnections.push([yConn]);
-      });
-      this.yDesign.set("connections", yConnections);
+      for (const connection of design.connections) {
+        this.createConnection(connection);
+      }
     }
 
     if (design.stats) {
       const yStats = new Y.Array<YStat>();
-      design.stats.forEach(stat => {
+      design.stats.forEach((stat) => {
         const yStat = new Y.Map();
         yStat.set("key", stat.key || "");
         yStat.set("value", stat.value);
@@ -2082,7 +2259,7 @@ class YDesignStore {
 
     if (design.props) {
       const yProps = new Y.Array<YProp>();
-      design.props.forEach(prop => {
+      design.props.forEach((prop) => {
         const yProp = new Y.Map();
         yProp.set("key", prop.key || "");
         yProp.set("value", prop.value);
@@ -2094,7 +2271,7 @@ class YDesignStore {
 
     if (design.layers) {
       const yLayers = new Y.Array<YLayer>();
-      design.layers.forEach(layer => {
+      design.layers.forEach((layer) => {
         const yLayer = new Y.Map();
         yLayer.set("path", layer.path || "");
         yLayer.set("isVisible", layer.isVisible);
@@ -2109,10 +2286,10 @@ class YDesignStore {
 
     if (design.groups) {
       const yGroups = new Y.Array<YGroup>();
-      design.groups.forEach(group => {
+      design.groups.forEach((group) => {
         const yGroup = new Y.Map();
         const pieceIds = new Y.Array<string>();
-        group.pieces.forEach(piece => pieceIds.push([piece.id_]));
+        group.pieces.forEach((piece) => pieceIds.push([piece.id_]));
         yGroup.set("pieces", pieceIds);
         yGroups.push([yGroup]);
       });
@@ -2140,7 +2317,7 @@ class YDesignStore {
 
     if (design.authors) {
       const yAuthors = new Y.Array<YAuthor>();
-      design.authors.forEach(author => {
+      design.authors.forEach((author) => {
         const yAuthor = new Y.Map<string>();
         yAuthor.set("email", author.email || "");
         yAuthors.push([yAuthor]);
@@ -2150,20 +2327,16 @@ class YDesignStore {
 
     if (design.concepts) {
       const yConcepts = new Y.Array<string>();
-      design.concepts.forEach(concept => yConcepts.push([concept]));
+      design.concepts.forEach((concept) => yConcepts.push([concept]));
       this.yDesign.set("concepts", yConcepts);
     }
 
+    // Initialize attributes with proper YStore pattern
+    this.yAttributes = this.yDesign.set("attributes", new Y.Array<YAttribute>());
     if (design.attributes) {
-      const yAttributes = new Y.Array<YAttribute>();
-      design.attributes.forEach(attr => {
-        const yAttr = new Y.Map<string>();
-        yAttr.set("key", attr.key || "");
-        yAttr.set("value", attr.value || "");
-        yAttr.set("definition", attr.definition || "");
-        yAttributes.push([yAttr]);
-      });
-      this.yDesign.set("attributes", yAttributes);
+      for (const attribute of design.attributes) {
+        this.createAttribute(attribute);
+      }
     }
 
     this.yPieces = this.yDesign.set("pieces", new Y.Array<YPiece>());
@@ -2260,6 +2433,20 @@ class YDesignStore {
     this.pieces.push(yPieceStore);
   }
 
+  createConnection(connection: Connection): void {
+    const yConnection = new Y.Map<YConnectionVal>();
+    const yConnectionStore = new YConnectionStore(yConnection, connection);
+    this.yConnections.push([yConnection]);
+    this.connections.push(yConnectionStore);
+  }
+
+  createAttribute(attribute: Attribute): void {
+    const yAttribute = new Y.Map<string>();
+    const yAttributeStore = new YAttributeStore(yAttribute, attribute);
+    this.yAttributes.push([yAttribute]);
+    this.attributes.push(yAttributeStore);
+  }
+
   piece(piece: PieceIdLike): PieceStore {
     if (!this.hasPiece(piece)) throw new Error(`Piece store not found for piece ${piece}`);
     return this.pieces.find((p) => areSamePiece(p.id(), piece))!;
@@ -2269,25 +2456,41 @@ class YDesignStore {
     return this.pieces.find((p) => p.uuid === uuid)!;
   }
 
+  hasConnection(connection: any): boolean {
+    return this.connections.some((c) => c.id.id_ === connection.id_ || c.id.id_ === connection);
+  }
+
+  connection(connection: any): YConnectionStore {
+    if (!this.hasConnection(connection)) throw new Error(`Connection store not found for connection ${connection}`);
+    return this.connections.find((c) => c.id.id_ === connection.id_ || c.id.id_ === connection)!;
+  }
+
+  connectionByUuid(uuid: string): YConnectionStore {
+    return this.connections.find((c) => c.uuid === uuid)!;
+  }
+
+  hasAttribute(attribute: any): boolean {
+    return this.attributes.some((a) => a.key === attribute.key || a.key === attribute);
+  }
+
+  attribute(attribute: any): YAttributeStore {
+    if (!this.hasAttribute(attribute)) throw new Error(`Attribute store not found for attribute ${attribute}`);
+    return this.attributes.find((a) => a.key === attribute.key || a.key === attribute)!;
+  }
+
+  attributeByUuid(uuid: string): YAttributeStore {
+    return this.attributes.find((a) => a.uuid === uuid)!;
+  }
+
   hash(design: Design): string {
     return JSON.stringify(design);
   }
 
   snapshot = (): Design => {
-    // Extract complex types from Y.js objects
-    let connections: Connection[] | undefined;
-    const yConnections = this.yDesign.get("connections") as Y.Array<YConnection> | undefined;
-    if (yConnections) {
-      connections = yConnections.toArray().map(yConn => ({
-        id_: yConn.get("id_") || "",
-        // Add other connection properties as needed based on ConnectionSchema
-      }));
-    }
-
     let stats: Stat[] | undefined;
     const yStats = this.yDesign.get("stats") as Y.Array<YStat> | undefined;
     if (yStats) {
-      stats = yStats.toArray().map(yStat => ({
+      stats = yStats.toArray().map((yStat) => ({
         key: yStat.get("key") || "",
         value: yStat.get("value"),
         definition: yStat.get("definition") || "",
@@ -2297,7 +2500,7 @@ class YDesignStore {
     let props: Prop[] | undefined;
     const yProps = this.yDesign.get("props") as Y.Array<YProp> | undefined;
     if (yProps) {
-      props = yProps.toArray().map(yProp => ({
+      props = yProps.toArray().map((yProp) => ({
         key: yProp.get("key") || "",
         value: yProp.get("value"),
         definition: yProp.get("definition") || "",
@@ -2307,7 +2510,7 @@ class YDesignStore {
     let layers: Layer[] | undefined;
     const yLayers = this.yDesign.get("layers") as Y.Array<YLayer> | undefined;
     if (yLayers) {
-      layers = yLayers.toArray().map(yLayer => ({
+      layers = yLayers.toArray().map((yLayer) => ({
         path: yLayer.get("path") || "",
         isVisible: yLayer.get("isVisible") as boolean,
       }));
@@ -2322,10 +2525,10 @@ class YDesignStore {
     let groups: Group[] | undefined;
     const yGroups = this.yDesign.get("groups") as Y.Array<YGroup> | undefined;
     if (yGroups) {
-      groups = yGroups.toArray().map(yGroup => {
+      groups = yGroups.toArray().map((yGroup) => {
         const pieceIds = yGroup.get("pieces") as Y.Array<string>;
         return {
-          pieces: pieceIds.toArray().map(id => ({ id_: id })),
+          pieces: pieceIds.toArray().map((id) => ({ id_: id })),
         };
       });
     }
@@ -2344,7 +2547,7 @@ class YDesignStore {
     let authors: AuthorId[] | undefined;
     const yAuthors = this.yDesign.get("authors") as Y.Array<YAuthor> | undefined;
     if (yAuthors) {
-      authors = yAuthors.toArray().map(yAuthor => ({
+      authors = yAuthors.toArray().map((yAuthor) => ({
         email: yAuthor.get("email") || "",
       }));
     }
@@ -2353,16 +2556,6 @@ class YDesignStore {
     const yConcepts = this.yDesign.get("concepts") as Y.Array<string> | undefined;
     if (yConcepts) {
       concepts = yConcepts.toArray();
-    }
-
-    let attributes: Attribute[] | undefined;
-    const yAttributes = this.yDesign.get("attributes") as Y.Array<YAttribute> | undefined;
-    if (yAttributes) {
-      attributes = yAttributes.toArray().map(yAttr => ({
-        key: yAttr.get("key") || "",
-        value: yAttr.get("value") || "",
-        definition: yAttr.get("definition") || "",
-      }));
     }
 
     const currentData = {
@@ -2376,7 +2569,7 @@ class YDesignStore {
       image: this.image,
       description: this.description,
       pieces: this.pieces.map((piece) => piece.snapshot()),
-      connections,
+      connections: this.connections.map((connection) => connection.snapshot()),
       stats,
       props,
       layers,
@@ -2385,7 +2578,7 @@ class YDesignStore {
       location,
       authors,
       concepts,
-      attributes,
+      attributes: this.attributes.map((attribute) => attribute.snapshot()),
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
     };
@@ -2410,26 +2603,23 @@ class YDesignStore {
     if (diff.image !== undefined) this.image = diff.image;
     if (diff.description !== undefined) this.description = diff.description;
 
-    // Handle complex type changes by updating Y.js objects directly
+    // Handle complex type changes using proper YStore pattern
     if (diff.connections !== undefined) {
+      // Clear existing connections
+      this.connections = [];
+      this.yConnections.delete(0, this.yConnections.length);
+
       if (diff.connections) {
-        const yConnections = new Y.Array<YConnection>();
-        diff.connections.forEach(conn => {
-          const yConn = new Y.Map();
-          yConn.set("id_", conn.id_ || "");
-          // Add other connection properties as needed
-          yConnections.push([yConn]);
-        });
-        this.yDesign.set("connections", yConnections);
-      } else {
-        this.yDesign.delete("connections");
+        for (const connection of diff.connections) {
+          this.createConnection(connection);
+        }
       }
     }
 
     if (diff.stats !== undefined) {
       if (diff.stats) {
         const yStats = new Y.Array<YStat>();
-        diff.stats.forEach(stat => {
+        diff.stats.forEach((stat) => {
           const yStat = new Y.Map();
           yStat.set("key", stat.key || "");
           yStat.set("value", stat.value);
@@ -2445,7 +2635,7 @@ class YDesignStore {
     if (diff.props !== undefined) {
       if (diff.props) {
         const yProps = new Y.Array<YProp>();
-        diff.props.forEach(prop => {
+        diff.props.forEach((prop) => {
           const yProp = new Y.Map();
           yProp.set("key", prop.key || "");
           yProp.set("value", prop.value);
@@ -2461,7 +2651,7 @@ class YDesignStore {
     if (diff.layers !== undefined) {
       if (diff.layers) {
         const yLayers = new Y.Array<YLayer>();
-        diff.layers.forEach(layer => {
+        diff.layers.forEach((layer) => {
           const yLayer = new Y.Map();
           yLayer.set("path", layer.path || "");
           yLayer.set("isVisible", layer.isVisible);
@@ -2484,10 +2674,10 @@ class YDesignStore {
     if (diff.groups !== undefined) {
       if (diff.groups) {
         const yGroups = new Y.Array<YGroup>();
-        diff.groups.forEach(group => {
+        diff.groups.forEach((group) => {
           const yGroup = new Y.Map();
           const pieceIds = new Y.Array<string>();
-          group.pieces.forEach(piece => pieceIds.push([piece.id_]));
+          group.pieces.forEach((piece) => pieceIds.push([piece.id_]));
           yGroup.set("pieces", pieceIds);
           yGroups.push([yGroup]);
         });
@@ -2523,7 +2713,7 @@ class YDesignStore {
     if (diff.authors !== undefined) {
       if (diff.authors) {
         const yAuthors = new Y.Array<YAuthor>();
-        diff.authors.forEach(author => {
+        diff.authors.forEach((author) => {
           const yAuthor = new Y.Map<string>();
           yAuthor.set("email", author.email || "");
           yAuthors.push([yAuthor]);
@@ -2537,7 +2727,7 @@ class YDesignStore {
     if (diff.concepts !== undefined) {
       if (diff.concepts) {
         const yConcepts = new Y.Array<string>();
-        diff.concepts.forEach(concept => yConcepts.push([concept]));
+        diff.concepts.forEach((concept) => yConcepts.push([concept]));
         this.yDesign.set("concepts", yConcepts);
       } else {
         this.yDesign.delete("concepts");
@@ -2545,18 +2735,14 @@ class YDesignStore {
     }
 
     if (diff.attributes !== undefined) {
+      // Clear existing attributes
+      this.attributes = [];
+      this.yAttributes.delete(0, this.yAttributes.length);
+
       if (diff.attributes) {
-        const yAttributes = new Y.Array<YAttribute>();
-        diff.attributes.forEach(attr => {
-          const yAttr = new Y.Map<string>();
-          yAttr.set("key", attr.key || "");
-          yAttr.set("value", attr.value || "");
-          yAttr.set("definition", attr.definition || "");
-          yAttributes.push([yAttr]);
-        });
-        this.yDesign.set("attributes", yAttributes);
-      } else {
-        this.yDesign.delete("attributes");
+        for (const attribute of diff.attributes) {
+          this.createAttribute(attribute);
+        }
       }
     }
 
@@ -2591,6 +2777,16 @@ class YKitStore {
   private readonly types: YTypeStore[];
   private readonly yDesigns: YDesigns;
   private readonly designs: YDesignStore[];
+  private readonly yFiles: YFiles;
+  private readonly files: YFileStore[];
+  private readonly yQualities: YQualities;
+  private readonly qualities: YQualityStore[];
+  private readonly yBenchmarks: YBenchmarks;
+  private readonly benchmarks: YBenchmarkStore[];
+  private readonly yAuthors: YAuthors;
+  private readonly authors: YAuthorStore[];
+  private readonly yAttributes: YAttributes;
+  private readonly attributes: YAttributeStore[];
   private readonly persistence: IndexeddbPersistence;
   private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult>;
   private readonly regularFiles: Map<Url, string>;
@@ -2611,10 +2807,20 @@ class YKitStore {
     this.regularFiles = new Map();
     this.types = new Array();
     this.designs = new Array();
+    this.files = new Array();
+    this.qualities = new Array();
+    this.benchmarks = new Array();
+    this.authors = new Array();
+    this.attributes = new Array();
 
     this.yKit = this.yDoc.getMap() as YKit;
     this.yTypes = this.yDoc.getArray("types");
     this.yDesigns = this.yDoc.getArray("designs");
+    this.yFiles = this.yDoc.getArray("files");
+    this.yQualities = this.yDoc.getArray("qualities");
+    this.yBenchmarks = this.yDoc.getArray("benchmarks");
+    this.yAuthors = this.yDoc.getArray("authors");
+    this.yAttributes = this.yDoc.getArray("attributes");
 
     this.yDoc.transact(() => {
       this.name = kit.name;
@@ -2625,6 +2831,10 @@ class YKitStore {
 
       if (kit.types) for (const type of kit.types) this.createType(type);
       if (kit.designs) for (const design of kit.designs) this.createDesign(design);
+      if (kit.files) for (const file of kit.files) this.createFile(file);
+      if (kit.qualities) for (const quality of kit.qualities) this.createQuality(quality);
+      if (kit.authors) for (const author of kit.authors) this.createAuthor(author);
+      if (kit.attributes) for (const attribute of kit.attributes) this.createAttribute(attribute);
 
       this.yKit.set("createdAt", new Date().toISOString());
       this.updated();
@@ -2730,6 +2940,111 @@ class YKitStore {
 
   designByUuid(uuid: string): YDesignStore {
     return this.designs.find((d) => d.uuid === uuid)!;
+  }
+
+  hasFile(file: FileIdLike): boolean {
+    return this.files.some((f) => f.id().path === (typeof file === "string" ? file : file.path));
+  }
+
+  createFile(file: SemioFile): void {
+    if (this.hasFile(file)) throw new Error(`File (${file.path}) already exists.`);
+    const yFile = new Y.Map<YFile>();
+    const yFileStore = new YFileStore(yFile, file);
+    this.yFiles.push([yFile]);
+    this.files.push(yFileStore);
+  }
+
+  file(file: FileIdLike): YFileStore {
+    if (!this.hasFile(file)) throw new Error(`File store not found for file ${file}`);
+    return this.files.find((f) => f.id().path === (typeof file === "string" ? file : file.path))!;
+  }
+
+  fileByUuid(uuid: string): YFileStore {
+    return this.files.find((f) => f.uuid === uuid)!;
+  }
+
+  hasQuality(quality: QualityIdLike): boolean {
+    return this.qualities.some((q) => q.id().key === (typeof quality === "string" ? quality : quality.key));
+  }
+
+  createQuality(quality: Quality): void {
+    if (this.hasQuality(quality)) throw new Error(`Quality (${quality.key}) already exists.`);
+    const yQuality = new Y.Map<YQuality>();
+    const yQualityStore = new YQualityStore(yQuality, quality);
+    this.yQualities.push([yQuality]);
+    this.qualities.push(yQualityStore);
+  }
+
+  quality(quality: QualityIdLike): YQualityStore {
+    if (!this.hasQuality(quality)) throw new Error(`Quality store not found for quality ${quality}`);
+    return this.qualities.find((q) => q.id().key === (typeof quality === "string" ? quality : quality.key))!;
+  }
+
+  qualityByUuid(uuid: string): YQualityStore {
+    return this.qualities.find((q) => q.uuid === uuid)!;
+  }
+
+  hasBenchmark(benchmark: BenchmarkIdLike): boolean {
+    return this.benchmarks.some((b) => b.id().name === (typeof benchmark === "string" ? benchmark : benchmark.name));
+  }
+
+  createBenchmark(benchmark: Benchmark): void {
+    if (this.hasBenchmark(benchmark)) throw new Error(`Benchmark (${benchmark.name}) already exists.`);
+    const yBenchmark = new Y.Map<YBenchmark>();
+    const yBenchmarkStore = new YBenchmarkStore(yBenchmark, benchmark);
+    this.yBenchmarks.push([yBenchmark]);
+    this.benchmarks.push(yBenchmarkStore);
+  }
+
+  benchmark(benchmark: BenchmarkIdLike): YBenchmarkStore {
+    if (!this.hasBenchmark(benchmark)) throw new Error(`Benchmark store not found for benchmark ${benchmark}`);
+    return this.benchmarks.find((b) => b.id().name === (typeof benchmark === "string" ? benchmark : benchmark.name))!;
+  }
+
+  benchmarkByUuid(uuid: string): YBenchmarkStore {
+    return this.benchmarks.find((b) => b.uuid === uuid)!;
+  }
+
+  hasAuthor(author: AuthorIdLike): boolean {
+    return this.authors.some((a) => a.id().email === (typeof author === "string" ? author : author.email));
+  }
+
+  createAuthor(author: Author): void {
+    if (this.hasAuthor(author)) throw new Error(`Author (${author.email}) already exists.`);
+    const yAuthor = new Y.Map<YAuthor>();
+    const yAuthorStore = new YAuthorStore(yAuthor, author);
+    this.yAuthors.push([yAuthor]);
+    this.authors.push(yAuthorStore);
+  }
+
+  author(author: AuthorIdLike): YAuthorStore {
+    if (!this.hasAuthor(author)) throw new Error(`Author store not found for author ${author}`);
+    return this.authors.find((a) => a.id().email === (typeof author === "string" ? author : author.email))!;
+  }
+
+  authorByUuid(uuid: string): YAuthorStore {
+    return this.authors.find((a) => a.uuid === uuid)!;
+  }
+
+  hasAttribute(attribute: AttributeIdLike): boolean {
+    return this.attributes.some((a) => a.id().key === (typeof attribute === "string" ? attribute : attribute.key));
+  }
+
+  createAttribute(attribute: Attribute): void {
+    if (this.hasAttribute(attribute)) throw new Error(`Attribute (${attribute.key}) already exists.`);
+    const yAttribute = new Y.Map<YAttribute>();
+    const yAttributeStore = new YAttributeStore(yAttribute, attribute);
+    this.yAttributes.push([yAttribute]);
+    this.attributes.push(yAttributeStore);
+  }
+
+  attribute(attribute: AttributeIdLike): YAttributeStore {
+    if (!this.hasAttribute(attribute)) throw new Error(`Attribute store not found for attribute ${attribute}`);
+    return this.attributes.find((a) => a.id().key === (typeof attribute === "string" ? attribute : attribute.key))!;
+  }
+
+  attributeByUuid(uuid: string): YAttributeStore {
+    return this.attributes.find((a) => a.uuid === uuid)!;
   }
 
   hash(kit: Kit): string {
