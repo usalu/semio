@@ -803,6 +803,7 @@ const Diagram: FC = () => {
     addConnections,
     updatePieces,
     updateConnections,
+    addPiece,
   } = useDesignEditorCommands();
 
   const { updateDesign } = useKitCommands();
@@ -843,6 +844,34 @@ const Diagram: FC = () => {
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [dragState, abortTransaction]);
+
+  useEffect(() => {
+    const handleDragEnd = (event: CustomEvent) => {
+      const { clientX, clientY, activeDraggedTypeId, activeDraggedDesignId } = event.detail;
+      const { x, y } = reactFlowInstance.screenToFlowPosition({
+        x: clientX,
+        y: clientY,
+      });
+      if (activeDraggedTypeId) {
+        const piece = {
+          id_: `piece-${Date.now()}`,
+          type: activeDraggedTypeId,
+          center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
+        };
+        addPiece(piece).catch(() => {});
+      } else if (activeDraggedDesignId) {
+        const piece = {
+          id_: `design-${Date.now()}`,
+          design: activeDraggedDesignId,
+          center: { x: x / ICON_WIDTH - 0.5, y: -y / ICON_WIDTH + 0.5 },
+        };
+        addPiece(piece).catch(() => {});
+      }
+    };
+
+    document.addEventListener("semio-drag-end", handleDragEnd as EventListener);
+    return () => document.removeEventListener("semio-drag-end", handleDragEnd as EventListener);
+  }, [reactFlowInstance, addPiece]);
 
   const onNodeClick = (e: React.MouseEvent, node: DiagramNode) => {
     e.stopPropagation();

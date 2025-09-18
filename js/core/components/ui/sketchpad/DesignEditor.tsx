@@ -125,25 +125,19 @@ const DesignEditor: FC<DesignEditorProps> = () => {
     const { active, over, delta } = event;
 
     if (over && over.id === "diagram-drop-zone") {
-      const ICON_WIDTH = 64;
-      const centerX = Math.round(delta.x / ICON_WIDTH);
-      const centerY = Math.round(-delta.y / ICON_WIDTH);
-
-      if (activeDraggedTypeId) {
-        const piece = {
-          id_: `piece-${Date.now()}`,
-          type: activeDraggedTypeId,
-          center: { x: centerX, y: centerY },
-        };
-        addPiece(piece).catch(() => {});
-      } else if (activeDraggedDesignId) {
-        const piece = {
-          id_: `design-${Date.now()}`,
-          design: activeDraggedDesignId,
-          center: { x: centerX, y: centerY },
-        };
-        addPiece(piece).catch(() => {});
+      if (!(event.activatorEvent instanceof PointerEvent)) {
+        return;
       }
+      const coordinateEvent = new CustomEvent("semio-drag-end", {
+        detail: {
+          clientX: event.activatorEvent.clientX + delta.x,
+          clientY: event.activatorEvent.clientY + delta.y,
+          activeDraggedTypeId,
+          activeDraggedDesignId,
+        },
+      });
+
+      document.dispatchEvent(coordinateEvent);
     }
 
     setActiveDraggedTypeId(null);
