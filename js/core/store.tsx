@@ -356,53 +356,61 @@ type YAttributes = Y.Array<YAttribute>;
 type YStringArray = Y.Array<string>;
 type YLeafMapString = Y.Map<string>;
 type YLeafMapNumber = Y.Map<number>;
+
+type YCoord = Y.Map<number>;
+type YVec = Y.Map<number>;
+type YPoint = Y.Map<number>;
+type YVector = Y.Map<number>;
 type YVec3 = YLeafMapNumber;
 type YPlane = Y.Map<YVec3>;
+type YCamera = Y.Map<YPoint | YVector | number>;
+type YLocation = Y.Map<YPoint | YVector>;
 
-type YFile = Y.Map<string>;
+type YFile = Y.Map<string | YAttributes>;
 type YFiles = Y.Array<YFile>;
 
-type YBenchmark = Y.Map<string>;
+type YBenchmark = Y.Map<string | number | YAttributes>;
 type YBenchmarks = Y.Array<YBenchmark>;
 
-type YQuality = Y.Map<string>;
+type YQuality = Y.Map<string | number | YAttributes>;
 type YQualities = Y.Array<YQuality>;
 
-type YProp = Y.Map<string>;
+type YProp = Y.Map<string | number | boolean | YAttributes>;
 type YProps = Y.Array<YProp>;
 
 type YRepresentationVal = string | YStringArray | YAttributes;
 type YRepresentation = Y.Map<YRepresentationVal>;
 type YRepresentations = Y.Array<YRepresentation>;
 
-type YPortVal = string | number | boolean | YLeafMapNumber | YAttributes | YStringArray;
+type YPortVal = string | number | boolean | YLeafMapNumber | YAttributes | YStringArray | YPoint | YVector | YProps;
 type YPort = Y.Map<YPortVal>;
 type YPorts = Y.Array<YPort>;
 
-type YTypeVal = string | number | boolean | YAuthors | YAttributes | YRepresentations | YPorts;
+type YTypeVal = string | number | boolean | YAuthors | YAttributes | YRepresentations | YPorts | YProps | YLocation;
 type YType = Y.Map<YTypeVal>;
 type YTypes = Y.Array<YType>;
 
-type YLayer = Y.Map<string>;
+type YLayer = Y.Map<string | boolean | YAttributes>;
 type YLayers = Y.Array<YLayer>;
 
-type YPieceVal = string | YLeafMapString | YLeafMapNumber | YPlane | YAttributes;
+type YPieceVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YPlane | YAttributes | YCoord;
 type YPiece = Y.Map<YPieceVal>;
 type YPieces = Y.Array<YPiece>;
 
-type YGroup = Y.Map<string>;
+type YGroup = Y.Map<string | YStringArray | YAttributes>;
 type YGroups = Y.Array<YGroup>;
 
 type YSide = Y.Map<YLeafMapString>;
+type YSides = Y.Array<YSide>;
 
-type YConnectionVal = string | number | YAttributes | YSide;
+type YConnectionVal = string | number | YAttributes | YSide | YSides;
 type YConnection = Y.Map<YConnectionVal>;
 type YConnections = Y.Array<YConnection>;
 
-type YStat = Y.Map<string>;
+type YStat = Y.Map<string | number | boolean>;
 type YStats = Y.Array<YStat>;
 
-type YDesignVal = string | YAuthors | YAttributes | YPieces | YConnections;
+type YDesignVal = string | YAuthors | YAttributes | YPieces | YConnections | YLayers | YGroups | YStats;
 type YDesign = Y.Map<YDesignVal>;
 type YDesigns = Y.Array<YDesign>;
 
@@ -411,7 +419,7 @@ type YDesignEditor = Y.Map<YDesignEditorVal>;
 type YDesignEditors = Y.Array<YDesignEditor>;
 
 type YIdMap = Y.Map<string>;
-type YKitVal = string | YUuidArray | YIdMap | YAttributes;
+type YKitVal = string | YUuidArray | YIdMap | YAttributes | YAuthors | YFiles | YBenchmarks | YQualities | YProps | YTypes | YDesigns;
 type YKit = Y.Map<YKitVal>;
 type YKits = Y.Array<YKit>;
 
@@ -441,15 +449,260 @@ function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscribe, deep
   }
 }
 
-// class YFileStore implements FileStore {
-// }
+class YFileStore implements FileStore {
+  public readonly uuid: string;
+  private yFile: YFile;
+  private cache?: SemioFile;
+  private cacheHash?: string;
 
-// class YRepresentationStore implements RepresentationStore {
-// }
+  private hash(file: SemioFile): string {
+    return JSON.stringify(file);
+  }
 
-// class YPortStore implements PortStore {
+  constructor(yFile: YFile, file: SemioFile) {
+    this.uuid = uuidv4();
+    this.yFile = yFile;
+    this.name = file.name;
+    this.type = file.type;
+    this.description = file.description;
+  }
 
-// }
+  get name(): string {
+    return this.yFile.get("name") as string;
+  }
+  set name(name: string) {
+    this.yFile.set("name", name);
+  }
+
+  get type(): string {
+    return this.yFile.get("type") as string;
+  }
+  set type(type: string) {
+    this.yFile.set("type", type);
+  }
+
+  get description(): string | undefined {
+    return this.yFile.get("description") as string | undefined;
+  }
+  set description(description: string | undefined) {
+    this.yFile.set("description", description || "");
+  }
+
+  get snapshot(): SemioFile {
+    const currentHash = this.hash({
+      name: this.name,
+      type: this.type,
+      description: this.description,
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const file: SemioFile = {
+      name: this.name,
+      type: this.type,
+      description: this.description,
+    };
+
+    this.cache = file;
+    this.cacheHash = currentHash;
+    return file;
+  }
+
+  get id(): FileId {
+    return { name: this.name, type: this.type };
+  }
+
+  apply(diff: FileDiff): void {
+    if (diff.name !== undefined) this.name = diff.name;
+    if (diff.type !== undefined) this.type = diff.type;
+    if (diff.description !== undefined) this.description = diff.description;
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yFile, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yFile, subscribe, true);
+  };
+}
+
+class YRepresentationStore implements RepresentationStore {
+  public readonly uuid: string;
+  private yRepresentation: YRepresentation;
+  private cache?: Representation;
+  private cacheHash?: string;
+
+  private hash(representation: Representation): string {
+    return JSON.stringify(representation);
+  }
+
+  constructor(yRepresentation: YRepresentation, representation: Representation) {
+    this.uuid = uuidv4();
+    this.yRepresentation = yRepresentation;
+    this.url = representation.url;
+    this.description = representation.description;
+  }
+
+  get url(): string {
+    return this.yRepresentation.get("url") as string;
+  }
+  set url(url: string) {
+    this.yRepresentation.set("url", url);
+  }
+
+  get description(): string | undefined {
+    return this.yRepresentation.get("description") as string | undefined;
+  }
+  set description(description: string | undefined) {
+    this.yRepresentation.set("description", description || "");
+  }
+
+  get snapshot(): Representation {
+    const currentHash = this.hash({
+      url: this.url,
+      description: this.description,
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const representation: Representation = {
+      url: this.url,
+      description: this.description,
+    };
+
+    this.cache = representation;
+    this.cacheHash = currentHash;
+    return representation;
+  }
+
+  get id(): RepresentationId {
+    return { tags: this.snapshot.tags };
+  }
+
+  apply(diff: RepresentationDiff): void {
+    if (diff.url !== undefined) this.url = diff.url;
+    if (diff.description !== undefined) this.description = diff.description;
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yRepresentation, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yRepresentation, subscribe, true);
+  };
+}
+
+class YPortStore implements PortStore {
+  public readonly uuid: string;
+  private yPort: YPort;
+  private cache?: Port;
+  private cacheHash?: string;
+
+  private hash(port: Port): string {
+    return JSON.stringify(port);
+  }
+
+  constructor(yPort: YPort, port: Port) {
+    this.uuid = uuidv4();
+    this.yPort = yPort;
+    this.id_ = port.id_;
+    this.description = port.description;
+    this.family = port.family;
+    this.mandatory = port.mandatory;
+    this.t = port.t;
+  }
+
+  get id_(): string | undefined {
+    return this.yPort.get("id_") as string | undefined;
+  }
+  set id_(id_: string | undefined) {
+    this.yPort.set("id_", id_ || "");
+  }
+
+  get description(): string | undefined {
+    return this.yPort.get("description") as string | undefined;
+  }
+  set description(description: string | undefined) {
+    this.yPort.set("description", description || "");
+  }
+
+  get family(): string | undefined {
+    return this.yPort.get("family") as string | undefined;
+  }
+  set family(family: string | undefined) {
+    this.yPort.set("family", family || "");
+  }
+
+  get mandatory(): boolean | undefined {
+    return this.yPort.get("mandatory") as boolean | undefined;
+  }
+  set mandatory(mandatory: boolean | undefined) {
+    this.yPort.set("mandatory", mandatory);
+  }
+
+  get t(): number {
+    return this.yPort.get("t") as number;
+  }
+  set t(t: number) {
+    this.yPort.set("t", t);
+  }
+
+  get snapshot(): Port {
+    const currentHash = this.hash({
+      id_: this.id_,
+      description: this.description,
+      family: this.family,
+      mandatory: this.mandatory,
+      t: this.t,
+      point: { x: 0, y: 0, z: 0 }, // TODO: implement point handling
+      direction: { x: 0, y: 0, z: 1 }, // TODO: implement direction handling
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const port: Port = {
+      id_: this.id_,
+      description: this.description,
+      family: this.family,
+      mandatory: this.mandatory,
+      t: this.t,
+      point: { x: 0, y: 0, z: 0 }, // TODO: implement point handling
+      direction: { x: 0, y: 0, z: 1 }, // TODO: implement direction handling
+    };
+
+    this.cache = port;
+    this.cacheHash = currentHash;
+    return port;
+  }
+
+  get id(): PortId {
+    return { t: this.t };
+  }
+
+  apply(diff: PortDiff): void {
+    if (diff.id_ !== undefined) this.id_ = diff.id_;
+    if (diff.description !== undefined) this.description = diff.description;
+    if (diff.family !== undefined) this.family = diff.family;
+    if (diff.mandatory !== undefined) this.mandatory = diff.mandatory;
+    if (diff.t !== undefined) this.t = diff.t;
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yPort, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yPort, subscribe, true);
+  };
+}
 
 class YTypeStore {
   public readonly uuid: string;
@@ -706,8 +959,87 @@ class YPieceStore {
   };
 }
 
-// class YConnectionStore implements ConnectionStore {
-// }
+class YConnectionStore implements ConnectionStore {
+  public readonly uuid: string;
+  private yConnection: YConnection;
+  private cache?: Connection;
+  private cacheHash?: string;
+
+  private hash(connection: Connection): string {
+    return JSON.stringify(connection);
+  }
+
+  constructor(yConnection: YConnection, connection: Connection) {
+    this.uuid = uuidv4();
+    this.yConnection = yConnection;
+    this.id_ = connection.id_;
+    this.description = connection.description;
+    this.quality = connection.quality;
+  }
+
+  get id_(): string {
+    return this.yConnection.get("id_") as string;
+  }
+  set id_(id_: string) {
+    this.yConnection.set("id_", id_);
+  }
+
+  get description(): string | undefined {
+    return this.yConnection.get("description") as string | undefined;
+  }
+  set description(description: string | undefined) {
+    this.yConnection.set("description", description || "");
+  }
+
+  get quality(): number | undefined {
+    return this.yConnection.get("quality") as number | undefined;
+  }
+  set quality(quality: number | undefined) {
+    this.yConnection.set("quality", quality);
+  }
+
+  get snapshot(): Connection {
+    const currentHash = this.hash({
+      id_: this.id_,
+      description: this.description,
+      quality: this.quality,
+      sides: [], // TODO: implement sides handling
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const connection: Connection = {
+      id_: this.id_,
+      description: this.description,
+      quality: this.quality,
+      sides: [], // TODO: implement sides handling
+    };
+
+    this.cache = connection;
+    this.cacheHash = currentHash;
+    return connection;
+  }
+
+  get id(): ConnectionId {
+    return { id_: this.id_ };
+  }
+
+  apply(diff: ConnectionDiff): void {
+    if (diff.id_ !== undefined) this.id_ = diff.id_;
+    if (diff.description !== undefined) this.description = diff.description;
+    if (diff.quality !== undefined) this.quality = diff.quality;
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yConnection, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yConnection, subscribe, true);
+  };
+}
 
 class YDesignStore {
   public readonly uuid: string;
