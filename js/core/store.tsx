@@ -35,7 +35,6 @@ import {
   areSamePiece,
   areSameType,
   Attribute,
-  AttributeId,
   AttributeIdLike,
   Author,
   AuthorId,
@@ -160,7 +159,6 @@ type YVec3 = YLeafMapNumber;
 type YPlane = Y.Map<YVec3>;
 type YCamera = Y.Map<YPoint | YVector | number>;
 type YLocation = Y.Map<YPoint | YVector>;
-
 
 export interface Snapshot<TModel> {
   snapshot(): TModel;
@@ -1081,7 +1079,6 @@ class YTypeStore implements TypeStore {
     this.image = type.image;
     this.description = type.description;
 
-    // Initialize representations with proper YStore pattern
     this.yRepresentations = this.yType.set("representations", new Y.Array<YRepresentation>());
     if (type.representations) {
       for (const representation of type.representations) {
@@ -1089,7 +1086,6 @@ class YTypeStore implements TypeStore {
       }
     }
 
-    // Initialize ports with proper YStore pattern
     this.yPorts = this.yType.set("ports", new Y.Array<YPort>());
     if (type.ports) {
       for (const port of type.ports) {
@@ -1253,6 +1249,44 @@ class YTypeStore implements TypeStore {
   onChangedDeep = (subscribe: Subscribe) => {
     return createObserver(this.yType, subscribe, true);
   };
+}
+
+type TypeScope = { id: TypeId };
+const TypeScopeContext = createContext<TypeScope | null>(null);
+export const TypeScopeProvider = (props: { id: TypeId; children: React.ReactNode }) => {
+  const value = { id: props.id };
+  return React.createElement(TypeScopeContext.Provider, { value }, props.children as any);
+};
+const useTypeScope = () => useContext(TypeScopeContext);
+
+function useTypeStore<T>(selector?: (store: TypeStore) => T, id?: TypeId): T | TypeStore {
+  const kitStore = useKitStore() as KitStore;
+  const typeScope = useTypeScope();
+  const typeId = typeScope?.id ?? id;
+  if (!typeId) throw new Error("useTypeStore must be called within a TypeScopeProvider or be directly provided with an id");
+  if (!kitStore.hasType(typeId)) throw new Error(`Type store not found for type ${typeId}`);
+  const typeStore = kitStore.type(typeId);
+  return selector ? selector(typeStore) : typeStore;
+}
+
+export function useType<T>(selector?: (type: Type) => T, id?: TypeId, deep: boolean = false): T | Type {
+  return useSync<Type, TypeId, TypeDiff, T>(useTypeStore(identitySelector, id) as TypeStore, selector ? selector : identitySelector, deep);
+}
+
+export function usePortColoredTypes(): Type[] {
+  const diffedKit = useDiffedKit();
+  const typesWithColoredPorts = useMemo(() => {
+    if (!diffedKit.types) return [];
+    const colorDiff = colorPortsForTypes(diffedKit.types);
+    return colorDiff.updated
+      ? diffedKit.types.map((type) => {
+          const update = colorDiff.updated?.find((u) => u.id.name === type.name && u.id.variant === type.variant);
+          return update ? { ...type, ports: update.diff.ports } : type;
+        })
+      : diffedKit.types;
+  }, [diffedKit.types]);
+  const unified = useMemo(() => ({ ...diffedKit, types: typesWithColoredPorts }), [diffedKit, typesWithColoredPorts]);
+  return unified.types;
 }
 
 // #endregion Type
@@ -1419,7 +1453,6 @@ class YPieceStore {
       this.yPiece.set("plane", yPlane);
     }
 
-    // Handle center as Y.js object (not a store since it's a simple nested object)
     if (piece.center) {
       const yCenter = new Y.Map<number>();
       yCenter.set("x", piece.center.x || 0);
@@ -1428,7 +1461,6 @@ class YPieceStore {
       this.yPiece.set("center", yCenter);
     }
 
-    // Handle mirrorPlane as Y.js object (not a store since it's a simple nested object)
     if (piece.mirrorPlane) {
       const yMirrorPlane = new Y.Map<YVec3>();
       if (piece.mirrorPlane.origin) {
@@ -1716,6 +1748,52 @@ class YPieceStore {
   };
 }
 
+type PieceScope = { id: PieceId };
+const PieceScopeContext = createContext<PieceScope | null>(null);
+export const PieceScopeProvider = (props: { id: PieceId; children: React.ReactNode }) => {
+  const value = { id: props.id };
+  return React.createElement(PieceScopeContext.Provider, { value }, props.children as any);
+};
+const usePieceScope = () => useContext(PieceScopeContext);
+
+function usePieceStore<T>(selector?: (store: PieceStore) => T, id?: PieceId): T | PieceStore {
+  const designStore = useDesignStore() as DesignStore;
+  const pieceScope = usePieceScope();
+  const pieceId = pieceScope?.id ?? id;
+  if (!pieceId) throw new Error("usePieceStore must be called within a PieceScopeProvider or be directly provided with an id");
+  const pieceStore = designStore.piece(pieceId);
+  if (!pieceStore) throw new Error(`Piece store not found for piece ${pieceId}`);
+  return selector ? selector(pieceStore) : pieceStore;
+}
+
+export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId, deep: boolean = false): T | Piece {
+  return useSync<Piece, PieceId, PieceDiff, T>(usePieceStore(identitySelector, id) as PieceStore, selector ? selector : identitySelector, deep);
+}
+
+export function useIsPieceSelected(): boolean {
+  const piece = usePieceScope();
+  const selection = useDesignEditorSelection();
+  return selection.pieces?.some((p) => p.id_ === piece?.id) ?? false;
+}
+
+export function useIsPieceHovered(): boolean {
+  // const hover = useDesignEditorHover();
+  // return hover.piece?.id_ === piece.id_ ?? false;
+  return false;
+}
+
+export function usePiecePlane(): Plane {
+  const plane = usePiece((p) => p.plane);
+  // TODO: integrate flat piece plane otherwise
+  return plane as Plane;
+}
+
+export function usePieceStatus(): DiffStatus {
+  // TODO: Check diff for status
+  return DiffStatus.Unchanged;
+}
+usePieceStatus();
+
 // #endregion Piece
 
 // #region Group
@@ -1944,6 +2022,46 @@ class YConnectionStore implements ConnectionStore {
   };
 }
 
+type ConnectionScope = { id: ConnectionId };
+const ConnectionScopeContext = createContext<ConnectionScope | null>(null);
+export const ConnectionScopeProvider = (props: { id: ConnectionId; children: React.ReactNode }) => {
+  const value = { id: props.id };
+  return React.createElement(ConnectionScopeContext.Provider, { value }, props.children as any);
+};
+const useConnectionScope = () => useContext(ConnectionScopeContext);
+
+function useConnectionStore<T>(selector?: (store: ConnectionStore) => T, id?: ConnectionId): T | ConnectionStore {
+  const designStore = useDesignStore() as DesignStore;
+  const connectionScope = useConnectionScope();
+  const connectionId = connectionScope?.id ?? id;
+  if (!connectionId) throw new Error("useConnectionStore must be called within a ConnectionScopeProvider or be directly provided with an id");
+  const connectionStore = designStore.connection(connectionId);
+  if (!connectionStore) throw new Error(`Connection store not found for connection ${JSON.stringify(connectionId)}`);
+  return selector ? selector(connectionStore) : connectionStore;
+}
+
+export function useConnection<T>(selector?: (connection: Connection) => T, id?: ConnectionId, deep: boolean = false): T | Connection {
+  return useSync<Connection, ConnectionId, ConnectionDiff, T>(useConnectionStore(identitySelector, id) as ConnectionStore, selector ? selector : identitySelector, deep);
+}
+
+export function useIsConnectionSelected(): boolean {
+  const connection = useConnectionScope();
+  const selection = useDesignEditorSelection();
+  return selection.connections?.some((c) => c.connected.piece.id_ === connection?.id.connected.piece.id_ && c.connecting.piece.id_ === connection?.id.connecting.piece.id_) ?? false;
+}
+
+export function useIsConnectionHovered(): boolean {
+  // const hover = useDesignEditorHover();
+  // return hover.connection?.id_ === connection.id_ ?? false;
+  return false;
+}
+
+export function useConnectionStatus(): DiffStatus {
+  // TODO: Check diff for status
+  return DiffStatus.Unchanged;
+}
+useConnectionStatus();
+
 // #endregion Connection
 
 // #region Stat
@@ -1951,87 +2069,7 @@ class YConnectionStore implements ConnectionStore {
 class YStatStore {
   public readonly uuid: string;
   private yStat: YStat;
-class YConnectionStore implements ConnectionStore {
-  public readonly uuid: string;
-  private yConnection: YConnection;
-  private cache?: Connection;
-  private cacheHash?: string;
-
-  private hash(connection: Connection): string {
-    return JSON.stringify(connection);
-  }
-
-  constructor(yConnection: YConnection, connection: Connection) {
-    this.uuid = uuidv4();
-    this.yConnection = yConnection;
-    this.id_ = connection.id_;
-    this.description = connection.description;
-    this.quality = connection.quality;
-  }
-
-  get id_(): string {
-    return this.yConnection.get("id_") as string;
-  }
-  set id_(id_: string) {
-    this.yConnection.set("id_", id_);
-  }
-
-  get description(): string | undefined {
-    return this.yConnection.get("description") as string | undefined;
-  }
-  set description(description: string | undefined) {
-    this.yConnection.set("description", description || "");
-  }
-
-  get quality(): number | undefined {
-    return this.yConnection.get("quality") as number | undefined;
-  }
-  set quality(quality: number | undefined) {
-    this.yConnection.set("quality", quality);
-  }
-
-  get snapshot(): Connection {
-    const currentHash = this.hash({
-      id_: this.id_,
-      description: this.description,
-      quality: this.quality,
-      sides: [], // TODO: implement sides handling
-    });
-
-    if (this.cache && this.cacheHash === currentHash) {
-      return this.cache;
-    }
-
-    const connection: Connection = {
-      id_: this.id_,
-      description: this.description,
-      quality: this.quality,
-      sides: [], // TODO: implement sides handling
-    };
-
-    this.cache = connection;
-    this.cacheHash = currentHash;
-    return connection;
-  }
-
-  get id(): ConnectionId {
-    return { id_: this.id_ };
-  }
-
-  apply(diff: ConnectionDiff): void {
-    if (diff.id_ !== undefined) this.id_ = diff.id_;
-    if (diff.description !== undefined) this.description = diff.description;
-    if (diff.quality !== undefined) this.quality = diff.quality;
-  }
-
-  onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yConnection, subscribe);
-  };
-
-  onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yConnection, subscribe, true);
-  };
-}  private cache?: Stat;
+  private cache?: Stat;
   private cacheHash?: string;
 
   private hash(stat: Stat): string {
@@ -2189,7 +2227,6 @@ class YDesignStore {
     this.image = design.image;
     this.description = design.description;
 
-    // Initialize connections with proper YStore pattern
     this.yConnections = this.yDesign.set("connections", new Y.Array<YConnection>());
     if (design.connections) {
       for (const connection of design.connections) {
@@ -2283,7 +2320,6 @@ class YDesignStore {
       this.yDesign.set("concepts", yConcepts);
     }
 
-    // Initialize attributes with proper YStore pattern
     this.yAttributes = this.yDesign.set("attributes", new Y.Array<YAttribute>());
     if (design.attributes) {
       for (const attribute of design.attributes) {
@@ -2555,9 +2591,7 @@ class YDesignStore {
     if (diff.image !== undefined) this.image = diff.image;
     if (diff.description !== undefined) this.description = diff.description;
 
-    // Handle complex type changes using proper YStore pattern
     if (diff.connections !== undefined) {
-      // Clear existing connections
       this.connections = [];
       this.yConnections.delete(0, this.yConnections.length);
 
@@ -2687,7 +2721,6 @@ class YDesignStore {
     }
 
     if (diff.attributes !== undefined) {
-      // Clear existing attributes
       this.attributes = [];
       this.yAttributes.delete(0, this.yAttributes.length);
 
@@ -2717,6 +2750,202 @@ class YDesignStore {
       this.yDesign.unobserveDeep(observer);
     };
   };
+}
+
+type DesignScope = { id: DesignId };
+const DesignScopeContext = createContext<DesignScope | null>(null);
+export const DesignScopeProvider = (props: { id: DesignId; children: React.ReactNode }) => {
+  const value = { id: props.id };
+  return React.createElement(DesignScopeContext.Provider, { value }, props.children as any);
+};
+const useDesignScope = () => useContext(DesignScopeContext);
+
+function useDesignStore<T>(selector?: (store: DesignStore) => T, id?: DesignId): T | DesignStore {
+  const kitStore = useKitStore() as KitStore;
+  const designScope = useDesignScope();
+  const designId = designScope?.id ?? id;
+  if (!designId) throw new Error("useDesignStore must be called within a DesignScopeProvider or be directly provided with an id");
+  if (!kitStore.hasDesign(designId)) throw new Error(`Design store not found for design ${designId}`);
+  const designStore = kitStore.design(designId);
+  return selector ? selector(designStore) : designStore;
+}
+
+export function useDesign<T>(selector?: (design: DesignShallow | Design) => T, id?: DesignId, deep: boolean = false): T | DesignShallow | Design {
+  if (deep) {
+    return useSyncDeep<Design, DesignId, DesignDiff, T>(useDesignStore(identitySelector, id) as DesignStore, selector ? selector : identitySelector);
+  }
+  return useSync<DesignShallow, DesignId, DesignDiff, T>(useDesignStore(identitySelector, id) as DesignStore, selector ? selector : identitySelector, deep);
+}
+
+export function useDiffedDesign(): Design {
+  const kit = useDiffedKit();
+  const designScope = useDesignScope();
+  if (!designScope) throw new Error("useDiffedDesign must be called within a DesignScopeProvider");
+  return findDesignInKit(kit, designScope.id);
+}
+
+export function useFlattenDiff(): DesignDiff {
+  const designScope = useDesignScope();
+  const kit = useKit() as Kit;
+  if (!designScope) throw new Error("useFlattenDiff must be called within a DesignScopeProvider");
+  return flattenDesign(kit, designScope.id);
+}
+
+export function useFlatDesign(): Design {
+  const design = useDesign() as Design;
+  const diff = useFlattenDiff();
+  return applyDesignDiff(design, diff, true);
+}
+
+export function useFlatPieces(): Piece[] {
+  const design = useFlatDesign();
+  return design.pieces ?? [];
+}
+
+export function usePiecesMetadata(): Map<
+  string,
+  {
+    plane: Plane;
+    center: Coord;
+    fixedPieceId: string;
+    parentPieceId: string | null;
+    depth: number;
+  }
+> {
+  const kit = useKit(undefined, undefined, true) as Kit;
+  const designScope = useDesignScope();
+  if (!designScope) throw new Error("usePiecesMetadata must be called within a DesignScopeProvider");
+  return piecesMetadata(kit, designScope.id);
+}
+
+export function useIncludedDesigns() {
+  const design = useDesign();
+  return useMemo(() => getIncludedDesigns(design), [design]);
+}
+
+export function useDesignId() {
+  const design = useDesign();
+  return useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
+}
+
+export function useClusterableGroups() {
+  const design = useDesign();
+  const selection = useDesignEditorSelection();
+  return useMemo(() => {
+    if (!design) return [];
+    return getClusterableGroups(
+      design,
+      selection.pieces.map((p: any) => p.id_),
+    );
+  }, [design, selection.pieces]);
+}
+
+export function usePiecePlanes(): Plane[] {
+  const flatDesign = useFlatDesign();
+  return useMemo(() => flatDesign.pieces?.map((p: Piece) => p.plane!) || [], [flatDesign]);
+}
+
+export function usePieceRepresentationUrls(): Map<string, string> {
+  const flatDesign = useFlatDesign();
+  const types = usePortColoredTypes();
+  return useMemo(() => getPieceRepresentationUrls(flatDesign, types), [flatDesign, types]);
+}
+
+export function usePieceDiffStatuses(): DiffStatus[] {
+  const flatDesign = useFlatDesign();
+  return useMemo(() => {
+    return (
+      flatDesign.pieces?.map((piece: Piece) => {
+        const diffAttribute = piece.attributes?.find((q: any) => q.key === "semio.diffStatus");
+        return (diffAttribute?.value as DiffStatus) || DiffStatus.Unchanged;
+      }) || []
+    );
+  }, [flatDesign]);
+}
+
+export function usePiecesFromIds(pieceIds: PieceId[]) {
+  const design = useDesign();
+  const includedDesigns = useIncludedDesigns();
+  const includedDesignMap = useMemo(() => new Map(includedDesigns.map((d) => [d.id, d])), [includedDesigns]);
+
+  return useMemo(() => {
+    return pieceIds.map((id) => {
+      try {
+        const foundPiece = findPieceInDesign(design, id);
+        return {
+          ...foundPiece,
+          id_: typeof foundPiece.id_ === "string" ? foundPiece.id_ : (foundPiece.id_ as any).id_,
+        };
+      } catch {
+        const pieceIdString = typeof id === "string" ? id : (id as any).id_;
+        const includedDesign = includedDesignMap.get(pieceIdString);
+        if (includedDesign) {
+          return {
+            id_: pieceIdString,
+            type: {
+              name: "design",
+              variant:
+                includedDesign.type === "fixed"
+                  ? `${includedDesign.designId.name}${includedDesign.designId.variant ? `-${includedDesign.designId.variant}` : ""}${includedDesign.designId.view ? `-${includedDesign.designId.view}` : ""}`
+                  : includedDesign.designId.name,
+            },
+            center: includedDesign.center,
+            plane: includedDesign.plane,
+            description: `${includedDesign.type === "fixed" ? "Fixed" : "Clustered"} design: ${includedDesign.designId.name}`,
+          };
+        }
+
+        console.warn(`Piece ${pieceIdString} not found in pieces or includedDesigns. Creating fallback piece.`);
+        return {
+          id_: pieceIdString,
+          type: {
+            name: "unknown",
+            variant: "",
+          },
+          description: `Unknown piece: ${pieceIdString}`,
+        };
+      }
+    });
+  }, [pieceIds, design, includedDesignMap]);
+}
+
+export function useReplacableTypes(pieceIds: PieceId[], selectedVariants?: string[]) {
+  const kit = useKit();
+  const design = useDesign();
+  const designId = useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
+
+  return useMemo(() => {
+    if (pieceIds.length === 1) {
+      return findReplacableTypesForPieceInDesign(kit, designId, pieceIds[0], selectedVariants);
+    } else {
+      return findReplacableTypesForPiecesInDesign(kit, designId, pieceIds, selectedVariants);
+    }
+  }, [kit, designId, pieceIds, selectedVariants]);
+}
+
+export function useReplacableDesigns(piece: Piece) {
+  const kit = useKit();
+  const design = useDesign();
+  const designId = useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
+
+  return useMemo(() => {
+    return findReplacableDesignsForDesignPiece(kit, designId, piece);
+  }, [kit, designId, piece]);
+}
+
+export function useExplodeableDesignNodes(nodes: any[], selection: any) {
+  const kit = useKit();
+  return useMemo(() => {
+    return nodes.filter((node) => {
+      if (node.type !== "design") return false;
+      const pieceId = node.data.piece.id_;
+      if (!selection.pieces?.some((p: any) => p.id_ === pieceId)) return false;
+      const designName = (node.data.piece as any).type?.variant;
+      if (!designName) return false;
+      if (!kit?.designs?.find((d) => d.name === designName)) return false;
+      return true;
+    });
+  }, [nodes, selection.pieces, kit]);
 }
 
 // #endregion Design
@@ -3607,6 +3836,102 @@ const kitCommands = {
   },
 };
 
+type KitScope = { id: KitId };
+const KitScopeContext = createContext<KitScope | null>(null);
+export const KitScopeProvider = (props: { id: KitId; children: React.ReactNode }) => {
+  const value = { id: props.id };
+  return React.createElement(KitScopeContext.Provider, { value }, props.children as any);
+};
+const useKitStoreScope = () => useContext(KitScopeContext);
+
+function useKitStore<T>(selector?: (store: KitStore) => T, id?: KitId): T | KitStore {
+  const store = useSketchpadStore();
+  const kitScope = useKitStoreScope();
+  const kitId = kitScope?.id ?? id;
+  if (!kitId) throw new Error("useKitStore must be called within a KitScopeProvider or be directly provided with an id");
+  if (!store.hasKit(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
+  const kitStore = store.kit(kitId);
+  return selector ? selector(kitStore) : kitStore;
+}
+
+export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, id?: KitId, deep: boolean = false): T | KitShallow | Kit {
+  if (deep) {
+    return useSyncDeep<Kit, KitId, KitDiff, T>(useKitStore(identitySelector, id) as KitStore, selector ? selector : identitySelector);
+  }
+  return useSync<KitShallow, KitId, KitDiff, T>(useKitStore(identitySelector, id) as KitStore, selector ? selector : identitySelector, deep);
+}
+
+export function useDiffedKit(): Kit {
+  const kit = useKit() as Kit;
+  const diff = useDesignEditorDiff();
+  return applyKitDiff(kit, diff);
+}
+
+export function useDesigns(): Design[] {
+  return useKit((k) => k.designs ?? []) as Design[];
+}
+
+export function useFileUrls(): Map<Url, Url> {
+  return (useKitStore() as KitStore).fileUrls();
+}
+
+export function useTypesByName(): Record<string, Type[]> {
+  const kit = useKit();
+  return useMemo(() => {
+    if (!kit?.types) return {};
+    return kit.types.reduce(
+      (acc, type) => {
+        acc[type.name] = acc[type.name] || [];
+        acc[type.name].push(type);
+        return acc;
+      },
+      {} as Record<string, Type[]>,
+    );
+  }, [kit?.types]);
+}
+
+export function useDesignsByName(): Record<string, Design[]> {
+  const kit = useKit();
+  return useMemo(() => {
+    if (!kit?.designs) return {};
+    return kit.designs.reduce(
+      (acc, design) => {
+        const nameKey = design.name;
+        acc[nameKey] = acc[nameKey] || [];
+        acc[nameKey].push(design);
+        return acc;
+      },
+      {} as Record<string, Design[]>,
+    );
+  }, [kit?.designs]);
+}
+
+export function useKitCommands() {
+  const store = useKitStore() as KitStore;
+  return {
+    importKit: (url: string) => store.execute("semio.kit.import", url),
+    exportKit: () => store.execute("semio.kit.export"),
+    createType: (type: Type) => store.execute("semio.kit.createType", type),
+    updateType: (typeId: TypeId, typeDiff: TypeDiff) => store.execute("semio.kit.updateType", typeId, typeDiff),
+    deleteType: (typeId: TypeId) => store.execute("semio.kit.deleteType", typeId),
+    createDesign: (design: Design) => store.execute("semio.kit.createDesign", design),
+    updateDesign: (designId: DesignId, designDiff: DesignDiff) => store.execute("semio.kit.updateDesign", designId, designDiff),
+    deleteDesign: (designId: DesignId) => store.execute("semio.kit.deleteDesign", designId),
+    addFile: (file: SemioFile, blob?: Blob) => store.execute("semio.kit.addFile", file, blob),
+    updateFile: (url: Url, fileDiff: FileDiff, blob?: Blob) => store.execute("semio.kit.updateFile", url, fileDiff, blob),
+    removeFile: (url: Url) => store.execute("semio.kit.removeFile", url),
+    addPiece: (designId: DesignId, piece: Piece) => store.execute("semio.kit.addPiece", designId, piece),
+    addPieces: (designId: DesignId, pieces: Piece[]) => store.execute("semio.kit.addPieces", designId, pieces),
+    removePiece: (designId: DesignId, pieceId: PieceId) => store.execute("semio.kit.removePiece", designId, pieceId),
+    removePieces: (designId: DesignId, pieceIds: PieceId[]) => store.execute("semio.kit.removePieces", designId, pieceIds),
+    addConnection: (designId: DesignId, connection: Connection) => store.execute("semio.kit.addConnection", designId, connection),
+    addConnections: (designId: DesignId, connections: Connection[]) => store.execute("semio.kit.addConnections", designId, connections),
+    removeConnection: (designId: DesignId, connectionId: ConnectionId) => store.execute("semio.kit.removeConnection", designId, connectionId),
+    removeConnections: (designId: DesignId, connectionIds: ConnectionId[]) => store.execute("semio.kit.removeConnections", designId, connectionIds),
+    deleteSelected: (designId: DesignId, selectedPieces: PieceId[], selectedConnections: ConnectionId[]) => store.execute("semio.kit.deleteSelected", designId, selectedPieces, selectedConnections),
+  };
+}
+
 // #endregion Kit
 
 // #region Design Editor
@@ -3692,7 +4017,6 @@ export const inverseDesignEditorSelectionDiff = (selection: DesignEditorSelectio
 };
 export const areSameDesignEditor = (designEditor: DesignEditorId, other: DesignEditorId): boolean => areSameKit(designEditor.kit, other.kit) && areSameDesign(designEditor.design, other.design);
 export const hasSameDesignEditor = (designEditor: DesignEditorId, others: DesignEditorId[]): boolean => others.some((other) => areSameDesignEditor(designEditor, other));
-
 
 class YDesignEditorStore {
   public readonly uuid: string;
@@ -4402,6 +4726,84 @@ const designEditorCommands = {
   },
 };
 
+type DesignEditorScope = { id: string };
+const DesignEditorScopeContext = createContext<DesignEditorScope | null>(null);
+export const DesignEditorScopeProvider = (props: { id: string; children: React.ReactNode }) => {
+  const value = { id: props.id };
+  return React.createElement(DesignEditorScopeContext.Provider, { value }, props.children as any);
+};
+const useDesignEditorScope = () => useContext(DesignEditorScopeContext);
+
+function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?: DesignEditorId): T | DesignEditorStore {
+  const store = useSketchpadStore();
+  const kitScope = useKitStoreScope();
+  const resolvedKitId = kitScope?.id ?? id?.kit;
+  if (!resolvedKitId) throw new Error("useDesignEditorStore must be called within a KitScopeProvider or be directly provided with an id");
+  const designScope = useDesignScope();
+  const resolvedDesignId = designScope?.id ?? id?.design;
+  if (!resolvedDesignId) throw new Error("useDesignEditorStore must be called within a DesignScopeProvider or be directly provided with an id");
+  const designEditorStore = store.designEditor({ kit: resolvedKitId, design: resolvedDesignId });
+  return selector ? selector(designEditorStore) : designEditorStore;
+}
+
+export function useDesignEditor<T>(selector?: (state: DesignEditorState) => T, id?: DesignEditorId): T | DesignEditorState {
+  return useSync<DesignEditorState, T>(useDesignEditorStore(identitySelector, id) as DesignEditorStore, selector ? selector : identitySelector);
+}
+
+export function useDesignEditorSelection(): DesignEditorSelection {
+  return useDesignEditor((s) => s.selection) as DesignEditorSelection;
+}
+
+export function useDesignEditorFullscreen(): DesignEditorFullscreenPanel {
+  return useDesignEditor((s) => s.fullscreenPanel) as DesignEditorFullscreenPanel;
+}
+
+export function useDesignEditorDiff(): KitDiff {
+  return useDesignEditor((s) => s.diff) as KitDiff;
+}
+
+export function useDesignEditorOthers(): DesignEditorPresenceOther[] {
+  return useDesignEditor((s) => s.others) as DesignEditorPresenceOther[];
+}
+
+export function useDesignEditorCommands() {
+  const store = useDesignEditorStore() as DesignEditorStore;
+  return {
+    startTransaction: () => store.execute("semio.designEditor.startTransaction"),
+    finalizeTransaction: () => store.execute("semio.designEditor.finalizeTransaction"),
+    abortTransaction: () => store.execute("semio.designEditor.abortTransaction"),
+    undo: () => store.execute("semio.designEditor.undo"),
+    redo: () => store.execute("semio.designEditor.redo"),
+    selectAll: () => store.execute("semio.designEditor.selectAll"),
+    deselectAll: () => store.execute("semio.designEditor.deselectAll"),
+    selectPiece: (pieceId: PieceId) => store.execute("semio.designEditor.selectPiece", pieceId),
+    selectPieces: (pieceIds: PieceId[]) => store.execute("semio.designEditor.selectPieces", pieceIds),
+    addPieceToSelection: (pieceId: PieceId) => store.execute("semio.designEditor.addPieceToSelection", pieceId),
+    removePieceFromSelection: (pieceId: PieceId) => store.execute("semio.designEditor.removePieceFromSelection", pieceId),
+    selectConnection: (connection: Connection) => store.execute("semio.designEditor.selectConnection", connection),
+    addConnectionToSelection: (connection: Connection) => store.execute("semio.designEditor.addConnectionToSelection", connection),
+    removeConnectionFromSelection: (connection: Connection) => store.execute("semio.designEditor.removeConnectionFromSelection", connection),
+    selectPiecePort: (pieceId: PieceId, portId: PortId) => store.execute("semio.designEditor.selectPiecePort", pieceId, portId),
+    deselectPiecePort: () => store.execute("semio.designEditor.deselectPiecePort"),
+    deleteSelected: () => store.execute("semio.designEditor.deleteSelected"),
+    toggleDiagramFullscreen: () => store.execute("semio.designEditor.toggleDiagramFullscreen"),
+    toggleModelFullscreen: () => store.execute("semio.designEditor.toggleModelFullscreen"),
+    addPiece: (piece: Piece) => store.execute("semio.designEditor.addPiece", piece),
+    addPieces: (pieces: Piece[]) => store.execute("semio.designEditor.addPieces", pieces),
+    removePiece: (pieceId: PieceId) => store.execute("semio.designEditor.removePiece", pieceId),
+    removePieces: (pieceIds: PieceId[]) => store.execute("semio.designEditor.removePieces", pieceIds),
+    addConnection: (connection: Connection) => store.execute("semio.designEditor.addConnection", connection),
+    addConnections: (connections: Connection[]) => store.execute("semio.designEditor.addConnections", connections),
+    removeConnection: (connectionId: ConnectionId) => store.execute("semio.designEditor.removeConnection", connectionId),
+    removeConnections: (connectionIds: ConnectionId[]) => store.execute("semio.designEditor.removeConnections", connectionIds),
+    updatePiece: (pieceId: PieceId, pieceDiff: PieceDiff) => store.execute("semio.designEditor.updatePiece", pieceId, pieceDiff),
+    updatePieces: (updates: { id: PieceId; diff: PieceDiff }[]) => store.execute("semio.designEditor.updatePieces", updates),
+    updateConnection: (connectionId: ConnectionId, connectionDiff: ConnectionDiff) => store.execute("semio.designEditor.updateConnection", connectionId, connectionDiff),
+    updateConnections: (updates: { id: ConnectionId; diff: ConnectionDiff }[]) => store.execute("semio.designEditor.updateConnections", updates),
+    execute: (command: string, ...args: any[]) => store.execute(command, ...args),
+  };
+}
+
 // #endregion Design Editor
 
 // #region Sketchpad
@@ -4706,100 +5108,7 @@ const sketchpadCommands = {
   },
 };
 
-// #endregion Sketchpad
-
 const stores: Map<string, YSketchpadStore> = new Map();
-
-// #region Hooks
-
-// #region Scoping
-
-type SketchpadScope = { id: string; yProviderFactory?: YProviderFactory };
-const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
-export const SketchpadScopeProvider = (props: { id?: string; yProviderFactory?: YProviderFactory; children: React.ReactNode }) => {
-  const id = props.id || uuidv4();
-  if (!stores.has(id)) {
-    const store = new YSketchpadStore(props.id, props?.yProviderFactory);
-    stores.set(id, store);
-  }
-  return React.createElement(SketchpadScopeContext.Provider, { value: { id } }, props.children as any);
-};
-
-type KitScope = { id: KitId };
-const KitScopeContext = createContext<KitScope | null>(null);
-
-type DesignScope = { id: DesignId };
-const DesignScopeContext = createContext<DesignScope | null>(null);
-
-type TypeScope = { id: TypeId };
-const TypeScopeContext = createContext<TypeScope | null>(null);
-
-type PieceScope = { id: PieceId };
-const PieceScopeContext = createContext<PieceScope | null>(null);
-
-const ConnectionScopeContext = createContext<ConnectionScope | null>(null);
-type ConnectionScope = { id: ConnectionId };
-
-const RepresentationScopeContext = createContext<RepresentationScope | null>(null);
-type RepresentationScope = { id: RepresentationId };
-
-type PortScope = { id: PortId };
-const PortScopeContext = createContext<PortScope | null>(null);
-
-type DesignEditorScope = { id: string };
-const DesignEditorScopeContext = createContext<DesignEditorScope | null>(null);
-
-export const KitScopeProvider = (props: { id: KitId; children: React.ReactNode }) => {
-  const value = { id: props.id };
-  return React.createElement(KitScopeContext.Provider, { value }, props.children as any);
-};
-
-export const DesignScopeProvider = (props: { id: DesignId; children: React.ReactNode }) => {
-  const value = { id: props.id };
-  return React.createElement(DesignScopeContext.Provider, { value }, props.children as any);
-};
-
-export const TypeScopeProvider = (props: { id: TypeId; children: React.ReactNode }) => {
-  const value = { id: props.id };
-  return React.createElement(TypeScopeContext.Provider, { value }, props.children as any);
-};
-
-export const PieceScopeProvider = (props: { id: PieceId; children: React.ReactNode }) => {
-  const value = { id: props.id };
-  return React.createElement(PieceScopeContext.Provider, { value }, props.children as any);
-};
-
-export const ConnectionScopeProvider = (props: { id: ConnectionId; children: React.ReactNode }) => {
-  const value = { id: props.id };
-  return React.createElement(ConnectionScopeContext.Provider, { value }, props.children as any);
-};
-
-export const RepresentationScopeProvider = (props: { id: RepresentationId; children: React.ReactNode }) => {
-  const value = { id: props.id };
-  return React.createElement(RepresentationScopeContext.Provider, { value }, props.children as any);
-};
-
-export const PortScopeProvider = (props: { id: PortId; children: React.ReactNode }) => {
-  const value = { id: props.id };
-  return React.createElement(PortScopeContext.Provider, { value }, props.children as any);
-};
-
-export const DesignEditorScopeProvider = (props: { id: string; children: React.ReactNode }) => {
-  const value = { id: props.id };
-  return React.createElement(DesignEditorScopeContext.Provider, { value }, props.children as any);
-};
-
-const useSketchpadScope = () => useContext(SketchpadScopeContext);
-const useKitStoreScope = () => useContext(KitScopeContext);
-const useDesignScope = () => useContext(DesignScopeContext);
-const useTypeScope = () => useContext(TypeScopeContext);
-const usePieceScope = () => useContext(PieceScopeContext);
-const useConnectionScope = () => useContext(ConnectionScopeContext);
-const useRepresentationScope = () => useContext(RepresentationScopeContext);
-const usePortScope = () => useContext(PortScopeContext);
-const useDesignEditorScope = () => useContext(DesignEditorScopeContext);
-
-// #endregion Scoping
 
 const identitySelector = (state: any) => state;
 
@@ -4822,218 +5131,21 @@ function useSketchpadStore(id?: string) {
   return store;
 }
 
+type SketchpadScope = { id: string; yProviderFactory?: YProviderFactory };
+const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
+export const SketchpadScopeProvider = (props: { id?: string; yProviderFactory?: YProviderFactory; children: React.ReactNode }) => {
+  const id = props.id || uuidv4();
+  if (!stores.has(id)) {
+    const store = new YSketchpadStore(props.id, props?.yProviderFactory);
+    stores.set(id, store);
+  }
+  return React.createElement(SketchpadScopeContext.Provider, { value: { id } }, props.children as any);
+};
+const useSketchpadScope = () => useContext(SketchpadScopeContext);
+
 export function useSketchpad<T>(selector?: (state: SketchpadState) => T, id?: string): T | SketchpadState {
   return useSync<SketchpadState, T>(useSketchpadStore(id), selector ? selector : identitySelector);
 }
-
-function useKitStore<T>(selector?: (store: KitStore) => T, id?: KitId): T | KitStore {
-  const store = useSketchpadStore();
-  const kitScope = useKitStoreScope();
-  const kitId = kitScope?.id ?? id;
-  if (!kitId) throw new Error("useKitStore must be called within a KitScopeProvider or be directly provided with an id");
-  if (!store.hasKit(kitId)) throw new Error(`Kit store not found for kit ${kitId}`);
-  const kitStore = store.kit(kitId);
-  return selector ? selector(kitStore) : kitStore;
-}
-
-export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, id?: KitId, deep: boolean = false): T | KitShallow | Kit {
-  if (deep) {
-    return useSyncDeep<Kit, KitId, KitDiff, T>(useKitStore(identitySelector, id) as KitStore, selector ? selector : identitySelector);
-  }
-  return useSync<KitShallow, KitId, KitDiff, T>(useKitStore(identitySelector, id) as KitStore, selector ? selector : identitySelector, deep);
-}
-
-export function useDiffedKit(): Kit {
-  const kit = useKit() as Kit;
-  const diff = useDesignEditorDiff();
-  return applyKitDiff(kit, diff);
-}
-
-function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?: DesignEditorId): T | DesignEditorStore {
-  const store = useSketchpadStore();
-  const kitScope = useKitStoreScope();
-  const resolvedKitId = kitScope?.id ?? id?.kit;
-  if (!resolvedKitId) throw new Error("useDesignEditorStore must be called within a KitScopeProvider or be directly provided with an id");
-  const designScope = useDesignScope();
-  const resolvedDesignId = designScope?.id ?? id?.design;
-  if (!resolvedDesignId) throw new Error("useDesignEditorStore must be called within a DesignScopeProvider or be directly provided with an id");
-  const designEditorStore = store.designEditor({ kit: resolvedKitId, design: resolvedDesignId });
-  return selector ? selector(designEditorStore) : designEditorStore;
-}
-
-export function useDesignEditor<T>(selector?: (state: DesignEditorState) => T, id?: DesignEditorId): T | DesignEditorState {
-  return useSync<DesignEditorState, T>(useDesignEditorStore(identitySelector, id) as DesignEditorStore, selector ? selector : identitySelector);
-}
-
-function useDesignStore<T>(selector?: (store: DesignStore) => T, id?: DesignId): T | DesignStore {
-  const kitStore = useKitStore() as KitStore;
-  const designScope = useDesignScope();
-  const designId = designScope?.id ?? id;
-  if (!designId) throw new Error("useDesignStore must be called within a DesignScopeProvider or be directly provided with an id");
-  if (!kitStore.hasDesign(designId)) throw new Error(`Design store not found for design ${designId}`);
-  const designStore = kitStore.design(designId);
-  return selector ? selector(designStore) : designStore;
-}
-
-export function useDesign<T>(selector?: (design: DesignShallow | Design) => T, id?: DesignId, deep: boolean = false): T | DesignShallow | Design {
-  if (deep) {
-    return useSyncDeep<Design, DesignId, DesignDiff, T>(useDesignStore(identitySelector, id) as DesignStore, selector ? selector : identitySelector);
-  }
-  return useSync<DesignShallow, DesignId, DesignDiff, T>(useDesignStore(identitySelector, id) as DesignStore, selector ? selector : identitySelector, deep);
-}
-
-export function useDiffedDesign(): Design {
-  const kit = useDiffedKit();
-  const designScope = useDesignScope();
-  if (!designScope) throw new Error("useDiffedDesign must be called within a DesignScopeProvider");
-  return findDesignInKit(kit, designScope.id);
-}
-
-export function useFlattenDiff(): DesignDiff {
-  const designScope = useDesignScope();
-  const kit = useKit() as Kit;
-  if (!designScope) throw new Error("useFlattenDiff must be called within a DesignScopeProvider");
-  return flattenDesign(kit, designScope.id);
-}
-
-export function useFlatDesign(): Design {
-  const design = useDesign() as Design;
-  const diff = useFlattenDiff();
-  return applyDesignDiff(design, diff, true);
-}
-
-export function useFlatPieces(): Piece[] {
-  const design = useFlatDesign();
-  return design.pieces ?? [];
-}
-
-export function usePiecesMetadata(): Map<
-  string,
-  {
-    plane: Plane;
-    center: Coord;
-    fixedPieceId: string;
-    parentPieceId: string | null;
-    depth: number;
-  }
-> {
-  const kit = useKit(undefined, undefined, true) as Kit;
-  const designScope = useDesignScope();
-  if (!designScope) throw new Error("usePiecesMetadata must be called within a DesignScopeProvider");
-  return piecesMetadata(kit, designScope.id);
-}
-
-function useTypeStore<T>(selector?: (store: TypeStore) => T, id?: TypeId): T | TypeStore {
-  const kitStore = useKitStore() as KitStore;
-  const typeScope = useTypeScope();
-  const typeId = typeScope?.id ?? id;
-  if (!typeId) throw new Error("useTypeStore must be called within a TypeScopeProvider or be directly provided with an id");
-  if (!kitStore.hasType(typeId)) throw new Error(`Type store not found for type ${typeId}`);
-  const typeStore = kitStore.type(typeId);
-  return selector ? selector(typeStore) : typeStore;
-}
-
-export function useType<T>(selector?: (type: Type) => T, id?: TypeId, deep: boolean = false): T | Type {
-  return useSync<Type, TypeId, TypeDiff, T>(useTypeStore(identitySelector, id) as TypeStore, selector ? selector : identitySelector, deep);
-}
-
-export function usePortColoredTypes(): Type[] {
-  const diffedKit = useDiffedKit();
-  const typesWithColoredPorts = useMemo(() => {
-    if (!diffedKit.types) return [];
-    const colorDiff = colorPortsForTypes(diffedKit.types);
-    return colorDiff.updated
-      ? diffedKit.types.map((type) => {
-          const update = colorDiff.updated?.find((u) => u.id.name === type.name && u.id.variant === type.variant);
-          return update ? { ...type, ports: update.diff.ports } : type;
-        })
-      : diffedKit.types;
-  }, [diffedKit.types]);
-  const unified = useMemo(() => ({ ...diffedKit, types: typesWithColoredPorts }), [diffedKit, typesWithColoredPorts]);
-  return unified.types;
-}
-
-function usePieceStore<T>(selector?: (store: PieceStore) => T, id?: PieceId): T | PieceStore {
-  const designStore = useDesignStore() as DesignStore;
-  const pieceScope = usePieceScope();
-  const pieceId = pieceScope?.id ?? id;
-  if (!pieceId) throw new Error("usePieceStore must be called within a PieceScopeProvider or be directly provided with an id");
-  const pieceStore = designStore.piece(pieceId);
-  if (!pieceStore) throw new Error(`Piece store not found for piece ${pieceId}`);
-  return selector ? selector(pieceStore) : pieceStore;
-}
-
-export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId, deep: boolean = false): T | Piece {
-  return useSync<Piece, PieceId, PieceDiff, T>(usePieceStore(identitySelector, id) as PieceStore, selector ? selector : identitySelector, deep);
-}
-
-export function useIsPieceSelected(): boolean {
-  const piece = usePieceScope();
-  const selection = useDesignEditorSelection();
-  return selection.pieces?.some((p) => p.id_ === piece?.id) ?? false;
-}
-
-export function useIsPieceHovered(): boolean {
-  // const hover = useDesignEditorHover();
-  // return hover.piece?.id_ === piece.id_ ?? false;
-  return false;
-}
-
-export function usePiecePlane(): Plane {
-  const plane = usePiece((p) => p.plane);
-  // TODO: integrate flat piece plane otherwise
-  return plane as Plane;
-}
-
-export function usePieceStatus(): DiffStatus {
-  // TODO: Check diff for status
-  return DiffStatus.Unchanged;
-}
-usePieceStatus();
-
-function useConnectionStore<T>(selector?: (store: ConnectionStore) => T, id?: ConnectionId): T | ConnectionStore {
-  const designStore = useDesignStore() as DesignStore;
-  const connectionScope = useConnectionScope();
-  const connectionId = connectionScope?.id ?? id;
-  if (!connectionId) throw new Error("useConnectionStore must be called within a ConnectionScopeProvider or be directly provided with an id");
-  if (!designStore.hasConnection(connectionId)) throw new Error(`Connection store not found for connection ${connectionId}`);
-  const connectionStore = designStore.connection(connectionId);
-  return selector ? selector(connectionStore) : connectionStore;
-}
-
-export function useConnection<T>(selector?: (connection: Connection) => T, id?: ConnectionId, deep: boolean = false): T | Connection {
-  return useSync<Connection, ConnectionId, ConnectionDiff, T>(useConnectionStore(identitySelector, id) as ConnectionStore, selector ? selector : identitySelector, deep);
-}
-
-function usePortStore<T>(selector?: (store: PortStore) => T, id?: PortId): T | PortStore {
-  const typeStore = useTypeStore() as TypeStore;
-  const portScope = usePortScope();
-  const portId = portScope?.id ?? id;
-  if (!portId) throw new Error("usePortStore must be called within a PortScopeProvider or be directly provided with an id");
-  if (!typeStore.hasPort(portId)) throw new Error(`Port store not found for port ${portId}`);
-  const portStore = typeStore.port(portId);
-  return selector ? selector(portStore) : portStore;
-}
-
-export function usePort<T>(selector?: (port: Port) => T, id?: PortId, deep: boolean = false): T | Port {
-  return useSync<Port, PortId, PortDiff, T>(usePortStore(identitySelector, id) as PortStore, selector ? selector : identitySelector, deep);
-}
-
-function useRepresentationStore<T>(selector?: (store: RepresentationStore) => T, id?: RepresentationId): T | RepresentationStore {
-  const typeStore = useTypeStore() as TypeStore;
-  const representationScope = useRepresentationScope();
-  const representationId = representationScope?.id ?? id;
-  if (!representationId) throw new Error("useRepresentationStore must be called within a RepresentationScopeProvider or be directly provided with an id");
-  if (!typeStore.hasRepresentation(representationId)) throw new Error(`Representation store not found for representation ${representationId}`);
-  const representationStore = typeStore.representation(representationId);
-  return selector ? selector(representationStore) : representationStore;
-}
-
-export function useRepresentation<T>(selector?: (representation: Representation) => T, id?: RepresentationId, deep: boolean = false): T | Representation {
-  return useSync<Representation, RepresentationId, RepresentationDiff, T>(useRepresentationStore(identitySelector, id) as RepresentationStore, selector ? selector : identitySelector, deep);
-}
-
-// Additional utility hooks for the new store architecture
 
 export function useMode(): Mode {
   return useSketchpad((s) => s.mode) as Mode;
@@ -5051,10 +5163,6 @@ export function useActiveDesignEditor(): DesignId | undefined {
   return (useSketchpad((s) => s.activeDesignEditor) as DesignEditorId)?.design;
 }
 
-export function useDesigns(): Design[] {
-  return useKit((k) => k.designs ?? []) as Design[];
-}
-
 export function useSketchpadCommands() {
   const store = useSketchpadStore();
   return {
@@ -5067,252 +5175,4 @@ export function useSketchpadCommands() {
   };
 }
 
-export function useKitCommands() {
-  const store = useKitStore() as KitStore;
-  return {
-    importKit: (url: string) => store.execute("semio.kit.import", url),
-    exportKit: () => store.execute("semio.kit.export"),
-    createType: (type: Type) => store.execute("semio.kit.createType", type),
-    updateType: (typeId: TypeId, typeDiff: TypeDiff) => store.execute("semio.kit.updateType", typeId, typeDiff),
-    deleteType: (typeId: TypeId) => store.execute("semio.kit.deleteType", typeId),
-    createDesign: (design: Design) => store.execute("semio.kit.createDesign", design),
-    updateDesign: (designId: DesignId, designDiff: DesignDiff) => store.execute("semio.kit.updateDesign", designId, designDiff),
-    deleteDesign: (designId: DesignId) => store.execute("semio.kit.deleteDesign", designId),
-    addFile: (file: SemioFile, blob?: Blob) => store.execute("semio.kit.addFile", file, blob),
-    updateFile: (url: Url, fileDiff: FileDiff, blob?: Blob) => store.execute("semio.kit.updateFile", url, fileDiff, blob),
-    removeFile: (url: Url) => store.execute("semio.kit.removeFile", url),
-    addPiece: (designId: DesignId, piece: Piece) => store.execute("semio.kit.addPiece", designId, piece),
-    addPieces: (designId: DesignId, pieces: Piece[]) => store.execute("semio.kit.addPieces", designId, pieces),
-    removePiece: (designId: DesignId, pieceId: PieceId) => store.execute("semio.kit.removePiece", designId, pieceId),
-    removePieces: (designId: DesignId, pieceIds: PieceId[]) => store.execute("semio.kit.removePieces", designId, pieceIds),
-    addConnection: (designId: DesignId, connection: Connection) => store.execute("semio.kit.addConnection", designId, connection),
-    addConnections: (designId: DesignId, connections: Connection[]) => store.execute("semio.kit.addConnections", designId, connections),
-    removeConnection: (designId: DesignId, connectionId: ConnectionId) => store.execute("semio.kit.removeConnection", designId, connectionId),
-    removeConnections: (designId: DesignId, connectionIds: ConnectionId[]) => store.execute("semio.kit.removeConnections", designId, connectionIds),
-    deleteSelected: (designId: DesignId, selectedPieces: PieceId[], selectedConnections: ConnectionId[]) => store.execute("semio.kit.deleteSelected", designId, selectedPieces, selectedConnections),
-  };
-}
-
-export function useDesignEditorCommands() {
-  const store = useDesignEditorStore() as DesignEditorStore;
-  return {
-    startTransaction: () => store.execute("semio.designEditor.startTransaction"),
-    finalizeTransaction: () => store.execute("semio.designEditor.finalizeTransaction"),
-    abortTransaction: () => store.execute("semio.designEditor.abortTransaction"),
-    undo: () => store.execute("semio.designEditor.undo"),
-    redo: () => store.execute("semio.designEditor.redo"),
-    selectAll: () => store.execute("semio.designEditor.selectAll"),
-    deselectAll: () => store.execute("semio.designEditor.deselectAll"),
-    selectPiece: (pieceId: PieceId) => store.execute("semio.designEditor.selectPiece", pieceId),
-    selectPieces: (pieceIds: PieceId[]) => store.execute("semio.designEditor.selectPieces", pieceIds),
-    addPieceToSelection: (pieceId: PieceId) => store.execute("semio.designEditor.addPieceToSelection", pieceId),
-    removePieceFromSelection: (pieceId: PieceId) => store.execute("semio.designEditor.removePieceFromSelection", pieceId),
-    selectConnection: (connection: Connection) => store.execute("semio.designEditor.selectConnection", connection),
-    addConnectionToSelection: (connection: Connection) => store.execute("semio.designEditor.addConnectionToSelection", connection),
-    removeConnectionFromSelection: (connection: Connection) => store.execute("semio.designEditor.removeConnectionFromSelection", connection),
-    selectPiecePort: (pieceId: PieceId, portId: PortId) => store.execute("semio.designEditor.selectPiecePort", pieceId, portId),
-    deselectPiecePort: () => store.execute("semio.designEditor.deselectPiecePort"),
-    deleteSelected: () => store.execute("semio.designEditor.deleteSelected"),
-    toggleDiagramFullscreen: () => store.execute("semio.designEditor.toggleDiagramFullscreen"),
-    toggleModelFullscreen: () => store.execute("semio.designEditor.toggleModelFullscreen"),
-    addPiece: (piece: Piece) => store.execute("semio.designEditor.addPiece", piece),
-    addPieces: (pieces: Piece[]) => store.execute("semio.designEditor.addPieces", pieces),
-    removePiece: (pieceId: PieceId) => store.execute("semio.designEditor.removePiece", pieceId),
-    removePieces: (pieceIds: PieceId[]) => store.execute("semio.designEditor.removePieces", pieceIds),
-    addConnection: (connection: Connection) => store.execute("semio.designEditor.addConnection", connection),
-    addConnections: (connections: Connection[]) => store.execute("semio.designEditor.addConnections", connections),
-    removeConnection: (connectionId: ConnectionId) => store.execute("semio.designEditor.removeConnection", connectionId),
-    removeConnections: (connectionIds: ConnectionId[]) => store.execute("semio.designEditor.removeConnections", connectionIds),
-    updatePiece: (pieceId: PieceId, pieceDiff: PieceDiff) => store.execute("semio.designEditor.updatePiece", pieceId, pieceDiff),
-    updatePieces: (updates: { id: PieceId; diff: PieceDiff }[]) => store.execute("semio.designEditor.updatePieces", updates),
-    updateConnection: (connectionId: ConnectionId, connectionDiff: ConnectionDiff) => store.execute("semio.designEditor.updateConnection", connectionId, connectionDiff),
-    updateConnections: (updates: { id: ConnectionId; diff: ConnectionDiff }[]) => store.execute("semio.designEditor.updateConnections", updates),
-    execute: (command: string, ...args: any[]) => store.execute(command, ...args),
-  };
-}
-// Design editor state hooks
-
-export function useDesignEditorSelection(): DesignEditorSelection {
-  return useDesignEditor((s) => s.selection) as DesignEditorSelection;
-}
-
-export function useDesignEditorFullscreen(): DesignEditorFullscreenPanel {
-  return useDesignEditor((s) => s.fullscreenPanel) as DesignEditorFullscreenPanel;
-}
-
-export function useDesignEditorDiff(): KitDiff {
-  return useDesignEditor((s) => s.diff) as KitDiff;
-}
-
-export function useFileUrls(): Map<Url, Url> {
-  return (useKitStore() as KitStore).fileUrls();
-}
-
-export function useDesignEditorOthers(): DesignEditorPresenceOther[] {
-  return useDesignEditor((s) => s.others) as DesignEditorPresenceOther[];
-}
-
-// Domain-specific computed hooks
-
-export function usePiecePlanes(): Plane[] {
-  const flatDesign = useFlatDesign();
-  return useMemo(() => flatDesign.pieces?.map((p: Piece) => p.plane!) || [], [flatDesign]);
-}
-
-export function usePieceRepresentationUrls(): Map<string, string> {
-  const flatDesign = useFlatDesign();
-  const types = usePortColoredTypes();
-  return useMemo(() => getPieceRepresentationUrls(flatDesign, types), [flatDesign, types]);
-}
-
-export function usePieceDiffStatuses(): DiffStatus[] {
-  const flatDesign = useFlatDesign();
-  return useMemo(() => {
-    return (
-      flatDesign.pieces?.map((piece: Piece) => {
-        const diffAttribute = piece.attributes?.find((q: any) => q.key === "semio.diffStatus");
-        return (diffAttribute?.value as DiffStatus) || DiffStatus.Unchanged;
-      }) || []
-    );
-  }, [flatDesign]);
-}
-
-export function useTypesByName(): Record<string, Type[]> {
-  const kit = useKit();
-  return useMemo(() => {
-    if (!kit?.types) return {};
-    return kit.types.reduce(
-      (acc, type) => {
-        acc[type.name] = acc[type.name] || [];
-        acc[type.name].push(type);
-        return acc;
-      },
-      {} as Record<string, Type[]>,
-    );
-  }, [kit?.types]);
-}
-
-export function useDesignsByName(): Record<string, Design[]> {
-  const kit = useKit();
-  return useMemo(() => {
-    if (!kit?.designs) return {};
-    return kit.designs.reduce(
-      (acc, design) => {
-        const nameKey = design.name;
-        acc[nameKey] = acc[nameKey] || [];
-        acc[nameKey].push(design);
-        return acc;
-      },
-      {} as Record<string, Design[]>,
-    );
-  }, [kit?.designs]);
-}
-
-export function useIncludedDesigns() {
-  const design = useDesign();
-  return useMemo(() => getIncludedDesigns(design), [design]);
-}
-
-export function useReplacableTypes(pieceIds: PieceId[], selectedVariants?: string[]) {
-  const kit = useKit();
-  const design = useDesign();
-  const designId = useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
-
-  return useMemo(() => {
-    if (pieceIds.length === 1) {
-      return findReplacableTypesForPieceInDesign(kit, designId, pieceIds[0], selectedVariants);
-    } else {
-      return findReplacableTypesForPiecesInDesign(kit, designId, pieceIds, selectedVariants);
-    }
-  }, [kit, designId, pieceIds, selectedVariants]);
-}
-
-export function useReplacableDesigns(piece: Piece) {
-  const kit = useKit();
-  const design = useDesign();
-  const designId = useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
-
-  return useMemo(() => {
-    return findReplacableDesignsForDesignPiece(kit, designId, piece);
-  }, [kit, designId, piece]);
-}
-
-export function usePiecesFromIds(pieceIds: PieceId[]) {
-  const design = useDesign();
-  const includedDesigns = useIncludedDesigns();
-  const includedDesignMap = useMemo(() => new Map(includedDesigns.map((d) => [d.id, d])), [includedDesigns]);
-
-  return useMemo(() => {
-    return pieceIds.map((id) => {
-      try {
-        const foundPiece = findPieceInDesign(design, id);
-        return {
-          ...foundPiece,
-          id_: typeof foundPiece.id_ === "string" ? foundPiece.id_ : (foundPiece.id_ as any).id_,
-        };
-      } catch {
-        const pieceIdString = typeof id === "string" ? id : (id as any).id_;
-        const includedDesign = includedDesignMap.get(pieceIdString);
-        if (includedDesign) {
-          return {
-            id_: pieceIdString,
-            type: {
-              name: "design",
-              variant:
-                includedDesign.type === "fixed"
-                  ? `${includedDesign.designId.name}${includedDesign.designId.variant ? `-${includedDesign.designId.variant}` : ""}${includedDesign.designId.view ? `-${includedDesign.designId.view}` : ""}`
-                  : includedDesign.designId.name,
-            },
-            center: includedDesign.center,
-            plane: includedDesign.plane,
-            description: `${includedDesign.type === "fixed" ? "Fixed" : "Clustered"} design: ${includedDesign.designId.name}`,
-          };
-        }
-
-        console.warn(`Piece ${pieceIdString} not found in pieces or includedDesigns. Creating fallback piece.`);
-        return {
-          id_: pieceIdString,
-          type: {
-            name: "unknown",
-            variant: "",
-          },
-          description: `Unknown piece: ${pieceIdString}`,
-        };
-      }
-    });
-  }, [pieceIds, design, includedDesignMap]);
-}
-
-export function useDesignId() {
-  const design = useDesign();
-  return useMemo(() => ({ name: design.name, variant: design.variant, view: design.view }), [design.name, design.variant, design.view]);
-}
-
-export function useClusterableGroups() {
-  const design = useDesign();
-  const selection = useDesignEditorSelection();
-  return useMemo(() => {
-    if (!design) return [];
-    return getClusterableGroups(
-      design,
-      selection.pieces.map((p: any) => p.id_),
-    );
-  }, [design, selection.pieces]);
-}
-
-export function useExplodeableDesignNodes(nodes: any[], selection: any) {
-  const kit = useKit();
-  return useMemo(() => {
-    return nodes.filter((node) => {
-      if (node.type !== "design") return false;
-      const pieceId = node.data.piece.id_;
-      if (!selection.pieces?.some((p: any) => p.id_ === pieceId)) return false;
-      const designName = (node.data.piece as any).type?.variant;
-      if (!designName) return false;
-      if (!kit?.designs?.find((d) => d.name === designName)) return false;
-      return true;
-    });
-  }, [nodes, selection.pieces, kit]);
-}
-
-// #endregion Hooks
+// #endregion Sketchpad
