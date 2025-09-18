@@ -373,13 +373,13 @@ type YProps = Y.Array<YProp>;
 
 type YRepresentationVal = string | YStringArray | YAttributes;
 type YRepresentation = Y.Map<YRepresentationVal>;
-type YRepresentationArray = Y.Array<YRepresentation>;
+type YRepresentations = Y.Array<YRepresentation>;
 
 type YPortVal = string | number | boolean | YLeafMapNumber | YAttributes | YStringArray;
 type YPort = Y.Map<YPortVal>;
-type YPortArray = Y.Array<YPort>;
+type YPorts = Y.Array<YPort>;
 
-type YTypeVal = string | number | boolean | YAuthors | YAttributes | YRepresentationArray | YPortArray;
+type YTypeVal = string | number | boolean | YAuthors | YAttributes | YRepresentations | YPorts;
 type YType = Y.Map<YTypeVal>;
 type YTypes = Y.Array<YType>;
 
@@ -388,7 +388,6 @@ type YLayers = Y.Array<YLayer>;
 
 type YPieceVal = string | YLeafMapString | YLeafMapNumber | YPlane | YAttributes;
 type YPiece = Y.Map<YPieceVal>;
-type YPieceArray = Y.Array<YPiece>;
 type YPieces = Y.Array<YPiece>;
 
 type YGroup = Y.Map<string>;
@@ -398,12 +397,12 @@ type YSide = Y.Map<YLeafMapString>;
 
 type YConnectionVal = string | number | YAttributes | YSide;
 type YConnection = Y.Map<YConnectionVal>;
-type YConnectionArray = Y.Array<YConnection>;
+type YConnections = Y.Array<YConnection>;
 
 type YStat = Y.Map<string>;
 type YStats = Y.Array<YStat>;
 
-type YDesignVal = string | YAuthors | YAttributes | YPieceArray | YConnectionArray;
+type YDesignVal = string | YAuthors | YAttributes | YPieces | YConnections;
 type YDesign = Y.Map<YDesignVal>;
 type YDesigns = Y.Array<YDesign>;
 
@@ -456,7 +455,6 @@ class YTypeStore {
   public readonly uuid: string;
   public readonly parent: YKitStore;
   private yType: YType;
-  private transact: Transact;
   private cache?: Type;
   private cacheHash?: string;
 
@@ -464,11 +462,10 @@ class YTypeStore {
     return JSON.stringify(type);
   }
 
-  constructor(parent: YKitStore, yType: YType, transact: Transact, type: Type) {
+  constructor(parent: YKitStore, yType: YType, type: Type) {
     this.uuid = uuidv4();
     this.parent = parent;
     this.yType = yType;
-    this.transact = transact;
     this.yType.set("name", type.name);
     this.yType.set("variant", type.variant || "");
 
@@ -476,18 +473,39 @@ class YTypeStore {
     this.yType.set("updatedAt", new Date().toISOString());
   }
 
+  get name(): string {
+    return this.yType.get("name") as string;
+  }
+  set name(name: string) {
+    this.yType.set("name", name);
+  }
+  get variant(): string | undefined {
+    return this.yType.get("variant") as string | undefined;
+  }
+  set variant(variant: string | undefined) {
+    this.yType.set("variant", variant || "");
+  }
+  get createdAt(): Date {
+    return new Date(this.yType.get("createdAt") as string);
+  }
+  get updatedAt(): Date {
+    return new Date(this.yType.get("updatedAt") as string);
+  }
+
+  updated(): void {
+    this.yType.set("updatedAt", new Date().toISOString());
+  }
+
   id = (): TypeId => {
-    return { name: this.yType.get("name") as string, variant: this.yType.get("variant") as string | undefined } as TypeId;
+    return { name: this.name, variant: this.variant } as TypeId;
   };
 
   snapshot = (): Type => {
-    const name = this.yType.get("name") as string;
-    const variant = this.yType.get("variant") as string | undefined;
     const currentData = {
-      name: name,
-      variant: variant,
-      createdAt: this.yType.get("createdAt") as string,
-      updatedAt: this.yType.get("updatedAt") as string,
+      name: this.name,
+      variant: this.variant,
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString(),
     };
     const currentHash = this.hash(currentData);
 
@@ -500,10 +518,8 @@ class YTypeStore {
   };
 
   change = (diff: TypeDiff) => {
-    this.transact(() => {
       if (diff.name !== undefined) this.yType.set("name", diff.name);
       if (diff.variant !== undefined) this.yType.set("variant", diff.variant);
-    });
     this.cache = undefined;
     this.cacheHash = undefined;
   };
@@ -521,43 +537,41 @@ class YPieceStore {
   public readonly uuid: string;
   public readonly parent: YDesignStore;
   private yPiece: YPiece;
-  private transact: Transact;
   private cache?: Piece;
   private cacheHash?: string;
 
-  private hash(piece: Piece): string {
-    return JSON.stringify(piece);
-  }
-
-  constructor(parent: YDesignStore, yPiece: YPiece, transact: Transact, piece: Piece) {
+  constructor(parent: YDesignStore, yPiece: YPiece, piece: Piece) {
     this.uuid = uuidv4();
     this.parent = parent;
     this.yPiece = yPiece;
-    this.transact = transact;
     this.yPiece.set("id_", piece.id_);
     if (piece.type) {
-      const yType = new Y.Map<YTypeVal>();
       const type = this.parent.parent.type(piece.type);
       this.yPiece.set("type", type.uuid);
-      yType.set("name", piece.type.name);
-      yType.set("variant", piece.type.variant || "");
     } else {
-      const yDesign = new Y.Map<YDesignVal>();
       const design = this.parent.parent.design(piece.design!);
       this.yPiece.set("design", design.uuid);
-      yDesign.set("name", piece.design!.name);
-      yDesign.set("variant", piece.design!.variant || "");
-      yDesign.set("view", piece.design!.view || "");
     }
   }
 
+  get localId(): string {
+    return this.yPiece.get("id_") as string;
+  }
+  set localId(localId: string) {
+    this.yPiece.set("id_", localId);
+  }
+
+  public hash(piece: Piece): string {
+    return JSON.stringify(piece);
+  }
+
   id = (): PieceId => {
-    return { id_: this.yPiece.get("id_") as string } as PieceId;
+    return { id_: this.localId } as PieceId;
   };
 
   snapshot = (): Piece => {
     const currentData = {
-      id_: this.yPiece.get("id_") as string,
+      id_: this.localId,
       type: this.parent.parent.typeByUuid(this.yPiece.get("type") as string)?.id(),
       design: this.parent.parent.designByUuid(this.yPiece.get("design") as string)?.id(),
     };
@@ -572,9 +586,7 @@ class YPieceStore {
   };
 
   change = (diff: PieceDiff) => {
-    this.transact(() => {
-      if (diff.id_) this.yPiece.set("id_", diff.id_);
-    });
+    if (diff.id_) this.localId = diff.id_;
   };
 
   onChanged = (subscribe: Subscribe) => {
@@ -593,40 +605,63 @@ class YDesignStore {
   public readonly uuid: string;
   public readonly parent: YKitStore;
   private yDesign: YDesign;
-  private transact: Transact;
   private yPieces: YPieces;
-  private yDesignPieces: YUuidArray;
   private pieces: YPieceStore[];
   private cache?: Design;
   private cacheHash?: string;
 
-  private hash(design: Design): string {
-    return JSON.stringify(design);
-  }
-
-  constructor(parent: YKitStore, yDesign: YDesign, transact: Transact, design: Design) {
+  constructor(parent: YKitStore, yDesign: YDesign, design: Design) {
     this.uuid = uuidv4();
     this.parent = parent;
     this.yDesign = yDesign;
-    this.transact = transact;
-    this.yPieces = new Y.Array<YPiece>();
-    this.yDesignPieces = new Y.Array<string>();
     this.pieces = new Array();
 
     this.yDesign.set("name", design.name);
     this.yDesign.set("variant", design.variant || "");
     this.yDesign.set("view", design.view || "");
 
+    this.yPieces = this.yDesign.set("pieces", new Y.Array<YPiece>());
     if (design.pieces) {
       for (const piece of design.pieces) {
         this.createPiece(piece);
       }
     }
-    this.yDesign.set("pieces", this.yPieces);
-    this.yDesign.set("designPieces", this.yDesignPieces);
 
     this.yDesign.set("createdAt", new Date().toISOString());
     this.yDesign.set("updatedAt", new Date().toISOString());
+  }
+
+  get name(): string {
+    return this.yDesign.get("name") as string;
+  }
+  set name(name: string) {
+    this.yDesign.set("name", name);
+  }
+  get variant(): string | undefined {
+    return this.yDesign.get("variant") as string | undefined;
+  }
+  set variant(variant: string | undefined) {
+    this.yDesign.set("variant", variant || "");
+  }
+  get view(): string | undefined {
+    return this.yDesign.get("view") as string | undefined;
+  }
+  set view(view: string | undefined) {
+    this.yDesign.set("view", view || "");
+  }
+  get createdAt(): Date {
+    return new Date(this.yDesign.get("createdAt") as string);
+  }
+  get updatedAt(): Date {
+    return new Date(this.yDesign.get("updatedAt") as string);
+  }
+
+  updated(): void {
+    this.yDesign.set("updatedAt", new Date().toISOString());
+  }
+
+  id(): DesignId {
+    return { name: this.name, variant: this.variant, view: this.view } as DesignId;
   }
 
   hasPiece(piece: PieceIdLike): boolean {
@@ -635,24 +670,35 @@ class YDesignStore {
       this.pieces.map((piece) => piece.id()),
     );
   }
+  
+  createPiece(piece: Piece): void {
+    const yPiece = new Y.Map<YPieceVal>();
+    const yPieceStore = new YPieceStore(this, yPiece, piece);
+    this.yPieces!.push([yPiece]);
+    this.pieces.push(yPieceStore);
+  }
 
   piece(piece: PieceIdLike): PieceStore {
     if (!this.hasPiece(piece)) throw new Error(`Piece store not found for piece ${piece}`);
     return this.pieces.find((p) => areSamePiece(p.id(), piece))!;
   }
 
-  id(): DesignId {
-    return { name: this.yDesign.get("name") as string, variant: this.yDesign.get("variant") as string | undefined, view: this.yDesign.get("view") as string | undefined } as DesignId;
+  pieceByUuid(uuid: string): YPieceStore {
+    return this.pieces.find((p) => p.uuid === uuid)!;
+  }
+
+  hash(design: Design): string {
+    return JSON.stringify(design);
   }
 
   snapshot = (): Design => {
     const currentData = {
-      name: this.yDesign.get("name") as string,
-      variant: this.yDesign.get("variant") as string | undefined,
-      view: this.yDesign.get("view") as string | undefined,
+      name: this.name,
+      variant: this.variant,
+      view: this.view,
       pieces: this.pieces.map((piece) => piece.snapshot()),
-      createdAt: this.yDesign.get("createdAt") as string,
-      updatedAt: this.yDesign.get("updatedAt") as string,
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString(),
     };
     const currentHash = this.hash(currentData);
 
@@ -663,14 +709,6 @@ class YDesignStore {
 
     return this.cache;
   };
-
-  createPiece(piece: Piece): void {
-    const yPiece = new Y.Map<YPiece>();
-    // const yTypeUuid = this.parent.type(piece.type!).id();
-    const yPieceStore = new YPieceStore(this, yPiece, this.transact, piece, "typeA", "designA");
-    this.yPieces.push([yPiece]);
-    this.pieces.push(yPieceStore);
-  }
 
   change = (diff: DesignDiff) => {
     this.cache = undefined;
@@ -710,10 +748,6 @@ class YKitStore {
   private cache?: Kit;
   private cacheHash?: string;
 
-  private hash(kit: Kit): string {
-    return JSON.stringify(kit);
-  }
-
   constructor(parent: YSketchpadStore, uri: string, kit: Kit, yProviderFactory?: YProviderFactory) {
     this.uri = uri;
     this.parent = parent;
@@ -734,22 +768,14 @@ class YKitStore {
     this.yDesigns = this.yDoc.getArray("designs");
 
     this.yDoc.transact(() => {
-      this.yKit.set("name", kit.name);
-      this.yKit.set("version", kit.version || "");
+      this.name = kit.name;
+      this.version = kit.version || "";
 
-      if (kit.types) {
-        for (const type of kit.types) {
-          this.createType(type);
-        }
-      }
-      if (kit.designs) {
-        for (const design of kit.designs) {
-          this.createDesign(design);
-        }
-      }
+      if (kit.types) for (const type of kit.types) this.createType(type);
+      if (kit.designs) for (const design of kit.designs) this.createDesign(design);
 
       this.yKit.set("createdAt", new Date().toISOString());
-      this.yKit.set("updatedAt", new Date().toISOString());
+      this.updated();
     });
 
     Object.entries(kitCommands).forEach(([commandId, command]) => {
@@ -757,8 +783,35 @@ class YKitStore {
     });
   }
 
+  get name(): string {
+    return this.yKit.get("name") as string;
+  }
+  set name(name: string) {
+    this.yKit.set("name", name);
+  }
+  get version(): string | undefined {
+    return this.yKit.get("version") as string | undefined;
+  }
+  set version(version: string | undefined) {
+    this.yKit.set("version", version || "");
+  }
+  get createdAt(): Date {
+    return new Date(this.yKit.get("createdAt") as string);
+  }
+  get updatedAt(): Date {
+    return new Date(this.yKit.get("updatedAt") as string);
+  }
+  
+  get fileUrls(): Map<Url, Url> {
+    return this.regularFiles;
+  };
+
+  updated(): void {
+    this.yKit.set("updatedAt", new Date().toISOString());
+  }
+
   id = (): KitId => {
-    return { name: this.yKit.get("name") as string, version: this.yKit.get("version") || "" } as KitId;
+    return { name: this.name, version: this.version } as KitId;
   };
 
   hasType(type: TypeIdLike): boolean {
@@ -766,6 +819,14 @@ class YKitStore {
       type,
       this.types.map((type) => type.id()),
     );
+  }
+
+  createType(type: Type): void {
+    if (this.hasType(type)) throw new Error(`Type (${type.name}, ${type.variant || ""}) already exists.`);
+    const yType = new Y.Map<YTypeVal>();
+    const yTypeStore = new YTypeStore(this, yType, type);
+    this.yTypes.push([yType]);
+    this.types.push(yTypeStore);
   }
 
   type(type: TypeIdLike): YTypeStore {
@@ -784,6 +845,14 @@ class YKitStore {
     );
   }
 
+  createDesign(design: Design): void {
+    if (this.hasDesign(design)) throw new Error(`Design (${design.name}, ${design.variant || ""}, ${design.view || ""}) already exists.`);
+    const yDesign = new Y.Map<YDesignVal>();
+    const yDesignStore = new YDesignStore(this, yDesign, design);
+    this.yDesigns.push([yDesign]);
+    this.designs.push(yDesignStore);
+  }
+
   design(design: DesignIdLike): YDesignStore {
     if (!this.hasDesign(design)) throw new Error(`Design store not found for design ${design}`);
     return this.designs.find((d) => areSameDesign(d.id(), design))!;
@@ -793,10 +862,14 @@ class YKitStore {
     return this.designs.find((d) => d.uuid === uuid)!;
   }
 
+  hash(kit: Kit): string {
+    return JSON.stringify(kit);
+  }
+
   snapshot = (): Kit => {
     const currentData = {
-      name: this.yKit.get("name") as string,
-      version: this.yKit.get("version") as string | undefined,
+      name: this.name,
+      version: this.version,
       types: this.types.map((type) => type.snapshot()),
       designs: this.designs.map((design) => design.snapshot()),
     };
@@ -810,28 +883,10 @@ class YKitStore {
     return this.cache;
   };
 
-  fileUrls = (): Map<Url, Url> => {
-    return this.regularFiles;
-  };
-
-  createType(type: Type): void {
-    const yType = new Y.Map<YTypeVal>();
-    const yTypeStore = new YTypeStore(this, yType, this.yDoc.transact, type);
-    this.yTypes.push([yType]);
-    this.types.push(yTypeStore);
-  }
-
-  createDesign(design: Design): void {
-    const yDesign = new Y.Map<YDesignVal>();
-    const yDesignStore = new YDesignStore(this, yDesign, this.yDoc.transact, design);
-    this.yDesigns.push([yDesign]);
-    this.designs.push(yDesignStore);
-  }
-
   change = (diff: KitDiff) => {
     this.yDoc.transact(() => {
-      if (diff.name) this.yKit.set("name", diff.name);
-      if (diff.version) this.yKit.set("version", diff.version);
+      if (diff.name) this.name = diff.name;
+      if (diff.version) this.version = diff.version;
       if (diff.types) {
         if (diff.types.added) {
           diff.types.added.forEach((type) => this.createType(type));
@@ -869,7 +924,7 @@ class YKitStore {
     if (!callback) throw new Error(`Command "${command}" not found in kit store`);
     const context: KitCommandContext = {
       kit: this.snapshot(),
-      fileUrls: this.fileUrls(),
+      fileUrls: this.fileUrls,
     };
     const result = callback(context, ...rest);
     if (result.diff) {
@@ -916,10 +971,6 @@ class YDesignEditorStore {
   private cache?: DesignEditorState;
   private cacheHash?: string;
 
-  private hash(state: DesignEditorState): string {
-    return JSON.stringify(state);
-  }
-
   constructor(parent: YSketchpadStore, yMap: YDesignEditor, transact: (fn: () => void) => void, id: DesignEditorId, state?: DesignEditorState) {
     this.uuid = uuidv4();
     this.parent = parent;
@@ -965,16 +1016,22 @@ class YDesignEditorStore {
     });
   }
 
-  fullscreenPanel(): DesignEditorFullscreenPanel {
-    return (this.yMap.get("fullscreenPanel") as DesignEditorFullscreenPanel) || DesignEditorFullscreenPanel.None;
+  get fullscreenPanel(): DesignEditorFullscreenPanel {
+    return (this.yMap.get("fullscreenPanel") as DesignEditorFullscreenPanel);
   }
-  selection(): DesignEditorSelection {
+  set fullscreenPanel(panel: DesignEditorFullscreenPanel) {
+    this.yMap.set("fullscreenPanel", panel);
+  }
+  get selection(): DesignEditorSelection {
     return {};
   }
-  isTransactionActive(): boolean {
+  get isTransactionActive(): boolean {
     return (this.yMap.get("isTransactionActive") as boolean) || false;
   }
-  presence(): DesignEditorPresence {
+  set isTransactionActive(active: boolean) {
+    this.yMap.set("isTransactionActive", active);
+  }
+  get presence(): DesignEditorPresence {
     return {
       cursor: {
         x: (this.yMap.get("presenceCursorX") as number) || 0,
@@ -982,17 +1039,17 @@ class YDesignEditorStore {
       },
     };
   }
-  others(): DesignEditorPresenceOther[] {
+  get others(): DesignEditorPresenceOther[] {
     return [];
   }
-  diff(): KitDiff {
+  get diff(): KitDiff {
     return {};
   }
-  currentTransactionStack(): DesignEditorEdit[] {
+  get currentTransactionStack(): DesignEditorEdit[] {
     const yStack = this.yMap.get("currentTransactionStack") as Y.Array<any>;
     return yStack ? yStack.toArray() : [];
   }
-  pastTransactionsStack(): DesignEditorEdit[] {
+  get pastTransactionsStack(): DesignEditorEdit[] {
     const yStack = this.yMap.get("pastTransactionsStack") as Y.Array<any>;
     return yStack ? yStack.toArray() : [];
   }
@@ -1014,18 +1071,22 @@ class YDesignEditorStore {
     } as DesignEditorId;
   }
 
+  hash(state: DesignEditorState): string {
+    return JSON.stringify(state);
+  }
+
   snapshot = (): DesignEditorState => {
     const currentData = {
-      fullscreenPanel: this.fullscreenPanel(),
-      selection: this.selection(),
-      isTransactionActive: this.isTransactionActive(),
+      fullscreenPanel: this.fullscreenPanel,
+      selection: this.selection,
+      isTransactionActive: this.isTransactionActive,
       canUndo: this.canUndo(),
       canRedo: this.canRedo(),
-      presence: this.presence(),
-      others: this.others(),
-      diff: this.diff(),
-      currentTransactionStack: this.currentTransactionStack(),
-      pastTransactionsStack: this.pastTransactionsStack(),
+      presence: this.presence,
+      others: this.others,
+      diff: this.diff,
+      currentTransactionStack: this.currentTransactionStack,
+      pastTransactionsStack: this.pastTransactionsStack,
     };
     const currentHash = this.hash(currentData);
 
@@ -1039,7 +1100,7 @@ class YDesignEditorStore {
 
   change = (diff: DesignEditorDiff) => {
     this.transact(() => {
-      if (diff.fullscreenPanel) this.yMap.set("fullscreenPanel", diff.fullscreenPanel);
+      if (diff.fullscreenPanel) this.fullscreenPanel = diff.fullscreenPanel;
       if (diff.selection) {
         const selection = this.yMap.get("selection") as Y.Map<any>;
       }
@@ -1063,7 +1124,7 @@ class YDesignEditorStore {
   };
 
   startTransaction = () => {
-    this.yMap.set("isTransactionActive", true);
+    this.isTransactionActive = true;
   };
 
   onTransactionStarted = (subscribe: Subscribe) => {
@@ -1080,7 +1141,7 @@ class YDesignEditorStore {
       if (currentStack) {
         currentStack.delete(0, currentStack.length);
       }
-      this.yMap.set("isTransactionActive", false);
+      this.isTransactionActive = false;
     }
   };
 
@@ -1100,8 +1161,7 @@ class YDesignEditorStore {
         pastStack.push(currentStack.toArray());
         currentStack.delete(0, currentStack.length);
       }
-      this.yMap.set("isTransactionActive", false);
-      this.yMap.set("isTransactionActive", false);
+      this.isTransactionActive = false;
     }
   };
 
