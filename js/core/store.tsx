@@ -30,9 +30,12 @@ import * as Y from "yjs";
 import {
   applyDesignDiff,
   applyKitDiff,
+  areSameAttribute,
   areSameDesign,
   areSameKit,
   areSamePiece,
+  areSamePort,
+  areSameRepresentation,
   areSameType,
   Attribute,
   AttributeIdLike,
@@ -44,12 +47,14 @@ import {
   BenchmarkId,
   BenchmarkIdLike,
   Camera,
+  CameraDiff,
   colorPortsForTypes,
   Connection,
   ConnectionDiff,
   ConnectionId,
   connectionIdToString,
   Coord,
+  CoordDiff,
   Design,
   DesignDiff,
   DesignId,
@@ -84,6 +89,7 @@ import {
   Layer,
   LayerId,
   Location,
+  LocationDiff,
   Piece,
   PieceDiff,
   PieceId,
@@ -91,9 +97,13 @@ import {
   pieceIdToString,
   piecesMetadata,
   Plane,
+  PlaneDiff,
+  Point,
+  PointDiff,
   Port,
   PortDiff,
   PortId,
+  PortIdLike,
   portIdToString,
   Prop,
   PropId,
@@ -103,6 +113,7 @@ import {
   Representation,
   RepresentationDiff,
   RepresentationId,
+  RepresentationIdLike,
   File as SemioFile,
   Side,
   SideId,
@@ -112,6 +123,10 @@ import {
   TypeDiff,
   TypeId,
   TypeIdLike,
+  Vec,
+  VecDiff,
+  Vector,
+  VectorDiff,
 } from "./semio";
 
 // #region Constants
@@ -151,77 +166,6 @@ type YStringArray = Y.Array<string>;
 type YLeafMapString = Y.Map<string>;
 type YLeafMapNumber = Y.Map<number>;
 
-export interface Snapshot<TModel> {
-  snapshot(): TModel;
-}
-export interface Id<TId> {
-  id(): TId;
-}
-export interface Actions<TDiff> {
-  change: (diff: TDiff) => void;
-}
-export interface OtherPresence {
-  name: string;
-}
-export interface EditorSelection<TSelection> {
-  selection: TSelection;
-}
-export interface EditorPresence<TPresence> {
-  presence: TPresence;
-}
-export interface EditorChangableState<TSelection, TPresence> extends EditorSelection<TSelection>, EditorPresence<TPresence> {}
-export interface EditorEdit<TEditorStep> {
-  do: TEditorStep;
-  undo: TEditorStep;
-}
-export interface EditorState<TDiff, TPresenceOther, TSelection, TPresence, TEdit> extends EditorChangableState<TSelection, TPresence> {
-  isTransactionActive: boolean;
-  canUndo: boolean;
-  canRedo: boolean;
-  others: TPresenceOther[];
-  diff: TDiff;
-  currentTransactionStack: TEdit[];
-  pastTransactionsStack: TEdit[];
-}
-export interface EditorSelectionActions<TSelectionDiff> {
-  selectAll: () => void;
-  deselectAll: () => void;
-  changeSelection: (diff: TSelectionDiff) => void;
-}
-export interface EditorPresenceActions<TPresence> {
-  setPresence: (presence: TPresence) => void;
-}
-export interface EditorActions<TDiff, TSelectionDiff, TPresence> extends Actions<TDiff>, EditorSelectionActions<TSelectionDiff>, EditorPresenceActions<TPresence> {
-  undo: () => void;
-  redo: () => void;
-  startTransaction: () => void;
-  abortTransaction: () => void;
-  finalizeTransaction: () => void;
-}
-export interface Subscriptions {
-  onChanged: (subscribe: Subscribe) => Unsubscribe;
-  onChangedDeep: (subscribe: Subscribe) => Unsubscribe;
-}
-export interface EditorSubscriptions extends Subscriptions {
-  onUndone: (subscribe: Subscribe) => Unsubscribe;
-  onRedone: (subscribe: Subscribe) => Unsubscribe;
-  onTransactionStarted: (subscribe: Subscribe) => Unsubscribe;
-  onTransactionAborted: (subscribe: Subscribe) => Unsubscribe;
-  onTransactionFinalized: (subscribe: Subscribe) => Unsubscribe;
-}
-export interface Store<TModel, TId, TDiff> extends Snapshot<TModel>, Id<TId>, Actions<TDiff>, Subscriptions {}
-export interface Commands<TContext, TResult> {
-  execute(command: string, ...rest: any[]): Promise<TResult>;
-  register(command: string, callback: (context: TContext, ...rest: any[]) => TResult): Disposable;
-}
-export interface StoreWithCommands<TModel, TId, TDiff, TContext, TResult> extends Store<TModel, TId, TDiff>, Commands<TContext, TResult> {}
-export interface Editor<TDiff, TSelection, TSelectionDiff, TPresence, TContext, TResult>
-  extends Commands<TContext, TResult>,
-    EditorActions<TDiff, TSelectionDiff, TPresence>,
-    EditorSelection<TSelection>,
-    EditorPresence<TPresence>,
-    EditorSelectionActions<TSelectionDiff> {}
-
 function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscribe, deep?: boolean): Unsubscribe {
   if (deep) {
     yObject.observeDeep(subscribe);
@@ -240,11 +184,11 @@ function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscribe, deep
 
 // #region Attribute
 
-type YAttribute = Y.Map<string>;
+type YAttributeVal = string;
+type YAttribute = Y.Map<YAttributeVal>;
 type YAttributes = Y.Array<YAttribute>;
 
-class YAttributeStore implements Store<Attribute, any, any> {
-  public readonly uuid: string;
+class YAttributeStore {
   private yAttribute: YAttribute;
   private cache?: Attribute;
   private cacheHash?: string;
@@ -254,7 +198,6 @@ class YAttributeStore implements Store<Attribute, any, any> {
   }
 
   constructor(yAttribute: YAttribute, attribute: Attribute) {
-    this.uuid = uuidv4();
     this.yAttribute = yAttribute;
     this.key = attribute.key;
     this.value = attribute.value;
@@ -318,12 +261,10 @@ class YAttributeStore implements Store<Attribute, any, any> {
 
 // #region Coord
 
-type YCoord = Y.Map<number>;
+type YCoordVal = number;
+type YCoord = Y.Map<YCoordVal>;
 
-export interface CoordStore extends Store<Coord, any, CoordDiff> {}
-
-class YCoordStore implements CoordStore {
-  public readonly uuid: string;
+class YCoordStore {
   private yCoord: YCoord;
   private cache?: Coord;
   private cacheHash?: string;
@@ -333,7 +274,6 @@ class YCoordStore implements CoordStore {
   }
 
   constructor(yCoord: YCoord, coord: Coord) {
-    this.uuid = uuidv4();
     this.yCoord = yCoord;
     this.x = coord.x;
     this.y = coord.y;
@@ -387,12 +327,10 @@ class YCoordStore implements CoordStore {
 
 // #region Vec
 
-type YVec = Y.Map<number>;
+type YVecVal = number;
+type YVec = Y.Map<YVecVal>;
 
-export interface VecStore extends Store<Vec, any, VecDiff> {}
-
-class YVecStore implements VecStore {
-  public readonly uuid: string;
+class YVecStore {
   private yVec: YVec;
   private cache?: Vec;
   private cacheHash?: string;
@@ -402,7 +340,6 @@ class YVecStore implements VecStore {
   }
 
   constructor(yVec: YVec, vec: Vec) {
-    this.uuid = uuidv4();
     this.yVec = yVec;
     this.x = vec.x;
     this.y = vec.y;
@@ -456,12 +393,10 @@ class YVecStore implements VecStore {
 
 // #region Point
 
-type YPoint = Y.Map<number>;
+type YPointVal = number;
+type YPoint = Y.Map<YPointVal>;
 
-export interface PointStore extends Store<Point, any, PointDiff> {}
-
-class YPointStore implements PointStore {
-  public readonly uuid: string;
+class YPointStore {
   private yPoint: YPoint;
   private cache?: Point;
   private cacheHash?: string;
@@ -471,7 +406,6 @@ class YPointStore implements PointStore {
   }
 
   constructor(yPoint: YPoint, point: Point) {
-    this.uuid = uuidv4();
     this.yPoint = yPoint;
     this.x = point.x;
     this.y = point.y;
@@ -535,12 +469,10 @@ class YPointStore implements PointStore {
 
 // #region Vector
 
-type YVector = Y.Map<number>;
+type YVectorVal = number;
+type YVector = Y.Map<YVectorVal>;
 
-export interface VectorStore extends Store<Vector, any, VectorDiff> {}
-
-class YVectorStore implements VectorStore {
-  public readonly uuid: string;
+class YVectorStore {
   private yVector: YVector;
   private cache?: Vector;
   private cacheHash?: string;
@@ -550,7 +482,6 @@ class YVectorStore implements VectorStore {
   }
 
   constructor(yVector: YVector, vector: Vector) {
-    this.uuid = uuidv4();
     this.yVector = yVector;
     this.x = vector.x;
     this.y = vector.y;
@@ -617,10 +548,7 @@ class YVectorStore implements VectorStore {
 type YPlaneVal = YPoint | YVector;
 type YPlane = Y.Map<YPlaneVal>;
 
-export interface PlaneStore extends Store<Plane, any, PlaneDiff> {}
-
-class YPlaneStore implements PlaneStore {
-  public readonly uuid: string;
+class YPlaneStore {
   private yPlane: YPlane;
   private origin: YPointStore;
   private xAxis: YVectorStore;
@@ -633,20 +561,10 @@ class YPlaneStore implements PlaneStore {
   }
 
   constructor(yPlane: YPlane, plane: Plane) {
-    this.uuid = uuidv4();
     this.yPlane = yPlane;
-
-    // Initialize origin Point store
-    const yOrigin = yPlane.get("origin") as YPoint;
-    this.origin = new YPointStore(yOrigin, plane.origin);
-
-    // Initialize xAxis Vector store
-    const yXAxis = yPlane.get("xAxis") as YVector;
-    this.xAxis = new YVectorStore(yXAxis, plane.xAxis);
-
-    // Initialize yAxis Vector store
-    const yYAxis = yPlane.get("yAxis") as YVector;
-    this.yAxis = new YVectorStore(yYAxis, plane.yAxis);
+    this.origin = new YPointStore(new Y.Map<YPointVal>(), plane.origin);
+    this.xAxis = new YVectorStore(new Y.Map<YVectorVal>(), plane.xAxis);
+    this.yAxis = new YVectorStore(new Y.Map<YVectorVal>(), plane.yAxis);
   }
 
   snapshot = (): Plane => {
@@ -688,10 +606,7 @@ class YPlaneStore implements PlaneStore {
 type YCameraVal = YPoint | YVector | number;
 type YCamera = Y.Map<YCameraVal>;
 
-export interface CameraStore extends Store<Camera, any, CameraDiff> {}
-
-class YCameraStore implements CameraStore {
-  public readonly uuid: string;
+class YCameraStore {
   private yCamera: YCamera;
   private cache?: Camera;
   private cacheHash?: string;
@@ -701,7 +616,6 @@ class YCameraStore implements CameraStore {
   }
 
   constructor(yCamera: YCamera, camera: Camera) {
-    this.uuid = uuidv4();
     this.yCamera = yCamera;
     this.distance = camera.distance;
     this.phi = camera.phi;
@@ -768,10 +682,7 @@ class YCameraStore implements CameraStore {
 type YLocationVal = number;
 type YLocation = Y.Map<YLocationVal>;
 
-export interface LocationStore extends Store<Location, any, LocationDiff> {}
-
-class YLocationStore implements LocationStore {
-  public readonly uuid: string;
+class YLocationStore {
   private yLocation: YLocation;
   private cache?: Location;
   private cacheHash?: string;
@@ -781,7 +692,6 @@ class YLocationStore implements LocationStore {
   }
 
   constructor(yLocation: YLocation, location: Location) {
-    this.uuid = uuidv4();
     this.yLocation = yLocation;
     this.latitude = location.latitude;
     this.longitude = location.longitude;
@@ -919,9 +829,7 @@ class YAuthorStore {
 type YFile = Y.Map<string | YAttributes>;
 type YFiles = Y.Array<YFile>;
 
-export interface FileStore extends Store<SemioFile, FileId, FileDiff> {}
-
-class YFileStore implements FileStore {
+class YFileStore {
   public readonly uuid: string;
   private yFile: YFile;
   private cache?: SemioFile;
@@ -1257,7 +1165,6 @@ type YProp = Y.Map<string | number | boolean | YAttributes>;
 type YProps = Y.Array<YProp>;
 
 class YPropStore {
-  public readonly uuid: string;
   private yProp: YProp;
   private cache?: Prop;
   private cacheHash?: string;
@@ -1267,7 +1174,6 @@ class YPropStore {
   }
 
   constructor(yProp: YProp, prop: Prop) {
-    this.uuid = uuidv4();
     this.yProp = yProp;
     this.key = prop.key;
     this.value = prop.value;
@@ -1338,9 +1244,7 @@ type YRepresentationVal = string | YStringArray | YAttributes;
 type YRepresentation = Y.Map<YRepresentationVal>;
 type YRepresentations = Y.Array<YRepresentation>;
 
-export interface RepresentationStore extends Store<Representation, RepresentationId, RepresentationDiff> {}
-
-class YRepresentationStore implements RepresentationStore {
+class YRepresentationStore {
   public readonly uuid: string;
   private yRepresentation: YRepresentation;
   private cache?: Representation;
@@ -1417,9 +1321,7 @@ type YPortVal = string | number | boolean | YLeafMapNumber | YAttributes | YStri
 type YPort = Y.Map<YPortVal>;
 type YPorts = Y.Array<YPort>;
 
-export interface PortStore extends Store<Port, PortId, PortDiff> {}
-
-class YPortStore implements PortStore {
+class YPortStore {
   public readonly uuid: string;
   private yPort: YPort;
   private point: YPointStore;
@@ -1539,19 +1441,14 @@ type YTypeVal = string | number | boolean | YAuthors | YAttributes | YRepresenta
 type YType = Y.Map<YTypeVal>;
 type YTypes = Y.Array<YType>;
 
-export interface TypeStore extends Store<Type, TypeId, TypeDiff> {
-  representations: Map<string, RepresentationStore>;
-  ports: Map<string, PortStore>;
-}
-
-class YTypeStore implements TypeStore {
+class YTypeStore {
   public readonly uuid: string;
   public readonly parent: YKitStore;
   private yType: YType;
   private yRepresentations: YRepresentations;
   private yPorts: YPorts;
-  public representations: Map<string, RepresentationStore>;
-  public ports: Map<string, PortStore>;
+  public representations: YRepresentationStore[];
+  public ports: YPortStore[];
   private cache?: Type;
   private cacheHash?: string;
 
@@ -1563,8 +1460,8 @@ class YTypeStore implements TypeStore {
     this.uuid = uuidv4();
     this.parent = parent;
     this.yType = yType;
-    this.representations = new Map();
-    this.ports = new Map();
+    this.representations = new Array();
+    this.ports = new Array();
 
     this.name = type.name;
     this.variant = type.variant;
@@ -1656,22 +1553,20 @@ class YTypeStore implements TypeStore {
     const yRepresentation = new Y.Map<YRepresentationVal>();
     const yRepresentationStore = new YRepresentationStore(yRepresentation, representation);
     this.yRepresentations.push([yRepresentation]);
-    this.representations.set(representation.tags.join(","), yRepresentationStore);
+    this.representations.push(yRepresentationStore);
   }
 
-  hasRepresentation(representation: any): boolean {
-    const key = typeof representation === "string" ? representation : representation.tags.join(",");
-    return this.representations.has(key);
+  hasRepresentation(representation: RepresentationIdLike): boolean {
+    return this.representations.some((rep) => areSameRepresentation(rep.id(), representation));
   }
 
-  representation(representation: any): YRepresentationStore {
-    const key = typeof representation === "string" ? representation : representation.tags.join(",");
-    if (!this.hasRepresentation(representation)) throw new Error(`Representation store not found for representation ${key}`);
-    return this.representations.get(key)!;
+  representation(representation: RepresentationIdLike): YRepresentationStore {
+    if (!this.hasRepresentation(representation)) throw new Error(`Representation store not found for representation ${representation}`);
+    return this.representations.find((rep) => areSameRepresentation(rep.id(), representation))!;
   }
 
   representationByUuid(uuid: string): YRepresentationStore {
-    for (const rep of this.representations.values()) {
+    for (const rep of this.representations) {
       if (rep.uuid === uuid) return rep;
     }
     throw new Error(`Representation store not found for uuid ${uuid}`);
@@ -1681,22 +1576,20 @@ class YTypeStore implements TypeStore {
     const yPort = new Y.Map<YPortVal>();
     const yPortStore = new YPortStore(yPort, port);
     this.yPorts.push([yPort]);
-    this.ports.set(port.id_, yPortStore);
+    this.ports.push(yPortStore);
   }
 
-  hasPort(port: any): boolean {
-    const key = typeof port === "string" ? port : port.id_;
-    return this.ports.has(key);
+  hasPort(port: PortIdLike): boolean {
+    return this.ports.some((port) => areSamePort(port.id(), port));
   }
 
-  port(port: any): YPortStore {
-    const key = typeof port === "string" ? port : port.id_;
-    if (!this.hasPort(port)) throw new Error(`Port store not found for port ${key}`);
-    return this.ports.get(key)!;
+  port(port: PortIdLike): YPortStore {
+    if (!this.hasPort(port)) throw new Error(`Port store not found for port ${port}`);
+    return this.ports.find((port) => areSamePort(port.id(), port))!;
   }
 
   portByUuid(uuid: string): YPortStore {
-    for (const p of this.ports.values()) {
+    for (const p of this.ports) {
       if (p.uuid === uuid) return p;
     }
     throw new Error(`Port store not found for uuid ${uuid}`);
@@ -1716,8 +1609,8 @@ class YTypeStore implements TypeStore {
       icon: this.icon,
       image: this.image,
       description: this.description,
-      representations: Array.from(this.representations.values()).map((rep) => rep.snapshot()),
-      ports: Array.from(this.ports.values()).map((port) => port.snapshot()),
+      representations: this.representations.map((rep) => rep.snapshot()),
+      ports: this.ports.map((port) => port.snapshot()),
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };
@@ -1793,7 +1686,6 @@ type YLayer = Y.Map<string | boolean | YAttributes>;
 type YLayers = Y.Array<YLayer>;
 
 class YLayerStore {
-  public readonly uuid: string;
   private yLayer: YLayer;
   private cache?: Layer;
   private cacheHash?: string;
@@ -1803,7 +1695,6 @@ class YLayerStore {
   }
 
   constructor(yLayer: YLayer, layer: Layer) {
-    this.uuid = uuidv4();
     this.yLayer = yLayer;
     this.path = layer.path;
     this.isHidden = layer.isHidden;
@@ -1893,8 +1784,6 @@ class YLayerStore {
 type YPieceVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YPlane | YAttributes | YCoord;
 type YPiece = Y.Map<YPieceVal>;
 type YPieces = Y.Array<YPiece>;
-
-export interface PieceStore extends Store<Piece, PieceId, PieceDiff> {}
 
 class YPieceStore {
   public readonly uuid: string;
@@ -2024,13 +1913,13 @@ class YPieceStore {
     this.attributes.push(yAttributeStore);
   }
 
-  hasAttribute(attribute: any): boolean {
-    return this.attributes.some((a) => a.key === attribute.key || a.key === attribute);
+  hasAttribute(attribute: AttributeIdLike): boolean {
+    return this.attributes.some((a) => areSameAttribute(a.id(), attribute));
   }
 
-  attribute(attribute: any): YAttributeStore {
+  attribute(attribute: AttributeIdLike): YAttributeStore {
     if (!this.hasAttribute(attribute)) throw new Error(`Attribute store not found for attribute ${attribute}`);
-    return this.attributes.find((a) => a.key === attribute.key || a.key === attribute)!;
+    return this.attributes.find((a) => areSameAttribute(a.id(), attribute))!;
   }
 
   attributeByUuid(uuid: string): YAttributeStore {
@@ -2243,7 +2132,6 @@ type YGroup = Y.Map<string | YStringArray | YAttributes>;
 type YGroups = Y.Array<YGroup>;
 
 class YGroupStore {
-  public readonly uuid: string;
   private yGroup: YGroup;
   private cache?: Group;
   private cacheHash?: string;
@@ -2253,7 +2141,6 @@ class YGroupStore {
   }
 
   constructor(yGroup: YGroup, group: Group) {
-    this.uuid = uuidv4();
     this.yGroup = yGroup;
     this.color = group.color;
     this.name = group.name;
@@ -2323,7 +2210,7 @@ class YGroupStore {
 // #region Side
 
 class YSideStore {
-  public readonly uuid: string;
+  public readonly parent: YDesignStore;
   private ySide: YSide;
   private cache?: Side;
   private cacheHash?: string;
@@ -2332,46 +2219,81 @@ class YSideStore {
     return JSON.stringify(side);
   }
 
-  constructor(ySide: YSide, side: Side) {
-    this.uuid = uuidv4();
+  constructor(parent: YDesignStore, ySide: YSide, side: Side) {
+    this.parent = parent;
     this.ySide = ySide;
-    this.piece = side.piece;
-    this.designPiece = side.designPiece;
-    this.port = side.port;
+
+    // Store piece UUID
+    const pieceStore = this.parent.pieces.find((p) => areSamePiece(p.id(), side.piece));
+    if (pieceStore) {
+      this.ySide.set("piece", pieceStore.uuid);
+    }
+
+    // Store designPiece UUID if present
+    if (side.designPiece) {
+      const designPieceStore = this.parent.pieces.find((p) => areSamePiece(p.id(), side.designPiece!));
+      if (designPieceStore) {
+        this.ySide.set("designPiece", designPieceStore.uuid);
+      }
+    }
+
+    // Store port UUID - need to find it through the piece's type
+    if (pieceStore) {
+      const typeId = pieceStore.type;
+      const typeStore = this.parent.parent.type(typeId);
+      const portStore = typeStore.ports.get(side.port.id_);
+      if (portStore) {
+        this.ySide.set("port", portStore.uuid);
+      }
+    }
   }
 
   get piece(): PieceId {
-    const ypieceId = this.ySide.get("piece") as Y.Map<string>;
-    return { id_: ypieceId.get("id_") || "" };
+    const pieceUuid = this.ySide.get("piece") as string;
+    return this.parent.pieceByUuid(pieceUuid).id();
   }
   set piece(piece: PieceId) {
-    const ypieceId = new Y.Map<string>();
-    ypieceId.set("id_", piece.id_ || "");
-    this.ySide.set("piece", ypieceId);
+    const pieceStore = this.parent.pieces.find((p) => areSamePiece(p.id(), piece));
+    if (pieceStore) {
+      this.ySide.set("piece", pieceStore.uuid);
+    }
   }
 
   get designPiece(): PieceId | undefined {
-    const ydesignPiece = this.ySide.get("designPiece") as Y.Map<string> | undefined;
-    return ydesignPiece ? { id_: ydesignPiece.get("id_") || "" } : undefined;
+    const designPieceUuid = this.ySide.get("designPiece") as string | undefined;
+    if (!designPieceUuid) return undefined;
+    return this.parent.pieceByUuid(designPieceUuid).id();
   }
   set designPiece(designPiece: PieceId | undefined) {
     if (designPiece) {
-      const ydesignPiece = new Y.Map<string>();
-      ydesignPiece.set("id_", designPiece.id_ || "");
-      this.ySide.set("designPiece", ydesignPiece);
+      const designPieceStore = this.parent.pieces.find((p) => areSamePiece(p.id(), designPiece));
+      if (designPieceStore) {
+        this.ySide.set("designPiece", designPieceStore.uuid);
+      }
     } else {
       this.ySide.delete("designPiece");
     }
   }
 
   get port(): PortId {
-    const yportId = this.ySide.get("port") as Y.Map<any>;
-    return { t: yportId.get("t") || 0 };
+    const portUuid = this.ySide.get("port") as string;
+    const pieceUuid = this.ySide.get("piece") as string;
+    const pieceStore = this.parent.pieceByUuid(pieceUuid);
+    const typeId = pieceStore.type;
+    const typeStore = this.parent.parent.type(typeId);
+    const portStore = typeStore.portByUuid(portUuid);
+    return portStore.id();
   }
   set port(port: PortId) {
-    const yportId = new Y.Map<any>();
-    yportId.set("t", port.t || 0);
-    this.ySide.set("port", yportId);
+    // Find the port through the piece's type
+    const pieceUuid = this.ySide.get("piece") as string;
+    const pieceStore = this.parent.pieceByUuid(pieceUuid);
+    const typeId = pieceStore.type;
+    const typeStore = this.parent.parent.type(typeId);
+    const portStore = typeStore.ports.get(port.id_);
+    if (portStore) {
+      this.ySide.set("port", portStore.uuid);
+    }
   }
 
   snapshot = (): Side => {
@@ -2416,8 +2338,8 @@ type YConnections = Y.Array<YConnection>;
 
 export interface ConnectionStore extends Store<Connection, ConnectionId, ConnectionDiff> {}
 
-class YConnectionStore implements ConnectionStore {
-  public readonly uuid: string;
+class YConnectionStore {
+  public readonly parent: YDesignStore;
   private yConnection: YConnection;
   private connected: YSideStore;
   private connecting: YSideStore;
@@ -2429,15 +2351,15 @@ class YConnectionStore implements ConnectionStore {
     return JSON.stringify(connection);
   }
 
-  constructor(yConnection: YConnection, connection: Connection) {
-    this.uuid = uuidv4();
+  constructor(parent: YDesignStore, yConnection: YConnection, connection: Connection) {
+    this.parent = parent;
     this.yConnection = yConnection;
     this.attributes = [];
 
     const yConnected = new Y.Map<YSideVal>();
-    this.connected = new YSideStore(yConnected, connection.connected);
+    this.connected = new YSideStore(parent, yConnected, connection.connected);
     const yConnecting = new Y.Map<YSideVal>();
-    this.connecting = new YSideStore(yConnecting, connection.connecting);
+    this.connecting = new YSideStore(parent, yConnecting, connection.connecting);
     this.gap = connection.gap;
     this.shift = connection.shift;
     this.rise = connection.rise;
@@ -2631,9 +2553,7 @@ useConnectionStatus();
 type YStat = Y.Map<string | number | boolean>;
 type YStats = Y.Array<YStat>;
 
-
 class YStatStore {
-  public readonly uuid: string;
   private yStat: YStat;
   private cache?: Stat;
   private cacheHash?: string;
@@ -2643,7 +2563,6 @@ class YStatStore {
   }
 
   constructor(yStat: YStat, stat: Stat) {
-    this.uuid = uuidv4();
     this.yStat = yStat;
     this.key = stat.key;
     this.unit = stat.unit;
@@ -2957,7 +2876,7 @@ class YDesignStore {
 
   createConnection(connection: Connection): void {
     const yConnection = new Y.Map<YConnectionVal>();
-    const yConnectionStore = new YConnectionStore(yConnection, connection);
+    const yConnectionStore = new YConnectionStore(this, yConnection, connection);
     this.yConnections.push([yConnection]);
     this.connections.push(yConnectionStore);
   }

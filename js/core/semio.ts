@@ -78,6 +78,12 @@ export const deserializeAttribute = (json: string): Attribute => AttributeSchema
 export const AttributeIdSchema = z.object({ key: z.string() });
 export type AttributeId = z.infer<typeof AttributeIdSchema>;
 export const attributeIdToString = (attribute: AttributeId): string => attribute.key;
+export const areSameAttribute = (attribute1: AttributeId, attribute2: AttributeIdLike): boolean => {
+  const a1 = attributeIdLikeToAttributeId(attribute1);
+  const a2 = attributeIdLikeToAttributeId(attribute2);
+  return a1.key === a2.key;
+}
+export const hasSameAttribute = (attribute: AttributeIdLike, attributes: AttributeIdLike[]): boolean => attributes.some((a) => areSameAttribute(attributeIdLikeToAttributeId(attribute), attributeIdLikeToAttributeId(a)));
 
 export const AttributeDiffSchema = AttributeSchema.partial();
 export type AttributeDiff = z.infer<typeof AttributeDiffSchema>;
