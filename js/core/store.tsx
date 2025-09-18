@@ -112,7 +112,7 @@ export enum Layout {
 
 // #endregion Constants
 
-// #region Api
+// #region Common Types
 
 export type Subscribe = () => void;
 export type Unsubscribe = () => void;
@@ -124,10 +124,6 @@ export type SketchpadId = string;
 type YUuid = string;
 type YUuidArray = Y.Array<YUuid>;
 
-type YAuthor = Y.Map<string>;
-type YAuthors = Y.Array<YAuthor>;
-type YAttribute = Y.Map<string>;
-type YAttributes = Y.Array<YAttribute>;
 type YStringArray = Y.Array<string>;
 type YLeafMapString = Y.Map<string>;
 type YLeafMapNumber = Y.Map<number>;
@@ -141,8 +137,15 @@ type YPlane = Y.Map<YVec3>;
 type YCamera = Y.Map<YPoint | YVector | number>;
 type YLocation = Y.Map<YPoint | YVector>;
 
+// #endregion Common Types
+
+// #region File
+
 type YFile = Y.Map<string | YAttributes>;
 type YFiles = Y.Array<YFile>;
+
+type YAttribute = Y.Map<string>;
+type YAttributes = Y.Array<YAttribute>;
 
 type YBenchmark = Y.Map<string | number | YAttributes>;
 type YBenchmarks = Y.Array<YBenchmark>;
@@ -153,27 +156,206 @@ type YQualities = Y.Array<YQuality>;
 type YProp = Y.Map<string | number | boolean | YAttributes>;
 type YProps = Y.Array<YProp>;
 
+type YAuthor = Y.Map<string>;
+type YAuthors = Y.Array<YAuthor>;
+
+export interface FileStore extends Store<SemioFile, FileId, FileDiff> {}
+
+class YFileStore implements FileStore {
+  public readonly uuid: string;
+  private yFile: YFile;
+  private cache?: SemioFile;
+  private cacheHash?: string;
+
+  private hash(file: SemioFile): string {
+    return JSON.stringify(file);
+  }
+
+  constructor(yFile: YFile, file: SemioFile) {
+    this.uuid = uuidv4();
+    this.yFile = yFile;
+    this.name = file.name;
+    this.type = file.type;
+    this.description = file.description;
+  }
+
+  get name(): string {
+    return this.yFile.get("name") as string;
+  }
+  set name(name: string) {
+    this.yFile.set("name", name);
+  }
+
+  get type(): string {
+    return this.yFile.get("type") as string;
+  }
+  set type(type: string) {
+    this.yFile.set("type", type);
+  }
+
+  get description(): string | undefined {
+    return this.yFile.get("description") as string | undefined;
+  }
+  set description(description: string | undefined) {
+    this.yFile.set("description", description || "");
+  }
+
+  get snapshot(): SemioFile {
+    const currentHash = this.hash({
+      name: this.name,
+      type: this.type,
+      description: this.description,
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const file: SemioFile = {
+      name: this.name,
+      type: this.type,
+      description: this.description,
+    };
+
+    this.cache = file;
+    this.cacheHash = currentHash;
+    return file;
+  }
+
+  get id(): FileId {
+    return { name: this.name, type: this.type };
+  }
+
+  apply(diff: FileDiff): void {
+    if (diff.name !== undefined) this.name = diff.name;
+    if (diff.type !== undefined) this.type = diff.type;
+    if (diff.description !== undefined) this.description = diff.description;
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yFile, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yFile, subscribe, true);
+  };
+}
+
+// #endregion File
+
+// #region Representation
+
 type YRepresentationVal = string | YStringArray | YAttributes;
 type YRepresentation = Y.Map<YRepresentationVal>;
 type YRepresentations = Y.Array<YRepresentation>;
+
+export interface RepresentationStore extends Store<Representation, RepresentationId, RepresentationDiff> {}
+
+class YRepresentationStore implements RepresentationStore {
+  public readonly uuid: string;
+  private yRepresentation: YRepresentation;
+  private cache?: Representation;
+  private cacheHash?: string;
+
+  private hash(representation: Representation): string {
+    return JSON.stringify(representation);
+  }
+
+  constructor(yRepresentation: YRepresentation, representation: Representation) {
+    this.uuid = uuidv4();
+    this.yRepresentation = yRepresentation;
+    this.url = representation.url;
+    this.description = representation.description;
+  }
+
+  get url(): string {
+    return this.yRepresentation.get("url") as string;
+  }
+  set url(url: string) {
+    this.yRepresentation.set("url", url);
+  }
+
+  get description(): string | undefined {
+    return this.yRepresentation.get("description") as string | undefined;
+  }
+  set description(description: string | undefined) {
+    this.yRepresentation.set("description", description || "");
+  }
+
+  get snapshot(): Representation {
+    const currentHash = this.hash({
+      url: this.url,
+      description: this.description,
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const representation: Representation = {
+      url: this.url,
+      description: this.description,
+    };
+
+    this.cache = representation;
+    this.cacheHash = currentHash;
+    return representation;
+  }
+
+  get id(): RepresentationId {
+    return { tags: this.snapshot.tags };
+  }
+
+  apply(diff: RepresentationDiff): void {
+    if (diff.url !== undefined) this.url = diff.url;
+    if (diff.description !== undefined) this.description = diff.description;
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yRepresentation, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yRepresentation, subscribe, true);
+  };
+}
+
+// #endregion Representation
+
+// #region Port
 
 type YPortVal = string | number | boolean | YLeafMapNumber | YAttributes | YStringArray | YPoint | YVector | YProps;
 type YPort = Y.Map<YPortVal>;
 type YPorts = Y.Array<YPort>;
 
+export interface PortStore extends Store<Port, PortId, PortDiff> {}
+
+// #endregion Port
+
+// #region Type
+
 type YTypeVal = string | number | boolean | YAuthors | YAttributes | YRepresentations | YPorts | YProps | YLocation;
 type YType = Y.Map<YTypeVal>;
 type YTypes = Y.Array<YType>;
 
-type YLayer = Y.Map<string | boolean | YAttributes>;
-type YLayers = Y.Array<YLayer>;
+export interface TypeStore extends Store<Type, TypeId, TypeDiff> {
+  representations: Map<string, RepresentationStore>;
+  ports: Map<string, PortStore>;
+}
+
+// #endregion Type
+
+// #region Piece
 
 type YPieceVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YPlane | YAttributes | YCoord;
 type YPiece = Y.Map<YPieceVal>;
 type YPieces = Y.Array<YPiece>;
 
-type YGroup = Y.Map<string | YStringArray | YAttributes>;
-type YGroups = Y.Array<YGroup>;
+export interface PieceStore extends Store<Piece, PieceId, PieceDiff> {}
+
+// #endregion Piece
+
+// #region Connection
 
 type YSide = Y.Map<YLeafMapString>;
 type YSides = Y.Array<YSide>;
@@ -181,6 +363,18 @@ type YSides = Y.Array<YSide>;
 type YConnectionVal = string | number | YAttributes | YSide | YSides;
 type YConnection = Y.Map<YConnectionVal>;
 type YConnections = Y.Array<YConnection>;
+
+export interface ConnectionStore extends Store<Connection, ConnectionId, ConnectionDiff> {}
+
+// #endregion Connection
+
+// #region Design
+
+type YLayer = Y.Map<string | boolean | YAttributes>;
+type YLayers = Y.Array<YLayer>;
+
+type YGroup = Y.Map<string | YStringArray | YAttributes>;
+type YGroups = Y.Array<YGroup>;
 
 type YStat = Y.Map<string | number | boolean>;
 type YStats = Y.Array<YStat>;
@@ -193,10 +387,40 @@ type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNum
 type YDesignEditor = Y.Map<YDesignEditorVal>;
 type YDesignEditors = Y.Array<YDesignEditor>;
 
+export interface DesignStore extends Store<Design, DesignId, DesignDiff> {
+  pieces: Map<string, PieceStore>;
+  connections: Map<string, ConnectionStore>;
+}
+
+// #endregion Design
+
+// #region Kit
+
 type YIdMap = Y.Map<string>;
 type YKitVal = string | YUuidArray | YIdMap | YAttributes | YAuthors | YFiles | YBenchmarks | YQualities | YProps | YTypes | YDesigns;
 type YKit = Y.Map<YKitVal>;
 type YKits = Y.Array<YKit>;
+
+export interface KitStore extends StoreWithCommands<Kit, KitId, KitDiff, KitCommandContext, KitCommandResult> {
+  types: Map<string, TypeStore>;
+  designs: Map<string, DesignStore>;
+  files: Map<Url, FileStore>;
+  fileUrls(): Map<Url, Url>;
+}
+
+export interface KitCommandContext {
+  kit: Kit;
+  fileUrls: Map<Url, Url>;
+}
+
+export interface KitCommandResult {
+  diff?: KitDiff;
+  files?: File[];
+}
+
+// #endregion Kit
+
+// #region Sketchpad
 
 type YSketchpadVal = string | boolean | YDesignEditors;
 type YSketchpad = Y.Map<YSketchpadVal>;
@@ -207,6 +431,10 @@ type YSketchpadKeysMap = {
   layout: string;
   activeDesignEditorDesign: YDesign;
 };
+
+// #endregion Sketchpad
+
+// #region Core Interfaces
 
 export type YProviderFactory = (doc: Y.Doc, id: string) => Promise<void>;
 
@@ -281,32 +509,7 @@ export interface Editor<TDiff, TSelection, TSelectionDiff, TPresence, TContext, 
     EditorPresence<TPresence>,
     EditorSelectionActions<TSelectionDiff> {}
 
-export interface RepresentationStore extends Store<Representation, RepresentationId, RepresentationDiff> {}
-export interface PortStore extends Store<Port, PortId, PortDiff> {}
-export interface TypeStore extends Store<Type, TypeId, TypeDiff> {
-  representations: Map<string, RepresentationStore>;
-  ports: Map<string, PortStore>;
-}
-export interface PieceStore extends Store<Piece, PieceId, PieceDiff> {}
-export interface ConnectionStore extends Store<Connection, ConnectionId, ConnectionDiff> {}
-export interface DesignStore extends Store<Design, DesignId, DesignDiff> {
-  pieces: Map<string, PieceStore>;
-  connections: Map<string, ConnectionStore>;
-}
-export interface KitStore extends StoreWithCommands<Kit, KitId, KitDiff, KitCommandContext, KitCommandResult> {
-  types: Map<string, TypeStore>;
-  designs: Map<string, DesignStore>;
-  files: Map<Url, FileStore>;
-  fileUrls(): Map<Url, Url>;
-}
-export interface KitCommandContext {
-  kit: Kit;
-  fileUrls: Map<Url, Url>;
-}
-export interface KitCommandResult {
-  diff?: KitDiff;
-  files?: File[];
-}
+// #endregion Core Interfaces
 export interface DesignEditorId {
   kit: KitId;
   design: DesignId;
@@ -426,8 +629,6 @@ export interface SketchpadStore extends StoreWithCommands<SketchpadState, Sketch
   designEditors: Map<string, Map<string, DesignEditorStore>>;
 }
 
-// #endregion Api
-
 export const inverseDesignEditorSelectionDiff = (selection: DesignEditorSelection, diff: DesignEditorSelectionDiff): DesignEditorSelectionDiff => {
   // TODO
 };
@@ -446,163 +647,6 @@ function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscribe, deep
       yObject.unobserve(subscribe);
     };
   }
-}
-
-// #region File
-
-export interface FileStore extends Store<SemioFile, FileId, FileDiff> {}
-
-class YFileStore implements FileStore {
-  public readonly uuid: string;
-  private yFile: YFile;
-  private cache?: SemioFile;
-  private cacheHash?: string;
-
-  private hash(file: SemioFile): string {
-    return JSON.stringify(file);
-  }
-
-  constructor(yFile: YFile, file: SemioFile) {
-    this.uuid = uuidv4();
-    this.yFile = yFile;
-    this.name = file.name;
-    this.type = file.type;
-    this.description = file.description;
-  }
-
-  get name(): string {
-    return this.yFile.get("name") as string;
-  }
-  set name(name: string) {
-    this.yFile.set("name", name);
-  }
-
-  get type(): string {
-    return this.yFile.get("type") as string;
-  }
-  set type(type: string) {
-    this.yFile.set("type", type);
-  }
-
-  get description(): string | undefined {
-    return this.yFile.get("description") as string | undefined;
-  }
-  set description(description: string | undefined) {
-    this.yFile.set("description", description || "");
-  }
-
-  get snapshot(): SemioFile {
-    const currentHash = this.hash({
-      name: this.name,
-      type: this.type,
-      description: this.description,
-    });
-
-    if (this.cache && this.cacheHash === currentHash) {
-      return this.cache;
-    }
-
-    const file: SemioFile = {
-      name: this.name,
-      type: this.type,
-      description: this.description,
-    };
-
-    this.cache = file;
-    this.cacheHash = currentHash;
-    return file;
-  }
-
-  get id(): FileId {
-    return { name: this.name, type: this.type };
-  }
-
-  apply(diff: FileDiff): void {
-    if (diff.name !== undefined) this.name = diff.name;
-    if (diff.type !== undefined) this.type = diff.type;
-    if (diff.description !== undefined) this.description = diff.description;
-  }
-
-  onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yFile, subscribe);
-  };
-
-  onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yFile, subscribe, true);
-  };
-}
-
-// #endregion File
-
-// #region Representation
-
-class YRepresentationStore implements RepresentationStore {
-  public readonly uuid: string;
-  private yRepresentation: YRepresentation;
-  private cache?: Representation;
-  private cacheHash?: string;
-
-  private hash(representation: Representation): string {
-    return JSON.stringify(representation);
-  }
-
-  constructor(yRepresentation: YRepresentation, representation: Representation) {
-    this.uuid = uuidv4();
-    this.yRepresentation = yRepresentation;
-    this.url = representation.url;
-    this.description = representation.description;
-  }
-
-  get url(): string {
-    return this.yRepresentation.get("url") as string;
-  }
-  set url(url: string) {
-    this.yRepresentation.set("url", url);
-  }
-
-  get description(): string | undefined {
-    return this.yRepresentation.get("description") as string | undefined;
-  }
-  set description(description: string | undefined) {
-    this.yRepresentation.set("description", description || "");
-  }
-
-  get snapshot(): Representation {
-    const currentHash = this.hash({
-      url: this.url,
-      description: this.description,
-    });
-
-    if (this.cache && this.cacheHash === currentHash) {
-      return this.cache;
-    }
-
-    const representation: Representation = {
-      url: this.url,
-      description: this.description,
-    };
-
-    this.cache = representation;
-    this.cacheHash = currentHash;
-    return representation;
-  }
-
-  get id(): RepresentationId {
-    return { tags: this.snapshot.tags };
-  }
-
-  apply(diff: RepresentationDiff): void {
-    if (diff.url !== undefined) this.url = diff.url;
-    if (diff.description !== undefined) this.description = diff.description;
-  }
-
-  onChanged = (subscribe: Subscribe) => {
-    return createObserver(this.yRepresentation, subscribe);
-  };
-
-  onChangedDeep = (subscribe: Subscribe) => {
-    return createObserver(this.yRepresentation, subscribe, true);
-  };
 }
 
 class YPortStore implements PortStore {
