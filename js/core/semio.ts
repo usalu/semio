@@ -454,6 +454,7 @@ export const applyCameraDiff = (base: Camera, diff: CameraDiff): Camera => {
 export const LocationSchema = z.object({
   longitude: z.number(),
   latitude: z.number(),
+  altitude: z.number().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
 export type Location = z.infer<typeof LocationSchema>;
@@ -504,9 +505,15 @@ export const AuthorIdLikeSchema = z.union([AuthorIdSchema, AuthorSchema, AuthorD
 export type AuthorIdLike = z.infer<typeof AuthorIdLikeSchema>;
 export const authorIdLikeToAuthorId = (author: AuthorIdLike): AuthorId => {
   if (typeof author === "string") return { email: author };
-  if (typeof author === "object" && "email" in author) return { email: author.email };
+  if (typeof author === "object" && "email" in author) return { email: author.email! };
   throw new Error("Invalid author id like");
 };
+export const areSameAuthor = (author1: AuthorIdLike, author2: AuthorIdLike): boolean => {
+  const a1 = authorIdLikeToAuthorId(author1);
+  const a2 = authorIdLikeToAuthorId(author2);
+  return a1.email === a2.email;
+};
+export const hasSameAuthor = (author: AuthorIdLike, authors: AuthorIdLike[]): boolean => authors.some((a) => areSameAuthor(author, a));
 
 // #endregion Author
 
