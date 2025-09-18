@@ -50,6 +50,7 @@ import {
   DesignShallow,
   DiffStatus,
   FileDiff,
+  FileId,
   findDesignInKit,
   findPieceInDesign,
   findReplacableDesignsForDesignPiece,
@@ -119,6 +120,95 @@ export type Disposable = () => void;
 export type Transact = (fn: () => void) => void;
 export type Url = string;
 export type SketchpadId = string;
+
+type YUuid = string;
+type YUuidArray = Y.Array<YUuid>;
+
+type YAuthor = Y.Map<string>;
+type YAuthors = Y.Array<YAuthor>;
+type YAttribute = Y.Map<string>;
+type YAttributes = Y.Array<YAttribute>;
+type YStringArray = Y.Array<string>;
+type YLeafMapString = Y.Map<string>;
+type YLeafMapNumber = Y.Map<number>;
+
+type YCoord = Y.Map<number>;
+type YVec = Y.Map<number>;
+type YPoint = Y.Map<number>;
+type YVector = Y.Map<number>;
+type YVec3 = YLeafMapNumber;
+type YPlane = Y.Map<YVec3>;
+type YCamera = Y.Map<YPoint | YVector | number>;
+type YLocation = Y.Map<YPoint | YVector>;
+
+type YFile = Y.Map<string | YAttributes>;
+type YFiles = Y.Array<YFile>;
+
+type YBenchmark = Y.Map<string | number | YAttributes>;
+type YBenchmarks = Y.Array<YBenchmark>;
+
+type YQuality = Y.Map<string | number | YAttributes>;
+type YQualities = Y.Array<YQuality>;
+
+type YProp = Y.Map<string | number | boolean | YAttributes>;
+type YProps = Y.Array<YProp>;
+
+type YRepresentationVal = string | YStringArray | YAttributes;
+type YRepresentation = Y.Map<YRepresentationVal>;
+type YRepresentations = Y.Array<YRepresentation>;
+
+type YPortVal = string | number | boolean | YLeafMapNumber | YAttributes | YStringArray | YPoint | YVector | YProps;
+type YPort = Y.Map<YPortVal>;
+type YPorts = Y.Array<YPort>;
+
+type YTypeVal = string | number | boolean | YAuthors | YAttributes | YRepresentations | YPorts | YProps | YLocation;
+type YType = Y.Map<YTypeVal>;
+type YTypes = Y.Array<YType>;
+
+type YLayer = Y.Map<string | boolean | YAttributes>;
+type YLayers = Y.Array<YLayer>;
+
+type YPieceVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YPlane | YAttributes | YCoord;
+type YPiece = Y.Map<YPieceVal>;
+type YPieces = Y.Array<YPiece>;
+
+type YGroup = Y.Map<string | YStringArray | YAttributes>;
+type YGroups = Y.Array<YGroup>;
+
+type YSide = Y.Map<YLeafMapString>;
+type YSides = Y.Array<YSide>;
+
+type YConnectionVal = string | number | YAttributes | YSide | YSides;
+type YConnection = Y.Map<YConnectionVal>;
+type YConnections = Y.Array<YConnection>;
+
+type YStat = Y.Map<string | number | boolean>;
+type YStats = Y.Array<YStat>;
+
+type YDesignVal = string | YAuthors | YAttributes | YPieces | YConnections | YLayers | YGroups | YStats;
+type YDesign = Y.Map<YDesignVal>;
+type YDesigns = Y.Array<YDesign>;
+
+type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
+type YDesignEditor = Y.Map<YDesignEditorVal>;
+type YDesignEditors = Y.Array<YDesignEditor>;
+
+type YIdMap = Y.Map<string>;
+type YKitVal = string | YUuidArray | YIdMap | YAttributes | YAuthors | YFiles | YBenchmarks | YQualities | YProps | YTypes | YDesigns;
+type YKit = Y.Map<YKitVal>;
+type YKits = Y.Array<YKit>;
+
+type YSketchpadVal = string | boolean | YDesignEditors;
+type YSketchpad = Y.Map<YSketchpadVal>;
+
+type YSketchpadKeysMap = {
+  mode: string;
+  theme: string;
+  layout: string;
+  activeDesignEditorDesign: YDesign;
+};
+
+export type YProviderFactory = (doc: Y.Doc, id: string) => Promise<void>;
 
 export interface Snapshot<TModel> {
   snapshot(): TModel;
@@ -191,7 +281,6 @@ export interface Editor<TDiff, TSelection, TSelectionDiff, TPresence, TContext, 
     EditorPresence<TPresence>,
     EditorSelectionActions<TSelectionDiff> {}
 
-export interface FileStore extends Store<SemioFile, FileId, FileDiff> {}
 export interface RepresentationStore extends Store<Representation, RepresentationId, RepresentationDiff> {}
 export interface PortStore extends Store<Port, PortId, PortDiff> {}
 export interface TypeStore extends Store<Type, TypeId, TypeDiff> {
@@ -345,96 +434,6 @@ export const inverseDesignEditorSelectionDiff = (selection: DesignEditorSelectio
 export const areSameDesignEditor = (designEditor: DesignEditorId, other: DesignEditorId): boolean => areSameKit(designEditor.kit, other.kit) && areSameDesign(designEditor.design, other.design);
 export const hasSameDesignEditor = (designEditor: DesignEditorId, others: DesignEditorId[]): boolean => others.some((other) => areSameDesignEditor(designEditor, other));
 
-// #region Stores
-type YUuid = string;
-type YUuidArray = Y.Array<YUuid>;
-
-type YAuthor = Y.Map<string>;
-type YAuthors = Y.Array<YAuthor>;
-type YAttribute = Y.Map<string>;
-type YAttributes = Y.Array<YAttribute>;
-type YStringArray = Y.Array<string>;
-type YLeafMapString = Y.Map<string>;
-type YLeafMapNumber = Y.Map<number>;
-
-type YCoord = Y.Map<number>;
-type YVec = Y.Map<number>;
-type YPoint = Y.Map<number>;
-type YVector = Y.Map<number>;
-type YVec3 = YLeafMapNumber;
-type YPlane = Y.Map<YVec3>;
-type YCamera = Y.Map<YPoint | YVector | number>;
-type YLocation = Y.Map<YPoint | YVector>;
-
-type YFile = Y.Map<string | YAttributes>;
-type YFiles = Y.Array<YFile>;
-
-type YBenchmark = Y.Map<string | number | YAttributes>;
-type YBenchmarks = Y.Array<YBenchmark>;
-
-type YQuality = Y.Map<string | number | YAttributes>;
-type YQualities = Y.Array<YQuality>;
-
-type YProp = Y.Map<string | number | boolean | YAttributes>;
-type YProps = Y.Array<YProp>;
-
-type YRepresentationVal = string | YStringArray | YAttributes;
-type YRepresentation = Y.Map<YRepresentationVal>;
-type YRepresentations = Y.Array<YRepresentation>;
-
-type YPortVal = string | number | boolean | YLeafMapNumber | YAttributes | YStringArray | YPoint | YVector | YProps;
-type YPort = Y.Map<YPortVal>;
-type YPorts = Y.Array<YPort>;
-
-type YTypeVal = string | number | boolean | YAuthors | YAttributes | YRepresentations | YPorts | YProps | YLocation;
-type YType = Y.Map<YTypeVal>;
-type YTypes = Y.Array<YType>;
-
-type YLayer = Y.Map<string | boolean | YAttributes>;
-type YLayers = Y.Array<YLayer>;
-
-type YPieceVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YPlane | YAttributes | YCoord;
-type YPiece = Y.Map<YPieceVal>;
-type YPieces = Y.Array<YPiece>;
-
-type YGroup = Y.Map<string | YStringArray | YAttributes>;
-type YGroups = Y.Array<YGroup>;
-
-type YSide = Y.Map<YLeafMapString>;
-type YSides = Y.Array<YSide>;
-
-type YConnectionVal = string | number | YAttributes | YSide | YSides;
-type YConnection = Y.Map<YConnectionVal>;
-type YConnections = Y.Array<YConnection>;
-
-type YStat = Y.Map<string | number | boolean>;
-type YStats = Y.Array<YStat>;
-
-type YDesignVal = string | YAuthors | YAttributes | YPieces | YConnections | YLayers | YGroups | YStats;
-type YDesign = Y.Map<YDesignVal>;
-type YDesigns = Y.Array<YDesign>;
-
-type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
-type YDesignEditor = Y.Map<YDesignEditorVal>;
-type YDesignEditors = Y.Array<YDesignEditor>;
-
-type YIdMap = Y.Map<string>;
-type YKitVal = string | YUuidArray | YIdMap | YAttributes | YAuthors | YFiles | YBenchmarks | YQualities | YProps | YTypes | YDesigns;
-type YKit = Y.Map<YKitVal>;
-type YKits = Y.Array<YKit>;
-
-type YSketchpadVal = string | boolean | YDesignEditors;
-type YSketchpad = Y.Map<YSketchpadVal>;
-
-type YSketchpadKeysMap = {
-  mode: string;
-  theme: string;
-  layout: string;
-  activeDesignEditorDesign: YDesign;
-};
-
-export type YProviderFactory = (doc: Y.Doc, id: string) => Promise<void>;
-
 function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscribe, deep?: boolean): Unsubscribe {
   if (deep) {
     yObject.observeDeep(subscribe);
@@ -448,6 +447,10 @@ function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscribe, deep
     };
   }
 }
+
+// #region File
+
+export interface FileStore extends Store<SemioFile, FileId, FileDiff> {}
 
 class YFileStore implements FileStore {
   public readonly uuid: string;
@@ -528,6 +531,10 @@ class YFileStore implements FileStore {
     return createObserver(this.yFile, subscribe, true);
   };
 }
+
+// #endregion File
+
+// #region Representation
 
 class YRepresentationStore implements RepresentationStore {
   public readonly uuid: string;
@@ -701,6 +708,719 @@ class YPortStore implements PortStore {
 
   onChangedDeep = (subscribe: Subscribe) => {
     return createObserver(this.yPort, subscribe, true);
+  };
+}
+
+class YAttributeStore {
+  public readonly uuid: string;
+  private yAttribute: YAttribute;
+  private cache?: Attribute;
+  private cacheHash?: string;
+
+  private hash(attribute: Attribute): string {
+    return JSON.stringify(attribute);
+  }
+
+  constructor(yAttribute: YAttribute, attribute: Attribute) {
+    this.uuid = uuidv4();
+    this.yAttribute = yAttribute;
+    this.key = attribute.key;
+    this.value = attribute.value;
+    this.definition = attribute.definition;
+  }
+
+  get key(): string {
+    return this.yAttribute.get("key") as string;
+  }
+  set key(key: string) {
+    this.yAttribute.set("key", key);
+  }
+
+  get value(): string | undefined {
+    return this.yAttribute.get("value") as string | undefined;
+  }
+  set value(value: string | undefined) {
+    this.yAttribute.set("value", value || "");
+  }
+
+  get definition(): string | undefined {
+    return this.yAttribute.get("definition") as string | undefined;
+  }
+  set definition(definition: string | undefined) {
+    this.yAttribute.set("definition", definition || "");
+  }
+
+  get snapshot(): Attribute {
+    const currentHash = this.hash({
+      key: this.key,
+      value: this.value,
+      definition: this.definition,
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const attribute: Attribute = {
+      key: this.key,
+      value: this.value,
+      definition: this.definition,
+    };
+
+    this.cache = attribute;
+    this.cacheHash = currentHash;
+    return attribute;
+  }
+
+  get id(): AttributeId {
+    return { key: this.key };
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yAttribute, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yAttribute, subscribe, true);
+  };
+}
+
+class YAuthorStore {
+  public readonly uuid: string;
+  private yAuthor: YAuthor;
+  private cache?: Author;
+  private cacheHash?: string;
+
+  private hash(author: Author): string {
+    return JSON.stringify(author);
+  }
+
+  constructor(yAuthor: YAuthor, author: Author) {
+    this.uuid = uuidv4();
+    this.yAuthor = yAuthor;
+    this.name = author.name;
+    this.email = author.email;
+  }
+
+  get name(): string {
+    return this.yAuthor.get("name") as string;
+  }
+  set name(name: string) {
+    this.yAuthor.set("name", name);
+  }
+
+  get email(): string {
+    return this.yAuthor.get("email") as string;
+  }
+  set email(email: string) {
+    this.yAuthor.set("email", email);
+  }
+
+  get snapshot(): Author {
+    const currentHash = this.hash({
+      name: this.name,
+      email: this.email,
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const author: Author = {
+      name: this.name,
+      email: this.email,
+    };
+
+    this.cache = author;
+    this.cacheHash = currentHash;
+    return author;
+  }
+
+  get id(): AuthorId {
+    return { email: this.email };
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yAuthor, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yAuthor, subscribe, true);
+  };
+}
+
+class YBenchmarkStore {
+  public readonly uuid: string;
+  private yBenchmark: YBenchmark;
+  private cache?: Benchmark;
+  private cacheHash?: string;
+
+  private hash(benchmark: Benchmark): string {
+    return JSON.stringify(benchmark);
+  }
+
+  constructor(yBenchmark: YBenchmark, benchmark: Benchmark) {
+    this.uuid = uuidv4();
+    this.yBenchmark = yBenchmark;
+    this.key = benchmark.key;
+    this.value = benchmark.value;
+    this.unit = benchmark.unit;
+    this.description = benchmark.description;
+  }
+
+  get key(): string {
+    return this.yBenchmark.get("key") as string;
+  }
+  set key(key: string) {
+    this.yBenchmark.set("key", key);
+  }
+
+  get value(): number {
+    return this.yBenchmark.get("value") as number;
+  }
+  set value(value: number) {
+    this.yBenchmark.set("value", value);
+  }
+
+  get unit(): string | undefined {
+    return this.yBenchmark.get("unit") as string | undefined;
+  }
+  set unit(unit: string | undefined) {
+    this.yBenchmark.set("unit", unit || "");
+  }
+
+  get description(): string | undefined {
+    return this.yBenchmark.get("description") as string | undefined;
+  }
+  set description(description: string | undefined) {
+    this.yBenchmark.set("description", description || "");
+  }
+
+  get snapshot(): Benchmark {
+    const currentHash = this.hash({
+      key: this.key,
+      value: this.value,
+      unit: this.unit,
+      description: this.description,
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const benchmark: Benchmark = {
+      key: this.key,
+      value: this.value,
+      unit: this.unit,
+      description: this.description,
+    };
+
+    this.cache = benchmark;
+    this.cacheHash = currentHash;
+    return benchmark;
+  }
+
+  get id(): BenchmarkId {
+    return { key: this.key };
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yBenchmark, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yBenchmark, subscribe, true);
+  };
+}
+
+class YQualityStore {
+  public readonly uuid: string;
+  private yQuality: YQuality;
+  private cache?: Quality;
+  private cacheHash?: string;
+
+  private hash(quality: Quality): string {
+    return JSON.stringify(quality);
+  }
+
+  constructor(yQuality: YQuality, quality: Quality) {
+    this.uuid = uuidv4();
+    this.yQuality = yQuality;
+    this.key = quality.key;
+    this.value = quality.value;
+    this.unit = quality.unit;
+    this.description = quality.description;
+  }
+
+  get key(): string {
+    return this.yQuality.get("key") as string;
+  }
+  set key(key: string) {
+    this.yQuality.set("key", key);
+  }
+
+  get value(): number | undefined {
+    return this.yQuality.get("value") as number | undefined;
+  }
+  set value(value: number | undefined) {
+    this.yQuality.set("value", value);
+  }
+
+  get unit(): string | undefined {
+    return this.yQuality.get("unit") as string | undefined;
+  }
+  set unit(unit: string | undefined) {
+    this.yQuality.set("unit", unit || "");
+  }
+
+  get description(): string | undefined {
+    return this.yQuality.get("description") as string | undefined;
+  }
+  set description(description: string | undefined) {
+    this.yQuality.set("description", description || "");
+  }
+
+  get snapshot(): Quality {
+    const currentHash = this.hash({
+      key: this.key,
+      value: this.value,
+      unit: this.unit,
+      description: this.description,
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const quality: Quality = {
+      key: this.key,
+      value: this.value,
+      unit: this.unit,
+      description: this.description,
+    };
+
+    this.cache = quality;
+    this.cacheHash = currentHash;
+    return quality;
+  }
+
+  get id(): QualityId {
+    return { key: this.key };
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yQuality, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yQuality, subscribe, true);
+  };
+}
+
+class YPropStore {
+  public readonly uuid: string;
+  private yProp: YProp;
+  private cache?: Prop;
+  private cacheHash?: string;
+
+  private hash(prop: Prop): string {
+    return JSON.stringify(prop);
+  }
+
+  constructor(yProp: YProp, prop: Prop) {
+    this.uuid = uuidv4();
+    this.yProp = yProp;
+    this.key = prop.key;
+    this.value = prop.value;
+    this.unit = prop.unit;
+    this.description = prop.description;
+  }
+
+  get key(): string {
+    return this.yProp.get("key") as string;
+  }
+  set key(key: string) {
+    this.yProp.set("key", key);
+  }
+
+  get value(): string | undefined {
+    return this.yProp.get("value") as string | undefined;
+  }
+  set value(value: string | undefined) {
+    this.yProp.set("value", value || "");
+  }
+
+  get unit(): string | undefined {
+    return this.yProp.get("unit") as string | undefined;
+  }
+  set unit(unit: string | undefined) {
+    this.yProp.set("unit", unit || "");
+  }
+
+  get description(): string | undefined {
+    return this.yProp.get("description") as string | undefined;
+  }
+  set description(description: string | undefined) {
+    this.yProp.set("description", description || "");
+  }
+
+  get snapshot(): Prop {
+    const currentHash = this.hash({
+      key: this.key,
+      value: this.value,
+      unit: this.unit,
+      description: this.description,
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const prop: Prop = {
+      key: this.key,
+      value: this.value,
+      unit: this.unit,
+      description: this.description,
+    };
+
+    this.cache = prop;
+    this.cacheHash = currentHash;
+    return prop;
+  }
+
+  get id(): PropId {
+    return { key: this.key };
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yProp, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yProp, subscribe, true);
+  };
+}
+
+class YLayerStore {
+  public readonly uuid: string;
+  private yLayer: YLayer;
+  private cache?: Layer;
+  private cacheHash?: string;
+
+  private hash(layer: Layer): string {
+    return JSON.stringify(layer);
+  }
+
+  constructor(yLayer: YLayer, layer: Layer) {
+    this.uuid = uuidv4();
+    this.yLayer = yLayer;
+    this.path = layer.path;
+    this.isHidden = layer.isHidden;
+    this.isLocked = layer.isLocked;
+    this.color = layer.color;
+    this.description = layer.description;
+  }
+
+  get path(): string {
+    return this.yLayer.get("path") as string;
+  }
+  set path(path: string) {
+    this.yLayer.set("path", path);
+  }
+
+  get isHidden(): boolean | undefined {
+    return this.yLayer.get("isHidden") as boolean | undefined;
+  }
+  set isHidden(isHidden: boolean | undefined) {
+    this.yLayer.set("isHidden", isHidden);
+  }
+
+  get isLocked(): boolean | undefined {
+    return this.yLayer.get("isLocked") as boolean | undefined;
+  }
+  set isLocked(isLocked: boolean | undefined) {
+    this.yLayer.set("isLocked", isLocked);
+  }
+
+  get color(): string | undefined {
+    return this.yLayer.get("color") as string | undefined;
+  }
+  set color(color: string | undefined) {
+    this.yLayer.set("color", color || "");
+  }
+
+  get description(): string | undefined {
+    return this.yLayer.get("description") as string | undefined;
+  }
+  set description(description: string | undefined) {
+    this.yLayer.set("description", description || "");
+  }
+
+  get snapshot(): Layer {
+    const currentHash = this.hash({
+      path: this.path,
+      isHidden: this.isHidden,
+      isLocked: this.isLocked,
+      color: this.color,
+      description: this.description,
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const layer: Layer = {
+      path: this.path,
+      isHidden: this.isHidden,
+      isLocked: this.isLocked,
+      color: this.color,
+      description: this.description,
+    };
+
+    this.cache = layer;
+    this.cacheHash = currentHash;
+    return layer;
+  }
+
+  get id(): LayerId {
+    return { path: this.path };
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yLayer, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yLayer, subscribe, true);
+  };
+}
+
+class YGroupStore {
+  public readonly uuid: string;
+  private yGroup: YGroup;
+  private cache?: Group;
+  private cacheHash?: string;
+
+  private hash(group: Group): string {
+    return JSON.stringify(group);
+  }
+
+  constructor(yGroup: YGroup, group: Group) {
+    this.uuid = uuidv4();
+    this.yGroup = yGroup;
+    this.color = group.color;
+    this.name = group.name;
+    this.description = group.description;
+  }
+
+  get color(): string | undefined {
+    return this.yGroup.get("color") as string | undefined;
+  }
+  set color(color: string | undefined) {
+    this.yGroup.set("color", color || "");
+  }
+
+  get name(): string | undefined {
+    return this.yGroup.get("name") as string | undefined;
+  }
+  set name(name: string | undefined) {
+    this.yGroup.set("name", name || "");
+  }
+
+  get description(): string | undefined {
+    return this.yGroup.get("description") as string | undefined;
+  }
+  set description(description: string | undefined) {
+    this.yGroup.set("description", description || "");
+  }
+
+  get snapshot(): Group {
+    const currentHash = this.hash({
+      pieces: [], // TODO: implement pieces handling
+      color: this.color,
+      name: this.name,
+      description: this.description,
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const group: Group = {
+      pieces: [], // TODO: implement pieces handling
+      color: this.color,
+      name: this.name,
+      description: this.description,
+    };
+
+    this.cache = group;
+    this.cacheHash = currentHash;
+    return group;
+  }
+
+  get id(): GroupId {
+    return { pieces: [] }; // TODO: implement pieces handling
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yGroup, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yGroup, subscribe, true);
+  };
+}
+
+class YSideStore {
+  public readonly uuid: string;
+  private ySide: YSide;
+  private cache?: Side;
+  private cacheHash?: string;
+
+  private hash(side: Side): string {
+    return JSON.stringify(side);
+  }
+
+  constructor(ySide: YSide, side: Side) {
+    this.uuid = uuidv4();
+    this.ySide = ySide;
+    // TODO: implement side properties
+  }
+
+  get snapshot(): Side {
+    const currentHash = this.hash({
+      piece: { id_: "" }, // TODO: implement piece handling
+      port: { t: 0 }, // TODO: implement port handling
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const side: Side = {
+      piece: { id_: "" }, // TODO: implement piece handling
+      port: { t: 0 }, // TODO: implement port handling
+    };
+
+    this.cache = side;
+    this.cacheHash = currentHash;
+    return side;
+  }
+
+  get id(): SideId {
+    return { piece: { id_: "" }, port: { t: 0 } }; // TODO: implement handling
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.ySide, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.ySide, subscribe, true);
+  };
+}
+
+class YStatStore {
+  public readonly uuid: string;
+  private yStat: YStat;
+  private cache?: Stat;
+  private cacheHash?: string;
+
+  private hash(stat: Stat): string {
+    return JSON.stringify(stat);
+  }
+
+  constructor(yStat: YStat, stat: Stat) {
+    this.uuid = uuidv4();
+    this.yStat = yStat;
+    this.key = stat.key;
+    this.unit = stat.unit;
+    this.min = stat.min;
+    this.minExcluded = stat.minExcluded;
+    this.max = stat.max;
+    this.maxExcluded = stat.maxExcluded;
+  }
+
+  get key(): string {
+    return this.yStat.get("key") as string;
+  }
+  set key(key: string) {
+    this.yStat.set("key", key);
+  }
+
+  get unit(): string | undefined {
+    return this.yStat.get("unit") as string | undefined;
+  }
+  set unit(unit: string | undefined) {
+    this.yStat.set("unit", unit || "");
+  }
+
+  get min(): number | undefined {
+    return this.yStat.get("min") as number | undefined;
+  }
+  set min(min: number | undefined) {
+    this.yStat.set("min", min);
+  }
+
+  get minExcluded(): boolean | undefined {
+    return this.yStat.get("minExcluded") as boolean | undefined;
+  }
+  set minExcluded(minExcluded: boolean | undefined) {
+    this.yStat.set("minExcluded", minExcluded);
+  }
+
+  get max(): number | undefined {
+    return this.yStat.get("max") as number | undefined;
+  }
+  set max(max: number | undefined) {
+    this.yStat.set("max", max);
+  }
+
+  get maxExcluded(): boolean | undefined {
+    return this.yStat.get("maxExcluded") as boolean | undefined;
+  }
+  set maxExcluded(maxExcluded: boolean | undefined) {
+    this.yStat.set("maxExcluded", maxExcluded);
+  }
+
+  get snapshot(): Stat {
+    const currentHash = this.hash({
+      key: this.key,
+      unit: this.unit,
+      min: this.min,
+      minExcluded: this.minExcluded,
+      max: this.max,
+      maxExcluded: this.maxExcluded,
+    });
+
+    if (this.cache && this.cacheHash === currentHash) {
+      return this.cache;
+    }
+
+    const stat: Stat = {
+      key: this.key,
+      unit: this.unit,
+      min: this.min,
+      minExcluded: this.minExcluded,
+      max: this.max,
+      maxExcluded: this.maxExcluded,
+    };
+
+    this.cache = stat;
+    this.cacheHash = currentHash;
+    return stat;
+  }
+
+  get id(): StatId {
+    return { key: this.key };
+  }
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yStat, subscribe);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yStat, subscribe, true);
   };
 }
 
@@ -1835,6 +2555,8 @@ class YDesignEditorStore {
   }
 }
 
+// #region Sketchpad
+
 class YSketchpadStore {
   private readonly id: string | undefined;
   private readonly yProviderFactory: YProviderFactory | undefined;
@@ -2059,9 +2781,9 @@ class YSketchpadStore {
   }
 }
 
-const stores: Map<string, YSketchpadStore> = new Map();
+// #endregion Sketchpad
 
-// #endregion Stores
+const stores: Map<string, YSketchpadStore> = new Map();
 
 // #region Commands
 
