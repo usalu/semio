@@ -121,6 +121,33 @@ export const attributeIdLikeToAttributeId = (attribute: AttributeIdLike): Attrib
   if (typeof attribute === "object" && "key" in attribute) return { key: attribute.key };
   throw new Error("Invalid attribute id like");
 };
+const getAttributesDiff = (before: Attribute[], after: Attribute[]): AttributesDiff => {
+  const beforeKeys = before.map(a => a.key);
+  const afterKeys = after.map(a => a.key);
+  const removed = beforeKeys.filter(key => !afterKeys.includes(key)).map(key => ({ key }));
+  const added = afterKeys.filter(key => !beforeKeys.includes(key)).map(key => ({ key }));
+  const updated = after.filter(a => beforeKeys.includes(a.key)).map(a => ({ id: { key: a.key }, diff: getAttributeDiff(before.find(b => b.key === a.key)!, a) }));
+  return {
+    removed,
+    updated,
+    added,
+  };
+};
+export const inverseAttributesDiff = (original: Attribute[], appliedDiff: AttributesDiff): AttributesDiff => {
+  const removedKeys = appliedDiff.removed?.map(a => a.key) ?? [];
+  const updatedKeys = appliedDiff.updated?.map(a => a.id.key) ?? [];
+  const addedKeys = appliedDiff.added?.map(a => a.key) ?? [];
+  return {
+    removed: addedKeys.map(key => ({ key })),
+    updated: updatedKeys.map(key => ({ id: { key }, diff: inverseAttributeDiff(original.find(a => a.key === key)!, appliedDiff.updated?.find(a => a.id.key === key)!.diff) })),
+    added: removedKeys.map(key => original.find(a => a.key === key)!)
+  };
+};
+export const mergeAttributesDiff = (first: AttributesDiff, second: AttributesDiff): AttributesDiff => {
+  // first and second might have different indices
+  // when first and second have the same id, second wins
+
+};
 
 // #endregion Attribute
 

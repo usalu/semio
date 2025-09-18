@@ -576,9 +576,18 @@ class YPlaneStore {
 
   constructor(yPlane: YPlane, plane: Plane) {
     this.yPlane = yPlane;
-    this.origin = new YPointStore(new Y.Map<YPointVal>(), plane.origin);
-    this.xAxis = new YVectorStore(new Y.Map<YVectorVal>(), plane.xAxis);
-    this.yAxis = new YVectorStore(new Y.Map<YVectorVal>(), plane.yAxis);
+
+    const yOrigin = new Y.Map<YPointVal>();
+    this.yPlane.set("origin", yOrigin);
+    this.origin = new YPointStore(yOrigin, plane.origin);
+
+    const yXAxis = new Y.Map<YVectorVal>();
+    this.yPlane.set("xAxis", yXAxis);
+    this.xAxis = new YVectorStore(yXAxis, plane.xAxis);
+
+    const yYAxis = new Y.Map<YVectorVal>();
+    this.yPlane.set("yAxis", yYAxis);
+    this.yAxis = new YVectorStore(yYAxis, plane.yAxis);
   }
   hash = (plane: Plane): string => {
     return JSON.stringify(plane);
@@ -1363,7 +1372,7 @@ class PortStore {
   constructor(yPort: YPort, port: Port) {
     this.uuid = uuidv4();
     this.yPort = yPort;
-    this.id_ = port.id_;
+    this.localId = port.id_;
     this.description = port.description;
     this.family = port.family;
     this.mandatory = port.mandatory;
@@ -1378,10 +1387,10 @@ class PortStore {
     this.direction = new YVectorStore(this.yDirection, port.direction);
   }
 
-  get id_(): string | undefined {
+  get localId(): string | undefined {
     return this.yPort.get("id_") as string | undefined;
   }
-  set id_(id_: string | undefined) {
+  set localId(id_: string | undefined) {
     this.yPort.set("id_", id_ || "");
   }
 
@@ -1680,7 +1689,23 @@ class TypeStore {
   change = (diff: TypeDiff) => {
     if (diff.name !== undefined) this.yType.set("name", diff.name);
     if (diff.variant !== undefined) this.yType.set("variant", diff.variant);
-    // TODO
+    if (diff.stock !== undefined) this.yType.set("stock", diff.stock);
+    if (diff.virtual !== undefined) this.yType.set("virtual", diff.virtual);
+    if (diff.unit !== undefined) this.yType.set("unit", diff.unit);
+    if (diff.icon !== undefined) this.yType.set("icon", diff.icon);
+    if (diff.image !== undefined) this.yType.set("image", diff.image);
+    if (diff.description !== undefined) this.yType.set("description", diff.description);
+    if (diff.createdAt !== undefined) this.yType.set("createdAt", diff.createdAt);
+    if (diff.updatedAt !== undefined) this.yType.set("updatedAt", diff.updatedAt);
+
+    if (diff.authors !== undefined) {
+      this.yAuthors.delete(0, this.yAuthors.length);
+      this.authors = diff.authors.map((author) => this.parent.author(author));
+      this.authors.forEach((author) => this.yAuthors.push([author.uuid]));
+    }
+
+    // TODO: Handle location, representations, ports, props, attributes diffs
+
     this.cache = undefined;
     this.cacheHash = undefined;
   };
@@ -1876,6 +1901,7 @@ class PieceStore {
 
     if (piece.plane) {
       this.yPlane = new Y.Map();
+      this.yPiece.set("plane", this.yPlane);
       this.plane = new YPlaneStore(this.yPlane, piece.plane);
     } else {
       this.yPlane = undefined;
@@ -1884,6 +1910,7 @@ class PieceStore {
 
     if (piece.center) {
       this.yCenter = new Y.Map();
+      this.yPiece.set("center", this.yCenter);
       this.center = new YCoordStore(this.yCenter, piece.center);
     } else {
       this.yCenter = undefined;
@@ -1892,6 +1919,7 @@ class PieceStore {
 
     if (piece.mirrorPlane) {
       this.yMirrorPlane = new Y.Map();
+      this.yPiece.set("mirrorPlane", this.yMirrorPlane);
       this.mirrorPlane = new YPlaneStore(this.yMirrorPlane, piece.mirrorPlane);
     } else {
       this.yMirrorPlane = undefined;
@@ -1912,24 +1940,26 @@ class PieceStore {
   set localId(localId: string) {
     this.yPiece.set("id_", localId);
   }
-  get type(): TypeId {
-    return this.parent.parent.typeByUuid(this.yPiece.get("type") as string).id();
+  get type(): TypeId | undefined {
+    const typeUuid = this.yPiece.get("type") as string;
+    return typeUuid ? this.parent.parent.typeByUuid(typeUuid).id() : undefined;
   }
   set type(type: TypeId | undefined) {
     if (type) {
       this.yPiece.set("type", this.parent.parent.type(type).uuid);
     } else {
-      this.yPiece.set("type", "");
+      this.yPiece.delete("type");
     }
   }
-  get design(): DesignId {
-    return this.parent.parent.designByUuid(this.yPiece.get("design") as string).id();
+  get design(): DesignId | undefined {
+    const designUuid = this.yPiece.get("design") as string;
+    return designUuid ? this.parent.parent.designByUuid(designUuid).id() : undefined;
   }
   set design(design: DesignId | undefined) {
     if (design) {
       this.yPiece.set("design", this.parent.parent.design(design).uuid);
     } else {
-      this.yPiece.set("design", "");
+      this.yPiece.delete("design");
     }
   }
   get scale(): number {
@@ -2136,12 +2166,56 @@ export function useIsPieceHovered(): boolean {
 
 export function usePiecePlane(): Plane {
   const plane = usePiece((p) => p.plane);
-  // TODO: integrate flat piece plane otherwise
-  return plane as Plane;
+
+  if (!plane) {
+    // Return default flat piece plane (XY plane at origin)
+    return {
+      origin: { x: 0, y: 0, z: 0 },
+      xAxis: { x: 1, y: 0, z: 0 },
+      yAxis: { x: 0, y: 1, z: 0 }
+    };
+  }
+
+  return plane;
 }
 
 export function usePieceStatus(): DiffStatus {
-  // TODO: Check diff for status
+  const piece = usePieceScope();
+  const kitDiff = useDesignEditorDiff();
+  const designScope = useDesignScope();
+
+  if (!piece || !designScope || !kitDiff?.designs?.updated) {
+    return DiffStatus.Unchanged;
+  }
+
+  // Find the design diff for the current design
+  const designDiff = kitDiff.designs.updated.find(d =>
+    d.id.name === designScope.id.name &&
+    d.id.variant === designScope.id.variant &&
+    d.id.view === designScope.id.view
+  );
+
+  if (!designDiff?.diff.pieces) {
+    return DiffStatus.Unchanged;
+  }
+
+  const piecesDiff = designDiff.diff.pieces;
+
+  // Check if piece is removed
+  if (piecesDiff.removed?.some(p => p.id_ === piece.id.id_)) {
+    return DiffStatus.Removed;
+  }
+
+  // Check if piece is added
+  if (piecesDiff.added?.some(p => p.id_ === piece.id.id_)) {
+    return DiffStatus.Added;
+  }
+
+  // Check if piece is updated
+  if (piecesDiff.updated?.some(p => p.id.id_ === piece.id.id_)) {
+    return DiffStatus.Modified;
+  }
+
   return DiffStatus.Unchanged;
 }
 usePieceStatus();
@@ -2150,7 +2224,8 @@ usePieceStatus();
 
 // #region Group
 
-type YGroup = Y.Map<string | YStringArray | YAttributes>;
+type YGroupVal = string | YStringArray | YAttributes;
+type YGroup = Y.Map<YGroupVal>;
 type YGroups = Y.Array<YGroup>;
 
 class GroupStore {
@@ -2163,6 +2238,12 @@ class GroupStore {
     this.color = group.color;
     this.name = group.name;
     this.description = group.description;
+
+    if (group.pieces) {
+      const yPieces = new Y.Array<string>();
+      yPieces.insert(0, group.pieces.map(p => p.id_));
+      this.yGroup.set("pieces", yPieces);
+    }
   }
 
   get color(): string | undefined {
@@ -2186,17 +2267,35 @@ class GroupStore {
     this.yGroup.set("description", description || "");
   }
 
+  get pieces(): PieceId[] {
+    const yPieces = this.yGroup.get("pieces") as Y.Array<string> | undefined;
+    if (!yPieces) return [];
+    return yPieces.toArray().map(id_ => ({ id_ }));
+  }
+  set pieces(pieces: PieceId[]) {
+    const yPieces = this.yGroup.get("pieces") as Y.Array<string> | undefined;
+    if (yPieces) {
+      yPieces.delete(0, yPieces.length);
+      yPieces.insert(0, pieces.map(p => p.id_));
+    } else {
+      const newYPieces = new Y.Array<string>();
+      newYPieces.insert(0, pieces.map(p => p.id_));
+      this.yGroup.set("pieces", newYPieces);
+    }
+  }
+
   hash = (group: Group): string => {
     return JSON.stringify(group);
   };
 
   snapshot = (): Group => {
-    const currentHash = this.hash({
-      pieces: [], // TODO: implement pieces handling
+    const currentData = {
+      pieces: this.pieces,
       color: this.color,
       name: this.name,
       description: this.description,
-    });
+    };
+    const currentHash = this.hash(currentData);
 
     if (!this.cache || this.cacheHash !== currentHash) {
       this.cache = currentData;
@@ -2478,10 +2577,6 @@ class ConnectionStore {
     return this.cache;
   };
 
-  id = (): ConnectionId => {
-    return { connected: { piece: this.connected.piece }, connecting: { piece: this.connecting.piece } };
-  };
-
   hasAttribute(attribute: AttributeIdLike): boolean {
     return this.attributes.some((a) => areSameAttribute(a.id(), attribute));
   }
@@ -2552,7 +2647,42 @@ export function useIsConnectionHovered(): boolean {
 }
 
 export function useConnectionStatus(): DiffStatus {
-  // TODO: Check diff for status
+  const connection = useConnectionScope();
+  const kitDiff = useDesignEditorDiff();
+  const designScope = useDesignScope();
+
+  if (!connection || !designScope || !kitDiff?.designs?.updated) {
+    return DiffStatus.Unchanged;
+  }
+
+  // Find the design diff for the current design
+  const designDiff = kitDiff.designs.updated.find(d =>
+    d.id.name === designScope.id.name &&
+    d.id.variant === designScope.id.variant &&
+    d.id.view === designScope.id.view
+  );
+
+  if (!designDiff?.diff.connections) {
+    return DiffStatus.Unchanged;
+  }
+
+  const connectionsDiff = designDiff.diff.connections;
+
+  // Check if connection is removed
+  if (connectionsDiff.removed?.some(c => c.id_ === connection.id.id_)) {
+    return DiffStatus.Removed;
+  }
+
+  // Check if connection is added
+  if (connectionsDiff.added?.some(c => c.id_ === connection.id.id_)) {
+    return DiffStatus.Added;
+  }
+
+  // Check if connection is updated
+  if (connectionsDiff.updated?.some(c => c.id.id_ === connection.id.id_)) {
+    return DiffStatus.Modified;
+  }
+
   return DiffStatus.Unchanged;
 }
 useConnectionStatus();
@@ -2780,8 +2910,8 @@ class DesignStore {
     //   this.yDesign.set("concepts", yConcepts);
     // }
 
-    this.authors = type.authors?.map((author) => this.parent.author(author)) || [];
-    this.yAuthors = this.yType.set("authors", new Y.Array<YAuthorUuid>());
+    this.authors = design.authors?.map((author) => this.parent.author(author)) || [];
+    this.yAuthors = this.yDesign.set("authors", new Y.Array<YAuthorUuid>());
     this.authors.forEach((author) => this.yAuthors.push([author.uuid]));
 
     this.yDesign.set("createdAt", new Date().toISOString());
@@ -3499,28 +3629,28 @@ class KitStore {
     this.yAuthors = this.yDoc.getArray("authors");
     this.yAttributes = this.yDoc.getArray("attributes");
 
-    // this.yDoc.transact(() => {
-    this.name = kit.name;
-    this.version = kit.version;
-    this.remote = kit.remote;
-    this.homepage = kit.homepage;
-    this.license = kit.license;
-    this.preview = kit.preview;
-    this.concepts = kit.concepts;
-    this.icon = kit.icon;
-    this.image = kit.image;
-    this.description = kit.description;
+    this.yDoc.transact(() => {
+      this.name = kit.name;
+      this.version = kit.version;
+      this.remote = kit.remote;
+      this.homepage = kit.homepage;
+      this.license = kit.license;
+      this.preview = kit.preview;
+      this.concepts = kit.concepts;
+      this.icon = kit.icon;
+      this.image = kit.image;
+      this.description = kit.description;
 
-    // kit.attributes?.forEach((attribute) => this.createAttribute(attribute));
-    kit.authors?.forEach((author) => this.createAuthor(author));
-    // kit.qualities?.forEach((quality) => this.createQuality(quality));
-    kit.types?.forEach((type) => this.createType(type));
-    kit.designs?.forEach((design) => this.createDesign(design));
-    kit.files?.forEach((file) => this.createFile(file));
+      kit.attributes?.forEach((attribute) => this.createAttribute(attribute));
+      kit.authors?.forEach((author) => this.createAuthor(author));
+      kit.qualities?.forEach((quality) => this.createQuality(quality));
+      kit.types?.forEach((type) => this.createType(type));
+      kit.designs?.forEach((design) => this.createDesign(design));
+      kit.files?.forEach((file) => this.createFile(file));
 
-    this.yKit.set("createdAt", new Date().toISOString());
-    this.updated();
-    // });
+      this.yKit.set("createdAt", new Date().toISOString());
+      this.updated();
+    });
 
     Object.entries(kitCommands).forEach(([commandId, command]) => {
       this.registerCommand(commandId, command);
@@ -3647,8 +3777,8 @@ class KitStore {
   createDesign(design: Design): void {
     if (this.hasDesign(design)) throw new Error(`Design (${design.name}, ${design.variant || ""}, ${design.view || ""}) already exists.`);
     const yDesign = new Y.Map<YDesignVal>();
-    const yDesignStore = new DesignStore(this, yDesign, design);
     this.yDesigns.push([yDesign]);
+    const yDesignStore = new DesignStore(this, yDesign, design);
     this.designs.push(yDesignStore);
   }
 
@@ -3668,8 +3798,8 @@ class KitStore {
   createFile(file: SemioFile): void {
     if (this.hasFile(file)) throw new Error(`File (${file.path}) already exists.`);
     const yFile = new Y.Map<YFile>();
-    const yFileStore = new FileStore(yFile, file);
     this.yFiles.push([yFile]);
+    const yFileStore = new FileStore(yFile, file);
     this.files.push(yFileStore);
   }
 
@@ -3689,8 +3819,8 @@ class KitStore {
   createQuality(quality: Quality): void {
     if (this.hasQuality(quality)) throw new Error(`Quality (${quality.key}) already exists.`);
     const yQuality = new Y.Map<YQuality>();
-    const yQualityStore = new QualityStore(yQuality, quality);
     this.yQualities.push([yQuality]);
+    const yQualityStore = new QualityStore(yQuality, quality);
     this.qualities.push(yQualityStore);
   }
 
@@ -3710,8 +3840,8 @@ class KitStore {
   createBenchmark(benchmark: Benchmark): void {
     if (this.hasBenchmark(benchmark)) throw new Error(`Benchmark (${benchmark.name}) already exists.`);
     const yBenchmark = new Y.Map<YBenchmark>();
-    const yBenchmarkStore = new BenchmarkStore(yBenchmark, benchmark);
     this.yBenchmarks.push([yBenchmark]);
+    const yBenchmarkStore = new BenchmarkStore(yBenchmark, benchmark);
     this.benchmarks.push(yBenchmarkStore);
   }
 
@@ -3784,20 +3914,18 @@ class KitStore {
       description: this.description,
       types: this.types.map((type) => type.snapshot()),
       designs: this.designs.map((design) => design.snapshot()),
-      // qualities: this.qualities.map((quality) => quality.snapshot),
+      qualities: this.qualities.map((quality) => quality.snapshot),
       files: this.files.map((file) => file.snapshot()),
       authors: this.authors.map((author) => author.snapshot()),
-      // attributes: this.attributes.map((attribute) => attribute.snapshot),
+      attributes: this.attributes.map((attribute) => attribute.snapshot),
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };
     const currentHash = this.hash(currentData);
-
     if (!this.cache || this.cacheHash !== currentHash) {
       this.cache = currentData;
       this.cacheHash = currentHash;
     }
-
     return this.cache;
   };
 
@@ -4556,7 +4684,40 @@ export interface DesignEditorCommandResult {
 }
 
 export const inverseDesignEditorSelectionDiff = (selection: DesignEditorSelection, diff: DesignEditorSelectionDiff): DesignEditorSelectionDiff => {
-  // TODO
+  const inverseDiff: DesignEditorSelectionDiff = {};
+
+  // Inverse pieces diff
+  if (diff.pieces) {
+    inverseDiff.pieces = {};
+    if (diff.pieces.added) {
+      inverseDiff.pieces.removed = diff.pieces.added;
+    }
+    if (diff.pieces.removed) {
+      inverseDiff.pieces.added = diff.pieces.removed;
+    }
+  }
+
+  // Inverse connections diff
+  if (diff.connections) {
+    inverseDiff.connections = {};
+    if (diff.connections.added) {
+      inverseDiff.connections.removed = diff.connections.added;
+    }
+    if (diff.connections.removed) {
+      inverseDiff.connections.added = diff.connections.removed;
+    }
+  }
+
+  // Inverse port diff - restore the original port from selection
+  if (diff.port) {
+    inverseDiff.port = {
+      piece: selection.port?.piece,
+      designPiece: selection.port?.designPiece,
+      port: selection.port?.port
+    };
+  }
+
+  return inverseDiff;
 };
 export const areSameDesignEditor = (designEditor: DesignEditorId, other: DesignEditorId): boolean => areSameKit(designEditor.kit, other.kit) && areSameDesign(designEditor.design, other.design);
 export const hasSameDesignEditor = (designEditor: DesignEditorId, others: DesignEditorId[]): boolean => others.some((other) => areSameDesignEditor(designEditor, other));
