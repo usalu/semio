@@ -889,8 +889,8 @@ export const PieceSchema = z.object({
   center: CoordSchema.optional(),
   scale: z.number().optional(),
   mirrorPlane: PlaneSchema.optional(),
-  hidden: z.boolean().optional(),
-  locked: z.boolean().optional(),
+  isHidden: z.boolean().optional(),
+  isLocked: z.boolean().optional(),
   color: z.string().optional(),
   description: z.string().optional(),
   attributes: z.array(AttributeSchema).optional()

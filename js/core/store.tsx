@@ -466,11 +466,17 @@ class YTypeStore {
     this.uuid = uuidv4();
     this.parent = parent;
     this.yType = yType;
-    this.yType.set("name", type.name);
-    this.yType.set("variant", type.variant || "");
+    this.name = type.name;
+    this.variant = type.variant;
+    this.stock = type.stock;
+    this.virtual = type.virtual;
+    this.unit = type.unit;
+    this.icon = type.icon;
+    this.image = type.image;
+    this.description = type.description;
 
     this.yType.set("createdAt", new Date().toISOString());
-    this.yType.set("updatedAt", new Date().toISOString());
+    this.updated();
   }
 
   get name(): string {
@@ -484,6 +490,42 @@ class YTypeStore {
   }
   set variant(variant: string | undefined) {
     this.yType.set("variant", variant || "");
+  }
+  get stock(): number | undefined {
+    return this.yType.get("stock") as number | undefined;
+  }
+  set stock(stock: number | undefined) {
+    this.yType.set("stock", stock);
+  }
+  get virtual(): boolean | undefined {
+    return this.yType.get("virtual") as boolean | undefined;
+  }
+  set virtual(virtual: boolean | undefined) {
+    this.yType.set("virtual", virtual);
+  }
+  get unit(): string | undefined {
+    return this.yType.get("unit") as string | undefined;
+  }
+  set unit(unit: string | undefined) {
+    this.yType.set("unit", unit || "");
+  }
+  get icon(): string | undefined {
+    return this.yType.get("icon") as string | undefined;
+  }
+  set icon(icon: string | undefined) {
+    this.yType.set("icon", icon || "");
+  }
+  get image(): string | undefined {
+    return this.yType.get("image") as string | undefined;
+  }
+  set image(image: string | undefined) {
+    this.yType.set("image", image || "");
+  }
+  get description(): string | undefined {
+    return this.yType.get("description") as string | undefined;
+  }
+  set description(description: string | undefined) {
+    this.yType.set("description", description || "");
   }
   get createdAt(): Date {
     return new Date(this.yType.get("createdAt") as string);
@@ -504,8 +546,14 @@ class YTypeStore {
     const currentData = {
       name: this.name,
       variant: this.variant,
-      createdAt: this.createdAt.toISOString(),
-      updatedAt: this.updatedAt.toISOString(),
+      stock: this.stock,
+      virtual: this.virtual,
+      unit: this.unit,
+      icon: this.icon,
+      image: this.image,
+      description: this.description,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
     };
     const currentHash = this.hash(currentData);
 
@@ -518,8 +566,8 @@ class YTypeStore {
   };
 
   change = (diff: TypeDiff) => {
-      if (diff.name !== undefined) this.yType.set("name", diff.name);
-      if (diff.variant !== undefined) this.yType.set("variant", diff.variant);
+    if (diff.name !== undefined) this.yType.set("name", diff.name);
+    if (diff.variant !== undefined) this.yType.set("variant", diff.variant);
     this.cache = undefined;
     this.cacheHash = undefined;
   };
@@ -544,7 +592,7 @@ class YPieceStore {
     this.uuid = uuidv4();
     this.parent = parent;
     this.yPiece = yPiece;
-    this.yPiece.set("id_", piece.id_);
+    this.localId = piece.id_;
     if (piece.type) {
       const type = this.parent.parent.type(piece.type);
       this.yPiece.set("type", type.uuid);
@@ -552,6 +600,11 @@ class YPieceStore {
       const design = this.parent.parent.design(piece.design!);
       this.yPiece.set("design", design.uuid);
     }
+    this.scale = piece.scale;
+    this.isHidden = piece.isHidden;
+    this.isLocked = piece.isLocked;
+    this.color = piece.color;
+    this.description = piece.description;
   }
 
   get localId(): string {
@@ -559,6 +612,56 @@ class YPieceStore {
   }
   set localId(localId: string) {
     this.yPiece.set("id_", localId);
+  }
+  get type(): TypeId {
+    return this.parent.parent.typeByUuid(this.yPiece.get("type") as string).id();
+  }
+  set type(type: TypeId | undefined) {
+    if (type) {
+      this.yPiece.set("type", this.parent.parent.type(type).uuid);
+    } else {
+      this.yPiece.set("type", "");
+    }
+  }
+  get design(): DesignId {
+    return this.parent.parent.designByUuid(this.yPiece.get("design") as string).id();
+  }
+  set design(design: DesignId | undefined) {
+    if (design) {
+      this.yPiece.set("design", this.parent.parent.design(design).uuid);
+    } else {
+      this.yPiece.set("design", "");
+    }
+  }
+  get scale(): number {
+    return this.yPiece.get("scale") as unknown as number;
+  }
+  set scale(scale: number | undefined) {
+    this.yPiece.set("scale", scale || 1.0);
+  }
+  get isHidden(): boolean {
+    return this.yPiece.get("isHidden") as unknown as boolean;
+  }
+  set isHidden(isHidden: boolean | undefined) {
+    this.yPiece.set("isHidden", isHidden || false);
+  }
+  get isLocked(): boolean {
+    return this.yPiece.get("isLocked") as unknown as boolean;
+  }
+  set isLocked(isLocked: boolean | undefined) {
+    this.yPiece.set("isLocked", isLocked || false);
+  }
+  get color(): string | undefined {
+    return this.yPiece.get("color") as string | undefined;
+  }
+  set color(color: string | undefined) {
+    this.yPiece.set("color", color || "");
+  }
+  get description(): string | undefined {
+    return this.yPiece.get("description") as string | undefined;
+  }
+  set description(description: string | undefined) {
+    this.yPiece.set("description", description || "");
   }
 
   public hash(piece: Piece): string {
@@ -572,8 +675,13 @@ class YPieceStore {
   snapshot = (): Piece => {
     const currentData = {
       id_: this.localId,
-      type: this.parent.parent.typeByUuid(this.yPiece.get("type") as string)?.id(),
-      design: this.parent.parent.designByUuid(this.yPiece.get("design") as string)?.id(),
+      type: this.type,
+      design: this.design,
+      scale: this.scale,
+      isHidden: this.isHidden,
+      isLocked: this.isLocked,
+      color: this.color,
+      description: this.description,
     };
     const currentHash = this.hash(currentData);
 
@@ -619,6 +727,12 @@ class YDesignStore {
     this.yDesign.set("name", design.name);
     this.yDesign.set("variant", design.variant || "");
     this.yDesign.set("view", design.view || "");
+    this.yDesign.set("canScale", design.canScale);
+    this.yDesign.set("canMirror", design.canMirror);
+    this.yDesign.set("unit", design.unit || "");
+    this.yDesign.set("icon", design.icon || "");
+    this.yDesign.set("image", design.image || "");
+    this.yDesign.set("description", design.description || "");
 
     this.yPieces = this.yDesign.set("pieces", new Y.Array<YPiece>());
     if (design.pieces) {
@@ -649,6 +763,42 @@ class YDesignStore {
   set view(view: string | undefined) {
     this.yDesign.set("view", view || "");
   }
+  get canScale(): boolean | undefined {
+    return this.yDesign.get("canScale") as boolean | undefined;
+  }
+  set canScale(canScale: boolean | undefined) {
+    this.yDesign.set("canScale", canScale);
+  }
+  get canMirror(): boolean | undefined {
+    return this.yDesign.get("canMirror") as boolean | undefined;
+  }
+  set canMirror(canMirror: boolean | undefined) {
+    this.yDesign.set("canMirror", canMirror);
+  }
+  get unit(): string | undefined {
+    return this.yDesign.get("unit") as string | undefined;
+  }
+  set unit(unit: string | undefined) {
+    this.yDesign.set("unit", unit || "");
+  }
+  get icon(): string | undefined {
+    return this.yDesign.get("icon") as string | undefined;
+  }
+  set icon(icon: string | undefined) {
+    this.yDesign.set("icon", icon || "");
+  }
+  get image(): string | undefined {
+    return this.yDesign.get("image") as string | undefined;
+  }
+  set image(image: string | undefined) {
+    this.yDesign.set("image", image || "");
+  }
+  get description(): string | undefined {
+    return this.yDesign.get("description") as string | undefined;
+  }
+  set description(description: string | undefined) {
+    this.yDesign.set("description", description || "");
+  }
   get createdAt(): Date {
     return new Date(this.yDesign.get("createdAt") as string);
   }
@@ -670,7 +820,7 @@ class YDesignStore {
       this.pieces.map((piece) => piece.id()),
     );
   }
-  
+
   createPiece(piece: Piece): void {
     const yPiece = new Y.Map<YPieceVal>();
     const yPieceStore = new YPieceStore(this, yPiece, piece);
@@ -696,6 +846,12 @@ class YDesignStore {
       name: this.name,
       variant: this.variant,
       view: this.view,
+      canScale: this.canScale,
+      canMirror: this.canMirror,
+      unit: this.unit,
+      icon: this.icon,
+      image: this.image,
+      description: this.description,
       pieces: this.pieces.map((piece) => piece.snapshot()),
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
@@ -769,7 +925,10 @@ class YKitStore {
 
     this.yDoc.transact(() => {
       this.name = kit.name;
-      this.version = kit.version || "";
+      this.version = kit.version;
+      this.remote = kit.remote;
+      this.homepage = kit.homepage;
+      this.license = kit.license;
 
       if (kit.types) for (const type of kit.types) this.createType(type);
       if (kit.designs) for (const design of kit.designs) this.createDesign(design);
@@ -795,16 +954,34 @@ class YKitStore {
   set version(version: string | undefined) {
     this.yKit.set("version", version || "");
   }
+  get remote(): string | undefined {
+    return this.yKit.get("remote") as string | undefined;
+  }
+  set remote(remote: string | undefined) {
+    this.yKit.set("remote", remote || "");
+  }
+  get homepage(): string | undefined {
+    return this.yKit.get("homepage") as string | undefined;
+  }
+  set homepage(homepage: string | undefined) {
+    this.yKit.set("homepage", homepage || "");
+  }
+  get license(): string | undefined {
+    return this.yKit.get("license") as string | undefined;
+  }
+  set license(license: string | undefined) {
+    this.yKit.set("license", license || "");
+  }
   get createdAt(): Date {
     return new Date(this.yKit.get("createdAt") as string);
   }
   get updatedAt(): Date {
     return new Date(this.yKit.get("updatedAt") as string);
   }
-  
+
   get fileUrls(): Map<Url, Url> {
     return this.regularFiles;
-  };
+  }
 
   updated(): void {
     this.yKit.set("updatedAt", new Date().toISOString());
@@ -870,8 +1047,13 @@ class YKitStore {
     const currentData = {
       name: this.name,
       version: this.version,
+      remote: this.remote,
+      homepage: this.homepage,
+      license: this.license,
       types: this.types.map((type) => type.snapshot()),
       designs: this.designs.map((design) => design.snapshot()),
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString(),
     };
     const currentHash = this.hash(currentData);
 
@@ -887,6 +1069,9 @@ class YKitStore {
     this.yDoc.transact(() => {
       if (diff.name) this.name = diff.name;
       if (diff.version) this.version = diff.version;
+      if (diff.remote) this.remote = diff.remote;
+      if (diff.homepage) this.homepage = diff.homepage;
+      if (diff.license) this.license = diff.license;
       if (diff.types) {
         if (diff.types.added) {
           diff.types.added.forEach((type) => this.createType(type));
@@ -1017,7 +1202,7 @@ class YDesignEditorStore {
   }
 
   get fullscreenPanel(): DesignEditorFullscreenPanel {
-    return (this.yMap.get("fullscreenPanel") as DesignEditorFullscreenPanel);
+    return this.yMap.get("fullscreenPanel") as DesignEditorFullscreenPanel;
   }
   set fullscreenPanel(panel: DesignEditorFullscreenPanel) {
     this.yMap.set("fullscreenPanel", panel);
