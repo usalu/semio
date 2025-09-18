@@ -40,6 +40,7 @@ import {
   Attribute,
   AttributeIdLike,
   Author,
+  AuthorDiff,
   AuthorId,
   AuthorIdLike,
   Benchmark,
@@ -74,7 +75,6 @@ import {
   getIncludedDesigns,
   getPieceRepresentationUrls,
   Group,
-  GroupId,
   hasSameDesign,
   hasSameKit,
   hasSamePiece,
@@ -206,14 +206,10 @@ type YAttributeVal = string;
 type YAttribute = Y.Map<YAttributeVal>;
 type YAttributes = Y.Array<YAttribute>;
 
-class YAttributeStore {
+class AttributeStore {
   private yAttribute: YAttribute;
   private cache?: Attribute;
   private cacheHash?: string;
-
-  private hash(attribute: Attribute): string {
-    return JSON.stringify(attribute);
-  }
 
   constructor(yAttribute: YAttribute, attribute: Attribute) {
     this.yAttribute = yAttribute;
@@ -243,6 +239,12 @@ class YAttributeStore {
     this.yAttribute.set("definition", definition || "");
   }
 
+  id = () => ({ key: this.key });
+
+  hash = (attribute: Attribute): string => {
+    return JSON.stringify(attribute);
+  };
+
   snapshot = (): Attribute => {
     const currentData = {
       key: this.key,
@@ -250,16 +252,13 @@ class YAttributeStore {
       definition: this.definition,
     };
     const currentHash = this.hash(currentData);
-
     if (!this.cache || this.cacheHash !== currentHash) {
       this.cache = currentData;
       this.cacheHash = currentHash;
     }
-
     return this.cache;
   };
 
-  id = () => ({ key: this.key });
   change = (diff: any) => {
     if (diff.key !== undefined) this.key = diff.key;
     if (diff.value !== undefined) this.value = diff.value;
@@ -287,10 +286,6 @@ class YCoordStore {
   private cache?: Coord;
   private cacheHash?: string;
 
-  private hash(coord: Coord): string {
-    return JSON.stringify(coord);
-  }
-
   constructor(yCoord: YCoord, coord: Coord) {
     this.yCoord = yCoord;
     this.x = coord.x;
@@ -311,6 +306,10 @@ class YCoordStore {
     this.yCoord.set("y", y);
   }
 
+  hash = (coord: Coord): string => {
+    return JSON.stringify(coord);
+  };
+
   snapshot = (): Coord => {
     const currentData = {
       x: this.x,
@@ -326,7 +325,6 @@ class YCoordStore {
     return this.cache;
   };
 
-  id = () => ({ x: this.x, y: this.y });
   change = (diff: CoordDiff) => {
     if (diff.x !== undefined) this.x = diff.x;
     if (diff.y !== undefined) this.y = diff.y;
@@ -353,10 +351,6 @@ class YVecStore {
   private cache?: Vec;
   private cacheHash?: string;
 
-  private hash(vec: Vec): string {
-    return JSON.stringify(vec);
-  }
-
   constructor(yVec: YVec, vec: Vec) {
     this.yVec = yVec;
     this.x = vec.x;
@@ -377,6 +371,10 @@ class YVecStore {
     this.yVec.set("y", y);
   }
 
+  hash = (vec: Vec): string => {
+    return JSON.stringify(vec);
+  };
+
   snapshot = (): Vec => {
     const currentData = {
       x: this.x,
@@ -392,7 +390,6 @@ class YVecStore {
     return this.cache;
   };
 
-  id = () => ({ x: this.x, y: this.y });
   change = (diff: VecDiff) => {
     if (diff.x !== undefined) this.x = diff.x;
     if (diff.y !== undefined) this.y = diff.y;
@@ -418,10 +415,6 @@ class YPointStore {
   private yPoint: YPoint;
   private cache?: Point;
   private cacheHash?: string;
-
-  private hash(point: Point): string {
-    return JSON.stringify(point);
-  }
 
   constructor(yPoint: YPoint, point: Point) {
     this.yPoint = yPoint;
@@ -451,6 +444,10 @@ class YPointStore {
     this.yPoint.set("z", z);
   }
 
+  hash = (point: Point): string => {
+    return JSON.stringify(point);
+  };
+
   snapshot = (): Point => {
     const currentData = {
       x: this.x,
@@ -467,7 +464,6 @@ class YPointStore {
     return this.cache;
   };
 
-  id = () => ({ x: this.x, y: this.y, z: this.z });
   change = (diff: PointDiff) => {
     if (diff.x !== undefined) this.x = diff.x;
     if (diff.y !== undefined) this.y = diff.y;
@@ -494,10 +490,6 @@ class YVectorStore {
   private yVector: YVector;
   private cache?: Vector;
   private cacheHash?: string;
-
-  private hash(vector: Vector): string {
-    return JSON.stringify(vector);
-  }
 
   constructor(yVector: YVector, vector: Vector) {
     this.yVector = yVector;
@@ -527,6 +519,10 @@ class YVectorStore {
     this.yVector.set("z", z);
   }
 
+  hash = (vector: Vector): string => {
+    return JSON.stringify(vector);
+  };
+
   snapshot = (): Vector => {
     const currentData = {
       x: this.x,
@@ -543,7 +539,6 @@ class YVectorStore {
     return this.cache;
   };
 
-  id = () => ({ x: this.x, y: this.y, z: this.z });
   change = (diff: VectorDiff) => {
     if (diff.x !== undefined) this.x = diff.x;
     if (diff.y !== undefined) this.y = diff.y;
@@ -574,16 +569,15 @@ class YPlaneStore {
   private cache?: Plane;
   private cacheHash?: string;
 
-  private hash(plane: Plane): string {
-    return JSON.stringify(plane);
-  }
-
   constructor(yPlane: YPlane, plane: Plane) {
     this.yPlane = yPlane;
     this.origin = new YPointStore(new Y.Map<YPointVal>(), plane.origin);
     this.xAxis = new YVectorStore(new Y.Map<YVectorVal>(), plane.xAxis);
     this.yAxis = new YVectorStore(new Y.Map<YVectorVal>(), plane.yAxis);
   }
+  hash = (plane: Plane): string => {
+    return JSON.stringify(plane);
+  };
 
   snapshot = (): Plane => {
     const currentData = {
@@ -601,7 +595,6 @@ class YPlaneStore {
     return this.cache;
   };
 
-  id = () => this.snapshot();
   change = (diff: PlaneDiff) => {
     if (diff.origin !== undefined) this.origin.change(diff.origin);
     if (diff.xAxis !== undefined) this.xAxis.change(diff.xAxis);
@@ -628,10 +621,6 @@ class YCameraStore {
   private yCamera: YCamera;
   private cache?: Camera;
   private cacheHash?: string;
-
-  private hash(camera: Camera): string {
-    return JSON.stringify(camera);
-  }
 
   constructor(yCamera: YCamera, camera: Camera) {
     this.yCamera = yCamera;
@@ -661,6 +650,10 @@ class YCameraStore {
     this.yCamera.set("theta", theta);
   }
 
+  hash = (camera: Camera): string => {
+    return JSON.stringify(camera);
+  };
+
   snapshot = (): Camera => {
     const currentData = {
       distance: this.distance,
@@ -677,7 +670,6 @@ class YCameraStore {
     return this.cache;
   };
 
-  id = () => this.snapshot();
   change = (diff: CameraDiff) => {
     if (diff.distance !== undefined) this.distance = diff.distance;
     if (diff.phi !== undefined) this.phi = diff.phi;
@@ -704,10 +696,6 @@ class YLocationStore {
   private yLocation: YLocation;
   private cache?: Location;
   private cacheHash?: string;
-
-  private hash(location: Location): string {
-    return JSON.stringify(location);
-  }
 
   constructor(yLocation: YLocation, location: Location) {
     this.yLocation = yLocation;
@@ -737,6 +725,10 @@ class YLocationStore {
     this.yLocation.set("altitude", altitude);
   }
 
+  hash = (location: Location): string => {
+    return JSON.stringify(location);
+  };
+
   snapshot = (): Location => {
     const currentData = {
       latitude: this.latitude,
@@ -753,7 +745,6 @@ class YLocationStore {
     return this.cache;
   };
 
-  id = () => this.snapshot();
   change = (diff: LocationDiff) => {
     if (diff.latitude !== undefined) this.latitude = diff.latitude;
     if (diff.longitude !== undefined) this.longitude = diff.longitude;
@@ -773,24 +764,29 @@ class YLocationStore {
 
 // #region Author
 
-type YAuthor = Y.Map<string>;
+type YAuthorVal = string | YAttributes;
+type YAuthor = Y.Map<YAuthorVal>;
 type YAuthors = Y.Array<YAuthor>;
+type YAuthorUuid = string;
+type YAuthorUuids = Y.Array<YAuthorUuid>;
 
-class YAuthorStore {
+class AuthorStore {
   public readonly uuid: string;
   private yAuthor: YAuthor;
+  private yAttributes: YAttributes;
+  private attributes: AttributeStore[];
   private cache?: Author;
   private cacheHash?: string;
-
-  private hash(author: Author): string {
-    return JSON.stringify(author);
-  }
 
   constructor(yAuthor: YAuthor, author: Author) {
     this.uuid = uuidv4();
     this.yAuthor = yAuthor;
     this.name = author.name;
     this.email = author.email;
+    this.yAttributes = new Y.Array<YAttribute>();
+    this.yAuthor.set("attributes", this.yAttributes);
+    this.attributes = new Array();
+    author.attributes?.forEach((attribute) => this.createAttribute(attribute));
   }
 
   get name(): string {
@@ -807,29 +803,55 @@ class YAuthorStore {
     this.yAuthor.set("email", email);
   }
 
-  get snapshot(): Author {
-    const currentHash = this.hash({
-      name: this.name,
-      email: this.email,
-    });
-
-    if (this.cache && this.cacheHash === currentHash) {
-      return this.cache;
-    }
-
-    const author: Author = {
-      name: this.name,
-      email: this.email,
-    };
-
-    this.cache = author;
-    this.cacheHash = currentHash;
-    return author;
-  }
-
   get id(): AuthorId {
     return { email: this.email };
   }
+
+  hasAttribute(attribute: AttributeIdLike): boolean {
+    return this.attributes.some((a) => areSameAttribute(a.id(), attribute));
+  }
+
+  createAttribute(attribute: Attribute): void {
+    if (this.hasAttribute(attribute)) throw new Error(`Attribute (${attribute.key}) already exists.`);
+    const yAttribute = new Y.Map<YAttributeVal>();
+    const yAttributeStore = new AttributeStore(yAttribute, attribute);
+    this.yAttributes.push([yAttribute]);
+    this.attributes.push(yAttributeStore);
+  }
+
+  attribute(attribute: AttributeIdLike): AttributeStore {
+    if (!this.hasAttribute(attribute)) throw new Error(`Attribute store not found for attribute ${attribute}`);
+    return this.attributes.find((a) => a.id.key === (typeof attribute === "string" ? attribute : attribute.key))!;
+  }
+
+  attributeByUuid(uuid: string): AttributeStore {
+    return this.attributes.find((a) => a.uuid === uuid)!;
+  }
+
+  hash = (author: Author): string => {
+    return JSON.stringify(author);
+  };
+
+  snapshot = (): Author => {
+    const currentData = {
+      name: this.name,
+      email: this.email,
+      attributes: this.attributes.map((attribute) => attribute.snapshot()),
+    };
+    const currentHash = this.hash(currentData);
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
+    }
+    return this.cache;
+  };
+
+  change = (diff: AuthorDiff) => {
+    if (diff.name !== undefined) this.name = diff.name;
+    if (diff.email !== undefined) this.email = diff.email;
+    this.cache = undefined;
+    this.cacheHash = undefined;
+  };
 
   onChanged = (subscribe: Subscribe) => {
     return createObserver(this.yAuthor, subscribe);
@@ -847,15 +869,11 @@ class YAuthorStore {
 type YFile = Y.Map<string | YAttributes>;
 type YFiles = Y.Array<YFile>;
 
-class YFileStore {
+class FileStore {
   public readonly uuid: string;
   private yFile: YFile;
   private cache?: SemioFile;
   private cacheHash?: string;
-
-  private hashFile(file: SemioFile): string {
-    return JSON.stringify(file);
-  }
 
   constructor(yFile: YFile, file: SemioFile) {
     this.uuid = uuidv4();
@@ -924,6 +942,10 @@ class YFileStore {
     this.yFile.set("updatedBy", updatedBy?.email || "");
   }
 
+  hashFile = (file: SemioFile): string => {
+    return JSON.stringify(file);
+  };
+
   snapshot = (): SemioFile => {
     const currentData = {
       path: this.path,
@@ -978,15 +1000,11 @@ class YFileStore {
 type YBenchmark = Y.Map<string | number | YAttributes>;
 type YBenchmarks = Y.Array<YBenchmark>;
 
-class YBenchmarkStore {
+class BenchmarkStore {
   public readonly uuid: string;
   private yBenchmark: YBenchmark;
   private cache?: Benchmark;
   private cacheHash?: string;
-
-  private hash(benchmark: Benchmark): string {
-    return JSON.stringify(benchmark);
-  }
 
   constructor(yBenchmark: YBenchmark, benchmark: Benchmark) {
     this.uuid = uuidv4();
@@ -1041,6 +1059,10 @@ class YBenchmarkStore {
     this.yBenchmark.set("maxExcluded", maxExcluded || false);
   }
 
+  hash = (benchmark: Benchmark): string => {
+    return JSON.stringify(benchmark);
+  };
+
   snapshot = (): Benchmark => {
     const currentData = {
       name: this.name,
@@ -1091,15 +1113,11 @@ class YBenchmarkStore {
 type YQuality = Y.Map<string | number | YAttributes>;
 type YQualities = Y.Array<YQuality>;
 
-class YQualityStore {
+class QualityStore {
   public readonly uuid: string;
   private yQuality: YQuality;
   private cache?: Quality;
   private cacheHash?: string;
-
-  private hash(quality: Quality): string {
-    return JSON.stringify(quality);
-  }
 
   constructor(yQuality: YQuality, quality: Quality) {
     this.uuid = uuidv4();
@@ -1137,6 +1155,10 @@ class YQualityStore {
   set description(description: string | undefined) {
     this.yQuality.set("description", description || "");
   }
+
+  hash = (quality: Quality): string => {
+    return JSON.stringify(quality);
+  };
 
   get snapshot(): Quality {
     const currentHash = this.hash({
@@ -1182,14 +1204,10 @@ class YQualityStore {
 type YProp = Y.Map<string | number | boolean | YAttributes>;
 type YProps = Y.Array<YProp>;
 
-class YPropStore {
+class PropStore {
   private yProp: YProp;
   private cache?: Prop;
   private cacheHash?: string;
-
-  private hash(prop: Prop): string {
-    return JSON.stringify(prop);
-  }
 
   constructor(yProp: YProp, prop: Prop) {
     this.yProp = yProp;
@@ -1218,6 +1236,10 @@ class YPropStore {
   set unit(unit: string | undefined) {
     this.yProp.set("unit", unit || "");
   }
+
+  hash = (prop: Prop): string => {
+    return JSON.stringify(prop);
+  };
 
   get snapshot(): Prop {
     const currentHash = this.hash({
@@ -1262,15 +1284,11 @@ type YRepresentationVal = string | YStringArray | YAttributes;
 type YRepresentation = Y.Map<YRepresentationVal>;
 type YRepresentations = Y.Array<YRepresentation>;
 
-class YRepresentationStore {
+class RepresentationStore {
   public readonly uuid: string;
   private yRepresentation: YRepresentation;
   private cache?: Representation;
   private cacheHash?: string;
-
-  private hash(representation: Representation): string {
-    return JSON.stringify(representation);
-  }
 
   constructor(yRepresentation: YRepresentation, representation: Representation) {
     this.uuid = uuidv4();
@@ -1292,6 +1310,10 @@ class YRepresentationStore {
   set description(description: string | undefined) {
     this.yRepresentation.set("description", description || "");
   }
+
+  hash = (representation: Representation): string => {
+    return JSON.stringify(representation);
+  };
 
   get snapshot(): Representation {
     const currentHash = this.hash({
@@ -1339,17 +1361,15 @@ type YPortVal = string | number | boolean | YLeafMapNumber | YAttributes | YStri
 type YPort = Y.Map<YPortVal>;
 type YPorts = Y.Array<YPort>;
 
-class YPortStore {
+class PortStore {
   public readonly uuid: string;
   private yPort: YPort;
+  private yPoint: YPoint;
   private point: YPointStore;
+  private yDirection: YVector;
   private direction: YVectorStore;
   private cache?: Port;
   private cacheHash?: string;
-
-  private hash(port: Port): string {
-    return JSON.stringify(port);
-  }
 
   constructor(yPort: YPort, port: Port) {
     this.uuid = uuidv4();
@@ -1360,19 +1380,13 @@ class YPortStore {
     this.mandatory = port.mandatory;
     this.t = port.t;
 
-    // Initialize Point store
-    if (!yPort.has("point")) {
-      yPort.set("point", new Y.Map());
-    }
-    const yPoint = yPort.get("point") as YPoint;
-    this.point = new YPointStore(yPoint, port.point);
+    this.yPoint = new Y.Map();
+    yPort.set("point", this.yPoint);
+    this.point = new YPointStore(this.yPoint, port.point);
 
-    // Initialize Vector store
-    if (!yPort.has("direction")) {
-      yPort.set("direction", new Y.Map());
-    }
-    const yDirection = yPort.get("direction") as YVector;
-    this.direction = new YVectorStore(yDirection, port.direction);
+    this.yDirection = new Y.Map();
+    yPort.set("direction", this.yDirection);
+    this.direction = new YVectorStore(this.yDirection, port.direction);
   }
 
   get id_(): string | undefined {
@@ -1410,6 +1424,14 @@ class YPortStore {
     this.yPort.set("t", t);
   }
 
+  id = (): PortId => {
+    return { id_: this.id_ };
+  };
+
+  hash = (port: Port): string => {
+    return JSON.stringify(port);
+  };
+
   snapshot = (): Port => {
     const currentData = {
       id_: this.id_,
@@ -1428,10 +1450,6 @@ class YPortStore {
     }
 
     return this.cache;
-  };
-
-  id = (): PortId => {
-    return { t: this.t };
   };
 
   apply(diff: PortDiff): void {
@@ -1459,22 +1477,22 @@ type YTypeVal = string | number | boolean | YAuthors | YAttributes | YRepresenta
 type YType = Y.Map<YTypeVal>;
 type YTypes = Y.Array<YType>;
 
-class YTypeStore {
+class TypeStore {
   public readonly uuid: string;
-  public readonly parent: YKitStore;
+  public readonly parent: KitStore;
   private yType: YType;
+  private yAttributes: YAttributes;
+  private attributes: AttributeStore[];
+  private yAuthors: YAuthorUuids;
+  private authors: AuthorStore[];
   private yRepresentations: YRepresentations;
   private yPorts: YPorts;
-  public representations: YRepresentationStore[];
-  public ports: YPortStore[];
+  public representations: RepresentationStore[];
+  public ports: PortStore[];
   private cache?: Type;
   private cacheHash?: string;
 
-  private hash(type: Type): string {
-    return JSON.stringify(type);
-  }
-
-  constructor(parent: YKitStore, yType: YType, type: Type) {
+  constructor(parent: KitStore, yType: YType, type: Type) {
     this.uuid = uuidv4();
     this.parent = parent;
     this.yType = yType;
@@ -1490,15 +1508,17 @@ class YTypeStore {
     this.image = type.image;
     this.description = type.description;
 
-    if (type.authors) {
-      this.yType.set(
-        "authors",
-        type.authors.map((author) => {
-          const authorStore = this.parent.author(author);
-          return authorStore.uuid;
-        }),
-      );
-    }
+    // this.attributes = new Array();
+    // this.yAttributes = this.yType.set("attributes", new Y.Array<YAttribute>());
+    // if (type.attributes) {
+    //   for (const attribute of type.attributes) {
+    //     this.createAttribute(attribute);
+    //   }
+    // }
+
+    this.authors = type.authors?.map((author) => this.parent.author(author)) || [];
+    this.yAuthors = this.yType.set("authors", new Y.Array<YAuthorUuid>());
+    this.authors.forEach((author) => this.yAuthors.push([author.uuid]));
 
     this.yRepresentations = this.yType.set("representations", new Y.Array<YRepresentation>());
     if (type.representations) {
@@ -1566,24 +1586,6 @@ class YTypeStore {
   set description(description: string | undefined) {
     this.yType.set("description", description || "");
   }
-  get authors(): AuthorId[] {
-    const authorUuids = this.yType.get("authors") as string[] | undefined;
-    if (!authorUuids) return [];
-    return authorUuids.map((uuid) => this.parent.authorByUuid(uuid).id());
-  }
-  set authors(authors: AuthorId[] | undefined) {
-    if (authors) {
-      this.yType.set(
-        "authors",
-        authors.map((author) => {
-          const authorStore = this.parent.author(author);
-          return authorStore.uuid;
-        }),
-      );
-    } else {
-      this.yType.set("authors", []);
-    }
-  }
   get createdAt(): Date {
     return new Date(this.yType.get("createdAt") as string);
   }
@@ -1595,9 +1597,21 @@ class YTypeStore {
     this.yType.set("updatedAt", new Date().toISOString());
   }
 
+  hasAttribute(attribute: AttributeIdLike): boolean {
+    return this.attributes.some((a) => areSameAttribute(a.id(), attribute));
+  }
+
+  createAttribute(attribute: Attribute): void {
+    if (this.hasAttribute(attribute)) throw new Error(`Attribute (${attribute.key}) already exists.`);
+    const yAttribute = new Y.Map<YAttributeVal>();
+    const yAttributeStore = new AttributeStore(yAttribute, attribute);
+    this.yAttributes.push([yAttribute]);
+    this.attributes.push(yAttributeStore);
+  }
+
   createRepresentation(representation: Representation): void {
     const yRepresentation = new Y.Map<YRepresentationVal>();
-    const yRepresentationStore = new YRepresentationStore(yRepresentation, representation);
+    const yRepresentationStore = new RepresentationStore(yRepresentation, representation);
     this.yRepresentations.push([yRepresentation]);
     this.representations.push(yRepresentationStore);
   }
@@ -1606,35 +1620,35 @@ class YTypeStore {
     return this.representations.some((rep) => areSameRepresentation(rep.id(), representation));
   }
 
-  representation(representation: RepresentationIdLike): YRepresentationStore {
+  representation(representation: RepresentationIdLike): RepresentationStore {
     if (!this.hasRepresentation(representation)) throw new Error(`Representation store not found for representation ${representation}`);
     return this.representations.find((rep) => areSameRepresentation(rep.id(), representation))!;
   }
 
-  representationByUuid(uuid: string): YRepresentationStore {
+  representationByUuid(uuid: string): RepresentationStore {
     for (const rep of this.representations) {
       if (rep.uuid === uuid) return rep;
     }
     throw new Error(`Representation store not found for uuid ${uuid}`);
   }
 
+  hasPort(port: PortIdLike): boolean {
+    return this.ports.some((port) => areSamePort(port.id(), port));
+  }
   createPort(port: Port): void {
+    if (this.hasPort(port)) throw new Error(`Port (${port.id_}) already exists.`);
     const yPort = new Y.Map<YPortVal>();
-    const yPortStore = new YPortStore(yPort, port);
+    const yPortStore = new PortStore(yPort, port);
     this.yPorts.push([yPort]);
     this.ports.push(yPortStore);
   }
 
-  hasPort(port: PortIdLike): boolean {
-    return this.ports.some((port) => areSamePort(port.id(), port));
-  }
-
-  port(port: PortIdLike): YPortStore {
+  port(port: PortIdLike): PortStore {
     if (!this.hasPort(port)) throw new Error(`Port store not found for port ${port}`);
     return this.ports.find((port) => areSamePort(port.id(), port))!;
   }
 
-  portByUuid(uuid: string): YPortStore {
+  portByUuid(uuid: string): PortStore {
     for (const p of this.ports) {
       if (p.uuid === uuid) return p;
     }
@@ -1642,9 +1656,12 @@ class YTypeStore {
   }
 
   id = (): TypeId => {
-    return { name: this.name, variant: this.variant } as TypeId;
+    return { name: this.name, variant: this.variant };
   };
 
+  hash = (type: Type): string => {
+    return JSON.stringify(type);
+  };
   snapshot = (): Type => {
     const currentData = {
       name: this.name,
@@ -1674,7 +1691,7 @@ class YTypeStore {
   change = (diff: TypeDiff) => {
     if (diff.name !== undefined) this.yType.set("name", diff.name);
     if (diff.variant !== undefined) this.yType.set("variant", diff.variant);
-    if (diff.authors !== undefined) this.authors = diff.authors;
+    // TODO
     this.cache = undefined;
     this.cacheHash = undefined;
   };
@@ -1696,8 +1713,8 @@ export const TypeScopeProvider = (props: { id: TypeId; children: React.ReactNode
 };
 const useTypeScope = () => useContext(TypeScopeContext);
 
-function useTypeStore<T>(selector?: (store: YTypeStore) => T, id?: TypeId): T | YTypeStore {
-  const kitStore = useKitStore() as YKitStore;
+function useTypeStore<T>(selector?: (store: TypeStore) => T, id?: TypeId): T | TypeStore {
+  const kitStore = useKitStore() as KitStore;
   const typeScope = useTypeScope();
   const typeId = typeScope?.id ?? id;
   if (!typeId) throw new Error("useTypeStore must be called within a TypeScopeProvider or be directly provided with an id");
@@ -1707,7 +1724,7 @@ function useTypeStore<T>(selector?: (store: YTypeStore) => T, id?: TypeId): T | 
 }
 
 export function useType<T>(selector?: (type: Type) => T, id?: TypeId, deep: boolean = false): T | Type {
-  return useSync<Type, T>(useTypeStore(identitySelector, id) as YTypeStore, selector ? selector : identitySelector, deep);
+  return useSync<Type, T>(useTypeStore(identitySelector, id) as TypeStore, selector ? selector : identitySelector, deep);
 }
 
 export function usePortColoredTypes(): Type[] {
@@ -1733,14 +1750,10 @@ export function usePortColoredTypes(): Type[] {
 type YLayer = Y.Map<string | boolean | YAttributes>;
 type YLayers = Y.Array<YLayer>;
 
-class YLayerStore {
+class LayerStore {
   private yLayer: YLayer;
   private cache?: Layer;
   private cacheHash?: string;
-
-  private hash(layer: Layer): string {
-    return JSON.stringify(layer);
-  }
 
   constructor(yLayer: YLayer, layer: Layer) {
     this.yLayer = yLayer;
@@ -1833,9 +1846,9 @@ type YPieceVal = string | number | boolean | YLeafMapString | YLeafMapNumber | Y
 type YPiece = Y.Map<YPieceVal>;
 type YPieces = Y.Array<YPiece>;
 
-class YPieceStore {
+class PieceStore {
   public readonly uuid: string;
-  public readonly parent: YDesignStore;
+  public readonly parent: DesignStore;
   private yPiece: YPiece;
   private yPlane: YPlane;
   private plane: YPlaneStore;
@@ -1844,11 +1857,11 @@ class YPieceStore {
   private yMirrorPlane: YPlane;
   private mirrorPlane: YPlaneStore;
   private yAttributes: YAttributes;
-  private attributes: YAttributeStore[];
+  private attributes: AttributeStore[];
   private cache?: Piece;
   private cacheHash?: string;
 
-  constructor(parent: YDesignStore, yPiece: YPiece, piece: Piece) {
+  constructor(parent: DesignStore, yPiece: YPiece, piece: Piece) {
     this.uuid = uuidv4();
     this.parent = parent;
     this.yPiece = yPiece;
@@ -1954,23 +1967,24 @@ class YPieceStore {
     this.yPiece.set("description", description || "");
   }
 
-  createAttribute(attribute: Attribute): void {
-    const yAttribute = new Y.Map<string>();
-    const yAttributeStore = new YAttributeStore(yAttribute, attribute);
-    this.yAttributes.push([yAttribute]);
-    this.attributes.push(yAttributeStore);
-  }
-
   hasAttribute(attribute: AttributeIdLike): boolean {
     return this.attributes.some((a) => areSameAttribute(a.id(), attribute));
   }
 
-  attribute(attribute: AttributeIdLike): YAttributeStore {
+  createAttribute(attribute: Attribute): void {
+    if (this.hasAttribute(attribute)) throw new Error(`Attribute (${attribute.key}) already exists.`);
+    const yAttribute = new Y.Map<YAttributeVal>();
+    const yAttributeStore = new AttributeStore(yAttribute, attribute);
+    this.yAttributes.push([yAttribute]);
+    this.attributes.push(yAttributeStore);
+  }
+
+  attribute(attribute: AttributeIdLike): AttributeStore {
     if (!this.hasAttribute(attribute)) throw new Error(`Attribute store not found for attribute ${attribute}`);
     return this.attributes.find((a) => areSameAttribute(a.id(), attribute))!;
   }
 
-  attributeByUuid(uuid: string): YAttributeStore {
+  attributeByUuid(uuid: string): AttributeStore {
     return this.attributes.find((a) => a.uuid === uuid)!;
   }
 
@@ -1979,7 +1993,7 @@ class YPieceStore {
   }
 
   id = (): PieceId => {
-    return { id_: this.localId } as PieceId;
+    return { id_: this.localId };
   };
 
   snapshot = (): Piece => {
@@ -2098,8 +2112,8 @@ export const PieceScopeProvider = (props: { id: PieceId; children: React.ReactNo
 };
 const usePieceScope = () => useContext(PieceScopeContext);
 
-function usePieceStore<T>(selector?: (store: YPieceStore) => T, id?: PieceId): T | YPieceStore {
-  const designStore = useDesignStore() as YDesignStore;
+function usePieceStore<T>(selector?: (store: PieceStore) => T, id?: PieceId): T | PieceStore {
+  const designStore = useDesignStore() as DesignStore;
   const pieceScope = usePieceScope();
   const pieceId = pieceScope?.id ?? id;
   if (!pieceId) throw new Error("usePieceStore must be called within a PieceScopeProvider or be directly provided with an id");
@@ -2109,7 +2123,7 @@ function usePieceStore<T>(selector?: (store: YPieceStore) => T, id?: PieceId): T
 }
 
 export function usePiece<T>(selector?: (piece: Piece) => T, id?: PieceId, deep: boolean = false): T | Piece {
-  return useSync<Piece, T>(usePieceStore(identitySelector, id) as YPieceStore, selector ? selector : identitySelector, deep);
+  return useSync<Piece, T>(usePieceStore(identitySelector, id) as PieceStore, selector ? selector : identitySelector, deep);
 }
 
 export function useIsPieceSelected(): boolean {
@@ -2143,14 +2157,10 @@ usePieceStatus();
 type YGroup = Y.Map<string | YStringArray | YAttributes>;
 type YGroups = Y.Array<YGroup>;
 
-class YGroupStore {
+class GroupStore {
   private yGroup: YGroup;
   private cache?: Group;
   private cacheHash?: string;
-
-  private hash(group: Group): string {
-    return JSON.stringify(group);
-  }
 
   constructor(yGroup: YGroup, group: Group) {
     this.yGroup = yGroup;
@@ -2180,7 +2190,11 @@ class YGroupStore {
     this.yGroup.set("description", description || "");
   }
 
-  get snapshot(): Group {
+  hash = (group: Group): string => {
+    return JSON.stringify(group);
+  };
+
+  snapshot = (): Group => {
     const currentHash = this.hash({
       pieces: [], // TODO: implement pieces handling
       color: this.color,
@@ -2188,25 +2202,13 @@ class YGroupStore {
       description: this.description,
     });
 
-    if (this.cache && this.cacheHash === currentHash) {
-      return this.cache;
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
     }
 
-    const group: Group = {
-      pieces: [], // TODO: implement pieces handling
-      color: this.color,
-      name: this.name,
-      description: this.description,
-    };
-
-    this.cache = group;
-    this.cacheHash = currentHash;
-    return group;
-  }
-
-  get id(): GroupId {
-    return { pieces: [] }; // TODO: implement pieces handling
-  }
+    return this.cache;
+  };
 
   onChanged = (subscribe: Subscribe) => {
     return createObserver(this.yGroup, subscribe);
@@ -2221,17 +2223,13 @@ class YGroupStore {
 
 // #region Side
 
-class YSideStore {
-  public readonly parent: YDesignStore;
+class SideStore {
+  public readonly parent: DesignStore;
   private ySide: YSide;
   private cache?: Side;
   private cacheHash?: string;
 
-  private hash(side: Side): string {
-    return JSON.stringify(side);
-  }
-
-  constructor(parent: YDesignStore, ySide: YSide, side: Side) {
+  constructor(parent: DesignStore, ySide: YSide, side: Side) {
     this.parent = parent;
     this.ySide = ySide;
 
@@ -2308,6 +2306,10 @@ class YSideStore {
     }
   }
 
+  hash = (side: Side): string => {
+    return JSON.stringify(side);
+  };
+
   snapshot = (): Side => {
     const currentData = {
       piece: this.piece,
@@ -2341,35 +2343,31 @@ class YSideStore {
 
 // #region Connection
 
-type YSide = Y.Map<YLeafMapString>;
+type YSideVal = string | number | YAttributes;
+type YSide = Y.Map<YSideVal>;
 type YSides = Y.Array<YSide>;
 
-type YConnectionVal = string | number | YAttributes | YSide | YSides;
+type YConnectionVal = string | number | YAttributes | YSide;
 type YConnection = Y.Map<YConnectionVal>;
 type YConnections = Y.Array<YConnection>;
 
-class YConnectionStore {
-  public readonly parent: YDesignStore;
+class ConnectionStore {
+  public readonly parent: DesignStore;
   private yConnection: YConnection;
-  private connected: YSideStore;
-  private connecting: YSideStore;
-  private attributes: YAttributeStore[];
+  private connected: SideStore;
+  private connecting: SideStore;
+  private yAttributes: YAttributes;
+  private attributes: AttributeStore[];
   private cache?: Connection;
   private cacheHash?: string;
 
-  private hash(connection: Connection): string {
-    return JSON.stringify(connection);
-  }
-
-  constructor(parent: YDesignStore, yConnection: YConnection, connection: Connection) {
+  constructor(parent: DesignStore, yConnection: YConnection, connection: Connection) {
     this.parent = parent;
     this.yConnection = yConnection;
-    this.attributes = [];
-
     const yConnected = new Y.Map<YSideVal>();
-    this.connected = new YSideStore(parent, yConnected, connection.connected);
+    this.connected = new SideStore(parent, yConnected, connection.connected);
     const yConnecting = new Y.Map<YSideVal>();
-    this.connecting = new YSideStore(parent, yConnecting, connection.connecting);
+    this.connecting = new SideStore(parent, yConnecting, connection.connecting);
     this.gap = connection.gap;
     this.shift = connection.shift;
     this.rise = connection.rise;
@@ -2379,9 +2377,8 @@ class YConnectionStore {
     this.x = connection.x;
     this.y = connection.y;
     this.description = connection.description;
-
-    const yAttributes = new Y.Array<YAttribute>();
-    this.yConnection.set("attributes", yAttributes);
+    this.attributes = [];
+    this.yAttributes = this.yConnection.set("attributes", new Y.Array<YAttribute>());
     if (connection.attributes) {
       for (const attribute of connection.attributes) {
         this.createAttribute(attribute);
@@ -2456,6 +2453,10 @@ class YConnectionStore {
     return { connected: this.connected.id(), connecting: this.connecting.id() };
   }
 
+  hash = (connection: Connection): string => {
+    return JSON.stringify(connection);
+  };
+
   snapshot = (): Connection => {
     const currentData = {
       connected: this.connected.snapshot(),
@@ -2485,11 +2486,15 @@ class YConnectionStore {
     return { connected: { piece: this.connected.piece }, connecting: { piece: this.connecting.piece } };
   };
 
+  hasAttribute(attribute: AttributeIdLike): boolean {
+    return this.attributes.some((a) => areSameAttribute(a.id(), attribute));
+  }
+
   createAttribute(attribute: Attribute): void {
-    const yAttributes = this.yConnection.get("attributes") as Y.Array<YAttribute>;
-    const yAttribute = new Y.Map<string>();
-    const yAttributeStore = new YAttributeStore(yAttribute, attribute);
-    yAttributes.push([yAttribute]);
+    if (this.hasAttribute(attribute)) throw new Error(`Attribute (${attribute.key}) already exists.`);
+    const yAttribute = new Y.Map<YAttributeVal>();
+    const yAttributeStore = new AttributeStore(yAttribute, attribute);
+    this.yAttributes.push([yAttribute]);
     this.attributes.push(yAttributeStore);
   }
 
@@ -2524,8 +2529,8 @@ export const ConnectionScopeProvider = (props: { id: ConnectionId; children: Rea
 };
 const useConnectionScope = () => useContext(ConnectionScopeContext);
 
-function useConnectionStore<T>(selector?: (store: YConnectionStore) => T, id?: ConnectionId): T | YConnectionStore {
-  const designStore = useDesignStore() as YDesignStore;
+function useConnectionStore<T>(selector?: (store: ConnectionStore) => T, id?: ConnectionId): T | ConnectionStore {
+  const designStore = useDesignStore() as DesignStore;
   const connectionScope = useConnectionScope();
   const connectionId = connectionScope?.id ?? id;
   if (!connectionId) throw new Error("useConnectionStore must be called within a ConnectionScopeProvider or be directly provided with an id");
@@ -2535,7 +2540,7 @@ function useConnectionStore<T>(selector?: (store: YConnectionStore) => T, id?: C
 }
 
 export function useConnection<T>(selector?: (connection: Connection) => T, id?: ConnectionId, deep: boolean = false): T | Connection {
-  return useSync<Connection, T>(useConnectionStore(identitySelector, id) as YConnectionStore, selector ? selector : identitySelector, deep);
+  return useSync<Connection, T>(useConnectionStore(identitySelector, id) as ConnectionStore, selector ? selector : identitySelector, deep);
 }
 
 export function useIsConnectionSelected(): boolean {
@@ -2563,14 +2568,10 @@ useConnectionStatus();
 type YStat = Y.Map<string | number | boolean>;
 type YStats = Y.Array<YStat>;
 
-class YStatStore {
+class StatStore {
   private yStat: YStat;
   private cache?: Stat;
   private cacheHash?: string;
-
-  private hash(stat: Stat): string {
-    return JSON.stringify(stat);
-  }
 
   constructor(yStat: YStat, stat: Stat) {
     this.yStat = yStat;
@@ -2624,6 +2625,10 @@ class YStatStore {
     this.yStat.set("maxExcluded", maxExcluded);
   }
 
+  hash = (stat: Stat): string => {
+    return JSON.stringify(stat);
+  };
+
   get snapshot(): Stat {
     const currentData = {
       key: this.key,
@@ -2662,25 +2667,25 @@ type YDesignVal = string | YAuthors | YAttributes | YPieces | YConnections | YLa
 type YDesign = Y.Map<YDesignVal>;
 type YDesigns = Y.Array<YDesign>;
 
-class YDesignStore {
+class DesignStore {
   public readonly uuid: string;
-  public readonly parent: YKitStore;
+  public readonly parent: KitStore;
   private yDesign: YDesign;
   private yPieces: YPieces;
-  private pieces: YPieceStore[];
+  private pieces: PieceStore[];
   private yConnections: YConnections;
-  private connections: YConnectionStore[];
+  private connections: ConnectionStore[];
   private yAttributes: YAttributes;
-  private attributes: YAttributeStore[];
-  private stats: YStatStore[];
-  private props: YPropStore[];
-  private layers: YLayerStore[];
-  private groups: YGroupStore[];
+  private attributes: AttributeStore[];
+  private stats: StatStore[];
+  private props: PropStore[];
+  private layers: LayerStore[];
+  private groups: GroupStore[];
   private location?: YLocationStore;
   private cache?: Design;
   private cacheHash?: string;
 
-  constructor(parent: YKitStore, yDesign: YDesign, design: Design) {
+  constructor(parent: KitStore, yDesign: YDesign, design: Design) {
     this.uuid = uuidv4();
     this.parent = parent;
     this.yDesign = yDesign;
@@ -2881,21 +2886,21 @@ class YDesignStore {
 
   createPiece(piece: Piece): void {
     const yPiece = new Y.Map<YPieceVal>();
-    const yPieceStore = new YPieceStore(this, yPiece, piece);
+    const yPieceStore = new PieceStore(this, yPiece, piece);
     this.yPieces!.push([yPiece]);
     this.pieces.push(yPieceStore);
   }
 
   createConnection(connection: Connection): void {
     const yConnection = new Y.Map<YConnectionVal>();
-    const yConnectionStore = new YConnectionStore(this, yConnection, connection);
+    const yConnectionStore = new ConnectionStore(this, yConnection, connection);
     this.yConnections.push([yConnection]);
     this.connections.push(yConnectionStore);
   }
 
   createAttribute(attribute: Attribute): void {
     const yAttribute = new Y.Map<string>();
-    const yAttributeStore = new YAttributeStore(yAttribute, attribute);
+    const yAttributeStore = new AttributeStore(yAttribute, attribute);
     this.yAttributes.push([yAttribute]);
     this.attributes.push(yAttributeStore);
   }
@@ -2903,7 +2908,7 @@ class YDesignStore {
   createStat(stat: Stat): void {
     const yStats = this.yDesign.get("stats") as Y.Array<YStat>;
     const yStat = new Y.Map<any>();
-    const yStatStore = new YStatStore(yStat, stat);
+    const yStatStore = new StatStore(yStat, stat);
     yStats.push([yStat]);
     this.stats.push(yStatStore);
   }
@@ -2911,7 +2916,7 @@ class YDesignStore {
   createProp(prop: Prop): void {
     const yProps = this.yDesign.get("props") as Y.Array<YProp>;
     const yProp = new Y.Map<any>();
-    const yPropStore = new YPropStore(yProp, prop);
+    const yPropStore = new PropStore(yProp, prop);
     yProps.push([yProp]);
     this.props.push(yPropStore);
   }
@@ -2919,7 +2924,7 @@ class YDesignStore {
   createLayer(layer: Layer): void {
     const yLayers = this.yDesign.get("layers") as Y.Array<YLayer>;
     const yLayer = new Y.Map<any>();
-    const yLayerStore = new YLayerStore(yLayer, layer);
+    const yLayerStore = new LayerStore(yLayer, layer);
     yLayers.push([yLayer]);
     this.layers.push(yLayerStore);
   }
@@ -2927,7 +2932,7 @@ class YDesignStore {
   createGroup(group: Group): void {
     const yGroups = this.yDesign.get("groups") as Y.Array<YGroup>;
     const yGroup = new Y.Map<any>();
-    const yGroupStore = new YGroupStore(yGroup, group);
+    const yGroupStore = new GroupStore(yGroup, group);
     yGroups.push([yGroup]);
     this.groups.push(yGroupStore);
   }
@@ -2937,7 +2942,7 @@ class YDesignStore {
     return this.pieces.find((p) => areSamePiece(p.id(), piece))!;
   }
 
-  pieceByUuid(uuid: string): YPieceStore {
+  pieceByUuid(uuid: string): PieceStore {
     return this.pieces.find((p) => p.uuid === uuid)!;
   }
 
@@ -2945,12 +2950,12 @@ class YDesignStore {
     return this.connections.some((c) => c.id.id_ === connection.id_ || c.id.id_ === connection);
   }
 
-  connection(connection: any): YConnectionStore {
+  connection(connection: any): ConnectionStore {
     if (!this.hasConnection(connection)) throw new Error(`Connection store not found for connection ${connection}`);
     return this.connections.find((c) => c.id.id_ === connection.id_ || c.id.id_ === connection)!;
   }
 
-  connectionByUuid(uuid: string): YConnectionStore {
+  connectionByUuid(uuid: string): ConnectionStore {
     return this.connections.find((c) => c.uuid === uuid)!;
   }
 
@@ -2958,12 +2963,12 @@ class YDesignStore {
     return this.attributes.some((a) => a.key === attribute.key || a.key === attribute);
   }
 
-  attribute(attribute: any): YAttributeStore {
+  attribute(attribute: any): AttributeStore {
     if (!this.hasAttribute(attribute)) throw new Error(`Attribute store not found for attribute ${attribute}`);
     return this.attributes.find((a) => a.key === attribute.key || a.key === attribute)!;
   }
 
-  attributeByUuid(uuid: string): YAttributeStore {
+  attributeByUuid(uuid: string): AttributeStore {
     return this.attributes.find((a) => a.uuid === uuid)!;
   }
 
@@ -3257,8 +3262,8 @@ export const DesignScopeProvider = (props: { id: DesignId; children: React.React
 };
 const useDesignScope = () => useContext(DesignScopeContext);
 
-function useDesignStore<T>(selector?: (store: YDesignStore) => T, id?: DesignId): T | YDesignStore {
-  const kitStore = useKitStore() as YKitStore;
+function useDesignStore<T>(selector?: (store: DesignStore) => T, id?: DesignId): T | DesignStore {
+  const kitStore = useKitStore() as KitStore;
   const designScope = useDesignScope();
   const designId = designScope?.id ?? id;
   if (!designId) throw new Error("useDesignStore must be called within a DesignScopeProvider or be directly provided with an id");
@@ -3269,9 +3274,9 @@ function useDesignStore<T>(selector?: (store: YDesignStore) => T, id?: DesignId)
 
 export function useDesign<T>(selector?: (design: DesignShallow | Design) => T, id?: DesignId, deep: boolean = false): T | DesignShallow | Design {
   if (deep) {
-    return useSyncDeep<Design, T>(useDesignStore(identitySelector, id) as YDesignStore, selector ? selector : identitySelector);
+    return useSyncDeep<Design, T>(useDesignStore(identitySelector, id) as DesignStore, selector ? selector : identitySelector);
   }
-  return useSync<DesignShallow, T>(useDesignStore(identitySelector, id) as YDesignStore, selector ? selector : identitySelector, deep);
+  return useSync<DesignShallow, T>(useDesignStore(identitySelector, id) as DesignStore, selector ? selector : identitySelector, deep);
 }
 
 export function useDiffedDesign(): Design {
@@ -3464,33 +3469,33 @@ export interface KitCommandResult {
   files?: File[];
 }
 
-class YKitStore {
+class KitStore {
   public readonly uri: string;
-  public readonly parent: YSketchpadStore;
+  public readonly parent: SketchpadStore;
   private readonly yProviderFactory: YProviderFactory | undefined;
   private readonly yDoc: Y.Doc;
   private readonly yKit: YKit;
   private readonly yTypes: YTypes;
-  private readonly types: YTypeStore[];
+  private readonly types: TypeStore[];
   private readonly yDesigns: YDesigns;
-  private readonly designs: YDesignStore[];
+  private readonly designs: DesignStore[];
   private readonly yFiles: YFiles;
-  private readonly files: YFileStore[];
+  private readonly files: FileStore[];
   private readonly yQualities: YQualities;
-  private readonly qualities: YQualityStore[];
+  private readonly qualities: QualityStore[];
   private readonly yBenchmarks: YBenchmarks;
-  private readonly benchmarks: YBenchmarkStore[];
+  private readonly benchmarks: BenchmarkStore[];
   private readonly yAuthors: YAuthors;
-  private readonly authors: YAuthorStore[];
+  private readonly authors: AuthorStore[];
   private readonly yAttributes: YAttributes;
-  private readonly attributes: YAttributeStore[];
+  private readonly attributes: AttributeStore[];
   private readonly persistence: IndexeddbPersistence;
   private readonly commandRegistry: Map<string, (context: KitCommandContext, ...rest: any[]) => KitCommandResult>;
   private readonly regularFiles: Map<Url, string>;
   private cache?: Kit;
   private cacheHash?: string;
 
-  constructor(parent: YSketchpadStore, kit: Kit, yProviderFactory?: YProviderFactory) {
+  constructor(parent: SketchpadStore, kit: Kit, yProviderFactory?: YProviderFactory) {
     this.parent = parent;
     this.yProviderFactory = yProviderFactory;
     this.yDoc = new Y.Doc();
@@ -3530,12 +3535,12 @@ class YKitStore {
       this.image = kit.image;
       this.description = kit.description;
 
-      if (kit.types) for (const type of kit.types) this.createType(type);
-      if (kit.designs) for (const design of kit.designs) this.createDesign(design);
-      // if (kit.files) for (const file of kit.files) this.createFile(file);
-      // if (kit.qualities) for (const quality of kit.qualities) this.createQuality(quality);
-      // if (kit.authors) for (const author of kit.authors) this.createAuthor(author);
-      // if (kit.attributes) for (const attribute of kit.attributes) this.createAttribute(attribute);
+      // kit.attributes?.forEach((attribute) => this.createAttribute(attribute));
+      kit.authors?.forEach((author) => this.createAuthor(author));
+      // kit.qualities?.forEach((quality) => this.createQuality(quality));
+      kit.types?.forEach((type) => this.createType(type));
+      kit.designs?.forEach((design) => this.createDesign(design));
+      kit.files?.forEach((file) => this.createFile(file));
 
       this.yKit.set("createdAt", new Date().toISOString());
       this.updated();
@@ -3629,7 +3634,7 @@ class YKitStore {
   }
 
   id = (): KitId => {
-    return { name: this.name, version: this.version } as KitId;
+    return { name: this.name, version: this.version };
   };
 
   hasType(type: TypeIdLike): boolean {
@@ -3642,17 +3647,17 @@ class YKitStore {
   createType(type: Type): void {
     if (this.hasType(type)) throw new Error(`Type (${type.name}, ${type.variant || ""}) already exists.`);
     const yType = new Y.Map<YTypeVal>();
-    const yTypeStore = new YTypeStore(this, yType, type);
+    const yTypeStore = new TypeStore(this, yType, type);
     this.yTypes.push([yType]);
     this.types.push(yTypeStore);
   }
 
-  type(type: TypeIdLike): YTypeStore {
+  type(type: TypeIdLike): TypeStore {
     if (!this.hasType(type)) throw new Error(`Type store not found for type ${type}`);
     return this.types.find((t) => areSameType(t.id(), type))!;
   }
 
-  typeByUuid(uuid: string): YTypeStore {
+  typeByUuid(uuid: string): TypeStore {
     return this.types.find((t) => t.uuid === uuid)!;
   }
 
@@ -3666,17 +3671,17 @@ class YKitStore {
   createDesign(design: Design): void {
     if (this.hasDesign(design)) throw new Error(`Design (${design.name}, ${design.variant || ""}, ${design.view || ""}) already exists.`);
     const yDesign = new Y.Map<YDesignVal>();
-    const yDesignStore = new YDesignStore(this, yDesign, design);
+    const yDesignStore = new DesignStore(this, yDesign, design);
     this.yDesigns.push([yDesign]);
     this.designs.push(yDesignStore);
   }
 
-  design(design: DesignIdLike): YDesignStore {
+  design(design: DesignIdLike): DesignStore {
     if (!this.hasDesign(design)) throw new Error(`Design store not found for design ${design}`);
     return this.designs.find((d) => areSameDesign(d.id(), design))!;
   }
 
-  designByUuid(uuid: string): YDesignStore {
+  designByUuid(uuid: string): DesignStore {
     return this.designs.find((d) => d.uuid === uuid)!;
   }
 
@@ -3687,17 +3692,17 @@ class YKitStore {
   createFile(file: SemioFile): void {
     if (this.hasFile(file)) throw new Error(`File (${file.path}) already exists.`);
     const yFile = new Y.Map<YFile>();
-    const yFileStore = new YFileStore(yFile, file);
+    const yFileStore = new FileStore(yFile, file);
     this.yFiles.push([yFile]);
     this.files.push(yFileStore);
   }
 
-  file(file: FileIdLike): YFileStore {
+  file(file: FileIdLike): FileStore {
     if (!this.hasFile(file)) throw new Error(`File store not found for file ${file}`);
     return this.files.find((f) => f.id().path === (typeof file === "string" ? file : file.path))!;
   }
 
-  fileByUuid(uuid: string): YFileStore {
+  fileByUuid(uuid: string): FileStore {
     return this.files.find((f) => f.uuid === uuid)!;
   }
 
@@ -3708,17 +3713,17 @@ class YKitStore {
   createQuality(quality: Quality): void {
     if (this.hasQuality(quality)) throw new Error(`Quality (${quality.key}) already exists.`);
     const yQuality = new Y.Map<YQuality>();
-    const yQualityStore = new YQualityStore(yQuality, quality);
+    const yQualityStore = new QualityStore(yQuality, quality);
     this.yQualities.push([yQuality]);
     this.qualities.push(yQualityStore);
   }
 
-  quality(quality: QualityIdLike): YQualityStore {
+  quality(quality: QualityIdLike): QualityStore {
     if (!this.hasQuality(quality)) throw new Error(`Quality store not found for quality ${quality}`);
     return this.qualities.find((q) => q.id.key === (typeof quality === "string" ? quality : quality.key))!;
   }
 
-  qualityByUuid(uuid: string): YQualityStore {
+  qualityByUuid(uuid: string): QualityStore {
     return this.qualities.find((q) => q.uuid === uuid)!;
   }
 
@@ -3729,17 +3734,17 @@ class YKitStore {
   createBenchmark(benchmark: Benchmark): void {
     if (this.hasBenchmark(benchmark)) throw new Error(`Benchmark (${benchmark.name}) already exists.`);
     const yBenchmark = new Y.Map<YBenchmark>();
-    const yBenchmarkStore = new YBenchmarkStore(yBenchmark, benchmark);
+    const yBenchmarkStore = new BenchmarkStore(yBenchmark, benchmark);
     this.yBenchmarks.push([yBenchmark]);
     this.benchmarks.push(yBenchmarkStore);
   }
 
-  benchmark(benchmark: BenchmarkIdLike): YBenchmarkStore {
+  benchmark(benchmark: BenchmarkIdLike): BenchmarkStore {
     if (!this.hasBenchmark(benchmark)) throw new Error(`Benchmark store not found for benchmark ${benchmark}`);
     return this.benchmarks.find((b) => b.id().name === (typeof benchmark === "string" ? benchmark : benchmark.name))!;
   }
 
-  benchmarkByUuid(uuid: string): YBenchmarkStore {
+  benchmarkByUuid(uuid: string): BenchmarkStore {
     return this.benchmarks.find((b) => b.uuid === uuid)!;
   }
 
@@ -3749,18 +3754,18 @@ class YKitStore {
 
   createAuthor(author: Author): void {
     if (this.hasAuthor(author)) throw new Error(`Author (${author.email}) already exists.`);
-    const yAuthor = new Y.Map<YAuthor>();
-    const yAuthorStore = new YAuthorStore(yAuthor, author);
+    const yAuthor = new Y.Map<YAuthorVal>();
+    const yAuthorStore = new AuthorStore(yAuthor, author);
     this.yAuthors.push([yAuthor]);
     this.authors.push(yAuthorStore);
   }
 
-  author(author: AuthorIdLike): YAuthorStore {
+  author(author: AuthorIdLike): AuthorStore {
     if (!this.hasAuthor(author)) throw new Error(`Author store not found for author ${author}`);
     return this.authors.find((a) => a.id.email === (typeof author === "string" ? author : author.email))!;
   }
 
-  authorByUuid(uuid: string): YAuthorStore {
+  authorByUuid(uuid: string): AuthorStore {
     return this.authors.find((a) => a.uuid === uuid)!;
   }
 
@@ -3771,17 +3776,17 @@ class YKitStore {
   createAttribute(attribute: Attribute): void {
     if (this.hasAttribute(attribute)) throw new Error(`Attribute (${attribute.key}) already exists.`);
     const yAttribute = new Y.Map<YAttribute>();
-    const yAttributeStore = new YAttributeStore(yAttribute, attribute);
+    const yAttributeStore = new AttributeStore(yAttribute, attribute);
     this.yAttributes.push([yAttribute]);
     this.attributes.push(yAttributeStore);
   }
 
-  attribute(attribute: AttributeIdLike): YAttributeStore {
+  attribute(attribute: AttributeIdLike): AttributeStore {
     if (!this.hasAttribute(attribute)) throw new Error(`Attribute store not found for attribute ${attribute}`);
     return this.attributes.find((a) => a.id.key === (typeof attribute === "string" ? attribute : attribute.key))!;
   }
 
-  attributeByUuid(uuid: string): YAttributeStore {
+  attributeByUuid(uuid: string): AttributeStore {
     return this.attributes.find((a) => a.uuid === uuid)!;
   }
 
@@ -3803,10 +3808,10 @@ class YKitStore {
       description: this.description,
       types: this.types.map((type) => type.snapshot()),
       designs: this.designs.map((design) => design.snapshot()),
-      qualities: this.qualities.map((quality) => quality.snapshot),
+      // qualities: this.qualities.map((quality) => quality.snapshot),
       files: this.files.map((file) => file.snapshot()),
-      authors: this.authors.map((author) => author.id),
-      attributes: this.attributes.map((attribute) => attribute.snapshot),
+      authors: this.authors.map((author) => author.snapshot()),
+      // attributes: this.attributes.map((attribute) => attribute.snapshot),
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };
@@ -3827,6 +3832,29 @@ class YKitStore {
       if (diff.remote) this.remote = diff.remote;
       if (diff.homepage) this.homepage = diff.homepage;
       if (diff.license) this.license = diff.license;
+
+      if (diff.authors) {
+        if (diff.authors.added) {
+          diff.authors.added.forEach((author) => this.createAuthor(author));
+        }
+        if (diff.authors.updated) {
+          diff.authors.updated.forEach(({ id, diff: authorDiff }) => {
+            const authorStore = this.authors.find((a) => a.id.email === id.email);
+            if (authorStore) {
+              authorStore.change(authorDiff);
+            }
+          });
+        }
+        if (diff.authors.removed) {
+          diff.authors.removed.forEach((authorId) => {
+            const authorIndex = this.authors.findIndex((a) => a.id.email === authorId.email);
+            if (authorIndex !== -1) {
+              this.authors.splice(authorIndex, 1);
+              this.yAuthors.delete(authorIndex, 1);
+            }
+          });
+        }
+      }
       if (diff.types) {
         if (diff.types.added) {
           diff.types.added.forEach((type) => this.createType(type));
@@ -3937,6 +3965,21 @@ class YKitStore {
 }
 
 const kitCommands = {
+  "semio.kit.createAuthor": (context: KitCommandContext, author: Author): KitCommandResult => {
+    return {
+      diff: { authors: { added: [author] } },
+    };
+  },
+  "semio.kit.updateAuthor": (context: KitCommandContext, authorId: AuthorId, authorDiff: AuthorDiff): KitCommandResult => {
+    return {
+      diff: { authors: { updated: [{ id: authorId, diff: authorDiff }] } },
+    };
+  },
+  "semio.kit.deleteAuthor": (context: KitCommandContext, authorId: AuthorId): KitCommandResult => {
+    return {
+      diff: { authors: { removed: [authorId] } },
+    };
+  },
   "semio.kit.createType": (context: KitCommandContext, type: Type): KitCommandResult => {
     return {
       diff: { types: { added: [type] } },
@@ -4367,7 +4410,7 @@ export const KitScopeProvider = (props: { id: KitId; children: React.ReactNode }
 };
 const useKitStoreScope = () => useContext(KitScopeContext);
 
-function useKitStore<T>(selector?: (store: YKitStore) => T, id?: KitId): T | YKitStore {
+function useKitStore<T>(selector?: (store: KitStore) => T, id?: KitId): T | KitStore {
   const store = useSketchpadStore();
   const kitScope = useKitStoreScope();
   const kitId = kitScope?.id ?? id;
@@ -4379,9 +4422,9 @@ function useKitStore<T>(selector?: (store: YKitStore) => T, id?: KitId): T | YKi
 
 export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, id?: KitId, deep: boolean = false): T | KitShallow | Kit {
   if (deep) {
-    return useSyncDeep<Kit, T>(useKitStore(identitySelector, id) as YKitStore, selector ? selector : identitySelector);
+    return useSyncDeep<Kit, T>(useKitStore(identitySelector, id) as KitStore, selector ? selector : identitySelector);
   }
-  return useSync<KitShallow, T>(useKitStore(identitySelector, id) as YKitStore, selector ? selector : identitySelector, deep);
+  return useSync<KitShallow, T>(useKitStore(identitySelector, id) as KitStore, selector ? selector : identitySelector, deep);
 }
 
 export function useDiffedKit(): Kit {
@@ -4395,7 +4438,7 @@ export function useDesigns(): Design[] {
 }
 
 export function useFileUrls(): Map<Url, Url> {
-  return (useKitStore() as YKitStore).fileUrls();
+  return (useKitStore() as KitStore).fileUrls();
 }
 
 export function useTypesByName(): Record<string, Type[]> {
@@ -4430,10 +4473,13 @@ export function useDesignsByName(): Record<string, Design[]> {
 }
 
 export function useKitCommands() {
-  const store = useKitStore() as YKitStore;
+  const store = useKitStore() as KitStore;
   return {
     importKit: (url: string) => store.execute("semio.kit.import", url),
     exportKit: () => store.execute("semio.kit.export"),
+    createAuthor: (author: Author) => store.execute("semio.kit.createAuthor", author),
+    updateAuthor: (authorId: AuthorId, authorDiff: AuthorDiff) => store.execute("semio.kit.updateAuthor", authorId, authorDiff),
+    deleteAuthor: (authorId: AuthorId) => store.execute("semio.kit.deleteAuthor", authorId),
     createType: (type: Type) => store.execute("semio.kit.createType", type),
     updateType: (typeId: TypeId, typeDiff: TypeDiff) => store.execute("semio.kit.updateType", typeId, typeDiff),
     deleteType: (typeId: TypeId) => store.execute("semio.kit.deleteType", typeId),
@@ -4539,16 +4585,16 @@ export const inverseDesignEditorSelectionDiff = (selection: DesignEditorSelectio
 export const areSameDesignEditor = (designEditor: DesignEditorId, other: DesignEditorId): boolean => areSameKit(designEditor.kit, other.kit) && areSameDesign(designEditor.design, other.design);
 export const hasSameDesignEditor = (designEditor: DesignEditorId, others: DesignEditorId[]): boolean => others.some((other) => areSameDesignEditor(designEditor, other));
 
-class YDesignEditorStore {
+class DesignEditorStore {
   public readonly uuid: string;
-  public readonly parent: YSketchpadStore;
+  public readonly parent: SketchpadStore;
   public readonly yMap: YDesignEditor;
   private readonly commandRegistry: Map<string, (context: DesignEditorCommandContext, ...rest: any[]) => DesignEditorCommandResult> = new Map();
   private readonly transact: (fn: () => void) => void;
   private cache?: YDesignEditorState;
   private cacheHash?: string;
 
-  constructor(parent: YSketchpadStore, yMap: YDesignEditor, transact: (fn: () => void) => void, id: DesignEditorId, state?: YDesignEditorState) {
+  constructor(parent: SketchpadStore, yMap: YDesignEditor, transact: (fn: () => void) => void, id: DesignEditorId, state?: YDesignEditorState) {
     this.uuid = uuidv4();
     this.parent = parent;
     this.yMap = yMap;
@@ -4831,7 +4877,7 @@ class YDesignEditorStore {
 
     const callback = this.commandRegistry.get(command);
     if (!callback) throw new Error(`Command "${command}" not found in design editor store`);
-    const parent = this.parent as YSketchpadStore;
+    const parent = this.parent as SketchpadStore;
     const kitStore = parent.kits.get(kitIdToString(parent.activeDesignEditor!.kit))!;
 
     const state = this.snapshot();
@@ -5255,7 +5301,7 @@ export const DesignEditorScopeProvider = (props: { id: string; children: React.R
 };
 const useDesignEditorScope = () => useContext(DesignEditorScopeContext);
 
-function useDesignEditorStore<T>(selector?: (store: YDesignEditorStore) => T, id?: DesignEditorId): T | YDesignEditorStore {
+function useDesignEditorStore<T>(selector?: (store: DesignEditorStore) => T, id?: DesignEditorId): T | DesignEditorStore {
   const store = useSketchpadStore();
   const kitScope = useKitStoreScope();
   const resolvedKitId = kitScope?.id ?? id?.kit;
@@ -5268,7 +5314,7 @@ function useDesignEditorStore<T>(selector?: (store: YDesignEditorStore) => T, id
 }
 
 export function useDesignEditor<T>(selector?: (state: YDesignEditorState) => T, id?: DesignEditorId): T | YDesignEditorState {
-  return useSync<YDesignEditorState, T>(useDesignEditorStore(identitySelector, id) as YDesignEditorStore, selector ? selector : identitySelector);
+  return useSync<YDesignEditorState, T>(useDesignEditorStore(identitySelector, id) as DesignEditorStore, selector ? selector : identitySelector);
 }
 
 export function useDesignEditorSelection(): DesignEditorSelection {
@@ -5288,7 +5334,7 @@ export function useDesignEditorOthers(): DesignEditorPresenceOther[] {
 }
 
 export function useDesignEditorCommands() {
-  const store = useDesignEditorStore() as YDesignEditorStore;
+  const store = useDesignEditorStore() as DesignEditorStore;
   return {
     startTransaction: () => store.execute("semio.designEditor.startTransaction"),
     finalizeTransaction: () => store.execute("semio.designEditor.finalizeTransaction"),
@@ -5357,23 +5403,19 @@ export interface SketchpadCommandResult {
   diff?: SketchpadDiff;
 }
 
-class YSketchpadStore {
+class SketchpadStore {
   private readonly id: string | undefined;
   private readonly yProviderFactory: YProviderFactory | undefined;
   private readonly yDoc: Y.Doc;
   private readonly ySketchpad: YSketchpad;
-  private readonly kits: Array<YKitStore>;
+  private readonly kits: Array<KitStore>;
   private readonly yDesignEditors: YDesignEditors;
-  private readonly designEditors: Array<YDesignEditorStore>;
+  private readonly designEditors: Array<DesignEditorStore>;
   private readonly persistence?: IndexeddbPersistence;
   private readonly commandRegistry: Map<string, (context: SketchpadCommandContext, ...rest: any[]) => SketchpadCommandResult>;
   private cache?: SketchpadState;
   private cacheHash?: string;
   // private readonly broadcastChannel: BroadcastChannel;
-
-  private hash(state: SketchpadState): string {
-    return JSON.stringify(state);
-  }
 
   constructor(id?: string, yProviderFactory?: YProviderFactory) {
     this.id = id;
@@ -5425,8 +5467,8 @@ class YSketchpadStore {
     });
   }
 
-  id = () => {
-    return this.yDoc.clientID.toString();
+  hash = (state: SketchpadState): string => {
+    return JSON.stringify(state);
   };
 
   snapshot = (): SketchpadState => {
@@ -5450,7 +5492,7 @@ class YSketchpadStore {
     if (this.hasKit(kit)) {
       throw new Error(`Kit (${kit.name}, ${kit.version || ""}) already exists.`);
     }
-    this.kits.push(new YKitStore(this, yProviderFactory, kit));
+    this.kits.push(new KitStore(this, kit, this.yProviderFactory));
   };
 
   createDesignEditor = (id: DesignEditorId) => {
@@ -5460,7 +5502,7 @@ class YSketchpadStore {
     this.yDoc.transact(() => {
       const yDesignEditor = new Y.Map<YDesignEditorVal>();
       this.yDesignEditors.push([yDesignEditor]);
-      const designEditor = new YDesignEditorStore(this, yDesignEditor, this.yDoc.transact, id);
+      const designEditor = new DesignEditorStore(this, yDesignEditor, this.yDoc.transact, id);
       this.designEditors.push(designEditor);
     });
   };
@@ -5555,12 +5597,12 @@ class YSketchpadStore {
     );
   }
 
-  kit(kit: KitIdLike): YKitStore {
+  kit(kit: KitIdLike): KitStore {
     if (!this.hasKit(kit)) throw new Error(`Kit store not found for kit ${kit}`);
     return this.kits.find((k) => areSameKit(k.id(), kit))!;
   }
 
-  kitByUuid(uuid: string): YKitStore {
+  kitByUuid(uuid: string): KitStore {
     return this.kits.find((k) => k.uuid === uuid)!;
   }
 
@@ -5571,12 +5613,12 @@ class YSketchpadStore {
     );
   }
 
-  designEditor(designEditor: DesignEditorId): YDesignEditorStore {
+  designEditor(designEditor: DesignEditorId): DesignEditorStore {
     if (!this.hasDesignEditor(designEditor)) throw new Error(`Design editor store not found for design editor ${designEditor}`);
     return this.designEditors.find((d) => areSameDesignEditor(d.id(), designEditor))!;
   }
 
-  designEditorByUuid(uuid: string): YDesignEditorStore {
+  designEditorByUuid(uuid: string): DesignEditorStore {
     return this.designEditors.find((d) => d.uuid === uuid)!;
   }
 }
@@ -5604,7 +5646,7 @@ const sketchpadCommands = {
   },
 };
 
-const stores: Map<string, YSketchpadStore> = new Map();
+const stores: Map<string, SketchpadStore> = new Map();
 
 function useSketchpadStore(id?: string) {
   const scope = useSketchpadScope();
@@ -5620,7 +5662,7 @@ const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
 export const SketchpadScopeProvider = (props: { id?: string; yProviderFactory?: YProviderFactory; children: React.ReactNode }) => {
   const id = props.id || uuidv4();
   if (!stores.has(id)) {
-    const store = new YSketchpadStore(props.id, props?.yProviderFactory);
+    const store = new SketchpadStore(props.id, props?.yProviderFactory);
     stores.set(id, store);
   }
   return React.createElement(SketchpadScopeContext.Provider, { value: { id } }, props.children as any);

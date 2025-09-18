@@ -42,6 +42,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Metabolism: Story = {
   args: {
-    id: "metabolism",
+    id: "usalu/metabolism",
   },
 };

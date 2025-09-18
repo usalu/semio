@@ -114,5 +114,4 @@ const Sketchpad: FC<SketchpadProps> = ({ id, yProviderFactory, onWindowEvents })
 export default Sketchpad;
 
 // Export Sketchpad state management types for external use
-export { };
-
+export {};

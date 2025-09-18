@@ -2262,7 +2262,7 @@ export const KitSchema = z.object({
   designs: z.array(DesignSchema).optional(),
   qualities: z.array(QualitySchema).optional(),
   files: z.array(FileSchema).optional(),
-  authors: z.array(AuthorIdSchema).optional(),
+  authors: z.array(AuthorSchema).optional(),
   remote: z.string().optional(),
   homepage: z.string().optional(),
   license: z.string().optional(),
