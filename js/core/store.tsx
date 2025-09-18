@@ -151,15 +151,6 @@ type YStringArray = Y.Array<string>;
 type YLeafMapString = Y.Map<string>;
 type YLeafMapNumber = Y.Map<number>;
 
-type YCoord = Y.Map<number>;
-type YVec = Y.Map<number>;
-type YPoint = Y.Map<number>;
-type YVector = Y.Map<number>;
-type YVec3 = YLeafMapNumber;
-type YPlane = Y.Map<YVec3>;
-type YCamera = Y.Map<YPoint | YVector | number>;
-type YLocation = Y.Map<YPoint | YVector>;
-
 export interface Snapshot<TModel> {
   snapshot(): TModel;
 }
@@ -249,6 +240,9 @@ function createObserver(yObject: Y.AbstractType<any>, subscribe: Subscribe, deep
 
 // #region Attribute
 
+type YAttribute = Y.Map<string>;
+type YAttributes = Y.Array<YAttribute>;
+
 class YAttributeStore implements Store<Attribute, any, any> {
   public readonly uuid: string;
   private yAttribute: YAttribute;
@@ -324,6 +318,8 @@ class YAttributeStore implements Store<Attribute, any, any> {
 
 // #region Coord
 
+type YCoord = Y.Map<number>;
+
 export interface CoordStore extends Store<Coord, any, CoordDiff> {}
 
 class YCoordStore implements CoordStore {
@@ -391,6 +387,8 @@ class YCoordStore implements CoordStore {
 
 // #region Vec
 
+type YVec = Y.Map<number>;
+
 export interface VecStore extends Store<Vec, any, VecDiff> {}
 
 class YVecStore implements VecStore {
@@ -457,6 +455,8 @@ class YVecStore implements VecStore {
 // #endregion Vec
 
 // #region Point
+
+type YPoint = Y.Map<number>;
 
 export interface PointStore extends Store<Point, any, PointDiff> {}
 
@@ -535,6 +535,8 @@ class YPointStore implements PointStore {
 
 // #region Vector
 
+type YVector = Y.Map<number>;
+
 export interface VectorStore extends Store<Vector, any, VectorDiff> {}
 
 class YVectorStore implements VectorStore {
@@ -612,6 +614,9 @@ class YVectorStore implements VectorStore {
 
 // #region Plane
 
+type YPlaneVal = YPoint | YVector;
+type YPlane = Y.Map<YPlaneVal>;
+
 export interface PlaneStore extends Store<Plane, any, PlaneDiff> {}
 
 class YPlaneStore implements PlaneStore {
@@ -679,6 +684,9 @@ class YPlaneStore implements PlaneStore {
 // #endregion Plane
 
 // #region Camera
+
+type YCameraVal = YPoint | YVector | number;
+type YCamera = Y.Map<YCameraVal>;
 
 export interface CameraStore extends Store<Camera, any, CameraDiff> {}
 
@@ -757,6 +765,9 @@ class YCameraStore implements CameraStore {
 
 // #region Location
 
+type YLocationVal = number;
+type YLocation = Y.Map<YLocationVal>;
+
 export interface LocationStore extends Store<Location, any, LocationDiff> {}
 
 class YLocationStore implements LocationStore {
@@ -834,6 +845,9 @@ class YLocationStore implements LocationStore {
 
 // #region Author
 
+type YAuthor = Y.Map<string>;
+type YAuthors = Y.Array<YAuthor>;
+
 class YAuthorStore {
   public readonly uuid: string;
   private yAuthor: YAuthor;
@@ -904,21 +918,6 @@ class YAuthorStore {
 
 type YFile = Y.Map<string | YAttributes>;
 type YFiles = Y.Array<YFile>;
-
-type YAttribute = Y.Map<string>;
-type YAttributes = Y.Array<YAttribute>;
-
-type YBenchmark = Y.Map<string | number | YAttributes>;
-type YBenchmarks = Y.Array<YBenchmark>;
-
-type YQuality = Y.Map<string | number | YAttributes>;
-type YQualities = Y.Array<YQuality>;
-
-type YProp = Y.Map<string | number | boolean | YAttributes>;
-type YProps = Y.Array<YProp>;
-
-type YAuthor = Y.Map<string>;
-type YAuthors = Y.Array<YAuthor>;
 
 export interface FileStore extends Store<SemioFile, FileId, FileDiff> {}
 
@@ -1050,6 +1049,9 @@ class YFileStore implements FileStore {
 
 // #region Benchmark
 
+type YBenchmark = Y.Map<string | number | YAttributes>;
+type YBenchmarks = Y.Array<YBenchmark>;
+
 class YBenchmarkStore {
   public readonly uuid: string;
   private yBenchmark: YBenchmark;
@@ -1160,6 +1162,9 @@ class YBenchmarkStore {
 
 // #region Quality
 
+type YQuality = Y.Map<string | number | YAttributes>;
+type YQualities = Y.Array<YQuality>;
+
 class YQualityStore {
   public readonly uuid: string;
   private yQuality: YQuality;
@@ -1247,6 +1252,9 @@ class YQualityStore {
 // #endregion Quality
 
 // #region Prop
+
+type YProp = Y.Map<string | number | boolean | YAttributes>;
+type YProps = Y.Array<YProp>;
 
 class YPropStore {
   public readonly uuid: string;
@@ -1504,7 +1512,7 @@ class YPortStore implements PortStore {
 
   id = (): PortId => {
     return { t: this.t };
-  }
+  };
 
   apply(diff: PortDiff): void {
     if (diff.id_ !== undefined) this.id_ = diff.id_;
@@ -1780,6 +1788,9 @@ export function usePortColoredTypes(): Type[] {
 // #endregion Type
 
 // #region Layer
+
+type YLayer = Y.Map<string | boolean | YAttributes>;
+type YLayers = Y.Array<YLayer>;
 
 class YLayerStore {
   public readonly uuid: string;
@@ -2228,6 +2239,9 @@ usePieceStatus();
 
 // #region Group
 
+type YGroup = Y.Map<string | YStringArray | YAttributes>;
+type YGroups = Y.Array<YGroup>;
+
 class YGroupStore {
   public readonly uuid: string;
   private yGroup: YGroup;
@@ -2321,32 +2335,64 @@ class YSideStore {
   constructor(ySide: YSide, side: Side) {
     this.uuid = uuidv4();
     this.ySide = ySide;
-    // TODO: implement side properties
+    this.piece = side.piece;
+    this.designPiece = side.designPiece;
+    this.port = side.port;
   }
 
-  get snapshot(): Side {
-    const currentHash = this.hash({
-      piece: { id_: "" }, // TODO: implement piece handling
-      port: { t: 0 }, // TODO: implement port handling
-    });
+  get piece(): PieceId {
+    const ypieceId = this.ySide.get("piece") as Y.Map<string>;
+    return { id_: ypieceId.get("id_") || "" };
+  }
+  set piece(piece: PieceId) {
+    const ypieceId = new Y.Map<string>();
+    ypieceId.set("id_", piece.id_ || "");
+    this.ySide.set("piece", ypieceId);
+  }
 
-    if (this.cache && this.cacheHash === currentHash) {
-      return this.cache;
+  get designPiece(): PieceId | undefined {
+    const ydesignPiece = this.ySide.get("designPiece") as Y.Map<string> | undefined;
+    return ydesignPiece ? { id_: ydesignPiece.get("id_") || "" } : undefined;
+  }
+  set designPiece(designPiece: PieceId | undefined) {
+    if (designPiece) {
+      const ydesignPiece = new Y.Map<string>();
+      ydesignPiece.set("id_", designPiece.id_ || "");
+      this.ySide.set("designPiece", ydesignPiece);
+    } else {
+      this.ySide.delete("designPiece");
+    }
+  }
+
+  get port(): PortId {
+    const yportId = this.ySide.get("port") as Y.Map<any>;
+    return { t: yportId.get("t") || 0 };
+  }
+  set port(port: PortId) {
+    const yportId = new Y.Map<any>();
+    yportId.set("t", port.t || 0);
+    this.ySide.set("port", yportId);
+  }
+
+  snapshot = (): Side => {
+    const currentData = {
+      piece: this.piece,
+      designPiece: this.designPiece,
+      port: this.port,
+    };
+    const currentHash = this.hash(currentData);
+
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
     }
 
-    const side: Side = {
-      piece: { id_: "" }, // TODO: implement piece handling
-      port: { t: 0 }, // TODO: implement port handling
-    };
+    return this.cache;
+  };
 
-    this.cache = side;
-    this.cacheHash = currentHash;
-    return side;
-  }
-
-  get id(): SideId {
-    return { piece: { id_: "" }, port: { t: 0 } }; // TODO: implement handling
-  }
+  id = (): SideId => {
+    return { piece: this.piece, designPiece: this.designPiece };
+  };
 
   onChanged = (subscribe: Subscribe) => {
     return createObserver(this.ySide, subscribe);
@@ -2373,6 +2419,9 @@ export interface ConnectionStore extends Store<Connection, ConnectionId, Connect
 class YConnectionStore implements ConnectionStore {
   public readonly uuid: string;
   private yConnection: YConnection;
+  private connected: YSideStore;
+  private connecting: YSideStore;
+  private attributes: YAttributeStore[];
   private cache?: Connection;
   private cacheHash?: string;
 
@@ -2383,16 +2432,29 @@ class YConnectionStore implements ConnectionStore {
   constructor(yConnection: YConnection, connection: Connection) {
     this.uuid = uuidv4();
     this.yConnection = yConnection;
-    this.id_ = connection.id_;
-    this.description = connection.description;
-    this.quality = connection.quality;
-  }
+    this.attributes = [];
 
-  get id_(): string {
-    return this.yConnection.get("id_") as string;
-  }
-  set id_(id_: string) {
-    this.yConnection.set("id_", id_);
+    const yConnected = new Y.Map<YSideVal>();
+    this.connected = new YSideStore(yConnected, connection.connected);
+    const yConnecting = new Y.Map<YSideVal>();
+    this.connecting = new YSideStore(yConnecting, connection.connecting);
+    this.gap = connection.gap;
+    this.shift = connection.shift;
+    this.rise = connection.rise;
+    this.rotation = connection.rotation;
+    this.turn = connection.turn;
+    this.tilt = connection.tilt;
+    this.x = connection.x;
+    this.y = connection.y;
+    this.description = connection.description;
+
+    const yAttributes = new Y.Array<YAttribute>();
+    this.yConnection.set("attributes", yAttributes);
+    if (connection.attributes) {
+      for (const attribute of connection.attributes) {
+        this.createAttribute(attribute);
+      }
+    }
   }
 
   get description(): string | undefined {
@@ -2402,46 +2464,116 @@ class YConnectionStore implements ConnectionStore {
     this.yConnection.set("description", description || "");
   }
 
-  get quality(): number | undefined {
-    return this.yConnection.get("quality") as number | undefined;
+  get gap(): number | undefined {
+    return this.yConnection.get("gap") as number | undefined;
   }
-  set quality(quality: number | undefined) {
-    this.yConnection.set("quality", quality);
+  set gap(gap: number | undefined) {
+    this.yConnection.set("gap", gap);
   }
 
-  get snapshot(): Connection {
-    const currentHash = this.hash({
-      id_: this.id_,
+  get shift(): number | undefined {
+    return this.yConnection.get("shift") as number | undefined;
+  }
+  set shift(shift: number | undefined) {
+    this.yConnection.set("shift", shift);
+  }
+
+  get rise(): number | undefined {
+    return this.yConnection.get("rise") as number | undefined;
+  }
+  set rise(rise: number | undefined) {
+    this.yConnection.set("rise", rise);
+  }
+
+  get rotation(): number | undefined {
+    return this.yConnection.get("rotation") as number | undefined;
+  }
+  set rotation(rotation: number | undefined) {
+    this.yConnection.set("rotation", rotation);
+  }
+
+  get turn(): number | undefined {
+    return this.yConnection.get("turn") as number | undefined;
+  }
+  set turn(turn: number | undefined) {
+    this.yConnection.set("turn", turn);
+  }
+
+  get tilt(): number | undefined {
+    return this.yConnection.get("tilt") as number | undefined;
+  }
+  set tilt(tilt: number | undefined) {
+    this.yConnection.set("tilt", tilt);
+  }
+
+  get x(): number | undefined {
+    return this.yConnection.get("x") as number | undefined;
+  }
+  set x(x: number | undefined) {
+    this.yConnection.set("x", x);
+  }
+
+  get y(): number | undefined {
+    return this.yConnection.get("y") as number | undefined;
+  }
+  set y(y: number | undefined) {
+    this.yConnection.set("y", y);
+  }
+
+  id(): ConnectionId {
+    return { connected: this.connected.id(), connecting: this.connecting.id() };
+  }
+
+  snapshot = (): Connection => {
+    const currentData = {
+      connected: this.connected.snapshot(),
+      connecting: this.connecting.snapshot(),
+      gap: this.gap,
+      shift: this.shift,
+      rise: this.rise,
+      rotation: this.rotation,
+      turn: this.turn,
+      tilt: this.tilt,
+      x: this.x,
+      y: this.y,
       description: this.description,
-      quality: this.quality,
-      sides: [], // TODO: implement sides handling
-    });
+      attributes: this.attributes.map((attr) => attr.snapshot()),
+    };
+    const currentHash = this.hash(currentData);
 
-    if (this.cache && this.cacheHash === currentHash) {
-      return this.cache;
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
     }
 
-    const connection: Connection = {
-      id_: this.id_,
-      description: this.description,
-      quality: this.quality,
-      sides: [], // TODO: implement sides handling
-    };
+    return this.cache;
+  };
 
-    this.cache = connection;
-    this.cacheHash = currentHash;
-    return connection;
+  id = (): ConnectionId => {
+    return { connected: { piece: this.connected.piece }, connecting: { piece: this.connecting.piece } };
+  };
+
+  createAttribute(attribute: Attribute): void {
+    const yAttributes = this.yConnection.get("attributes") as Y.Array<YAttribute>;
+    const yAttribute = new Y.Map<string>();
+    const yAttributeStore = new YAttributeStore(yAttribute, attribute);
+    yAttributes.push([yAttribute]);
+    this.attributes.push(yAttributeStore);
   }
 
-  get id(): ConnectionId {
-    return { id_: this.id_ };
-  }
-
-  apply(diff: ConnectionDiff): void {
-    if (diff.id_ !== undefined) this.id_ = diff.id_;
+  change = (diff: ConnectionDiff): void => {
+    if (diff.connected !== undefined) this.connected.change(diff.connected);
+    if (diff.connecting !== undefined) this.connecting.change(diff.connecting);
+    if (diff.gap !== undefined) this.gap = diff.gap;
+    if (diff.shift !== undefined) this.shift = diff.shift;
+    if (diff.rise !== undefined) this.rise = diff.rise;
+    if (diff.rotation !== undefined) this.rotation = diff.rotation;
+    if (diff.turn !== undefined) this.turn = diff.turn;
+    if (diff.tilt !== undefined) this.tilt = diff.tilt;
+    if (diff.x !== undefined) this.x = diff.x;
+    if (diff.y !== undefined) this.y = diff.y;
     if (diff.description !== undefined) this.description = diff.description;
-    if (diff.quality !== undefined) this.quality = diff.quality;
-  }
+  };
 
   onChanged = (subscribe: Subscribe) => {
     return createObserver(this.yConnection, subscribe);
@@ -2495,6 +2627,10 @@ useConnectionStatus();
 // #endregion Connection
 
 // #region Stat
+
+type YStat = Y.Map<string | number | boolean>;
+type YStats = Y.Array<YStat>;
+
 
 class YStatStore {
   public readonly uuid: string;
@@ -2604,22 +2740,9 @@ class YStatStore {
 
 // #region Design
 
-type YLayer = Y.Map<string | boolean | YAttributes>;
-type YLayers = Y.Array<YLayer>;
-
-type YGroup = Y.Map<string | YStringArray | YAttributes>;
-type YGroups = Y.Array<YGroup>;
-
-type YStat = Y.Map<string | number | boolean>;
-type YStats = Y.Array<YStat>;
-
 type YDesignVal = string | YAuthors | YAttributes | YPieces | YConnections | YLayers | YGroups | YStats;
 type YDesign = Y.Map<YDesignVal>;
 type YDesigns = Y.Array<YDesign>;
-
-type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
-type YDesignEditor = Y.Map<YDesignEditorVal>;
-type YDesignEditors = Y.Array<YDesignEditor>;
 
 export interface DesignStore extends Store<Design, DesignId, DesignDiff> {
   pieces: Map<string, PieceStore>;
@@ -2636,6 +2759,10 @@ class YDesignStore {
   private connections: YConnectionStore[];
   private yAttributes: YAttributes;
   private attributes: YAttributeStore[];
+  private stats: YStatStore[];
+  private props: YPropStore[];
+  private layers: YLayerStore[];
+  private groups: YGroupStore[];
   private location?: YLocationStore;
   private cache?: Design;
   private cacheHash?: string;
@@ -2647,6 +2774,10 @@ class YDesignStore {
     this.pieces = new Array();
     this.connections = new Array();
     this.attributes = new Array();
+    this.stats = new Array();
+    this.props = new Array();
+    this.layers = new Array();
+    this.groups = new Array();
 
     this.name = design.name;
     this.variant = design.variant;
@@ -2667,37 +2798,26 @@ class YDesignStore {
 
     if (design.stats) {
       const yStats = new Y.Array<YStat>();
-      design.stats.forEach((stat) => {
-        const yStat = new Y.Map();
-        yStat.set("key", stat.key || "");
-        yStat.set("value", stat.value);
-        yStat.set("definition", stat.definition || "");
-        yStats.push([yStat]);
-      });
       this.yDesign.set("stats", yStats);
+      for (const stat of design.stats) {
+        this.createStat(stat);
+      }
     }
 
     if (design.props) {
       const yProps = new Y.Array<YProp>();
-      design.props.forEach((prop) => {
-        const yProp = new Y.Map();
-        yProp.set("key", prop.key || "");
-        yProp.set("value", prop.value);
-        if (prop.unit) yProp.set("unit", prop.unit);
-        yProps.push([yProp]);
-      });
       this.yDesign.set("props", yProps);
+      for (const prop of design.props) {
+        this.createProp(prop);
+      }
     }
 
     if (design.layers) {
       const yLayers = new Y.Array<YLayer>();
-      design.layers.forEach((layer) => {
-        const yLayer = new Y.Map();
-        yLayer.set("path", layer.path || "");
-        yLayer.set("isVisible", layer.isVisible);
-        yLayers.push([yLayer]);
-      });
       this.yDesign.set("layers", yLayers);
+      for (const layer of design.layers) {
+        this.createLayer(layer);
+      }
     }
 
     if (design.activeLayer) {
@@ -2706,14 +2826,10 @@ class YDesignStore {
 
     if (design.groups) {
       const yGroups = new Y.Array<YGroup>();
-      design.groups.forEach((group) => {
-        const yGroup = new Y.Map();
-        const pieceIds = new Y.Array<string>();
-        group.pieces.forEach((piece) => pieceIds.push([piece.id_]));
-        yGroup.set("pieces", pieceIds);
-        yGroups.push([yGroup]);
-      });
       this.yDesign.set("groups", yGroups);
+      for (const group of design.groups) {
+        this.createGroup(group);
+      }
     }
 
     if (design.location) {
@@ -2853,6 +2969,38 @@ class YDesignStore {
     this.attributes.push(yAttributeStore);
   }
 
+  createStat(stat: Stat): void {
+    const yStats = this.yDesign.get("stats") as Y.Array<YStat>;
+    const yStat = new Y.Map<any>();
+    const yStatStore = new YStatStore(yStat, stat);
+    yStats.push([yStat]);
+    this.stats.push(yStatStore);
+  }
+
+  createProp(prop: Prop): void {
+    const yProps = this.yDesign.get("props") as Y.Array<YProp>;
+    const yProp = new Y.Map<any>();
+    const yPropStore = new YPropStore(yProp, prop);
+    yProps.push([yProp]);
+    this.props.push(yPropStore);
+  }
+
+  createLayer(layer: Layer): void {
+    const yLayers = this.yDesign.get("layers") as Y.Array<YLayer>;
+    const yLayer = new Y.Map<any>();
+    const yLayerStore = new YLayerStore(yLayer, layer);
+    yLayers.push([yLayer]);
+    this.layers.push(yLayerStore);
+  }
+
+  createGroup(group: Group): void {
+    const yGroups = this.yDesign.get("groups") as Y.Array<YGroup>;
+    const yGroup = new Y.Map<any>();
+    const yGroupStore = new YGroupStore(yGroup, group);
+    yGroups.push([yGroup]);
+    this.groups.push(yGroupStore);
+  }
+
   piece(piece: PieceIdLike): PieceStore {
     if (!this.hasPiece(piece)) throw new Error(`Piece store not found for piece ${piece}`);
     return this.pieces.find((p) => areSamePiece(p.id(), piece))!;
@@ -2894,32 +3042,18 @@ class YDesignStore {
 
   snapshot = (): Design => {
     let stats: Stat[] | undefined;
-    const yStats = this.yDesign.get("stats") as Y.Array<YStat> | undefined;
-    if (yStats) {
-      stats = yStats.toArray().map((yStat) => ({
-        key: yStat.get("key") || "",
-        value: yStat.get("value"),
-        definition: yStat.get("definition") || "",
-      }));
+    if (this.stats.length > 0) {
+      stats = this.stats.map((stat) => stat.snapshot());
     }
 
     let props: Prop[] | undefined;
-    const yProps = this.yDesign.get("props") as Y.Array<YProp> | undefined;
-    if (yProps) {
-      props = yProps.toArray().map((yProp) => ({
-        key: (yProp.get("key") as string) || "",
-        value: (yProp.get("value") as string) || "",
-        unit: yProp.get("unit") as string | undefined,
-      }));
+    if (this.props.length > 0) {
+      props = this.props.map((prop) => prop.snapshot());
     }
 
     let layers: Layer[] | undefined;
-    const yLayers = this.yDesign.get("layers") as Y.Array<YLayer> | undefined;
-    if (yLayers) {
-      layers = yLayers.toArray().map((yLayer) => ({
-        path: yLayer.get("path") || "",
-        isVisible: yLayer.get("isVisible") as boolean,
-      }));
+    if (this.layers.length > 0) {
+      layers = this.layers.map((layer) => layer.snapshot());
     }
 
     let activeLayer: LayerId | undefined;
@@ -2929,14 +3063,8 @@ class YDesignStore {
     }
 
     let groups: Group[] | undefined;
-    const yGroups = this.yDesign.get("groups") as Y.Array<YGroup> | undefined;
-    if (yGroups) {
-      groups = yGroups.toArray().map((yGroup) => {
-        const pieceIds = yGroup.get("pieces") as Y.Array<string>;
-        return {
-          pieces: pieceIds.toArray().map((id) => ({ id_: id })),
-        };
-      });
+    if (this.groups.length > 0) {
+      groups = this.groups.map((group) => group.snapshot());
     }
 
     let location: Location | undefined;
@@ -3016,48 +3144,61 @@ class YDesignStore {
 
     if (diff.stats !== undefined) {
       if (diff.stats) {
-        const yStats = new Y.Array<YStat>();
-        diff.stats.forEach((stat) => {
-          const yStat = new Y.Map();
-          yStat.set("key", stat.key || "");
-          yStat.set("value", stat.value);
-          yStat.set("definition", stat.definition || "");
-          yStats.push([yStat]);
-        });
-        this.yDesign.set("stats", yStats);
+        // Clear existing stats
+        this.stats = [];
+        const yStats = this.yDesign.get("stats") as Y.Array<YStat>;
+        if (yStats) {
+          yStats.delete(0, yStats.length);
+        } else {
+          const newYStats = new Y.Array<YStat>();
+          this.yDesign.set("stats", newYStats);
+        }
+        for (const stat of diff.stats) {
+          this.createStat(stat);
+        }
       } else {
         this.yDesign.delete("stats");
+        this.stats = [];
       }
     }
 
     if (diff.props !== undefined) {
       if (diff.props) {
-        const yProps = new Y.Array<YProp>();
-        diff.props.forEach((prop) => {
-          const yProp = new Y.Map();
-          yProp.set("key", prop.key || "");
-          yProp.set("value", prop.value);
-          yProp.set("definition", prop.definition || "");
-          yProps.push([yProp]);
-        });
-        this.yDesign.set("props", yProps);
+        // Clear existing props
+        this.props = [];
+        const yProps = this.yDesign.get("props") as Y.Array<YProp>;
+        if (yProps) {
+          yProps.delete(0, yProps.length);
+        } else {
+          const newYProps = new Y.Array<YProp>();
+          this.yDesign.set("props", newYProps);
+        }
+        for (const prop of diff.props) {
+          this.createProp(prop);
+        }
       } else {
         this.yDesign.delete("props");
+        this.props = [];
       }
     }
 
     if (diff.layers !== undefined) {
       if (diff.layers) {
-        const yLayers = new Y.Array<YLayer>();
-        diff.layers.forEach((layer) => {
-          const yLayer = new Y.Map();
-          yLayer.set("path", layer.path || "");
-          yLayer.set("isVisible", layer.isVisible);
-          yLayers.push([yLayer]);
-        });
-        this.yDesign.set("layers", yLayers);
+        // Clear existing layers
+        this.layers = [];
+        const yLayers = this.yDesign.get("layers") as Y.Array<YLayer>;
+        if (yLayers) {
+          yLayers.delete(0, yLayers.length);
+        } else {
+          const newYLayers = new Y.Array<YLayer>();
+          this.yDesign.set("layers", newYLayers);
+        }
+        for (const layer of diff.layers) {
+          this.createLayer(layer);
+        }
       } else {
         this.yDesign.delete("layers");
+        this.layers = [];
       }
     }
 
@@ -3071,17 +3212,21 @@ class YDesignStore {
 
     if (diff.groups !== undefined) {
       if (diff.groups) {
-        const yGroups = new Y.Array<YGroup>();
-        diff.groups.forEach((group) => {
-          const yGroup = new Y.Map();
-          const pieceIds = new Y.Array<string>();
-          group.pieces.forEach((piece) => pieceIds.push([piece.id_]));
-          yGroup.set("pieces", pieceIds);
-          yGroups.push([yGroup]);
-        });
-        this.yDesign.set("groups", yGroups);
+        // Clear existing groups
+        this.groups = [];
+        const yGroups = this.yDesign.get("groups") as Y.Array<YGroup>;
+        if (yGroups) {
+          yGroups.delete(0, yGroups.length);
+        } else {
+          const newYGroups = new Y.Array<YGroup>();
+          this.yDesign.set("groups", newYGroups);
+        }
+        for (const group of diff.groups) {
+          this.createGroup(group);
+        }
       } else {
         this.yDesign.delete("groups");
+        this.groups = [];
       }
     }
 
@@ -4339,6 +4484,10 @@ export function useKitCommands() {
 // #endregion Kit
 
 // #region Design Editor
+
+type YDesignEditorVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
+type YDesignEditor = Y.Map<YDesignEditorVal>;
+type YDesignEditors = Y.Array<YDesignEditor>;
 
 export interface DesignEditorId {
   kit: KitId;
