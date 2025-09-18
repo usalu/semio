@@ -81,6 +81,26 @@ export const attributeIdToString = (attribute: AttributeId): string => attribute
 
 export const AttributeDiffSchema = AttributeSchema.partial();
 export type AttributeDiff = z.infer<typeof AttributeDiffSchema>;
+export const getAttributeDiff = (before: Attribute, after: Attribute): AttributeDiff => {
+  return { ...after };
+};
+export const inverseAttributeDiff = (original: Attribute, appliedDiff: AttributeDiff): AttributeDiff => {
+  return {
+    key: appliedDiff.key ? original.key : "",
+    value: appliedDiff.value ? original.value : "",
+    definition: appliedDiff.definition ? original.definition : "",
+  };
+}
+export const mergeAttributeDiff = (diff1: AttributeDiff, diff2: AttributeDiff): AttributeDiff => {
+  return {
+    key: diff2.key ?? diff1.key,
+    value: diff2.value ?? diff1.value,
+    definition: diff2.definition ?? diff1.definition,
+  };
+}
+export const applyAttributeDiff = (base: Attribute, diff: AttributeDiff): Attribute => {
+  return { ...base, ...diff };
+}
 
 export const AttributesDiffSchema = z.object({
   removed: z.array(AttributeIdSchema).optional(),
@@ -88,7 +108,6 @@ export const AttributesDiffSchema = z.object({
   added: z.array(AttributeSchema).optional(),
 });
 export type AttributesDiff = z.infer<typeof AttributesDiffSchema>;
-
 export const AttributeIdLikeSchema = z.union([AttributeIdSchema, AttributeSchema, AttributeDiffSchema, z.string()]);
 export type AttributeIdLike = z.infer<typeof AttributeIdLikeSchema>;
 export const attributeIdLikeToAttributeId = (attribute: AttributeIdLike): AttributeId => {
@@ -437,7 +456,13 @@ export const deserializeLocation = (json: string): Location => LocationSchema.pa
 
 export const LocationDiffSchema = LocationSchema.partial();
 export type LocationDiff = z.infer<typeof LocationDiffSchema>;
-export const getLocationDiff = (before: Location, after: Location): LocationDiff => { }
+export const getLocationDiff = (before: Location, after: Location): LocationDiff => {
+  return {
+    longitude: after.longitude - before.longitude,
+    latitude: after.latitude - before.latitude,
+    attributes: before.attributes && after.attributes ? getAttributesDiff(before.attributes!, after.attributes!) : undefined,
+  };
+}
 export const inverseLocationDiff = (original: Location, appliedDiff: LocationDiff): LocationDiff => { }
 export const mergeLocationDiff = (diff1: LocationDiff, diff2: LocationDiff): LocationDiff => { }
 export const applyLocationDiff = (base: Location, diff: LocationDiff): Location => { }

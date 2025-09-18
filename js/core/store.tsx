@@ -35,11 +35,9 @@ import {
   areSamePiece,
   areSameType,
   Attribute,
-  AttributeDiff,
   AttributeId,
   AttributeIdLike,
   Author,
-  AuthorDiff,
   AuthorId,
   AuthorIdLike,
   Benchmark,
@@ -99,17 +97,13 @@ import {
   PortId,
   portIdToString,
   Prop,
-  PropDiff,
   PropId,
-  PropIdLike,
   Quality,
-  QualityDiff,
   QualityId,
   QualityIdLike,
   Representation,
   RepresentationDiff,
   RepresentationId,
-  RepresentationIdLike,
   File as SemioFile,
   Side,
   SideId,
@@ -196,70 +190,114 @@ class YFileStore implements FileStore {
   private cache?: SemioFile;
   private cacheHash?: string;
 
-  private hash(file: SemioFile): string {
+  private hashFile(file: SemioFile): string {
     return JSON.stringify(file);
   }
 
   constructor(yFile: YFile, file: SemioFile) {
     this.uuid = uuidv4();
     this.yFile = yFile;
-    this.name = file.name;
-    this.type = file.type;
-    this.description = file.description;
+
+    this.path = file.path;
+    this.remote = file.remote;
+    this.size = file.size;
+    this.fileHash = file.hash;
+    this.createdAt = file.createdAt;
+    this.updatedAt = file.updatedAt;
+    this.createdBy = file.createdBy;
+    this.updatedBy = file.updatedBy;
   }
 
-  get name(): string {
-    return this.yFile.get("name") as string;
+  get path(): string {
+    return this.yFile.get("path") as string;
   }
-  set name(name: string) {
-    this.yFile.set("name", name);
+  set path(path: string) {
+    this.yFile.set("path", path);
+  }
+  get remote(): string | undefined {
+    return this.yFile.get("remote") as string | undefined;
+  }
+  set remote(remote: string | undefined) {
+    this.yFile.set("remote", remote || "");
+  }
+  get size(): number | undefined {
+    return this.yFile.get("size") as number | undefined;
+  }
+  set size(size: number | undefined) {
+    this.yFile.set("size", size || 0);
+  }
+  get fileHash(): string | undefined {
+    return this.yFile.get("hash") as string | undefined;
+  }
+  set fileHash(hash: string | undefined) {
+    this.yFile.set("hash", hash || "");
+  }
+  get createdAt(): Date | undefined {
+    const date = this.yFile.get("createdAt") as string | undefined;
+    return date ? new Date(date) : undefined;
+  }
+  set createdAt(createdAt: Date | undefined) {
+    this.yFile.set("createdAt", createdAt?.toISOString() || "");
+  }
+  get updatedAt(): Date | undefined {
+    const date = this.yFile.get("updatedAt") as string | undefined;
+    return date ? new Date(date) : undefined;
+  }
+  set updatedAt(updatedAt: Date | undefined) {
+    this.yFile.set("updatedAt", updatedAt?.toISOString() || "");
+  }
+  get createdBy(): AuthorId | undefined {
+    const email = this.yFile.get("createdBy") as string | undefined;
+    return email ? { email } : undefined;
+  }
+  set createdBy(createdBy: AuthorId | undefined) {
+    this.yFile.set("createdBy", createdBy?.email || "");
+  }
+  get updatedBy(): AuthorId | undefined {
+    const email = this.yFile.get("updatedBy") as string | undefined;
+    return email ? { email } : undefined;
+  }
+  set updatedBy(updatedBy: AuthorId | undefined) {
+    this.yFile.set("updatedBy", updatedBy?.email || "");
   }
 
-  get type(): string {
-    return this.yFile.get("type") as string;
-  }
-  set type(type: string) {
-    this.yFile.set("type", type);
-  }
+  snapshot = (): SemioFile => {
+    const currentData = {
+      path: this.path,
+      remote: this.remote,
+      size: this.size,
+      hash: this.fileHash,
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
+      createdBy: this.createdBy,
+      updatedBy: this.updatedBy,
+    };
+    const currentHash = this.hashFile(currentData);
 
-  get description(): string | undefined {
-    return this.yFile.get("description") as string | undefined;
-  }
-  set description(description: string | undefined) {
-    this.yFile.set("description", description || "");
-  }
-
-  get snapshot(): SemioFile {
-    const currentHash = this.hash({
-      name: this.name,
-      type: this.type,
-      description: this.description,
-    });
-
-    if (this.cache && this.cacheHash === currentHash) {
-      return this.cache;
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
     }
 
-    const file: SemioFile = {
-      name: this.name,
-      type: this.type,
-      description: this.description,
-    };
+    return this.cache;
+  };
 
-    this.cache = file;
-    this.cacheHash = currentHash;
-    return file;
-  }
+  id = (): FileId => {
+    return { path: this.path };
+  };
 
-  get id(): FileId {
-    return { name: this.name, type: this.type };
-  }
-
-  apply(diff: FileDiff): void {
-    if (diff.name !== undefined) this.name = diff.name;
-    if (diff.type !== undefined) this.type = diff.type;
-    if (diff.description !== undefined) this.description = diff.description;
-  }
+  change = (diff: FileDiff) => {
+    if (diff.path !== undefined) this.path = diff.path;
+    if (diff.remote !== undefined) this.remote = diff.remote;
+    if (diff.size !== undefined) this.size = diff.size;
+    if (diff.hash !== undefined) this.fileHash = diff.hash;
+    if (diff.createdAt !== undefined) this.createdAt = diff.createdAt;
+    if (diff.updatedAt !== undefined) this.updatedAt = diff.updatedAt;
+    if (diff.createdBy !== undefined) this.createdBy = diff.createdBy;
+    if (diff.updatedBy !== undefined) this.updatedBy = diff.updatedBy;
+    this.cache = undefined;
+    this.cacheHash = undefined;
+  };
 
   onChanged = (subscribe: Subscribe) => {
     return createObserver(this.yFile, subscribe);
@@ -935,67 +973,89 @@ class YBenchmarkStore {
   constructor(yBenchmark: YBenchmark, benchmark: Benchmark) {
     this.uuid = uuidv4();
     this.yBenchmark = yBenchmark;
-    this.key = benchmark.key;
-    this.value = benchmark.value;
-    this.unit = benchmark.unit;
-    this.description = benchmark.description;
+    this.name = benchmark.name;
+    this.icon = benchmark.icon;
+    this.min = benchmark.min;
+    this.minExcluded = benchmark.minExcluded;
+    this.max = benchmark.max;
+    this.maxExcluded = benchmark.maxExcluded;
   }
 
-  get key(): string {
-    return this.yBenchmark.get("key") as string;
+  get name(): string {
+    return this.yBenchmark.get("name") as string;
   }
-  set key(key: string) {
-    this.yBenchmark.set("key", key);
-  }
-
-  get value(): number {
-    return this.yBenchmark.get("value") as number;
-  }
-  set value(value: number) {
-    this.yBenchmark.set("value", value);
+  set name(name: string) {
+    this.yBenchmark.set("name", name);
   }
 
-  get unit(): string | undefined {
-    return this.yBenchmark.get("unit") as string | undefined;
+  get icon(): string | undefined {
+    return this.yBenchmark.get("icon") as string | undefined;
   }
-  set unit(unit: string | undefined) {
-    this.yBenchmark.set("unit", unit || "");
-  }
-
-  get description(): string | undefined {
-    return this.yBenchmark.get("description") as string | undefined;
-  }
-  set description(description: string | undefined) {
-    this.yBenchmark.set("description", description || "");
+  set icon(icon: string | undefined) {
+    this.yBenchmark.set("icon", icon || "");
   }
 
-  get snapshot(): Benchmark {
-    const currentHash = this.hash({
-      key: this.key,
-      value: this.value,
-      unit: this.unit,
-      description: this.description,
-    });
+  get min(): number | undefined {
+    return this.yBenchmark.get("min") as number | undefined;
+  }
+  set min(min: number | undefined) {
+    this.yBenchmark.set("min", min || 0);
+  }
 
-    if (this.cache && this.cacheHash === currentHash) {
-      return this.cache;
+  get minExcluded(): boolean | undefined {
+    return this.yBenchmark.get("minExcluded") as boolean | undefined;
+  }
+  set minExcluded(minExcluded: boolean | undefined) {
+    this.yBenchmark.set("minExcluded", minExcluded || false);
+  }
+
+  get max(): number | undefined {
+    return this.yBenchmark.get("max") as number | undefined;
+  }
+  set max(max: number | undefined) {
+    this.yBenchmark.set("max", max || 0);
+  }
+
+  get maxExcluded(): boolean | undefined {
+    return this.yBenchmark.get("maxExcluded") as boolean | undefined;
+  }
+  set maxExcluded(maxExcluded: boolean | undefined) {
+    this.yBenchmark.set("maxExcluded", maxExcluded || false);
+  }
+
+  snapshot = (): Benchmark => {
+    const currentData = {
+      name: this.name,
+      icon: this.icon,
+      min: this.min,
+      minExcluded: this.minExcluded,
+      max: this.max,
+      maxExcluded: this.maxExcluded,
+    };
+    const currentHash = this.hash(currentData);
+
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
     }
 
-    const benchmark: Benchmark = {
-      key: this.key,
-      value: this.value,
-      unit: this.unit,
-      description: this.description,
-    };
+    return this.cache;
+  };
 
-    this.cache = benchmark;
-    this.cacheHash = currentHash;
-    return benchmark;
-  }
+  id = (): BenchmarkId => {
+    return { name: this.name };
+  };
 
-  get id(): BenchmarkId {
-    return { key: this.key };
-  }
+  change = (diff: BenchmarkDiff) => {
+    if (diff.name !== undefined) this.name = diff.name;
+    if (diff.icon !== undefined) this.icon = diff.icon;
+    if (diff.min !== undefined) this.min = diff.min;
+    if (diff.minExcluded !== undefined) this.minExcluded = diff.minExcluded;
+    if (diff.max !== undefined) this.max = diff.max;
+    if (diff.maxExcluded !== undefined) this.maxExcluded = diff.maxExcluded;
+    this.cache = undefined;
+    this.cacheHash = undefined;
+  };
 
   onChanged = (subscribe: Subscribe) => {
     return createObserver(this.yBenchmark, subscribe);
@@ -1020,7 +1080,7 @@ class YQualityStore {
     this.uuid = uuidv4();
     this.yQuality = yQuality;
     this.key = quality.key;
-    this.value = quality.value;
+    this.name = quality.name;
     this.unit = quality.unit;
     this.description = quality.description;
   }
@@ -1032,11 +1092,11 @@ class YQualityStore {
     this.yQuality.set("key", key);
   }
 
-  get value(): number | undefined {
-    return this.yQuality.get("value") as number | undefined;
+  get name(): string {
+    return this.yQuality.get("name") as string;
   }
-  set value(value: number | undefined) {
-    this.yQuality.set("value", value);
+  set name(name: string) {
+    this.yQuality.set("name", name);
   }
 
   get unit(): string | undefined {
@@ -1056,7 +1116,7 @@ class YQualityStore {
   get snapshot(): Quality {
     const currentHash = this.hash({
       key: this.key,
-      value: this.value,
+      name: this.name,
       unit: this.unit,
       description: this.description,
     });
@@ -1067,7 +1127,7 @@ class YQualityStore {
 
     const quality: Quality = {
       key: this.key,
-      value: this.value,
+      name: this.name,
       unit: this.unit,
       description: this.description,
     };
@@ -1106,7 +1166,6 @@ class YPropStore {
     this.key = prop.key;
     this.value = prop.value;
     this.unit = prop.unit;
-    this.description = prop.description;
   }
 
   get key(): string {
@@ -1130,19 +1189,11 @@ class YPropStore {
     this.yProp.set("unit", unit || "");
   }
 
-  get description(): string | undefined {
-    return this.yProp.get("description") as string | undefined;
-  }
-  set description(description: string | undefined) {
-    this.yProp.set("description", description || "");
-  }
-
   get snapshot(): Prop {
     const currentHash = this.hash({
       key: this.key,
-      value: this.value,
+      value: this.value || "",
       unit: this.unit,
-      description: this.description,
     });
 
     if (this.cache && this.cacheHash === currentHash) {
@@ -1151,9 +1202,8 @@ class YPropStore {
 
     const prop: Prop = {
       key: this.key,
-      value: this.value,
+      value: this.value || "",
       unit: this.unit,
-      description: this.description,
     };
 
     this.cache = prop;
@@ -1671,6 +1721,8 @@ class YTypeStore implements TypeStore {
       icon: this.icon,
       image: this.image,
       description: this.description,
+      representations: Array.from(this.representations.values()).map(rep => rep.snapshot()),
+      ports: Array.from(this.ports.values()).map(port => port.snapshot()),
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };
@@ -2227,15 +2279,15 @@ class YDesignStore {
     this.connections = new Array();
     this.attributes = new Array();
 
-    this.yDesign.set("name", design.name);
-    this.yDesign.set("variant", design.variant || "");
-    this.yDesign.set("view", design.view || "");
-    this.yDesign.set("canScale", design.canScale);
-    this.yDesign.set("canMirror", design.canMirror);
-    this.yDesign.set("unit", design.unit || "");
-    this.yDesign.set("icon", design.icon || "");
-    this.yDesign.set("image", design.image || "");
-    this.yDesign.set("description", design.description || "");
+    this.name = design.name;
+    this.variant = design.variant;
+    this.view = design.view;
+    this.canScale = design.canScale;
+    this.canMirror = design.canMirror;
+    this.unit = design.unit;
+    this.icon = design.icon;
+    this.image = design.image;
+    this.description = design.description;
 
     // Initialize connections with proper YStore pattern
     this.yConnections = this.yDesign.set("connections", new Y.Array<YConnection>());
@@ -2263,7 +2315,7 @@ class YDesignStore {
         const yProp = new Y.Map();
         yProp.set("key", prop.key || "");
         yProp.set("value", prop.value);
-        yProp.set("definition", prop.definition || "");
+        if (prop.unit) yProp.set("unit", prop.unit);
         yProps.push([yProp]);
       });
       this.yDesign.set("props", yProps);
@@ -2501,9 +2553,9 @@ class YDesignStore {
     const yProps = this.yDesign.get("props") as Y.Array<YProp> | undefined;
     if (yProps) {
       props = yProps.toArray().map((yProp) => ({
-        key: yProp.get("key") || "",
-        value: yProp.get("value"),
-        definition: yProp.get("definition") || "",
+        key: yProp.get("key") as string || "",
+        value: yProp.get("value") as string || "",
+        unit: yProp.get("unit") as string | undefined,
       }));
     }
 
@@ -2828,6 +2880,11 @@ class YKitStore {
       this.remote = kit.remote;
       this.homepage = kit.homepage;
       this.license = kit.license;
+      this.preview = kit.preview;
+      this.concepts = kit.concepts;
+      this.icon = kit.icon;
+      this.image = kit.image;
+      this.description = kit.description;
 
       if (kit.types) for (const type of kit.types) this.createType(type);
       if (kit.designs) for (const design of kit.designs) this.createDesign(design);
@@ -2874,6 +2931,43 @@ class YKitStore {
   }
   set license(license: string | undefined) {
     this.yKit.set("license", license || "");
+  }
+  get preview(): string | undefined {
+    return this.yKit.get("preview") as string | undefined;
+  }
+  set preview(preview: string | undefined) {
+    this.yKit.set("preview", preview || "");
+  }
+  get concepts(): string[] | undefined {
+    const yConcepts = this.yKit.get("concepts") as Y.Array<string> | undefined;
+    return yConcepts ? yConcepts.toArray() : undefined;
+  }
+  set concepts(concepts: string[] | undefined) {
+    if (concepts) {
+      const yConcepts = new Y.Array<string>();
+      concepts.forEach((concept) => yConcepts.push([concept]));
+      this.yKit.set("concepts", yConcepts);
+    } else {
+      this.yKit.delete("concepts");
+    }
+  }
+  get icon(): string | undefined {
+    return this.yKit.get("icon") as string | undefined;
+  }
+  set icon(icon: string | undefined) {
+    this.yKit.set("icon", icon || "");
+  }
+  get image(): string | undefined {
+    return this.yKit.get("image") as string | undefined;
+  }
+  set image(image: string | undefined) {
+    this.yKit.set("image", image || "");
+  }
+  get description(): string | undefined {
+    return this.yKit.get("description") as string | undefined;
+  }
+  set description(description: string | undefined) {
+    this.yKit.set("description", description || "");
   }
   get createdAt(): Date {
     return new Date(this.yKit.get("createdAt") as string);
@@ -2964,7 +3058,7 @@ class YKitStore {
   }
 
   hasQuality(quality: QualityIdLike): boolean {
-    return this.qualities.some((q) => q.id().key === (typeof quality === "string" ? quality : quality.key));
+    return this.qualities.some((q) => q.id.key === (typeof quality === "string" ? quality : quality.key));
   }
 
   createQuality(quality: Quality): void {
@@ -2977,7 +3071,7 @@ class YKitStore {
 
   quality(quality: QualityIdLike): YQualityStore {
     if (!this.hasQuality(quality)) throw new Error(`Quality store not found for quality ${quality}`);
-    return this.qualities.find((q) => q.id().key === (typeof quality === "string" ? quality : quality.key))!;
+    return this.qualities.find((q) => q.id.key === (typeof quality === "string" ? quality : quality.key))!;
   }
 
   qualityByUuid(uuid: string): YQualityStore {
@@ -3006,7 +3100,7 @@ class YKitStore {
   }
 
   hasAuthor(author: AuthorIdLike): boolean {
-    return this.authors.some((a) => a.id().email === (typeof author === "string" ? author : author.email));
+    return this.authors.some((a) => a.id.email === (typeof author === "string" ? author : author.email));
   }
 
   createAuthor(author: Author): void {
@@ -3019,7 +3113,7 @@ class YKitStore {
 
   author(author: AuthorIdLike): YAuthorStore {
     if (!this.hasAuthor(author)) throw new Error(`Author store not found for author ${author}`);
-    return this.authors.find((a) => a.id().email === (typeof author === "string" ? author : author.email))!;
+    return this.authors.find((a) => a.id.email === (typeof author === "string" ? author : author.email))!;
   }
 
   authorByUuid(uuid: string): YAuthorStore {
@@ -3027,7 +3121,7 @@ class YKitStore {
   }
 
   hasAttribute(attribute: AttributeIdLike): boolean {
-    return this.attributes.some((a) => a.id().key === (typeof attribute === "string" ? attribute : attribute.key));
+    return this.attributes.some((a) => a.id.key === (typeof attribute === "string" ? attribute : attribute.key));
   }
 
   createAttribute(attribute: Attribute): void {
@@ -3040,7 +3134,7 @@ class YKitStore {
 
   attribute(attribute: AttributeIdLike): YAttributeStore {
     if (!this.hasAttribute(attribute)) throw new Error(`Attribute store not found for attribute ${attribute}`);
-    return this.attributes.find((a) => a.id().key === (typeof attribute === "string" ? attribute : attribute.key))!;
+    return this.attributes.find((a) => a.id.key === (typeof attribute === "string" ? attribute : attribute.key))!;
   }
 
   attributeByUuid(uuid: string): YAttributeStore {
@@ -3058,10 +3152,19 @@ class YKitStore {
       remote: this.remote,
       homepage: this.homepage,
       license: this.license,
+      preview: this.preview,
+      concepts: this.concepts,
+      icon: this.icon,
+      image: this.image,
+      description: this.description,
       types: this.types.map((type) => type.snapshot()),
       designs: this.designs.map((design) => design.snapshot()),
-      createdAt: this.createdAt.toISOString(),
-      updatedAt: this.updatedAt.toISOString(),
+      qualities: this.qualities.map((quality) => quality.snapshot),
+      files: this.files.map((file) => file.snapshot()),
+      authors: this.authors.map((author) => author.id),
+      attributes: this.attributes.map((attribute) => attribute.snapshot),
+      createdAt: this.createdAt,
+      updatedAt: this.updatedAt,
     };
     const currentHash = this.hash(currentData);
 
