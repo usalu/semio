@@ -324,29 +324,511 @@ class YAttributeStore implements Store<Attribute, any, any> {
 
 // #region Coord
 
+export interface CoordStore extends Store<Coord, any, CoordDiff> {}
+
+class YCoordStore implements CoordStore {
+  public readonly uuid: string;
+  private yCoord: YCoord;
+  private cache?: Coord;
+  private cacheHash?: string;
+
+  private hash(coord: Coord): string {
+    return JSON.stringify(coord);
+  }
+
+  constructor(yCoord: YCoord, coord: Coord) {
+    this.uuid = uuidv4();
+    this.yCoord = yCoord;
+    this.x = coord.x;
+    this.y = coord.y;
+  }
+
+  get x(): number {
+    return this.yCoord.get("x") as number;
+  }
+  set x(x: number) {
+    this.yCoord.set("x", x);
+  }
+
+  get y(): number {
+    return this.yCoord.get("y") as number;
+  }
+  set y(y: number) {
+    this.yCoord.set("y", y);
+  }
+
+  snapshot = (): Coord => {
+    const currentData = {
+      x: this.x,
+      y: this.y,
+    };
+    const currentHash = this.hash(currentData);
+
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
+    }
+
+    return this.cache;
+  };
+
+  id = () => ({ x: this.x, y: this.y });
+  change = (diff: CoordDiff) => {
+    if (diff.x !== undefined) this.x = diff.x;
+    if (diff.y !== undefined) this.y = diff.y;
+  };
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yCoord, subscribe, false);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yCoord, subscribe, true);
+  };
+}
+
 // #endregion Coord
 
 // #region Vec
+
+export interface VecStore extends Store<Vec, any, VecDiff> {}
+
+class YVecStore implements VecStore {
+  public readonly uuid: string;
+  private yVec: YVec;
+  private cache?: Vec;
+  private cacheHash?: string;
+
+  private hash(vec: Vec): string {
+    return JSON.stringify(vec);
+  }
+
+  constructor(yVec: YVec, vec: Vec) {
+    this.uuid = uuidv4();
+    this.yVec = yVec;
+    this.x = vec.x;
+    this.y = vec.y;
+  }
+
+  get x(): number {
+    return this.yVec.get("x") as number;
+  }
+  set x(x: number) {
+    this.yVec.set("x", x);
+  }
+
+  get y(): number {
+    return this.yVec.get("y") as number;
+  }
+  set y(y: number) {
+    this.yVec.set("y", y);
+  }
+
+  snapshot = (): Vec => {
+    const currentData = {
+      x: this.x,
+      y: this.y,
+    };
+    const currentHash = this.hash(currentData);
+
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
+    }
+
+    return this.cache;
+  };
+
+  id = () => ({ x: this.x, y: this.y });
+  change = (diff: VecDiff) => {
+    if (diff.x !== undefined) this.x = diff.x;
+    if (diff.y !== undefined) this.y = diff.y;
+  };
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yVec, subscribe, false);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yVec, subscribe, true);
+  };
+}
 
 // #endregion Vec
 
 // #region Point
 
+export interface PointStore extends Store<Point, any, PointDiff> {}
+
+class YPointStore implements PointStore {
+  public readonly uuid: string;
+  private yPoint: YPoint;
+  private cache?: Point;
+  private cacheHash?: string;
+
+  private hash(point: Point): string {
+    return JSON.stringify(point);
+  }
+
+  constructor(yPoint: YPoint, point: Point) {
+    this.uuid = uuidv4();
+    this.yPoint = yPoint;
+    this.x = point.x;
+    this.y = point.y;
+    this.z = point.z;
+  }
+
+  get x(): number {
+    return this.yPoint.get("x") as number;
+  }
+  set x(x: number) {
+    this.yPoint.set("x", x);
+  }
+
+  get y(): number {
+    return this.yPoint.get("y") as number;
+  }
+  set y(y: number) {
+    this.yPoint.set("y", y);
+  }
+
+  get z(): number {
+    return this.yPoint.get("z") as number;
+  }
+  set z(z: number) {
+    this.yPoint.set("z", z);
+  }
+
+  snapshot = (): Point => {
+    const currentData = {
+      x: this.x,
+      y: this.y,
+      z: this.z,
+    };
+    const currentHash = this.hash(currentData);
+
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
+    }
+
+    return this.cache;
+  };
+
+  id = () => ({ x: this.x, y: this.y, z: this.z });
+  change = (diff: PointDiff) => {
+    if (diff.x !== undefined) this.x = diff.x;
+    if (diff.y !== undefined) this.y = diff.y;
+    if (diff.z !== undefined) this.z = diff.z;
+  };
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yPoint, subscribe, false);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yPoint, subscribe, true);
+  };
+}
+
 // #endregion Point
 
 // #region Vector
+
+export interface VectorStore extends Store<Vector, any, VectorDiff> {}
+
+class YVectorStore implements VectorStore {
+  public readonly uuid: string;
+  private yVector: YVector;
+  private cache?: Vector;
+  private cacheHash?: string;
+
+  private hash(vector: Vector): string {
+    return JSON.stringify(vector);
+  }
+
+  constructor(yVector: YVector, vector: Vector) {
+    this.uuid = uuidv4();
+    this.yVector = yVector;
+    this.x = vector.x;
+    this.y = vector.y;
+    this.z = vector.z;
+  }
+
+  get x(): number {
+    return this.yVector.get("x") as number;
+  }
+  set x(x: number) {
+    this.yVector.set("x", x);
+  }
+
+  get y(): number {
+    return this.yVector.get("y") as number;
+  }
+  set y(y: number) {
+    this.yVector.set("y", y);
+  }
+
+  get z(): number {
+    return this.yVector.get("z") as number;
+  }
+  set z(z: number) {
+    this.yVector.set("z", z);
+  }
+
+  snapshot = (): Vector => {
+    const currentData = {
+      x: this.x,
+      y: this.y,
+      z: this.z,
+    };
+    const currentHash = this.hash(currentData);
+
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
+    }
+
+    return this.cache;
+  };
+
+  id = () => ({ x: this.x, y: this.y, z: this.z });
+  change = (diff: VectorDiff) => {
+    if (diff.x !== undefined) this.x = diff.x;
+    if (diff.y !== undefined) this.y = diff.y;
+    if (diff.z !== undefined) this.z = diff.z;
+  };
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yVector, subscribe, false);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yVector, subscribe, true);
+  };
+}
 
 // #endregion Vector
 
 // #region Plane
 
+export interface PlaneStore extends Store<Plane, any, PlaneDiff> {}
+
+class YPlaneStore implements PlaneStore {
+  public readonly uuid: string;
+  private yPlane: YPlane;
+  private origin: YPointStore;
+  private xAxis: YVectorStore;
+  private yAxis: YVectorStore;
+  private cache?: Plane;
+  private cacheHash?: string;
+
+  private hash(plane: Plane): string {
+    return JSON.stringify(plane);
+  }
+
+  constructor(yPlane: YPlane, plane: Plane) {
+    this.uuid = uuidv4();
+    this.yPlane = yPlane;
+
+    // Initialize origin Point store
+    const yOrigin = yPlane.get("origin") as YPoint;
+    this.origin = new YPointStore(yOrigin, plane.origin);
+
+    // Initialize xAxis Vector store
+    const yXAxis = yPlane.get("xAxis") as YVector;
+    this.xAxis = new YVectorStore(yXAxis, plane.xAxis);
+
+    // Initialize yAxis Vector store
+    const yYAxis = yPlane.get("yAxis") as YVector;
+    this.yAxis = new YVectorStore(yYAxis, plane.yAxis);
+  }
+
+  snapshot = (): Plane => {
+    const currentData = {
+      origin: this.origin.snapshot(),
+      xAxis: this.xAxis.snapshot(),
+      yAxis: this.yAxis.snapshot(),
+    };
+    const currentHash = this.hash(currentData);
+
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
+    }
+
+    return this.cache;
+  };
+
+  id = () => this.snapshot();
+  change = (diff: PlaneDiff) => {
+    if (diff.origin !== undefined) this.origin.change(diff.origin);
+    if (diff.xAxis !== undefined) this.xAxis.change(diff.xAxis);
+    if (diff.yAxis !== undefined) this.yAxis.change(diff.yAxis);
+  };
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yPlane, subscribe, false);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yPlane, subscribe, true);
+  };
+}
+
 // #endregion Plane
 
 // #region Camera
 
+export interface CameraStore extends Store<Camera, any, CameraDiff> {}
+
+class YCameraStore implements CameraStore {
+  public readonly uuid: string;
+  private yCamera: YCamera;
+  private cache?: Camera;
+  private cacheHash?: string;
+
+  private hash(camera: Camera): string {
+    return JSON.stringify(camera);
+  }
+
+  constructor(yCamera: YCamera, camera: Camera) {
+    this.uuid = uuidv4();
+    this.yCamera = yCamera;
+    this.distance = camera.distance;
+    this.phi = camera.phi;
+    this.theta = camera.theta;
+  }
+
+  get distance(): number {
+    return this.yCamera.get("distance") as number;
+  }
+  set distance(distance: number) {
+    this.yCamera.set("distance", distance);
+  }
+
+  get phi(): number {
+    return this.yCamera.get("phi") as number;
+  }
+  set phi(phi: number) {
+    this.yCamera.set("phi", phi);
+  }
+
+  get theta(): number {
+    return this.yCamera.get("theta") as number;
+  }
+  set theta(theta: number) {
+    this.yCamera.set("theta", theta);
+  }
+
+  snapshot = (): Camera => {
+    const currentData = {
+      distance: this.distance,
+      phi: this.phi,
+      theta: this.theta,
+    };
+    const currentHash = this.hash(currentData);
+
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
+    }
+
+    return this.cache;
+  };
+
+  id = () => this.snapshot();
+  change = (diff: CameraDiff) => {
+    if (diff.distance !== undefined) this.distance = diff.distance;
+    if (diff.phi !== undefined) this.phi = diff.phi;
+    if (diff.theta !== undefined) this.theta = diff.theta;
+  };
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yCamera, subscribe, false);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yCamera, subscribe, true);
+  };
+}
+
 // #endregion Camera
 
 // #region Location
+
+export interface LocationStore extends Store<Location, any, LocationDiff> {}
+
+class YLocationStore implements LocationStore {
+  public readonly uuid: string;
+  private yLocation: YLocation;
+  private cache?: Location;
+  private cacheHash?: string;
+
+  private hash(location: Location): string {
+    return JSON.stringify(location);
+  }
+
+  constructor(yLocation: YLocation, location: Location) {
+    this.uuid = uuidv4();
+    this.yLocation = yLocation;
+    this.latitude = location.latitude;
+    this.longitude = location.longitude;
+    this.altitude = location.altitude;
+  }
+
+  get latitude(): number {
+    return this.yLocation.get("latitude") as number;
+  }
+  set latitude(latitude: number) {
+    this.yLocation.set("latitude", latitude);
+  }
+
+  get longitude(): number {
+    return this.yLocation.get("longitude") as number;
+  }
+  set longitude(longitude: number) {
+    this.yLocation.set("longitude", longitude);
+  }
+
+  get altitude(): number | undefined {
+    return this.yLocation.get("altitude") as number | undefined;
+  }
+  set altitude(altitude: number | undefined) {
+    this.yLocation.set("altitude", altitude);
+  }
+
+  snapshot = (): Location => {
+    const currentData = {
+      latitude: this.latitude,
+      longitude: this.longitude,
+      altitude: this.altitude,
+    };
+    const currentHash = this.hash(currentData);
+
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
+    }
+
+    return this.cache;
+  };
+
+  id = () => this.snapshot();
+  change = (diff: LocationDiff) => {
+    if (diff.latitude !== undefined) this.latitude = diff.latitude;
+    if (diff.longitude !== undefined) this.longitude = diff.longitude;
+    if (diff.altitude !== undefined) this.altitude = diff.altitude;
+  };
+
+  onChanged = (subscribe: Subscribe) => {
+    return createObserver(this.yLocation, subscribe, false);
+  };
+
+  onChangedDeep = (subscribe: Subscribe) => {
+    return createObserver(this.yLocation, subscribe, true);
+  };
+}
 
 // #endregion Location
 
@@ -932,6 +1414,8 @@ export interface PortStore extends Store<Port, PortId, PortDiff> {}
 class YPortStore implements PortStore {
   public readonly uuid: string;
   private yPort: YPort;
+  private point: YPointStore;
+  private direction: YVectorStore;
   private cache?: Port;
   private cacheHash?: string;
 
@@ -947,6 +1431,20 @@ class YPortStore implements PortStore {
     this.family = port.family;
     this.mandatory = port.mandatory;
     this.t = port.t;
+
+    // Initialize Point store
+    if (!yPort.has("point")) {
+      yPort.set("point", new Y.Map());
+    }
+    const yPoint = yPort.get("point") as YPoint;
+    this.point = new YPointStore(yPoint, port.point);
+
+    // Initialize Vector store
+    if (!yPort.has("direction")) {
+      yPort.set("direction", new Y.Map());
+    }
+    const yDirection = yPort.get("direction") as YVector;
+    this.direction = new YVectorStore(yDirection, port.direction);
   }
 
   get id_(): string | undefined {
@@ -984,37 +1482,27 @@ class YPortStore implements PortStore {
     this.yPort.set("t", t);
   }
 
-  get snapshot(): Port {
-    const currentHash = this.hash({
+  snapshot = (): Port => {
+    const currentData = {
       id_: this.id_,
       description: this.description,
       family: this.family,
       mandatory: this.mandatory,
       t: this.t,
-      point: { x: 0, y: 0, z: 0 }, // TODO: implement point handling
-      direction: { x: 0, y: 0, z: 1 }, // TODO: implement direction handling
-    });
+      point: this.point.snapshot(),
+      direction: this.direction.snapshot(),
+    };
+    const currentHash = this.hash(currentData);
 
-    if (this.cache && this.cacheHash === currentHash) {
-      return this.cache;
+    if (!this.cache || this.cacheHash !== currentHash) {
+      this.cache = currentData;
+      this.cacheHash = currentHash;
     }
 
-    const port: Port = {
-      id_: this.id_,
-      description: this.description,
-      family: this.family,
-      mandatory: this.mandatory,
-      t: this.t,
-      point: { x: 0, y: 0, z: 0 }, // TODO: implement point handling
-      direction: { x: 0, y: 0, z: 1 }, // TODO: implement direction handling
-    };
+    return this.cache;
+  };
 
-    this.cache = port;
-    this.cacheHash = currentHash;
-    return port;
-  }
-
-  get id(): PortId {
+  id = (): PortId => {
     return { t: this.t };
   }
 
@@ -1401,6 +1889,12 @@ class YPieceStore {
   public readonly uuid: string;
   public readonly parent: YDesignStore;
   private yPiece: YPiece;
+  private yPlane: YPlane;
+  private plane: YPlaneStore;
+  private yCenter: YCoord;
+  private center: YCoordStore;
+  private yMirrorPlane: YPlane;
+  private mirrorPlane: YPlaneStore;
   private yAttributes: YAttributes;
   private attributes: YAttributeStore[];
   private cache?: Piece;
@@ -1426,68 +1920,27 @@ class YPieceStore {
     this.color = piece.color;
     this.description = piece.description;
 
-    // Handle plane as Y.js object (not a store since it's a simple nested object)
     if (piece.plane) {
-      const yPlane = new Y.Map<YVec3>();
-      if (piece.plane.origin) {
-        const yOrigin = new Y.Map<number>();
-        yOrigin.set("x", piece.plane.origin.x || 0);
-        yOrigin.set("y", piece.plane.origin.y || 0);
-        yOrigin.set("z", piece.plane.origin.z || 0);
-        yPlane.set("origin", yOrigin);
-      }
-      if (piece.plane.xAxis) {
-        const yXAxis = new Y.Map<number>();
-        yXAxis.set("x", piece.plane.xAxis.x || 0);
-        yXAxis.set("y", piece.plane.xAxis.y || 0);
-        yXAxis.set("z", piece.plane.xAxis.z || 0);
-        yPlane.set("xAxis", yXAxis);
-      }
-      if (piece.plane.yAxis) {
-        const yYAxis = new Y.Map<number>();
-        yYAxis.set("x", piece.plane.yAxis.x || 0);
-        yYAxis.set("y", piece.plane.yAxis.y || 0);
-        yYAxis.set("z", piece.plane.yAxis.z || 0);
-        yPlane.set("yAxis", yYAxis);
-      }
+      const yPlane = new Y.Map();
       this.yPiece.set("plane", yPlane);
+      this.yPlane = yPlane;
+      this.plane = new YPlaneStore(this.yPlane, piece.plane);
     }
 
     if (piece.center) {
-      const yCenter = new Y.Map<number>();
-      yCenter.set("x", piece.center.x || 0);
-      yCenter.set("y", piece.center.y || 0);
-      yCenter.set("z", piece.center.z || 0);
+      const yCenter = new Y.Map();
       this.yPiece.set("center", yCenter);
+      this.yCenter = yCenter;
+      this.center = new YCoordStore(this.yCenter, piece.center);
     }
 
     if (piece.mirrorPlane) {
-      const yMirrorPlane = new Y.Map<YVec3>();
-      if (piece.mirrorPlane.origin) {
-        const yOrigin = new Y.Map<number>();
-        yOrigin.set("x", piece.mirrorPlane.origin.x || 0);
-        yOrigin.set("y", piece.mirrorPlane.origin.y || 0);
-        yOrigin.set("z", piece.mirrorPlane.origin.z || 0);
-        yMirrorPlane.set("origin", yOrigin);
-      }
-      if (piece.mirrorPlane.xAxis) {
-        const yXAxis = new Y.Map<number>();
-        yXAxis.set("x", piece.mirrorPlane.xAxis.x || 0);
-        yXAxis.set("y", piece.mirrorPlane.xAxis.y || 0);
-        yXAxis.set("z", piece.mirrorPlane.xAxis.z || 0);
-        yMirrorPlane.set("xAxis", yXAxis);
-      }
-      if (piece.mirrorPlane.yAxis) {
-        const yYAxis = new Y.Map<number>();
-        yYAxis.set("x", piece.mirrorPlane.yAxis.x || 0);
-        yYAxis.set("y", piece.mirrorPlane.yAxis.y || 0);
-        yYAxis.set("z", piece.mirrorPlane.yAxis.z || 0);
-        yMirrorPlane.set("yAxis", yYAxis);
-      }
+      const yMirrorPlane = new Y.Map();
       this.yPiece.set("mirrorPlane", yMirrorPlane);
+      this.yMirrorPlane = yMirrorPlane;
+      this.mirrorPlane = new YPlaneStore(this.yMirrorPlane, piece.mirrorPlane);
     }
 
-    // Handle attributes with proper YStore pattern
     this.yAttributes = this.yPiece.set("attributes", new Y.Array<YAttribute>());
     if (piece.attributes) {
       for (const attribute of piece.attributes) {
@@ -1582,7 +2035,6 @@ class YPieceStore {
   };
 
   snapshot = (): Piece => {
-    // Extract complex types from Y.js objects
     let plane: Plane | undefined;
     const yPlane = this.yPiece.get("plane") as YPlane | undefined;
     if (yPlane) {
@@ -1653,76 +2105,54 @@ class YPieceStore {
     if (diff.color !== undefined) this.color = diff.color;
     if (diff.description !== undefined) this.description = diff.description;
 
-    // Handle complex type changes
     if (diff.plane !== undefined) {
       if (diff.plane) {
-        const yPlane = new Y.Map<YVec3>();
-        if (diff.plane.origin) {
-          const yOrigin = new Y.Map<number>();
-          yOrigin.set("x", diff.plane.origin.x || 0);
-          yOrigin.set("y", diff.plane.origin.y || 0);
-          yOrigin.set("z", diff.plane.origin.z || 0);
-          yPlane.set("origin", yOrigin);
+        if (!this.plane) {
+          const yPlane = new Y.Map();
+          this.yPiece.set("plane", yPlane);
+          this.yPlane = yPlane;
+          this.plane = new YPlaneStore(this.yPlane, diff.plane);
+        } else {
+          this.plane.change(diff.plane);
         }
-        if (diff.plane.xAxis) {
-          const yXAxis = new Y.Map<number>();
-          yXAxis.set("x", diff.plane.xAxis.x || 0);
-          yXAxis.set("y", diff.plane.xAxis.y || 0);
-          yXAxis.set("z", diff.plane.xAxis.z || 0);
-          yPlane.set("xAxis", yXAxis);
-        }
-        if (diff.plane.yAxis) {
-          const yYAxis = new Y.Map<number>();
-          yYAxis.set("x", diff.plane.yAxis.x || 0);
-          yYAxis.set("y", diff.plane.yAxis.y || 0);
-          yYAxis.set("z", diff.plane.yAxis.z || 0);
-          yPlane.set("yAxis", yYAxis);
-        }
-        this.yPiece.set("plane", yPlane);
       } else {
         this.yPiece.delete("plane");
+        this.plane = undefined;
+        this.yPlane = undefined;
       }
     }
 
     if (diff.center !== undefined) {
       if (diff.center) {
-        const yCenter = new Y.Map<number>();
-        yCenter.set("x", diff.center.x || 0);
-        yCenter.set("y", diff.center.y || 0);
-        yCenter.set("z", diff.center.z || 0);
-        this.yPiece.set("center", yCenter);
+        if (!this.center) {
+          const yCenter = new Y.Map();
+          this.yPiece.set("center", yCenter);
+          this.yCenter = yCenter;
+          this.center = new YCoordStore(this.yCenter, diff.center);
+        } else {
+          this.center.change(diff.center);
+        }
       } else {
         this.yPiece.delete("center");
+        this.center = undefined;
+        this.yCenter = undefined;
       }
     }
 
     if (diff.mirrorPlane !== undefined) {
       if (diff.mirrorPlane) {
-        const yMirrorPlane = new Y.Map<YVec3>();
-        if (diff.mirrorPlane.origin) {
-          const yOrigin = new Y.Map<number>();
-          yOrigin.set("x", diff.mirrorPlane.origin.x || 0);
-          yOrigin.set("y", diff.mirrorPlane.origin.y || 0);
-          yOrigin.set("z", diff.mirrorPlane.origin.z || 0);
-          yMirrorPlane.set("origin", yOrigin);
+        if (!this.mirrorPlane) {
+          const yMirrorPlane = new Y.Map();
+          this.yPiece.set("mirrorPlane", yMirrorPlane);
+          this.yMirrorPlane = yMirrorPlane;
+          this.mirrorPlane = new YPlaneStore(this.yMirrorPlane, diff.mirrorPlane);
+        } else {
+          this.mirrorPlane.change(diff.mirrorPlane);
         }
-        if (diff.mirrorPlane.xAxis) {
-          const yXAxis = new Y.Map<number>();
-          yXAxis.set("x", diff.mirrorPlane.xAxis.x || 0);
-          yXAxis.set("y", diff.mirrorPlane.xAxis.y || 0);
-          yXAxis.set("z", diff.mirrorPlane.xAxis.z || 0);
-          yMirrorPlane.set("xAxis", yXAxis);
-        }
-        if (diff.mirrorPlane.yAxis) {
-          const yYAxis = new Y.Map<number>();
-          yYAxis.set("x", diff.mirrorPlane.yAxis.x || 0);
-          yYAxis.set("y", diff.mirrorPlane.yAxis.y || 0);
-          yYAxis.set("z", diff.mirrorPlane.yAxis.z || 0);
-          yMirrorPlane.set("yAxis", yYAxis);
-        }
-        this.yPiece.set("mirrorPlane", yMirrorPlane);
       } else {
         this.yPiece.delete("mirrorPlane");
+        this.mirrorPlane = undefined;
+        this.yMirrorPlane = undefined;
       }
     }
 
@@ -2206,6 +2636,7 @@ class YDesignStore {
   private connections: YConnectionStore[];
   private yAttributes: YAttributes;
   private attributes: YAttributeStore[];
+  private location?: YLocationStore;
   private cache?: Design;
   private cacheHash?: string;
 
@@ -2287,21 +2718,8 @@ class YDesignStore {
 
     if (design.location) {
       const yLocation = new Y.Map();
-      if (design.location.position) {
-        const yPosition = new Y.Map<number>();
-        yPosition.set("x", design.location.position.x || 0);
-        yPosition.set("y", design.location.position.y || 0);
-        yPosition.set("z", design.location.position.z || 0);
-        yLocation.set("position", yPosition);
-      }
-      if (design.location.direction) {
-        const yDirection = new Y.Map<number>();
-        yDirection.set("x", design.location.direction.x || 0);
-        yDirection.set("y", design.location.direction.y || 0);
-        yDirection.set("z", design.location.direction.z || 0);
-        yLocation.set("direction", yDirection);
-      }
       this.yDesign.set("location", yLocation);
+      this.location = new YLocationStore(yLocation, design.location);
     }
 
     if (design.authors) {
@@ -2522,14 +2940,8 @@ class YDesignStore {
     }
 
     let location: Location | undefined;
-    const yLocation = this.yDesign.get("location") as Y.Map<any> | undefined;
-    if (yLocation) {
-      const yPosition = yLocation.get("position") as Y.Map<number> | undefined;
-      const yDirection = yLocation.get("direction") as Y.Map<number> | undefined;
-      location = {
-        position: yPosition ? { x: yPosition.get("x") || 0, y: yPosition.get("y") || 0, z: yPosition.get("z") || 0 } : undefined,
-        direction: yDirection ? { x: yDirection.get("x") || 0, y: yDirection.get("y") || 0, z: yDirection.get("z") || 0 } : undefined,
-      };
+    if (this.location) {
+      location = this.location.snapshot();
     }
 
     let authors: AuthorId[] | undefined;
@@ -2675,24 +3087,16 @@ class YDesignStore {
 
     if (diff.location !== undefined) {
       if (diff.location) {
-        const yLocation = new Y.Map();
-        if (diff.location.position) {
-          const yPosition = new Y.Map<number>();
-          yPosition.set("x", diff.location.position.x || 0);
-          yPosition.set("y", diff.location.position.y || 0);
-          yPosition.set("z", diff.location.position.z || 0);
-          yLocation.set("position", yPosition);
+        if (!this.location) {
+          const yLocation = new Y.Map();
+          this.yDesign.set("location", yLocation);
+          this.location = new YLocationStore(yLocation, diff.location);
+        } else {
+          this.location.change(diff.location);
         }
-        if (diff.location.direction) {
-          const yDirection = new Y.Map<number>();
-          yDirection.set("x", diff.location.direction.x || 0);
-          yDirection.set("y", diff.location.direction.y || 0);
-          yDirection.set("z", diff.location.direction.z || 0);
-          yLocation.set("direction", yDirection);
-        }
-        this.yDesign.set("location", yLocation);
       } else {
         this.yDesign.delete("location");
+        this.location = undefined;
       }
     }
 
